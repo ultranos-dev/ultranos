@@ -37,7 +37,7 @@ describe('SearchBar', () => {
     expect(screen.getByPlaceholderText('Search drugs\u2026')).toBeTruthy()
   })
 
-  it('does not render language buttons (moved to LanguageChips)', () => {
+  it('does not render language buttons (moved to LanguageMenu)', () => {
     render(<SearchBar value="" onSearch={vi.fn()} />)
     expect(screen.queryByTestId('lang-en')).toBeNull()
     expect(screen.queryByTestId('lang-prs')).toBeNull()

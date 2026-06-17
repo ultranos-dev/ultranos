@@ -27,7 +27,7 @@ vi.mock('@/lib/supabase', () => ({ supabase: { auth: { signInWithOtp: h.signInWi
 vi.mock('@/store/auth-store', () => ({ useAuthStore: (s: (x: { login: () => void; token: string | null }) => unknown) => s({ login: vi.fn(), token: 'tok' }) }))
 vi.mock('@/store/lang-store', () => ({ useLangStore: (s: (x: { lang: string; setLang: () => void }) => unknown) => s({ lang: 'en', setLang: vi.fn() }), isRtlLang: () => false }))
 vi.mock('@/lib/profile-photo', () => ({ uploadProfilePhoto: h.uploadProfilePhoto }))
-vi.mock('@/components/LanguageChips', () => ({ LanguageChips: () => null }))
+vi.mock('@/components/LanguageMenu', () => ({ LanguageMenu: () => null }))
 vi.mock('@/components/signup/PhotoPicker', () => ({ PhotoPicker: ({ onChange }: { onChange: (uri: string) => void }) => { const { Pressable, Text } = require('react-native'); return <Pressable testID="mock-photo" onPress={() => onChange('file:///test.jpg')}><Text>photo</Text></Pressable> } }))
 vi.mock('@/components/signup/ProvincePicker', () => ({ ProvincePicker: ({ onChange }: { onChange: (p: string) => void }) => { const { Pressable, Text } = require('react-native'); return <Pressable testID="mock-province" onPress={() => onChange('Kabul')}><Text>province</Text></Pressable> } }))
 vi.mock('@/components/signup/DistrictPicker', () => ({ DistrictPicker: ({ onChange }: { onChange: (d: string) => void }) => { const { Pressable, Text } = require('react-native'); return <Pressable testID="mock-district" onPress={() => onChange('Kabul')}><Text>district</Text></Pressable> } }))

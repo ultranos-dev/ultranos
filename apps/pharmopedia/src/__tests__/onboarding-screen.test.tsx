@@ -5,7 +5,7 @@ const push = vi.fn()
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
 vi.mock('expo-router', () => ({ useRouter: () => ({ push }) }))
 vi.mock('@/store/lang-store', () => ({ useLangStore: (s: (x: { lang: string; setLang: () => void }) => unknown) => s({ lang: 'en', setLang: vi.fn() }), isRtlLang: () => false }))
-vi.mock('@/components/LanguageChips', () => ({ LanguageChips: () => null }))
+vi.mock('@/components/LanguageMenu', () => ({ LanguageMenu: () => null }))
 
 import OnboardingScreen from '@/app/(auth)/onboarding'
 

@@ -44,6 +44,7 @@ vi.mock('expo-router', () => ({ useRouter: () => ({ replace: vi.fn() }) }))
 vi.mock('@/sync/catalog-sync', () => ({ runSync: vi.fn() }))
 vi.mock('@/db/migrations', () => ({ getDatabase: vi.fn() }))
 vi.mock('@/components/RoleBadge', () => ({ RoleBadge: () => null }))
+vi.mock('@/hooks/useProfile', () => ({ useProfile: () => ({ profile: null, source: 'none', loading: false }) }))
 
 describe('Profile — language selector', () => {
   beforeEach(() => { mockSetLang.mockClear() })

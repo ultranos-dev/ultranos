@@ -16,6 +16,10 @@ vi.mock('expo-updates', () => ({
   reloadAsync: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock('@/i18n', () => ({
+  i18n: { changeLanguage: vi.fn().mockResolvedValue(undefined) },
+}))
+
 const { isRtlLang, useLangStore } = await import('@/store/lang-store')
 
 describe('isRtlLang', () => {
@@ -55,6 +59,15 @@ describe('useLangStore.setLang', () => {
     const { setItemAsync } = await import('expo-secure-store') as { setItemAsync: ReturnType<typeof vi.fn> }
     await useLangStore.getState().setLang('prs')
     expect(setItemAsync).toHaveBeenCalledWith('pharmopedia.lang', 'prs')
+  })
+
+  it('applies the language to i18next so text updates without a reload', async () => {
+    const { i18n } = await import('@/i18n') as { i18n: { changeLanguage: ReturnType<typeof vi.fn> } }
+    i18n.changeLanguage.mockClear()
+    // prs → ar: both RTL, so reloadAsync does NOT fire — changeLanguage must.
+    useLangStore.setState({ lang: 'prs', initialized: true })
+    await useLangStore.getState().setLang('ar')
+    expect(i18n.changeLanguage).toHaveBeenCalledWith('ar')
   })
 
   it('calls reloadAsync when RTL direction changes', async () => {

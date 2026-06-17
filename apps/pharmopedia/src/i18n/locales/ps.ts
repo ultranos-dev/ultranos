@@ -40,6 +40,8 @@ const ps: Translations = {
     tabs: { overview: 'لنډیز', clinical: 'کلیني', formulary: 'فارمولري', pricing: 'نرخ', enrich: 'سمول' },
     overview: {
       summary: 'لنډیز',
+      brandNames: 'سوداګریز نومونه',
+      doseForms: 'د درملو بڼې',
       usedFor: 'د کارولو ځایونه',
       sideEffects: 'عمومي اغیزمن اثرات',
       seekHelp: 'د ډاکتر سره د مشورې وخت',
@@ -125,6 +127,7 @@ const ps: Translations = {
     reload: 'بیا پورته کول',
     tabError: 'دا برخه له تېروتنې سره مخ شوه',
     poweredBy: 'د اولټرانوس روغتیایی پلیټفارم',
+    selectLanguage: 'ژبه وټاکئ',
   },
   net: {
     offline: 'تاسو آفلاین یاست — کیش شوی معلومات ښودل کیږي',

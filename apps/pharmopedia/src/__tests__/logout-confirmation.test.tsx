@@ -42,6 +42,7 @@ vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }
 vi.mock('@/sync/catalog-sync', () => ({ runSync: vi.fn() }))
 vi.mock('@/db/migrations', () => ({ getDatabase: () => ({}) }))
 vi.mock('@/components/RoleBadge', () => ({ RoleBadge: () => null }))
+vi.mock('@/hooks/useProfile', () => ({ useProfile: () => ({ profile: null, source: 'none', loading: false }) }))
 vi.mock('@/components/CoachMark', () => ({ CoachMark: () => null }))
 vi.mock('@/lib/haptics', () => ({ hapticNotification: vi.fn(), hapticSelection: vi.fn() }))
 vi.mock('expo-haptics', () => ({ NotificationFeedbackType: { Error: 'error', Success: 'success' } }))

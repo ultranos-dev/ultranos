@@ -52,7 +52,9 @@ exports[`SectionCard > snapshot — danger severity (title + items) 1`] = `
         {
           "color": "#111",
         },
-        undefined,
+        {
+          "writingDirection": "ltr",
+        },
       ]
     }
   >
@@ -71,7 +73,9 @@ exports[`SectionCard > snapshot — danger severity (title + items) 1`] = `
         {
           "color": "#111",
         },
-        undefined,
+        {
+          "writingDirection": "ltr",
+        },
       ]
     }
   >
@@ -130,7 +134,9 @@ exports[`SectionCard > snapshot — default severity (title + text) 1`] = `
         {
           "color": "#111",
         },
-        undefined,
+        {
+          "writingDirection": "ltr",
+        },
       ]
     }
   >

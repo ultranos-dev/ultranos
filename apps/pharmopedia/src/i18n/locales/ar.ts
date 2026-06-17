@@ -40,6 +40,8 @@ const ar: Translations = {
     tabs: { overview: 'نظرة عامة', clinical: 'سريري', formulary: 'القائمة الدوائية', pricing: 'التسعير', enrich: 'تعديل' },
     overview: {
       summary: 'ملخص',
+      brandNames: 'الأسماء التجارية',
+      doseForms: 'الأشكال الصيدلانية',
       usedFor: 'يُستخدم لـ',
       sideEffects: 'الآثار الجانبية الشائعة',
       seekHelp: 'متى تطلب المساعدة',
@@ -125,6 +127,7 @@ const ar: Translations = {
     reload: 'إعادة التحميل',
     tabError: 'واجه هذا القسم خطأ',
     poweredBy: 'منصة أولترانوس الصحية',
+    selectLanguage: 'اختر اللغة',
   },
   net: {
     offline: 'أنت غير متصل — يتم عرض البيانات المحفوظة',

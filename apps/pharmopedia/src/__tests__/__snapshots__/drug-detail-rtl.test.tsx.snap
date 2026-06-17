@@ -27,102 +27,132 @@ exports[`DrugDetailScreen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
       ]
     }
   >
-    <Text
+    <View
       style={
-        [
-          {
-            "fontFamily": "PublicSans-Bold",
-            "fontSize": 24,
-            "marginBottom": 2,
-          },
-          {
-            "color": "#141c28",
-          },
-          false,
-        ]
-      }
-    >
-      amoxicillin
-    </Text>
-    <Text
-      style={
-        [
-          {
-            "fontFamily": "Manrope",
-            "fontSize": 14,
-            "marginBottom": 8,
-          },
-          {
-            "color": "#4a5568",
-          },
-        ]
-      }
-    >
-      amoxicillin
-       · J01CA04
-    </Text>
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={
         {
-          "selected": false,
+          "alignItems": "flex-start",
+          "flexDirection": "row",
+          "gap": 12,
+          "justifyContent": "space-between",
         }
       }
-      style={
-        [
-          {
-            "borderRadius": 9999,
-            "borderWidth": 1,
-            "paddingHorizontal": 12,
-            "paddingVertical": 8,
-          },
-          {
-            "backgroundColor": "#ffffff",
-            "borderColor": "#d8dde6",
-          },
-        ]
-      }
     >
-      <Text
+      <View
         style={
-          [
-            {
-              "fontFamily": "Manrope",
-              "fontSize": 14,
-            },
-            {
-              "color": "#4a5568",
-            },
-            false,
-          ]
+          {
+            "flex": 1,
+          }
         }
       >
-        Antibiotic
-      </Text>
-    </Pressable>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "PublicSans-Bold",
+                "fontSize": 24,
+                "marginBottom": 2,
+              },
+              {
+                "color": "#141c28",
+              },
+              false,
+            ]
+          }
+        >
+          amoxicillin
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope",
+                "fontSize": 14,
+              },
+              {
+                "color": "#4a5568",
+                "textAlign": "left",
+                "writingDirection": "ltr",
+              },
+            ]
+          }
+        >
+          amoxicillin
+           · J01CA04
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 12,
+          }
+        }
+      >
+        <Pressable
+          accessibilityLabel="drug.addBookmark"
+          accessibilityRole="button"
+          hitSlop={8}
+          onClick={[Function]}
+          testID="bookmark-btn"
+        >
+          <View
+            style={{}}
+          >
+            <View
+              testID="icon-Heart"
+            />
+          </View>
+        </Pressable>
+      </View>
+    </View>
     <View
       style={
         {
           "flexDirection": "row",
-          "gap": 12,
-          "justifyContent": "flex-end",
+          "marginTop": 12,
         }
       }
     >
       <Pressable
-        accessibilityLabel="drug.addBookmark"
         accessibilityRole="button"
-        hitSlop={8}
-        onClick={[Function]}
-        testID="bookmark-btn"
+        accessibilityState={
+          {
+            "selected": false,
+          }
+        }
+        style={
+          [
+            {
+              "borderRadius": 9999,
+              "borderWidth": 1,
+              "paddingHorizontal": 12,
+              "paddingVertical": 8,
+            },
+            {
+              "backgroundColor": "#ffffff",
+              "borderColor": "#d8dde6",
+            },
+          ]
+        }
       >
-        <View
-          style={{}}
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope",
+                "fontSize": 14,
+              },
+              {
+                "color": "#4a5568",
+              },
+              false,
+              false,
+            ]
+          }
         >
-          <View
-            testID="icon-Heart"
-          />
-        </View>
+          Antibiotic
+        </Text>
       </Pressable>
     </View>
   </View>
@@ -333,105 +363,136 @@ exports[`DrugDetailScreen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
       ]
     }
   >
-    <Text
+    <View
       style={
-        [
-          {
-            "fontFamily": "PublicSans-Bold",
-            "fontSize": 24,
-            "marginBottom": 2,
-          },
-          {
-            "color": "#141c28",
-          },
-          {
-            "fontFamily": "NotoNaskhArabic",
-            "textAlign": "right",
-          },
-        ]
-      }
-    >
-      أموكسيسيلين
-    </Text>
-    <Text
-      style={
-        [
-          {
-            "fontFamily": "Manrope",
-            "fontSize": 14,
-            "marginBottom": 8,
-          },
-          {
-            "color": "#4a5568",
-          },
-        ]
-      }
-    >
-      amoxicillin
-       · J01CA04
-    </Text>
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={
         {
-          "selected": false,
+          "alignItems": "flex-start",
+          "flexDirection": "row",
+          "gap": 12,
+          "justifyContent": "space-between",
         }
       }
-      style={
-        [
-          {
-            "borderRadius": 9999,
-            "borderWidth": 1,
-            "paddingHorizontal": 12,
-            "paddingVertical": 8,
-          },
-          {
-            "backgroundColor": "#ffffff",
-            "borderColor": "#d8dde6",
-          },
-        ]
-      }
     >
-      <Text
+      <View
         style={
-          [
-            {
-              "fontFamily": "Manrope",
-              "fontSize": 14,
-            },
-            {
-              "color": "#4a5568",
-            },
-            false,
-          ]
+          {
+            "flex": 1,
+          }
         }
       >
-        Antibiotic
-      </Text>
-    </Pressable>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "PublicSans-Bold",
+                "fontSize": 24,
+                "marginBottom": 2,
+              },
+              {
+                "color": "#141c28",
+              },
+              {
+                "fontFamily": "NotoKufiArabic",
+                "textAlign": "right",
+                "writingDirection": "rtl",
+              },
+            ]
+          }
+        >
+          أموكسيسيلين
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope",
+                "fontSize": 14,
+              },
+              {
+                "color": "#4a5568",
+                "textAlign": "right",
+                "writingDirection": "ltr",
+              },
+            ]
+          }
+        >
+          amoxicillin
+           · J01CA04
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 12,
+          }
+        }
+      >
+        <Pressable
+          accessibilityLabel="drug.addBookmark"
+          accessibilityRole="button"
+          hitSlop={8}
+          onClick={[Function]}
+          testID="bookmark-btn"
+        >
+          <View
+            style={{}}
+          >
+            <View
+              testID="icon-Heart"
+            />
+          </View>
+        </Pressable>
+      </View>
+    </View>
     <View
       style={
         {
           "flexDirection": "row",
-          "gap": 12,
-          "justifyContent": "flex-end",
+          "marginTop": 12,
         }
       }
     >
       <Pressable
-        accessibilityLabel="drug.addBookmark"
         accessibilityRole="button"
-        hitSlop={8}
-        onClick={[Function]}
-        testID="bookmark-btn"
+        accessibilityState={
+          {
+            "selected": false,
+          }
+        }
+        style={
+          [
+            {
+              "borderRadius": 9999,
+              "borderWidth": 1,
+              "paddingHorizontal": 12,
+              "paddingVertical": 8,
+            },
+            {
+              "backgroundColor": "#ffffff",
+              "borderColor": "#d8dde6",
+            },
+          ]
+        }
       >
-        <View
-          style={{}}
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope",
+                "fontSize": 14,
+              },
+              {
+                "color": "#4a5568",
+              },
+              false,
+              false,
+            ]
+          }
         >
-          <View
-            testID="icon-Heart"
-          />
-        </View>
+          Antibiotic
+        </Text>
       </Pressable>
     </View>
   </View>

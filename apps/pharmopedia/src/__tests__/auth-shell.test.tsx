@@ -5,7 +5,7 @@ import { AuthShell } from '@/components/AuthShell'
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
 vi.mock('@/store/lang-store', () => ({ useLangStore: (s: (x: { lang: string; setLang: () => void }) => unknown) => s({ lang: 'en', setLang: vi.fn() }), isRtlLang: () => false }))
-vi.mock('@/components/LanguageChips', () => ({ LanguageChips: () => null }))
+vi.mock('@/components/LanguageMenu', () => ({ LanguageMenu: () => null }))
 
 describe('AuthShell', () => {
   it('renders the wordmark, title, subtitle, children, and footer', () => {

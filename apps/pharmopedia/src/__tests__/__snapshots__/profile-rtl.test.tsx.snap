@@ -95,6 +95,7 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
               "marginBottom": 16,
               "padding": 16,
             },
+            false,
             {
               "backgroundColor": "#fff",
             },
@@ -131,6 +132,7 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                   "color": "#ffffff",
                   "fontSize": 22.8,
                 },
+                false,
               ]
             }
           >
@@ -155,6 +157,9 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                 {
                   "color": "#111",
                 },
+                {
+                  "textAlign": "left",
+                },
               ]
             }
             testID="profile-name"
@@ -163,11 +168,14 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
           </Text>
           <View
             style={
-              {
-                "flexDirection": "row",
-                "flexWrap": "wrap",
-                "gap": 8,
-              }
+              [
+                {
+                  "flexDirection": "row",
+                  "flexWrap": "wrap",
+                  "gap": 8,
+                },
+                false,
+              ]
             }
           >
             <Pressable
@@ -203,6 +211,7 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                     {
                       "color": "#4a5568",
                     },
+                    false,
                     false,
                   ]
                 }
@@ -242,6 +251,7 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                     {
                       "color": "#4a5568",
                     },
+                    false,
                     false,
                   ]
                 }
@@ -760,6 +770,9 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
               {
                 "color": "#666",
               },
+              {
+                "textAlign": "left",
+              },
             ]
           }
         >
@@ -776,6 +789,9 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
               {
                 "color": "#666",
               },
+              {
+                "textAlign": "left",
+              },
             ]
           }
         >
@@ -784,11 +800,14 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
         <View
           accessibilityRole="radiogroup"
           style={
-            {
-              "flexDirection": "row",
-              "flexWrap": "wrap",
-              "gap": 8,
-            }
+            [
+              {
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": 8,
+              },
+              false,
+            ]
           }
         >
           <Pressable
@@ -833,6 +852,7 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                     "color": "#fff",
                     "fontFamily": "Manrope-SemiBold",
                   },
+                  false,
                 ]
               }
             >
@@ -875,6 +895,9 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                     "color": "#666",
                   },
                   false,
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
                 ]
               }
             >
@@ -917,6 +940,9 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                     "color": "#666",
                   },
                   false,
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
                 ]
               }
             >
@@ -959,6 +985,9 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                     "color": "#666",
                   },
                   false,
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
                 ]
               }
             >
@@ -978,6 +1007,9 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                 "color": "#666",
                 "marginTop": 12,
               },
+              {
+                "textAlign": "left",
+              },
             ]
           }
         >
@@ -986,10 +1018,13 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
         <View
           accessibilityRole="radiogroup"
           style={
-            {
-              "flexDirection": "row",
-              "gap": 8,
-            }
+            [
+              {
+                "flexDirection": "row",
+                "gap": 8,
+              },
+              false,
+            ]
           }
         >
           <Pressable
@@ -1034,6 +1069,7 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                   {
                     "color": "#fff",
                   },
+                  false,
                 ]
               }
             >
@@ -1076,6 +1112,7 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                   {
                     "color": "#666",
                   },
+                  false,
                   false,
                 ]
               }
@@ -1120,6 +1157,7 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                     "color": "#666",
                   },
                   false,
+                  false,
                 ]
               }
             >
@@ -1156,6 +1194,9 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
               {
                 "color": "#666",
               },
+              {
+                "textAlign": "left",
+              },
             ]
           }
         >
@@ -1170,6 +1211,9 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
               },
               {
                 "color": "#666",
+              },
+              {
+                "textAlign": "left",
               },
             ]
           }
@@ -1186,6 +1230,9 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
               },
               {
                 "color": "#666",
+              },
+              {
+                "textAlign": "left",
               },
             ]
           }
@@ -1228,6 +1275,7 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                 {
                   "color": "#fff",
                 },
+                false,
               ]
             }
           >
@@ -1258,6 +1306,7 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                 {
                   "color": "#2e9e71",
                 },
+                false,
               ]
             }
           >
@@ -1309,6 +1358,7 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                 {
                   "color": "#991b1b",
                 },
+                false,
               ]
             }
           >
@@ -1460,6 +1510,9 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
               "padding": 16,
             },
             {
+              "flexDirection": "row-reverse",
+            },
+            {
               "backgroundColor": "#fff",
             },
           ]
@@ -1495,6 +1548,7 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                   "color": "#ffffff",
                   "fontSize": 22.8,
                 },
+                false,
               ]
             }
           >
@@ -1519,6 +1573,10 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                 {
                   "color": "#111",
                 },
+                {
+                  "fontFamily": "NotoKufiArabic",
+                  "textAlign": "right",
+                },
               ]
             }
             testID="profile-name"
@@ -1527,11 +1585,16 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
           </Text>
           <View
             style={
-              {
-                "flexDirection": "row",
-                "flexWrap": "wrap",
-                "gap": 8,
-              }
+              [
+                {
+                  "flexDirection": "row",
+                  "flexWrap": "wrap",
+                  "gap": 8,
+                },
+                {
+                  "flexDirection": "row-reverse",
+                },
+              ]
             }
           >
             <Pressable
@@ -1567,6 +1630,7 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                     {
                       "color": "#4a5568",
                     },
+                    false,
                     false,
                   ]
                 }
@@ -1606,6 +1670,7 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                     {
                       "color": "#4a5568",
                     },
+                    false,
                     false,
                   ]
                 }
@@ -2124,6 +2189,10 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
               {
                 "color": "#666",
               },
+              {
+                "fontFamily": "NotoKufiArabic",
+                "textAlign": "right",
+              },
             ]
           }
         >
@@ -2140,6 +2209,10 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
               {
                 "color": "#666",
               },
+              {
+                "fontFamily": "NotoKufiArabic",
+                "textAlign": "right",
+              },
             ]
           }
         >
@@ -2148,11 +2221,16 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
         <View
           accessibilityRole="radiogroup"
           style={
-            {
-              "flexDirection": "row",
-              "flexWrap": "wrap",
-              "gap": 8,
-            }
+            [
+              {
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": 8,
+              },
+              {
+                "flexDirection": "row-reverse",
+              },
+            ]
           }
         >
           <Pressable
@@ -2190,6 +2268,7 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                   {
                     "color": "#666",
                   },
+                  false,
                   false,
                 ]
               }
@@ -2233,6 +2312,9 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                     "color": "#666",
                   },
                   false,
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
                 ]
               }
             >
@@ -2275,6 +2357,9 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                     "color": "#666",
                   },
                   false,
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
                 ]
               }
             >
@@ -2323,6 +2408,9 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                     "color": "#fff",
                     "fontFamily": "Manrope-SemiBold",
                   },
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
                 ]
               }
             >
@@ -2342,6 +2430,10 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                 "color": "#666",
                 "marginTop": 12,
               },
+              {
+                "fontFamily": "NotoKufiArabic",
+                "textAlign": "right",
+              },
             ]
           }
         >
@@ -2350,10 +2442,15 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
         <View
           accessibilityRole="radiogroup"
           style={
-            {
-              "flexDirection": "row",
-              "gap": 8,
-            }
+            [
+              {
+                "flexDirection": "row",
+                "gap": 8,
+              },
+              {
+                "flexDirection": "row-reverse",
+              },
+            ]
           }
         >
           <Pressable
@@ -2398,6 +2495,9 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                   {
                     "color": "#fff",
                   },
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
                 ]
               }
             >
@@ -2441,6 +2541,9 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                     "color": "#666",
                   },
                   false,
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
                 ]
               }
             >
@@ -2484,6 +2587,9 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                     "color": "#666",
                   },
                   false,
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
                 ]
               }
             >
@@ -2520,6 +2626,10 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
               {
                 "color": "#666",
               },
+              {
+                "fontFamily": "NotoKufiArabic",
+                "textAlign": "right",
+              },
             ]
           }
         >
@@ -2534,6 +2644,10 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
               },
               {
                 "color": "#666",
+              },
+              {
+                "fontFamily": "NotoKufiArabic",
+                "textAlign": "right",
               },
             ]
           }
@@ -2550,6 +2664,10 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
               },
               {
                 "color": "#666",
+              },
+              {
+                "fontFamily": "NotoKufiArabic",
+                "textAlign": "right",
               },
             ]
           }
@@ -2592,6 +2710,9 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                 {
                   "color": "#fff",
                 },
+                {
+                  "fontFamily": "NotoKufiArabic",
+                },
               ]
             }
           >
@@ -2621,6 +2742,9 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                 },
                 {
                   "color": "#2e9e71",
+                },
+                {
+                  "fontFamily": "NotoKufiArabic",
                 },
               ]
             }
@@ -2672,6 +2796,9 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                 },
                 {
                   "color": "#991b1b",
+                },
+                {
+                  "fontFamily": "NotoKufiArabic",
                 },
               ]
             }

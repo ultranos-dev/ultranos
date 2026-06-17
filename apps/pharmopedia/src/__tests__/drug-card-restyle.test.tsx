@@ -17,9 +17,11 @@ vi.mock('@/store/lang-store', () => ({
 }))
 
 vi.mock('@/store/bookmark-store', () => ({
-  useBookmarkStore: (s: (state: { isBookmarked: (atcCode: string) => boolean }) => unknown) =>
-    s({ isBookmarked: () => false }),
+  useBookmarkStore: (s: (state: { isBookmarked: (atcCode: string) => boolean; toggle: () => void }) => unknown) =>
+    s({ isBookmarked: () => false, toggle: vi.fn() }),
 }))
+
+vi.mock('@/db/migrations', () => ({ getDatabase: () => ({}) }))
 
 vi.mock('@/hooks/useThemeColors', () => ({
   useThemeColors: () => ({
@@ -86,8 +88,9 @@ describe('DrugCard — restyle snapshots', () => {
     expect(screen.getByTestId('drug-primary-name').props.children).toBe('Amoxicillin')
   })
 
-  it('does not render Heart bookmark icon when not bookmarked', () => {
+  it('renders the bookmark toggle (heart) and no secondary name for en+no-localName', () => {
     render(<DrugCard result={LTR_DRUG} lang="en" onPress={vi.fn()} />)
+    expect(screen.getByTestId('bookmark-toggle')).toBeTruthy()
     // drug-secondary-name absent for en+no-localName
     expect(screen.queryByTestId('drug-secondary-name')).toBeNull()
   })

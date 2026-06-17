@@ -28,7 +28,7 @@ vi.mock('@/hooks/useThemeColors', () => ({
 
 vi.mock('expo-router', () => ({ useRouter: () => ({ replace: vi.fn(), back: vi.fn() }) }))
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
-vi.mock('@/components/LanguageChips', () => ({ LanguageChips: () => null }))
+vi.mock('@/components/LanguageMenu', () => ({ LanguageMenu: () => null }))
 vi.mock('@/lib/haptics', () => ({ hapticNotification: vi.fn() }))
 vi.mock('expo-haptics', () => ({ NotificationFeedbackType: { Error: 'error', Success: 'success' } }))
 

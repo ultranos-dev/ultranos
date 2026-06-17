@@ -5,6 +5,7 @@ import SavedTab from '@/app/(tabs)/saved'
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
 vi.mock('@/store/lang-store', () => ({ useLangStore: (s: (x: { lang: string }) => unknown) => s({ lang: 'en' }), isRtlLang: () => false }))
 vi.mock('@/store/bookmark-store', () => ({ useBookmarkStore: (s: (x: { bookmarks: [] }) => unknown) => s({ bookmarks: [] }) }))
+vi.mock('@/db/migrations', () => ({ getDatabase: () => ({}) }))
 
 describe('SavedTab', () => {
   it('renders the title and an empty state with a browse CTA', () => {

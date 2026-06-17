@@ -50,6 +50,8 @@ const en = {
     },
     overview: {
       summary: 'Summary',
+      brandNames: 'Brand names',
+      doseForms: 'Dose forms',
       usedFor: 'Used for',
       sideEffects: 'Common side effects',
       seekHelp: 'When to seek help',
@@ -146,6 +148,7 @@ const en = {
     reload: 'Reload',
     tabError: 'This section encountered an error',
     poweredBy: 'Ultranos Healthcare Platform',
+    selectLanguage: 'Select language',
   },
   net: {
     offline: "You're offline — showing cached data",

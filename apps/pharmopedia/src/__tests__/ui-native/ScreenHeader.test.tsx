@@ -31,6 +31,6 @@ describe('ScreenHeader', () => {
     const { getByRole } = render(
       <UiKitProvider mode="light" rtl><ScreenHeader title="حفظ" /></UiKitProvider>,
     )
-    expect(flattenStyle(getByRole('header').props.style).fontFamily).toBe('NotoNaskhArabic')
+    expect(flattenStyle(getByRole('header').props.style).fontFamily).toBe('NotoKufiArabic')
   })
 })

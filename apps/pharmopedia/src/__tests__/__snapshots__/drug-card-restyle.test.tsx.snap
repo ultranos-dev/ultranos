@@ -6,14 +6,9 @@ exports[`DrugCard — restyle snapshots > LTR snapshot (lang=en, no bookmark) 1`
   accessibilityRole="button"
   onClick={[MockFunction spy]}
   style={
-    [
-      {
-        "marginBottom": 12,
-      },
-      {
-        "opacity": 1,
-      },
-    ]
+    {
+      "opacity": 1,
+    }
   }
   testID="drug-card-J01CA04"
 >
@@ -62,6 +57,27 @@ exports[`DrugCard — restyle snapshots > LTR snapshot (lang=en, no bookmark) 1`
         >
           Amoxicillin
         </Text>
+        <Pressable
+          accessibilityLabel="drug.addBookmark"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "selected": false,
+            }
+          }
+          hitSlop={10}
+          onClick={[Function]}
+          style={
+            {
+              "padding": 2,
+            }
+          }
+          testID="bookmark-toggle"
+        >
+          <View
+            testID="icon-Heart"
+          />
+        </Pressable>
       </View>
       <Text
         numberOfLines={1}
@@ -74,9 +90,12 @@ exports[`DrugCard — restyle snapshots > LTR snapshot (lang=en, no bookmark) 1`
             },
             {
               "color": "#9ca3af",
+              "textAlign": "left",
+              "writingDirection": "ltr",
             },
           ]
         }
+        testID="drug-meta"
       >
         J01CA04
          · 
@@ -94,14 +113,9 @@ exports[`DrugCard — restyle snapshots > RTL snapshot (lang=ar, with localName)
   accessibilityRole="button"
   onClick={[MockFunction spy]}
   style={
-    [
-      {
-        "marginBottom": 12,
-      },
-      {
-        "opacity": 1,
-      },
-    ]
+    {
+      "opacity": 1,
+    }
   }
   testID="drug-card-C10AA01"
 >
@@ -144,8 +158,9 @@ exports[`DrugCard — restyle snapshots > RTL snapshot (lang=ar, with localName)
                 "color": "#111827",
               },
               {
-                "fontFamily": "NotoNaskhArabic",
+                "fontFamily": "NotoKufiArabic",
                 "textAlign": "right",
+                "writingDirection": "rtl",
               },
             ]
           }
@@ -153,6 +168,27 @@ exports[`DrugCard — restyle snapshots > RTL snapshot (lang=ar, with localName)
         >
           سيمفاستاتين
         </Text>
+        <Pressable
+          accessibilityLabel="drug.addBookmark"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "selected": false,
+            }
+          }
+          hitSlop={10}
+          onClick={[Function]}
+          style={
+            {
+              "padding": 2,
+            }
+          }
+          testID="bookmark-toggle"
+        >
+          <View
+            testID="icon-Heart"
+          />
+        </Pressable>
       </View>
       <Text
         style={
@@ -181,9 +217,12 @@ exports[`DrugCard — restyle snapshots > RTL snapshot (lang=ar, with localName)
             },
             {
               "color": "#9ca3af",
+              "textAlign": "right",
+              "writingDirection": "ltr",
             },
           ]
         }
+        testID="drug-meta"
       >
         C10AA01
          · 

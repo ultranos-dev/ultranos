@@ -40,6 +40,8 @@ const prs: Translations = {
     tabs: { overview: 'مرور', clinical: 'بالینی', formulary: 'فرمولاری', pricing: 'قیمت', enrich: 'ویرایش' },
     overview: {
       summary: 'خلاصه',
+      brandNames: 'نام‌های تجاری',
+      doseForms: 'اشکال دارویی',
       usedFor: 'موارد استفاده',
       sideEffects: 'عوارض جانبی رایج',
       seekHelp: 'زمان مراجعه به پزشک',
@@ -125,6 +127,7 @@ const prs: Translations = {
     reload: 'بارگذاری مجدد',
     tabError: 'این بخش با خطا مواجه شد',
     poweredBy: 'پلتفرم صحی اولترانوس',
+    selectLanguage: 'انتخاب زبان',
   },
   net: {
     offline: 'شما آفلاین هستید — داده‌های ذخیره شده نمایش داده می‌شود',

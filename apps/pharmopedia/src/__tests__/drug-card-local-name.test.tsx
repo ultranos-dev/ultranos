@@ -10,9 +10,11 @@ vi.mock('@/store/lang-store', () => ({
 }))
 
 vi.mock('@/store/bookmark-store', () => ({
-  useBookmarkStore: (s: (state: { isBookmarked: (atcCode: string) => boolean }) => unknown) =>
-    s({ isBookmarked: () => false }),
+  useBookmarkStore: (s: (state: { isBookmarked: (atcCode: string) => boolean; toggle: () => void }) => unknown) =>
+    s({ isBookmarked: () => false, toggle: vi.fn() }),
 }))
+
+vi.mock('@/db/migrations', () => ({ getDatabase: () => ({}) }))
 
 vi.mock('@/hooks/useThemeColors', () => ({
   useThemeColors: () => ({
