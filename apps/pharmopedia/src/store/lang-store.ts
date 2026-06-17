@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import * as SecureStore from 'expo-secure-store'
 import { I18nManager } from 'react-native'
 import * as Updates from 'expo-updates'
+import { i18n } from '@/i18n'
 
 export type Lang = 'en' | 'prs' | 'ps' | 'ar'
 
@@ -44,6 +45,11 @@ export const useLangStore = create<LangState>((set, get) => ({
     const prev = get().lang
     await SecureStore.setItemAsync(LANG_KEY, lang)
     set({ lang })
+    // Apply the language to i18next immediately so translated text updates in
+    // place. Without this, switching between two same-direction languages (e.g.
+    // Dari → Pashto, both RTL) would leave the UI on the previous language,
+    // because the reload below only fires when text direction changes.
+    void i18n.changeLanguage(lang)
     if (isRtlLang(prev) !== isRtlLang(lang)) {
       I18nManager.forceRTL(isRtlLang(lang))
       try {

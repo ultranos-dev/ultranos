@@ -31,12 +31,12 @@ export default function OnboardingScreen() {
               onPress={c.onPress}
               accessibilityRole="button"
               accessibilityLabel={c.title}
-              style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              style={[styles.card, rtl && styles.cardRtl, { backgroundColor: colors.surface, borderColor: colors.border }]}
             >
               <View style={[styles.iconWrap, { backgroundColor: colors.primary50 }]}><Icon size={22} color={colors.primary600} /></View>
               <View style={styles.cardBody}>
-                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{c.title}</Text>
-                <Text style={[styles.cardSub, { color: colors.textSecondary }]}>{c.subtitle}</Text>
+                <Text style={[styles.cardTitle, { color: colors.textPrimary, textAlign: rtl ? 'right' : 'left' }, rtl && styles.arabic]}>{c.title}</Text>
+                <Text style={[styles.cardSub, { color: colors.textSecondary, textAlign: rtl ? 'right' : 'left' }, rtl && styles.arabic]}>{c.subtitle}</Text>
               </View>
               <ChevronRight size={20} color={colors.textMuted} style={rtl ? styles.chevRtl : undefined} />
             </Pressable>
@@ -50,9 +50,11 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   cards: { gap: Spacing[3], marginTop: Spacing[2] },
   card: { flexDirection: 'row', alignItems: 'center', gap: Spacing[3], borderWidth: 1, borderRadius: Radius.lg, padding: Spacing[4] },
+  cardRtl: { flexDirection: 'row-reverse' },
   iconWrap: { width: 44, height: 44, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
   cardBody: { flex: 1, gap: 2 },
   cardTitle: { fontFamily: FontFamily.sansSemibold, fontSize: FontSize.base },
   cardSub: { fontFamily: FontFamily.sans, fontSize: FontSize.sm },
+  arabic: { fontFamily: FontFamily.arabic },
   chevRtl: { transform: [{ scaleX: -1 }] },
 })

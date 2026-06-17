@@ -10,11 +10,13 @@ import { Button } from '@ultranos/ui-kit/native'
 import { FontFamily, FontSize, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { AuthShell } from '@/components/AuthShell'
+import { useLangStore, isRtlLang } from '@/store/lang-store'
 
 export default function LoginScreen() {
   const { t } = useTranslation()
   const colors = useThemeColors()
   const router = useRouter()
+  const rtl = isRtlLang(useLangStore((s) => s.lang))
   const login = useAuthStore((s) => s.login)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -33,11 +35,17 @@ export default function LoginScreen() {
       return
     }
     const session = data.session
-    const meta = (session.user.app_metadata ?? {}) as Record<string, unknown>
+    // Role lives in user_metadata (set at createUser time); app_metadata is a
+    // secondary fallback. This MUST match the Hub's resolution in trpc/init.ts —
+    // reading app_metadata only would default staff to PATIENT and show the
+    // wrong profile. Default to PATIENT only when no role is present anywhere.
+    const userMeta = (session.user.user_metadata ?? {}) as Record<string, unknown>
+    const appMeta = (session.user.app_metadata ?? {}) as Record<string, unknown>
+    const role = ((userMeta['role'] as string) ?? (appMeta['role'] as string) ?? 'PATIENT').toUpperCase()
     login(session.access_token, {
       sub: session.user.id,
-      role: (meta['role'] as string) ?? 'PATIENT',
-      facilityId: meta['facilityId'] as string | undefined,
+      role,
+      facilityId: (userMeta['facilityId'] as string | undefined) ?? (appMeta['facilityId'] as string | undefined),
     })
     router.replace('/(tabs)' as never)
   }
@@ -61,17 +69,17 @@ export default function LoginScreen() {
     <AuthShell title={t('login.memberTitle')} subtitle={t('login.memberSubtitle')} onBack={() => router.back()}>
       {error ? (
         <View style={[styles.banner, { backgroundColor: colors.dangerLight, borderColor: colors.danger }]}>
-          <Text style={[styles.bannerText, { color: colors.dangerDark }]}>{error}</Text>
+          <Text style={[styles.bannerText, { color: colors.dangerDark }, rtl && styles.arabic]}>{error}</Text>
         </View>
       ) : null}
       {resetSent ? (
         <View style={[styles.banner, { backgroundColor: colors.successLight, borderColor: colors.success }]}>
-          <Text style={[styles.bannerText, { color: colors.successDark }]}>{t('login.resetSent')}</Text>
+          <Text style={[styles.bannerText, { color: colors.successDark }, rtl && styles.arabic]}>{t('login.resetSent')}</Text>
         </View>
       ) : null}
 
       <View style={styles.field}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('login.email')}</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }, rtl && styles.arabic]}>{t('login.email')}</Text>
         <TextInput
           testID="email-input"
           style={[styles.input, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surfaceSubtle }]}
@@ -84,7 +92,7 @@ export default function LoginScreen() {
         />
       </View>
       <View style={styles.field}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('login.password')}</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }, rtl && styles.arabic]}>{t('login.password')}</Text>
         <TextInput
           testID="password-input"
           style={[styles.input, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surfaceSubtle }]}
@@ -96,7 +104,7 @@ export default function LoginScreen() {
         />
       </View>
       <Pressable testID="forgot-password-button" onPress={handleForgotPassword} style={styles.forgotRow} accessibilityRole="button" accessibilityLabel={t('login.forgotPassword')}>
-        <Text style={[styles.forgot, { color: colors.textMuted }]}>{t('login.forgotPassword')}</Text>
+        <Text style={[styles.forgot, { color: colors.textMuted }, rtl && styles.arabic]}>{t('login.forgotPassword')}</Text>
       </Pressable>
       <Button testID="login-button" label={t('login.logIn')} variant="primary" loading={loading} onPress={handleSignIn} />
     </AuthShell>
@@ -111,4 +119,5 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderRadius: Radius.md, padding: Spacing[3], fontSize: FontSize.base, fontFamily: FontFamily.sans },
   forgotRow: { alignSelf: 'flex-end' },
   forgot: { fontFamily: FontFamily.sans, fontSize: FontSize.sm },
+  arabic: { fontFamily: FontFamily.arabic },
 })

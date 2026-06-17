@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth-store'
-import { useLangStore } from '@/store/lang-store'
+import { useLangStore, isRtlLang } from '@/store/lang-store'
 import { hapticNotification } from '@/lib/haptics'
 import { NotificationFeedbackType } from 'expo-haptics'
 import { Button } from '@ultranos/ui-kit/native'
@@ -33,6 +33,7 @@ export default function RegisterScreen() {
   const login = useAuthStore((s) => s.login)
   const token = useAuthStore((s) => s.token)
   const lang = useLangStore((s) => s.lang)
+  const rtl = isRtlLang(lang)
 
   const [step, setStep] = useState<Step>('phone')
   const [phone, setPhone] = useState('')
@@ -201,7 +202,7 @@ export default function RegisterScreen() {
       )}
       {error ? (
         <View style={[styles.banner, { backgroundColor: colors.dangerLight, borderColor: colors.danger }]}>
-          <Text style={[styles.bannerText, { color: colors.dangerDark }]}>{error}</Text>
+          <Text style={[styles.bannerText, { color: colors.dangerDark }, rtl && styles.arabic]}>{error}</Text>
         </View>
       ) : null}
 
@@ -217,7 +218,7 @@ export default function RegisterScreen() {
           <TextInput testID="otp-input" style={[styles.input, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surfaceSubtle }]} placeholder={t('register.sixDigitCode')} placeholderTextColor={colors.textMuted} value={otp} onChangeText={(x) => setOtp(x.replace(/[^0-9]/g, ''))} keyboardType="number-pad" maxLength={6} />
           <Button testID="wizard-continue" label={t('signup.continue')} variant="primary" loading={loading} onPress={handleVerifyOtp} />
           <Pressable testID="wizard-resend" onPress={handleResendOtp} disabled={cooldown > 0} accessibilityRole="button" accessibilityLabel={cooldown > 0 ? t('register.resendIn', { seconds: cooldown }) : t('register.resendCode')} style={styles.skip}>
-            <Text style={[styles.skipText, { color: cooldown > 0 ? colors.textMuted : colors.primary500 }]}>
+            <Text style={[styles.skipText, { color: cooldown > 0 ? colors.textMuted : colors.primary500 }, rtl && styles.arabic]}>
               {cooldown > 0 ? t('register.resendIn', { seconds: cooldown }) : t('register.resendCode')}
             </Text>
           </Pressable>
@@ -226,18 +227,18 @@ export default function RegisterScreen() {
 
       {step === 'staff' && (
         <>
-          <Text style={[styles.body, { color: colors.textSecondary }]}>{t('signup.staffMatchBody')}</Text>
+          <Text style={[styles.body, { color: colors.textSecondary }, rtl && styles.arabic]}>{t('signup.staffMatchBody')}</Text>
           <Button testID="wizard-staff-signin" label={t('signup.goToMemberLogin')} variant="primary" loading={loading} onPress={handleStaffSignIn} />
         </>
       )}
 
       {step === 'claim' && (
         <>
-          <Text style={[styles.body, { color: colors.textSecondary }]}>
+          <Text style={[styles.body, { color: colors.textSecondary }, rtl && styles.arabic]}>
             {t('signup.foundAccountBody', { name: discovery?.candidate?.maskedName ?? '' })}
           </Text>
           <View style={styles.field}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('signup.confirmBirthYear')}</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }, rtl && styles.arabic]}>{t('signup.confirmBirthYear')}</Text>
             <TextInput
               testID="claim-birthyear-input"
               style={[styles.input, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surfaceSubtle }]}
@@ -255,9 +256,9 @@ export default function RegisterScreen() {
 
       {step === 'name' && (
         <>
-          <View style={styles.field}><Text style={[styles.label, { color: colors.textSecondary }]}>{t('signup.givenName')}</Text>
+          <View style={styles.field}><Text style={[styles.label, { color: colors.textSecondary }, rtl && styles.arabic]}>{t('signup.givenName')}</Text>
             <TextInput testID="given-name-input" style={[styles.input, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surfaceSubtle }]} value={given} onChangeText={setGiven} /></View>
-          <View style={styles.field}><Text style={[styles.label, { color: colors.textSecondary }]}>{t('signup.familyName')}</Text>
+          <View style={styles.field}><Text style={[styles.label, { color: colors.textSecondary }, rtl && styles.arabic]}>{t('signup.familyName')}</Text>
             <TextInput testID="family-name-input" style={[styles.input, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surfaceSubtle }]} value={family} onChangeText={setFamily} /></View>
           <Button testID="wizard-continue" label={t('signup.continue')} variant="primary" disabled={!given.trim() || !family.trim()} onPress={() => setStep('dob')} />
         </>
@@ -266,7 +267,7 @@ export default function RegisterScreen() {
       {step === 'dob' && (
         <>
           <View style={styles.field}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('signup.dob')}</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }, rtl && styles.arabic]}>{t('signup.dob')}</Text>
             <TextInput
               testID="dob-input"
               style={[styles.input, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surfaceSubtle }]}
@@ -285,7 +286,7 @@ export default function RegisterScreen() {
           <PhotoPicker value={photoUri} onChange={setPhotoUri} />
           <Button testID="wizard-continue" label={t('signup.continue')} variant="primary" onPress={() => setStep('address')} />
           <Pressable testID="wizard-skip" onPress={() => setStep('address')} accessibilityRole="button" accessibilityLabel={t('signup.skip')} style={styles.skip}>
-            <Text style={[styles.skipText, { color: colors.textMuted }]}>{t('signup.skip')}</Text>
+            <Text style={[styles.skipText, { color: colors.textMuted }, rtl && styles.arabic]}>{t('signup.skip')}</Text>
           </Pressable>
         </>
       )}
@@ -294,7 +295,7 @@ export default function RegisterScreen() {
         <>
           <ProvincePicker value={province} onChange={(p) => { setProvince(p); setDistrict('') }} />
           <DistrictPicker province={province} value={district} onChange={setDistrict} />
-          <View style={styles.field}><Text style={[styles.label, { color: colors.textSecondary }]}>{t('signup.village')}</Text>
+          <View style={styles.field}><Text style={[styles.label, { color: colors.textSecondary }, rtl && styles.arabic]}>{t('signup.village')}</Text>
             <TextInput testID="village-input" style={[styles.input, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surfaceSubtle }]} value={village} onChangeText={setVillage} /></View>
           <Button testID="wizard-finish" label={t('signup.finish')} variant="primary" loading={loading} disabled={!province || !district} onPress={handleFinish} />
         </>
@@ -309,6 +310,7 @@ const styles = StyleSheet.create({
   body: { fontFamily: FontFamily.sans, fontSize: FontSize.base, lineHeight: 24 },
   field: { gap: Spacing[1] },
   label: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm },
+  arabic: { fontFamily: FontFamily.arabic },
   input: { borderWidth: 1, borderRadius: Radius.md, padding: Spacing[3], fontSize: FontSize.base, fontFamily: FontFamily.sans },
   skip: { alignSelf: 'center', paddingVertical: Spacing[2] },
   skipText: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm },

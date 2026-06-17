@@ -68,13 +68,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await logout(db)
       return
     }
+    // Role lives in user_metadata (matches the Hub's trpc/init.ts resolution);
+    // app_metadata and the existing in-memory role are fallbacks. Reading
+    // app_metadata only would drop staff to an empty/PATIENT role on refresh.
+    const u = data.session.user
+    const userMeta = (u.user_metadata ?? {}) as Record<string, unknown>
+    const appMeta = (u.app_metadata ?? {}) as Record<string, unknown>
     set({
       token: data.session.access_token,
       isAuthenticated: true,
       user: {
-        sub: data.session.user.id,
-        role: (data.session.user.app_metadata?.['role'] as string) ?? get().user?.role ?? '',
-        facilityId: (data.session.user.app_metadata?.['facilityId'] as string | undefined) ?? get().user?.facilityId,
+        sub: u.id,
+        role: ((userMeta['role'] as string) ?? (appMeta['role'] as string) ?? get().user?.role ?? '').toUpperCase(),
+        facilityId: (userMeta['facilityId'] as string | undefined) ?? (appMeta['facilityId'] as string | undefined) ?? get().user?.facilityId,
       },
     })
   },
