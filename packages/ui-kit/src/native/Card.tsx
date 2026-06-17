@@ -6,15 +6,17 @@ import { useThemeColors, useRtl } from './theme'
 interface CardProps {
   children: ReactNode
   padded?: boolean
+  /** Drop the rounded corners — useful for full-width, edge-to-edge list cards. */
+  square?: boolean
   testID?: string
 }
 
-export function Card({ children, padded = false, testID }: CardProps) {
+export function Card({ children, padded = false, square = false, testID }: CardProps) {
   const colors = useThemeColors()
   return (
     <View
       testID={testID}
-      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.borderSubtle }, padded && styles.padded]}
+      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.borderSubtle, ...(square && { borderRadius: 0 }) }, padded && styles.padded]}
     >
       {children}
     </View>

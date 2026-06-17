@@ -154,7 +154,7 @@ export type ThemeColors = typeof Colors | typeof ColorsDark
  * the app's root _layout.tsx.
  *
  * LTR (en): Manrope (sans) / Public Sans (heading)
- * RTL (ar, prs, ps): NotoNaskhArabic replaces both
+ * RTL (ar, prs, ps): NotoKufiArabic replaces both
  */
 export const FontFamily = {
   sans:         'Manrope',
@@ -163,7 +163,7 @@ export const FontFamily = {
   sansBold:     'Manrope-Bold',
   heading:      'PublicSans',
   headingBold:  'PublicSans-Bold',
-  arabic:       'NotoNaskhArabic',
+  arabic:       'NotoKufiArabic',
 } as const
 
 /** Returns the correct font family for the active locale. */

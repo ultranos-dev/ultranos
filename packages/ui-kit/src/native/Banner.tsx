@@ -2,7 +2,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { Info, AlertTriangle, CheckCircle } from 'lucide-react-native'
 import type { LucideIcon } from 'lucide-react-native'
 import { FontFamily, FontSize, Radius, Spacing } from '../tokens.native'
-import { useThemeColors } from './theme'
+import { useThemeColors, useRtl } from './theme'
 
 type Variant = 'info' | 'warning' | 'error' | 'success'
 
@@ -23,6 +23,7 @@ const DEFAULT_ICON: Record<Variant, LucideIcon> = {
 
 export function Banner({ variant, text, icon, onPress, testID }: BannerProps) {
   const colors = useThemeColors()
+  const rtl = useRtl()
   const palette = {
     info: { bg: colors.infoLight, fg: colors.info },
     warning: { bg: colors.warningLight, fg: colors.warning },
@@ -34,7 +35,7 @@ export function Banner({ variant, text, icon, onPress, testID }: BannerProps) {
   const inner = (
     <View style={[styles.banner, { backgroundColor: palette.bg }]}>
       <Icon size={16} color={palette.fg} />
-      <Text style={[styles.text, { color: palette.fg }]}>{text}</Text>
+      <Text style={[styles.text, { color: palette.fg }, rtl && styles.arabic]}>{text}</Text>
     </View>
   )
   if (onPress) {
@@ -54,4 +55,5 @@ export function Banner({ variant, text, icon, onPress, testID }: BannerProps) {
 const styles = StyleSheet.create({
   banner: { flexDirection: 'row', alignItems: 'center', gap: Spacing[2], borderRadius: Radius.lg, paddingHorizontal: Spacing[3], paddingVertical: Spacing[3] },
   text: { flex: 1, fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm },
+  arabic: { fontFamily: FontFamily.arabic },
 })

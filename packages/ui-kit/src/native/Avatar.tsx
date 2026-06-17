@@ -1,7 +1,7 @@
 import { View, Text, Image, StyleSheet } from 'react-native'
 import { User } from 'lucide-react-native'
 import { FontFamily } from '../tokens.native'
-import { useThemeColors } from './theme'
+import { useThemeColors, useRtl } from './theme'
 
 interface AvatarProps {
   name?: string
@@ -22,6 +22,7 @@ function initials(name?: string): string {
 
 export function Avatar({ name, photoUri, size = 46, testID }: AvatarProps) {
   const colors = useThemeColors()
+  const rtl = useRtl()
   const dim = { width: size, height: size, borderRadius: size / 2 }
   if (photoUri) {
     return <Image testID={testID ?? 'avatar-image'} source={{ uri: photoUri }} accessibilityRole="image" accessibilityLabel={name} style={dim} />
@@ -30,7 +31,7 @@ export function Avatar({ name, photoUri, size = 46, testID }: AvatarProps) {
   return (
     <View testID={testID} accessibilityLabel={name} style={[styles.fallback, dim, { backgroundColor: colors.primary500 }]}>
       {text ? (
-        <Text style={[styles.initials, { color: colors.white, fontSize: size * 0.38 }]}>{text}</Text>
+        <Text style={[styles.initials, { color: colors.white, fontSize: size * 0.38 }, rtl && styles.arabic]}>{text}</Text>
       ) : (
         <User size={size * 0.5} color={colors.white} />
       )}
@@ -41,4 +42,5 @@ export function Avatar({ name, photoUri, size = 46, testID }: AvatarProps) {
 const styles = StyleSheet.create({
   fallback: { alignItems: 'center', justifyContent: 'center' },
   initials: { fontFamily: FontFamily.headingBold },
+  arabic: { fontFamily: FontFamily.arabic },
 })
