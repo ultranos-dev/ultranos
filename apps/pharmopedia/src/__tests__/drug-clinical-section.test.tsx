@@ -39,7 +39,7 @@ describe('clinical section parity', () => {
     expect(getByText(/Infection: 40mg\/kg\/day TID/)).toBeTruthy()
     expect(getByText(/drug.clinical.halfLife: 1.5 h/)).toBeTruthy()
     expect(getByText(/drug.clinical.proteinBinding: 20%/)).toBeTruthy()
-    expect(getByText(/Category B/)).toBeTruthy()
+    expect(getByText('B')).toBeTruthy()
   })
 
   it('omits the clinical section entirely when there is no clinical content', () => {

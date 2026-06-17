@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
 import { View, StyleSheet } from 'react-native'
-import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
+import { Spacing } from '@ultranos/ui-kit/tokens.native'
 import { resolveLocalized } from '@/lib/localized-text'
 import type { Lang } from '@/store/lang-store'
 import { SectionCard } from './SectionCard'
@@ -94,7 +94,7 @@ export function buildDrugSections({ entry, lang, t, isClinical, isPharmacist }: 
     if (e2.adverseEvents?.length) cards.push(<SectionCard key="ae" title={t('drug.clinical.adverseEvents')} items={e2.adverseEvents.map((a) => a.effect)} />)
     if (pkLines.length) cards.push(<SectionCard key="pk" title={t('drug.clinical.pharmacokinetics')} items={pkLines} />)
     if (e2.renalAdjustment) cards.push(<SectionCard key="renal" title={t('drug.clinical.renalAdjustment')} text={e2.renalAdjustment} />)
-    if (e2.pregnancyCategory) cards.push(<SectionCard key="preg" title={t('drug.clinical.pregnancyCategory')} text={`Category ${e2.pregnancyCategory}`} />)
+    if (e2.pregnancyCategory) cards.push(<SectionCard key="preg" title={t('drug.clinical.pregnancyCategory')} text={e2.pregnancyCategory} />)
     if (adminNotes.text) cards.push(<SectionCard key="admin" title={t('drug.clinical.adminNotes')} text={adminNotes.text} isRtl={adminNotes.isLocalized} />)
     if (cards.length) {
       sections.push({ id: 'clinical', title: t('drug.tabs.clinical'), defaultOpen: false, body: <View style={styles.stack}>{cards}</View> })
