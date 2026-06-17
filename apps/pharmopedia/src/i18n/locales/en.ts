@@ -91,7 +91,7 @@ const en = {
       unavailableOffline: 'Photos are unavailable offline.',
     },
     sections: { dispensing: 'Dispensing & formulary' },
-    noDetail: 'Detailed information isn\'t available yet for this medicine.',
+    noDetail: 'Detailed information isn’t available yet for this medicine.',
   },
   pricing: {
     byDistance: 'By distance',
