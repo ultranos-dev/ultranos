@@ -124,6 +124,12 @@ export default function ProfileTab() {
   }
 
   const rtl = isRtlLang(lang)
+  // In RTL, also switch translated text to the Arabic (Noto Kufi) font. `align`
+  // is applied last on every bespoke <Text>, so its fontFamily overrides the
+  // Manrope/Public Sans default from the base style.
+  const align = rtl
+    ? { textAlign: 'right' as const, fontFamily: FontFamily.arabic }
+    : { textAlign: 'left' as const }
 
   // ── Identity header ──────────────────────────────────────────────────────
 
@@ -145,7 +151,7 @@ export default function ProfileTab() {
     const photoUri = profile?.kind === 'patient' ? profile.photoUrl : undefined
 
     return (
-      <View style={[styles.identityHeader, { backgroundColor: colors.surface }]}>
+      <View style={[styles.identityHeader, rtl && styles.rowRtl, { backgroundColor: colors.surface }]}>
         <Avatar
           testID="profile-avatar"
           name={displayName}
@@ -153,10 +159,10 @@ export default function ProfileTab() {
           size={60}
         />
         <View style={styles.identityInfo}>
-          <Text testID="profile-name" style={[styles.displayName, { color: colors.textPrimary }]}>
+          <Text testID="profile-name" style={[styles.displayName, { color: colors.textPrimary }, align]}>
             {displayName}
           </Text>
-          <View style={styles.chipRow}>
+          <View style={[styles.chipRow, rtl && styles.rowRtl]}>
             {profile?.kind === 'patient' && (
               <>
                 <Chip
@@ -264,20 +270,20 @@ export default function ProfileTab() {
       {/* Fallback role section when no profile loaded */}
       {!profile && !loading && (
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.role')}</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }, align]}>{t('profile.role')}</Text>
           {user?.role && <RoleBadge role={user.role} />}
           {user?.facilityId && (
-            <Text style={[styles.facility, { color: colors.textSecondary }]}>{`${t('profile.facility')}: ${user.facilityId}`}</Text>
+            <Text style={[styles.facility, { color: colors.textSecondary }, align]}>{`${t('profile.facility')}: ${user.facilityId}`}</Text>
           )}
         </View>
       )}
 
       {/* ── PRESERVED: Preferences section ───────────────────────────────── */}
       <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.preferences')}</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }, align]}>{t('profile.preferences')}</Text>
 
-        <Text style={[styles.sublabel, { color: colors.textSecondary }]}>{t('profile.language')}</Text>
-        <View style={styles.langRow} accessibilityRole="radiogroup">
+        <Text style={[styles.sublabel, { color: colors.textSecondary }, align]}>{t('profile.language')}</Text>
+        <View style={[styles.langRow, rtl && styles.rowRtl]} accessibilityRole="radiogroup">
           {LANG_OPTIONS.map(({ value, label }) => (
             <Pressable
               key={value}
@@ -288,15 +294,15 @@ export default function ProfileTab() {
               accessibilityLabel={label}
               accessibilityState={{ selected: lang === value }}
             >
-              <Text style={[styles.langText, { color: colors.textSecondary }, lang === value && { color: colors.white, fontFamily: FontFamily.sansSemibold }]}>
+              <Text style={[styles.langText, { color: colors.textSecondary }, lang === value && { color: colors.white, fontFamily: FontFamily.sansSemibold }, value !== 'en' && styles.arabic]}>
                 {label}
               </Text>
             </Pressable>
           ))}
         </View>
 
-        <Text style={[styles.sublabel, { color: colors.textSecondary, marginTop: Spacing[3] }]}>{t('profile.appearance')}</Text>
-        <View style={styles.themeRow} accessibilityRole="radiogroup">
+        <Text style={[styles.sublabel, { color: colors.textSecondary, marginTop: Spacing[3] }, align]}>{t('profile.appearance')}</Text>
+        <View style={[styles.themeRow, rtl && styles.rowRtl]} accessibilityRole="radiogroup">
           {THEME_OPTIONS.map((opt) => (
             <Pressable
               key={opt.value}
@@ -307,7 +313,7 @@ export default function ProfileTab() {
               accessibilityLabel={t(opt.labelKey)}
               accessibilityState={{ selected: themeMode === opt.value }}
             >
-              <Text style={[styles.themeText, { color: colors.textSecondary }, themeMode === opt.value && { color: colors.white }]}>
+              <Text style={[styles.themeText, { color: colors.textSecondary }, themeMode === opt.value && { color: colors.white }, rtl && styles.arabic]}>
                 {t(opt.labelKey)}
               </Text>
             </Pressable>
@@ -317,11 +323,11 @@ export default function ProfileTab() {
 
       {/* ── PRESERVED: Catalog sync section ──────────────────────────────── */}
       <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.catalogSync')}</Text>
-        <Text testID="last-synced-text" style={[styles.value, { color: colors.textSecondary }]}>{formatSyncTime(lastSyncAt)}</Text>
-        <Text style={[styles.value, { color: colors.textSecondary }]}>{t('profile.version', { number: lastVersion })}</Text>
-        {status === 'syncing' && <Text style={[styles.syncing, { color: colors.primary500 }]}>{t('profile.syncing')}</Text>}
-        {status === 'error' && <Text style={[styles.error, { color: colors.danger }]}>{t('profile.syncFailed')}</Text>}
+        <Text style={[styles.label, { color: colors.textSecondary }, align]}>{t('profile.catalogSync')}</Text>
+        <Text testID="last-synced-text" style={[styles.value, { color: colors.textSecondary }, align]}>{formatSyncTime(lastSyncAt)}</Text>
+        <Text style={[styles.value, { color: colors.textSecondary }, align]}>{t('profile.version', { number: lastVersion })}</Text>
+        {status === 'syncing' && <Text style={[styles.syncing, { color: colors.primary500 }, align]}>{t('profile.syncing')}</Text>}
+        {status === 'error' && <Text style={[styles.error, { color: colors.danger }, align]}>{t('profile.syncFailed')}</Text>}
         <Pressable
           testID="sync-now-button"
           style={[styles.button, { backgroundColor: colors.primary500 }, status === 'syncing' && styles.buttonDisabled]}
@@ -331,7 +337,7 @@ export default function ProfileTab() {
           accessibilityLabel={status === 'syncing' ? t('profile.syncing') : t('profile.syncNow')}
           accessibilityState={{ disabled: status === 'syncing' }}
         >
-          <Text style={[styles.buttonText, { color: colors.white }]}>
+          <Text style={[styles.buttonText, { color: colors.white }, rtl && styles.arabic]}>
             {status === 'syncing' ? t('profile.syncing') : t('profile.syncNow')}
           </Text>
         </Pressable>
@@ -342,7 +348,7 @@ export default function ProfileTab() {
           accessibilityRole="button"
           accessibilityLabel={t('profile.showTips')}
         >
-          <Text style={[styles.tipsText, { color: colors.primary500 }]}>{t('profile.showTips')}</Text>
+          <Text style={[styles.tipsText, { color: colors.primary500 }, rtl && styles.arabic]}>{t('profile.showTips')}</Text>
         </Pressable>
       </View>
 
@@ -355,7 +361,7 @@ export default function ProfileTab() {
           accessibilityRole="button"
           accessibilityLabel={t('profile.logout')}
         >
-          <Text style={[styles.buttonText, { color: colors.dangerDark }]}>{t('profile.logout')}</Text>
+          <Text style={[styles.buttonText, { color: colors.dangerDark }, rtl && styles.arabic]}>{t('profile.logout')}</Text>
         </Pressable>
       </View>
 
@@ -441,6 +447,8 @@ const styles = StyleSheet.create({
   facility: { fontSize: FontSize.sm, fontFamily: FontFamily.sans, marginTop: Spacing[1] },
   syncing: { fontSize: FontSize.sm, fontFamily: FontFamily.sans },
   error: { fontSize: FontSize.sm, fontFamily: FontFamily.sans },
+  rowRtl: { flexDirection: 'row-reverse' },
+  arabic: { fontFamily: FontFamily.arabic },
   themeRow: { flexDirection: 'row', gap: Spacing[2] },
   themeBtn: {
     flex: 1,

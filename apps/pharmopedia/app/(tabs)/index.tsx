@@ -37,7 +37,9 @@ export default function HomeTab() {
   const lang = useLangStore((s) => s.lang)
   const rtl = useRtl()
   const role = user?.role ?? 'PATIENT'
-  const labelAlign = { textAlign: rtl ? ('right' as const) : ('left' as const) }
+  const labelAlign = rtl
+    ? { textAlign: 'right' as const, fontFamily: FontFamily.arabic }
+    : { textAlign: 'left' as const }
   const [recalls, setRecalls] = useState<RecallSummary[]>([])
 
   const { query, results, loading, search } = useDrugSearch()
@@ -111,7 +113,7 @@ export default function HomeTab() {
               <Text style={[styles.label, { color: colors.textMuted }, labelAlign]}>{t('home.saved')}</Text>
               {bookmarks.length > 5 && (
                 <Pressable onPress={() => router.push('/(tabs)/saved')} accessibilityRole="button" accessibilityLabel={t('home.seeAll')}>
-                  <Text style={[styles.seeAll, { color: colors.primary500 }]}>{t('home.seeAll')}</Text>
+                  <Text style={[styles.seeAll, { color: colors.primary500 }, rtl && styles.arabic]}>{t('home.seeAll')}</Text>
                 </Pressable>
               )}
             </View>
@@ -138,4 +140,5 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[2] },
   savedHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Spacing[2] },
   seeAll: { fontFamily: FontFamily.sansSemibold, fontSize: FontSize.sm },
+  arabic: { fontFamily: FontFamily.arabic },
 })

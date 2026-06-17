@@ -122,7 +122,7 @@ export default function BrowseTab() {
           <Text style={[styles.classTitle, { color: colors.textPrimary }]} numberOfLines={1}>{selectedClass}</Text>
         </View>
         {drugsLoading && drugs.length === 0 ? (
-          <View>
+          <View style={styles.drugListContent}>
             {[0, 1, 2].map((i) => (
               <SkeletonCard key={i} testID={`skeleton-drug-${i}`} />
             ))}
@@ -179,7 +179,7 @@ export default function BrowseTab() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  drugListContent: { paddingBottom: Spacing[8] },
+  drugListContent: { paddingTop: Spacing[4], paddingBottom: Spacing[8] },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing[8] },
   emptyText: {
     fontSize: FontSize.sm,

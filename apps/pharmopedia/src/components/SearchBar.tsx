@@ -25,8 +25,8 @@ export function SearchBar({ value, onSearch }: Props) {
   }, [value, onSearch])
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-      <View style={[styles.inputRow, { borderColor: colors.border, backgroundColor: colors.surfaceSubtle }]}>
+    <View style={styles.container}>
+      <View style={[styles.inputRow, { borderColor: colors.border, backgroundColor: colors.surface }]}>
         <TextInput
           testID="search-input"
           style={[
@@ -62,7 +62,7 @@ export function SearchBar({ value, onSearch }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: Spacing[3], borderBottomWidth: 1 },
+  container: { width: '100%' },
   inputRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: Radius.md },
   input: {
     flex: 1,

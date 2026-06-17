@@ -149,7 +149,7 @@ export const usersRouter = createTRPCRouter({
       .from('practitioners')
       .select(
         'id, given_name, family_name, telecom_email, telecom_phone, role, status, ' +
-          'org_id, facility_id, qualification_display, identifier_value, license_expiry',
+          'org_id, qualification_display, identifier_value, license_expiry',
       )
       .eq('auth_user_id', ctx.user.sub)
       .maybeSingle()
@@ -182,22 +182,6 @@ export const usersRouter = createTRPCRouter({
       organization = (org as { name?: string } | null)?.name ?? undefined
     }
 
-    // Resolve facility name — fall back to facility_id string if no facilities table
-    let facility: string | undefined
-    if (row.facility_id) {
-      try {
-        const { data: fac } = await ctx.supabase
-          .from('facilities')
-          .select('name')
-          .eq('id', row.facility_id)
-          .maybeSingle()
-        facility = (fac as { name?: string } | null)?.name ?? (row.facility_id as string)
-      } catch {
-        // facilities table does not exist — use the id as an opaque reference
-        facility = row.facility_id as string
-      }
-    }
-
     // telecom_phone is encrypted at write time (enrollChw in admin.ts uses encryptField → "v1:" prefix).
     // Guard on the version prefix so any legacy plaintext value is returned as-is instead of being
     // run through decryptField (which would yield the "[Encrypted Content]" placeholder).
@@ -220,7 +204,6 @@ export const usersRouter = createTRPCRouter({
       email: (row.telecom_email as string | null) ?? undefined,
       phone,
       organization,
-      facility,
       qualificationDisplay: (row.qualification_display as string | null) ?? undefined,
       licenseId: (row.identifier_value as string | null) ?? undefined,
       licenseExpiry: (row.license_expiry as string | null) ?? undefined,
