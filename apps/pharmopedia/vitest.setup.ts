@@ -28,6 +28,7 @@ const STUB_MAP: Record<string, string> = {
   'expo-image-picker': path.join(MOCKS_DIR, 'expo-image-picker.js'),
   'expo-router': path.join(MOCKS_DIR, 'expo-router.js'),
   'expo-secure-store': path.join(MOCKS_DIR, 'expo-secure-store.js'),
+  'expo-crypto': path.join(MOCKS_DIR, 'expo-crypto.js'),
 }
 
 for (const [pkg, mockPath] of Object.entries(STUB_MAP)) {

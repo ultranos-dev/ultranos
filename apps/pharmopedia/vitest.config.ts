@@ -36,6 +36,7 @@ export default defineConfig({
       'expo-updates': path.resolve(__dirname, 'src/__mocks__/expo-updates.js'),
       'expo-status-bar': path.resolve(__dirname, 'src/__mocks__/expo-status-bar.js'),
       'expo-font': path.resolve(__dirname, 'src/__mocks__/expo-font.js'),
+      'expo-crypto': path.resolve(__dirname, 'src/__mocks__/expo-crypto.js'),
       '@react-native-community/netinfo': path.resolve(__dirname, 'src/__mocks__/@react-native-community/netinfo.js'),
     },
   },

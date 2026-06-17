@@ -7,6 +7,7 @@ import { useSyncStore } from '@/store/sync-store'
 import { useLangStore, isRtlLang, type Lang } from '@/store/lang-store'
 import { useThemeStore, type ThemeMode } from '@/store/theme-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useProfile } from '@/hooks/useProfile'
 import { runSync } from '@/sync/catalog-sync'
 import { getDatabase } from '@/db/migrations'
 import { RoleBadge } from '@/components/RoleBadge'
@@ -15,7 +16,14 @@ import { hapticNotification, hapticSelection } from '@/lib/haptics'
 import { NotificationFeedbackType } from 'expo-haptics'
 import { FontFamily, FontSize, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { CoachMark } from '@/components/CoachMark'
-import { CollapsibleScreen } from '@ultranos/ui-kit/native'
+import {
+  CollapsibleScreen,
+  Avatar,
+  CardSection,
+  Chip,
+  Banner,
+  ListRow,
+} from '@ultranos/ui-kit/native'
 
 const LANG_OPTIONS: { value: Lang; label: string }[] = [
   { value: 'en', label: 'EN' },
@@ -29,6 +37,13 @@ const THEME_OPTIONS: { value: ThemeMode; labelKey: string }[] = [
   { value: 'dark', labelKey: 'profile.themeDark' },
   { value: 'system', labelKey: 'profile.themeSystem' },
 ]
+
+/** Join non-empty address parts into one readable string. */
+function formatAddress(addr: { province?: string; district?: string; village?: string } | undefined): string | undefined {
+  if (!addr) return undefined
+  const parts = [addr.village, addr.district, addr.province].filter(Boolean)
+  return parts.length > 0 ? parts.join(', ') : undefined
+}
 
 export default function ProfileTab() {
   const { t } = useTranslation()
@@ -48,6 +63,7 @@ export default function ProfileTab() {
   const themeMode = useThemeStore((s) => s.mode)
   const setThemeMode = useThemeStore((s) => s.setMode)
   const langCoachDismissed = useCoachMarkStore((s) => s.dismissed.has('profile-lang'))
+  const { profile, source, loading } = useProfile()
 
   async function handleSyncNow() {
     if (!token || status === 'syncing') return
@@ -107,18 +123,156 @@ export default function ProfileTab() {
     return t('profile.lastSynced', { date: d.toLocaleDateString(), time: d.toLocaleTimeString() })
   }
 
+  const rtl = isRtlLang(lang)
+
+  // ── Identity header ──────────────────────────────────────────────────────
+
+  function renderIdentityHeader() {
+    if (loading && !profile) {
+      // Lightweight placeholder: avatar circle + name placeholder
+      return (
+        <View style={[styles.identityPlaceholder, { backgroundColor: colors.surface }]}>
+          <View style={[styles.avatarPlaceholder, { backgroundColor: colors.border }]} />
+          <View style={styles.identityPlaceholderText}>
+            <View style={[styles.placeholderLine, { backgroundColor: colors.border, width: 120 }]} />
+            <View style={[styles.placeholderLine, { backgroundColor: colors.border, width: 80, marginTop: Spacing[1] }]} />
+          </View>
+        </View>
+      )
+    }
+
+    const displayName = profile?.displayName ?? ''
+    const photoUri = profile?.kind === 'patient' ? profile.photoUrl : undefined
+
+    return (
+      <View style={[styles.identityHeader, { backgroundColor: colors.surface }]}>
+        <Avatar
+          testID="profile-avatar"
+          name={displayName}
+          photoUri={photoUri}
+          size={60}
+        />
+        <View style={styles.identityInfo}>
+          <Text testID="profile-name" style={[styles.displayName, { color: colors.textPrimary }]}>
+            {displayName}
+          </Text>
+          <View style={styles.chipRow}>
+            {profile?.kind === 'patient' && (
+              <>
+                <Chip
+                  testID="profile-account-type"
+                  label={t('profile.patient')}
+                />
+                <Chip
+                  label={profile.tier === 'PREMIUM' ? t('profile.premium') : t('profile.free')}
+                />
+              </>
+            )}
+            {profile?.kind === 'practitioner' && (
+              <Chip
+                testID="profile-account-type"
+                label={t('profile.practitioner')}
+              />
+            )}
+            {!profile && (
+              <Chip
+                testID="profile-account-type"
+                label={user?.role ?? ''}
+              />
+            )}
+          </View>
+        </View>
+      </View>
+    )
+  }
+
+  // ── Identity cards ────────────────────────────────────────────────────────
+
+  function renderPatientCards() {
+    if (!profile || profile.kind !== 'patient') return null
+    const addressStr = formatAddress(profile.currentAddress)
+
+    const accountRows = [
+      profile.phone ? <ListRow key="phone" label={t('profile.phone')} value={profile.phone} /> : null,
+    ].filter(Boolean)
+
+    const patientRows = [
+      profile.gender ? <ListRow key="gender" label={t('profile.gender')} value={profile.gender} /> : null,
+      profile.age != null ? <ListRow key="age" label={t('profile.age')} value={String(profile.age)} /> : null,
+      profile.bloodGroup ? <ListRow key="blood" label={t('profile.bloodGroup')} value={profile.bloodGroup} /> : null,
+      addressStr ? <ListRow key="addr" label={t('profile.currentAddress')} value={addressStr} /> : null,
+      profile.preferredLanguage ? <ListRow key="lang" label={t('profile.preferredLanguage')} value={profile.preferredLanguage} /> : null,
+    ].filter(Boolean)
+
+    return (
+      <>
+        <CardSection label={t('profile.accountType')}>
+          {accountRows.length > 0 ? accountRows : <ListRow label={t('profile.patient')} value="" />}
+        </CardSection>
+        {patientRows.length > 0 && (
+          <CardSection>
+            {patientRows}
+          </CardSection>
+        )}
+      </>
+    )
+  }
+
+  function renderPractitionerCards() {
+    if (!profile || profile.kind !== 'practitioner') return null
+
+    const rows = [
+      profile.role ? <ListRow key="role" label={t('profile.role')} value={profile.role} /> : null,
+      profile.email ? <ListRow key="email" label={t('profile.email')} value={profile.email} /> : null,
+      profile.phone ? <ListRow key="phone" label={t('profile.phone')} value={profile.phone} /> : null,
+      profile.organization ? <ListRow key="org" label={t('profile.organization')} value={profile.organization} /> : null,
+      profile.facility ? <ListRow key="fac" label={t('profile.facility')} value={profile.facility} /> : null,
+      profile.qualificationDisplay ? <ListRow key="qual" label={t('profile.qualification')} value={profile.qualificationDisplay} /> : null,
+      profile.licenseId ? <ListRow key="lic" label={t('profile.license')} value={profile.licenseId} /> : null,
+      profile.licenseExpiry ? <ListRow key="exp" label={t('profile.licenseExpiry')} value={profile.licenseExpiry} /> : null,
+      profile.status ? <ListRow key="status" label={t('profile.status')} value={profile.status} /> : null,
+    ].filter(Boolean)
+
+    if (rows.length === 0) return null
+    return (
+      <CardSection label={t('profile.accountType')}>
+        {rows}
+      </CardSection>
+    )
+  }
+
   return (
     <CollapsibleScreen title={t('tabs.profile')}>
       <NetStatusBanner />
 
-      <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.role')}</Text>
-        {user?.role && <RoleBadge role={user.role} />}
-        {user?.facilityId && (
-          <Text style={[styles.facility, { color: colors.textSecondary }]}>{t('profile.facility', { id: user.facilityId })}</Text>
-        )}
-      </View>
+      {/* Offline banner */}
+      {source === 'none' && !loading && (
+        <Banner
+          testID="profile-offline-banner"
+          variant="warning"
+          text={t('profile.offlineProfileBanner')}
+        />
+      )}
 
+      {/* Identity header */}
+      {renderIdentityHeader()}
+
+      {/* Identity cards */}
+      {renderPatientCards()}
+      {renderPractitionerCards()}
+
+      {/* Fallback role section when no profile loaded */}
+      {!profile && !loading && (
+        <View style={[styles.section, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.role')}</Text>
+          {user?.role && <RoleBadge role={user.role} />}
+          {user?.facilityId && (
+            <Text style={[styles.facility, { color: colors.textSecondary }]}>{`${t('profile.facility')}: ${user.facilityId}`}</Text>
+          )}
+        </View>
+      )}
+
+      {/* ── PRESERVED: Preferences section ───────────────────────────────── */}
       <View style={[styles.section, { backgroundColor: colors.surface }]}>
         <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.preferences')}</Text>
 
@@ -155,6 +309,7 @@ export default function ProfileTab() {
         </View>
       </View>
 
+      {/* ── PRESERVED: Catalog sync section ──────────────────────────────── */}
       <View style={[styles.section, { backgroundColor: colors.surface }]}>
         <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.catalogSync')}</Text>
         <Text testID="last-synced-text" style={[styles.value, { color: colors.textSecondary }]}>{formatSyncTime(lastSyncAt)}</Text>
@@ -180,6 +335,7 @@ export default function ProfileTab() {
         </Pressable>
       </View>
 
+      {/* ── PRESERVED: Logout section ─────────────────────────────────────── */}
       <View style={[styles.section, { backgroundColor: colors.surface }]}>
         <Pressable
           testID="logout-button"
@@ -189,6 +345,8 @@ export default function ProfileTab() {
           <Text style={[styles.buttonText, { color: colors.dangerDark }]}>{t('profile.logout')}</Text>
         </Pressable>
       </View>
+
+      {/* ── PRESERVED: CoachMarks ─────────────────────────────────────────── */}
       <CoachMark
         markKey="profile-lang"
         hint={t('coach.profileLang')}
@@ -204,6 +362,50 @@ export default function ProfileTab() {
 }
 
 const styles = StyleSheet.create({
+  // Identity header
+  identityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[3],
+    borderRadius: Radius.lg,
+    padding: Spacing[4],
+    marginBottom: Spacing[4],
+  },
+  identityInfo: {
+    flex: 1,
+    gap: Spacing[2],
+  },
+  displayName: {
+    fontSize: FontSize.lg,
+    fontFamily: FontFamily.headingBold,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    gap: Spacing[2],
+    flexWrap: 'wrap',
+  },
+  // Loading placeholder
+  identityPlaceholder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[3],
+    borderRadius: Radius.lg,
+    padding: Spacing[4],
+    marginBottom: Spacing[4],
+  },
+  avatarPlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
+  identityPlaceholderText: {
+    flex: 1,
+  },
+  placeholderLine: {
+    height: 12,
+    borderRadius: Radius.sm,
+  },
+  // Preserved styles
   section: {
     borderRadius: Radius.lg,
     padding: Spacing[4],

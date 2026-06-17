@@ -4,8 +4,10 @@ const BUCKET = 'profile-photos'
 
 /**
  * Upload a local image URI to the profile-photos bucket at {userId}/avatar.<ext>
- * (upsert) and return its public URL. The extension + content type are derived
- * from the fetched blob so HEIC/PNG/JPEG are all served correctly. Throws on error.
+ * (upsert) and return the storage object path (e.g. "u1/avatar.jpeg").
+ * The bucket is private — callers must obtain a signed URL from the Hub API.
+ * The extension + content type are derived from the fetched blob so
+ * HEIC/PNG/JPEG are all handled correctly. Throws on error.
  */
 export async function uploadProfilePhoto(uri: string, userId: string): Promise<string> {
   const res = await fetch(uri)
@@ -18,6 +20,5 @@ export async function uploadProfilePhoto(uri: string, userId: string): Promise<s
     upsert: true,
   })
   if (error) throw error
-  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
-  return data.publicUrl
+  return path
 }

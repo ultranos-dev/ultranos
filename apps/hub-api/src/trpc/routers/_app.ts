@@ -26,6 +26,7 @@ import { duplicateReviewRouter } from './duplicate-review'
 import { patientAdminRouter } from './patient-admin'
 import { appointmentRouter } from './appointment'
 import { drugCatalogRouter } from './drug-catalog'
+import { usersRouter } from './users'
 
 /**
  * Root tRPC router — aggregates all domain routers.
@@ -59,6 +60,7 @@ export const appRouter = createTRPCRouter({
   patientAdmin: patientAdminRouter,
   appointment: appointmentRouter,
   drugCatalog: drugCatalogRouter,
+  users: usersRouter,
 })
 
 export type AppRouter = typeof appRouter

@@ -1,0 +1,2605 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
+<SafeAreaView
+  edges={
+    [
+      "top",
+    ]
+  }
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#f5f5f5",
+      },
+    ]
+  }
+>
+  <View
+    contentContainerStyle={
+      {
+        "paddingBottom": 32,
+      }
+    }
+    onScroll={[Function]}
+    scrollEventThrottle={16}
+  >
+    <View
+      onLayout={[Function]}
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+              "paddingBottom": 8,
+              "paddingHorizontal": 16,
+              "paddingTop": 16,
+            },
+            false,
+            {
+              "paddingBottom": 12,
+              "paddingTop": 8,
+            },
+          ]
+        }
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            style={
+              [
+                {
+                  "fontFamily": "PublicSans-Bold",
+                  "fontSize": 30,
+                },
+                {
+                  "color": "#141c28",
+                  "textAlign": "left",
+                },
+                false,
+              ]
+            }
+          >
+            tabs.profile
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "gap": 16,
+          "paddingHorizontal": 16,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "borderRadius": 12,
+              "flexDirection": "row",
+              "gap": 12,
+              "marginBottom": 16,
+              "padding": 16,
+            },
+            {
+              "backgroundColor": "#fff",
+            },
+          ]
+        }
+      >
+        <View
+          accessibilityLabel="Sara Ahmadi"
+          style={
+            [
+              {
+                "alignItems": "center",
+                "justifyContent": "center",
+              },
+              {
+                "borderRadius": 30,
+                "height": 60,
+                "width": 60,
+              },
+              {
+                "backgroundColor": "#2e9e71",
+              },
+            ]
+          }
+          testID="profile-avatar"
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontFamily": "PublicSans-Bold",
+                },
+                {
+                  "color": "#ffffff",
+                  "fontSize": 22.8,
+                },
+              ]
+            }
+          >
+            SA
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "flex": 1,
+              "gap": 8,
+            }
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontFamily": "PublicSans-Bold",
+                  "fontSize": 20,
+                },
+                {
+                  "color": "#111",
+                },
+              ]
+            }
+            testID="profile-name"
+          >
+            Sara Ahmadi
+          </Text>
+          <View
+            style={
+              {
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": 8,
+              }
+            }
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={
+                {
+                  "selected": false,
+                }
+              }
+              style={
+                [
+                  {
+                    "borderRadius": 9999,
+                    "borderWidth": 1,
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 8,
+                  },
+                  {
+                    "backgroundColor": "#ffffff",
+                    "borderColor": "#d8dde6",
+                  },
+                ]
+              }
+              testID="profile-account-type"
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "fontFamily": "Manrope",
+                      "fontSize": 14,
+                    },
+                    {
+                      "color": "#4a5568",
+                    },
+                    false,
+                  ]
+                }
+              >
+                profile.patient
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={
+                {
+                  "selected": false,
+                }
+              }
+              style={
+                [
+                  {
+                    "borderRadius": 9999,
+                    "borderWidth": 1,
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 8,
+                  },
+                  {
+                    "backgroundColor": "#ffffff",
+                    "borderColor": "#d8dde6",
+                  },
+                ]
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "fontFamily": "Manrope",
+                      "fontSize": 14,
+                    },
+                    {
+                      "color": "#4a5568",
+                    },
+                    false,
+                  ]
+                }
+              >
+                profile.premium
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "marginBottom": 16,
+          }
+        }
+      >
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Bold",
+                "fontSize": 12,
+                "letterSpacing": 0.5,
+                "marginBottom": 8,
+                "marginHorizontal": 4,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "#838e9d",
+                "textAlign": "left",
+              },
+            ]
+          }
+        >
+          profile.accountType
+        </Text>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 12,
+                "borderWidth": 1,
+                "elevation": 1,
+                "overflow": "hidden",
+                "shadowColor": "#000",
+                "shadowOffset": {
+                  "height": 1,
+                  "width": 0,
+                },
+                "shadowOpacity": 0.05,
+                "shadowRadius": 2,
+              },
+              {
+                "backgroundColor": "#ffffff",
+                "borderColor": "#eef1f5",
+              },
+              false,
+            ]
+          }
+        >
+          <View>
+            <View>
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 12,
+                      "minHeight": 48,
+                      "paddingHorizontal": 16,
+                      "paddingVertical": 12,
+                    },
+                    false,
+                  ]
+                }
+              >
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "flex": 1,
+                        "fontFamily": "Manrope-Medium",
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#141c28",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  profile.phone
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "fontFamily": "Manrope",
+                        "fontSize": 14,
+                      },
+                      {
+                        "color": "#838e9d",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  +93700000000
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "marginBottom": 16,
+          }
+        }
+      >
+        <View
+          style={
+            [
+              {
+                "borderRadius": 12,
+                "borderWidth": 1,
+                "elevation": 1,
+                "overflow": "hidden",
+                "shadowColor": "#000",
+                "shadowOffset": {
+                  "height": 1,
+                  "width": 0,
+                },
+                "shadowOpacity": 0.05,
+                "shadowRadius": 2,
+              },
+              {
+                "backgroundColor": "#ffffff",
+                "borderColor": "#eef1f5",
+              },
+              false,
+            ]
+          }
+        >
+          <View>
+            <View>
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 12,
+                      "minHeight": 48,
+                      "paddingHorizontal": 16,
+                      "paddingVertical": 12,
+                    },
+                    false,
+                  ]
+                }
+              >
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "flex": 1,
+                        "fontFamily": "Manrope-Medium",
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#141c28",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  profile.gender
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "fontFamily": "Manrope",
+                        "fontSize": 14,
+                      },
+                      {
+                        "color": "#838e9d",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  female
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View>
+            <View
+              style={
+                [
+                  {
+                    "height": 1,
+                  },
+                  {
+                    "backgroundColor": "#eef1f5",
+                  },
+                ]
+              }
+              testID="card-divider"
+            />
+            <View>
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 12,
+                      "minHeight": 48,
+                      "paddingHorizontal": 16,
+                      "paddingVertical": 12,
+                    },
+                    false,
+                  ]
+                }
+              >
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "flex": 1,
+                        "fontFamily": "Manrope-Medium",
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#141c28",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  profile.age
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "fontFamily": "Manrope",
+                        "fontSize": 14,
+                      },
+                      {
+                        "color": "#838e9d",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  36
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View>
+            <View
+              style={
+                [
+                  {
+                    "height": 1,
+                  },
+                  {
+                    "backgroundColor": "#eef1f5",
+                  },
+                ]
+              }
+              testID="card-divider"
+            />
+            <View>
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 12,
+                      "minHeight": 48,
+                      "paddingHorizontal": 16,
+                      "paddingVertical": 12,
+                    },
+                    false,
+                  ]
+                }
+              >
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "flex": 1,
+                        "fontFamily": "Manrope-Medium",
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#141c28",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  profile.bloodGroup
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "fontFamily": "Manrope",
+                        "fontSize": 14,
+                      },
+                      {
+                        "color": "#838e9d",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  O+
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View>
+            <View
+              style={
+                [
+                  {
+                    "height": 1,
+                  },
+                  {
+                    "backgroundColor": "#eef1f5",
+                  },
+                ]
+              }
+              testID="card-divider"
+            />
+            <View>
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 12,
+                      "minHeight": 48,
+                      "paddingHorizontal": 16,
+                      "paddingVertical": 12,
+                    },
+                    false,
+                  ]
+                }
+              >
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "flex": 1,
+                        "fontFamily": "Manrope-Medium",
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#141c28",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  profile.currentAddress
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "fontFamily": "Manrope",
+                        "fontSize": 14,
+                      },
+                      {
+                        "color": "#838e9d",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  Kabul 1, Kabul
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View>
+            <View
+              style={
+                [
+                  {
+                    "height": 1,
+                  },
+                  {
+                    "backgroundColor": "#eef1f5",
+                  },
+                ]
+              }
+              testID="card-divider"
+            />
+            <View>
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 12,
+                      "minHeight": 48,
+                      "paddingHorizontal": 16,
+                      "paddingVertical": 12,
+                    },
+                    false,
+                  ]
+                }
+              >
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "flex": 1,
+                        "fontFamily": "Manrope-Medium",
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#141c28",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  profile.preferredLanguage
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "fontFamily": "Manrope",
+                        "fontSize": 14,
+                      },
+                      {
+                        "color": "#838e9d",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  prs
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 12,
+              "gap": 8,
+              "marginBottom": 16,
+              "padding": 16,
+            },
+            {
+              "backgroundColor": "#fff",
+            },
+          ]
+        }
+      >
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Bold",
+                "fontSize": 12,
+                "letterSpacing": 0.5,
+                "marginBottom": 4,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "#666",
+              },
+            ]
+          }
+        >
+          profile.preferences
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Medium",
+                "fontSize": 12,
+                "marginBottom": 4,
+              },
+              {
+                "color": "#666",
+              },
+            ]
+          }
+        >
+          profile.language
+        </Text>
+        <View
+          style={
+            {
+              "flexDirection": "row",
+              "flexWrap": "wrap",
+              "gap": 8,
+            }
+          }
+        >
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 4,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                {
+                  "backgroundColor": "#2e9e71",
+                  "borderColor": "#2e9e71",
+                },
+              ]
+            }
+            testID="lang-btn-en"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  {
+                    "color": "#fff",
+                    "fontFamily": "Manrope-SemiBold",
+                  },
+                ]
+              }
+            >
+              EN
+            </Text>
+          </Pressable>
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 4,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="lang-btn-prs"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                ]
+              }
+            >
+              دری
+            </Text>
+          </Pressable>
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 4,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="lang-btn-ps"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                ]
+              }
+            >
+              پښتو
+            </Text>
+          </Pressable>
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 4,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="lang-btn-ar"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                ]
+              }
+            >
+              عربي
+            </Text>
+          </Pressable>
+        </View>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Medium",
+                "fontSize": 12,
+                "marginBottom": 4,
+              },
+              {
+                "color": "#666",
+                "marginTop": 12,
+              },
+            ]
+          }
+        >
+          profile.appearance
+        </Text>
+        <View
+          style={
+            {
+              "flexDirection": "row",
+              "gap": 8,
+            }
+          }
+        >
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "flex": 1,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                {
+                  "backgroundColor": "#2e9e71",
+                  "borderColor": "#2e9e71",
+                },
+              ]
+            }
+            testID="theme-light"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  {
+                    "color": "#fff",
+                  },
+                ]
+              }
+            >
+              profile.themeLight
+            </Text>
+          </Pressable>
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "flex": 1,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="theme-dark"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                ]
+              }
+            >
+              profile.themeDark
+            </Text>
+          </Pressable>
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "flex": 1,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="theme-system"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                ]
+              }
+            >
+              profile.themeSystem
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 12,
+              "gap": 8,
+              "marginBottom": 16,
+              "padding": 16,
+            },
+            {
+              "backgroundColor": "#fff",
+            },
+          ]
+        }
+      >
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Bold",
+                "fontSize": 12,
+                "letterSpacing": 0.5,
+                "marginBottom": 4,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "#666",
+              },
+            ]
+          }
+        >
+          profile.catalogSync
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope",
+                "fontSize": 16,
+              },
+              {
+                "color": "#666",
+              },
+            ]
+          }
+          testID="last-synced-text"
+        >
+          profile.neverSynced
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope",
+                "fontSize": 16,
+              },
+              {
+                "color": "#666",
+              },
+            ]
+          }
+        >
+          profile.version
+        </Text>
+        <Pressable
+          disabled={false}
+          onClick={[Function]}
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 8,
+                "marginTop": 8,
+                "padding": 12,
+              },
+              {
+                "backgroundColor": "#2e9e71",
+              },
+              false,
+            ]
+          }
+          testID="sync-now-button"
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontFamily": "Manrope-SemiBold",
+                  "fontSize": 16,
+                },
+                {
+                  "color": "#fff",
+                },
+              ]
+            }
+          >
+            profile.syncNow
+          </Text>
+        </Pressable>
+        <Pressable
+          onClick={[Function]}
+          style={
+            [
+              {
+                "alignItems": "center",
+                "marginTop": 8,
+              },
+            ]
+          }
+          testID="show-tips-button"
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontFamily": "Manrope-Medium",
+                  "fontSize": 14,
+                },
+                {
+                  "color": "#2e9e71",
+                },
+              ]
+            }
+          >
+            profile.showTips
+          </Text>
+        </Pressable>
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 12,
+              "gap": 8,
+              "marginBottom": 16,
+              "padding": 16,
+            },
+            {
+              "backgroundColor": "#fff",
+            },
+          ]
+        }
+      >
+        <Pressable
+          onClick={[Function]}
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 8,
+                "marginTop": 8,
+                "padding": 12,
+              },
+              {
+                "backgroundColor": "#fee2e2",
+              },
+            ]
+          }
+          testID="logout-button"
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontFamily": "Manrope-SemiBold",
+                  "fontSize": 16,
+                },
+                {
+                  "color": "#991b1b",
+                },
+              ]
+            }
+          >
+            profile.logout
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  </View>
+  <View
+    pointerEvents="none"
+    style={
+      [
+        {
+          "borderBottomWidth": 1,
+          "height": 52,
+          "justifyContent": "center",
+          "left": 0,
+          "paddingHorizontal": 16,
+          "position": "absolute",
+          "right": 0,
+          "top": 0,
+        },
+        {
+          "backgroundColor": "#ffffff",
+          "borderBottomColor": "#eef1f5",
+          "opacity": Value {
+            "_value": 0,
+          },
+        },
+      ]
+    }
+  >
+    <Text
+      numberOfLines={1}
+      style={
+        [
+          {
+            "fontFamily": "Manrope-Bold",
+            "fontSize": 16,
+          },
+          {
+            "color": "#141c28",
+            "textAlign": "left",
+          },
+          false,
+        ]
+      }
+    >
+      tabs.profile
+    </Text>
+  </View>
+</SafeAreaView>
+`;
+
+exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
+<SafeAreaView
+  edges={
+    [
+      "top",
+    ]
+  }
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#f5f5f5",
+      },
+    ]
+  }
+>
+  <View
+    contentContainerStyle={
+      {
+        "paddingBottom": 32,
+      }
+    }
+    onScroll={[Function]}
+    scrollEventThrottle={16}
+  >
+    <View
+      onLayout={[Function]}
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+              "paddingBottom": 8,
+              "paddingHorizontal": 16,
+              "paddingTop": 16,
+            },
+            false,
+            {
+              "paddingBottom": 12,
+              "paddingTop": 8,
+            },
+          ]
+        }
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+            }
+          }
+        >
+          <Text
+            accessibilityRole="header"
+            style={
+              [
+                {
+                  "fontFamily": "PublicSans-Bold",
+                  "fontSize": 30,
+                },
+                {
+                  "color": "#141c28",
+                  "textAlign": "left",
+                },
+                false,
+              ]
+            }
+          >
+            tabs.profile
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "gap": 16,
+          "paddingHorizontal": 16,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "borderRadius": 12,
+              "flexDirection": "row",
+              "gap": 12,
+              "marginBottom": 16,
+              "padding": 16,
+            },
+            {
+              "backgroundColor": "#fff",
+            },
+          ]
+        }
+      >
+        <View
+          accessibilityLabel="Sara Ahmadi"
+          style={
+            [
+              {
+                "alignItems": "center",
+                "justifyContent": "center",
+              },
+              {
+                "borderRadius": 30,
+                "height": 60,
+                "width": 60,
+              },
+              {
+                "backgroundColor": "#2e9e71",
+              },
+            ]
+          }
+          testID="profile-avatar"
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontFamily": "PublicSans-Bold",
+                },
+                {
+                  "color": "#ffffff",
+                  "fontSize": 22.8,
+                },
+              ]
+            }
+          >
+            SA
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "flex": 1,
+              "gap": 8,
+            }
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontFamily": "PublicSans-Bold",
+                  "fontSize": 20,
+                },
+                {
+                  "color": "#111",
+                },
+              ]
+            }
+            testID="profile-name"
+          >
+            Sara Ahmadi
+          </Text>
+          <View
+            style={
+              {
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": 8,
+              }
+            }
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={
+                {
+                  "selected": false,
+                }
+              }
+              style={
+                [
+                  {
+                    "borderRadius": 9999,
+                    "borderWidth": 1,
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 8,
+                  },
+                  {
+                    "backgroundColor": "#ffffff",
+                    "borderColor": "#d8dde6",
+                  },
+                ]
+              }
+              testID="profile-account-type"
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "fontFamily": "Manrope",
+                      "fontSize": 14,
+                    },
+                    {
+                      "color": "#4a5568",
+                    },
+                    false,
+                  ]
+                }
+              >
+                profile.patient
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={
+                {
+                  "selected": false,
+                }
+              }
+              style={
+                [
+                  {
+                    "borderRadius": 9999,
+                    "borderWidth": 1,
+                    "paddingHorizontal": 12,
+                    "paddingVertical": 8,
+                  },
+                  {
+                    "backgroundColor": "#ffffff",
+                    "borderColor": "#d8dde6",
+                  },
+                ]
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "fontFamily": "Manrope",
+                      "fontSize": 14,
+                    },
+                    {
+                      "color": "#4a5568",
+                    },
+                    false,
+                  ]
+                }
+              >
+                profile.premium
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "marginBottom": 16,
+          }
+        }
+      >
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Bold",
+                "fontSize": 12,
+                "letterSpacing": 0.5,
+                "marginBottom": 8,
+                "marginHorizontal": 4,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "#838e9d",
+                "textAlign": "left",
+              },
+            ]
+          }
+        >
+          profile.accountType
+        </Text>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 12,
+                "borderWidth": 1,
+                "elevation": 1,
+                "overflow": "hidden",
+                "shadowColor": "#000",
+                "shadowOffset": {
+                  "height": 1,
+                  "width": 0,
+                },
+                "shadowOpacity": 0.05,
+                "shadowRadius": 2,
+              },
+              {
+                "backgroundColor": "#ffffff",
+                "borderColor": "#eef1f5",
+              },
+              false,
+            ]
+          }
+        >
+          <View>
+            <View>
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 12,
+                      "minHeight": 48,
+                      "paddingHorizontal": 16,
+                      "paddingVertical": 12,
+                    },
+                    false,
+                  ]
+                }
+              >
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "flex": 1,
+                        "fontFamily": "Manrope-Medium",
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#141c28",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  profile.phone
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "fontFamily": "Manrope",
+                        "fontSize": 14,
+                      },
+                      {
+                        "color": "#838e9d",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  +93700000000
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "marginBottom": 16,
+          }
+        }
+      >
+        <View
+          style={
+            [
+              {
+                "borderRadius": 12,
+                "borderWidth": 1,
+                "elevation": 1,
+                "overflow": "hidden",
+                "shadowColor": "#000",
+                "shadowOffset": {
+                  "height": 1,
+                  "width": 0,
+                },
+                "shadowOpacity": 0.05,
+                "shadowRadius": 2,
+              },
+              {
+                "backgroundColor": "#ffffff",
+                "borderColor": "#eef1f5",
+              },
+              false,
+            ]
+          }
+        >
+          <View>
+            <View>
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 12,
+                      "minHeight": 48,
+                      "paddingHorizontal": 16,
+                      "paddingVertical": 12,
+                    },
+                    false,
+                  ]
+                }
+              >
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "flex": 1,
+                        "fontFamily": "Manrope-Medium",
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#141c28",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  profile.gender
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "fontFamily": "Manrope",
+                        "fontSize": 14,
+                      },
+                      {
+                        "color": "#838e9d",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  female
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View>
+            <View
+              style={
+                [
+                  {
+                    "height": 1,
+                  },
+                  {
+                    "backgroundColor": "#eef1f5",
+                  },
+                ]
+              }
+              testID="card-divider"
+            />
+            <View>
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 12,
+                      "minHeight": 48,
+                      "paddingHorizontal": 16,
+                      "paddingVertical": 12,
+                    },
+                    false,
+                  ]
+                }
+              >
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "flex": 1,
+                        "fontFamily": "Manrope-Medium",
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#141c28",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  profile.age
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "fontFamily": "Manrope",
+                        "fontSize": 14,
+                      },
+                      {
+                        "color": "#838e9d",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  36
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View>
+            <View
+              style={
+                [
+                  {
+                    "height": 1,
+                  },
+                  {
+                    "backgroundColor": "#eef1f5",
+                  },
+                ]
+              }
+              testID="card-divider"
+            />
+            <View>
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 12,
+                      "minHeight": 48,
+                      "paddingHorizontal": 16,
+                      "paddingVertical": 12,
+                    },
+                    false,
+                  ]
+                }
+              >
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "flex": 1,
+                        "fontFamily": "Manrope-Medium",
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#141c28",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  profile.bloodGroup
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "fontFamily": "Manrope",
+                        "fontSize": 14,
+                      },
+                      {
+                        "color": "#838e9d",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  O+
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View>
+            <View
+              style={
+                [
+                  {
+                    "height": 1,
+                  },
+                  {
+                    "backgroundColor": "#eef1f5",
+                  },
+                ]
+              }
+              testID="card-divider"
+            />
+            <View>
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 12,
+                      "minHeight": 48,
+                      "paddingHorizontal": 16,
+                      "paddingVertical": 12,
+                    },
+                    false,
+                  ]
+                }
+              >
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "flex": 1,
+                        "fontFamily": "Manrope-Medium",
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#141c28",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  profile.currentAddress
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "fontFamily": "Manrope",
+                        "fontSize": 14,
+                      },
+                      {
+                        "color": "#838e9d",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  Kabul 1, Kabul
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View>
+            <View
+              style={
+                [
+                  {
+                    "height": 1,
+                  },
+                  {
+                    "backgroundColor": "#eef1f5",
+                  },
+                ]
+              }
+              testID="card-divider"
+            />
+            <View>
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 12,
+                      "minHeight": 48,
+                      "paddingHorizontal": 16,
+                      "paddingVertical": 12,
+                    },
+                    false,
+                  ]
+                }
+              >
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "flex": 1,
+                        "fontFamily": "Manrope-Medium",
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#141c28",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  profile.preferredLanguage
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={
+                    [
+                      {
+                        "fontFamily": "Manrope",
+                        "fontSize": 14,
+                      },
+                      {
+                        "color": "#838e9d",
+                        "textAlign": "left",
+                      },
+                      false,
+                    ]
+                  }
+                >
+                  prs
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 12,
+              "gap": 8,
+              "marginBottom": 16,
+              "padding": 16,
+            },
+            {
+              "backgroundColor": "#fff",
+            },
+          ]
+        }
+      >
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Bold",
+                "fontSize": 12,
+                "letterSpacing": 0.5,
+                "marginBottom": 4,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "#666",
+              },
+            ]
+          }
+        >
+          profile.preferences
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Medium",
+                "fontSize": 12,
+                "marginBottom": 4,
+              },
+              {
+                "color": "#666",
+              },
+            ]
+          }
+        >
+          profile.language
+        </Text>
+        <View
+          style={
+            {
+              "flexDirection": "row",
+              "flexWrap": "wrap",
+              "gap": 8,
+            }
+          }
+        >
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 4,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="lang-btn-en"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                ]
+              }
+            >
+              EN
+            </Text>
+          </Pressable>
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 4,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="lang-btn-prs"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                ]
+              }
+            >
+              دری
+            </Text>
+          </Pressable>
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 4,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="lang-btn-ps"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                ]
+              }
+            >
+              پښتو
+            </Text>
+          </Pressable>
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 4,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                {
+                  "backgroundColor": "#2e9e71",
+                  "borderColor": "#2e9e71",
+                },
+              ]
+            }
+            testID="lang-btn-ar"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  {
+                    "color": "#fff",
+                    "fontFamily": "Manrope-SemiBold",
+                  },
+                ]
+              }
+            >
+              عربي
+            </Text>
+          </Pressable>
+        </View>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Medium",
+                "fontSize": 12,
+                "marginBottom": 4,
+              },
+              {
+                "color": "#666",
+                "marginTop": 12,
+              },
+            ]
+          }
+        >
+          profile.appearance
+        </Text>
+        <View
+          style={
+            {
+              "flexDirection": "row",
+              "gap": 8,
+            }
+          }
+        >
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "flex": 1,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                {
+                  "backgroundColor": "#2e9e71",
+                  "borderColor": "#2e9e71",
+                },
+              ]
+            }
+            testID="theme-light"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  {
+                    "color": "#fff",
+                  },
+                ]
+              }
+            >
+              profile.themeLight
+            </Text>
+          </Pressable>
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "flex": 1,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="theme-dark"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                ]
+              }
+            >
+              profile.themeDark
+            </Text>
+          </Pressable>
+          <Pressable
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "flex": 1,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="theme-system"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                ]
+              }
+            >
+              profile.themeSystem
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 12,
+              "gap": 8,
+              "marginBottom": 16,
+              "padding": 16,
+            },
+            {
+              "backgroundColor": "#fff",
+            },
+          ]
+        }
+      >
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Bold",
+                "fontSize": 12,
+                "letterSpacing": 0.5,
+                "marginBottom": 4,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "#666",
+              },
+            ]
+          }
+        >
+          profile.catalogSync
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope",
+                "fontSize": 16,
+              },
+              {
+                "color": "#666",
+              },
+            ]
+          }
+          testID="last-synced-text"
+        >
+          profile.neverSynced
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope",
+                "fontSize": 16,
+              },
+              {
+                "color": "#666",
+              },
+            ]
+          }
+        >
+          profile.version
+        </Text>
+        <Pressable
+          disabled={false}
+          onClick={[Function]}
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 8,
+                "marginTop": 8,
+                "padding": 12,
+              },
+              {
+                "backgroundColor": "#2e9e71",
+              },
+              false,
+            ]
+          }
+          testID="sync-now-button"
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontFamily": "Manrope-SemiBold",
+                  "fontSize": 16,
+                },
+                {
+                  "color": "#fff",
+                },
+              ]
+            }
+          >
+            profile.syncNow
+          </Text>
+        </Pressable>
+        <Pressable
+          onClick={[Function]}
+          style={
+            [
+              {
+                "alignItems": "center",
+                "marginTop": 8,
+              },
+            ]
+          }
+          testID="show-tips-button"
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontFamily": "Manrope-Medium",
+                  "fontSize": 14,
+                },
+                {
+                  "color": "#2e9e71",
+                },
+              ]
+            }
+          >
+            profile.showTips
+          </Text>
+        </Pressable>
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 12,
+              "gap": 8,
+              "marginBottom": 16,
+              "padding": 16,
+            },
+            {
+              "backgroundColor": "#fff",
+            },
+          ]
+        }
+      >
+        <Pressable
+          onClick={[Function]}
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 8,
+                "marginTop": 8,
+                "padding": 12,
+              },
+              {
+                "backgroundColor": "#fee2e2",
+              },
+            ]
+          }
+          testID="logout-button"
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontFamily": "Manrope-SemiBold",
+                  "fontSize": 16,
+                },
+                {
+                  "color": "#991b1b",
+                },
+              ]
+            }
+          >
+            profile.logout
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  </View>
+  <View
+    pointerEvents="none"
+    style={
+      [
+        {
+          "borderBottomWidth": 1,
+          "height": 52,
+          "justifyContent": "center",
+          "left": 0,
+          "paddingHorizontal": 16,
+          "position": "absolute",
+          "right": 0,
+          "top": 0,
+        },
+        {
+          "backgroundColor": "#ffffff",
+          "borderBottomColor": "#eef1f5",
+          "opacity": Value {
+            "_value": 0,
+          },
+        },
+      ]
+    }
+  >
+    <Text
+      numberOfLines={1}
+      style={
+        [
+          {
+            "fontFamily": "Manrope-Bold",
+            "fontSize": 16,
+          },
+          {
+            "color": "#141c28",
+            "textAlign": "left",
+          },
+          false,
+        ]
+      }
+    >
+      tabs.profile
+    </Text>
+  </View>
+</SafeAreaView>
+`;

@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import type * as SQLite from 'expo-sqlite'
 import { clearCatalog } from '@/db/drug-catalog'
 import { clearBookmarks } from '@/db/bookmarks'
+import { clearProfileCache } from '@/lib/profile-cache'
+import { clearCacheKey } from '@/lib/secure-crypto'
 import { useSyncStore } from './sync-store'
 import { useBookmarkStore } from './bookmark-store'
 import { supabase } from '@/lib/supabase'
@@ -50,6 +52,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useBookmarkStore.getState().reset()
     await clearCatalog(db)
     await clearBookmarks(db)
+    await clearProfileCache(db)
+    await clearCacheKey()
   },
 
   initialize: () => {

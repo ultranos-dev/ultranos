@@ -1,5 +1,5 @@
 export const DB_NAME = 'pharmopedia.db'
-export const SCHEMA_VERSION = 2
+export const SCHEMA_VERSION = 3
 
 /**
  * Full DDL for the Pharmopedia local database.
@@ -54,5 +54,14 @@ export const CREATE_BOOKMARKS_SQL = `
     inn_name          TEXT NOT NULL,
     therapeutic_class TEXT,
     saved_at          TEXT NOT NULL
+  );
+`
+
+export const CREATE_PROFILE_CACHE_SQL = `
+  CREATE TABLE IF NOT EXISTS profile_cache (
+    sub        TEXT PRIMARY KEY,
+    ciphertext TEXT NOT NULL,
+    iv         TEXT NOT NULL,
+    updated_at TEXT NOT NULL
   );
 `

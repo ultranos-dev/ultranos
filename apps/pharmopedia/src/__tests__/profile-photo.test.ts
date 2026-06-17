@@ -11,12 +11,19 @@ import { uploadProfilePhoto } from '@/lib/profile-photo'
 describe('uploadProfilePhoto', () => {
   beforeEach(() => { upload.mockClear(); getPublicUrl.mockClear() })
 
-  it('uploads to {userId}/avatar.<ext> (from blob type) and returns the public url', async () => {
-    const url = await uploadProfilePhoto('file:///x/photo.jpg', 'u1')
+  it('uploads to {userId}/avatar.<ext> (from blob type) and returns the object path', async () => {
+    const result = await uploadProfilePhoto('file:///x/photo.jpg', 'u1')
     expect(upload).toHaveBeenCalled()
     expect(upload.mock.calls[0][0]).toBe('u1/avatar.jpeg')
     expect((upload.mock.calls[0][2] as { contentType: string }).contentType).toBe('image/jpeg')
-    expect(url).toBe('https://cdn/u1/avatar.jpg')
+    // bucket is now private — must return the storage object path, not a public URL
+    expect(result).toBe('u1/avatar.jpeg')
+    expect(result).not.toMatch(/^https?:\/\//)
+  })
+
+  it('does not call getPublicUrl after upload', async () => {
+    await uploadProfilePhoto('file:///x/photo.jpg', 'u1')
+    expect(getPublicUrl).not.toHaveBeenCalled()
   })
 
   it('throws when the storage upload errors', async () => {

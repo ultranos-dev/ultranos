@@ -19,7 +19,7 @@ const h = vi.hoisted(() => ({
   verifyOtp: vi.fn(async () => ({ data: { session: { access_token: 'tok', user: { id: 'u1', app_metadata: {} } } }, error: null })),
   updateUser: vi.fn(async () => ({ data: {}, error: null })),
   signOut: vi.fn(async () => ({ error: null })),
-  uploadProfilePhoto: vi.fn(async () => 'https://cdn/u1/avatar.jpg'),
+  uploadProfilePhoto: vi.fn(async () => 'u1/avatar.jpg'),
 }))
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string, p?: Record<string, unknown>) => (p ? `${k}:${JSON.stringify(p)}` : k) }) }))
 vi.mock('expo-router', () => ({ useRouter: () => ({ replace: h.replace }) }))
@@ -123,10 +123,11 @@ describe('Signup wizard', () => {
     await press(getByTestId, 'wizard-finish')
     await waitFor(() => expect(h.uploadProfilePhoto).toHaveBeenCalledWith('file:///test.jpg', 'u1'))
     const arg = h.updateUser.mock.calls[0][0] as { data: { photo_url?: string } }
-    expect(arg.data.photo_url).toBe('https://cdn/u1/avatar.jpg')
+    // bucket is now private — photo_url stores the object path, not a public URL
+    expect(arg.data.photo_url).toBe('u1/avatar.jpg')
     await waitFor(() => expect(mockRegisterFromSession).toHaveBeenCalledWith('tok', expect.objectContaining({
       firstName: 'Sara',
-      photoUrl: 'https://cdn/u1/avatar.jpg',
+      photoUrl: 'u1/avatar.jpg',
     })))
   })
 
