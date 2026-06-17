@@ -73,12 +73,13 @@ describe('getDrugByAtcCodeApi', () => {
     const { hubFetch } = jest.requireMock('@/lib/hub-fetch')
     hubFetch.mockResolvedValueOnce(makeResponse({ atcCode: 'J01CA04', innName: 'Amoxicillin' }))
 
-    const result = await getDrugByAtcCodeApi('J01CA04', TOKEN)
+    const result = await getDrugByAtcCodeApi('J01CA04', 'en', TOKEN)
 
     expect(hubFetch).toHaveBeenCalledTimes(1)
     const [url, init] = hubFetch.mock.calls[0]
     expect(url).toContain('drugCatalog.getByAtcCode')
     expect(url).toContain('J01CA04')
+    expect(url).toContain('en')
     expect(init.method).toBe('GET')
     expect((result as any).atcCode).toBe('J01CA04')
   })

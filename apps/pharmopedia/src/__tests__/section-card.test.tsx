@@ -57,4 +57,26 @@ describe('SectionCard', () => {
     const title = screen.getByText('Dosing')
     expect(title.props.accessibilityRole).toBe('header')
   })
+
+  it('snapshot — danger severity (title + items)', () => {
+    const { toJSON } = render(
+      <SectionCard
+        title="Contraindications"
+        items={['Penicillin allergy', 'Severe renal impairment']}
+        severity="danger"
+        testID="snap-danger"
+      />
+    )
+    expect(toJSON()).toMatchSnapshot()
+  })
+
+  it('snapshot — default severity (title + text)', () => {
+    const { toJSON } = render(
+      <SectionCard
+        title="Mechanism of Action"
+        text="Inhibits bacterial cell wall synthesis by binding to penicillin-binding proteins."
+      />
+    )
+    expect(toJSON()).toMatchSnapshot()
+  })
 })

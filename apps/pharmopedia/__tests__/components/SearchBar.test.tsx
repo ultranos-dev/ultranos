@@ -1,29 +1,23 @@
 import React from 'react'
-import { render, fireEvent, act } from '@testing-library/react-native'
+import { render, fireEvent } from '@testing-library/react-native'
 import { SearchBar } from '@/components/SearchBar'
 
-beforeEach(() => jest.useFakeTimers())
-afterEach(() => jest.useRealTimers())
-
 describe('SearchBar', () => {
-  it('calls onSearch after 300ms debounce', () => {
+  it('calls onSearch immediately when text changes', () => {
     const onSearch = jest.fn()
     const { getByTestId } = render(
-      <SearchBar value="" onSearch={onSearch} lang="en" onLangChange={() => {}} />
+      <SearchBar value="" onSearch={onSearch} />
     )
     fireEvent.changeText(getByTestId('search-input'), 'amox')
-    expect(onSearch).not.toHaveBeenCalled()
-    act(() => jest.advanceTimersByTime(300))
     expect(onSearch).toHaveBeenCalledWith('amox')
   })
 
-  it('does not call onSearch before debounce expires', () => {
+  it('calls onSearch with new text on each change', () => {
     const onSearch = jest.fn()
     const { getByTestId } = render(
-      <SearchBar value="" onSearch={onSearch} lang="en" onLangChange={() => {}} />
+      <SearchBar value="" onSearch={onSearch} />
     )
     fireEvent.changeText(getByTestId('search-input'), 'para')
-    act(() => jest.advanceTimersByTime(100))
-    expect(onSearch).not.toHaveBeenCalled()
+    expect(onSearch).toHaveBeenCalledWith('para')
   })
 })

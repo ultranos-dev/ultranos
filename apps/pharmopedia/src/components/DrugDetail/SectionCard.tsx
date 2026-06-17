@@ -28,7 +28,7 @@ export function SectionCard({ title, text, items, severity = 'none', isRtl, test
     danger: colors.danger,
     warning: colors.warning,
     info: colors.border,
-    none: colors.border,
+    none: undefined,
   }
 
   const hasSeverity = severity !== 'none'
@@ -39,12 +39,10 @@ export function SectionCard({ title, text, items, severity = 'none', isRtl, test
       testID={testID}
       style={[
         styles.section,
+        { backgroundColor: colors.surface, borderColor: colors.border },
         hasSeverity && {
           backgroundColor: severityBg[severity],
-          borderWidth: 1,
           borderColor: severityBorder[severity],
-          borderRadius: Radius.md,
-          padding: Spacing[3],
         },
       ]}
     >
@@ -72,6 +70,9 @@ export function SectionCard({ title, text, items, severity = 'none', isRtl, test
 const styles = StyleSheet.create({
   section: {
     marginBottom: Spacing[5],
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    padding: Spacing[4],
   },
   sectionTitle: {
     fontSize: FontSize.sm,

@@ -3,7 +3,7 @@ import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from '
 import * as Location from 'expo-location'
 import { useTranslation } from 'react-i18next'
 import { MapPinOff } from 'lucide-react-native'
-import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
+import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
 import { getDrugPricesApi } from '@/api/drug-catalog'
 import { useAuthStore } from '@/store/auth-store'
 import { PriceCard } from '@/components/PriceCard'
@@ -104,12 +104,12 @@ export function PricingTab({ atcCode }: { atcCode: string }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  sortRow: { flexDirection: 'row', padding: 12, gap: 8, borderBottomWidth: 1 },
-  sortBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 6, borderWidth: 1 },
-  sortText: { fontSize: 14 },
-  errorBox: { padding: 24, alignItems: 'center' },
-  errorText: { textAlign: 'center', marginBottom: 12 },
-  retryBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6 },
+  sortRow: { flexDirection: 'row', padding: Spacing[3], gap: Spacing[2], borderBottomWidth: 1 },
+  sortBtn: { paddingHorizontal: Spacing[4], paddingVertical: Spacing[2], borderRadius: Radius.md, borderWidth: 1 },
+  sortText: { fontSize: FontSize.sm },
+  errorBox: { padding: Spacing[6], alignItems: 'center' },
+  errorText: { textAlign: 'center', marginBottom: Spacing[3] },
+  retryBtn: { paddingHorizontal: Spacing[4], paddingVertical: Spacing[2], borderRadius: Radius.md },
   retryText: { fontWeight: '600' },
   emptyState: {
     flex: 1,

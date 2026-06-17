@@ -2,7 +2,7 @@ import { ScrollView, View, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import type { DrugEntryTier3 } from '@ultranos/shared-types'
 import { Pill } from 'lucide-react-native'
-import { FontFamily, FontSize, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
+import { FontFamily, FontSize, LineHeight, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 
 type FormularyStatus = 'on_formulary' | 'off_formulary' | 'restricted'
@@ -83,16 +83,16 @@ export function FormularyTab({ entry }: { entry: DrugEntryTier3 }) {
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { padding: Spacing[4] },
-  section: { marginBottom: Spacing[5] },
+  section: { marginBottom: Spacing[4] },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: FontSize.xs,
     fontFamily: FontFamily.sansBold,
     marginBottom: Spacing[2],
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  text: { fontSize: 15, fontFamily: FontFamily.sans, lineHeight: 22 },
-  muted: { fontSize: 14, fontFamily: FontFamily.sans },
+  text: { fontSize: FontSize.base, fontFamily: FontFamily.sans, lineHeight: LineHeight.normal },
+  muted: { fontSize: FontSize.sm, fontFamily: FontFamily.sans },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
@@ -110,9 +110,9 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     textAlign: 'center',
   },
-  statusBadge: { alignSelf: 'flex-start' as const, paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.md },
-  statusText: { fontSize: 14, fontFamily: FontFamily.sansBold },
-  substituteCode: { fontSize: 14, fontFamily: FontFamily.sansMedium, marginBottom: 4 },
+  statusBadge: { alignSelf: 'flex-start' as const, paddingHorizontal: Spacing[3], paddingVertical: Spacing[2], borderRadius: Radius.md },
+  statusText: { fontSize: FontSize.sm, fontFamily: FontFamily.sansBold },
+  substituteCode: { fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium, marginBottom: Spacing[1] },
   recallCard: {
     padding: Spacing[3],
     marginBottom: Spacing[2],
@@ -120,6 +120,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: undefined, // will be set inline
   },
-  recallDescription: { fontSize: 14, fontFamily: FontFamily.sansSemibold, marginBottom: 2 },
-  recallMeta: { fontSize: 12, fontFamily: FontFamily.sans },
+  recallDescription: { fontSize: FontSize.sm, fontFamily: FontFamily.sansSemibold, marginBottom: Spacing[1] },
+  recallMeta: { fontSize: FontSize.xs, fontFamily: FontFamily.sans },
 })

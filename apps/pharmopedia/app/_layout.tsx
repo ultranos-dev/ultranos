@@ -105,7 +105,6 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
             <Stack.Screen name="(tabs)" options={{ animation: 'fade', animationDuration: 250 }} />
             <Stack.Screen name="drug/[atcCode]" options={{ headerShown: true, title: '', animation: 'slide_from_bottom', animationDuration: 300 }} />
-            <Stack.Screen name="search" options={{ headerShown: true, title: '', animation: 'slide_from_bottom', animationDuration: 300 }} />
           </Stack>
         </ErrorBoundary>
       </UiKitProvider>

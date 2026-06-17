@@ -1,0 +1,140 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SectionCard > snapshot — danger severity (title + items) 1`] = `
+<View
+  style={
+    [
+      {
+        "borderRadius": 8,
+        "borderWidth": 1,
+        "marginBottom": 20,
+        "padding": 16,
+      },
+      {
+        "backgroundColor": "#fff",
+        "borderColor": "#e5e5e5",
+      },
+      {
+        "backgroundColor": "#fee2e2",
+        "borderColor": "#dc2626",
+      },
+    ]
+  }
+  testID="snap-danger"
+>
+  <Text
+    accessibilityRole="header"
+    style={
+      [
+        {
+          "fontFamily": "Manrope-Bold",
+          "fontSize": 14,
+          "letterSpacing": 0.5,
+          "marginBottom": 4,
+          "textTransform": "uppercase",
+        },
+        {
+          "color": "#666",
+        },
+      ]
+    }
+  >
+    Contraindications
+  </Text>
+  <Text
+    style={
+      [
+        {
+          "fontFamily": "Manrope",
+          "fontSize": 16,
+          "lineHeight": 22,
+        },
+        {
+          "color": "#111",
+        },
+        undefined,
+      ]
+    }
+  >
+    •
+     
+    Penicillin allergy
+  </Text>
+  <Text
+    style={
+      [
+        {
+          "fontFamily": "Manrope",
+          "fontSize": 16,
+          "lineHeight": 22,
+        },
+        {
+          "color": "#111",
+        },
+        undefined,
+      ]
+    }
+  >
+    •
+     
+    Severe renal impairment
+  </Text>
+</View>
+`;
+
+exports[`SectionCard > snapshot — default severity (title + text) 1`] = `
+<View
+  style={
+    [
+      {
+        "borderRadius": 8,
+        "borderWidth": 1,
+        "marginBottom": 20,
+        "padding": 16,
+      },
+      {
+        "backgroundColor": "#fff",
+        "borderColor": "#e5e5e5",
+      },
+      false,
+    ]
+  }
+>
+  <Text
+    accessibilityRole="header"
+    style={
+      [
+        {
+          "fontFamily": "Manrope-Bold",
+          "fontSize": 14,
+          "letterSpacing": 0.5,
+          "marginBottom": 4,
+          "textTransform": "uppercase",
+        },
+        {
+          "color": "#666",
+        },
+      ]
+    }
+  >
+    Mechanism of Action
+  </Text>
+  <Text
+    style={
+      [
+        {
+          "fontFamily": "Manrope",
+          "fontSize": 16,
+          "lineHeight": 22,
+        },
+        {
+          "color": "#111",
+        },
+        undefined,
+      ]
+    }
+  >
+    Inhibits bacterial cell wall synthesis by binding to penicillin-binding proteins.
+  </Text>
+</View>
+`;

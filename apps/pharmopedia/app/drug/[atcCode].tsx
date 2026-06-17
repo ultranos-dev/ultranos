@@ -24,6 +24,7 @@ import { SkeletonCard } from '@/components/SkeletonCard'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { CoachMark } from '@/components/CoachMark'
 import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
+import { Chip } from '@ultranos/ui-kit/native'
 import type { DrugEntryTier1, DrugEntryTier2, DrugEntryTier3 } from '@ultranos/shared-types'
 
 const CLINICAL_ROLES = new Set(['DOCTOR', 'NURSE', 'LAB_TECH', 'PHARMACIST', 'ADMIN'])
@@ -81,7 +82,7 @@ export default function DrugDetailScreen() {
     try {
       const row = await getDrugRowByAtcCode(getDatabase(), code)
       if (row) { setEntry(scopeEntryForRole(row, role)); return }
-      if (token) { const apiEntry = await getDrugByAtcCodeApi(code, token); setEntry(apiEntry) }
+      if (token) { const apiEntry = await getDrugByAtcCodeApi(code, lang, token); setEntry(apiEntry) }
     } catch {
       // entry stays null → renders "Drug not found"
     } finally {
@@ -90,7 +91,8 @@ export default function DrugDetailScreen() {
   }
 
   function onTabPress(index: number) {
-    setActiveTab(TABS[index])
+    const tab = TABS[index]
+    if (tab) setActiveTab(tab)
     if (tabLayouts[index]) {
       indicatorX.value = withTiming(tabLayouts[index].x, { duration: 250 })
       indicatorW.value = withTiming(tabLayouts[index].width, { duration: 250 })
@@ -148,11 +150,7 @@ export default function DrugDetailScreen() {
         <Text style={[styles.innLine, { color: colors.textSecondary }]}>
           {entry.innName}{isClinical ? ` · ${entry.atcCode}` : ''}
         </Text>
-        <View style={[styles.classBadge, { backgroundColor: colors.surfaceSubtle }]}>
-          <Text style={[styles.classBadgeText, { color: colors.textSecondary }]}>
-            {entry.therapeuticClass}
-          </Text>
-        </View>
+        <Chip label={entry.therapeuticClass} />
         <View style={styles.actionRow}>
           <Pressable testID="bookmark-btn" onPress={() => void handleToggleBookmark()}>
             <Animated.View style={heartAnimatedStyle}>
@@ -163,7 +161,7 @@ export default function DrugDetailScreen() {
               />
             </Animated.View>
           </Pressable>
-          <ShareButton entry={entry} />
+          <ShareButton atcCode={entry.atcCode} drugName={entry.innName} />
         </View>
       </View>
 
@@ -203,7 +201,7 @@ export default function DrugDetailScreen() {
         )}
         {activeTab === 'clinical' && isClinical && (
           <ErrorBoundary inline>
-            <ClinicalTab entry={entry as DrugEntryTier2} />
+            <ClinicalTab entry={entry as DrugEntryTier2} lang={lang} />
           </ErrorBoundary>
         )}
         {activeTab === 'pricing' && (
@@ -244,17 +242,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontFamily: FontFamily.sans,
     marginBottom: Spacing[2],
-  },
-  classBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: Spacing[2],
-    paddingVertical: Spacing[1],
-    borderRadius: Radius.sm,
-    marginBottom: Spacing[3],
-  },
-  classBadgeText: {
-    fontSize: FontSize.xs,
-    fontFamily: FontFamily.sans,
   },
   actionRow: {
     flexDirection: 'row',

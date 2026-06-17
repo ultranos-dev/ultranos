@@ -1,32 +1,43 @@
 import { ScrollView, View, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { DrugEntryTier2 } from '@ultranos/shared-types'
+import type { DrugEntryTier2, DrugLocalizedText } from '@ultranos/shared-types'
+import { isRtlLang, type Lang } from '@/store/lang-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { SectionCard } from './SectionCard'
 import { SeverityBadge } from './SeverityBadge'
 import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
 
-export function ClinicalTab({ entry }: { entry: DrugEntryTier2 }) {
+function localText(field: DrugLocalizedText | undefined, lang: Lang): string {
+  if (!field) return ''
+  return (field as Record<string, string | undefined>)[lang] ?? field.en ?? ''
+}
+
+export function ClinicalTab({ entry, lang }: { entry: DrugEntryTier2; lang: Lang }) {
   const { t } = useTranslation()
   const colors = useThemeColors()
+  const isRtl = isRtlLang(lang)
+  const pk = entry.pharmacokinetics
+  const adminNotes = localText(entry.administrationNotes, lang)
+  const hasPk = !!pk && (pk.halfLifeHours != null || pk.proteinBindingPct != null || !!pk.volumeOfDistribution || !!pk.metabolism || !!pk.excretion)
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       {entry.contraindications.length > 0 && (
-        <SectionCard
-          title={t('drug.clinical.contraindications')}
-          items={entry.contraindications}
-          severity="danger"
-        />
+        <SectionCard title={t('drug.clinical.contraindications')} items={entry.contraindications} severity="danger" isRtl={isRtl} />
       )}
       {entry.interactions && entry.interactions.length > 0 && (
         <SectionCard title={t('drug.clinical.interactions')} severity="warning">
           {entry.interactions.map((ix, i) => (
             <View key={i} style={styles.interactionRow}>
               <SeverityBadge severity={ix.severity} />
-              <Text style={[styles.interactionText, { color: colors.textPrimary }]}>
-                {ix.drugName}: {ix.description}
-              </Text>
+              <View style={styles.interactionTextWrap}>
+                <Text style={[styles.interactionText, { color: colors.textPrimary }]}>
+                  {ix.drugName}
+                </Text>
+                <Text style={[styles.interactionText, { color: colors.textPrimary }]}>
+                  {ix.mechanism}
+                </Text>
+              </View>
             </View>
           ))}
         </SectionCard>
@@ -38,10 +49,7 @@ export function ClinicalTab({ entry }: { entry: DrugEntryTier2 }) {
         <SectionCard title={t('drug.clinical.indications')} items={entry.indicationsClinical} />
       )}
       {entry.adverseEvents.length > 0 && (
-        <SectionCard
-          title={t('drug.clinical.adverseEvents')}
-          items={entry.adverseEvents.map((e) => e.effect)}
-        />
+        <SectionCard title={t('drug.clinical.adverseEvents')} items={entry.adverseEvents.map((e) => e.effect)} />
       )}
       {entry.adultDosing.length > 0 && (
         <SectionCard title={t('drug.clinical.adultDosing')}>
@@ -52,11 +60,29 @@ export function ClinicalTab({ entry }: { entry: DrugEntryTier2 }) {
           ))}
         </SectionCard>
       )}
+      {entry.pediatricDosing.length > 0 && (
+        <SectionCard title={t('drug.clinical.pediatricDosing')}>
+          {entry.pediatricDosing.map((d, i) => (
+            <Text key={i} style={[styles.dosing, { color: colors.textPrimary }]}>
+              {d.indication}: {d.pediatricDose} {d.frequency}{d.route ? ` (${d.route})` : ''}
+            </Text>
+          ))}
+        </SectionCard>
+      )}
+      {hasPk && (
+        <SectionCard title={t('drug.clinical.pharmacokinetics')}>
+          {pk.halfLifeHours != null && <Text style={[styles.dosing, { color: colors.textPrimary }]}>{t('drug.clinical.halfLife')}: {pk.halfLifeHours} h</Text>}
+          {pk.proteinBindingPct != null && <Text style={[styles.dosing, { color: colors.textPrimary }]}>{t('drug.clinical.proteinBinding')}: {pk.proteinBindingPct}%</Text>}
+          {pk.volumeOfDistribution && <Text style={[styles.dosing, { color: colors.textPrimary }]}>{t('drug.clinical.volumeDistribution')}: {pk.volumeOfDistribution}</Text>}
+          {pk.metabolism && <Text style={[styles.dosing, { color: colors.textPrimary }]}>{t('drug.clinical.metabolism')}: {pk.metabolism}</Text>}
+          {pk.excretion && <Text style={[styles.dosing, { color: colors.textPrimary }]}>{t('drug.clinical.excretion')}: {pk.excretion}</Text>}
+        </SectionCard>
+      )}
+      {adminNotes ? (
+        <SectionCard title={t('drug.clinical.adminNotes')} text={adminNotes} isRtl={isRtl} />
+      ) : null}
       {entry.pregnancyCategory && (
-        <SectionCard
-          title={t('drug.clinical.pregnancyCategory')}
-          text={`Category ${entry.pregnancyCategory}`}
-        />
+        <SectionCard title={t('drug.clinical.pregnancyCategory')} text={`Category ${entry.pregnancyCategory}`} />
       )}
       {entry.renalAdjustment && (
         <SectionCard title={t('drug.clinical.renalAdjustment')} text={entry.renalAdjustment} />
@@ -74,8 +100,10 @@ const styles = StyleSheet.create({
     gap: Spacing[2],
     marginBottom: Spacing[2],
   },
-  interactionText: {
+  interactionTextWrap: {
     flex: 1,
+  },
+  interactionText: {
     fontSize: FontSize.base,
     fontFamily: FontFamily.sans,
     lineHeight: 22,

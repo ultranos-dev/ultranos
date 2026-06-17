@@ -81,7 +81,7 @@ export function EnrichTab({ atcCode }: { atcCode: string }) {
 
       {isPharmacist && (
         <>
-          <Text style={[styles.sectionTitle, { marginTop: 16, color: colors.textSecondary }]}>{t('enrich.pharmacistFields')}</Text>
+          <Text style={[styles.sectionTitle, { marginTop: Spacing[4], color: colors.textSecondary }]}>{t('enrich.pharmacistFields')}</Text>
           <TextInput testID="dispensing-notes" style={[styles.input, styles.multiline, { borderColor: colors.border, color: colors.textPrimary }]} placeholder={t('enrich.dispensingNotes')} placeholderTextColor={colors.textMuted} value={dispensingNotes} onChangeText={setDispensingNotes} multiline maxLength={500} accessibilityLabel={t('enrich.dispensingNotes')} />
 
           <Text style={[styles.label, { color: colors.textSecondary }]}>{t('enrich.formularyStatus')}</Text>

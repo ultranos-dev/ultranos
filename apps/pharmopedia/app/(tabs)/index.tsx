@@ -2,15 +2,18 @@ import { useState, useEffect } from 'react'
 import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { ChevronRight, Pill } from 'lucide-react-native'
+import { ChevronRight, Pill, SearchX } from 'lucide-react-native'
 import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { CollapsibleScreen, Banner, Chip, ListRow, EmptyState, Card, useRtl } from '@ultranos/ui-kit/native'
-import { HomeSearchField } from '@/components/HomeSearchField'
+import { SearchBar } from '@/components/SearchBar'
+import { DrugCard } from '@/components/DrugCard'
+import { useDrugSearch } from '@/hooks/useDrugSearch'
 import { getActiveRecalls, type RecallSummary } from '@/db/recalls'
 import { getDatabase } from '@/db/migrations'
 import { useAuthStore } from '@/store/auth-store'
 import { useBookmarkStore } from '@/store/bookmark-store'
 import { useRecentSearchStore } from '@/store/recent-search-store'
+import { useLangStore } from '@/store/lang-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
 
 const ROLE_LABELS: Record<string, string> = {
@@ -30,10 +33,14 @@ export default function HomeTab() {
   const user = useAuthStore((s) => s.user)
   const bookmarks = useBookmarkStore((s) => s.bookmarks)
   const recents = useRecentSearchStore((s) => s.recents)
+  const addRecent = useRecentSearchStore((s) => s.add)
+  const lang = useLangStore((s) => s.lang)
   const rtl = useRtl()
   const role = user?.role ?? 'PATIENT'
   const labelAlign = { textAlign: rtl ? ('right' as const) : ('left' as const) }
   const [recalls, setRecalls] = useState<RecallSummary[]>([])
+
+  const { query, results, loading, search } = useDrugSearch()
 
   useEffect(() => {
     let cancelled = false
@@ -54,54 +61,72 @@ export default function HomeTab() {
 
   return (
     <CollapsibleScreen title={greeting} subtitle={subtitle}>
-      <HomeSearchField onPress={() => router.push('/search')} />
+      <SearchBar value={query} onSearch={search} />
 
-      {recalls.length > 0 && (
+      {query.trim().length > 0 ? (
         <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.textMuted }, labelAlign]}>{t('home.safetyAlerts')}</Text>
-          <View style={styles.alerts}>
-            {recalls.map((r) => (
-              <Banner
-                key={r.atcCode}
-                variant="warning"
-                text={`${r.innName}${r.description ? ` — ${r.description}` : ''}`}
-                onPress={() => router.push(`/drug/${r.atcCode}`)}
-              />
-            ))}
-          </View>
-        </View>
-      )}
-
-      {recents.length > 0 && (
-        <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.textMuted }, labelAlign]}>{t('home.recent')}</Text>
-          <View style={styles.chips}>
-            {recents.map((q) => (
-              <Chip key={q} label={q} onPress={() => router.push({ pathname: '/search', params: { q } })} />
-            ))}
-          </View>
-        </View>
-      )}
-
-      <View style={styles.section}>
-        <View style={styles.savedHeader}>
-          <Text style={[styles.label, { color: colors.textMuted }, labelAlign]}>{t('home.saved')}</Text>
-          {bookmarks.length > 5 && (
-            <Pressable onPress={() => router.push('/(tabs)/saved')} accessibilityRole="button" accessibilityLabel={t('home.seeAll')}>
-              <Text style={[styles.seeAll, { color: colors.primary500 }]}>{t('home.seeAll')}</Text>
-            </Pressable>
+          {results.map((item) => (
+            <DrugCard
+              key={item.atcCode}
+              result={item}
+              lang={lang}
+              onPress={() => { void addRecent(query); router.push(`/drug/${item.atcCode}`) }}
+            />
+          ))}
+          {!loading && results.length === 0 && (
+            <EmptyState icon={SearchX} title={t('search.noResultsTitle')} description={t('search.noResultsDescription')} />
           )}
         </View>
-        {savedTop.length > 0 ? (
-          <Card>
-            {savedTop.map((b) => (
-              <ListRow key={b.atcCode} icon={Pill} label={b.innName} trailing={<ChevronRight size={18} color={colors.textMuted} />} onPress={() => router.push(`/drug/${b.atcCode}`)} />
-            ))}
-          </Card>
-        ) : (
-          <EmptyState icon={Pill} title={t('home.savedEmpty')} action={{ label: t('home.browseCta'), onPress: () => router.push('/(tabs)/browse') }} />
-        )}
-      </View>
+      ) : (
+        <>
+          {recalls.length > 0 && (
+            <View style={styles.section}>
+              <Text style={[styles.label, { color: colors.textMuted }, labelAlign]}>{t('home.safetyAlerts')}</Text>
+              <View style={styles.alerts}>
+                {recalls.map((r) => (
+                  <Banner
+                    key={r.atcCode}
+                    variant="warning"
+                    text={`${r.innName}${r.description ? ` — ${r.description}` : ''}`}
+                    onPress={() => router.push(`/drug/${r.atcCode}`)}
+                  />
+                ))}
+              </View>
+            </View>
+          )}
+
+          {recents.length > 0 && (
+            <View style={styles.section}>
+              <Text style={[styles.label, { color: colors.textMuted }, labelAlign]}>{t('home.recent')}</Text>
+              <View style={styles.chips}>
+                {recents.map((q) => (
+                  <Chip key={q} label={q} onPress={() => void search(q)} />
+                ))}
+              </View>
+            </View>
+          )}
+
+          <View style={styles.section}>
+            <View style={styles.savedHeader}>
+              <Text style={[styles.label, { color: colors.textMuted }, labelAlign]}>{t('home.saved')}</Text>
+              {bookmarks.length > 5 && (
+                <Pressable onPress={() => router.push('/(tabs)/saved')} accessibilityRole="button" accessibilityLabel={t('home.seeAll')}>
+                  <Text style={[styles.seeAll, { color: colors.primary500 }]}>{t('home.seeAll')}</Text>
+                </Pressable>
+              )}
+            </View>
+            {savedTop.length > 0 ? (
+              <Card>
+                {savedTop.map((b) => (
+                  <ListRow key={b.atcCode} icon={Pill} label={b.innName} trailing={<ChevronRight size={18} color={colors.textMuted} />} onPress={() => router.push(`/drug/${b.atcCode}`)} />
+                ))}
+              </Card>
+            ) : (
+              <EmptyState icon={Pill} title={t('home.savedEmpty')} action={{ label: t('home.browseCta'), onPress: () => router.push('/(tabs)/browse') }} />
+            )}
+          </View>
+        </>
+      )}
     </CollapsibleScreen>
   )
 }
