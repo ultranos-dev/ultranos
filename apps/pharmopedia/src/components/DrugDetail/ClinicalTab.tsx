@@ -1,29 +1,24 @@
 import { ScrollView, View, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { DrugEntryTier2, DrugLocalizedText } from '@ultranos/shared-types'
-import { isRtlLang, type Lang } from '@/store/lang-store'
+import type { DrugEntryTier2 } from '@ultranos/shared-types'
+import { type Lang } from '@/store/lang-store'
+import { resolveLocalized } from '@/lib/localized-text'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { SectionCard } from './SectionCard'
 import { SeverityBadge } from './SeverityBadge'
 import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
 
-function localText(field: DrugLocalizedText | undefined, lang: Lang): string {
-  if (!field) return ''
-  return (field as Record<string, string | undefined>)[lang] ?? field.en ?? ''
-}
-
 export function ClinicalTab({ entry, lang }: { entry: DrugEntryTier2; lang: Lang }) {
   const { t } = useTranslation()
   const colors = useThemeColors()
-  const isRtl = isRtlLang(lang)
   const pk = entry.pharmacokinetics
-  const adminNotes = localText(entry.administrationNotes, lang)
+  const adminNotes = resolveLocalized(entry.administrationNotes, lang)
   const hasPk = !!pk && (pk.halfLifeHours != null || pk.proteinBindingPct != null || !!pk.volumeOfDistribution || !!pk.metabolism || !!pk.excretion)
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       {entry.contraindications.length > 0 && (
-        <SectionCard title={t('drug.clinical.contraindications')} items={entry.contraindications} severity="danger" isRtl={isRtl} />
+        <SectionCard title={t('drug.clinical.contraindications')} items={entry.contraindications} severity="danger" isRtl={false} />
       )}
       {entry.interactions && entry.interactions.length > 0 && (
         <SectionCard title={t('drug.clinical.interactions')} severity="warning">
@@ -78,8 +73,8 @@ export function ClinicalTab({ entry, lang }: { entry: DrugEntryTier2; lang: Lang
           {pk.excretion && <Text style={[styles.dosing, { color: colors.textPrimary }]}>{t('drug.clinical.excretion')}: {pk.excretion}</Text>}
         </SectionCard>
       )}
-      {adminNotes ? (
-        <SectionCard title={t('drug.clinical.adminNotes')} text={adminNotes} isRtl={isRtl} />
+      {adminNotes.text ? (
+        <SectionCard title={t('drug.clinical.adminNotes')} text={adminNotes.text} isRtl={adminNotes.isLocalized} />
       ) : null}
       {entry.pregnancyCategory && (
         <SectionCard title={t('drug.clinical.pregnancyCategory')} text={`Category ${entry.pregnancyCategory}`} />

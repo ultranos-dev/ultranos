@@ -32,7 +32,13 @@ export function SectionCard({ title, text, items, severity = 'none', isRtl, test
   }
 
   const hasSeverity = severity !== 'none'
-  const rtlStyle = isRtl ? { fontFamily: FontFamily.arabic, textAlign: 'right' as const } : undefined
+  // Direction must follow the CONTENT, not the ambient I18nManager.forceRTL.
+  // RTL content → Arabic face + explicit rtl so it reads correctly. LTR content
+  // (brand names, dose forms, English fallbacks) → explicit ltr so the Unicode
+  // bidi algorithm never reorders `·`/comma-separated Latin segments.
+  const rtlStyle = isRtl
+    ? { fontFamily: FontFamily.arabic, writingDirection: 'rtl' as const, textAlign: 'right' as const }
+    : { writingDirection: 'ltr' as const }
 
   return (
     <View

@@ -1,40 +1,64 @@
 import { ScrollView, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import type { DrugEntryTier1 } from '@ultranos/shared-types'
-import { isRtlLang, type Lang } from '@/store/lang-store'
+import type { DrugEntryTier1, DrugLocalizedText } from '@ultranos/shared-types'
+import { type Lang } from '@/store/lang-store'
+import { resolveLocalized } from '@/lib/localized-text'
 import { SectionCard } from './SectionCard'
 import { Spacing } from '@ultranos/ui-kit/tokens.native'
 
-function localText(field: Record<string, string | undefined>, lang: Lang): string {
-  return field[lang] ?? field.en ?? ''
-}
-
 export function OverviewTab({ entry, lang }: { entry: DrugEntryTier1; lang: Lang }) {
   const { t } = useTranslation()
-  const isRtl = isRtlLang(lang)
+
+  const resolve = (field: DrugLocalizedText | undefined) => resolveLocalized(field, lang)
+  // For list fields, treat the section as RTL only when every shown item is
+  // genuinely localized — a single English fallback would otherwise reorder.
+  const resolveList = (fields: DrugLocalizedText[] | undefined) => {
+    const items = (fields ?? []).map(resolve).filter((r) => r.text)
+    return { texts: items.map((r) => r.text), isRtl: items.length > 0 && items.every((r) => r.isLocalized) }
+  }
+
+  const summary = resolve(entry.summaryPlain)
+  const seekHelp = resolve(entry.whenToSeekHelp)
+  const storage = resolve(entry.storageInstructions)
+  const pregnancy = resolve(entry.pregnancySummaryPlain)
+  const warnings = resolve(entry.warningsSummaryPlain)
+  const usedFor = resolveList(entry.usedFor)
+  const sideEffects = resolveList(entry.commonSideEffects)
+
+  // Plain-language fields are not populated for every drug; always surface the
+  // basic reference info (brand names, dose forms) so the tab is never empty.
+  // Brand names and dose forms are always Latin → isRtl={false}.
+  const brandNames = (entry.brandNames ?? []).filter(Boolean)
+  const doseForms = (entry.doseForms ?? []).filter(Boolean)
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-      {entry.summaryPlain && localText(entry.summaryPlain, lang) ? (
-        <SectionCard title={t('drug.overview.summary')} text={localText(entry.summaryPlain, lang)} isRtl={isRtl} />
+      {summary.text ? (
+        <SectionCard title={t('drug.overview.summary')} text={summary.text} isRtl={summary.isLocalized} />
       ) : null}
-      {entry.usedFor.length > 0 && (
-        <SectionCard title={t('drug.overview.usedFor')} items={entry.usedFor.map((f) => localText(f, lang)).filter(Boolean)} isRtl={isRtl} />
+      {brandNames.length > 0 && (
+        <SectionCard title={t('drug.overview.brandNames')} text={brandNames.join(', ')} isRtl={false} />
       )}
-      {entry.commonSideEffects.length > 0 && (
-        <SectionCard title={t('drug.overview.sideEffects')} items={entry.commonSideEffects.map((f) => localText(f, lang)).filter(Boolean)} isRtl={isRtl} />
+      {doseForms.length > 0 && (
+        <SectionCard title={t('drug.overview.doseForms')} text={doseForms.join(', ')} isRtl={false} />
       )}
-      {localText(entry.whenToSeekHelp, lang) ? (
-        <SectionCard title={t('drug.overview.seekHelp')} text={localText(entry.whenToSeekHelp, lang)} isRtl={isRtl} severity="warning" />
+      {usedFor.texts.length > 0 && (
+        <SectionCard title={t('drug.overview.usedFor')} items={usedFor.texts} isRtl={usedFor.isRtl} />
+      )}
+      {sideEffects.texts.length > 0 && (
+        <SectionCard title={t('drug.overview.sideEffects')} items={sideEffects.texts} isRtl={sideEffects.isRtl} />
+      )}
+      {seekHelp.text ? (
+        <SectionCard title={t('drug.overview.seekHelp')} text={seekHelp.text} isRtl={seekHelp.isLocalized} severity="warning" />
       ) : null}
-      {localText(entry.storageInstructions, lang) ? (
-        <SectionCard title={t('drug.overview.storage')} text={localText(entry.storageInstructions, lang)} isRtl={isRtl} />
+      {storage.text ? (
+        <SectionCard title={t('drug.overview.storage')} text={storage.text} isRtl={storage.isLocalized} />
       ) : null}
-      {localText(entry.pregnancySummaryPlain, lang) ? (
-        <SectionCard title={t('drug.overview.pregnancy')} text={localText(entry.pregnancySummaryPlain, lang)} isRtl={isRtl} severity="info" />
+      {pregnancy.text ? (
+        <SectionCard title={t('drug.overview.pregnancy')} text={pregnancy.text} isRtl={pregnancy.isLocalized} severity="info" />
       ) : null}
-      {localText(entry.warningsSummaryPlain, lang) ? (
-        <SectionCard title={t('drug.overview.warnings')} text={localText(entry.warningsSummaryPlain, lang)} isRtl={isRtl} severity="warning" />
+      {warnings.text ? (
+        <SectionCard title={t('drug.overview.warnings')} text={warnings.text} isRtl={warnings.isLocalized} severity="warning" />
       ) : null}
     </ScrollView>
   )

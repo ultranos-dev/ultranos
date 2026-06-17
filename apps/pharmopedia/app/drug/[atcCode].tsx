@@ -152,30 +152,36 @@ export default function DrugDetailScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surfaceSubtle }]}>
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <Text style={[styles.primaryName, { color: colors.textPrimary }, isRtl && styles.rtlText]}>
-          {localName || entry.innName}
-        </Text>
-        <Text style={[styles.innLine, { color: colors.textSecondary }]}>
-          {entry.innName}{isClinical ? ` · ${entry.atcCode}` : ''}
-        </Text>
-        <Chip label={entry.therapeuticClass} />
-        <View style={styles.actionRow}>
-          <Pressable
-            testID="bookmark-btn"
-            onPress={() => void handleToggleBookmark()}
-            accessibilityRole="button"
-            accessibilityLabel={isBookmarked(entry.atcCode) ? t('drug.removeBookmark') : t('drug.addBookmark')}
-            hitSlop={8}
-          >
-            <Animated.View style={heartAnimatedStyle}>
-              <Heart
-                color={isBookmarked(entry.atcCode) ? colors.primary500 : colors.textMuted}
-                fill={isBookmarked(entry.atcCode) ? colors.primary500 : 'none'}
-                size={24}
-              />
-            </Animated.View>
-          </Pressable>
-          <ShareButton atcCode={entry.atcCode} drugName={entry.innName} />
+        <View style={styles.headerTop}>
+          <View style={styles.nameBlock}>
+            <Text style={[styles.primaryName, { color: colors.textPrimary }, localName ? styles.rtlText : isRtl && styles.fallbackName]}>
+              {localName || entry.innName}
+            </Text>
+            <Text style={[styles.innLine, { color: colors.textSecondary, writingDirection: 'ltr', textAlign: isRtl ? 'right' : 'left' }]}>
+              {entry.innName}{isClinical ? ` · ${entry.atcCode}` : ''}
+            </Text>
+          </View>
+          <View style={styles.actionRow}>
+            <Pressable
+              testID="bookmark-btn"
+              onPress={() => void handleToggleBookmark()}
+              accessibilityRole="button"
+              accessibilityLabel={isBookmarked(entry.atcCode) ? t('drug.removeBookmark') : t('drug.addBookmark')}
+              hitSlop={8}
+            >
+              <Animated.View style={heartAnimatedStyle}>
+                <Heart
+                  color={isBookmarked(entry.atcCode) ? colors.primary500 : colors.textMuted}
+                  fill={isBookmarked(entry.atcCode) ? colors.primary500 : 'none'}
+                  size={24}
+                />
+              </Animated.View>
+            </Pressable>
+            <ShareButton atcCode={entry.atcCode} drugName={entry.innName} />
+          </View>
+        </View>
+        <View style={styles.chipWrap}>
+          <Chip label={entry.therapeuticClass} />
         </View>
       </View>
 
@@ -250,6 +256,13 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { padding: Spacing[4], borderBottomWidth: 1 },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: Spacing[3],
+  },
+  nameBlock: { flex: 1 },
   primaryName: {
     fontSize: FontSize.xl,
     fontFamily: FontFamily.headingBold,
@@ -258,14 +271,18 @@ const styles = StyleSheet.create({
   innLine: {
     fontSize: FontSize.sm,
     fontFamily: FontFamily.sans,
-    marginBottom: Spacing[2],
+  },
+  chipWrap: {
+    flexDirection: 'row',
+    marginTop: Spacing[3],
   },
   actionRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    alignItems: 'center',
     gap: Spacing[3],
   },
-  rtlText: { fontFamily: FontFamily.arabic, textAlign: 'right' },
+  rtlText: { fontFamily: FontFamily.arabic, textAlign: 'right', writingDirection: 'rtl' },
+  fallbackName: { textAlign: 'right', writingDirection: 'ltr' },
   tabBar: { flexDirection: 'row', borderBottomWidth: 1 },
   tab: { paddingHorizontal: Spacing[4], paddingVertical: Spacing[3] },
   tabText: { fontSize: FontSize.base },
