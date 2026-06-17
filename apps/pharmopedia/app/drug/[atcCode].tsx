@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { View, Text, Pressable, StyleSheet } from 'react-native'
+import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring } from 'react-native-reanimated'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { Heart } from 'lucide-react-native'
@@ -14,21 +13,18 @@ import { useLangStore, isRtlLang } from '@/store/lang-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { useBookmarkStore } from '@/store/bookmark-store'
 import { hapticImpact } from '@/lib/haptics'
-import { OverviewTab } from '@/components/DrugDetail/OverviewTab'
-import { ClinicalTab } from '@/components/DrugDetail/ClinicalTab'
-import { PricingTab } from '@/components/DrugDetail/PricingTab'
-import { EnrichTab } from '@/components/DrugDetail/EnrichTab'
+import { SafetyZone } from '@/components/DrugDetail/SafetyZone'
+import { DrugThumbnail } from '@/components/DrugDetail/DrugThumbnail'
+import { buildDrugSections } from '@/components/DrugDetail/drug-detail-sections'
 import { ShareButton } from '@/components/DrugDetail/ShareButton'
-import { SafetyBanner } from '@/components/DrugDetail/SafetyBanner'
 import { SkeletonCard } from '@/components/SkeletonCard'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { CoachMark } from '@/components/CoachMark'
-import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
-import { Chip, useReducedMotion } from '@ultranos/ui-kit/native'
+import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
+import { Chip, CollapsibleSection } from '@ultranos/ui-kit/native'
 import type { DrugEntryTier1, DrugEntryTier2, DrugEntryTier3 } from '@ultranos/shared-types'
 
 const CLINICAL_ROLES = new Set(['DOCTOR', 'NURSE', 'LAB_TECH', 'PHARMACIST', 'ADMIN'])
-type Tab = 'overview' | 'clinical' | 'pricing' | 'enrich'
+const PHARMACIST_ROLES = new Set(['PHARMACIST', 'ADMIN'])
 
 export default function DrugDetailScreen() {
   const { t } = useTranslation()
@@ -39,38 +35,14 @@ export default function DrugDetailScreen() {
   const lang = useLangStore((s) => s.lang)
   const role = user?.role ?? 'PATIENT'
   const isClinical = CLINICAL_ROLES.has(role)
+  const isPharmacist = PHARMACIST_ROLES.has(role)
   const isRtl = isRtlLang(lang)
 
   const isBookmarked = useBookmarkStore((s) => s.isBookmarked)
   const toggleBookmark = useBookmarkStore((s) => s.toggle)
-  const reduced = useReducedMotion()
 
   const [entry, setEntry] = useState<DrugEntryTier1 | DrugEntryTier2 | DrugEntryTier3 | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<Tab>('overview')
-  const [tabLayouts, setTabLayouts] = useState<{ x: number; width: number }[]>([])
-
-  const indicatorX = useSharedValue(0)
-  const indicatorW = useSharedValue(0)
-  const heartScale = useSharedValue(1)
-
-  const indicatorStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: indicatorX.value }],
-    width: indicatorW.value,
-  }))
-
-  const heartAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: heartScale.value }],
-  }))
-
-  const TABS: Tab[] = ['overview', ...(isClinical ? ['clinical' as Tab] : []), 'pricing', ...(isClinical ? ['enrich' as Tab] : [])]
-
-  const TAB_LABELS: Record<Tab, string> = {
-    overview: t('drug.tabs.overview'),
-    clinical: t('drug.tabs.clinical'),
-    pricing: t('drug.tabs.pricing'),
-    enrich: t('drug.tabs.enrich'),
-  }
 
   useEffect(() => {
     if (!atcCode) return
@@ -83,52 +55,26 @@ export default function DrugDetailScreen() {
     try {
       const row = await getDrugRowByAtcCode(getDatabase(), code)
       if (row) { setEntry(scopeEntryForRole(row, role)); return }
-      if (token) { const apiEntry = await getDrugByAtcCodeApi(code, lang, token); setEntry(apiEntry) }
+      if (token) { setEntry(await getDrugByAtcCodeApi(code, lang, token)) }
     } catch {
-      // entry stays null → renders "Drug not found"
+      // entry stays null → "not found"
     } finally {
       setLoading(false)
     }
   }
 
-  function onTabPress(index: number) {
-    const tab = TABS[index]
-    if (tab) setActiveTab(tab)
-    if (tabLayouts[index]) {
-      if (reduced) {
-        indicatorX.value = tabLayouts[index].x
-        indicatorW.value = tabLayouts[index].width
-      } else {
-        indicatorX.value = withTiming(tabLayouts[index].x, { duration: 250 })
-        indicatorW.value = withTiming(tabLayouts[index].width, { duration: 250 })
-      }
-    }
-  }
-
   async function handleToggleBookmark() {
-    const wasBookmarked = isBookmarked(entry!.atcCode)
     await toggleBookmark(getDatabase(), {
-      atcCode: entry!.atcCode,
-      innName: entry!.innName,
-      therapeuticClass: entry!.therapeuticClass,
+      atcCode: entry!.atcCode, innName: entry!.innName, therapeuticClass: entry!.therapeuticClass,
     })
-    if (!wasBookmarked) {
-      if (!reduced) {
-        heartScale.value = withSpring(1.3, { damping: 8 }, () => {
-          heartScale.value = withSpring(1)
-        })
-      }
-      void hapticImpact(ImpactFeedbackStyle.Light)
-    }
+    void hapticImpact(ImpactFeedbackStyle.Light)
   }
 
   if (loading) {
     return (
       <View style={[styles.center, { backgroundColor: colors.surfaceSubtle }]}>
         <View style={{ width: '100%', padding: Spacing[4] }}>
-          <SkeletonCard lines={1} />
-          <SkeletonCard lines={3} />
-          <SkeletonCard lines={2} />
+          <SkeletonCard lines={1} /><SkeletonCard lines={3} /><SkeletonCard lines={2} />
         </View>
       </View>
     )
@@ -148,11 +94,13 @@ export default function DrugDetailScreen() {
 
   const localNames = (entry as DrugEntryTier1 & { localNames?: Record<string, string> }).localNames
   const localName = lang !== 'en' ? localNames?.[lang] : undefined
+  const sections = buildDrugSections({ entry, lang, t, isClinical, isPharmacist })
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.surfaceSubtle }]}>
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <View style={styles.headerTop}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surfaceSubtle }]} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={[styles.header, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}>
+          <DrugThumbnail images={(entry as DrugEntryTier1).images} name={entry.innName} />
           <View style={styles.nameBlock}>
             <Text style={[styles.primaryName, { color: colors.textPrimary }, localName ? styles.rtlText : isRtl && styles.fallbackName]}>
               {localName || entry.innName}
@@ -161,138 +109,50 @@ export default function DrugDetailScreen() {
               {entry.innName}{isClinical ? ` · ${entry.atcCode}` : ''}
             </Text>
           </View>
-          <View style={styles.actionRow}>
-            <Pressable
-              testID="bookmark-btn"
-              onPress={() => void handleToggleBookmark()}
-              accessibilityRole="button"
-              accessibilityLabel={isBookmarked(entry.atcCode) ? t('drug.removeBookmark') : t('drug.addBookmark')}
-              hitSlop={8}
-            >
-              <Animated.View style={heartAnimatedStyle}>
-                <Heart
-                  color={isBookmarked(entry.atcCode) ? colors.primary500 : colors.textMuted}
-                  fill={isBookmarked(entry.atcCode) ? colors.primary500 : 'none'}
-                  size={24}
-                />
-              </Animated.View>
+          <View style={[styles.actionRow, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}>
+            <Pressable testID="bookmark-btn" onPress={() => void handleToggleBookmark()} accessibilityRole="button"
+              accessibilityLabel={isBookmarked(entry.atcCode) ? t('drug.removeBookmark') : t('drug.addBookmark')} hitSlop={8}>
+              <Heart color={isBookmarked(entry.atcCode) ? colors.primary500 : colors.textMuted}
+                fill={isBookmarked(entry.atcCode) ? colors.primary500 : 'none'} size={24} />
             </Pressable>
             <ShareButton atcCode={entry.atcCode} drugName={entry.innName} />
           </View>
         </View>
-        <View style={styles.chipWrap}>
-          <Chip label={entry.therapeuticClass} />
+
+        <View style={styles.chipWrap}><Chip label={entry.therapeuticClass} /></View>
+
+        <SafetyZone entry={entry} lang={lang} isClinical={isClinical} />
+
+        <View style={styles.sectionList}>
+          {sections.length === 0 ? (
+            <Text style={[styles.noDetail, { color: colors.textMuted }]}>{t('drug.noDetail')}</Text>
+          ) : (
+            sections.map((s) => (
+              <CollapsibleSection key={s.id} testID={`section-${s.id}`} title={s.title} defaultOpen={s.defaultOpen}>
+                <ErrorBoundary inline>{s.body}</ErrorBoundary>
+              </CollapsibleSection>
+            ))
+          )}
         </View>
-      </View>
-
-      {isClinical && 'interactions' in entry && (entry as DrugEntryTier2).interactions?.length > 0 && (
-        <SafetyBanner interactions={(entry as DrugEntryTier2).interactions} />
-      )}
-
-      <View style={[styles.tabBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        {TABS.map((tab, i) => (
-          <Pressable
-            key={tab}
-            testID={`tab-${tab}`}
-            style={styles.tab}
-            onPress={() => onTabPress(i)}
-            accessibilityRole="tab"
-            accessibilityLabel={TAB_LABELS[tab]}
-            accessibilityState={{ selected: activeTab === tab }}
-            onLayout={(e) => {
-              const { x, width } = e.nativeEvent.layout
-              setTabLayouts((prev) => {
-                const next = [...prev]
-                next[i] = { x, width }
-                return next
-              })
-            }}
-          >
-            <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === tab && { color: colors.primary500, fontWeight: '600' }]}>
-              {TAB_LABELS[tab]}
-            </Text>
-          </Pressable>
-        ))}
-        <Animated.View style={[styles.tabIndicator, { backgroundColor: colors.primary500 }, indicatorStyle]} />
-      </View>
-
-      <View style={styles.content}>
-        {activeTab === 'overview' && (
-          <ErrorBoundary inline>
-            <OverviewTab entry={entry} lang={lang} />
-          </ErrorBoundary>
-        )}
-        {activeTab === 'clinical' && isClinical && (
-          <ErrorBoundary inline>
-            <ClinicalTab entry={entry as DrugEntryTier2} lang={lang} />
-          </ErrorBoundary>
-        )}
-        {activeTab === 'pricing' && (
-          <ErrorBoundary inline>
-            <PricingTab atcCode={entry.atcCode} />
-          </ErrorBoundary>
-        )}
-        {activeTab === 'enrich' && isClinical && (
-          <ErrorBoundary inline>
-            <EnrichTab atcCode={entry.atcCode} />
-          </ErrorBoundary>
-        )}
-      </View>
-      <CoachMark
-        markKey="detail-bookmark"
-        hint={t('coach.detailBookmark')}
-        visible={!!entry}
-      />
-      <CoachMark
-        markKey="detail-tabs"
-        hint={t('coach.detailTabs')}
-        visible={!!entry}
-      />
+      </ScrollView>
     </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  scroll: { padding: Spacing[4], gap: Spacing[3], paddingBottom: Spacing[8] },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: Spacing[4], borderBottomWidth: 1 },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: Spacing[3],
-  },
+  header: { alignItems: 'center', gap: Spacing[3] },
   nameBlock: { flex: 1 },
-  primaryName: {
-    fontSize: FontSize.xl,
-    fontFamily: FontFamily.headingBold,
-    marginBottom: 2,
-  },
-  innLine: {
-    fontSize: FontSize.sm,
-    fontFamily: FontFamily.sans,
-  },
-  chipWrap: {
-    flexDirection: 'row',
-    marginTop: Spacing[3],
-  },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing[3],
-  },
+  primaryName: { fontSize: FontSize.xl, fontFamily: FontFamily.headingBold, marginBottom: 2 },
+  innLine: { fontSize: FontSize.sm, fontFamily: FontFamily.sans },
+  chipWrap: { flexDirection: 'row' },
+  actionRow: { alignItems: 'center', gap: Spacing[3] },
   rtlText: { fontFamily: FontFamily.arabic, textAlign: 'right', writingDirection: 'rtl' },
   fallbackName: { textAlign: 'right', writingDirection: 'ltr' },
-  tabBar: { flexDirection: 'row', borderBottomWidth: 1 },
-  tab: { paddingHorizontal: Spacing[4], paddingVertical: Spacing[3] },
-  tabText: { fontSize: FontSize.base },
-  tabIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    height: 2,
-    borderRadius: 1,
-  },
-  content: { flex: 1 },
+  sectionList: { gap: 0 },
+  noDetail: { fontSize: FontSize.base, fontFamily: FontFamily.sans, textAlign: 'center', padding: Spacing[6] },
   notFound: { fontSize: FontSize.lg, marginBottom: Spacing[3] },
   notFoundDesc: { fontSize: FontSize.sm, fontFamily: FontFamily.sans, textAlign: 'center', marginBottom: Spacing[3], paddingHorizontal: Spacing[6] },
   back: { fontSize: FontSize.base },

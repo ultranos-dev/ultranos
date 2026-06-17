@@ -108,7 +108,7 @@ export default function RootLayout() {
             <Stack.Screen name="welcome" />
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="drug/[atcCode]" options={{ headerShown: true, title: '' }} />
+            <Stack.Screen name="drug/[atcCode]" options={{ headerShown: false }} />
           </Stack>
         </ErrorBoundary>
       </UiKitProvider>

@@ -1,12 +1,11 @@
 /**
  * drug-detail-rtl.test.tsx
  *
- * RTL snapshot tests for the DrugDetailScreen.
- * Snapshots in LTR (lang=en) and RTL (lang=ar) for a clinical role,
- * and asserts the clinical tab is present for clinical roles.
+ * RTL snapshot tests for the DrugDetailScreen (single-scroll collapsible layout).
+ * Asserts pinned SafetyZone is present, no tab bar nodes, and LTR/RTL snapshots.
  */
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react-native'
+import { render } from '@testing-library/react-native'
 
 // ── lang store — mutable so tests can override ─────────────────────────────
 
@@ -38,10 +37,11 @@ vi.mock('@/db/drug-catalog', () => {
     atcCode: 'J01CA04', innName: 'amoxicillin', brandNames: ['Augmentin'],
     doseForms: ['tablet'], therapeuticClass: 'Antibiotic',
     localNames: { ar: 'أموكسيسيلين' },
+    images: [{ url: 'https://x/advil.jpg', brand: 'Advil', isPrimary: true }],
     summaryPlain: { en: 'Broad-spectrum antibiotic.', ar: 'مضاد حيوي واسع الطيف.' },
     usedFor: [{ en: 'Bacterial infections' }], commonSideEffects: [{ en: 'Nausea' }],
     whenToSeekHelp: { en: 'If rash develops' }, storageInstructions: { en: 'Store below 25°C' },
-    pregnancySummaryPlain: { en: 'Category B' }, warningsSummaryPlain: { en: 'Allergy risk' },
+    pregnancySummaryPlain: { en: 'Category B' }, warningsSummaryPlain: { en: 'May cause stomach bleeding' },
     version: 1, lastUpdated: '2026-06-12T00:00:00Z',
     mechanismOfAction: 'Inhibits cell wall synthesis', indicationsClinical: [],
     adultDosing: [], pediatricDosing: [], renalAdjustment: undefined,
@@ -130,22 +130,47 @@ vi.mock('expo-haptics', () => ({
   ImpactFeedbackStyle: { Light: 'light' },
   NotificationFeedbackType: { Success: 'success', Error: 'error' },
 }))
-vi.mock('@/components/DrugDetail/OverviewTab', () => ({ OverviewTab: () => null }))
-vi.mock('@/components/DrugDetail/ClinicalTab', () => ({ ClinicalTab: () => null }))
+vi.mock('expo-image', () => { const R = require('react'); return { Image: (p: Record<string, unknown>) => R.createElement('ExpoImage', p) } })
 vi.mock('@/components/DrugDetail/PricingTab', () => ({ PricingTab: () => null }))
-vi.mock('@/components/DrugDetail/EnrichTab', () => ({ EnrichTab: () => null }))
 vi.mock('@/components/DrugDetail/ShareButton', () => ({ ShareButton: () => null }))
-vi.mock('@/components/DrugDetail/SafetyBanner', () => ({ SafetyBanner: () => null }))
+vi.mock('@/components/DrugDetail/SafetyZone', () => {
+  const R = require('react')
+  return { SafetyZone: () => R.createElement('View', { testID: 'safety-zone' }) }
+})
+vi.mock('@/components/DrugDetail/DrugThumbnail', () => {
+  const R = require('react')
+  return { DrugThumbnail: () => R.createElement('View', { testID: 'drug-thumbnail' }) }
+})
+vi.mock('@/components/DrugDetail/drug-detail-sections', () => ({
+  buildDrugSections: () => [
+    { id: 'summary', title: 'Summary', defaultOpen: true, body: null },
+  ],
+}))
 vi.mock('@/components/SkeletonCard', () => ({ SkeletonCard: () => null }))
 vi.mock('@/components/ErrorBoundary', () => ({
   ErrorBoundary: ({ children }: { children?: React.ReactNode }) => children,
 }))
-vi.mock('@/components/CoachMark', () => ({ CoachMark: () => null }))
+vi.mock('@ultranos/ui-kit/native', () => {
+  const R = require('react')
+  return {
+    CollapsibleSection: ({ children, testID, title }: { children?: React.ReactNode; testID?: string; title?: string }) =>
+      R.createElement('View', { testID }, R.createElement('View', null, title), children),
+    Chip: ({ label }: { label?: string }) => R.createElement('View', null, label),
+  }
+})
 
 import DrugDetailScreen from '@/app/drug/[atcCode]'
 
-describe('DrugDetailScreen — RTL snapshots', () => {
-  it('LTR snapshot (lang=en)', async () => {
+describe('DrugDetailScreen — single scroll', () => {
+  it('renders the pinned safety zone and a collapsible section, no tab bar', async () => {
+    mockLang.lang = 'en'
+    const { findByText, queryByTestId } = render(<DrugDetailScreen />)
+    await findByText('amoxicillin')
+    expect(queryByTestId('safety-zone')).toBeTruthy()
+    expect(queryByTestId('tab-overview')).toBeNull() // tabs removed
+  })
+
+  it('LTR snapshot', async () => {
     mockLang.lang = 'en'
     const { toJSON, findByText } = render(<DrugDetailScreen />)
     await findByText('amoxicillin')
@@ -155,14 +180,7 @@ describe('DrugDetailScreen — RTL snapshots', () => {
   it('RTL snapshot (lang=ar)', async () => {
     mockLang.lang = 'ar'
     const { toJSON, findByText } = render(<DrugDetailScreen />)
-    // In RTL with ar localName present, it renders the Arabic name
     await findByText('أموكسيسيلين')
     expect(toJSON()).toMatchSnapshot()
-  })
-
-  it('tab-clinical testID is present for DOCTOR role', async () => {
-    mockLang.lang = 'en'
-    const { findByTestId } = render(<DrugDetailScreen />)
-    expect(await findByTestId('tab-clinical')).toBeTruthy()
   })
 })

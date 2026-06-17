@@ -1,7 +1,12 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`DrugDetailScreen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
+exports[`DrugDetailScreen — single scroll > LTR snapshot 1`] = `
 <SafeAreaView
+  edges={
+    [
+      "top",
+    ]
+  }
   style={
     [
       {
@@ -14,29 +19,30 @@ exports[`DrugDetailScreen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
   }
 >
   <View
-    style={
-      [
-        {
-          "borderBottomWidth": 1,
-          "padding": 16,
-        },
-        {
-          "backgroundColor": "#fff",
-          "borderBottomColor": "#d8dde6",
-        },
-      ]
+    contentContainerStyle={
+      {
+        "gap": 12,
+        "padding": 16,
+        "paddingBottom": 32,
+      }
     }
   >
     <View
       style={
-        {
-          "alignItems": "flex-start",
-          "flexDirection": "row",
-          "gap": 12,
-          "justifyContent": "space-between",
-        }
+        [
+          {
+            "alignItems": "center",
+            "gap": 12,
+          },
+          {
+            "flexDirection": "row",
+          },
+        ]
       }
     >
+      <View
+        testID="drug-thumbnail"
+      />
       <View
         style={
           {
@@ -82,11 +88,15 @@ exports[`DrugDetailScreen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
       </View>
       <View
         style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "gap": 12,
-          }
+          [
+            {
+              "alignItems": "center",
+              "gap": 12,
+            },
+            {
+              "flexDirection": "row",
+            },
+          ]
         }
       >
         <Pressable
@@ -97,12 +107,8 @@ exports[`DrugDetailScreen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
           testID="bookmark-btn"
         >
           <View
-            style={{}}
-          >
-            <View
-              testID="icon-Heart"
-            />
-          </View>
+            testID="icon-Heart"
+          />
         </Pressable>
       </View>
     </View>
@@ -110,234 +116,42 @@ exports[`DrugDetailScreen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
       style={
         {
           "flexDirection": "row",
-          "marginTop": 12,
         }
       }
     >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "selected": false,
-          }
-        }
-        style={
-          [
-            {
-              "borderRadius": 9999,
-              "borderWidth": 1,
-              "paddingHorizontal": 12,
-              "paddingVertical": 8,
-            },
-            {
-              "backgroundColor": "#ffffff",
-              "borderColor": "#d8dde6",
-            },
-          ]
-        }
-      >
-        <Text
-          style={
-            [
-              {
-                "fontFamily": "Manrope",
-                "fontSize": 14,
-              },
-              {
-                "color": "#4a5568",
-              },
-              false,
-              false,
-            ]
-          }
-        >
-          Antibiotic
-        </Text>
-      </Pressable>
+      <View>
+        Antibiotic
+      </View>
     </View>
-  </View>
-  <View
-    style={
-      [
-        {
-          "borderBottomWidth": 1,
-          "flexDirection": "row",
-        },
-        {
-          "backgroundColor": "#fff",
-          "borderBottomColor": "#d8dde6",
-        },
-      ]
-    }
-  >
-    <Pressable
-      accessibilityLabel="Overview"
-      accessibilityRole="tab"
-      accessibilityState={
-        {
-          "selected": true,
-        }
-      }
-      onClick={[Function]}
-      onLayout={[Function]}
-      style={
-        {
-          "paddingHorizontal": 16,
-          "paddingVertical": 12,
-        }
-      }
-      testID="tab-overview"
-    >
-      <Text
-        style={
-          [
-            {
-              "fontSize": 16,
-            },
-            {
-              "color": "#4a5568",
-            },
-            {
-              "color": "#2e9e71",
-              "fontWeight": "600",
-            },
-          ]
-        }
-      >
-        Overview
-      </Text>
-    </Pressable>
-    <Pressable
-      accessibilityLabel="Clinical"
-      accessibilityRole="tab"
-      accessibilityState={
-        {
-          "selected": false,
-        }
-      }
-      onClick={[Function]}
-      onLayout={[Function]}
-      style={
-        {
-          "paddingHorizontal": 16,
-          "paddingVertical": 12,
-        }
-      }
-      testID="tab-clinical"
-    >
-      <Text
-        style={
-          [
-            {
-              "fontSize": 16,
-            },
-            {
-              "color": "#4a5568",
-            },
-            false,
-          ]
-        }
-      >
-        Clinical
-      </Text>
-    </Pressable>
-    <Pressable
-      accessibilityLabel="Pricing"
-      accessibilityRole="tab"
-      accessibilityState={
-        {
-          "selected": false,
-        }
-      }
-      onClick={[Function]}
-      onLayout={[Function]}
-      style={
-        {
-          "paddingHorizontal": 16,
-          "paddingVertical": 12,
-        }
-      }
-      testID="tab-pricing"
-    >
-      <Text
-        style={
-          [
-            {
-              "fontSize": 16,
-            },
-            {
-              "color": "#4a5568",
-            },
-            false,
-          ]
-        }
-      >
-        Pricing
-      </Text>
-    </Pressable>
-    <Pressable
-      accessibilityLabel="Enrich"
-      accessibilityRole="tab"
-      accessibilityState={
-        {
-          "selected": false,
-        }
-      }
-      onClick={[Function]}
-      onLayout={[Function]}
-      style={
-        {
-          "paddingHorizontal": 16,
-          "paddingVertical": 12,
-        }
-      }
-      testID="tab-enrich"
-    >
-      <Text
-        style={
-          [
-            {
-              "fontSize": 16,
-            },
-            {
-              "color": "#4a5568",
-            },
-            false,
-          ]
-        }
-      >
-        Enrich
-      </Text>
-    </Pressable>
+    <View
+      testID="safety-zone"
+    />
     <View
       style={
-        [
-          {
-            "borderRadius": 1,
-            "bottom": 0,
-            "height": 2,
-            "position": "absolute",
-          },
-          {
-            "backgroundColor": "#2e9e71",
-          },
-          {},
-        ]
+        {
+          "gap": 0,
+        }
       }
-    />
+    >
+      <View
+        testID="section-summary"
+      >
+        <View>
+          Summary
+        </View>
+      </View>
+    </View>
   </View>
-  <View
-    style={
-      {
-        "flex": 1,
-      }
-    }
-  />
 </SafeAreaView>
 `;
 
-exports[`DrugDetailScreen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
+exports[`DrugDetailScreen — single scroll > RTL snapshot (lang=ar) 1`] = `
 <SafeAreaView
+  edges={
+    [
+      "top",
+    ]
+  }
   style={
     [
       {
@@ -350,29 +164,30 @@ exports[`DrugDetailScreen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
   }
 >
   <View
-    style={
-      [
-        {
-          "borderBottomWidth": 1,
-          "padding": 16,
-        },
-        {
-          "backgroundColor": "#fff",
-          "borderBottomColor": "#d8dde6",
-        },
-      ]
+    contentContainerStyle={
+      {
+        "gap": 12,
+        "padding": 16,
+        "paddingBottom": 32,
+      }
     }
   >
     <View
       style={
-        {
-          "alignItems": "flex-start",
-          "flexDirection": "row",
-          "gap": 12,
-          "justifyContent": "space-between",
-        }
+        [
+          {
+            "alignItems": "center",
+            "gap": 12,
+          },
+          {
+            "flexDirection": "row-reverse",
+          },
+        ]
       }
     >
+      <View
+        testID="drug-thumbnail"
+      />
       <View
         style={
           {
@@ -422,11 +237,15 @@ exports[`DrugDetailScreen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
       </View>
       <View
         style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "gap": 12,
-          }
+          [
+            {
+              "alignItems": "center",
+              "gap": 12,
+            },
+            {
+              "flexDirection": "row-reverse",
+            },
+          ]
         }
       >
         <Pressable
@@ -437,12 +256,8 @@ exports[`DrugDetailScreen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
           testID="bookmark-btn"
         >
           <View
-            style={{}}
-          >
-            <View
-              testID="icon-Heart"
-            />
-          </View>
+            testID="icon-Heart"
+          />
         </Pressable>
       </View>
     </View>
@@ -450,228 +265,31 @@ exports[`DrugDetailScreen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
       style={
         {
           "flexDirection": "row",
-          "marginTop": 12,
         }
       }
     >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "selected": false,
-          }
-        }
-        style={
-          [
-            {
-              "borderRadius": 9999,
-              "borderWidth": 1,
-              "paddingHorizontal": 12,
-              "paddingVertical": 8,
-            },
-            {
-              "backgroundColor": "#ffffff",
-              "borderColor": "#d8dde6",
-            },
-          ]
-        }
-      >
-        <Text
-          style={
-            [
-              {
-                "fontFamily": "Manrope",
-                "fontSize": 14,
-              },
-              {
-                "color": "#4a5568",
-              },
-              false,
-              false,
-            ]
-          }
-        >
-          Antibiotic
-        </Text>
-      </Pressable>
+      <View>
+        Antibiotic
+      </View>
     </View>
-  </View>
-  <View
-    style={
-      [
-        {
-          "borderBottomWidth": 1,
-          "flexDirection": "row",
-        },
-        {
-          "backgroundColor": "#fff",
-          "borderBottomColor": "#d8dde6",
-        },
-      ]
-    }
-  >
-    <Pressable
-      accessibilityLabel="Overview"
-      accessibilityRole="tab"
-      accessibilityState={
-        {
-          "selected": true,
-        }
-      }
-      onClick={[Function]}
-      onLayout={[Function]}
-      style={
-        {
-          "paddingHorizontal": 16,
-          "paddingVertical": 12,
-        }
-      }
-      testID="tab-overview"
-    >
-      <Text
-        style={
-          [
-            {
-              "fontSize": 16,
-            },
-            {
-              "color": "#4a5568",
-            },
-            {
-              "color": "#2e9e71",
-              "fontWeight": "600",
-            },
-          ]
-        }
-      >
-        Overview
-      </Text>
-    </Pressable>
-    <Pressable
-      accessibilityLabel="Clinical"
-      accessibilityRole="tab"
-      accessibilityState={
-        {
-          "selected": false,
-        }
-      }
-      onClick={[Function]}
-      onLayout={[Function]}
-      style={
-        {
-          "paddingHorizontal": 16,
-          "paddingVertical": 12,
-        }
-      }
-      testID="tab-clinical"
-    >
-      <Text
-        style={
-          [
-            {
-              "fontSize": 16,
-            },
-            {
-              "color": "#4a5568",
-            },
-            false,
-          ]
-        }
-      >
-        Clinical
-      </Text>
-    </Pressable>
-    <Pressable
-      accessibilityLabel="Pricing"
-      accessibilityRole="tab"
-      accessibilityState={
-        {
-          "selected": false,
-        }
-      }
-      onClick={[Function]}
-      onLayout={[Function]}
-      style={
-        {
-          "paddingHorizontal": 16,
-          "paddingVertical": 12,
-        }
-      }
-      testID="tab-pricing"
-    >
-      <Text
-        style={
-          [
-            {
-              "fontSize": 16,
-            },
-            {
-              "color": "#4a5568",
-            },
-            false,
-          ]
-        }
-      >
-        Pricing
-      </Text>
-    </Pressable>
-    <Pressable
-      accessibilityLabel="Enrich"
-      accessibilityRole="tab"
-      accessibilityState={
-        {
-          "selected": false,
-        }
-      }
-      onClick={[Function]}
-      onLayout={[Function]}
-      style={
-        {
-          "paddingHorizontal": 16,
-          "paddingVertical": 12,
-        }
-      }
-      testID="tab-enrich"
-    >
-      <Text
-        style={
-          [
-            {
-              "fontSize": 16,
-            },
-            {
-              "color": "#4a5568",
-            },
-            false,
-          ]
-        }
-      >
-        Enrich
-      </Text>
-    </Pressable>
+    <View
+      testID="safety-zone"
+    />
     <View
       style={
-        [
-          {
-            "borderRadius": 1,
-            "bottom": 0,
-            "height": 2,
-            "position": "absolute",
-          },
-          {
-            "backgroundColor": "#2e9e71",
-          },
-          {},
-        ]
+        {
+          "gap": 0,
+        }
       }
-    />
+    >
+      <View
+        testID="section-summary"
+      >
+        <View>
+          Summary
+        </View>
+      </View>
+    </View>
   </View>
-  <View
-    style={
-      {
-        "flex": 1,
-      }
-    }
-  />
 </SafeAreaView>
 `;
