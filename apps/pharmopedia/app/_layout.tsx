@@ -32,7 +32,7 @@ import { useThemeStore } from '@/store/theme-store'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { initI18n } from '@/i18n'
 import { hasSeenWelcome } from './welcome'
-import { UiKitProvider } from '@ultranos/ui-kit/native'
+import { UiKitProvider, useReducedMotion } from '@ultranos/ui-kit/native'
 import { isRtlLang } from '@/store/lang-store'
 
 export default function RootLayout() {
@@ -46,6 +46,10 @@ export default function RootLayout() {
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme)
   const onSystemChange = useThemeStore((s) => s.onSystemChange)
   const lang = useLangStore((s) => s.lang)
+  const reduced = useReducedMotion()
+  // Side-slide that respects writing direction: new screens enter from the
+  // trailing edge (right in LTR, left in RTL). Reduced motion → gentle fade.
+  const stackAnimation = reduced ? 'fade' : isRtlLang(lang) ? 'slide_from_left' : 'slide_from_right'
 
   const [fontsLoaded] = useFonts({
     'Manrope':          Manrope_400Regular,
@@ -54,7 +58,7 @@ export default function RootLayout() {
     'Manrope-Bold':     Manrope_700Bold,
     'PublicSans':       PublicSans_400Regular,
     'PublicSans-Bold':  PublicSans_700Bold,
-    NotoNaskhArabic: require('../assets/fonts/NotoNaskhArabic-Regular.ttf'),
+    NotoKufiArabic: require('../assets/fonts/NotoKufiArabic-Regular.ttf'),
   })
 
   useEffect(() => {
@@ -100,11 +104,11 @@ export default function RootLayout() {
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
       <UiKitProvider mode={resolvedTheme} rtl={isRtlLang(lang)}>
         <ErrorBoundary>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
-            <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
-            <Stack.Screen name="(tabs)" options={{ animation: 'fade', animationDuration: 250 }} />
-            <Stack.Screen name="drug/[atcCode]" options={{ headerShown: true, title: '', animation: 'slide_from_bottom', animationDuration: 300 }} />
+          <Stack screenOptions={{ headerShown: false, animation: stackAnimation, animationDuration: 300 }}>
+            <Stack.Screen name="welcome" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="drug/[atcCode]" options={{ headerShown: true, title: '' }} />
           </Stack>
         </ErrorBoundary>
       </UiKitProvider>

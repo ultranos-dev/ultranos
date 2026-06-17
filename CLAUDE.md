@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
 **Fonts in Expo apps:** Load Manrope and Public Sans via `@expo-google-fonts/manrope` and `@expo-google-fonts/public-sans` in the root `_layout.tsx` `useFonts()` call. The registered names must match the `FontFamily.*` constants exactly:
 - `'Manrope'`, `'Manrope-Medium'`, `'Manrope-SemiBold'`, `'Manrope-Bold'`
 - `'PublicSans'`, `'PublicSans-Bold'`
-- `'NotoNaskhArabic'` — for Arabic/RTL content (`FontFamily.arabic`)
+- `'NotoKufiArabic'` — for Arabic/RTL content, i.e. Arabic, Pashto, and Dari (`FontFamily.arabic`); loaded as a local TTF in `assets/fonts/`
 
 **Metro config:** Expo apps using `expo-sqlite` require a `metro.config.js` that adds `.mjs` to `sourceExts` and `.wasm` to `assetExts`:
 ```javascript

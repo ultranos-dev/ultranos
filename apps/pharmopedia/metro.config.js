@@ -39,7 +39,30 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     }
   }
 
-  // 2. For bare module imports from within .pnpm/, redirect resolution to app's node_modules
+  // 2. Workspace TS sources are aliased to source by tsconfig "paths" (Expo Metro
+  // honors them). Those sources use NodeNext '.js' import specifiers (e.g.
+  // './enums.js') that tsc rewrites to '.ts' at build time, but Metro does not.
+  // Mirror that rule: for a relative '.js' import from a workspace source file,
+  // prefer the sibling '.ts'/'.tsx' when it exists. Real '.js' files (node_modules,
+  // compiled output) have no colliding '.ts', so this is a no-op for them.
+  if (
+    moduleName.endsWith('.js') &&
+    (moduleName.startsWith('./') || moduleName.startsWith('../')) &&
+    context.originModulePath &&
+    !context.originModulePath.includes('node_modules')
+  ) {
+    const base = path.resolve(
+      path.dirname(context.originModulePath),
+      moduleName.slice(0, -'.js'.length),
+    )
+    for (const candidate of [`${base}.ts`, `${base}.tsx`]) {
+      if (fs.existsSync(candidate)) {
+        return { filePath: candidate, type: 'sourceFile' }
+      }
+    }
+  }
+
+  // 3. For bare module imports from within .pnpm/, redirect resolution to app's node_modules
   if (
     !moduleName.startsWith('.') &&
     !moduleName.startsWith('/') &&
