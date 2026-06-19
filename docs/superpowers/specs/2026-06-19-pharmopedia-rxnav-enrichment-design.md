@@ -254,3 +254,10 @@ Commercial DrugBank license held (D8) → DrugBank shippable with required attri
 
 ### Data flow (answers "does it end up at the Hub, cached by Pharmopedia?")
 The 6 GB raw datasets are **build-time inputs only** — they never reach the Hub or devices. The ETL runs **off-device** (dev/CI/Hub-side), streams the raw files, filters to the catalog's drugs, maps fields, and **upserts enriched rows into Hub Postgres `drug_catalog`**. The Hub API serves them tier-scoped; **Pharmopedia syncs them into local SQLite** (`tier{1,2,3}_json` blobs) and reads them **offline**. So: enriched *subset* → Hub → synced/cached on device. Writing Plan 2 produces the code; the catalog is populated only when the ETL is **run**.
+
+### Post-run decision (live ETL, 2026-06-19)
+| # | Decision | Choice |
+|---|----------|--------|
+| D13 | Interactions per drug | **Severity-first cap at 50/drug** in the catalog (keep all CONTRAINDICATED+MAJOR, fill MODERATE→MINOR to 50). DrugBank gives avg ~367/drug (max 1540, ~1M total) — unviable for offline mobile sync and exceeds upsert statement-timeout. Cap bounds device payload and surfaces clinically significant DDIs. The full DDI set remains in the source data for any future server-side use. |
+
+**First live DrugBank ingestion result (DrugBank 5.1.13):** 2,524 rostered drugs → 3,868 ATC rows. Coverage: MOA 92%, interactions 91% (max 50), PK 85%, indications 93%, RxCUI 96%. Empty: `therapeutic_class`, `dose_forms` (ATC-derived class + dosages = fast follow); dosing regimens/pregnancy/patient-prose/adverse-events = Plans 3–4.
