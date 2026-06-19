@@ -56,6 +56,8 @@ const ar: Translations = {
       adverseEvents: 'الأحداث الضارة',
       adultDosing: 'جرعات البالغين',
       pregnancyCategory: 'فئة الحمل',
+      lactation: 'الرضاعة',
+      reproductivePotential: 'الإناث والذكور في سن الإنجاب',
       renalAdjustment: 'تعديل الكلى',
       interactions: 'التفاعلات الدوائية',
       safetyWarning: 'تفاعلات ممنوعة الاستعمال',
@@ -75,7 +77,7 @@ const ar: Translations = {
       },
     },
     photos: { title: 'الصور', disclaimer: 'للتوضيح فقط — تحقق من العبوة الفعلية.', generic: 'عام', unavailableOffline: 'الصور غير متوفرة دون اتصال.' },
-    sections: { dispensing: 'الصرف والقائمة الدوائية' },
+    sections: { dispensing: 'الصرف والقائمة الدوائية', about: 'حول هذا الدواء', dosageIndications: 'الجرعة ودواعي الاستعمال', adverseEffects: 'الآثار الجانبية', pharmacology: 'علم الأدوية', administration: 'طريقة الإعطاء', formulary: 'القائمة الدوائية', pricing: 'السعر والتوفير' },
     noDetail: 'المعلومات التفصيلية غير متوفرة لهذا الدواء بعد.',
   },
   pricing: {
@@ -144,8 +146,6 @@ const ar: Translations = {
   },
   coach: {
     browseClass: 'اضغط على فئة لرؤية جميع الأدوية فيها',
-    detailBookmark: 'احفظ الأدوية للوصول السريع في تبويب المحفوظات',
-    detailTabs: 'اسحب بين التبويبات للتفاصيل السريرية والأسعار',
     profileLang: 'غيّر لغتك في أي وقت من الإعدادات',
     profileSync: 'حافظ على تحديث الكتالوج — المزامنة تنزّل أحدث الأدوية',
   },

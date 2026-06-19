@@ -32,4 +32,9 @@ describe('MediaSection', () => {
     render(<MediaSection images={[]} />)
     expect(screen.queryByTestId('media-disclaimer')).toBeNull()
   })
+
+  it('uses caption as the image accessibility label when present', () => {
+    render(<MediaSection images={[{ url: 'https://x/a.jpg', caption: 'Front of box' }]} />)
+    expect(screen.getByLabelText('Front of box')).toBeTruthy()
+  })
 })

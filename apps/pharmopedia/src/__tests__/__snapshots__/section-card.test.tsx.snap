@@ -3,22 +3,9 @@
 exports[`SectionCard > snapshot — danger severity (title + items) 1`] = `
 <View
   style={
-    [
-      {
-        "borderRadius": 8,
-        "borderWidth": 1,
-        "marginBottom": 20,
-        "padding": 16,
-      },
-      {
-        "backgroundColor": "#fff",
-        "borderColor": "#e5e5e5",
-      },
-      {
-        "backgroundColor": "#fee2e2",
-        "borderColor": "#dc2626",
-      },
-    ]
+    {
+      "gap": 4,
+    }
   }
   testID="snap-danger"
 >
@@ -30,11 +17,10 @@ exports[`SectionCard > snapshot — danger severity (title + items) 1`] = `
           "fontFamily": "Manrope-Bold",
           "fontSize": 14,
           "letterSpacing": 0.5,
-          "marginBottom": 4,
           "textTransform": "uppercase",
         },
         {
-          "color": "#666",
+          "color": "#dc2626",
         },
       ]
     }
@@ -47,7 +33,7 @@ exports[`SectionCard > snapshot — danger severity (title + items) 1`] = `
         {
           "fontFamily": "Manrope",
           "fontSize": 16,
-          "lineHeight": 22,
+          "lineHeight": 24,
         },
         {
           "color": "#111",
@@ -68,7 +54,7 @@ exports[`SectionCard > snapshot — danger severity (title + items) 1`] = `
         {
           "fontFamily": "Manrope",
           "fontSize": 16,
-          "lineHeight": 22,
+          "lineHeight": 24,
         },
         {
           "color": "#111",
@@ -89,19 +75,9 @@ exports[`SectionCard > snapshot — danger severity (title + items) 1`] = `
 exports[`SectionCard > snapshot — default severity (title + text) 1`] = `
 <View
   style={
-    [
-      {
-        "borderRadius": 8,
-        "borderWidth": 1,
-        "marginBottom": 20,
-        "padding": 16,
-      },
-      {
-        "backgroundColor": "#fff",
-        "borderColor": "#e5e5e5",
-      },
-      false,
-    ]
+    {
+      "gap": 4,
+    }
   }
 >
   <Text
@@ -112,7 +88,6 @@ exports[`SectionCard > snapshot — default severity (title + text) 1`] = `
           "fontFamily": "Manrope-Bold",
           "fontSize": 14,
           "letterSpacing": 0.5,
-          "marginBottom": 4,
           "textTransform": "uppercase",
         },
         {
@@ -129,7 +104,7 @@ exports[`SectionCard > snapshot — default severity (title + text) 1`] = `
         {
           "fontFamily": "Manrope",
           "fontSize": 16,
-          "lineHeight": 22,
+          "lineHeight": 24,
         },
         {
           "color": "#111",

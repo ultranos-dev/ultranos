@@ -46,7 +46,7 @@ vi.mock('@/db/drug-catalog', () => {
     mechanismOfAction: 'Inhibits cell wall synthesis', indicationsClinical: [],
     adultDosing: [], pediatricDosing: [], renalAdjustment: undefined,
     adverseEvents: [], contraindications: [], interactions: [],
-    pregnancyCategory: undefined, administrationNotes: {}, pharmacokinetics: {},
+    pregnancyClinical: undefined, administrationNotes: {}, pharmacokinetics: {},
   }
   return {
     getDrugRowByAtcCode: vi.fn().mockResolvedValue({
@@ -117,8 +117,6 @@ vi.mock('react-i18next', () => ({
         'drug.notFound': 'Drug not found',
         'drug.notFoundDescription': 'We could not find this drug.',
         'drug.searchInstead': 'Search instead',
-        'coach.detailBookmark': 'Bookmark this drug',
-        'coach.detailTabs': 'Switch tabs',
       }[key] ?? key),
   }),
 }))
@@ -131,7 +129,6 @@ vi.mock('expo-haptics', () => ({
   NotificationFeedbackType: { Success: 'success', Error: 'error' },
 }))
 vi.mock('expo-image', () => { const R = require('react'); return { Image: (p: Record<string, unknown>) => R.createElement('ExpoImage', p) } })
-vi.mock('@/components/DrugDetail/PricingTab', () => ({ PricingTab: () => null }))
 vi.mock('@/components/DrugDetail/ShareButton', () => ({ ShareButton: () => null }))
 vi.mock('@/components/DrugDetail/SafetyZone', () => {
   const R = require('react')

@@ -22,8 +22,8 @@ exports[`DrugDetailScreen — single scroll > LTR snapshot 1`] = `
     contentContainerStyle={
       {
         "gap": 12,
-        "padding": 16,
         "paddingBottom": 32,
+        "paddingTop": 16,
       }
     }
   >
@@ -33,6 +33,7 @@ exports[`DrugDetailScreen — single scroll > LTR snapshot 1`] = `
           {
             "alignItems": "center",
             "gap": 12,
+            "paddingHorizontal": 16,
           },
           {
             "flexDirection": "row",
@@ -40,6 +41,17 @@ exports[`DrugDetailScreen — single scroll > LTR snapshot 1`] = `
         ]
       }
     >
+      <Pressable
+        accessibilityLabel="common.back"
+        accessibilityRole="button"
+        hitSlop={8}
+        onClick={[Function]}
+        testID="detail-back-btn"
+      >
+        <View
+          testID="icon-ChevronLeft"
+        />
+      </Pressable>
       <View
         testID="drug-thumbnail"
       />
@@ -116,6 +128,7 @@ exports[`DrugDetailScreen — single scroll > LTR snapshot 1`] = `
       style={
         {
           "flexDirection": "row",
+          "paddingHorizontal": 16,
         }
       }
     >
@@ -123,6 +136,18 @@ exports[`DrugDetailScreen — single scroll > LTR snapshot 1`] = `
         Antibiotic
       </View>
     </View>
+    <View
+      style={
+        [
+          {
+            "height": 1,
+          },
+          {
+            "backgroundColor": "#d8dde6",
+          },
+        ]
+      }
+    />
     <View
       testID="safety-zone"
     />
@@ -167,8 +192,8 @@ exports[`DrugDetailScreen — single scroll > RTL snapshot (lang=ar) 1`] = `
     contentContainerStyle={
       {
         "gap": 12,
-        "padding": 16,
         "paddingBottom": 32,
+        "paddingTop": 16,
       }
     }
   >
@@ -178,6 +203,7 @@ exports[`DrugDetailScreen — single scroll > RTL snapshot (lang=ar) 1`] = `
           {
             "alignItems": "center",
             "gap": 12,
+            "paddingHorizontal": 16,
           },
           {
             "flexDirection": "row-reverse",
@@ -185,6 +211,17 @@ exports[`DrugDetailScreen — single scroll > RTL snapshot (lang=ar) 1`] = `
         ]
       }
     >
+      <Pressable
+        accessibilityLabel="common.back"
+        accessibilityRole="button"
+        hitSlop={8}
+        onClick={[Function]}
+        testID="detail-back-btn"
+      >
+        <View
+          testID="icon-ChevronRight"
+        />
+      </Pressable>
       <View
         testID="drug-thumbnail"
       />
@@ -265,6 +302,7 @@ exports[`DrugDetailScreen — single scroll > RTL snapshot (lang=ar) 1`] = `
       style={
         {
           "flexDirection": "row",
+          "paddingHorizontal": 16,
         }
       }
     >
@@ -272,6 +310,18 @@ exports[`DrugDetailScreen — single scroll > RTL snapshot (lang=ar) 1`] = `
         Antibiotic
       </View>
     </View>
+    <View
+      style={
+        [
+          {
+            "height": 1,
+          },
+          {
+            "backgroundColor": "#d8dde6",
+          },
+        ]
+      }
+    />
     <View
       testID="safety-zone"
     />

@@ -56,6 +56,8 @@ const ps: Translations = {
       adverseEvents: 'ناغوښتل پیښې',
       adultDosing: 'د لویانو ډوز',
       pregnancyCategory: 'د حمل کټګوري',
+      lactation: 'شیدول',
+      reproductivePotential: 'د زیږون وړ ښځې او نارینه',
       renalAdjustment: 'د پښتورګو تنظیم',
       interactions: 'د درملو تعاملات',
       safetyWarning: 'د منع تعاملات',
@@ -75,7 +77,7 @@ const ps: Translations = {
       },
     },
     photos: { title: 'انځورونه', disclaimer: 'یوازې د نمونې لپاره — اصلي بسته‌بندي تایید کړئ.', generic: 'عمومي', unavailableOffline: 'انځورونه آفلاین شتون نلري.' },
-    sections: { dispensing: 'وېش او درمل لیست' },
+    sections: { dispensing: 'وېش او درمل لیست', about: 'د دې درمل په اړه', dosageIndications: 'دوز او اندیکیشنونه', adverseEffects: 'ناوړه اغیزې', pharmacology: 'فارماکولوژي', administration: 'د کارولو لاره', formulary: 'درمل لیست', pricing: 'بیه او سپما' },
     noDetail: 'د دې درمل لپاره تفصيلي معلومات تر اوسه شتون نلري.',
   },
   pricing: {
@@ -144,8 +146,6 @@ const ps: Translations = {
   },
   coach: {
     browseClass: 'په یوه کټګوري ټک وکړئ ترڅو ټولې درمل وګورئ',
-    detailBookmark: 'درمل خوندي کړئ ترڅو د خوندي شوي تب کې ژر ومومئ',
-    detailTabs: 'د کلینیکي توضیحاتو او بیو لپاره تبونو ته سوایپ وکړئ',
     profileLang: 'خپله ژبه هر وخت د تنظیماتو څخه بدل کړئ',
     profileSync: 'خپل کتابچه تازه وساتئ — همغږي وروستي درمل ډاونلوډ کوي',
   },

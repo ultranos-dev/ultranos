@@ -6,6 +6,9 @@ expo-env.d.ts
 .expo/
 # @end expo-cli
 
+# Project-local Metro cache (see metro.config.js)
+.metro-cache/
+
 # Local environment variables (contain secrets)
 .env.local
 .env*.local

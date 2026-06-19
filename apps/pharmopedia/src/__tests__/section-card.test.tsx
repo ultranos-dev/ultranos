@@ -27,24 +27,20 @@ describe('SectionCard', () => {
     expect(screen.getByText(/Rash/)).toBeTruthy()
   })
 
-  it('applies danger severity background', () => {
-    const { getByTestId } = render(
-      <SectionCard title="Contraindications" items={['Penicillin allergy']} severity="danger" testID="section-contra" />
-    )
-    const container = getByTestId('section-contra')
-    const style = container.props.style
+  it('colors the title for danger severity (no box)', () => {
+    render(<SectionCard title="Contraindications" items={['Penicillin allergy']} severity="danger" />)
+    const title = screen.getByText('Contraindications')
+    const style = title.props.style
     const flat = Array.isArray(style) ? Object.assign({}, ...style.filter(Boolean)) : style
-    expect(flat.backgroundColor).toBe('#fee2e2')
+    expect(flat.color).toBe('#dc2626')
   })
 
-  it('applies warning severity background', () => {
-    const { getByTestId } = render(
-      <SectionCard title="Interactions" items={['Warfarin']} severity="warning" testID="section-inter" />
-    )
-    const container = getByTestId('section-inter')
-    const style = container.props.style
+  it('colors the title for warning severity (no box)', () => {
+    render(<SectionCard title="Interactions" items={['Warfarin']} severity="warning" />)
+    const title = screen.getByText('Interactions')
+    const style = title.props.style
     const flat = Array.isArray(style) ? Object.assign({}, ...style.filter(Boolean)) : style
-    expect(flat.backgroundColor).toBe('#fef3c7')
+    expect(flat.color).toBe('#d97706')
   })
 
   it('applies RTL text alignment', () => {

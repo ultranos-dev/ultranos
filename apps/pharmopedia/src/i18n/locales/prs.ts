@@ -56,6 +56,8 @@ const prs: Translations = {
       adverseEvents: 'حوادث ناخواسته',
       adultDosing: 'دوز بزرگسالان',
       pregnancyCategory: 'رده بارداری',
+      lactation: 'شیردهی',
+      reproductivePotential: 'زنان و مردان در سن باروری',
       renalAdjustment: 'تعدیل کلیوی',
       interactions: 'تداخلات دارویی',
       safetyWarning: 'تداخلات منع مصرف',
@@ -75,7 +77,7 @@ const prs: Translations = {
       },
     },
     photos: { title: 'تصاویر', disclaimer: 'فقط برای نمایش — بسته‌بندی واقعی را تأیید کنید.', generic: 'عمومی', unavailableOffline: 'تصاویر در حالت آفلاین در دسترس نیستند.' },
-    sections: { dispensing: 'توزیع و فهرست دارویی' },
+    sections: { dispensing: 'توزیع و فهرست دارویی', about: 'درباره این دارو', dosageIndications: 'دوز و موارد مصرف', adverseEffects: 'عوارض جانبی', pharmacology: 'فارماکولوژی', administration: 'نحوه مصرف', formulary: 'فهرست دارویی', pricing: 'قیمت و صرفه‌جویی' },
     noDetail: 'معلومات تفصیلی برای این دارو هنوز موجود نیست.',
   },
   pricing: {
@@ -144,8 +146,6 @@ const prs: Translations = {
   },
   coach: {
     browseClass: 'روی یک دسته ضربه بزنید تا داروهای آن را ببینید',
-    detailBookmark: 'داروها را ذخیره کنید تا در تب ذخیره‌شده‌ها سریع پیدا شوند',
-    detailTabs: 'بین تب‌ها بکشید برای جزئیات بالینی و قیمت‌گذاری',
     profileLang: 'زبان خود را هر وقت از تنظیمات تغییر دهید',
     profileSync: 'کتابچه خود را به‌روز نگه دارید — همگام‌سازی آخرین داروها را دانلود می‌کند',
   },

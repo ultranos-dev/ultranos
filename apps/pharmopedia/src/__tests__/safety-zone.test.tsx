@@ -20,12 +20,13 @@ const base = {
 }
 
 describe('SafetyZone', () => {
-  it('renders warnings + seek-help for all roles, with no collapse control', () => {
+  it('renders the critical seek-help item for all roles, with no collapse control', () => {
     render(<SafetyZone entry={base} lang="en" isClinical={false} />)
     const zone = screen.getByTestId('safety-zone')
     expect(zone.props.accessibilityRole).toBe('alert')
-    expect(screen.getByText('May cause stomach bleeding')).toBeTruthy()
     expect(screen.getByText('Seek help if breathing is hard')).toBeTruthy()
+    // Full warnings prose now lives in a collapsible Warnings section — NOT pinned here.
+    expect(screen.queryByText('May cause stomach bleeding')).toBeNull()
     // no expandable button inside the safety zone
     expect(screen.queryByRole('button')).toBeNull()
   })

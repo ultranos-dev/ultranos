@@ -98,4 +98,12 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
 config.resolver.sourceExts.push('mjs')
 config.resolver.assetExts.push('wasm')
 
+// Keep Metro's cache inside the project rather than the shared OS temp dir.
+// On Windows, %TEMP%\metro-cache gets locked by Defender/stale handles, which
+// makes `expo start --clear` fail with EBUSY on unlink. A project-local store
+// sidesteps that contention. Reuse the FileStore class from Expo's default
+// config (metro-cache isn't symlinked into the app's node_modules under pnpm).
+const FileStore = getDefaultConfig(projectRoot).cacheStores[0].constructor
+config.cacheStores = [new FileStore({ root: path.join(projectRoot, '.metro-cache') })]
+
 module.exports = config
