@@ -67,6 +67,7 @@ const ps: Translations = {
       halfLife: 'نیمه ژوند',
       proteinBinding: 'د پروټین سره تړلو',
       volumeDistribution: 'د توزیع حجم',
+      clearance: 'کلیرانس',
       metabolism: 'میټابولیزم',
       excretion: 'اخراج',
       severity: {

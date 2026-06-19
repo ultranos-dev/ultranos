@@ -85,7 +85,7 @@ describe('buildDrugSections — clinical/pharmacist (monograph)', () => {
     pediatricDosing: [], adverseEvents: [{ effect: 'Nausea', frequency: 'common', severity: 'mild' }],
     contraindications: [], interactions: [{ drugAtcCode: 'X', drugName: 'Warfarin', severity: 'MAJOR', mechanism: 'bleeding' }],
     renalAdjustment: undefined, pregnancyClinical: { legacyCategory: 'C' }, administrationNotes: {},
-    pharmacokinetics: { halfLifeHours: 2 },
+    pharmacokinetics: { halfLife: '2 hours' },
   } as unknown as DrugEntryTier2
 
   it('produces Medscape-style monograph sections', () => {

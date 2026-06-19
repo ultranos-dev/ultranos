@@ -67,6 +67,7 @@ const ar: Translations = {
       halfLife: 'عمر النصف',
       proteinBinding: 'الارتباط بالبروتين',
       volumeDistribution: 'حجم التوزيع',
+      clearance: 'التصفية',
       metabolism: 'الاستقلاب',
       excretion: 'الإطراح',
       severity: {

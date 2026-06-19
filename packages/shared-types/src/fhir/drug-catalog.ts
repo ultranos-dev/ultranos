@@ -34,11 +34,12 @@ export interface AdverseEvent {
 }
 
 export interface DrugPharmacokinetics {
-  halfLifeHours?: number
-  proteinBindingPct?: number
+  halfLife?: string              // free-text, e.g. "approximately 10 minutes"
+  proteinBinding?: string        // e.g. "approximately 3%"
   volumeOfDistribution?: string
+  clearance?: string
   metabolism?: string
-  excretion?: string
+  excretion?: string             // sourced from DrugBank route-of-elimination
 }
 
 /** Structured clinical pregnancy/lactation info, aligned to the FDA PLLR label rule. */

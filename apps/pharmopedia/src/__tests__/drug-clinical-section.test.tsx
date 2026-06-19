@@ -25,7 +25,7 @@ const base = {
   contraindications: [], interactions: [], renalAdjustment: undefined, administrationNotes: {},
   adultDosing: [{ indication: 'Infection', adultDose: '500mg', frequency: 'TID', route: 'PO' }],
   pediatricDosing: [{ indication: 'Infection', pediatricDose: '40mg/kg/day', frequency: 'TID' }],
-  pharmacokinetics: { halfLifeHours: 1.5, proteinBindingPct: 20 },
+  pharmacokinetics: { halfLife: '1.5 hours', proteinBinding: '20%' },
   pregnancyClinical: { legacyCategory: 'B', lactation: 'Excreted in breast milk.' },
 } as unknown as DrugEntryTier2
 

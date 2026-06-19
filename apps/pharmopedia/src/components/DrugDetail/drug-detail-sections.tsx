@@ -116,9 +116,10 @@ export function buildDrugSections({ entry, lang, t, isClinical, isPharmacist }: 
     const pk = e2.pharmacokinetics
     const pkLines: string[] = []
     if (pk) {
-      if (pk.halfLifeHours != null) pkLines.push(`${t('drug.clinical.halfLife')}: ${pk.halfLifeHours} h`)
-      if (pk.proteinBindingPct != null) pkLines.push(`${t('drug.clinical.proteinBinding')}: ${pk.proteinBindingPct}%`)
+      if (pk.halfLife) pkLines.push(`${t('drug.clinical.halfLife')}: ${pk.halfLife}`)
+      if (pk.proteinBinding) pkLines.push(`${t('drug.clinical.proteinBinding')}: ${pk.proteinBinding}`)
       if (pk.volumeOfDistribution) pkLines.push(`${t('drug.clinical.volumeDistribution')}: ${pk.volumeOfDistribution}`)
+      if (pk.clearance) pkLines.push(`${t('drug.clinical.clearance')}: ${pk.clearance}`)
       if (pk.metabolism) pkLines.push(`${t('drug.clinical.metabolism')}: ${pk.metabolism}`)
       if (pk.excretion) pkLines.push(`${t('drug.clinical.excretion')}: ${pk.excretion}`)
     }

@@ -67,6 +67,7 @@ const prs: Translations = {
       halfLife: 'نیمه‌عمر',
       proteinBinding: 'اتصال به پروتئین',
       volumeDistribution: 'حجم توزیع',
+      clearance: 'کلیرانس',
       metabolism: 'متابولیسم',
       excretion: 'دفع',
       severity: {

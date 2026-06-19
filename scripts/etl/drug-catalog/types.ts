@@ -61,9 +61,11 @@ export interface SourceDrugData {
   administrationNotes?: Record<string, string>
   pharmacokinetics?: {
     halfLife?: string
-    peakEffect?: string
-    bioavailability?: string
     proteinBinding?: string
+    volumeOfDistribution?: string
+    clearance?: string
+    metabolism?: string
+    excretion?: string
   }
   summaryPlain?: Record<string, string>
   usedFor?: Record<string, string>[]

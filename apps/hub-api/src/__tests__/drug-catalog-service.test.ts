@@ -31,7 +31,7 @@ const FULL_ROW = {
   interactions: [{ drugAtcCode: 'B01AA03', drugName: 'Warfarin', severity: 'MODERATE', mechanism: 'CYP2C9' }],
   pregnancy_clinical: { legacyCategory: 'B' },
   administration_notes: { en: 'Take with food.' },
-  pharmacokinetics: { halfLifeHours: 1.3 },
+  pharmacokinetics: { halfLife: '1.3 hours' },
   formulary_status: 'on_formulary',
   dispensing_notes: 'Dispense with water.',
   substitutes: ['J01CA01'],

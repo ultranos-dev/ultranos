@@ -77,6 +77,7 @@ const en = {
       halfLife: 'Half-life',
       proteinBinding: 'Protein binding',
       volumeDistribution: 'Volume of distribution',
+      clearance: 'Clearance',
       metabolism: 'Metabolism',
       excretion: 'Excretion',
       severity: {
