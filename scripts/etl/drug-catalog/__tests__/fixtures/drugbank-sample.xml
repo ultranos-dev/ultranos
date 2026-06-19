@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<drugbank xmlns="http://www.drugbank.ca" version="5.1.13" exported-on="2024-01-02">
+  <drug type="biotech" created="2005-06-13" updated="2024-01-02">
+    <drugbank-id primary="true">DB00001</drugbank-id>
+    <drugbank-id>BTD00024</drugbank-id>
+    <name>Lepirudin</name>
+    <description>A direct thrombin inhibitor.</description>
+    <groups><group>approved</group></groups>
+    <indication>Indicated for anticoagulation in patients with HIT.[L41]</indication>
+    <mechanism-of-action>Lepirudin is a direct thrombin inhibitor.[A12]</mechanism-of-action>
+    <half-life>Approximately 10 minutes, and 2 hours in renal impairment.</half-life>
+    <protein-binding>Approximately 3%.[L41]</protein-binding>
+    <volume-of-distribution>12.2 L/m<sup>2</sup> at steady state.</volume-of-distribution>
+    <clearance>Proportional to glomerular filtration rate.</clearance>
+    <metabolism>Metabolized by release of amino acids.</metabolism>
+    <route-of-elimination>Renal, about 48% of the dose.</route-of-elimination>
+    <international-brands>
+      <international-brand><name>Refludan</name><company>Bayer</company></international-brand>
+    </international-brands>
+    <atc-codes>
+      <atc-code code="B01AE02">
+        <level code="B01AE">Direct thrombin inhibitors</level>
+        <level code="B01A">ANTITHROMBOTIC AGENTS</level>
+        <level code="B01">ANTITHROMBOTIC AGENTS</level>
+        <level code="B">BLOOD AND BLOOD FORMING ORGANS</level>
+      </atc-code>
+    </atc-codes>
+    <dosages>
+      <dosage><form>Injection, solution, concentrate</form><route>Intravenous</route><strength>50 mg/mL</strength></dosage>
+      <dosage><form>Injection, solution, concentrate</form><route>Intravenous</route><strength>20 mg</strength></dosage>
+    </dosages>
+    <external-identifiers>
+      <external-identifier><resource>RxCUI</resource><identifier>237057</identifier></external-identifier>
+      <external-identifier><resource>Wikipedia</resource><identifier>Lepirudin</identifier></external-identifier>
+    </external-identifiers>
+    <drug-interactions>
+      <drug-interaction><drugbank-id>DB06605</drugbank-id><name>Apixaban</name><description>Apixaban may increase the anticoagulant activities of Lepirudin.</description></drug-interaction>
+    </drug-interactions>
+    <pathways>
+      <pathway><smpdb-id>SMP0001</smpdb-id><name>P</name><category>c</category>
+        <drugs><drug><drugbank-id>DB00001</drugbank-id><name>Lepirudin</name></drug></drugs>
+        <enzymes></enzymes>
+      </pathway>
+    </pathways>
+    <targets>
+      <target position="1">
+        <id>BE0000048</id>
+        <name>Prothrombin</name>
+        <organism>Humans</organism>
+        <actions><action>inhibitor</action></actions>
+        <polypeptide id="P00734" source="Swiss-Prot">
+          <name>Prothrombin</name>
+          <gene-name>Gla</gene-name>
+        </polypeptide>
+      </target>
+    </targets>
+  </drug>
+</drugbank>

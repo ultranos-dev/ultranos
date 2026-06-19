@@ -6,13 +6,16 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "run-etl": "tsx run.ts"
+    "run-etl": "tsx run.ts",
+    "run-drugbank": "tsx run-drugbank.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.0"
+    "@supabase/supabase-js": "^2.49.0",
+    "sax": "^1.4.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/sax": "^1.2.7",
     "tsx": "^4.0.0",
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"

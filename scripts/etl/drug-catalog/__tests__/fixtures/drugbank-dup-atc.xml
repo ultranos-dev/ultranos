@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<drugbank xmlns="http://www.drugbank.ca" version="5.1.13" exported-on="2024-01-02">
+  <drug type="small molecule" created="2005-06-13" updated="2024-01-02">
+    <drugbank-id primary="true">DB10001</drugbank-id>
+    <name>AlphaDrug</name>
+    <groups><group>approved</group></groups>
+    <indication>Test indication for alpha drug.</indication>
+    <mechanism-of-action>Alpha mechanism of action.</mechanism-of-action>
+    <protein-binding>Test binding data.</protein-binding>
+    <atc-codes>
+      <atc-code code="X01XX01">
+        <level code="X01XX">Test category</level>
+        <level code="X01X">Test parent</level>
+        <level code="X01">Test grandparent</level>
+        <level code="X">Test root</level>
+      </atc-code>
+    </atc-codes>
+    <international-brands>
+      <international-brand><name>AlphaBrand</name><company>TestCorp</company></international-brand>
+    </international-brands>
+    <external-identifiers>
+      <external-identifier><resource>RxCUI</resource><identifier>100001</identifier></external-identifier>
+    </external-identifiers>
+    <drug-interactions></drug-interactions>
+    <pathways></pathways>
+    <targets></targets>
+  </drug>
+  <drug type="small molecule" created="2005-06-14" updated="2024-01-02">
+    <drugbank-id primary="true">DB10002</drugbank-id>
+    <name>BetaDrug</name>
+    <groups><group>approved</group></groups>
+    <indication>Test indication for beta drug.</indication>
+    <mechanism-of-action>Beta mechanism of action.</mechanism-of-action>
+    <protein-binding>Test binding data.</protein-binding>
+    <atc-codes>
+      <atc-code code="X01XX01">
+        <level code="X01XX">Test category</level>
+        <level code="X01X">Test parent</level>
+        <level code="X01">Test grandparent</level>
+        <level code="X">Test root</level>
+      </atc-code>
+    </atc-codes>
+    <international-brands>
+      <international-brand><name>BetaBrand</name><company>TestCorp</company></international-brand>
+    </international-brands>
+    <external-identifiers>
+      <external-identifier><resource>RxCUI</resource><identifier>100002</identifier></external-identifier>
+    </external-identifiers>
+    <drug-interactions></drug-interactions>
+    <pathways></pathways>
+    <targets></targets>
+  </drug>
+</drugbank>
