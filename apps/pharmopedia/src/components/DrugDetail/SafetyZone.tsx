@@ -11,7 +11,8 @@ export function SafetyZone({ entry, lang, isClinical }: { entry: DrugEntryTier1;
   const { t } = useTranslation()
   const colors = useThemeColors()
 
-  const warnings = resolveLocalized(entry.warningsSummaryPlain, lang)
+  // Critical subset only — the urgent "act now" items that must never be collapsible.
+  // The longer warnings prose (warningsSummaryPlain) lives in a collapsible Warnings section.
   const seekHelp = resolveLocalized(entry.whenToSeekHelp, lang)
 
   const clinical = isClinical ? (entry as DrugEntryTier2) : undefined
@@ -22,14 +23,11 @@ export function SafetyZone({ entry, lang, isClinical }: { entry: DrugEntryTier1;
     .sort((a, b) => (severityOrder[a.severity] ?? 9) - (severityOrder[b.severity] ?? 9))
   const contraindications = clinical?.contraindications ?? []
 
-  const hasAny = warnings.text || seekHelp.text || blocking.length > 0 || contraindications.length > 0
+  const hasAny = seekHelp.text || blocking.length > 0 || contraindications.length > 0
   if (!hasAny) return null
 
   return (
     <View testID="safety-zone" accessibilityRole="alert" style={styles.wrapper}>
-      {warnings.text ? (
-        <Row color={colors.warningDark} bg={colors.warningLight} title={t('drug.overview.warnings')} lines={[warnings.text]} rtl={warnings.isLocalized} />
-      ) : null}
       {seekHelp.text ? (
         <Row color={colors.warningDark} bg={colors.warningLight} title={t('drug.overview.seekHelp')} lines={[seekHelp.text]} rtl={seekHelp.isLocalized} />
       ) : null}

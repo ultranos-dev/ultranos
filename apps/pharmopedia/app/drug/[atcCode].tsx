@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Heart } from 'lucide-react-native'
+import { Heart, ChevronLeft, ChevronRight } from 'lucide-react-native'
 import { ImpactFeedbackStyle } from 'expo-haptics'
 import { getDrugRowByAtcCode, scopeEntryForRole } from '@/db/drug-catalog'
 import { getDrugByAtcCodeApi } from '@/api/drug-catalog'
@@ -100,6 +100,15 @@ export default function DrugDetailScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surfaceSubtle }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={[styles.header, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}>
+          <Pressable
+            testID="detail-back-btn"
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back')}
+            hitSlop={8}
+          >
+            {isRtl ? <ChevronRight size={26} color={colors.textPrimary} /> : <ChevronLeft size={26} color={colors.textPrimary} />}
+          </Pressable>
           <DrugThumbnail images={(entry as DrugEntryTier1).images} name={entry.innName} />
           <View style={styles.nameBlock}>
             <Text style={[styles.primaryName, { color: colors.textPrimary }, localName ? styles.rtlText : isRtl && styles.fallbackName]}>
@@ -121,6 +130,8 @@ export default function DrugDetailScreen() {
 
         <View style={styles.chipWrap}><Chip label={entry.therapeuticClass} /></View>
 
+        <View style={[styles.headerDivider, { backgroundColor: colors.border }]} />
+
         <SafetyZone entry={entry} lang={lang} isClinical={isClinical} />
 
         <View style={styles.sectionList}>
@@ -141,13 +152,16 @@ export default function DrugDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { padding: Spacing[4], gap: Spacing[3], paddingBottom: Spacing[8] },
+  // No horizontal padding on the scroll — the section list runs edge-to-edge (Saved-tab card rhythm);
+  // the header and chip get their own horizontal padding instead.
+  scroll: { paddingTop: Spacing[4], gap: Spacing[3], paddingBottom: Spacing[8] },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { alignItems: 'center', gap: Spacing[3] },
+  header: { alignItems: 'center', gap: Spacing[3], paddingHorizontal: Spacing[4] },
   nameBlock: { flex: 1 },
   primaryName: { fontSize: FontSize.xl, fontFamily: FontFamily.headingBold, marginBottom: 2 },
   innLine: { fontSize: FontSize.sm, fontFamily: FontFamily.sans },
-  chipWrap: { flexDirection: 'row' },
+  chipWrap: { flexDirection: 'row', paddingHorizontal: Spacing[4] },
+  headerDivider: { height: StyleSheet.hairlineWidth },
   actionRow: { alignItems: 'center', gap: Spacing[3] },
   rtlText: { fontFamily: FontFamily.arabic, textAlign: 'right', writingDirection: 'rtl' },
   fallbackName: { textAlign: 'right', writingDirection: 'ltr' },

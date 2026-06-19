@@ -14,7 +14,7 @@ export function MediaSection({ images }: { images: DrugImage[] }) {
     <View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         {images.map((img, i) => (
-          <View key={i} testID={`media-tile-${i}`} style={styles.tile}>
+          <View key={img.url ?? i} testID={`media-tile-${i}`} style={styles.tile}>
             <Image
               source={img.url}
               style={[styles.image, { backgroundColor: colors.surfaceSubtle }]}

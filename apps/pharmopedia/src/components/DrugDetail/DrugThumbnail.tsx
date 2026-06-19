@@ -23,7 +23,7 @@ export function DrugThumbnail({ images, name, size = 44 }: { images?: DrugImage[
     )
   }
   return (
-    <View testID="drug-thumb-fallback" style={[styles.fallback, dim, { backgroundColor: colors.surfaceSubtle }]}>
+    <View testID="drug-thumb-fallback" accessibilityRole="image" accessibilityLabel={name} style={[styles.fallback, dim, { backgroundColor: colors.surfaceSubtle }]}>
       <Pill size={size * 0.5} color={colors.primary500} />
     </View>
   )

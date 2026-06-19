@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native'
-import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
+import { FontFamily, FontSize, LineHeight, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 
 type Severity = 'danger' | 'warning' | 'info' | 'none'
@@ -14,58 +14,37 @@ interface SectionCardProps {
   children?: React.ReactNode
 }
 
+/**
+ * Flat content block rendered INSIDE a CollapsibleSection body — no border, no
+ * card chrome (the section card already provides that). An optional small
+ * uppercase label, then text / bulleted items. Severity is conveyed by the
+ * label color rather than a tinted box. RTL direction follows the content.
+ */
 export function SectionCard({ title, text, items, severity = 'none', isRtl, testID, children }: SectionCardProps) {
   const colors = useThemeColors()
 
-  const severityBg: Record<Severity, string | undefined> = {
-    danger: colors.dangerLight,
-    warning: colors.warningLight,
-    info: colors.surfaceSubtle,
-    none: undefined,
-  }
+  const titleColor =
+    severity === 'danger' ? colors.danger : severity === 'warning' ? colors.warning : colors.textSecondary
 
-  const severityBorder: Record<Severity, string | undefined> = {
-    danger: colors.danger,
-    warning: colors.warning,
-    info: colors.border,
-    none: undefined,
-  }
-
-  const hasSeverity = severity !== 'none'
-  // Direction must follow the CONTENT, not the ambient I18nManager.forceRTL.
-  // RTL content → Arabic face + explicit rtl so it reads correctly. LTR content
-  // (brand names, dose forms, English fallbacks) → explicit ltr so the Unicode
-  // bidi algorithm never reorders `·`/comma-separated Latin segments.
+  // Direction follows the CONTENT, not the ambient I18nManager.forceRTL: RTL content gets the
+  // Arabic face + explicit rtl; LTR content gets explicit ltr so `·`/comma Latin segments never reorder.
   const rtlStyle = isRtl
     ? { fontFamily: FontFamily.arabic, writingDirection: 'rtl' as const, textAlign: 'right' as const }
     : { writingDirection: 'ltr' as const }
 
   return (
-    <View
-      testID={testID}
-      style={[
-        styles.section,
-        { backgroundColor: colors.surface, borderColor: colors.border },
-        hasSeverity && {
-          backgroundColor: severityBg[severity],
-          borderColor: severityBorder[severity],
-        },
-      ]}
-    >
-      <Text
-        style={[styles.sectionTitle, { color: colors.textSecondary }]}
-        accessibilityRole="header"
-      >
-        {title}
-      </Text>
-      {text && (
-        <Text style={[styles.text, { color: colors.textPrimary }, rtlStyle]}>
-          {text}
+    <View testID={testID} style={styles.section}>
+      {title ? (
+        <Text style={[styles.sectionTitle, { color: titleColor }]} accessibilityRole="header">
+          {title}
         </Text>
-      )}
+      ) : null}
+      {text ? (
+        <Text style={[styles.text, { color: colors.textPrimary }, rtlStyle]}>{text}</Text>
+      ) : null}
       {items?.map((item, i) => (
         <Text key={i} style={[styles.item, { color: colors.textPrimary }, rtlStyle]}>
-          {'\u2022'} {item}
+          {'•'} {item}
         </Text>
       ))}
       {children}
@@ -74,27 +53,13 @@ export function SectionCard({ title, text, items, severity = 'none', isRtl, test
 }
 
 const styles = StyleSheet.create({
-  section: {
-    marginBottom: Spacing[5],
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    padding: Spacing[4],
-  },
+  section: { gap: Spacing[1] },
   sectionTitle: {
     fontSize: FontSize.sm,
     fontFamily: FontFamily.sansBold,
-    marginBottom: Spacing[1],
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  text: {
-    fontSize: FontSize.base,
-    fontFamily: FontFamily.sans,
-    lineHeight: 22,
-  },
-  item: {
-    fontSize: FontSize.base,
-    fontFamily: FontFamily.sans,
-    lineHeight: 22,
-  },
+  text: { fontSize: FontSize.base, fontFamily: FontFamily.sans, lineHeight: LineHeight.normal },
+  item: { fontSize: FontSize.base, fontFamily: FontFamily.sans, lineHeight: LineHeight.normal },
 })
