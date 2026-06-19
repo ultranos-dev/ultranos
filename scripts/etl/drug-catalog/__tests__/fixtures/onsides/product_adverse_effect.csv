@@ -1,0 +1,7 @@
+product_label_id,effect_id,label_section,effect_meddra_id,match_method,pred0,pred1
+500,1,BW,10002218,PMB,0.0,5.50
+500,2,AR,10000496,PMB,0.0,5.20
+500,3,WP,10006093,PMB,0.0,4.90
+500,4,AR,10002218,PMB,0.0,4.10
+500,5,AR,10000496,PMB,0.0,2.00
+500,6,BW,10011612,PMB,0.0,5.60
