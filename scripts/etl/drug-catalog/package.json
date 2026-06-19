@@ -9,7 +9,8 @@
     "run-etl": "tsx run.ts",
     "run-drugbank": "tsx run-drugbank.ts",
     "run-onsides": "tsx run-onsides.ts",
-    "run-medlineplus": "tsx run-medlineplus.ts"
+    "run-medlineplus": "tsx run-medlineplus.ts",
+    "run-openfda-label": "tsx run-openfda-label.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",
