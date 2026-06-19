@@ -45,7 +45,7 @@ export function normalizeDrug(
     adverse_events: firstNonEmptyArray(...sorted.map(s => s.adverseEvents)) as unknown[],
     contraindications: firstNonEmptyArray(...sorted.map(s => s.contraindications)),
     interactions: firstNonEmptyArray(...sorted.map(s => s.interactions)) as unknown[],
-    pregnancy_category: firstDefined(...sorted.map(s => s.pregnancyCategory)),
+    pregnancy_clinical: firstDefined(...sorted.map(s => s.pregnancyClinical)),
     administration_notes: firstDefined(...sorted.map(s => s.administrationNotes)) ?? {},
     pharmacokinetics: firstDefined(...sorted.map(s => s.pharmacokinetics)) ?? {},
     summary_plain: firstDefined(...sorted.map(s => s.summaryPlain)) ?? {},

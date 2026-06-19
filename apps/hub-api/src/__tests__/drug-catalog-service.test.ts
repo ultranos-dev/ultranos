@@ -29,7 +29,7 @@ const FULL_ROW = {
   adverse_events: [{ effect: 'Diarrhoea', frequency: 'common', severity: 'mild' }],
   contraindications: ['Penicillin hypersensitivity'],
   interactions: [{ drugAtcCode: 'B01AA03', drugName: 'Warfarin', severity: 'MODERATE', mechanism: 'CYP2C9' }],
-  pregnancy_category: 'B',
+  pregnancy_clinical: { legacyCategory: 'B' },
   administration_notes: { en: 'Take with food.' },
   pharmacokinetics: { halfLifeHours: 1.3 },
   formulary_status: 'on_formulary',

@@ -48,7 +48,7 @@ const AMOX_ROW = {
   adverse_events: [],
   contraindications: [],
   interactions: [],
-  pregnancy_category: 'B',
+  pregnancy_clinical: { legacyCategory: 'B' },
   administration_notes: {},
   pharmacokinetics: {},
   formulary_status: 'on_formulary',

@@ -8,6 +8,7 @@ import type {
   AdverseEvent,
   DrugInteraction,
   DrugPharmacokinetics,
+  DrugPregnancyClinical,
   RecallAlert,
 } from '@ultranos/shared-types'
 
@@ -62,7 +63,7 @@ export function scopeEntryToTier(
     adverseEvents: (row.adverse_events ?? []) as AdverseEvent[],
     contraindications: (row.contraindications ?? []) as string[],
     interactions: (row.interactions ?? []) as DrugInteraction[],
-    pregnancyCategory: row.pregnancy_category as string | undefined,
+    pregnancyClinical: (row.pregnancy_clinical ?? undefined) as DrugPregnancyClinical | undefined,
     administrationNotes: (row.administration_notes ?? {}) as DrugLocalizedText,
     pharmacokinetics: (row.pharmacokinetics ?? {}) as DrugPharmacokinetics,
   }
@@ -86,7 +87,7 @@ export const ETL_PROTECTED_FIELDS = new Set([
   'inn_name', 'brand_names', 'dose_forms', 'therapeutic_class',
   'rxnorm_cui', 'drugbank_id', 'mechanism_of_action', 'indications_clinical',
   'adult_dosing', 'pediatric_dosing', 'renal_adjustment', 'adverse_events',
-  'contraindications', 'interactions', 'pregnancy_category', 'administration_notes',
+  'contraindications', 'interactions', 'pregnancy_clinical', 'administration_notes',
   'pharmacokinetics', 'summary_plain', 'used_for', 'common_side_effects',
   'when_to_seek_help', 'storage_instructions', 'pregnancy_summary_plain',
   'warnings_summary_plain', 'substitutes', 'recall_alerts',

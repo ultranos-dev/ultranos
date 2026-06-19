@@ -41,6 +41,14 @@ export interface DrugPharmacokinetics {
   excretion?: string
 }
 
+/** Structured clinical pregnancy/lactation info, aligned to the FDA PLLR label rule. */
+export interface DrugPregnancyClinical {
+  pregnancy?: string             // PLLR 8.1 — Pregnancy
+  lactation?: string             // PLLR 8.2 — Lactation
+  reproductivePotential?: string // PLLR 8.3 — Females & males of reproductive potential
+  legacyCategory?: string        // legacy A/B/C/D/X letter, when a source still carries one
+}
+
 export interface RecallAlert {
   recallId: string
   description: string
@@ -87,7 +95,7 @@ export interface DrugEntryTier2 extends DrugEntryTier1 {
   adverseEvents: AdverseEvent[]
   contraindications: string[]
   interactions: DrugInteraction[]
-  pregnancyCategory?: string
+  pregnancyClinical?: DrugPregnancyClinical
   administrationNotes: DrugLocalizedText
   pharmacokinetics: DrugPharmacokinetics
 }

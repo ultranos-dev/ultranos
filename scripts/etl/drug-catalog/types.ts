@@ -52,7 +52,12 @@ export interface SourceDrugData {
     severity: 'CONTRAINDICATED' | 'MAJOR' | 'MODERATE' | 'MINOR'
     mechanism: string
   }>
-  pregnancyCategory?: string
+  pregnancyClinical?: {
+    pregnancy?: string
+    lactation?: string
+    reproductivePotential?: string
+    legacyCategory?: string
+  }
   administrationNotes?: Record<string, string>
   pharmacokinetics?: {
     halfLife?: string
@@ -89,7 +94,12 @@ export interface NormalizedDrugRow {
   adverse_events: unknown[]
   contraindications: string[]
   interactions: unknown[]
-  pregnancy_category?: string
+  pregnancy_clinical?: {
+    pregnancy?: string
+    lactation?: string
+    reproductivePotential?: string
+    legacyCategory?: string
+  }
   administration_notes: Record<string, string>
   /** JSONB column — stored as-is; typed narrowly in SourceDrugData but widened here for DB storage */
   pharmacokinetics: Record<string, unknown>

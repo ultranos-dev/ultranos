@@ -11,6 +11,7 @@ const AMOXICILLIN_RESPONSE = {
     contraindications: ['Hypersensitivity to any penicillin. History of allergic reaction.'],
     adverse_reactions: ['Nausea, vomiting, diarrhea. Skin rashes. Anaphylaxis in rare cases.'],
     pregnancy: ['Pregnancy Category B. Animal reproduction studies.'],
+    nursing_mothers: ['Amoxicillin is excreted in breast milk. Caution advised.'],
     mechanism_of_action: ['Amoxicillin is a beta-lactam antibiotic that inhibits cell wall synthesis.'],
   }],
 }
@@ -49,7 +50,7 @@ describe('fetchFromOpenFda', () => {
     expect(result.therapeuticClass).not.toContain('[EPC]')
   })
 
-  it('extracts pregnancy category letter', async () => {
+  it('extracts structured pregnancy clinical info', async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => AMOXICILLIN_RESPONSE,
@@ -57,7 +58,9 @@ describe('fetchFromOpenFda', () => {
 
     const result = await fetchFromOpenFda('J01CA04', 'amoxicillin')
 
-    expect(result.pregnancyCategory).toBe('B')
+    expect(result.pregnancyClinical?.legacyCategory).toBe('B')
+    expect(result.pregnancyClinical?.pregnancy).toContain('Animal reproduction studies')
+    expect(result.pregnancyClinical?.lactation).toContain('breast milk')
   })
 
   it('returns mechanismOfAction string', async () => {

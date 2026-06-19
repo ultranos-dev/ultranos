@@ -11,6 +11,7 @@ interface OpenFdaResult {
   contraindications?: string[]
   adverse_reactions?: string[]
   pregnancy?: string[]
+  nursing_mothers?: string[]
   mechanism_of_action?: string[]
 }
 
@@ -59,8 +60,17 @@ async function fetchOpenFdaByName(
 
     const contraindications = parseSentences(r.contraindications?.[0] ?? '', 5)
 
-    const pregnancyCategoryMatch = (r.pregnancy?.[0] ?? '').match(/Category ([A-DX])/)
-    const pregnancyCategory = pregnancyCategoryMatch?.[1]
+    const pregnancyText = r.pregnancy?.[0]?.trim()
+    const lactationText = r.nursing_mothers?.[0]?.trim()
+    const legacyCategory = (r.pregnancy?.[0] ?? '').match(/Category ([A-DX])/)?.[1]
+    const pregnancyClinical =
+      pregnancyText || lactationText || legacyCategory
+        ? {
+            ...(pregnancyText ? { pregnancy: pregnancyText } : {}),
+            ...(lactationText ? { lactation: lactationText } : {}),
+            ...(legacyCategory ? { legacyCategory } : {}),
+          }
+        : undefined
 
     const mechanismOfAction = r.mechanism_of_action?.[0]
 
@@ -71,7 +81,7 @@ async function fetchOpenFdaByName(
       therapeuticClass: therapeuticClass.length > 0 ? therapeuticClass : undefined,
       adverseEvents: adverseEvents.length > 0 ? adverseEvents : undefined,
       contraindications: contraindications.length > 0 ? contraindications : undefined,
-      pregnancyCategory,
+      pregnancyClinical,
       mechanismOfAction: mechanismOfAction ? mechanismOfAction : undefined,
     }
   } catch {
