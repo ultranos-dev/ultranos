@@ -2,6 +2,7 @@
 
 export interface DrugLocalizedText {
   en?: string
+  ar?: string   // Arabic
   prs?: string  // Dari Persian
   ps?: string   // Pashto
 }
@@ -82,6 +83,8 @@ export interface DrugEntryTier1 {
   storageInstructions: DrugLocalizedText
   pregnancySummaryPlain: DrugLocalizedText
   warningsSummaryPlain: DrugLocalizedText
+  /** Per-field, per-lang machine|confirmed status for displayed translations. Field keys are entity field names (e.g. "summaryPlain"). */
+  translationStatus?: Record<string, Record<string, string>>
   version: number
   lastUpdated: string
 }
