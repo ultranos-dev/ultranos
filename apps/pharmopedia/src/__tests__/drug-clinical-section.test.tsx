@@ -60,6 +60,39 @@ describe('clinical monograph section content', () => {
     expect(getByText('Excreted in breast milk.')).toBeTruthy()
   })
 
+  it('renders the enriched OnSIDES/openFDA monograph fields end-to-end', () => {
+    const enriched = {
+      ...base,
+      adverseEvents: [{ effect: 'Stevens-Johnson syndrome', frequency: 'unknown', severity: 'severe' }],
+      administrationNotes: { en: 'Trichomoniasis: two grams orally as a single dose.' },
+      warningsSummaryPlain: { en: 'Carcinogenic in mice and rats.' },
+    } as unknown as DrugEntryTier2
+    const secs = buildDrugSections({ entry: enriched, lang: 'en', t, isClinical: true, isPharmacist: false })
+    const ids = secs.map((s) => s.id)
+    expect(ids).toEqual(expect.arrayContaining(['adverseEffects', 'administration', 'warnings']))
+    expect(render(<>{secs.find((s) => s.id === 'adverseEffects')!.body}</>).getByText(/Stevens-Johnson syndrome/)).toBeTruthy()
+    expect(render(<>{secs.find((s) => s.id === 'administration')!.body}</>).getByText(/two grams orally/)).toBeTruthy()
+    expect(render(<>{secs.find((s) => s.id === 'warnings')!.body}</>).getByText(/Carcinogenic in mice/)).toBeTruthy()
+  })
+
+  it('patient view renders the MedlinePlus summary (about) + openFDA warnings', () => {
+    const patient = {
+      ...base,
+      summaryPlain: { en: 'Aspirin is used to reduce fever and relieve pain.' },
+      warningsSummaryPlain: { en: 'Risk of Reye syndrome in children.' },
+    } as unknown as DrugEntryTier2
+    const secs = buildDrugSections({ entry: patient, lang: 'en', t, isClinical: false, isPharmacist: false })
+    const ids = secs.map((s) => s.id)
+    expect(ids).toEqual(expect.arrayContaining(['about', 'warnings']))
+    expect(render(<>{secs.find((s) => s.id === 'about')!.body}</>).getByText(/Aspirin is used to reduce fever/)).toBeTruthy()
+  })
+
+  it('falls back to English prose when the requested language is missing (Dari user, en-only field)', () => {
+    const enOnly = { ...base, administrationNotes: { en: 'Take with food.' } } as unknown as DrugEntryTier2
+    const secs = buildDrugSections({ entry: enOnly, lang: 'prs', t, isClinical: true, isPharmacist: false })
+    expect(render(<>{secs.find((s) => s.id === 'administration')!.body}</>).getByText(/Take with food/)).toBeTruthy()
+  })
+
   it('omits monograph sections when clinical content is absent', () => {
     const empty = {
       ...base, mechanismOfAction: undefined, adultDosing: [], pediatricDosing: [], pharmacokinetics: {},
