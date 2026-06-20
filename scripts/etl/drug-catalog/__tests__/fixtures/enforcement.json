@@ -1,0 +1,10 @@
+{ "meta": { "results": { "total": 3 } }, "results": [
+  { "recall_number": "D-0554-2026", "status": "Ongoing", "reason_for_recall": "Lack of Assurance of Sterility",
+    "recall_initiation_date": "20260512", "classification": "Class II",
+    "openfda": { "generic_name": ["METRONIDAZOLE"], "substance_name": ["METRONIDAZOLE"] } },
+  { "recall_number": "D-0100-2025", "status": "Terminated", "reason_for_recall": "Subpotent",
+    "recall_initiation_date": "20250101", "classification": "Class III",
+    "openfda": { "generic_name": ["METRONIDAZOLE"] } },
+  { "recall_number": "D-9999-2024", "status": "Ongoing", "reason_for_recall": "no openfda",
+    "recall_initiation_date": "20240101" }
+] }
