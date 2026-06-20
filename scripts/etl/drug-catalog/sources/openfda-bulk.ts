@@ -4,6 +4,48 @@ import { join } from 'node:path'
 import { createRequire } from 'node:module'
 import { cleanText, stripSectionHeader } from './openfda-label.js'
 
+/** WHO INN -> US (USAN) generic-name aliases, both lowercased. Used to match openFDA labels (US names) to DrugBank INN catalog names. Extensible. */
+export const INN_US_ALIASES: Record<string, string> = {
+  'acetylsalicylic acid': 'aspirin',
+  'paracetamol': 'acetaminophen',
+  'salbutamol': 'albuterol',
+  'adrenaline': 'epinephrine',
+  'noradrenaline': 'norepinephrine',
+  'glibenclamide': 'glyburide',
+  'lignocaine': 'lidocaine',
+  'frusemide': 'furosemide',
+  'rifampicin': 'rifampin',
+  'ciclosporin': 'cyclosporine',
+  'colecalciferol': 'cholecalciferol',
+  'pethidine': 'meperidine',
+  'hydroxycarbamide': 'hydroxyurea',
+  'isoprenaline': 'isoproterenol',
+  'chlorphenamine': 'chlorpheniramine',
+  'beclometasone': 'beclomethasone',
+  'benzylpenicillin': 'penicillin g',
+  'phenoxymethylpenicillin': 'penicillin v',
+  'amfetamine': 'amphetamine',
+  'dexamfetamine': 'dextroamphetamine',
+  'methylthioninium chloride': 'methylene blue',
+  'glyceryl trinitrate': 'nitroglycerin',
+  'suxamethonium': 'succinylcholine',
+  'ergometrine': 'ergonovine',
+  'phytomenadione': 'phytonadione',
+  'amethocaine': 'tetracaine',
+  'dicycloverine': 'dicyclomine',
+  'dosulepin': 'dothiepin',
+  'trimeprazine': 'alimemazine',
+  'mercaptamine': 'cysteamine',
+}
+
+/** Candidate match names for a catalog INN (lowercased): the INN itself + its USAN alias if known. */
+export function candidateNamesFor(innLower: string): string[] {
+  const out = [innLower]
+  const alias = INN_US_ALIASES[innLower]
+  if (alias) out.push(alias)
+  return out
+}
+
 // stream-json is a CJS package with no ESM exports field.
 // Under ESM/tsx/Vitest, named imports from CJS submodules are unreliable.
 // We use createRequire to load each submodule safely.
@@ -85,8 +127,8 @@ export function streamPartition(
       .pipe(pick({ filter: 'results' }))
       .pipe(streamArray())
     pipeline.on('data', ({ value }: StreamArrayData) => {
-      count++
-      onLabel(value.openfda?.generic_name ?? [], value)
+      try { count++; onLabel(value.openfda?.generic_name ?? [], value) }
+      catch (err) { reject(err as Error) }
     })
     pipeline.on('end', () => resolve(count))
     pipeline.on('error', reject)
@@ -103,7 +145,7 @@ function mergeInto(acc: BulkLabelFields, ext: BulkLabelFields): void {
 
 export async function buildOpenFdaBulk(
   dir: string,
-  catalogNamesLower: Set<string>,
+  nameToCanonical: Map<string, string>,
 ): Promise<Map<string, BulkLabelFields>> {
   const entries = await readdir(dir, { withFileTypes: true })
   const re = /^drug-label-\d{4}-of-\d{4}\.json$/
@@ -115,16 +157,19 @@ export async function buildOpenFdaBulk(
   const acc = new Map<string, BulkLabelFields>()
   for (const path of partitionPaths) {
     await streamPartition(path, (genericNames, r) => {
-      const matched = genericNames.map((n) => n.toLowerCase()).filter((n) => catalogNamesLower.has(n))
-      if (matched.length === 0) return
-      const ext = extractBulkLabel(r)
-      if (!ext) return
-      for (const name of matched) {
-        let cur = acc.get(name)
-        if (!cur) {
-          cur = { contraindications: [] }
-          acc.set(name, cur)
-        }
+      // collect candidate label names: generic_name(s) + substance_name(s), lowercased
+      const labelNames = new Set<string>()
+      for (const g of genericNames) labelNames.add(g.toLowerCase())
+      const subs = (r as { openfda?: { substance_name?: string[] } }).openfda?.substance_name ?? []
+      for (const s of subs) labelNames.add(s.toLowerCase())
+      // map any matching label name back to its catalog canonical
+      const canonicals = new Set<string>()
+      for (const n of labelNames) { const c = nameToCanonical.get(n); if (c) canonicals.add(c) }
+      if (canonicals.size === 0) return
+      const ext = extractBulkLabel(r); if (!ext) return
+      for (const canon of canonicals) {
+        let cur = acc.get(canon)
+        if (!cur) { cur = { contraindications: [] }; acc.set(canon, cur) }
         mergeInto(cur, ext)
       }
     })

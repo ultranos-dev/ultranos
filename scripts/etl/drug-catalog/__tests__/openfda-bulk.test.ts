@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { extractBulkLabel, streamPartition, buildOpenFdaBulk } from '../sources/openfda-bulk.js'
+import { extractBulkLabel, streamPartition, buildOpenFdaBulk, candidateNamesFor, INN_US_ALIASES } from '../sources/openfda-bulk.js'
 
 const DIRX = dirname(fileURLToPath(import.meta.url))
 const DIR = join(DIRX, 'fixtures', 'openfda-bulk')
@@ -31,16 +31,33 @@ describe('openfda-bulk', () => {
   it('streamPartition yields each result with its generic names', async () => {
     const seen: string[] = []
     const n = await streamPartition(PART, (names) => seen.push(names.join('|')))
-    expect(n).toBe(3)
+    expect(n).toBe(4)
     expect(seen).toContain('METRONIDAZOLE')
   })
-  it('buildOpenFdaBulk matches catalog names (lowercased), merges across labels', async () => {
-    const m = await buildOpenFdaBulk(DIR, new Set(['metronidazole']))
+  it('buildOpenFdaBulk matches catalog names (lowercased) via nameToCanonical Map, merges across labels', async () => {
+    const m = await buildOpenFdaBulk(DIR, new Map([['metronidazole', 'metronidazole']]))
     const f = m.get('metronidazole')!
     expect(f).toBeTruthy()
     expect(f.pregnancyClinical?.legacyCategory).toBe('B')
     expect(f.warnings).toContain('carcinogenic')
     expect(f.administrationNotes).toContain('Two grams')
     expect(m.has('budesonide and formoterol fumarate')).toBe(false)
+  })
+  it('buildOpenFdaBulk resolves INN→USAN alias: ASPIRIN label maps to acetylsalicylic acid canonical', async () => {
+    // nameToCanonical maps both the INN and the USAN alias to the canonical INN
+    const nameToCanonical = new Map([
+      ['aspirin', 'acetylsalicylic acid'],
+      ['acetylsalicylic acid', 'acetylsalicylic acid'],
+    ])
+    const m = await buildOpenFdaBulk(DIR, nameToCanonical)
+    expect(m.has('acetylsalicylic acid')).toBe(true)
+    const f = m.get('acetylsalicylic acid')!
+    expect(f.contraindications.length).toBeGreaterThan(0)
+  })
+  it('INN_US_ALIASES and candidateNamesFor are exported and correct', () => {
+    expect(INN_US_ALIASES['acetylsalicylic acid']).toBe('aspirin')
+    expect(INN_US_ALIASES['paracetamol']).toBe('acetaminophen')
+    expect(candidateNamesFor('acetylsalicylic acid')).toEqual(['acetylsalicylic acid', 'aspirin'])
+    expect(candidateNamesFor('metronidazole')).toEqual(['metronidazole'])
   })
 })

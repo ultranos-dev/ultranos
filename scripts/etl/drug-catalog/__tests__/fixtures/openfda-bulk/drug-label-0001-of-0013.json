@@ -1,4 +1,4 @@
-{ "meta": { "results": { "skip": 0, "limit": 20000, "total": 3 } }, "results": [
+{ "meta": { "results": { "skip": 0, "limit": 20000, "total": 4 } }, "results": [
   { "openfda": { "generic_name": ["METRONIDAZOLE"] },
     "pregnancy": ["8.1 Pregnancy Risk Summary There are no adequate studies. Pregnancy Category B applies."],
     "nursing_mothers": ["Metronidazole is present in human milk."],
@@ -8,5 +8,7 @@
   { "openfda": { "generic_name": ["METRONIDAZOLE"] },
     "warnings": ["Some non-boxed warning text."] },
   { "openfda": { "generic_name": ["BUDESONIDE AND FORMOTEROL FUMARATE"] },
-    "contraindications": ["Primary treatment of status asthmaticus."] }
+    "contraindications": ["Primary treatment of status asthmaticus."] },
+  { "openfda": { "generic_name": ["ASPIRIN"] },
+    "contraindications": ["Do not use in children with viral infections. Contraindicated in patients with aspirin hypersensitivity."] }
 ] }
