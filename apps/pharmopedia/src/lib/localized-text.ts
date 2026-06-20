@@ -28,3 +28,12 @@ export function resolveLocalized(
   if (direct) return { text: direct, isLocalized: lang !== 'en' }
   return { text: field.en ?? '', isLocalized: false }
 }
+
+/** True if any field carries a `machine` translation for the requested language (drives the unverified-translation banner). */
+export function hasMachineTranslatedContent(
+  status: Record<string, Record<string, string>> | undefined,
+  lang: string,
+): boolean {
+  if (!status || lang === 'en') return false
+  return Object.values(status).some((byLang) => byLang?.[lang] === 'machine')
+}

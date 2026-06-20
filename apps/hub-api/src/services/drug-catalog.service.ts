@@ -40,6 +40,7 @@ export function scopeEntryToTier(
     doseForms: (row.dose_forms ?? []) as string[],
     therapeuticClass: (row.therapeutic_class ?? '') as string,
     localNames: (row.local_names ?? {}) as DrugLocalNames,
+    translationStatus: (row.translation_status ?? {}) as Record<string, Record<string, string>>,
     summaryPlain: (row.summary_plain ?? {}) as DrugLocalizedText,
     usedFor: (row.used_for ?? []) as DrugLocalizedText[],
     commonSideEffects: (row.common_side_effects ?? []) as DrugLocalizedText[],
@@ -90,7 +91,7 @@ export const ETL_PROTECTED_FIELDS = new Set([
   'contraindications', 'interactions', 'pregnancy_clinical', 'administration_notes',
   'pharmacokinetics', 'summary_plain', 'used_for', 'common_side_effects',
   'when_to_seek_help', 'storage_instructions', 'pregnancy_summary_plain',
-  'warnings_summary_plain', 'substitutes', 'recall_alerts',
+  'warnings_summary_plain', 'substitutes', 'recall_alerts', 'translation_status',
 ])
 
 /** Enrichment fields each role is permitted to write */

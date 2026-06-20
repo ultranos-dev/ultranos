@@ -14,6 +14,7 @@ const FULL_ROW = {
   dose_forms: ['capsule', 'suspension'],
   therapeutic_class: 'Aminopenicillin antibiotic',
   local_names: { prs: 'آموکسیسیلین' },
+  translation_status: {},
   summary_plain: { en: 'An antibiotic for bacterial infections.' },
   used_for: [{ en: 'Chest infection' }],
   common_side_effects: [{ en: 'Nausea' }],

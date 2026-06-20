@@ -13,6 +13,8 @@ import { useLangStore, isRtlLang } from '@/store/lang-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { useBookmarkStore } from '@/store/bookmark-store'
 import { hapticImpact } from '@/lib/haptics'
+import { hasMachineTranslatedContent } from '@/lib/localized-text'
+import { MachineTranslationBanner } from '@/components/DrugDetail/MachineTranslationBanner'
 import { SafetyZone } from '@/components/DrugDetail/SafetyZone'
 import { DrugThumbnail } from '@/components/DrugDetail/DrugThumbnail'
 import { buildDrugSections } from '@/components/DrugDetail/drug-detail-sections'
@@ -132,6 +134,9 @@ export default function DrugDetailScreen() {
 
         <View style={[styles.headerDivider, { backgroundColor: colors.border }]} />
 
+        {lang !== 'en' && hasMachineTranslatedContent((entry as DrugEntryTier1).translationStatus, lang) ? (
+          <MachineTranslationBanner t={t} />
+        ) : null}
         <SafetyZone entry={entry} lang={lang} isClinical={isClinical} />
 
         <View style={styles.sectionList}>

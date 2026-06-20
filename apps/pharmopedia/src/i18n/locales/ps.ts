@@ -37,6 +37,7 @@ const ps: Translations = {
     back: 'شاته',
     addBookmark: 'دوا خوندي کړئ',
     removeBookmark: 'له خوندي شوو لرې کړئ',
+    machineTranslatedNotice: 'ځینې معلومات دلته په ماشيني ډول ژباړل شوي او د ډاکټر لخوا نه دي تصدیق شوي.',
     tabs: { overview: 'لنډیز', clinical: 'کلیني', formulary: 'فارمولري', pricing: 'نرخ', enrich: 'سمول' },
     overview: {
       summary: 'لنډیز',

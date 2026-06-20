@@ -41,6 +41,7 @@ const en = {
     back: 'Go back',
     addBookmark: 'Save drug',
     removeBookmark: 'Remove saved drug',
+    machineTranslatedNotice: 'Some information here was machine-translated and has not been verified by a clinician.',
     tabs: {
       overview: 'Overview',
       clinical: 'Clinical',

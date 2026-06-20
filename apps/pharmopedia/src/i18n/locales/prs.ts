@@ -37,6 +37,7 @@ const prs: Translations = {
     back: 'برگشت',
     addBookmark: 'ذخیره دارو',
     removeBookmark: 'حذف از ذخیره‌شده‌ها',
+    machineTranslatedNotice: 'برخی از معلومات اینجا به‌صورت ماشینی ترجمه شده و توسط داکتر تأیید نشده است.',
     tabs: { overview: 'مرور', clinical: 'بالینی', formulary: 'فرمولاری', pricing: 'قیمت', enrich: 'ویرایش' },
     overview: {
       summary: 'خلاصه',

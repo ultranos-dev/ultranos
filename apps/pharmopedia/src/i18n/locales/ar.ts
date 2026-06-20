@@ -37,6 +37,7 @@ const ar: Translations = {
     back: 'رجوع',
     addBookmark: 'حفظ الدواء',
     removeBookmark: 'إزالة الدواء المحفوظ',
+    machineTranslatedNotice: 'تُرجمت بعض المعلومات هنا آليًا ولم يتم التحقق منها من قبل طبيب.',
     tabs: { overview: 'نظرة عامة', clinical: 'سريري', formulary: 'القائمة الدوائية', pricing: 'التسعير', enrich: 'تعديل' },
     overview: {
       summary: 'ملخص',
