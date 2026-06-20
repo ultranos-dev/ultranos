@@ -12,7 +12,8 @@
     "run-medlineplus": "tsx run-medlineplus.ts",
     "run-openfda-label": "tsx run-openfda-label.ts",
     "run-openfda-bulk": "tsx run-openfda-bulk.ts",
-    "run-enforcement": "tsx run-enforcement.ts"
+    "run-enforcement": "tsx run-enforcement.ts",
+    "run-translate": "tsx run-translate.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",
