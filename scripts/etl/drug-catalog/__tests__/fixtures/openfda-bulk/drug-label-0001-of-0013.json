@@ -1,0 +1,12 @@
+{ "meta": { "results": { "skip": 0, "limit": 20000, "total": 3 } }, "results": [
+  { "openfda": { "generic_name": ["METRONIDAZOLE"] },
+    "pregnancy": ["8.1 Pregnancy Risk Summary There are no adequate studies. Pregnancy Category B applies."],
+    "nursing_mothers": ["Metronidazole is present in human milk."],
+    "contraindications": ["4 CONTRAINDICATIONS Metronidazole is contraindicated in hypersensitivity. Avoid in first trimester."],
+    "dosage_and_administration": ["2 DOSAGE AND ADMINISTRATION Two grams orally, single dose."],
+    "boxed_warning": ["WARNING: CARCINOGENICITY Metronidazole has been shown to be carcinogenic in mice."] },
+  { "openfda": { "generic_name": ["METRONIDAZOLE"] },
+    "warnings": ["Some non-boxed warning text."] },
+  { "openfda": { "generic_name": ["BUDESONIDE AND FORMOTEROL FUMARATE"] },
+    "contraindications": ["Primary treatment of status asthmaticus."] }
+] }
