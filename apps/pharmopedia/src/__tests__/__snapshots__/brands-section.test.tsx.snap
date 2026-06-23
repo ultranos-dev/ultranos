@@ -1,0 +1,184 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`BrandsSection > matches snapshot (LTR) 1`] = `
+<View
+  style={
+    {
+      "gap": 8,
+      "paddingHorizontal": 16,
+    }
+  }
+>
+  <View
+    testID="brand-row-b1"
+  >
+    <View
+      style={
+        [
+          {
+            "gap": 2,
+            "paddingHorizontal": 16,
+            "paddingVertical": 12,
+          },
+          {
+            "backgroundColor": "#fff",
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 8,
+              "justifyContent": "space-between",
+            },
+            false,
+          ]
+        }
+      >
+        <Text
+          numberOfLines={1}
+          style={
+            [
+              {
+                "flex": 1,
+                "fontFamily": "Manrope-SemiBold",
+                "fontSize": 16,
+              },
+              {
+                "color": "#111",
+              },
+              {
+                "textAlign": "left",
+              },
+              undefined,
+            ]
+          }
+          testID="brand-name"
+        >
+          Augmentin
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "borderRadius": 9999,
+                "fontFamily": "Manrope-SemiBold",
+                "fontSize": 12,
+                "overflow": "hidden",
+                "paddingHorizontal": 8,
+                "paddingVertical": 2,
+              },
+              {
+                "backgroundColor": "#edfaf4",
+                "color": "#1c6248",
+              },
+            ]
+          }
+        >
+          Prescription only
+        </Text>
+      </View>
+      <Text
+        style={
+          [
+            {
+              "fontFamily": "Manrope",
+              "fontSize": 14,
+            },
+            {
+              "color": "#555",
+            },
+            {
+              "textAlign": "left",
+            },
+          ]
+        }
+        testID="brand-manufacturer"
+      >
+        Manufacturer: GSK
+      </Text>
+      <Text
+        numberOfLines={2}
+        style={
+          [
+            {
+              "fontFamily": "Manrope",
+              "fontSize": 14,
+              "marginTop": 1,
+            },
+            {
+              "color": "#999",
+              "writingDirection": "ltr",
+            },
+            {
+              "textAlign": "left",
+            },
+          ]
+        }
+        testID="presentation-p1"
+      >
+        625 mg · tablet · 14 tablets · 12.5 AFN
+      </Text>
+    </View>
+  </View>
+  <View
+    testID="brand-row-b2"
+  >
+    <View
+      style={
+        [
+          {
+            "gap": 2,
+            "paddingHorizontal": 16,
+            "paddingVertical": 12,
+          },
+          {
+            "backgroundColor": "#fff",
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 8,
+              "justifyContent": "space-between",
+            },
+            false,
+          ]
+        }
+      >
+        <Text
+          numberOfLines={1}
+          style={
+            [
+              {
+                "flex": 1,
+                "fontFamily": "Manrope-SemiBold",
+                "fontSize": 16,
+              },
+              {
+                "color": "#111",
+              },
+              {
+                "textAlign": "left",
+              },
+              undefined,
+            ]
+          }
+          testID="brand-name"
+        >
+          Curam
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;

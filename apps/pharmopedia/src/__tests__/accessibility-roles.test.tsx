@@ -54,6 +54,7 @@ vi.mock('react-native-reanimated', () => {
 })
 
 // Mocks needed for BrowseTab rendering
+vi.mock('@/hooks/useDrugSearch', () => ({ useDrugSearch: () => ({ query: '', results: [], loading: false, search: vi.fn() }) }))
 vi.mock('@/db/migrations', () => ({ getDatabase: () => ({}) }))
 vi.mock('@/db/browse', () => ({
   getTherapeuticClasses: async () => [{ name: 'Antibacterials', count: 3 }],

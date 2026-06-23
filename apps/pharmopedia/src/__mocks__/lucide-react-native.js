@@ -68,8 +68,10 @@ const UserPlus = createIconMock('UserPlus')
 const ChevronDown = createIconMock('ChevronDown')
 const Camera = createIconMock('Camera')
 const ImagePlus = createIconMock('ImagePlus')
+const Tag = createIconMock('Tag')
 
 module.exports = {
+  Tag,
   Heart,
   Search,
   Bookmark,

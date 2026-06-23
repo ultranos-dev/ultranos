@@ -153,6 +153,7 @@ vi.mock('@ultranos/ui-kit/native', () => {
     CollapsibleSection: ({ children, testID, title }: { children?: React.ReactNode; testID?: string; title?: string }) =>
       R.createElement('View', { testID }, R.createElement('View', null, title), children),
     Chip: ({ label }: { label?: string }) => R.createElement('View', null, label),
+    useReducedMotion: () => false,
   }
 })
 

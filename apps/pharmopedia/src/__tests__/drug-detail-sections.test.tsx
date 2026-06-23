@@ -51,8 +51,8 @@ describe('buildDrugSections — patient (plain language)', () => {
     expect(ids).not.toContain('sideEffects')
     expect(ids).not.toContain('warnings')
     expect(ids).not.toContain('photos')
-    expect(secs.find((s) => s.id === 'about')!.defaultOpen).toBe(true)
-    expect(secs.find((s) => s.id === 'usedFor')!.defaultOpen).toBe(true)
+    expect(secs.find((s) => s.id === 'about')!.defaultOpen).toBe(false)
+    expect(secs.find((s) => s.id === 'usedFor')!.defaultOpen).toBe(false)
     expect(secs.find((s) => s.id === 'formsBrands')!.defaultOpen).toBe(false)
   })
 
@@ -98,7 +98,7 @@ describe('buildDrugSections — clinical/pharmacist (monograph)', () => {
     expect(ids).toContain('pricing')
     expect(ids).not.toContain('about')      // plain-language not used for clinical
     expect(ids).not.toContain('formulary')  // not pharmacist
-    expect(secs.find((s) => s.id === 'dosageIndications')!.defaultOpen).toBe(true)
+    expect(secs.find((s) => s.id === 'dosageIndications')!.defaultOpen).toBe(false)
   })
 
   it('adds Formulary for pharmacist when formulary data exists', () => {

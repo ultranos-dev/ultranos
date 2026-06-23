@@ -31,7 +31,12 @@ vi.mock('@/hooks/useThemeColors', () => ({
     textPrimary: '#111827',
     textSecondary: '#6b7280',
     textMuted: '#9ca3af',
+    border: '#d8dde6',
+    primary50: '#edfaf4',
+    primary100: '#d0f3e5',
     primary500: '#2e9e71',
+    primary700: '#1c6248',
+    white: '#ffffff',
     danger: '#dc2626',
   }),
 }))
@@ -45,6 +50,7 @@ vi.mock('@ultranos/ui-kit/native', () => {
   return {
     Card: ({ children, testID }: { children: React.ReactNode; testID?: string }) =>
       React.createElement(View, { testID, 'data-testid': testID, accessibilityRole: 'none' }, children),
+    useReducedMotion: () => false,
   }
 })
 

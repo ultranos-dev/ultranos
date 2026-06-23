@@ -23,6 +23,19 @@ const prs: Translations = {
     noResultsTitle: 'نتیجه‌ای یافت نشد',
     noResultsDescription: 'املای دیگری را امتحان کنید',
     recentSearches: 'جستجوهای اخیر',
+    filterAll: 'همه',
+    filterGenerics: 'داروهای جنریک',
+    filterBrands: 'برندها',
+    kindGeneric: 'جنریک',
+    kindBrand: 'برند',
+  },
+  brandDetail: {
+    notFound: 'برند پیدا نشد',
+    presentations: 'اشکال و بسته‌بندی',
+    genericIngredient: 'ماده مؤثره (داروی جنریک)',
+    otherBrands: 'برندهای دیگر',
+    viewFull: 'معلومات کامل دارو',
+    clinicalFrom: 'معلومات کلینیکی از',
   },
   sync: {
     syncing: 'کاتالوگ همگام‌سازی می‌شود\u2026',
@@ -81,6 +94,13 @@ const prs: Translations = {
     photos: { title: 'تصاویر', disclaimer: 'فقط برای نمایش — بسته‌بندی واقعی را تأیید کنید.', generic: 'عمومی', unavailableOffline: 'تصاویر در حالت آفلاین در دسترس نیستند.' },
     sections: { dispensing: 'توزیع و فهرست دارویی', about: 'درباره این دارو', dosageIndications: 'دوز و موارد مصرف', adverseEffects: 'عوارض جانبی', pharmacology: 'فارماکولوژی', administration: 'نحوه مصرف', formulary: 'فهرست دارویی', pricing: 'قیمت و صرفه‌جویی' },
     noDetail: 'معلومات تفصیلی برای این دارو هنوز موجود نیست.',
+    brands: {
+      title: 'برندها',
+      manufacturer: 'تولیدکننده',
+      referencePrice: 'قیمت مرجع',
+      rx: 'فقط با نسخه',
+      otc: 'بدون نسخه',
+    },
   },
   pricing: {
     byDistance: 'بر اساس فاصله',

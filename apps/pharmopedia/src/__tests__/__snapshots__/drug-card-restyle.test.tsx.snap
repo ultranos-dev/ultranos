@@ -75,9 +75,52 @@ exports[`DrugCard — restyle snapshots > LTR snapshot (lang=en, no bookmark) 1`
           testID="bookmark-toggle"
         >
           <View
-            testID="icon-Heart"
-          />
+            style={{}}
+          >
+            <View
+              testID="icon-Heart"
+            />
+          </View>
         </Pressable>
+      </View>
+      <View
+        style={
+          [
+            {
+              "flexDirection": "row",
+              "flexWrap": "wrap",
+              "gap": 4,
+              "marginTop": 4,
+            },
+            false,
+          ]
+        }
+        testID="drug-brand-chips"
+      >
+        <Text
+          numberOfLines={1}
+          style={
+            [
+              {
+                "borderRadius": 9999,
+                "borderWidth": 1,
+                "fontFamily": "Manrope-SemiBold",
+                "fontSize": 12,
+                "overflow": "hidden",
+                "paddingHorizontal": 8,
+                "paddingVertical": 2,
+              },
+              {
+                "backgroundColor": "#edfaf4",
+                "borderColor": "#d0f3e5",
+                "color": "#1c6248",
+              },
+            ]
+          }
+          testID="drug-brand-chip"
+        >
+          Amoxil
+        </Text>
       </View>
       <Text
         numberOfLines={1}
@@ -186,8 +229,12 @@ exports[`DrugCard — restyle snapshots > RTL snapshot (lang=ar, with localName)
           testID="bookmark-toggle"
         >
           <View
-            testID="icon-Heart"
-          />
+            style={{}}
+          >
+            <View
+              testID="icon-Heart"
+            />
+          </View>
         </Pressable>
       </View>
       <Text
@@ -206,6 +253,47 @@ exports[`DrugCard — restyle snapshots > RTL snapshot (lang=ar, with localName)
       >
         Simvastatin
       </Text>
+      <View
+        style={
+          [
+            {
+              "flexDirection": "row",
+              "flexWrap": "wrap",
+              "gap": 4,
+              "marginTop": 4,
+            },
+            {
+              "flexDirection": "row-reverse",
+            },
+          ]
+        }
+        testID="drug-brand-chips"
+      >
+        <Text
+          numberOfLines={1}
+          style={
+            [
+              {
+                "borderRadius": 9999,
+                "borderWidth": 1,
+                "fontFamily": "Manrope-SemiBold",
+                "fontSize": 12,
+                "overflow": "hidden",
+                "paddingHorizontal": 8,
+                "paddingVertical": 2,
+              },
+              {
+                "backgroundColor": "#edfaf4",
+                "borderColor": "#d0f3e5",
+                "color": "#1c6248",
+              },
+            ]
+          }
+          testID="drug-brand-chip"
+        >
+          Zocor
+        </Text>
+      </View>
       <Text
         numberOfLines={1}
         style={

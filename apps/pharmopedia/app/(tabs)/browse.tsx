@@ -5,16 +5,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { FolderOpen } from 'lucide-react-native'
-import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
+import { FolderOpen, ChevronLeft, ChevronRight } from 'lucide-react-native'
+import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { CollapsibleList, EmptyState } from '@ultranos/ui-kit/native'
 import { getDatabase } from '@/db/migrations'
 import { getTherapeuticClasses, getDrugsByTherapeuticClass, type TherapeuticClass } from '@/db/browse'
 import { TherapeuticClassCard } from '@/components/TherapeuticClassCard'
 import { NetStatusBanner } from '@/components/NetStatusBanner'
 import { DrugCard } from '@/components/DrugCard'
+import { SearchBar } from '@/components/SearchBar'
+import { SearchResults } from '@/components/SearchResults'
 import { SkeletonCard } from '@/components/SkeletonCard'
-import { useLangStore } from '@/store/lang-store'
+import { useDrugSearch } from '@/hooks/useDrugSearch'
+import { useLangStore, isRtlLang } from '@/store/lang-store'
 import { useSyncStore } from '@/store/sync-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { CoachMark } from '@/components/CoachMark'
@@ -25,7 +28,10 @@ export default function BrowseTab() {
   const colors = useThemeColors()
   const router = useRouter()
   const lang = useLangStore((s) => s.lang)
+  const isRtl = isRtlLang(lang)
   const lastVersion = useSyncStore((s) => s.lastVersion)
+  const { query, results, brands, loading: searchLoading, search } = useDrugSearch()
+  const searching = query.trim().length > 0
 
   const [classes, setClasses] = useState<TherapeuticClass[]>([])
   const [selectedClass, setSelectedClass] = useState<string | null>(null)
@@ -108,7 +114,7 @@ export default function BrowseTab() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.surfaceSubtle }]}>
         <NetStatusBanner />
-        <View style={[styles.classHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <View style={[styles.classHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border, flexDirection: isRtl ? 'row-reverse' : 'row' }]}>
           <Pressable
             testID="browse-back-btn"
             onPress={handleBack}
@@ -117,7 +123,9 @@ export default function BrowseTab() {
             hitSlop={8}
             style={styles.backBtn}
           >
-            <Text style={[styles.backText, { color: colors.primary500 }]}>{t('common.back')}</Text>
+            {isRtl
+              ? <ChevronRight size={26} color={colors.textPrimary} />
+              : <ChevronLeft size={26} color={colors.textPrimary} />}
           </Pressable>
           <Text style={[styles.classTitle, { color: colors.textPrimary }]} numberOfLines={1}>{selectedClass}</Text>
         </View>
@@ -150,28 +158,49 @@ export default function BrowseTab() {
     )
   }
 
+  // Empty query → therapeutic-class browser. Non-empty query → unified results
+  // (generics + brands, Option A filter chips) rendered in the list header so
+  // the SearchBar stays mounted and keeps focus across the two modes.
   return (
     <>
-      <CollapsibleList
+      <CollapsibleList<TherapeuticClass>
         title={t('tabs.browse')}
-        data={classes}
+        subHeader={
+          <View style={styles.searchHeader}>
+            <SearchBar value={query} onSearch={search} />
+            {searching && (
+              <SearchResults
+                query={query}
+                results={results}
+                brands={brands}
+                loading={searchLoading}
+                lang={lang}
+                onSelectGeneric={(atcCode) => router.push(`/drug/${atcCode}`)}
+                onSelectBrand={(id) => router.push({ pathname: '/brand/[id]', params: { id } })}
+              />
+            )}
+          </View>
+        }
+        data={searching ? [] : classes}
         keyExtractor={(item) => item.name}
         renderItem={({ item, index }) => (
           <TherapeuticClassCard name={item.name} count={item.count} index={index} onPress={() => void handleClassPress(item.name)} />
         )}
         ListEmptyComponent={
-          classesLoading
-            ? <View>{[0, 1, 2, 3].map((i) => <SkeletonCard key={i} testID={`skeleton-class-${i}`} />)}</View>
-            : <EmptyState icon={FolderOpen} title={t('browse.emptyTitle')} description={t('browse.emptyDescription')} />
+          searching
+            ? undefined
+            : (classesLoading
+                ? <View>{[0, 1, 2, 3].map((i) => <SkeletonCard key={i} testID={`skeleton-class-${i}`} />)}</View>
+                : <EmptyState icon={FolderOpen} title={t('browse.emptyTitle')} description={t('browse.emptyDescription')} />)
         }
-        refreshing={classesRefreshing}
-        onRefresh={onRefreshClasses}
+        refreshing={searching ? false : classesRefreshing}
+        onRefresh={searching ? undefined : onRefreshClasses}
       />
       <NetStatusBanner />
       <CoachMark
         markKey="browse-class"
         hint={t('coach.browseClass')}
-        visible={classes.length > 0}
+        visible={!searching && classes.length > 0}
       />
     </>
   )
@@ -179,6 +208,7 @@ export default function BrowseTab() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  searchHeader: { gap: Spacing[2] },
   drugListContent: { paddingTop: Spacing[4], paddingBottom: Spacing[8] },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing[8] },
   emptyText: {
@@ -195,6 +225,5 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   backBtn: { paddingVertical: 4 },
-  backText: { fontSize: FontSize.base },
   classTitle: { fontSize: FontSize.base, fontFamily: FontFamily.sansSemibold, flex: 1 },
 })

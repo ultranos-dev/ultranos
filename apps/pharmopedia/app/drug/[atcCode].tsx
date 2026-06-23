@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native'
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { Heart, ChevronLeft, ChevronRight } from 'lucide-react-native'
 import { ImpactFeedbackStyle } from 'expo-haptics'
 import { getDrugRowByAtcCode, scopeEntryForRole } from '@/db/drug-catalog'
-import { getDrugByAtcCodeApi } from '@/api/drug-catalog'
+import { getDrugByAtcCodeApi, getBrandsByAtcApi } from '@/api/drug-catalog'
+import { getBrandsWithPresentations } from '@/db/brands'
+import { BrandsSection } from '@/components/DrugDetail/BrandsSection'
 import { getDatabase } from '@/db/migrations'
 import { useAuthStore } from '@/store/auth-store'
 import { useLangStore, isRtlLang } from '@/store/lang-store'
@@ -16,14 +19,13 @@ import { hapticImpact } from '@/lib/haptics'
 import { hasMachineTranslatedContent } from '@/lib/localized-text'
 import { MachineTranslationBanner } from '@/components/DrugDetail/MachineTranslationBanner'
 import { SafetyZone } from '@/components/DrugDetail/SafetyZone'
-import { DrugThumbnail } from '@/components/DrugDetail/DrugThumbnail'
 import { buildDrugSections } from '@/components/DrugDetail/drug-detail-sections'
 import { ShareButton } from '@/components/DrugDetail/ShareButton'
 import { SkeletonCard } from '@/components/SkeletonCard'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
-import { Chip, CollapsibleSection } from '@ultranos/ui-kit/native'
-import type { DrugEntryTier1, DrugEntryTier2, DrugEntryTier3 } from '@ultranos/shared-types'
+import { Chip, CollapsibleSection, useReducedMotion } from '@ultranos/ui-kit/native'
+import type { DrugEntryTier1, DrugEntryTier2, DrugEntryTier3, DrugBrandWithPresentations } from '@ultranos/shared-types'
 
 const CLINICAL_ROLES = new Set(['DOCTOR', 'NURSE', 'LAB_TECH', 'PHARMACIST', 'ADMIN'])
 const PHARMACIST_ROLES = new Set(['PHARMACIST', 'ADMIN'])
@@ -40,17 +42,35 @@ export default function DrugDetailScreen() {
   const isPharmacist = PHARMACIST_ROLES.has(role)
   const isRtl = isRtlLang(lang)
 
-  const isBookmarked = useBookmarkStore((s) => s.isBookmarked)
+  // Select the boolean (not the isBookmarked fn) so the component re-renders —
+  // and the heart re-fills — the moment the bookmark set changes.
+  const bookmarked = useBookmarkStore((s) => (atcCode ? s.isBookmarked(atcCode) : false))
   const toggleBookmark = useBookmarkStore((s) => s.toggle)
+  const reduced = useReducedMotion()
+  const heartScale = useSharedValue(1)
+  const heartAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: heartScale.value }] }))
 
   const [entry, setEntry] = useState<DrugEntryTier1 | DrugEntryTier2 | DrugEntryTier3 | null>(null)
+  const [brands, setBrands] = useState<DrugBrandWithPresentations[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!atcCode) return
     loadDrug(atcCode)
+    loadBrands(atcCode)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [atcCode])
+
+  async function loadBrands(code: string) {
+    try {
+      // Offline-first: read the synced cache, fall back to the Hub only if empty.
+      let result = await getBrandsWithPresentations(getDatabase(), code)
+      if (result.length === 0 && token) result = await getBrandsByAtcApi(code, token)
+      setBrands(result)
+    } catch {
+      setBrands([])
+    }
+  }
 
   async function loadDrug(code: string) {
     setLoading(true)
@@ -66,10 +86,17 @@ export default function DrugDetailScreen() {
   }
 
   async function handleToggleBookmark() {
+    const willBookmark = !bookmarked
+    void hapticImpact(ImpactFeedbackStyle.Light)
+    // Subtle pop when saving — skip on removal and under reduce-motion.
+    if (willBookmark && !reduced) {
+      heartScale.value = withSpring(1.25, { damping: 8 }, () => {
+        heartScale.value = withSpring(1)
+      })
+    }
     await toggleBookmark(getDatabase(), {
       atcCode: entry!.atcCode, innName: entry!.innName, therapeuticClass: entry!.therapeuticClass,
     })
-    void hapticImpact(ImpactFeedbackStyle.Light)
   }
 
   if (loading) {
@@ -111,7 +138,6 @@ export default function DrugDetailScreen() {
           >
             {isRtl ? <ChevronRight size={26} color={colors.textPrimary} /> : <ChevronLeft size={26} color={colors.textPrimary} />}
           </Pressable>
-          <DrugThumbnail images={(entry as DrugEntryTier1).images} name={entry.innName} />
           <View style={styles.nameBlock}>
             <Text style={[styles.primaryName, { color: colors.textPrimary }, localName ? styles.rtlText : isRtl && styles.fallbackName]}>
               {localName || entry.innName}
@@ -122,9 +148,11 @@ export default function DrugDetailScreen() {
           </View>
           <View style={[styles.actionRow, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}>
             <Pressable testID="bookmark-btn" onPress={() => void handleToggleBookmark()} accessibilityRole="button"
-              accessibilityLabel={isBookmarked(entry.atcCode) ? t('drug.removeBookmark') : t('drug.addBookmark')} hitSlop={8}>
-              <Heart color={isBookmarked(entry.atcCode) ? colors.primary500 : colors.textMuted}
-                fill={isBookmarked(entry.atcCode) ? colors.primary500 : 'none'} size={24} />
+              accessibilityLabel={bookmarked ? t('drug.removeBookmark') : t('drug.addBookmark')} hitSlop={8}>
+              <Animated.View style={heartAnimatedStyle}>
+                <Heart color={bookmarked ? colors.primary500 : colors.textMuted}
+                  fill={bookmarked ? colors.primary500 : 'none'} size={24} />
+              </Animated.View>
             </Pressable>
             <ShareButton atcCode={entry.atcCode} drugName={entry.innName} />
           </View>
@@ -140,7 +168,12 @@ export default function DrugDetailScreen() {
         <SafetyZone entry={entry} lang={lang} isClinical={isClinical} />
 
         <View style={styles.sectionList}>
-          {sections.length === 0 ? (
+          {brands.length > 0 && (
+            <CollapsibleSection testID="section-brands" title={t('drug.brands.title')} defaultOpen={false}>
+              <ErrorBoundary inline><BrandsSection brands={brands} lang={lang} t={t} /></ErrorBoundary>
+            </CollapsibleSection>
+          )}
+          {sections.length === 0 && brands.length === 0 ? (
             <Text style={[styles.noDetail, { color: colors.textMuted }]}>{t('drug.noDetail')}</Text>
           ) : (
             sections.map((s) => (

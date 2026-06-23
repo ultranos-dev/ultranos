@@ -1,5 +1,5 @@
 export const DB_NAME = 'pharmopedia.db'
-export const SCHEMA_VERSION = 3
+export const SCHEMA_VERSION = 5
 
 /**
  * Full DDL for the Pharmopedia local database.
@@ -57,6 +57,25 @@ export const CREATE_BOOKMARKS_SQL = `
   );
 `
 
+/**
+ * Saved branded medications — the brand-side equivalent of `bookmarks`.
+ * Keyed by drug_brands.id; stores enough to render the saved row + navigate
+ * without re-querying the catalog.
+ */
+export const CREATE_BRAND_BOOKMARKS_SQL = `
+  CREATE TABLE IF NOT EXISTS brand_bookmarks (
+    id               TEXT PRIMARY KEY,
+    brand_name       TEXT NOT NULL,
+    generic_atc_code TEXT NOT NULL,
+    generic_inn_name TEXT,
+    manufacturer     TEXT,
+    dose_form        TEXT,
+    reference_price  REAL,
+    currency         TEXT,
+    saved_at         TEXT NOT NULL
+  );
+`
+
 export const CREATE_PROFILE_CACHE_SQL = `
   CREATE TABLE IF NOT EXISTS profile_cache (
     sub        TEXT PRIMARY KEY,
@@ -64,4 +83,43 @@ export const CREATE_PROFILE_CACHE_SQL = `
     iv         TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
+`
+
+/**
+ * Branded medications — trade-name products linked to a generic by ATC code,
+ * fanning out into specific presentations (strength + form + pack + price).
+ * Synced from Hub API on independent version watermarks (sync_meta keys
+ * 'brandsVersion' / 'presentationsVersion'). Columns mirror the remote tables.
+ */
+export const CREATE_BRANDS_SQL = `
+  CREATE TABLE IF NOT EXISTS drug_brands (
+    id                TEXT PRIMARY KEY,
+    generic_atc_code  TEXT NOT NULL,
+    brand_name        TEXT NOT NULL,
+    manufacturer      TEXT,
+    brand_name_local  TEXT,          -- JSON object { ar, prs, ps }
+    rx_status         TEXT,
+    version           INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS drug_brands_atc_idx ON drug_brands (generic_atc_code);
+
+  CREATE TABLE IF NOT EXISTS drug_brand_presentations (
+    id                  TEXT PRIMARY KEY,
+    brand_id            TEXT NOT NULL,
+    strength            TEXT,
+    dose_form           TEXT,
+    route               TEXT,
+    pack_size           INTEGER,
+    pack_unit           TEXT,
+    volume              TEXT,
+    gtin                TEXT,
+    registration_number TEXT,
+    registration_status TEXT,
+    market              TEXT,
+    reference_price     REAL,
+    currency            TEXT,
+    packaging_photo_url TEXT,
+    version             INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS drug_brand_presentations_brand_idx ON drug_brand_presentations (brand_id);
 `

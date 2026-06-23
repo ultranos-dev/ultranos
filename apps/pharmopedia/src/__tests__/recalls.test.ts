@@ -36,6 +36,47 @@ describe('getActiveRecalls', () => {
     expect(out).toHaveLength(1)
   })
 
+  it('dedupes a drug with multiple active recalls, keeping the most recent', async () => {
+    const multi = {
+      atc_code: 'A12AA04', inn_name: 'Calcium carbonate',
+      tier3_json: JSON.stringify({
+        recallAlerts: [
+          { recallId: 'r1', description: 'Older batch', initiationDate: '2026-01-01', status: 'active' },
+          { recallId: 'r2', description: 'Newer batch', initiationDate: '2026-06-01', status: 'active' },
+        ],
+      }),
+    }
+    const out = await getActiveRecalls(fakeDb([multi]), 'PHARMACIST')
+    expect(out).toEqual([{ atcCode: 'A12AA04', innName: 'Calcium carbonate', description: 'Newer batch' }])
+  })
+
+  it('collapses the same recall across different ATC codes of one ingredient into one banner', async () => {
+    const a = {
+      atc_code: 'G03CA03', inn_name: 'Estradiol',
+      tier3_json: JSON.stringify({ recallAlerts: [{ recallId: 'r1', description: 'Foreign particles', initiationDate: '2026-05-28', status: 'active' }] }),
+    }
+    const b = {
+      atc_code: 'G03CA04', inn_name: 'Estradiol',
+      tier3_json: JSON.stringify({ recallAlerts: [{ recallId: 'r2', description: 'Foreign particles', initiationDate: '2026-05-20', status: 'active' }] }),
+    }
+    const out = await getActiveRecalls(fakeDb([a, b]), 'PHARMACIST')
+    // Newest representative (a) kept; the identical recall on b's ATC is dropped.
+    expect(out).toEqual([{ atcCode: 'G03CA03', innName: 'Estradiol', description: 'Foreign particles' }])
+  })
+
+  it('keeps distinct recalls on the same ingredient (different messages)', async () => {
+    const a = {
+      atc_code: 'G03CA03', inn_name: 'Estradiol',
+      tier3_json: JSON.stringify({ recallAlerts: [{ recallId: 'r1', description: 'Foreign particles', initiationDate: '2026-05-28', status: 'active' }] }),
+    }
+    const b = {
+      atc_code: 'G03CA04', inn_name: 'Estradiol',
+      tier3_json: JSON.stringify({ recallAlerts: [{ recallId: 'r2', description: 'Failed dissolution', initiationDate: '2026-05-20', status: 'active' }] }),
+    }
+    const out = await getActiveRecalls(fakeDb([a, b]), 'PHARMACIST')
+    expect(out).toHaveLength(2)
+  })
+
   it('respects the limit', async () => {
     const many = Array.from({ length: 8 }, (_, i) => ({
       atc_code: `C${i}`, inn_name: `Drug${i}`,

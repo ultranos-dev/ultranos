@@ -5,6 +5,10 @@ import BrowseTab from '@/app/(tabs)/browse'
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
 vi.mock('@/store/lang-store', () => ({ useLangStore: (s: (x: { lang: string }) => unknown) => s({ lang: 'en' }), isRtlLang: () => false }))
 vi.mock('@/store/sync-store', () => ({ useSyncStore: (s: (x: { lastVersion: number }) => unknown) => s({ lastVersion: 1 }) }))
+vi.mock('@/hooks/useThemeColors', () => ({
+  useThemeColors: () => ({ surface: '#fff', border: '#e5e7eb', textPrimary: '#111', textMuted: '#9ca3af', surfaceSubtle: '#f3f4f6', primary500: '#2e9e71' }),
+}))
+vi.mock('@/hooks/useDrugSearch', () => ({ useDrugSearch: () => ({ query: '', results: [], loading: false, search: vi.fn() }) }))
 vi.mock('@/db/browse', () => ({
   getTherapeuticClasses: async () => [{ name: 'Antibacterials', count: 3 }],
   getDrugsByTherapeuticClass: async () => [{ atcCode: 'J01CA04', innName: 'Amoxicillin', brandNames: [], doseForms: [], therapeuticClass: 'Antibacterials', localName: undefined }],

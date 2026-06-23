@@ -44,6 +44,18 @@ function queryByTestId(instance, testID) {
   return found ? normalizeNode(found) : null
 }
 
+function queryAllByTestId(instance, testID) {
+  const found = []
+  function search(node) {
+    if (!node || typeof node !== 'object') return
+    if (node.props && node.props.testID === testID) found.push(normalizeNode(node))
+    if (node.children) node.children.forEach(search)
+  }
+  const json = instance.toJSON()
+  if (Array.isArray(json)) { json.forEach(search) } else { search(json) }
+  return found
+}
+
 function matchesText(child, text) {
   if (typeof child !== 'string') return false
   if (text instanceof RegExp) return text.test(child)
@@ -184,6 +196,12 @@ const screen = {
     return result
   },
   queryByTestId: (testID) => queryByTestId(_currentInstance, testID),
+  getAllByTestId: (testID) => {
+    const results = queryAllByTestId(_currentInstance, testID)
+    if (results.length === 0) throw new Error(`Unable to find any elements with testID: ${testID}`)
+    return results
+  },
+  queryAllByTestId: (testID) => queryAllByTestId(_currentInstance, testID),
   queryByText: (text) => queryByText(_currentInstance, text),
   getByLabelText: (label) => {
     const result = queryByLabelText(_currentInstance, label)

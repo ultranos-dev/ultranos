@@ -1,22 +1,30 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native'
-import { Heart } from 'lucide-react-native'
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
+import { Heart, Pill } from 'lucide-react-native'
 import { useTranslation } from 'react-i18next'
 import type { DrugSearchResult } from '@ultranos/shared-types'
 import { isRtlLang, type Lang } from '@/store/lang-store'
 import { useBookmarkStore } from '@/store/bookmark-store'
 import { getDatabase } from '@/db/migrations'
 import { hapticSelection } from '@/lib/haptics'
-import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
+import { FontFamily, FontSize, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { Card } from '@ultranos/ui-kit/native'
+import { Card, useReducedMotion } from '@ultranos/ui-kit/native'
 
 interface Props {
   result: DrugSearchResult
   lang: Lang
   onPress: () => void
+  /** Active search query — the brand(s) it matches are promoted and highlighted. */
+  query?: string
+  /** Show a "Generic" kind label (used in unified search results to pair with brand rows). */
+  showKind?: boolean
 }
 
-export function DrugCard({ result, lang, onPress }: Props) {
+/** Max brand chips shown before collapsing the rest into a "+N" chip. */
+const MAX_BRAND_CHIPS = 3
+
+export function DrugCard({ result, lang, onPress, query, showKind }: Props) {
   const { t } = useTranslation()
   const colors = useThemeColors()
   const bookmarked = useBookmarkStore((s) => s.isBookmarked(result.atcCode))
@@ -25,9 +33,32 @@ export function DrugCard({ result, lang, onPress }: Props) {
   const primaryName = useLocal ? result.localName! : result.innName
   const secondaryName = useLocal ? result.innName : undefined
   const isRtl = isRtlLang(lang)
+  const reduced = useReducedMotion()
+
+  // Brand chips: promote the brand(s) matching the active query to the front and
+  // flag them, so a user who searched a brand sees which one matched the generic.
+  const q = query?.trim().toLowerCase() ?? ''
+  const isBrandMatch = (b: string) => q.length > 0 && b.toLowerCase().includes(q)
+  const orderedBrands = [
+    ...result.brandNames.filter(isBrandMatch),
+    ...result.brandNames.filter((b) => !isBrandMatch(b)),
+  ]
+  const visibleBrands = orderedBrands.slice(0, MAX_BRAND_CHIPS)
+  const brandOverflow = orderedBrands.length - visibleBrands.length
+
+  const scale = useSharedValue(1)
+  const iconAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }))
 
   async function handleToggleBookmark() {
+    const willBookmark = !bookmarked
     void hapticSelection()
+    // Subtle pop when saving — confirms the action landed. Skip on removal and
+    // when reduce-motion is on.
+    if (willBookmark && !reduced) {
+      scale.value = withSpring(1.25, { damping: 8 }, () => {
+        scale.value = withSpring(1)
+      })
+    }
     await toggleBookmark(getDatabase(), {
       atcCode: result.atcCode,
       innName: result.innName,
@@ -45,6 +76,12 @@ export function DrugCard({ result, lang, onPress }: Props) {
     >
       <Card square>
         <View style={[styles.body, { backgroundColor: colors.surface }]}>
+          {showKind ? (
+            <View testID="kind-generic" style={[styles.kindRow, isRtl && styles.kindRowRtl]}>
+              <Pill size={12} color={colors.info} />
+              <Text style={[styles.kind, { color: colors.info }]}>{t('search.kindGeneric')}</Text>
+            </View>
+          ) : null}
           <View style={styles.topRow}>
             <Text
               testID="drug-primary-name"
@@ -68,17 +105,52 @@ export function DrugCard({ result, lang, onPress }: Props) {
               hitSlop={10}
               style={styles.bookmarkBtn}
             >
-              <Heart
-                size={18}
-                color={bookmarked ? colors.primary500 : colors.textMuted}
-                fill={bookmarked ? colors.primary500 : 'none'}
-              />
+              <Animated.View style={iconAnimatedStyle}>
+                <Heart
+                  size={18}
+                  color={bookmarked ? colors.primary500 : colors.textMuted}
+                  fill={bookmarked ? colors.primary500 : 'none'}
+                />
+              </Animated.View>
             </Pressable>
           </View>
           {secondaryName && (
             <Text testID="drug-secondary-name" style={[styles.secondaryName, { color: colors.textSecondary }]}>
               {secondaryName}
             </Text>
+          )}
+          {result.brandNames.length > 0 && (
+            <View
+              testID="drug-brand-chips"
+              style={[styles.brandChips, isRtl && styles.brandChipsRtl]}
+            >
+              {visibleBrands.map((brand) => {
+                const matched = isBrandMatch(brand)
+                return (
+                  <Text
+                    key={brand}
+                    testID={matched ? 'drug-brand-chip-matched' : 'drug-brand-chip'}
+                    numberOfLines={1}
+                    style={[
+                      styles.chip,
+                      matched
+                        ? { backgroundColor: colors.primary500, borderColor: colors.primary500, color: colors.white }
+                        : { backgroundColor: colors.primary50, borderColor: colors.primary100, color: colors.primary700 },
+                    ]}
+                  >
+                    {brand}
+                  </Text>
+                )
+              })}
+              {brandOverflow > 0 && (
+                <Text
+                  testID="drug-brand-chip-more"
+                  style={[styles.chip, { backgroundColor: colors.primary50, borderColor: colors.primary100, color: colors.primary700 }]}
+                >
+                  {`+${brandOverflow}`}
+                </Text>
+              )}
+            </View>
           )}
           <Text
             testID="drug-meta"
@@ -119,6 +191,25 @@ const styles = StyleSheet.create({
   },
   rtlText: { fontFamily: FontFamily.arabic, textAlign: 'right', writingDirection: 'rtl' },
   fallbackName: { textAlign: 'right', writingDirection: 'ltr' },
+  kindRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  kindRowRtl: { flexDirection: 'row-reverse' },
+  kind: { fontSize: FontSize.xs, fontFamily: FontFamily.sansBold, letterSpacing: 0.5, textTransform: 'uppercase' },
+  brandChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing[1],
+    marginTop: Spacing[1],
+  },
+  brandChipsRtl: { flexDirection: 'row-reverse' },
+  chip: {
+    fontSize: FontSize.xs,
+    fontFamily: FontFamily.sansSemibold,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    paddingHorizontal: Spacing[2],
+    paddingVertical: 2,
+    overflow: 'hidden',
+  },
   meta: {
     fontSize: FontSize.xs,
     fontFamily: FontFamily.sans,

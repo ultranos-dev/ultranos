@@ -3,12 +3,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockAddBookmark = vi.fn().mockResolvedValue(undefined)
 const mockRemoveBookmark = vi.fn().mockResolvedValue(undefined)
 const mockGetBookmarks = vi.fn().mockResolvedValue([])
+const mockAddBrandBookmark = vi.fn().mockResolvedValue(undefined)
+const mockRemoveBrandBookmark = vi.fn().mockResolvedValue(undefined)
+const mockGetBrandBookmarks = vi.fn().mockResolvedValue([])
 
 vi.mock('@/db/bookmarks', () => ({
   addBookmark: mockAddBookmark,
   removeBookmark: mockRemoveBookmark,
   getBookmarks: mockGetBookmarks,
   clearBookmarks: vi.fn().mockResolvedValue(undefined),
+  addBrandBookmark: mockAddBrandBookmark,
+  removeBrandBookmark: mockRemoveBrandBookmark,
+  getBrandBookmarks: mockGetBrandBookmarks,
 }))
 
 const mockDb = {} as import('expo-sqlite').SQLiteDatabase
@@ -95,17 +101,47 @@ describe('bookmark-store: toggle', () => {
   })
 })
 
+describe('bookmark-store: brand bookmarks', () => {
+  beforeEach(() => {
+    useBookmarkStore.setState({ bookmarkedBrandIds: [], brandBookmarks: [], initialized: true })
+    mockAddBrandBookmark.mockClear()
+    mockRemoveBrandBookmark.mockClear()
+  })
+
+  const brand = { id: 'b1', brandName: 'SNOCIP', genericAtcCode: 'J01MA02', genericInnName: 'Ciprofloxacin', manufacturer: 'Snow Pharma', referencePrice: 54.4, currency: 'AFN' }
+
+  it('toggleBrand adds a brand bookmark and persists it', async () => {
+    await useBookmarkStore.getState().toggleBrand(mockDb, brand)
+    expect(mockAddBrandBookmark).toHaveBeenCalledWith(mockDb, brand)
+    const s = useBookmarkStore.getState()
+    expect(s.bookmarkedBrandIds).toContain('b1')
+    expect(s.brandBookmarks[0]!.brandName).toBe('SNOCIP')
+    expect(useBookmarkStore.getState().isBrandBookmarked('b1')).toBe(true)
+  })
+
+  it('toggleBrand removes an existing brand bookmark', async () => {
+    await useBookmarkStore.getState().toggleBrand(mockDb, brand)
+    await useBookmarkStore.getState().toggleBrand(mockDb, brand)
+    expect(mockRemoveBrandBookmark).toHaveBeenCalledWith(mockDb, 'b1')
+    expect(useBookmarkStore.getState().isBrandBookmarked('b1')).toBe(false)
+  })
+})
+
 describe('bookmark-store: reset', () => {
-  it('reset clears all state and unsets initialized', () => {
+  it('reset clears all state (generic + brand) and unsets initialized', () => {
     useBookmarkStore.setState({
       bookmarkedAtcCodes: ['J01CA04'],
       bookmarks: [{ atcCode: 'J01CA04', innName: 'Amoxicillin', therapeuticClass: null, savedAt: '2026-06-13T00:00:00.000Z' }],
+      bookmarkedBrandIds: ['b1'],
+      brandBookmarks: [{ id: 'b1', brandName: 'SNOCIP', genericAtcCode: 'J01MA02', genericInnName: 'Ciprofloxacin', manufacturer: null, doseForm: null, referencePrice: null, currency: null, savedAt: '2026-06-13T00:00:00.000Z' }],
       initialized: true,
     })
     useBookmarkStore.getState().reset()
     const s = useBookmarkStore.getState()
     expect(s.bookmarkedAtcCodes).toHaveLength(0)
     expect(s.bookmarks).toHaveLength(0)
+    expect(s.bookmarkedBrandIds).toHaveLength(0)
+    expect(s.brandBookmarks).toHaveLength(0)
     expect(s.initialized).toBe(false)
   })
 })

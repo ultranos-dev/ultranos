@@ -66,7 +66,7 @@ export function CollapsibleSection({ title, defaultOpen = false, badge, children
       {open ? (
         <View testID={testID ? `${testID}-body` : undefined}>
           <View style={[styles.divider, { backgroundColor: colors.borderSubtle }]} />
-          <View style={styles.body}>{children}</View>
+          <View style={[styles.body, { backgroundColor: colors.surfaceSubtle }]}>{children}</View>
         </View>
       ) : null}
     </Card>

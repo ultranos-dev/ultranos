@@ -9,6 +9,7 @@ import { useThemeStore, type ThemeMode } from '@/store/theme-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { useProfile } from '@/hooks/useProfile'
 import { runSync } from '@/sync/catalog-sync'
+import { runBrandsSync } from '@/sync/brands-sync'
 import { getDatabase } from '@/db/migrations'
 import { RoleBadge } from '@/components/RoleBadge'
 import { NetStatusBanner } from '@/components/NetStatusBanner'
@@ -71,6 +72,8 @@ export default function ProfileTab() {
     setSyncedCount(0)
     try {
       const { version } = await runSync(getDatabase(), token, setSyncedCount)
+      // Branded medications sync alongside the catalog (best-effort).
+      await runBrandsSync(getDatabase(), token).catch(() => {})
       setLastSync(version, new Date().toISOString())
       void hapticNotification(NotificationFeedbackType.Success)
     } catch {

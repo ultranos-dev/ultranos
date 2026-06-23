@@ -53,9 +53,9 @@ export function buildDrugSections({ entry, lang, t, isClinical, isPharmacist }: 
 
   if (!isClinical) {
     // ── Patient / public — plain language ──────────────────────────────────
-    if (summary.text) sections.push({ id: 'about', title: t('drug.sections.about'), defaultOpen: true,
+    if (summary.text) sections.push({ id: 'about', title: t('drug.sections.about'), defaultOpen: false,
       body: <SectionCard title="" text={summary.text} isRtl={summary.isLocalized} /> })
-    if (usedFor.texts.length) sections.push({ id: 'usedFor', title: t('drug.overview.usedFor'), defaultOpen: true,
+    if (usedFor.texts.length) sections.push({ id: 'usedFor', title: t('drug.overview.usedFor'), defaultOpen: false,
       body: <SectionCard title="" items={usedFor.texts} isRtl={usedFor.isRtl} /> })
     if (warnings.text) sections.push({ id: 'warnings', title: t('drug.overview.warnings'), defaultOpen: false,
       body: <SectionCard title="" text={warnings.text} isRtl={warnings.isLocalized} severity="warning" /> })
@@ -85,7 +85,7 @@ export function buildDrugSections({ entry, lang, t, isClinical, isPharmacist }: 
     if (adultDosing.length) dosageCards.push(<SectionCard key="adult" title={t('drug.clinical.adultDosing')} items={adultDosing} />)
     if (pediatricDosing.length) dosageCards.push(<SectionCard key="ped" title={t('drug.clinical.pediatricDosing')} items={pediatricDosing} />)
     if (e2.renalAdjustment) dosageCards.push(<SectionCard key="renal" title={t('drug.clinical.renalAdjustment')} text={e2.renalAdjustment} />)
-    if (dosageCards.length) sections.push({ id: 'dosageIndications', title: t('drug.sections.dosageIndications'), defaultOpen: true, body: stack(dosageCards) })
+    if (dosageCards.length) sections.push({ id: 'dosageIndications', title: t('drug.sections.dosageIndications'), defaultOpen: false, body: stack(dosageCards) })
 
     // Interactions (full list, all severities)
     if (e2.interactions?.length) {

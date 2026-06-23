@@ -27,6 +27,19 @@ const en = {
     noResultsDescription: 'Try a different spelling or search term',
     lang: { en: 'EN', prs: '\u062f\u0631\u06cc', ps: '\u067e\u069a\u062a\u0648', ar: '\u0639\u0631\u0628\u064a' },
     recentSearches: 'Recent searches',
+    filterAll: 'All',
+    filterGenerics: 'Generics',
+    filterBrands: 'Brands',
+    kindGeneric: 'Generic',
+    kindBrand: 'Brand',
+  },
+  brandDetail: {
+    notFound: 'Brand not found',
+    presentations: 'Presentations',
+    genericIngredient: 'Generic ingredient',
+    otherBrands: 'Other brands',
+    viewFull: 'Full drug information',
+    clinicalFrom: 'Clinical information from',
   },
   sync: {
     syncing: 'Syncing catalog\u2026',
@@ -105,6 +118,13 @@ const en = {
       pricing: 'Pricing & Savings',
     },
     noDetail: 'Detailed information isn’t available yet for this medicine.',
+    brands: {
+      title: 'Brands',
+      manufacturer: 'Manufacturer',
+      referencePrice: 'Reference price',
+      rx: 'Prescription only',
+      otc: 'Over the counter',
+    },
   },
   pricing: {
     byDistance: 'By distance',

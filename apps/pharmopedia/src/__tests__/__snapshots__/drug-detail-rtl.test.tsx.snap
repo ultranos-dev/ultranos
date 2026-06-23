@@ -53,9 +53,6 @@ exports[`DrugDetailScreen — single scroll > LTR snapshot 1`] = `
         />
       </Pressable>
       <View
-        testID="drug-thumbnail"
-      />
-      <View
         style={
           {
             "flex": 1,
@@ -119,8 +116,12 @@ exports[`DrugDetailScreen — single scroll > LTR snapshot 1`] = `
           testID="bookmark-btn"
         >
           <View
-            testID="icon-Heart"
-          />
+            style={{}}
+          >
+            <View
+              testID="icon-Heart"
+            />
+          </View>
         </Pressable>
       </View>
     </View>
@@ -223,9 +224,6 @@ exports[`DrugDetailScreen — single scroll > RTL snapshot (lang=ar) 1`] = `
         />
       </Pressable>
       <View
-        testID="drug-thumbnail"
-      />
-      <View
         style={
           {
             "flex": 1,
@@ -293,8 +291,12 @@ exports[`DrugDetailScreen — single scroll > RTL snapshot (lang=ar) 1`] = `
           testID="bookmark-btn"
         >
           <View
-            testID="icon-Heart"
-          />
+            style={{}}
+          >
+            <View
+              testID="icon-Heart"
+            />
+          </View>
         </Pressable>
       </View>
     </View>

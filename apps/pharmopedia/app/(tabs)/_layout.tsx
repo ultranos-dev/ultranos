@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router'
-import { Home, Folder, Bookmark, User } from 'lucide-react-native'
+import { Home, Folder, Heart, User } from 'lucide-react-native'
 import { useTranslation } from 'react-i18next'
 import { useAutoSync } from '@/hooks/useAutoSync'
 import { FontFamily, FontSize, Shadow } from '@ultranos/ui-kit/tokens.native'
@@ -51,7 +51,7 @@ export default function TabsLayout() {
         name="saved"
         options={{
           title: t('tabs.saved'),
-          tabBarIcon: ({ color, size, focused }) => <AnimatedTabIcon icon={Bookmark} color={color} size={size} focused={focused} />,
+          tabBarIcon: ({ color, size, focused }) => <AnimatedTabIcon icon={Heart} color={color} size={size} focused={focused} />,
         }}
       />
       <Tabs.Screen

@@ -8,79 +8,93 @@ const mockSetStatus = vi.fn()
 const mockSetSyncedCount = vi.fn()
 const mockSetLastSync = vi.fn()
 const mockRunSync = vi.fn()
+const mockRunBrandsSync = vi.fn()
+const mockNetFetch = vi.fn()
 
 vi.mock('@/db/migrations', () => ({ getDatabase: () => ({}), isDatabaseReady: () => true }))
-vi.mock('@/sync/catalog-sync', () => ({
-  runSync: (...args: unknown[]) => mockRunSync(...args),
-}))
+vi.mock('@/sync/catalog-sync', () => ({ runSync: (...a: unknown[]) => mockRunSync(...a) }))
+vi.mock('@/sync/brands-sync', () => ({ runBrandsSync: (...a: unknown[]) => mockRunBrandsSync(...a) }))
+vi.mock('@react-native-community/netinfo', () => ({ default: { fetch: () => mockNetFetch() } }))
 vi.mock('@/store/auth-store', () => ({ useAuthStore: vi.fn() }))
 vi.mock('@/store/sync-store', () => ({ useSyncStore: vi.fn() }))
 
 type AuthState = { isAuthenticated: boolean; token: string | null }
 type SyncState = {
-  lastVersion: number
-  status: 'idle' | 'syncing' | 'error'
-  setStatus: typeof mockSetStatus
-  setSyncedCount: typeof mockSetSyncedCount
-  setLastSync: typeof mockSetLastSync
+  lastVersion: number; status: 'idle' | 'syncing' | 'error'; lastSyncAt: string | null
+  setStatus: typeof mockSetStatus; setSyncedCount: typeof mockSetSyncedCount; setLastSync: typeof mockSetLastSync
 }
 
-function setAuth(state: AuthState) {
-  vi.mocked(useAuthStore).mockImplementation((sel: (s: AuthState) => unknown) => sel(state))
-}
-function setSync(state: SyncState) {
-  vi.mocked(useSyncStore).mockImplementation((sel: (s: SyncState) => unknown) => sel(state))
-}
+function setAuth(s: AuthState) { vi.mocked(useAuthStore).mockImplementation((sel: (x: AuthState) => unknown) => sel(s)) }
+function setSync(s: SyncState) { vi.mocked(useSyncStore).mockImplementation((sel: (x: SyncState) => unknown) => sel(s)) }
 
-const defaultSync: SyncState = {
-  lastVersion: 0,
-  status: 'idle',
-  setStatus: mockSetStatus,
-  setSyncedCount: mockSetSyncedCount,
-  setLastSync: mockSetLastSync,
+const baseSync: SyncState = {
+  lastVersion: 0, status: 'idle', lastSyncAt: null,
+  setStatus: mockSetStatus, setSyncedCount: mockSetSyncedCount, setLastSync: mockSetLastSync,
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
   setAuth({ isAuthenticated: true, token: 'tok' })
-  setSync(defaultSync)
+  setSync(baseSync)
+  mockRunSync.mockResolvedValue({ synced: 100, version: 7 })
+  mockRunBrandsSync.mockResolvedValue({ brands: 0, presentations: 0 })
+  mockNetFetch.mockResolvedValue({ isConnected: true, isInternetReachable: true })
 })
 
+const mount = async () => { await act(async () => { renderHook(() => useAutoSync()) }) }
+
 describe('useAutoSync', () => {
-  it('triggers sync when authenticated, token present, lastVersion=0', async () => {
-    mockRunSync.mockResolvedValue({ synced: 100, version: 1 })
-    await act(async () => { renderHook(() => useAutoSync()) })
+  it('cold start (lastVersion=0): shows progress and full-syncs', async () => {
+    await mount()
     expect(mockSetStatus).toHaveBeenCalledWith('syncing')
     expect(mockRunSync).toHaveBeenCalledTimes(1)
+    expect(mockRunBrandsSync).toHaveBeenCalledTimes(1)
+    expect(mockSetLastSync).toHaveBeenCalledWith(7, expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/))
   })
 
-  it('calls setLastSync with version and ISO timestamp on success', async () => {
-    mockRunSync.mockResolvedValue({ synced: 100, version: 3 })
-    await act(async () => { renderHook(() => useAutoSync()) })
-    expect(mockSetLastSync).toHaveBeenCalledWith(3, expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/))
+  it('returning user (lastVersion>0): delta-syncs silently (no progress UI)', async () => {
+    setSync({ ...baseSync, lastVersion: 5, lastSyncAt: '2026-01-01T00:00:00Z' })
+    await mount()
+    expect(mockRunSync).toHaveBeenCalledTimes(1)
+    expect(mockSetStatus).not.toHaveBeenCalledWith('syncing')
+    expect(mockSetLastSync).toHaveBeenCalled()
   })
 
-  it('calls setStatus("error") when runSync rejects', async () => {
+  it('throttles: skips a delta sync if synced within the last 15 min', async () => {
+    setSync({ ...baseSync, lastVersion: 5, lastSyncAt: new Date().toISOString() })
+    await mount()
+    expect(mockRunSync).not.toHaveBeenCalled()
+  })
+
+  it('skips when offline', async () => {
+    setSync({ ...baseSync, lastVersion: 5, lastSyncAt: '2026-01-01T00:00:00Z' })
+    mockNetFetch.mockResolvedValue({ isConnected: false, isInternetReachable: false })
+    await mount()
+    expect(mockRunSync).not.toHaveBeenCalled()
+  })
+
+  it('sets status "error" only on a cold-start failure', async () => {
     mockRunSync.mockRejectedValue(new Error('network'))
-    await act(async () => { renderHook(() => useAutoSync()) })
+    await mount()
     expect(mockSetStatus).toHaveBeenCalledWith('error')
   })
 
-  it('does NOT trigger when lastVersion > 0', async () => {
-    setSync({ ...defaultSync, lastVersion: 5 })
-    await act(async () => { renderHook(() => useAutoSync()) })
-    expect(mockRunSync).not.toHaveBeenCalled()
+  it('does not surface error on a returning-user (silent) failure', async () => {
+    setSync({ ...baseSync, lastVersion: 5, lastSyncAt: '2026-01-01T00:00:00Z' })
+    mockRunSync.mockRejectedValue(new Error('network'))
+    await mount()
+    expect(mockSetStatus).not.toHaveBeenCalledWith('error')
   })
 
-  it('does NOT trigger when not authenticated', async () => {
+  it('does NOT sync when unauthenticated', async () => {
     setAuth({ isAuthenticated: false, token: null })
-    await act(async () => { renderHook(() => useAutoSync()) })
+    await mount()
     expect(mockRunSync).not.toHaveBeenCalled()
   })
 
-  it('does NOT trigger when already syncing', async () => {
-    setSync({ ...defaultSync, status: 'syncing' })
-    await act(async () => { renderHook(() => useAutoSync()) })
+  it('does NOT sync when a sync is already in progress', async () => {
+    setSync({ ...baseSync, status: 'syncing' })
+    await mount()
     expect(mockRunSync).not.toHaveBeenCalled()
   })
 })

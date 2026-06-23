@@ -23,6 +23,19 @@ const ps: Translations = {
     noResultsTitle: 'هیڅ پایلې نشته',
     noResultsDescription: 'بل املا هڅه وکړئ',
     recentSearches: 'وروستي لټونونه',
+    filterAll: 'ټول',
+    filterGenerics: 'جنریک درمل',
+    filterBrands: 'برانډونه',
+    kindGeneric: 'جنریک',
+    kindBrand: 'برانډ',
+  },
+  brandDetail: {
+    notFound: 'برانډ ونه موندل شو',
+    presentations: 'بڼې او بنډلونه',
+    genericIngredient: 'اغېزمنه ماده (جنریک درمل)',
+    otherBrands: 'نور برانډونه',
+    viewFull: 'د درملو بشپړ معلومات',
+    clinicalFrom: 'کلینیکي معلومات د',
   },
   sync: {
     syncing: 'کاتالوګ سنک کیږي\u2026',
@@ -81,6 +94,13 @@ const ps: Translations = {
     photos: { title: 'انځورونه', disclaimer: 'یوازې د نمونې لپاره — اصلي بسته‌بندي تایید کړئ.', generic: 'عمومي', unavailableOffline: 'انځورونه آفلاین شتون نلري.' },
     sections: { dispensing: 'وېش او درمل لیست', about: 'د دې درمل په اړه', dosageIndications: 'دوز او اندیکیشنونه', adverseEffects: 'ناوړه اغیزې', pharmacology: 'فارماکولوژي', administration: 'د کارولو لاره', formulary: 'درمل لیست', pricing: 'بیه او سپما' },
     noDetail: 'د دې درمل لپاره تفصيلي معلومات تر اوسه شتون نلري.',
+    brands: {
+      title: 'برانډونه',
+      manufacturer: 'تولیدوونکی',
+      referencePrice: 'لومړنۍ بیه',
+      rx: 'یوازې د نسخې سره',
+      otc: 'پرته له نسخې',
+    },
   },
   pricing: {
     byDistance: 'د فاصلې له مخې',

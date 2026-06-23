@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react'
 import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { ChevronRight, Pill, SearchX } from 'lucide-react-native'
+import { ChevronRight, Pill } from 'lucide-react-native'
 import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { CollapsibleScreen, Banner, Chip, ListRow, EmptyState, Card, useRtl } from '@ultranos/ui-kit/native'
 import { SearchBar } from '@/components/SearchBar'
-import { DrugCard } from '@/components/DrugCard'
+import { SearchResults } from '@/components/SearchResults'
 import { useDrugSearch } from '@/hooks/useDrugSearch'
 import { getActiveRecalls, type RecallSummary } from '@/db/recalls'
 import { getDatabase } from '@/db/migrations'
@@ -42,7 +42,7 @@ export default function HomeTab() {
     : { textAlign: 'left' as const }
   const [recalls, setRecalls] = useState<RecallSummary[]>([])
 
-  const { query, results, loading, search } = useDrugSearch()
+  const { query, results, brands, loading, search } = useDrugSearch()
 
   useEffect(() => {
     let cancelled = false
@@ -67,17 +67,15 @@ export default function HomeTab() {
 
       {query.trim().length > 0 ? (
         <View style={styles.section}>
-          {results.map((item) => (
-            <DrugCard
-              key={item.atcCode}
-              result={item}
-              lang={lang}
-              onPress={() => { void addRecent(query); router.push(`/drug/${item.atcCode}`) }}
-            />
-          ))}
-          {!loading && results.length === 0 && (
-            <EmptyState icon={SearchX} title={t('search.noResultsTitle')} description={t('search.noResultsDescription')} />
-          )}
+          <SearchResults
+            query={query}
+            results={results}
+            brands={brands}
+            loading={loading}
+            lang={lang}
+            onSelectGeneric={(atcCode) => { void addRecent(query); router.push(`/drug/${atcCode}`) }}
+            onSelectBrand={(id) => { void addRecent(query); router.push({ pathname: '/brand/[id]', params: { id } }) }}
+          />
         </View>
       ) : (
         <>

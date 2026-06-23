@@ -56,6 +56,7 @@ vi.mock('@ultranos/ui-kit/native', () => {
   return {
     Card: ({ children, testID }: { children: React.ReactNode; testID?: string }) =>
       React.createElement(View, { testID }, children),
+    useReducedMotion: () => false,
   }
 })
 

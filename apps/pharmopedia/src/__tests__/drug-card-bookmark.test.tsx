@@ -22,7 +22,10 @@ vi.mock('@/hooks/useThemeColors', () => ({
 vi.mock('@ultranos/ui-kit/native', () => {
   const React = require('react')
   const { View } = require('react-native')
-  return { Card: ({ children, testID }: { children: React.ReactNode; testID?: string }) => React.createElement(View, { testID }, children) }
+  return {
+    Card: ({ children, testID }: { children: React.ReactNode; testID?: string }) => React.createElement(View, { testID }, children),
+    useReducedMotion: () => false,
+  }
 })
 
 import { render, screen, fireEvent } from '@testing-library/react-native'

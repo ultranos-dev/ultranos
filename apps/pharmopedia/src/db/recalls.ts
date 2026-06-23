@@ -48,5 +48,24 @@ export async function getActiveRecalls(
     }
   }
   collected.sort((x, y) => y.date.localeCompare(x.date))
-  return collected.slice(0, limit).map(({ atcCode, innName, description }) => ({ atcCode, innName, description }))
+
+  // Stage 1: a drug may carry multiple active recall alerts — surface only its
+  // most recent one, so each drug appears once.
+  const seenAtc = new Set<string>()
+  const perDrug = collected.filter((r) => (seenAtc.has(r.atcCode) ? false : seenAtc.add(r.atcCode) && true))
+
+  // Stage 2: one ingredient (e.g. Estradiol) spans many ATC codes that all carry
+  // the *identical* recall, which would otherwise render as duplicate banners.
+  // Collapse by display identity (name + message); the newest representative
+  // wins (list is sorted newest-first). Distinct recalls on the same ingredient
+  // still surface separately.
+  const seenMessage = new Set<string>()
+  const deduped = perDrug.filter((r) => {
+    const key = `${r.innName.trim().toLowerCase()}|${r.description.trim().toLowerCase()}`
+    if (seenMessage.has(key)) return false
+    seenMessage.add(key)
+    return true
+  })
+
+  return deduped.slice(0, limit).map(({ atcCode, innName, description }) => ({ atcCode, innName, description }))
 }

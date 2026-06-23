@@ -14,6 +14,9 @@ import type {
   DrugEntryTier2,
   DrugEntryTier3,
   PharmacyPrice,
+  DrugBrand,
+  DrugBrandPresentation,
+  DrugBrandWithPresentations,
 } from '@ultranos/shared-types'
 
 function getHubApiUrl(): string {
@@ -86,6 +89,32 @@ export function syncDrugsApi(
   token: string,
 ): Promise<{ entries: (DrugEntryTier1 | DrugEntryTier2 | DrugEntryTier3)[]; latestVersion: number }> {
   return trpcGet('drugCatalog.sync', { sinceVersion, limit }, token)
+}
+
+/** Branded medications (brand + presentations) for a generic drug. Online fetch fallback. */
+export function getBrandsByAtcApi(
+  atcCode: string,
+  token: string,
+): Promise<DrugBrandWithPresentations[]> {
+  return trpcGet('drugCatalog.getBrandsByAtc', { atcCode }, token)
+}
+
+/** Paginated sync of branded medications (trade-name level). */
+export function syncBrandsApi(
+  sinceVersion: number,
+  limit: number,
+  token: string,
+): Promise<{ brands: DrugBrand[]; latestVersion: number }> {
+  return trpcGet('drugCatalog.syncBrands', { sinceVersion, limit }, token)
+}
+
+/** Paginated sync of brand presentations (product/pack level). */
+export function syncBrandPresentationsApi(
+  sinceVersion: number,
+  limit: number,
+  token: string,
+): Promise<{ presentations: DrugBrandPresentation[]; latestVersion: number }> {
+  return trpcGet('drugCatalog.syncBrandPresentations', { sinceVersion, limit }, token)
 }
 
 /** Fetch real-time pharmacy prices for a drug near a geo-coordinate. */

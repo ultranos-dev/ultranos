@@ -23,6 +23,19 @@ const ar: Translations = {
     noResultsTitle: 'لا توجد نتائج',
     noResultsDescription: 'جرب تهجئة مختلفة',
     recentSearches: 'عمليات البحث الأخيرة',
+    filterAll: 'الكل',
+    filterGenerics: 'الأدوية الجنيسة',
+    filterBrands: 'العلامات التجارية',
+    kindGeneric: 'جنيس',
+    kindBrand: 'علامة تجارية',
+  },
+  brandDetail: {
+    notFound: 'لم يتم العثور على العلامة التجارية',
+    presentations: 'الأشكال والعبوات',
+    genericIngredient: 'المادة الفعالة (الدواء الجنيس)',
+    otherBrands: 'علامات تجارية أخرى',
+    viewFull: 'معلومات الدواء الكاملة',
+    clinicalFrom: 'المعلومات السريرية من',
   },
   sync: {
     syncing: 'جارٍ مزامنة الكتالوج\u2026',
@@ -81,6 +94,13 @@ const ar: Translations = {
     photos: { title: 'الصور', disclaimer: 'للتوضيح فقط — تحقق من العبوة الفعلية.', generic: 'عام', unavailableOffline: 'الصور غير متوفرة دون اتصال.' },
     sections: { dispensing: 'الصرف والقائمة الدوائية', about: 'حول هذا الدواء', dosageIndications: 'الجرعة ودواعي الاستعمال', adverseEffects: 'الآثار الجانبية', pharmacology: 'علم الأدوية', administration: 'طريقة الإعطاء', formulary: 'القائمة الدوائية', pricing: 'السعر والتوفير' },
     noDetail: 'المعلومات التفصيلية غير متوفرة لهذا الدواء بعد.',
+    brands: {
+      title: 'العلامات التجارية',
+      manufacturer: 'الشركة المصنّعة',
+      referencePrice: 'السعر الإرشادي',
+      rx: 'بوصفة طبية فقط',
+      otc: 'بدون وصفة طبية',
+    },
   },
   pricing: {
     byDistance: 'حسب المسافة',
