@@ -6,9 +6,16 @@ import {
   getTierForRole,
   ENRICHMENT_FIELDS_BY_ROLE,
 } from '@/services/drug-catalog.service'
+import {
+  mapBrandRow,
+  mapPresentationRow,
+  mapBrandWithPresentations,
+} from '@/services/branded-medications.service'
 import { haversineDistanceKm, sortPrices } from '@/services/drug-prices.service'
 import { AuditLogger } from '@ultranos/audit-logger'
-import type { DrugSearchResult, PharmacyPrice } from '@ultranos/shared-types'
+import type {
+  DrugSearchResult, PharmacyPrice, DrugBrandWithPresentations, DrugBrand, DrugBrandPresentation,
+} from '@ultranos/shared-types'
 import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
 
 const langSchema = z.enum(['en', 'prs', 'ps']).default('en')
@@ -114,6 +121,74 @@ export const drugCatalogRouter = createTRPCRouter({
       }
 
       return { entries, latestVersion }
+    }),
+
+  /**
+   * Branded medications for a generic drug (by ATC) — each brand with its
+   * marketed presentations (strength, form, pack, manufacturer, reference price).
+   * Non-PHI reference data, identical for every authenticated role.
+   * Used by the Pharmopedia drug-detail "Brands" section.
+   */
+  getBrandsByAtc: protectedProcedure
+    .input(z.object({ atcCode: z.string().min(1) }))
+    .query(async ({ ctx, input }): Promise<DrugBrandWithPresentations[]> => {
+      const { data, error } = await ctx.supabase
+        .from('drug_brands')
+        .select('*, drug_brand_presentations(*)')
+        .eq('generic_atc_code', input.atcCode)
+        .order('brand_name', { ascending: true })
+
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      return (data ?? []).map(mapBrandWithPresentations)
+    }),
+
+  /**
+   * Incremental sync of branded medications (trade-name level) for the offline cache.
+   * Brands and presentations sync on independent version watermarks (two tables).
+   */
+  syncBrands: protectedProcedure
+    .input(z.object({
+      sinceVersion: z.number().int().min(0),
+      limit: z.number().int().min(1).max(500).default(200),
+    }))
+    .query(async ({ ctx, input }): Promise<{ brands: DrugBrand[]; latestVersion: number }> => {
+      const { data, error } = await ctx.supabase
+        .from('drug_brands')
+        .select('*')
+        .gt('version', input.sinceVersion)
+        .order('version', { ascending: true })
+        .limit(input.limit)
+
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      const brands = (data ?? []).map(mapBrandRow)
+      const latestVersion = brands.length > 0
+        ? brands[brands.length - 1].version
+        : input.sinceVersion
+      return { brands, latestVersion }
+    }),
+
+  /**
+   * Incremental sync of brand presentations (product/pack level) for the offline cache.
+   */
+  syncBrandPresentations: protectedProcedure
+    .input(z.object({
+      sinceVersion: z.number().int().min(0),
+      limit: z.number().int().min(1).max(500).default(200),
+    }))
+    .query(async ({ ctx, input }): Promise<{ presentations: DrugBrandPresentation[]; latestVersion: number }> => {
+      const { data, error } = await ctx.supabase
+        .from('drug_brand_presentations')
+        .select('*')
+        .gt('version', input.sinceVersion)
+        .order('version', { ascending: true })
+        .limit(input.limit)
+
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      const presentations = (data ?? []).map(mapPresentationRow)
+      const latestVersion = presentations.length > 0
+        ? presentations[presentations.length - 1].version
+        : input.sinceVersion
+      return { presentations, latestVersion }
     }),
 
   /**

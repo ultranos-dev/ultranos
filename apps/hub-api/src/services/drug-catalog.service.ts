@@ -92,6 +92,7 @@ export const ETL_PROTECTED_FIELDS = new Set([
   'pharmacokinetics', 'summary_plain', 'used_for', 'common_side_effects',
   'when_to_seek_help', 'storage_instructions', 'pregnancy_summary_plain',
   'warnings_summary_plain', 'substitutes', 'recall_alerts', 'translation_status',
+  'brand_sources',
 ])
 
 /** Enrichment fields each role is permitted to write */

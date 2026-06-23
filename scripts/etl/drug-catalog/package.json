@@ -13,7 +13,10 @@
     "run-openfda-label": "tsx run-openfda-label.ts",
     "run-openfda-bulk": "tsx run-openfda-bulk.ts",
     "run-enforcement": "tsx run-enforcement.ts",
-    "run-translate": "tsx run-translate.ts"
+    "run-translate": "tsx run-translate.ts",
+    "run-rxnav-brands": "tsx run-rxnav-brands.ts",
+    "run-regional-brands": "tsx run-regional-brands.ts",
+    "run-branded-medications": "tsx run-branded-medications.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",

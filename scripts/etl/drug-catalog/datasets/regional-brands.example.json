@@ -1,0 +1,7 @@
+[
+  { "atcCode": "J01CR02", "innName": "amoxicillin/clavulanate", "brandNames": ["Augmentin", "Curam", "Co-amoxiclav"], "source": "EXAMPLE-TEMPLATE" },
+  { "atcCode": "J01CA04", "innName": "amoxicillin", "brandNames": ["Amoxil", "Ospamox", "Moxatag"], "source": "EXAMPLE-TEMPLATE" },
+  { "atcCode": "N02BE01", "innName": "paracetamol", "brandNames": ["Panadol", "Calpol"], "source": "EXAMPLE-TEMPLATE" },
+  { "atcCode": "J01XD01", "innName": "metronidazole", "brandNames": ["Flagyl"], "source": "EXAMPLE-TEMPLATE" },
+  { "atcCode": "A02BC01", "innName": "omeprazole", "brandNames": ["Losec", "Prilosec", "Omepral"], "source": "EXAMPLE-TEMPLATE" }
+]

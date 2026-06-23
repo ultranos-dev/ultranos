@@ -1,0 +1,21 @@
+[
+  {
+    "genericAtcCode": "J01CR02",
+    "brandName": "Augmentin",
+    "manufacturer": "GlaxoSmithKline",
+    "rxStatus": "rx",
+    "presentations": [
+      { "strength": "625 mg", "doseForm": "tablet", "packSize": 14, "packUnit": "tablets", "registrationStatus": "marketed", "market": "AF", "reference_price": null, "currency": "AFN" },
+      { "strength": "228 mg/5 mL", "doseForm": "suspension", "volume": "100 mL", "registrationStatus": "marketed", "market": "AF" }
+    ]
+  },
+  {
+    "genericAtcCode": "J01CA04",
+    "brandName": "Amoxil",
+    "manufacturer": "GlaxoSmithKline",
+    "rxStatus": "rx",
+    "presentations": [
+      { "strength": "500 mg", "doseForm": "capsule", "packSize": 21, "packUnit": "capsules", "registrationStatus": "marketed", "market": "AF" }
+    ]
+  }
+]

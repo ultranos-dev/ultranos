@@ -4,47 +4,10 @@ import { join } from 'node:path'
 import { createRequire } from 'node:module'
 import { cleanText, stripSectionHeader } from './openfda-label.js'
 
-/** WHO INN -> US (USAN) generic-name aliases, both lowercased. Used to match openFDA labels (US names) to DrugBank INN catalog names. Extensible. */
-export const INN_US_ALIASES: Record<string, string> = {
-  'acetylsalicylic acid': 'aspirin',
-  'paracetamol': 'acetaminophen',
-  'salbutamol': 'albuterol',
-  'adrenaline': 'epinephrine',
-  'noradrenaline': 'norepinephrine',
-  'glibenclamide': 'glyburide',
-  'lignocaine': 'lidocaine',
-  'frusemide': 'furosemide',
-  'rifampicin': 'rifampin',
-  'ciclosporin': 'cyclosporine',
-  'colecalciferol': 'cholecalciferol',
-  'pethidine': 'meperidine',
-  'hydroxycarbamide': 'hydroxyurea',
-  'isoprenaline': 'isoproterenol',
-  'chlorphenamine': 'chlorpheniramine',
-  'beclometasone': 'beclomethasone',
-  'benzylpenicillin': 'penicillin g',
-  'phenoxymethylpenicillin': 'penicillin v',
-  'amfetamine': 'amphetamine',
-  'dexamfetamine': 'dextroamphetamine',
-  'methylthioninium chloride': 'methylene blue',
-  'glyceryl trinitrate': 'nitroglycerin',
-  'suxamethonium': 'succinylcholine',
-  'ergometrine': 'ergonovine',
-  'phytomenadione': 'phytonadione',
-  'amethocaine': 'tetracaine',
-  'dicycloverine': 'dicyclomine',
-  'dosulepin': 'dothiepin',
-  'trimeprazine': 'alimemazine',
-  'mercaptamine': 'cysteamine',
-}
-
-/** Candidate match names for a catalog INN (lowercased): the INN itself + its USAN alias if known. */
-export function candidateNamesFor(innLower: string): string[] {
-  const out = [innLower]
-  const alias = INN_US_ALIASES[innLower]
-  if (alias) out.push(alias)
-  return out
-}
+// The INN↔USAN alias map moved to transforms/inn-aliases.ts so the regional
+// brand source can share it without importing this (stream-json-heavy) module.
+// Re-exported here to keep existing import paths working.
+export { INN_US_ALIASES, candidateNamesFor } from '../transforms/inn-aliases.js'
 
 // stream-json is a CJS package with no ESM exports field.
 // Under ESM/tsx/Vitest, named imports from CJS submodules are unreliable.

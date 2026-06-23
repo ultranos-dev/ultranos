@@ -141,3 +141,79 @@ export interface PharmacyFacility {
   longitude: number
   address?: string
 }
+
+// ── Branded medications ─────────────────────────────────────────────────────────
+// A trade-name product (DrugBrand) linked to a generic drug_catalog entry by ATC,
+// fanning out into specific marketed products/packs (DrugBrandPresentation).
+// FHIR R4 Medication-aligned: brand≈Medication.code, manufacturer≈Medication.manufacturer,
+// presentation form/amount≈Medication.form/amount. Reference data — never PHI.
+
+/** A branded/trade-name medication linked to a generic catalog entry (by ATC code). */
+export interface DrugBrand {
+  id: string
+  genericAtcCode: string             // FK → DrugEntryTier1.atcCode
+  brandName: string
+  manufacturer?: string              // marketing-authorization holder; undefined = unknown
+  brandNameLocal: DrugLocalNames
+  rxStatus: 'rx' | 'otc' | 'unknown'
+  version: number
+  lastUpdated: string
+}
+
+/** A specific marketed product/pack of a brand (strength + form + pack + price). */
+export interface DrugBrandPresentation {
+  id: string
+  brandId: string                    // FK → DrugBrand.id
+  strength?: string                  // "625 mg"
+  doseForm?: string                  // tablet / suspension
+  route?: string
+  packSize?: number                  // 14
+  packUnit?: string                  // tablets
+  volume?: string                    // "100 mL"
+  gtin?: string                      // barcode
+  registrationNumber?: string
+  registrationStatus: 'marketed' | 'withdrawn' | 'unknown'
+  market?: string                    // country/market of registration
+  /** Indicative list price — NOT the per-pharmacy real-time price (see PharmacyPrice). */
+  referencePrice?: number
+  currency?: string
+  packagingPhotoUrl?: string
+  version: number
+  lastUpdated: string
+}
+
+/** A brand with its presentations — returned by getBrandsByAtc, rendered on drug-detail. */
+export interface DrugBrandWithPresentations extends DrugBrand {
+  presentations: DrugBrandPresentation[]
+}
+
+/** Lightweight brand search hit — shown as a "brand" result row alongside generics. */
+export interface BrandSearchResult {
+  id: string
+  brandName: string
+  manufacturer?: string
+  genericAtcCode: string
+  genericInnName: string      // the generic this brand resolves to
+  doseForm?: string           // representative form (for the result subtitle)
+  referencePrice?: number     // lowest presentation price, if any
+  currency?: string
+}
+
+/** A sibling brand of the same generic (for the substitution loop on brand-detail). */
+export interface DrugBrandSibling {
+  id: string
+  brandName: string
+  manufacturer?: string
+}
+
+/** Brand-detail payload: the brand, its presentations, the generic it maps to, and sibling brands. */
+export interface DrugBrandDetail {
+  id: string
+  brandName: string
+  manufacturer?: string
+  rxStatus: 'rx' | 'otc' | 'unknown'
+  genericAtcCode: string
+  genericInnName: string
+  presentations: DrugBrandPresentation[]
+  siblings: DrugBrandSibling[]
+}

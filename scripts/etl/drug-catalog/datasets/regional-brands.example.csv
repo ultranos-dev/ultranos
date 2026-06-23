@@ -1,0 +1,8 @@
+atc_code,inn_name,brand_name,market,source
+J01CR02,amoxicillin/clavulanate,Augmentin,,EXAMPLE-TEMPLATE
+J01CR02,amoxicillin/clavulanate,Curam,,EXAMPLE-TEMPLATE
+J01CA04,amoxicillin,Amoxil,,EXAMPLE-TEMPLATE
+J01CA04,amoxicillin,Ospamox,,EXAMPLE-TEMPLATE
+N02BE01,paracetamol,Panadol,,EXAMPLE-TEMPLATE
+J01XD01,metronidazole,Flagyl,,EXAMPLE-TEMPLATE
+A02BC01,omeprazole,Losec,,EXAMPLE-TEMPLATE
