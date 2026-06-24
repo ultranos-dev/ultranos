@@ -33,6 +33,24 @@ export const PRESERVE_TABLES = [
   'vocabularyMedications',
   'vocabularyIcd10',
   'vocabularyInteractions',
+  // AI model metadata (non-PHI reference data — model IDs, versions, checksums)
+  'aiModels',
+  'modelDownloadProgress',
+  // Appointment slots — provider availability windows (schedule.reference points to
+  // a practitioner Schedule, NOT a patient). Consistent with the encryption config,
+  // which already treats `slots` as non-encrypted (unlike `appointments`).
+  // IMPORTANT: if a patient reference is ever added to FhirSlot, move this to PHI_TABLES.
+  'slots',
+  // Data budget tracking (non-PHI — byte counts and category labels only)
+  'dataBudgetConfig',
+  'dataUsage',
+  // Encryption migration status (non-PHI — table names and status only)
+  'encryptionMigrations',
+  // Phase 1: enriched drug-catalog mirror + brands (non-PHI reference data)
+  'drugCatalogMirror',
+  'drugBrandsMirror',
+  'drugBrandPresentationsMirror',
+  'drugCatalogSyncMeta',
 ] as const
 
 // Compile-time safety: ensure syncQueue is never in the PHI list

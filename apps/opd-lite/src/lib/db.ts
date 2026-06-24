@@ -1,7 +1,9 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod, FhirAllergyIntolerance, FhirMedicationStatementZod, AIModelType } from '@ultranos/shared-types'
+import type { DrugBrand, DrugBrandPresentation } from '@ultranos/shared-types'
 import type { ClientAuditEvent } from '@ultranos/audit-logger/client'
 import type { DataUsageCategory } from '@ultranos/sync-engine'
+import type { DrugEntry } from '@ultranos/drug-catalog-sync'
 export type { DataUsageCategory }  // re-export for consumers
 import {
   applyEncryptionMiddleware,
@@ -129,6 +131,12 @@ export interface VocabInteractionEntry {
   version: number
 }
 
+// --- Drug-catalog mirror (Phase 1 — enriched catalog/brands, non-PHI reference data) ---
+export interface CatalogSyncMetaEntry {
+  key: string   // primary key — e.g. 'catalogVersion'
+  value: string
+}
+
 // Data Budget types — Story 48.x / Data Connectivity
 // ---------------------------------------------------------------------------
 
@@ -210,6 +218,10 @@ class OpdLiteDatabase extends Dexie {
   dataBudgetConfig!: Dexie.Table<DataBudgetConfig, string>
   dataUsage!: Dexie.Table<DataUsageRecord & { id?: number }, number>
   encryptionMigrations!: EntityTable<EncryptionMigrationEntry, 'tableName'>
+  drugCatalogMirror!: EntityTable<DrugEntry, 'atcCode'>
+  drugBrandsMirror!: EntityTable<DrugBrand, 'id'>
+  drugBrandPresentationsMirror!: EntityTable<DrugBrandPresentation, 'id'>
+  drugCatalogSyncMeta!: EntityTable<CatalogSyncMetaEntry, 'key'>
 
   constructor() {
     super('opd-lite')
@@ -628,6 +640,16 @@ class OpdLiteDatabase extends Dexie {
         { tableName: 'practitionerKeys', status: 'pending' },
         { tableName: 'diagnosticReports', status: 'pending' },
       ])
+    })
+
+    // v24: Phase 1 — enriched drug-catalog mirror + brands (non-PHI reference data).
+    // Plaintext (not in the encryption middleware config); preserved across logout.
+    // brandNames is a multiEntry index so a brand-name search finds the generic.
+    this.version(24).stores({
+      drugCatalogMirror: '&atcCode, innName, *brandNames',
+      drugBrandsMirror: '&id, genericAtcCode',
+      drugBrandPresentationsMirror: '&id, brandId',
+      drugCatalogSyncMeta: '&key',
     })
   }
 }

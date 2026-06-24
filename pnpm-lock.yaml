@@ -300,6 +300,9 @@ importers:
       '@ultranos/crypto':
         specifier: workspace:*
         version: link:../../packages/crypto
+      '@ultranos/drug-catalog-sync':
+        specifier: workspace:*
+        version: link:../../packages/drug-catalog-sync
       '@ultranos/drug-db':
         specifier: workspace:*
         version: link:../../packages/drug-db
@@ -905,6 +908,19 @@ importers:
       vitest:
         specifier: ^1.6.0
         version: 1.6.1(@types/node@20.19.39)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.46.2)
+
+  packages/drug-catalog-sync:
+    dependencies:
+      '@ultranos/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.19.39)(jsdom@24.1.3)(lightningcss@1.32.0)(msw@2.14.6(@types/node@20.19.39)(typescript@5.9.3))(terser@5.46.2)
 
   packages/drug-db:
     dependencies:

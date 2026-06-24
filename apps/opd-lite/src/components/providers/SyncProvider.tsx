@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import '@/lib/key-lifecycle-hooks' // registers re-auth listener for awaiting-key queue restoration
 import { startSyncWorker, stopSyncWorker, triggerDrain } from '@/lib/sync-worker'
+import { syncDrugCatalog } from '@/lib/drug-catalog-sync'
 import { pullPatientChanges } from '@/lib/sync-pull'
 import { useSyncStore } from '@/stores/sync-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -11,6 +12,12 @@ import { db } from '@/lib/db'
 import type { SyncQueueEntry, ConflictResolution } from '@ultranos/sync-engine'
 
 const HUB_BASE_URL = (process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004').replace(/\/api\/trpc\/?$/, '')
+
+/** Fire-and-forget enriched-catalog sync on sign-in (online-gated/throttled inside). */
+export async function triggerCatalogSyncOnAuth(isAuthenticated: boolean): Promise<void> {
+  if (!isAuthenticated) return
+  await syncDrugCatalog()
+}
 
 /** Background pull interval — 2 minutes */
 const BACKGROUND_PULL_INTERVAL_MS = 2 * 60 * 1000
@@ -69,6 +76,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
     if (startedRef.current) return
     startedRef.current = true
+
+    // Phase 1: refresh the enriched drug-catalog mirror on sign-in (best-effort).
+    void triggerCatalogSyncOnAuth(true)
 
     // Hydrate lastSyncedAt from Dexie so the banner reflects persisted state
     db.syncMeta.get('__global__').then((global) => {

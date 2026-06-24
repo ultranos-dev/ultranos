@@ -182,7 +182,11 @@ describe('InteractionChecker service (Dexie-backed)', () => {
       expect(r3.result).toBe('BLOCKED')
     })
 
-    it('throws when severity string is unknown (P3 — unknown severity false negative)', async () => {
+    it('degrades to UNAVAILABLE (never a false CLEAR) when a severity string is unknown (P3 — unknown severity false negative)', async () => {
+      // An unrecognized severity makes the lookup-map build throw inside the checker.
+      // checkInteractions catches that and surfaces UNAVAILABLE — the fail-safe channel
+      // (Rule #3) — rather than throwing into the prescribing UI. The interacting pair
+      // must NEVER be silently treated as CLEAR.
       vi.spyOn(db.vocabularyInteractions, 'toArray').mockResolvedValueOnce([
         {
           id: 'test-entry-1',
@@ -192,9 +196,10 @@ describe('InteractionChecker service (Dexie-backed)', () => {
           description: 'Test interaction',
         } as unknown,
       ])
-      await expect(checkInteractions('DrugA', ['DrugB'])).rejects.toThrow(
-        'Unknown drug interaction severity: "UNKNOWN_SEVERITY"',
-      )
+      const result = await checkInteractions('DrugA', ['DrugB'])
+      expect(result.result).toBe('UNAVAILABLE')
+      expect(result.result).not.toBe('CLEAR')
+      expect(result.reason).toBe('ADAPTER_ERROR')
     })
   })
 })

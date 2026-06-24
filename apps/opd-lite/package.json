@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.45.0",
     "@ultranos/audit-logger": "workspace:*",
     "@ultranos/crypto": "workspace:*",
+    "@ultranos/drug-catalog-sync": "workspace:*",
     "@ultranos/drug-db": "workspace:*",
     "@ultranos/shared-types": "workspace:*",
     "@ultranos/sync-engine": "workspace:^",

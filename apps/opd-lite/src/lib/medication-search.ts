@@ -3,6 +3,7 @@ import { db } from './db'
 import type { VocabMedicationEntry } from './db'
 import { searchDrugCatalog } from './trpc'
 import type { DrugSearchResult } from '@ultranos/shared-types'
+import type { DrugEntry } from '@ultranos/drug-catalog-sync'
 
 export interface MedicationItem {
   code: string
@@ -46,7 +47,56 @@ function drugResultToMedicationItem(r: DrugSearchResult): MedicationItem {
   }
 }
 
+function mirrorEntryToItems(e: DrugEntry): MedicationItem[] {
+  const form = e.doseForms[0] ?? ''
+  const generic: MedicationItem = { code: e.atcCode, display: e.innName, form, strength: '' }
+  // One item per brand name so a brand query surfaces (and labels) the generic.
+  const brands: MedicationItem[] = (e.brandNames ?? []).map((b) => ({
+    code: e.atcCode,
+    display: `${e.innName} (${b})`,
+    form,
+    strength: '',
+  }))
+  return [generic, ...brands]
+}
+
+async function searchMirror(trimmed: string): Promise<MedicationSearchResult[] | null> {
+  const total = await db.drugCatalogMirror.count()
+  if (total === 0) return null // cold start — caller falls back to vocab seed
+
+  const lower = trimmed.toLowerCase()
+  const byName = await db.drugCatalogMirror
+    .where('innName')
+    .startsWithIgnoreCase(trimmed)
+    .limit(200)
+    .toArray()
+  const byBrand = await db.drugCatalogMirror
+    .where('brandNames')
+    .startsWithIgnoreCase(trimmed)
+    .limit(200)
+    .toArray()
+
+  let candidates = [...byName, ...byBrand]
+  if (candidates.length < 10) {
+    candidates = await db.drugCatalogMirror.limit(1000).toArray()
+  }
+  // De-dupe entries by atcCode before expanding to items.
+  const seen = new Set<string>()
+  const items: MedicationItem[] = []
+  for (const e of candidates) {
+    if (seen.has(e.atcCode)) continue
+    seen.add(e.atcCode)
+    items.push(...mirrorEntryToItems(e))
+  }
+  const fuse = new Fuse(items, fuseOptions)
+  return fuse.search(lower, { limit: 20 }).map((r) => ({ item: r.item, matches: r.matches }))
+}
+
 async function searchLocal(trimmed: string): Promise<MedicationSearchResult[]> {
+  const fromMirror = await searchMirror(trimmed)
+  if (fromMirror !== null) return fromMirror
+
+  // Fallback (pre-first-sync cold start): the JSON-seeded vocabulary.
   const prefixCandidates = await db.vocabularyMedications
     .where('display')
     .startsWithIgnoreCase(trimmed)
