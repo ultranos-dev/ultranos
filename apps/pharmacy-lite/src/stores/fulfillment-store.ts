@@ -26,6 +26,8 @@ export interface FulfillmentItem {
   selected: boolean
   brandName: string
   batchLot: string
+  brandId?: string
+  presentationId?: string
   fefoBatchId?: string
   fefoBatchNumber?: string
   fefoBatchExpiry?: string
@@ -55,6 +57,7 @@ interface FulfillmentState {
   selectAll: () => void
   deselectAll: () => void
   setBrandName: (prescriptionId: string, brandName: string) => void
+  setBrandSelection: (prescriptionId: string, sel: { brandId?: string; brandName: string; presentationId?: string }) => void
   setBatchLot: (prescriptionId: string, batchLot: string) => void
   startReview: () => void
   assignFefoBatches: () => Promise<void>
@@ -129,6 +132,17 @@ export const useFulfillmentStore = create<FulfillmentState>()(
       set((state) => {
         const item = state.items.find((i) => i.prescription.id === prescriptionId)
         if (item) item.brandName = brandName
+      })
+    },
+
+    setBrandSelection: (prescriptionId, sel) => {
+      set((state) => {
+        const item = state.items.find((i) => i.prescription.id === prescriptionId)
+        if (item) {
+          item.brandId = sel.brandId
+          item.brandName = sel.brandName
+          item.presentationId = sel.presentationId
+        }
       })
     },
 

@@ -7,6 +7,7 @@ import { useFulfillmentStore, type FulfillmentItem } from '@/stores/fulfillment-
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { DispensingConfirmationModal } from './DispensingConfirmationModal'
+import { BrandSubstitutionPicker } from './BrandSubstitutionPicker'
 import { AllergyBanner } from './AllergyBanner'
 import { usePatientStore } from '@/stores/patient-store'
 import { usePosStore } from '@/stores/pos-store'
@@ -24,7 +25,7 @@ function formatFrequency(freqN?: number, perU?: string): string {
 export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
   const t = useTranslations('fulfillment')
   const tD = useTranslations('dispensing')
-  const { phase, items, practitionerName, patientName, patientAge, toggleItem, selectAll, deselectAll, setBrandName, setBatchLot } =
+  const { phase, items, practitionerName, patientName, patientAge, toggleItem, selectAll, deselectAll, setBrandSelection, setBatchLot } =
     useFulfillmentStore()
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [dispensingComplete, setDispensingComplete] = useState(false)
@@ -118,14 +119,10 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                       >
                         {t('brandName')}
                       </label>
-                      <input
-                        id={`brand-${item.prescription.id}`}
-                        data-testid={`brand-input-${item.prescription.id}`}
-                        type="text"
+                      <BrandSubstitutionPicker
+                        atc={item.prescription.atc}
                         value={item.brandName}
-                        onChange={(e) => setBrandName(item.prescription.id, e.target.value)}
-                        placeholder={t('brandPlaceholder')}
-                        className="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        onSelect={(sel) => setBrandSelection(item.prescription.id, sel)}
                       />
                     </div>
                     <div>

@@ -13,7 +13,7 @@ export function createMedicationDispense(
   pharmacistRef: `Practitioner/${string}`,
   fulfillmentContext?: { fulfilledCount: number; totalCount: number },
 ): FhirMedicationDispense {
-  const { prescription, brandName, batchLot } = item
+  const { prescription, brandName, batchLot, brandId, presentationId } = item
   const now = new Date().toISOString()
   const ts = hlc.now()
   const hlcString = serializeHlc(ts)
@@ -52,6 +52,8 @@ export function createMedicationDispense(
       createdAt: now,
       ...(brandName ? { brandName } : {}),
       ...(batchLot ? { batchLot } : {}),
+      ...(brandId ? { brandId } : {}),
+      ...(presentationId ? { presentationId } : {}),
       isOfflineCreated: typeof navigator !== 'undefined' ? !navigator.onLine : true,
       ...(fulfillmentContext ? {
         fulfilledCount: fulfillmentContext.fulfilledCount,

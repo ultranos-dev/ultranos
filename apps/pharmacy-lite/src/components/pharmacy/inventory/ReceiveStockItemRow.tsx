@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import type { CatalogItem } from '@/lib/inventory/types'
+import { PriceCard } from '@/components/pharmacy/PriceCard'
 
 export interface ReceiveLineItem {
   catalogItem: CatalogItem
@@ -58,6 +59,9 @@ export function ReceiveStockItemRow({ item, index, currencyMinorUnits, onUpdate,
         <div>
           <label htmlFor={`sell-${index}`} className="mb-1 block text-xs font-medium text-muted-foreground">{t('sellingPriceRequired')}</label>
           <input id={`sell-${index}`} type="number" step="0.01" min="0" value={item.sellingPrice ? formatPrice(item.sellingPrice) : ''} onChange={(e) => onUpdate(index, { sellingPrice: parsePrice(e.target.value) })} className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500" required />
+          <div className="mt-1">
+            <PriceCard atc={item.catalogItem.atcCode} />
+          </div>
         </div>
         <div>
           <label htmlFor={`lot-${index}`} className="mb-1 block text-xs font-medium text-muted-foreground">{t('lotNo')}</label>

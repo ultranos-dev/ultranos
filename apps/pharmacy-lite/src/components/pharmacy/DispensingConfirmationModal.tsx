@@ -1,9 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { AllergyBanner } from './AllergyBanner'
+import { RecallAlertBanner } from './RecallAlertBanner'
+import { InteractionCheckBanner, type InteractionStatus } from './InteractionCheckBanner'
+import { getRecallAlertsForAtc } from '@/lib/drug-catalog-queries'
+import { runDispenseInteractionCheck } from '@/lib/dispense-interaction-check'
+import type { RecallAlert } from '@ultranos/shared-types'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
 
 interface DispensingConfirmationModalProps {
@@ -22,7 +27,28 @@ export function DispensingConfirmationModal({
   onCancel,
 }: DispensingConfirmationModalProps) {
   const [acknowledged, setAcknowledged] = useState(false)
+  const [recalls, setRecalls] = useState<RecallAlert[]>([])
+  const [interaction, setInteraction] = useState<InteractionStatus>({ state: 'checking' })
   const t = useTranslations('dispensingConfirmation')
+
+  useEffect(() => {
+    let cancelled = false
+    void Promise.all(
+      items.map((i) => (i.prescription.atc ? getRecallAlertsForAtc(i.prescription.atc) : Promise.resolve([]))),
+    ).then((lists) => { if (!cancelled) setRecalls(lists.flat()) })
+    return () => { cancelled = true }
+  }, [items])
+
+  useEffect(() => {
+    let cancelled = false
+    const meds = items.map((i) => i.prescription.medN)
+    void runDispenseInteractionCheck(meds, patientAllergies ?? []).then((s) => { if (!cancelled) setInteraction(s) })
+    return () => { cancelled = true }
+  }, [items, patientAllergies])
+
+  // Block on a contraindication AND while the check is still running —
+  // never allow dispense before the interaction check has resolved (safety race).
+  const blockedByInteraction = interaction.state === 'contraindicated' || interaction.state === 'checking'
 
   return (
     <div
@@ -35,8 +61,16 @@ export function DispensingConfirmationModal({
       <div className="w-full max-w-lg rounded-2xl bg-card p-6 shadow-card mx-4 max-h-[80vh] overflow-y-auto">
         <h3 className="text-lg font-bold text-foreground mb-4">{t('title')}</h3>
 
+        {recalls.length > 0 && (
+          <div className="mb-4">
+            <RecallAlertBanner alerts={recalls} />
+          </div>
+        )}
         <div className="mb-4">
           <AllergyBanner allergies={patientAllergies} patientName={patientName} />
+        </div>
+        <div className="mb-4">
+          <InteractionCheckBanner status={interaction} />
         </div>
 
         <div className="mb-4">
@@ -80,7 +114,7 @@ export function DispensingConfirmationModal({
             variant="default"
             type="button"
             className="w-full"
-            disabled={!acknowledged}
+            disabled={!acknowledged || blockedByInteraction}
             onClick={onConfirm}
             data-testid="modal-confirm-dispensing-btn"
           >
