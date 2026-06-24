@@ -1,0 +1,1357 @@
+[
+  {
+    "sr": "1",
+    "rawProduct": "AM-Levomin 250mg",
+    "brandBase": "AM-Levomin",
+    "productStrength": "250mg",
+    "rawComposition": "levofloxacin as hemihydrate……. 250mg",
+    "ingredients": [
+      {
+        "raw": "levofloxacin as hemihydrate……. 250mg",
+        "inn": "levofloxacin",
+        "strength": "250mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "10 tablets",
+    "packSize": 10,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "2",
+    "rawProduct": "Oflomin 200mg",
+    "brandBase": "Oflomin",
+    "productStrength": "200mg",
+    "rawComposition": "ofloxacin… 200mg",
+    "ingredients": [
+      {
+        "raw": "ofloxacin…                                      200mg",
+        "inn": "ofloxacin",
+        "strength": "200mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "10 tablets",
+    "packSize": 10,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "3",
+    "rawProduct": "Metrin 400mg",
+    "brandBase": "Metrin",
+    "productStrength": "400mg",
+    "rawComposition": "metronidazole… 400mg",
+    "ingredients": [
+      {
+        "raw": "metronidazole…                             400mg",
+        "inn": "metronidazole",
+        "strength": "400mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "30 tablets",
+    "packSize": 30,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "4",
+    "rawProduct": "Citomin 10mg",
+    "brandBase": "Citomin",
+    "productStrength": "10mg",
+    "rawComposition": "escitalopram as oxalate 10mg",
+    "ingredients": [
+      {
+        "raw": "escitalopram as oxalate                  10mg",
+        "inn": "escitalopram",
+        "strength": "10mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "14 tablets",
+    "packSize": 14,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "5",
+    "rawProduct": "Tenovoir 300mg",
+    "brandBase": "Tenovoir",
+    "productStrength": "300mg",
+    "rawComposition": "tenofovir disoproxil fumarate…… 300mg",
+    "ingredients": [
+      {
+        "raw": "tenofovir disoproxil fumarate…… 300mg",
+        "inn": "tenofovir disoproxil",
+        "strength": "300mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "30 tablets",
+    "packSize": 30,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "6",
+    "rawProduct": "AM-Zithromin 500mg",
+    "brandBase": "AM-Zithromin",
+    "productStrength": "500mg",
+    "rawComposition": "azithromycin dihydrate 500mg",
+    "ingredients": [
+      {
+        "raw": "azithromycin dihydrate                   500mg",
+        "inn": "azithromycin",
+        "strength": "500mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "6 tablets",
+    "packSize": 6,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "7",
+    "rawProduct": "AM-Vir 0.5mg",
+    "brandBase": "AM-Vir",
+    "productStrength": "0.5mg",
+    "rawComposition": "Enticavir as monohydrate 0.5mg",
+    "ingredients": [
+      {
+        "raw": "Enticavir as monohydrate               0.5mg",
+        "inn": "entecavir",
+        "strength": "0.5mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "30 tablets",
+    "packSize": 30,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "8",
+    "rawProduct": "Mevrin 135mg",
+    "brandBase": "Mevrin",
+    "productStrength": "135mg",
+    "rawComposition": "Meberverine HCl 135mg",
+    "ingredients": [
+      {
+        "raw": "Meberverine HCl                              135mg",
+        "inn": "mebeverine",
+        "strength": "135mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "30 tablets",
+    "packSize": 30,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "9",
+    "rawProduct": "Metranide DF",
+    "brandBase": "Metranide DF",
+    "rawComposition": "Metronidazole 400mg | Diloxanide furoate 500mg",
+    "ingredients": [
+      {
+        "raw": "Metronidazole                                400mg",
+        "inn": "metronidazole",
+        "strength": "400mg"
+      },
+      {
+        "raw": "Diloxanide furoate                          500mg",
+        "inn": "diloxanide furoate",
+        "strength": "500mg"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "15 tablets",
+    "packSize": 15,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "10",
+    "rawProduct": "Cipromin 250mg",
+    "brandBase": "Cipromin",
+    "productStrength": "250mg",
+    "rawComposition": "Ciprofloxacin HCl 250mg",
+    "ingredients": [
+      {
+        "raw": "Ciprofloxacin HCl                            250mg",
+        "inn": "ciprofloxacin",
+        "strength": "250mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "10 tablets",
+    "packSize": 10,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "11",
+    "rawProduct": "Metrin 200mg",
+    "brandBase": "Metrin",
+    "productStrength": "200mg",
+    "rawComposition": "metronidazole 200mg",
+    "ingredients": [
+      {
+        "raw": "metronidazole                                200mg",
+        "inn": "metronidazole",
+        "strength": "200mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "30 tablets",
+    "packSize": 30,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "12",
+    "rawProduct": "Cipromin 500mg",
+    "brandBase": "Cipromin",
+    "productStrength": "500mg",
+    "rawComposition": "Ciprofloxacin HCl 500mg",
+    "ingredients": [
+      {
+        "raw": "Ciprofloxacin HCl                             500mg",
+        "inn": "ciprofloxacin",
+        "strength": "500mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "10 tablets",
+    "packSize": 10,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "13",
+    "rawProduct": "Moximin 400mg",
+    "brandBase": "Moximin",
+    "productStrength": "400mg",
+    "rawComposition": "Moxifloxacin HCl 400mg",
+    "ingredients": [
+      {
+        "raw": "Moxifloxacin HCl                              400mg",
+        "inn": "moxifloxacin",
+        "strength": "400mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "5 tablets",
+    "packSize": 5,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "14",
+    "rawProduct": "Citomin 5mg",
+    "brandBase": "Citomin",
+    "productStrength": "5mg",
+    "rawComposition": "escitalopram as oxalate 5mg",
+    "ingredients": [
+      {
+        "raw": "escitalopram as oxalate                  5mg",
+        "inn": "escitalopram",
+        "strength": "5mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "14 tablets",
+    "packSize": 14,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "15",
+    "rawProduct": "Brumin 400mg",
+    "brandBase": "Brumin",
+    "productStrength": "400mg",
+    "rawComposition": "ibuprofen 400mg",
+    "ingredients": [
+      {
+        "raw": "ibuprofen                                         400mg",
+        "inn": "ibuprofen",
+        "strength": "400mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "10 tablets",
+    "packSize": 10,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "16",
+    "rawProduct": "Amamol 500mg",
+    "brandBase": "Amamol",
+    "productStrength": "500mg",
+    "rawComposition": "paracetamol 500mg",
+    "ingredients": [
+      {
+        "raw": "paracetamol                                    500mg",
+        "inn": "paracetamol",
+        "strength": "500mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "20 tablets",
+    "packSize": 20,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "17",
+    "rawProduct": "Amgesic 450+35",
+    "brandBase": "Amgesic",
+    "productStrength": "450+35",
+    "rawComposition": "Paracetamol 450mg | Orphinadrine citrate 35mg",
+    "ingredients": [
+      {
+        "raw": "Paracetamol                                    450mg",
+        "inn": "paracetamol",
+        "strength": "450mg"
+      },
+      {
+        "raw": "Orphinadrine citrate                       35mg",
+        "inn": "orphenadrine",
+        "strength": "35mg"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "100 tablets",
+    "packSize": 100,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "18",
+    "rawProduct": "Amgesic Extra",
+    "brandBase": "Amgesic Extra",
+    "rawComposition": "Paracetamol 650mg | Orphinadrine citrate 50mg",
+    "ingredients": [
+      {
+        "raw": "Paracetamol                                    650mg",
+        "inn": "paracetamol",
+        "strength": "650mg"
+      },
+      {
+        "raw": "Orphinadrine citrate                       50mg",
+        "inn": "orphenadrine",
+        "strength": "50mg"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "30 tablets",
+    "packSize": 30,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "19",
+    "rawProduct": "AM-Domin 10mg",
+    "brandBase": "AM-Domin",
+    "productStrength": "10mg",
+    "rawComposition": "domperidon 10mg",
+    "ingredients": [
+      {
+        "raw": "domperidon                                    10mg",
+        "inn": "domperidone",
+        "strength": "10mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "50 tablets",
+    "packSize": 50,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "20",
+    "rawProduct": "Cetramin 10mg",
+    "brandBase": "Cetramin",
+    "productStrength": "10mg",
+    "rawComposition": "Cetirizine 2HCl 10mg",
+    "ingredients": [
+      {
+        "raw": "Cetirizine 2HCl                                10mg",
+        "inn": "cetirizine",
+        "strength": "10mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "30 tablets",
+    "packSize": 30,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "21",
+    "rawProduct": "AM Levomin 500mg",
+    "brandBase": "AM-Levomin",
+    "productStrength": "500mg",
+    "rawComposition": "levofloxacin as hemihydrate …… 500mg",
+    "ingredients": [
+      {
+        "raw": "levofloxacin as hemihydrate …… 500mg",
+        "inn": "levofloxacin",
+        "strength": "500mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "10 tablets",
+    "packSize": 10,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "22",
+    "rawProduct": "Amamol CF",
+    "brandBase": "Amamol CF",
+    "rawComposition": "paracetamol 500mg | Pseudoepdedrine HCl 60mg | Chlorpheniramine Maleat 4mg",
+    "ingredients": [
+      {
+        "raw": "paracetamol                                    500mg",
+        "inn": "paracetamol",
+        "strength": "500mg"
+      },
+      {
+        "raw": "Pseudoepdedrine HCl                    60mg",
+        "inn": "pseudoephedrine",
+        "strength": "60mg"
+      },
+      {
+        "raw": "Chlorpheniramine Maleat             4mg",
+        "inn": "chlorphenamine",
+        "strength": "4mg"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "30 tablets",
+    "packSize": 30,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "23",
+    "rawProduct": "Metranide  200+250",
+    "brandBase": "Metranide",
+    "productStrength": "200+250",
+    "rawComposition": "Metronidazole 200mg | Diloxanide Furoate 250mg",
+    "ingredients": [
+      {
+        "raw": "Metronidazole                                200mg",
+        "inn": "metronidazole",
+        "strength": "200mg"
+      },
+      {
+        "raw": "Diloxanide Furoate                        250mg",
+        "inn": "diloxanide furoate",
+        "strength": "250mg"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "30 tablets",
+    "packSize": 30,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "24",
+    "rawProduct": "Brumin 600mg",
+    "brandBase": "Brumin",
+    "productStrength": "600mg",
+    "rawComposition": "ibuprofen 600mg",
+    "ingredients": [
+      {
+        "raw": "ibuprofen                                         600mg",
+        "inn": "ibuprofen",
+        "strength": "600mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "10 tablets",
+    "packSize": 10,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "25",
+    "rawProduct": "Iron(III)hydroxide polymaltose complex+Folic acid",
+    "brandBase": "Iron(III)hydroxide polymaltose complex+Folic acid",
+    "rawComposition": "Iron(III)hydroxide polymaltose complex 100mg | Folic acid… 0.35mg",
+    "ingredients": [
+      {
+        "raw": "Iron(III)hydroxide polymaltose complex        100mg",
+        "inn": "iron",
+        "strength": "100mg"
+      },
+      {
+        "raw": "Folic acid…                        0.35mg",
+        "inn": "folic acid",
+        "strength": "0.35mg"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "20 tablets",
+    "packSize": 20,
+    "packUnit": "tablets",
+    "doseForm": "tablet"
+  },
+  {
+    "sr": "26",
+    "rawProduct": "Cetramin 5mg",
+    "brandBase": "Cetramin",
+    "productStrength": "5mg",
+    "rawComposition": "cetirizine HCl 5mg",
+    "ingredients": [
+      {
+        "raw": "cetirizine HCl                                    5mg",
+        "inn": "cetirizine",
+        "strength": "5mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "120ml",
+    "volume": "120 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "27",
+    "rawProduct": "Calvitamin",
+    "brandBase": "Calvitamin",
+    "rawComposition": "Ca carbonate 800mg | Mg hydroxide… 150mg | Zinc gluconate 10mg | Vitamin D 800IU",
+    "ingredients": [
+      {
+        "raw": "Ca carbonate                                   800mg",
+        "inn": "ca",
+        "strength": "800mg"
+      },
+      {
+        "raw": "Mg hydroxide…                               150mg",
+        "inn": "mg",
+        "strength": "150mg"
+      },
+      {
+        "raw": "Zinc gluconate                                 10mg",
+        "inn": "zinc sulfate",
+        "strength": "10mg"
+      },
+      {
+        "raw": "Vitamin D                                         800IU",
+        "inn": "cholecalciferol",
+        "strength": "800IU"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "120ml",
+    "volume": "120 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "28",
+    "rawProduct": "Metrin 200mg",
+    "brandBase": "Metrin",
+    "productStrength": "200mg",
+    "rawComposition": "Metronidazole (as benzoyl) 200mg",
+    "ingredients": [
+      {
+        "raw": "Metronidazole (as benzoyl)           200mg",
+        "inn": "metronidazole",
+        "strength": "200mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "90ml",
+    "volume": "90 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "29",
+    "rawProduct": "Amacid",
+    "brandBase": "Amacid",
+    "rawComposition": "Al Hydroxide… 225mg | Mg Hydroxide… 200mg | Simethicon… 25mg",
+    "ingredients": [
+      {
+        "raw": "Al Hydroxide…                                225mg",
+        "inn": "al",
+        "strength": "225mg"
+      },
+      {
+        "raw": "Mg Hydroxide…                              200mg",
+        "inn": "mg",
+        "strength": "200mg"
+      },
+      {
+        "raw": "Simethicon…                                   25mg",
+        "inn": "simeticone",
+        "strength": "25mg"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "240ml",
+    "volume": "240 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "30",
+    "rawProduct": "Amzinc 20mg",
+    "brandBase": "Amzinc",
+    "productStrength": "20mg",
+    "rawComposition": "Zinc Sulphate 20mg",
+    "ingredients": [
+      {
+        "raw": "Zinc Sulphate                                  20mg",
+        "inn": "zinc sulfate",
+        "strength": "20mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "60ml",
+    "volume": "60 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "31",
+    "rawProduct": "Brumin 100mg",
+    "brandBase": "Brumin",
+    "productStrength": "100mg",
+    "rawComposition": "Ibuprofen 100mg",
+    "ingredients": [
+      {
+        "raw": "Ibuprofen                                        100mg",
+        "inn": "ibuprofen",
+        "strength": "100mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "120ml",
+    "volume": "120 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "32",
+    "rawProduct": "Amamol 250mg",
+    "brandBase": "Amamol",
+    "productStrength": "250mg",
+    "rawComposition": "Paracetamol 250mg",
+    "ingredients": [
+      {
+        "raw": "Paracetamol                                    250mg",
+        "inn": "paracetamol",
+        "strength": "250mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "120ml",
+    "volume": "120 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "33",
+    "rawProduct": "Amamol 120mg",
+    "brandBase": "Amamol",
+    "productStrength": "120mg",
+    "rawComposition": "Paracetamol 120mg",
+    "ingredients": [
+      {
+        "raw": "Paracetamol                                    120mg",
+        "inn": "paracetamol",
+        "strength": "120mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "120ml",
+    "volume": "120 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "34",
+    "rawProduct": "Firmin 50+0.35",
+    "brandBase": "Firmin",
+    "productStrength": "50+0.35",
+    "rawComposition": "Iron III hdyroxy polymaltose eq.to elemental iron | … 50mg | Folic acid… 0.35mg",
+    "ingredients": [
+      {
+        "raw": "Iron III hdyroxy polymaltose eq.to elemental iron",
+        "inn": "ferric oxide polymaltose"
+      },
+      {
+        "raw": "Folic acid…                                         0.35mg",
+        "inn": "folic acid",
+        "strength": "0.35mg"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "120ml",
+    "volume": "120 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "35",
+    "rawProduct": "Crave 0.25mg",
+    "brandBase": "Crave",
+    "productStrength": "0.25mg",
+    "rawComposition": "Pizotifen (Hydrogen Malate) 0.25mg",
+    "ingredients": [
+      {
+        "raw": "Pizotifen (Hydrogen Malate)        0.25mg",
+        "inn": "pizotifen",
+        "strength": "0.25mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "120ml",
+    "volume": "120 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "36",
+    "rawProduct": "Amcuf E",
+    "brandBase": "Amcuf E",
+    "rawComposition": "Ammonium chloride 30mg | Diphenhydramine HCl 8mg | Aminophylline 32mg | Menthol 0.98mg",
+    "ingredients": [
+      {
+        "raw": "Ammonium chloride                      30mg",
+        "inn": "ammonium chloride",
+        "strength": "30mg"
+      },
+      {
+        "raw": "Diphenhydramine HCl                   8mg",
+        "inn": "diphenhydramine",
+        "strength": "8mg"
+      },
+      {
+        "raw": "Aminophylline                                32mg",
+        "inn": "aminophylline",
+        "strength": "32mg"
+      },
+      {
+        "raw": "Menthol                                          0.98mg",
+        "inn": "menthol",
+        "strength": "0.98mg"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "120ml",
+    "volume": "120 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "37",
+    "rawProduct": "AM-Leaf 70mg",
+    "brandBase": "AM-Leaf",
+    "productStrength": "70mg",
+    "rawComposition": "Hedera Helix (ivy leaf powder extract) ….. 70mg/10ml",
+    "ingredients": [
+      {
+        "raw": "Hedera Helix (ivy leaf powder extract) ….. 70mg/10ml",
+        "inn": "hedera helix",
+        "strength": "70mg/10ml"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "120ml",
+    "volume": "120 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "38",
+    "rawProduct": "AM-Leaf Plus",
+    "brandBase": "AM-Leaf Plus",
+    "rawComposition": "Hedera Helix (ivy leaf powder extract) ….. 70mg/10ml | Glycerhiza glabra(Licorice/Mulethi powder ext…43.4mg | Thymus Vulgaris (Thymus powder extract)… 43mg/10ml",
+    "ingredients": [
+      {
+        "raw": "Hedera Helix (ivy leaf powder extract) ….. 70mg/10ml",
+        "inn": "hedera helix",
+        "strength": "70mg/10ml"
+      },
+      {
+        "raw": "Glycerhiza glabra(Licorice/Mulethi powder ext…43.4mg",
+        "inn": "glycerhiza glabra",
+        "strength": "43.4mg"
+      },
+      {
+        "raw": "Thymus Vulgaris (Thymus powder extract)… 43mg/10ml",
+        "inn": "thymus vulgaris",
+        "strength": "43mg/10ml"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "120ml",
+    "volume": "120 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "39",
+    "rawProduct": "Amylysine-B",
+    "brandBase": "Amylysine-B",
+    "rawComposition": "Thiamin HCl 4.16mg | Riboflavin 5 PO4 Sodium… 1.66mg | Pyridoxin HCl……1.0mg, Cyanobalamine… 8.3mg | Niacinamide……… 18mg, Calcium D Pantethol 2.5mg | Ascorbic Acid……...…. 75mg, Inositol 5mg | Lysine Monohydrochloride. 33,33mg",
+    "ingredients": [
+      {
+        "raw": "Thiamin HCl                                                             4.16mg",
+        "inn": "thiamin",
+        "strength": "4.16mg"
+      },
+      {
+        "raw": "Riboflavin 5 PO4 Sodium…                                     1.66mg",
+        "inn": "riboflavin",
+        "strength": "1.66mg"
+      },
+      {
+        "raw": "Pyridoxin HCl……1.0mg, Cyanobalamine…            8.3mg",
+        "inn": "pyridoxin",
+        "strength": "1.0mg"
+      },
+      {
+        "raw": "Niacinamide……… 18mg, Calcium D Pantethol      2.5mg",
+        "inn": "niacinamide",
+        "strength": "18mg"
+      },
+      {
+        "raw": "Ascorbic Acid……...…. 75mg, Inositol                      5mg",
+        "inn": "ascorbic acid",
+        "strength": "75mg"
+      },
+      {
+        "raw": "Lysine Monohydrochloride.                                 33,33mg",
+        "inn": "lysine",
+        "strength": "33mg"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "120ml",
+    "volume": "120 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "40",
+    "rawProduct": "AM-Domin 5mg",
+    "brandBase": "AM-Domin",
+    "productStrength": "5mg",
+    "rawComposition": "Domperidone 5mg/5ml",
+    "ingredients": [
+      {
+        "raw": "Domperidone                                                       5mg/5ml",
+        "inn": "domperidone",
+        "strength": "5mg/5ml"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "120ml",
+    "volume": "120 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "41",
+    "rawProduct": "CALMIN-J",
+    "brandBase": "CALMIN-J",
+    "rawComposition": "Each 10ml: Vitamin A …….. 800IU, Vitamin B1 0.7mg | Vitamin B2 …. 0.5mg, Vitamin B3 ….. 8mg, Vitamin B…. 2mg Vitamin B6… 0.6mg, Vitamin B12 … 2.5mg, Vitamin C .. 50mg Vitamin D … 400IU, Vitamin E(Acetate)… 6mg, Biotin … 15mg Zinc SO4 … 5mg, Folic acid ... 200mg, Iodine 120mcg | Chromium(picosulfate) .. 1.5mcg, Mg Sulfate 1.5mcg, | Molybdenam(sod) ...22mcg, Selinium (sodium) 45mcg | Calcium Carbonate 150mg, | Iron (ferrous Bis Glycinate) 5mg",
+    "ingredients": [
+      {
+        "raw": "Each 10ml: Vitamin A …….. 800IU, Vitamin B1        0.7mg",
+        "inn": "each vitamin a",
+        "strength": "800IU"
+      },
+      {
+        "raw": "Vitamin B2 …. 0.5mg, Vitamin B3 ….. 8mg, Vitamin B…. 2mg Vitamin B6… 0.6mg, Vitamin B12 … 2.5mg, Vitamin C .. 50mg Vitamin D … 400IU, Vitamin E(Acetate)… 6mg, Biotin … 15mg Zinc SO4 … 5mg, Folic acid ... 200mg, Iodine       120mcg",
+        "inn": "vitamin b",
+        "strength": "0.5mg"
+      },
+      {
+        "raw": "Chromium(picosulfate) .. 1.5mcg, Mg Sulfate      1.5mcg,",
+        "inn": "chromium",
+        "strength": "1.5mcg"
+      },
+      {
+        "raw": "Molybdenam(sod) ...22mcg, Selinium (sodium)     45mcg",
+        "inn": "molybdenam",
+        "strength": "22mcg"
+      },
+      {
+        "raw": "Calcium Carbonate      150mg,",
+        "inn": "calcium",
+        "strength": "150mg"
+      },
+      {
+        "raw": "Iron (ferrous Bis Glycinate)     5mg",
+        "inn": "iron",
+        "strength": "5mg"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "200ml",
+    "volume": "200 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "42",
+    "rawProduct": "C-Lox 200mg",
+    "brandBase": "C-Lox",
+    "productStrength": "200mg",
+    "rawComposition": "Celecoxib… 200mg",
+    "ingredients": [
+      {
+        "raw": "Celecoxib…                                      200mg",
+        "inn": "celecoxib",
+        "strength": "200mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "20 capsules",
+    "packSize": 20,
+    "packUnit": "capsules",
+    "doseForm": "capsule"
+  },
+  {
+    "sr": "43",
+    "rawProduct": "AM-Zithromin",
+    "brandBase": "AM-Zithromin",
+    "rawComposition": "Azithromycin 250mg",
+    "ingredients": [
+      {
+        "raw": "Azithromycin                                  250mg",
+        "inn": "azithromycin",
+        "strength": "250mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "2 x 6 capsules",
+    "packSize": 12,
+    "packUnit": "capsules",
+    "doseForm": "capsule"
+  },
+  {
+    "sr": "44",
+    "rawProduct": "AM-Esomin 40mg",
+    "brandBase": "AM-Esomin",
+    "productStrength": "40mg",
+    "rawComposition": "Esomperazole 40mg",
+    "ingredients": [
+      {
+        "raw": "Esomperazole                                40mg",
+        "inn": "esomeprazole",
+        "strength": "40mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "2 x 7 capsules",
+    "packSize": 14,
+    "packUnit": "capsules",
+    "doseForm": "capsule"
+  },
+  {
+    "sr": "45",
+    "rawProduct": "C-Lox 100mg",
+    "brandBase": "C-Lox",
+    "productStrength": "100mg",
+    "rawComposition": "Celecoxib 100mg",
+    "ingredients": [
+      {
+        "raw": "Celecoxib                                       100mg",
+        "inn": "celecoxib",
+        "strength": "100mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "20 capsules",
+    "packSize": 20,
+    "packUnit": "capsules",
+    "doseForm": "capsule"
+  },
+  {
+    "sr": "46",
+    "rawProduct": "AM-Esomin 20mg",
+    "brandBase": "AM-Esomin",
+    "productStrength": "20mg",
+    "rawComposition": "Esomperazole 20mg",
+    "ingredients": [
+      {
+        "raw": "Esomperazole                                 20mg",
+        "inn": "esomeprazole",
+        "strength": "20mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "2 x 7 capsules",
+    "packSize": 14,
+    "packUnit": "capsules",
+    "doseForm": "capsule"
+  },
+  {
+    "sr": "47",
+    "rawProduct": "AM-Gablin 75mg",
+    "brandBase": "AM-Gablin",
+    "productStrength": "75mg",
+    "rawComposition": "Pregabalin… 75mg",
+    "ingredients": [
+      {
+        "raw": "Pregabalin…                                    75mg",
+        "inn": "pregabalin",
+        "strength": "75mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "14 capsules",
+    "packSize": 14,
+    "packUnit": "capsules",
+    "doseForm": "capsule"
+  },
+  {
+    "sr": "48",
+    "rawProduct": "AM-Gabamin 300mg",
+    "brandBase": "AM-Gabamin",
+    "productStrength": "300mg",
+    "rawComposition": "Gabpentin 300mg",
+    "ingredients": [
+      {
+        "raw": "Gabpentin                                      300mg",
+        "inn": "gabapentin",
+        "strength": "300mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "10 capsules",
+    "packSize": 10,
+    "packUnit": "capsules",
+    "doseForm": "capsule"
+  },
+  {
+    "sr": "49",
+    "rawProduct": "AM-Gabamin 100mg",
+    "brandBase": "AM-Gabamin",
+    "productStrength": "100mg",
+    "rawComposition": "Gabpentin 100mg",
+    "ingredients": [
+      {
+        "raw": "Gabpentin                                      100mg",
+        "inn": "gabapentin",
+        "strength": "100mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "20 capsules",
+    "packSize": 20,
+    "packUnit": "capsules",
+    "doseForm": "capsule"
+  },
+  {
+    "sr": "50",
+    "rawProduct": "AM-Gablin 50mg",
+    "brandBase": "AM-Gablin",
+    "productStrength": "50mg",
+    "rawComposition": "Pregabalin… 50mg",
+    "ingredients": [
+      {
+        "raw": "Pregabalin…                                    50mg",
+        "inn": "pregabalin",
+        "strength": "50mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "14 capsules",
+    "packSize": 14,
+    "packUnit": "capsules",
+    "doseForm": "capsule"
+  },
+  {
+    "sr": "51",
+    "rawProduct": "AM-AD",
+    "brandBase": "AM-AD",
+    "rawComposition": "Vit A…………... 1500IU, Vit D… 400IU/ml",
+    "ingredients": [
+      {
+        "raw": "Vit A…………... 1500IU, Vit D…           400IU/ml",
+        "inn": "vitamin a",
+        "strength": "1500IU"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "15ml",
+    "volume": "15 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "52",
+    "rawProduct": "AM-Iron 50mg",
+    "brandBase": "AM-Iron",
+    "productStrength": "50mg",
+    "rawComposition": "Iron III Hydroxide polymaltose eq. to. | Elemental iron 50mg/ml",
+    "ingredients": [
+      {
+        "raw": "Iron III Hydroxide polymaltose eq. to.",
+        "inn": "ferric oxide polymaltose"
+      },
+      {
+        "raw": "Elemental iron                                50mg/ml",
+        "inn": "elemental iron",
+        "strength": "50mg/ml"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "15ml",
+    "volume": "15 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "53",
+    "rawProduct": "Levitiramin 100mg",
+    "brandBase": "Levitiramin",
+    "productStrength": "100mg",
+    "rawComposition": "Levetiracetam 100mg/ml",
+    "ingredients": [
+      {
+        "raw": "Levetiracetam                                 100mg/ml",
+        "inn": "levetiracetam",
+        "strength": "100mg/ml"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "60ml",
+    "volume": "60 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "54",
+    "rawProduct": "Amamol 80mg",
+    "brandBase": "Amamol",
+    "productStrength": "80mg",
+    "rawComposition": "Paracetamol 80mg/0.8ml",
+    "ingredients": [
+      {
+        "raw": "Paracetamol                                  80mg/0.8ml",
+        "inn": "paracetamol",
+        "strength": "80mg/0.8ml"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "30ml",
+    "volume": "30 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "55",
+    "rawProduct": "Picomin 7.5mg",
+    "brandBase": "Picomin",
+    "productStrength": "7.5mg",
+    "rawComposition": "Sodium picosulfate 7.5mg/1ml",
+    "ingredients": [
+      {
+        "raw": "Sodium picosulfate                      7.5mg/1ml",
+        "inn": "sodium picosulfate",
+        "strength": "7.5mg/1ml"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "15ml",
+    "volume": "15 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "56",
+    "rawProduct": "AM-D",
+    "brandBase": "AM-D",
+    "rawComposition": "Vitamin D3 400IU/1ml",
+    "ingredients": [
+      {
+        "raw": "Vitamin D3                                   400IU/1ml",
+        "inn": "cholecalciferol",
+        "strength": "400IU/1ml"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "15ml",
+    "volume": "15 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "57",
+    "rawProduct": "Amino-C",
+    "brandBase": "Amino-C",
+    "rawComposition": "Vitamin C 50mg/1ml",
+    "ingredients": [
+      {
+        "raw": "Vitamin C                                          50mg/1ml",
+        "inn": "ascorbic acid",
+        "strength": "50mg/1ml"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "10ml",
+    "volume": "10 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "58",
+    "rawProduct": "Aminramide",
+    "brandBase": "Aminramide",
+    "rawComposition": "Metoclopramide… 4mg/1ml",
+    "ingredients": [
+      {
+        "raw": "Metoclopramide…                                       4mg/1ml",
+        "inn": "metoclopramide",
+        "strength": "4mg/1ml"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "15ml",
+    "volume": "15 ml",
+    "doseForm": "oral liquid"
+  },
+  {
+    "sr": "59",
+    "rawProduct": "AM-Fibro 50g",
+    "brandBase": "AM-Fibro",
+    "productStrength": "50g",
+    "rawComposition": "Ispaghula husk 50g",
+    "ingredients": [
+      {
+        "raw": "Ispaghula husk                                     50g",
+        "inn": "ispaghula husk",
+        "strength": "50g"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "50g",
+    "volume": "50 g",
+    "doseForm": "powder"
+  },
+  {
+    "sr": "60",
+    "rawProduct": "Mevrin Fibro 4gm",
+    "brandBase": "Mevrin Fibro 4gm",
+    "rawComposition": "Mebeverin as HCl 135mg | Ispaghula husk 3.5g",
+    "ingredients": [
+      {
+        "raw": "Mebeverin as HCl                                   135mg",
+        "inn": "mebeverine",
+        "strength": "135mg"
+      },
+      {
+        "raw": "Ispaghula husk                                  3.5g",
+        "inn": "ispaghula husk",
+        "strength": "3.5g"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "4gm (1o sachets)"
+  },
+  {
+    "sr": "61",
+    "rawProduct": "AM-Pedicare low osmolarity",
+    "brandBase": "AM-Pedicare low osmolarity",
+    "rawComposition": "Sodium chloride 2.6g | Dextrose anhydrous 13.5g | Potassium Chloride 1.5g | Sosium citrate as dehydrate 2.9g",
+    "ingredients": [
+      {
+        "raw": "Dextrose anhydrous                               13.5g",
+        "inn": "dextrose anhydrous",
+        "strength": "13.5g"
+      },
+      {
+        "raw": "Sosium citrate as dehydrate                  2.9g",
+        "inn": "sodium",
+        "strength": "2.9g"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "20 sachets",
+    "packSize": 20,
+    "packUnit": "sachets",
+    "doseForm": "sachet"
+  },
+  {
+    "sr": "62",
+    "rawProduct": "AM-Pedicare",
+    "brandBase": "AM-Pedicare",
+    "rawComposition": "Sodium chloride 3.5g | Dextrose anhydrous 20g | Potassium Chloride 1.5g | Sosium citrate as dehydrate 2.9g",
+    "ingredients": [
+      {
+        "raw": "Dextrose anhydrous                               20g",
+        "inn": "dextrose anhydrous",
+        "strength": "20g"
+      },
+      {
+        "raw": "Sosium citrate as dehydrate                  2.9g",
+        "inn": "sodium",
+        "strength": "2.9g"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "20 sachets",
+    "packSize": 20,
+    "packUnit": "sachets",
+    "doseForm": "sachet"
+  },
+  {
+    "sr": "63",
+    "rawProduct": "AM-Lexamin",
+    "brandBase": "AM-Lexamin",
+    "rawComposition": "Macrogol 3350 (PEG) 13.125mg | Sodium Chloride 350.7mg | Sodium Bicarbonate 178.5mg | Potassium chloride 46.6mg",
+    "ingredients": [
+      {
+        "raw": "Macrogol 3350 (PEG)                              13.125mg",
+        "inn": "macrogol",
+        "strength": "13.125mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "10 sachets 13.81gm/sachet",
+    "packSize": 10,
+    "packUnit": "sachets",
+    "doseForm": "sachet"
+  },
+  {
+    "sr": "64",
+    "rawProduct": "AM-Instamin 40 mg",
+    "brandBase": "AM-Instamin",
+    "productStrength": "40mg",
+    "rawComposition": "Omeprazole 40mg | Sodium Bicarbonate 1680mg",
+    "ingredients": [
+      {
+        "raw": "Omeprazole                                            40mg",
+        "inn": "omeprazole",
+        "strength": "40mg"
+      }
+    ],
+    "isCombo": false,
+    "packRaw": "10 Sachets",
+    "packSize": 10,
+    "packUnit": "sachets",
+    "doseForm": "sachet"
+  },
+  {
+    "sr": "65",
+    "rawProduct": "MC-Cal",
+    "brandBase": "MC-Cal",
+    "rawComposition": "Calcium Lactate Gluconate 1000mg | Ascorbic acid 500mg | Calcium bicarbonate 327mg",
+    "ingredients": [
+      {
+        "raw": "Calcium Lactate Gluconate                  1000mg",
+        "inn": "calcium lactate",
+        "strength": "1000mg"
+      },
+      {
+        "raw": "Ascorbic acid                                         500mg",
+        "inn": "ascorbic acid",
+        "strength": "500mg"
+      },
+      {
+        "raw": "Calcium bicarbonate                              327mg",
+        "inn": "calcium",
+        "strength": "327mg"
+      }
+    ],
+    "isCombo": true,
+    "packRaw": "10 Sachets",
+    "packSize": 10,
+    "packUnit": "sachets",
+    "doseForm": "sachet"
+  }
+]
