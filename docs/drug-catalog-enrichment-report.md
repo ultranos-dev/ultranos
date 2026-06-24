@@ -16,6 +16,8 @@ Pharmopedia's reference data has two layers:
 
 Data flows end-to-end and offline-first: **dataset → ETL/loader → Supabase → hub-api role-scoping → version-watermark delta sync → device SQLite → Pharmopedia UI**. The app lets users search by **generic or brand name** (unified results with `All · Generics · Brands` filter chips), open a **brand-detail view** (commercial layer → generic link → clinical sourced from the generic), **bookmark** both generics and brands, and stay current via **automatic background sync** (sign-in + foreground + 30-min interval, online-gated and throttled).
 
+A **UX-consistency pass** (this session) unifies the drug/brand **card styling and GENERIC/BRAND kind labels** across every surface, makes the Home **safety-alert (recall) banners dismissable** with a user-configurable reappear policy, and routes **all confirmations through a shared themed modal** (replacing native `Alert.alert`).
+
 **Known gaps:** generic dosing fields and several Tier-1 patient fields remain empty (see §9); branded-product clinical content is always shown *from the generic* (single source of truth), so it is sparse for the hand-added stub generics until those are enriched.
 
 ---
@@ -43,8 +45,11 @@ Data flows end-to-end and offline-first: **dataset → ETL/loader → Supabase �
 | **16. Brand-vs-generic UX (Option A)** | Local brand search (`searchBrandsLocal`, `getBrandDetail`), unified results with `All · Generics · Brands` filter chips, `BrandResultCard`, brand-detail screen (`app/brand/[id].tsx`). | *this session* |
 | **17. Background sync** | `useAutoSync` rewritten: sign-in + app-foreground + 30-min interval delta sync, online-gated, throttled, silent for returning users. | *this session* |
 | **18. Brand bookmarking** | `brand_bookmarks` local table, store methods, heart toggle on brand cards + brand detail, unified Saved tab. | *this session* |
+| **19. Safety-alert dismissal + reappear policy** | Home recall (Tier-3) banners get a circular-X dismiss behind a themed confirm dialog; a Profile **Safety alerts** setting controls when dismissed alerts reappear (15/30/60/90 days or **Never**, SecureStore-persisted); `getActiveRecalls` now de-dupes to **one most-recent active alert per drug** (also fixed a duplicate-React-key crash). | *this session* |
+| **20. Card-consistency pass** | **GENERIC/BRAND kind labels on every drug/brand card**; one shared `Card square` chrome (hairline border, subtle shadow, square corners, inset + `gap` rhythm) across search, Saved, Home, drug-detail "Brands", brand-detail presentations, and pharmacy `PriceCard`; a **compact inline-label variant** + generic/brand merge for the Home "Saved" preview; drug/brand-detail collapsible sections now inset+gapped to match. | *this session* |
+| **21. Shared themed modal + Home polish** | `ConfirmDialog` + `useConfirm` (RTL-aware) replace native `Alert.alert` for **all** confirmations (logout, language-restart, alert-dismiss, clear-recents); a "**clear recent searches**" control (gray circular-X opposite the RECENT title) with confirm. | *this session* |
 
-> **Commit status:** all of phases 10–18 are implemented and green but **uncommitted**, pending an explicit commit instruction (per the repo's no-autonomous-commits rule).
+> **Commit status:** all of phases 10–21 are implemented and green but **uncommitted**, pending an explicit commit instruction (per the repo's no-autonomous-commits rule).
 
 ---
 
@@ -107,6 +112,9 @@ All source datasets live under `docs/datasets/` (gitignored, ~14 GB). The ETL is
 - **Bookmarking:** heart toggle on generic cards/detail (existing) and now on brand cards/detail; the **Saved** tab merges both, newest-first.
 - **Offline sync:** `useAutoSync` runs a full cold-start sync (with progress UI) on first launch, then **silent delta syncs** on sign-in, app foreground, and a 30-min interval — online-gated (`NetInfo`), throttled (15 min), single-flight. Brand sync runs alongside (best-effort).
 - **No section open by default:** all collapsible drug-detail sections (generic and brand pages) start collapsed.
+- **Consistent cards (this session):** every generic/brand result uses the same `Card square` chrome (hairline border, subtle shadow, square corners) and carries a **GENERIC** (pill icon) / **BRAND** (tag icon) kind label — so cards look identical across search, the **Saved** tab, the Home preview, the drug-detail **Brands** list, brand-detail presentations, and pharmacy `PriceCard` (the latter keeps its semantic stock-color border). The same inset + `gap` rhythm now also applies to the drug/brand-detail **collapsible sections**. The Home **Saved** preview is a **compact** variant — the kind label sits **inline, right after the name** — and merges generic + brand bookmarks, newest-first.
+- **Dismissable safety alerts (this session):** Home recall banners have a circular-X dismiss gated by a themed confirm dialog; a Profile **Safety alerts** control sets when dismissed alerts reappear (15/30/60/90 days or **Never**), persisted in SecureStore (`useDismissedAlertsStore`). `getActiveRecalls` returns **one most-recent active alert per drug**.
+- **Themed confirmations (this session):** a shared, RTL-aware `ConfirmDialog` + `useConfirm` hook (in `@ultranos/ui-kit/native`) replaces native `Alert.alert` everywhere — logout, language restart, alert dismissal, and **clear recent searches**.
 
 ### 3.6 Runtime data flow (offline-first)
 
@@ -264,7 +272,7 @@ Also applied as data inserts (not migration files): **15 `manual-supplement` stu
 ## 8. Testing
 
 - **ETL suite:** **144/144** passing (`pnpm -F @ultranos/drug-catalog-etl test`) — parser/transform/runner/translator + the new `brand-merge`, `rxnav-brands`, `regional-brands`, and `run-branded-medications` (incl. dataset-template locks).
-- **Pharmopedia:** **365/365** vitest passing — brand search/detail DB queries, `BrandResultCard`, `SearchResults` filter behavior, brand-detail screen, brand bookmarking (store + DB + Saved merge), `useAutoSync` (cold/delta/throttle/offline/guards), plus the existing generic render/RTL snapshots. The local v4/v5 migrations run clean under the jest catalog-sync test on a real in-memory DB.
+- **Pharmopedia:** **388/388** vitest passing — brand search/detail DB queries, `BrandResultCard`, `SearchResults` filter behavior, brand-detail screen, brand bookmarking (store + DB + Saved merge), `useAutoSync` (cold/delta/throttle/offline/guards), plus the existing generic render/RTL snapshots. This session added coverage for the **recall de-dupe** (`getActiveRecalls`), the **dismissed-alerts store + reappear policy** (`useDismissedAlertsStore`, `isAlertHidden`), the **themed `ConfirmDialog`/`useConfirm`** flows (logout, language-restart, alert-dismiss, clear-recents), and the GENERIC/BRAND kind-label + compact-card restyle (snapshots refreshed). The local v4/v5 migrations run clean under the jest catalog-sync test on a real in-memory DB.
 - **hub-api:** branded-medications service + router tests green alongside the existing `drug-catalog` suite.
 - **Discipline:** every load was verified against the live DB via the Supabase MCP (counts, spot-checks); matching bugs (oral-vs-topical/eye ATCs, salt over-stripping, duplicate-presentation upsert) were caught this way.
 
@@ -290,7 +298,7 @@ Also applied as data inserts (not migration files): **15 `manual-supplement` stu
 11. **True OS background sync** (app closed) — deferred; foreground + interval cover the realistic freshness need.
 
 ### Housekeeping
-12. **Uncommitted work** — phases 10–18 are green but uncommitted (no-autonomous-commits rule).
+12. **Uncommitted work** — phases 10–21 are green but uncommitted (no-autonomous-commits rule).
 13. **Paid Gemini key rotation** — a paid key pasted in chat earlier should be rotated (never written to `.env`).
 
 ---
@@ -337,3 +345,4 @@ See `scripts/etl/drug-catalog/datasets/README.md` for the brand-coverage runners
 | Stale offline catalog/brands | Version-watermark delta sync + automatic background sync (sign-in/foreground/30-min) |
 | Empty dosing / sparse stub generics rendered as "no data" | Tracked as gaps #2/#5 — must be filled before clinicians rely on them |
 | Indicative `reference_price` mistaken for retail | Stored as trade/indicative price, distinct from per-pharmacy `pharmacy_prices` |
+| Dismissed recall (safety) alert hidden indefinitely | Dismissal is per-drug and confirmed via dialog; the default reappear policy re-surfaces dismissed alerts after **30 days**; "Never" is an explicit user opt-in in Profile |

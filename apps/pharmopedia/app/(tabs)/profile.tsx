@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet, Alert } from 'react-native'
+import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/store/auth-store'
@@ -6,6 +6,7 @@ import { useCoachMarkStore } from '@/store/coach-mark-store'
 import { useSyncStore } from '@/store/sync-store'
 import { useLangStore, isRtlLang, type Lang } from '@/store/lang-store'
 import { useThemeStore, type ThemeMode } from '@/store/theme-store'
+import { useDismissedAlertsStore, REAPPEAR_OPTIONS, type ReappearPolicy } from '@/store/dismissed-alerts-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { useProfile } from '@/hooks/useProfile'
 import { runSync } from '@/sync/catalog-sync'
@@ -24,6 +25,7 @@ import {
   Chip,
   Banner,
   ListRow,
+  useConfirm,
 } from '@ultranos/ui-kit/native'
 
 const LANG_OPTIONS: { value: Lang; label: string }[] = [
@@ -38,6 +40,9 @@ const THEME_OPTIONS: { value: ThemeMode; labelKey: string }[] = [
   { value: 'dark', labelKey: 'profile.themeDark' },
   { value: 'system', labelKey: 'profile.themeSystem' },
 ]
+
+// Re-show options for dismissed safety alerts: 15/30/60/90 days, or never (null).
+const REAPPEAR_CHOICES: ReappearPolicy[] = [...REAPPEAR_OPTIONS, null]
 
 /** Join non-empty address parts into one readable string. */
 function formatAddress(addr: { province?: string; district?: string; village?: string } | undefined): string | undefined {
@@ -63,6 +68,9 @@ export default function ProfileTab() {
   const setLang = useLangStore((s) => s.setLang)
   const themeMode = useThemeStore((s) => s.mode)
   const setThemeMode = useThemeStore((s) => s.setMode)
+  const reappearPolicy = useDismissedAlertsStore((s) => s.policyDays)
+  const setReappearPolicy = useDismissedAlertsStore((s) => s.setPolicy)
+  const { confirm, confirmDialog } = useConfirm()
   const langCoachDismissed = useCoachMarkStore((s) => s.dismissed.has('profile-lang'))
   const { profile, source, loading } = useProfile()
 
@@ -92,28 +100,29 @@ export default function ProfileTab() {
     router.replace('/(auth)/login')
   }
 
-  function confirmLogout() {
-    Alert.alert(
-      t('profile.logoutConfirmTitle'),
-      t('profile.logoutConfirmMessage'),
-      [
-        { text: t('common.cancel'), style: 'cancel' as const },
-        { text: t('profile.logoutConfirm'), style: 'destructive' as const, onPress: () => void handleLogout() },
-      ],
-    )
+  async function confirmLogout() {
+    const ok = await confirm({
+      title: t('profile.logoutConfirmTitle'),
+      message: t('profile.logoutConfirmMessage'),
+      confirmLabel: t('profile.logoutConfirm'),
+      cancelLabel: t('common.cancel'),
+      destructive: true,
+      testID: 'logout-dialog',
+    })
+    if (ok) void handleLogout()
   }
 
-  function handleLangPress(selected: Lang) {
+  async function handleLangPress(selected: Lang) {
     const rtlChanges = isRtlLang(lang) !== isRtlLang(selected)
     if (rtlChanges) {
-      Alert.alert(
-        t('profile.languageRestartTitle'),
-        t('profile.languageRestartMessage'),
-        [
-          { text: t('common.cancel'), style: 'cancel' as const },
-          { text: t('common.ok'), onPress: () => void setLang(selected) },
-        ],
-      )
+      const ok = await confirm({
+        title: t('profile.languageRestartTitle'),
+        message: t('profile.languageRestartMessage'),
+        confirmLabel: t('common.ok'),
+        cancelLabel: t('common.cancel'),
+        testID: 'lang-restart-dialog',
+      })
+      if (ok) void setLang(selected)
     } else {
       void setLang(selected)
       void hapticSelection()
@@ -292,7 +301,7 @@ export default function ProfileTab() {
               key={value}
               testID={`lang-btn-${value}`}
               style={[styles.langBtn, { borderColor: colors.border }, lang === value && { backgroundColor: colors.primary500, borderColor: colors.primary500 }]}
-              onPress={() => handleLangPress(value)}
+              onPress={() => void handleLangPress(value)}
               accessibilityRole="radio"
               accessibilityLabel={label}
               accessibilityState={{ selected: lang === value }}
@@ -321,6 +330,33 @@ export default function ProfileTab() {
               </Text>
             </Pressable>
           ))}
+        </View>
+      </View>
+
+      {/* ── Safety-alert re-show policy ──────────────────────────────────── */}
+      <View style={[styles.section, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.label, { color: colors.textSecondary }, align]}>{t('profile.alertsSection')}</Text>
+        <Text style={[styles.sublabel, { color: colors.textSecondary }, align]}>{t('profile.alertReappearLabel')}</Text>
+        <View style={[styles.reappearRow, rtl && styles.rowRtl]} accessibilityRole="radiogroup">
+          {REAPPEAR_CHOICES.map((value) => {
+            const label = value === null ? t('profile.alertReappearNever') : t('profile.alertReappearDays', { count: value })
+            const selected = reappearPolicy === value
+            return (
+              <Pressable
+                key={value ?? 'never'}
+                testID={`alert-reappear-${value ?? 'never'}`}
+                style={[styles.reappearBtn, { borderColor: colors.border }, selected && { backgroundColor: colors.primary500, borderColor: colors.primary500 }]}
+                onPress={() => { void setReappearPolicy(value); void hapticSelection() }}
+                accessibilityRole="radio"
+                accessibilityLabel={label}
+                accessibilityState={{ selected }}
+              >
+                <Text style={[styles.reappearText, { color: colors.textSecondary }, selected && { color: colors.white, fontFamily: FontFamily.sansSemibold }, rtl && styles.arabic]}>
+                  {label}
+                </Text>
+              </Pressable>
+            )
+          })}
         </View>
       </View>
 
@@ -360,7 +396,7 @@ export default function ProfileTab() {
         <Pressable
           testID="logout-button"
           style={[styles.button, { backgroundColor: colors.dangerLight }]}
-          onPress={confirmLogout}
+          onPress={() => void confirmLogout()}
           accessibilityRole="button"
           accessibilityLabel={t('profile.logout')}
         >
@@ -379,6 +415,8 @@ export default function ProfileTab() {
         hint={t('coach.profileSync')}
         visible={langCoachDismissed}
       />
+
+      {confirmDialog}
     </CollapsibleScreen>
   )
 }
@@ -469,6 +507,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   langText: { fontSize: FontSize.sm, fontFamily: FontFamily.sans },
+  reappearRow: { flexDirection: 'row', gap: Spacing[2], flexWrap: 'wrap' },
+  reappearBtn: {
+    paddingHorizontal: Spacing[3],
+    paddingVertical: Spacing[2],
+    borderRadius: Radius.md,
+    borderWidth: 1,
+  },
+  reappearText: { fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
   button: {
     borderRadius: Radius.md,
     padding: Spacing[3],

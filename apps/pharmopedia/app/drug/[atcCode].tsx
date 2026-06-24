@@ -203,7 +203,9 @@ const styles = StyleSheet.create({
   actionRow: { alignItems: 'center', gap: Spacing[3] },
   rtlText: { fontFamily: FontFamily.arabic, textAlign: 'right', writingDirection: 'rtl' },
   fallbackName: { textAlign: 'right', writingDirection: 'ltr' },
-  sectionList: { gap: 0 },
+  // Inset + gapped so each collapsible section reads as its own card, matching
+  // the SafetyZone above and the search/saved card rhythm.
+  sectionList: { gap: Spacing[2], paddingHorizontal: Spacing[4] },
   noDetail: { fontSize: FontSize.base, fontFamily: FontFamily.sans, textAlign: 'center', padding: Spacing[6] },
   notFound: { fontSize: FontSize.lg, marginBottom: Spacing[3] },
   notFoundDesc: { fontSize: FontSize.sm, fontFamily: FontFamily.sans, textAlign: 'center', marginBottom: Spacing[3], paddingHorizontal: Spacing[6] },

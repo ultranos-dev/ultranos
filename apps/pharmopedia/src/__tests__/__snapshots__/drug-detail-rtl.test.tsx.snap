@@ -155,7 +155,8 @@ exports[`DrugDetailScreen — single scroll > LTR snapshot 1`] = `
     <View
       style={
         {
-          "gap": 0,
+          "gap": 8,
+          "paddingHorizontal": 16,
         }
       }
     >
@@ -330,7 +331,8 @@ exports[`DrugDetailScreen — single scroll > RTL snapshot (lang=ar) 1`] = `
     <View
       style={
         {
-          "gap": 0,
+          "gap": 8,
+          "paddingHorizontal": 16,
         }
       }
     >

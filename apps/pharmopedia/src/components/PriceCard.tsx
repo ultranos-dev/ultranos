@@ -3,7 +3,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated'
 import { MapPin } from 'lucide-react-native'
 import { useTranslation } from 'react-i18next'
 import type { PharmacyPrice } from '@ultranos/shared-types'
-import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
+import { FontFamily, FontSize, Spacing, Shadow } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { useReducedMotion } from '@ultranos/ui-kit/native'
 
@@ -66,11 +66,13 @@ export function PriceCard({ price, index }: { price: PharmacyPrice; index?: numb
 
 const styles = StyleSheet.create({
   card: {
-    padding: Spacing[4],
+    paddingHorizontal: Spacing[4],
+    paddingVertical: Spacing[3],
     marginHorizontal: Spacing[4],
-    marginBottom: Spacing[3],
-    borderRadius: Radius.lg,
+    marginBottom: Spacing[2],
     borderWidth: 1,
+    overflow: 'hidden',
+    ...Shadow.sm,
   },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   pharmacy: { fontSize: FontSize.base, fontFamily: FontFamily.sansSemibold, flex: 1 },

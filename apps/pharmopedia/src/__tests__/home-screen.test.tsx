@@ -1,21 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, fireEvent } from '@testing-library/react-native'
+import { render, fireEvent, waitFor } from '@testing-library/react-native'
 
 const push = vi.fn()
 const addRecent = vi.fn()
+const clearRecents = vi.fn()
 const h = vi.hoisted(() => ({ role: 'PATIENT' }))
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
 vi.mock('expo-router', () => ({ useRouter: () => ({ push }) }))
 vi.mock('@/store/auth-store', () => ({ useAuthStore: (s: (x: { user: { role: string } | null }) => unknown) => s({ user: { role: h.role } }) }))
-vi.mock('@/store/bookmark-store', () => ({ useBookmarkStore: (s: (x: { bookmarks: [] }) => unknown) => s({ bookmarks: [] }) }))
+vi.mock('@/store/bookmark-store', () => ({ useBookmarkStore: (s: (x: { bookmarks: []; brandBookmarks: [] }) => unknown) => s({ bookmarks: [], brandBookmarks: [] }) }))
 vi.mock('@/store/recent-search-store', () => ({
-  useRecentSearchStore: (s: (x: { recents: string[]; add: ReturnType<typeof vi.fn> }) => unknown) =>
-    s({ recents: ['amox', 'metformin'], add: addRecent }),
+  useRecentSearchStore: (s: (x: { recents: string[]; add: ReturnType<typeof vi.fn>; clear: ReturnType<typeof vi.fn> }) => unknown) =>
+    s({ recents: ['amox', 'metformin'], add: addRecent, clear: clearRecents }),
 }))
 vi.mock('@/store/lang-store', () => ({
   useLangStore: (s: (x: { lang: string }) => unknown) => s({ lang: 'en' }),
   isRtlLang: () => false,
+}))
+vi.mock('@/store/dismissed-alerts-store', () => ({
+  useDismissedAlertsStore: (s: (x: { dismissed: Record<string, string>; policyDays: number | null; dismiss: ReturnType<typeof vi.fn> }) => unknown) =>
+    s({ dismissed: {}, policyDays: 30, dismiss: vi.fn() }),
+  isAlertHidden: () => false,
 }))
 vi.mock('@/db/recalls', () => ({ getActiveRecalls: vi.fn(async () => []) }))
 vi.mock('@/db/migrations', () => ({ getDatabase: () => ({}) }))
@@ -58,6 +64,7 @@ describe('HomeTab', () => {
     h.role = 'PATIENT'
     push.mockClear()
     addRecent.mockClear()
+    clearRecents.mockClear()
     vi.mocked(getActiveRecalls).mockReset()
     vi.mocked(getActiveRecalls).mockResolvedValue([])
     // Default: empty query (dashboard mode)
@@ -96,6 +103,23 @@ describe('HomeTab', () => {
     fireEvent.press(getByText('metformin'))
     expect(search).toHaveBeenCalledWith('metformin')
     expect(push).not.toHaveBeenCalledWith({ pathname: '/search', params: { q: 'metformin' } })
+  })
+
+  it('clears recent searches after confirming the dialog', async () => {
+    const { getByTestId, queryByTestId } = render(<HomeTab />)
+    expect(queryByTestId('clear-recents-dialog')).toBeNull()
+    fireEvent.press(getByTestId('clear-recents-btn'))
+    expect(getByTestId('clear-recents-dialog')).toBeTruthy()
+    fireEvent.press(getByTestId('clear-recents-dialog-confirm'))
+    await waitFor(() => expect(clearRecents).toHaveBeenCalled())
+  })
+
+  it('does not clear recent searches when the dialog is cancelled', async () => {
+    const { getByTestId, queryByTestId } = render(<HomeTab />)
+    fireEvent.press(getByTestId('clear-recents-btn'))
+    fireEvent.press(getByTestId('clear-recents-dialog-cancel'))
+    await waitFor(() => expect(queryByTestId('clear-recents-dialog')).toBeNull())
+    expect(clearRecents).not.toHaveBeenCalled()
   })
 
   // ── Existing dashboard behavior ──────────────────────────────────────────

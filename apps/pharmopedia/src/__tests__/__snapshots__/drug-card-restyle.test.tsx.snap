@@ -31,11 +31,48 @@ exports[`DrugCard — restyle snapshots > LTR snapshot (lang=en, no bookmark) 1`
     >
       <View
         style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "gap": 8,
+          [
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 4,
+            },
+            false,
+          ]
+        }
+        testID="kind-generic"
+      >
+        <View
+          testID="icon-Pill"
+        />
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Bold",
+                "fontSize": 12,
+                "letterSpacing": 0.5,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": undefined,
+              },
+            ]
           }
+        >
+          search.kindGeneric
+        </Text>
+      </View>
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 8,
+            },
+            undefined,
+          ]
         }
       >
         <Text
@@ -43,7 +80,6 @@ exports[`DrugCard — restyle snapshots > LTR snapshot (lang=en, no bookmark) 1`
           style={
             [
               {
-                "flex": 1,
                 "fontFamily": "Manrope-SemiBold",
                 "fontSize": 16,
               },
@@ -51,6 +87,9 @@ exports[`DrugCard — restyle snapshots > LTR snapshot (lang=en, no bookmark) 1`
                 "color": "#111827",
               },
               false,
+              {
+                "flex": 1,
+              },
             ]
           }
           testID="drug-primary-name"
@@ -181,11 +220,50 @@ exports[`DrugCard — restyle snapshots > RTL snapshot (lang=ar, with localName)
     >
       <View
         style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "gap": 8,
+          [
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 4,
+            },
+            {
+              "flexDirection": "row-reverse",
+            },
+          ]
+        }
+        testID="kind-generic"
+      >
+        <View
+          testID="icon-Pill"
+        />
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Bold",
+                "fontSize": 12,
+                "letterSpacing": 0.5,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": undefined,
+              },
+            ]
           }
+        >
+          search.kindGeneric
+        </Text>
+      </View>
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": 8,
+            },
+            undefined,
+          ]
         }
       >
         <Text
@@ -193,7 +271,6 @@ exports[`DrugCard — restyle snapshots > RTL snapshot (lang=ar, with localName)
           style={
             [
               {
-                "flex": 1,
                 "fontFamily": "Manrope-SemiBold",
                 "fontSize": 16,
               },
@@ -204,6 +281,9 @@ exports[`DrugCard — restyle snapshots > RTL snapshot (lang=ar, with localName)
                 "fontFamily": "NotoKufiArabic",
                 "textAlign": "right",
                 "writingDirection": "rtl",
+              },
+              {
+                "flex": 1,
               },
             ]
           }

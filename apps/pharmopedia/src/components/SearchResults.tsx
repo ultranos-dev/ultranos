@@ -57,7 +57,7 @@ export function SearchResults({ query, results, brands, loading, lang, onSelectG
       ) : (
         <View style={styles.list}>
           {genericList.map((g) => (
-            <DrugCard key={`g-${g.atcCode}`} result={g} lang={lang} query={query} showKind onPress={() => onSelectGeneric(g.atcCode)} />
+            <DrugCard key={`g-${g.atcCode}`} result={g} lang={lang} query={query} onPress={() => onSelectGeneric(g.atcCode)} />
           ))}
           {brandList.map((b) => (
             <BrandResultCard key={`b-${b.id}`} result={b} lang={lang} onPress={() => onSelectBrand(b.id)} />

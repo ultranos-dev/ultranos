@@ -1200,6 +1200,297 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
             ]
           }
         >
+          profile.alertsSection
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Medium",
+                "fontSize": 12,
+                "marginBottom": 4,
+              },
+              {
+                "color": "#666",
+              },
+              {
+                "textAlign": "left",
+              },
+            ]
+          }
+        >
+          profile.alertReappearLabel
+        </Text>
+        <View
+          accessibilityRole="radiogroup"
+          style={
+            [
+              {
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": 8,
+              },
+              false,
+            ]
+          }
+        >
+          <Pressable
+            accessibilityLabel="profile.alertReappearDays"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="alert-reappear-15"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                  false,
+                ]
+              }
+            >
+              profile.alertReappearDays
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="profile.alertReappearDays"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": true,
+              }
+            }
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                {
+                  "backgroundColor": "#2e9e71",
+                  "borderColor": "#2e9e71",
+                },
+              ]
+            }
+            testID="alert-reappear-30"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  {
+                    "color": "#fff",
+                    "fontFamily": "Manrope-SemiBold",
+                  },
+                  false,
+                ]
+              }
+            >
+              profile.alertReappearDays
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="profile.alertReappearDays"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="alert-reappear-60"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                  false,
+                ]
+              }
+            >
+              profile.alertReappearDays
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="profile.alertReappearDays"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="alert-reappear-90"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                  false,
+                ]
+              }
+            >
+              profile.alertReappearDays
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="profile.alertReappearNever"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="alert-reappear-never"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                  false,
+                ]
+              }
+            >
+              profile.alertReappearNever
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 12,
+              "gap": 8,
+              "marginBottom": 16,
+              "padding": 16,
+            },
+            {
+              "backgroundColor": "#fff",
+            },
+          ]
+        }
+      >
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Bold",
+                "fontSize": 12,
+                "letterSpacing": 0.5,
+                "marginBottom": 4,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "#666",
+              },
+              {
+                "textAlign": "left",
+              },
+            ]
+          }
+        >
           profile.catalogSync
         </Text>
         <Text
@@ -2594,6 +2885,311 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
               }
             >
               profile.themeSystem
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+      <View
+        style={
+          [
+            {
+              "borderRadius": 12,
+              "gap": 8,
+              "marginBottom": 16,
+              "padding": 16,
+            },
+            {
+              "backgroundColor": "#fff",
+            },
+          ]
+        }
+      >
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Bold",
+                "fontSize": 12,
+                "letterSpacing": 0.5,
+                "marginBottom": 4,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "#666",
+              },
+              {
+                "fontFamily": "NotoKufiArabic",
+                "textAlign": "right",
+              },
+            ]
+          }
+        >
+          profile.alertsSection
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Medium",
+                "fontSize": 12,
+                "marginBottom": 4,
+              },
+              {
+                "color": "#666",
+              },
+              {
+                "fontFamily": "NotoKufiArabic",
+                "textAlign": "right",
+              },
+            ]
+          }
+        >
+          profile.alertReappearLabel
+        </Text>
+        <View
+          accessibilityRole="radiogroup"
+          style={
+            [
+              {
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": 8,
+              },
+              {
+                "flexDirection": "row-reverse",
+              },
+            ]
+          }
+        >
+          <Pressable
+            accessibilityLabel="profile.alertReappearDays"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="alert-reappear-15"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
+                ]
+              }
+            >
+              profile.alertReappearDays
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="profile.alertReappearDays"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": true,
+              }
+            }
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                {
+                  "backgroundColor": "#2e9e71",
+                  "borderColor": "#2e9e71",
+                },
+              ]
+            }
+            testID="alert-reappear-30"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  {
+                    "color": "#fff",
+                    "fontFamily": "Manrope-SemiBold",
+                  },
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
+                ]
+              }
+            >
+              profile.alertReappearDays
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="profile.alertReappearDays"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="alert-reappear-60"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
+                ]
+              }
+            >
+              profile.alertReappearDays
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="profile.alertReappearDays"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="alert-reappear-90"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
+                ]
+              }
+            >
+              profile.alertReappearDays
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="profile.alertReappearNever"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
+            onClick={[Function]}
+            style={
+              [
+                {
+                  "borderRadius": 8,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 8,
+                },
+                {
+                  "borderColor": "#e5e5e5",
+                },
+                false,
+              ]
+            }
+            testID="alert-reappear-never"
+          >
+            <Text
+              style={
+                [
+                  {
+                    "fontFamily": "Manrope-Medium",
+                    "fontSize": 14,
+                  },
+                  {
+                    "color": "#666",
+                  },
+                  false,
+                  {
+                    "fontFamily": "NotoKufiArabic",
+                  },
+                ]
+              }
+            >
+              profile.alertReappearNever
             </Text>
           </Pressable>
         </View>

@@ -38,7 +38,7 @@ export function BrandsSection({ brands, lang, t }: Props) {
       {brands.map((b) => {
         const local = brandLocal(b)
         return (
-          <Card key={b.id} testID={`brand-row-${b.id}`}>
+          <Card key={b.id} square testID={`brand-row-${b.id}`}>
             <View style={[styles.body, { backgroundColor: colors.surface }]}>
               <View style={[styles.headerRow, isRtl && styles.rtlRow]}>
                 <Text testID="brand-name" style={[styles.brandName, { color: colors.textPrimary }, align, local ? styles.arabic : undefined]} numberOfLines={1}>

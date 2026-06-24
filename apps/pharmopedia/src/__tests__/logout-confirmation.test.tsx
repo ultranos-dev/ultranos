@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { Alert } from 'react-native'
 
 const mockLogout = vi.hoisted(() => vi.fn())
 
@@ -55,28 +54,41 @@ vi.mock('react-native-safe-area-context', () => {
   }
 })
 
-import { render, screen, fireEvent } from '@testing-library/react-native'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react-native'
 import ProfileTab from '@/app/(tabs)/profile'
 
 describe('Logout Confirmation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.spyOn(Alert, 'alert')
   })
 
-  it('shows confirmation dialog on logout press', () => {
+  it('shows the themed confirm dialog on logout press', () => {
     render(<ProfileTab />)
+    expect(screen.queryByTestId('logout-dialog')).toBeNull()
     fireEvent.press(screen.getByTestId('logout-button'))
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'profile.logoutConfirmTitle',
-      'profile.logoutConfirmMessage',
-      expect.any(Array),
-    )
+    expect(screen.getByTestId('logout-dialog')).toBeTruthy()
+    expect(screen.getByText('profile.logoutConfirmTitle')).toBeTruthy()
+    expect(screen.getByText('profile.logoutConfirmMessage')).toBeTruthy()
   })
 
   it('does not call logout until confirmed', () => {
     render(<ProfileTab />)
     fireEvent.press(screen.getByTestId('logout-button'))
+    expect(mockLogout).not.toHaveBeenCalled()
+  })
+
+  it('calls logout when the dialog is confirmed', async () => {
+    render(<ProfileTab />)
+    fireEvent.press(screen.getByTestId('logout-button'))
+    fireEvent.press(screen.getByTestId('logout-dialog-confirm'))
+    await waitFor(() => expect(mockLogout).toHaveBeenCalled())
+  })
+
+  it('dismisses without logging out when cancelled', async () => {
+    render(<ProfileTab />)
+    fireEvent.press(screen.getByTestId('logout-button'))
+    fireEvent.press(screen.getByTestId('logout-dialog-cancel'))
+    await waitFor(() => expect(screen.queryByTestId('logout-dialog')).toBeNull())
     expect(mockLogout).not.toHaveBeenCalled()
   })
 })

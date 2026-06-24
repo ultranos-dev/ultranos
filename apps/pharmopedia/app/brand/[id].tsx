@@ -131,7 +131,7 @@ export default function BrandDetailScreen() {
         <View style={styles.body}>
           {/* Presentations + price (commercial layer) */}
           <Text style={[styles.label, { color: colors.textMuted }, align]}>{t('brandDetail.presentations')}</Text>
-          <Card>
+          <Card square>
             {detail.presentations.map((p, i) => (
               <View key={p.id} testID={`presentation-${p.id}`} style={[styles.presRow, { borderTopColor: colors.borderSubtle, borderTopWidth: i === 0 ? 0 : StyleSheet.hairlineWidth, flexDirection: isRtl ? 'row-reverse' : 'row' }]}>
                 <Text style={[styles.presText, { color: colors.textPrimary }, align]} numberOfLines={2}>{presentationLine(p)}</Text>
@@ -211,16 +211,16 @@ const styles = StyleSheet.create({
   presRow: { alignItems: 'center', justifyContent: 'space-between', gap: Spacing[2], paddingVertical: Spacing[3], paddingHorizontal: Spacing[4] },
   presText: { flex: 1, fontSize: FontSize.sm, fontFamily: FontFamily.sans },
   price: { fontSize: FontSize.sm, fontFamily: FontFamily.sansBold, borderRadius: Radius.md, paddingHorizontal: Spacing[2], paddingVertical: 2, overflow: 'hidden' },
-  genericLink: { alignItems: 'center', gap: Spacing[2], borderWidth: 1, borderRadius: Radius.lg, padding: Spacing[4] },
+  genericLink: { alignItems: 'center', gap: Spacing[2], borderWidth: 1, borderRadius: 0, padding: Spacing[4] },
   genericLabel: { fontSize: FontSize.xs, fontFamily: FontFamily.sansBold, letterSpacing: 0.4, textTransform: 'uppercase' },
   genericName: { fontSize: FontSize.base, fontFamily: FontFamily.sansSemibold, marginTop: 2 },
   flip: { transform: [{ scaleX: -1 }] },
   siblings: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[2] },
   siblingsRtl: { flexDirection: 'row-reverse' },
-  // Attribution label stays padded so it aligns with the section header text;
-  // the section list itself runs edge-to-edge (gap:0) for full-width hairlines.
+  // Attribution label and the section list share the same Spacing[4] inset, so
+  // each collapsible section reads as its own card (matching the drug-detail page).
   clinicalFrom: { fontSize: FontSize.xs, fontFamily: FontFamily.sans, fontStyle: 'italic', paddingHorizontal: Spacing[4] },
-  sectionList: { gap: 0 },
+  sectionList: { gap: Spacing[2], paddingHorizontal: Spacing[4] },
   notFound: { fontSize: FontSize.lg, marginBottom: Spacing[3] },
   link: { fontSize: FontSize.base },
 })

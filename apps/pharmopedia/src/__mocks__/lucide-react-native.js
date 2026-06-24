@@ -69,9 +69,11 @@ const ChevronDown = createIconMock('ChevronDown')
 const Camera = createIconMock('Camera')
 const ImagePlus = createIconMock('ImagePlus')
 const Tag = createIconMock('Tag')
+const XCircle = createIconMock('XCircle')
 
 module.exports = {
   Tag,
+  XCircle,
   Heart,
   Search,
   Bookmark,

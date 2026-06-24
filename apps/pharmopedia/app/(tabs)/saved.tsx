@@ -1,7 +1,9 @@
 import { useMemo, useState, useCallback } from 'react'
+import { View, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { BookmarkPlus } from 'lucide-react-native'
+import { Spacing } from '@ultranos/ui-kit/tokens.native'
 import { CollapsibleList, EmptyState } from '@ultranos/ui-kit/native'
 import { DrugCard } from '@/components/DrugCard'
 import { BrandResultCard } from '@/components/BrandResultCard'
@@ -44,13 +46,15 @@ export default function SavedTab() {
       title={t('tabs.saved')}
       data={items}
       keyExtractor={(item) => (item.kind === 'brand' ? `b-${item.brand.id}` : `g-${item.generic.atcCode}`)}
-      renderItem={({ item }) =>
-        item.kind === 'brand' ? (
-          <BrandResultCard result={item.brand} lang={lang} onPress={() => router.push({ pathname: '/brand/[id]', params: { id: item.brand.id } })} />
-        ) : (
-          <DrugCard result={item.generic} lang={lang} onPress={() => router.push(`/drug/${item.generic.atcCode}`)} />
-        )
-      }
+      renderItem={({ item }) => (
+        <View style={styles.cardWrap}>
+          {item.kind === 'brand' ? (
+            <BrandResultCard result={item.brand} lang={lang} onPress={() => router.push({ pathname: '/brand/[id]', params: { id: item.brand.id } })} />
+          ) : (
+            <DrugCard result={item.generic} lang={lang} onPress={() => router.push(`/drug/${item.generic.atcCode}`)} />
+          )}
+        </View>
+      )}
       ListEmptyComponent={
         <EmptyState
           icon={BookmarkPlus}
@@ -64,3 +68,9 @@ export default function SavedTab() {
     />
   )
 }
+
+const styles = StyleSheet.create({
+  // Inset + top gap so each saved card reads as its own card, matching the
+  // search results and drug-detail section rhythm.
+  cardWrap: { paddingHorizontal: Spacing[4], paddingTop: Spacing[2] },
+})

@@ -28,6 +28,7 @@ import { useLangStore } from '@/store/lang-store'
 import { useBookmarkStore } from '@/store/bookmark-store'
 import { useCoachMarkStore } from '@/store/coach-mark-store'
 import { useRecentSearchStore } from '@/store/recent-search-store'
+import { useDismissedAlertsStore } from '@/store/dismissed-alerts-store'
 import { useThemeStore } from '@/store/theme-store'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { initI18n } from '@/i18n'
@@ -72,6 +73,7 @@ export default function RootLayout() {
         await useBookmarkStore.getState().init(getDatabase())
         await useCoachMarkStore.getState().init()
         await useRecentSearchStore.getState().init()
+        await useDismissedAlertsStore.getState().init()
         const seen = await hasSeenWelcome()
         setShowWelcome(!seen)
       } catch {
@@ -81,6 +83,7 @@ export default function RootLayout() {
         initI18n(useLangStore.getState().lang)
         await useCoachMarkStore.getState().init()
         await useRecentSearchStore.getState().init()
+        await useDismissedAlertsStore.getState().init()
         const seen = await hasSeenWelcome()
         setShowWelcome(!seen)
       } finally {

@@ -17,14 +17,14 @@ interface Props {
   onPress: () => void
   /** Active search query — the brand(s) it matches are promoted and highlighted. */
   query?: string
-  /** Show a "Generic" kind label (used in unified search results to pair with brand rows). */
-  showKind?: boolean
+  /** Compact variant (Home): the Generic kind label sits inline before the name instead of on its own row. */
+  compact?: boolean
 }
 
 /** Max brand chips shown before collapsing the rest into a "+N" chip. */
 const MAX_BRAND_CHIPS = 3
 
-export function DrugCard({ result, lang, onPress, query, showKind }: Props) {
+export function DrugCard({ result, lang, onPress, query, compact }: Props) {
   const { t } = useTranslation()
   const colors = useThemeColors()
   const bookmarked = useBookmarkStore((s) => s.isBookmarked(result.atcCode))
@@ -76,13 +76,13 @@ export function DrugCard({ result, lang, onPress, query, showKind }: Props) {
     >
       <Card square>
         <View style={[styles.body, { backgroundColor: colors.surface }]}>
-          {showKind ? (
+          {!compact ? (
             <View testID="kind-generic" style={[styles.kindRow, isRtl && styles.kindRowRtl]}>
               <Pill size={12} color={colors.info} />
               <Text style={[styles.kind, { color: colors.info }]}>{t('search.kindGeneric')}</Text>
             </View>
           ) : null}
-          <View style={styles.topRow}>
+          <View style={[styles.topRow, compact && isRtl && styles.topRowRtl]}>
             <Text
               testID="drug-primary-name"
               style={[
@@ -91,11 +91,21 @@ export function DrugCard({ result, lang, onPress, query, showKind }: Props) {
                 // Arabic face only when the name is actually the local (RTL) name;
                 // an English INN fallback stays Latin, right-aligned in RTL.
                 useLocal ? styles.rtlText : isRtl && styles.fallbackName,
+                // Compact: size to content so the kind label sits right after the
+                // name; full: grow to fill so the bookmark stays at the edge.
+                compact ? styles.nameShrink : styles.nameGrow,
               ]}
               numberOfLines={1}
             >
               {primaryName}
             </Text>
+            {compact ? (
+              <View testID="kind-generic" style={[styles.kindRow, isRtl && styles.kindRowRtl]}>
+                <Pill size={12} color={colors.info} />
+                <Text style={[styles.kind, { color: colors.info }]}>{t('search.kindGeneric')}</Text>
+              </View>
+            ) : null}
+            {compact ? <View style={styles.flexSpacer} /> : null}
             <Pressable
               testID="bookmark-toggle"
               onPress={() => void handleToggleBookmark()}
@@ -177,11 +187,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing[2],
   },
+  topRowRtl: { flexDirection: 'row-reverse' },
   primaryName: {
     fontSize: FontSize.base,
     fontFamily: FontFamily.sansSemibold,
-    flex: 1,
   },
+  nameGrow: { flex: 1 },
+  nameShrink: { flexShrink: 1 },
+  flexSpacer: { flex: 1 },
   bookmarkBtn: {
     padding: 2,
   },

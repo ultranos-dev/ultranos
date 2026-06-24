@@ -6,8 +6,7 @@
  * and logout Alert invocation.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, fireEvent } from '@testing-library/react-native'
-import { Alert } from 'react-native'
+import { render, fireEvent, waitFor } from '@testing-library/react-native'
 
 // ── hoisted mocks ──────────────────────────────────────────────────────────
 const mockUseProfile = vi.hoisted(() => vi.fn())
@@ -184,23 +183,32 @@ describe('Profile screen — Clinical-Calm refactor', () => {
     expect(getByTestId('logout-button')).toBeTruthy()
   })
 
-  it('logout button triggers Alert', () => {
+  it('logout button opens the themed confirm dialog', () => {
     mockUseProfile.mockReturnValue({
       profile: null,
       source: 'cache',
       loading: false,
     })
 
-    vi.spyOn(Alert, 'alert')
+    const { getByTestId, getByText } = render(<ProfileTab />)
+    fireEvent.press(getByTestId('logout-button'))
+
+    expect(getByTestId('logout-dialog')).toBeTruthy()
+    expect(getByText('profile.logoutConfirmTitle')).toBeTruthy()
+  })
+
+  it('logout dialog confirm invokes logout', async () => {
+    mockUseProfile.mockReturnValue({
+      profile: null,
+      source: 'cache',
+      loading: false,
+    })
 
     const { getByTestId } = render(<ProfileTab />)
     fireEvent.press(getByTestId('logout-button'))
+    fireEvent.press(getByTestId('logout-dialog-confirm'))
 
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'profile.logoutConfirmTitle',
-      'profile.logoutConfirmMessage',
-      expect.any(Array),
-    )
+    await waitFor(() => expect(mockLogout).toHaveBeenCalled())
   })
 
   it('shows loading placeholder when loading and no profile yet', () => {

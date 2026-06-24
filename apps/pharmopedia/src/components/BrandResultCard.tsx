@@ -14,6 +14,8 @@ interface Props {
   result: BrandSearchResult
   lang: Lang
   onPress: () => void
+  /** Compact variant (Home): the Brand kind label sits inline before the name instead of on its own row. */
+  compact?: boolean
 }
 
 /**
@@ -21,7 +23,7 @@ interface Props {
  * name + price lead, with the generic it resolves to and the manufacturer
  * beneath. Tapping opens the brand-detail view.
  */
-export function BrandResultCard({ result, lang, onPress }: Props) {
+export function BrandResultCard({ result, lang, onPress, compact }: Props) {
   const { t } = useTranslation()
   const colors = useThemeColors()
   const isRtl = isRtlLang(lang)
@@ -49,14 +51,23 @@ export function BrandResultCard({ result, lang, onPress }: Props) {
     >
       <Card square>
         <View style={[styles.body, { backgroundColor: colors.surface }]}>
-          <View testID="kind-brand" style={[styles.kindRow, isRtl && styles.kindRowRtl]}>
-            <Tag size={12} color={colors.primary600} />
-            <Text style={[styles.kind, { color: colors.primary600 }]}>{t('search.kindBrand')}</Text>
-          </View>
+          {!compact ? (
+            <View testID="kind-brand" style={[styles.kindRow, isRtl && styles.kindRowRtl]}>
+              <Tag size={12} color={colors.primary600} />
+              <Text style={[styles.kind, { color: colors.primary600 }]}>{t('search.kindBrand')}</Text>
+            </View>
+          ) : null}
           <View style={[styles.topRow, isRtl && styles.rtlRow]}>
-            <Text style={[styles.brandName, { color: colors.textPrimary }, align]} numberOfLines={1}>
+            <Text style={[styles.brandName, { color: colors.textPrimary }, align, compact ? styles.nameShrink : styles.nameGrow]} numberOfLines={1}>
               {result.brandName}
             </Text>
+            {compact ? (
+              <View testID="kind-brand" style={[styles.kindRow, isRtl && styles.kindRowRtl]}>
+                <Tag size={12} color={colors.primary600} />
+                <Text style={[styles.kind, { color: colors.primary600 }]}>{t('search.kindBrand')}</Text>
+              </View>
+            ) : null}
+            {compact ? <View style={styles.flexSpacer} /> : null}
             {result.referencePrice != null && (
               <Text
                 testID="brand-result-price"
@@ -100,7 +111,10 @@ const styles = StyleSheet.create({
   kind: { fontSize: FontSize.xs, fontFamily: FontFamily.sansBold, letterSpacing: 0.5, textTransform: 'uppercase' },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing[2] },
   rtlRow: { flexDirection: 'row-reverse' },
-  brandName: { flex: 1, fontSize: FontSize.base, fontFamily: FontFamily.sansSemibold },
+  brandName: { fontSize: FontSize.base, fontFamily: FontFamily.sansSemibold },
+  nameGrow: { flex: 1 },
+  nameShrink: { flexShrink: 1 },
+  flexSpacer: { flex: 1 },
   price: {
     fontSize: FontSize.sm, fontFamily: FontFamily.sansBold,
     borderRadius: Radius.md, paddingHorizontal: Spacing[2], paddingVertical: 2, overflow: 'hidden',

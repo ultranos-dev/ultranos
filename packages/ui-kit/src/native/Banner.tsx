@@ -1,5 +1,5 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native'
-import { Info, AlertTriangle, CheckCircle } from 'lucide-react-native'
+import { Info, AlertTriangle, CheckCircle, XCircle } from 'lucide-react-native'
 import type { LucideIcon } from 'lucide-react-native'
 import { FontFamily, FontSize, Radius, Spacing } from '../tokens.native'
 import { useThemeColors, useRtl } from './theme'
@@ -11,6 +11,10 @@ interface BannerProps {
   text: string
   icon?: LucideIcon
   onPress?: () => void
+  /** When provided, renders a trailing circular close button that calls this. */
+  onDismiss?: () => void
+  /** Accessibility label for the close button (required when onDismiss is set). */
+  dismissLabel?: string
   testID?: string
 }
 
@@ -21,7 +25,7 @@ const DEFAULT_ICON: Record<Variant, LucideIcon> = {
   success: CheckCircle,
 }
 
-export function Banner({ variant, text, icon, onPress, testID }: BannerProps) {
+export function Banner({ variant, text, icon, onPress, onDismiss, dismissLabel, testID }: BannerProps) {
   const colors = useThemeColors()
   const rtl = useRtl()
   const palette = {
@@ -36,6 +40,18 @@ export function Banner({ variant, text, icon, onPress, testID }: BannerProps) {
     <View style={[styles.banner, { backgroundColor: palette.bg }]}>
       <Icon size={16} color={palette.fg} />
       <Text style={[styles.text, { color: palette.fg }, rtl && styles.arabic]}>{text}</Text>
+      {onDismiss && (
+        <Pressable
+          testID={testID ? `${testID}-dismiss` : undefined}
+          onPress={onDismiss}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={dismissLabel}
+          style={styles.dismiss}
+        >
+          <XCircle size={18} color={palette.fg} />
+        </Pressable>
+      )}
     </View>
   )
   if (onPress) {
@@ -55,5 +71,6 @@ export function Banner({ variant, text, icon, onPress, testID }: BannerProps) {
 const styles = StyleSheet.create({
   banner: { flexDirection: 'row', alignItems: 'center', gap: Spacing[2], borderRadius: Radius.lg, paddingHorizontal: Spacing[3], paddingVertical: Spacing[3] },
   text: { flex: 1, fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm },
+  dismiss: { marginInlineStart: Spacing[1] },
   arabic: { fontFamily: FontFamily.arabic },
 })
