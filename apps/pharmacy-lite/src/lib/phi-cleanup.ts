@@ -62,6 +62,11 @@ export const PRESERVE_TABLES = [
   'stockTransfers',
   'dataBudgetConfig',
   'dataUsage',
+  // Phase 2: enriched drug-catalog mirror + brands (non-PHI reference data)
+  'drugCatalogMirror',
+  'drugBrandsMirror',
+  'drugBrandPresentationsMirror',
+  'drugCatalogSyncMeta',
 ] as const
 
 // Compile-time safety: ensure syncQueue is never accidentally added to PHI_TABLES

@@ -21,12 +21,18 @@ interface CompactRx {
   med: string       // medication code
   medN: string      // medication display name
   medT: string      // full text (name + strength + form)
+  atc?: string      // ATC code when the medication code is ATC-shaped (Phase 2 — for pharmacy brand/recall/interaction lookups)
   dos: CompactDosage
   dur: number       // duration in days
   enc?: string      // encounter ID (stripped prefix, omitted when absent)
   req: string       // requester ref (stripped prefix)
   pat: string       // patient ID (stripped prefix)
   at: string        // authoredOn ISO
+}
+
+/** ATC codes start with a letter followed by two digits (e.g. J01CA04, A12AA). */
+function asAtcCode(code: string): string | undefined {
+  return /^[A-Z]\d{2}/.test(code) ? code : undefined
 }
 
 function stripRef(ref: string): string {
@@ -76,6 +82,9 @@ export function compressPrescription(rxList: FhirMedicationRequestZod[]): string
       pat: stripRef(rx.subject.reference),
       at: rx.authoredOn,
     }
+
+    const atc = asAtcCode(rx.medicationCodeableConcept.coding?.[0]?.code ?? '')
+    if (atc) result.atc = atc
 
     const encRef = rx.encounter?.reference
     if (encRef) result.enc = stripRef(encRef)

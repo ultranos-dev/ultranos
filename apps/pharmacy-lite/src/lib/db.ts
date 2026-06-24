@@ -12,6 +12,8 @@ import { POS_STORES } from './pos-db'
 import type { Supplier, PurchaseOrder, StockCount } from './procurement/types'
 import type { StockTransfer } from './transfers/types'
 import type { DataUsageCategory } from '@ultranos/sync-engine'
+import type { DrugEntry } from '@ultranos/drug-catalog-sync'
+import type { DrugBrand, DrugBrandPresentation } from '@ultranos/shared-types'
 export type { DataUsageCategory }  // re-export for consumers
 
 export interface DispenseAuditEntry {
@@ -93,6 +95,11 @@ export interface LocalPatient {
   source: 'registered' | 'qr-verified' | 'hub-synced'
 }
 
+export interface CatalogSyncMetaEntry {
+  key: string
+  value: string
+}
+
 // Data Budget types — Story 48.x / Data Connectivity
 // ---------------------------------------------------------------------------
 export interface DataBudgetConfig {
@@ -136,6 +143,10 @@ class PharmacyLiteDatabase extends Dexie {
   stockTransfers!: EntityTable<StockTransfer, 'id'>
   dataBudgetConfig!: Dexie.Table<DataBudgetConfig, string>
   dataUsage!: Dexie.Table<DataUsageRecord & { id?: number }, number>
+  drugCatalogMirror!: EntityTable<DrugEntry, 'atcCode'>
+  drugBrandsMirror!: EntityTable<DrugBrand, 'id'>
+  drugBrandPresentationsMirror!: EntityTable<DrugBrandPresentation, 'id'>
+  drugCatalogSyncMeta!: EntityTable<CatalogSyncMetaEntry, 'key'>
 
   constructor() {
     super('pharmacy-lite')
@@ -215,6 +226,15 @@ class PharmacyLiteDatabase extends Dexie {
         delete record['nameGiven']
         delete record['phone']
       })
+    })
+
+    // v13: Phase 2 — enriched drug-catalog mirror + brands (non-PHI reference data).
+    // Plaintext (not in PHI_TABLE_CONFIGS); preserved across logout.
+    this.version(13).stores({
+      drugCatalogMirror: '&atcCode, innName, *brandNames',
+      drugBrandsMirror: '&id, genericAtcCode',
+      drugBrandPresentationsMirror: '&id, brandId',
+      drugCatalogSyncMeta: '&key',
     })
   }
 }

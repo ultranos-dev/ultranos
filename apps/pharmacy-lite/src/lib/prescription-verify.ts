@@ -11,6 +11,7 @@ export interface VerifiedPrescription {
   med: string
   medN: string
   medT: string
+  atc?: string      // ATC code carried from the QR (Phase 2) — used for brand/recall/interaction lookups
   dos: {
     qty: number
     unit: string

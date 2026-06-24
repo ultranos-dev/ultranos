@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import { useCatalogSync } from '@/hooks/useCatalogSync'
+import { useDrugCatalogSync } from '@/hooks/useDrugCatalogSync'
 import { useInventoryStore } from '@/stores/inventory-store'
 import { getTotalStockOnHand } from '@/lib/inventory/fefo'
 import { searchDrugCatalog } from '@/lib/trpc'
@@ -19,6 +20,7 @@ interface CatalogRowData {
 export function CatalogBrowsePage() {
   const t = useTranslations('inventory')
   useCatalogSync()
+  useDrugCatalogSync()
   const isSyncingCatalog = useInventoryStore((s) => s.isSyncingCatalog)
 
   const [rows, setRows] = useState<CatalogRowData[]>([])

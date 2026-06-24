@@ -594,6 +594,12 @@ importers:
       '@ultranos/crypto':
         specifier: workspace:*
         version: link:../../packages/crypto
+      '@ultranos/drug-catalog-sync':
+        specifier: workspace:*
+        version: link:../../packages/drug-catalog-sync
+      '@ultranos/drug-db':
+        specifier: workspace:*
+        version: link:../../packages/drug-db
       '@ultranos/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
