@@ -39,6 +39,17 @@ interface EncounterDashboardProps {
   patientId: string
 }
 
+function ageYears(birthDate?: string): number | undefined {
+  if (!birthDate) return undefined
+  const b = new Date(birthDate)
+  if (Number.isNaN(b.getTime())) return undefined
+  const now = new Date()
+  let age = now.getFullYear() - b.getFullYear()
+  const m = now.getMonth() - b.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--
+  return age
+}
+
 function formatAge(birthDate?: string, birthYearOnly?: boolean, unknownLabel = 'Unknown age'): string {
   if (!birthDate) return unknownLabel
   const birth = new Date(birthDate)
@@ -736,7 +747,11 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             </div>
           )}
 
-          <PrescriptionEntry onSubmit={handleAddPrescription} />
+          <PrescriptionEntry
+            onSubmit={handleAddPrescription}
+            patientSex={patient.gender}
+            patientAge={ageYears(patient.birthDate)}
+          />
 
           {prescriptionError && (
             <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3" role="alert">

@@ -13,11 +13,15 @@ import {
   type PrescriptionFormData,
 } from '@/lib/prescription-config'
 import { enrichDrug } from '@/lib/trpc'
+import { DrugSafetyPanel } from '@/components/clinical/DrugSafetyPanel'
+import { DrugMonographSheet } from '@/components/clinical/DrugMonographSheet'
 
 interface PrescriptionEntryProps {
   onSubmit: (form: PrescriptionFormData) => void | Promise<void>
   disabled?: boolean
   canEnrich?: boolean
+  patientSex?: string
+  patientAge?: number
 }
 
 function getDisplayIndices(
@@ -68,7 +72,7 @@ function highlightMatches(
   return <>{parts}</>
 }
 
-export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false }: PrescriptionEntryProps) {
+export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patientSex, patientAge }: PrescriptionEntryProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<MedicationSearchResult[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -336,7 +340,12 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false }: Pre
           >
             Open in Pharmopedia
           </a>
+          <DrugMonographSheet atcCode={form.medicationCode} label={`${form.medicationDisplay} ${form.medicationStrength}`} />
         </div>
+      )}
+
+      {hasMedication && (
+        <DrugSafetyPanel atcCode={form.medicationCode} patientSex={patientSex} patientAge={patientAge} />
       )}
 
       {hasMedication && canEnrich && (
