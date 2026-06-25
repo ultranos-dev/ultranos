@@ -4,6 +4,7 @@ import { createTRPCRouter, protectedProcedure } from '../init'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { enforceEntitlement } from '../middleware/enforceEntitlement'
 import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
+import { roleRestrictedProcedure } from '../rbac'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
 
@@ -66,6 +67,50 @@ export const medicationStatementRouter = createTRPCRouter({
         statements: db.fromRows(data),
         count: data.length,
       }
+    }),
+
+  /**
+   * List active MedicationStatements for a patient — PHARMACIST-scoped.
+   * Used by Pharmacy-Lite's dispense interaction recheck (treatment-essential).
+   * Scoped to this read endpoint only (roleRestrictedProcedure) — does NOT grant
+   * pharmacists access to other MedicationStatement operations. No per-access
+   * consent gate (consistent with the clinician listActive); access is governed by
+   * org verification + PHARMACY_LITE entitlement + role + a PHI_READ audit event.
+   */
+  listActiveForPharmacist: roleRestrictedProcedure(['PHARMACIST', 'ADMIN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('PHARMACY_LITE'))
+    .input(z.object({ patientRef: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from('medication_statements')
+        .select('*')
+        .eq('subject_reference', input.patientRef)
+        .eq('status', 'active')
+
+      if (error) {
+        console.error('MedicationStatement (pharmacist) list error:', { code: error.code })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to retrieve active medication statements' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'MEDICATION_STATEMENT',
+          resourceId: input.patientRef,
+          patientId: input.patientRef.replace('Patient/', ''),
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { count: data.length, via: 'pharmacist_dispense' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'MEDICATION_STATEMENT', patientRef: input.patientRef })
+      }
+
+      return { statements: db.fromRows(data), count: data.length }
     }),
 
   /**

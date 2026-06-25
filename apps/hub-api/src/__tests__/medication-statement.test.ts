@@ -379,6 +379,38 @@ describe('medicationStatement.create', () => {
   })
 })
 
+describe('medicationStatement.listActiveForPharmacist', () => {
+  it('allows a PHARMACIST to list a patient\'s active medication statements', async () => {
+    const mockStatements = [{ id: 'ms-1', status: 'active', medication_display: 'Warfarin 5mg', subject_reference: 'Patient/pat-001' }]
+    const mockSelect = vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ data: mockStatements, error: null }) }),
+    })
+    const auditMock = vi.fn().mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: 'audit-1' }, error: null }) }) })
+    const callCount = { n: 0 }
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+      callCount.n++
+      return callCount.n === 1 ? { select: mockSelect } : { insert: auditMock }
+    })
+    const caller = createCaller(createTestContext({ supabaseFrom: mockFrom, user: PHARMACIST_USER }))
+    const result = await caller.medicationStatement.listActiveForPharmacist({ patientRef: 'Patient/pat-001' })
+    expect(result.count).toBe(1)
+    expect(result.statements).toHaveLength(1)
+    expect(mockFrom).toHaveBeenCalledWith('medication_statements')
+  })
+
+  it('denies a PATIENT role (FORBIDDEN)', async () => {
+    const caller = createCaller(createTestContext({ user: { sub: 'pat-001', role: 'PATIENT', sessionId: 's1', orgId: 'org-1' } }))
+    await expect(caller.medicationStatement.listActiveForPharmacist({ patientRef: 'Patient/pat-001' })).rejects.toThrow()
+  })
+
+  it('requires authentication (UNAUTHORIZED)', async () => {
+    const caller = createCaller(createTestContext({ user: null }))
+    await expect(caller.medicationStatement.listActiveForPharmacist({ patientRef: 'Patient/pat-001' })).rejects.toThrow()
+  })
+})
+
 describe('medicationStatement.updateStatus', () => {
   it('transitions active statement to completed', async () => {
     const updateMock = vi.fn().mockReturnValue({

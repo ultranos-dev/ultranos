@@ -38,4 +38,12 @@ describe('runDispenseInteractionCheck', () => {
     const status = await runDispenseInteractionCheck([], [])
     expect(status.state).toBe('unavailable')
   })
+
+  it('detects an interaction against the patient\'s active (Hub) medications', async () => {
+    await db.drugCatalogMirror.put(warfarin() as never)
+    await db.drugCatalogSyncMeta.put({ key: 'lastSyncAt', value: new Date().toISOString() })
+    // Prescribing Aspirin; Warfarin is an existing active med fetched from the Hub.
+    const status = await runDispenseInteractionCheck(['Aspirin'], [], ['Warfarin'])
+    expect(status.state).toBe('contraindicated')
+  })
 })

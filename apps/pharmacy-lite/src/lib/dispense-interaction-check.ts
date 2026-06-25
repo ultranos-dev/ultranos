@@ -19,6 +19,7 @@ function formatInteraction(i: InteractionResult): string {
 export async function runDispenseInteractionCheck(
   medDisplays: string[],
   allergies: string[],
+  activeMedDisplays: string[] = [],
 ): Promise<InteractionStatus> {
   const adapter = await resolveDrugAdapter()
   if (!adapter) return { state: 'unavailable', reason: 'Drug data not yet synced to this device.' }
@@ -32,8 +33,9 @@ export async function runDispenseInteractionCheck(
   let worst: 'CLEAR' | 'WARNING' | 'BLOCKED' | 'UNAVAILABLE' = 'CLEAR'
 
   for (let i = 0; i < meds.length; i++) {
-    const others = meds.filter((_, j) => j !== i)
-    const summary = await checkInteractions(meds[i]!, others, { activeAllergies: allergyResources }, adapter)
+    const peers = Array.from(new Set([...meds.filter((_, j) => j !== i), ...activeMedDisplays]))
+      .filter((p) => p && p.trim().length > 0 && p !== meds[i])
+    const summary = await checkInteractions(meds[i]!, peers, { activeAllergies: allergyResources }, adapter)
     if (summary.result === 'UNAVAILABLE') return { state: 'unavailable', reason: 'Interaction check unavailable.' }
     if (summary.result === 'BLOCKED') worst = 'BLOCKED'
     else if (summary.result === 'WARNING' && worst !== 'BLOCKED') worst = 'WARNING'

@@ -8,6 +8,7 @@ import { RecallAlertBanner } from './RecallAlertBanner'
 import { InteractionCheckBanner, type InteractionStatus } from './InteractionCheckBanner'
 import { getRecallAlertsForAtc } from '@/lib/drug-catalog-queries'
 import { runDispenseInteractionCheck } from '@/lib/dispense-interaction-check'
+import { fetchActiveMedicationDisplays } from '@/lib/active-medications'
 import type { RecallAlert } from '@ultranos/shared-types'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
 
@@ -42,7 +43,12 @@ export function DispensingConfirmationModal({
   useEffect(() => {
     let cancelled = false
     const meds = items.map((i) => i.prescription.medN)
-    void runDispenseInteractionCheck(meds, patientAllergies ?? []).then((s) => { if (!cancelled) setInteraction(s) })
+    const patientId = items[0]?.prescription.pat
+    void (async () => {
+      const active = patientId ? await fetchActiveMedicationDisplays(patientId) : []
+      const status = await runDispenseInteractionCheck(meds, patientAllergies ?? [], active)
+      if (!cancelled) setInteraction(status)
+    })()
     return () => { cancelled = true }
   }, [items, patientAllergies])
 
