@@ -33,4 +33,18 @@ describe('PrescriptionEntry decision support', () => {
     expect(screen.getByText(/Penicillin hypersensitivity/)).toBeInTheDocument()
     expect(screen.getByTestId('monograph-trigger')).toBeInTheDocument()
   })
+
+  it('offers a brand picker and records the brand hint', async () => {
+    await db.drugBrandsMirror.clear()
+    await db.drugBrandsMirror.put({ id: 'b1', genericAtcCode: 'J01CA04', brandName: 'Amoxil' } as never)
+    let submitted: import('@/lib/prescription-config').PrescriptionFormData | null = null
+    render(<PrescriptionEntry onSubmit={(f) => { submitted = f }} patientSex="male" patientAge={40} />)
+    fireEvent.change(screen.getByLabelText(/Search medications/i), { target: { value: 'Amox' } })
+    fireEvent.mouseDown(await waitFor(() => screen.getAllByRole('option')[0]!))
+    const brandSelect = await waitFor(() => screen.getByTestId('brand-hint-select'))
+    fireEvent.change(brandSelect, { target: { value: 'Amoxil' } })
+    fireEvent.click(screen.getByRole('button', { name: /Add Prescription/i }))
+    await waitFor(() => expect(submitted).not.toBeNull())
+    expect(submitted!.brandHint).toBe('Amoxil')
+  })
 })

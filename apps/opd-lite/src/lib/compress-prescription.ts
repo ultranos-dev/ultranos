@@ -22,6 +22,7 @@ interface CompactRx {
   medN: string      // medication display name
   medT: string      // full text (name + strength + form)
   atc?: string      // ATC code when the medication code is ATC-shaped (Phase 2 — for pharmacy brand/recall/interaction lookups)
+  brand?: string    // clinician's preferred brand (Phase 3C), from the urn:ultranos:brand coding
   dos: CompactDosage
   dur: number       // duration in days
   enc?: string      // encounter ID (stripped prefix, omitted when absent)
@@ -85,6 +86,9 @@ export function compressPrescription(rxList: FhirMedicationRequestZod[]): string
 
     const atc = asAtcCode(rx.medicationCodeableConcept.coding?.[0]?.code ?? '')
     if (atc) result.atc = atc
+
+    const brandCoding = rx.medicationCodeableConcept.coding?.find((c) => c.system === 'urn:ultranos:brand')
+    if (brandCoding?.code) result.brand = brandCoding.code
 
     const encRef = rx.encounter?.reference
     if (encRef) result.enc = stripRef(encRef)

@@ -17,4 +17,11 @@ describe('fulfillment substitution state', () => {
     expect(item.brandName).toBe('Amoxil')
     expect(item.presentationId).toBe('p-1')
   })
+
+  it('seeds the fulfillment brand from a prescribed brand hint', () => {
+    const withBrand = { ...rx('rx-2'), brand: 'Amoxil' }
+    useFulfillmentStore.getState().loadPrescriptions([withBrand as never], undefined, undefined)
+    const item = useFulfillmentStore.getState().items.find((i) => i.prescription.id === 'rx-2')!
+    expect(item.brandName).toBe('Amoxil')
+  })
 })

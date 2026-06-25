@@ -111,36 +111,43 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
 
                 {/* Brand / Batch inputs — only for selected items */}
                 {item.selected && (
-                  <div className="mt-3 grid grid-cols-2 gap-3">
-                    <div>
-                      <label
-                        htmlFor={`brand-${item.prescription.id}`}
-                        className="mb-1 block text-xs font-medium text-muted-foreground"
-                      >
-                        {t('brandName')}
-                      </label>
-                      <BrandSubstitutionPicker
-                        atc={item.prescription.atc}
-                        value={item.brandName}
-                        onSelect={(sel) => setBrandSelection(item.prescription.id, sel)}
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor={`batch-${item.prescription.id}`}
-                        className="mb-1 block text-xs font-medium text-muted-foreground"
-                      >
-                        {t('batchLot')} <span className="text-muted-foreground">{t('batchOptional')}</span>
-                      </label>
-                      <input
-                        id={`batch-${item.prescription.id}`}
-                        data-testid={`batch-input-${item.prescription.id}`}
-                        type="text"
-                        value={item.batchLot}
-                        onChange={(e) => setBatchLot(item.prescription.id, e.target.value)}
-                        placeholder={t('batchPlaceholder')}
-                        className="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                      />
+                  <div className="mt-3 space-y-2">
+                    {item.prescription.brand && (
+                      <p className="text-xs text-muted-foreground">
+                        Prescribed brand: <span className="font-semibold text-foreground">{item.prescription.brand}</span>
+                      </p>
+                    )}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label
+                          htmlFor={`brand-${item.prescription.id}`}
+                          className="mb-1 block text-xs font-medium text-muted-foreground"
+                        >
+                          {t('brandName')}
+                        </label>
+                        <BrandSubstitutionPicker
+                          atc={item.prescription.atc}
+                          value={item.brandName}
+                          onSelect={(sel) => setBrandSelection(item.prescription.id, sel)}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor={`batch-${item.prescription.id}`}
+                          className="mb-1 block text-xs font-medium text-muted-foreground"
+                        >
+                          {t('batchLot')} <span className="text-muted-foreground">{t('batchOptional')}</span>
+                        </label>
+                        <input
+                          id={`batch-${item.prescription.id}`}
+                          data-testid={`batch-input-${item.prescription.id}`}
+                          type="text"
+                          value={item.batchLot}
+                          onChange={(e) => setBatchLot(item.prescription.id, e.target.value)}
+                          placeholder={t('batchPlaceholder')}
+                          className="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}

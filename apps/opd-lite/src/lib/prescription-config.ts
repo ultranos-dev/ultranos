@@ -33,6 +33,7 @@ export interface PrescriptionFormData {
   frequencyCode: string
   durationDays: string
   notes: string
+  brandHint?: string
 }
 
 export const EMPTY_PRESCRIPTION_FORM: Readonly<PrescriptionFormData> = Object.freeze({

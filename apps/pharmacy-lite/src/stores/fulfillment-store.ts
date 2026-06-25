@@ -86,7 +86,7 @@ export const useFulfillmentStore = create<FulfillmentState>()(
         state.items = prescriptions.map((rx) => ({
           prescription: rx,
           selected: true,
-          brandName: '',
+          brandName: rx.brand ?? '',
           batchLot: '',
         }))
         state.practitionerName = practitionerName ?? null

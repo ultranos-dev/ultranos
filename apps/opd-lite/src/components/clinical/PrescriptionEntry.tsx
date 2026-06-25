@@ -15,6 +15,7 @@ import {
 import { enrichDrug } from '@/lib/trpc'
 import { DrugSafetyPanel } from '@/components/clinical/DrugSafetyPanel'
 import { DrugMonographSheet } from '@/components/clinical/DrugMonographSheet'
+import { getBrandNamesForAtc } from '@/lib/drug-entry'
 
 interface PrescriptionEntryProps {
   onSubmit: (form: PrescriptionFormData) => void | Promise<void>
@@ -85,6 +86,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
   const [isEnriching, setIsEnriching] = useState(false)
   const [enrichSuccess, setEnrichSuccess] = useState(false)
   const [enrichError, setEnrichError] = useState<string | null>(null)
+  const [brandOptions, setBrandOptions] = useState<string[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -226,6 +228,13 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
   }, [])
 
   useEffect(() => {
+    let cancelled = false
+    if (!form.medicationCode) { setBrandOptions([]); return }
+    void getBrandNamesForAtc(form.medicationCode).then((b) => { if (!cancelled) setBrandOptions(b) })
+    return () => { cancelled = true }
+  }, [form.medicationCode])
+
+  useEffect(() => {
     if (activeIndex >= 0 && listRef.current) {
       const activeEl = listRef.current.children[activeIndex] as HTMLElement | undefined
       if (activeEl && typeof activeEl.scrollIntoView === 'function') {
@@ -346,6 +355,26 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
 
       {hasMedication && (
         <DrugSafetyPanel atcCode={form.medicationCode} patientSex={patientSex} patientAge={patientAge} />
+      )}
+
+      {hasMedication && brandOptions.length > 0 && (
+        <div>
+          <label htmlFor="brand-hint" className="mb-1 block text-sm font-semibold text-foreground">
+            Preferred brand (optional)
+          </label>
+          <select
+            id="brand-hint"
+            data-testid="brand-hint-select"
+            value={form.brandHint ?? ''}
+            onChange={(e) => setForm((prev) => ({ ...prev, brandHint: e.target.value || undefined }))}
+            disabled={disabled}
+            className={inputClasses}
+            aria-label="Preferred brand"
+          >
+            <option value="">— Any brand —</option>
+            {brandOptions.map((b) => <option key={b} value={b}>{b}</option>)}
+          </select>
+        </div>
       )}
 
       {hasMedication && canEnrich && (

@@ -56,6 +56,9 @@ export function mapFormToMedicationRequest(
           code: form.medicationCode,
           display: form.medicationDisplay,
         },
+        ...(form.brandHint
+          ? [{ system: 'urn:ultranos:brand', code: form.brandHint, display: form.brandHint }]
+          : []),
       ],
       text: `${form.medicationDisplay} ${form.medicationStrength} (${form.medicationForm})`,
     },
