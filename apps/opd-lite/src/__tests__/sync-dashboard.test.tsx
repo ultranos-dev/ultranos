@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, fireEvent, within } from '@testing-library/react'
 import { SyncDashboard } from '../components/SyncDashboard'
+
+// next-intl context isn't provided in unit tests; components only need the locale.
+vi.mock('next-intl', () => ({
+  useLocale: () => 'en',
+  useTranslations: () => (key: string) => key,
+}))
 import { SyncPulse } from '../components/SyncPulse'
 import { useSyncStore } from '../stores/sync-store'
 import { db, type SyncQueueEntry } from '../lib/db'
@@ -35,6 +41,12 @@ function makeSyncEntry(overrides: Partial<SyncQueueEntry> = {}): SyncQueueEntry 
 async function seedQueue(entries: SyncQueueEntry[]) {
   await db.syncQueue.clear()
   await db.syncQueue.bulkPut(entries)
+}
+
+/** Resource groups are collapsed by default — expand them to reveal item rows. */
+async function expandAllGroups() {
+  const headers = await screen.findAllByTestId('sync-group-header')
+  for (const h of headers) fireEvent.click(h)
 }
 
 describe('SyncDashboard', () => {
@@ -84,6 +96,33 @@ describe('SyncDashboard', () => {
     expect(vitalsBadge).toBeInTheDocument()
   })
 
+  it('collapses resource groups by default and toggles items on header click', async () => {
+    await seedQueue([
+      makeSyncEntry({ id: 'o1', resourceType: 'Observation', status: 'pending' }),
+    ])
+
+    render(<SyncDashboard />)
+
+    // Header is shown, but item rows are hidden while collapsed (default).
+    await waitFor(() => {
+      expect(screen.getByTestId('sync-group-header')).toBeInTheDocument()
+    })
+    expect(screen.getByTestId('sync-group-header')).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByTestId('sync-item')).not.toBeInTheDocument()
+
+    // Expand → item appears.
+    fireEvent.click(screen.getByTestId('sync-group-header'))
+    await waitFor(() => {
+      expect(screen.getByTestId('sync-item')).toBeInTheDocument()
+    })
+
+    // Collapse again → item hidden.
+    fireEvent.click(screen.getByTestId('sync-group-header'))
+    await waitFor(() => {
+      expect(screen.queryByTestId('sync-item')).not.toBeInTheDocument()
+    })
+  })
+
   it('shows summary header with counts', async () => {
     await seedQueue([
       makeSyncEntry({ id: 'p1', status: 'pending' }),
@@ -127,6 +166,7 @@ describe('SyncDashboard', () => {
     ])
 
     render(<SyncDashboard />)
+    await expandAllGroups()
 
     await waitFor(() => {
       expect(screen.getByTestId('retry-btn')).toBeInTheDocument()
@@ -149,6 +189,7 @@ describe('SyncDashboard', () => {
     ])
 
     render(<SyncDashboard />)
+    await expandAllGroups()
 
     await waitFor(() => {
       expect(screen.getByTestId('failure-reason')).toHaveTextContent('Server error')
@@ -161,6 +202,7 @@ describe('SyncDashboard', () => {
     ])
 
     render(<SyncDashboard />)
+    await expandAllGroups()
 
     await waitFor(() => {
       expect(screen.getByTestId('discard-btn')).toBeInTheDocument()
@@ -217,6 +259,7 @@ describe('SyncDashboard', () => {
     ])
 
     render(<SyncDashboard />)
+    await expandAllGroups()
 
     await waitFor(() => {
       expect(screen.getByTestId('badge-conflict')).toBeInTheDocument()
@@ -229,6 +272,7 @@ describe('SyncDashboard', () => {
     ])
 
     render(<SyncDashboard />)
+    await expandAllGroups()
 
     await waitFor(() => {
       const link = screen.getByTestId('resolve-conflict-link')
@@ -292,6 +336,7 @@ describe('SyncDashboard', () => {
     ])
 
     render(<SyncDashboard />)
+    await expandAllGroups()
 
     // Wait for items to load from Dexie
     await waitFor(() => {

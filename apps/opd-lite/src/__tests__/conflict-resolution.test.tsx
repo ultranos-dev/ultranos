@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { db, type SyncQueueEntry } from '../lib/db'
+
+// next-intl context isn't provided in unit tests; components only need the locale.
+vi.mock('next-intl', () => ({
+  useLocale: () => 'en',
+  useTranslations: () => (key: string) => key,
+}))
 import {
   resolveConflict,
   isTier1Resource,

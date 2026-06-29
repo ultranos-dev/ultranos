@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { NotificationBell } from '../components/NotificationPanel'
 
+// next-intl context isn't provided in unit tests; components only need the locale.
+vi.mock('next-intl', () => ({
+  useLocale: () => 'en',
+  useTranslations: () => (key: string) => key,
+}))
+
 // Mock the notification API
 vi.mock('../lib/notification-api', () => ({
   fetchUnreadCount: vi.fn().mockResolvedValue({ count: 3 }),

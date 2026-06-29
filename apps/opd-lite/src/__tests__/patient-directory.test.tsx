@@ -142,8 +142,8 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad Khan')).toBeDefined()
-      expect(screen.getByText('Fatima Ali')).toBeDefined()
+      expect(screen.getByText('Ahmad')).toBeDefined()
+      expect(screen.getByText('Fatima')).toBeDefined()
     })
   })
 
@@ -166,7 +166,7 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad Khan')).toBeDefined()
+      expect(screen.getByText('Ahmad')).toBeDefined()
     })
 
     const searchInput = screen.getByPlaceholderText('Search by name or phone...')
@@ -174,8 +174,8 @@ describe('PatientDirectory', () => {
 
     // Wait for debounce
     await vi.waitFor(() => {
-      expect(screen.queryByText('Ahmad Khan')).toBeNull()
-      expect(screen.getByText('Fatima Ali')).toBeDefined()
+      expect(screen.queryByText('Ahmad')).toBeNull()
+      expect(screen.getByText('Fatima')).toBeDefined()
     }, { timeout: 1000 })
   })
 
@@ -186,16 +186,16 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad Khan')).toBeDefined()
-      expect(screen.getByText('Fatima Ali')).toBeDefined()
+      expect(screen.getByText('Ahmad')).toBeDefined()
+      expect(screen.getByText('Fatima')).toBeDefined()
     })
 
     const statusSelect = screen.getByLabelText('Status')
     fireEvent.change(statusSelect, { target: { value: 'active' } })
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad Khan')).toBeDefined()
-      expect(screen.queryByText('Fatima Ali')).toBeNull()
+      expect(screen.getByText('Ahmad')).toBeDefined()
+      expect(screen.queryByText('Fatima')).toBeNull()
     })
   })
 
@@ -208,6 +208,79 @@ describe('PatientDirectory', () => {
     await vi.waitFor(() => {
       const registerLinks = screen.getAllByText('Register New Patient')
       expect(registerLinks.length).toBeGreaterThanOrEqual(1)
+    })
+  })
+
+  it('renders Last Visit from encounter period.start, never "Invalid Date" from the HLC timestamp', async () => {
+    mockEncountersToArray.mockResolvedValue([
+      {
+        id: 'e-1',
+        subject: { reference: 'Patient/p-1' },
+        period: { start: '2026-06-20T10:00:00Z' },
+        // HLC clock string — must NOT be used as the visit date.
+        _ultranos: { hlcTimestamp: '000001700000000:00000:node-1' },
+        meta: { lastUpdated: '2026-06-20T10:00:00Z' },
+      },
+    ])
+
+    const { PatientDirectory } = await import(
+      '@/components/patients/PatientDirectory'
+    )
+    render(<PatientDirectory />)
+
+    // Rendered via formatDate(..., 'en') → MENA Gregorian DD/MM/YYYY.
+    await vi.waitFor(() => {
+      expect(screen.getByText('Ahmad')).toBeDefined()
+      expect(screen.getByText('20/06/2026')).toBeDefined()
+    })
+    expect(screen.queryByText('Invalid Date')).toBeNull()
+  })
+
+  it('refreshes the allergy column on tab re-focus (data pulled while away)', async () => {
+    mockAllergyToArray.mockReset()
+    mockAllergyToArray.mockResolvedValueOnce([]) // mount: no allergies cached yet
+    mockAllergyToArray.mockResolvedValue([
+      { id: 'a-1', patient: { reference: 'Patient/p-1' } },
+    ]) // later reads: allergy now present in Dexie
+
+    const { PatientDirectory } = await import(
+      '@/components/patients/PatientDirectory'
+    )
+    render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('Ahmad')).toBeDefined()
+    })
+    expect(screen.queryAllByRole('img', { name: 'Has allergies' })).toHaveLength(0)
+
+    // Returning to the tab re-reads Dexie and surfaces the newly-pulled allergy.
+    fireEvent.focus(window)
+    await vi.waitFor(() => {
+      expect(screen.getAllByRole('img', { name: 'Has allergies' })).toHaveLength(1)
+    })
+  })
+
+  it('uses the Hub list summary (hasAllergies / lastVisitAt) when local cache is empty', async () => {
+    mockAllergyToArray.mockResolvedValue([])    // no local allergies cached
+    mockEncountersToArray.mockResolvedValue([])  // no local encounters cached
+    mockPatientsToArray.mockResolvedValue([
+      makePatient({
+        id: 'p-1',
+        _ultranos: { hasAllergies: true, lastVisitAt: '2026-06-20T10:00:00Z' },
+      }),
+    ])
+
+    const { PatientDirectory } = await import(
+      '@/components/patients/PatientDirectory'
+    )
+    render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('Ahmad')).toBeDefined()
+      // Last Visit from the Hub summary, rendered DD/MM/YYYY.
+      expect(screen.getByText('20/06/2026')).toBeDefined()
+      // Allergy flag from the Hub summary even with no local allergy records.
+      expect(screen.getAllByRole('img', { name: 'Has allergies' })).toHaveLength(1)
     })
   })
 

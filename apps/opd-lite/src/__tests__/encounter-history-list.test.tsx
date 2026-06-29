@@ -49,20 +49,26 @@ const TEST_PATIENT_ID = '22222222-2222-2222-2222-222222222222'
 const ENC_1_ID = 'aaaa1111-1111-1111-1111-111111111111'
 const ENC_2_ID = 'bbbb2222-2222-2222-2222-222222222222'
 
-function makeEncounter(id: string, status: string, hlcTimestamp: string): FhirEncounterZod {
+// Build a serialized HLC matching production format: "<wallMs(15)>:<counter(5)>:<nodeId>".
+function makeHlc(isoDate: string): string {
+  const wallMs = new Date(isoDate).getTime()
+  return `${String(wallMs).padStart(15, '0')}:00001:node1`
+}
+
+function makeEncounter(id: string, status: string, isoDate: string): FhirEncounterZod {
   return {
     id,
     resourceType: 'Encounter',
     status: status as FhirEncounterZod['status'],
     class: { system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode', code: 'AMB' },
     subject: { reference: `Patient/${TEST_PATIENT_ID}` },
-    period: { start: hlcTimestamp.split('_')[0] },
+    period: { start: isoDate },
     _ultranos: {
       isOfflineCreated: false,
-      hlcTimestamp,
-      createdAt: '2024-01-01T00:00:00Z',
+      hlcTimestamp: makeHlc(isoDate),
+      createdAt: isoDate,
     },
-    meta: { versionId: '1', lastUpdated: '2024-01-01T00:00:00Z' },
+    meta: { versionId: '1', lastUpdated: isoDate },
   }
 }
 
@@ -73,7 +79,7 @@ function makeSoapEntry(encounterId: string, subjective: string): SoapLedgerEntry
     subjective,
     objective: 'Objective text',
     assessorRef: 'Practitioner/pract-1',
-    hlcTimestamp: '2024-06-15T10:00:00Z_0001_node1',
+    hlcTimestamp: '2024-06-15T10:00:00Z',
     createdAt: '2024-06-15T10:00:00Z',
   }
 }
@@ -89,7 +95,7 @@ function makeCondition(encounterId: string, display: string): FhirCondition {
     },
     subject: { reference: `Patient/${TEST_PATIENT_ID}` },
     encounter: { reference: `Encounter/${encounterId}` },
-    _ultranos: { diagnosisRank: 1, isOfflineCreated: false, hlcTimestamp: '2024-06-15T10:00:00Z_0001_node1', createdAt: '2024-06-15T10:00:00Z' },
+    _ultranos: { diagnosisRank: 1, isOfflineCreated: false, hlcTimestamp: '2024-06-15T10:00:00Z', createdAt: '2024-06-15T10:00:00Z' },
     meta: { versionId: '1', lastUpdated: '2024-06-15T10:00:00Z' },
   } as FhirCondition
 }
@@ -111,7 +117,7 @@ function makeMedication(encounterId: string): FhirMedicationRequestZod {
     dosageInstruction: [{ text: '1 tablet daily' }],
     _ultranos: {
       isOfflineCreated: false,
-      hlcTimestamp: '2024-06-15T10:00:00Z_0001_node1',
+      hlcTimestamp: '2024-06-15T10:00:00Z',
       createdAt: '2024-06-15T10:00:00Z',
       interactionCheckResult: 'CLEAR',
     },
@@ -150,8 +156,8 @@ describe('EncounterHistoryList', () => {
   })
 
   it('renders encounters ordered newest-first', async () => {
-    const older = makeEncounter(ENC_1_ID, 'finished', '2024-06-01T10:00:00Z_0001_node1')
-    const newer = makeEncounter(ENC_2_ID, 'finished', '2024-06-15T10:00:00Z_0001_node1')
+    const older = makeEncounter(ENC_1_ID, 'finished', '2024-06-01T10:00:00Z')
+    const newer = makeEncounter(ENC_2_ID, 'finished', '2024-06-15T10:00:00Z')
     await db.encounters.bulkPut([older, newer])
 
     render(<EncounterHistoryList patientId={TEST_PATIENT_ID} />)
@@ -166,7 +172,7 @@ describe('EncounterHistoryList', () => {
   })
 
   it('displays status badge for finished encounter', async () => {
-    await db.encounters.put(makeEncounter(ENC_1_ID, 'finished', '2024-06-15T10:00:00Z_0001_node1'))
+    await db.encounters.put(makeEncounter(ENC_1_ID, 'finished', '2024-06-15T10:00:00Z'))
 
     render(<EncounterHistoryList patientId={TEST_PATIENT_ID} />)
 
@@ -177,7 +183,7 @@ describe('EncounterHistoryList', () => {
   })
 
   it('displays status badge for cancelled encounter', async () => {
-    await db.encounters.put(makeEncounter(ENC_1_ID, 'cancelled', '2024-06-15T10:00:00Z_0001_node1'))
+    await db.encounters.put(makeEncounter(ENC_1_ID, 'cancelled', '2024-06-15T10:00:00Z'))
 
     render(<EncounterHistoryList patientId={TEST_PATIENT_ID} />)
 
@@ -188,7 +194,7 @@ describe('EncounterHistoryList', () => {
   })
 
   it('shows SOAP preview truncated to ~100 chars', async () => {
-    await db.encounters.put(makeEncounter(ENC_1_ID, 'finished', '2024-06-15T10:00:00Z_0001_node1'))
+    await db.encounters.put(makeEncounter(ENC_1_ID, 'finished', '2024-06-15T10:00:00Z'))
     const longSubjective = 'A'.repeat(150)
     await db.soapLedger.put(makeSoapEntry(ENC_1_ID, longSubjective))
 
@@ -202,7 +208,7 @@ describe('EncounterHistoryList', () => {
   })
 
   it('displays diagnosis chips', async () => {
-    await db.encounters.put(makeEncounter(ENC_1_ID, 'finished', '2024-06-15T10:00:00Z_0001_node1'))
+    await db.encounters.put(makeEncounter(ENC_1_ID, 'finished', '2024-06-15T10:00:00Z'))
     await db.conditions.put(makeCondition(ENC_1_ID, 'Acute Gastritis'))
 
     render(<EncounterHistoryList patientId={TEST_PATIENT_ID} />)
@@ -213,7 +219,7 @@ describe('EncounterHistoryList', () => {
   })
 
   it('displays prescription count', async () => {
-    await db.encounters.put(makeEncounter(ENC_1_ID, 'finished', '2024-06-15T10:00:00Z_0001_node1'))
+    await db.encounters.put(makeEncounter(ENC_1_ID, 'finished', '2024-06-15T10:00:00Z'))
     await db.medications.bulkPut([makeMedication(ENC_1_ID), makeMedication(ENC_1_ID)])
 
     render(<EncounterHistoryList patientId={TEST_PATIENT_ID} />)
@@ -223,8 +229,8 @@ describe('EncounterHistoryList', () => {
     })
   })
 
-  it('expands encounter detail on click', async () => {
-    await db.encounters.put(makeEncounter(ENC_1_ID, 'finished', '2024-06-15T10:00:00Z_0001_node1'))
+  it('opens the encounter detail modal on card click', async () => {
+    await db.encounters.put(makeEncounter(ENC_1_ID, 'finished', '2024-06-15T10:00:00Z'))
 
     render(<EncounterHistoryList patientId={TEST_PATIENT_ID} />)
 
@@ -232,16 +238,19 @@ describe('EncounterHistoryList', () => {
       expect(screen.getByTestId('encounter-item')).toBeTruthy()
     })
 
-    const expandButton = screen.getByRole('button', { expanded: false })
-    fireEvent.click(expandButton)
+    // No modal until the card body is clicked
+    expect(screen.queryByTestId('encounter-detail')).toBeNull()
+
+    const cardButton = screen.getByRole('button', { name: /view encounter on/i })
+    fireEvent.click(cardButton)
 
     await waitFor(() => {
-      expect(screen.getByTestId('encounter-detail') || screen.getByTestId('encounter-detail-loading')).toBeTruthy()
+      expect(screen.getByTestId('encounter-detail')).toBeTruthy()
     })
   })
 
   it('emits audit event for encounter list read', async () => {
-    await db.encounters.put(makeEncounter(ENC_1_ID, 'finished', '2024-06-15T10:00:00Z_0001_node1'))
+    await db.encounters.put(makeEncounter(ENC_1_ID, 'finished', '2024-06-15T10:00:00Z'))
 
     render(<EncounterHistoryList patientId={TEST_PATIENT_ID} />)
 

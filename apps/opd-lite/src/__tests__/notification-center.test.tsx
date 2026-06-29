@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 
+// next-intl context isn't provided in unit tests; components only need the locale.
+vi.mock('next-intl', () => ({
+  useLocale: () => 'en',
+  useTranslations: () => (key: string) => key,
+}))
+
 // Mock next/navigation
 const mockPush = vi.fn()
 vi.mock('next/navigation', () => ({

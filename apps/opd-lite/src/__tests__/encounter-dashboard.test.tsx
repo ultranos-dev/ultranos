@@ -26,6 +26,50 @@ vi.mock('@/services/interactionAuditService', () => ({
   logInteractionCheck: vi.fn().mockResolvedValue(undefined),
 }))
 
+// Mock next-intl using the real English catalog, resolved by namespace.
+vi.mock('next-intl', async () => {
+  const en = (await import('../../messages/en.json')).default as unknown as Record<
+    string,
+    Record<string, string>
+  >
+  const interpolate = (val: string, params?: Record<string, unknown>) =>
+    params
+      ? val.replace(/\{(\w+)\}/g, (_, k) =>
+          k in params ? String(params[k]) : `{${k}}`,
+        )
+      : val
+  return {
+    useLocale: () => 'en',
+    useTranslations:
+      (namespace?: string) =>
+      (key: string, params?: Record<string, unknown>) => {
+        const ns = namespace
+          ? en[namespace] ?? {}
+          : (en as unknown as Record<string, string>)
+        const val = (ns as Record<string, string>)[key]
+        return val != null ? interpolate(val, params) : key
+      },
+  }
+})
+
+// Mock Supabase with a controllable session token for the Hub-fetch path.
+const { supabaseState } = vi.hoisted(() => ({
+  supabaseState: { token: undefined as string | undefined },
+}))
+vi.mock('@/lib/supabase', () => ({
+  getSupabaseBrowserClient: () => ({
+    auth: {
+      getSession: async () => ({
+        data: {
+          session: supabaseState.token
+            ? { access_token: supabaseState.token }
+            : null,
+        },
+      }),
+    },
+  }),
+}))
+
 import { EncounterDashboard } from '@/components/encounter-dashboard'
 import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
 
@@ -40,6 +84,8 @@ function makePatient(id: string, nameLocal: string): FhirPatient {
     _ultranos: {
       nameLocal,
       nameLatin: 'Ahmed Al-Rashid',
+      patient_tier: 'FREE',
+      isNomadic: false,
       isActive: true,
       createdAt: new Date().toISOString(),
     },
@@ -81,6 +127,12 @@ describe('Encounter Dashboard', () => {
     await db.patients.clear()
     await db.encounters.clear()
     resetStores()
+    // No Hub session by default; tests that exercise the Hub path opt in.
+    supabaseState.token = undefined
+    // Default to an offline fetch so background sync pulls fail gracefully.
+    global.fetch = vi
+      .fn()
+      .mockRejectedValue(new Error('offline')) as unknown as typeof fetch
     // Configure PrescriptionEntry mock to render a submit button for P2/P3 testing
     vi.mocked(PrescriptionEntry).mockImplementation(({ onSubmit }) =>
       React.createElement(
@@ -129,7 +181,32 @@ describe('Encounter Dashboard', () => {
 
     expect(screen.getByText('أحمد الراشد')).toBeDefined()
     expect(screen.getByText('Ahmed Al-Rashid')).toBeDefined()
-    expect(screen.getByText('Encounter Dashboard')).toBeDefined()
+  })
+
+  it('should display age computed from an exact birthDate', () => {
+    const patient = makePatient('patient-dob', 'DOB Patient') // birthDate 1985-03-15
+    usePatientStore.setState({ selectedPatient: patient })
+
+    render(<EncounterDashboard patientId="patient-dob" />)
+
+    // Age is rendered, not the "Unknown age" fallback.
+    expect(screen.queryByText(/Unknown age/i)).toBeNull()
+    expect(screen.getByText(/\d+y/)).toBeDefined()
+  })
+
+  it('should display age from year-only birthYear when no exact birthDate', () => {
+    // Year-only patients (the common case for this population) carry
+    // _ultranos.birthYear and no top-level birthDate. Age must still render.
+    const patient = makePatient('patient-year-only', 'Year Only')
+    patient.birthDate = undefined
+    patient.birthYearOnly = true
+    patient._ultranos.birthYear = new Date().getFullYear() - 40
+    usePatientStore.setState({ selectedPatient: patient })
+
+    render(<EncounterDashboard patientId="patient-year-only" />)
+
+    expect(screen.queryByText(/Unknown age/i)).toBeNull()
+    expect(screen.getByText('40y')).toBeDefined()
   })
 
   it('should display patient demographics', () => {
@@ -141,16 +218,29 @@ describe('Encounter Dashboard', () => {
     expect(screen.getByText(/male/i)).toBeDefined()
   })
 
-  it('should have a back to search button', () => {
-    const patient = makePatient('patient-789', 'Test Patient')
+  it('should render the patronymic name chain as separate segments', () => {
+    const patient = makePatient('patient-chain', 'Ahmed Ali Hassan')
+    patient._ultranos.nameGiven = 'Ahmed'
+    patient._ultranos.nameFather = 'Ali'
+    patient._ultranos.nameGrandfather = 'Hassan'
     usePatientStore.setState({ selectedPatient: patient })
 
-    render(<EncounterDashboard patientId="patient-789" />)
+    render(<EncounterDashboard patientId="patient-chain" />)
 
-    const backBtn = screen.getByLabelText('Back to search')
-    expect(backBtn).toBeDefined()
-    fireEvent.click(backBtn)
-    expect(mockPush).toHaveBeenCalledWith('/')
+    // Each segment renders independently (separated by gray-circle dividers),
+    // not as one joined nameLocal string.
+    expect(screen.getByText('Ahmed')).toBeDefined()
+    expect(screen.getByText('Ali')).toBeDefined()
+    expect(screen.getByText('Hassan')).toBeDefined()
+  })
+
+  it('should fall back to nameLocal when patronymic parts are absent', () => {
+    const patient = makePatient('patient-local', 'محمد عبدالله') // only nameLocal set
+    usePatientStore.setState({ selectedPatient: patient })
+
+    render(<EncounterDashboard patientId="patient-local" />)
+
+    expect(screen.getByText('محمد عبدالله')).toBeDefined()
   })
 
   it('should show patient info section with accessible label', () => {
@@ -182,7 +272,52 @@ describe('Encounter Dashboard', () => {
     await waitFor(() => {
       expect(screen.getByText('Ahmed from Dexie')).toBeDefined()
     })
-    expect(screen.getByText('Encounter Dashboard')).toBeDefined()
+  })
+
+  it('should load patient from the Hub when starting a new encounter for a patient absent from Dexie', async () => {
+    // Reproduces the "Start New Encounter" bug: navigation lands on
+    // /encounter/[id] with an empty patient store and the patient missing
+    // from IndexedDB (the Patient sync pull does not deliver it). The
+    // dashboard must fall back to the Hub instead of showing "not found".
+    supabaseState.token = 'test-token'
+    const hubRow = {
+      id: 'hub-patient',
+      resourceType: 'Patient',
+      name: [{ text: 'Ahmed from Hub' }],
+      gender: 'male',
+      birthDate: '1990-01-01',
+      birthYearOnly: false,
+      _ultranos: {
+        nameLocal: 'Ahmed from Hub',
+        nameLatin: 'Ahmed Hub Latin',
+        isNomadic: false,
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      meta: { lastUpdated: '2026-01-01T00:00:00.000Z' },
+    }
+    global.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('patient.read')) {
+        return {
+          ok: true,
+          json: async () => ({ result: { data: { json: hubRow } } }),
+        } as Response
+      }
+      // Background sync pull (sync.pull) — return no changes.
+      return {
+        ok: true,
+        json: async () => ({ result: { data: { json: { changes: [] } } } }),
+      } as Response
+    }) as unknown as typeof fetch
+
+    render(<EncounterDashboard patientId="hub-patient" />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Ahmed from Hub')).toBeDefined()
+    })
+    // The patient must NOT show the "not found" fallback.
+    expect(screen.queryByText('Patient not found in local session.')).toBeNull()
   })
 
   // --- Story 2.1 encounter lifecycle tests ---

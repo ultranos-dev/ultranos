@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { db } from '../lib/db'
+
+// next-intl context isn't provided in unit tests; components only need the locale.
+vi.mock('next-intl', () => ({
+  useLocale: () => 'en',
+  useTranslations: () => (key: string) => key,
+}))
 import { useAuthSessionStore } from '../stores/auth-session-store'
 import type { FhirObservation, FhirCondition, FhirMedicationRequestZod, FhirAllergyIntolerance } from '@ultranos/shared-types'
 import type { SoapLedgerEntry } from '../lib/db'

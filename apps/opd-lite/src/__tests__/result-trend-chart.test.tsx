@@ -13,6 +13,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { ResultTrendChart, ResultSummaryTable } from '@/components/clinical/ResultTrendChart'
+
+// next-intl context isn't provided in unit tests; components only need the locale.
+vi.mock('next-intl', () => ({
+  useLocale: () => 'en',
+  useTranslations: () => (key: string) => key,
+}))
 import type { TrendDataPoint } from '@/lib/lab-results/result-grouper'
 
 function makePoint(
