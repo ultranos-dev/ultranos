@@ -12,23 +12,27 @@ interface RecentEncounter {
   id: string
   patientId: string
   patientName: string
+  nameSegments: string[]
   date: string
   status: string
 }
 
-function formatDate(timestamp: string): string {
-  try {
-    // HLC timestamps have format "ISO_counter_nodeId" — extract ISO portion
-    const iso = timestamp.includes('_') ? timestamp.split('_')[0]! : timestamp
-    return new Date(iso).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return timestamp
-  }
+export function formatDate(value: string): string {
+  if (!value) return ''
+  // HLC serialized format is "<wallMs>:<counter>:<nodeId>" (see serializeHlc):
+  // the segment before the first ':' is epoch-millis and is all digits.
+  // ISO strings also contain ':' but their head ("2026-05-11T10") is not.
+  // `new Date()` never throws — it yields an Invalid Date — so guard explicitly
+  // and return '' rather than rendering the literal string "Invalid Date".
+  const head = value.split(':')[0]!
+  const date = /^\d+$/.test(head) ? new Date(Number(head)) : new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 function getStatusBadgeClasses(status: string): string {
@@ -77,12 +81,21 @@ export function RecentEncountersList() {
             const ref = enc.subject?.reference ?? ''
             const patientId = ref.replace('Patient/', '') || enc.id
             let patientName = unknownPatient
+            let nameSegments: string[] = []
             try {
               if (ref) {
                 const patient = await db.patients.get(patientId)
                 if (patient) {
+                  const ext = patient._ultranos
+                  // Patronymic chain (patient + father + grandfather) for
+                  // ring-separated display; falls back to nameLocal below.
+                  nameSegments = [
+                    [ext?.nameGiven, ext?.nameFamily].filter(Boolean).join(' '),
+                    ext?.nameFather,
+                    ext?.nameGrandfather,
+                  ].filter((s): s is string => !!s && s.trim().length > 0)
                   patientName =
-                    patient._ultranos?.nameLocal ??
+                    ext?.nameLocal ??
                     patient.name?.[0]?.text ??
                     unknownPatient
                   auditPhiAccess(AuditAction.READ, AuditResourceType.PATIENT, patientId, patientId, {
@@ -97,6 +110,7 @@ export function RecentEncountersList() {
               id: enc.id,
               patientId,
               patientName,
+              nameSegments,
               date: enc._ultranos?.hlcTimestamp ?? enc.meta?.lastUpdated ?? '',
               status: enc.status,
             }
@@ -135,7 +149,19 @@ export function RecentEncountersList() {
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-foreground">
-                  {enc.patientName}
+                  {enc.nameSegments.length > 0
+                    ? enc.nameSegments.map((seg, i) => (
+                        <span key={i}>
+                          {i > 0 && (
+                            <span
+                              className="mx-2 inline-block h-2 w-2 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
+                              aria-hidden="true"
+                            />
+                          )}
+                          {seg}
+                        </span>
+                      ))
+                    : enc.patientName}
                 </p>
                 <p className="text-xs font-semibold text-muted-foreground">
                   {formatDate(enc.date)}

@@ -16,8 +16,9 @@ import {
 import { auditPhiAccess, AuditAction } from './audit'
 import type { AuditResourceType } from './audit'
 import type { FhirPatient, PatientAddress, PatientTier } from '@ultranos/shared-types'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 
-const HUB_BASE_URL = process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+const HUB_BASE_URL = getHubTrpcUrl()
 
 /**
  * Transform a flat camelCase patient row from the Hub into the nested
@@ -110,7 +111,316 @@ function transformResourceData(
   if (resourceType === 'Patient') {
     return toFhirPatient(data) as unknown as Record<string, unknown>
   }
+  if (resourceType === 'Encounter') {
+    return toFhirEncounter(data)
+  }
+  if (resourceType === 'AllergyIntolerance') {
+    return toFhirAllergyIntolerance(data)
+  }
+  if (resourceType === 'Observation') {
+    return toFhirObservation(data)
+  }
+  if (resourceType === 'Condition') {
+    return toFhirCondition(data)
+  }
+  if (resourceType === 'MedicationRequest') {
+    return toFhirMedicationRequest(data)
+  }
+  if (resourceType === 'ClinicalImpression') {
+    return toSoapLedgerEntry(data)
+  }
+  if (resourceType === 'MedicationStatement') {
+    return toFhirMedicationStatement(data)
+  }
   return data
+}
+
+/**
+ * Parse a CodeableConcept that the Hub stores as a JSON string (TEXT column),
+ * tolerating an already-parsed object. Falls back to reconstructing from the
+ * decrypted text / standardized display when the JSON is absent or unparseable.
+ */
+function parseCodeableConcept(
+  value: unknown,
+  fallbackText?: string,
+  fallbackDisplay?: string,
+): Record<string, unknown> | undefined {
+  if (value && typeof value === 'object') return value as Record<string, unknown>
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      return JSON.parse(value) as Record<string, unknown>
+    } catch {
+      // fall through to fallback reconstruction
+    }
+  }
+  if (fallbackText || fallbackDisplay) {
+    return {
+      ...(fallbackText ? { text: fallbackText } : {}),
+      ...(fallbackDisplay ? { coding: [{ display: fallbackDisplay }] } : {}),
+    }
+  }
+  return undefined
+}
+
+/**
+ * Observation (vitals): Hub flat row → nested FHIR. Local components query
+ * `encounter.reference` / `subject.reference` and read `_ultranos.hlcTimestamp`.
+ */
+export function toFhirObservation(row: Record<string, unknown>): Record<string, unknown> {
+  if (row.subject && typeof row.subject === 'object') return row
+  const subjectId = (row.subjectId as string) ?? ''
+  const encounterId = (row.encounterId as string) ?? ''
+  return {
+    id: row.id,
+    resourceType: 'Observation',
+    status: (row.status as string) ?? 'final',
+    ...(row.category ? { category: row.category } : {}),
+    ...(row.code ? { code: row.code } : {}),
+    subject: { reference: subjectId ? `Patient/${subjectId}` : '' },
+    ...(encounterId ? { encounter: { reference: `Encounter/${encounterId}` } } : {}),
+    ...(row.effectiveDateTime ? { effectiveDateTime: row.effectiveDateTime as string } : {}),
+    ...(row.performer ? { performer: row.performer } : {}),
+    ...(row.valueQuantity ? { valueQuantity: row.valueQuantity } : {}),
+    ...(row.component ? { component: row.component } : {}),
+    _ultranos: {
+      isOfflineCreated: (row.isOfflineCreated as boolean) ?? false,
+      hlcTimestamp: (row.hlcTimestamp as string) ?? '',
+      createdAt: (row.createdAt as string) ?? '',
+    },
+    meta: {
+      lastUpdated: (row.lastUpdated as string) ?? '',
+      versionId: (row.versionId as string) ?? '1',
+    },
+  }
+}
+
+/**
+ * Condition (diagnoses): Hub flat row → nested FHIR. Local components query
+ * `encounter.reference` / `subject.reference` and sort by `_ultranos.diagnosisRank`.
+ */
+export function toFhirCondition(row: Record<string, unknown>): Record<string, unknown> {
+  if (row.subject && typeof row.subject === 'object') return row
+  const subjectId = (row.subjectId as string) ?? ''
+  const encounterId = (row.encounterId as string) ?? ''
+  const recorderId = (row.recorderId as string) ?? ''
+  return {
+    id: row.id,
+    resourceType: 'Condition',
+    ...(row.clinicalStatus ? { clinicalStatus: row.clinicalStatus } : {}),
+    ...(row.category ? { category: row.category } : {}),
+    ...(row.code ? { code: row.code } : {}),
+    subject: { reference: subjectId ? `Patient/${subjectId}` : '' },
+    ...(encounterId ? { encounter: { reference: `Encounter/${encounterId}` } } : {}),
+    ...(recorderId ? { recorder: { reference: `Practitioner/${recorderId}` } } : {}),
+    ...(row.recordedDate ? { recordedDate: row.recordedDate as string } : {}),
+    _ultranos: {
+      ...(row.diagnosisRank != null ? { diagnosisRank: row.diagnosisRank } : {}),
+      isOfflineCreated: (row.isOfflineCreated as boolean) ?? false,
+      hlcTimestamp: (row.hlcTimestamp as string) ?? '',
+      createdAt: (row.createdAt as string) ?? '',
+    },
+    meta: {
+      lastUpdated: (row.lastUpdated as string) ?? '',
+      versionId: (row.versionId as string) ?? '1',
+    },
+  }
+}
+
+/**
+ * MedicationRequest (prescriptions): Hub flat row → nested FHIR. Local components
+ * query `encounter.reference` / `subject.reference`. The Hub stores the
+ * CodeableConcept as JSON text and the references as bare UUIDs.
+ */
+export function toFhirMedicationRequest(row: Record<string, unknown>): Record<string, unknown> {
+  if (row.subject && typeof row.subject === 'object') return row
+  const subjectRef = (row.subjectReference as string) ?? ''
+  const encounterRef = (row.encounterReference as string) ?? ''
+  const requesterId = (row.requesterId as string) ?? ''
+  return {
+    id: row.id,
+    resourceType: 'MedicationRequest',
+    status: (row.status as string) ?? 'active',
+    intent: (row.intent as string) ?? 'order',
+    medicationCodeableConcept: parseCodeableConcept(
+      row.medicationCodeableConcept,
+      row.medicationText as string,
+      row.medicationDisplay as string,
+    ),
+    subject: { reference: subjectRef ? `Patient/${subjectRef}` : '' },
+    ...(encounterRef ? { encounter: { reference: `Encounter/${encounterRef}` } } : {}),
+    ...(requesterId ? { requester: { reference: `Practitioner/${requesterId}` } } : {}),
+    ...(row.authoredOn ? { authoredOn: row.authoredOn as string } : {}),
+    ...(row.dosageInstruction ? { dosageInstruction: row.dosageInstruction } : {}),
+    ...(row.dispenseRequest ? { dispenseRequest: row.dispenseRequest } : {}),
+    _ultranos: {
+      ...(row.prescriptionStatus ? { prescriptionStatus: row.prescriptionStatus as string } : {}),
+      ...(row.interactionCheck ? { interactionCheckResult: row.interactionCheck as string } : {}),
+      ...(row.interactionOverride ? { interactionOverrideReason: row.interactionOverride as string } : {}),
+      isOfflineCreated: (row.isOfflineCreated as boolean) ?? false,
+      hlcTimestamp: (row.hlcTimestamp as string) ?? '',
+      createdAt: (row.createdAt as string) ?? '',
+    },
+    meta: {
+      lastUpdated: (row.metaLastUpdated as string) ?? '',
+      versionId: (row.metaVersionId as string) ?? '1',
+    },
+  }
+}
+
+/**
+ * ClinicalImpression (SOAP): Hub flat row → local SoapLedgerEntry. NOT a nested
+ * FHIR resource — the soapLedger table is queried by flat `encounterId` and
+ * top-level `hlcTimestamp`; only the soap_* fields need renaming.
+ */
+export function toSoapLedgerEntry(row: Record<string, unknown>): Record<string, unknown> {
+  // Already in the local ledger shape (e.g. a locally-created entry).
+  if (row.subjective !== undefined || row.assessorRef !== undefined) return row
+  const practitionerId = (row.practitionerId as string) ?? ''
+  return {
+    id: row.id,
+    encounterId: row.encounterId,
+    ...(practitionerId ? { assessorRef: `Practitioner/${practitionerId}` } : {}),
+    ...(row.soapSubjective ? { subjective: row.soapSubjective as string } : {}),
+    ...(row.soapObjective ? { objective: row.soapObjective as string } : {}),
+    ...(row.soapAssessment ? { assessment: row.soapAssessment as string } : {}),
+    ...(row.soapPlan ? { plan: row.soapPlan as string } : {}),
+    hlcTimestamp: (row.hlcTimestamp as string) ?? '',
+    createdAt: (row.createdAt as string) ?? '',
+    ...(row.source ? { source: row.source as string } : {}),
+    ...(row.aiModelVersion ? { aiModelVersion: row.aiModelVersion as string } : {}),
+    ...(row.confirmedBy ? { confirmedBy: row.confirmedBy as string } : {}),
+    ...(row.confirmedAt ? { confirmedAt: row.confirmedAt as string } : {}),
+  }
+}
+
+/**
+ * MedicationStatement (active-meds history): Hub flat row → nested FHIR. Local
+ * components query `subject.reference` and `_ultranos.sourcePrescriptionId`.
+ */
+export function toFhirMedicationStatement(row: Record<string, unknown>): Record<string, unknown> {
+  if (row.subject && typeof row.subject === 'object') return row
+  const subjectRef = (row.subjectReference as string) ?? ''
+  const start = row.effectivePeriodStart as string | undefined
+  const end = row.effectivePeriodEnd as string | undefined
+  return {
+    id: row.id,
+    resourceType: 'MedicationStatement',
+    status: (row.status as string) ?? 'active',
+    medicationCodeableConcept: parseCodeableConcept(
+      row.medicationCodeableConcept,
+      undefined,
+      row.medicationDisplay as string,
+    ),
+    subject: { reference: subjectRef ? `Patient/${subjectRef}` : '' },
+    ...(start || end
+      ? { effectivePeriod: { ...(start ? { start } : {}), ...(end ? { end } : {}) } }
+      : {}),
+    ...(row.dateAsserted ? { dateAsserted: row.dateAsserted as string } : {}),
+    ...(row.informationSourceReference
+      ? { informationSource: { reference: row.informationSourceReference as string } }
+      : {}),
+    _ultranos: {
+      ...(row.sourceEncounterId ? { sourceEncounterId: row.sourceEncounterId as string } : {}),
+      ...(row.sourcePrescriptionId ? { sourcePrescriptionId: row.sourcePrescriptionId as string } : {}),
+      isOfflineCreated: (row.isOfflineCreated as boolean) ?? false,
+      hlcTimestamp: (row.hlcTimestamp as string) ?? '',
+      createdAt: (row.createdAt as string) ?? '',
+    },
+    meta: {
+      lastUpdated: (row.metaLastUpdated as string) ?? '',
+      versionId: (row.metaVersionId as string) ?? '1',
+    },
+  }
+}
+
+/**
+ * Reconstruct the nested FHIR AllergyIntolerance shape from the Hub's flat row
+ * (inverse of the server's flattenAllergyIntolerance). The Hub stores patient_ref
+ * as a bare UUID; local components query `patient.reference` ("Patient/{id}") and
+ * read `_ultranos.substanceFreeText`, so a pulled allergy must be re-nested.
+ */
+export function toFhirAllergyIntolerance(row: Record<string, unknown>): Record<string, unknown> {
+  if (row.patient && typeof row.patient === 'object') return row
+
+  const patientRef = (row.patientRef as string) ?? ''
+  const recorderRef = (row.recorderRef as string) ?? ''
+  return {
+    id: row.id,
+    resourceType: 'AllergyIntolerance',
+    clinicalStatus: {
+      coding: [{
+        system: 'http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical',
+        code: (row.clinicalStatusCode as string) ?? 'active',
+      }],
+    },
+    ...(row.verificationStatusCode
+      ? { verificationStatus: { coding: [{ code: row.verificationStatusCode as string }] } }
+      : {}),
+    ...(row.type ? { type: row.type as string } : {}),
+    ...(row.criticality ? { criticality: row.criticality as string } : {}),
+    code: {
+      ...(row.substanceText ? { text: row.substanceText as string } : {}),
+      ...(row.substanceCode || row.substanceSystem
+        ? { coding: [{ system: row.substanceSystem as string, code: row.substanceCode as string }] }
+        : {}),
+    },
+    patient: { reference: patientRef ? `Patient/${patientRef}` : '' },
+    ...(recorderRef ? { recorder: { reference: `Practitioner/${recorderRef}` } } : {}),
+    ...(row.recordedDate ? { recordedDate: row.recordedDate as string } : {}),
+    _ultranos: {
+      ...(row.substanceFreeText ? { substanceFreeText: row.substanceFreeText as string } : {}),
+      hlcTimestamp: (row.hlcTimestamp as string) ?? '',
+      createdAt: (row.createdAt as string) ?? (row.metaLastUpdated as string) ?? '',
+    },
+    meta: {
+      lastUpdated: (row.metaLastUpdated as string) ?? '',
+      versionId: '1',
+    },
+  }
+}
+
+/**
+ * Reconstruct the nested FHIR Encounter shape from the Hub's flat row (the
+ * inverse of the server's flattenEncounter). The Hub returns flat camelCase
+ * columns (subjectId, classCode, periodStart, top-level hlcTimestamp); local
+ * components query `subject.reference` and read `_ultranos.hlcTimestamp`, so a
+ * pulled encounter must be re-nested or it won't match / display.
+ */
+export function toFhirEncounter(row: Record<string, unknown>): Record<string, unknown> {
+  // Already nested (e.g. a locally-created record) — leave untouched.
+  if (row.subject && typeof row.subject === 'object') return row
+
+  const subjectId = (row.subjectId as string) ?? ''
+  return {
+    id: row.id,
+    resourceType: 'Encounter',
+    status: row.status,
+    class: {
+      system: (row.classSystem as string) ?? 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
+      code: (row.classCode as string) ?? 'AMB',
+      ...(row.classDisplay ? { display: row.classDisplay as string } : {}),
+    },
+    ...(row.type ? { type: row.type } : {}),
+    subject: { reference: subjectId ? `Patient/${subjectId}` : '' },
+    ...(row.participant ? { participant: row.participant } : {}),
+    period: {
+      ...(row.periodStart ? { start: row.periodStart as string } : {}),
+      ...(row.periodEnd ? { end: row.periodEnd as string } : {}),
+    },
+    ...(row.reasonCode ? { reasonCode: row.reasonCode } : {}),
+    ...(row.diagnosisRefs ? { diagnosis: row.diagnosisRefs } : {}),
+    _ultranos: {
+      ...(row.clinicId ? { clinicId: row.clinicId as string } : {}),
+      ...(row.soapNoteId ? { soapNoteId: row.soapNoteId as string } : {}),
+      isOfflineCreated: (row.isOfflineCreated as boolean) ?? false,
+      hlcTimestamp: (row.hlcTimestamp as string) ?? '',
+      createdAt: (row.createdAt as string) ?? (row.lastUpdated as string) ?? '',
+    },
+    meta: {
+      lastUpdated: (row.lastUpdated as string) ?? '',
+      versionId: (row.versionId as string) ?? '1',
+    },
+  }
 }
 
 /** Maps FHIR resourceType to the Dexie table name for local storage. */

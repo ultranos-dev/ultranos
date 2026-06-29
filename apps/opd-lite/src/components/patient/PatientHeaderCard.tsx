@@ -8,6 +8,7 @@ import { formatRelativeTime } from '@ultranos/ui-kit'
 import { db } from '@/lib/db'
 import { PatientAvatar } from '@/components/patient/PatientAvatar'
 import { Button } from '@/components/ui/Button'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 
 interface PatientHeaderCardProps {
   patient: FhirPatient
@@ -20,8 +21,7 @@ interface PatientHeaderCardProps {
 const LOINC_HEIGHT = '8302-2'
 const LOINC_WEIGHT = '29463-7'
 
-const HUB_API_URL =
-  process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+const HUB_API_URL = getHubTrpcUrl()
 
 /** Calculate age from birthDate (ISO) or birthYear. */
 function computeAge(patient: FhirPatient): string {
@@ -168,6 +168,14 @@ export function PatientHeaderCard({
   const phone = getPhone(patient)
   const bloodGroup = patient._ultranos.bloodGroup ?? '--'
 
+  // Patronymic name chain in entry order: patient's name (given + family),
+  // father, grandfather — rendered ring-separated to match the encounter header.
+  const nameSegments = [
+    [patient._ultranos.nameGiven, patient._ultranos.nameFamily].filter(Boolean).join(' '),
+    patient._ultranos.nameFather,
+    patient._ultranos.nameGrandfather,
+  ].filter((s): s is string => !!s && s.trim().length > 0)
+
   return (
     <div className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50">
       <div className="flex items-start gap-5">
@@ -181,23 +189,22 @@ export function PatientHeaderCard({
 
         {/* Patient info */}
         <div className="min-w-0 flex-1">
-          {/* Primary name */}
-          <h2 className="text-xl font-bold text-foreground truncate">
-            {patient._ultranos.nameGiven || patient._ultranos.nameLocal || '--'}
+          {/* Patronymic name chain — patient, father, grandfather, ring-separated */}
+          <h2 className="text-xl font-bold text-foreground leading-snug" dir="auto">
+            {nameSegments.length > 0
+              ? nameSegments.map((name, i) => (
+                  <span key={i}>
+                    {i > 0 && (
+                      <span
+                        className="mx-2.5 inline-block h-3 w-3 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
+                        aria-hidden="true"
+                      />
+                    )}
+                    {name}
+                  </span>
+                ))
+              : patient._ultranos.nameLocal || '--'}
           </h2>
-
-          {/* Patronymic chain */}
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {patient._ultranos.nameFather && (
-              <span>Father: {patient._ultranos.nameFather}</span>
-            )}
-            {patient._ultranos.nameFather && patient._ultranos.nameGrandfather && (
-              <span> &middot; </span>
-            )}
-            {patient._ultranos.nameGrandfather && (
-              <span>Grandfather: {patient._ultranos.nameGrandfather}</span>
-            )}
-          </p>
 
           {/* Latin transliteration */}
           {patient._ultranos.nameLatin && (

@@ -59,3 +59,48 @@ const serwist = new Serwist({
 })
 
 serwist.addEventListeners()
+
+// ---------------------------------------------------------------------------
+// Background Sync wake-up bridge
+// ---------------------------------------------------------------------------
+//
+// useBackgroundSync registers the Background Sync tag 'ultranos-sync-queue' and
+// the Periodic Background Sync tag 'ultranos-periodic-sync'. Without a handler
+// here those registrations were no-ops. We handle them by waking any open
+// window client to run its in-page drain (the existing 'ultranos:sync-now'
+// path).
+//
+// SECURITY BOUNDARY — by design the Service Worker does NOT decrypt or push PHI
+// itself. The IndexedDB sync-queue payloads are encrypted with a session key
+// that lives in page memory only and is cleared on tab/browser close (never in
+// localStorage/IndexedDB — see CLAUDE.md encryption rules). The SW therefore
+// cannot drain while the app is fully closed; it can only nudge a live client
+// that still holds the key. Fully-closed background push is intentionally out
+// of scope for that reason.
+
+const SYNC_TAG = 'ultranos-sync-queue'
+const PERIODIC_TAG = 'ultranos-periodic-sync'
+
+/** Wake every open window client to run its in-page sync drain. */
+async function wakeClientsToSync(): Promise<void> {
+  const clients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
+  for (const client of clients) {
+    client.postMessage({ type: 'ULTRANOS_SYNC_TRIGGER' })
+  }
+}
+
+// One-shot Background Sync (fires on connectivity restore).
+self.addEventListener('sync', (event: Event) => {
+  const syncEvent = event as ExtendableEvent & { tag?: string }
+  if (syncEvent.tag === SYNC_TAG) {
+    syncEvent.waitUntil(wakeClientsToSync())
+  }
+})
+
+// Periodic Background Sync (fires on the browser's periodic schedule).
+self.addEventListener('periodicsync' as keyof ServiceWorkerGlobalScopeEventMap, (event: Event) => {
+  const periodicEvent = event as ExtendableEvent & { tag?: string }
+  if (periodicEvent.tag === PERIODIC_TAG) {
+    periodicEvent.waitUntil(wakeClientsToSync())
+  }
+})

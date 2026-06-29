@@ -145,10 +145,7 @@ export function MpiResultModal({
           <ul className="space-y-2" aria-label={t('mpiCandidates')}>
             {candidates.map((candidate) => {
               const isExpanded = expandedId === candidate.id
-              const name =
-                [candidate.nameGiven, candidate.nameFather]
-                  .filter(Boolean)
-                  .join(' ') || t('mpiUnknownName')
+              const nameParts = [candidate.nameGiven, candidate.nameFather].filter(Boolean) as string[]
 
               return (
                 <li
@@ -175,7 +172,19 @@ export function MpiResultModal({
                       />
 
                       <span className="text-sm font-bold text-foreground truncate">
-                        {name}
+                        {nameParts.length > 0
+                          ? nameParts.map((seg, i) => (
+                              <span key={i}>
+                                {i > 0 && (
+                                  <span
+                                    className="mx-2 inline-block h-2 w-2 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
+                                    aria-hidden="true"
+                                  />
+                                )}
+                                {seg}
+                              </span>
+                            ))
+                          : t('mpiUnknownName')}
                       </span>
                     </div>
 

@@ -9,7 +9,7 @@ import { VitalsForm } from '@/components/clinical/vitals-form'
 import { AutosaveIndicator } from '@/components/clinical/autosave-indicator'
 import { useAutosave } from '@/lib/use-autosave'
 import { useVitalsStore } from '@/stores/vitals-store'
-import { db } from '@/lib/db'
+import { loadPatientResilient } from '@/lib/patient-loader'
 import { useRouter } from 'next/navigation'
 import type { FhirPatient } from '@ultranos/shared-types'
 import { CommandPalette } from '@/components/layout/CommandPalette'
@@ -17,7 +17,8 @@ import { useCommandPalette } from '@/hooks/use-command-palette'
 import { usePrescriptionStore } from '@/stores/prescription-store'
 import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { formatTime } from '@ultranos/ui-kit'
 import { checkInteractions, type InteractionCheckSummary, type InteractionResult } from '@/services/interactionService'
 import { InteractionWarningModal } from '@/components/modals/InteractionWarningModal'
 import { logInteractionCheck } from '@/services/interactionAuditService'
@@ -39,30 +40,42 @@ interface EncounterDashboardProps {
   patientId: string
 }
 
-function ageYears(birthDate?: string): number | undefined {
-  if (!birthDate) return undefined
-  const b = new Date(birthDate)
-  if (Number.isNaN(b.getTime())) return undefined
-  const now = new Date()
-  let age = now.getFullYear() - b.getFullYear()
-  const m = now.getMonth() - b.getMonth()
-  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--
-  return age
+// Resolve age from an exact birthDate when present, else fall back to the
+// year-only `birthYear` (the common case for this population — the patient
+// schema makes birthDate and birthYearOnly mutually exclusive, so year-only
+// records carry no birthDate). Mirrors PatientHeaderCard.computeAge.
+function ageYears(birthDate?: string, birthYear?: number): number | undefined {
+  if (birthDate) {
+    const b = new Date(birthDate)
+    if (!Number.isNaN(b.getTime())) {
+      const now = new Date()
+      let age = now.getFullYear() - b.getFullYear()
+      const m = now.getMonth() - b.getMonth()
+      if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--
+      return age
+    }
+  }
+  if (birthYear) {
+    return new Date().getFullYear() - birthYear
+  }
+  return undefined
 }
 
-function formatAge(birthDate?: string, birthYearOnly?: boolean, unknownLabel = 'Unknown age'): string {
-  if (!birthDate) return unknownLabel
-  const birth = new Date(birthDate)
-  const now = new Date()
-  if (birthYearOnly) {
-    return `~${now.getFullYear() - birth.getFullYear()}y`
-  }
-  let age = now.getFullYear() - birth.getFullYear()
-  const monthDiff = now.getMonth() - birth.getMonth()
-  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
-    age--
-  }
-  return `${age}y`
+function formatAge(birthDate?: string, birthYear?: number, unknownLabel = 'Unknown age'): string {
+  const age = ageYears(birthDate, birthYear)
+  return age == null ? unknownLabel : `${age}y`
+}
+
+// Patronymic name chain in entry order: patient's name (given + family),
+// father, grandfather — mirrors NameInputSection's Display Name preview so the
+// encounter header reads identically to the Edit Patient Profile modal.
+function patientNameSegments(ext?: FhirPatient['_ultranos']): string[] {
+  if (!ext) return []
+  return [
+    [ext.nameGiven, ext.nameFamily].filter(Boolean).join(' '),
+    ext.nameFather,
+    ext.nameGrandfather,
+  ].filter((s): s is string => !!s && s.trim().length > 0)
 }
 
 export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
@@ -72,6 +85,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const tNav = useTranslations('nav')
   const tSoap = useTranslations('soap')
   const tAllergy = useTranslations('allergy')
+  const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const practitionerRef = useAuthSessionStore((s) => s.session?.practitionerId ?? '')
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const router = useRouter()
@@ -79,6 +93,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const selectedPatient = usePatientStore((s) => s.selectedPatient)
   const [dexiePatient, setDexiePatient] = useState<FhirPatient | null>(null)
   const [loading, setLoading] = useState(false)
+  const [needsReauth, setNeedsReauth] = useState(false)
 
   const { isSyncing: _isSyncing } = usePatientSync(patientId)
   const [prescriptionBlocked, setPrescriptionBlocked] = useState(false)
@@ -174,19 +189,31 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     }
   }, [activeEncounter?.status, signingKey])
 
-  // Load patient from Dexie on page refresh / direct nav
+  // Load patient on page refresh / direct nav (e.g. "Start New Encounter").
+  // Offline-first: read local Dexie, then fall back to the Hub when the
+  // patient isn't in IndexedDB (the Patient sync pull does not deliver the
+  // demographic record to every client). Shared with the patient chart page.
   useEffect(() => {
-    if (!selectedPatient || selectedPatient.id !== patientId) {
-      setLoading(true)
-      db.patients.get(patientId).then((patient) => {
-        if (patient) {
+    if (selectedPatient && selectedPatient.id === patientId) return
+    let cancelled = false
+    setLoading(true)
+    setNeedsReauth(false)
+    loadPatientResilient(patientId)
+      .then(({ patient, needsReauth: reauth }) => {
+        if (cancelled) return
+        if (reauth) {
+          setNeedsReauth(true)
+        } else if (patient) {
           setDexiePatient(patient)
           usePatientStore.getState().selectPatient(patient)
         }
         setLoading(false)
-      }).catch(() => {
-        setLoading(false)
       })
+      .catch(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
     }
   }, [patientId, selectedPatient])
 
@@ -469,6 +496,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   }, [endEncounter, flushAutosave, flushVitalsAutosave])
 
   const patient = (selectedPatient?.id === patientId ? selectedPatient : null) ?? dexiePatient
+  const nameSegments = patient ? patientNameSegments(patient._ultranos) : []
 
   // Reset palette state when entering/exiting loading to prevent desync
   useEffect(() => {
@@ -485,6 +513,26 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           </svg>
           <p className="font-semibold text-muted-foreground">{tEncounter('loadingPatient')}</p>
         </div>
+      </div>
+    )
+  }
+
+  if (needsReauth) {
+    return (
+      <div className="mx-auto max-w-2xl flex flex-col gap-4">
+        <p className="font-semibold text-muted-foreground">
+          {tPatient('reauthRequired')}
+        </p>
+        <Button
+          variant="primary"
+          onClick={() => {
+            const returnUrl = encodeURIComponent(window.location.pathname)
+            window.location.href = `/login?returnUrl=${returnUrl}`
+          }}
+          className="mt-4"
+        >
+          {tPatient('signIn')}
+        </Button>
       </div>
     )
   }
@@ -518,33 +566,33 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           }
         `}</style>
       )}
-      <div className="mx-auto max-w-2xl flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
       {/* CLAUDE.md Rule #4: Allergy banner renders FIRST, in red, never collapsed */}
       <AllergyBanner patientId={patientId} />
 
       <ConflictBanner patientId={patientId} />
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
-      <header className="mb-8">
-        <Button
-          variant="ghost"
-          onClick={() => router.push('/')}
-          className="mb-4"
-          aria-label={tEncounter('backToSearch')}
-        >
-          {tNav('backToSearch')}
-        </Button>
-        <h1 className="text-3xl font-black tracking-tight text-foreground">
-          {tEncounter('dashboard')}
-        </h1>
-      </header>
+      {/* Title and back navigation are provided by the shell's BreadcrumbHeader. */}
 
       <Card
         as="section"
         aria-label={tEncounter('patientInfo')}
       >
-        <h2 className="text-xl font-bold text-foreground">
-          {patient._ultranos?.nameLocal}
+        <h2 className="text-xl font-bold text-foreground leading-snug" dir="auto">
+          {nameSegments.length > 0
+            ? nameSegments.map((name, i) => (
+                <span key={i}>
+                  {i > 0 && (
+                    <span
+                      className="mx-2.5 inline-block h-3 w-3 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {name}
+                </span>
+              ))
+            : patient._ultranos?.nameLocal}
         </h2>
         {patient._ultranos?.nameLatin && (
           <p className="text-sm font-semibold text-muted-foreground">
@@ -554,14 +602,13 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         <div className="mt-3 flex gap-4 text-sm font-semibold text-muted-foreground">
           <span>ID: {patient.id.slice(0, 8)}...</span>
           <span>{patient.gender ?? tPatient('unknownGender')}</span>
-          <span>{formatAge(patient.birthDate, patient.birthYearOnly, tPatient('unknownAge'))}</span>
+          <span>{formatAge(patient.birthDate, patient._ultranos?.birthYear, tPatient('unknownAge'))}</span>
         </div>
       </Card>
 
       {/* Encounter status + controls */}
       <Card
         as="section"
-        className="mt-6"
         aria-label={tEncounter('statusAria')}
       >
         {isActive ? (
@@ -578,7 +625,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             <p className="mt-2 text-sm text-muted-foreground">
               {tEncounter('started', {
                 time: activeEncounter.period.start
-                  ? new Date(activeEncounter.period.start).toLocaleTimeString()
+                  ? formatTime(activeEncounter.period.start, locale)
                   : tEncounter('startedUnknown')
               })}
             </p>
@@ -610,7 +657,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       {isActive && (
         <Card
           as="section"
-          className="encounter-section mt-6"
+          className="encounter-section"
           style={{ animationDelay: '0ms' }}
           aria-label={tAllergy('title')}
           data-section="allergies"
@@ -624,7 +671,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       {isActive && (
         <Card
           as="section"
-          className="encounter-section mt-6"
+          className="encounter-section"
           style={{ animationDelay: '50ms' }}
           aria-label={tEncounter('vitalSigns')}
           data-section="vitals"
@@ -655,7 +702,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       {isActive && (
         <Card
           as="section"
-          className="encounter-section mt-6"
+          className="encounter-section"
           style={{ animationDelay: '100ms' }}
           aria-label={tEncounter('soapNotes')}
         >
@@ -684,7 +731,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       {isActive && (
         <Card
           as="section"
-          className="encounter-section mt-6"
+          className="encounter-section"
           style={{ animationDelay: '150ms' }}
           aria-label={tEncounter('prescriptions')}
           data-section="prescriptions"
@@ -750,7 +797,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           <PrescriptionEntry
             onSubmit={handleAddPrescription}
             patientSex={patient.gender}
-            patientAge={ageYears(patient.birthDate)}
+            patientAge={ageYears(patient.birthDate, patient._ultranos?.birthYear)}
           />
 
           {prescriptionError && (

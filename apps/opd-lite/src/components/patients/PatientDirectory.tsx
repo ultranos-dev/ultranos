@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
-import { formatRelativeTime } from '@ultranos/ui-kit'
+import { formatDate, formatRelativeTime } from '@ultranos/ui-kit'
 import { db } from '@/lib/db'
 import type { LocalPatient } from '@/lib/db'
 import { usePatientListSync } from '@/lib/use-patient-list-sync'
@@ -19,6 +19,7 @@ type VisitFilter = 'all' | 'today' | 'week' | 'month'
 interface PatientRow {
   id: string
   name: string
+  nameSegments: string[]
   age: number | null
   gender: string
   phone: string
@@ -54,9 +55,27 @@ function getPatientName(patient: LocalPatient): string {
   return [given, father].filter(Boolean).join(' ') || patient._ultranos?.nameLocal || ''
 }
 
+// Name parts for ring-separated display (given, father). Falls back to the
+// joined nameLocal when neither part is present. The joined `name` string above
+// is kept for search/sort.
+function getPatientNameSegments(patient: LocalPatient): string[] {
+  const given = patient._ultranos?.nameGiven ?? patient.name?.[0]?.given?.[0] ?? ''
+  const father = patient._ultranos?.nameFather ?? ''
+  const segments = [given, father].filter(Boolean) as string[]
+  if (segments.length > 0) return segments
+  const local = patient._ultranos?.nameLocal ?? ''
+  return local ? [local] : []
+}
+
 function getPatientPhone(patient: LocalPatient): string {
   const phoneTelecom = patient.telecom?.find((t) => t.system === 'phone')
   return phoneTelecom?.value ?? ''
+}
+
+/** Latest of two ISO timestamps (either may be missing). */
+function latestIso(a?: string | null, b?: string | null): string | null {
+  if (a && b) return a > b ? a : b
+  return a ?? b ?? null
 }
 
 export function PatientDirectory() {
@@ -95,55 +114,69 @@ export function PatientDirectory() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Load data on mount
+  // Read patients + allergy/encounter aux data from local IndexedDB. Reused on
+  // mount, after the Hub sync, and on tab re-focus so the allergy column and
+  // last-visit always reflect the latest local state (e.g. allergies pulled
+  // while a patient chart was open).
+  const refreshFromDexie = useCallback(async () => {
+    try {
+      const [allPatients, allergies, encounters] = await Promise.all([
+        db.patients.toArray(),
+        db.allergyIntolerances.toArray(),
+        db.encounters.toArray(),
+      ])
+      setPatients(allPatients)
+
+      // Which patients have any allergy — patient.reference is "Patient/<id>".
+      const allergyIds = new Set<string>()
+      for (const a of allergies) {
+        const ref = (a as { patient?: { reference?: string } }).patient?.reference
+        if (ref) allergyIds.add(ref.replace('Patient/', ''))
+      }
+      setAllergyPatientIds(allergyIds)
+
+      // Latest visit per patient from encounters.
+      const visitMap = new Map<string, string>()
+      for (const enc of encounters) {
+        const ref = (enc as { subject?: { reference?: string } }).subject?.reference
+        if (!ref) continue
+        const pid = ref.replace('Patient/', '')
+        // Use the encounter's actual visit datetime (period.start, ISO) — NOT
+        // the HLC clock string, which is not a parseable date ("Invalid Date").
+        const ts = (enc as { period?: { start?: string } }).period?.start
+          ?? (enc as { meta?: { lastUpdated?: string } }).meta?.lastUpdated
+          ?? ''
+        if (!ts) continue
+        const existing = visitMap.get(pid)
+        if (!existing || ts > existing) visitMap.set(pid, ts)
+      }
+      setLastVisitMap(visitMap)
+    } catch {
+      // Encryption key not available or Dexie error — keep current state.
+    }
+  }, [])
+
+  // Initial load on mount.
   useEffect(() => {
     let cancelled = false
-    async function loadData() {
-      try {
-        const allPatients = await db.patients.toArray()
-        if (cancelled) return
-        setPatients(allPatients)
-
-        // Load allergy data — we only need to know which patients have any
-        const allergies = await db.allergyIntolerances.toArray()
-        if (cancelled) return
-        const allergyIds = new Set<string>()
-        for (const a of allergies) {
-          // patient.reference is "Patient/<id>"
-          const ref = (a as { patient?: { reference?: string } }).patient?.reference
-          if (ref) {
-            const pid = ref.replace('Patient/', '')
-            allergyIds.add(pid)
-          }
-        }
-        setAllergyPatientIds(allergyIds)
-
-        // Load last visit dates from encounters
-        const encounters = await db.encounters.toArray()
-        if (cancelled) return
-        const visitMap = new Map<string, string>()
-        for (const enc of encounters) {
-          const ref = (enc as { subject?: { reference?: string } }).subject?.reference
-          if (!ref) continue
-          const pid = ref.replace('Patient/', '')
-          const ts = (enc as { _ultranos?: { hlcTimestamp?: string } })._ultranos?.hlcTimestamp
-            ?? (enc as { meta?: { lastUpdated?: string } }).meta?.lastUpdated
-            ?? ''
-          const existing = visitMap.get(pid)
-          if (!existing || ts > existing) {
-            visitMap.set(pid, ts)
-          }
-        }
-        setLastVisitMap(visitMap)
-      } catch {
-        // Encryption key not available or Dexie error — show empty state gracefully
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    loadData()
+    refreshFromDexie().finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [])
+  }, [refreshFromDexie])
+
+  // Refresh local-derived columns when the tab regains focus — covers data
+  // (allergies/encounters) pulled into Dexie while the user was on a chart.
+  useEffect(() => {
+    function onResume() {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+      void refreshFromDexie()
+    }
+    window.addEventListener('focus', onResume)
+    document.addEventListener('visibilitychange', onResume)
+    return () => {
+      window.removeEventListener('focus', onResume)
+      document.removeEventListener('visibilitychange', onResume)
+    }
+  }, [refreshFromDexie])
 
   // Background Hub sync — fetch all patients and refresh local list
   useEffect(() => {
@@ -153,9 +186,9 @@ export function PatientDirectory() {
     syncAll()
       .then(async (hubPatients) => {
         if (cancelled || hubPatients.length === 0) return
-        // Re-read from IndexedDB to pick up merged Hub data
-        const refreshed = await db.patients.toArray()
-        if (!cancelled) setPatients(refreshed)
+        // Re-read patients AND allergy/encounter aux data so the allergy column
+        // and last-visit reflect anything pulled during/after the patient sync.
+        await refreshFromDexie()
       })
       .finally(() => {
         if (!cancelled) setSyncing(false)
@@ -165,19 +198,22 @@ export function PatientDirectory() {
       cancelled = true
       cancelSync()
     }
-  }, [syncAll, cancelSync])
+  }, [syncAll, cancelSync, refreshFromDexie])
 
   // Build rows
   const rows: PatientRow[] = useMemo(() => {
     return patients.map((p) => ({
       id: p.id,
       name: getPatientName(p),
+      nameSegments: getPatientNameSegments(p),
       age: calculateAge(p.birthDate, p._ultranos?.birthYear),
       gender: p.gender ?? '',
       phone: getPatientPhone(p),
-      lastVisit: lastVisitMap.get(p.id) ?? null,
+      // Prefer the most recent of the Hub list summary (covers all patients) and
+      // the local per-patient cache (covers patients opened on this device).
+      lastVisit: latestIso(lastVisitMap.get(p.id), p._ultranos?.lastVisitAt),
       status: p._ultranos?.isActive !== false ? 'active' : 'inactive',
-      hasAllergies: allergyPatientIds.has(p.id),
+      hasAllergies: allergyPatientIds.has(p.id) || (p._ultranos?.hasAllergies ?? false),
       hasNationalId: !!p._ultranos?.nationalIdHash,
       lastUpdated: (p.meta?.lastUpdated as string) ?? null,
     }))
@@ -420,7 +456,21 @@ export function PatientDirectory() {
                   >
                     <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground">
                       <span className="flex items-center gap-2">
-                        {row.name}
+                        <span>
+                          {row.nameSegments.length > 0
+                            ? row.nameSegments.map((seg, i) => (
+                                <span key={i}>
+                                  {i > 0 && (
+                                    <span
+                                      className="mx-2 inline-block h-2 w-2 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
+                                      aria-hidden="true"
+                                    />
+                                  )}
+                                  {seg}
+                                </span>
+                              ))
+                            : row.name}
+                        </span>
                         {!row.hasNationalId && (
                           <span className="inline-flex rounded-full bg-warning/20 px-2 py-0.5 text-xs font-semibold text-warning">
                             {t('nidMissingBadge')}
@@ -439,7 +489,7 @@ export function PatientDirectory() {
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
                       {row.lastVisit
-                        ? new Date(row.lastVisit).toLocaleDateString()
+                        ? formatDate(row.lastVisit, locale as 'en' | 'ar' | 'prs' | 'ps')
                         : '—'}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
