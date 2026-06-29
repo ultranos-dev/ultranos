@@ -47,7 +47,7 @@ const createCaller = createCallerFactory(appRouter)
 function createAuthContext(role = 'DOCTOR') {
   return {
     supabase: mockSupabaseClient as never,
-    user: { sub: 'user-1', role, sessionId: 'session-1', userId: 'user-1' },
+    user: { sub: 'user-1', role, sessionId: 'session-1', userId: 'user-1', orgId: 'org-1' },
     headers: new Headers(),
   }
 }
@@ -125,6 +125,60 @@ describe('sync.push', () => {
     expect(result.results).toHaveLength(1)
     expect(result.results[0]!.success).toBe(true)
     expect(result.results[0]!.resourceId).toBe('enc-1')
+  })
+
+  it('stamps synced_by/synced_at when pushing an AllergyIntolerance (Tier-1 provenance)', async () => {
+    const mockFrom = vi.fn()
+    const upsertSpy = vi.fn().mockResolvedValue({ error: null })
+
+    // 1. conflict-detection select (no existing row)
+    mockFrom.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    })
+    // 2. upsert
+    mockFrom.mockReturnValueOnce({ upsert: upsertSpy })
+    // 3. audit log
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })
+
+    mockSupabaseClient.from = mockFrom
+
+    const caller = createCaller(createAuthContext())
+
+    const result = await caller.sync.push({
+      operations: [{
+        resourceType: 'AllergyIntolerance',
+        resourceId: 'alg-1',
+        action: 'create',
+        payload: JSON.stringify({
+          id: 'alg-1',
+          clinicalStatus: { coding: [{ code: 'active' }] },
+          verificationStatus: { coding: [{ code: 'confirmed' }] },
+          type: 'allergy',
+          criticality: 'high',
+          code: { text: 'Penicillin' },
+          patient: { reference: 'Patient/pat-1' },
+        }),
+        hlcTimestamp: '000001700000000:00000:node-1',
+      }],
+    })
+
+    expect(result.results[0]!.success).toBe(true)
+    // synced_by is NOT NULL with no DB default — it MUST be stamped from the
+    // authenticated actor, or the upsert fails and the allergy never persists.
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow.syncedBy).toBe('user-1')
+    expect(upsertedRow.syncedAt).toBeTruthy()
   })
 
   it('detects conflict when incoming HLC is older than stored', async () => {

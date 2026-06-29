@@ -31,10 +31,13 @@ export const allergyRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      // patient_ref is stored as a BARE UUID (the sync flatten strips the
+      // "Patient/" prefix so the sync.pull patient-scope filter matches). Query
+      // with the bare id — a "Patient/{id}" prefix here matches nothing.
       let query = ctx.supabase
         .from('allergy_intolerances')
         .select('*')
-        .eq('patient_ref', `Patient/${input.patientId}`)
+        .eq('patient_ref', input.patientId)
         .order('recorded_date', { ascending: false })
 
       if (!input.includeAll) {
@@ -54,7 +57,7 @@ export const allergyRouter = createTRPCRouter({
       const rows = (data ?? []).map((row) => db.fromRow(row))
 
       // Audit PHI access (CLAUDE.md Rule #6)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -125,8 +128,11 @@ export const allergyRouter = createTRPCRouter({
         substanceText: input.substanceText,
         substanceCode: input.substanceCode ?? null,
         substanceSystem: input.substanceSystem ?? null,
-        patientRef: input.patientRef,
-        recorderRef: input.recorderRef ?? null,
+        // Store bare UUIDs (canonical for allergy_intolerances) regardless of
+        // whether the caller sent a "Patient/" / "Practitioner/" prefix, so the
+        // bare-keyed reads (allergy.list, sync.pull) always match.
+        patientRef: input.patientRef.replace(/^Patient\//, ''),
+        recorderRef: input.recorderRef ? input.recorderRef.replace(/^Practitioner\//, '') : null,
         recordedDate: input.recordedDate,
         substanceFreeText: input.substanceFreeText ?? null,
         hlcTimestamp: input.hlcTimestamp,
@@ -167,7 +173,7 @@ export const allergyRouter = createTRPCRouter({
 
       // Audit PHI write (CLAUDE.md Rule #6)
       const patientId = input.patientRef.replace('Patient/', '')
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',

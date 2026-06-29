@@ -69,6 +69,17 @@ describe('flattenForDb', () => {
       expect(result).not.toHaveProperty('meta')
     })
 
+    it('maps FHIR diagnosis to diagnosisRefs, never a `diagnosis` key (which the field encryptor would catch)', () => {
+      const withDx = {
+        ...fhirEncounter,
+        diagnosis: [{ condition: { reference: 'Condition/c-1' }, rank: 1 }],
+      }
+      const result = flattenForDb('Encounter', withDx)
+      expect(result.diagnosisRefs).toEqual([{ condition: { reference: 'Condition/c-1' }, rank: 1 }])
+      // A `diagnosis` key would be JSON-encrypted-as-text by encryptRow and corrupt the jsonb write.
+      expect(result).not.toHaveProperty('diagnosis')
+    })
+
     it('strips resourceType (not a DB column)', () => {
       const result = flattenForDb('Encounter', fhirEncounter)
       expect(result).not.toHaveProperty('resourceType')
@@ -119,7 +130,7 @@ describe('flattenForDb', () => {
       expect(result.participant).toBeNull()
       expect(result.type).toBeNull()
       expect(result.reasonCode).toBeNull()
-      expect(result.diagnosis).toBeNull()
+      expect(result.diagnosisRefs).toBeNull()
       expect(result.soapNoteId).toBeNull()
     })
   })
@@ -162,10 +173,10 @@ describe('flattenForDb', () => {
     it('strips resourceType and passes through for unknown types', () => {
       const unknown = {
         id: 'x-001',
-        resourceType: 'Observation',
+        resourceType: 'ServiceRequest',
         someField: 'value',
       }
-      const result = flattenForDb('Observation', unknown)
+      const result = flattenForDb('ServiceRequest', unknown)
       expect(result).not.toHaveProperty('resourceType')
       expect(result.someField).toBe('value')
     })

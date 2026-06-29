@@ -21,25 +21,44 @@ const RESOURCE_TABLE_MAP: Record<string, string> = {
   ClinicalImpression: 'soap_ledger',
   Observation: 'observations',
   Condition: 'conditions',
-  MedicationRequest: 'medications',
+  MedicationRequest: 'medication_requests',
   AllergyIntolerance: 'allergy_intolerances',
   MedicationStatement: 'medication_statements',
   Consent: 'consent_records',
   Patient: 'patients',
 }
 
-/** Map table names to their patient reference column for pull filtering. */
+/**
+ * Tables carrying a NOT NULL `org_id` (multi-tenant scoping). For these, the
+ * Hub stamps org_id from the authenticated user's context — spokes never send
+ * it. soap_ledger/patients/consent_records/allergy_intolerances have no org_id
+ * column, so it must NOT be injected there (would be an unknown-column error).
+ */
+const ORG_SCOPED_TABLES = new Set<string>(['encounters', 'observations', 'conditions', 'medication_requests'])
+
+/**
+ * Tables with no `hlc_timestamp` column. The generic HLC-based pull (and push
+ * conflict-detection) must skip these — consent_records syncs via its dedicated
+ * append-only consent ledger path, not the generic HLC engine.
+ */
+const NO_HLC_TABLES = new Set<string>(['consent_records'])
+
+/**
+ * Map table names to the column used to scope pull results to a patient.
+ * Bare-UUID columns (subject_id) and bare-UUID-bearing text columns
+ * (patient_ref, subject_reference) are matched against the bare patientId.
+ */
 const PATIENT_COLUMN_MAP: Record<string, string | null> = {
   encounters: 'subject_id',
-  medications: 'patient_id',
-  allergy_intolerances: 'patient_id',
+  observations: 'subject_id',
+  conditions: 'subject_id',
+  medication_requests: 'subject_reference',
+  allergy_intolerances: 'patient_ref',
   medication_statements: 'subject_reference',
   consent_records: 'patient_id',
   patients: 'id',
   // Linked through encounter — no direct patient column
   soap_ledger: null,
-  observations: null,
-  conditions: null,
 }
 
 /**
@@ -59,7 +78,9 @@ export const syncRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const audit = new AuditLogger(ctx.supabase)
+      // Pass the caller's org as the default so every audit row satisfies the
+      // audit_log.org_id NOT NULL constraint (the RPC already accepts p_org_id).
+      const audit = new AuditLogger(ctx.supabase, ctx.user.orgId ?? undefined)
       const results: Array<{
         resourceId: string
         success: boolean
@@ -100,12 +121,16 @@ export const syncRouter = createTRPCRouter({
 
           const payload = JSON.parse(op.payload) as Record<string, unknown>
 
-          // Check for conflict: compare incoming HLC with stored HLC
-          const { data: existing } = await ctx.supabase
-            .from(tableName)
-            .select('id, hlc_timestamp')
-            .eq('id', op.resourceId)
-            .maybeSingle()
+          // Check for conflict: compare incoming HLC with stored HLC.
+          // Skip for tables without an hlc_timestamp column (e.g. consent_records,
+          // which syncs via its dedicated append-only ledger).
+          const existing = NO_HLC_TABLES.has(tableName)
+            ? null
+            : (await ctx.supabase
+                .from(tableName)
+                .select('id, hlc_timestamp')
+                .eq('id', op.resourceId)
+                .maybeSingle()).data
 
           if (existing && existing.hlc_timestamp) {
             const incomingHlc = deserializeHlc(op.hlcTimestamp)
@@ -164,6 +189,32 @@ export const syncRouter = createTRPCRouter({
           // Flatten FHIR resource shape to match flat DB columns,
           // then apply snake_case + field-level encryption.
           const flat = flattenForDb(op.resourceType, payload)
+
+          // Stamp org_id from the authenticated context for org-scoped tables.
+          // These columns are NOT NULL with no default, so a missing org context
+          // is a hard error rather than a silent NULL write.
+          if (ORG_SCOPED_TABLES.has(tableName)) {
+            if (!ctx.user.orgId) {
+              results.push({
+                resourceId: op.resourceId,
+                success: false,
+                error: 'MISSING_ORG_CONTEXT',
+              })
+              continue
+            }
+            flat.orgId = ctx.user.orgId
+          }
+
+          // allergy_intolerances carries sync provenance: synced_by is NOT NULL
+          // with no default. The flattener can't know the actor, so stamp it from
+          // the authenticated context here (mirrors the allergy.create endpoint).
+          // Without this, every AllergyIntolerance push fails a NOT NULL violation
+          // and Tier-1 safety data never reaches the Hub.
+          if (tableName === 'allergy_intolerances') {
+            flat.syncedBy = ctx.user.sub
+            flat.syncedAt = new Date().toISOString()
+          }
+
           const row = db.toRow({
             ...flat,
             hlcTimestamp: op.hlcTimestamp,
@@ -244,11 +295,15 @@ export const syncRouter = createTRPCRouter({
         hlcTimestamp: string
       }> = []
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
 
       for (const { type, table } of targetTables) {
         // RBAC: skip resource types the user cannot access
         if (!hasResourceAccess(userRole, type)) continue
+
+        // Skip tables without an hlc_timestamp column — they don't participate
+        // in the generic HLC pull (consent syncs via its dedicated ledger path).
+        if (NO_HLC_TABLES.has(table)) continue
 
         let query = ctx.supabase
           .from(table)
