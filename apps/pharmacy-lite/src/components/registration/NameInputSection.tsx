@@ -30,7 +30,6 @@ export function NameInputSection({
 
   // Compose the full local name preview (given + father + grandfather)
   const nameParts = [nameGiven, nameFather, nameGrandfather].filter(Boolean)
-  const nameLocalPreview = nameParts.length > 0 ? nameParts.join(' ') : ''
 
   return (
     <Card as="fieldset">
@@ -132,8 +131,8 @@ export function NameInputSection({
           )}
         </div>
 
-        {/* Composed nameLocal preview */}
-        {nameLocalPreview && (
+        {/* Composed nameLocal preview — ring-separated patronymic chain */}
+        {nameParts.length > 0 && (
           <div
             className="mt-3 rounded-xl ring-[0.65px] ring-gray-400/40 bg-background px-4 py-3"
             aria-live="polite"
@@ -142,10 +141,20 @@ export function NameInputSection({
               {t('namePreview')}
             </p>
             <p
-              className="text-lg font-bold text-foreground"
+              className="text-lg font-bold text-foreground leading-snug"
               dir="auto"
             >
-              {nameLocalPreview}
+              {nameParts.map((name, i) => (
+                <span key={i}>
+                  {i > 0 && (
+                    <span
+                      className="mx-2.5 inline-block h-3 w-3 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {name}
+                </span>
+              ))}
             </p>
           </div>
         )}

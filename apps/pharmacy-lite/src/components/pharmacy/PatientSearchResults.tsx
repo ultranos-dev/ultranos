@@ -55,8 +55,17 @@ export function PatientSearchResults({
         >
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-foreground truncate">
-              {patient.nameGiven}
-              {patient.nameFather ? ` ${patient.nameFather}` : ''}
+              {[patient.nameGiven, patient.nameFather].filter(Boolean).map((seg, i) => (
+                <span key={i}>
+                  {i > 0 && (
+                    <span
+                      className="mx-2 inline-block h-2 w-2 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {seg}
+                </span>
+              ))}
             </p>
             <p className="text-xs text-muted-foreground">
               {patient.gender}{patient.birthYear ? ` | ${new Date().getFullYear() - patient.birthYear} y/o` : ''}

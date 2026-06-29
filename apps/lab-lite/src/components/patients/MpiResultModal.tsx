@@ -51,7 +51,22 @@ export function MpiResultModal({
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-foreground">
-                  {[c.nameGiven, c.nameFather].filter(Boolean).join(' ') || '---'}
+                  {(() => {
+                    const parts = [c.nameGiven, c.nameFather].filter(Boolean) as string[]
+                    return parts.length > 0
+                      ? parts.map((seg, i) => (
+                          <span key={i}>
+                            {i > 0 && (
+                              <span
+                                className="mx-2 inline-block h-2 w-2 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
+                                aria-hidden="true"
+                              />
+                            )}
+                            {seg}
+                          </span>
+                        ))
+                      : '---'
+                  })()}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {[
