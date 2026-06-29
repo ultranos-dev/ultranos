@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useLocale } from 'next-intl'
+import { formatDateTime } from '@ultranos/ui-kit'
 import { CircleCheck, ChevronDown } from '@ultranos/ui-kit/icons'
 import { db, type SyncQueueEntry } from '@/lib/db'
 import { isTier1Resource, isConflictOverdue } from '@/lib/conflict-resolution'
@@ -29,6 +31,7 @@ function formatConflictAge(createdAt: string): string {
 }
 
 export function ConflictList() {
+  const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const [conflicts, setConflicts] = useState<SyncQueueEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
@@ -170,7 +173,7 @@ export function ConflictList() {
                 <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                   <span>Patient: {patientShortId}</span>
                   <span>{formatConflictAge(entry.createdAt)}</span>
-                  <span>{new Date(entry.createdAt).toLocaleString()}</span>
+                  <span>{formatDateTime(entry.createdAt, locale)}</span>
                 </div>
               </div>
 

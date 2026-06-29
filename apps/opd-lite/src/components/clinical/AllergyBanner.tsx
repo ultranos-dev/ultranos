@@ -36,7 +36,7 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
   if (isLoading) {
     return (
       <div
-        className="mb-4 rounded-xl bg-card px-5 py-3 shadow-card ring-[0.65px] ring-border/50 text-center text-sm font-semibold text-muted-foreground transition-colors duration-200"
+        className="mb-4 rounded-xl bg-card px-4 py-3 shadow-card ring-[0.65px] ring-border/50 text-center text-sm font-semibold text-muted-foreground transition-colors duration-200"
         role="alert"
         aria-live="polite"
         data-testid="allergy-banner"
@@ -51,7 +51,7 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
   if (loadError) {
     return (
       <div
-        className="mb-4 rounded-xl bg-warning/10 px-5 py-3 shadow-card ring-[0.65px] ring-warning/40 text-center text-sm font-bold text-foreground transition-colors duration-200"
+        className="mb-4 rounded-xl bg-warning/10 px-4 py-3 shadow-card ring-[0.65px] ring-warning/40 text-center text-sm font-bold text-foreground transition-colors duration-200"
         role="alert"
         aria-live="assertive"
         data-testid="allergy-banner"
@@ -70,7 +70,7 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
 
     return (
       <div
-        className="mb-4 rounded-xl bg-destructive/10 p-5 shadow-card ring-[0.65px] ring-destructive/50 text-center text-sm font-bold text-destructive transition-colors duration-200"
+        className="mb-4 rounded-xl bg-destructive/10 px-4 py-3 shadow-card ring-[0.65px] ring-destructive/50 text-center text-sm font-bold text-destructive transition-colors duration-200"
         role="alert"
         aria-live="assertive"
         data-testid="allergy-banner"
@@ -86,7 +86,7 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
   // Neutral state: no known allergies
   return (
     <div
-      className="mb-4 rounded-xl bg-card px-5 py-3 shadow-card ring-[0.65px] ring-border/50 text-center text-sm font-semibold text-muted-foreground transition-colors duration-200"
+      className="mb-4 rounded-xl bg-card px-4 py-3 shadow-card ring-[0.65px] ring-border/50 text-center text-sm font-semibold text-muted-foreground transition-colors duration-200"
       role="alert"
       aria-live="polite"
       data-testid="allergy-banner"

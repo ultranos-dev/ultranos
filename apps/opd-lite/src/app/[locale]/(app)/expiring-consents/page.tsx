@@ -1,7 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useLocale } from 'next-intl'
+import { formatDate } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 
 interface ExpiringConsent {
   id: string
@@ -18,6 +21,7 @@ interface ExpiringConsent {
  * TODO i18n: add keys under "consent" namespace for all hardcoded strings.
  */
 export default function ExpiringConsentsPage() {
+  const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const [consents, setConsents] = useState<ExpiringConsent[]>([])
   const [loading, setLoading] = useState(true)
   const [offset, setOffset] = useState(0)
@@ -26,8 +30,7 @@ export default function ExpiringConsentsPage() {
   const loadConsents = useCallback(async () => {
     setLoading(true)
     try {
-      const hubUrl =
-        process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+      const hubUrl = getHubTrpcUrl()
       const input = JSON.stringify({ json: { limit, offset } })
       const res = await fetch(
         `${hubUrl}/consent.expiringSoon?input=${encodeURIComponent(input)}`,
@@ -96,7 +99,7 @@ export default function ExpiringConsentsPage() {
                           {extractPatientId(c.patient_ref)}
                         </td>
                         <td className="px-4 py-3">
-                          {new Date(c.provision_end).toLocaleDateString()}
+                          {formatDate(c.provision_end, locale)}
                         </td>
                         <td className="px-4 py-3">
                           <span

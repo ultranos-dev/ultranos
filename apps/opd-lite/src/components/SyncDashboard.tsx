@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { AlertTriangle, CircleX, RefreshCw, X, User, HeartPulse, Pill, FileText, Stethoscope, ClipboardList, ShieldAlert, FlaskConical } from '@ultranos/ui-kit/icons'
+import { useLocale } from 'next-intl'
+import { formatDate } from '@ultranos/ui-kit'
+import { AlertTriangle, CircleX, RefreshCw, X, User, HeartPulse, Pill, FileText, Stethoscope, ClipboardList, ShieldAlert, FlaskConical, ChevronDown } from '@ultranos/ui-kit/icons'
 import { Button } from '@ultranos/ui-kit/components/ui/button'
 import { useSyncStore } from '@/stores/sync-store'
 import { db, type SyncQueueEntry } from '@/lib/db'
@@ -67,7 +69,7 @@ function safeFailureReason(entry: SyncQueueEntry): string {
   return 'Unknown error'
 }
 
-function formatTimeAgo(iso: string): string {
+function formatTimeAgo(iso: string, locale: 'en' | 'ar' | 'prs' | 'ps'): string {
   const d = new Date(iso)
   const now = new Date()
   const diffMs = now.getTime() - d.getTime()
@@ -76,7 +78,7 @@ function formatTimeAgo(iso: string): string {
   if (diffMin < 60) return `${diffMin}m ago`
   const diffHrs = Math.floor(diffMin / 60)
   if (diffHrs < 24) return `${diffHrs}h ago`
-  return d.toLocaleDateString()
+  return formatDate(d, locale)
 }
 
 // --- Status badge ---
@@ -169,10 +171,22 @@ function groupByResourceType(entries: SyncQueueEntry[]): ResourceGroup[] {
 // --- Main Component ---
 
 export function SyncDashboard() {
+  const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const { isDashboardOpen, setDashboardOpen, lastSyncedAt, isDraining, setIsDraining } = useSyncStore()
   const [queueItems, setQueueItems] = useState<SyncQueueEntry[]>([])
   const [discardingId, setDiscardingId] = useState<string | null>(null)
   const [phase, setPhase] = useState<'idle' | 'syncing' | 'complete' | 'error'>('idle')
+  // Resource groups are collapsed by default; track which are expanded.
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+
+  const toggleGroup = useCallback((resourceType: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(resourceType)) next.delete(resourceType)
+      else next.add(resourceType)
+      return next
+    })
+  }, [])
 
   // Load queue items from Dexie and subscribe to changes
   const loadItems = useCallback(async () => {
@@ -353,7 +367,7 @@ export function SyncDashboard() {
             </span>
             {summary.lastSyncedAt && (
               <span className="rounded-md bg-success/10 px-2 py-1 text-success">
-                Last sync: {formatTimeAgo(summary.lastSyncedAt)}
+                Last sync: {formatTimeAgo(summary.lastSyncedAt, locale)}
               </span>
             )}
           </div>
@@ -416,18 +430,33 @@ export function SyncDashboard() {
           {queueItems.length === 0 ? (
             <EmptyState title="All synced — no pending items" size="sm" />
           ) : (
-            groups.map((group) => (
+            groups.map((group) => {
+              const isExpanded = expandedGroups.has(group.resourceType)
+              return (
               <div key={group.resourceType} className="border-b border-border last:border-b-0">
-                {/* Group header */}
-                <div className="flex items-center gap-2 bg-muted/50 px-5 py-2">
+                {/* Group header — collapsible toggle, collapsed by default */}
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.resourceType)}
+                  aria-expanded={isExpanded}
+                  aria-controls={`sync-group-${group.resourceType}`}
+                  className="flex w-full items-center gap-2 bg-muted/50 px-5 py-2 text-start transition-colors hover:bg-muted"
+                  data-testid="sync-group-header"
+                >
+                  <ChevronDown
+                    className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isExpanded ? '' : '-rotate-90'}`}
+                    aria-hidden="true"
+                  />
                   <ResourceIcon resourceType={group.resourceType} />
                   <span className="text-xs font-semibold text-foreground">{group.label}</span>
                   <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
                     {group.items.length}
                   </span>
-                </div>
+                </button>
 
-                {/* Items */}
+                {/* Items — hidden while collapsed */}
+                {isExpanded && (
+                <div id={`sync-group-${group.resourceType}`}>
                 {group.items.map((item) => (
                   <div
                     key={item.id}
@@ -438,7 +467,7 @@ export function SyncDashboard() {
                       <p className="text-sm text-foreground">{safeDescription(item)}</p>
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         <StatusBadge status={item.status} conflictFlag={item.conflictFlag} />
-                        <span className="text-xs text-muted-foreground">{formatTimeAgo(item.createdAt)}</span>
+                        <span className="text-xs text-muted-foreground">{formatTimeAgo(item.createdAt, locale)}</span>
                       </div>
                       {/* Failure reason (AC: 4) */}
                       {item.status === 'failed' && (
@@ -523,8 +552,11 @@ export function SyncDashboard() {
                     </div>
                   </div>
                 ))}
+                </div>
+                )}
               </div>
-            ))
+              )
+            })
           )}
         </div>
       </div>

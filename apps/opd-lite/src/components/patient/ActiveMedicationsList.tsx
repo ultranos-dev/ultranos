@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useLocale } from 'next-intl'
+import { formatDate } from '@ultranos/ui-kit'
 import { db } from '@/lib/db'
 
 interface ActiveMedicationsListProps {
@@ -17,10 +19,10 @@ interface MedicationRow {
 }
 
 /** Format ISO datetime to locale date string. */
-function formatDate(iso?: string): string {
+function formatStartDate(iso: string | undefined, locale: 'en' | 'ar' | 'prs' | 'ps'): string {
   if (!iso) return '--'
   try {
-    return new Date(iso).toLocaleDateString()
+    return formatDate(iso, locale)
   } catch {
     return iso
   }
@@ -37,6 +39,7 @@ function formatDate(iso?: string): string {
 export function ActiveMedicationsList({
   patientId,
 }: ActiveMedicationsListProps) {
+  const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const [meds, setMeds] = useState<MedicationRow[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -85,7 +88,7 @@ export function ActiveMedicationsList({
           const frequency = '--'
 
           // Start date from effectivePeriod
-          const startDate = formatDate(stmt.effectivePeriod?.start)
+          const startDate = formatStartDate(stmt.effectivePeriod?.start, locale)
 
           // Override flag: check if source prescription has an override entry
           const hasOverride = stmt._ultranos.sourcePrescriptionId
@@ -113,7 +116,7 @@ export function ActiveMedicationsList({
 
     loadMedications()
     return () => { cancelled = true }
-  }, [patientId])
+  }, [patientId, locale])
 
   if (loading) {
     return (

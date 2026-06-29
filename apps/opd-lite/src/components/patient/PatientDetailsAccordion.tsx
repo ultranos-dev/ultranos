@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { useLocale } from 'next-intl'
+import { formatDate } from '@ultranos/ui-kit'
 import type { FhirPatient, PatientAddress } from '@ultranos/shared-types'
 import { ChevronDown } from '@ultranos/ui-kit/icons'
 
@@ -30,10 +32,10 @@ function addressesMatch(
 }
 
 /** Format ISO date string to locale date. */
-function formatDate(iso?: string): string {
+function formatRegisteredDate(iso: string | undefined, locale: 'en' | 'ar' | 'prs' | 'ps'): string {
   if (!iso) return '--'
   try {
-    return new Date(iso).toLocaleDateString()
+    return formatDate(iso, locale)
   } catch {
     return iso
   }
@@ -56,6 +58,7 @@ function maskHash(hash: string): string {
 export function PatientDetailsAccordion({
   patient,
 }: PatientDetailsAccordionProps) {
+  const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const [isOpen, setIsOpen] = useState(false)
 
   const ext = patient._ultranos
@@ -141,7 +144,7 @@ export function PatientDetailsAccordion({
             {/* Registered */}
             <div className="flex gap-2">
               <dt className="font-medium text-muted-foreground shrink-0">Registered:</dt>
-              <dd>{formatDate(ext.createdAt)}</dd>
+              <dd>{formatRegisteredDate(ext.createdAt, locale)}</dd>
             </div>
 
             {/* Consent version */}

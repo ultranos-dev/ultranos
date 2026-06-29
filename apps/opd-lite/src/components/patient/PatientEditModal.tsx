@@ -13,6 +13,7 @@ import { db } from '@/lib/db'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/Card'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -39,7 +40,7 @@ const BLOOD_GROUPS = [
 // ── Hub API helpers ─────────────────────────────────────────────────────────
 
 function getHubApiUrl(): string {
-  return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return getHubTrpcUrl()
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {

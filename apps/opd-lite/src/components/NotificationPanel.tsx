@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useLocale } from 'next-intl'
+import { formatDate } from '@ultranos/ui-kit'
 import { Bell, X } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import {
@@ -13,7 +15,7 @@ import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 
 const POLL_INTERVAL_MS = 30_000 // 30s polling for <60s SLA (AC: 3)
 
-function formatTimestamp(iso: string): string {
+function formatTimestamp(iso: string, locale: 'en' | 'ar' | 'prs' | 'ps'): string {
   const d = new Date(iso)
   const now = new Date()
   const diffMs = now.getTime() - d.getTime()
@@ -22,7 +24,7 @@ function formatTimestamp(iso: string): string {
   if (diffMin < 60) return `${diffMin}m ago`
   const diffHrs = Math.floor(diffMin / 60)
   if (diffHrs < 24) return `${diffHrs}h ago`
-  return d.toLocaleDateString()
+  return formatDate(d, locale)
 }
 
 function notificationLabel(type: string): string {
@@ -187,6 +189,7 @@ function NotificationRow({
   notification: NotificationItem
   onAcknowledge: (id: string) => void
 }) {
+  const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const isUnread = notification.status !== 'ACKNOWLEDGED'
   const isEscalation = notification.type === 'LAB_RESULT_ESCALATION'
 
@@ -206,7 +209,7 @@ function NotificationRow({
             </p>
           )}
           <p className="mt-1 text-xs text-muted-foreground">
-            {formatTimestamp(notification.createdAt)}
+            {formatTimestamp(notification.createdAt, locale)}
           </p>
         </div>
 

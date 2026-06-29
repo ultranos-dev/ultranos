@@ -5,9 +5,9 @@ import { useLocale, useTranslations } from 'next-intl'
 import { ChevronDown } from '@ultranos/ui-kit/icons'
 import { formatRelativeTime } from '@ultranos/ui-kit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { getHubBaseUrl } from '@/lib/hub-url'
 
-const HUB_API_URL =
-  process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000'
+const HUB_API_URL = getHubBaseUrl()
 
 /** Map camelCase field names to human-readable labels */
 const FIELD_LABELS: Record<string, string> = {

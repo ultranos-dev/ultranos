@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useLocale } from 'next-intl'
+import { formatTime } from '@ultranos/ui-kit'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { Card } from '@/components/Card'
 
@@ -27,6 +29,7 @@ function countdownColor(remainingMs: number): string {
 }
 
 export function SessionInfoCard() {
+  const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const session = useAuthSessionStore((s) => s.session)
   const [remainingMs, setRemainingMs] = useState<number | null>(null)
 
@@ -46,7 +49,7 @@ export function SessionInfoCard() {
 
   if (!session) return null
 
-  const loginTime = loginAtMs ? new Date(loginAtMs).toLocaleTimeString() : 'Unknown'
+  const loginTime = loginAtMs ? formatTime(new Date(loginAtMs), locale) : 'Unknown'
 
   return (
     <Card>

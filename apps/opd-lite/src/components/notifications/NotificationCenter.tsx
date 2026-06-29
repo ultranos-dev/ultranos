@@ -2,6 +2,8 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLocale } from 'next-intl'
+import { formatDate } from '@ultranos/ui-kit'
 import { Beaker, Check, Settings } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
@@ -46,7 +48,7 @@ function notificationLabel(type: string): string {
   }
 }
 
-function formatTimestamp(iso: string): string {
+function formatTimestamp(iso: string, locale: 'en' | 'ar' | 'prs' | 'ps'): string {
   const d = new Date(iso)
   const now = new Date()
   const diffMs = now.getTime() - d.getTime()
@@ -55,7 +57,7 @@ function formatTimestamp(iso: string): string {
   if (diffMin < 60) return `${diffMin}m ago`
   const diffHrs = Math.floor(diffMin / 60)
   if (diffHrs < 24) return `${diffHrs}h ago`
-  return d.toLocaleDateString()
+  return formatDate(d, locale)
 }
 
 function getIconCategory(type: string): 'lab' | 'rx' | 'system' {
@@ -224,6 +226,7 @@ function NotificationRow({
   notification: NotificationItem
   onClick: (n: NotificationItem) => void
 }) {
+  const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const isUnread = notification.status !== 'ACKNOWLEDGED'
   const isEscalation = notification.type === 'LAB_RESULT_ESCALATION'
   const deepLink = getDeepLink(notification)
@@ -270,7 +273,7 @@ function NotificationRow({
 
         {/* Timestamp */}
         <p className="mt-1 text-xs text-muted-foreground">
-          {formatTimestamp(notification.createdAt)}
+          {formatTimestamp(notification.createdAt, locale)}
         </p>
       </div>
     </div>

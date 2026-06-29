@@ -11,6 +11,8 @@
  * CLAUDE.md Rule #4 (allergy prominence precedent): critical values get colored data points.
  */
 
+import { useLocale } from 'next-intl'
+import { formatDate } from '@ultranos/ui-kit'
 import type { TrendDataPoint } from '@/lib/lab-results/result-grouper'
 
 interface ResultTrendChartProps {
@@ -60,6 +62,7 @@ export function ResultTrendChart({
   onPointHover,
   hoveredPoint,
 }: ResultTrendChartProps) {
+  const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const innerW = width - PADDING.left - PADDING.right
   const innerH = height - PADDING.top - PADDING.bottom
 
@@ -87,7 +90,7 @@ export function ResultTrendChart({
         {sorted[0] && (
           <span>
             {sorted[0].value} {sorted[0].unit} on{' '}
-            {new Date(sorted[0].date).toLocaleDateString()}
+            {formatDate(sorted[0].date, locale)}
           </span>
         )}
       </div>
@@ -157,7 +160,7 @@ export function ResultTrendChart({
               onFocus={() => onPointHover?.(point)}
               onBlur={() => onPointHover?.(null)}
               tabIndex={0}
-              aria-label={`${point.value} ${point.unit} on ${new Date(point.date).toLocaleDateString()} from ${point.labName} — ${point.flagLevel}`}
+              aria-label={`${point.value} ${point.unit} on ${formatDate(point.date, locale)} from ${point.labName} — ${point.flagLevel}`}
             />
           )
         })}
@@ -206,7 +209,7 @@ export function ResultTrendChart({
             {hoveredPoint.value} {hoveredPoint.unit}
           </span>
           {' · '}
-          {new Date(hoveredPoint.date).toLocaleDateString()}
+          {formatDate(hoveredPoint.date, locale)}
           {' · '}
           {hoveredPoint.labName}
         </div>
@@ -226,6 +229,7 @@ export function ResultSummaryTable({
 }: {
   results: { date: string; summary: string; flagLevel?: string }[]
 }) {
+  const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   if (results.length === 0) return null
   return (
     <table
@@ -243,7 +247,7 @@ export function ResultSummaryTable({
         {results.map((r, i) => (
           <tr key={i} className="border-b border-border">
             <td className="py-1 text-muted-foreground">
-              {new Date(r.date).toLocaleDateString()}
+              {formatDate(r.date, locale)}
             </td>
             <td
               className={`py-1 font-medium ${

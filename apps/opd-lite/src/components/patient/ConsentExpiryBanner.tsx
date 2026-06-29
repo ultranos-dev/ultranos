@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { useLocale } from 'next-intl'
+import { formatDate } from '@ultranos/ui-kit'
 import { ConsentRenewalModal } from './ConsentRenewalModal'
 import { Button } from '@/components/ui/Button'
 
@@ -18,12 +20,13 @@ interface ConsentExpiryBannerProps {
  *   expiryWarning, renewConsent
  */
 export function ConsentExpiryBanner({ patientId, expiryDate }: ConsentExpiryBannerProps) {
+  const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const [showModal, setShowModal] = useState(false)
   const [renewed, setRenewed] = useState(false)
 
   if (renewed) return null
 
-  const formattedDate = new Date(expiryDate).toLocaleDateString()
+  const formattedDate = formatDate(expiryDate, locale)
 
   return (
     <>
