@@ -36,11 +36,26 @@ describe('field-encryption', () => {
       expect(encrypted.id).toBe('123')
       expect(encrypted.status).toBe('active')
       expect(encrypted.medication_display).toBe('Metformin')
+      // reason_code is a coded FHIR CodeableConcept (e.g. ICD-10 "E11"), not
+      // free-text PHI — intentionally NOT encrypted. See encounter router.
+      expect(encrypted.reason_code).toBe('E11')
 
-      // Sensitive fields are encrypted (v1: prefix)
+      // Sensitive (free-text PHI) fields are encrypted (v1: prefix)
       expect(encrypted.diagnosis).toMatch(/^v1:/)
       expect(encrypted.diagnosis).not.toBe('Diabetes mellitus type 2')
-      expect(encrypted.reason_code).toMatch(/^v1:/)
+    })
+
+    it('does NOT encrypt diagnosis_refs (jsonb Encounter.diagnosis references) — only the text `diagnosis` field', () => {
+      const refs = [{ condition: { reference: 'Condition/c-1' }, rank: 1 }]
+      const row = { id: 'e1', diagnosis_refs: refs, diagnosis: 'Pneumonia' }
+
+      const encrypted = encryptRow(row, TEST_ENCRYPTION_KEY)
+
+      // diagnosis_refs passes through untouched — if it were encrypted-as-text it
+      // would corrupt the jsonb column write on encounters.
+      expect(encrypted.diagnosis_refs).toEqual(refs)
+      // the configured text `diagnosis` field is still encrypted (regression guard)
+      expect(encrypted.diagnosis).toMatch(/^v1:/)
     })
 
     it('skips null/undefined fields without error', () => {

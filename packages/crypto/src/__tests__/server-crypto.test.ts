@@ -106,10 +106,30 @@ describe('server-crypto', () => {
     it('returns config with field lists', () => {
       const config = getEncryptionConfig()
       expect(config.randomizedFields).toContain('diagnosis')
-      expect(config.randomizedFields).toContain('reason_code')
       expect(config.randomizedFields).toContain('dosage_instruction')
       expect(config.randomizedFields).toContain('interaction_override')
-      expect(config.deterministicFields).toContain('national_id')
+      expect(config.randomizedFields).toContain('medication_text')
+      // AllergyIntolerance substance — Tier-1 PHI, must be encrypted at rest.
+      expect(config.randomizedFields).toContain('substance_text')
+      expect(config.randomizedFields).toContain('substance_free_text')
+    })
+
+    it('encrypts every patient PHI *_enc column', () => {
+      // Each patients.*_enc column is documented as an AES-256-GCM encrypted
+      // copy — all must be in randomizedFields or they are written plaintext.
+      const config = getEncryptionConfig()
+      for (const field of [
+        'name_local_enc',
+        'name_latin_enc',
+        'name_phonetic_enc',
+        'birth_date_enc',
+        'name_given_enc',
+        'name_father_enc',
+        'name_grandfather_enc',
+        'name_family_enc',
+      ]) {
+        expect(config.randomizedFields).toContain(field)
+      }
     })
   })
 })

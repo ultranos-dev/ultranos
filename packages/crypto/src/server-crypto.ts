@@ -105,6 +105,13 @@ export function getEncryptionConfig() {
       // AI scribe PHI fields (Story 24.1)
       'original_freeform_text',
       'ai_raw_response',
+      // AllergyIntolerance substance (Tier-1, CLAUDE.md Rule #1 + Rule #4). The
+      // allergy router documents substance_free_text as encrypted, and the
+      // allergen display name (substance_text) is equally PHI; neither is used
+      // in a query filter, so both are encrypted at rest. substance_code stays
+      // plaintext for coded allergen matching.
+      'substance_text',
+      'substance_free_text',
       // Lab result tables (Story 12.3)
       'report_conclusion',
       'encrypted_content',
@@ -116,6 +123,13 @@ export function getEncryptionConfig() {
       'name_latin_enc',
       'name_phonetic_enc',
       'birth_date_enc',
+      // Patronymic name parts (Migration 020) — the *_enc columns are documented
+      // as "AES-256-GCM encrypted copy ... source of truth for display". They were
+      // omitted from this list, so they were being written in PLAINTEXT. Encrypt them.
+      'name_given_enc',
+      'name_father_enc',
+      'name_grandfather_enc',
+      'name_family_enc',
     ] as const,
   }
 }
