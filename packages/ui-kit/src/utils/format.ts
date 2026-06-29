@@ -62,8 +62,31 @@ export function formatPercent(value: number, locale: SupportedLocale): string {
 // --- Date Formatting ---
 
 /**
- * Format a date in MENA-standard format (dd/MM/yyyy).
- * Uses locale-appropriate numerals.
+ * Locale → BCP-47 tag for NUMERIC dates. We pin the day/month/year ORDER and the
+ * Gregorian calendar by using `en-GB` (which is DD/MM/YYYY) as the base, and vary
+ * ONLY the numbering system per locale via the `-u-nu-` extension. This is the
+ * MENA/Afghanistan convention: Gregorian DD/MM/YYYY with locale-appropriate
+ * numerals — the same order for every locale.
+ *
+ * Why not pass the locale directly: `en` resolves to en-US → MM/DD/YYYY, and
+ * `fa`/`ps` (Dari/Pashto) default to the Solar-Hijri (Jalali) calendar, year-first
+ * (e.g. ۱۴۰۵/۰۳/۳۰) — neither is the requested DD/MM/YYYY Gregorian format.
+ */
+const NUMERIC_DATE_LOCALE: Record<SupportedLocale, string> = {
+  en: 'en-GB',                  // 20/06/2026 (Latin digits)
+  ar: 'en-GB-u-nu-arab',        // ٢٠/٠٦/٢٠٢٦ (Arabic-Indic digits)
+  prs: 'en-GB-u-nu-arabext',    // ۲۰/۰۶/۲۰۲۶ (Extended Arabic-Indic / Persian digits)
+  ps: 'en-GB-u-nu-arabext',     // ۲۰/۰۶/۲۰۲۶ (Pashto uses Persian digits)
+}
+
+function numericDateTag(locale: SupportedLocale): string {
+  return NUMERIC_DATE_LOCALE[locale] ?? 'en-GB'
+}
+
+/**
+ * Format a date in MENA-standard Gregorian format (DD/MM/YYYY) using
+ * locale-appropriate numerals. The day/month/year order is the same for every
+ * supported locale; only the digits differ.
  */
 export function formatDate(
   date: Date | string,
@@ -72,8 +95,8 @@ export function formatDate(
   const d = typeof date === 'string' ? new Date(date) : date
   if (isNaN(d.getTime())) return ''
 
-  const resolvedLocale = locale === 'prs' ? 'fa' : locale
-  return new Intl.DateTimeFormat(resolvedLocale, {
+  return new Intl.DateTimeFormat(numericDateTag(locale), {
+    calendar: 'gregory',
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -81,7 +104,8 @@ export function formatDate(
 }
 
 /**
- * Format a date with time in locale-appropriate format.
+ * Format a date with 24-hour time as DD/MM/YYYY HH:mm, Gregorian, with
+ * locale-appropriate numerals.
  */
 export function formatDateTime(
   date: Date | string,
@@ -90,13 +114,14 @@ export function formatDateTime(
   const d = typeof date === 'string' ? new Date(date) : date
   if (isNaN(d.getTime())) return ''
 
-  const resolvedLocale = locale === 'prs' ? 'fa' : locale
-  return new Intl.DateTimeFormat(resolvedLocale, {
+  return new Intl.DateTimeFormat(numericDateTag(locale), {
+    calendar: 'gregory',
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    hour12: false,
   }).format(d)
 }
 

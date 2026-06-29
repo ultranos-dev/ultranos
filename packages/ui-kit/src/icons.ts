@@ -65,6 +65,8 @@ export {
   Thermometer,
   HeartPulse,
   Activity,
+  Ruler,
+  Weight,
   Brain,
   Bone,
   Eye,

@@ -52,18 +52,25 @@ describe('formatPercent', () => {
 })
 
 describe('formatDate', () => {
-  it('formats date in dd/MM/yyyy for English', () => {
-    // Use a date that avoids timezone boundary issues
-    const result = formatDate(new Date(2026, 2, 15), 'en') // March 15, 2026
-    expect(result).toContain('15')
-    expect(result).toContain('2026')
+  const MAR_15 = new Date(2026, 2, 15) // local March 15, 2026 (avoids TZ boundary)
+
+  it('formats English as DD/MM/YYYY (not US MM/DD/YYYY)', () => {
+    expect(formatDate(MAR_15, 'en')).toBe('15/03/2026')
   })
 
-  it('formats date for Arabic locale', () => {
-    const result = formatDate(new Date('2026-03-15'), 'ar')
-    // Should produce a date string (may or may not use Arabic-Indic numerals)
-    expect(result).toBeTruthy()
-    expect(result).toContain('2026')
+  it('formats Arabic as DD/MM/YYYY with Arabic-Indic digits', () => {
+    expect(formatDate(MAR_15, 'ar')).toMatch(/^[٠-٩]{2}\/[٠-٩]{2}\/[٠-٩]{4}$/)
+  })
+
+  it('formats Dari (prs) and Pashto (ps) as DD/MM/YYYY with Persian digits', () => {
+    expect(formatDate(MAR_15, 'prs')).toMatch(/^[۰-۹]{2}\/[۰-۹]{2}\/[۰-۹]{4}$/)
+    expect(formatDate(MAR_15, 'ps')).toMatch(/^[۰-۹]{2}\/[۰-۹]{2}\/[۰-۹]{4}$/)
+  })
+
+  it('uses the Gregorian calendar for Dari, NOT Solar-Hijri/Jalali', () => {
+    // 2026 → ۲۰۲۶ (Gregorian). Jalali would render the year as ۱۴۰۵.
+    expect(formatDate(MAR_15, 'prs')).toContain('۲۰۲۶')
+    expect(formatDate(MAR_15, 'prs')).not.toContain('۱۴۰۵')
   })
 
   it('returns empty string for invalid date', () => {
@@ -71,16 +78,15 @@ describe('formatDate', () => {
   })
 
   it('accepts ISO string input', () => {
-    const result = formatDate('2026-05-16T10:30:00Z', 'en')
-    expect(result).toContain('2026')
+    expect(formatDate('2026-05-16T10:30:00Z', 'en')).toContain('2026')
   })
 })
 
 describe('formatDateTime', () => {
-  it('includes both date and time', () => {
-    const result = formatDateTime(new Date('2026-03-15T14:30:00'), 'en')
-    expect(result).toContain('15')
-    expect(result).toContain('2026')
+  it('renders DD/MM/YYYY plus 24-hour time for English', () => {
+    const result = formatDateTime(new Date(2026, 2, 15, 14, 30), 'en')
+    expect(result).toContain('15/03/2026')
+    expect(result).toContain('14:30')
   })
 })
 
