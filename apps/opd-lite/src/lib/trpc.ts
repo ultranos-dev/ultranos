@@ -1,14 +1,12 @@
 import type { DrugSearchResult, FhirPatient } from '@ultranos/shared-types'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 
 export interface PatientSearchResult {
   patients: FhirPatient[]
 }
 
 function getHubApiUrl(): string {
-  if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
-  }
-  return process.env.HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+  return getHubTrpcUrl()
 }
 
 type AuthEventType =

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 
 interface ConsentRenewalModalProps {
   patientId: string
@@ -31,8 +32,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
     setSubmitting(true)
 
     try {
-      const hubUrl =
-        process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+      const hubUrl = getHubTrpcUrl()
 
       const payload: Record<string, unknown> = {
         patientId,

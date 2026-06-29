@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { db } from './db'
 import type { VocabMedicationEntry, VocabIcd10Entry } from './db'
 import { invalidateInteractionCache } from '@/services/interactionService'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 
 type VocabType = 'medications' | 'icd10' | 'interactions'
 
@@ -36,10 +37,7 @@ type ValidInteractionEntry = z.infer<typeof InteractionEntrySchema>
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getHubApiUrl(): string {
-  if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
-  }
-  return process.env.HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+  return getHubTrpcUrl()
 }
 
 // P9 — URL construction: normalize base URL and build sync endpoint safely

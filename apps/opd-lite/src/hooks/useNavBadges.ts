@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { fetchUnreadCount } from '@/lib/notification-api'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { db } from '@/lib/db'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 
 interface NavBadges {
   notifications: number
@@ -90,8 +91,7 @@ export function useNavBadges(): NavBadges {
  * Reuses the same URL/auth pattern as notification-api.ts.
  */
 async function fetchTrpcCount(path: string): Promise<number> {
-  const hubUrl =
-    process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+  const hubUrl = getHubTrpcUrl()
 
   // Dynamic import to reuse Supabase auth token (same pattern as notification-api)
   const { getSupabaseBrowserClient } = await import('@/lib/supabase')

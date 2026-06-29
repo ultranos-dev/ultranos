@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card } from '@/components/Card'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 
 /**
  * Dashboard card showing the number of active consents expiring within 90 days.
@@ -23,8 +24,7 @@ export function ExpiringConsentsCard() {
         const headers: Record<string, string> = { 'Content-Type': 'application/json' }
         if (token) headers['Authorization'] = `Bearer ${token}`
 
-        const hubUrl =
-          process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+        const hubUrl = getHubTrpcUrl()
         const res = await fetch(
           `${hubUrl}/consent.expiringCount?input=${encodeURIComponent(JSON.stringify({ json: {} }))}`,
           { method: 'GET', headers }

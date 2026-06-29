@@ -4,6 +4,8 @@
  * Story 12.4: Notification Dispatch — OPD Lite receiver.
  */
 
+import { getHubTrpcUrl } from '@/lib/hub-url'
+
 export interface NotificationItem {
   id: string
   type: string
@@ -21,10 +23,7 @@ export interface NotificationItem {
 }
 
 function getHubApiUrl(): string {
-  if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
-  }
-  return process.env.HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+  return getHubTrpcUrl()
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {

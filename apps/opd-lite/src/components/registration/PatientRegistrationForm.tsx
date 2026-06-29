@@ -22,6 +22,7 @@ import { MpiResultModal } from './MpiResultModal'
 import { SocialInfoSection } from './SocialInfoSection'
 import { EmergencyContactSection } from './EmergencyContactSection'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 import { Card } from '@/components/Card'
 import { db } from '@/lib/db'
 import { EncryptionKeyNotAvailableError } from '@/lib/encryption-key-store'
@@ -30,10 +31,7 @@ import type { FhirPatient } from '@ultranos/shared-types'
 // ── Hub API helpers ──────────────────────────────────────────────────────────
 
 function getHubApiUrl(): string {
-  if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
-  }
-  return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+  return getHubTrpcUrl()
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {

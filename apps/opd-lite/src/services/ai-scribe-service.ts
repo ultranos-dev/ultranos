@@ -5,12 +5,10 @@
  */
 
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 
 function getHubApiUrl(): string {
-  if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
-  }
-  return process.env.HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+  return getHubTrpcUrl()
 }
 
 function getAuthToken(): string | null {

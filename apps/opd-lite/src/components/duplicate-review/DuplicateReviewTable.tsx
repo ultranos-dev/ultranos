@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 import { CandidateComparisonCard, type DuplicateCandidate } from './CandidateComparisonCard'
 
 /* ------------------------------------------------------------------ */
@@ -29,7 +30,7 @@ interface DuplicateReviewRow {
 /* ------------------------------------------------------------------ */
 
 function getHubApiUrl(): string {
-  return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return getHubTrpcUrl()
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {

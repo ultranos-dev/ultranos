@@ -8,10 +8,11 @@ import { pullPatientChanges } from '@/lib/sync-pull'
 import { useSyncStore } from '@/stores/sync-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { getHubBaseUrl } from '@/lib/hub-url'
 import { db } from '@/lib/db'
 import type { SyncQueueEntry, ConflictResolution } from '@ultranos/sync-engine'
 
-const HUB_BASE_URL = (process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004').replace(/\/api\/trpc\/?$/, '')
+const HUB_BASE_URL = getHubBaseUrl()
 
 /** Fire-and-forget enriched-catalog sync on sign-in (online-gated/throttled inside). */
 export async function triggerCatalogSyncOnAuth(isAuthenticated: boolean): Promise<void> {
@@ -140,11 +141,26 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     }
     window.addEventListener('online', handleOnline)
 
+    // Drain immediately when the user returns to the app, instead of waiting up
+    // to the 30s poll. Covers the common "tab was backgrounded / app refocused"
+    // case — the in-page worker can only run while a tab is open, so the moment
+    // it becomes active we flush any queued changes.
+    function handleResume() {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+      if (!navigator.onLine) return
+      triggerDrain()
+      backgroundPull()
+    }
+    document.addEventListener('visibilitychange', handleResume)
+    window.addEventListener('focus', handleResume)
+
     return () => {
       clearInterval(tokenInterval)
       clearInterval(pullInterval)
       window.removeEventListener('ultranos:sync-now', handleSyncNow)
       window.removeEventListener('online', handleOnline)
+      document.removeEventListener('visibilitychange', handleResume)
+      window.removeEventListener('focus', handleResume)
       stopSyncWorker()
       startedRef.current = false
       cachedToken = ''

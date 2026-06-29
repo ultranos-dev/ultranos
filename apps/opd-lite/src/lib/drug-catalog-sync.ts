@@ -6,11 +6,12 @@ import {
   type DrugCatalogStore,
 } from '@ultranos/drug-catalog-sync'
 import { createDexieDrugCatalogStore } from './drug-catalog-store'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 
 export const CATALOG_SYNC_THROTTLE_MS = 15 * 60 * 1000
 
 function getHubApiUrl(): string {
-  return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+  return getHubTrpcUrl()
 }
 
 /** Testable core: run catalog + brand delta sync into the given store. */

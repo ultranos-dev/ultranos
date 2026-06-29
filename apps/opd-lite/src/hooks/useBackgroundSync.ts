@@ -7,12 +7,17 @@ const SYNC_TAG = 'ultranos-sync-queue'
 const PERIODIC_TAG = 'ultranos-periodic-sync'
 
 /**
- * Registers the Background Sync API so the service worker can trigger
- * a sync drain when connectivity is restored — even if the tab is inactive.
+ * Registers the Background Sync + Periodic Background Sync APIs so the service
+ * worker can wake the app to drain the queue when connectivity is restored or
+ * on the browser's periodic schedule — even if the tab is backgrounded.
  *
- * Also listens for ULTRANOS_SYNC_TRIGGER messages from the service worker
- * and dispatches the existing 'ultranos:sync-now' custom event that the
- * sync drain worker already listens to.
+ * The SW handler for these tags lives in `src/app/sw.ts`; it posts an
+ * ULTRANOS_SYNC_TRIGGER message which we translate here into the existing
+ * 'ultranos:sync-now' event the in-page drain worker listens to.
+ *
+ * BOUNDARY: this can only resume sync while a window client is still open — the
+ * encryption key used to decrypt queued PHI lives in page memory only (cleared
+ * on tab/browser close), so the SW cannot drain a fully-closed app. See sw.ts.
  */
 export function useBackgroundSync() {
   useEffect(() => {

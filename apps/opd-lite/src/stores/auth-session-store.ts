@@ -6,6 +6,8 @@ export interface AuthSession {
   role: string
   sessionId: string
   email: string
+  /** Full display name from Supabase user_metadata (e.g. "Dr. Toor Khan"). */
+  name?: string
   kycStatus?: string
 }
 

@@ -9,15 +9,14 @@
  * so this is a defense-in-depth client-side check.
  */
 
+import { getHubTrpcUrl } from '@/lib/hub-url'
+
 export type ConsentCheckResult =
   | { granted: true; unverified?: boolean }
   | { granted: false; reason: 'no_consent' | 'expired' | 'network_error' }
 
 function getHubApiUrl(): string {
-  if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
-  }
-  return process.env.HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+  return getHubTrpcUrl()
 }
 
 function getAuthToken(): string | null {
