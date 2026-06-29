@@ -69,7 +69,7 @@ export const diagnosticReportRouter = createTRPCRouter({
         .eq('diagnostic_report_id', input.id)
 
       // Audit PHI access (CLAUDE.md Rule #6)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -180,7 +180,7 @@ export const diagnosticReportRouter = createTRPCRouter({
       const mapped = db.fromRows(items)
 
       // Audit PHI access (CLAUDE.md Rule #6)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -292,7 +292,7 @@ export const diagnosticReportRouter = createTRPCRouter({
       const mapped = db.fromRows(items)
 
       // Audit operational access (not PHI_READ — lab-scoped, no patient data beyond refs)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'READ',

@@ -47,7 +47,7 @@ export const practitionerKeyRouter = createTRPCRouter({
       }
 
       // Audit: key status lookup (practitioner_id is PHI-adjacent)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'READ',
@@ -181,7 +181,7 @@ export const practitionerKeyRouter = createTRPCRouter({
       }
 
       // Audit: key registration
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CREATE',
@@ -234,7 +234,7 @@ export const practitionerKeyRouter = createTRPCRouter({
       }
 
       // Audit: key revocation is a security-critical admin action
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'UPDATE',

@@ -43,7 +43,7 @@ export const consentRouter = createTRPCRouter({
       const CONSENT_GRANTOR_ROLES = ['PATIENT', 'GUARDIAN', 'ADMIN']
       if (!CONSENT_GRANTOR_ROLES.includes(ctx.user.role)) {
         // Story 21.3: Emit security audit event before rejecting
-        const roleAudit = new AuditLogger(ctx.supabase)
+        const roleAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
           await roleAudit.emit({
             action: 'SECURITY_VIOLATION',
@@ -67,7 +67,7 @@ export const consentRouter = createTRPCRouter({
       // ADMIN may sync on behalf of patients (override).
       if (ctx.user.role !== 'ADMIN' && input.grantorId !== ctx.user.sub) {
         // Story 21.3: Emit security audit event before rejecting
-        const impersonationAudit = new AuditLogger(ctx.supabase)
+        const impersonationAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
           await impersonationAudit.emit({
             action: 'SECURITY_VIOLATION',
@@ -128,7 +128,7 @@ export const consentRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -200,7 +200,7 @@ export const consentRouter = createTRPCRouter({
       }
 
       // Audit
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ', resourceType: 'CONSENT', resourceId: 'expiring-soon',
@@ -273,7 +273,7 @@ export const consentRouter = createTRPCRouter({
       }
 
       // Audit
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE', resourceType: 'CONSENT', resourceId: input.patientId,
@@ -306,7 +306,7 @@ export const consentRouter = createTRPCRouter({
         resourceType: input.resourceType,
       })
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',

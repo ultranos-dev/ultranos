@@ -199,7 +199,7 @@ export const labRouter = createTRPCRouter({
       }
 
       // Audit event for lab registration
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CREATE',
@@ -270,7 +270,7 @@ export const labRouter = createTRPCRouter({
         // If invalid actorId, fall back to session user or omit
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
 
       const actionMap: Record<string, string> = {
         LOGIN_SUCCESS: 'LOGIN',
@@ -340,7 +340,7 @@ export const labRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
 
       // Resolve HMAC key once — wrapped to prevent env var name leaks
@@ -488,7 +488,7 @@ export const labRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
       const labId = ctx.lab?.labId
       if (!labId) {
@@ -770,7 +770,7 @@ export const labRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
 
       const result = await analyzeFile(input.fileBase64, input.fileType)
@@ -952,7 +952,7 @@ export const labRouter = createTRPCRouter({
 
       // Emit audit event (AC 5) — use practitioner IDs only, never email
       if (result.changed) {
-        const audit = new AuditLogger(ctx.supabase)
+        const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
           await audit.emit({
             action: 'UPDATE',
@@ -994,7 +994,7 @@ export const labRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       const labId = ctx.lab?.labId
       const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
 
@@ -1121,7 +1121,7 @@ export const labRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       const labId = ctx.lab?.labId
       const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
       const now = new Date().toISOString()
@@ -1278,7 +1278,7 @@ export const labRouter = createTRPCRouter({
       }
 
       // Emit audit event (AC #6 — READ)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'READ',
@@ -1356,7 +1356,7 @@ export const labRouter = createTRPCRouter({
       }
 
       // Emit audit event (AC #7 — data access tracking)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CERTIFICATION_PROGRESS_VIEWED',
@@ -1458,7 +1458,7 @@ export const labRouter = createTRPCRouter({
       // P1+D2: audit after error check with accurate outcome.
       // Best-effort for emergency endpoint — audit failure must not block access during incidents.
       try {
-        const audit = new AuditLogger(ctx.supabase)
+        const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         await audit.emit({
           action: 'READ',
           resourceType: 'EMPLOYEE_HEALTH',

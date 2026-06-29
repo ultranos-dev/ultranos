@@ -51,7 +51,7 @@ export const notificationRouter = createTRPCRouter({
           .in('id', queuedIds)
 
         // Audit delivery events
-        const audit = new AuditLogger(ctx.supabase)
+        const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         for (const id of queuedIds) {
           try {
             await audit.emit({
@@ -133,7 +133,7 @@ export const notificationRouter = createTRPCRouter({
       }
 
       // Audit acknowledgement
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       await audit.emit({
         action: 'UPDATE',
         resourceType: 'NOTIFICATION',

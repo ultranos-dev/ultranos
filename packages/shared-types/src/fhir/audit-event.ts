@@ -17,6 +17,7 @@ export interface AuditEvent {
   outcome: AuditOutcome
   denialReason?: string    // Populated on DENIED outcome
   chainHash: string        // SHA-256(prev_event_hash + this_event_data)
+  orgId?: string           // Tenant org UUID — satisfies audit_log.org_id NOT NULL. Not part of the hash chain.
   metadata?: Record<string, unknown> // non-PHI context only
 }
 

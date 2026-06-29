@@ -118,7 +118,7 @@ export const subscriptionRouter = createTRPCRouter({
       }
 
       // Audit operational read (non-PHI)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'READ',
@@ -467,7 +467,7 @@ export const subscriptionRouter = createTRPCRouter({
       }
 
       // AC #5: Audit event — no PHI
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CREATE',
@@ -568,7 +568,7 @@ export const subscriptionRouter = createTRPCRouter({
       }
 
       // AC #5: Audit event — no PHI
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'UPDATE',
@@ -857,7 +857,7 @@ export const subscriptionRouter = createTRPCRouter({
           const setupData = await (adapter as any).createSetupIntent(customerId)
 
           // Audit event
-          const audit = new AuditLogger(ctx.supabase)
+          const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
           try {
             await audit.emit({
               action: 'PAYMENT_SETUP_INITIATED',
@@ -883,7 +883,7 @@ export const subscriptionRouter = createTRPCRouter({
       }
 
       // Adapter doesn't support createSetupIntent — return stub
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PAYMENT_SETUP_INITIATED',
@@ -920,7 +920,7 @@ export const subscriptionRouter = createTRPCRouter({
       }
 
       // Audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PAYMENT_METHOD_REMOVED',

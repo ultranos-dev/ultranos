@@ -265,7 +265,7 @@ export const drugCatalogRouter = createTRPCRouter({
       }
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       await audit.emit({
         action: AuditAction.DRUG_CATALOG_ENRICH,
         resourceType: AuditResourceType.DRUG_CATALOG,

@@ -44,7 +44,7 @@ export const auditRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       const results: Array<{ id: string; success: boolean }> = []
       const serverActorId = ctx.user.sub
 

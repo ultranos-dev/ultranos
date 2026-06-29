@@ -295,7 +295,7 @@ export const medicationRouter = createTRPCRouter({
 
           if (existing?.requester_id !== ctx.user.sub) {
             // Audit the rejected conflict attempt (CLAUDE.md Rule #6)
-            const conflictAudit = new AuditLogger(ctx.supabase)
+            const conflictAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
             try {
               await conflictAudit.emit({
                 action: 'PHI_WRITE',
@@ -318,7 +318,7 @@ export const medicationRouter = createTRPCRouter({
           }
 
           // Audit the idempotent replay (CLAUDE.md Rule #6)
-          const replayAudit = new AuditLogger(ctx.supabase)
+          const replayAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
           try {
             await replayAudit.emit({
               action: 'PHI_WRITE',
@@ -364,7 +364,7 @@ export const medicationRouter = createTRPCRouter({
       }
 
       // Audit PHI write (CLAUDE.md Rule #6)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -428,7 +428,7 @@ export const medicationRouter = createTRPCRouter({
       const decrypted = db.fromRow(data)
 
       // Audit PHI read (CLAUDE.md Rule #6)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -458,7 +458,7 @@ export const medicationRouter = createTRPCRouter({
     .use(enforceResourceAccess('MedicationRequest'))
     .input(GetStatusInputSchema)
     .query(async ({ ctx, input }) => {
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
 
       // Story 21.2: Signature verification enforcement BEFORE any DB lookup.
       if (!input.signedBundle) {
@@ -700,7 +700,7 @@ export const medicationRouter = createTRPCRouter({
 
       if (existingDispense && existingDispense.length > 0) {
         // Audit the duplicate attempt before rejecting
-        const dupAudit = new AuditLogger(ctx.supabase)
+        const dupAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
           await dupAudit.emit({
             action: 'DUPLICATE_DISPENSE_ATTEMPT',
@@ -732,7 +732,7 @@ export const medicationRouter = createTRPCRouter({
       const verifiedPharmacistRef = `Practitioner/${ctx.user.sub}`
       if (input.pharmacistRef !== verifiedPharmacistRef) {
         // Audit the mismatch (potential spoofing attempt or stale client data)
-        const mismatchAudit = new AuditLogger(ctx.supabase)
+        const mismatchAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
           await mismatchAudit.emit({
             action: 'SECURITY_VIOLATION',
@@ -881,7 +881,7 @@ export const medicationRouter = createTRPCRouter({
       }
 
       // 4. Emit audit log via AuditLogger (replaces direct medication_request_sync insert)
-      const dispenseAudit = new AuditLogger(ctx.supabase)
+      const dispenseAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await dispenseAudit.emit({
           action: 'PHI_WRITE',
@@ -1018,7 +1018,7 @@ export const medicationRouter = createTRPCRouter({
       )
 
       // Audit PHI write — prescription status changed (CLAUDE.md Rule #6)
-      const completeAudit = new AuditLogger(ctx.supabase)
+      const completeAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await completeAudit.emit({
           action: 'PHI_WRITE',
@@ -1098,7 +1098,7 @@ export const medicationRouter = createTRPCRouter({
         input.hlcTimestamp,
       )
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -1237,7 +1237,7 @@ export const medicationRouter = createTRPCRouter({
       }
 
       // Audit: PAPER_PRESCRIPTION_CREATED (AC #11)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PAPER_PRESCRIPTION_CREATED',
@@ -1300,7 +1300,7 @@ export const medicationRouter = createTRPCRouter({
       // AC #8: Paper prescriptions cannot be digitally invalidated
       if (rx.prescription_status === 'LEGACY_PAPER') {
         // Audit the rejected access attempt (CLAUDE.md Rule #6)
-        const rejectionAudit = new AuditLogger(ctx.supabase)
+        const rejectionAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
           await rejectionAudit.emit({
             action: 'PHI_READ',
@@ -1348,7 +1348,7 @@ export const medicationRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -1423,11 +1423,13 @@ export const medicationRouter = createTRPCRouter({
         })
       }
 
-      // 3. Query active allergies (select fields needed by drug-db allergy matching)
+      // 3. Query active allergies (select fields needed by drug-db allergy matching).
+      // Columns are substance_*; patient_ref is stored as a BARE UUID. The
+      // substance text is field-encrypted — db.fromRow() decrypts it below.
       const { data: allergies, error: allergyError } = await ctx.supabase
         .from('allergy_intolerances')
-        .select('id, code_coding, code_text, clinical_status_code, patient_ref')
-        .eq('patient_ref', patientRef)
+        .select('id, substance_code, substance_text, substance_free_text, clinical_status_code, patient_ref')
+        .eq('patient_ref', input.patientId)
         .eq('clinical_status_code', 'active')
 
       if (allergyError) {
@@ -1455,7 +1457,16 @@ export const medicationRouter = createTRPCRouter({
           pendingRxNames,
           {
             activeMedications: activeMedStatements,
-            activeAllergies: (allergies ?? []).map((row) => db.fromRow(row)),
+            // Reshape the flat (decrypted) allergy rows into the FHIR shape the
+            // drug-db checker reads (allergy._ultranos.substanceFreeText / code.text).
+            activeAllergies: (allergies ?? []).map((row) => {
+              const a = db.fromRow(row) as Record<string, unknown>
+              return {
+                resourceType: 'AllergyIntolerance',
+                code: { text: (a.substanceText as string) ?? undefined },
+                _ultranos: { substanceFreeText: (a.substanceFreeText as string) ?? undefined },
+              }
+            }) as unknown as Parameters<typeof checkInteractions>[2]['activeAllergies'],
           },
           adapter,
         )
@@ -1471,7 +1482,7 @@ export const medicationRouter = createTRPCRouter({
       }
 
       // 6. Audit PHI read (CLAUDE.md Rule #6)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -1628,7 +1639,7 @@ export const medicationRouter = createTRPCRouter({
       // — setTimeout is unreliable in serverless; cron ensures PHI deletion (PRD Section 9)
 
       // Audit: TTS_GENERATED — never log medication content (CLAUDE.md Rule #1)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -1681,7 +1692,7 @@ export const medicationRouter = createTRPCRouter({
         return { success: false }
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',

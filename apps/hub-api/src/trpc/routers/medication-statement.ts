@@ -42,7 +42,7 @@ export const medicationStatementRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -93,7 +93,7 @@ export const medicationStatementRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to retrieve active medication statements' })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -222,7 +222,7 @@ export const medicationStatementRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -299,7 +299,7 @@ export const medicationStatementRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',

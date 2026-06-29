@@ -63,7 +63,7 @@ export const patientKeyRouter = createTRPCRouter({
       }
 
       // Audit: patient key registration
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CREATE',

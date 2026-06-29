@@ -76,7 +76,7 @@ export const encounterRouter = createTRPCRouter({
           }
 
           // AC 6: Audit idempotent create path
-          const audit = new AuditLogger(ctx.supabase)
+          const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
           try {
             await audit.emit({
               action: 'PHI_WRITE',
@@ -102,7 +102,7 @@ export const encounterRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -160,7 +160,7 @@ export const encounterRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -244,7 +244,7 @@ export const encounterRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -335,7 +335,7 @@ export const encounterRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -425,7 +425,7 @@ export const encounterRouter = createTRPCRouter({
       }
 
       // AC 4: Emit PHI_WRITE audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -487,7 +487,7 @@ export const encounterRouter = createTRPCRouter({
       const rows = db.fromRows(data ?? [])
 
       // AC 4: Emit PHI_READ audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -556,7 +556,7 @@ export const encounterRouter = createTRPCRouter({
 
       const rows = db.fromRows(data ?? [])
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -625,7 +625,7 @@ export const encounterRouter = createTRPCRouter({
 
       if (!hasAIConsent) {
         // Audit the denied attempt (metadata only, no clinical content)
-        const audit = new AuditLogger(ctx.supabase)
+        const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
           await audit.emit({
             action: 'PHI_READ',
@@ -675,7 +675,7 @@ export const encounterRouter = createTRPCRouter({
       aiScribeInvocationsTotal.inc({ status: 'error' in result ? 'error' : 'success' })
 
       // Audit: AI_SCRIBE_INVOKED (no clinical content, only metadata)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -819,7 +819,7 @@ export const encounterRouter = createTRPCRouter({
       aiScribeEditRate.set(editRate)
 
       // Audit: AI_SCRIBE_CONFIRMED (no clinical content)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',

@@ -129,7 +129,7 @@ export const aiRouter = createTRPCRouter({
       }
 
       // Audit the model publish event (non-PHI, but important for traceability)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       await audit.emit({
         actorId: ctx.user.sub,
         actorRole: ctx.user.role,

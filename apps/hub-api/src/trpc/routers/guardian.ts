@@ -50,7 +50,7 @@ export const guardianRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
 
       // Server-side OTP verification via Supabase Admin SDK.
       // `type` is always 'sms' for phone-based OTP regardless of delivery
@@ -162,7 +162,7 @@ export const guardianRouter = createTRPCRouter({
         await redis.del(nonceKey)
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
 
       // Insert guardian link — DB unique index enforces V1 limit
       const { data: link, error: insertError } = await ctx.supabase
@@ -260,7 +260,7 @@ export const guardianRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
 
       // Revoke the guardian link and verify a row was actually matched
       const { data: revoked, error: updateError } = await ctx.supabase

@@ -148,7 +148,7 @@ export const registrationRouter = createTRPCRouter({
         createdUserId = authData.user.id
 
         // Emit audit event — no PHI (AC #7)
-        const audit = new AuditLogger(ctx.supabase)
+        const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
           await audit.emit({
             action: 'CREATE',
@@ -317,7 +317,7 @@ export const registrationRouter = createTRPCRouter({
       }
 
       // Emit audit event per module added (no PHI)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       for (const code of uniqueModuleCodes) {
         try {
           await audit.emit({
@@ -470,7 +470,7 @@ export const registrationRouter = createTRPCRouter({
       }
 
       // Emit audit event — no PHI (AC #11, opaque IDs only)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'KYC_SUBMITTED',

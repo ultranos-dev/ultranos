@@ -205,7 +205,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   // Audit log
-  const audit = new AuditLogger(supabase)
+  const audit = new AuditLogger(supabase, orgId ?? undefined)
   try {
     await audit.emit({
       action: `BILLING_${webhookEvent.eventType}`,

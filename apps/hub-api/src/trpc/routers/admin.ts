@@ -284,7 +284,7 @@ export const adminRouter = createTRPCRouter({
         }
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       const isSuccess = input.event === 'ADMIN_LOGIN_SUCCESS'
       const sourceIpHash = ip !== 'unknown' ? ipHash : undefined
 
@@ -495,7 +495,7 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CREATE',
@@ -600,7 +600,7 @@ export const adminRouter = createTRPCRouter({
         REACTIVATE: 'LAB_REACTIVATED',
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: auditActionMap[input.action]!,
@@ -749,7 +749,7 @@ export const adminRouter = createTRPCRouter({
       })
 
       // Audit PHI read — CLAUDE.md rule 6
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -830,7 +830,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Emit audit event — AC #11
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'LICENSE_RENEWED',
@@ -1059,7 +1059,7 @@ export const adminRouter = createTRPCRouter({
       const sla = calculateSlaDeadline(submission.submitted_at)
 
       // Audit PHI read — CLAUDE.md rule 6
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -1209,7 +1209,7 @@ export const adminRouter = createTRPCRouter({
         REQUEST_MORE_INFO: 'KYC_MORE_INFO_REQUESTED',
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: auditActionMap[input.action]!,
@@ -1327,7 +1327,7 @@ export const adminRouter = createTRPCRouter({
       }).sort((a, b) => (SEVERITY_ORDER[a.severity] ?? 99) - (SEVERITY_ORDER[b.severity] ?? 99))
 
       // Audit PHI read — CLAUDE.md rule 6
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -1463,7 +1463,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit PHI read — CLAUDE.md rule 6 (no exceptions)
-      const detailAudit = new AuditLogger(ctx.supabase)
+      const detailAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await detailAudit.emit({
           action: 'PHI_READ',
@@ -1569,7 +1569,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit log — CLAUDE.md rule 6: mandatory, no exceptions
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: auditActionMap[input.action]!,
@@ -1746,7 +1746,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit PHI read — metrics read aggregate data
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -1805,7 +1805,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit PHI read
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -2070,7 +2070,7 @@ export const adminRouter = createTRPCRouter({
       }))
 
       // Audit PHI read — CLAUDE.md rule 6
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -2128,7 +2128,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit PHI read
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -2306,7 +2306,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'USER_CREATED',
@@ -2444,7 +2444,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'USER_UPDATED',
@@ -2551,7 +2551,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'USER_SUSPENDED',
@@ -2660,7 +2660,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'USER_REACTIVATED',
@@ -2729,7 +2729,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'INVITATION_RESENT',
@@ -2802,7 +2802,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PASSWORD_RESET_TRIGGERED',
@@ -2889,7 +2889,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PROFILE_UPDATED',
@@ -2987,7 +2987,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'ORGANIZATION_UPDATED',
@@ -3329,7 +3329,7 @@ export const adminRouter = createTRPCRouter({
       ])
 
       // Emit export audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'AUDIT_EVENTS_EXPORTED',
@@ -3599,7 +3599,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit PHI read — CLAUDE.md rule 6
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PROVIDER_PROFILE_VIEWED',
@@ -3701,7 +3701,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit — CLAUDE.md rule 6
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'ANOMALY_ESCALATED',
@@ -3766,7 +3766,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit — CLAUDE.md rule 6
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'ANOMALY_RESOLVED',
@@ -3820,7 +3820,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit — CLAUDE.md rule 6
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'ANOMALY_REASSIGNED',
@@ -3914,7 +3914,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit — CLAUDE.md rule 6
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'ORG_THRESHOLDS_UPDATED',
@@ -4015,7 +4015,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit — CLAUDE.md rule 6
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'MODULE_SETTINGS_UPDATED',
@@ -4152,7 +4152,7 @@ export const adminRouter = createTRPCRouter({
 
       // Emit audit event (AC #5)
       if (result.changed) {
-        const audit = new AuditLogger(ctx.supabase)
+        const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
           await audit.emit({
             action: 'UPDATE',
@@ -4234,7 +4234,7 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to assign staff to lab' })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CREATE',
@@ -4293,7 +4293,7 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to remove staff from lab' })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'DELETE',
@@ -4597,7 +4597,7 @@ export const adminRouter = createTRPCRouter({
       })
 
       // Emit audit event for data export (AC #6)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: AuditAction.EXPORT,
@@ -4859,7 +4859,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Emit audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CREATE',
@@ -4922,7 +4922,7 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'UPDATE',
@@ -4985,7 +4985,7 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'UPDATE',
@@ -5122,7 +5122,7 @@ export const adminRouter = createTRPCRouter({
         .single()
 
       // P1: audit after error check with accurate outcome
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       await audit.emit({
         action: 'READ',
         resourceType: 'EMPLOYEE_HEALTH',
@@ -5224,7 +5224,7 @@ export const adminRouter = createTRPCRouter({
           )
         }
       } catch (encErr) {
-        const audit = new AuditLogger(ctx.supabase)
+        const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         await audit.emit({
           action: 'UPDATE',
           resourceType: 'EMPLOYEE_HEALTH',
@@ -5282,7 +5282,7 @@ export const adminRouter = createTRPCRouter({
         ...(input.exposureHistory.length > 0 ? ['exposureHistory'] : []),
       ]
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       await audit.emit({
         action: 'UPDATE',
         resourceType: 'EMPLOYEE_HEALTH',
@@ -5401,7 +5401,7 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CERTIFICATION_PATHWAY_CREATED',
@@ -5462,7 +5462,7 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CERTIFICATION_PATHWAY_UPDATED',
@@ -5503,7 +5503,7 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CERTIFICATION_PATHWAY_ARCHIVED',
@@ -5676,7 +5676,7 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CERTIFICATION_MILESTONE_REVIEWED',
@@ -5782,7 +5782,7 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CERTIFICATION_PATHWAY_ASSIGNED',
@@ -5921,7 +5921,7 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CERTIFICATION_CREDENTIAL_ISSUED',
@@ -6036,7 +6036,7 @@ export const adminRouter = createTRPCRouter({
       const labIds = labList.map((l) => l.id)
 
       if (labIds.length === 0) {
-        const audit = new AuditLogger(ctx.supabase)
+        const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
           await audit.emit({
             action: 'READ',
@@ -6102,7 +6102,7 @@ export const adminRouter = createTRPCRouter({
         }
       })
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'READ',
@@ -6313,7 +6313,7 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create purchase order' })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CREATE',
@@ -6387,7 +6387,7 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'CONFLICT', message: 'Order status was modified by another user. Please refresh and try again.' })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'UPDATE',
@@ -6463,7 +6463,7 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create supplier' })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CREATE',
@@ -6513,7 +6513,7 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Supplier not found' })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'UPDATE',
@@ -6595,7 +6595,7 @@ export const adminRouter = createTRPCRouter({
       }
     })
 
-    const audit = new AuditLogger(ctx.supabase)
+    const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
     try {
       await audit.emit({
         action: 'NETWORK_OVERVIEW_ACCESSED',
@@ -6700,7 +6700,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // P3: audit metadata includes affectedLabIds per AC 7
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'OUTBREAK_MODE_ACTIVATED',
@@ -6789,7 +6789,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // P3: audit metadata includes affectedLabIds per AC 7
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'OUTBREAK_MODE_DEACTIVATED',
@@ -6949,7 +6949,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit event — log only practitioner_id, never name or phone (CLAUDE.md PHI rule)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'CHW_ENROLLED',
@@ -7124,7 +7124,7 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to save surveillance config' })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'SURVEILLANCE_CONFIG_UPDATED',
@@ -7286,7 +7286,7 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'CONFLICT', message: 'Alert is already acknowledged' })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'SURVEILLANCE_ALERT_ACKNOWLEDGED',
@@ -7444,7 +7444,7 @@ function mapKycQueueEntry(row: Record<string, unknown>) {
  * Emit audit event for KYC list reads — extracted to avoid duplication.
  */
 async function emitKycListAudit(ctx: { supabase: SupabaseClient; user: { sub: string; role: string; sessionId: string } }, statusFilter: string, resultCount: number) {
-  const audit = new AuditLogger(ctx.supabase)
+  const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
   try {
     await audit.emit({
       action: 'PHI_READ',

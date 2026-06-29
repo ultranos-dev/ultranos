@@ -251,7 +251,7 @@ export const appointmentRouter = createTRPCRouter({
       }
 
       // Audit: PHI_READ
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -306,7 +306,7 @@ export const appointmentRouter = createTRPCRouter({
       }
 
       // Audit: PHI_READ
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -420,7 +420,7 @@ export const appointmentRouter = createTRPCRouter({
       }
 
       // Audit: PHI_WRITE
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -517,7 +517,7 @@ export const appointmentRouter = createTRPCRouter({
       }
 
       // Audit: PHI_WRITE
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -644,7 +644,7 @@ export const appointmentRouter = createTRPCRouter({
         })
 
         // Audit: PHI_WRITE for each
-        const audit = new AuditLogger(ctx.supabase)
+        const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
           await audit.emit({
             action: 'PHI_WRITE',

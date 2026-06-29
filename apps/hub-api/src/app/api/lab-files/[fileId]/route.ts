@@ -43,10 +43,12 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const userMeta = (payload.user_metadata as Record<string, unknown>) ?? {}
   const user = {
     sub: payload.sub,
-    role: ((payload.role as string) ?? '').toUpperCase(),
+    role: ((userMeta.role as string) ?? (payload.role as string) ?? '').toUpperCase(),
     sessionId: (payload.session_id as string) ?? '',
+    orgId: (userMeta.org_id as string) ?? (payload.org_id as string) ?? undefined,
   }
 
   // RBAC check
@@ -118,7 +120,7 @@ export async function GET(
   }
 
   // Audit file access (CLAUDE.md Rule #6)
-  const audit = new AuditLogger(supabase)
+  const audit = new AuditLogger(supabase, user.orgId)
   try {
     await audit.emit({
       action: 'PHI_READ',

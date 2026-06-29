@@ -268,7 +268,7 @@ export const billingRouter = createTRPCRouter({
       }
 
       // AC #8: Audit log for every billing event — amounts and provider refs ONLY
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: `BILLING_${webhookEvent.eventType}`,
@@ -347,7 +347,7 @@ export const billingRouter = createTRPCRouter({
       }
 
       // Audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'DATA_PURGE_CONFIRMED',
@@ -414,7 +414,7 @@ export const billingRouter = createTRPCRouter({
       }
 
       // Audit event
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'DATA_PURGE_CANCELLED',
@@ -472,7 +472,7 @@ export const billingRouter = createTRPCRouter({
       const invoices = await adapter.getInvoices(input.customerId)
 
       // AC #8: Audit event for invoice access
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'READ',

@@ -62,7 +62,7 @@ export const healthRouter = createTRPCRouter({
       }).optional(),
     )
     .query(async ({ ctx, input }) => {
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       const limit = input?.limit ?? 1000
       const result = await audit.verifyChain(limit)
 

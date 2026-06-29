@@ -291,7 +291,7 @@ export const patientRegistrationRouter = createTRPCRouter({
 
       // Step 5: Emit audit event with opaque patient ID only (AC #7 — never phone, name, or DOB)
       // D2: Queue for retry on failure rather than silently dropping
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       const auditEvent = {
         action: 'CREATE' as const,
         resourceType: 'PATIENT' as const,
@@ -339,7 +339,7 @@ export const patientRegistrationRouter = createTRPCRouter({
     .input(z.object({ phone: z.string().min(7).max(20).regex(/^\+\d+$/) }))
     .mutation(async ({ ctx, input }) => {
       const { hmacKey } = getFieldEncryptionKeys()
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
 
       // Step 0: bind to the session's OTP-verified phone (prevents discovering phone B
       // while authed for phone A). FORBIDDEN on mismatch without leaking which phone.
@@ -437,7 +437,7 @@ export const patientRegistrationRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { hmacKey } = getFieldEncryptionKeys()
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
 
       // Bind to the session's OTP-verified phone before resolving any patient by phone.
       await assertSessionPhone(ctx, input.phone, audit, 'claim')
@@ -648,7 +648,7 @@ export const patientRegistrationRouter = createTRPCRouter({
         /* link row already set via auth_user_id on patient row */
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       const auditEvent = {
         action: 'CREATE' as const,
         resourceType: 'PATIENT' as const,

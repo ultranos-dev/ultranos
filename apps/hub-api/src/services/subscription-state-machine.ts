@@ -138,7 +138,7 @@ export async function transitionOrg(
   }
 
   // AC #4: Emit audit event — no PHI, only org_id and transition metadata
-  const audit = new AuditLogger(ctx.supabase)
+  const audit = new AuditLogger(ctx.supabase, orgId)
   try {
     await audit.emit({
       action: 'ORG_STATUS_TRANSITION',

@@ -72,7 +72,7 @@ export const usersRouter = createTRPCRouter({
    * All PHI access is audited with opaque IDs only (CLAUDE.md Rules #1, #6).
    */
   getProfile: protectedProcedure.query(async ({ ctx }) => {
-    const audit = new AuditLogger(ctx.supabase)
+    const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
     const { encryptionKey } = getFieldEncryptionKeys()
 
     /** Decrypt a field value if it is a non-empty string; otherwise return undefined. */

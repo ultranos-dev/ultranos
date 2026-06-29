@@ -40,7 +40,7 @@ export const patientAdminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Patient not found' })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -110,7 +110,7 @@ export const patientAdminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Admin search failed' })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -262,7 +262,7 @@ export const patientAdminRouter = createTRPCRouter({
       }
 
       // Audit PHI write
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -386,7 +386,7 @@ export const patientAdminRouter = createTRPCRouter({
         .eq('id', mergeAudit.duplicate_id)
 
       // Audit PHI write
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',

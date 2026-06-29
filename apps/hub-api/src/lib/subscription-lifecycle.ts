@@ -60,7 +60,7 @@ export async function scheduleUserSuspension(
   }
 
   // Audit the scheduling
-  const audit = new AuditLogger(supabase)
+  const audit = new AuditLogger(supabase, orgId)
   try {
     await audit.emit({
       action: 'UPDATE',
@@ -104,6 +104,7 @@ export async function suspendUser(
   reason: string,
   actorId: string,
   sessionId: string,
+  orgId?: string,
 ): Promise<void> {
   const now = new Date().toISOString()
 
@@ -147,7 +148,7 @@ export async function suspendUser(
   await supabase.auth.admin.signOut(userId)
 
   // Audit the suspension
-  const audit = new AuditLogger(supabase)
+  const audit = new AuditLogger(supabase, orgId)
   try {
     await audit.emit({
       action: 'UPDATE',
@@ -183,7 +184,7 @@ export async function processPendingSuspensions(
 
   const { data: pending, error } = await supabase
     .from('practitioners')
-    .select('id, auth_user_id, suspension_reason')
+    .select('id, auth_user_id, suspension_reason, org_id')
     .lte('pending_suspension_date', now)
     .is('suspended_at', null)
 
@@ -209,6 +210,7 @@ export async function processPendingSuspensions(
         (p.suspension_reason as string) ?? 'MODULE_CANCELLED',
         'SYSTEM',
         'cron',
+        (p.org_id as string) ?? undefined,
       )
       processedCount++
     } catch (err) {
@@ -294,7 +296,7 @@ export async function reactivateUsersForModule(
   }
 
   // Audit the reactivation
-  const audit = new AuditLogger(supabase)
+  const audit = new AuditLogger(supabase, orgId)
   try {
     await audit.emit({
       action: 'UPDATE',

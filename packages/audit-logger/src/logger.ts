@@ -32,7 +32,16 @@ function computeChainHash(prevHash: string, event: AuditEventInput & { id: strin
 }
 
 export class AuditLogger {
-  constructor(private readonly db: SupabaseClient) {}
+  /**
+   * @param db        Supabase client.
+   * @param defaultOrgId  Tenant org applied to every emitted event when the
+   *   event itself doesn't carry one. Required for the audit_log.org_id NOT NULL
+   *   constraint — callers in a request context should pass ctx.user.orgId.
+   */
+  constructor(
+    private readonly db: SupabaseClient,
+    private readonly defaultOrgId?: string,
+  ) {}
 
   async emit(input: AuditEventInput): Promise<AuditEvent> {
     // Generate id and timestamp in JS (preserves existing behavior)
@@ -57,6 +66,7 @@ export class AuditLogger {
       p_outcome: input.outcome,
       p_denial_reason: input.denialReason ?? null,
       p_metadata: input.metadata ?? null,
+      p_org_id: input.orgId ?? this.defaultOrgId ?? null,
     })
 
     if (error) {
@@ -85,6 +95,7 @@ export class AuditLogger {
       outcome: input.outcome,
       denialReason: input.denialReason,
       chainHash: row.chain_hash,
+      orgId: input.orgId ?? this.defaultOrgId,
       metadata: input.metadata,
     }
   }
