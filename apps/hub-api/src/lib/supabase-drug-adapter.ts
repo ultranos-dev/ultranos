@@ -13,7 +13,9 @@ export function createSupabaseDrugAdapter(supabase: SupabaseClient): DrugDatabas
   return {
     async getInteractions(): Promise<VocabInteractionEntry[]> {
       const { data, error } = await supabase
-        .from('vocab_interactions')
+        // The canonical interactions table is vocabulary_interactions (populated
+        // by the vocabulary sync). "vocab_interactions" never existed.
+        .from('vocabulary_interactions')
         .select('drug_a, drug_b, severity, description')
 
       if (error || !data) return []

@@ -81,8 +81,36 @@ export const patientRouter = createTRPCRouter({
         ? (rows[rows.length - 1] as Record<string, unknown>).created_at as string
         : null
 
+      // Directory summary flags for this page of patients — a boolean and a
+      // date only (no allergy/encounter PHI), so the directory's Allergies and
+      // Last Visit columns are complete on first login without per-patient pulls.
+      const pageIds = rows.map((r) => (r as unknown as Record<string, unknown>).id as string)
+      const allergicIds = new Set<string>()
+      const lastVisitByPatient = new Map<string, string>()
+      if (pageIds.length > 0) {
+        const [allergyRes, encounterRes] = await Promise.all([
+          ctx.supabase
+            .from('allergy_intolerances')
+            .select('patient_ref')
+            .in('patient_ref', pageIds),
+          ctx.supabase
+            .from('encounters')
+            .select('subject_id, period_start')
+            .in('subject_id', pageIds)
+            .not('period_start', 'is', null),
+        ])
+        for (const a of (allergyRes.data ?? []) as Array<{ patient_ref?: string }>) {
+          if (a.patient_ref) allergicIds.add(a.patient_ref)
+        }
+        for (const e of (encounterRes.data ?? []) as Array<{ subject_id?: string; period_start?: string }>) {
+          if (!e.subject_id || !e.period_start) continue
+          const cur = lastVisitByPatient.get(e.subject_id)
+          if (!cur || e.period_start > cur) lastVisitByPatient.set(e.subject_id, e.period_start)
+        }
+      }
+
       // Audit PHI access (CLAUDE.md Rule #6)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -150,6 +178,9 @@ export const patientRouter = createTRPCRouter({
             occupation:  (row.occupation as string) ?? undefined,
             educationLevel: (row.education_level as string) ?? undefined,
             disability:  (row.disability as boolean) ?? undefined,
+            // Directory summary flags (no PHI beyond a boolean + date).
+            hasAllergies: allergicIds.has(row.id as string),
+            lastVisitAt:  lastVisitByPatient.get(row.id as string) ?? undefined,
           },
           meta: {
             lastUpdated: (row.updated_at as string) ?? (row.created_at as string),
@@ -220,7 +251,7 @@ export const patientRouter = createTRPCRouter({
       }
 
       // Audit PHI access — patient identity data returned (CLAUDE.md Rule #6)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -363,7 +394,7 @@ export const patientRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -580,7 +611,7 @@ export const patientRouter = createTRPCRouter({
         (rpcData as Record<string, unknown>)['patientId'] as string ?? patientId
 
       // Step 8: Audit
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -738,7 +769,7 @@ export const patientRouter = createTRPCRouter({
       })
 
       // Audit
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -873,7 +904,7 @@ export const patientRouter = createTRPCRouter({
       }
 
       // Audit PHI read (CLAUDE.md Rule #6)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -1042,7 +1073,7 @@ export const patientRouter = createTRPCRouter({
       }
 
       // Audit event — opaque patient ID only, no PHI (CLAUDE.md Rule #6)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'UPDATE',
@@ -1311,7 +1342,7 @@ export const patientRouter = createTRPCRouter({
       }
 
       // Audit PHI write (CLAUDE.md Rule #6)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -1377,7 +1408,7 @@ export const patientRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update biometric' })
       }
 
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
@@ -1453,7 +1484,7 @@ export const patientRouter = createTRPCRouter({
       }
 
       // Audit the audit trail read itself (CLAUDE.md Rule #6)
-      const audit = new AuditLogger(ctx.supabase)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',

@@ -175,6 +175,13 @@ export interface FhirPatient {
     educationLevel?: EducationLevel
     /** True if patient self-reports a disability */
     disability?: boolean
+    // ── Directory list summary (computed by patient.list) ─────────
+    /** True if the patient has any recorded allergy. Derived flag for the
+     *  directory list — no allergy detail/PHI is exposed. */
+    hasAllergies?: boolean
+    /** ISO 8601 instant of the patient's most recent encounter (period.start),
+     *  or absent if none. Derived for the directory's Last Visit column. */
+    lastVisitAt?: string
   }
 
   // FHIR R4 Meta — canonical field names
