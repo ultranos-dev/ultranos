@@ -61,9 +61,25 @@ export function useOrderSync(): OrderSyncState {
       const isFullSync = pollCount % FULL_SYNC_EVERY_N === 1
       const since = isFullSync ? undefined : lastSyncedAtCache
 
-      let result
+      type FetchedOrders = Awaited<ReturnType<typeof pullOrders>>['orders']
+      let fetched: FetchedOrders
+      let syncTimestamp: string | null
       try {
-        result = await pullOrders(token, since)
+        // Page through EVERY page (esp. on full sync) so tombstone reconciliation
+        // below sees the complete server set and never false-cancels orders that
+        // merely fell beyond a single page.
+        const all: FetchedOrders = []
+        let cursor: string | undefined
+        let lastTs: string | null = null
+        while (true) {
+          const pageResult = await pullOrders(token, since, cursor)
+          all.push(...pageResult.orders)
+          if (pageResult.syncTimestamp) lastTs = pageResult.syncTimestamp
+          if (!pageResult.nextCursor) break
+          cursor = pageResult.nextCursor
+        }
+        fetched = all
+        syncTimestamp = lastTs
       } catch {
         const cached = await getOrders()
         if (!cancelledRef.current) {
@@ -74,8 +90,6 @@ export function useOrderSync(): OrderSyncState {
       }
 
       if (cancelledRef.current) return
-
-      const { orders: fetched, syncTimestamp } = result
 
       // P1: Track existing order IDs BEFORE upsert for new-order detection
       const existingIds = new Set((await getOrders()).map((o) => o.orderId))
@@ -158,9 +172,16 @@ export function useOrderSync(): OrderSyncState {
     sync()
     const interval = lowDataMode ? LOW_DATA_POLL_INTERVAL_MS : POLL_INTERVAL_MS
     intervalRef.current = setInterval(sync, interval)
+
+    // Refresh the worklist immediately on reconnect instead of waiting up to a
+    // full poll interval (up to 5 min in low-data mode).
+    const handleOnline = () => { void sync() }
+    window.addEventListener('online', handleOnline)
+
     return () => {
       cancelledRef.current = true
       if (intervalRef.current) clearInterval(intervalRef.current)
+      window.removeEventListener('online', handleOnline)
     }
   }, [sync, lowDataMode])
 

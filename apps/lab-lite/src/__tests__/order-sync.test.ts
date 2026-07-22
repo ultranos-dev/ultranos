@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import 'fake-indexeddb/auto'
-import { getDb, putOrders, getOrders, type LabOrderEntry } from '../lib/db'
+import { getDb, putOrders, getOrders, updateOrderStatus, type LabOrderEntry } from '../lib/db'
 
 // Mock supabase
 vi.mock('@/lib/supabase', () => ({
@@ -114,6 +114,18 @@ describe('Order Sync (pullOrders / acknowledgeOrder)', () => {
     expect(stored).toHaveLength(1)
     expect(stored[0].patientFirstName).toBe('Ahmad')
     expect(stored[0].status).toBe('RECEIVED')
+  })
+
+  it('updateOrderStatus marks a cached order CANCELLED (tombstone reconciliation)', async () => {
+    await putOrders([makeOrder({ orderId: 'ord-1', status: 'RECEIVED' })])
+    await updateOrderStatus('ord-1', 'CANCELLED')
+    const stored = await getOrders()
+    expect(stored.find((o) => o.orderId === 'ord-1')?.status).toBe('CANCELLED')
+  })
+
+  it('updateOrderStatus is a no-op for an unknown order id', async () => {
+    await expect(updateOrderStatus('does-not-exist', 'CANCELLED')).resolves.toBeUndefined()
+    expect(await getOrders()).toHaveLength(0)
   })
 
   it('offline fallback serves cached orders from Dexie', async () => {

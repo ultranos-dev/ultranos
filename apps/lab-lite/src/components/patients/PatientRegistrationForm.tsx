@@ -102,19 +102,24 @@ export function PatientRegistrationForm() {
   }
 
   async function saveAndRedirect(patientId: string) {
+    // Rule #7 data minimization: the FULL demographics (father's name, exact DOB,
+    // phone) go to the Hub via createPatient, but the lab only RETAINS what it
+    // needs locally — first name, gender (required for lab reference ranges), and
+    // birth YEAR (for age). Father's name, exact date of birth, and phone are
+    // never persisted in the lab's local store.
+    const birthYearValue = yearOnly
+      ? Number(birthYear)
+      : (birthDate ? new Date(birthDate).getFullYear() : undefined)
+
     const patient = {
       id: patientId,
       resourceType: 'Patient',
-      name: [{ given: [nameGiven.trim()], family: nameFather.trim() || undefined }],
+      name: [{ given: [nameGiven.trim()] }],
       gender,
-      ...(yearOnly
-        ? {}
-        : { birthDate }),
       _ultranos: {
         nameLocal: nameGiven.trim(),
-        nameFather: nameFather.trim() || undefined,
-        birthYearOnly: yearOnly,
-        birthYear: yearOnly ? Number(birthYear) : undefined,
+        birthYearOnly: true,
+        birthYear: birthYearValue,
       },
       meta: { lastUpdated: new Date().toISOString(), versionId: '1' },
     }

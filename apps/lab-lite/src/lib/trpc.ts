@@ -446,19 +446,23 @@ export interface LabOrderResponse {
 export interface PullOrdersResult {
   orders: LabOrderResponse[]
   syncTimestamp: string | null
+  /** Keyset cursor for the next page, or null when the last page has been reached. */
+  nextCursor: string | null
 }
 
 /**
- * Pull pending test orders from Hub API.
+ * Pull one page of pending test orders from the Hub API.
  * Returns ONLY data-minimized order summaries (CLAUDE.md Rule #7).
- * Supports incremental sync via `since` parameter.
+ * Supports incremental sync via `since` and cursor pagination via `cursor`
+ * (callers loop until nextCursor is null to fetch every active order).
  */
 export async function pullOrders(
   token: string,
   since?: string,
+  cursor?: string,
 ): Promise<PullOrdersResult> {
   const input = encodeURIComponent(
-    JSON.stringify({ json: { ...(since ? { since } : {}) } }),
+    JSON.stringify({ json: { ...(since ? { since } : {}), ...(cursor ? { cursor } : {}) } }),
   )
   const res = await fetch(`${getHubApiUrl()}/lab.pullOrders?input=${input}`, {
     method: 'GET',
@@ -467,10 +471,14 @@ export async function pullOrders(
   })
   if (!res.ok) throw new Error(`Pull orders failed: ${res.status}`)
   const body = (await res.json()) as {
-    result: { data: { json: { orders: LabOrderResponse[]; syncTimestamp: string | null } } }
+    result: { data: { json: { orders: LabOrderResponse[]; syncTimestamp: string | null; nextCursor: string | null } } }
   }
   const json = body.result.data.json
-  return { orders: json.orders ?? [], syncTimestamp: json.syncTimestamp ?? null }
+  return {
+    orders: json.orders ?? [],
+    syncTimestamp: json.syncTimestamp ?? null,
+    nextCursor: json.nextCursor ?? null,
+  }
 }
 
 /**

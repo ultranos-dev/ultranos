@@ -2402,6 +2402,16 @@ export async function getOrdersForPatient(patientRef: string): Promise<LabOrderE
   return db.orders.where('patientRef').equals(patientRef).toArray()
 }
 
+/**
+ * Update the status of a locally-cached order by its primary key (&orderId).
+ * Used by the full-sync tombstone reconciliation to mark orders that have
+ * disappeared server-side as CANCELLED. No-op if the order isn't present.
+ */
+export async function updateOrderStatus(orderId: string, status: LabOrderStatus): Promise<void> {
+  const db = getDb()
+  await db.orders.update(orderId, { status })
+}
+
 // ---------------------------------------------------------------------------
 // TAT Override helpers (v9) — Story 45.5
 // ---------------------------------------------------------------------------
