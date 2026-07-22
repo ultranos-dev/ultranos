@@ -1,34 +1,54 @@
 /**
- * Background sync service — fetches updated patients from Hub API.
+ * Background sync service — fetches all active patients from Hub API.
  * Uses tRPC raw fetch pattern (avoids cross-app build dependency).
  * Merge strategy: LWW for Tier 3 (demographics), append-only for Tier 1 (allergies, active meds).
+ *
+ * Contract note: the Hub's `patient.list` procedure accepts `{ cursor?, limit? }`
+ * (cursor is the previous page's `created_at`) and returns `{ patients, nextCursor }`,
+ * wrapped by the tRPC REST bridge as `result.data.json`. It returns `meta.lastUpdated`
+ * as an ISO 8601 instant (from Postgres `updated_at`/`created_at`), NOT a serialized
+ * HLC — so Tier-3 recency is compared with Date semantics, never `deserializeHlc`.
+ *
+ * NOTE: A push/drain path (uploading locally-queued patient edits to the Hub) is not
+ * yet implemented — that remains genuine scaffold and is out of scope here.
  */
-import { deserializeHlc, compareHlc } from '@ultranos/sync-engine'
-
 import { getDatabase } from '../lib/db'
 import { hashNationalId } from '../lib/hash-national-id'
 import type { FhirPatient } from '@ultranos/shared-types'
 
 const HUB_API_BASE = process.env.EXPO_PUBLIC_HUB_API_BASE ?? 'https://hub.ultranos.com'
+const PAGE_LIMIT = 50
+
+interface PatientListPage {
+  patients: FhirPatient[]
+  nextCursor: string | null
+}
 
 interface SyncResult {
   synced: number
+  /** Count of records that failed to merge. */
   errors: number
+  /**
+   * Diagnosable per-record failure details. OPAQUE patient id + error class only —
+   * never any PHI content (names, allergies, meds, diagnoses).
+   */
+  errorDetails: Array<{ id: string; reason: string }>
 }
 
 /**
- * Fetch updated patients from Hub API and merge into local SQLCipher DB.
- * @param lastSyncTimestamp - ISO 8601 timestamp of last successful sync
+ * Fetch one page of active patients from the Hub API.
  * @param authToken - JWT access token for Hub API
+ * @param cursor - opaque pagination cursor from the previous page's `nextCursor`
  */
-export async function syncPatients(
-  lastSyncTimestamp: string | null,
-  authToken: string
-): Promise<SyncResult> {
+async function fetchPatientPage(
+  authToken: string,
+  cursor?: string
+): Promise<PatientListPage> {
   const url = new URL('/api/trpc/patient.list', HUB_API_BASE)
-  if (lastSyncTimestamp) {
-    url.searchParams.set('input', JSON.stringify({ since: lastSyncTimestamp }))
-  }
+  const input: Record<string, unknown> = { limit: PAGE_LIMIT }
+  if (cursor) input.cursor = cursor
+  // tRPC REST bridge expects the input wrapped in a `json` envelope.
+  url.searchParams.set('input', JSON.stringify({ json: input }))
 
   const response = await fetch(url.toString(), {
     method: 'GET',
@@ -42,28 +62,79 @@ export async function syncPatients(
     throw new Error(`Sync failed: ${response.status}`)
   }
 
-  const data = await response.json()
-  const remotePatients: FhirPatient[] = data.result?.data ?? []
+  const body = (await response.json()) as {
+    result?: { data?: { json?: PatientListPage } }
+  }
+  const page = body.result?.data?.json
+  return {
+    patients: page?.patients ?? [],
+    nextCursor: page?.nextCursor ?? null,
+  }
+}
 
+/**
+ * Fetch ALL active patients from the Hub API (paging through every cursor page)
+ * and merge them into the local SQLCipher DB.
+ *
+ * @param _lastSyncTimestamp - reserved for a future incremental/delta pull; the Hub's
+ *   `patient.list` currently paginates the full active set via cursor, so this is unused.
+ * @param authToken - JWT access token for Hub API
+ */
+export async function syncPatients(
+  _lastSyncTimestamp: string | null,
+  authToken: string
+): Promise<SyncResult> {
   const db = await getDatabase()
   let synced = 0
   let errors = 0
+  const errorDetails: Array<{ id: string; reason: string }> = []
 
-  for (const remotePatient of remotePatients) {
-    try {
-      await mergePatient(db, remotePatient)
-      synced++
-    } catch {
-      errors++
+  let cursor: string | undefined
+  while (true) {
+    // A page-fetch failure (network/auth) is thrown so the caller can react —
+    // matches the existing "throw on non-200" contract.
+    const { patients, nextCursor } = await fetchPatientPage(authToken, cursor)
+
+    for (const remotePatient of patients) {
+      try {
+        await mergePatient(db, remotePatient)
+        synced++
+      } catch (err) {
+        errors++
+        // OPAQUE id + error class only — never PHI content.
+        errorDetails.push({
+          id: remotePatient.id ?? 'unknown',
+          reason: err instanceof Error ? err.constructor.name : 'UnknownError',
+        })
+      }
     }
+
+    if (!nextCursor) break
+    cursor = nextCursor
   }
 
-  return { synced, errors }
+  return { synced, errors, errorDetails }
+}
+
+/**
+ * Compare two ISO 8601 instants for Tier-3 (demographics) LWW.
+ * Returns > 0 when `a` is strictly newer than `b`.
+ *
+ * The Hub returns `meta.lastUpdated` as an ISO instant, not a serialized HLC, so
+ * recency is compared with Date semantics. An unparseable timestamp sorts as -Infinity
+ * so a valid remote/local value always wins over a garbage one.
+ */
+function isoRecencyDelta(a: string | undefined, b: string | undefined): number {
+  const ta = a ? Date.parse(a) : NaN
+  const tb = b ? Date.parse(b) : NaN
+  const na = Number.isNaN(ta) ? -Infinity : ta
+  const nb = Number.isNaN(tb) ? -Infinity : tb
+  return na - nb
 }
 
 /**
  * Merge a remote patient into local SQLCipher.
- * - Tier 3 fields (demographics): LWW by HLC meta.lastUpdated
+ * - Tier 3 fields (demographics): LWW by ISO meta.lastUpdated (newer wins)
  * - Tier 1 fields (allergies, active meds): append-only merge
  */
 async function mergePatient(db: any, remotePatient: FhirPatient): Promise<void> {
@@ -99,10 +170,10 @@ async function mergePatient(db: any, remotePatient: FhirPatient): Promise<void> 
 
   const localPatient = JSON.parse(existing.fhir_json) as FhirPatient
 
-  // Compare HLC timestamps for Tier 3 (demographics) — newer wins
-  const remoteHlc = deserializeHlc(remotePatient.meta.lastUpdated)
-  const localHlc = deserializeHlc(localPatient.meta.lastUpdated)
-  const useRemoteDemographics = compareHlc(remoteHlc, localHlc) > 0
+  // Compare ISO instants for Tier 3 (demographics) — newer wins.
+  // The Hub returns meta.lastUpdated as an ISO 8601 instant, never a serialized HLC.
+  const useRemoteDemographics =
+    isoRecencyDelta(remotePatient.meta.lastUpdated, localPatient.meta.lastUpdated) > 0
 
   // Tier 1: append-only merge for allergies and active meds
   const localAllergies: string[] = JSON.parse(existing.allergies_json || '[]')

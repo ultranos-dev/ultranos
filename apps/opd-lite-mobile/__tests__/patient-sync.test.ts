@@ -23,11 +23,20 @@ function makeMockPatient(overrides: Partial<FhirPatient> & Record<string, any> =
       isActive: true,
       createdAt: '2026-01-01T00:00:00Z',
     },
-    meta: { lastUpdated: '000001716000000000:00001:node1' },
+    // Hub returns meta.lastUpdated as an ISO 8601 instant, never a serialized HLC.
+    meta: { lastUpdated: '2026-01-01T00:00:00Z' },
     _allergies: ['Penicillin'],
     _activeMeds: ['Metformin'],
     ...overrides,
   } as any
+}
+
+/** Build the real tRPC REST bridge response shape: result.data.json.{patients,nextCursor}. */
+function mockPage(patients: any[], nextCursor: string | null = null) {
+  return {
+    ok: true,
+    json: () => Promise.resolve({ result: { data: { json: { patients, nextCursor } } } }),
+  }
 }
 
 describe('patient-sync', () => {
@@ -58,10 +67,7 @@ describe('patient-sync', () => {
 
   describe('syncPatients', () => {
     it('fetches patients from Hub API via tRPC raw fetch', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ result: { data: [] } }),
-      })
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce(mockPage([]))
 
       await syncPatients(null, 'test-token')
 
@@ -74,14 +80,16 @@ describe('patient-sync', () => {
           }),
         })
       )
+      // Input must be the real contract: { json: { limit } } wrapped, cursor-driven (no `since`).
+      const calledUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string
+      const input = new URL(calledUrl).searchParams.get('input')!
+      expect(JSON.parse(input)).toEqual({ json: { limit: 50 } })
+      expect(input).not.toContain('since')
     })
 
-    it('inserts new patients into SQLCipher', async () => {
+    it('inserts new patients into SQLCipher (reads result.data.json.patients)', async () => {
       const patient = makeMockPatient()
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ result: { data: [patient] } }),
-      })
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce(mockPage([patient]))
       mockDb.getFirstAsync.mockResolvedValueOnce(null) // no existing
 
       const result = await syncPatients(null, 'token')
@@ -92,6 +100,42 @@ describe('patient-sync', () => {
         expect.stringContaining('INSERT INTO patients'),
         expect.arrayContaining(['patient-001'])
       )
+    })
+
+    it('follows nextCursor across pages, accumulating all patients', async () => {
+      const page1 = makeMockPatient({ id: 'patient-001' })
+      const page2 = makeMockPatient({ id: 'patient-002' })
+
+      ;(global.fetch as jest.Mock)
+        .mockResolvedValueOnce(mockPage([page1], 'cursor-page-2'))
+        .mockResolvedValueOnce(mockPage([page2], null))
+      mockDb.getFirstAsync.mockResolvedValue(null) // all new
+
+      const result = await syncPatients(null, 'token')
+
+      expect(global.fetch).toHaveBeenCalledTimes(2)
+      expect(result.synced).toBe(2)
+      // Second fetch must carry the cursor returned by the first page.
+      const secondUrl = (global.fetch as jest.Mock).mock.calls[1][0] as string
+      const secondInput = JSON.parse(new URL(secondUrl).searchParams.get('input')!)
+      expect(secondInput).toEqual({ json: { limit: 50, cursor: 'cursor-page-2' } })
+    })
+
+    it('collects per-record failures with opaque id + error class (no PHI)', async () => {
+      const patient = makeMockPatient({ id: 'patient-777' })
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce(mockPage([patient]))
+      mockDb.getFirstAsync.mockResolvedValueOnce(null)
+      mockDb.runAsync.mockRejectedValueOnce(new TypeError('boom'))
+
+      const result = await syncPatients(null, 'token')
+
+      expect(result.synced).toBe(0)
+      expect(result.errors).toBe(1)
+      expect(result.errorDetails).toEqual([{ id: 'patient-777', reason: 'TypeError' }])
+      // No PHI leaked into error details.
+      const serialized = JSON.stringify(result.errorDetails)
+      expect(serialized).not.toContain('Ahmed')
+      expect(serialized).not.toContain('Penicillin')
     })
 
     it('throws on non-200 response', async () => {
@@ -105,19 +149,16 @@ describe('patient-sync', () => {
   })
 
   describe('merge logic', () => {
-    it('updates demographics when remote HLC is newer (Tier 3 LWW)', async () => {
+    it('updates demographics when remote ISO timestamp is newer (Tier 3 LWW)', async () => {
       const localPatient = makeMockPatient({
-        meta: { lastUpdated: '000001716000000000:00001:node1' },
+        meta: { lastUpdated: '2026-01-01T00:00:00Z' },
       })
       const remotePatient = makeMockPatient({
-        meta: { lastUpdated: '000001716000000001:00001:node1' }, // newer
+        meta: { lastUpdated: '2026-02-01T00:00:00Z' }, // newer ISO instant
         name: [{ text: 'Ahmed Updated' }],
       })
 
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ result: { data: [remotePatient] } }),
-      })
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce(mockPage([remotePatient]))
 
       mockDb.getFirstAsync.mockResolvedValueOnce({
         fhir_json: JSON.stringify(localPatient),
@@ -131,20 +172,19 @@ describe('patient-sync', () => {
       // Should update with remote demographics
       const updateCall = mockDb.runAsync.mock.calls[0]
       expect(updateCall[0]).toContain('UPDATE patients SET')
+      const fhirJsonArg = updateCall[1][updateCall[1].length - 2] // fhir_json is second-to-last
+      expect(fhirJsonArg).toContain('Ahmed Updated')
     })
 
-    it('preserves local demographics when local HLC is newer', async () => {
+    it('preserves local demographics when local ISO timestamp is newer', async () => {
       const remotePatient = makeMockPatient({
-        meta: { lastUpdated: '000001716000000000:00001:node1' }, // older
+        meta: { lastUpdated: '2026-01-01T00:00:00Z' }, // older
       })
 
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ result: { data: [remotePatient] } }),
-      })
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce(mockPage([remotePatient]))
 
       const localPatient = makeMockPatient({
-        meta: { lastUpdated: '000001716000000001:00001:node1' }, // newer
+        meta: { lastUpdated: '2026-06-01T00:00:00Z' }, // newer ISO instant
         name: [{ text: 'Local Name' }],
       })
 
