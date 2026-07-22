@@ -991,6 +991,32 @@ export const labRouter = createTRPCRouter({
     .input(
       z.object({
         since: z.string().datetime().optional(),
+        cursor: z.string().optional(),
+        limit: z.number().int().min(1).max(200).default(100),
+      }),
+    )
+    // Rule #7 defense-in-depth: strict output schema enforces the data-minimized
+    // order shape at the API layer (name + age only for the patient; opaque
+    // patientRef). specialInstructions is an intentional lab-handling field
+    // (e.g. "Fasting required") — see order-data-minimization.test.ts.
+    .output(
+      z.object({
+        orders: z.array(
+          z.object({
+            orderId: z.string(),
+            patientFirstName: z.string(),
+            patientAge: z.number().nullable(),
+            patientRef: z.string(),
+            testsRequested: z.array(z.object({ loincCode: z.string(), loincDisplay: z.string() })),
+            urgency: z.string(),
+            orderingPhysicianName: z.string(),
+            specialInstructions: z.string().nullable(),
+            status: z.string(),
+            authoredOn: z.string().nullable(),
+          }),
+        ),
+        syncTimestamp: z.string().nullable(),
+        nextCursor: z.string().nullable(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -1016,8 +1042,10 @@ export const labRouter = createTRPCRouter({
           practitioners!service_requests_requester_id_fkey(id, given_name, family_name)
         `)
         .in('status', ['active', 'on-hold'])
-        .order('meta_last_updated', { ascending: false })
-        .limit(100)
+        // Ascending keyset order for stable cursor pagination (mirrors patient.list).
+        .order('meta_last_updated', { ascending: true })
+        .order('id', { ascending: true })
+        .limit(input.limit)
 
       // Scope to this lab (received by this lab, or unassigned)
       if (labId) {
@@ -1027,6 +1055,13 @@ export const labRouter = createTRPCRouter({
       // Incremental sync: only orders updated since the given timestamp
       if (input.since) {
         query = query.gte('meta_last_updated', input.since)
+      }
+
+      // Keyset cursor: advance past the last page. Combined with a full sync
+      // (no `since`), the client pages through EVERY active order — so the
+      // tombstone-cleanup step never wrongly cancels orders beyond a single page.
+      if (input.cursor) {
+        query = query.gt('meta_last_updated', input.cursor)
       }
 
       const { data: orders, error } = await query
@@ -1099,12 +1134,18 @@ export const labRouter = createTRPCRouter({
       })
 
       // P11: Return max server timestamp for accurate incremental sync
-      const maxServerTs = (orders ?? []).reduce(
+      const rows = orders ?? []
+      const maxServerTs = rows.reduce(
         (max: string, o: any) => (o.meta_last_updated > max ? o.meta_last_updated : max),
         '',
       )
 
-      return { orders: mapped, syncTimestamp: maxServerTs || null }
+      // A full page implies more may remain — hand back a cursor so the client
+      // keeps paging until it's null.
+      const nextCursor =
+        rows.length === input.limit ? (rows[rows.length - 1] as any).meta_last_updated as string : null
+
+      return { orders: mapped, syncTimestamp: maxServerTs || null, nextCursor }
     }),
 
   /**

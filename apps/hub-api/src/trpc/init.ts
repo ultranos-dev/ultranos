@@ -12,7 +12,23 @@ import type { UserRole } from '@ultranos/shared-types'
  */
 export interface TRPCContext {
   supabase: SupabaseClient
-  user: { sub: string; role: string; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
+  user: {
+    sub: string
+    /**
+     * The practitioner reference identity, derived the SAME way the spoke clients
+     * do (`payload.practitioner_id ?? sub`). Encounters store the participant as
+     * `Practitioner/${practitionerId}`, so any endpoint scoping by practitioner
+     * must match on this — not raw `sub` — to stay correct if a `practitioner_id`
+     * access-token claim is ever introduced. Optional so existing test contexts
+     * (which omit it) still fall back to `sub`.
+     */
+    practitionerId?: string
+    role: string
+    sessionId: string
+    orgId: string | null
+    facilityId: string | null
+    status: string | null
+  } | null
   headers: Headers
 }
 
@@ -40,6 +56,10 @@ export const createTRPCContext = async (opts: {
           const userMeta = (payload.user_metadata as Record<string, unknown>) ?? {}
           user = {
             sub: payload.sub,
+            // Mirror the client's practitioner-ref derivation exactly (top-level
+            // `practitioner_id` claim, falling back to sub) so participant-scoped
+            // queries match whatever the spoke stored.
+            practitionerId: (payload.practitioner_id as string) ?? payload.sub,
             role: ((userMeta.role as string) ?? (payload.role as string) ?? '').toUpperCase(),
             sessionId: (payload.session_id as string) ?? '',
             orgId: (userMeta.org_id as string) ?? (payload.org_id as string) ?? null,

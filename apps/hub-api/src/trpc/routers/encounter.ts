@@ -577,6 +577,92 @@ export const encounterRouter = createTRPCRouter({
     }),
 
   /**
+   * List ALL of the authenticated practitioner's active-status encounters across
+   * all of their patients, cursor-paginated, so the client can fully hydrate the
+   * clinician dashboard/queue on login (the caller pages until nextCursor is null).
+   * RBAC: DOCTOR, CLINICIAN (ADMIN via bypass).
+   * Scoped server-side to ctx.user.sub (the practitioner) — never a client input —
+   * so a caller can only ever see their own encounters, matching the
+   * assertPractitionerOrAdmin(sub === practitionerId) convention used elsewhere.
+   * Status filter includes planned (pending), in-progress (current), and finished
+   * (completed) — cancelled / entered-in-error are excluded. No period_start
+   * filter: period_start is nullable, so filtering on it silently dropped pending
+   * encounters that have not started yet.
+   * No per-patient consent middleware: the result spans many patients and covers
+   * only encounters the caller is a participant in (mirrors appointment.listByPractitioner).
+   * Emits a single aggregate PHI_READ audit event per page.
+   */
+  listByPractitioner: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
+    .use(enforceResourceAccess('Encounter'))
+    .input(
+      z.object({
+        cursor: z.string().optional(),
+        limit: z.number().int().min(1).max(200).default(100),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      // Match on the practitioner reference exactly as the spoke stored it
+      // (`practitioner_id` claim ?? sub) — not raw sub — so scoping stays correct
+      // if a practitioner_id access-token claim is ever introduced.
+      const practitionerRef = `Practitioner/${ctx.user.practitionerId ?? ctx.user.sub}`
+
+      // Keyset pagination on created_at (NOT NULL), mirroring patient.list.
+      let query = ctx.supabase
+        .from('encounters')
+        .select('*')
+        .contains('participant', [{ individual: { reference: practitionerRef } }])
+        .in('status', ['planned', 'in-progress', 'finished'])
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .limit(input.limit)
+
+      if (input.cursor) {
+        query = query.gt('created_at', input.cursor)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Practitioner encounter list error:', { code: error.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to retrieve encounters',
+        })
+      }
+
+      const rowsRaw = data ?? []
+      const nextCursor = rowsRaw.length === input.limit
+        ? (rowsRaw[rowsRaw.length - 1] as Record<string, unknown>).created_at as string
+        : null
+
+      const rows = db.fromRows(rowsRaw)
+
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'Encounter',
+          resourceId: `practitioner-encounters:${ctx.user.sub}`,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            operation: 'list_by_practitioner',
+            encounterCount: rows.length,
+            paginated: input.cursor != null,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'Encounter' })
+      }
+
+      return { encounters: rows, nextCursor }
+    }),
+
+  /**
    * Story 24.1 AC 2, 9: Parse freeform clinical text into SOAP via Cloud LLM.
    * RBAC: DOCTOR, CLINICIAN.
    * Checks AI_PROCESSING consent before sending to LLM.

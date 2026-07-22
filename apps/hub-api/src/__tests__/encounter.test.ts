@@ -22,10 +22,15 @@ const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
   supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string; orgId?: string } | null
+  supabaseRpc?: ReturnType<typeof vi.fn>
+  user?: { sub: string; practitionerId?: string; role: string; sessionId: string; orgId?: string } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
+    // AuditLogger.emit() writes through rpc('audit_emit_with_lock') and expects a
+    // row carrying chain_hash back; default to a successful stub so audit never
+    // silently fails in tests. Pass supabaseRpc to assert on the audit call.
+    rpc: overrides?.supabaseRpc ?? vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null }),
   }
   return {
     supabase: supabase as never,
@@ -172,12 +177,12 @@ describe('encounter.create', () => {
           }),
         }
       }
-      // Ownership verification call
+      // Ownership verification call — code compares existing.subject_id
       return {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
-              data: { patient_id: PATIENT_UUID },
+              data: { subject_id: PATIENT_UUID },
               error: null,
             }),
           }),
@@ -221,12 +226,15 @@ describe('encounter.create', () => {
       }
     })
 
-    const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
+    const rpc = vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null })
+    const ctx = createTestContext({ supabaseFrom: mockFrom, supabaseRpc: rpc, user: CLINICIAN_USER })
     const caller = createCaller(ctx)
 
     await caller.encounter.create(validInput)
-    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
-    expect(fromCalls).toContain('audit_log')
+    expect(rpc).toHaveBeenCalledWith(
+      'audit_emit_with_lock',
+      expect.objectContaining({ p_action: 'PHI_WRITE', p_resource_type: 'Encounter' }),
+    )
   })
 
   it('passes reasonCode through db.toRow() for encryption', async () => {
@@ -291,7 +299,7 @@ describe('encounter.read', () => {
 
     const mockRow = {
       id: ENCOUNTER_UUID,
-      patient_id: PATIENT_UUID,
+      subject_id: PATIENT_UUID,
       status: 'in-progress',
       class_code: 'AMB',
       reason_code: 'Routine checkup',
@@ -420,7 +428,7 @@ describe('encounter.read', () => {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
-              data: { id: ENCOUNTER_UUID, patient_id: PATIENT_UUID, status: 'in-progress' },
+              data: { id: ENCOUNTER_UUID, subject_id: PATIENT_UUID, status: 'in-progress' },
               error: null,
             }),
           }),
@@ -428,12 +436,15 @@ describe('encounter.read', () => {
       }
     })
 
-    const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
+    const rpc = vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null })
+    const ctx = createTestContext({ supabaseFrom: mockFrom, supabaseRpc: rpc, user: CLINICIAN_USER })
     const caller = createCaller(ctx)
 
     await caller.encounter.read(validInput)
-    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
-    expect(fromCalls).toContain('audit_log')
+    expect(rpc).toHaveBeenCalledWith(
+      'audit_emit_with_lock',
+      expect.objectContaining({ p_action: 'PHI_READ', p_resource_type: 'Encounter' }),
+    )
   })
 })
 
@@ -586,12 +597,15 @@ describe('encounter.update', () => {
       }
     })
 
-    const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
+    const rpc = vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null })
+    const ctx = createTestContext({ supabaseFrom: mockFrom, supabaseRpc: rpc, user: CLINICIAN_USER })
     const caller = createCaller(ctx)
 
     await caller.encounter.update(validInput)
-    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
-    expect(fromCalls).toContain('audit_log')
+    expect(rpc).toHaveBeenCalledWith(
+      'audit_emit_with_lock',
+      expect.objectContaining({ p_action: 'PHI_WRITE', p_resource_type: 'Encounter' }),
+    )
   })
 })
 
@@ -904,11 +918,187 @@ describe('encounter.listByPatient', () => {
       }
     })
 
-    const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
+    const rpc = vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null })
+    const ctx = createTestContext({ supabaseFrom: mockFrom, supabaseRpc: rpc, user: CLINICIAN_USER })
     const caller = createCaller(ctx)
 
     await caller.encounter.listByPatient(validInput)
-    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
-    expect(fromCalls).toContain('audit_log')
+    expect(rpc).toHaveBeenCalledWith(
+      'audit_emit_with_lock',
+      expect.objectContaining({ p_action: 'PHI_READ', p_resource_type: 'Encounter' }),
+    )
+  })
+})
+
+// ─── encounter.listByPractitioner ───────────────────────────────────────────
+
+describe('encounter.listByPractitioner', () => {
+  const validInput = { limit: 100 }
+
+  /**
+   * Builds the supabase `from` mock for the keyset chain
+   * .from('encounters').select('*').contains(...).in(...).order(...).order(...).limit(...)[.gt(...)]
+   * The encounters query builder is a single thenable object whose chainable
+   * methods all return itself, so `await query` (with or without a trailing
+   * .gt() cursor) resolves to { data, error }. The `q` handle is returned so
+   * tests can assert on contains/in/gt.
+   */
+  function buildMockFrom(encounterRows: unknown[] = []) {
+    const result = { data: encounterRows, error: null }
+    const q: Record<string, ReturnType<typeof vi.fn> | unknown> = {}
+    Object.assign(q, {
+      select: vi.fn(() => q),
+      contains: vi.fn(() => q),
+      in: vi.fn(() => q),
+      order: vi.fn(() => q),
+      limit: vi.fn(() => q),
+      gt: vi.fn(() => q),
+      then: (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) =>
+        Promise.resolve(result).then(resolve, reject),
+    })
+
+    const from = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+      if (table === 'audit_log') {
+        return {
+          select: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+          }),
+          insert: vi.fn().mockResolvedValue({ error: null }),
+        }
+      }
+      if (table === 'encounters') return q
+      // Benign default for any table a middleware might touch
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({ data: [], error: null }),
+          }),
+        }),
+      }
+    })
+
+    return { from, q }
+  }
+
+  it('requires authentication', async () => {
+    const ctx = createTestContext({ user: null })
+    const caller = createCaller(ctx)
+    await expect(caller.encounter.listByPractitioner(validInput)).rejects.toThrow()
+  })
+
+  it('denies PHARMACIST role', async () => {
+    const ctx = createTestContext({ user: PHARMACIST_USER })
+    const caller = createCaller(ctx)
+    await expect(caller.encounter.listByPractitioner(validInput)).rejects.toThrow(/denied|forbidden/i)
+  })
+
+  it('returns the practitioner\'s encounters', async () => {
+    const mockRows = [
+      { id: ENCOUNTER_UUID, subject_id: PATIENT_UUID, status: 'planned', created_at: '2026-05-10T08:00:00Z' },
+    ]
+    const { from } = buildMockFrom(mockRows)
+    const ctx = createTestContext({ supabaseFrom: from, user: CLINICIAN_USER })
+    const caller = createCaller(ctx)
+
+    const result = await caller.encounter.listByPractitioner(validInput)
+    expect(result.encounters).toHaveLength(1)
+    expect(from).toHaveBeenCalledWith('encounters')
+  })
+
+  it('scopes to the authenticated practitioner and includes active statuses only', async () => {
+    const { from, q } = buildMockFrom()
+    const ctx = createTestContext({ supabaseFrom: from, user: CLINICIAN_USER })
+    const caller = createCaller(ctx)
+
+    await caller.encounter.listByPractitioner(validInput)
+    expect((q.contains as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith('participant', [
+      { individual: { reference: `Practitioner/${CLINICIAN_USER.sub}` } },
+    ])
+    expect((q.in as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith('status', [
+      'planned',
+      'in-progress',
+      'finished',
+    ])
+  })
+
+  it('matches on the practitioner_id claim reference when present (not raw sub)', async () => {
+    // Hardening: if a practitioner_id access-token claim is ever introduced, the
+    // spoke stores participant as Practitioner/{practitioner_id}; the endpoint
+    // must match that, not raw sub.
+    const { from, q } = buildMockFrom()
+    const ctx = createTestContext({
+      supabaseFrom: from,
+      user: { ...CLINICIAN_USER, practitionerId: 'fhir-prac-99' },
+    })
+    const caller = createCaller(ctx)
+
+    await caller.encounter.listByPractitioner(validInput)
+    expect((q.contains as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith('participant', [
+      { individual: { reference: 'Practitioner/fhir-prac-99' } },
+    ])
+  })
+
+  it('returns nextCursor (last created_at) when the page is full', async () => {
+    const mockRows = [
+      { id: ENCOUNTER_UUID, subject_id: PATIENT_UUID, status: 'in-progress', created_at: '2026-05-09T08:00:00Z' },
+      { id: '00000000-0000-4000-8000-000000000101', subject_id: PATIENT_UUID, status: 'finished', created_at: '2026-05-10T08:00:00Z' },
+    ]
+    const { from } = buildMockFrom(mockRows)
+    const ctx = createTestContext({ supabaseFrom: from, user: CLINICIAN_USER })
+    const caller = createCaller(ctx)
+
+    const result = await caller.encounter.listByPractitioner({ limit: 2 })
+    expect(result.nextCursor).toBe('2026-05-10T08:00:00Z')
+  })
+
+  it('returns null nextCursor on a partial (last) page', async () => {
+    const mockRows = [
+      { id: ENCOUNTER_UUID, subject_id: PATIENT_UUID, status: 'finished', created_at: '2026-05-10T08:00:00Z' },
+    ]
+    const { from } = buildMockFrom(mockRows)
+    const ctx = createTestContext({ supabaseFrom: from, user: CLINICIAN_USER })
+    const caller = createCaller(ctx)
+
+    const result = await caller.encounter.listByPractitioner({ limit: 100 })
+    expect(result.nextCursor).toBeNull()
+  })
+
+  it('applies the cursor via gt(created_at) when provided', async () => {
+    const { from, q } = buildMockFrom()
+    const ctx = createTestContext({ supabaseFrom: from, user: CLINICIAN_USER })
+    const caller = createCaller(ctx)
+
+    await caller.encounter.listByPractitioner({ cursor: '2026-05-01T00:00:00Z', limit: 100 })
+    expect((q.gt as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith('created_at', '2026-05-01T00:00:00Z')
+  })
+
+  it('emits a PHI_READ audit event via audit_emit_with_lock', async () => {
+    // AuditLogger.emit() writes through the rpc('audit_emit_with_lock') path,
+    // so the context needs an rpc mock returning a chain_hash for emit to succeed.
+    const { from } = buildMockFrom([])
+    const rpc = vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null })
+    const ctx = {
+      supabase: { from, rpc } as never,
+      user: CLINICIAN_USER,
+      headers: new Headers(),
+    }
+    const caller = createCaller(ctx)
+
+    await caller.encounter.listByPractitioner(validInput)
+    expect(rpc).toHaveBeenCalledWith(
+      'audit_emit_with_lock',
+      expect.objectContaining({
+        p_action: 'PHI_READ',
+        p_resource_type: 'Encounter',
+        p_actor_id: CLINICIAN_USER.sub,
+        p_resource_id: `practitioner-encounters:${CLINICIAN_USER.sub}`,
+      }),
+    )
   })
 })

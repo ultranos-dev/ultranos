@@ -799,12 +799,15 @@ export const patientRouter = createTRPCRouter({
   // Story 16.2 — AC #3, #5
   read: protectedProcedure
     .use(enforceResourceAccess('Patient'))
-    .use(enforceConsentMiddleware('Patient'))
+    // .input() MUST come before enforceConsentMiddleware — the consent middleware
+    // reads opts.input.patientId, which is only populated by parsers registered
+    // earlier in the chain. Ordering it after would leave opts.input undefined.
     .input(
       z.object({
         patientId: z.string().uuid(),
       })
     )
+    .use(enforceConsentMiddleware('Patient'))
     .query(async ({ ctx, input }) => {
       // First fetch: allow inactive patients so we can follow merged_into links
       let { data, error } = await ctx.supabase
