@@ -328,6 +328,15 @@ When writing sync logic, use the correct tier:
 - Do NOT stage files as a "convenience" step after edits.
 - Only commit when the user explicitly says "commit" or equivalent.
 
+## ⛔ Parallel Agents — Worktree Isolation
+
+**When dispatching two or more agents that will MODIFY files, run each in its own isolated git worktree** (the Agent tool's `isolation: "worktree"`). Agents sharing the main working tree can corrupt each other's and your uncommitted work.
+
+- **Never let agents run `git stash`, `git checkout -- <path>`, `git reset`, or `git restore` in the shared working tree.** Concurrent stashes/pops in one tree silently revert everyone's uncommitted changes into a dangling stash (recoverable only via `git fsck`/reflog). This has already caused a full-tree revert incident — do not repeat it.
+- If an agent needs a clean-tree comparison or a baseline, it must do it inside its own worktree, not by stashing the shared tree.
+- Read-only / research agents (Explore, search, review) may share the tree — the rule is about *file-mutating* agents run in parallel.
+- After parallel agents finish, verify integrity before trusting results: check `git status`, confirm expected changes are on disk (`grep` for hallmark edits), and watch for a staged/unstaged split (agents that ran `git add` leave changes in the index — `git diff` alone will not show them; use `git status --short` and `git diff --cached`).
+
 ## Decision Points
 
 When you encounter a decision point (ambiguous design choice, multiple valid approaches, or a tradeoff that requires human judgment), always:
