@@ -605,3 +605,94 @@ export async function pullPatientChanges(
 
   return result
 }
+
+export interface PractitionerEncountersPullResult {
+  changesApplied: number
+  errors: string[]
+}
+
+/**
+ * Apply a single pulled encounter row to local Dexie with a Tier 2 (clinical,
+ * newer-wins) HLC guard: the remote version is written only when it is strictly
+ * newer than the local copy, so a locally-created/edited encounter that hasn't
+ * synced yet is never clobbered. Returns true if a write occurred.
+ */
+async function applyPulledEncounter(row: Record<string, unknown>): Promise<boolean> {
+  const transformed = toFhirEncounter(row)
+  const id = transformed.id as string
+  if (!id) return false
+
+  const local = await db.encounters.get(id)
+  if (local) {
+    const localHlc = deserializeHlc(
+      ((local._ultranos as Record<string, unknown> | undefined)?.hlcTimestamp as string) || '0',
+    )
+    const remoteHlc = deserializeHlc(
+      ((transformed._ultranos as Record<string, unknown> | undefined)?.hlcTimestamp as string) || '0',
+    )
+    // Newer-wins (Tier 2): skip when local is same-or-newer — preserves unsynced edits.
+    if (compareHlc(localHlc, remoteHlc) >= 0) return false
+  }
+
+  await db.encounters.put(transformed as unknown as Parameters<typeof db.encounters.put>[0])
+
+  const subjectId = (transformed.subject as { reference?: string } | undefined)?.reference?.replace(
+    'Patient/',
+    '',
+  )
+  auditPhiAccess(
+    AuditAction.READ,
+    'Encounter' as AuditResourceType,
+    id,
+    subjectId,
+    { source: 'sync-pull-practitioner' },
+  )
+  return true
+}
+
+/**
+ * Pull ALL of the authenticated practitioner's active-status encounters (planned,
+ * in-progress, finished) across all patients from the Hub and upsert them into
+ * local Dexie, to fully hydrate the clinician dashboard/queue on login. Pages
+ * through every cursor page until exhausted. Patient names shown on the dashboard
+ * resolve from the patient list pulled alongside this on login.
+ *
+ * Offline-safe: returns early when offline; a page-fetch failure stops paging but
+ * keeps whatever was already applied; per-row failures are collected, not thrown.
+ */
+export async function pullPractitionerEncounters(
+  getAuthToken: () => string,
+  opts?: { limit?: number },
+): Promise<PractitionerEncountersPullResult> {
+  const result: PractitionerEncountersPullResult = { changesApplied: 0, errors: [] }
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return result
+
+  const { listEncountersByPractitionerFromHub } = await import('@/lib/trpc')
+  let cursor: string | undefined
+
+  while (true) {
+    let page: Array<Record<string, unknown>>
+    let nextCursor: string | null
+    try {
+      const res = await listEncountersByPractitionerFromHub(getAuthToken(), cursor, opts?.limit)
+      page = res.encounters
+      nextCursor = res.nextCursor
+    } catch (err) {
+      result.errors.push(err instanceof Error ? err.message : 'Practitioner encounters pull failed')
+      break
+    }
+
+    for (const row of page) {
+      try {
+        if (await applyPulledEncounter(row)) result.changesApplied++
+      } catch (err) {
+        result.errors.push(`Failed to apply encounter: ${err instanceof Error ? err.message : 'unknown'}`)
+      }
+    }
+
+    if (!nextCursor) break
+    cursor = nextCursor
+  }
+
+  return result
+}

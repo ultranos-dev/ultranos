@@ -172,6 +172,49 @@ export async function searchPatientsOnHub(query: string, signal?: AbortSignal): 
   return body.result.data.json
 }
 
+export interface EncounterListResult {
+  /** Flat camelCase encounter rows (transform via toFhirEncounter before local write). */
+  encounters: Array<Record<string, unknown>>
+  /** Keyset cursor for the next page, or null when the last page has been reached. */
+  nextCursor: string | null
+}
+
+/**
+ * Fetch one page of the authenticated practitioner's active-status encounters
+ * (planned/in-progress/finished, across all their patients) from the Hub API.
+ * Cursor-paginated — callers loop until nextCursor is null to fetch every one.
+ * The token is passed in (rather than re-fetched) so callers can reuse the
+ * already-refreshed session token from the sync worker.
+ */
+export async function listEncountersByPractitionerFromHub(
+  token: string,
+  cursor?: string,
+  limit = 100,
+  signal?: AbortSignal,
+): Promise<EncounterListResult> {
+  const url = new URL(getHubApiUrl())
+  url.pathname = url.pathname.replace(/\/$/, '') + '/encounter.listByPractitioner'
+  const input: Record<string, unknown> = { limit }
+  if (cursor) input.cursor = cursor
+  url.searchParams.set('input', JSON.stringify({ json: input }))
+
+  const res = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    signal,
+  })
+
+  if (!res.ok) {
+    throw new Error(`Hub API error: ${res.status}`)
+  }
+
+  const body = await res.json() as { result: { data: { json: EncounterListResult } } }
+  return body.result.data.json
+}
+
 export type EnrichDrugFields = {
   localNames?: Record<string, string>
   dispensingNotes?: string

@@ -4,7 +4,8 @@ import { useEffect, useRef } from 'react'
 import '@/lib/key-lifecycle-hooks' // registers re-auth listener for awaiting-key queue restoration
 import { startSyncWorker, stopSyncWorker, triggerDrain } from '@/lib/sync-worker'
 import { syncDrugCatalog } from '@/lib/drug-catalog-sync'
-import { pullPatientChanges } from '@/lib/sync-pull'
+import { pullPatientChanges, pullPractitionerEncounters } from '@/lib/sync-pull'
+import { syncAllPatientsToDb } from '@/lib/use-patient-list-sync'
 import { useSyncStore } from '@/stores/sync-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
@@ -118,6 +119,17 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       // and will push any pending changes, so the app is in a "synced" state
       if (navigator.onLine) {
         markSynced()
+      }
+
+      // Initial login pull: refresh the local patient directory AND all of the
+      // clinician's active-status encounters (paged fully) so the dashboard and
+      // lists aren't stale on sign-in (previously nothing pulled until you opened
+      // a chart/directory). Online-gated and best-effort — offline keeps cache.
+      if (navigator.onLine && cachedToken) {
+        void syncAllPatientsToDb()
+        void pullPractitionerEncounters(() => cachedToken).then((r) => {
+          if (r.changesApplied > 0) markSynced()
+        })
       }
     })
 

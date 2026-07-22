@@ -8,8 +8,8 @@ import { Stethoscope } from '@ultranos/ui-kit/icons'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
-import { generateSessionKey } from '@ultranos/crypto'
-import { encryptionKeyStore } from '@/lib/encryption-key-store'
+import { deriveSessionKey } from '@ultranos/crypto'
+import { encryptionKeyStore, getOrCreateDeviceSalt } from '@/lib/encryption-key-store'
 import { Button } from '@ultranos/ui-kit/components/ui/button'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { Label } from '@ultranos/ui-kit/components/ui/label'
@@ -91,8 +91,13 @@ export default function LoginPage() {
     })
 
     if (!encryptionKeyStore.isReady()) {
-      const encKey = await generateSessionKey()
-      encryptionKeyStore.setKey(encKey)
+      // Derive the SAME deterministic key AuthGuard re-derives on refresh
+      // (PBKDF2 over the Supabase user id + device salt). Using a random key
+      // here left data written this session undecryptable after a reload —
+      // AuthGuard would then wipe and re-pull it. payload.sub === session.user.id,
+      // so this matches AuthGuard's deriveSessionKey(data.session.user.id, …) input.
+      const derivedKey = await deriveSessionKey(payload.sub, getOrCreateDeviceSalt())
+      encryptionKeyStore.setKey(derivedKey)
     }
 
     const params = new URLSearchParams(window.location.search)
