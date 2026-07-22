@@ -7,6 +7,7 @@ import { useSyncStore } from '@/store/sync-store'
 const mockSetStatus = vi.fn()
 const mockSetSyncedCount = vi.fn()
 const mockSetLastSync = vi.fn()
+const mockSetBrandsIncomplete = vi.fn()
 const mockRunSync = vi.fn()
 const mockRunBrandsSync = vi.fn()
 const mockNetFetch = vi.fn()
@@ -22,6 +23,7 @@ type AuthState = { isAuthenticated: boolean; token: string | null }
 type SyncState = {
   lastVersion: number; status: 'idle' | 'syncing' | 'error'; lastSyncAt: string | null
   setStatus: typeof mockSetStatus; setSyncedCount: typeof mockSetSyncedCount; setLastSync: typeof mockSetLastSync
+  setBrandsIncomplete: typeof mockSetBrandsIncomplete
 }
 
 function setAuth(s: AuthState) { vi.mocked(useAuthStore).mockImplementation((sel: (x: AuthState) => unknown) => sel(s)) }
@@ -30,6 +32,7 @@ function setSync(s: SyncState) { vi.mocked(useSyncStore).mockImplementation((sel
 const baseSync: SyncState = {
   lastVersion: 0, status: 'idle', lastSyncAt: null,
   setStatus: mockSetStatus, setSyncedCount: mockSetSyncedCount, setLastSync: mockSetLastSync,
+  setBrandsIncomplete: mockSetBrandsIncomplete,
 }
 
 beforeEach(() => {
@@ -50,6 +53,30 @@ describe('useAutoSync', () => {
     expect(mockRunSync).toHaveBeenCalledTimes(1)
     expect(mockRunBrandsSync).toHaveBeenCalledTimes(1)
     expect(mockSetLastSync).toHaveBeenCalledWith(7, expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/))
+    // Brands succeeded → not flagged incomplete.
+    expect(mockSetBrandsIncomplete).toHaveBeenCalledWith(false)
+  })
+
+  it('cold start with brands failure: flags incomplete, errors, does NOT record a full lastSync', async () => {
+    mockRunBrandsSync.mockRejectedValue(new Error('brands network'))
+    await mount()
+    // Catalog sync still ran successfully.
+    expect(mockRunSync).toHaveBeenCalledTimes(1)
+    // Failure is surfaced, not swallowed.
+    expect(mockSetBrandsIncomplete).toHaveBeenCalledWith(true)
+    expect(mockSetStatus).toHaveBeenCalledWith('error')
+    // Must NOT mark the cold run as fully synced.
+    expect(mockSetLastSync).not.toHaveBeenCalled()
+  })
+
+  it('returning-user brands failure: flags incomplete but still records lastSync (non-blocking)', async () => {
+    setSync({ ...baseSync, lastVersion: 5, lastSyncAt: '2026-01-01T00:00:00Z' })
+    mockRunBrandsSync.mockRejectedValue(new Error('brands network'))
+    await mount()
+    expect(mockSetBrandsIncomplete).toHaveBeenCalledWith(true)
+    // Delta run self-heals: catalog success is still recorded.
+    expect(mockSetLastSync).toHaveBeenCalled()
+    expect(mockSetStatus).not.toHaveBeenCalledWith('error')
   })
 
   it('returning user (lastVersion>0): delta-syncs silently (no progress UI)', async () => {

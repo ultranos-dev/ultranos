@@ -31,6 +31,7 @@ export function useAutoSync() {
   const setStatus = useSyncStore((s) => s.setStatus)
   const setSyncedCount = useSyncStore((s) => s.setSyncedCount)
   const setLastSync = useSyncStore((s) => s.setLastSync)
+  const setBrandsIncomplete = useSyncStore((s) => s.setBrandsIncomplete)
 
   // Latest reactive values, so the interval/AppState callbacks never go stale.
   const snap = useRef({ isAuthenticated, token, lastVersion, status, lastSyncAt })
@@ -54,14 +55,34 @@ export function useAutoSync() {
     if (cold) setStatus('syncing') // only the first-run cold sync shows progress UI
     try {
       const { version } = await runSync(getDatabase(), s.token, cold ? (c) => setSyncedCount(c) : undefined)
-      await runBrandsSync(getDatabase(), s.token).catch(() => {})
-      setLastSync(version, new Date().toISOString())
+
+      // Brands sync is non-blocking for the core catalog, but its failure must be
+      // observable — a swallowed failure would leave branded/trade-name data
+      // missing with zero user indication. Surface it via the brandsIncomplete flag.
+      let brandsOk = true
+      try {
+        await runBrandsSync(getDatabase(), s.token)
+      } catch {
+        brandsOk = false
+      }
+      setBrandsIncomplete(!brandsOk)
+
+      // On a cold first run, a brands failure means brand data is genuinely
+      // incomplete — don't record a fully-successful lastSync (which would clear
+      // status to idle and mark us "synced"). Keep the catalog's version recorded
+      // for delta resume, but flag the run as errored so the UI can prompt a retry.
+      // Delta re-syncs will still record success and self-heal the brands flag.
+      if (cold && !brandsOk) {
+        setStatus('error')
+      } else {
+        setLastSync(version, new Date().toISOString())
+      }
     } catch {
       if (cold) setStatus('error') // delta failures stay silent
     } finally {
       running.current = false
     }
-  }, [setStatus, setSyncedCount, setLastSync])
+  }, [setStatus, setSyncedCount, setLastSync, setBrandsIncomplete])
 
   // Sign-in / app open.
   useEffect(() => {

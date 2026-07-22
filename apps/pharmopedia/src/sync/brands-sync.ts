@@ -43,7 +43,15 @@ export async function runBrandsSync(
   while (true) {
     const { brands, latestVersion } = await fetchBrands(since, SYNC_PAGE_SIZE, token)
     if (brands.length === 0) break
-    if (latestVersion <= since) break // guard against a stalled server
+    // Guard against a stalled server that returns entries but never advances the
+    // version: silently breaking here would leave brands unsynced with no error,
+    // producing an incomplete drug reference. Throw loudly instead (matches
+    // catalog-sync's stall guard).
+    if (latestVersion <= since) {
+      throw new Error(
+        `Brands sync stalled: server returned entries but version did not advance (since=${since}, latestVersion=${latestVersion})`,
+      )
+    }
     await upsertBrands(db, brands)
     brandCount += brands.length
     since = latestVersion
@@ -55,7 +63,12 @@ export async function runBrandsSync(
   while (true) {
     const { presentations, latestVersion } = await fetchPresentations(psince, SYNC_PAGE_SIZE, token)
     if (presentations.length === 0) break
-    if (latestVersion <= psince) break
+    // Same stall guard as the brands loop — never silently truncate presentations.
+    if (latestVersion <= psince) {
+      throw new Error(
+        `Presentations sync stalled: server returned entries but version did not advance (since=${psince}, latestVersion=${latestVersion})`,
+      )
+    }
     await upsertPresentations(db, presentations)
     presCount += presentations.length
     psince = latestVersion

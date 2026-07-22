@@ -48,4 +48,37 @@ describe('runBrandsSync', () => {
     expect(fetchBrands.mock.calls[0][0]).toBe(500)
     expect(fetchPresentations.mock.calls[0][0]).toBe(600)
   })
+
+  it('THROWS when the brands server returns entries but the version did not advance (stall guard)', async () => {
+    const upsertBrands = vi.fn(async () => {})
+    // Non-empty page whose latestVersion did NOT advance past `since` (0).
+    const fetchBrands = vi.fn().mockResolvedValue({ brands: [brand(1), brand(2)], latestVersion: 0 })
+    const fetchPresentations = vi.fn().mockResolvedValue({ presentations: [], latestVersion: 0 })
+
+    await expect(
+      runBrandsSync({} as never, 'tok', {
+        fetchBrands, fetchPresentations, upsertBrands, upsertPresentations: async () => {},
+        getMeta: async () => null,
+        setMeta: async () => {},
+      }),
+    ).rejects.toThrow(/stalled/i)
+    // Must not have silently truncated by upserting the stalled page.
+    expect(upsertBrands).not.toHaveBeenCalled()
+  })
+
+  it('THROWS when the presentations server returns entries but the version did not advance (stall guard)', async () => {
+    const upsertPresentations = vi.fn(async () => {})
+    // Brands complete cleanly; presentations stall on a non-empty non-advancing page.
+    const fetchBrands = vi.fn().mockResolvedValue({ brands: [], latestVersion: 0 })
+    const fetchPresentations = vi.fn().mockResolvedValue({ presentations: [pres(1), pres(2)], latestVersion: 0 })
+
+    await expect(
+      runBrandsSync({} as never, 'tok', {
+        fetchBrands, fetchPresentations, upsertBrands: async () => {}, upsertPresentations,
+        getMeta: async () => null,
+        setMeta: async () => {},
+      }),
+    ).rejects.toThrow(/stalled/i)
+    expect(upsertPresentations).not.toHaveBeenCalled()
+  })
 })
