@@ -33,15 +33,17 @@ export function createSqliteSyncAdapter(db: SQLiteDatabase): SyncQueueStorage {
       )
     },
 
+    // Matches the SyncQueueStorage interface in @ultranos/sync-engine:
+    // getByResourceId(resourceId, status). The sync-engine queue calls this as
+    // getByResourceId(input.resourceId, 'pending') for dedup — filtering by
+    // resource_id + status is the correct, arity-matched behavior.
     async getByResourceId(
       resourceId: string,
-      resourceType: string,
       status: string,
     ): Promise<SyncQueueEntry | null> {
       const row = await db.getFirstAsync<SyncQueueRow>(
-        `SELECT * FROM sync_queue WHERE resource_id = ? AND resource_type = ? AND status = ? LIMIT 1`,
+        `SELECT * FROM sync_queue WHERE resource_id = ? AND status = ? LIMIT 1`,
         resourceId,
-        resourceType,
         status,
       )
       return row ? rowToEntry(row) : null

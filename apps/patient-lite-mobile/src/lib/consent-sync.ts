@@ -1,10 +1,28 @@
 import { Platform } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
 import type { FhirConsent } from '@ultranos/shared-types'
-import { getSyncPriority } from '@ultranos/sync-engine'
+import type { SyncQueue } from '@ultranos/sync-engine'
+import { getSyncPriority, enqueueSyncAction } from '@ultranos/sync-engine'
+import { consentToEnqueueInput } from '@/lib/consent-queue-adapter'
 import { emitAuditEvent } from '@/lib/audit'
 
 const SYNC_QUEUE_KEY = 'ultranos_consent_sync_queue'
+
+/**
+ * Sync-engine queue for dual-write.
+ * Set during app init (see use-database-unlock.ts / sync-drain-init.ts). When set,
+ * queueConsentSync ALSO enqueues the consent into the durable sync-engine queue so
+ * the DrainWorker dispatches it to the Hub. When null (queue not yet initialized),
+ * consent changes are still captured in the SecureStore ledger below.
+ */
+let syncEngineQueue: SyncQueue | null = null
+
+/**
+ * Wire the sync-engine queue for dual-write. Pass null to clear (e.g. on lock/logout).
+ */
+export function setSyncEngineQueue(queue: SyncQueue | null): void {
+  syncEngineQueue = queue
+}
 
 /** In-memory mirror for PWA — cleared on tab close */
 let memoryStore: Map<string, string> = new Map()
@@ -56,10 +74,20 @@ export async function loadSyncQueue(): Promise<void> {
 
 /**
  * Queue a consent change for high-priority sync to the Hub API.
- * Uses the append-only pattern — entries are never removed from the ledger,
- * only marked as synced.
+ *
+ * Dual-write:
+ *   (a) Appends to the append-only SecureStore ledger (entries are never
+ *       removed, only marked as synced).
+ *   (b) When a sync-engine queue is wired via setSyncEngineQueue(), also
+ *       enqueues the consent into the durable sync-engine queue so the
+ *       DrainWorker dispatches it to the Hub.
+ *
+ * Returns the ledger entry synchronously. The durable persist (SecureStore)
+ * and the sync-engine enqueue run fire-and-forget so a rejected persist never
+ * discards the already-appended ledger entry; the entry is retained and will
+ * be retried on the next queue flush.
  */
-export async function queueConsentSync(consent: FhirConsent): Promise<ConsentSyncEntry> {
+export function queueConsentSync(consent: FhirConsent): ConsentSyncEntry {
   const entry: ConsentSyncEntry = {
     id: consent.id,
     resourceType: 'Consent',
@@ -69,8 +97,14 @@ export async function queueConsentSync(consent: FhirConsent): Promise<ConsentSyn
     synced: false,
   }
 
+  // (a) Append to the ledger synchronously so it is captured before enqueue.
   consentSyncQueue.push(entry)
-  await persistQueue()
+  void persistQueue()
+
+  // (b) Dual-write to the sync-engine queue when initialized.
+  if (syncEngineQueue) {
+    void enqueueSyncAction(syncEngineQueue, consentToEnqueueInput(consent))
+  }
 
   const ref = consent.patient?.reference ?? ''
   const patientId = ref.includes('/') ? ref.split('/').pop()! : ref

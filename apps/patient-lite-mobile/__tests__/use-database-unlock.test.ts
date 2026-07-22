@@ -70,6 +70,46 @@ describe('useDatabaseUnlock', () => {
     expect(result.current.isUnlocking).toBe(false)
   })
 
+  it('starts the drain worker and wires the consent dual-write queue on unlock', async () => {
+    const { result } = renderHook(() => useDatabaseUnlock())
+
+    await act(async () => {
+      await result.current.unlock()
+    })
+
+    expect(mockStartDrainWorker).toHaveBeenCalledTimes(1)
+    // Wires the returned sync-engine queue into consent-sync for dual-write
+    expect(mockSetSyncEngineQueue).toHaveBeenCalledWith(mockSyncQueue)
+  })
+
+  it('stops the drain worker and detaches the consent queue on lock', async () => {
+    const { result } = renderHook(() => useDatabaseUnlock())
+
+    await act(async () => {
+      await result.current.unlock()
+    })
+    await act(async () => {
+      await result.current.lock()
+    })
+
+    expect(mockStopDrainWorker).toHaveBeenCalled()
+    expect(mockSetSyncEngineQueue).toHaveBeenLastCalledWith(null)
+  })
+
+  it('does not start the drain worker twice across re-unlock', async () => {
+    const { result } = renderHook(() => useDatabaseUnlock())
+
+    await act(async () => {
+      await result.current.unlock()
+    })
+    // Second unlock without an intervening lock — drain already running
+    await act(async () => {
+      await result.current.unlock()
+    })
+
+    expect(mockStartDrainWorker).toHaveBeenCalledTimes(1)
+  })
+
   it('sets error when biometric auth is cancelled', async () => {
     mockedUnlock.mockResolvedValue({ success: false, reason: 'cancelled' })
 

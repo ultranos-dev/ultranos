@@ -81,12 +81,11 @@ describe('sqlite-sync-adapter', () => {
   describe('getByResourceId', () => {
     it('returns null when no row found', async () => {
       db.getFirstAsync.mockResolvedValue(null)
-      const result = await adapter.getByResourceId('res-1', 'Consent', 'pending')
+      const result = await adapter.getByResourceId('res-1', 'pending')
       expect(result).toBeNull()
       expect(db.getFirstAsync).toHaveBeenCalledWith(
         expect.stringContaining('resource_id = ?'),
         'res-1',
-        'Consent',
         'pending',
       )
     })
@@ -105,7 +104,7 @@ describe('sqlite-sync-adapter', () => {
         last_attempt_at: '2026-01-01T01:00:00Z',
       })
 
-      const result = await adapter.getByResourceId('c1', 'Consent', 'pending')
+      const result = await adapter.getByResourceId('c1', 'pending')
       expect(result).toEqual({
         id: 'e1',
         resourceType: 'Consent',
