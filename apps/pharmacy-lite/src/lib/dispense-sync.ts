@@ -1,5 +1,5 @@
-import { db } from '@/lib/db'
 import type { LocalMedicationDispense } from '@/lib/medication-dispense'
+import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getHubApiUrl } from '@/lib/trpc'
 
@@ -132,15 +132,12 @@ async function enqueueForRetry(
   dispense: LocalMedicationDispense,
   payload: Record<string, unknown>,
 ): Promise<void> {
-  await db.syncQueue.add({
-    id: crypto.randomUUID(),
+  // Payload contains PHI (patientRef, medicationDisplay) — encrypted at rest.
+  await enqueuePharmacySyncEntry({
     resourceType: 'MedicationDispense',
     resourceId: dispense.id,
     action: 'dispense_sync',
-    payload: JSON.stringify(payload),
-    status: 'pending',
+    payload,
     hlcTimestamp: dispense._ultranos.hlcTimestamp,
-    createdAt: new Date().toISOString(),
-    retryCount: 0,
   })
 }

@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { buildEncryptedSyncEntry } from '@/lib/dexie-sync-adapter'
 import type { Invoice, InvoiceLineItem, InvoiceStatus } from './types'
 
 /**
@@ -74,19 +75,19 @@ export async function createInvoiceFromDispense(
     hlcTimestamp,
   }
 
+  // Encrypt the sync entry before the transaction (Web Crypto cannot run in a
+  // Dexie tx zone); the payload carries PHI (patientId, line items).
+  const syncEntry = await buildEncryptedSyncEntry({
+    resourceType: 'Invoice',
+    resourceId: invoice.id,
+    action: 'create',
+    payload: invoice as unknown as Record<string, unknown>,
+    hlcTimestamp,
+  })
+
   await db.transaction('rw', [db.invoices, db.syncQueue], async () => {
     await db.invoices.add(invoice)
-    await db.syncQueue.add({
-      id: crypto.randomUUID(),
-      resourceType: 'Invoice',
-      resourceId: invoice.id,
-      action: 'create',
-      payload: JSON.stringify(invoice),
-      status: 'pending',
-      hlcTimestamp,
-      createdAt: new Date().toISOString(),
-      retryCount: 0,
-    })
+    await db.syncQueue.add(syncEntry)
   })
 
   return invoice
@@ -166,19 +167,17 @@ export async function voidInvoice(params: VoidInvoiceParams): Promise<Invoice> {
     voidedAt: new Date().toISOString(),
   }
 
+  const syncEntry = await buildEncryptedSyncEntry({
+    resourceType: 'Invoice',
+    resourceId: invoiceId,
+    action: 'update',
+    payload: updated as unknown as Record<string, unknown>,
+    hlcTimestamp,
+  })
+
   await db.transaction('rw', [db.invoices, db.syncQueue], async () => {
     await db.invoices.put(updated)
-    await db.syncQueue.add({
-      id: crypto.randomUUID(),
-      resourceType: 'Invoice',
-      resourceId: invoiceId,
-      action: 'update',
-      payload: JSON.stringify(updated),
-      status: 'pending',
-      hlcTimestamp,
-      createdAt: new Date().toISOString(),
-      retryCount: 0,
-    })
+    await db.syncQueue.add(syncEntry)
   })
 
   return updated

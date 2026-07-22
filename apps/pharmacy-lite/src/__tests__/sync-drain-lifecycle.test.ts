@@ -25,6 +25,9 @@ vi.mock('@ultranos/sync-engine', () => ({
 // Mock dependencies
 vi.mock('@/lib/dexie-sync-adapter', () => ({
   dexieSyncAdapter: {},
+  createDexieSyncAdapter: vi.fn().mockReturnValue({}),
+  pharmacyEncryptPayload: vi.fn(async (p: string) => `enc:v1:${p}`),
+  decryptPharmacyEntryPayload: vi.fn(async (p: string) => p),
 }))
 
 vi.mock('@/lib/drain-sync-fn', () => ({

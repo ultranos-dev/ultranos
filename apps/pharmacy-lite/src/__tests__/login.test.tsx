@@ -1,15 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import LoginPage from '../app/[locale]/(auth)/login/page'
 import { useAuthSessionStore } from '../stores/auth-session-store'
 
-// Mock Supabase client
+// MFA is currently disabled in the login page (credentials → session → redirect),
+// so these tests cover that flow plus the deterministic encryption-key derivation
+// (Story 28.4) that must match AuthGuard so data survives a refresh.
+
+// Hoisted so the vi.mock factories (lifted to the top of the file) can reference
+// these spies without a temporal-dead-zone error.
+const { mockDeriveSessionKey, mockSetKey } = vi.hoisted(() => ({
+  mockDeriveSessionKey: vi.fn().mockResolvedValue({} as CryptoKey),
+  mockSetKey: vi.fn(),
+}))
+
 const mockSignInWithPassword = vi.fn()
 const mockSignOut = vi.fn()
-const mockListFactors = vi.fn()
-const mockChallenge = vi.fn()
-const mockVerify = vi.fn()
 const mockGetSession = vi.fn()
 
 vi.mock('@/lib/supabase', () => ({
@@ -17,394 +23,174 @@ vi.mock('@/lib/supabase', () => ({
     auth: {
       signInWithPassword: mockSignInWithPassword,
       signOut: mockSignOut,
-      mfa: {
-        listFactors: mockListFactors,
-        challenge: mockChallenge,
-        verify: mockVerify,
-      },
       getSession: mockGetSession,
     },
   }),
 }))
 
-// Mock reportAuthEvent
 const mockReportAuthEvent = vi.fn()
 vi.mock('@/lib/trpc', () => ({
   reportAuthEvent: (...args: unknown[]) => mockReportAuthEvent(...args),
 }))
 
-// Mock encryption (key lives in memory only — no real Web Crypto needed in tests)
+const mockRouterPush = vi.fn()
+const mockRouterReplace = vi.fn()
+let mockSearchParamsValue = ''
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(mockSearchParamsValue),
+  useRouter: () => ({ push: mockRouterPush, replace: mockRouterReplace }),
+}))
+
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+}))
+
+vi.mock('next/link', () => ({
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}))
+
+vi.mock('@/components/LanguageSelectorClient', () => ({
+  LanguageSelectorClient: () => null,
+}))
+
+vi.mock('@ultranos/ui-kit/icons', () => ({
+  Pill: () => null,
+}))
+
+// deriveSessionKey is the DETERMINISTIC PBKDF2 key that must match AuthGuard — the
+// login page must call it (not the random generateSessionKey) so data survives refresh.
 vi.mock('@ultranos/crypto', () => ({
+  deriveSessionKey: (...args: unknown[]) => mockDeriveSessionKey(...args),
   generateSessionKey: vi.fn().mockResolvedValue({} as CryptoKey),
 }))
+
 vi.mock('@/lib/encryption-key-store', () => ({
-  encryptionKeyStore: { isReady: () => false, setKey: vi.fn() },
+  encryptionKeyStore: { isReady: () => false, setKey: mockSetKey, wipe: vi.fn(), getKey: () => null },
+  getOrCreateDeviceSalt: () => new Uint8Array(16),
 }))
 
-// Mock window.location
-Object.defineProperty(window, 'location', {
-  value: { href: '' },
-  writable: true,
-})
+import LoginPage from '../app/[locale]/(auth)/login/page'
 
-describe('LoginPage', () => {
+/** Build a fake (unsigned) JWT whose payload decodes to `payload`. */
+function fakeJwt(payload: Record<string, unknown>): string {
+  return `header.${btoa(JSON.stringify(payload))}.signature`
+}
+
+const DEFAULT_PAYLOAD = {
+  sub: 'user-123',
+  role: 'PHARMACIST',
+  session_id: 'sess-abc',
+  practitioner_id: 'pract-456',
+}
+
+function mockSuccessfulSignIn(payload: Record<string, unknown> = DEFAULT_PAYLOAD) {
+  mockSignInWithPassword.mockResolvedValue({ data: { user: { id: payload.sub } }, error: null })
+  mockGetSession.mockResolvedValue({
+    data: { session: { access_token: fakeJwt(payload), user: { id: payload.sub, email: 'pharm@hospital.com' } } },
+  })
+}
+
+async function submitCredentials(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText('email'), 'pharm@hospital.com')
+  await user.type(screen.getByLabelText('password'), 'correct-pass')
+  await user.click(screen.getByRole('button', { name: /signIn/i }))
+}
+
+describe('LoginPage (pharmacy-lite)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     useAuthSessionStore.getState().clearSession()
-    window.location.href = ''
+    mockSearchParamsValue = ''
+    window.history.replaceState({}, '', '/login')
   })
 
-  it('renders credential form with email and password fields', () => {
+  it('renders credential form with email, password, and sign-in button', () => {
     render(<LoginPage />)
-    expect(screen.getByLabelText('Email')).toBeInTheDocument()
-    expect(screen.getByLabelText('Password')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
+    expect(screen.getByLabelText('email')).toBeInTheDocument()
+    expect(screen.getByLabelText('password')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /signIn/i })).toBeInTheDocument()
   })
 
-  it('shows error on failed credential submission and emits LOGIN_FAILURE', async () => {
+  it('shows error and emits LOGIN_FAILURE on invalid credentials', async () => {
     const user = userEvent.setup()
-    mockSignInWithPassword.mockResolvedValue({
-      data: { user: null },
-      error: { message: 'Invalid credentials' },
-    })
+    mockSignInWithPassword.mockResolvedValue({ data: { user: null }, error: { message: 'Invalid' } })
 
     render(<LoginPage />)
-
-    await user.type(screen.getByLabelText('Email'), 'test@example.com')
-    await user.type(screen.getByLabelText('Password'), 'wrongpass')
-    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    await submitCredentials(user)
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Invalid email or password')
+      expect(screen.getByRole('alert')).toHaveTextContent('invalidCredentials')
     })
-
-    expect(mockReportAuthEvent).toHaveBeenCalledWith('LOGIN_FAILURE', {
-      actorEmail: 'test@example.com',
-    })
+    expect(mockReportAuthEvent).toHaveBeenCalledWith('LOGIN_FAILURE', { actorEmail: 'pharm@hospital.com' })
+    expect(mockRouterPush).not.toHaveBeenCalled()
   })
 
-  it('transitions to MFA step on successful credential submission', async () => {
+  it('populates the session, derives the deterministic key, and redirects on success', async () => {
     const user = userEvent.setup()
-    mockSignInWithPassword.mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    })
-    mockListFactors.mockResolvedValue({
-      data: { totp: [{ id: 'factor-1' }] },
-      error: null,
-    })
-    mockChallenge.mockResolvedValue({
-      data: { id: 'challenge-1' },
-      error: null,
-    })
+    mockSuccessfulSignIn()
 
     render(<LoginPage />)
-
-    await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
-    await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    await submitCredentials(user)
 
     await waitFor(() => {
-      expect(screen.getByLabelText('TOTP Code')).toBeInTheDocument()
+      expect(mockRouterPush).toHaveBeenCalledWith('/')
     })
 
-    expect(mockReportAuthEvent).toHaveBeenCalledWith('LOGIN_SUCCESS', {
-      actorId: 'user-123',
-    })
-  })
-
-  it('shows enrollment error and signs out when no TOTP factor is enrolled', async () => {
-    const user = userEvent.setup()
-    mockSignInWithPassword.mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    })
-    mockListFactors.mockResolvedValue({
-      data: { totp: [] },
-      error: null,
-    })
-
-    render(<LoginPage />)
-
-    await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
-    await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign in' }))
-
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'TOTP MFA is required for pharmacy staff',
-      )
-    })
-
-    expect(mockSignOut).toHaveBeenCalled()
-  })
-
-  it('renders MFA form with TOTP input after credential success', async () => {
-    const user = userEvent.setup()
-    mockSignInWithPassword.mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    })
-    mockListFactors.mockResolvedValue({
-      data: { totp: [{ id: 'factor-1' }] },
-      error: null,
-    })
-    mockChallenge.mockResolvedValue({
-      data: { id: 'challenge-1' },
-      error: null,
-    })
-
-    render(<LoginPage />)
-
-    await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
-    await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign in' }))
-
-    await waitFor(() => {
-      expect(screen.getByLabelText('TOTP Code')).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Verify' })).toBeInTheDocument()
-      expect(screen.getByText('Back to sign in')).toBeInTheDocument()
-    })
-  })
-
-  it('populates auth session store with role=PHARMACIST on successful MFA', async () => {
-    const user = userEvent.setup()
-
-    mockSignInWithPassword.mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    })
-    mockListFactors.mockResolvedValue({
-      data: { totp: [{ id: 'factor-1' }] },
-      error: null,
-    })
-    mockChallenge.mockResolvedValue({
-      data: { id: 'challenge-1' },
-      error: null,
-    })
-    mockVerify.mockResolvedValue({ error: null })
-
-    // Create a fake JWT with claims
-    const payload = {
-      sub: 'user-123',
+    expect(mockReportAuthEvent).toHaveBeenCalledWith('LOGIN_SUCCESS', { actorId: 'user-123' })
+    expect(useAuthSessionStore.getState().session).toMatchObject({
+      userId: 'user-123',
+      practitionerId: 'pract-456',
       role: 'PHARMACIST',
-      session_id: 'sess-abc',
-      practitioner_id: 'pract-456',
-    }
-    const fakeJwt = `header.${btoa(JSON.stringify(payload))}.signature`
-    mockGetSession.mockResolvedValue({
-      data: { session: { access_token: fakeJwt, user: { email: 'pharm@hospital.com' } } },
+      sessionId: 'sess-abc',
+      email: 'pharm@hospital.com',
     })
+    // Key must be derived from the JWT sub (deterministic, matches AuthGuard) —
+    // never a random generateSessionKey().
+    expect(mockDeriveSessionKey).toHaveBeenCalledWith('user-123', expect.anything())
+    expect(mockSetKey).toHaveBeenCalled()
+  })
+
+  it('falls back to userId as practitionerId when the claim is absent', async () => {
+    const user = userEvent.setup()
+    mockSuccessfulSignIn({ sub: 'user-789', role: 'PHARMACIST', session_id: 'sess-xyz' })
 
     render(<LoginPage />)
-
-    // Step 1: credentials
-    await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
-    await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign in' }))
-
-    // Step 2: MFA
-    await waitFor(() => {
-      expect(screen.getByLabelText('TOTP Code')).toBeInTheDocument()
-    })
-
-    await user.type(screen.getByLabelText('TOTP Code'), '123456')
-    await user.click(screen.getByRole('button', { name: 'Verify' }))
+    await submitCredentials(user)
 
     await waitFor(() => {
-      const session = useAuthSessionStore.getState().session
-      expect(session).toEqual({
-        userId: 'user-123',
-        practitionerId: 'pract-456',
-        role: 'PHARMACIST',
-        sessionId: 'sess-abc',
-        email: 'pharm@hospital.com',
-        name: '',
+      expect(useAuthSessionStore.getState().session).toMatchObject({
+        userId: 'user-789',
+        practitionerId: 'user-789',
       })
     })
-
-    expect(mockReportAuthEvent).toHaveBeenCalledWith('MFA_VERIFY_SUCCESS')
-    expect(window.location.href).toBe('/')
+    expect(mockDeriveSessionKey).toHaveBeenCalledWith('user-789', expect.anything())
   })
 
-  it('shows error and clears TOTP input on failed MFA verification', async () => {
+  it('redirects to a safe returnUrl when present', async () => {
     const user = userEvent.setup()
-
-    mockSignInWithPassword.mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    })
-    mockListFactors.mockResolvedValue({
-      data: { totp: [{ id: 'factor-1' }] },
-      error: null,
-    })
-    mockChallenge.mockResolvedValue({
-      data: { id: 'challenge-1' },
-      error: null,
-    })
-    mockVerify.mockResolvedValue({
-      error: { message: 'Invalid TOTP' },
-    })
+    window.history.replaceState({}, '', '/login?returnUrl=%2Fdispense')
+    mockSuccessfulSignIn()
 
     render(<LoginPage />)
-
-    await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
-    await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    await submitCredentials(user)
 
     await waitFor(() => {
-      expect(screen.getByLabelText('TOTP Code')).toBeInTheDocument()
+      expect(mockRouterPush).toHaveBeenCalledWith('/dispense')
     })
-
-    await user.type(screen.getByLabelText('TOTP Code'), '000000')
-    await user.click(screen.getByRole('button', { name: 'Verify' }))
-
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'Invalid TOTP code — please try again',
-      )
-    })
-
-    expect(mockReportAuthEvent).toHaveBeenCalledWith('MFA_VERIFY_FAILURE')
-    expect(screen.getByLabelText('TOTP Code')).toHaveValue('')
   })
 
-  it('redirects to / only after session store is populated', async () => {
+  it('rejects an absolute returnUrl (open-redirect prevention)', async () => {
     const user = userEvent.setup()
-
-    mockSignInWithPassword.mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    })
-    mockListFactors.mockResolvedValue({
-      data: { totp: [{ id: 'factor-1' }] },
-      error: null,
-    })
-    mockChallenge.mockResolvedValue({
-      data: { id: 'challenge-1' },
-      error: null,
-    })
-    mockVerify.mockResolvedValue({ error: null })
-
-    // Simulate null session — should NOT redirect
-    mockGetSession.mockResolvedValue({
-      data: { session: null },
-    })
+    window.history.replaceState({}, '', '/login?returnUrl=https%3A%2F%2Fevil.com')
+    mockSuccessfulSignIn()
 
     render(<LoginPage />)
-
-    await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
-    await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+    await submitCredentials(user)
 
     await waitFor(() => {
-      expect(screen.getByLabelText('TOTP Code')).toBeInTheDocument()
+      expect(mockRouterPush).toHaveBeenCalledWith('/')
     })
-
-    await user.type(screen.getByLabelText('TOTP Code'), '123456')
-    await user.click(screen.getByRole('button', { name: 'Verify' }))
-
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'Failed to retrieve session',
-      )
-    })
-
-    // Should NOT have redirected
-    expect(window.location.href).toBe('')
-    expect(useAuthSessionStore.getState().session).toBeNull()
-  })
-
-  it('signs out on factorsError (dangling session prevention)', async () => {
-    const user = userEvent.setup()
-    mockSignInWithPassword.mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    })
-    mockListFactors.mockResolvedValue({
-      data: null,
-      error: { message: 'Factors error' },
-    })
-
-    render(<LoginPage />)
-
-    await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
-    await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign in' }))
-
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Failed to retrieve MFA factors')
-    })
-
-    expect(mockSignOut).toHaveBeenCalled()
-  })
-
-  it('signs out on challengeError (dangling session prevention)', async () => {
-    const user = userEvent.setup()
-    mockSignInWithPassword.mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    })
-    mockListFactors.mockResolvedValue({
-      data: { totp: [{ id: 'factor-1' }] },
-      error: null,
-    })
-    mockChallenge.mockResolvedValue({
-      data: null,
-      error: { message: 'Challenge error' },
-    })
-
-    render(<LoginPage />)
-
-    await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
-    await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign in' }))
-
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Failed to initiate MFA challenge')
-    })
-
-    expect(mockSignOut).toHaveBeenCalled()
-  })
-
-  it('back to sign in clears factorId, challengeId, and signs out', async () => {
-    const user = userEvent.setup()
-
-    mockSignInWithPassword.mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    })
-    mockListFactors.mockResolvedValue({
-      data: { totp: [{ id: 'factor-1' }] },
-      error: null,
-    })
-    mockChallenge.mockResolvedValue({
-      data: { id: 'challenge-1' },
-      error: null,
-    })
-
-    render(<LoginPage />)
-
-    await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
-    await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign in' }))
-
-    await waitFor(() => {
-      expect(screen.getByLabelText('TOTP Code')).toBeInTheDocument()
-    })
-
-    // Click back to sign in
-    await user.click(screen.getByRole('button', { name: 'Back to sign in' }))
-
-    await waitFor(() => {
-      expect(screen.getByLabelText('Email')).toBeInTheDocument()
-      expect(screen.getByLabelText('Password')).toBeInTheDocument()
-    })
-
-    // Verify signOut was called (clears dangling AAL1 session)
-    expect(mockSignOut).toHaveBeenCalled()
-
-    // Verify MFA state was cleared (TOTP form no longer visible)
-    expect(screen.queryByLabelText('TOTP Code')).not.toBeInTheDocument()
   })
 })

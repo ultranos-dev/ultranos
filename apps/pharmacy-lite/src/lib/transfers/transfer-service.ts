@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { deductStock, addStock } from '@/lib/inventory/stock-service'
 import type { StockTransfer, TransferItem } from './types'
 
@@ -14,16 +15,13 @@ async function enqueueSyncUpdate(transferId: string): Promise<void> {
   const transfer = await db.stockTransfers.get(transferId)
   if (!transfer) return
   const ts = now()
-  await db.syncQueue.put({
-    id: crypto.randomUUID(),
+  await enqueuePharmacySyncEntry({
     resourceType: 'StockTransfer',
     resourceId: transferId,
     action: 'update',
-    payload: JSON.stringify(transfer),
-    status: 'pending',
+    payload: transfer as unknown as Record<string, unknown>,
     hlcTimestamp: ts,
     createdAt: ts,
-    retryCount: 0,
   })
 }
 
@@ -56,16 +54,13 @@ export async function createTransferRequest(params: {
 
   await db.stockTransfers.put(transfer)
 
-  await db.syncQueue.put({
-    id: crypto.randomUUID(),
+  await enqueuePharmacySyncEntry({
     resourceType: 'StockTransfer',
     resourceId: transfer.id,
     action: 'create',
-    payload: JSON.stringify(transfer),
-    status: 'pending',
+    payload: transfer as unknown as Record<string, unknown>,
     hlcTimestamp: ts,
     createdAt: ts,
-    retryCount: 0,
   })
 
   return transfer

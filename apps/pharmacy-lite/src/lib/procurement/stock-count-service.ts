@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { buildEncryptedSyncEntry } from '@/lib/dexie-sync-adapter'
 import type { StockCount, StockCountItem, StockCountType } from './types'
 import type { StockMovement } from '@/lib/inventory/types'
 
@@ -44,39 +45,48 @@ export async function completeStockCount(countId: string): Promise<StockCount> {
   const now = new Date().toISOString()
   const varianceItems = count.items.filter((item) => item.variance !== 0)
 
-  await db.transaction('rw', [db.stockCounts, db.stockMovements, db.stockBatches, db.syncQueue], async () => {
-    for (const item of varianceItems) {
-      const movementId = crypto.randomUUID()
-      const catalogItem = await db.catalogItems.get(item.catalogItemId)
-      const isControlled = !!catalogItem?.controlledSchedule
-      const movement: StockMovement = {
-        id: movementId,
-        stockBatchId: item.stockBatchId,
-        catalogItemId: item.catalogItemId,
-        type: 'adjusted',
-        quantity: item.variance,
-        reason: isControlled
-          ? `[CONTROLLED] Stock count variance: expected ${item.expectedQty}, counted ${item.actualQty}`
-          : `Stock count variance: expected ${item.expectedQty}, counted ${item.actualQty}`,
-        referenceId: countId,
-        referenceType: 'count',
-        performedBy: count.countedBy,
-        timestamp: now,
-        hlcTimestamp: now,
-      }
-      await db.stockMovements.put(movement)
-      await db.stockBatches.update(item.stockBatchId, { quantityOnHand: item.actualQty, hlcTimestamp: now })
-      await db.syncQueue.put({
-        id: crypto.randomUUID(),
+  // Build movements (with catalog lookups) and encrypt sync-queue entries BEFORE
+  // opening the Dexie transaction — Web Crypto cannot run inside a tx zone.
+  const movements: StockMovement[] = []
+  for (const item of varianceItems) {
+    const catalogItem = await db.catalogItems.get(item.catalogItemId)
+    const isControlled = !!catalogItem?.controlledSchedule
+    movements.push({
+      id: crypto.randomUUID(),
+      stockBatchId: item.stockBatchId,
+      catalogItemId: item.catalogItemId,
+      type: 'adjusted',
+      quantity: item.variance,
+      reason: isControlled
+        ? `[CONTROLLED] Stock count variance: expected ${item.expectedQty}, counted ${item.actualQty}`
+        : `Stock count variance: expected ${item.expectedQty}, counted ${item.actualQty}`,
+      referenceId: countId,
+      referenceType: 'count',
+      performedBy: count.countedBy,
+      timestamp: now,
+      hlcTimestamp: now,
+    })
+  }
+
+  const syncEntries = await Promise.all(
+    movements.map((movement) =>
+      buildEncryptedSyncEntry({
         resourceType: 'StockMovement',
-        resourceId: movementId,
+        resourceId: movement.id,
         action: 'create',
-        payload: JSON.stringify(movement),
-        status: 'pending',
+        payload: movement as unknown as Record<string, unknown>,
         hlcTimestamp: now,
         createdAt: now,
-        retryCount: 0,
-      })
+      }),
+    ),
+  )
+
+  await db.transaction('rw', [db.stockCounts, db.stockMovements, db.stockBatches, db.syncQueue], async () => {
+    for (let i = 0; i < varianceItems.length; i++) {
+      const item = varianceItems[i]!
+      await db.stockMovements.put(movements[i]!)
+      await db.stockBatches.update(item.stockBatchId, { quantityOnHand: item.actualQty, hlcTimestamp: now })
+      await db.syncQueue.put(syncEntries[i]!)
     }
     await db.stockCounts.update(countId, {
       status: 'completed' as const,

@@ -13,7 +13,11 @@
  */
 
 import { DrainWorker, createSyncQueue } from '@ultranos/sync-engine'
-import { dexieSyncAdapter, decryptPharmacyEntryPayload } from './dexie-sync-adapter'
+import {
+  createDexieSyncAdapter,
+  pharmacyEncryptPayload,
+  decryptPharmacyEntryPayload,
+} from './dexie-sync-adapter'
 import { drainSyncFn } from './drain-sync-fn'
 import { encryptionKeyStore } from './encryption-key-store'
 import { useSyncStore } from '@/stores/sync-store'
@@ -23,13 +27,17 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 let drainWorker: DrainWorker | null = null
 
 /**
- * Start the sync drain worker. Idempotent — stops any existing worker first.
+ * Start the sync drain worker. Idempotent ï¿½ stops any existing worker first.
  * Should be called after successful authentication.
  */
 export function startSyncDrain(): void {
   stopSyncDrain()
 
-  const queue = createSyncQueue(dexieSyncAdapter)
+  // Wire the ENCRYPTING adapter so any payload re-persisted through the queue
+  // (status transitions, dedup replaces) is encrypted at rest with the enc:v1:
+  // prefix that decryptFn below expects. Enqueue sites encrypt via
+  // enqueuePharmacySyncEntry; this closes the loop for queue-internal writes.
+  const queue = createSyncQueue(createDexieSyncAdapter(pharmacyEncryptPayload))
 
   drainWorker = new DrainWorker({
     queue,

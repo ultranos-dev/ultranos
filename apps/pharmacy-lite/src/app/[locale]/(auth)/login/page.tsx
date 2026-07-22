@@ -12,8 +12,8 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
-import { generateSessionKey } from '@ultranos/crypto'
-import { encryptionKeyStore } from '@/lib/encryption-key-store'
+import { deriveSessionKey } from '@ultranos/crypto'
+import { encryptionKeyStore, getOrCreateDeviceSalt } from '@/lib/encryption-key-store'
 
 type AuthStep = 'credentials' | 'mfa'
 
@@ -74,15 +74,19 @@ export default function LoginPage() {
       return
     }
 
-    if (!encryptionKeyStore.isReady()) {
-      const encKey = await generateSessionKey()
-      encryptionKeyStore.setKey(encKey)
-    }
-
     const jwtPart = jwt.split('.')[1]
     if (!jwtPart) throw new Error('Invalid JWT format')
     const base64 = jwtPart.replace(/-/g, '+').replace(/_/g, '/')
     const payload = JSON.parse(atob(base64))
+
+    if (!encryptionKeyStore.isReady()) {
+      // Derive the SAME deterministic key AuthGuard re-derives on refresh
+      // (PBKDF2 over the Supabase user id + device salt). A random key here left
+      // data written this session undecryptable after reload. payload.sub ===
+      // session.user.id, matching AuthGuard's deriveSessionKey(...) input.
+      const derivedKey = await deriveSessionKey(payload.sub, getOrCreateDeviceSalt())
+      encryptionKeyStore.setKey(derivedKey)
+    }
     useAuthSessionStore.getState().setSession({
       userId: payload.sub,
       practitionerId: payload.practitioner_id ?? payload.sub,

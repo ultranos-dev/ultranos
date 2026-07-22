@@ -103,7 +103,7 @@ describe('dexieSyncAdapter', () => {
 
       const syncing = await dexieSyncAdapter.getByStatus('syncing')
       expect(syncing).toHaveLength(1)
-      expect(syncing[0].status).toBe('syncing')
+      expect(syncing[0]?.status).toBe('syncing')
     })
 
     it('returns empty array when no matches', async () => {

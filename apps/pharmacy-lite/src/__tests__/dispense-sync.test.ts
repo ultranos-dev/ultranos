@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { db } from '@/lib/db'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
+import { ENCRYPTED_PAYLOAD_PREFIX } from '@ultranos/sync-engine'
+import { generateSessionKey } from '@ultranos/crypto'
 import type { LocalMedicationDispense } from '@/lib/medication-dispense'
 
 // Mock global fetch
@@ -50,11 +53,14 @@ function makeSampleDispense(overrides?: Partial<LocalMedicationDispense>): Local
 
 beforeEach(async () => {
   vi.clearAllMocks()
+  // Seed the session key so PHI sync-queue payloads are encrypted at rest.
+  encryptionKeyStore.setKey(await generateSessionKey())
   await db.delete()
   await db.open()
 })
 
 afterEach(() => {
+  encryptionKeyStore.wipe()
   vi.unstubAllGlobals()
   vi.stubGlobal('fetch', fetchMock)
 })
@@ -138,7 +144,7 @@ describe('syncDispenseToHub', () => {
     expect(body.json.prescriptionId).toBe('rx-001')
   })
 
-  it('stores the full dispense payload in sync_queue for later retry', async () => {
+  it('stores the full dispense payload ENCRYPTED in sync_queue for later retry', async () => {
     fetchMock.mockRejectedValueOnce(new Error('offline'))
 
     const dispense = makeSampleDispense()
@@ -146,7 +152,12 @@ describe('syncDispenseToHub', () => {
 
     const queued = await db.syncQueue.toArray()
     expect(queued[0]!.payload).toBeTruthy()
-    const payload = JSON.parse(queued[0]!.payload)
+    // PHI payload must be encrypted at rest (enc:v1: prefix), never plaintext JSON.
+    expect(queued[0]!.payload.startsWith(ENCRYPTED_PAYLOAD_PREFIX)).toBe(true)
+    expect(queued[0]!.payload).not.toContain('dispense-001')
+    // Decrypt to confirm the round-trip yields the original payload.
+    const { decryptPharmacyEntryPayload } = await import('@/lib/dexie-sync-adapter')
+    const payload = JSON.parse(await decryptPharmacyEntryPayload(queued[0]!.payload))
     expect(payload.dispenseId).toBe('dispense-001')
   })
 

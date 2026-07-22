@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import type { Supplier } from './types'
 
 export async function createSupplier(params: {
@@ -25,16 +26,13 @@ export async function createSupplier(params: {
     createdAt: now,
   }
   await db.suppliers.put(supplier)
-  await db.syncQueue.put({
-    id: crypto.randomUUID(),
+  await enqueuePharmacySyncEntry({
     resourceType: 'Supplier',
     resourceId: id,
     action: 'create',
-    payload: JSON.stringify(supplier),
-    status: 'pending',
+    payload: supplier as unknown as Record<string, unknown>,
     hlcTimestamp: now,
     createdAt: now,
-    retryCount: 0,
   })
   return supplier
 }

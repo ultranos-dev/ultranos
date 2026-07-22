@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { buildEncryptedSyncEntry } from '@/lib/dexie-sync-adapter'
 import type { Payment, PaymentMethod, LedgerEntry, PatientAccount } from './types'
 import { updateInvoicePaymentStatus } from './invoice-service'
 
@@ -30,6 +31,24 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Paymen
     receivedBy,
     timestamp: new Date().toISOString(),
   }
+
+  // Resolve the open cash drawer before the transaction so the encrypted sync
+  // payload carries the correct cashDrawerId. Web Crypto cannot run inside a
+  // Dexie transaction zone, so the sync entry is built/encrypted up front.
+  if (method === 'cash') {
+    const openDrawer = await db.cashDrawers.where('status').equals('open').first()
+    if (openDrawer) {
+      payment.cashDrawerId = openDrawer.id
+    }
+  }
+
+  const syncEntry = await buildEncryptedSyncEntry({
+    resourceType: 'Payment',
+    resourceId: payment.id,
+    action: 'create',
+    payload: payment as unknown as Record<string, unknown>,
+    hlcTimestamp,
+  })
 
   await db.transaction(
     'rw',
@@ -84,17 +103,7 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Paymen
 
       await db.payments.add(payment)
 
-      await db.syncQueue.add({
-        id: crypto.randomUUID(),
-        resourceType: 'Payment',
-        resourceId: payment.id,
-        action: 'create',
-        payload: JSON.stringify(payment),
-        status: 'pending',
-        hlcTimestamp,
-        createdAt: new Date().toISOString(),
-        retryCount: 0,
-      })
+      await db.syncQueue.add(syncEntry)
     }
   )
 
@@ -130,6 +139,14 @@ export async function recordCreditPayment(
     timestamp: new Date().toISOString(),
   }
 
+  const syncEntry = await buildEncryptedSyncEntry({
+    resourceType: 'LedgerEntry',
+    resourceId: ledgerEntry.id,
+    action: 'create',
+    payload: ledgerEntry as unknown as Record<string, unknown>,
+    hlcTimestamp,
+  })
+
   await db.transaction(
     'rw',
     [db.ledgerEntries, db.patientAccounts, db.cashDrawers, db.syncQueue],
@@ -160,17 +177,7 @@ export async function recordCreditPayment(
         })
       }
 
-      await db.syncQueue.add({
-        id: crypto.randomUUID(),
-        resourceType: 'LedgerEntry',
-        resourceId: ledgerEntry.id,
-        action: 'create',
-        payload: JSON.stringify(ledgerEntry),
-        status: 'pending',
-        hlcTimestamp,
-        createdAt: new Date().toISOString(),
-        retryCount: 0,
-      })
+      await db.syncQueue.add(syncEntry)
     }
   )
 

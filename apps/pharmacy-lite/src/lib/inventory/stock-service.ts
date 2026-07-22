@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import type { StockBatch, StockMovement, StockMovementType } from './types'
 
 export async function deductStock(params: {
@@ -46,16 +47,13 @@ export async function deductStock(params: {
     })
   })
 
-  await db.syncQueue.put({
-    id: crypto.randomUUID(),
+  await enqueuePharmacySyncEntry({
     resourceType: 'StockMovement',
     resourceId: movementId,
     action: 'create',
-    payload: JSON.stringify(movement),
-    status: 'pending',
+    payload: movement as unknown as Record<string, unknown>,
     hlcTimestamp: now,
     createdAt: now,
-    retryCount: 0,
   })
 
   return { ...batch, quantityOnHand: newQty, status: newStatus }
@@ -101,16 +99,13 @@ export async function addStock(params: {
     }
   })
 
-  await db.syncQueue.put({
-    id: crypto.randomUUID(),
+  await enqueuePharmacySyncEntry({
     resourceType: 'StockMovement',
     resourceId: movementId,
     action: 'create',
-    payload: JSON.stringify(movement),
-    status: 'pending',
+    payload: movement as unknown as Record<string, unknown>,
     hlcTimestamp: now,
     createdAt: now,
-    retryCount: 0,
   })
 }
 

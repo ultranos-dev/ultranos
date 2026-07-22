@@ -57,7 +57,7 @@ export interface SyncQueueEntry {
   resourceId: string
   action: string
   payload: string
-  status: 'pending' | 'in-flight' | 'failed' | 'synced'
+  status: 'pending' | 'in-flight' | 'failed' | 'synced' | 'awaiting-key'
   hlcTimestamp: string
   createdAt: string
   retryCount: number

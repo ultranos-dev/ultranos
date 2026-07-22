@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import type { PurchaseOrder, PurchaseOrderItem, PurchaseOrderStatus } from './types'
 
 export async function createPurchaseOrder(params: {
@@ -26,16 +27,13 @@ export async function createPurchaseOrder(params: {
     hlcTimestamp: now,
   }
   await db.purchaseOrders.put(po)
-  await db.syncQueue.put({
-    id: crypto.randomUUID(),
+  await enqueuePharmacySyncEntry({
     resourceType: 'PurchaseOrder',
     resourceId: id,
     action: 'create',
-    payload: JSON.stringify(po),
-    status: 'pending',
+    payload: po as unknown as Record<string, unknown>,
     hlcTimestamp: now,
     createdAt: now,
-    retryCount: 0,
   })
   return po
 }

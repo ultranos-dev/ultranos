@@ -1,4 +1,5 @@
 import { db, type LocalPatient } from '@/lib/db'
+import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 
 export interface PatientRegistrationData {
   nameGiven: string
@@ -29,17 +30,14 @@ export async function registerPatientLocally(data: PatientRegistrationData): Pro
 
   await db.patients.put(patient)
 
-  // Enqueue sync to Hub
-  await db.syncQueue.put({
-    id: crypto.randomUUID(),
+  // Enqueue sync to Hub — payload contains PHI (patient name), encrypted at rest.
+  await enqueuePharmacySyncEntry({
     resourceType: 'Patient',
     resourceId: id,
     action: 'create',
-    payload: JSON.stringify(patient),
-    status: 'pending',
+    payload: patient as unknown as Record<string, unknown>,
     hlcTimestamp: now, // Simplified — real HLC uses the hlcNow() helper
     createdAt: now,
-    retryCount: 0,
   })
 
   return patient
