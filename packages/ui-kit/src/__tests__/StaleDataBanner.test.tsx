@@ -87,4 +87,41 @@ describe('StaleDataBanner', () => {
     )
     expect(container.firstChild).toBeNull()
   })
+
+  it('suppresses the elapsed-time warning when online (no failures)', () => {
+    const thirtyFiveMinAgo = new Date(Date.now() - 35 * 60 * 1000).toISOString()
+    const { container } = render(
+      <StaleDataBanner
+        lastSyncedAt={thirtyFiveMinAgo}
+        failedCount={0}
+        onSyncNow={vi.fn()}
+        isOnline
+      />
+    )
+    // Online + idle is not a staleness risk — the app can refresh on demand.
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('suppresses the never-synced warning when online (no failures)', () => {
+    const { container } = render(
+      <StaleDataBanner lastSyncedAt={null} failedCount={0} onSyncNow={vi.fn()} isOnline />
+    )
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('still warns about failed items even when online', () => {
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    render(
+      <StaleDataBanner
+        lastSyncedAt={fiveMinAgo}
+        failedCount={2}
+        onSyncNow={vi.fn()}
+        isOnline
+      />
+    )
+    expect(screen.getByText(/data may be outdated/i)).toBeInTheDocument()
+    expect(screen.getByText(/2 failed/i)).toBeInTheDocument()
+    // Not a time-staleness case — the "minutes ago" detail is omitted.
+    expect(screen.queryByText(/minutes ago/i)).not.toBeInTheDocument()
+  })
 })

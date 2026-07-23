@@ -6,20 +6,32 @@ export interface StaleDataBannerProps {
   lastSyncedAt: string | null
   failedCount: number
   onSyncNow: () => void
+  /**
+   * Live network connectivity. When `true`, the elapsed-time "data may be
+   * outdated" warning is suppressed — an online app can refresh on demand, so
+   * time since the last pull is not itself a staleness risk. Failed-item
+   * warnings still show regardless. Defaults to `false` to preserve the
+   * conservative offline-first warning for callers that don't pass connectivity.
+   */
+  isOnline?: boolean
 }
 
 function getMinutesAgo(isoDate: string): number {
   return Math.floor((Date.now() - new Date(isoDate).getTime()) / 60_000)
 }
 
-export function StaleDataBanner({ lastSyncedAt, failedCount, onSyncNow }: StaleDataBannerProps) {
+export function StaleDataBanner({ lastSyncedAt, failedCount, onSyncNow, isOnline = false }: StaleDataBannerProps) {
   const isStaleByTime =
     lastSyncedAt === null || Date.now() - new Date(lastSyncedAt).getTime() > STALE_THRESHOLD_MS
+  // Elapsed-time staleness is only a real risk when OFFLINE. While connected the
+  // app can pull on demand (opd-lite also runs a background freshness heartbeat),
+  // so don't alarm merely because time passed with the app sitting idle.
+  const showTimeWarning = !isOnline && isStaleByTime
   const isStaleByFailures = failedCount > 0
 
-  if (!isStaleByTime && !isStaleByFailures) return null
+  if (!showTimeWarning && !isStaleByFailures) return null
 
-  const minutesAgo = lastSyncedAt ? getMinutesAgo(lastSyncedAt) : null
+  const minutesAgo = showTimeWarning && lastSyncedAt ? getMinutesAgo(lastSyncedAt) : null
 
   return (
     <div
@@ -38,8 +50,8 @@ export function StaleDataBanner({ lastSyncedAt, failedCount, onSyncNow }: StaleD
     >
       <span>
         <strong>Data may be outdated</strong>
-        {minutesAgo !== null && <> — last synced {minutesAgo} minutes ago</>}
-        {minutesAgo === null && <> — never synced</>}
+        {showTimeWarning && minutesAgo !== null && <> — last synced {minutesAgo} minutes ago</>}
+        {showTimeWarning && minutesAgo === null && <> — never synced</>}
         {isStaleByFailures && <> ({failedCount} failed sync items)</>}
       </span>
       <button
