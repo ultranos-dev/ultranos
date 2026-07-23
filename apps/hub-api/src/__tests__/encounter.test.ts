@@ -1017,9 +1017,13 @@ describe('encounter.listByPractitioner', () => {
     const caller = createCaller(ctx)
 
     await caller.encounter.listByPractitioner(validInput)
-    expect((q.contains as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith('participant', [
-      { individual: { reference: `Practitioner/${CLINICIAN_USER.sub}` } },
-    ])
+    // `participant` is jsonb — the containment value must be a JSON *string*
+    // (`cs.[...]`), not a JS array (which supabase-js serializes as a Postgres
+    // array literal `cs.{...}` → "invalid input syntax for type json").
+    expect((q.contains as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith(
+      'participant',
+      JSON.stringify([{ individual: { reference: `Practitioner/${CLINICIAN_USER.sub}` } }]),
+    )
     expect((q.in as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith('status', [
       'planned',
       'in-progress',
@@ -1039,9 +1043,10 @@ describe('encounter.listByPractitioner', () => {
     const caller = createCaller(ctx)
 
     await caller.encounter.listByPractitioner(validInput)
-    expect((q.contains as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith('participant', [
-      { individual: { reference: 'Practitioner/fhir-prac-99' } },
-    ])
+    expect((q.contains as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith(
+      'participant',
+      JSON.stringify([{ individual: { reference: 'Practitioner/fhir-prac-99' } }]),
+    )
   })
 
   it('returns nextCursor (last created_at) when the page is full', async () => {

@@ -609,10 +609,14 @@ export const encounterRouter = createTRPCRouter({
       const practitionerRef = `Practitioner/${ctx.user.practitionerId ?? ctx.user.sub}`
 
       // Keyset pagination on created_at (NOT NULL), mirroring patient.list.
+      // NOTE: `participant` is a jsonb column, so the containment value MUST be a
+      // JSON *string* (`cs.[...]`). Passing a JS array makes supabase-js emit a
+      // Postgres array literal (`cs.{...}`) → "invalid input syntax for type json".
+      const participantFilter = JSON.stringify([{ individual: { reference: practitionerRef } }])
       let query = ctx.supabase
         .from('encounters')
         .select('*')
-        .contains('participant', [{ individual: { reference: practitionerRef } }])
+        .contains('participant', participantFilter)
         .in('status', ['planned', 'in-progress', 'finished'])
         .order('created_at', { ascending: true })
         .order('id', { ascending: true })
