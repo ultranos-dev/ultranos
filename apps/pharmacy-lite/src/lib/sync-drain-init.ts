@@ -43,11 +43,21 @@ export function startSyncDrain(): void {
     queue,
     syncFn: async (entry) => {
       const result = await drainSyncFn(entry)
+      const store = useSyncStore.getState()
 
       if (!result.success && result.error === 'auth-expired') {
         stopSyncDrain()
         window.dispatchEvent(new CustomEvent('ultranos:session-expired'))
         return { ...result, authExpired: true }
+      }
+
+      // Surface WHY a push failed (e.g. KYC_REQUIRED, SUBSCRIPTION_REQUIRED) so the
+      // pharmacist gets an actionable reason instead of a silent "N failed". A
+      // successful push clears it. Payload/parse errors aren't org-gate issues.
+      if (result.success) {
+        store.setSyncError(null)
+      } else if (result.error && result.error !== 'invalid-payload') {
+        store.setSyncError(result.error)
       }
 
       return result
@@ -57,8 +67,11 @@ export function startSyncDrain(): void {
     onStatusUpdate: (status) => {
       const store = useSyncStore.getState()
       store.updateSyncStatus(status)
-      if (!status.isPending && status.pendingCount === 0) {
+      // Only a genuinely clean queue (nothing pending AND nothing failed) counts
+      // as "synced" — a permanently-failed dispense must never read as fresh.
+      if (!status.isPending && status.pendingCount === 0 && status.failedCount === 0) {
         store.markSynced()
+        store.setSyncError(null)
       }
     },
     onAudit: (entry, outcome) => {

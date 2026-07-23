@@ -119,6 +119,30 @@ describe('drainSyncFn', () => {
     expect(result).toEqual({ success: false, error: 'Hub sync failed: 500' })
   })
 
+  it('surfaces the tRPC gate reason on 403 (e.g. KYC_REQUIRED)', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: async () => ({ error: { json: { message: 'KYC_REQUIRED' } } }),
+    })
+
+    const result = await drainSyncFn(makeEntry())
+
+    expect(result).toEqual({ success: false, error: 'KYC_REQUIRED' })
+  })
+
+  it('falls back to the status on 403 with an unexpected body', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: async () => ({}),
+    })
+
+    const result = await drainSyncFn(makeEntry())
+
+    expect(result).toEqual({ success: false, error: 'Hub sync failed: 403' })
+  })
+
   it('throws on network error (propagates to DrainWorker catch)', async () => {
     fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
 

@@ -5,7 +5,6 @@ import '@/lib/key-lifecycle-hooks'
 import { startSyncDrain, stopSyncDrain, triggerDrain } from '@/lib/sync-drain-init'
 import { startKrlSync, stopKrlSync } from '@/lib/krl-sync-worker'
 import { startAuditDrain, stopAuditDrain } from '@/lib/audit'
-import { useSyncStore } from '@/stores/sync-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getHubApiUrl } from '@/lib/trpc'
 
@@ -59,10 +58,10 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // Start audit drain worker (syncs client audit events to Hub)
     startAuditDrain(hubBaseUrl)
 
-    // Mark synced on initial startup when online
-    if (navigator.onLine) {
-      useSyncStore.getState().markSynced()
-    }
+    // NOTE: do not optimistically markSynced() here. The drain worker's
+    // onStatusUpdate is the single source of truth — it marks synced only once
+    // the queue is genuinely clean (nothing pending AND nothing failed), so the
+    // banner never reads "synced" while a push is still pending or has failed.
 
     // Refresh token every 10 minutes (JWT has 15-min expiry)
     const tokenInterval = setInterval(() => {
@@ -75,10 +74,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     }
     window.addEventListener('ultranos:sync-now', handleSyncNow)
 
-    // On reconnect: trigger immediate drain and mark synced
+    // On reconnect: trigger an immediate drain. Do NOT markSynced() here — the
+    // drain worker marks synced only after the queue actually clears, so we don't
+    // claim "synced" before the reconnected push has completed (or failed).
     function handleOnline() {
       triggerDrain()
-      useSyncStore.getState().markSynced()
     }
     window.addEventListener('online', handleOnline)
 

@@ -58,5 +58,17 @@ export async function drainSyncFn(entry: SyncQueueEntry): Promise<SyncResult> {
     return { success: false, error: 'Hub rejected with 409 Conflict' }
   }
 
+  if (res.status === 403) {
+    // Surface the tRPC gate reason (KYC_REQUIRED / SUBSCRIPTION_REQUIRED /
+    // ORG_SUSPENDED) so the pharmacist sees an actionable message instead of a
+    // bare status. Falls back to the status when the body isn't the expected shape.
+    let reason = `Hub sync failed: 403`
+    try {
+      const body = await res.json() as { error?: { json?: { message?: string } } }
+      if (body?.error?.json?.message) reason = body.error.json.message
+    } catch { /* non-JSON body — keep the status */ }
+    return { success: false, error: reason }
+  }
+
   return { success: false, error: `Hub sync failed: ${res.status}` }
 }

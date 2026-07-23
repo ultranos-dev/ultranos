@@ -11,10 +11,17 @@ export interface SyncStatus {
 interface SyncState extends SyncStatus {
   conflictCount: number
   isDashboardOpen: boolean
+  /**
+   * Human-facing reason the last push could not complete (e.g. "KYC_REQUIRED"),
+   * or null when the queue is draining cleanly. Lets the banner explain WHY
+   * dispense records aren't reaching the Hub instead of only showing "N failed".
+   */
+  syncError: string | null
   updateSyncStatus: (status: Partial<SyncStatus>) => void
   markSynced: () => void
   setConflictCount: (count: number) => void
   setDashboardOpen: (open: boolean) => void
+  setSyncError: (reason: string | null) => void
 }
 
 export const useSyncStore = create<SyncState>()((set) => ({
@@ -25,6 +32,7 @@ export const useSyncStore = create<SyncState>()((set) => ({
   failedCount: 0,
   conflictCount: 0,
   isDashboardOpen: false,
+  syncError: null,
 
   updateSyncStatus: (status) => {
     set(status)
@@ -40,5 +48,9 @@ export const useSyncStore = create<SyncState>()((set) => ({
 
   setDashboardOpen: (open) => {
     set({ isDashboardOpen: open })
+  },
+
+  setSyncError: (reason) => {
+    set({ syncError: reason })
   },
 }))
