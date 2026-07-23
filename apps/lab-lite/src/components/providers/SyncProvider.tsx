@@ -49,6 +49,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     startUploadDrain({
       uploadFn: uploadResult,
       getToken,
+      onSyncError: (reason) => {
+        useSyncStore.getState().setSyncError(reason)
+      },
       onAuditEvent: (event) => {
         void getToken().then((token) =>
           reportQueueAuditEvent(

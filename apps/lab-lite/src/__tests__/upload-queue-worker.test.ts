@@ -117,6 +117,29 @@ describe('Upload Queue Worker — drainQueue', () => {
     expect(items[0].retryCount).toBe(3)
   })
 
+  it('surfaces the failure reason via onSyncError (e.g. KYC_REQUIRED)', async () => {
+    await addToQueue(makeEntry({ retryCount: 2 }))
+    const onSyncError = vi.fn()
+    const deps = makeDeps({
+      uploadFn: vi.fn().mockRejectedValue(new Error('KYC_REQUIRED')),
+      onSyncError,
+    })
+
+    await drainQueue(deps)
+
+    expect(onSyncError).toHaveBeenCalledWith('KYC_REQUIRED')
+  })
+
+  it('clears the surfaced error via onSyncError on a successful upload', async () => {
+    await addToQueue(makeEntry())
+    const onSyncError = vi.fn()
+    const deps = makeDeps({ onSyncError })
+
+    await drainQueue(deps)
+
+    expect(onSyncError).toHaveBeenCalledWith(null)
+  })
+
   it('skips expired and failed items during drain', async () => {
     await addToQueue(makeEntry({ status: 'expired' }))
     await addToQueue(makeEntry({ status: 'failed', retryCount: 3 }))

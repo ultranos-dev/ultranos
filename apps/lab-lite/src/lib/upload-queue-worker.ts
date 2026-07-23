@@ -31,6 +31,12 @@ export interface DrainDependencies {
   blobToBase64Fn?: (blob: Blob) => Promise<string>
   /** When true, compress request bodies before upload */
   lowDataMode?: boolean
+  /**
+   * Surface WHY an upload failed (e.g. KYC_REQUIRED, SUBSCRIPTION_REQUIRED) so the
+   * UI can show an actionable reason instead of a silent "N failed". Called with
+   * the reason on failure and with null after a successful upload.
+   */
+  onSyncError?: (reason: string | null) => void
 }
 
 const BACKOFF_BASE_MS = 1000
@@ -107,8 +113,9 @@ async function drainItem(item: UploadQueueEntry, deps: DrainDependencies): Promi
 
       await deps.uploadFn(input, token)
 
-      // Success — remove from queue and emit audit
+      // Success — remove from queue, clear any surfaced error, emit audit
       await removeQueueItem(id)
+      deps.onSyncError?.(null)
       deps.onAuditEvent({
         action: 'QUEUE_DRAIN_SUCCESS',
         queueEntryId: id,
@@ -117,13 +124,18 @@ async function drainItem(item: UploadQueueEntry, deps: DrainDependencies): Promi
         timestamp: new Date().toISOString(),
       })
       return
-    } catch {
+    } catch (err) {
       currentRetry++
       const now = new Date().toISOString()
       await updateQueueItemStatus(id, currentRetry >= MAX_RETRIES ? 'failed' : 'pending', {
         retryCount: currentRetry,
         lastAttemptAt: now,
       })
+
+      // Surface WHY the upload failed (e.g. KYC_REQUIRED, SUBSCRIPTION_REQUIRED)
+      // instead of swallowing it — the pulse/banner otherwise shows only "N failed"
+      // with no actionable reason. A later successful upload clears it.
+      deps.onSyncError?.(err instanceof Error ? err.message : 'Upload failed')
 
       if (currentRetry < MAX_RETRIES) {
         const sleepFn = deps.sleep ?? sleep
