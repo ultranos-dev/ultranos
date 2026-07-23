@@ -14,12 +14,19 @@ interface SyncState extends SyncStatus {
   isDraining: boolean
   isDashboardOpen: boolean
   activePatientId: string | null
+  /**
+   * Human-facing reason the last pull could not complete (e.g. "KYC_REQUIRED"),
+   * or null when the pull succeeded. Lets the UI explain WHY data is unavailable
+   * instead of silently showing stale/empty lists. Push (drain) is independent.
+   */
+  syncError: string | null
 
   updateSyncStatus: (status: SyncStatus) => void
   setConflictCount: (count: number) => void
   setIsDraining: (draining: boolean) => void
   setDashboardOpen: (open: boolean) => void
   setActivePatientId: (id: string | null) => void
+  setSyncError: (reason: string | null) => void
 }
 
 export const useSyncStore = create<SyncState>()((set, get) => ({
@@ -32,6 +39,7 @@ export const useSyncStore = create<SyncState>()((set, get) => ({
   isDraining: false,
   isDashboardOpen: false,
   activePatientId: null,
+  syncError: null,
 
   updateSyncStatus: (status) => {
     const prev = get().lastSyncedAt
@@ -60,5 +68,9 @@ export const useSyncStore = create<SyncState>()((set, get) => ({
 
   setActivePatientId: (id) => {
     set({ activePatientId: id })
+  },
+
+  setSyncError: (reason) => {
+    set({ syncError: reason })
   },
 }))

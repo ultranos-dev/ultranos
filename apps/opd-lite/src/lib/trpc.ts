@@ -208,7 +208,14 @@ export async function listEncountersByPractitionerFromHub(
   })
 
   if (!res.ok) {
-    throw new Error(`Hub API error: ${res.status}`)
+    // Surface the tRPC error message (e.g. KYC_REQUIRED, SUBSCRIPTION_REQUIRED)
+    // so callers can show WHY encounters are unavailable instead of a bare status.
+    let reason = `HTTP ${res.status}`
+    try {
+      const errBody = await res.json() as { error?: { json?: { message?: string } } }
+      if (errBody?.error?.json?.message) reason = `${errBody.error.json.message} (HTTP ${res.status})`
+    } catch { /* non-JSON body — keep the status */ }
+    throw new Error(reason)
   }
 
   const body = await res.json() as { result: { data: { json: EncounterListResult } } }

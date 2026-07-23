@@ -44,19 +44,56 @@ function markSynced() {
   })
 }
 
-/** Pull for the active patient if a chart is open. */
+/** Minimum spacing between full patient-directory refreshes when no chart is open. */
+const DIRECTORY_HEARTBEAT_MS = 5 * 60 * 1000
+let lastDirectoryHeartbeat = 0
+
+/**
+ * Periodic freshness pull. Keeps lastSyncedAt honest while the app sits open, so
+ * the stale-data banner reflects real connectivity rather than idle time:
+ *  - Chart open → pull that patient's changes (2-min cadence).
+ *  - No chart open → refresh the patient directory, throttled to
+ *    DIRECTORY_HEARTBEAT_MS (patient.list has no incremental cursor, so we avoid
+ *    re-pulling the whole directory every tick).
+ * markSynced() runs ONLY after a pull actually succeeds — never cosmetically, so
+ * "synced N min ago" always reflects a real Hub round-trip.
+ */
 async function backgroundPull() {
   if (!navigator.onLine) return
-  const activePatientId = useSyncStore.getState().activePatientId
-  if (!activePatientId) return
 
+  const { setSyncError } = useSyncStore.getState()
   try {
     await refreshToken()
     if (!cachedToken) return
-    await pullPatientChanges(activePatientId, () => cachedToken)
+
+    const activePatientId = useSyncStore.getState().activePatientId
+    if (activePatientId) {
+      const r = await pullPatientChanges(activePatientId, () => cachedToken)
+      // Only mark synced on a genuine round-trip. If the pull reported an error
+      // while we are online, surface it — the banner suppresses elapsed-time
+      // staleness when online, so a silent failure would otherwise hide a
+      // Hub-unreachable state (a false "you're in sync").
+      if (r.errors.length > 0) {
+        if (navigator.onLine) setSyncError('HUB_REFRESH_FAILED')
+        return
+      }
+      setSyncError(null)
+      markSynced()
+      return
+    }
+
+    const now = Date.now()
+    if (now - lastDirectoryHeartbeat < DIRECTORY_HEARTBEAT_MS) return
+    lastDirectoryHeartbeat = now
+    // rethrow so an unreachable Hub is observable (syncAllPatientsToDb otherwise
+    // swallows and returns a partial list, which would falsely mark us synced).
+    await syncAllPatientsToDb(undefined, { rethrow: true })
+    setSyncError(null)
     markSynced()
   } catch {
-    // Silent — background pull failure is non-critical
+    // We were online yet the refresh failed — surface it rather than silently
+    // marking synced. A transient blip clears on the next successful heartbeat.
+    if (navigator.onLine) setSyncError('HUB_REFRESH_FAILED')
   }
 }
 
@@ -128,7 +165,17 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       if (navigator.onLine && cachedToken) {
         void syncAllPatientsToDb()
         void pullPractitionerEncounters(() => cachedToken).then((r) => {
-          if (r.changesApplied > 0) markSynced()
+          const store = useSyncStore.getState()
+          if (r.errors.length > 0) {
+            // Surface WHY the encounter pull could not complete (e.g. KYC_REQUIRED
+            // when the org is pending verification, or a network error) instead of
+            // failing silently and leaving the dashboard mysteriously empty. Push
+            // (drain) is independent and unaffected.
+            store.setSyncError(r.errors[0]!)
+          } else {
+            store.setSyncError(null)
+            if (r.changesApplied > 0) markSynced()
+          }
         })
       }
     })
