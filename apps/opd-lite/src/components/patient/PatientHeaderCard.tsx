@@ -8,9 +8,6 @@ import { formatRelativeTime } from '@ultranos/ui-kit'
 import { db } from '@/lib/db'
 import { PatientAvatar } from '@/components/patient/PatientAvatar'
 import { Button } from '@/components/ui/Button'
-import { getHubTrpcUrl } from '@/lib/hub-url'
-import { getAuthHeaders } from '@/lib/hub-auth'
-import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 
 interface PatientHeaderCardProps {
   patient: FhirPatient
@@ -22,8 +19,6 @@ interface PatientHeaderCardProps {
 /** LOINC codes for baseline vitals. */
 const LOINC_HEIGHT = '8302-2'
 const LOINC_WEIGHT = '29463-7'
-
-const HUB_API_URL = getHubTrpcUrl()
 
 /** Calculate age from birthDate (ISO) or birthYear. */
 function computeAge(patient: FhirPatient): string {
@@ -72,10 +67,6 @@ export function PatientHeaderCard({
     weight: '--',
     bmi: '--',
   })
-  // True when a photo upload reached Storage but the Hub write was refused, so
-  // the change isn't yet on the patient record. Non-blocking — surfaced as a notice.
-  const [photoError, setPhotoError] = useState(false)
-
   // Load latest height & weight from Dexie observations
   useEffect(() => {
     let cancelled = false
@@ -126,66 +117,22 @@ export function PatientHeaderCard({
     return () => { cancelled = true }
   }, [patientId])
 
-  // Handle photo update: persist to Hub and Dexie
+  // Handle photo update: the Hub route already persisted + audited; mirror locally.
   const handlePhotoUpdated = useCallback(
-    async (photoUrl: string) => {
-      try {
-        // Update Hub API. patient.update is a protectedProcedure — without the
-        // bearer token it 401s and the photo never persists to the Hub, so the
-        // auth headers are mandatory (see @/lib/hub-auth).
-        const headers = await getAuthHeaders()
-        const res = await fetch(`${HUB_API_URL}/patient.update`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            json: {
-              patientId,
-              lastKnownUpdate: patient.meta.lastUpdated,
-              photoUrl,
-            },
-          }),
-        })
-
-        // Surface a Hub rejection instead of swallowing it. Offline is expected
-        // (the photo is in Storage + local Dexie and syncs later); an online
-        // non-OK response means the Hub refused the write and the caller must know.
-        if (!res.ok && navigator.onLine) {
-          throw new Error(`patient.update failed: HTTP ${res.status}`)
-        }
-
-        // Audit the PHI write (CLAUDE.md rule 6 — every PHI access is audited).
-        auditPhiAccess(
-          AuditAction.UPDATE,
-          AuditResourceType.PATIENT,
-          patientId,
-          patientId,
-          { phiAccess: 'profile_photo' },
-        )
-
-        // Update Dexie locally
-        const updatedPatient: FhirPatient = {
-          ...patient,
-          _ultranos: {
-            ...patient._ultranos,
-            photoUrl,
-          },
-          meta: {
-            ...patient.meta,
-            lastUpdated: new Date().toISOString(),
-          },
-        }
-
-        await db.patients.put(updatedPatient)
-        onPatientUpdated(updatedPatient)
-        setPhotoError(false)
-      } catch {
-        // Hub refused the write (or we're offline). The image is already in
-        // Storage; surface a non-blocking notice so the user knows it isn't yet
-        // saved to the record rather than assuming success.
-        setPhotoError(true)
+    async (photoKey: string | null, lastUpdated?: string) => {
+      const updatedPatient: FhirPatient = {
+        ...patient,
+        _ultranos: { ...patient._ultranos, photoUrl: photoKey ?? undefined },
+        meta: { ...patient.meta, lastUpdated: lastUpdated ?? new Date().toISOString() },
       }
+      try {
+        await db.patients.put(updatedPatient)
+      } catch {
+        // Local mirror failed — non-fatal; server is source of truth and will re-sync.
+      }
+      onPatientUpdated(updatedPatient)
     },
-    [patient, patientId, onPatientUpdated],
+    [patient, onPatientUpdated],
   )
 
   const age = computeAge(patient)
@@ -211,11 +158,6 @@ export function PatientHeaderCard({
             size={80}
             onPhotoUpdated={handlePhotoUpdated}
           />
-          {photoError && (
-            <p role="status" className="max-w-[80px] text-center text-xs text-destructive">
-              {t('photoNotSaved')}
-            </p>
-          )}
         </div>
 
         {/* Patient info */}

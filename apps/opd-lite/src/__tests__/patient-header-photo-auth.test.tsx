@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import type { FhirPatient } from '@ultranos/shared-types'
 
-// The patient profile-photo update POSTs to the Hub's protectedProcedure
-// `patient.update`, which returns 401 without a bearer token. This test locks in
-// that the request carries the Supabase access token AND is audited as a PHI write.
+// PatientHeaderCard.handlePhotoUpdated no longer calls patient.update on the Hub.
+// The Hub route (Task 5) already persisted + audited the photo; the header just
+// mirrors the new key into Dexie and propagates state to the parent.
 
 vi.mock('next/link', () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => (
@@ -27,10 +27,10 @@ vi.mock('@/components/ui/Button', () => ({
   ),
 }))
 
-// PatientAvatar → expose a button that fires onPhotoUpdated, simulating a completed upload.
+// PatientAvatar stub: fires onPhotoUpdated with a nullable key (new signature).
 vi.mock('@/components/patient/PatientAvatar', () => ({
-  PatientAvatar: ({ onPhotoUpdated }: { onPhotoUpdated?: (p: string) => void }) => (
-    <button onClick={() => onPhotoUpdated?.('patients/abc/photo.jpg')}>upload-photo</button>
+  PatientAvatar: ({ onPhotoUpdated }: { onPhotoUpdated?: (k: string | null) => void }) => (
+    <button onClick={() => onPhotoUpdated?.('key.webp')}>upload-photo</button>
   ),
 }))
 
@@ -42,20 +42,6 @@ vi.mock('@/lib/db', () => ({
     },
     patients: { put: (...args: unknown[]) => putPatient(...args) },
   },
-}))
-
-const getSession = vi.fn().mockResolvedValue({
-  data: { session: { access_token: 'TESTTOKEN' } },
-})
-vi.mock('@/lib/supabase', () => ({
-  getSupabaseBrowserClient: () => ({ auth: { getSession } }),
-}))
-
-const auditPhiAccess = vi.fn()
-vi.mock('@/lib/audit', () => ({
-  auditPhiAccess: (...args: unknown[]) => auditPhiAccess(...args),
-  AuditAction: { UPDATE: 'UPDATE' },
-  AuditResourceType: { PATIENT: 'Patient' },
 }))
 
 import { PatientHeaderCard } from '@/components/patient/PatientHeaderCard'
@@ -83,44 +69,16 @@ const patient: FhirPatient = {
 describe('PatientHeaderCard — profile photo update', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200 }) as unknown as typeof fetch
   })
 
-  it('sends the Supabase bearer token when persisting a new photo to the Hub', async () => {
+  it('mirrors a photo update into Dexie without calling patient.update', async () => {
+    global.fetch = vi.fn() as unknown as typeof fetch
     render(
-      <PatientHeaderCard
-        patient={patient}
-        patientId={PATIENT_ID}
-        onEditClick={() => {}}
-        onPatientUpdated={() => {}}
-      />,
+      <PatientHeaderCard patient={patient} patientId={PATIENT_ID}
+        onEditClick={() => {}} onPatientUpdated={() => {}} />,
     )
-
-    fireEvent.click(screen.getByText('upload-photo'))
-
-    await waitFor(() => expect(global.fetch).toHaveBeenCalled())
-
-    const calls = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls
-    expect(calls.length).toBeGreaterThan(0)
-    const [url, init] = calls[0] as [string, RequestInit]
-    expect(String(url)).toContain('patient.update')
-    const headers = init.headers as Record<string, string>
-    expect(headers['Authorization']).toBe('Bearer TESTTOKEN')
-  })
-
-  it('audits the photo change as a PHI write', async () => {
-    render(
-      <PatientHeaderCard
-        patient={patient}
-        patientId={PATIENT_ID}
-        onEditClick={() => {}}
-        onPatientUpdated={() => {}}
-      />,
-    )
-
-    fireEvent.click(screen.getByText('upload-photo'))
-
-    await waitFor(() => expect(auditPhiAccess).toHaveBeenCalled())
-    expect(auditPhiAccess).toHaveBeenCalledWith('UPDATE', 'Patient', PATIENT_ID, PATIENT_ID, expect.anything())
+    fireEvent.click(screen.getByText('upload-photo')) // PatientAvatar mock fires onPhotoUpdated('key.webp')
+    await waitFor(() => expect(putPatient).toHaveBeenCalled())
+    expect(global.fetch).not.toHaveBeenCalled()
   })
 })
