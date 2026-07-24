@@ -53,6 +53,7 @@ describe('practitioner key router', () => {
         data: {
           id: 'key-1',
           practitioner_id: 'prac-1',
+          practitioner_name: 'Dr. Test',
           public_key_ed25519: 'dGVzdC1rZXk=',
           revoked_at: null,
           expires_at: '2027-01-01T00:00:00Z',
@@ -67,6 +68,8 @@ describe('practitioner key router', () => {
 
       expect(result.status).toBe('active')
       expect(result.practitionerId).toBe('prac-1')
+      // practitionerName is required by pharmacy-lite to cache a first-time-fetched key.
+      expect(result.practitionerName).toBe('Dr. Test')
       expect(result.publicKey).toBe('dGVzdC1rZXk=')
       expect(result.revokedAt).toBeNull()
       expect(result.expiresAt).toBe('2027-01-01T00:00:00Z')

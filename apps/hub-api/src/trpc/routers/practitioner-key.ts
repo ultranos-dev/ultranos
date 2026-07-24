@@ -25,7 +25,7 @@ export const practitionerKeyRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase
         .from('practitioner_keys')
-        .select('id, practitioner_id, public_key_ed25519, revoked_at, expires_at, created_at')
+        .select('id, practitioner_id, practitioner_name, public_key_ed25519, revoked_at, expires_at, created_at')
         .eq('public_key_ed25519', input.publicKey)
         .single()
 
@@ -66,6 +66,7 @@ export const practitionerKeyRouter = createTRPCRouter({
       return {
         status,
         practitionerId: data.practitioner_id,
+        practitionerName: data.practitioner_name,
         publicKey: data.public_key_ed25519,
         revokedAt: data.revoked_at,
         expiresAt: data.expires_at,

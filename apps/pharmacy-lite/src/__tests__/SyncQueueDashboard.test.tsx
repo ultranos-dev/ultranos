@@ -54,6 +54,20 @@ vi.mock('next/link', () => ({
   ),
 }))
 
+// Mock next-intl — the dashboard/entry use useTranslations/useLocale, and without a
+// NextIntlClientProvider in the test tree the real hooks throw at render. Resolve the
+// REAL messages so assertions match rendered English, with simple {param} interpolation.
+vi.mock('next-intl', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const messages = require('../../messages/en.json') as Record<string, Record<string, string>>
+  const makeT = (ns: string) => (key: string, params?: Record<string, unknown>) => {
+    let val = messages[ns]?.[key] ?? key
+    if (params) for (const [k, v] of Object.entries(params)) val = val.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
+    return val
+  }
+  return { useTranslations: (ns: string) => makeT(ns), useLocale: () => 'en' }
+})
+
 import { SyncQueueDashboard } from '@/components/pharmacy/SyncQueueDashboard'
 import { SyncQueueEntry as SyncQueueEntryComponent } from '@/components/pharmacy/SyncQueueEntry'
 
@@ -192,7 +206,8 @@ describe('SyncQueueEntry — entry card (AC #1)', () => {
       />,
     )
 
-    expect(screen.getByText(/5 min ago/i)).toBeInTheDocument()
+    // The `time.minutesAgo` message is "{minutes}m ago" → "5m ago" (not "5 min ago").
+    expect(screen.getByText(/5m ago/i)).toBeInTheDocument()
   })
 
   it('shows retry count badge when retryCount > 0', () => {
@@ -461,15 +476,23 @@ describe('SyncQueueDashboard — auto-cleanup (AC #5)', () => {
 })
 
 // ============================================================
-// Task 2: SyncPulse navigation (AC #1)
+// Task 2: SyncPulse opens the sync dashboard (AC #1)
 // ============================================================
-describe('SyncPulse navigation (AC #1)', () => {
-  it('SyncPulse click navigates to /sync', async () => {
+// SyncPulse was redesigned from an <a href="/sync"> link into a drawer-toggle
+// <button> (testid "sync-pulse") that flips useSyncStore.isDashboardOpen. The old
+// assertion (a "sync-pulse-link" navigating to /sync) tested a contract that no
+// longer exists — this asserts the current one.
+describe('SyncPulse dashboard toggle (AC #1)', () => {
+  it('clicking the SyncPulse button opens the sync dashboard', async () => {
     // Dynamically import after mocks are set up
     const { SyncPulse } = await import('@/components/pharmacy/SyncPulse')
+    const { useSyncStore } = await import('@/stores/sync-store')
+    useSyncStore.setState({ isDashboardOpen: false })
+
     render(<SyncPulse />)
 
-    const link = screen.getByTestId('sync-pulse-link')
-    expect(link).toHaveAttribute('href', '/sync')
+    fireEvent.click(screen.getByTestId('sync-pulse'))
+
+    expect(useSyncStore.getState().isDashboardOpen).toBe(true)
   })
 })

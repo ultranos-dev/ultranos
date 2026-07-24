@@ -59,8 +59,11 @@ export async function revalidateKey(
   authToken: string,
 ): Promise<RevalidationResult | null> {
   try {
+    // getHubApiUrl() already ends in /api/trpc (same convention as dispense-sync's
+    // `${getHubApiUrl()}/medication.recordDispense`), so append the procedure directly —
+    // do NOT prefix another /api/trpc or the path doubles and the Hub returns 404.
     const res = await fetch(
-      `${hubBaseUrl}/api/trpc/practitionerKey.getKeyStatus?input=${encodeURIComponent(JSON.stringify({ publicKey: pubKeyBase64 }))}`,
+      `${hubBaseUrl}/practitionerKey.getKeyStatus?input=${encodeURIComponent(JSON.stringify({ publicKey: pubKeyBase64 }))}`,
       {
         headers: { Authorization: `Bearer ${authToken}` },
       },

@@ -28,7 +28,7 @@ vi.mock('@/lib/trpc', () => ({
 }))
 
 import { verifySignature } from '@ultranos/sync-engine'
-import { verifyPrescriptionQr } from '@/lib/prescription-verify'
+import { verifyPrescriptionQr, fetchAndCachePractitionerKey } from '@/lib/prescription-verify'
 import { revalidateKey as _revalidateKey } from '@/lib/practitioner-key-cache'
 import type { SignedPrescriptionBundle } from '@/lib/prescription-types'
 
@@ -397,6 +397,68 @@ describe('Practitioner key revalidation (Story 26.7)', () => {
 
     const result = await verifyPrescriptionQr(JSON.stringify(bundle))
     expect(result.status).toBe('key_untrusted_offline')
+
+    vi.mocked(globalThis.fetch).mockRestore()
+  })
+})
+
+describe('fetchAndCachePractitionerKey', () => {
+  it('fetches from practitionerKey.getKeyStatus and caches an active key', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          result: {
+            data: {
+              status: 'active',
+              practitionerId: 'prac-9',
+              practitionerName: 'Dr. Nine',
+              publicKey: 'key-nine-b64',
+            },
+          },
+        }),
+        { status: 200 },
+      ),
+    )
+
+    const result = await fetchAndCachePractitionerKey('key-nine-b64', 'http://hub', 'token-9')
+
+    expect(result).toEqual({ id: 'prac-9', name: 'Dr. Nine' })
+
+    // Hits the real tRPC procedure, NOT the non-existent /api/practitioners/by-public-key route.
+    const calledUrl = String(fetchSpy.mock.calls[0]![0])
+    expect(calledUrl).toContain('/practitionerKey.getKeyStatus')
+    expect(calledUrl).not.toContain('by-public-key')
+    expect(calledUrl).not.toContain('/api/trpc/api/trpc')
+
+    const cached = await db.practitionerKeys.get('key-nine-b64')
+    expect(cached).toBeDefined()
+    expect(cached!.practitionerName).toBe('Dr. Nine')
+
+    vi.mocked(globalThis.fetch).mockRestore()
+  })
+
+  it('does NOT cache a revoked key (fail-closed)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          result: {
+            data: {
+              status: 'revoked',
+              practitionerId: 'prac-9',
+              practitionerName: 'Dr. Nine',
+              publicKey: 'revoked-key-b64',
+            },
+          },
+        }),
+        { status: 200 },
+      ),
+    )
+
+    const result = await fetchAndCachePractitionerKey('revoked-key-b64', 'http://hub', 'token-9')
+
+    expect(result).toBeNull()
+    const cached = await db.practitionerKeys.get('revoked-key-b64')
+    expect(cached).toBeUndefined()
 
     vi.mocked(globalThis.fetch).mockRestore()
   })

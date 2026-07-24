@@ -218,8 +218,11 @@ export async function fetchAndCachePractitionerKey(
   authToken: string,
   signal?: AbortSignal,
 ): Promise<{ id: string; name: string } | null> {
+  // There is no /api/practitioners/by-public-key REST route on the Hub — use the real
+  // practitionerKey.getKeyStatus tRPC procedure (same one revalidateKey uses). hubBaseUrl
+  // (getHubApiUrl()) already ends in /api/trpc, so append the procedure directly.
   const res = await fetch(
-    `${hubBaseUrl}/api/practitioners/by-public-key/${encodeURIComponent(pubKeyBase64)}`,
+    `${hubBaseUrl}/practitionerKey.getKeyStatus?input=${encodeURIComponent(JSON.stringify({ publicKey: pubKeyBase64 }))}`,
     {
       headers: { Authorization: `Bearer ${authToken}` },
       signal,
@@ -228,7 +231,14 @@ export async function fetchAndCachePractitionerKey(
 
   if (!res.ok) return null
 
-  const data = (await res.json()) as Record<string, unknown>
+  const json = (await res.json()) as Record<string, unknown>
+  // Support both the tRPC envelope ({ result: { data: ... } }) and a direct response.
+  const envelope = json.result as Record<string, unknown> | undefined
+  const data = (envelope?.data ?? json) as Record<string, unknown>
+
+  // Fail-closed: only trust and cache an ACTIVE key. A revoked/expired key must never be
+  // written to the offline cache, or it could satisfy a future offline verification.
+  if (data.status !== 'active') return null
 
   if (
     typeof data.practitionerId !== 'string' || !data.practitionerId ||
