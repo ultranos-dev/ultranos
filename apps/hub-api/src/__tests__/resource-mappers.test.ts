@@ -92,6 +92,41 @@ describe('flattenForDb', () => {
       ])
     })
 
+    it('normalizes a bare-UUID participant reference to Practitioner/<id>', () => {
+      // A spoke that stored the participant as a bare id (no resource-type prefix)
+      // must be normalized so participant-scoped queries (listByPractitioner) match.
+      const bare = {
+        ...fhirEncounter,
+        participant: [
+          { individual: { reference: '8586f2d7-c46d-4d0f-b31f-9cb9f5aaecdc' } },
+        ],
+      }
+      const result = flattenForDb('Encounter', bare)
+      expect(result.participant).toEqual([
+        { individual: { reference: 'Practitioner/8586f2d7-c46d-4d0f-b31f-9cb9f5aaecdc' } },
+      ])
+    })
+
+    it('leaves an already-prefixed participant reference untouched', () => {
+      const result = flattenForDb('Encounter', fhirEncounter)
+      expect(result.participant).toEqual([
+        { individual: { reference: 'Practitioner/p-001' } },
+      ])
+    })
+
+    it('leaves a non-Practitioner participant reference untouched', () => {
+      const withPatientActor = {
+        ...fhirEncounter,
+        participant: [
+          { individual: { reference: 'RelatedPerson/rp-1' } },
+        ],
+      }
+      const result = flattenForDb('Encounter', withPatientActor)
+      expect(result.participant).toEqual([
+        { individual: { reference: 'RelatedPerson/rp-1' } },
+      ])
+    })
+
     it('preserves the encounter id', () => {
       const result = flattenForDb('Encounter', fhirEncounter)
       expect(result.id).toBe('68d6aa02-1234-5678-9abc-def012345678')

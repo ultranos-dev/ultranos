@@ -86,7 +86,13 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const tSoap = useTranslations('soap')
   const tAllergy = useTranslations('allergy')
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
-  const practitionerRef = useAuthSessionStore((s) => s.session?.practitionerId ?? '')
+  // Canonical FHIR reference. Encounters (participant) and prescriptions
+  // (requester) are stored verbatim, and the Hub scopes encounter.listByPractitioner
+  // on "Practitioner/<id>" — a bare id silently drops the practitioner's whole
+  // queue from the dashboard on login. Empty stays empty so the guards below hold.
+  const practitionerRef = useAuthSessionStore((s) =>
+    s.session?.practitionerId ? `Practitioner/${s.session.practitionerId}` : '',
+  )
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const router = useRouter()
   const { open: paletteOpen, setOpen: setPaletteOpen } = useCommandPalette()

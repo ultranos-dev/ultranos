@@ -34,6 +34,28 @@ interface FhirEncounterPayload {
   meta?: { lastUpdated?: string; versionId?: string }
 }
 
+/**
+ * Normalize Encounter.participant references to the canonical FHIR
+ * "Practitioner/<id>" form. Some spoke versions historically stored a bare UUID
+ * in `individual.reference`, which silently breaks participant-scoped queries
+ * (encounter.listByPractitioner matches on "Practitioner/<id>"). Normalizing at
+ * ingestion makes the Hub authoritative regardless of the spoke's format — a
+ * reference without a resource-type prefix (no "/") is assumed to be a Practitioner.
+ */
+function normalizeParticipantRefs(participant: unknown): unknown {
+  if (!Array.isArray(participant)) return participant ?? null
+  return participant.map((p) => {
+    if (p && typeof p === 'object' && 'individual' in p) {
+      const individual = (p as { individual?: { reference?: string } }).individual
+      const ref = individual?.reference
+      if (typeof ref === 'string' && ref.length > 0 && !ref.includes('/')) {
+        return { ...p, individual: { ...individual, reference: `Practitioner/${ref}` } }
+      }
+    }
+    return p
+  })
+}
+
 function flattenEncounter(payload: FhirEncounterPayload): Record<string, unknown> {
   const subjectRef = payload.subject?.reference ?? ''
   const subjectId = subjectRef.replace(/^Patient\//, '')
@@ -49,8 +71,9 @@ function flattenEncounter(payload: FhirEncounterPayload): Record<string, unknown
     type: payload.type ?? null,
     // subject.reference → subject_id (UUID)
     subjectId,
-    // participant stays JSONB
-    participant: payload.participant ?? null,
+    // participant stays JSONB — normalized to canonical Practitioner/<id> refs so
+    // participant-scoped queries work regardless of the spoke's reference format.
+    participant: normalizeParticipantRefs(payload.participant),
     // period → two flat columns
     periodStart: payload.period?.start ?? null,
     periodEnd: payload.period?.end ?? null,
