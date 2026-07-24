@@ -101,47 +101,51 @@ export async function resolveConflict(
 
   const now = new Date().toISOString()
 
-  // Wrap all mutations in a Dexie transaction to prevent partial writes
-  await db.transaction(
-    'rw',
-    [db.syncQueue, db.allergyIntolerances, db.medications, db.conditions],
-    async () => {
-      // Apply resolution strategy
-      if (resolutionType === 'keep-both' && entry.conflictData) {
-        await appendRemoteVersion(entry)
-      } else if (resolutionType === 'prefer-remote' && entry.conflictData) {
-        await replaceWithRemoteVersion(entry)
-      }
-      // prefer-local: no data changes needed — local is already in place.
+  const clinicalWrite = prepareClinicalWrite(entry, resolutionType)
 
-      // Update syncQueue entry to resolved
-      await db.syncQueue.update(entryId, {
-        status: 'synced' as const,
-        conflictFlag: false,
-        resolvedAt: now,
+  // The clinical tables (allergyIntolerances / medications / conditions) use
+  // async AES-GCM field encryption via Dexie middleware. That middleware awaits
+  // Web Crypto on every put, and awaiting a non-Dexie promise inside a Dexie
+  // transaction detaches the transaction zone -> PrematureCommitError
+  // ("Transaction committed too early"). So the encrypted clinical write must NOT
+  // run inside a Dexie transaction. Each encrypted put is atomic on its own; we
+  // write it FIRST so that if the syncQueue update below fails, the conflict
+  // stays flagged and is safely retried, rather than being marked resolved with
+  // no data written.
+  if (clinicalWrite) {
+    await db[clinicalWrite.table].put(clinicalWrite.data as never)
+  }
+
+  // syncQueue is NOT encrypted, so its two mutations can share a transaction —
+  // marking the conflict resolved and enqueueing the sync action are all-or-nothing.
+  await db.transaction('rw', db.syncQueue, async () => {
+    // Update syncQueue entry to resolved
+    await db.syncQueue.update(entryId, {
+      status: 'synced' as const,
+      conflictFlag: false,
+      resolvedAt: now,
+      resolutionType,
+    })
+
+    // Enqueue resolution for Hub sync
+    await db.syncQueue.put({
+      id: `conflict-resolved-${entryId}-${Date.now()}`,
+      resourceType: entry.resourceType,
+      resourceId: entry.resourceId,
+      action: 'sync:conflict_resolved',
+      payload: JSON.stringify({
+        originalEntryId: entryId,
         resolutionType,
-      })
-
-      // Enqueue resolution for Hub sync
-      await db.syncQueue.put({
-        id: `conflict-resolved-${entryId}-${Date.now()}`,
-        resourceType: entry.resourceType,
-        resourceId: entry.resourceId,
-        action: 'sync:conflict_resolved',
-        payload: JSON.stringify({
-          originalEntryId: entryId,
-          resolutionType,
-          resolvedAt: now,
-          practitionerRef,
-        }),
-        status: 'pending',
-        hlcTimestamp: now,
-        createdAt: now,
-        retryCount: 0,
-        patientRef: entry.patientRef,
-      })
-    },
-  )
+        resolvedAt: now,
+        practitionerRef,
+      }),
+      status: 'pending',
+      hlcTimestamp: now,
+      createdAt: now,
+      retryCount: 0,
+      patientRef: entry.patientRef,
+    })
+  })
 
   // Emit audit event outside transaction — never log PHI field values
   auditPhiAccess(
@@ -169,45 +173,50 @@ function parseConflictData(entry: SyncQueueEntry): Record<string, unknown> {
   return JSON.parse(entry.conflictData) as Record<string, unknown>
 }
 
-/**
- * Write a FHIR resource to the appropriate clinical table by resourceType.
- */
-async function writeToClinicalTable(
-  resourceType: string,
-  data: Record<string, unknown>,
-): Promise<void> {
+/** Clinical Dexie tables that hold Tier 1 resources. */
+type ClinicalTable = 'allergyIntolerances' | 'medications' | 'conditions'
+
+/** Map a FHIR resourceType to its clinical Dexie table, or null if unsupported. */
+function tableForResourceType(resourceType: string): ClinicalTable | null {
   switch (resourceType) {
     case 'AllergyIntolerance':
-      await db.allergyIntolerances.put(data as never)
-      break
+      return 'allergyIntolerances'
     case 'MedicationRequest':
-      await db.medications.put(data as never)
-      break
+      return 'medications'
     case 'Condition':
-      await db.conditions.put(data as never)
-      break
+      return 'conditions'
+    default:
+      return null
   }
 }
 
 /**
- * Append the remote version to the local clinical table (keep-both / append-only).
+ * Compute the clinical-table write for the chosen resolution — SYNCHRONOUS by
+ * design so it can run OUTSIDE the Dexie transaction (see resolveConflict).
+ *
+ * - keep-both (append-only): assign a fresh unique ID so the remote version is
+ *   added alongside the local one, never overwriting it.
+ * - prefer-remote: reuse the original resource ID so the local version is replaced.
+ * - prefer-local (or missing conflictData/unsupported table): no write.
  */
-async function appendRemoteVersion(entry: SyncQueueEntry): Promise<void> {
+function prepareClinicalWrite(
+  entry: SyncQueueEntry,
+  resolutionType: ResolutionType,
+): { table: ClinicalTable; data: Record<string, unknown> } | null {
+  if (resolutionType === 'prefer-local' || !entry.conflictData) {
+    return null
+  }
+
+  const table = tableForResourceType(entry.resourceType)
+  if (!table) {
+    return null
+  }
+
   const remoteData = parseConflictData(entry)
+  remoteData.id =
+    resolutionType === 'keep-both'
+      ? `${entry.resourceId}-kept-${crypto.randomUUID()}` // append-only: fresh unique ID
+      : entry.resourceId // prefer-remote: overwrite the local version
 
-  // Always assign a fresh unique ID to prevent overwriting any existing record
-  remoteData.id = `${entry.resourceId}-kept-${crypto.randomUUID()}`
-
-  await writeToClinicalTable(entry.resourceType, remoteData)
-}
-
-/**
- * Replace the local version with the remote version (prefer-remote).
- */
-async function replaceWithRemoteVersion(entry: SyncQueueEntry): Promise<void> {
-  const remoteData = parseConflictData(entry)
-  // Use the original resource ID so it overwrites the local version
-  remoteData.id = entry.resourceId
-
-  await writeToClinicalTable(entry.resourceType, remoteData)
+  return { table, data: remoteData }
 }

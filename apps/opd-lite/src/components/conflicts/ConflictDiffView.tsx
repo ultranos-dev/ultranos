@@ -9,6 +9,7 @@ import {
 } from '@/lib/conflict-resolution'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { Button } from '@/components/ui/Button'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 
 /** Fields to display for each resource type — never show raw IDs or internal fields. */
 const DISPLAY_FIELDS: Record<string, string[]> = {
@@ -190,19 +191,19 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
     <div data-testid="conflict-diff-view">
       {/* Tier 1 safety warning */}
       {isTier1 && (
-        <div className="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3" role="alert">
+        <Alert variant="warning" role="alert" className="mb-4">
           <p className="text-xs font-bold text-warning">
             Safety-Critical Resource — &quot;Keep Both&quot; is recommended (append-only merge)
           </p>
           <p className="text-xs text-warning">
             &quot;Prefer Local&quot; or &quot;Prefer Remote&quot; will discard one version. Use with caution.
           </p>
-        </div>
+        </Alert>
       )}
 
       {/* Side-by-side diff grid — uses logical properties for RTL */}
       <div
-        className="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-xl ring-[0.65px] ring-border/50 bg-secondary"
+        className="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-xl ring-[0.65px] ring-border/50 bg-secondary lg:max-h-[70svh] lg:overflow-y-auto"
         data-testid="diff-grid"
       >
         {/* Column headers */}
@@ -288,11 +289,12 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
 
       {/* Confirmation dialog for Tier 1 destructive actions */}
       {confirmAction && (
-        <div
-          className="mt-3 rounded-lg border-2 border-destructive/30 bg-destructive/10 p-4"
+        <Alert
+          variant="destructive"
           role="alertdialog"
           aria-label="Confirm destructive resolution"
           data-testid="confirm-destructive-dialog"
+          className="mt-3"
         >
           <p className="text-sm font-bold text-destructive">
             Confirm: {confirmAction === 'prefer-local' ? 'Discard Remote' : 'Discard Local'} Version
@@ -320,7 +322,7 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
               Cancel
             </Button>
           </div>
-        </div>
+        </Alert>
       )}
 
       {error && (

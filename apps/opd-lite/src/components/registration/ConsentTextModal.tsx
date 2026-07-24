@@ -1,9 +1,14 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { X } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@ultranos/ui-kit/components/ui/dialog'
 
 interface ConsentTextModalProps {
   open: boolean
@@ -28,81 +33,18 @@ const CONSENT_SECTIONS = [
 export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
   const t = useTranslations('registration')
   const [activeTab, setActiveTab] = useState<'en' | 'ar' | 'prs'>('en')
-  const dialogRef = useRef<HTMLDivElement>(null)
-
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-        return
-      }
-      if (e.key !== 'Tab' || !dialogRef.current) return
-      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      )
-      if (focusable.length === 0) return
-      const first = focusable[0]!
-      const last = focusable[focusable.length - 1]!
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault()
-        last.focus()
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault()
-        first.focus()
-      }
-    },
-    [onClose],
-  )
-
-  useEffect(() => {
-    if (!open) return
-    document.addEventListener('keydown', handleKeyDown)
-    const timer = setTimeout(() => {
-      dialogRef.current?.querySelector<HTMLElement>('button')?.focus()
-    }, 0)
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-      clearTimeout(timer)
-    }
-  }, [open, handleKeyDown])
-
-  if (!open) return null
 
   const activeDir = TABS.find((tab) => tab.locale === activeTab)?.dir ?? 'ltr'
 
   return (
-    <div
-      ref={dialogRef}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="consent-text-title"
-    >
-      <div
-        className="absolute inset-0 bg-black/50"
-        aria-hidden="true"
-        onClick={onClose}
-      />
-
-      <div className="relative mx-4 w-full max-w-2xl rounded-xl bg-background ring-[0.65px] ring-border/50 shadow-2xl">
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
+      <DialogContent className="max-w-2xl p-0">
         {/* Header */}
-        <div className="flex items-center justify-between rounded-t-xl border-b border-border bg-muted px-6 py-4">
-          <h2
-            id="consent-text-title"
-            className="text-xl font-black text-foreground"
-          >
+        <DialogHeader className="flex-row items-center justify-between rounded-t-xl border-b border-border bg-muted px-6 py-4">
+          <DialogTitle className="text-xl font-black text-foreground">
             {t('consentDocumentTitle')}
-          </h2>
-          <Button
-            variant="icon"
-            type="button"
-            className="min-h-[44px] min-w-[44px]"
-            onClick={onClose}
-            aria-label={t('cancel')}
-          >
-            <X className="h-6 w-6 mx-auto" />
-          </Button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
         {/* Language tabs */}
         <div className="flex border-b border-border" role="tablist" aria-label={t('consentLanguage')}>
@@ -151,7 +93,7 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
             {t('consentDocumentClose')}
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

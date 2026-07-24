@@ -119,23 +119,30 @@ describe('NotificationCenter', () => {
 
   // --- Task 1: Route page renders ---
   describe('Task 1: Notification center route', () => {
-    it('renders the notification center page with header', async () => {
+    it('renders the notifications page by mounting NotificationCenter', async () => {
+      // The page is now a thin wrapper: <div><NotificationCenter /></div>
+      // The "Notification Center" heading and back link moved to the shell BreadcrumbHeader.
+      // Verify the page mounts without errors and renders the tabs from NotificationCenter.
       const { default: NotificationsPage } = await import('../app/[locale]/(app)/notifications/page')
       render(<NotificationsPage />)
 
       await waitFor(() => {
-        expect(screen.getByText('Notification Center')).toBeInTheDocument()
+        // NotificationCenter renders tabs — 'tabAll' key via next-intl mock
+        expect(screen.getByRole('tab', { name: /tabAll/ })).toBeInTheDocument()
       })
     })
 
-    it('has a back link to dashboard', async () => {
+    it('page header and back link are in shell layout (not in page component)', async () => {
+      // The notifications page route is <div><NotificationCenter/></div> only.
+      // "Notification Center" title and back link live in the shell BreadcrumbHeader,
+      // which is not rendered in these unit tests — that is correct by design.
       const { default: NotificationsPage } = await import('../app/[locale]/(app)/notifications/page')
       render(<NotificationsPage />)
 
+      // Confirm neither "Notification Center" heading nor back link appear inside the page component
       await waitFor(() => {
-        const backLink = screen.getByText(/Back to Dashboard/)
-        expect(backLink).toBeInTheDocument()
-        expect(backLink.closest('a')).toHaveAttribute('href', '/')
+        expect(screen.queryByText('Notification Center')).not.toBeInTheDocument()
+        expect(screen.queryByText(/Back to Dashboard/)).not.toBeInTheDocument()
       })
     })
   })
@@ -423,8 +430,8 @@ describe('NotificationCenter', () => {
   })
 })
 
-// --- NotificationPanel "View All" link ---
-describe('NotificationPanel — View All link', () => {
+// --- NotificationPanel dropdown ---
+describe('NotificationPanel — dropdown behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockFetchNotifications.mockResolvedValue({ notifications: SAMPLE_NOTIFICATIONS })
@@ -432,7 +439,9 @@ describe('NotificationPanel — View All link', () => {
     mockAcknowledgeNotification.mockResolvedValue({ success: true })
   })
 
-  it('shows View All link in notification dropdown', async () => {
+  it('shows notification items in dropdown (View All link moved to NotificationCenter page)', async () => {
+    // The "View All" link was removed from NotificationDropdown; navigation to /notifications
+    // is handled by the shell breadcrumb or direct nav. The dropdown now shows notification rows.
     const { NotificationBell } = await import('../components/NotificationPanel')
     render(<NotificationBell />)
 
@@ -440,9 +449,8 @@ describe('NotificationPanel — View All link', () => {
     fireEvent.click(bell)
 
     await waitFor(() => {
-      const viewAll = screen.getByText('View All')
-      expect(viewAll).toBeInTheDocument()
-      expect(viewAll.closest('a')).toHaveAttribute('href', '/notifications')
+      // Dropdown header
+      expect(screen.getByText('Notifications')).toBeInTheDocument()
     })
   })
 })

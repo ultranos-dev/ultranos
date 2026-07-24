@@ -3,8 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { X } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@ultranos/ui-kit/components/ui/dialog'
 import type { FhirAppointmentZod, AppointmentStatus } from '@ultranos/shared-types'
 
 interface PatientSummaryPopupProps {
@@ -54,22 +59,14 @@ export function PatientSummaryPopup({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="mx-4 w-full max-w-sm rounded-xl bg-background p-6 shadow-xl">
+    <Dialog open={true} onOpenChange={(o) => { if (!o) onClose() }}>
+      <DialogContent className="max-w-sm">
         {/* Header */}
-        <div className="mb-4 flex items-start justify-between">
-          <h3 className="text-lg font-bold text-foreground">
+        <DialogHeader className="mb-4">
+          <DialogTitle className="text-lg font-bold text-foreground">
             {patientName}
-          </h3>
-          <Button
-            variant="icon"
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
         {/* Patient info */}
         <div className="space-y-2 text-sm">
@@ -148,7 +145,7 @@ export function PatientSummaryPopup({
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

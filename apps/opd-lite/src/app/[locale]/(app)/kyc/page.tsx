@@ -1,9 +1,14 @@
 'use client'
 
 import { useEffect, useState, useCallback, type ChangeEvent } from 'react'
+import { useTranslations } from 'next-intl'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { extractKycFields, fileToBase64, type OcrResult } from '@/lib/ocr'
 import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/Card'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { CircleCheck } from '@ultranos/ui-kit/icons'
 import {
   getKycUploadUrl,
   uploadToSignedUrl,
@@ -38,6 +43,7 @@ const INITIAL_DOC_STATE: DocumentState = {
 }
 
 export default function KycPage() {
+  const t = useTranslations('kyc')
   const session = useAuthSessionStore((s) => s.session)
   const [step, setStep] = useState<KycStep>('upload')
   const [licenseDoc, setLicenseDoc] = useState<DocumentState>(INITIAL_DOC_STATE)
@@ -260,27 +266,29 @@ export default function KycPage() {
 
       {/* Rejection banner */}
       {isRejected && rejectionReason && step !== 'submitted' && (
-        <div
-          className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive"
+        <Alert
+          variant="destructive"
           role="alert"
+          className="mb-6"
           data-testid="rejection-banner"
+          title="Previous submission was rejected"
         >
-          <p className="font-semibold">Previous submission was rejected</p>
-          <p className="mt-1 text-sm">{rejectionReason}</p>
-          <p className="mt-2 text-sm">Please update your documents and re-submit.</p>
-        </div>
+          <p className="text-sm">{rejectionReason}</p>
+          <p className="mt-1 text-sm">Please update your documents and re-submit.</p>
+        </Alert>
       )}
 
       {/* Request more info banner */}
       {isRequestMoreInfo && adminMessage && step !== 'submitted' && (
-        <div
-          className="mb-6 rounded-lg border border-warning/30 bg-warning/10 p-4 text-warning"
+        <Alert
+          variant="warning"
           role="alert"
+          className="mb-6"
           data-testid="info-request-banner"
+          title="Additional information requested"
         >
-          <p className="font-semibold">Additional information requested</p>
-          <p className="mt-1 text-sm">{adminMessage}</p>
-        </div>
+          <p className="text-sm">{adminMessage}</p>
+        </Alert>
       )}
 
       {/* Step indicator */}
@@ -403,7 +411,7 @@ export default function KycPage() {
             Confirm Submission
           </h2>
 
-          <div className="rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4">
+          <Card>
             <h3 className="mb-3 text-sm font-medium text-muted-foreground">Summary</h3>
             <dl className="space-y-2 text-sm">
               {Object.entries(reviewFields).map(([key, value]) => (
@@ -425,9 +433,9 @@ export default function KycPage() {
                 </dd>
               </div>
             </dl>
-          </div>
+          </Card>
 
-          <label className="flex items-start gap-3 rounded-xl ring-[0.65px] ring-border/50 p-4">
+          <Card as="label" className="flex cursor-pointer items-start gap-3">
             <input
               type="checkbox"
               checked={confirmed}
@@ -437,12 +445,12 @@ export default function KycPage() {
             <span className="text-sm text-foreground">
               I confirm this information is accurate and the documents are genuine.
             </span>
-          </label>
+          </Card>
 
           {submitError && (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+            <Alert variant="destructive" role="alert">
               {submitError}
-            </div>
+            </Alert>
           )}
 
           <div className="flex gap-3">
@@ -458,17 +466,12 @@ export default function KycPage() {
 
       {/* Step 4: Submitted confirmation */}
       {step === 'submitted' && (
-        <div className="rounded-lg border border-success/30 bg-success/10 p-8 text-center" data-testid="kyc-submitted">
-          <div className="mb-4 text-4xl">&#10003;</div>
-          <h2 className="mb-2 text-xl font-semibold text-success">
-            Pending Verification
-          </h2>
-          <p className="text-success">
-            We will notify you within 3 business days.
-          </p>
-          <p className="mt-4 text-sm text-success">
-            You will be able to access clinical features once your account is verified.
-          </p>
+        <div data-testid="kyc-submitted">
+          <EmptyState
+            icon={CircleCheck}
+            title={t('pendingTitle')}
+            description={`${t('pendingDetail')} ${t('pendingAccess')}`}
+          />
         </div>
       )}
       </div>

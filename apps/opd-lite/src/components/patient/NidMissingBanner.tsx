@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 
 /**
  * Amber warning banner displayed when a patient has no national ID on file.
@@ -10,11 +11,8 @@ export function NidMissingBanner() {
   const t = useTranslations('patient')
 
   return (
-    <div
-      role="status"
-      className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning"
-    >
+    <Alert variant="warning" role="status" className="mb-4">
       {t('nidMissing')}
-    </div>
+    </Alert>
   )
 }

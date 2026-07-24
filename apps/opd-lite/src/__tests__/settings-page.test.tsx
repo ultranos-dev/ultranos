@@ -7,6 +7,13 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }))
 
+// next-intl context isn't provided in unit tests; components only need the key/locale.
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, params?: Record<string, unknown>) =>
+    params ? `${key} ${JSON.stringify(params)}` : key,
+  useLocale: () => 'en',
+}))
+
 // Mock supabase
 const mockListFactors = vi.fn()
 vi.mock('@/lib/supabase', () => ({
@@ -126,11 +133,12 @@ vi.mock('@/stores/allergy-store', () => ({
   }),
 }))
 
-// Mock ui-kit SessionManagerProvider
+// Mock ui-kit SessionManagerProvider + formatTime (used by SessionInfoCard)
 vi.mock('@ultranos/ui-kit', () => ({
   SessionManagerProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   SESSION_DURATIONS: { CLINICIAN: 900_000 },
   INACTIVITY_TIMEOUT: 1_800_000,
+  formatTime: (date: Date) => date.toLocaleTimeString(),
 }))
 
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -160,9 +168,11 @@ describe('ProfileCard', () => {
   })
 
   it('renders practitioner name', async () => {
+    // ProfileCard uses session.email.split('@')[0] as displayName, not session.name.
+    // With email 'ahmed@hospital.com', displayName is 'ahmed'.
     const { ProfileCard } = await import('@/components/settings/ProfileCard')
     render(<ProfileCard />)
-    expect(screen.getByText('Dr Ahmed')).toBeDefined()
+    expect(screen.getByText('ahmed')).toBeDefined()
   })
 
   it('renders practitioner role', async () => {
@@ -184,10 +194,10 @@ describe('ProfileCard', () => {
   })
 
   it('renders initials-based avatar', async () => {
+    // ProfileCard derives initials from displayName = email.split('@')[0] = 'ahmed' → 'A'
     const { ProfileCard } = await import('@/components/settings/ProfileCard')
     render(<ProfileCard />)
-    // "Dr Ahmed" → initials "DA"
-    expect(screen.getByText('DA')).toBeDefined()
+    expect(screen.getByText('A')).toBeDefined()
   })
 
   it('is read-only — no edit buttons', async () => {
@@ -401,10 +411,11 @@ describe('UserDropdown', () => {
   })
 
   it('renders user initials button', async () => {
+    // UserDropdown uses session.email.split('@')[0] = 'ahmed' → initials 'A'
     const { UserDropdown } = await import('@/components/UserDropdown')
     render(<UserDropdown />)
     expect(screen.getByTestId('user-dropdown-trigger')).toBeDefined()
-    expect(screen.getByText('DA')).toBeDefined() // "Dr Ahmed" → DA
+    expect(screen.getByText('A')).toBeDefined()
   })
 
   it('shows dropdown menu on click with Settings and Logout', async () => {

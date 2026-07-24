@@ -9,6 +9,7 @@ import { ProfileCard } from '@/components/settings/ProfileCard'
 import { SessionInfoCard } from '@/components/settings/SessionInfoCard'
 import { MfaManagementCard } from '@/components/settings/MfaManagementCard'
 import { PreferencesCard } from '@/components/settings/PreferencesCard'
+import { Card } from '@/components/Card'
 import { useDataBudgetStore } from '@/stores/data-budget-store'
 
 export default function SettingsPage() {
@@ -21,12 +22,12 @@ export default function SettingsPage() {
 
   const usedPct = planSizeMB > 0 ? Math.min((currentCycleUsedMB / planSizeMB) * 100, 100) : 0
   const barColor =
-    thresholdLevel === 'critical' ? 'bg-red-500'
-    : thresholdLevel === 'warning' ? 'bg-yellow-500'
-    : 'bg-green-500'
+    thresholdLevel === 'critical' ? 'bg-destructive'
+    : thresholdLevel === 'warning' ? 'bg-warning'
+    : 'bg-success'
   const textColor =
-    thresholdLevel === 'critical' ? 'text-red-500'
-    : thresholdLevel === 'warning' ? 'text-yellow-500'
+    thresholdLevel === 'critical' ? 'text-destructive'
+    : thresholdLevel === 'warning' ? 'text-warning'
     : 'text-muted-foreground'
 
   return (
@@ -37,9 +38,10 @@ export default function SettingsPage() {
         <MfaManagementCard />
         <PreferencesCard />
 
-        <Link
+        <Card
+          as={Link}
           href="/settings/data-budget"
-          className="flex items-center justify-between rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 transition-colors hover:bg-muted/50"
+          className="flex items-center justify-between transition-colors hover:bg-muted/50"
         >
           <div className="flex flex-col gap-2">
             <span className="text-sm font-semibold text-foreground">{t('settingsTitle')}</span>
@@ -57,7 +59,7 @@ export default function SettingsPage() {
           <DirectionalIcon category="navigation">
             <ChevronRight size={16} className="text-muted-foreground" />
           </DirectionalIcon>
-        </Link>
+        </Card>
       </div>
     </div>
   )

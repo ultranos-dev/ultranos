@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import { ChevronLeft, ChevronRight } from '@ultranos/ui-kit/icons'
+import { ChevronLeft, ChevronRight, CalendarDays } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Button } from '@/components/ui/Button'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { useAppointments } from '@/hooks/useAppointments'
@@ -139,6 +140,9 @@ export function DayScheduleView() {
       </div>
 
       {/* Time grid */}
+      {appointmentsByTime.size === 0 && (
+        <EmptyState size="sm" icon={CalendarDays} title={t('noAppointments')} />
+      )}
       <div className="space-y-2">
         {TIME_SLOTS.map((time) => {
           const apt = appointmentsByTime.get(time)

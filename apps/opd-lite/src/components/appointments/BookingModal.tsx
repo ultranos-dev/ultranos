@@ -2,8 +2,13 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { X } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@ultranos/ui-kit/components/ui/dialog'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { useAppointments } from '@/hooks/useAppointments'
 import { db } from '@/lib/db'
@@ -290,25 +295,15 @@ export function BookingModal({
     }
   }
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="mx-4 w-full max-w-md rounded-xl bg-background p-6 shadow-xl">
+    <Dialog open={isOpen} onOpenChange={(o) => { if (!o) onClose() }}>
+      <DialogContent className="max-w-md">
         {/* Header */}
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-foreground">
+        <DialogHeader className="mb-5">
+          <DialogTitle className="text-lg font-bold text-foreground">
             {t('bookAppointment')}
-          </h2>
-          <Button
-            variant="icon"
-            type="button"
-            onClick={onClose}
-            aria-label={t('closeModal')}
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
         {/* Safety Rule 4: Allergy banner at highest prominence */}
         {hasAllergies && (
@@ -487,7 +482,7 @@ export function BookingModal({
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

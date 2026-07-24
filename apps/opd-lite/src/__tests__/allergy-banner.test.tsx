@@ -8,6 +8,16 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }))
 
+// next-intl context isn't provided in unit tests. Preserve the {substances}
+// interpolation so Rule #4 allergen-content assertions still see the substance names.
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, values?: Record<string, unknown>) => {
+    if (values && 'substances' in values) return String(values.substances)
+    return values ? `${key} ${JSON.stringify(values)}` : key
+  },
+  useLocale: () => 'en',
+}))
+
 // Mock audit module to avoid dexie resolution issue in audit-logger
 vi.mock('../lib/audit', () => ({
   auditPhiAccess: vi.fn(),
@@ -105,7 +115,8 @@ describe('AllergyBanner', () => {
 
     await waitFor(() => {
       expect(banner?.getAttribute('data-banner-state')).toBe('nka')
-      expect(screen.getByText(/No Known Allergies/)).toBeDefined()
+      // next-intl mock renders the key; state is asserted via data-banner-state above
+      expect(screen.getByText(/bannerNka/)).toBeDefined()
     })
   })
 
@@ -119,7 +130,7 @@ describe('AllergyBanner', () => {
       expect(banner?.getAttribute('data-banner-state')).toBe('warning')
       expect(banner?.getAttribute('aria-live')).toBe('assertive')
       expect(banner?.className).toContain('bg-warning/10')
-      expect(screen.getByText(/Allergy data unavailable/)).toBeDefined()
+      expect(screen.getByText(/bannerUnavailable/)).toBeDefined()
     })
   })
 
@@ -177,7 +188,7 @@ describe('AllergyBanner', () => {
 
     expect(banner?.getAttribute('data-banner-state')).toBe('loading')
     expect(banner?.getAttribute('aria-live')).toBe('polite')
-    expect(screen.getByText(/Loading allergy data/)).toBeDefined()
+    expect(screen.getByText(/bannerLoading/)).toBeDefined()
   })
 
   it('renders correctly in RTL layout — allergy substances visible', () => {

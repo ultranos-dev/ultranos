@@ -1,3 +1,4 @@
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { calculateAge } from '@/lib/clinical-utils'
 
 interface PediatricDosingBannerProps {
@@ -13,13 +14,14 @@ export function PediatricDosingBanner({ patientBirthDate, birthYearOnly }: Pedia
   if (isNaN(age) || age >= 18) return null
 
   return (
-    <div
-      role="alert"
+    <Alert
+      variant="warning"
+      role="status"
       data-testid="pediatric-dosing-banner"
       dir="auto"
-      className="mb-4 rounded-lg border border-warning/40 bg-warning/20 py-3 ps-4 pe-4 font-semibold text-foreground"
+      className="mb-4"
     >
       Weight-based dosing not supported — calculate manually
-    </div>
+    </Alert>
   )
 }

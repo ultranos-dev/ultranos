@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 
 interface MpiWarnBannerProps {
   mpiScore: number
@@ -17,10 +18,7 @@ export function MpiWarnBanner({ mpiScore, patientId }: MpiWarnBannerProps) {
   const t = useTranslations('duplicateReview')
 
   return (
-    <div
-      role="alert"
-      className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning"
-    >
+    <Alert variant="warning" role="alert" className="mb-4">
       {t.rich('warnBanner', {
         score: mpiScore,
         link: (chunks) => (
@@ -32,6 +30,6 @@ export function MpiWarnBanner({ mpiScore, patientId }: MpiWarnBannerProps) {
           </Link>
         ),
       })}
-    </div>
+    </Alert>
   )
 }

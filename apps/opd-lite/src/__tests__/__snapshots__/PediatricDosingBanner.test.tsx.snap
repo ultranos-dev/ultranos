@@ -6,12 +6,24 @@ exports[`PediatricDosingBanner > renders correctly in RTL layout 1`] = `
     dir="rtl"
   >
     <div
-      class="mb-4 rounded-lg border border-warning/40 bg-warning/20 py-3 ps-4 pe-4 font-semibold text-foreground"
+      class="rounded-xl border px-4 py-3 text-sm border-warning/30 bg-warning/10 text-warning mb-4"
       data-testid="pediatric-dosing-banner"
       dir="auto"
-      role="alert"
+      role="status"
     >
-      Weight-based dosing not supported — calculate manually
+      <div
+        class="flex items-start gap-2"
+      >
+        <div
+          class="min-w-0 flex-1"
+        >
+          <div
+            class=""
+          >
+            Weight-based dosing not supported — calculate manually
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

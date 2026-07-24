@@ -163,7 +163,7 @@ export function ConflictList() {
                   <span className="text-xs text-muted-foreground">ID {shortId}</span>
                   {overdue && (
                     <span
-                      className="inline-flex items-center rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-white"
+                      className="inline-flex items-center rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground"
                       data-testid="overdue-badge"
                     >
                       OVERDUE

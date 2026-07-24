@@ -38,6 +38,8 @@
     "forgotPasswordTitle": "نسيت كلمة المرور",
     "forgotPasswordSubtitle": "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين",
     "sendResetLink": "إرسال رابط إعادة التعيين",
+    "sending": "جاري الإرسال…",
+    "updating": "جاري التحديث…",
     "checkYourEmail": "تحقق من بريدك الإلكتروني",
     "resetLinkSent": "أرسلنا رابط إعادة التعيين إلى بريدك الإلكتروني. تنتهي صلاحيته خلال ساعة.",
     "didntReceiveIt": "لم تستلمه؟",
@@ -820,7 +822,8 @@
     "contactFriend": "صديق/صديقة",
     "contactOther": "أخرى",
     "addEmergencyContact": "إضافة جهة اتصال طارئة",
-    "removeContact": "إزالة جهة الاتصال"
+    "removeContact": "إزالة جهة الاتصال",
+    "unsavedChanges": "تغييرات غير محفوظة"
   },
   "sidebar": {
     "dashboard": "لوحة المعلومات",
@@ -994,7 +997,8 @@
     "sidebarUsed": "{used} ميغابايت",
     "backToSettings": "العودة إلى الإعدادات",
     "save": "حفظ",
-    "saved": "تم الحفظ"
+    "saved": "تم الحفظ",
+    "categoryEmpty": "لا توجد بيانات تصنيف لهذه الدورة"
   },
   "consent": {
     "emptyTitle": "لا توجد موافقات منتهية قريباً",

@@ -112,7 +112,7 @@ export default function ForgotPasswordPage() {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Sending\u2026' : t('sendResetLink')}
+                    {loading ? t('sending') : t('sendResetLink')}
                   </Button>
                 </form>
 
@@ -169,13 +169,9 @@ export default function ForgotPasswordPage() {
             <Stethoscope className="size-10" />
           </div>
           <h2 className="font-heading text-3xl font-bold">OPD Lite</h2>
-          <p className="mt-3 text-base text-primary-foreground/75">Clinical workflows for outpatient care</p>
+          <p className="mt-3 text-base text-primary-foreground/75">{t('panelTagline')}</p>
           <ul className="mt-10 space-y-2 text-start">
-            {[
-              'Patient registration & encounters',
-              'Offline-first clinical documentation',
-              'Prescription management',
-            ].map((item) => (
+            {[t('panelFeature1'), t('panelFeature2'), t('panelFeature3')].map((item) => (
               <li key={item} className="flex items-center gap-2 text-sm text-primary-foreground/70">
                 <span className="size-1.5 shrink-0 rounded-full bg-primary-foreground/50" />
                 {item}

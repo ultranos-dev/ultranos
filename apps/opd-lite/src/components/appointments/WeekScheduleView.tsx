@@ -2,12 +2,14 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { ChevronLeft, ChevronRight } from '@ultranos/ui-kit/icons'
+import { ChevronLeft, ChevronRight, CalendarDays } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { db } from '@/lib/db'
 import { BookingModal } from './BookingModal'
 import { Button } from '@/components/ui/Button'
+import { SERVICE_TYPE_COLORS } from '@/lib/appointment-colors'
 import type { FhirAppointmentZod } from '@ultranos/shared-types'
 
 /** Configurable week start day. Saturday (6) is default for MENA. */
@@ -80,13 +82,6 @@ function formatWeekRange(start: Date, end: Date): string {
     day: 'numeric',
     year: 'numeric',
   })}`
-}
-
-const SERVICE_TYPE_COLORS: Record<string, string> = {
-  'new-consult': 'bg-success',
-  'follow-up': 'bg-primary',
-  urgent: 'bg-destructive',
-  'walk-in': 'bg-warning',
 }
 
 interface CellData {
@@ -289,6 +284,9 @@ export function WeekScheduleView() {
 
         {/* Time slots for selected day */}
         <div className="space-y-1">
+          {cellDataMap.size === 0 && (
+            <EmptyState size="sm" icon={CalendarDays} title={t('noAppointments')} />
+          )}
           {TIME_SLOTS.map((time) => {
             const cellKey = `${mobileDayOffset}-${time}`
             const data = cellDataMap.get(cellKey)
@@ -427,6 +425,13 @@ export function WeekScheduleView() {
             </tr>
           </thead>
           <tbody>
+            {weekAppointments.length === 0 && (
+              <tr>
+                <td colSpan={8} className="py-8">
+                  <EmptyState size="sm" icon={CalendarDays} title={t('noAppointments')} />
+                </td>
+              </tr>
+            )}
             {TIME_SLOTS.map((time) => (
               <tr key={time} className="group">
                 {/* Time label */}

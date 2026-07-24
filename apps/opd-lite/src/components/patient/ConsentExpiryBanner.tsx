@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useLocale } from 'next-intl'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { formatDate } from '@ultranos/ui-kit'
 import { ConsentRenewalModal } from './ConsentRenewalModal'
 import { Button } from '@/components/ui/Button'
@@ -30,10 +31,7 @@ export function ConsentExpiryBanner({ patientId, expiryDate }: ConsentExpiryBann
 
   return (
     <>
-      <div
-        role="alert"
-        className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning"
-      >
+      <Alert variant="warning" role="alert" className="mb-4">
         <div className="flex items-center justify-between gap-3">
           <p>
             {/* TODO: t('consent.expiryWarning', { date: formattedDate }) */}
@@ -49,7 +47,7 @@ export function ConsentExpiryBanner({ patientId, expiryDate }: ConsentExpiryBann
             Renew Consent
           </Button>
         </div>
-      </div>
+      </Alert>
 
       {showModal && (
         <ConsentRenewalModal

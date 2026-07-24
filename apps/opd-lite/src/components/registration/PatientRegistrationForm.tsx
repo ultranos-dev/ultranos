@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { z } from 'zod'
@@ -14,6 +14,7 @@ import type {
   PatientLanguage,
 } from '@ultranos/shared-types'
 import { Button } from '@/components/ui/Button'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { NameInputSection } from './NameInputSection'
 import { PatientPhotoSection } from './PatientPhotoSection'
 import { GeographySection } from './GeographySection'
@@ -195,12 +196,32 @@ export function PatientRegistrationForm({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [isDirty, setIsDirty] = useState(!!prefilledNameGiven)
+  // Track whether the component has mounted so we can skip the first effect run
+  const mountedRef = useRef(false)
 
   // MPI modal state
   const [mpiModalOpen, setMpiModalOpen] = useState(false)
   const [mpiDecision, setMpiDecision] = useState<'WARN' | 'BLOCK'>('WARN')
   const [mpiCandidates, setMpiCandidates] = useState<CheckDuplicatesResult['candidates']>([])
   const [mpiProceedToken, setMpiProceedToken] = useState<string | undefined>()
+
+  // ── Dirty tracking ──
+  // Mark the form as dirty after first mount whenever any field value changes.
+  useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true
+      return
+    }
+    setIsDirty(true)
+  }, [
+    nameGiven, nameFather, nameGrandfather, nameFamily, gender, birthYearOnly,
+    birthYear, birthDate, phone, phoneUse, nationalId, preferredLanguage,
+    isNomadic, bloodGroup, maritalStatus, addressOrigin, addressCurrent,
+    sameAsOrigin, displacementCategory, nationality, occupation, educationLevel,
+    disability, emergencyContacts, consentMethod, consentWitnessedBy,
+    consentLanguage, photoDataUrl,
+  ])
 
   // ── Build submission payload ──
 
@@ -853,18 +874,20 @@ export function PatientRegistrationForm({
 
         {/* Submit error */}
         {submitError && (
-          <div
-            className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-            role="alert"
-          >
+          <Alert variant="destructive" role="alert">
             {submitError}
-          </div>
+          </Alert>
         )}
 
-        {/* Submit button */}
-        <Button variant="primary" type="submit" disabled={submitting} fullWidth>
-          {submitting ? t('submitting') : t('submitRegistration')}
-        </Button>
+        {/* Sticky save bar */}
+        <div className="sticky bottom-0 z-10 flex items-center justify-between gap-4 border-t border-border bg-background/95 py-3 backdrop-blur">
+          <span className="text-sm text-muted-foreground">
+            {isDirty ? t('unsavedChanges') : null}
+          </span>
+          <Button variant="primary" type="submit" disabled={submitting}>
+            {submitting ? t('submitting') : t('submitRegistration')}
+          </Button>
+        </div>
       </form>
 
       <MpiResultModal

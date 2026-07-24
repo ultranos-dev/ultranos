@@ -5,22 +5,34 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
   data-testid="conflict-diff-view"
 >
   <div
-    class="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3"
+    class="rounded-xl border px-4 py-3 text-sm border-warning/30 bg-warning/10 text-warning mb-4"
     role="alert"
   >
-    <p
-      class="text-xs font-bold text-warning"
+    <div
+      class="flex items-start gap-2"
     >
-      Safety-Critical Resource — "Keep Both" is recommended (append-only merge)
-    </p>
-    <p
-      class="text-xs text-warning"
-    >
-      "Prefer Local" or "Prefer Remote" will discard one version. Use with caution.
-    </p>
+      <div
+        class="min-w-0 flex-1"
+      >
+        <div
+          class=""
+        >
+          <p
+            class="text-xs font-bold text-warning"
+          >
+            Safety-Critical Resource — "Keep Both" is recommended (append-only merge)
+          </p>
+          <p
+            class="text-xs text-warning"
+          >
+            "Prefer Local" or "Prefer Remote" will discard one version. Use with caution.
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
   <div
-    class="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-xl ring-[0.65px] ring-border/50 bg-secondary"
+    class="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-xl ring-[0.65px] ring-border/50 bg-secondary lg:max-h-[70svh] lg:overflow-y-auto"
     data-testid="diff-grid"
   >
     <div
@@ -371,22 +383,34 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
     data-testid="conflict-diff-view"
   >
     <div
-      class="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3"
+      class="rounded-xl border px-4 py-3 text-sm border-warning/30 bg-warning/10 text-warning mb-4"
       role="alert"
     >
-      <p
-        class="text-xs font-bold text-warning"
+      <div
+        class="flex items-start gap-2"
       >
-        Safety-Critical Resource — "Keep Both" is recommended (append-only merge)
-      </p>
-      <p
-        class="text-xs text-warning"
-      >
-        "Prefer Local" or "Prefer Remote" will discard one version. Use with caution.
-      </p>
+        <div
+          class="min-w-0 flex-1"
+        >
+          <div
+            class=""
+          >
+            <p
+              class="text-xs font-bold text-warning"
+            >
+              Safety-Critical Resource — "Keep Both" is recommended (append-only merge)
+            </p>
+            <p
+              class="text-xs text-warning"
+            >
+              "Prefer Local" or "Prefer Remote" will discard one version. Use with caution.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
     <div
-      class="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-xl ring-[0.65px] ring-border/50 bg-secondary"
+      class="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-xl ring-[0.65px] ring-border/50 bg-secondary lg:max-h-[70svh] lg:overflow-y-auto"
       data-testid="diff-grid"
     >
       <div

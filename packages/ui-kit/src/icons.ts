@@ -249,6 +249,7 @@ export {
   Table,
   Rows3,
   Columns3,
+  Database,
 } from 'lucide-react'
 
 // ─── Gamification & Achievements ────────────────────────────────────

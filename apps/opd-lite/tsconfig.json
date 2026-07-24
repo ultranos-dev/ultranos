@@ -21,7 +21,8 @@
       "@/*": ["./src/*"],
       "@ultranos/crypto": ["../../packages/crypto/src/index.ts"],
       "@ultranos/shared-types": ["../../packages/shared-types/src/index.ts"],
-      "@ultranos/ui-kit": ["../../packages/ui-kit/src/index.ts"]
+      "@ultranos/ui-kit": ["../../packages/ui-kit/src/index.ts"],
+      "@ultranos/ui-kit/icons": ["../../packages/ui-kit/src/icons.ts"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

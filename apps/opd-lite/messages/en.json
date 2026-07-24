@@ -38,6 +38,8 @@
     "forgotPasswordTitle": "Forgot password",
     "forgotPasswordSubtitle": "Enter your email and we'll send you a reset link",
     "sendResetLink": "Send reset link",
+    "sending": "Sending…",
+    "updating": "Updating…",
     "checkYourEmail": "Check your email",
     "resetLinkSent": "We sent a reset link to your email. It expires in 1 hour.",
     "didntReceiveIt": "Didn't receive it?",
@@ -836,7 +838,8 @@
     "contactFriend": "Friend",
     "contactOther": "Other",
     "addEmergencyContact": "Add Emergency Contact",
-    "removeContact": "Remove contact"
+    "removeContact": "Remove contact",
+    "unsavedChanges": "Unsaved changes"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -1010,7 +1013,8 @@
     "sidebarUsed": "{used} MB",
     "backToSettings": "Back to Settings",
     "save": "Save",
-    "saved": "Saved"
+    "saved": "Saved",
+    "categoryEmpty": "No category data for this cycle"
   },
   "consent": {
     "emptyTitle": "No consents expiring soon",

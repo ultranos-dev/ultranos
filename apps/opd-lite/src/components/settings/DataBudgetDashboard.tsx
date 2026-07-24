@@ -5,6 +5,9 @@ import { useTranslations } from 'next-intl'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { Label } from '@ultranos/ui-kit/components/ui/label'
 import { Button } from '@ultranos/ui-kit/components/ui/button'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Database } from '@ultranos/ui-kit/icons'
 import { useDataBudgetStore } from '@/stores/data-budget-store'
 
 export function DataBudgetDashboard() {
@@ -61,23 +64,23 @@ export function DataBudgetDashboard() {
   const remainingMB = Math.max(planSizeMB - currentCycleUsedMB, 0)
 
   const barColor =
-    thresholdLevel === 'critical' ? 'bg-red-500'
-    : thresholdLevel === 'warning' ? 'bg-yellow-500'
-    : 'bg-green-500'
+    thresholdLevel === 'critical' ? 'bg-destructive'
+    : thresholdLevel === 'warning' ? 'bg-warning'
+    : 'bg-success'
 
   const maxDailyMB = Math.max(...dailyUsage.map((d) => d.totalMB), 0.01)
 
   return (
     <div className="flex flex-col gap-4">
       {thresholdLevel === 'warning' && (
-        <div role="alert" className="rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800" data-testid="data-budget-warning">
+        <Alert variant="warning" role="alert" data-testid="data-budget-warning">
           {t('warningBanner')}
-        </div>
+        </Alert>
       )}
       {thresholdLevel === 'critical' && (
-        <div role="alert" className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800" data-testid="data-budget-critical">
+        <Alert variant="destructive" role="alert" data-testid="data-budget-critical">
           {t('criticalBanner')}
-        </div>
+        </Alert>
       )}
 
       <div className="rounded-lg border border-border bg-card p-4">
@@ -124,9 +127,11 @@ export function DataBudgetDashboard() {
         </div>
       </div>
 
-      {Object.keys(categoryBreakdown).length > 0 && (
-        <div className="rounded-lg border border-border bg-card p-4">
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('categoryTitle')}</h2>
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('categoryTitle')}</h2>
+        {Object.keys(categoryBreakdown).length === 0 ? (
+          <EmptyState size="sm" icon={Database} title={t('categoryEmpty')} />
+        ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
@@ -143,8 +148,8 @@ export function DataBudgetDashboard() {
               ))}
             </tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="rounded-lg border border-border bg-card p-4">
         <h2 className="text-sm font-semibold text-muted-foreground mb-4">{t('settingsTitle')}</h2>
@@ -189,7 +194,7 @@ export function DataBudgetDashboard() {
 
           <div className="flex items-center gap-3">
             <Button onClick={handleSave} size="sm">{t('save')}</Button>
-            {saved && <span className="text-xs text-green-600">{t('saved')}</span>}
+            {saved && <span className="text-xs text-success">{t('saved')}</span>}
           </div>
         </div>
       </div>

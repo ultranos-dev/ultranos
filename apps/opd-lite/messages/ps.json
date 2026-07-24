@@ -38,6 +38,8 @@
     "forgotPasswordTitle": "پټنوم هیر شو",
     "forgotPasswordSubtitle": "خپل بریښنالیک ولیکئ او موږ به تاسو ته د بیا تنظیم لینک درلیږو",
     "sendResetLink": "د بیا تنظیم لینک واستوئ",
+    "sending": "لیږل کیږي…",
+    "updating": "تازه کیږي…",
     "checkYourEmail": "خپل بریښنالیک وګورئ",
     "resetLinkSent": "موږ د بیا تنظیم لینک ستاسو بریښنالیک ته واستاوه. دا لینک ۱ ساعت وروسته پای ته رسیږي.",
     "didntReceiveIt": "نه مو ترلاسه کړ؟",
@@ -820,7 +822,8 @@
     "contactFriend": "ملګری",
     "contactOther": "نور",
     "addEmergencyContact": "بیړني اتصال زیات کړئ",
-    "removeContact": "اتصال لرې کړئ"
+    "removeContact": "اتصال لرې کړئ",
+    "unsavedChanges": "نه خوندي شوي بدلونونه"
   },
   "sidebar": {
     "dashboard": "ډشبورډ",
@@ -994,7 +997,8 @@
     "sidebarUsed": "{used} MB",
     "backToSettings": "بیرته ترتیباتو ته",
     "save": "خوندي کړئ",
-    "saved": "خوندي شو"
+    "saved": "خوندي شو",
+    "categoryEmpty": "د دې سایکل لپاره د کټګورۍ ډاټا شتون نلري"
   },
   "consent": {
     "emptyTitle": "هیڅ رضایت‌نامه ژر نه پای ته رسیږي",

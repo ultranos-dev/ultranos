@@ -1,3 +1,4 @@
+import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 
@@ -6,6 +7,61 @@ import { render, screen, waitFor } from '@testing-library/react'
 // Tests page rendering, upload zones, OCR field review,
 // low-confidence highlights, submission flow, and re-submission.
 // ============================================================
+
+// Mock next-intl — resolve real English strings from the kyc namespace
+vi.mock('next-intl', async () => {
+  const en = (await import('../../messages/en.json')).default as unknown as Record<string, Record<string, string>>
+  return {
+    useTranslations: (ns: string) => (key: string) => en[ns]?.[key] ?? key,
+    useLocale: () => 'en',
+  }
+})
+
+// Mock ui-kit components — avoids pulling in the full ui-kit bundle in jsdom
+vi.mock('@ultranos/ui-kit/components/ui/alert', () => ({
+  Alert: ({
+    children,
+    title,
+    variant,
+    role,
+    className,
+    ...rest
+  }: {
+    children?: React.ReactNode
+    title?: React.ReactNode
+    variant?: string
+    role?: string
+    className?: string
+    [key: string]: unknown
+  }) => (
+    <div role={role ?? 'status'} className={className} data-variant={variant} {...rest}>
+      {title && <p className="font-semibold">{title}</p>}
+      {children}
+    </div>
+  ),
+}))
+
+vi.mock('@ultranos/ui-kit/components/ui/empty-state', () => ({
+  EmptyState: ({
+    title,
+    description,
+    icon: Icon,
+  }: {
+    title: string
+    description?: string
+    icon?: React.ComponentType
+  }) => (
+    <div data-testid="empty-state-inner">
+      {Icon && <Icon />}
+      <p>{title}</p>
+      {description && <p>{description}</p>}
+    </div>
+  ),
+}))
+
+vi.mock('@ultranos/ui-kit/icons', () => ({
+  CircleCheck: () => <svg data-testid="icon-circle-check" />,
+}))
 
 // Mock modules
 vi.mock('@/lib/supabase', () => ({
@@ -74,7 +130,7 @@ beforeEach(() => {
 })
 
 // Dynamic import after mocks
-const { default: KycPage } = await import('../app/kyc/page')
+const { default: KycPage } = await import('../app/[locale]/(app)/kyc/page')
 
 describe('KYC Page', () => {
   it('renders upload zones for both documents', async () => {
@@ -191,11 +247,11 @@ describe('KYC Page', () => {
     // When the review step is reached, license_number should be highlighted
     // We verify the mock data is correctly set up for this scenario
     const { extractKycFields } = await import('../lib/ocr')
-    const result = await (extractKycFields as ReturnType<typeof vi.fn>)('test')
-    const lowConfField = result.fields.find((f: { confidence: number }) => f.confidence < 0.85)
+    const result = await (extractKycFields as ReturnType<typeof vi.fn>)('test') as { fields: Array<{ name: string; confidence: number }> }
+    const lowConfField = result.fields.find((f) => f.confidence < 0.85)
     expect(lowConfField).toBeTruthy()
-    expect(lowConfField.name).toBe('license_number')
-    expect(lowConfField.confidence).toBe(0.70)
+    expect(lowConfField?.name).toBe('license_number')
+    expect(lowConfField?.confidence).toBe(0.70)
   })
 
   it('redirects to login when not authenticated', async () => {

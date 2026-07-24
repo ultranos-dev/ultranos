@@ -1,5 +1,6 @@
 'use client'
 
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { Button } from '@/components/ui/Button'
 
 interface BiometricStaleBannerProps {
@@ -23,10 +24,7 @@ export function BiometricStaleBanner({
   }
 
   return (
-    <div
-      role="status"
-      className="mb-4 rounded-lg border border-primary bg-primary/10 px-4 py-3 text-sm text-primary"
-    >
+    <Alert variant="info" className="mb-4">
       <div className="flex items-center justify-between gap-3">
         <p>
           A newer biometric algorithm is available. Re-enrolling improves
@@ -41,6 +39,6 @@ export function BiometricStaleBanner({
           Update Biometric
         </Button>
       </div>
-    </div>
+    </Alert>
   )
 }

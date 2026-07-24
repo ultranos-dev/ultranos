@@ -6,7 +6,7 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in LTR mode 1`] = `
     dir="ltr"
   >
     <div
-      class="space-y-6"
+      class="space-y-4"
     >
       <div>
         <label
@@ -147,7 +147,7 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in RTL mode 1`] = `
     dir="rtl"
   >
     <div
-      class="space-y-6"
+      class="space-y-4"
     >
       <div>
         <label

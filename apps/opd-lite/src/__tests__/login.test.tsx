@@ -57,6 +57,7 @@ vi.mock('@/components/LanguageSelectorClient', () => ({
 
 vi.mock('@ultranos/ui-kit/icons', () => ({
   Stethoscope: () => null,
+  X: () => null,
 }))
 
 // Deterministic key derivation is the whole point of the crypto fix — mock it so

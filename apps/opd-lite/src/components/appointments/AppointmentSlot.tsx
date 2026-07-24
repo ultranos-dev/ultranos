@@ -2,39 +2,17 @@
 
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
+import {
+  STATUS_COLORS,
+  STATUS_BADGE_COLORS,
+  SERVICE_TYPE_BADGE_COLORS,
+} from '@/lib/appointment-colors'
 import type { FhirAppointmentZod, AppointmentStatus } from '@ultranos/shared-types'
 
 interface AppointmentSlotProps {
   time: string // HH:MM formatted
   appointment?: FhirAppointmentZod
   onClick: () => void
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  free: 'bg-success/10 border-success/20 hover:bg-success/20',
-  proposed: 'bg-primary/10 border-primary/20 hover:bg-primary',
-  pending: 'bg-primary/10 border-primary/20 hover:bg-primary',
-  booked: 'bg-primary/10 border-primary/20 hover:bg-primary',
-  arrived: 'bg-warning/10 border-warning/20 hover:bg-warning/20',
-  fulfilled: 'bg-muted border-border',
-  cancelled: 'bg-destructive/10 border-destructive/20',
-  noshow: 'bg-destructive/10 border-destructive/20',
-  'entered-in-error': 'bg-muted border-border',
-}
-
-const STATUS_BADGE_COLORS: Record<string, string> = {
-  booked: 'bg-primary text-primary',
-  arrived: 'bg-warning/20 text-warning',
-  fulfilled: 'bg-secondary text-foreground',
-  cancelled: 'bg-destructive/20 text-destructive',
-  noshow: 'bg-destructive/20 text-destructive',
-}
-
-const SERVICE_TYPE_BADGE_COLORS: Record<string, string> = {
-  'new-consult': 'bg-primary/10 text-primary',
-  'follow-up':   'bg-secondary text-foreground',
-  urgent:        'bg-warning/15 text-warning',
-  'walk-in':     'bg-muted text-muted-foreground',
 }
 
 function getStatusLabel(

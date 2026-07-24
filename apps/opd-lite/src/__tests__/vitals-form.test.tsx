@@ -36,15 +36,15 @@ describe('VitalsForm', () => {
     expect(weightInput).toHaveAttribute('type', 'number')
   })
 
-  it('renders Billboard typography headers (font-black / Inter 900)', () => {
+  it('renders section labels for each vital sign field', () => {
+    // The design system dropped Billboard/Inter 900 headers; vitals now use <label> elements
+    // with font-semibold. Verify all 4 vital sign labels are present and visible.
     render(<VitalsForm {...defaultProps} />)
 
-    // Billboard headers for each vital sign section
-    const headers = screen.getAllByRole('heading', { level: 3 })
-    expect(headers.length).toBeGreaterThanOrEqual(4) // Weight, Height, BP, Temp
-    headers.forEach((header) => {
-      expect(header.className).toMatch(/font-black/)
-    })
+    expect(screen.getByText('Weight')).toBeInTheDocument()
+    expect(screen.getByText('Height')).toBeInTheDocument()
+    expect(screen.getByText('Blood Pressure')).toBeInTheDocument()
+    expect(screen.getByText('Temperature')).toBeInTheDocument()
   })
 
   it('calls onChange handlers when values change', async () => {
@@ -91,7 +91,8 @@ describe('VitalsForm', () => {
     expect(tempInput).toHaveAttribute('max')
   })
 
-  it('applies red styling when rangeStatuses indicate panic', () => {
+  it('applies destructive (semantic) styling when rangeStatuses indicate panic', () => {
+    // Design system replaced bg-red-*/border-red-* with semantic border-destructive token
     render(
       <VitalsForm
         {...defaultProps}
@@ -101,10 +102,11 @@ describe('VitalsForm', () => {
     )
 
     const tempInput = screen.getByLabelText(/temperature/i)
-    expect(tempInput.className).toMatch(/border-red|ring-red/)
+    expect(tempInput.className).toMatch(/border-destructive/)
   })
 
-  it('applies warning styling when rangeStatuses indicate warning', () => {
+  it('applies warning (semantic) styling when rangeStatuses indicate warning', () => {
+    // Design system replaced border-amber-* with semantic border-warning token
     render(
       <VitalsForm
         {...defaultProps}
@@ -114,7 +116,7 @@ describe('VitalsForm', () => {
     )
 
     const tempInput = screen.getByLabelText(/temperature/i)
-    expect(tempInput.className).toMatch(/border-amber|ring-amber/)
+    expect(tempInput.className).toMatch(/border-warning/)
   })
 
   it('uses dir="auto" for RTL support', () => {

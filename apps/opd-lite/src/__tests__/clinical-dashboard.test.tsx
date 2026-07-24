@@ -59,6 +59,43 @@ vi.mock('@/lib/use-patient-search', () => ({
   usePatientSearch: () => ({ search: vi.fn() }),
 }))
 
+// Mock patient-store so ClinicalDashboard renders without real Zustand/audit deps.
+// ClinicalDashboard calls usePatientStore() (no selector) to destructure state directly.
+vi.mock('@/stores/patient-store', () => {
+  const mockState = {
+    query: '',
+    results: [],
+    isSearching: false,
+    searchError: null,
+    selectPatient: vi.fn(),
+    setQuery: vi.fn(),
+    setResults: vi.fn(),
+    clearSearch: vi.fn(),
+    setIsSearching: vi.fn(),
+    setSearchError: vi.fn(),
+    setSyncStatus: vi.fn(),
+    syncStatus: { isPending: false, isError: false, lastSyncedAt: null },
+    selectedPatient: null,
+  }
+  return {
+    usePatientStore: (selector?: (s: typeof mockState) => unknown) =>
+      selector ? selector(mockState) : mockState,
+  }
+})
+
+// Mock DuplicateReviewsCard to avoid Hub API fetch in unit tests
+vi.mock('@/components/dashboard/DuplicateReviewsCard', () => ({
+  DuplicateReviewsCard: () => <div data-testid="duplicate-reviews-card">Duplicate Reviews</div>,
+}))
+
+// Mock encounter-store (used by TodayEncountersCard and RecentEncountersList)
+vi.mock('@/stores/encounter-store', () => ({
+  useEncounterStore: (selector: (s: Record<string, unknown>) => unknown) => {
+    const state = { activeEncounter: null }
+    return selector(state)
+  },
+}))
+
 // Mock sync-engine
 vi.mock('@ultranos/sync-engine', () => ({
   HybridLogicalClock: vi.fn().mockImplementation(() => ({
@@ -132,9 +169,10 @@ describe('TodayEncountersCard', () => {
   })
 
   it('renders with zero encounters', async () => {
+    // Card renders t('todayEncounters') — mock returns the i18n key
     const { TodayEncountersCard } = await import('@/components/dashboard/TodayEncountersCard')
     render(<TodayEncountersCard />)
-    expect(screen.getByText("Today's Encounters")).toBeDefined()
+    expect(screen.getByText('todayEncounters')).toBeDefined()
     expect(screen.getByText('0')).toBeDefined()
   })
 
@@ -171,8 +209,9 @@ describe('TodayEncountersCard', () => {
     const { TodayEncountersCard } = await import('@/components/dashboard/TodayEncountersCard')
     render(<TodayEncountersCard />)
 
+    // Card renders t('activeConsultation') — mock returns the i18n key
     await vi.waitFor(() => {
-      expect(screen.getByText('Active encounter')).toBeDefined()
+      expect(screen.getByText('activeConsultation')).toBeDefined()
     })
   })
 })
@@ -183,9 +222,10 @@ describe('PendingLabResultsCard', () => {
   })
 
   it('renders with zero unread lab results', async () => {
+    // Card renders t('pendingLabResults') — mock returns the i18n key
     const { PendingLabResultsCard } = await import('@/components/dashboard/PendingLabResultsCard')
     render(<PendingLabResultsCard />)
-    expect(screen.getByText('Pending Lab Results')).toBeDefined()
+    expect(screen.getByText('pendingLabResults')).toBeDefined()
     await vi.waitFor(() => {
       expect(screen.getByText('0')).toBeDefined()
     })
@@ -219,13 +259,14 @@ describe('UnresolvedConflictsCard', () => {
   })
 
   it('renders with zero conflicts', async () => {
+    // Card renders t('unresolvedConflicts') — mock returns the i18n key
     const { UnresolvedConflictsCard } = await import('@/components/dashboard/UnresolvedConflictsCard')
     render(<UnresolvedConflictsCard />)
-    expect(screen.getByText('Unresolved Conflicts')).toBeDefined()
+    expect(screen.getByText('unresolvedConflicts')).toBeDefined()
     expect(screen.getByText('0')).toBeDefined()
   })
 
-  it('shows red badge when conflicts exist', async () => {
+  it('shows physician review badge when conflicts exist', async () => {
     mockSyncQueueFilter.mockReturnValue({
       count: vi.fn().mockResolvedValue(3),
     })
@@ -233,8 +274,9 @@ describe('UnresolvedConflictsCard', () => {
     const { UnresolvedConflictsCard } = await import('@/components/dashboard/UnresolvedConflictsCard')
     render(<UnresolvedConflictsCard />)
 
+    // Card renders t('physicianReview') — mock returns the i18n key
     await vi.waitFor(() => {
-      expect(screen.getByText(/Physician review required/)).toBeDefined()
+      expect(screen.getByText(/physicianReview/)).toBeDefined()
     })
   })
 })
@@ -255,11 +297,12 @@ describe('RecentEncountersList', () => {
   })
 
   it('shows empty state when no encounters', async () => {
+    // Card renders t('recentEncounters') and t('noEncountersYet') — mock returns i18n keys
     const { RecentEncountersList } = await import('@/components/dashboard/RecentEncountersList')
     render(<RecentEncountersList />)
-    expect(screen.getByText('Recent Encounters')).toBeDefined()
+    expect(screen.getByText('recentEncounters')).toBeDefined()
     await vi.waitFor(() => {
-      expect(screen.getByText('No encounters recorded yet')).toBeDefined()
+      expect(screen.getByText('noEncountersYet')).toBeDefined()
     })
   })
 
@@ -292,7 +335,8 @@ describe('RecentEncountersList', () => {
 
     await vi.waitFor(() => {
       expect(screen.getByText('Fatima Al-Hassan')).toBeDefined()
-      expect(screen.getByText('finished')).toBeDefined()
+      // 'finished' status renders as t('statusCompleted') — mock returns i18n key
+      expect(screen.getByText('statusCompleted')).toBeDefined()
     })
   })
 
@@ -351,9 +395,11 @@ describe('ClinicalDashboard', () => {
   })
 
   it('renders welcome header with practitioner name', async () => {
+    // ClinicalDashboard renders t('welcome', { name }) — the next-intl mock returns the i18n key
+    // with interpolated values: 'welcome {"name":"Dr Ahmed"}'.
     const { ClinicalDashboard } = await import('@/components/dashboard/ClinicalDashboard')
     render(<ClinicalDashboard />)
-    expect(screen.getByText('Welcome, Dr Ahmed')).toBeDefined()
+    expect(screen.getByText(/Dr Ahmed/)).toBeDefined()
   })
 
   it('renders practitioner role', async () => {
@@ -363,9 +409,10 @@ describe('ClinicalDashboard', () => {
   })
 
   it('renders Start New Encounter button', async () => {
+    // ClinicalDashboard renders t('startEncounter') — mock returns the i18n key 'startEncounter'.
     const { ClinicalDashboard } = await import('@/components/dashboard/ClinicalDashboard')
     render(<ClinicalDashboard />)
-    expect(screen.getByText('Start New Encounter')).toBeDefined()
+    expect(screen.getByText('startEncounter')).toBeDefined()
   })
 
   it('renders inline patient search', async () => {
@@ -374,24 +421,29 @@ describe('ClinicalDashboard', () => {
     expect(screen.getByLabelText('Patient search')).toBeDefined()
   })
 
-  it('renders all three summary cards', async () => {
+  it('renders all four summary cards', async () => {
+    // Cards render i18n keys via the next-intl mock
     const { ClinicalDashboard } = await import('@/components/dashboard/ClinicalDashboard')
     render(<ClinicalDashboard />)
-    expect(screen.getByText("Today's Encounters")).toBeDefined()
-    expect(screen.getByText('Pending Lab Results')).toBeDefined()
-    expect(screen.getByText('Unresolved Conflicts')).toBeDefined()
+    expect(screen.getByText('todayEncounters')).toBeDefined()
+    expect(screen.getByText('pendingLabResults')).toBeDefined()
+    expect(screen.getByText('unresolvedConflicts')).toBeDefined()
+    // DuplicateReviewsCard is mocked above
+    expect(screen.getByTestId('duplicate-reviews-card')).toBeDefined()
   })
 
   it('renders recent encounters section', async () => {
+    // RecentEncountersList renders t('recentEncounters') — mock returns i18n key
     const { ClinicalDashboard } = await import('@/components/dashboard/ClinicalDashboard')
     render(<ClinicalDashboard />)
-    expect(screen.getByText('Recent Encounters')).toBeDefined()
+    expect(screen.getByText('recentEncounters')).toBeDefined()
   })
 
-  it('renders SyncPulse and NotificationBell in header', async () => {
+  it('does NOT render SyncPulse or NotificationBell (moved to shell layout)', async () => {
+    // SyncPulse and NotificationBell moved to the app shell — ClinicalDashboard no longer renders them.
     const { ClinicalDashboard } = await import('@/components/dashboard/ClinicalDashboard')
     render(<ClinicalDashboard />)
-    expect(screen.getByTestId('sync-pulse')).toBeDefined()
-    expect(screen.getByTestId('notification-bell')).toBeDefined()
+    expect(screen.queryByTestId('sync-pulse')).toBeNull()
+    expect(screen.queryByTestId('notification-bell')).toBeNull()
   })
 })

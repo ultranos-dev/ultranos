@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-import { Stethoscope } from '@ultranos/ui-kit/icons'
+import { Stethoscope, X } from '@ultranos/ui-kit/icons'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { deriveSessionKey } from '@ultranos/crypto'
 import { encryptionKeyStore, getOrCreateDeviceSalt } from '@/lib/encryption-key-store'
 import { Button } from '@ultranos/ui-kit/components/ui/button'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { Label } from '@ultranos/ui-kit/components/ui/label'
 import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
@@ -167,23 +168,24 @@ export default function LoginPage() {
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-sm space-y-6">
             {showResetBanner && (
-              <div
-                role="status"
-                className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary"
-              >
-                <span>{t('resetSuccess')}</span>
-                <button
-                  type="button"
-                  aria-label="Dismiss"
-                  onClick={() => {
-                    setShowResetBanner(false)
-                    router.replace('/login')
-                  }}
-                  className="ms-2 text-primary hover:text-primary/80"
-                >
-                  ×
-                </button>
-              </div>
+              <Alert variant="success">
+                <div className="flex items-center justify-between gap-2">
+                  <span>{t('resetSuccess')}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Dismiss"
+                    onClick={() => {
+                      setShowResetBanner(false)
+                      router.replace('/login')
+                    }}
+                    className="-me-1 shrink-0"
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+              </Alert>
             )}
             <div>
               <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">

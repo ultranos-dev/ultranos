@@ -38,6 +38,8 @@
     "forgotPasswordTitle": "فراموشی رمز عبور",
     "forgotPasswordSubtitle": "ایمیل خود را وارد کنید تا لینک بازنشانی برایتان بفرستیم",
     "sendResetLink": "ارسال لینک بازنشانی",
+    "sending": "در حال ارسال…",
+    "updating": "در حال بروزرسانی…",
     "checkYourEmail": "ایمیل خود را بررسی کنید",
     "resetLinkSent": "لینک بازنشانی را به ایمیل شما فرستادیم. این لینک در ۱ ساعت منقضی می‌شود.",
     "didntReceiveIt": "دریافت نکردید؟",
@@ -820,7 +822,8 @@
     "contactFriend": "دوست",
     "contactOther": "دیگر",
     "addEmergencyContact": "افزودن مخابره اضطراری",
-    "removeContact": "حذف مخابره"
+    "removeContact": "حذف مخابره",
+    "unsavedChanges": "تغییرات ذخیره نشده"
   },
   "sidebar": {
     "dashboard": "داشبورد",
@@ -994,7 +997,8 @@
     "sidebarUsed": "{used} مگابایت",
     "backToSettings": "بازگشت به تنظیمات",
     "save": "ذخیره",
-    "saved": "ذخیره شد"
+    "saved": "ذخیره شد",
+    "categoryEmpty": "هیچ داده‌ای بر اساس دسته برای این دوره وجود ندارد"
   },
   "consent": {
     "emptyTitle": "هیچ رضایت‌نامه‌ای به زودی منقضی نمی‌شود",

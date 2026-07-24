@@ -15,6 +15,7 @@ export default function AppointmentsPage() {
       <div className="flex justify-end">
         <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           <button
+            type="button"
             onClick={() => setViewMode('day')}
             className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
               viewMode === 'day' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
@@ -23,6 +24,7 @@ export default function AppointmentsPage() {
             {t('dayView')}
           </button>
           <button
+            type="button"
             onClick={() => setViewMode('week')}
             className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
               viewMode === 'week' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'

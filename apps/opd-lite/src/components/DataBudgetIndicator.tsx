@@ -19,16 +19,16 @@ export function DataBudgetIndicator() {
 
   const barColor =
     thresholdLevel === 'critical'
-      ? 'bg-red-500'
+      ? 'bg-destructive'
       : thresholdLevel === 'warning'
-        ? 'bg-yellow-500'
-        : 'bg-green-500'
+        ? 'bg-warning'
+        : 'bg-success'
 
   const textColor =
     thresholdLevel === 'critical'
-      ? 'text-red-400'
+      ? 'text-destructive'
       : thresholdLevel === 'warning'
-        ? 'text-yellow-400'
+        ? 'text-warning'
         : 'text-muted-foreground'
 
   return (

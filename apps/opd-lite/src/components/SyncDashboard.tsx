@@ -3,8 +3,14 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useLocale } from 'next-intl'
 import { formatDate } from '@ultranos/ui-kit'
-import { AlertTriangle, CircleX, RefreshCw, X, User, HeartPulse, Pill, FileText, Stethoscope, ClipboardList, ShieldAlert, FlaskConical, ChevronDown } from '@ultranos/ui-kit/icons'
+import { AlertTriangle, CircleX, RefreshCw, User, HeartPulse, Pill, FileText, Stethoscope, ClipboardList, ShieldAlert, FlaskConical, ChevronDown } from '@ultranos/ui-kit/icons'
 import { Button } from '@ultranos/ui-kit/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@ultranos/ui-kit/components/ui/dialog'
 import { useSyncStore } from '@/stores/sync-store'
 import { db, type SyncQueueEntry } from '@/lib/db'
 import { triggerDrain } from '@/lib/sync-worker'
@@ -279,8 +285,6 @@ export function SyncDashboard() {
     }
   }, [setIsDraining, loadItems, activePatientId, isDraining])
 
-  if (!isDashboardOpen) return null
-
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
   const hasMultipleFailed = summary.totalFailed >= 2 || summary.totalConflicts >= 2
   const phaseLabel =
@@ -293,48 +297,11 @@ export function SyncDashboard() {
           : null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16" data-testid="sync-dashboard">
-      <style>{`
-        @keyframes syncBackdropIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes syncPanelIn {
-          from { opacity: 0; transform: scale(0.97) translateY(-4px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes syncProgress {
-          0% { transform: translateX(-100%); }
-          50% { transform: translateX(0%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-background/40 backdrop-blur-sm animate-[syncBackdropIn_100ms_ease-out_forwards]"
-        onClick={() => setDashboardOpen(false)}
-        aria-hidden="true"
-      />
-
-      {/* Panel */}
-      <div
-        className="relative mx-4 w-full max-w-lg overflow-hidden rounded-xl bg-background ring-[0.65px] ring-border/50 shadow-2xl animate-[syncPanelIn_200ms_ease-out_forwards]"
-        role="dialog"
-        aria-label="Sync Dashboard"
-      >
+    <Dialog open={isDashboardOpen} onOpenChange={(o) => { if (!o) setDashboardOpen(false) }}>
+      <DialogContent className="max-w-lg overflow-hidden rounded-xl p-0" data-testid="sync-dashboard">
         {/* Header */}
-        <div className="border-b border-border px-5 py-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-foreground">Sync Status</h2>
-            <button
-              type="button"
-              className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-              onClick={() => setDashboardOpen(false)}
-              aria-label="Close sync dashboard"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+        <DialogHeader className="border-b border-border px-5 py-4">
+          <DialogTitle className="text-base font-semibold text-foreground">Sync Status</DialogTitle>
 
           {/* Summary (AC: 6) */}
           <div className="mt-3 flex flex-wrap gap-3 text-xs" data-testid="sync-summary">
@@ -360,9 +327,8 @@ export function SyncDashboard() {
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ease-out ${
-                    phase === 'complete' ? 'w-full bg-success' : 'bg-primary animate-[syncProgress_1.5s_ease-in-out_infinite]'
+                    phase === 'complete' ? 'w-full bg-success' : 'w-[70%] bg-primary animate-pulse'
                   }`}
-                  style={phase !== 'complete' ? { width: '70%' } : undefined}
                 />
               </div>
               <p className="mt-1.5 text-xs text-muted-foreground" aria-live="polite">{phaseLabel}</p>
@@ -405,7 +371,7 @@ export function SyncDashboard() {
               </Button>
             )}
           </div>
-        </div>
+        </DialogHeader>
 
         {/* Queue items grouped by resource type (AC: 2, 3) */}
         <div className="max-h-[60vh] overflow-y-auto" data-testid="sync-item-list">
@@ -547,7 +513,7 @@ export function SyncDashboard() {
             })
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

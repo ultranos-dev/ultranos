@@ -25,7 +25,7 @@ export function SwUpdateNotification() {
   if (!showUpdate) return null
 
   return (
-    <div className="fixed bottom-4 end-4 z-50 rounded-lg border border-primary-200 bg-background p-4 shadow-lg">
+    <div className="fixed bottom-4 end-4 z-50 rounded-lg border border-primary/20 bg-background p-4 shadow-lg">
       <p className="text-sm font-medium text-foreground">A new version is available</p>
       <div className="mt-2 flex gap-2">
         <Button

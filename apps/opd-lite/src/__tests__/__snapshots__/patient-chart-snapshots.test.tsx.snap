@@ -24,21 +24,33 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
         </span>
       </div>
       <div
-        class="mb-4 rounded-lg border border-primary bg-primary/10 px-4 py-3 text-sm text-primary"
+        class="rounded-xl border px-4 py-3 text-sm border-primary/20 bg-primary/10 text-primary mb-4"
         role="status"
       >
         <div
-          class="flex items-center justify-between gap-3"
+          class="flex items-start gap-2"
         >
-          <p>
-            A newer biometric algorithm is available. Re-enrolling improves matching accuracy.
-          </p>
-          <button
-            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
-            type="button"
+          <div
+            class="min-w-0 flex-1"
           >
-            Update Biometric
-          </button>
+            <div
+              class=""
+            >
+              <div
+                class="flex items-center justify-between gap-3"
+              >
+                <p>
+                  A newer biometric algorithm is available. Re-enrolling improves matching accuracy.
+                </p>
+                <button
+                  class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+                  type="button"
+                >
+                  Update Biometric
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -82,53 +94,50 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
             class="flex flex-col items-center gap-1"
           >
             <div
-              aria-label="Upload patient photo"
-              class="group relative cursor-pointer overflow-hidden rounded-full"
-              role="button"
-              style="width: 80px; height: 80px;"
-              tabindex="0"
+              class="flex flex-col items-center gap-1"
             >
               <div
-                aria-hidden="true"
-                class="flex h-full w-full items-center justify-center text-white font-bold select-none"
-                style="background-color: rgb(89, 192, 158); font-size: 28px;"
+                aria-label="Upload patient photo"
+                class="group relative cursor-pointer overflow-hidden rounded-full"
+                role="button"
+                style="width: 80px; height: 80px;"
+                tabindex="0"
               >
-                ?
-              </div>
-              <div
-                class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
-              >
-                <svg
+                <div
                   aria-hidden="true"
-                  class="lucide lucide-camera h-6 w-6 text-white"
-                  fill="none"
-                  height="24"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  width="24"
-                  xmlns="http://www.w3.org/2000/svg"
+                  class="flex h-full w-full items-center justify-center text-white font-bold select-none"
+                  style="background-color: rgb(89, 192, 158); font-size: 28px;"
                 >
-                  <path
-                    d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
-                  />
-                  <circle
-                    cx="12"
-                    cy="13"
-                    r="3"
-                  />
-                </svg>
+                  ?
+                </div>
+                <div
+                  class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-camera h-6 w-6 text-white"
+                    fill="none"
+                    height="24"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+                    />
+                    <circle
+                      cx="12"
+                      cy="13"
+                      r="3"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
-            <input
-              accept="image/*"
-              aria-hidden="true"
-              capture="environment"
-              class="hidden"
-              type="file"
-            />
           </div>
           <div
             class="min-w-0 flex-1"
@@ -323,21 +332,33 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
         </span>
       </div>
       <div
-        class="mb-4 rounded-lg border border-primary bg-primary/10 px-4 py-3 text-sm text-primary"
+        class="rounded-xl border px-4 py-3 text-sm border-primary/20 bg-primary/10 text-primary mb-4"
         role="status"
       >
         <div
-          class="flex items-center justify-between gap-3"
+          class="flex items-start gap-2"
         >
-          <p>
-            A newer biometric algorithm is available. Re-enrolling improves matching accuracy.
-          </p>
-          <button
-            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
-            type="button"
+          <div
+            class="min-w-0 flex-1"
           >
-            Update Biometric
-          </button>
+            <div
+              class=""
+            >
+              <div
+                class="flex items-center justify-between gap-3"
+              >
+                <p>
+                  A newer biometric algorithm is available. Re-enrolling improves matching accuracy.
+                </p>
+                <button
+                  class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+                  type="button"
+                >
+                  Update Biometric
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -381,53 +402,50 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
             class="flex flex-col items-center gap-1"
           >
             <div
-              aria-label="Upload patient photo"
-              class="group relative cursor-pointer overflow-hidden rounded-full"
-              role="button"
-              style="width: 80px; height: 80px;"
-              tabindex="0"
+              class="flex flex-col items-center gap-1"
             >
               <div
-                aria-hidden="true"
-                class="flex h-full w-full items-center justify-center text-white font-bold select-none"
-                style="background-color: rgb(89, 192, 158); font-size: 28px;"
+                aria-label="Upload patient photo"
+                class="group relative cursor-pointer overflow-hidden rounded-full"
+                role="button"
+                style="width: 80px; height: 80px;"
+                tabindex="0"
               >
-                ?
-              </div>
-              <div
-                class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
-              >
-                <svg
+                <div
                   aria-hidden="true"
-                  class="lucide lucide-camera h-6 w-6 text-white"
-                  fill="none"
-                  height="24"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                  width="24"
-                  xmlns="http://www.w3.org/2000/svg"
+                  class="flex h-full w-full items-center justify-center text-white font-bold select-none"
+                  style="background-color: rgb(89, 192, 158); font-size: 28px;"
                 >
-                  <path
-                    d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
-                  />
-                  <circle
-                    cx="12"
-                    cy="13"
-                    r="3"
-                  />
-                </svg>
+                  ?
+                </div>
+                <div
+                  class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-camera h-6 w-6 text-white"
+                    fill="none"
+                    height="24"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+                    />
+                    <circle
+                      cx="12"
+                      cy="13"
+                      r="3"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
-            <input
-              accept="image/*"
-              aria-hidden="true"
-              capture="environment"
-              class="hidden"
-              type="file"
-            />
           </div>
           <div
             class="min-w-0 flex-1"
