@@ -66,6 +66,7 @@
     "panelFeature3": "إدارة الوصفات الطبية"
   },
   "patient": {
+    "photoNotSaved": "لم يتم حفظ الصورة في السجل بعد",
     "search": "بحث المرضى",
     "searchHint": "ابحث بالاسم أو الرقم الوطني لبدء الزيارة",
     "searchPlaceholder": "ابحث بالاسم أو الرقم الوطني...",
@@ -98,7 +99,8 @@
     "auditLoadMore": "تحميل المزيد",
     "auditLoading": "جارٍ تحميل سجل المراجعة...",
     "auditEmpty": "لم يتم العثور على سجلات",
-    "noResults": "لم يُعثر على مرضى"
+    "noResults": "لم يُعثر على مرضى",
+    "contextRailLabel": "سياق المريض"
   },
   "encounter": {
     "dashboard": "لوحة الزيارات",
@@ -138,7 +140,17 @@
     "unspecified": "غير محدد",
     "confirmedByTooltip": "أكّده: {name}{time, select, other { في {time}}}",
     "patientInfo": "معلومات المريض",
-    "statusAria": "حالة الزيارة"
+    "railPatientCard": "ملخص المريض",
+    "statusAria": "حالة الزيارة",
+    "railAllergies": "الحساسية",
+    "railInteractionCheck": "فحص التفاعلات",
+    "railActiveMeds": "الأدوية النشطة",
+    "railNoKnownAllergies": "لا حساسية معروفة",
+    "railNoneRecorded": "لا يوجد",
+    "interactionStatusClear": "سليم",
+    "interactionStatusWarning": "تحذير",
+    "interactionStatusBlocked": "محظور",
+    "interactionStatusUnavailable": "غير متاح"
   },
   "soap": {
     "clinicalNotes": "الملاحظات السريرية",

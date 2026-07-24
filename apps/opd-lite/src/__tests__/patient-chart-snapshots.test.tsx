@@ -4,6 +4,17 @@ import { db } from '../lib/db'
 import { useAuthSessionStore } from '../stores/auth-session-store'
 import type { FhirPatient, FhirEncounterZod } from '@ultranos/shared-types'
 
+// next-intl context isn't provided in unit tests; components only need the locale.
+// Preserve the {substances} interpolation so allergy-content coverage (Rule #4)
+// can assert the actual allergen name reaches the DOM, not just the message key.
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, values?: Record<string, unknown>) => {
+    if (values && 'substances' in values) return String(values.substances)
+    return key
+  },
+  useLocale: () => 'en',
+}))
+
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -121,12 +132,13 @@ describe('Patient Chart — Snapshot Tests', () => {
     )
 
     const banner = await findByTestId('allergy-banner')
-    // Verify banner is the first child of <main>
-    const main = container.querySelector('main')
-    expect(main).toBeTruthy()
-    expect(main!.firstElementChild).toBe(banner)
+    // Verify banner is inside the banner slot (first slot in DetailLayout, above the grid)
+    const bannerSlot = container.querySelector('[data-slot="detail-banner"]')
+    expect(bannerSlot).toBeTruthy()
+    expect(bannerSlot).toContainElement(banner)
     // Verify it has active state (red)
     expect(banner.getAttribute('data-banner-state')).toBe('active')
+    // Rule #4: the actual allergen name (patient data) must reach the DOM
     expect(banner.textContent).toContain('Penicillin')
   })
 

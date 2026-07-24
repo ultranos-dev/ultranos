@@ -30,7 +30,9 @@
     "./components/ui/skeleton":      "./src/components/ui/skeleton.tsx",
     "./components/ui/textarea":      "./src/components/ui/textarea.tsx",
     "./components/ui/tooltip":       "./src/components/ui/tooltip.tsx",
-    "./components/ui/empty-state":   "./src/components/ui/empty-state.tsx",
+    "./components/ui/empty-state":     "./src/components/ui/empty-state.tsx",
+    "./components/ui/detail-layout":   "./src/components/ui/detail-layout.tsx",
+    "./components/ui/alert":           "./src/components/ui/alert.tsx",
     "./tailwind.preset":             "./src/tailwind.preset.ts",
     "./tokens.native":               "./src/tokens.native.ts",
     "./native":                      "./src/native/index.ts"

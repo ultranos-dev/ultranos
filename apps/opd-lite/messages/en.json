@@ -66,6 +66,7 @@
     "panelFeature3": "Prescription management"
   },
   "patient": {
+    "photoNotSaved": "Photo not saved to record yet",
     "search": "Patient Search",
     "searchHint": "Search by name or National ID to start an encounter",
     "searchPlaceholder": "Search by name or National ID...",
@@ -98,7 +99,8 @@
     "auditLoadMore": "Load more",
     "auditLoading": "Loading audit trail...",
     "auditEmpty": "No audit entries found",
-    "noResults": "No patients found"
+    "noResults": "No patients found",
+    "contextRailLabel": "Patient context"
   },
   "encounter": {
     "dashboard": "Encounter Dashboard",
@@ -138,7 +140,17 @@
     "unspecified": "Unspecified",
     "confirmedByTooltip": "Confirmed by: {name}{time, select, other { at {time}}}",
     "patientInfo": "Patient information",
-    "statusAria": "Encounter status"
+    "railPatientCard": "Patient summary",
+    "statusAria": "Encounter status",
+    "railAllergies": "Allergies",
+    "railInteractionCheck": "Interaction check",
+    "railActiveMeds": "Active medications",
+    "railNoKnownAllergies": "No known allergies",
+    "railNoneRecorded": "None recorded",
+    "interactionStatusClear": "Clear",
+    "interactionStatusWarning": "Warning",
+    "interactionStatusBlocked": "Blocked",
+    "interactionStatusUnavailable": "Unavailable"
   },
   "soap": {
     "clinicalNotes": "Clinical Notes",

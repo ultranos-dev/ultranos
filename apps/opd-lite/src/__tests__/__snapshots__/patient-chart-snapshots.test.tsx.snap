@@ -1,0 +1,599 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page matches 1`] = `
+<div
+  class="flex flex-col gap-4"
+>
+  <div
+    data-slot="detail-banner"
+  >
+    <div
+      data-testid="patient-banner-stack"
+    >
+      <div
+        aria-live="assertive"
+        class="mb-4 rounded-xl bg-destructive/10 px-4 py-3 shadow-card ring-[0.65px] ring-destructive/50 text-center text-sm font-bold text-destructive transition-colors duration-200"
+        data-banner-state="active"
+        data-testid="allergy-banner"
+        role="alert"
+      >
+        <span
+          aria-label="bannerActiveAria"
+        >
+          Penicillin
+        </span>
+      </div>
+      <div
+        class="mb-4 rounded-lg border border-primary bg-primary/10 px-4 py-3 text-sm text-primary"
+        role="status"
+      >
+        <div
+          class="flex items-center justify-between gap-3"
+        >
+          <p>
+            A newer biometric algorithm is available. Re-enrolling improves matching accuracy.
+          </p>
+          <button
+            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+            type="button"
+          >
+            Update Biometric
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start"
+  >
+    <div
+      class="order-2 flex min-w-0 flex-col gap-4 lg:order-1"
+    >
+      <section
+        aria-label="encounterHistory"
+      >
+        <h2
+          class="mb-3 text-lg font-bold text-foreground"
+        >
+          encounterHistory
+        </h2>
+        <p
+          class="text-sm font-semibold text-muted-foreground"
+        >
+          Loading encounters...
+        </p>
+      </section>
+      <section
+        aria-label="labResultsSection"
+        class="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
+      />
+    </div>
+    <aside
+      aria-label="contextRailLabel"
+      class="order-1 mb-4 flex flex-col gap-4 lg:order-2 lg:mb-0 lg:sticky lg:top-[4.5rem] lg:max-h-[calc(100svh-4.5rem)] lg:overflow-y-auto lg:pb-2"
+    >
+      <div
+        class="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
+      >
+        <div
+          class="flex items-start gap-5"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <div
+              aria-label="Upload patient photo"
+              class="group relative cursor-pointer overflow-hidden rounded-full"
+              role="button"
+              style="width: 80px; height: 80px;"
+              tabindex="0"
+            >
+              <div
+                aria-hidden="true"
+                class="flex h-full w-full items-center justify-center text-white font-bold select-none"
+                style="background-color: rgb(89, 192, 158); font-size: 28px;"
+              >
+                ?
+              </div>
+              <div
+                class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-camera h-6 w-6 text-white"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+                  />
+                  <circle
+                    cx="12"
+                    cy="13"
+                    r="3"
+                  />
+                </svg>
+              </div>
+            </div>
+            <input
+              accept="image/*"
+              aria-hidden="true"
+              capture="environment"
+              class="hidden"
+              type="file"
+            />
+          </div>
+          <div
+            class="min-w-0 flex-1"
+          >
+            <h2
+              class="text-xl font-bold text-foreground leading-snug"
+              dir="auto"
+            >
+              Snapshot Patient Local
+            </h2>
+            <p
+              class="mt-0.5 text-xs text-muted-foreground"
+            >
+              Snapshot Patient Latin
+            </p>
+            <p
+              class="mt-2 text-sm font-medium text-muted-foreground"
+            >
+              female
+              <span
+                class="mx-1"
+              >
+                ·
+              </span>
+              41y
+              <span
+                class="mx-1"
+              >
+                ·
+              </span>
+              --
+            </p>
+            <p
+              class="mt-1 text-sm text-muted-foreground"
+            >
+              Height: 
+              --
+              <span
+                class="mx-1"
+              >
+                ·
+              </span>
+              Weight: 
+              --
+              <span
+                class="mx-1"
+              >
+                ·
+              </span>
+              BMI: 
+              --
+              <span
+                class="mx-1"
+              >
+                ·
+              </span>
+              Blood: 
+              --
+            </p>
+            <p
+              class="mt-1 text-xs text-muted-foreground"
+            >
+              lastUpdated
+            </p>
+          </div>
+        </div>
+        <div
+          class="mt-4 flex items-center justify-between gap-3"
+        >
+          <button
+            aria-label="Edit patient profile"
+            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-transparent text-primary hover:bg-muted"
+            type="button"
+          >
+            Edit Profile
+          </button>
+          <a
+            aria-label="Start New Encounter"
+            class="inline-flex items-center justify-center rounded-pill bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            href="/encounter/44444444-4444-4444-4444-444444444444"
+          >
+            Start New Encounter
+          </a>
+        </div>
+      </div>
+      <div
+        class="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
+      >
+        <h3
+          class="mb-3 text-sm font-semibold text-foreground"
+        >
+          Active Medications
+        </h3>
+        <p
+          class="text-sm text-muted-foreground"
+        >
+          Loading...
+        </p>
+      </div>
+      <div
+        class="rounded-xl bg-card shadow-sm ring-[0.65px] ring-border/50"
+      >
+        <button
+          aria-controls="patient-details-content"
+          aria-expanded="false"
+          class="flex w-full items-center justify-between px-5 py-4 text-start"
+          type="button"
+        >
+          <span
+            class="text-sm font-semibold text-foreground"
+          >
+            Patient Details
+          </span>
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-chevron-down h-4 w-4 text-muted-foreground transition-transform duration-200"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
+        </button>
+      </div>
+      <div
+        class="rounded-xl bg-card shadow-sm ring-[0.65px] ring-border/50"
+      >
+        <button
+          aria-controls="patient-audit-trail-content"
+          aria-expanded="false"
+          class="flex w-full items-center justify-between px-5 py-4 text-start"
+          type="button"
+        >
+          <span
+            class="text-sm font-semibold text-foreground"
+          >
+            auditTrail
+          </span>
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-chevron-down h-4 w-4 text-muted-foreground transition-transform duration-200"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
+        </button>
+      </div>
+    </aside>
+  </div>
+</div>
+`;
+
+exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page matches 1`] = `
+<div
+  class="flex flex-col gap-4"
+>
+  <div
+    data-slot="detail-banner"
+  >
+    <div
+      data-testid="patient-banner-stack"
+    >
+      <div
+        aria-live="assertive"
+        class="mb-4 rounded-xl bg-destructive/10 px-4 py-3 shadow-card ring-[0.65px] ring-destructive/50 text-center text-sm font-bold text-destructive transition-colors duration-200"
+        data-banner-state="active"
+        data-testid="allergy-banner"
+        role="alert"
+      >
+        <span
+          aria-label="bannerActiveAria"
+        >
+          Penicillin
+        </span>
+      </div>
+      <div
+        class="mb-4 rounded-lg border border-primary bg-primary/10 px-4 py-3 text-sm text-primary"
+        role="status"
+      >
+        <div
+          class="flex items-center justify-between gap-3"
+        >
+          <p>
+            A newer biometric algorithm is available. Re-enrolling improves matching accuracy.
+          </p>
+          <button
+            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+            type="button"
+          >
+            Update Biometric
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start"
+  >
+    <div
+      class="order-2 flex min-w-0 flex-col gap-4 lg:order-1"
+    >
+      <section
+        aria-label="encounterHistory"
+      >
+        <h2
+          class="mb-3 text-lg font-bold text-foreground"
+        >
+          encounterHistory
+        </h2>
+        <p
+          class="text-sm font-semibold text-muted-foreground"
+        >
+          Loading encounters...
+        </p>
+      </section>
+      <section
+        aria-label="labResultsSection"
+        class="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
+      />
+    </div>
+    <aside
+      aria-label="contextRailLabel"
+      class="order-1 mb-4 flex flex-col gap-4 lg:order-2 lg:mb-0 lg:sticky lg:top-[4.5rem] lg:max-h-[calc(100svh-4.5rem)] lg:overflow-y-auto lg:pb-2"
+    >
+      <div
+        class="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
+      >
+        <div
+          class="flex items-start gap-5"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <div
+              aria-label="Upload patient photo"
+              class="group relative cursor-pointer overflow-hidden rounded-full"
+              role="button"
+              style="width: 80px; height: 80px;"
+              tabindex="0"
+            >
+              <div
+                aria-hidden="true"
+                class="flex h-full w-full items-center justify-center text-white font-bold select-none"
+                style="background-color: rgb(89, 192, 158); font-size: 28px;"
+              >
+                ?
+              </div>
+              <div
+                class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-camera h-6 w-6 text-white"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+                  />
+                  <circle
+                    cx="12"
+                    cy="13"
+                    r="3"
+                  />
+                </svg>
+              </div>
+            </div>
+            <input
+              accept="image/*"
+              aria-hidden="true"
+              capture="environment"
+              class="hidden"
+              type="file"
+            />
+          </div>
+          <div
+            class="min-w-0 flex-1"
+          >
+            <h2
+              class="text-xl font-bold text-foreground leading-snug"
+              dir="auto"
+            >
+              Snapshot Patient Local
+            </h2>
+            <p
+              class="mt-0.5 text-xs text-muted-foreground"
+            >
+              Snapshot Patient Latin
+            </p>
+            <p
+              class="mt-2 text-sm font-medium text-muted-foreground"
+            >
+              female
+              <span
+                class="mx-1"
+              >
+                ·
+              </span>
+              41y
+              <span
+                class="mx-1"
+              >
+                ·
+              </span>
+              --
+            </p>
+            <p
+              class="mt-1 text-sm text-muted-foreground"
+            >
+              Height: 
+              --
+              <span
+                class="mx-1"
+              >
+                ·
+              </span>
+              Weight: 
+              --
+              <span
+                class="mx-1"
+              >
+                ·
+              </span>
+              BMI: 
+              --
+              <span
+                class="mx-1"
+              >
+                ·
+              </span>
+              Blood: 
+              --
+            </p>
+            <p
+              class="mt-1 text-xs text-muted-foreground"
+            >
+              lastUpdated
+            </p>
+          </div>
+        </div>
+        <div
+          class="mt-4 flex items-center justify-between gap-3"
+        >
+          <button
+            aria-label="Edit patient profile"
+            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-transparent text-primary hover:bg-muted"
+            type="button"
+          >
+            Edit Profile
+          </button>
+          <a
+            aria-label="Start New Encounter"
+            class="inline-flex items-center justify-center rounded-pill bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            href="/encounter/44444444-4444-4444-4444-444444444444"
+          >
+            Start New Encounter
+          </a>
+        </div>
+      </div>
+      <div
+        class="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
+      >
+        <h3
+          class="mb-3 text-sm font-semibold text-foreground"
+        >
+          Active Medications
+        </h3>
+        <p
+          class="text-sm text-muted-foreground"
+        >
+          Loading...
+        </p>
+      </div>
+      <div
+        class="rounded-xl bg-card shadow-sm ring-[0.65px] ring-border/50"
+      >
+        <button
+          aria-controls="patient-details-content"
+          aria-expanded="false"
+          class="flex w-full items-center justify-between px-5 py-4 text-start"
+          type="button"
+        >
+          <span
+            class="text-sm font-semibold text-foreground"
+          >
+            Patient Details
+          </span>
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-chevron-down h-4 w-4 text-muted-foreground transition-transform duration-200"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
+        </button>
+      </div>
+      <div
+        class="rounded-xl bg-card shadow-sm ring-[0.65px] ring-border/50"
+      >
+        <button
+          aria-controls="patient-audit-trail-content"
+          aria-expanded="false"
+          class="flex w-full items-center justify-between px-5 py-4 text-start"
+          type="button"
+        >
+          <span
+            class="text-sm font-semibold text-foreground"
+          >
+            auditTrail
+          </span>
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-chevron-down h-4 w-4 text-muted-foreground transition-transform duration-200"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
+        </button>
+      </div>
+    </aside>
+  </div>
+</div>
+`;

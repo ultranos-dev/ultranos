@@ -179,7 +179,8 @@ describe('Encounter Dashboard', () => {
 
     render(<EncounterDashboard patientId="patient-123" />)
 
-    expect(screen.getByText('أحمد الراشد')).toBeDefined()
+    // The rail mirrors patient name, so we use getAllByText (main card + rail)
+    expect(screen.getAllByText('أحمد الراشد').length).toBeGreaterThan(0)
     expect(screen.getByText('Ahmed Al-Rashid')).toBeDefined()
   })
 
@@ -190,8 +191,9 @@ describe('Encounter Dashboard', () => {
     render(<EncounterDashboard patientId="patient-dob" />)
 
     // Age is rendered, not the "Unknown age" fallback.
+    // Rail mirrors age so we use getAllByText (main card + rail).
     expect(screen.queryByText(/Unknown age/i)).toBeNull()
-    expect(screen.getByText(/\d+y/)).toBeDefined()
+    expect(screen.getAllByText(/\d+y/).length).toBeGreaterThan(0)
   })
 
   it('should display age from year-only birthYear when no exact birthDate', () => {
@@ -215,7 +217,8 @@ describe('Encounter Dashboard', () => {
 
     render(<EncounterDashboard patientId="patient-456" />)
 
-    expect(screen.getByText(/male/i)).toBeDefined()
+    // Rail mirrors demographics so we use getAllByText (main card + rail).
+    expect(screen.getAllByText(/male/i).length).toBeGreaterThan(0)
   })
 
   it('should render the patronymic name chain as separate segments', () => {
@@ -240,7 +243,8 @@ describe('Encounter Dashboard', () => {
 
     render(<EncounterDashboard patientId="patient-local" />)
 
-    expect(screen.getByText('محمد عبدالله')).toBeDefined()
+    // Rail mirrors patient name, so use getAllByText (main card + rail).
+    expect(screen.getAllByText('محمد عبدالله').length).toBeGreaterThan(0)
   })
 
   it('should show patient info section with accessible label', () => {
@@ -249,7 +253,10 @@ describe('Encounter Dashboard', () => {
 
     render(<EncounterDashboard patientId="patient-abc" />)
 
-    expect(screen.getByLabelText('Patient information')).toBeDefined()
+    // The rail uses aria-label="Patient summary" (t('railPatientCard')), not
+    // "Patient information" — so only one element carries this label. getByLabelText
+    // is correct and unique here.
+    expect(screen.getByLabelText('Patient information')).toBeInTheDocument()
   })
 
   it('should show mismatch state when patientId does not match and not in Dexie', async () => {
@@ -270,7 +277,8 @@ describe('Encounter Dashboard', () => {
     render(<EncounterDashboard patientId="dexie-patient" />)
 
     await waitFor(() => {
-      expect(screen.getByText('Ahmed from Dexie')).toBeDefined()
+      // Rail mirrors patient name, so use getAllByText (main card + rail).
+      expect(screen.getAllByText('Ahmed from Dexie').length).toBeGreaterThan(0)
     })
   })
 
@@ -314,7 +322,8 @@ describe('Encounter Dashboard', () => {
     render(<EncounterDashboard patientId="hub-patient" />)
 
     await waitFor(() => {
-      expect(screen.getByText('Ahmed from Hub')).toBeDefined()
+      // Rail mirrors patient name, so use getAllByText (main card + rail).
+      expect(screen.getAllByText('Ahmed from Hub').length).toBeGreaterThan(0)
     })
     // The patient must NOT show the "not found" fallback.
     expect(screen.queryByText('Patient not found in local session.')).toBeNull()
@@ -445,6 +454,35 @@ describe('Encounter Dashboard', () => {
     })
     // Prescription must be fully blocked — addPrescription must never be called
     expect(mockAddPrescription).not.toHaveBeenCalled()
+  })
+
+  it('renders encounter in two columns with a pinned context rail', async () => {
+    const patient = makePatient('patient-rail', 'Rail Test')
+    usePatientStore.setState({ selectedPatient: patient })
+    render(<EncounterDashboard patientId="patient-rail" />)
+    fireEvent.click(screen.getByText('Start Encounter'))
+    await waitFor(() => {
+      expect(screen.getByText('Active Consultation')).toBeDefined()
+    })
+    expect(screen.getByRole('complementary')).toBeInTheDocument()
+    const rail = screen.getByRole('complementary')
+    expect(rail).toHaveTextContent(/interaction check/i)
+  })
+
+  it('allergy banner is not inside the rail landmark', async () => {
+    const patient = makePatient('patient-rail2', 'Rail Test 2')
+    usePatientStore.setState({ selectedPatient: patient })
+    render(<EncounterDashboard patientId="patient-rail2" />)
+    fireEvent.click(screen.getByText('Start Encounter'))
+    await waitFor(() => {
+      expect(screen.getByText('Active Consultation')).toBeDefined()
+    })
+    const rail = screen.getByRole('complementary')
+    // The AllergyBanner renders in the detail-banner slot (full-width, above grid).
+    // Verify: the banner's test-id element is NOT a descendant of the aside/rail.
+    const allergyBanner = document.querySelector('[data-testid="allergy-banner"]')
+    expect(allergyBanner).not.toBeNull()
+    expect(rail.contains(allergyBanner)).toBe(false)
   })
 
   it('P3: allows prescription add with UNAVAILABLE flag when allergy data has load error', async () => {

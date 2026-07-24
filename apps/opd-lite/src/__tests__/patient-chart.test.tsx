@@ -4,6 +4,12 @@ import { db } from '../lib/db'
 import { useAuthSessionStore } from '../stores/auth-session-store'
 import type { FhirPatient } from '@ultranos/shared-types'
 
+// next-intl context isn't provided in unit tests; components only need the locale.
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
+}))
+
 // Mock next/navigation
 const mockPush = vi.fn()
 vi.mock('next/navigation', () => ({
@@ -117,7 +123,8 @@ describe('PatientChartPage', () => {
     render(<PatientChartPage patientId="nonexistent-id" />)
 
     await waitFor(() => {
-      expect(screen.getByText(/patient not found/i)).toBeTruthy()
+      // next-intl mock returns translation keys; the 'notFound' key renders as "notFound"
+      expect(screen.getByText('notFound')).toBeTruthy()
     })
   })
 
@@ -129,11 +136,10 @@ describe('PatientChartPage', () => {
     await waitFor(() => {
       const banner = screen.getByTestId('allergy-banner')
       expect(banner).toBeTruthy()
-      // Allergy banner should come before the patient header
-      const main = banner.closest('main')
-      expect(main).toBeTruthy()
-      const firstChild = main!.firstElementChild
-      expect(firstChild).toBe(banner)
+      // In the two-column layout, the banner is inside data-slot="detail-banner"
+      // which is the first child of the DetailLayout root.
+      const detailRoot = banner.closest('[data-slot="detail-banner"]')
+      expect(detailRoot).toBeTruthy()
     })
   })
 
@@ -163,13 +169,25 @@ describe('PatientChartPage', () => {
     })
   })
 
-  it('renders "Back to Search" navigation link', async () => {
+  it('renders "Return to Search" fallback button when patient not found', async () => {
+    render(<PatientChartPage patientId="nonexistent-id" />)
+
+    await waitFor(() => {
+      // next-intl mock returns translation keys; 'returnToSearch' key renders as-is
+      expect(screen.getByText('returnToSearch')).toBeTruthy()
+    })
+  })
+
+  it('keeps the allergy banner first and full-width, above the two columns', async () => {
     await db.patients.put(testPatient)
 
     render(<PatientChartPage patientId={TEST_PATIENT_ID} />)
 
     await waitFor(() => {
-      expect(screen.getByText(/back to search/i)).toBeTruthy()
+      const alerts = screen.getAllByRole('alert')
+      const banner = alerts[0] ?? null
+      const rail = screen.getByRole('complementary')
+      expect(rail).not.toContainElement(banner) // Rule #4: banner not inside a column
     })
   })
 })

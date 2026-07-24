@@ -66,6 +66,7 @@
     "panelFeature3": "مدیریت نسخ‌ها"
   },
   "patient": {
+    "photoNotSaved": "عکس هنوز در سابقه ذخیره نشده است",
     "search": "جستجوی مریض",
     "searchHint": "با نام یا شماره تذکره جستجو کنید تا ویزیت شروع شود",
     "searchPlaceholder": "جستجو با نام یا شماره تذکره...",
@@ -98,7 +99,8 @@
     "auditLoadMore": "بارگذاری بیشتر",
     "auditLoading": "در حال بارگذاری گزارش تغییرات...",
     "auditEmpty": "هیچ موردی یافت نشد",
-    "noResults": "هیچ مریضی یافت نشد"
+    "noResults": "هیچ مریضی یافت نشد",
+    "contextRailLabel": "زمینه بیمار"
   },
   "encounter": {
     "dashboard": "داشبورد ویزیت",
@@ -138,7 +140,17 @@
     "unspecified": "مشخص نشده",
     "confirmedByTooltip": "تأیید شده توسط: {name}{time, select, other { در {time}}}",
     "patientInfo": "معلومات بیمار",
-    "statusAria": "وضعیت ویزیت"
+    "railPatientCard": "خلاصه بیمار",
+    "statusAria": "وضعیت ویزیت",
+    "railAllergies": "حساسیت‌ها",
+    "railInteractionCheck": "بررسی تداخل",
+    "railActiveMeds": "داروهای فعال",
+    "railNoKnownAllergies": "هیچ حساسیت شناخته‌شده‌ای وجود ندارد",
+    "railNoneRecorded": "هیچ موردی ثبت نشده",
+    "interactionStatusClear": "سالم",
+    "interactionStatusWarning": "هشدار",
+    "interactionStatusBlocked": "مسدود",
+    "interactionStatusUnavailable": "در دسترس نیست"
   },
   "soap": {
     "clinicalNotes": "یادداشت‌های کلینیکی",

@@ -35,6 +35,9 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/Card'
 import { usePatientSync } from '@/hooks/usePatientSync'
 import { hasUnresolvedTier1Conflicts } from '@/lib/conflict-check'
+import { DetailLayout } from '@ultranos/ui-kit/components/ui/detail-layout'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
+import { EncounterContextRail } from '@/components/encounter/EncounterContextRail'
 
 interface EncounterDashboardProps {
   patientId: string
@@ -511,6 +514,39 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const patient = (selectedPatient?.id === patientId ? selectedPatient : null) ?? dexiePatient
   const nameSegments = patient ? patientNameSegments(patient._ultranos) : []
 
+  // Rail props — derived from same sources as the existing patient info UI.
+  // These are display-only derivations; no clinical logic is changed here.
+  const railPatient = patient
+    ? {
+        display:
+          nameSegments.length > 0
+            ? nameSegments.join(' · ')
+            : (patient._ultranos?.nameLocal ?? ''),
+        ageSex: `${formatAge(patient.birthDate, patient._ultranos?.birthYear, tPatient('unknownAge'))} · ${patient.gender ?? tPatient('unknownGender')}`,
+        idSlice: patient.id.slice(0, 8),
+      }
+    : { display: '', ageSex: '', idSlice: '' }
+
+  // AllergyIntolerance.code is CodeableConcept: prefer text, then first coding display.
+  const railAllergies = activeAllergies
+    .map((a) => a.code?.text ?? a.code?.coding?.[0]?.display ?? '')
+    .filter(Boolean)
+
+  // interactionModal.checkResult is the last stored check result from the modal state.
+  // Falls back to 'UNAVAILABLE' when no prescription has been added yet (checkResult is null).
+  const railInteractionStatus = interactionModal.checkResult?.result ?? 'UNAVAILABLE'
+
+  // MedicationStatement.medicationCodeableConcept is CodeableConcept: prefer text.
+  // Also include any pending prescriptions from the current encounter session.
+  const railActiveMeds = [
+    ...activeMedicationStatements.map(
+      (s) => s.medicationCodeableConcept?.text ?? s.medicationCodeableConcept?.coding?.[0]?.display ?? '',
+    ),
+    ...pendingPrescriptions.map(
+      (rx) => rx.medicationCodeableConcept.text ?? rx.medicationCodeableConcept.coding?.[0]?.display ?? '',
+    ),
+  ].filter(Boolean)
+
   // Reset palette state when entering/exiting loading to prevent desync
   useEffect(() => {
     if (loading) setPaletteOpen(false)
@@ -579,13 +615,22 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           }
         `}</style>
       )}
-      <div className="flex flex-col gap-4">
-      {/* CLAUDE.md Rule #4: Allergy banner renders FIRST, in red, never collapsed */}
-      <AllergyBanner patientId={patientId} />
-
+      <DetailLayout
+        railLabel={tPatient('contextRailLabel')}
+        banner={
+          /* CLAUDE.md Rule #4: Allergy banner renders FIRST, in red, never collapsed */
+          <AllergyBanner patientId={patientId} />
+        }
+        rail={
+          <EncounterContextRail
+            patient={railPatient}
+            allergies={railAllergies}
+            interactionStatus={railInteractionStatus}
+            activeMeds={railActiveMeds}
+          />
+        }
+      >
       <ConflictBanner patientId={patientId} />
-
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       {/* Title and back navigation are provided by the shell's BreadcrumbHeader. */}
 
       <Card
@@ -752,44 +797,35 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         >
           {/* Story 10.1 AC 9: Medication history unavailable warning */}
           {!medicationHistoryAvailable && (
-            <div
-              className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3"
-              role="alert"
-            >
+            <Alert variant="warning" role="alert" className="mb-4">
               <p className="text-sm font-bold text-foreground">
                 {tPrescription('medicationHistoryUnavailable')}
               </p>
               <p className="text-xs text-muted-foreground">
                 {tPrescription('medicationHistoryDetail')}
               </p>
-            </div>
+            </Alert>
           )}
 
           {/* Drug interaction check status */}
           {pendingPrescriptions.some((rx) => rx._ultranos.interactionCheckResult === 'UNAVAILABLE') ? (
-            <div
-              className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3"
-              role="alert"
-            >
+            <Alert variant="warning" role="alert" className="mb-4">
               <p className="text-sm font-bold text-foreground">
                 {tPrescription('interactionCheckPartial')}
               </p>
               <p className="text-xs text-muted-foreground">
                 {tPrescription('interactionCheckPartialDetail')}
               </p>
-            </div>
+            </Alert>
           ) : (
-            <div
-              className="mb-4 rounded-lg border border-success/30 bg-success/10 px-4 py-3"
-              role="status"
-            >
+            <Alert variant="success" role="status" className="mb-4">
               <p className="text-sm font-bold text-foreground">
                 {tPrescription('interactionCheckActive')}
               </p>
               <p className="text-xs text-muted-foreground">
                 {tPrescription('interactionCheckActiveDetail', { medCount: activeMedicationStatements.length, allergyCount: activeAllergies.length })}
               </p>
-            </div>
+            </Alert>
           )}
 
           <InteractionWarningModal
@@ -800,11 +836,11 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           />
 
           {prescriptionBlocked && (
-            <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 p-3" role="alert">
+            <Alert variant="destructive" role="alert" className="mb-4">
               <p className="text-sm font-semibold text-destructive">
                 {tPrescription('prescriptionBlocked')}
               </p>
-            </div>
+            </Alert>
           )}
 
           <PrescriptionEntry
@@ -815,9 +851,9 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           />
 
           {prescriptionError && (
-            <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3" role="alert">
+            <Alert variant="destructive" role="alert" className="mt-3">
               <p className="text-sm font-semibold text-destructive">{prescriptionError}</p>
-            </div>
+            </Alert>
           )}
 
           {/* Pending prescriptions list */}
@@ -906,7 +942,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         </Card>
       )}
 
-    </div>
+      </DetailLayout>
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </>
   )
 }

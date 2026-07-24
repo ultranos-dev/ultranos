@@ -16,13 +16,12 @@ import {
 } from '@/lib/patient-loader'
 import { Button } from '@/components/ui/Button'
 
+import { DetailLayout } from '@ultranos/ui-kit/components/ui/detail-layout'
+
 // Composed sections
 import { PatientBannerStack } from '@/components/patient/PatientBannerStack'
-import { PatientHeaderCard } from '@/components/patient/PatientHeaderCard'
 import { PatientEditModal } from '@/components/patient/PatientEditModal'
-import { PatientDetailsAccordion } from '@/components/patient/PatientDetailsAccordion'
-import { PatientAuditTrail } from '@/components/patient/PatientAuditTrail'
-import { ActiveMedicationsList } from '@/components/patient/ActiveMedicationsList'
+import { PatientContextRail } from '@/components/patient/PatientContextRail'
 import { EncounterHistoryList } from '@/components/patient/EncounterHistoryList'
 import { LabResultsList } from '@/components/clinical/LabResultsList'
 import { LabResultDetail } from '@/components/clinical/LabResultDetail'
@@ -166,34 +165,24 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl flex flex-col gap-4">
-      {/* Safety banners — CLAUDE.md Rule #4: allergies first, never collapsed */}
-      <PatientBannerStack patient={patient} patientId={patientId} />
-
-      {/* Patient identity header with avatar, vitals, actions */}
-      <PatientHeaderCard
-        patient={patient}
-        patientId={patientId}
-        onEditClick={() => setEditModalOpen(true)}
-        onPatientUpdated={handlePatientUpdated}
-      />
-
-      {/* Collapsible demographics and identity details */}
-      <PatientDetailsAccordion patient={patient} />
-
-      {/* Audit trail — who modified this record */}
-      <PatientAuditTrail patientId={patientId} userRole={userRole} />
-
-      {/* Cross-encounter active medications */}
-      <ActiveMedicationsList patientId={patientId} />
-
-      {/* Encounter history with expandable detail */}
+    <DetailLayout
+      railLabel={tPatient('contextRailLabel')}
+      banner={<PatientBannerStack patient={patient} patientId={patientId} />}
+      rail={
+        <PatientContextRail
+          patient={patient}
+          patientId={patientId}
+          userRole={userRole}
+          onEditClick={() => setEditModalOpen(true)}
+          onPatientUpdated={handlePatientUpdated}
+        />
+      }
+    >
       <section aria-label={tPatient('encounterHistory')}>
         <h2 className="mb-3 text-lg font-bold text-foreground">{tPatient('encounterHistory')}</h2>
         <EncounterHistoryList patientId={patientId} />
       </section>
 
-      {/* Lab results */}
       <section
         className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
         aria-label={tPatient('labResultsSection')}
@@ -211,7 +200,6 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
         )}
       </section>
 
-      {/* Edit profile modal */}
       <PatientEditModal
         open={editModalOpen}
         patient={patient}
@@ -219,6 +207,6 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
         onClose={() => setEditModalOpen(false)}
         onSaved={handlePatientUpdated}
       />
-    </div>
+    </DetailLayout>
   )
 }

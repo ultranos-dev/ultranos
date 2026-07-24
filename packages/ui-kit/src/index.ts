@@ -73,6 +73,12 @@ export { formatUserRole } from './format-role.js'
 export { EmptyState } from './components/ui/empty-state.js'
 export type { EmptyStateProps } from './components/ui/empty-state.js'
 
+export { DetailLayout } from './components/ui/detail-layout.js'
+export type { DetailLayoutProps } from './components/ui/detail-layout.js'
+
+export { Alert } from './components/ui/alert.js'
+export type { AlertProps } from './components/ui/alert.js'
+
 export {
   formatNumber,
   formatInteger,

@@ -66,6 +66,7 @@
     "panelFeature3": "د نسخو مدیریت"
   },
   "patient": {
+    "photoNotSaved": "انځور لا تر اوسه په ریکارډ کې نه دی خوندي شوی",
     "search": "د ناروغ لټون",
     "searchHint": "د لیدنې پیل لپاره د نوم یا تذکرې شمیرې په واسطه لټون وکړئ",
     "searchPlaceholder": "د نوم یا تذکرې شمیرې په واسطه لټون...",
@@ -98,7 +99,8 @@
     "auditLoadMore": "نور یې ولولئ",
     "auditLoading": "د بدلونونو راپور لوډ کیږي...",
     "auditEmpty": "هیڅ مورد ونه موندل شو",
-    "noResults": "هیڅ ناروغ ونه موندل شو"
+    "noResults": "هیڅ ناروغ ونه موندل شو",
+    "contextRailLabel": "د ناروغ شرایط"
   },
   "encounter": {
     "dashboard": "د لیدنې ډشبورډ",
@@ -138,7 +140,17 @@
     "unspecified": "مشخص نه دی",
     "confirmedByTooltip": "تایید شوی د: {name} لخوا{time, select, other { په {time}}}",
     "patientInfo": "د ناروغ معلومات",
-    "statusAria": "د لیدنې حالت"
+    "railPatientCard": "د ناروغ لنډیز",
+    "statusAria": "د لیدنې حالت",
+    "railAllergies": "الرژیونه",
+    "railInteractionCheck": "د متقابل عمل معاینه",
+    "railActiveMeds": "فعاله درمل",
+    "railNoKnownAllergies": "هیڅ معلومه الرژي نشته",
+    "railNoneRecorded": "هیڅ ثبت شوي نه دي",
+    "interactionStatusClear": "سم",
+    "interactionStatusWarning": "خبرداری",
+    "interactionStatusBlocked": "بند",
+    "interactionStatusUnavailable": "نه شتون"
   },
   "soap": {
     "clinicalNotes": "کلینیکي یادښتونه",
