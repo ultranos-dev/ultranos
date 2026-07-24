@@ -220,31 +220,29 @@ describe('patient.read', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                id: PATIENT_UUID,
-                name_local: 'Plain Name',
-                name_local_enc: 'Encrypted Name',
-                name_latin: null,
-                name_latin_enc: null,
-                name_phonetic: null,
-                name_phonetic_enc: null,
-                gender: 'male',
-                birth_date: '1990-01-01',
-                birth_date_enc: '1990-01-01',
-                birth_year_only: false,
-                telecom_phone: null,
-                guardian_id: null,
-                consent_version: null,
-                is_active: true,
-                created_by: 'doctor-001',
-                created_at: '2026-01-01T00:00:00Z',
-                updated_at: '2026-01-01T00:00:00Z',
-                mpi_warn: false,
-              },
-              error: null,
-            }),
+          single: vi.fn().mockResolvedValue({
+            data: {
+              id: PATIENT_UUID,
+              name_local: 'Plain Name',
+              name_local_enc: 'Encrypted Name',
+              name_latin: null,
+              name_latin_enc: null,
+              name_phonetic: null,
+              name_phonetic_enc: null,
+              gender: 'male',
+              birth_date: '1990-01-01',
+              birth_date_enc: '1990-01-01',
+              birth_year_only: false,
+              telecom_phone: null,
+              guardian_id: null,
+              consent_version: null,
+              is_active: true,
+              created_by: 'doctor-001',
+              created_at: '2026-01-01T00:00:00Z',
+              updated_at: '2026-01-01T00:00:00Z',
+              mpi_warn: false,
+            },
+            error: null,
           }),
         }),
       }),
@@ -279,7 +277,7 @@ describe('patient.read', () => {
     const result = await caller.patient.read({ patientId: PATIENT_UUID })
 
     expect(result.id).toBe(PATIENT_UUID)
-    expect(result.nameLocal).toBe('Decrypted Name')
+    expect(result._ultranos.nameLocal).toBe('Decrypted Name')
     expect(result.resourceType).toBe('Patient')
     expect(mockFromRow).toHaveBeenCalled()
   })
@@ -306,21 +304,19 @@ describe('patient.read', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                id: PATIENT_UUID,
-                name_local: 'Test',
-                gender: 'male',
-                birth_date: '1990-01-01',
-                birth_year_only: false,
-                is_active: true,
-                created_at: '2026-01-01T00:00:00Z',
-                updated_at: '2026-01-01T00:00:00Z',
-                mpi_warn: false,
-              },
-              error: null,
-            }),
+          single: vi.fn().mockResolvedValue({
+            data: {
+              id: PATIENT_UUID,
+              name_local: 'Test',
+              gender: 'male',
+              birth_date: '1990-01-01',
+              birth_year_only: false,
+              is_active: true,
+              created_at: '2026-01-01T00:00:00Z',
+              updated_at: '2026-01-01T00:00:00Z',
+              mpi_warn: false,
+            },
+            error: null,
           }),
         }),
       }),
@@ -339,11 +335,9 @@ describe('patient.read', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST116' },
-            }),
+          single: vi.fn().mockResolvedValue({
+            data: null,
+            error: { code: 'PGRST116' },
           }),
         }),
       }),
@@ -362,22 +356,20 @@ describe('patient.read', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                id: PATIENT_UUID,
-                name_local: 'Test',
-                name_local_enc: 'Test',
-                gender: 'male',
-                birth_date: '1990-01-01',
-                birth_year_only: false,
-                is_active: true,
-                created_at: '2026-01-01T00:00:00Z',
-                updated_at: '2026-01-01T00:00:00Z',
-                mpi_warn: false,
-              },
-              error: null,
-            }),
+          single: vi.fn().mockResolvedValue({
+            data: {
+              id: PATIENT_UUID,
+              name_local: 'Test',
+              name_local_enc: 'Test',
+              gender: 'male',
+              birth_date: '1990-01-01',
+              birth_year_only: false,
+              is_active: true,
+              created_at: '2026-01-01T00:00:00Z',
+              updated_at: '2026-01-01T00:00:00Z',
+              mpi_warn: false,
+            },
+            error: null,
           }),
         }),
       }),

@@ -25,6 +25,7 @@ vi.mock('next-intl', () => ({
       gender: 'Gender',
       phone: 'Phone',
       lastVisit: 'Last Visit',
+      lastUpdatedCol: 'Last Updated',
       status: 'Status',
       allergies: 'Allergies',
       active: 'Active',
@@ -41,9 +42,17 @@ vi.mock('next-intl', () => ({
       noPatients: 'No patients registered yet',
       noPatientsDescription: 'Get started by registering your first patient.',
       noResults: 'No patients match your filters',
+      noResultsDescription: 'Try adjusting your search or filters.',
+      clearFilters: 'Clear filters',
       previous: 'Previous',
       next: 'Next',
       allergyFlag: 'Has allergies',
+      nidMissingBadge: 'NID Missing',
+      syncing: 'Syncing...',
+      statTotal: 'Total patients',
+      statActive: 'Active',
+      statWithAllergies: 'With allergies',
+      statRecentlyUpdated: 'Recently updated',
     }
     return (key: string, params?: Record<string, unknown>) => {
       const val = messages[key] ?? key
@@ -53,6 +62,54 @@ vi.mock('next-intl', () => ({
       return val
     }
   },
+}))
+
+// Mock EmptyState from ui-kit so we don't pull in the ui-kit Button/icon chain
+vi.mock('@ultranos/ui-kit/components/ui/empty-state', () => ({
+  EmptyState: ({
+    title,
+    description,
+    action,
+  }: {
+    title: string
+    description?: string
+    action?: { label: string; onClick: () => void }
+  }) => (
+    <div data-testid="empty-state">
+      <p>{title}</p>
+      {description && <p>{description}</p>}
+      {action && <button onClick={action.onClick}>{action.label}</button>}
+    </div>
+  ),
+}))
+
+// Mock Lucide icons from ui-kit
+vi.mock('@ultranos/ui-kit/icons', () => ({
+  Users: () => <svg data-testid="icon-users" />,
+  FileSearch: () => <svg data-testid="icon-file-search" />,
+}))
+
+// Mock app-local Card
+vi.mock('@/components/Card', () => ({
+  Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <div data-testid="stat-card" className={className}>
+      {children}
+    </div>
+  ),
+}))
+
+// Mock formatDate / formatRelativeTime
+vi.mock('@ultranos/ui-kit', () => ({
+  formatDate: (_iso: string, _locale: string) => {
+    // Parse the ISO date and return DD/MM/YYYY matching the real formatDate('en') output
+    const d = new Date(_iso)
+    if (isNaN(d.getTime())) return 'Invalid Date'
+    const day = String(d.getUTCDate()).padStart(2, '0')
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0')
+    const year = d.getUTCFullYear()
+    return `${day}/${month}/${year}`
+  },
+  formatRelativeTime: (iso: string) => iso,
 }))
 
 // Mock Dexie DB
@@ -66,6 +123,14 @@ vi.mock('@/lib/db', () => ({
     allergyIntolerances: { toArray: (...args: unknown[]) => mockAllergyToArray(...args) },
     encounters: { toArray: (...args: unknown[]) => mockEncountersToArray(...args) },
   },
+}))
+
+// Mock use-patient-list-sync
+vi.mock('@/lib/use-patient-list-sync', () => ({
+  usePatientListSync: () => ({
+    syncAll: vi.fn().mockResolvedValue([]),
+    cancel: vi.fn(),
+  }),
 }))
 
 function makePatient(overrides: Record<string, unknown> = {}) {
@@ -179,7 +244,7 @@ describe('PatientDirectory', () => {
     }, { timeout: 1000 })
   })
 
-  it('filters by status', async () => {
+  it('filters by status via pill tab-bar', async () => {
     const { PatientDirectory } = await import(
       '@/components/patients/PatientDirectory'
     )
@@ -190,8 +255,9 @@ describe('PatientDirectory', () => {
       expect(screen.getByText('Fatima')).toBeDefined()
     })
 
-    const statusSelect = screen.getByLabelText('Status')
-    fireEvent.change(statusSelect, { target: { value: 'active' } })
+    // Click the "Active" pill tab
+    const activeTab = screen.getByRole('button', { name: 'Active' })
+    fireEvent.click(activeTab)
 
     await vi.waitFor(() => {
       expect(screen.getByText('Ahmad')).toBeDefined()
@@ -206,8 +272,8 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      const registerLinks = screen.getAllByText('Register New Patient')
-      expect(registerLinks.length).toBeGreaterThanOrEqual(1)
+      const registerBtns = screen.getAllByText('Register New Patient')
+      expect(registerBtns.length).toBeGreaterThanOrEqual(1)
     })
   })
 
@@ -228,7 +294,6 @@ describe('PatientDirectory', () => {
     )
     render(<PatientDirectory />)
 
-    // Rendered via formatDate(..., 'en') → MENA Gregorian DD/MM/YYYY.
     await vi.waitFor(() => {
       expect(screen.getByText('Ahmad')).toBeDefined()
       expect(screen.getByText('20/06/2026')).toBeDefined()
@@ -284,7 +349,9 @@ describe('PatientDirectory', () => {
     })
   })
 
-  it('shows empty state when no patients exist', async () => {
+  // ─── New: EmptyState ──────────────────────────────────────────────────────
+
+  it('shows EmptyState (zero-data) when no patients exist', async () => {
     mockPatientsToArray.mockResolvedValue([])
     mockAllergyToArray.mockResolvedValue([])
 
@@ -294,7 +361,155 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
+      expect(screen.getByTestId('empty-state')).toBeDefined()
       expect(screen.getByText('No patients registered yet')).toBeDefined()
     })
+  })
+
+  it('zero-data EmptyState renders a Register New Patient action', async () => {
+    mockPatientsToArray.mockResolvedValue([])
+    mockAllergyToArray.mockResolvedValue([])
+
+    const { PatientDirectory } = await import(
+      '@/components/patients/PatientDirectory'
+    )
+    render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      // Both the header CTA and the EmptyState action render "Register New Patient"
+      const btns = screen.getAllByRole('button', { name: 'Register New Patient' })
+      expect(btns.length).toBeGreaterThanOrEqual(1)
+    })
+  })
+
+  it('shows EmptyState (no-results) when filters produce empty result', async () => {
+    // patient1 is active, patient2 is inactive — 3 active patients needed to hide register btn
+    const p3 = makePatient({ id: 'p-3', _ultranos: { nameGiven: 'Omar', isActive: true } })
+    mockPatientsToArray.mockResolvedValue([patient1, p3, makePatient({ id: 'p-4', _ultranos: { nameGiven: 'Sara', isActive: true } })])
+    mockAllergyToArray.mockResolvedValue([])
+
+    const { PatientDirectory } = await import(
+      '@/components/patients/PatientDirectory'
+    )
+    render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('Ahmad')).toBeDefined()
+    })
+
+    // Click "Inactive" tab — all patients are active so result is empty
+    fireEvent.click(screen.getByRole('button', { name: 'Inactive' }))
+
+    await vi.waitFor(() => {
+      expect(screen.getByTestId('empty-state')).toBeDefined()
+      expect(screen.getByText('No patients match your filters')).toBeDefined()
+    })
+  })
+
+  it('no-results EmptyState renders a Clear filters action', async () => {
+    const p3 = makePatient({ id: 'p-3', _ultranos: { nameGiven: 'Omar', isActive: true } })
+    mockPatientsToArray.mockResolvedValue([patient1, p3, makePatient({ id: 'p-4', _ultranos: { nameGiven: 'Sara', isActive: true } })])
+    mockAllergyToArray.mockResolvedValue([])
+
+    const { PatientDirectory } = await import(
+      '@/components/patients/PatientDirectory'
+    )
+    render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('Ahmad')).toBeDefined()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Inactive' }))
+
+    await vi.waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Clear filters' })).toBeDefined()
+    })
+  })
+
+  // ─── New: Stat strip ──────────────────────────────────────────────────────
+
+  it('renders stat strip with total count when patients exist', async () => {
+    const { PatientDirectory } = await import(
+      '@/components/patients/PatientDirectory'
+    )
+    render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      expect(screen.getByTestId('stat-strip')).toBeDefined()
+      // patient1 + patient2 = 2 total
+      expect(screen.getByTestId('stat-total').textContent).toBe('2')
+    })
+  })
+
+  it('stat strip shows correct active count', async () => {
+    // patient1 active, patient2 inactive
+    const { PatientDirectory } = await import(
+      '@/components/patients/PatientDirectory'
+    )
+    render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      expect(screen.getByTestId('stat-active').textContent).toBe('1')
+    })
+  })
+
+  it('stat strip shows correct with-allergies count', async () => {
+    // patient1 has allergy (from allergyIntolerances mock), patient2 does not
+    const { PatientDirectory } = await import(
+      '@/components/patients/PatientDirectory'
+    )
+    render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      expect(screen.getByTestId('stat-allergies').textContent).toBe('1')
+    })
+  })
+
+  it('stat strip does NOT render when there are no patients', async () => {
+    mockPatientsToArray.mockResolvedValue([])
+    mockAllergyToArray.mockResolvedValue([])
+
+    const { PatientDirectory } = await import(
+      '@/components/patients/PatientDirectory'
+    )
+    render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      expect(screen.getByTestId('empty-state')).toBeDefined()
+    })
+
+    expect(screen.queryByTestId('stat-strip')).toBeNull()
+  })
+
+  // ─── New: Status pill tab-bar ─────────────────────────────────────────────
+
+  it('status tab-bar renders All / Active / Inactive tabs', async () => {
+    const { PatientDirectory } = await import(
+      '@/components/patients/PatientDirectory'
+    )
+    render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('Ahmad')).toBeDefined()
+    })
+
+    expect(screen.getByRole('button', { name: 'All' })).toBeDefined()
+    expect(screen.getByRole('button', { name: 'Active' })).toBeDefined()
+    expect(screen.getByRole('button', { name: 'Inactive' })).toBeDefined()
+  })
+
+  it('"All" tab is aria-pressed initially', async () => {
+    const { PatientDirectory } = await import(
+      '@/components/patients/PatientDirectory'
+    )
+    render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('Ahmad')).toBeDefined()
+    })
+
+    const allTab = screen.getByRole('button', { name: 'All' }) as HTMLButtonElement
+    expect(allTab.getAttribute('aria-pressed')).toBe('true')
   })
 })

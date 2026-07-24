@@ -2,12 +2,13 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { formatDate } from '@ultranos/ui-kit'
 import { Beaker, Check, Settings } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import type { NotificationItem } from '@/lib/notification-api'
 import { db } from '@/lib/db'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
@@ -20,11 +21,13 @@ const SYSTEM_TYPES = ['SYNC_CONFLICT', 'CONSENT_CHANGE', 'ALLERGY_UPDATE'] as co
 
 type TabKey = 'all' | 'lab' | 'rx' | 'system'
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'lab', label: 'Lab Results' },
-  { key: 'rx', label: 'Prescriptions' },
-  { key: 'system', label: 'System' },
+type TabDef = { key: TabKey; labelKey: string }
+
+const TABS: TabDef[] = [
+  { key: 'all', labelKey: 'tabAll' },
+  { key: 'lab', labelKey: 'tabLabResults' },
+  { key: 'rx', labelKey: 'tabPrescriptions' },
+  { key: 'system', labelKey: 'tabSystem' },
 ]
 
 function filterByTab(notifications: NotificationItem[], tab: TabKey): NotificationItem[] {
@@ -36,15 +39,15 @@ function filterByTab(notifications: NotificationItem[], tab: TabKey): Notificati
 
 // --- Notification type display helpers ---
 
-function notificationLabel(type: string): string {
+function notificationLabelKey(type: string): string {
   switch (type) {
-    case 'LAB_RESULT_AVAILABLE': return 'Lab Result Available'
-    case 'LAB_RESULT_ESCALATION': return 'Lab Result — Urgent'
-    case 'PRESCRIPTION_READY': return 'Prescription Ready'
-    case 'CONSENT_CHANGE': return 'Consent Updated'
-    case 'SYNC_CONFLICT': return 'Sync Conflict'
-    case 'ALLERGY_UPDATE': return 'Allergy Update'
-    default: return 'Notification'
+    case 'LAB_RESULT_AVAILABLE': return 'typeLab'
+    case 'LAB_RESULT_ESCALATION': return 'typeLabUrgent'
+    case 'PRESCRIPTION_READY': return 'typePrescription'
+    case 'CONSENT_CHANGE': return 'typeConsent'
+    case 'SYNC_CONFLICT': return 'typeSyncConflict'
+    case 'ALLERGY_UPDATE': return 'typeAllergyUpdate'
+    default: return 'typeDefault'
   }
 }
 
@@ -101,6 +104,7 @@ function TypeIcon({ type, id }: { type: string; id: string }) {
 export function NotificationCenter() {
   const [activeTab, setActiveTab] = useState<TabKey>('all')
   const router = useRouter()
+  const t = useTranslations('notificationCenter')
 
   const {
     notifications,
@@ -150,16 +154,16 @@ export function NotificationCenter() {
       <div className="flex items-center justify-between">
         <div>
           <span className="text-sm text-muted-foreground">
-            {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
+            {unreadCount > 0 ? t('unreadCount', { count: unreadCount }) : t('allCaughtUp')}
           </span>
         </div>
         <Button
           variant="primary"
           disabled={unreadCount === 0}
           onClick={acknowledgeAll}
-          aria-label="Mark All Read"
+          aria-label={t('markAllReadAria')}
         >
-          Mark All Read
+          {t('markAllRead')}
         </Button>
       </div>
 
@@ -168,6 +172,7 @@ export function NotificationCenter() {
         {TABS.map(tab => (
           <button
             key={tab.key}
+            type="button"
             role="tab"
             aria-selected={activeTab === tab.key}
             onClick={() => setActiveTab(tab.key)}
@@ -177,28 +182,26 @@ export function NotificationCenter() {
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>
 
       {/* Error state */}
       {error && (
-        <div className="rounded-xl bg-warning/10 px-4 py-3 text-sm text-warning">
-          Notifications unavailable offline. Please check your connection.
-        </div>
+        <Alert variant="warning" role="alert">{t('offlineError')}</Alert>
       )}
 
       {/* Loading state */}
       {loading && (
         <div className="py-12 text-center text-sm text-muted-foreground">
-          Loading notifications...
+          {t('loadingNotifications')}
         </div>
       )}
 
       {/* Empty state */}
       {!loading && filtered.length === 0 && !error && (
-        <EmptyState title="No notifications" size="sm" />
+        <EmptyState title={t('noNotifications')} size="sm" />
       )}
 
       {/* Notification list */}
@@ -227,6 +230,7 @@ function NotificationRow({
   onClick: (n: NotificationItem) => void
 }) {
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
+  const tNotif = useTranslations('notifications')
   const isUnread = notification.status !== 'ACKNOWLEDGED'
   const isEscalation = notification.type === 'LAB_RESULT_ESCALATION'
   const deepLink = getDeepLink(notification)
@@ -251,7 +255,7 @@ function NotificationRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className={`text-sm font-medium ${isEscalation ? 'text-destructive' : 'text-foreground'}`}>
-            {notificationLabel(notification.type)}
+            {tNotif(notificationLabelKey(notification.type))}
           </p>
           {isUnread && (
             <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />

@@ -12,6 +12,7 @@ import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { pullPatientChanges } from '@/lib/sync-pull'
 import { auditPhiAccess, AuditAction } from '@/lib/audit'
 import type { AuditResourceType } from '@/lib/audit'
+import { ConflictDiffView } from '@/components/conflicts/ConflictDiffView'
 
 // --- PHI-safe resource labels (AC: 9) ---
 
@@ -25,26 +26,6 @@ const RESOURCE_LABELS: Record<string, string> = {
   Consent: 'Consent',
   DiagnosticReport: 'Lab Result',
   Patient: 'Demographics',
-}
-
-/** Route map for conflict resolution — each resource type links to its clinical view. */
-const RESOURCE_ROUTES: Record<string, (resourceId: string) => string> = {
-  Encounter: (id) => `/encounter/${id}`,
-  ClinicalImpression: (id) => `/encounter/${id}`,
-  Observation: (id) => `/encounter/${id}`,
-  MedicationRequest: (id) => `/encounter/${id}`,
-  AllergyIntolerance: (id) => `/encounter/${id}`,
-  Condition: (id) => `/encounter/${id}`,
-  Consent: (id) => `/consent/${id}`,
-  DiagnosticReport: (id) => `/lab/${id}`,
-  Patient: (id) => `/patient/${id}`,
-}
-
-function getConflictRoute(entry: SyncQueueEntry): string | null {
-  const routeFn = RESOURCE_ROUTES[entry.resourceType]
-  if (!routeFn) return null
-  const id = entry.resourceId.split('/').pop() ?? entry.resourceId
-  return routeFn(id)
 }
 
 function safeResourceLabel(resourceType: string): string {
@@ -175,6 +156,7 @@ export function SyncDashboard() {
   const { isDashboardOpen, setDashboardOpen, lastSyncedAt, isDraining, setIsDraining } = useSyncStore()
   const [queueItems, setQueueItems] = useState<SyncQueueEntry[]>([])
   const [discardingId, setDiscardingId] = useState<string | null>(null)
+  const [resolvingId, setResolvingId] = useState<string | null>(null)
   const [phase, setPhase] = useState<'idle' | 'syncing' | 'complete' | 'error'>('idle')
   // Resource groups are collapsed by default; track which are expanded.
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
@@ -460,9 +442,10 @@ export function SyncDashboard() {
                 {group.items.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-start gap-3 border-t border-border px-5 py-3"
+                    className="border-t border-border"
                     data-testid="sync-item"
                   >
+                    <div className="flex items-start gap-3 px-5 py-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm text-foreground">{safeDescription(item)}</p>
                       <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -492,26 +475,20 @@ export function SyncDashboard() {
                         </Button>
                       )}
 
-                      {/* Conflict link (AC: 5) */}
-                      {item.conflictFlag && (() => {
-                        const route = getConflictRoute(item)
-                        return route ? (
-                          <a
-                            href={route}
-                            className="rounded-md bg-warning/10 px-2 py-1 text-xs font-medium text-warning hover:bg-warning/20"
-                            data-testid="resolve-conflict-link"
-                          >
-                            Resolve
-                          </a>
-                        ) : (
-                          <span
-                            className="rounded-md bg-warning/10 px-2 py-1 text-xs text-warning"
-                            data-testid="resolve-conflict-link"
-                          >
-                            Resolve in clinical view
-                          </span>
-                        )
-                      })()}
+                      {/* Resolve — opens the inline chooser (keep both / local / remote) */}
+                      {item.conflictFlag && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          type="button"
+                          onClick={() => setResolvingId(resolvingId === item.id ? null : item.id)}
+                          aria-expanded={resolvingId === item.id}
+                          className="text-warning hover:text-warning"
+                          data-testid="resolve-conflict-btn"
+                        >
+                          {resolvingId === item.id ? 'Close' : 'Resolve'}
+                        </Button>
+                      )}
 
                       {/* Discard (AC: 4) */}
                       {item.status === 'failed' && (
@@ -550,6 +527,17 @@ export function SyncDashboard() {
                         </>
                       )}
                     </div>
+                    </div>
+
+                    {/* Inline conflict resolver — lets the user CHOOSE which version wins */}
+                    {item.conflictFlag && resolvingId === item.id && (
+                      <div className="border-t border-border/60 bg-muted/30 px-5 py-4" data-testid="resolve-conflict-panel">
+                        <ConflictDiffView
+                          entry={item}
+                          onResolved={() => { setResolvingId(null); void loadItems() }}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
                 </div>

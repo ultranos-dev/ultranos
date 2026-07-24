@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Camera, Upload, Trash2, RotateCcw } from '@ultranos/ui-kit/icons'
+import { Camera, Upload, Trash2, User, Check, RotateCcw } from '@ultranos/ui-kit/icons'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@ultranos/ui-kit/components/ui/dialog'
 import { Alert } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
@@ -17,7 +17,10 @@ type Step = 'source' | 'camera' | 'crop' | 'uploading' | 'error'
 interface Props {
   open: boolean
   patientId: string
+  /** Storage key of the current photo, or null. Drives the Remove affordance. */
   currentPhotoKey: string | null
+  /** Signed URL for the current photo (from the avatar), shown in the preview. */
+  currentPhotoSrc?: string | null
   lastKnownUpdate: string
   onClose: () => void
   onUpdated: (photoKey: string | null, lastUpdated: string) => void
@@ -36,7 +39,7 @@ function dataUrlToBlob(dataUrl: string): Blob {
 }
 
 export function PatientPhotoUploadModal({
-  open, patientId, currentPhotoKey, lastKnownUpdate, onClose, onUpdated,
+  open, patientId, currentPhotoKey, currentPhotoSrc, lastKnownUpdate, onClose, onUpdated,
 }: Props) {
   const t = useTranslations('patientPhoto')
   const [step, setStep] = useState<Step>('source')
@@ -134,78 +137,124 @@ export function PatientPhotoUploadModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) close() }}>
-      <DialogContent className="max-w-sm w-full gap-0 p-0 overflow-hidden">
-        <DialogHeader className="px-5 pt-5 pb-3">
-          <DialogTitle>{t('title')}</DialogTitle>
+      <DialogContent aria-describedby={undefined} className="sm:max-w-md max-h-[90vh] overflow-y-auto gap-0 p-0">
+        <DialogHeader className="px-6 pt-6 pb-1">
+          <DialogTitle className="text-lg font-semibold">{t('title')}</DialogTitle>
         </DialogHeader>
 
-        {!online && <div className="px-5 pb-3"><Alert variant="warning">{t('offline')}</Alert></div>}
+        {!online && (
+          <div className="px-6 pt-3">
+            <Alert variant="warning">{t('offline')}</Alert>
+          </div>
+        )}
 
+        {/* ── Source: current photo + actions ──────────────────────────── */}
         {step === 'source' && (
-          <div className="flex flex-col gap-4 px-5 pb-5">
-            <div className="mx-auto h-24 w-24 overflow-hidden rounded-full bg-muted flex items-center justify-center">
-              {/* Current photo preview is rendered by PatientAvatar upstream; here show a neutral placeholder. */}
-              <Camera className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+          <div className="flex flex-col items-center gap-6 px-6 pb-6 pt-4">
+            <div className="h-28 w-28 shrink-0 overflow-hidden rounded-full bg-muted ring-4 ring-primary/15">
+              {currentPhotoSrc ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={currentPhotoSrc} alt="" className="h-full w-full object-cover" aria-hidden="true" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <User className="h-11 w-11 text-muted-foreground" aria-hidden="true" />
+                </div>
+              )}
             </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              <Button variant="outline" type="button" disabled={actionsDisabled}
-                onClick={() => fileInputRef.current?.click()}>
-                <Upload className="h-4 w-4" /> {t('uploadFile')}
+
+            <div className="flex w-full flex-col gap-2">
+              <Button
+                variant="primary" fullWidth type="button" className="gap-2"
+                disabled={actionsDisabled} onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-4 w-4" aria-hidden="true" /> {t('uploadFile')}
               </Button>
-              <Button variant="outline" type="button" disabled={actionsDisabled} onClick={startCamera}>
-                <Camera className="h-4 w-4" /> {t('takePhoto')}
+              <Button
+                variant="outline" fullWidth type="button" className="gap-2"
+                disabled={actionsDisabled} onClick={startCamera}
+              >
+                <Camera className="h-4 w-4" aria-hidden="true" /> {t('takePhoto')}
               </Button>
               {currentPhotoKey && (
-                <Button variant="danger" type="button" disabled={actionsDisabled}
-                  onClick={() => (confirmRemove ? void doRemove() : setConfirmRemove(true))}>
-                  <Trash2 className="h-4 w-4" /> {confirmRemove ? t('confirmRemove') : t('remove')}
+                <Button
+                  variant="ghost" fullWidth type="button"
+                  className="gap-2 text-destructive hover:bg-destructive/10"
+                  disabled={actionsDisabled}
+                  onClick={() => (confirmRemove ? void doRemove() : setConfirmRemove(true))}
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  {confirmRemove ? t('confirmRemove') : t('remove')}
                 </Button>
               )}
             </div>
+
+            <p className="text-center text-xs text-muted-foreground">{t('formatsHint')}</p>
           </div>
         )}
 
+        {/* ── Camera: live preview ─────────────────────────────────────── */}
         {step === 'camera' && (
-          <div className="flex flex-col items-center gap-3 px-5 pb-5">
-            {webcam.state.status === 'starting' && <p className="text-sm text-muted-foreground">{t('cameraStarting')}</p>}
-            <video ref={videoRef} className="w-full rounded-xl bg-neutral-900" playsInline muted />
-            <div className="flex justify-end gap-2 self-stretch">
-              <Button variant="outline" type="button" onClick={() => { webcam.stop(); setStep('source') }}>{t('back')}</Button>
-              <Button variant="primary" type="button" onClick={captureFromCamera}>{t('capture')}</Button>
+          <div className="flex flex-col gap-4 px-6 pb-6 pt-4">
+            <div className="relative mx-auto aspect-square w-full max-w-[300px] overflow-hidden rounded-xl bg-neutral-900">
+              <video ref={videoRef} className="h-full w-full object-cover" playsInline muted />
+              {webcam.state.status === 'starting' && (
+                <div className="absolute inset-0 flex items-center justify-center text-sm text-white/80">
+                  {t('cameraStarting')}
+                </div>
+              )}
+              {/* Circular framing guide */}
+              <div className="pointer-events-none absolute inset-5 rounded-full ring-2 ring-white/70" aria-hidden="true" />
+            </div>
+            <div className="flex justify-between gap-2">
+              <Button variant="outline" type="button" onClick={() => { webcam.stop(); setStep('source') }}>
+                {t('back')}
+              </Button>
+              <Button variant="primary" type="button" className="gap-2" onClick={captureFromCamera}>
+                <Camera className="h-4 w-4" aria-hidden="true" /> {t('capture')}
+              </Button>
             </div>
           </div>
         )}
 
+        {/* ── Crop: circular guide (matches the avatar) ────────────────── */}
         {step === 'crop' && (
-          <>
-            <div className="flex justify-center px-5">
-              <PhotoCropper ref={cropperRef} rawDataUrl={rawDataUrl} onCropped={doUpload} />
+          <div className="flex flex-col px-6 pt-2">
+            <p className="pb-3 text-center text-xs text-muted-foreground">{t('cropHint')}</p>
+            <div className="flex justify-center">
+              <PhotoCropper ref={cropperRef} rawDataUrl={rawDataUrl} onCropped={doUpload} shape="circle" />
             </div>
-            <div className="flex justify-end gap-2 px-5 py-4">
+            <div className="flex justify-between gap-2 pb-6 pt-4">
               <Button variant="outline" type="button" onClick={() => setStep('source')}>{t('back')}</Button>
-              <Button variant="primary" type="button" onClick={() => cropperRef.current?.crop()}>{t('usePhoto')}</Button>
+              <Button variant="primary" type="button" className="gap-2" onClick={() => cropperRef.current?.crop()}>
+                <Check className="h-4 w-4" aria-hidden="true" /> {t('usePhoto')}
+              </Button>
             </div>
-          </>
-        )}
-
-        {step === 'uploading' && (
-          <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-muted-foreground">
-            <RotateCcw className="h-4 w-4 animate-spin" aria-hidden="true" /> {t('saving')}
           </div>
         )}
 
+        {/* ── Uploading ────────────────────────────────────────────────── */}
+        {step === 'uploading' && (
+          <div className="flex flex-col items-center justify-center gap-3 px-6 py-12">
+            <RotateCcw className="h-6 w-6 animate-spin text-primary" aria-hidden="true" />
+            <p className="text-sm text-muted-foreground">{t('saving')}</p>
+          </div>
+        )}
+
+        {/* ── Error ────────────────────────────────────────────────────── */}
         {step === 'error' && (
-          <div className="flex flex-col gap-4 px-5 py-5">
+          <div className="flex flex-col gap-4 px-6 py-6">
             <Alert variant="destructive">{errorMsg}</Alert>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-between gap-2">
               <Button variant="outline" type="button" onClick={close}>{t('cancel')}</Button>
               <Button variant="primary" type="button" onClick={() => setStep('source')}>{t('retry')}</Button>
             </div>
           </div>
         )}
 
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
-          onChange={onFilePicked} aria-hidden="true" tabIndex={-1} />
+        <input
+          ref={fileInputRef} type="file" accept="image/*" className="hidden"
+          onChange={onFilePicked} aria-hidden="true" tabIndex={-1}
+        />
       </DialogContent>
     </Dialog>
   )

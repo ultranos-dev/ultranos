@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/Card'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Users, FileSearch } from '@ultranos/ui-kit/icons'
 import { formatDate, formatRelativeTime } from '@ultranos/ui-kit'
 import { db } from '@/lib/db'
 import type { LocalPatient } from '@/lib/db'
@@ -219,6 +221,22 @@ export function PatientDirectory() {
     }))
   }, [patients, allergyPatientIds, lastVisitMap])
 
+  // Stat counts derived from already-loaded rows (no new fetch)
+  // - total: all patients
+  // - active: patients with isActive !== false
+  // - withAllergies: patients flagged with hasAllergies
+  // - recentlyUpdated: patients whose meta.lastUpdated is more recent than lastVisit.
+  //   This is "modified more recently than their last visit" — NOT a sync-queue metric.
+  const stats = useMemo(() => {
+    const total = rows.length
+    const active = rows.filter((r) => r.status === 'active').length
+    const withAllergies = rows.filter((r) => r.hasAllergies).length
+    const recentlyUpdated = rows.filter(
+      (r) => r.lastUpdated && (!r.lastVisit || r.lastUpdated > r.lastVisit)
+    ).length
+    return { total, active, withAllergies, recentlyUpdated }
+  }, [rows])
+
   // Filter
   const filtered = useMemo(() => {
     let result = rows
@@ -307,6 +325,18 @@ export function PatientDirectory() {
     [router, locale]
   )
 
+  const handleRegisterNew = useCallback(() => {
+    router.push(`/${locale}/register-patient`)
+  }, [router, locale])
+
+  const handleClearFilters = useCallback(() => {
+    setSearchQuery('')
+    setStatusFilter('all')
+    setAllergyFilter('all')
+    setVisitFilter('all')
+    setPage(1)
+  }, [])
+
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -319,6 +349,7 @@ export function PatientDirectory() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Header row */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-foreground">
@@ -332,17 +363,57 @@ export function PatientDirectory() {
           )}
         </div>
         {showRegisterButton && (
-          <Link
-            href={`/${locale}/register-patient`}
-            className="inline-flex items-center justify-center rounded-pill bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          >
+          <Button variant="primary" onClick={handleRegisterNew}>
             {t('registerNew')}
-          </Link>
+          </Button>
         )}
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-wrap gap-3">
+      {/* Stat strip — derived from already-loaded patient rows */}
+      {rows.length > 0 && (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4" data-testid="stat-strip">
+          <Card>
+            <p className="text-xs text-muted-foreground">{t('statTotal')}</p>
+            <p className="mt-1 text-2xl font-bold text-foreground" data-testid="stat-total">{stats.total}</p>
+          </Card>
+          <Card>
+            <p className="text-xs text-muted-foreground">{t('statActive')}</p>
+            <p className="mt-1 text-2xl font-bold text-foreground" data-testid="stat-active">{stats.active}</p>
+          </Card>
+          <Card>
+            <p className="text-xs text-muted-foreground">{t('statWithAllergies')}</p>
+            <p className="mt-1 text-2xl font-bold text-foreground" data-testid="stat-allergies">{stats.withAllergies}</p>
+          </Card>
+          <Card>
+            <p className="text-xs text-muted-foreground">{t('statRecentlyUpdated')}</p>
+            <p className="mt-1 text-2xl font-bold text-foreground" data-testid="stat-recently-updated">{stats.recentlyUpdated}</p>
+          </Card>
+        </div>
+      )}
+
+      {/* Status pill tab-bar + secondary filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Status pill tab-bar */}
+        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {(['all', 'active', 'inactive'] as StatusFilter[]).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => { setStatusFilter(tab); setPage(1) }}
+              className={[
+                'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                statusFilter === tab
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              ].join(' ')}
+              aria-pressed={statusFilter === tab}
+            >
+              {t(tab as 'all' | 'active' | 'inactive')}
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
         <input
           type="text"
           dir="auto"
@@ -353,17 +424,7 @@ export function PatientDirectory() {
           aria-label={t('searchPlaceholder')}
         />
 
-        <select
-          value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value as StatusFilter); setPage(1) }}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-          aria-label={t('status')}
-        >
-          <option value="all">{t('all')}</option>
-          <option value="active">{t('active')}</option>
-          <option value="inactive">{t('inactive')}</option>
-        </select>
-
+        {/* Secondary filters */}
         <select
           value={allergyFilter}
           onChange={(e) => { setAllergyFilter(e.target.value as AllergyFilter); setPage(1) }}
@@ -390,30 +451,23 @@ export function PatientDirectory() {
 
       {/* Empty states */}
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border py-16">
-          <p className="mb-2 text-lg font-medium text-foreground">
-            {t('noPatients')}
-          </p>
-          <p className="mb-6 text-sm text-muted-foreground">
-            {t('noPatientsDescription')}
-          </p>
-          <Link
-            href={`/${locale}/register-patient`}
-            className="inline-flex items-center justify-center rounded-pill bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          >
-            {t('registerNew')}
-          </Link>
-        </div>
+        <EmptyState
+          icon={Users}
+          title={t('noPatients')}
+          description={t('noPatientsDescription')}
+          action={{ label: t('registerNew'), onClick: handleRegisterNew }}
+        />
       ) : sorted.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border py-16">
-          <p className="text-lg font-medium text-foreground">
-            {t('noResults')}
-          </p>
-        </div>
+        <EmptyState
+          icon={FileSearch}
+          title={t('noResults')}
+          description={t('noResultsDescription')}
+          action={{ label: t('clearFilters'), onClick: handleClearFilters }}
+        />
       ) : (
         <>
           {/* Table */}
-          <div className="overflow-x-auto rounded-2xl border border-border">
+          <div className="overflow-x-auto rounded-xl border border-border">
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-muted">
                 <tr>
@@ -436,7 +490,7 @@ export function PatientDirectory() {
                       {label}
                       {sortField === field && (
                         <span className="ms-1">
-                          {sortDir === 'asc' ? '\u2191' : '\u2193'}
+                          {sortDir === 'asc' ? '↑' : '↓'}
                         </span>
                       )}
                     </th>

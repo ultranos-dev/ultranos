@@ -74,6 +74,11 @@ async function backgroundPull() {
       // staleness when online, so a silent failure would otherwise hide a
       // Hub-unreachable state (a false "you're in sync").
       if (r.errors.length > 0) {
+        // Surface WHY the pull reported errors instead of masking it behind the
+        // generic banner. These are operational messages (resource type + opaque
+        // UUID + error), never patient content — safe to log. A 200 from the Hub
+        // with errors here means a client-side apply failure, not "Hub unreachable".
+        console.warn('[sync] patient pull reported errors:', r.errors)
         if (navigator.onLine) setSyncError('HUB_REFRESH_FAILED')
         return
       }
@@ -90,9 +95,11 @@ async function backgroundPull() {
     await syncAllPatientsToDb(undefined, { rethrow: true })
     setSyncError(null)
     markSynced()
-  } catch {
+  } catch (err) {
     // We were online yet the refresh failed — surface it rather than silently
     // marking synced. A transient blip clears on the next successful heartbeat.
+    // Log the real cause (message only — no PHI) so this isn't a black box.
+    console.warn('[sync] background pull failed:', err instanceof Error ? err.message : err)
     if (navigator.onLine) setSyncError('HUB_REFRESH_FAILED')
   }
 }

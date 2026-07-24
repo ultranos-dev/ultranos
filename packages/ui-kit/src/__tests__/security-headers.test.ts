@@ -96,6 +96,43 @@ describe('getSecurityHeaders', () => {
     expect(csp!.value).not.toContain('/api/trpc')
   })
 
+  it('adds supabaseOrigin to connect-src and img-src when provided', () => {
+    const rules = getSecurityHeaders({
+      hubApiOrigin: 'https://hub.example.com',
+      supabaseOrigin: 'https://abc123.supabase.co',
+    })
+    const csp = rules[0].headers.find(h => h.key === 'Content-Security-Policy-Report-Only')!
+    expect(csp.value).toContain("connect-src 'self' https://hub.example.com https://abc123.supabase.co")
+    expect(csp.value).toContain("img-src 'self' data: blob: https://abc123.supabase.co")
+  })
+
+  it('strips path from supabaseOrigin (origin only)', () => {
+    const rules = getSecurityHeaders({
+      hubApiOrigin: 'https://hub.example.com',
+      supabaseOrigin: 'https://abc123.supabase.co/storage/v1',
+    })
+    const csp = rules[0].headers.find(h => h.key === 'Content-Security-Policy-Report-Only')!
+    expect(csp.value).toContain('https://abc123.supabase.co')
+    expect(csp.value).not.toContain('/storage/v1')
+  })
+
+  it('omits supabase from img-src/connect-src when supabaseOrigin is not provided', () => {
+    const rules = getSecurityHeaders(defaultConfig)
+    const csp = rules[0].headers.find(h => h.key === 'Content-Security-Policy-Report-Only')!
+    expect(csp.value).toContain("connect-src 'self' https://hub.example.com;")
+    expect(csp.value).toContain("img-src 'self' data: blob:;")
+    expect(csp.value).not.toContain('supabase')
+  })
+
+  it('throws on supabaseOrigin containing semicolons (CSP injection)', () => {
+    expect(() =>
+      getSecurityHeaders({
+        hubApiOrigin: 'https://hub.example.com',
+        supabaseOrigin: "https://evil.co; script-src 'unsafe-eval'",
+      }),
+    ).toThrow(/must not contain semicolons/)
+  })
+
   it('throws on hubApiOrigin containing semicolons (CSP injection)', () => {
     expect(() =>
       getSecurityHeaders({ hubApiOrigin: "http://evil.com; script-src 'unsafe-eval'" }),

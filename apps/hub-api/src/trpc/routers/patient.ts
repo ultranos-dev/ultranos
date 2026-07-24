@@ -825,25 +825,29 @@ export const patientRouter = createTRPCRouter({
           'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
           'mpi_score, mpi_warn, guardian_id, consent_version, patient_tier, ' +
           'biometric_fingerprint_hash, biometric_algorithm_version, ' +
-          'birth_date_enc, meta_version_id, merged_into, ' +
+          'birth_date_enc, merged_into, ' +
           'marital_status, displacement_category, nationality, occupation, ' +
           'education_level, disability, telecom_phone_use, emergency_contacts'
         )
         .eq('id', input.patientId)
         .single()
 
-      if (error || !data) {
-        if (error?.code === 'PGRST116' || !data) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Patient not found',
-          })
+      if (error) {
+        // PGRST116 = no rows matched → genuinely not found. Any OTHER error (e.g.
+        // a missing column from schema drift) must surface as a real failure with
+        // the code logged — never be masked as "Patient not found" (that masking
+        // previously turned a bad SELECT column into a misleading 404).
+        if (error.code === 'PGRST116') {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Patient not found' })
         }
-        console.error('Patient read error:', { code: error?.code })
+        console.error('Patient read error:', { code: error.code })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to read patient',
         })
+      }
+      if (!data) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Patient not found' })
       }
 
       // Follow merged_into link transparently — if this patient was merged,
@@ -864,7 +868,7 @@ export const patientRouter = createTRPCRouter({
             'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
             'mpi_score, mpi_warn, guardian_id, consent_version, patient_tier, ' +
             'biometric_fingerprint_hash, biometric_algorithm_version, ' +
-            'birth_date_enc, meta_version_id, merged_into, ' +
+            'birth_date_enc, merged_into, ' +
             'marital_status, displacement_category, nationality, occupation, ' +
             'education_level, disability, telecom_phone_use, emergency_contacts'
           )

@@ -3,6 +3,7 @@
 import { forwardRef, useImperativeHandle, useRef, useState, useCallback, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { ZoomIn, ZoomOut, AlertCircle } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/Button'
 
 // ── Constants (verbatim from prior PhotoCropModal) ─────────────────────────────
 const MAX_BYTES = 1024 * 1024     // 1 MB
@@ -26,6 +27,12 @@ export interface PhotoCropperHandle { crop: () => void }
 interface PhotoCropperProps {
   rawDataUrl: string | null
   onCropped: (dataUrl: string) => void
+  /**
+   * Visual crop guide. The exported canvas is ALWAYS a square (OUTPUT×OUTPUT);
+   * `'circle'` only swaps the on-screen mask for a round one so an avatar crop
+   * reads true to its circular display. Registration keeps the default square.
+   */
+  shape?: 'square' | 'circle'
 }
 
 // ── Helper: clamp pan so image always fills the crop frame ───────────────────
@@ -42,7 +49,7 @@ function clampPan(panX: number, panY: number, zoom: number, nw: number, nh: numb
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export const PhotoCropper = forwardRef<PhotoCropperHandle, PhotoCropperProps>(
-  function PhotoCropper({ rawDataUrl, onCropped }, ref) {
+  function PhotoCropper({ rawDataUrl, onCropped, shape = 'square' }, ref) {
     const t = useTranslations('registration')
     const imgRef = useRef<HTMLImageElement>(null)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -151,13 +158,15 @@ export const PhotoCropper = forwardRef<PhotoCropperHandle, PhotoCropperProps>(
     const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
       if (e.touches.length === 1) {
         const t0 = e.touches[0]
+        if (!t0) return
         setIsDragging(true)
         setDragStart({ clientX: t0.clientX, clientY: t0.clientY, panX: transform.panX, panY: transform.panY })
         lastPinchDist.current = null
       } else if (e.touches.length === 2) {
-        setIsDragging(false)
         const t0 = e.touches[0]
         const t1 = e.touches[1]
+        if (!t0 || !t1) return
+        setIsDragging(false)
         lastPinchDist.current = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY)
       }
     }, [transform.panX, transform.panY])
@@ -171,6 +180,7 @@ export const PhotoCropper = forwardRef<PhotoCropperHandle, PhotoCropperProps>(
     const handleTouchMoveReact = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
       if (e.touches.length === 1 && isDragging) {
         const t0 = e.touches[0]
+        if (!t0) return
         const dx = t0.clientX - dragStart.clientX
         const dy = t0.clientY - dragStart.clientY
         setTransform(prev => {
@@ -180,6 +190,7 @@ export const PhotoCropper = forwardRef<PhotoCropperHandle, PhotoCropperProps>(
       } else if (e.touches.length === 2) {
         const t0 = e.touches[0]
         const t1 = e.touches[1]
+        if (!t0 || !t1) return
         const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY)
         const last = lastPinchDist.current
         const rect = containerRef.current?.getBoundingClientRect()
@@ -261,7 +272,7 @@ export const PhotoCropper = forwardRef<PhotoCropperHandle, PhotoCropperProps>(
     // ── Render ──
 
     return (
-      <>
+      <div className="flex w-full flex-col items-center">
         {/* Crop viewport */}
         <div
           ref={containerRef}
@@ -301,50 +312,68 @@ export const PhotoCropper = forwardRef<PhotoCropperHandle, PhotoCropperProps>(
             />
           )}
 
-          {/* Dark overlay — 4 panels around the crop frame */}
-          <div className="absolute pointer-events-none bg-black/60" style={{ inset: 0, bottom: VIEWPORT - MARGIN }} />
-          <div className="absolute pointer-events-none bg-black/60" style={{ inset: 0, top: MARGIN + FRAME }} />
-          <div className="absolute pointer-events-none bg-black/60" style={{ top: MARGIN, bottom: VIEWPORT - MARGIN - FRAME, left: 0, width: MARGIN }} />
-          <div className="absolute pointer-events-none bg-black/60" style={{ top: MARGIN, bottom: VIEWPORT - MARGIN - FRAME, right: 0, left: MARGIN + FRAME }} />
-
-          {/* Rule-of-thirds grid (inside crop frame) */}
-          <div className="absolute pointer-events-none" style={{ top: MARGIN, left: MARGIN, width: FRAME, height: FRAME }}>
-            <div className="absolute bg-white/15" style={{ top: '33.3%', left: 0, right: 0, height: 1 }} />
-            <div className="absolute bg-white/15" style={{ top: '66.6%', left: 0, right: 0, height: 1 }} />
-            <div className="absolute bg-white/15" style={{ top: 0, left: '33.3%', bottom: 0, width: 1 }} />
-            <div className="absolute bg-white/15" style={{ top: 0, left: '66.6%', bottom: 0, width: 1 }} />
-          </div>
-
-          {/* Corner brackets */}
-          {(['tl', 'tr', 'bl', 'br'] as const).map((corner) => (
+          {shape === 'circle' ? (
+            /* Circular mask — a round hole in the dark overlay (the huge box-shadow
+               is clipped to the viewport by overflow-hidden). Matches the avatar. */
             <div
-              key={corner}
-              className="absolute pointer-events-none border-white"
+              className="absolute pointer-events-none rounded-full ring-2 ring-white/85"
               style={{
-                top: corner.startsWith('t') ? MARGIN : MARGIN + FRAME - CORNER,
-                left: corner.endsWith('l') ? MARGIN : MARGIN + FRAME - CORNER,
-                width: CORNER,
-                height: CORNER,
-                borderTopWidth: corner.startsWith('t') ? 2 : 0,
-                borderBottomWidth: corner.startsWith('b') ? 2 : 0,
-                borderLeftWidth: corner.endsWith('l') ? 2 : 0,
-                borderRightWidth: corner.endsWith('r') ? 2 : 0,
-                borderRadius: corner === 'tl' ? '2px 0 0 0' : corner === 'tr' ? '0 2px 0 0' : corner === 'bl' ? '0 0 0 2px' : '0 0 2px 0',
+                top: MARGIN,
+                left: MARGIN,
+                width: FRAME,
+                height: FRAME,
+                boxShadow: '0 0 0 9999px rgba(0,0,0,0.55)',
               }}
             />
-          ))}
+          ) : (
+            <>
+              {/* Dark overlay — 4 panels around the square crop frame */}
+              <div className="absolute pointer-events-none bg-black/60" style={{ inset: 0, bottom: VIEWPORT - MARGIN }} />
+              <div className="absolute pointer-events-none bg-black/60" style={{ inset: 0, top: MARGIN + FRAME }} />
+              <div className="absolute pointer-events-none bg-black/60" style={{ top: MARGIN, bottom: VIEWPORT - MARGIN - FRAME, left: 0, width: MARGIN }} />
+              <div className="absolute pointer-events-none bg-black/60" style={{ top: MARGIN, bottom: VIEWPORT - MARGIN - FRAME, right: 0, left: MARGIN + FRAME }} />
+
+              {/* Rule-of-thirds grid (inside crop frame) */}
+              <div className="absolute pointer-events-none" style={{ top: MARGIN, left: MARGIN, width: FRAME, height: FRAME }}>
+                <div className="absolute bg-white/15" style={{ top: '33.3%', left: 0, right: 0, height: 1 }} />
+                <div className="absolute bg-white/15" style={{ top: '66.6%', left: 0, right: 0, height: 1 }} />
+                <div className="absolute bg-white/15" style={{ top: 0, left: '33.3%', bottom: 0, width: 1 }} />
+                <div className="absolute bg-white/15" style={{ top: 0, left: '66.6%', bottom: 0, width: 1 }} />
+              </div>
+
+              {/* Corner brackets */}
+              {(['tl', 'tr', 'bl', 'br'] as const).map((corner) => (
+                <div
+                  key={corner}
+                  className="absolute pointer-events-none border-white"
+                  style={{
+                    top: corner.startsWith('t') ? MARGIN : MARGIN + FRAME - CORNER,
+                    left: corner.endsWith('l') ? MARGIN : MARGIN + FRAME - CORNER,
+                    width: CORNER,
+                    height: CORNER,
+                    borderTopWidth: corner.startsWith('t') ? 2 : 0,
+                    borderBottomWidth: corner.startsWith('b') ? 2 : 0,
+                    borderLeftWidth: corner.endsWith('l') ? 2 : 0,
+                    borderRightWidth: corner.endsWith('r') ? 2 : 0,
+                    borderRadius: corner === 'tl' ? '2px 0 0 0' : corner === 'tr' ? '0 2px 0 0' : corner === 'bl' ? '0 0 0 2px' : '0 0 2px 0',
+                  }}
+                />
+              ))}
+            </>
+          )}
         </div>
 
-        {/* Zoom slider */}
-        <div className="px-5 pt-3 flex items-center gap-2">
-          <button
+        {/* Zoom slider — sits directly under the photo box, matched to its width */}
+        <div className="flex items-center gap-2 pt-3" style={{ width: VIEWPORT }}>
+          <Button
+            variant="icon"
             type="button"
             aria-label="Zoom out"
+            className="shrink-0 p-1.5"
             onClick={() => applyZoomFromCenter(transform.zoom * 0.9)}
-            className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-muted transition-colors"
           >
             <ZoomOut className="h-4 w-4" />
-          </button>
+          </Button>
           <input
             type="range"
             min={0}
@@ -357,24 +386,28 @@ export const PhotoCropper = forwardRef<PhotoCropperHandle, PhotoCropperProps>(
             }}
             className="flex-1 accent-primary"
           />
-          <button
+          <Button
+            variant="icon"
             type="button"
             aria-label="Zoom in"
+            className="shrink-0 p-1.5"
             onClick={() => applyZoomFromCenter(transform.zoom * 1.1)}
-            className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-muted transition-colors"
           >
             <ZoomIn className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="mx-5 mt-2 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2">
+          <div
+            className="mt-2 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2"
+            style={{ width: VIEWPORT }}
+          >
             <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
             <p className="text-sm text-destructive">{error}</p>
           </div>
         )}
-      </>
+      </div>
     )
   },
 )

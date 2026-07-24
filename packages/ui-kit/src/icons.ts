@@ -140,6 +140,7 @@ export {
   FilePlus,
   FileCheck,
   FileX,
+  FileSearch,
   ClipboardList,
   ClipboardCheck,
   ClipboardPen,

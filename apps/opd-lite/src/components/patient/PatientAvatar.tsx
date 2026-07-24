@@ -70,6 +70,7 @@ export function PatientAvatar({ patient, patientId, size = 80, onPhotoUpdated }:
         open={modalOpen}
         patientId={patientId}
         currentPhotoKey={photoKey}
+        currentPhotoSrc={photoSrc}
         lastKnownUpdate={patient.meta.lastUpdated}
         onClose={() => setModalOpen(false)}
         onUpdated={(key, lastUpdated) => { setModalOpen(false); onPhotoUpdated?.(key, lastUpdated) }}

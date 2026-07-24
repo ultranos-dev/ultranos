@@ -21,6 +21,14 @@ import { getHubTrpcUrl } from '@/lib/hub-url'
 const HUB_BASE_URL = getHubTrpcUrl()
 
 /**
+ * A valid "zero" HLC string (`wallMs:counter:nodeId`). Used when a record carries
+ * no HLC — e.g. Tier-3 patients, which are LWW-versioned by `updated_at`, not HLC.
+ * NOTE: `deserializeHlc` requires ≥3 colon-parts, so a bare `'0'` is INVALID and
+ * throws; the zero value must be fully formed.
+ */
+const ZERO_HLC = '0:0:'
+
+/**
  * Transform a flat camelCase patient row from the Hub into the nested
  * FhirPatient shape expected by client components.
  *
@@ -512,12 +520,38 @@ export async function pullPatientChanges(
         // No local version — straight insert
         await table.put({ ...transformedData, id: change.resourceId })
         result.changesApplied++
+      } else if (change.resourceType === 'Patient') {
+        // Demographics are Tier-3 (last-write-wins) and the Hub is authoritative.
+        // Patients carry an ISO `updated_at`, NOT an HLC, so routing them through the
+        // generic HLC conflict path both mis-compares and spuriously flags a
+        // "conflict": the ISO parses to a tiny wallMs (parseInt('2026-…')=2026) that
+        // lands inside the 60s window, so every pull raised a bogus Demographics
+        // conflict. Do a plain LWW by meta.lastUpdated with NO conflict flag, and
+        // skip the HLC clock/watermark below — an ISO string sorts ABOVE real HLCs
+        // and would poison the per-patient watermark, stalling incremental sync for
+        // real-HLC resources (encounters, vitals, …).
+        const localUpdated = ((localRecord as Record<string, unknown>).meta as Record<string, unknown> | undefined)?.lastUpdated as string | undefined
+        const remoteUpdated = (transformedData.meta as Record<string, unknown> | undefined)?.lastUpdated as string | undefined
+        if (!localUpdated || !remoteUpdated || remoteUpdated >= localUpdated) {
+          await table.put({ ...transformedData, id: change.resourceId })
+          result.changesApplied++
+        }
+        // else: a newer unsynced local edit exists — keep it (LWW).
+        auditPhiAccess(
+          AuditAction.READ,
+          change.resourceType as AuditResourceType,
+          change.resourceId,
+          patientId,
+          { source: 'sync-pull' },
+        )
+        continue
       } else {
-        // Local record exists — run conflict resolution
-        const localHlc = (localRecord as Record<string, unknown>)._ultranos
-          ? deserializeHlc(((localRecord as Record<string, unknown>)._ultranos as Record<string, unknown>).hlcTimestamp as string)
-          : deserializeHlc('0')
-        const remoteHlc = deserializeHlc(change.hlcTimestamp)
+        // Local record exists — run conflict resolution.
+        // Guard every HLC deserialize with a zero default so a missing HLC can't
+        // throw (`undefined.split`) and fail the apply.
+        const localUltranos = (localRecord as Record<string, unknown>)._ultranos as Record<string, unknown> | undefined
+        const localHlc = deserializeHlc((localUltranos?.hlcTimestamp as string) || ZERO_HLC)
+        const remoteHlc = deserializeHlc(change.hlcTimestamp || ZERO_HLC)
 
         // Skip if we already have the same or newer version
         if (compareHlc(localHlc, remoteHlc) >= 0) {
@@ -576,7 +610,7 @@ export async function pullPatientChanges(
       }
 
       // Update HLC clock with remote timestamp for causal ordering
-      hlc.receive(deserializeHlc(change.hlcTimestamp))
+      hlc.receive(deserializeHlc(change.hlcTimestamp || ZERO_HLC))
 
       // Track highest HLC for watermark update
       if (change.hlcTimestamp > highestHlc) {

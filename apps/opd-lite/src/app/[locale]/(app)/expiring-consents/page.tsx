@@ -1,9 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { formatDate } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
+import { CalendarClock } from '@ultranos/ui-kit/icons'
 import { getHubTrpcUrl } from '@/lib/hub-url'
 
 interface ExpiringConsent {
@@ -17,11 +20,10 @@ interface ExpiringConsent {
 /**
  * Expiring Consents page — lists active consents expiring within 90 days.
  * Fetches from the Hub API consent.expiringSoon endpoint.
- *
- * TODO i18n: add keys under "consent" namespace for all hardcoded strings.
  */
 export default function ExpiringConsentsPage() {
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
+  const t = useTranslations('consent')
   const [consents, setConsents] = useState<ExpiringConsent[]>([])
   const [loading, setLoading] = useState(true)
   const [offset, setOffset] = useState(0)
@@ -64,17 +66,48 @@ export default function ExpiringConsentsPage() {
     return Math.max(0, Math.ceil((end - now) / (24 * 60 * 60 * 1000)))
   }
 
+  function expiryPillClass(days: number): string {
+    if (days <= 30) return 'inline-flex rounded-full px-2 py-0.5 text-xs font-bold bg-destructive/20 text-destructive'
+    if (days <= 60) return 'inline-flex rounded-full px-2 py-0.5 text-xs font-bold bg-warning/20 text-warning'
+    return 'inline-flex rounded-full px-2 py-0.5 text-xs font-bold bg-muted text-muted-foreground'
+  }
+
   return (
     <div className="flex flex-col gap-4">
 
         {loading && (
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+            <table className="w-full text-sm">
+              <thead className="bg-muted text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 text-start font-semibold">{t('colPatientId')}</th>
+                  <th className="px-4 py-3 text-start font-semibold">{t('colExpiryDate')}</th>
+                  <th className="px-4 py-3 text-start font-semibold">{t('colDaysUntilExpiry')}</th>
+                  <th className="px-4 py-3 text-start font-semibold">{t('colVersion')}</th>
+                  <th className="px-4 py-3 text-start font-semibold">{t('colGrantorRole')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <tr key={i}>
+                    <td className="px-4 py-3"><Skeleton className="h-4 w-28" /></td>
+                    <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                    <td className="px-4 py-3"><Skeleton className="h-5 w-16 rounded-full" /></td>
+                    <td className="px-4 py-3"><Skeleton className="h-4 w-12" /></td>
+                    <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {!loading && consents.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            No consents expiring within 90 days.
-          </p>
+          <EmptyState
+            icon={CalendarClock}
+            title={t('emptyTitle')}
+            description={t('emptyDescription')}
+          />
         )}
 
         {!loading && consents.length > 0 && (
@@ -83,11 +116,11 @@ export default function ExpiringConsentsPage() {
               <table className="w-full text-sm">
                 <thead className="bg-muted text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-3 text-start font-semibold">Patient ID</th>
-                    <th className="px-4 py-3 text-start font-semibold">Expiry Date</th>
-                    <th className="px-4 py-3 text-start font-semibold">Days Until Expiry</th>
-                    <th className="px-4 py-3 text-start font-semibold">Version</th>
-                    <th className="px-4 py-3 text-start font-semibold">Grantor Role</th>
+                    <th className="px-4 py-3 text-start font-semibold">{t('colPatientId')}</th>
+                    <th className="px-4 py-3 text-start font-semibold">{t('colExpiryDate')}</th>
+                    <th className="px-4 py-3 text-start font-semibold">{t('colDaysUntilExpiry')}</th>
+                    <th className="px-4 py-3 text-start font-semibold">{t('colVersion')}</th>
+                    <th className="px-4 py-3 text-start font-semibold">{t('colGrantorRole')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -102,15 +135,7 @@ export default function ExpiringConsentsPage() {
                           {formatDate(c.provision_end, locale)}
                         </td>
                         <td className="px-4 py-3">
-                          <span
-                            className={
-                              days <= 30
-                                ? 'font-semibold text-destructive'
-                                : days <= 60
-                                  ? 'font-semibold text-warning'
-                                  : 'text-foreground'
-                            }
-                          >
+                          <span className={expiryPillClass(days)}>
                             {days}
                           </span>
                         </td>
@@ -125,10 +150,10 @@ export default function ExpiringConsentsPage() {
 
             <div className="mt-4 flex items-center gap-4">
               <Button variant="outline" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>
-                Previous
+                {t('previous')}
               </Button>
               <Button variant="outline" disabled={consents.length < limit} onClick={() => setOffset(offset + limit)}>
-                Next
+                {t('next')}
               </Button>
             </div>
           </>

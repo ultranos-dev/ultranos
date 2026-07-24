@@ -3,7 +3,17 @@ import sharp from 'sharp'
 import { getSupabaseClient, db } from '@/lib/supabase'
 import { verifySupabaseJwt, getSupabaseJwk } from '@/lib/jwt'
 import { hasResourceAccess } from '@/trpc/rbac'
+import { isOriginAllowed, corsHeaders } from '@/lib/cors'
 import { AuditLogger } from '@ultranos/audit-logger'
+
+/** Add CORS headers for allowed spoke origins (mirrors the tRPC route). */
+function withCors(req: Request, res: NextResponse): NextResponse {
+  const origin = req.headers.get('origin')
+  if (origin && isOriginAllowed(origin)) {
+    for (const [k, v] of Object.entries(corsHeaders(origin))) res.headers.set(k, v)
+  }
+  return res
+}
 
 const BUCKET = 'patient-photos'
 const MAX_DIM = 512
@@ -74,7 +84,7 @@ async function setPhotoUrl(
   return { lastUpdated: updatedAt }
 }
 
-export async function POST(req: Request): Promise<NextResponse> {
+async function handlePost(req: Request): Promise<NextResponse> {
   const user = await authenticate(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (!hasResourceAccess(user.role, 'Patient')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -115,7 +125,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   return NextResponse.json({ photoUrl: key, lastUpdated: result.lastUpdated }, { status: 200 })
 }
 
-export async function DELETE(req: Request): Promise<NextResponse> {
+async function handleDelete(req: Request): Promise<NextResponse> {
   const user = await authenticate(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (!hasResourceAccess(user.role, 'Patient')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -136,4 +146,23 @@ export async function DELETE(req: Request): Promise<NextResponse> {
   const result = await setPhotoUrl(supabase, user, patientId, null)
   if ('error' in result) return result.error
   return NextResponse.json({ photoUrl: null, lastUpdated: result.lastUpdated }, { status: 200 })
+}
+
+// CORS-wrapped exports. The browser sends a preflight OPTIONS for the multipart
+// POST / JSON DELETE (both carry an Authorization header), so every response —
+// including the preflight — must advertise the allowed spoke origin.
+export async function POST(req: Request): Promise<NextResponse> {
+  return withCors(req, await handlePost(req))
+}
+
+export async function DELETE(req: Request): Promise<NextResponse> {
+  return withCors(req, await handleDelete(req))
+}
+
+export function OPTIONS(req: Request): NextResponse {
+  const origin = req.headers.get('origin')
+  if (origin && isOriginAllowed(origin)) {
+    return new NextResponse(null, { status: 204, headers: corsHeaders(origin) })
+  }
+  return new NextResponse(null, { status: 204 })
 }

@@ -868,7 +868,13 @@
     "pageOf": "مخ {current} له {total}",
     "allergyFlag": "حساسیت لري",
     "nidMissingBadge": "بدون تذکره",
-    "syncing": "همغږي کیږي..."
+    "syncing": "همغږي کیږي...",
+    "noResultsDescription": "د خپل لټون یا فلترونو تنظیم وکړئ ترڅو هغه ومومئ چې لټوئ یې.",
+    "clearFilters": "فلترونه پاک کړئ",
+    "statTotal": "ټول ناروغان",
+    "statActive": "فعال",
+    "statWithAllergies": "د حساسیت سره",
+    "statRecentlyUpdated": "پدې وروستیو تازه شوی"
   },
   "duplicateReview": {
     "title": "د تکرار بیاکتنه",
@@ -908,7 +914,8 @@
     "actionDismiss": "تکراري نه دی",
     "actionFlagMerge": "د یوځای کولو نښه",
     "dismissAriaLabel": "د {patient} لپاره د تکرار بیاکتنه رد کړئ",
-    "flagAriaLabel": "د {patient} لپاره د یوځای کولو نښه"
+    "flagAriaLabel": "د {patient} لپاره د یوځای کولو نښه",
+    "noCandidates": "د نوماندانو هیڅ ریکارډ ونه موندل شو"
   },
   "appointments": {
     "title": "وختونه",
@@ -988,5 +995,39 @@
     "backToSettings": "بیرته ترتیباتو ته",
     "save": "خوندي کړئ",
     "saved": "خوندي شو"
+  },
+  "consent": {
+    "emptyTitle": "هیڅ رضایت‌نامه ژر نه پای ته رسیږي",
+    "emptyDescription": "د راتلونکو ۹۰ ورځو کې هیڅ فعال رضایت‌نامه نه پای ته رسیږي.",
+    "colPatientId": "د ناروغ پیژندنه",
+    "colExpiryDate": "د پای نیټه",
+    "colDaysUntilExpiry": "تر پای ورځي",
+    "colVersion": "نسخه",
+    "colGrantorRole": "د ورکوونکي دنده",
+    "previous": "مخکینی",
+    "next": "بعدی"
+  },
+  "patientPhoto": {
+    "title": "د ناروغ عکس تازه کړئ",
+    "formatsHint": "JPG یا PNG، تر ۲۰ میګابایټ پورې",
+    "cropHint": "د ځای بدلولو لپاره یې راکاږئ. د لویولو لپاره سکرول یا دوه ګوتې وکاروئ.",
+    "current": "اوسنی عکس",
+    "uploadFile": "فایل پورته کړئ",
+    "takePhoto": "عکس واخلئ",
+    "remove": "عکس لرې کړئ",
+    "confirmRemove": "د لرې کولو لپاره بیا کلیک وکړئ",
+    "capture": "اخیستل",
+    "retake": "بیا اخیستل",
+    "back": "شاته",
+    "usePhoto": "عکس وکاروئ",
+    "cameraStarting": "کیمره پیلیږي…",
+    "cameraUnavailable": "کیمره شتون نلري — پر ځای یې فایل وټاکئ.",
+    "saving": "عکس ساتل کیږي…",
+    "offline": "د عکس بدلونونو لپاره انټرنټ اتصال اړین دی.",
+    "tooLarge": "دا عکس ډیر لوی دی (اعظمي ۲۰ مېګابایټ).",
+    "saveFailed": "عکس ساتل ناکام شو. مهرباني وکړئ بیا هڅه وکړئ.",
+    "conflict": "د دې ناروغ معلومات بل ځای تازه شوي دي. وتړئ او بیا یې خلاص کړئ، بیا هڅه وکړئ.",
+    "retry": "بیا هڅه",
+    "cancel": "لغوه کول"
   }
 }

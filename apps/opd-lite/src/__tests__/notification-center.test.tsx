@@ -120,7 +120,7 @@ describe('NotificationCenter', () => {
   // --- Task 1: Route page renders ---
   describe('Task 1: Notification center route', () => {
     it('renders the notification center page with header', async () => {
-      const { default: NotificationsPage } = await import('../app/notifications/page')
+      const { default: NotificationsPage } = await import('../app/[locale]/(app)/notifications/page')
       render(<NotificationsPage />)
 
       await waitFor(() => {
@@ -129,7 +129,7 @@ describe('NotificationCenter', () => {
     })
 
     it('has a back link to dashboard', async () => {
-      const { default: NotificationsPage } = await import('../app/notifications/page')
+      const { default: NotificationsPage } = await import('../app/[locale]/(app)/notifications/page')
       render(<NotificationsPage />)
 
       await waitFor(() => {
@@ -147,10 +147,10 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        expect(screen.getByRole('tab', { name: /All/ })).toBeInTheDocument()
-        expect(screen.getByRole('tab', { name: /Lab Results/ })).toBeInTheDocument()
-        expect(screen.getByRole('tab', { name: /Prescriptions/ })).toBeInTheDocument()
-        expect(screen.getByRole('tab', { name: /System/ })).toBeInTheDocument()
+        expect(screen.getByRole('tab', { name: /tabAll/ })).toBeInTheDocument()
+        expect(screen.getByRole('tab', { name: /tabLabResults/ })).toBeInTheDocument()
+        expect(screen.getByRole('tab', { name: /tabPrescriptions/ })).toBeInTheDocument()
+        expect(screen.getByRole('tab', { name: /tabSystem/ })).toBeInTheDocument()
       })
     })
 
@@ -160,9 +160,9 @@ describe('NotificationCenter', () => {
 
       await waitFor(() => {
         // n1 and n7 both have LAB_RESULT_AVAILABLE, so use getAllByText
-        expect(screen.getAllByText('Lab Result Available').length).toBeGreaterThanOrEqual(1)
-        expect(screen.getByText('Prescription Ready')).toBeInTheDocument()
-        expect(screen.getByText('Sync Conflict')).toBeInTheDocument()
+        expect(screen.getAllByText('typeLab').length).toBeGreaterThanOrEqual(1)
+        expect(screen.getByText('typePrescription')).toBeInTheDocument()
+        expect(screen.getByText('typeSyncConflict')).toBeInTheDocument()
       })
     })
 
@@ -171,16 +171,16 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        expect(screen.getAllByText('Lab Result Available').length).toBeGreaterThanOrEqual(1)
+        expect(screen.getAllByText('typeLab').length).toBeGreaterThanOrEqual(1)
       })
 
-      fireEvent.click(screen.getByRole('tab', { name: /Lab Results/ }))
+      fireEvent.click(screen.getByRole('tab', { name: /tabLabResults/ }))
 
       // Lab Results tab shows LAB_RESULT_AVAILABLE (n1, n7) and LAB_RESULT_ESCALATION (n2)
-      expect(screen.getAllByText('Lab Result Available').length).toBeGreaterThanOrEqual(1)
-      expect(screen.getByText('Lab Result — Urgent')).toBeInTheDocument()
-      expect(screen.queryByText('Prescription Ready')).not.toBeInTheDocument()
-      expect(screen.queryByText('Sync Conflict')).not.toBeInTheDocument()
+      expect(screen.getAllByText('typeLab').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByText('typeLabUrgent')).toBeInTheDocument()
+      expect(screen.queryByText('typePrescription')).not.toBeInTheDocument()
+      expect(screen.queryByText('typeSyncConflict')).not.toBeInTheDocument()
     })
 
     it('filters to prescription notifications when Prescriptions tab is selected', async () => {
@@ -188,13 +188,13 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        expect(screen.getByText('Prescription Ready')).toBeInTheDocument()
+        expect(screen.getByText('typePrescription')).toBeInTheDocument()
       })
 
-      fireEvent.click(screen.getByRole('tab', { name: /Prescriptions/ }))
+      fireEvent.click(screen.getByRole('tab', { name: /tabPrescriptions/ }))
 
-      expect(screen.getByText('Prescription Ready')).toBeInTheDocument()
-      expect(screen.queryAllByText('Lab Result Available')).toHaveLength(0)
+      expect(screen.getByText('typePrescription')).toBeInTheDocument()
+      expect(screen.queryAllByText('typeLab')).toHaveLength(0)
     })
 
     it('filters to system notifications when System tab is selected', async () => {
@@ -202,15 +202,15 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        expect(screen.getByText('Sync Conflict')).toBeInTheDocument()
+        expect(screen.getByText('typeSyncConflict')).toBeInTheDocument()
       })
 
-      fireEvent.click(screen.getByRole('tab', { name: /System/ }))
+      fireEvent.click(screen.getByRole('tab', { name: /tabSystem/ }))
 
-      expect(screen.getByText('Sync Conflict')).toBeInTheDocument()
-      expect(screen.getByText('Consent Updated')).toBeInTheDocument()
-      expect(screen.getByText('Allergy Update')).toBeInTheDocument()
-      expect(screen.queryAllByText('Lab Result Available')).toHaveLength(0)
+      expect(screen.getByText('typeSyncConflict')).toBeInTheDocument()
+      expect(screen.getByText('typeConsent')).toBeInTheDocument()
+      expect(screen.getByText('typeAllergyUpdate')).toBeInTheDocument()
+      expect(screen.queryAllByText('typeLab')).toHaveLength(0)
     })
   })
 
@@ -292,7 +292,7 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Mark All Read/ })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /markAllRead/ })).toBeInTheDocument()
       })
     })
 
@@ -301,11 +301,11 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Mark All Read/ })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /markAllRead/ })).toBeInTheDocument()
       })
 
       await act(async () => {
-        fireEvent.click(screen.getByRole('button', { name: /Mark All Read/ }))
+        fireEvent.click(screen.getByRole('button', { name: /markAllRead/ }))
       })
 
       await waitFor(() => {
@@ -323,7 +323,7 @@ describe('NotificationCenter', () => {
       })
 
       await act(async () => {
-        fireEvent.click(screen.getByRole('button', { name: /Mark All Read/ }))
+        fireEvent.click(screen.getByRole('button', { name: /markAllRead/ }))
       })
 
       await waitFor(() => {
@@ -393,7 +393,7 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        expect(screen.getByText(/No notifications/)).toBeInTheDocument()
+        expect(screen.getByText(/noNotifications/)).toBeInTheDocument()
       })
     })
 
@@ -403,7 +403,7 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        expect(screen.getByText(/Notifications unavailable offline/)).toBeInTheDocument()
+        expect(screen.getByText(/offlineError/)).toBeInTheDocument()
       })
     })
 
@@ -417,7 +417,7 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Mark All Read/ })).toBeDisabled()
+        expect(screen.getByRole('button', { name: /markAllRead/ })).toBeDisabled()
       })
     })
   })

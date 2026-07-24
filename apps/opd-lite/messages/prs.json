@@ -868,7 +868,13 @@
     "pageOf": "صفحه {current} از {total}",
     "allergyFlag": "حساسیت دارد",
     "nidMissingBadge": "بدون تذکره",
-    "syncing": "همگام‌سازی..."
+    "syncing": "همگام‌سازی...",
+    "noResultsDescription": "جستجو یا فیلترهای خود را تنظیم کنید تا آنچه را که دنبال می‌کنید پیدا کنید.",
+    "clearFilters": "پاک کردن فیلترها",
+    "statTotal": "مجموع مریضان",
+    "statActive": "فعال",
+    "statWithAllergies": "با حساسیت",
+    "statRecentlyUpdated": "به‌تازگی به‌روزشده"
   },
   "duplicateReview": {
     "title": "بررسی تکراری‌ها",
@@ -908,7 +914,8 @@
     "actionDismiss": "تکراری نیست",
     "actionFlagMerge": "علامت‌گذاری برای ادغام",
     "dismissAriaLabel": "رد بررسی تکراری برای {patient}",
-    "flagAriaLabel": "علامت‌گذاری برای ادغام {patient}"
+    "flagAriaLabel": "علامت‌گذاری برای ادغام {patient}",
+    "noCandidates": "هیچ سابقه نامزدی یافت نشد"
   },
   "appointments": {
     "title": "وقت‌ها",
@@ -988,5 +995,39 @@
     "backToSettings": "بازگشت به تنظیمات",
     "save": "ذخیره",
     "saved": "ذخیره شد"
+  },
+  "consent": {
+    "emptyTitle": "هیچ رضایت‌نامه‌ای به زودی منقضی نمی‌شود",
+    "emptyDescription": "هیچ رضایت‌نامه فعالی در ۹۰ روز آینده منقضی نمی‌شود.",
+    "colPatientId": "شناسه مریض",
+    "colExpiryDate": "تاریخ انقضا",
+    "colDaysUntilExpiry": "روزهای باقی‌مانده تا انقضا",
+    "colVersion": "نسخه",
+    "colGrantorRole": "نقش اعطاکننده",
+    "previous": "قبلی",
+    "next": "بعدی"
+  },
+  "patientPhoto": {
+    "title": "تصویر مریض را بروز کنید",
+    "formatsHint": "JPG یا PNG، تا ۲۰ مگابایت",
+    "cropHint": "برای جابجایی بکشید. برای بزرگ‌نمایی اسکرول یا انگشتان را باز کنید.",
+    "current": "تصویر فعلی",
+    "uploadFile": "بارگذاری فایل",
+    "takePhoto": "گرفتن تصویر",
+    "remove": "حذف تصویر",
+    "confirmRemove": "برای حذف دوباره بزنید",
+    "capture": "عکس بگیرید",
+    "retake": "دوباره بگیرید",
+    "back": "بازگشت",
+    "usePhoto": "استفاده از تصویر",
+    "cameraStarting": "دوربین در حال راه‌اندازی…",
+    "cameraUnavailable": "دوربین در دسترس نیست — به جای آن فایل انتخاب کنید.",
+    "saving": "در حال ذخیره تصویر…",
+    "offline": "تغییرات تصویر به اتصال اینترنت نیاز دارد.",
+    "tooLarge": "این تصویر بسیار بزرگ است (حداکثر ۲۰ مگابایت).",
+    "saveFailed": "ذخیره تصویر ناکام شد. لطفاً دوباره تلاش کنید.",
+    "conflict": "معلومات این مریض در جای دیگری بروز شده است. ببندید و دوباره باز کنید، سپس تلاش کنید.",
+    "retry": "تلاش مجدد",
+    "cancel": "لغو"
   }
 }

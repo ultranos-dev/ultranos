@@ -884,7 +884,13 @@
     "pageOf": "Page {current} of {total}",
     "allergyFlag": "Has allergies",
     "nidMissingBadge": "NID Missing",
-    "syncing": "Syncing..."
+    "syncing": "Syncing...",
+    "noResultsDescription": "Try adjusting your search or filters to find what you are looking for.",
+    "clearFilters": "Clear filters",
+    "statTotal": "Total patients",
+    "statActive": "Active",
+    "statWithAllergies": "With allergies",
+    "statRecentlyUpdated": "Recently updated"
   },
   "duplicateReview": {
     "title": "Duplicate Reviews",
@@ -924,7 +930,8 @@
     "actionDismiss": "Not a Duplicate",
     "actionFlagMerge": "Flag for Merge",
     "dismissAriaLabel": "Dismiss duplicate review for {patient}",
-    "flagAriaLabel": "Flag {patient} for merge"
+    "flagAriaLabel": "Flag {patient} for merge",
+    "noCandidates": "No candidate records found"
   },
   "appointments": {
     "title": "Appointments",
@@ -1004,5 +1011,39 @@
     "backToSettings": "Back to Settings",
     "save": "Save",
     "saved": "Saved"
+  },
+  "consent": {
+    "emptyTitle": "No consents expiring soon",
+    "emptyDescription": "No active consents are expiring within the next 90 days.",
+    "colPatientId": "Patient ID",
+    "colExpiryDate": "Expiry Date",
+    "colDaysUntilExpiry": "Days Until Expiry",
+    "colVersion": "Version",
+    "colGrantorRole": "Grantor Role",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "patientPhoto": {
+    "title": "Update patient photo",
+    "formatsHint": "JPG or PNG, up to 20 MB",
+    "cropHint": "Drag to reposition. Scroll or pinch to zoom.",
+    "current": "Current photo",
+    "uploadFile": "Upload file",
+    "takePhoto": "Take photo",
+    "remove": "Remove photo",
+    "confirmRemove": "Tap again to remove",
+    "capture": "Capture",
+    "retake": "Retake",
+    "back": "Back",
+    "usePhoto": "Use photo",
+    "cameraStarting": "Starting camera…",
+    "cameraUnavailable": "Camera unavailable — choose a file instead.",
+    "saving": "Saving photo…",
+    "offline": "Photo changes need an internet connection.",
+    "tooLarge": "That image is too large (max 20 MB).",
+    "saveFailed": "Couldn't save the photo. Please try again.",
+    "conflict": "This patient was updated elsewhere. Close and reopen, then retry.",
+    "retry": "Retry",
+    "cancel": "Cancel"
   }
 }

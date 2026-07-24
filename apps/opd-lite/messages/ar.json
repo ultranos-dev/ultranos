@@ -868,7 +868,13 @@
     "pageOf": "صفحة {current} من {total}",
     "allergyFlag": "لديه حساسية",
     "nidMissingBadge": "بدون هوية",
-    "syncing": "جارٍ المزامنة..."
+    "syncing": "جارٍ المزامنة...",
+    "noResultsDescription": "حاول تعديل بحثك أو الفلاتر للعثور على ما تبحث عنه.",
+    "clearFilters": "مسح الفلاتر",
+    "statTotal": "إجمالي المرضى",
+    "statActive": "نشط",
+    "statWithAllergies": "مع حساسية",
+    "statRecentlyUpdated": "محدَّث مؤخرًا"
   },
   "duplicateReview": {
     "title": "مراجعة التكرارات",
@@ -908,7 +914,8 @@
     "actionDismiss": "ليس تكراراً",
     "actionFlagMerge": "علامة للدمج",
     "dismissAriaLabel": "رفض مراجعة التكرار لـ {patient}",
-    "flagAriaLabel": "وضع علامة دمج لـ {patient}"
+    "flagAriaLabel": "وضع علامة دمج لـ {patient}",
+    "noCandidates": "لم يتم العثور على سجلات مرشحة"
   },
   "appointments": {
     "title": "المواعيد",
@@ -988,5 +995,39 @@
     "backToSettings": "العودة إلى الإعدادات",
     "save": "حفظ",
     "saved": "تم الحفظ"
+  },
+  "consent": {
+    "emptyTitle": "لا توجد موافقات منتهية قريباً",
+    "emptyDescription": "لا توجد موافقات فاعلة تنتهي خلال الـ 90 يوماً القادمة.",
+    "colPatientId": "رقم المريض",
+    "colExpiryDate": "تاريخ الانتهاء",
+    "colDaysUntilExpiry": "الأيام حتى الانتهاء",
+    "colVersion": "الإصدار",
+    "colGrantorRole": "دور المانح",
+    "previous": "السابق",
+    "next": "التالي"
+  },
+  "patientPhoto": {
+    "title": "تحديث صورة المريض",
+    "formatsHint": "JPG أو PNG، حتى 20 ميغابايت",
+    "cropHint": "اسحب لإعادة التموضع. مرّر أو اضغط بإصبعين للتكبير.",
+    "current": "الصورة الحالية",
+    "uploadFile": "رفع ملف",
+    "takePhoto": "التقاط صورة",
+    "remove": "إزالة الصورة",
+    "confirmRemove": "اضغط مرة أخرى للإزالة",
+    "capture": "التقاط",
+    "retake": "إعادة الالتقاط",
+    "back": "رجوع",
+    "usePhoto": "استخدام الصورة",
+    "cameraStarting": "جاري تشغيل الكاميرا…",
+    "cameraUnavailable": "الكاميرا غير متاحة — اختر ملفًا بدلاً من ذلك.",
+    "saving": "جارٍ حفظ الصورة…",
+    "offline": "تتطلب تغييرات الصورة اتصالاً بالإنترنت.",
+    "tooLarge": "حجم الصورة كبير جدًا (الحدّ الأقصى 20 ميغابايت).",
+    "saveFailed": "تعذّر حفظ الصورة. حاول مرة أخرى.",
+    "conflict": "تم تحديث بيانات هذا المريض في مكان آخر. أغلق وأعِد الفتح، ثم حاول مجددًا.",
+    "retry": "إعادة المحاولة",
+    "cancel": "إلغاء"
   }
 }

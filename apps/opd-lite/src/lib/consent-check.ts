@@ -19,16 +19,6 @@ function getHubApiUrl(): string {
   return getHubTrpcUrl()
 }
 
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- sync access to zustand store state
-    const { useAuthSessionStore } = require('@/stores/auth-session-store')
-    return useAuthSessionStore.getState().session?.token ?? null
-  } catch {
-    return null
-  }
-}
 
 // In-memory cache to avoid repeated consent checks per session
 const consentCache = new Map<string, { result: ConsentCheckResult; expiry: number }>()
@@ -50,19 +40,22 @@ export async function checkLabsConsent(patientId: string): Promise<ConsentCheckR
 
   try {
     const url = new URL(getHubApiUrl())
-    url.pathname = url.pathname.replace(/\/$/, '') + '/consent.checkAccess'
+    url.pathname = url.pathname.replace(/\/$/, '') + '/consent.check'
+    // The Hub's consent.check takes { patientId, resourceType } and returns
+    // { permitted }. Labs data is the DiagnosticReport resource — the same
+    // resourceType the Hub's lab-data endpoints enforce consent against.
     url.searchParams.set('input', JSON.stringify({
       json: {
-        patientRef: `Patient/${patientId}`,
-        scope: 'LABS',
+        patientId,
+        resourceType: 'DiagnosticReport',
       },
     }))
 
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    const token = getAuthToken()
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
-    }
+    // Use the canonical Hub auth headers (Supabase access token). Historically
+    // this read a nonexistent `token` field off the auth-session store, so it
+    // always sent no Authorization header and the Hub returned 401.
+    const { getAuthHeaders } = await import('@/lib/hub-auth')
+    const headers = await getAuthHeaders()
 
     const res = await fetch(url.toString(), { method: 'GET', headers })
 
@@ -83,12 +76,13 @@ export async function checkLabsConsent(patientId: string): Promise<ConsentCheckR
       throw new Error(`Consent check failed: ${res.status}`)
     }
 
-    const body = await res.json() as { result: { data: { json: { granted: boolean; expired?: boolean } } } }
-    const consent = body.result.data.json
+    // consent.check returns { permitted: boolean }. It does not distinguish
+    // "expired" from "never granted", so a denial maps to 'no_consent'.
+    const body = await res.json() as { result: { data: { json: { permitted: boolean } } } }
+    const permitted = body.result.data.json.permitted
 
-    if (!consent.granted) {
-      const reason = consent.expired ? 'expired' as const : 'no_consent' as const
-      const result: ConsentCheckResult = { granted: false, reason }
+    if (!permitted) {
+      const result: ConsentCheckResult = { granted: false, reason: 'no_consent' }
       consentCache.set(cacheKey, { result, expiry: Date.now() + CACHE_TTL_MS })
       return result
     }

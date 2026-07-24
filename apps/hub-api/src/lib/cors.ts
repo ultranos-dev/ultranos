@@ -45,7 +45,7 @@ export function validateCorsConfig(): void {
 export function corsHeaders(origin: string): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Methods': 'GET, POST',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',

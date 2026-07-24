@@ -266,7 +266,7 @@ describe('SyncDashboard', () => {
     })
   })
 
-  it('shows resolve conflict link for conflict items', async () => {
+  it('shows a real Resolve button (not a bare link) for conflict items', async () => {
     await seedQueue([
       makeSyncEntry({ id: 'c1', resourceId: 'enc-12345678', status: 'failed', conflictFlag: true }),
     ])
@@ -274,11 +274,10 @@ describe('SyncDashboard', () => {
     render(<SyncDashboard />)
     await expandAllGroups()
 
-    await waitFor(() => {
-      const link = screen.getByTestId('resolve-conflict-link')
-      expect(link).toBeInTheDocument()
-      expect(link).toHaveTextContent('Resolve')
-    })
+    const btn = await screen.findByTestId('resolve-conflict-btn')
+    // The reported bug: it was an <a>/<span>, not a button.
+    expect(btn.tagName).toBe('BUTTON')
+    expect(btn).toHaveTextContent('Resolve')
   })
 
   // --- Task 4: Sync Now button (AC: 7) ---

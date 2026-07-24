@@ -8,7 +8,6 @@ import { usePatientStore } from '@/stores/patient-store'
 import { usePatientSearch } from '@/lib/use-patient-search'
 import { SearchInput } from '@/components/search-input'
 import { PatientResultList } from '@/components/patient-result-list'
-import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { TodayEncountersCard } from './TodayEncountersCard'
 import { PendingLabResultsCard } from './PendingLabResultsCard'
@@ -69,12 +68,9 @@ export function ClinicalDashboard() {
         <Button variant="primary" onClick={handleStartEncounter}>
           {t('startEncounter')}
         </Button>
-        <Link
-          href="/register-patient"
-          className="inline-flex items-center justify-center rounded-pill bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-        >
+        <Button variant="outline" onClick={() => router.push('/register-patient')}>
           {t('registerNew')}
-        </Link>
+        </Button>
       </div>
 
       {/* Inline patient search */}

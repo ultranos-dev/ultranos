@@ -15,6 +15,13 @@ export interface SecurityHeadersConfig {
   hubApiOrigin: string
   /** Optional CSP report-uri endpoint */
   reportUri?: string
+  /**
+   * Optional Supabase project origin, e.g. "https://xxxx.supabase.co". When set,
+   * it is added to `connect-src` (the Supabase auth/storage/realtime client) and
+   * `img-src` (signed-URL patient photos served from Supabase Storage) so those
+   * requests are not blocked once CSP moves from report-only to enforcing.
+   */
+  supabaseOrigin?: string
 }
 
 interface HeaderEntry {
@@ -45,15 +52,21 @@ function sanitizeOrigin(raw: string): string {
   }
 }
 
-function buildCsp(hubApiOrigin: string, reportUri?: string): string {
+function buildCsp(hubApiOrigin: string, reportUri?: string, supabaseOrigin?: string): string {
   const origin = sanitizeOrigin(hubApiOrigin)
+  const supabase = supabaseOrigin ? sanitizeOrigin(supabaseOrigin) : ''
+
+  // Supabase origin (when provided) joins connect-src (auth/storage/realtime
+  // client) and img-src (signed-URL patient photos).
+  const connectSrc = ["'self'", origin, supabase].filter(Boolean).join(' ')
+  const imgSrc = ["'self'", 'data:', 'blob:', supabase].filter(Boolean).join(' ')
 
   const directives: string[] = [
     "default-src 'self'",
     "script-src 'self'",
     "style-src 'self' 'unsafe-inline'",
-    `connect-src 'self' ${origin}`,
-    "img-src 'self' data: blob:",
+    `connect-src ${connectSrc}`,
+    `img-src ${imgSrc}`,
     "font-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
@@ -75,7 +88,7 @@ function buildCsp(hubApiOrigin: string, reportUri?: string): string {
  * to every route matching `/(.*)`.\
  */
 export function getSecurityHeaders(config: SecurityHeadersConfig): HeaderRule[] {
-  const csp = buildCsp(config.hubApiOrigin, config.reportUri)
+  const csp = buildCsp(config.hubApiOrigin, config.reportUri, config.supabaseOrigin)
 
   return [
     {

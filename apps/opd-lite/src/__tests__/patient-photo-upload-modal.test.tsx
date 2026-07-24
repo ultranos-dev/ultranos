@@ -11,7 +11,7 @@ vi.mock('@ultranos/ui-kit/components/ui/dialog', () => ({
 }))
 vi.mock('@ultranos/ui-kit', () => ({ Alert: ({ children }: { children: React.ReactNode }) => <div role="alert">{children}</div> }))
 vi.mock('@/components/ui/Button', () => ({
-  Button: ({ children, ...p }: React.ComponentProps<'button'>) => <button {...p}>{children}</button>,
+  Button: ({ children, fullWidth: _fw, ...p }: React.ComponentProps<'button'> & { fullWidth?: boolean }) => <button {...p}>{children}</button>,
 }))
 // Cropper stub: a button that emits a cropped data URL.
 vi.mock('@/components/patient/PhotoCropper', () => ({

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { UserSearch } from '@ultranos/ui-kit/icons'
 import { getHubApiUrl, getAuthHeaders } from '@/lib/hub-auth'
 import { CandidateComparisonCard, type DuplicateCandidate } from './CandidateComparisonCard'
 
@@ -201,7 +202,7 @@ function TableRow({
   const decisionBadge: Record<ReviewDecision, { label: string; classes: string }> = {
     PENDING: { label: t('decisionPending'), classes: 'bg-warning/20 text-warning' },
     DISMISSED: { label: t('decisionDismissed'), classes: 'bg-muted text-muted-foreground' },
-    FLAGGED_FOR_MERGE: { label: t('decisionFlagged'), classes: 'bg-primary text-primary' },
+    FLAGGED_FOR_MERGE: { label: t('decisionFlagged'), classes: 'bg-primary text-primary-foreground' },
   }
 
   const badge = decisionBadge[row.decision]
@@ -209,13 +210,14 @@ function TableRow({
   return (
     <>
       <tr
-        className="border-b border-border hover:bg-muted cursor-pointer"
+        className={`border-b border-border hover:bg-muted cursor-pointer${!isPending ? ' text-muted-foreground' : ''}`}
         onClick={onToggle}
         aria-expanded={isExpanded}
+        aria-disabled={!isPending ? true : undefined}
         role="row"
       >
-        <td className="px-4 py-3 font-medium text-foreground">{row.patientLabel}</td>
-        <td className="px-4 py-3 text-foreground">{row.topScore}</td>
+        <td className={`px-4 py-3 font-medium${isPending ? ' text-foreground' : ''}`}>{row.patientLabel}</td>
+        <td className="px-4 py-3">{row.topScore}</td>
         <td className="px-4 py-3">
           <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold ${badge.classes}`}>
             {badge.label}
@@ -257,11 +259,15 @@ function TableRow({
       {isExpanded && (
         <tr>
           <td colSpan={5} className="bg-muted px-4 py-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {row.candidates.map((candidate) => (
-                <CandidateComparisonCard key={candidate.id} candidate={candidate} />
-              ))}
-            </div>
+            {row.candidates.length === 0 ? (
+              <EmptyState size="sm" icon={UserSearch} title={t('noCandidates')} />
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {row.candidates.map((candidate) => (
+                  <CandidateComparisonCard key={candidate.id} candidate={candidate} />
+                ))}
+              </div>
+            )}
           </td>
         </tr>
       )}

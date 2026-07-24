@@ -29,7 +29,7 @@ vi.mock('@/lib/jwt', () => ({
 vi.mock('@/trpc/rbac', () => ({ hasResourceAccess: (role: string) => role === 'CLINICIAN' }))
 vi.mock('@ultranos/audit-logger', () => ({ AuditLogger: class { emit = auditEmit } }))
 
-import { POST, DELETE } from '@/app/api/patient-photo/route'
+import { POST, DELETE, OPTIONS } from '@/app/api/patient-photo/route'
 
 const PID = '5d60f549-6fd0-4633-8746-2877d3f62abb'
 
@@ -133,5 +133,38 @@ describe('DELETE /api/patient-photo', () => {
     single.mockResolvedValue({ data: { id: PID, updated_at: '2999-12-31T00:00:00.000Z' }, error: null })
     const res = await DELETE(deleteReq(PID, '2000-01-01T00:00:00.000Z') as never)
     expect(res.status).toBe(409)
+  })
+})
+
+describe('CORS', () => {
+  const ORIGIN = 'http://localhost:3001'
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    single.mockResolvedValue({ data: { id: PID, updated_at: '2000-01-01T00:00:00.000Z' }, error: null })
+    updateSelect.mockResolvedValue({ data: [{ id: PID }], error: null })
+    storageUpload.mockResolvedValue({ error: null })
+  })
+
+  it('answers the preflight OPTIONS for an allowed spoke origin', () => {
+    const res = OPTIONS(new Request('http://x/api/patient-photo', {
+      method: 'OPTIONS', headers: { origin: ORIGIN },
+    }) as never)
+    expect(res.status).toBe(204)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe(ORIGIN)
+    expect(res.headers.get('Access-Control-Allow-Methods')).toContain('POST')
+    expect(res.headers.get('Access-Control-Allow-Methods')).toContain('DELETE')
+  })
+
+  it('adds the Allow-Origin header to a successful POST from an allowed origin', async () => {
+    const fd = new FormData()
+    fd.set('file', await pngFile())
+    fd.set('patientId', PID)
+    fd.set('lastKnownUpdate', '2999-01-01T00:00:00.000Z')
+    const res = await POST(new Request('http://x/api/patient-photo', {
+      method: 'POST', headers: { authorization: 'Bearer good', origin: ORIGIN }, body: fd,
+    }) as never)
+    expect(res.status).toBe(200)
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe(ORIGIN)
   })
 })
