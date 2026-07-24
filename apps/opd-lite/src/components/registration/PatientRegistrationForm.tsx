@@ -21,29 +21,11 @@ import { ConsentSection } from './ConsentSection'
 import { MpiResultModal } from './MpiResultModal'
 import { SocialInfoSection } from './SocialInfoSection'
 import { EmergencyContactSection } from './EmergencyContactSection'
-import { getSupabaseBrowserClient } from '@/lib/supabase'
-import { getHubTrpcUrl } from '@/lib/hub-url'
+import { getHubApiUrl, getAuthHeaders } from '@/lib/hub-auth'
 import { Card } from '@/components/Card'
 import { db } from '@/lib/db'
 import { EncryptionKeyNotAvailableError } from '@/lib/encryption-key-store'
 import type { FhirPatient } from '@ultranos/shared-types'
-
-// ── Hub API helpers ──────────────────────────────────────────────────────────
-
-function getHubApiUrl(): string {
-  return getHubTrpcUrl()
-}
-
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const supabase = getSupabaseBrowserClient()
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
-  return headers
-}
 
 interface CheckDuplicatesResult {
   decision: 'ALLOW' | 'WARN' | 'BLOCK'

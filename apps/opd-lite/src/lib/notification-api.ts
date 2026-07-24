@@ -4,7 +4,7 @@
  * Story 12.4: Notification Dispatch — OPD Lite receiver.
  */
 
-import { getHubTrpcUrl } from '@/lib/hub-url'
+import { getHubApiUrl, getAuthHeaders } from '@/lib/hub-auth'
 
 export interface NotificationItem {
   id: string
@@ -20,23 +20,6 @@ export interface NotificationItem {
   createdAt: string
   deliveredAt: string | null
   acknowledgedAt: string | null
-}
-
-function getHubApiUrl(): string {
-  return getHubTrpcUrl()
-}
-
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (typeof window === 'undefined') return headers
-  const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-  const supabase = getSupabaseBrowserClient()
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
-  return headers
 }
 
 async function trpcQuery<T>(path: string, input?: object): Promise<T> {

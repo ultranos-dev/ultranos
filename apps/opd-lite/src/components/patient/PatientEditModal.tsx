@@ -8,12 +8,11 @@ import { AdministrativeGender } from '@ultranos/shared-types'
 import type { FhirPatient, AfghanProvince } from '@ultranos/shared-types'
 import { NameInputSection } from '@/components/registration/NameInputSection'
 import { GeographySection } from '@/components/registration/GeographySection'
-import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { db } from '@/lib/db'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/Card'
-import { getHubTrpcUrl } from '@/lib/hub-url'
+import { getHubApiUrl, getAuthHeaders } from '@/lib/hub-auth'
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -36,23 +35,6 @@ const EMPTY_ADDRESS: AddressFields = { province: '', district: '', village: '' }
 const BLOOD_GROUPS = [
   'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown',
 ] as const
-
-// ── Hub API helpers ─────────────────────────────────────────────────────────
-
-function getHubApiUrl(): string {
-  return getHubTrpcUrl()
-}
-
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const supabase = getSupabaseBrowserClient()
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
-  return headers
-}
 
 // ── Validation schema ───────────────────────────────────────────────────────
 

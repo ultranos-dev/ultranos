@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { getHubTrpcUrl } from '@/lib/hub-url'
+import { getHubApiUrl, getAuthHeaders } from '@/lib/hub-auth'
 import { CandidateComparisonCard, type DuplicateCandidate } from './CandidateComparisonCard'
 
 /* ------------------------------------------------------------------ */
@@ -23,28 +23,6 @@ interface DuplicateReviewRow {
   topScore: number
   decision: ReviewDecision
   createdAt: string
-}
-
-/* ------------------------------------------------------------------ */
-/*  Hub API helpers (placeholder — swap for tRPC client when wired)    */
-/* ------------------------------------------------------------------ */
-
-function getHubApiUrl(): string {
-  return getHubTrpcUrl()
-}
-
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  try {
-    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-    const { data } = await getSupabaseBrowserClient().auth.getSession()
-    if (data.session?.access_token) {
-      headers['Authorization'] = `Bearer ${data.session.access_token}`
-    }
-  } catch {
-    // Auth unavailable — proceed without token (Hub will reject if required)
-  }
-  return headers
 }
 
 async function fetchDuplicateReviews(): Promise<DuplicateReviewRow[]> {

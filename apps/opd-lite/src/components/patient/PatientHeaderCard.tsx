@@ -9,6 +9,8 @@ import { db } from '@/lib/db'
 import { PatientAvatar } from '@/components/patient/PatientAvatar'
 import { Button } from '@/components/ui/Button'
 import { getHubTrpcUrl } from '@/lib/hub-url'
+import { getAuthHeaders } from '@/lib/hub-auth'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 
 interface PatientHeaderCardProps {
   patient: FhirPatient
@@ -70,6 +72,9 @@ export function PatientHeaderCard({
     weight: '--',
     bmi: '--',
   })
+  // True when a photo upload reached Storage but the Hub write was refused, so
+  // the change isn't yet on the patient record. Non-blocking — surfaced as a notice.
+  const [photoError, setPhotoError] = useState(false)
 
   // Load latest height & weight from Dexie observations
   useEffect(() => {
@@ -125,10 +130,13 @@ export function PatientHeaderCard({
   const handlePhotoUpdated = useCallback(
     async (photoUrl: string) => {
       try {
-        // Update Hub API
+        // Update Hub API. patient.update is a protectedProcedure — without the
+        // bearer token it 401s and the photo never persists to the Hub, so the
+        // auth headers are mandatory (see @/lib/hub-auth).
+        const headers = await getAuthHeaders()
         const res = await fetch(`${HUB_API_URL}/patient.update`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             json: {
               patientId,
@@ -138,9 +146,21 @@ export function PatientHeaderCard({
           }),
         })
 
-        if (!res.ok) {
-          // Non-critical — photo is already in Storage
+        // Surface a Hub rejection instead of swallowing it. Offline is expected
+        // (the photo is in Storage + local Dexie and syncs later); an online
+        // non-OK response means the Hub refused the write and the caller must know.
+        if (!res.ok && navigator.onLine) {
+          throw new Error(`patient.update failed: HTTP ${res.status}`)
         }
+
+        // Audit the PHI write (CLAUDE.md rule 6 — every PHI access is audited).
+        auditPhiAccess(
+          AuditAction.UPDATE,
+          AuditResourceType.PATIENT,
+          patientId,
+          patientId,
+          { phiAccess: 'profile_photo' },
+        )
 
         // Update Dexie locally
         const updatedPatient: FhirPatient = {
@@ -157,8 +177,12 @@ export function PatientHeaderCard({
 
         await db.patients.put(updatedPatient)
         onPatientUpdated(updatedPatient)
+        setPhotoError(false)
       } catch {
-        // Non-critical — photo is already uploaded to Storage
+        // Hub refused the write (or we're offline). The image is already in
+        // Storage; surface a non-blocking notice so the user knows it isn't yet
+        // saved to the record rather than assuming success.
+        setPhotoError(true)
       }
     },
     [patient, patientId, onPatientUpdated],
@@ -180,12 +204,19 @@ export function PatientHeaderCard({
     <div className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50">
       <div className="flex items-start gap-5">
         {/* Avatar */}
-        <PatientAvatar
-          patient={patient}
-          patientId={patientId}
-          size={80}
-          onPhotoUpdated={handlePhotoUpdated}
-        />
+        <div className="flex flex-col items-center gap-1">
+          <PatientAvatar
+            patient={patient}
+            patientId={patientId}
+            size={80}
+            onPhotoUpdated={handlePhotoUpdated}
+          />
+          {photoError && (
+            <p role="status" className="max-w-[80px] text-center text-xs text-destructive">
+              {t('photoNotSaved')}
+            </p>
+          )}
+        </div>
 
         {/* Patient info */}
         <div className="min-w-0 flex-1">
