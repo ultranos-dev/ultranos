@@ -337,6 +337,18 @@ When writing sync logic, use the correct tier:
 - Read-only / research agents (Explore, search, review) may share the tree — the rule is about *file-mutating* agents run in parallel.
 - After parallel agents finish, verify integrity before trusting results: check `git status`, confirm expected changes are on disk (`grep` for hallmark edits), and watch for a staged/unstaged split (agents that ran `git add` leave changes in the index — `git diff` alone will not show them; use `git status --short` and `git diff --cached`).
 
+## ⛔ No Assumptions — Verify Before Claiming
+
+**Never assume, guess, or hallucinate. Every factual claim must be checked against ground truth first — and this applies equally to you and to every subagent you dispatch.** In a healthcare system, a confident-but-wrong claim is worse than saying "I don't know yet."
+
+- **No claim without evidence.** Before stating that something works, is fixed, exists, is empty, passes, or is the root cause, you must have just verified it — by reading the actual file, running the actual query/test, or observing the running system. Do not state as fact anything you have only inferred, remembered, or expect to be true.
+- **Verify at the source, against reality.** Check the real code (Read/Grep), the real data (Supabase MCP), and the real running app (tests, Playwright, logs) — not your mental model, not a plausible-sounding pattern, not what a filename implies.
+- **A negative/empty result is not proof — question the probe first.** If a query, search, or test returns "nothing"/"none"/"zero", confirm the probe itself is correct before concluding the thing doesn't exist. (Real incident: an encounter query returned empty and was reported as "no encounters exist" — but the query used the wrong reference format; the data was there. The empty result proved nothing except that the query was wrong.)
+- **Test before claiming done.** "Fixed" / "working" / "passing" requires the test to have actually run and passed, or the behavior to have been observed live in this session. Typecheck and run the relevant tests for every code change. If you didn't run it, say so — don't imply verification you didn't do.
+- **Distinguish fact from inference, explicitly.** Say "verified: …", "I haven't checked X yet", or "this is a hypothesis" — never present a hypothesis in the voice of a confirmed fact. If you're not sure, investigate; if you still can't confirm, report the uncertainty plainly.
+- **Subagent findings are unverified until you check them.** Treat any claim, line number, or conclusion returned by a subagent as a lead, not a fact. Re-verify the load-bearing ones against the source before relaying them to the user or acting on them. Subagents are bound by this same rule; instruct them to verify and to report uncertainty rather than fill gaps with plausible guesses.
+- **When corrected, re-investigate from scratch.** If the user says it's still broken, do not restate your prior conclusion — assume your diagnosis was wrong and re-derive it from fresh evidence.
+
 ## Decision Points
 
 When you encounter a decision point (ambiguous design choice, multiple valid approaches, or a tradeoff that requires human judgment), always:

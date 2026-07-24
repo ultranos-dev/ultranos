@@ -21,3 +21,6 @@ coverage/
 
 # Large source datasets for drug-catalog ETL (DrugBank XML, TWOSIDES, OnSIDES) — multi-GB, never commit
 docs/datasets/
+
+# Playwright MCP debug artifacts — ephemeral console/page dumps
+.playwright-mcp/
