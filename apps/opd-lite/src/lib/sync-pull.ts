@@ -659,10 +659,10 @@ async function applyPulledEncounter(row: Record<string, unknown>): Promise<boole
   const local = await db.encounters.get(id)
   if (local) {
     const localHlc = deserializeHlc(
-      ((local._ultranos as Record<string, unknown> | undefined)?.hlcTimestamp as string) || '0',
+      ((local._ultranos as Record<string, unknown> | undefined)?.hlcTimestamp as string) || ZERO_HLC,
     )
     const remoteHlc = deserializeHlc(
-      ((transformed._ultranos as Record<string, unknown> | undefined)?.hlcTimestamp as string) || '0',
+      ((transformed._ultranos as Record<string, unknown> | undefined)?.hlcTimestamp as string) || ZERO_HLC,
     )
     // Newer-wins (Tier 2): skip when local is same-or-newer — preserves unsynced edits.
     if (compareHlc(localHlc, remoteHlc) >= 0) return false

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { db, type SyncQueueEntry as SyncQueueEntryType } from '@/lib/db'
 import { SyncQueueEntry } from './SyncQueueEntry'
-import { syncDispenseToHub, retrySyncPayload } from '@/lib/dispense-sync'
+import { syncDispenseToHub } from '@/lib/dispense-sync'
 
 const CLEANUP_THRESHOLD_MS = 24 * 60 * 60 * 1000
 const MAX_RETRY_COUNT = 10
@@ -113,19 +113,14 @@ export function SyncQueueDashboard() {
             })
           }
         } else {
-          // No dispense record — retry with stored payload via consolidated helper
-          const payload = JSON.parse(current.payload)
-          const result = await retrySyncPayload(payload)
-
-          if (result.synced) {
-            await db.syncQueue.update(entry.id, { status: 'synced', lastAttemptAt: new Date().toISOString() })
-          } else {
-            await db.syncQueue.update(entry.id, {
-              status: 'failed',
-              retryCount: Math.min(current.retryCount + 1, MAX_RETRY_COUNT),
-              lastAttemptAt: new Date().toISOString(),
-            })
-          }
+          // The local dispense record is gone. The stored payload may be encrypted
+          // (enc:v1:), so JSON.parse-ing it here throws and force-fails the entry.
+          // Hand it back to the DrainWorker (30s poll), which decrypts before pushing.
+          await db.syncQueue.update(entry.id, {
+            status: 'pending',
+            retryCount: 0,
+            lastAttemptAt: new Date().toISOString(),
+          })
         }
       } catch {
         await db.syncQueue.update(entry.id, {

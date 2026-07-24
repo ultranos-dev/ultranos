@@ -6,6 +6,9 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
 const hubApiOrigin = process.env.NEXT_PUBLIC_HUB_API_URL || 'http://localhost:3004'
 const reportUri = process.env.CSP_REPORT_URI
+// Supabase project origin — the Supabase client (auth/storage/realtime) connects
+// to it, so it must be in CSP connect-src/img-src or it is blocked once enforced.
+const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL
 
 const withSerwist = withSerwistInit({
   swSrc: 'src/app/sw.ts',
@@ -25,7 +28,7 @@ const nextConfig = {
     return config
   },
   async headers() {
-    return getSecurityHeaders({ hubApiOrigin, reportUri })
+    return getSecurityHeaders({ hubApiOrigin, reportUri, supabaseOrigin })
   },
 }
 
