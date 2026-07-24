@@ -23,6 +23,35 @@ import { synthesizeSpeech, isTTSError } from '@/lib/tts-client'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 /**
+ * Tier-1 safety-critical resource types. An UNRESOLVED sync_conflicts row for
+ * any of these blocks new prescribing for the patient until a physician resolves
+ * it (CLAUDE.md safety rule 5 — "Prescription generation blocked until resolved").
+ */
+const TIER1_CONFLICT_RESOURCE_TYPES = [
+  'AllergyIntolerance',
+  'MedicationRequest',
+  'MedicationStatement',
+  'Condition',
+] as const
+
+/**
+ * Returns true if the patient has any UNRESOLVED Tier-1 sync conflict.
+ * Matches patient_ref stored either as "Patient/<id>" or a bare id.
+ */
+async function hasUnresolvedTier1Conflict(
+  supabase: SupabaseClient,
+  patientId: string,
+): Promise<boolean> {
+  const { count } = await supabase
+    .from('sync_conflicts')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'UNRESOLVED')
+    .in('patient_ref', [`Patient/${patientId}`, patientId])
+    .in('resource_type', TIER1_CONFLICT_RESOURCE_TYPES as unknown as string[])
+  return (count ?? 0) > 0
+}
+
+/**
  * Story 10.1: Create or update a MedicationStatement when a prescription is dispensed.
  * Best-effort — does not fail the parent operation on error.
  */
@@ -249,6 +278,34 @@ export const medicationRouter = createTRPCRouter({
     )
     .use(enforceConsentMiddleware('MedicationRequest'))
     .mutation(async ({ ctx, input }) => {
+      // Tier-1 safety gate: block new prescribing while an unresolved append-only
+      // conflict exists for this patient (allergies / active meds / conditions).
+      // These conflicts are physician-review-required; prescribing on top of an
+      // unreviewed divergence is exactly the false-negative rule 5 prevents.
+      if (await hasUnresolvedTier1Conflict(ctx.supabase, input.patientId)) {
+        const blockAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+        try {
+          await blockAudit.emit({
+            action: 'PHI_WRITE',
+            resourceType: 'PRESCRIPTION',
+            resourceId: input.prescriptionId ?? 'new',
+            patientId: input.patientId,
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'DENIED',
+            sessionId: ctx.user.sessionId,
+            metadata: { operation: 'prescription_create_blocked_tier1_conflict' },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PRESCRIPTION', reason: 'tier1_conflict_block' })
+        }
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message:
+            'Prescription blocked: an unresolved safety-critical (Tier 1) conflict for this patient must be resolved by a physician first',
+        })
+      }
+
       const now = new Date().toISOString()
       const prescriptionId = input.prescriptionId ?? crypto.randomUUID()
       const qrCodeId = crypto.randomUUID()

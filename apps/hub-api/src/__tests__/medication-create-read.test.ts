@@ -108,12 +108,28 @@ function mockOrgSubscriptionsTable() {
   }
 }
 
+/** Mock for sync_conflicts count query (Tier-1 prescription gate). Thenable → { count }. */
+function mockSyncConflictsTable(openConflicts: number) {
+  const builder: Record<string, unknown> = {}
+  builder.select = () => builder
+  builder.eq = () => builder
+  builder.in = () => builder
+  builder.then = (resolve: (v: unknown) => unknown) =>
+    Promise.resolve({ data: null, count: openConflicts, error: null }).then(resolve)
+  return builder
+}
+
 /** Returns a mockFrom that handles consents + audit + medication_requests insert */
-function mockFromForCreate(insertResult?: { data: unknown; error: unknown }) {
+function mockFromForCreate(
+  insertResult?: { data: unknown; error: unknown },
+  opts?: { openConflicts?: number },
+) {
   return vi.fn((table: string) => {
     if (table === 'organizations') return mockOrganizationsTable()
+    if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
     if (table === 'consents') return mockConsentsTable()
     if (table === 'audit_log') return mockAuditTable()
+    if (table === 'sync_conflicts') return mockSyncConflictsTable(opts?.openConflicts ?? 0)
     return {
       insert: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
@@ -180,6 +196,33 @@ describe('medication.create', () => {
     const ctx = createTestContext({ user: LAB_TECH_USER })
     const caller = createCaller(ctx)
     await expect(caller.medication.create(validCreateInput)).rejects.toThrow(/denied|forbidden/i)
+  })
+
+  it('blocks prescribing when the patient has an unresolved Tier-1 conflict', async () => {
+    const mockFrom = mockFromForCreate(undefined, { openConflicts: 1 })
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
+    const caller = createCaller(ctx)
+
+    await expect(caller.medication.create(validCreateInput)).rejects.toThrow(
+      /Tier 1|resolved|blocked/i,
+    )
+
+    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
+    // The gate was consulted and the prescription was NEVER inserted.
+    expect(fromCalls).toContain('sync_conflicts')
+    expect(fromCalls).not.toContain('medication_requests')
+  })
+
+  it('proceeds normally when there are no unresolved Tier-1 conflicts', async () => {
+    const mockFrom = mockFromForCreate(undefined, { openConflicts: 0 })
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
+    const caller = createCaller(ctx)
+
+    const result = await caller.medication.create(validCreateInput)
+    expect(result.status).toBe('active')
+    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
+    expect(fromCalls).toContain('sync_conflicts')
+    expect(fromCalls).toContain('medication_requests')
   })
 
   it('creates prescription and returns id, qrCodeId, status', async () => {
