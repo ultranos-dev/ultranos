@@ -300,6 +300,13 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
 
   const handleAddPrescription = useCallback(async (form: PrescriptionFormData) => {
     if (!activeEncounter || !practitionerRef) return
+    // Tier-1 safety gate (defense-in-depth): the form is disabled while blocked,
+    // but a command-palette / keyboard path could still reach here. Never generate
+    // a prescription while an unresolved Tier-1 conflict stands (CLAUDE.md rule 5).
+    if (prescriptionBlocked) {
+      setPrescriptionError(tPrescription('prescriptionBlocked'))
+      return
+    }
     if (prescriptionCheckInFlight.current) return  // guard against double-submit
     prescriptionCheckInFlight.current = true
     setPrescriptionError(null)
@@ -440,7 +447,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     } finally {
       prescriptionCheckInFlight.current = false
     }
-  }, [activeEncounter, addPrescription, patientId, practitionerRef, pendingPrescriptions, activeAllergies, activeMedicationStatements, prescriptionCheckInFlight])
+  }, [activeEncounter, addPrescription, patientId, practitionerRef, pendingPrescriptions, activeAllergies, activeMedicationStatements, prescriptionCheckInFlight, prescriptionBlocked, tPrescription])
 
   const handleInteractionOverride = useCallback(async (justification: string) => {
     if (!activeEncounter || !interactionModal.pendingForm) return
@@ -802,6 +809,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
 
           <PrescriptionEntry
             onSubmit={handleAddPrescription}
+            disabled={prescriptionBlocked}
             patientSex={patient.gender}
             patientAge={ageYears(patient.birthDate, patient._ultranos?.birthYear)}
           />
