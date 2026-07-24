@@ -25,6 +25,8 @@ vi.mock('@/lib/field-encryption', () => ({
   decryptRows: (data: Record<string, unknown>[]) => data,
   getCachedEncryptionKey: () => 'a'.repeat(64),
   validateEncryptionConfig: () => {},
+  encryptJsonbValue: (v: unknown) => `v1:${JSON.stringify(v)}`,
+  decryptJsonbValue: (c: unknown) => c,
 }))
 
 // Mock crypto/server

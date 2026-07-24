@@ -4,8 +4,9 @@ import { createTRPCRouter, protectedProcedure } from '../init'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
-import { compareHlc, deserializeHlc } from '@ultranos/sync-engine'
+import { compareHlc, deserializeHlc, resolveConflict } from '@ultranos/sync-engine'
 import { flattenForDb } from '@/lib/resource-mappers'
+import { encryptJsonbValue } from '@/lib/field-encryption'
 
 const SyncOperationSchema = z.object({
   resourceType: z.string().min(1),
@@ -42,6 +43,32 @@ const ORG_SCOPED_TABLES = new Set<string>(['encounters', 'observations', 'condit
  * append-only consent ledger path, not the generic HLC engine.
  */
 const NO_HLC_TABLES = new Set<string>(['consent_records'])
+
+/**
+ * Concurrency window for Tier-1 conflict detection, in milliseconds.
+ * Mirrors CONFLICT_WINDOW_MS in the sync-engine resolver and the PRD's 60s
+ * conflict window (CLAUDE.md Tier 4). Two Tier-1 writes from different devices
+ * within this window are treated as concurrent (divergent) rather than causal.
+ */
+const TIER1_CONFLICT_WINDOW_MS = 60_000
+
+/**
+ * Extract a patient reference (e.g. "Patient/<id>") from either a FHIR payload
+ * (nested patient/subject.reference) or a flattened DB row (bare-UUID columns).
+ * Used to stamp sync_conflicts.patient_ref so the safety monitor can attribute
+ * an unresolved conflict to a patient.
+ */
+function extractPatientRef(data: Record<string, unknown>): string | null {
+  const nested =
+    (data.patient as { reference?: string } | undefined)?.reference ??
+    (data.subject as { reference?: string } | undefined)?.reference
+  if (typeof nested === 'string' && nested.length > 0) return nested
+  const flat = (data.patientRef ?? data.subjectReference ?? data.subjectId) as unknown
+  if (typeof flat === 'string' && flat.length > 0) {
+    return flat.includes('/') ? flat : `Patient/${flat}`
+  }
+  return null
+}
 
 /**
  * Map table names to the column used to scope pull results to a patient.
@@ -136,9 +163,15 @@ export const syncRouter = createTRPCRouter({
             const incomingHlc = deserializeHlc(op.hlcTimestamp)
             const storedHlc = deserializeHlc(existing.hlc_timestamp as string)
             const cmp = compareHlc(incomingHlc, storedHlc)
+            const withinWindow =
+              Math.abs(incomingHlc.wallMs - storedHlc.wallMs) <= TIER1_CONFLICT_WINDOW_MS
 
-            if (cmp <= 0) {
-              // Incoming is older or same — conflict
+            // Only fetch the stored row + resolve when there is a *potential* conflict:
+            // the incoming write is older/equal (optimistic concurrency) OR concurrent
+            // with the stored write (within the 60s window). A clearly-later write
+            // (strictly newer AND outside the window) is a clean sequential update —
+            // fall straight through to the upsert below with no extra query.
+            if (cmp <= 0 || withinWindow) {
               const { data: fullRow } = await ctx.supabase
                 .from(tableName)
                 .select('*')
@@ -146,42 +179,148 @@ export const syncRouter = createTRPCRouter({
                 .single()
 
               if (fullRow) {
-                const remoteData = db.fromRow(fullRow) as Record<string, unknown>
+                const storedData = db.fromRow(fullRow) as Record<string, unknown>
 
-                // Audit: log PHI read during conflict detection
-                try {
-                  await audit.emit({
-                    actorId: ctx.user.sub,
-                    actorRole: ctx.user.role as Parameters<typeof audit.emit>[0]['actorRole'],
-                    action: 'READ' as Parameters<typeof audit.emit>[0]['action'],
-                    resourceType: op.resourceType as Parameters<typeof audit.emit>[0]['resourceType'],
+                // Resolve by clinical safety tier. resolveConflict computes the
+                // effective tier (active vs. historical) from both versions.
+                const resolution = resolveConflict(
+                  {
+                    id: op.resourceId,
+                    data: storedData,
+                    hlcTimestamp: storedHlc,
+                    version: existing.hlc_timestamp as string,
+                  },
+                  {
+                    id: op.resourceId,
+                    data: payload,
+                    hlcTimestamp: incomingHlc,
+                    version: op.hlcTimestamp,
+                  },
+                  op.resourceType,
+                )
+
+                // Tier-1 safety-critical data (allergies, active meds/conditions)
+                // resolves APPEND_ONLY — never LWW-overwrite. Treat as a conflict
+                // for physician review only when the incoming write genuinely
+                // diverged on another device: a different HLC node AND either a
+                // stale write (cmp <= 0) or a concurrent one (within the 60s window).
+                // Same-device linear edits and clearly-later cross-device updates
+                // are legitimate updates, not conflicts.
+                const differentNode = incomingHlc.nodeId !== storedHlc.nodeId
+                const isTier1Conflict =
+                  resolution.strategy === 'APPEND_ONLY' &&
+                  differentNode &&
+                  (cmp <= 0 || withinWindow)
+
+                if (isTier1Conflict) {
+                  // Persist BOTH versions (encrypted at rest) as an UNRESOLVED
+                  // conflict. If we cannot record it, FAIL the op — silently
+                  // accepting the write would be Tier-1 data loss (safety rule 5).
+                  const patientRef =
+                    extractPatientRef(payload) ?? extractPatientRef(storedData)
+
+                  const { error: conflictError } = await ctx.supabase
+                    .from('sync_conflicts')
+                    .insert({
+                      resource_type: op.resourceType,
+                      resource_id: op.resourceId,
+                      patient_ref: patientRef,
+                      status: 'UNRESOLVED',
+                      local_version: encryptJsonbValue(storedData),
+                      remote_version: encryptJsonbValue(payload),
+                      resolution: {
+                        strategy: resolution.strategy,
+                        conflictFlag: resolution.conflictFlag,
+                        blocksPrescription: resolution.blocksPrescription,
+                        detectedBy: 'sync.push',
+                      },
+                    })
+
+                  if (conflictError) {
+                    results.push({
+                      resourceId: op.resourceId,
+                      success: false,
+                      error: 'CONFLICT_PERSIST_FAILED',
+                    })
+                    continue
+                  }
+
+                  // Audit the conflict — opaque ids only, never PHI.
+                  try {
+                    await audit.emit({
+                      actorId: ctx.user.sub,
+                      actorRole: ctx.user.role as Parameters<typeof audit.emit>[0]['actorRole'],
+                      action: 'READ' as Parameters<typeof audit.emit>[0]['action'],
+                      resourceType: op.resourceType as Parameters<typeof audit.emit>[0]['resourceType'],
+                      resourceId: op.resourceId,
+                      sessionId: ctx.user.sessionId,
+                      outcome: 'SUCCESS' as const,
+                      metadata: {
+                        source: 'sync.push',
+                        reason: 'tier1_conflict_recorded',
+                        incomingHlc: op.hlcTimestamp,
+                        storedHlc: existing.hlc_timestamp,
+                      },
+                    })
+                  } catch {
+                    // Audit failure should not block the conflict response.
+                  }
+
+                  results.push({
                     resourceId: op.resourceId,
-                    sessionId: ctx.user.sessionId,
-                    outcome: 'SUCCESS' as const,
-                    metadata: {
-                      source: 'sync.push',
-                      reason: 'conflict_detection',
-                      incomingHlc: op.hlcTimestamp,
-                      storedHlc: existing.hlc_timestamp,
+                    success: false,
+                    conflict: {
+                      remoteVersion: {
+                        id: op.resourceId,
+                        data: storedData,
+                        hlcTimestamp: storedHlc,
+                        version: existing.hlc_timestamp as string,
+                      },
                     },
                   })
-                } catch {
-                  // Audit failure should not block conflict response
+                  continue
                 }
 
-                results.push({
-                  resourceId: op.resourceId,
-                  success: false,
-                  conflict: {
-                    remoteVersion: {
-                      id: op.resourceId,
-                      data: remoteData,
-                      hlcTimestamp: storedHlc,
-                      version: existing.hlc_timestamp as string,
+                // Not an append-only Tier-1 conflict. An older/equal incoming write
+                // is rejected (optimistic concurrency) so the spoke re-pulls and
+                // re-resolves. Strictly-newer writes (Tier-2 timestamp-wins, Tier-3
+                // LWW, or a legitimate Tier-1 sequential update) fall through to the
+                // upsert below.
+                if (cmp <= 0) {
+                  try {
+                    await audit.emit({
+                      actorId: ctx.user.sub,
+                      actorRole: ctx.user.role as Parameters<typeof audit.emit>[0]['actorRole'],
+                      action: 'READ' as Parameters<typeof audit.emit>[0]['action'],
+                      resourceType: op.resourceType as Parameters<typeof audit.emit>[0]['resourceType'],
+                      resourceId: op.resourceId,
+                      sessionId: ctx.user.sessionId,
+                      outcome: 'SUCCESS' as const,
+                      metadata: {
+                        source: 'sync.push',
+                        reason: 'conflict_detection',
+                        incomingHlc: op.hlcTimestamp,
+                        storedHlc: existing.hlc_timestamp,
+                      },
+                    })
+                  } catch {
+                    // Audit failure should not block conflict response
+                  }
+
+                  results.push({
+                    resourceId: op.resourceId,
+                    success: false,
+                    conflict: {
+                      remoteVersion: {
+                        id: op.resourceId,
+                        data: storedData,
+                        hlcTimestamp: storedHlc,
+                        version: existing.hlc_timestamp as string,
+                      },
                     },
-                  },
-                })
-                continue
+                  })
+                  continue
+                }
               }
             }
           }
@@ -311,10 +450,26 @@ export const syncRouter = createTRPCRouter({
           .gt('hlc_timestamp', input.sinceHlc)
           .order('hlc_timestamp', { ascending: true })
 
-        // Patient-scope filter: restrict results to the requested patient
+        // Patient-scope filter: restrict results to the requested patient.
         const patientCol = PATIENT_COLUMN_MAP[table]
         if (patientCol) {
           query = query.eq(patientCol, input.patientId)
+        } else if (table === 'soap_ledger') {
+          // soap_ledger has no direct patient column — it links via encounter_id.
+          // Resolve the patient's encounters first, then scope SOAP notes to them.
+          // Without this filter, a ClinicalImpression pull returned EVERY patient's
+          // SOAP notes to any clinician (mass PHI exposure).
+          const { data: encRows } = await ctx.supabase
+            .from('encounters')
+            .select('id')
+            .eq('subject_id', input.patientId)
+          const encounterIds = (encRows ?? []).map((r) => (r as { id: string }).id)
+          if (encounterIds.length === 0) continue // no encounters → no SOAP for this patient
+          query = query.in('encounter_id', encounterIds)
+        } else {
+          // No patient-scoping column and no known linkage — skip rather than
+          // return every patient's rows (data-minimization fail-safe).
+          continue
         }
 
         const { data: rows } = await query

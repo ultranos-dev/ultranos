@@ -152,3 +152,41 @@ export function decryptRows<T extends Record<string, unknown>>(
 ): T[] {
   return rows.map((row) => decryptRow(row, encryptionKey))
 }
+
+/**
+ * Encrypt an arbitrary value (object/array/scalar) into a single ciphertext
+ * string for storage in a jsonb column that is NOT covered by the field-name
+ * based row encryptor.
+ *
+ * Used for sync_conflicts.local_version / remote_version — those columns hold
+ * full FHIR resource snapshots (allergy substance, medication, diagnosis) that
+ * are PHI and must not be persisted in plaintext. The value is JSON-stringified
+ * then AES-256-GCM encrypted; the ciphertext string is stored as a jsonb string
+ * scalar. Round-trip via decryptJsonbValue().
+ */
+export function encryptJsonbValue(
+  value: unknown,
+  encryptionKey: string = getCachedEncryptionKey(),
+): string {
+  return encryptField(JSON.stringify(value ?? null), encryptionKey)
+}
+
+/**
+ * Decrypt a value produced by encryptJsonbValue() back into its original shape.
+ * Returns null for tampered/undecryptable ciphertext (never throws), and passes
+ * through non-string / non-encrypted values unchanged (backward compatibility).
+ */
+export function decryptJsonbValue(
+  ciphertext: unknown,
+  encryptionKey: string = getCachedEncryptionKey(),
+): unknown {
+  if (typeof ciphertext !== 'string') return ciphertext
+  if (!ciphertext.startsWith('v1:')) return ciphertext
+  const plain = decryptField(ciphertext, encryptionKey)
+  if (plain === '[Encrypted Content]') return null
+  try {
+    return JSON.parse(plain)
+  } catch {
+    return plain
+  }
+}
