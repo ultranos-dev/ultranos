@@ -46,14 +46,17 @@ describe('Dexie patient database', () => {
     expect(retrieved!.name[0]!.text).toBe('Ahmed Al-Rashid')
   })
 
-  it('should search patients by nameLocal index', async () => {
-    const p1 = makePatient({ _ultranos: { ...makePatient()._ultranos, nameLocal: 'أحمد الراشد' } })
-    const p2 = makePatient({ _ultranos: { ...makePatient()._ultranos, nameLocal: 'فاطمة حسن' } })
+  it('should search patients by nationalIdHash index (nameLocal index removed in Story 28.6)', async () => {
+    // Story 28.6: _ultranos.nameLocal and _ultranos.nameLatin were removed from indexedFields.
+    // Name search is now done via in-memory decrypt-and-filter (see adr-028).
+    // This test validates the blind index (_ultranos.nationalIdHash) which IS still indexed.
+    const p1 = makePatient({ _ultranos: { ...makePatient()._ultranos, nationalIdHash: 'hash_search_a' } })
+    const p2 = makePatient({ _ultranos: { ...makePatient()._ultranos, nationalIdHash: 'hash_search_b' } })
     await db.patients.bulkAdd([p1, p2])
 
     const results = await db.patients
-      .where('_ultranos.nameLocal')
-      .startsWithIgnoreCase('أحمد')
+      .where('_ultranos.nationalIdHash')
+      .equals('hash_search_a')
       .toArray()
 
     expect(results).toHaveLength(1)
@@ -91,7 +94,9 @@ describe('Dexie patient database', () => {
     expect(count).toBe(50)
   })
 
-  it('should retrieve local records in under 500ms for 100 records', async () => {
+  it('should retrieve local records by nationalIdHash in under 500ms for 100 records', async () => {
+    // Story 28.6: _ultranos.nameLocal is no longer indexed — search uses in-memory decrypt-and-filter.
+    // This test validates indexed lookup performance using the blind nationalIdHash index.
     const patients = Array.from({ length: 100 }, (_, i) =>
       makePatient({
         _ultranos: {
@@ -105,8 +110,8 @@ describe('Dexie patient database', () => {
 
     const start = performance.now()
     const results = await db.patients
-      .where('_ultranos.nameLocal')
-      .startsWithIgnoreCase('Patient 5')
+      .where('_ultranos.nationalIdHash')
+      .startsWith('hash_5')
       .toArray()
     const elapsed = performance.now() - start
 

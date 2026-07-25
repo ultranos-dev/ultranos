@@ -51,7 +51,9 @@ describe("migrateUnencryptedQueueEntries", () => {
       encryptionKeyStore: { getKey: () => fakeKey },
     }))
     vi.doMock("@ultranos/crypto", () => ({
-      encryptPayload: vi.fn().mockResolvedValue("ENCRYPTED_BASE64"),
+      // encryptPayload returns a version-prefixed string "v<N>:<base64>" per the crypto package contract.
+      // The migration prepends "enc:" via ENCRYPTED_PAYLOAD_PREFIX, yielding "enc:v1:<base64>".
+      encryptPayload: vi.fn().mockResolvedValue("v1:ENCRYPTED_BASE64"),
     }))
 
     await db.syncQueue.add(makeEntry("e1", PLAINTEXT))

@@ -23,6 +23,13 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }))
 
+// Mock next-intl to avoid NextIntlClientProvider context requirement
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, values?: Record<string, unknown>) =>
+    values ? `${key} ${JSON.stringify(values)}` : key,
+  useLocale: () => 'en',
+}))
+
 // Mock audit module
 vi.mock('../lib/audit', () => ({
   auditPhiAccess: vi.fn(),

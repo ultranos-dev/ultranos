@@ -1,5 +1,6 @@
 import type { DrugSearchResult, FhirPatient } from '@ultranos/shared-types'
 import { getHubTrpcUrl } from '@/lib/hub-url'
+import { db, type LocalDiagnosticReport } from '@/lib/db'
 
 export interface PatientSearchResult {
   patients: FhirPatient[]
@@ -281,4 +282,122 @@ export async function enrichDrug(
     body: JSON.stringify({ json: { atcCode, fields } }),
   })
   if (!res.ok) throw new Error(`Drug enrichment failed: ${res.status}`)
+}
+
+// ---------------------------------------------------------------------------
+// Diagnostic reports (lab results) — Hub -> FHIR R4 -> local Dexie cache.
+// ---------------------------------------------------------------------------
+
+/** Flat lab-report row as returned by the Hub `lab.listReportsForPatient` procedure. */
+export interface HubDiagnosticReportItem {
+  id: string
+  resourceType: 'DiagnosticReport'
+  status: string
+  loincCode: string | null
+  loincDisplay: string | null
+  patientRef: string
+  performerId: string | null
+  performerDisplay: string | null
+  labId: string | null
+  issued: string | null
+  collectionDate: string | null
+  virusScanStatus: string
+  createdAt: string | null
+  conclusion: string | null
+  presentedForm:
+    | Array<{ contentType?: string; data?: string; title?: string; url?: string }>
+    | null
+}
+
+/** Mapped local report — FHIR R4 DiagnosticReport plus the Ultranos extension block. */
+export type MappedDiagnosticReport = LocalDiagnosticReport & {
+  meta: { versionId: string; lastUpdated: string }
+  _ultranos: {
+    createdAt: string
+    hlcTimestamp: string
+    isOfflineCreated: boolean
+    virusScanStatus: 'pending' | 'clean' | 'infected' | 'error'
+    labId: string | null
+  }
+}
+
+const VALID_VIRUS_SCAN = new Set(['pending', 'clean', 'infected', 'error'])
+
+/**
+ * Map a flat Hub lab-report row to a FHIR R4 DiagnosticReport for local storage.
+ * Pure and deterministic — uses ONLY server-provided timestamps (never new Date())
+ * so cached values stay stable, and coerces an unknown virusScanStatus to 'pending'
+ * (fail-safe: never trust an unvalidated scan status).
+ */
+export function mapHubReportToFhir(item: HubDiagnosticReportItem): MappedDiagnosticReport {
+  const createdAt = item.createdAt ?? ''
+  const virusScanStatus = (VALID_VIRUS_SCAN.has(item.virusScanStatus)
+    ? item.virusScanStatus
+    : 'pending') as 'pending' | 'clean' | 'infected' | 'error'
+
+  return {
+    id: item.id,
+    resourceType: 'DiagnosticReport',
+    status: item.status,
+    code: {
+      coding: item.loincCode
+        ? [{ system: 'http://loinc.org', code: item.loincCode, display: item.loincDisplay ?? undefined }]
+        : [],
+    },
+    subject: { reference: item.patientRef },
+    ...(item.collectionDate ? { effectiveDateTime: item.collectionDate } : {}),
+    issued: item.issued ?? '',
+    ...(item.conclusion ? { conclusion: item.conclusion } : {}),
+    ...(item.performerId
+      ? { performer: [{ reference: item.performerId, display: item.performerDisplay ?? undefined }] }
+      : {}),
+    ...(item.presentedForm ? { presentedForm: item.presentedForm } : {}),
+    meta: { versionId: '1', lastUpdated: createdAt },
+    _ultranos: { createdAt, hlcTimestamp: '', isOfflineCreated: false, virusScanStatus, labId: item.labId },
+  }
+}
+
+/** In-flight fetches keyed by patientId — dedupes concurrent calls. */
+const inFlightReportFetches = new Map<string, Promise<void>>()
+
+/**
+ * Fetch a patient's lab reports from the Hub and upsert them into the local
+ * Dexie cache. Offline-first: on any network/parse failure the existing cache
+ * is left intact (never cleared). Concurrent calls for the same patient share a
+ * single request.
+ *
+ * NOTE: the Hub-side `lab.listReportsForPatient` procedure is the counterpart
+ * this client expects; it must be implemented on hub-api for end-to-end sync.
+ */
+export async function fetchDiagnosticReportsForPatient(patientId: string): Promise<void> {
+  const existing = inFlightReportFetches.get(patientId)
+  if (existing) return existing
+
+  const task = (async () => {
+    try {
+      const { useAuthSessionStore } = await import('@/stores/auth-session-store')
+      const token = useAuthSessionStore.getState().session?.token
+      const input = encodeURIComponent(JSON.stringify({ json: { patientId } }))
+      const res = await fetch(`${getHubApiUrl()}/lab.listReportsForPatient?input=${input}`, {
+        method: 'GET',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      if (!res.ok) return
+      const body = (await res.json()) as {
+        result?: { data?: { json?: { reports?: HubDiagnosticReportItem[] } } }
+      }
+      const reports = body?.result?.data?.json?.reports ?? []
+      if (reports.length === 0) return
+      await db.diagnosticReports.bulkPut(reports.map(mapHubReportToFhir) as never)
+    } catch {
+      // Network/parse failure — keep the existing Dexie cache (offline-first).
+    }
+  })()
+
+  inFlightReportFetches.set(patientId, task)
+  try {
+    await task
+  } finally {
+    inFlightReportFetches.delete(patientId)
+  }
 }

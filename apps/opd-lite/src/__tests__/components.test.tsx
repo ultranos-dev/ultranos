@@ -6,6 +6,13 @@ import { SearchInput } from '@/components/search-input'
 import type { FhirPatient } from '@ultranos/shared-types'
 import { AdministrativeGender } from '@ultranos/shared-types'
 
+// Mock next-intl to avoid NextIntlClientProvider context requirement
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, values?: Record<string, unknown>) =>
+    values ? `${key} ${JSON.stringify(values)}` : key,
+  useLocale: () => 'en',
+}))
+
 function makePatient(id: string, nameLocal: string): FhirPatient {
   return {
     id,
@@ -67,7 +74,8 @@ describe('SearchInput', () => {
 describe('PatientResultList', () => {
   it('should show searching state', () => {
     render(<PatientResultList results={[]} isSearching={true} onSelect={vi.fn()} />)
-    expect(screen.getByText('Searching...')).toBeDefined()
+    // The component renders t('loading') — the mock returns the key 'loading'
+    expect(screen.getByRole('status')).toBeDefined()
   })
 
   it('should render nothing for empty results when not searching', () => {
@@ -89,7 +97,8 @@ describe('PatientResultList', () => {
       makePatient('id-2', 'Fatima'),
     ]
     render(<PatientResultList results={patients} isSearching={false} onSelect={vi.fn()} />)
-    const buttons = screen.getAllByRole('button', { name: 'Select' })
+    // The component renders t('select') — the mock returns the key 'select'
+    const buttons = screen.getAllByRole('button', { name: 'select' })
     expect(buttons).toHaveLength(2)
   })
 
@@ -97,14 +106,16 @@ describe('PatientResultList', () => {
     const onSelect = vi.fn()
     const patient = makePatient('id-1', 'Ahmed')
     render(<PatientResultList results={[patient]} isSearching={false} onSelect={onSelect} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Select' }))
+    // The component renders t('select') — the mock returns the key 'select'
+    fireEvent.click(screen.getByRole('button', { name: 'select' }))
     expect(onSelect).toHaveBeenCalledWith(patient)
   })
 
   it('should render patient list with accessible role', () => {
     const patients = [makePatient('id-1', 'Ahmed')]
     render(<PatientResultList results={patients} isSearching={false} onSelect={vi.fn()} />)
-    expect(screen.getByRole('list', { name: 'Patient search results' })).toBeDefined()
+    // The component renders t('searchResults') — the mock returns the key 'searchResults'
+    expect(screen.getByRole('list', { name: 'searchResults' })).toBeDefined()
   })
 
   it('should use logical CSS properties (margin-inline-start) via Tailwind ms- class', () => {

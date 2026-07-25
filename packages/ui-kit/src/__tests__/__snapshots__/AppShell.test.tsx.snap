@@ -21,14 +21,14 @@ exports[`AppShell > snapshot: RTL render with all props 1`] = `
         <button
           aria-expanded="false"
           aria-label="Toggle navigation"
-          class="appshell-hamburger-_r_k_"
+          class="appshell-hamburger-«rk»"
           style="background: none; cursor: pointer; margin-inline-start: auto; margin-inline-end: 0.5rem; padding: 0.25rem; font-size: 1.5rem; line-height: 1; color: rgb(76, 84, 93);"
           type="button"
         >
           ☰
         </button>
         <div
-          class="appshell-nav-links-_r_k_ "
+          class="appshell-nav-links-«rk» "
           style="display: flex; align-items: center; gap: 0.25rem; margin-inline-start: 2rem; flex: 1 1 0%;"
         >
           <a
@@ -72,10 +72,10 @@ exports[`AppShell > snapshot: RTL render with all props 1`] = `
       <style>
         
             @media (min-width: 641px) {
-              .appshell-hamburger-_r_k_ { display: none !important; }
+              .appshell-hamburger-«rk» { display: none !important; }
             }
             @media (max-width: 640px) {
-              .appshell-nav-links-_r_k_ {
+              .appshell-nav-links-«rk» {
                 display: none !important;
                 position: absolute;
                 inset-block-start: 56px;
@@ -88,7 +88,7 @@ exports[`AppShell > snapshot: RTL render with all props 1`] = `
                 padding-inline: 0.5rem;
                 z-index: 99;
               }
-              .appshell-nav-links-open-_r_k_ {
+              .appshell-nav-links-open-«rk» {
                 display: flex !important;
               }
             }
@@ -127,14 +127,14 @@ exports[`AppShell > snapshot: RTL render with user=null 1`] = `
         <button
           aria-expanded="false"
           aria-label="Toggle navigation"
-          class="appshell-hamburger-_r_l_"
+          class="appshell-hamburger-«rl»"
           style="background: none; cursor: pointer; margin-inline-start: auto; margin-inline-end: 0.5rem; padding: 0.25rem; font-size: 1.5rem; line-height: 1; color: rgb(76, 84, 93);"
           type="button"
         >
           ☰
         </button>
         <div
-          class="appshell-nav-links-_r_l_ "
+          class="appshell-nav-links-«rl» "
           style="display: flex; align-items: center; gap: 0.25rem; margin-inline-start: 2rem; flex: 1 1 0%;"
         >
           <a
@@ -164,10 +164,10 @@ exports[`AppShell > snapshot: RTL render with user=null 1`] = `
       <style>
         
             @media (min-width: 641px) {
-              .appshell-hamburger-_r_l_ { display: none !important; }
+              .appshell-hamburger-«rl» { display: none !important; }
             }
             @media (max-width: 640px) {
-              .appshell-nav-links-_r_l_ {
+              .appshell-nav-links-«rl» {
                 display: none !important;
                 position: absolute;
                 inset-block-start: 56px;
@@ -180,7 +180,7 @@ exports[`AppShell > snapshot: RTL render with user=null 1`] = `
                 padding-inline: 0.5rem;
                 z-index: 99;
               }
-              .appshell-nav-links-open-_r_l_ {
+              .appshell-nav-links-open-«rl» {
                 display: flex !important;
               }
             }
@@ -216,14 +216,14 @@ exports[`AppShell > snapshot: default render with all props 1`] = `
       <button
         aria-expanded="false"
         aria-label="Toggle navigation"
-        class="appshell-hamburger-_r_i_"
+        class="appshell-hamburger-«ri»"
         style="background: none; cursor: pointer; margin-inline-start: auto; margin-inline-end: 0.5rem; padding: 0.25rem; font-size: 1.5rem; line-height: 1; color: rgb(76, 84, 93);"
         type="button"
       >
         ☰
       </button>
       <div
-        class="appshell-nav-links-_r_i_ "
+        class="appshell-nav-links-«ri» "
         style="display: flex; align-items: center; gap: 0.25rem; margin-inline-start: 2rem; flex: 1 1 0%;"
       >
         <a
@@ -267,10 +267,10 @@ exports[`AppShell > snapshot: default render with all props 1`] = `
     <style>
       
             @media (min-width: 641px) {
-              .appshell-hamburger-_r_i_ { display: none !important; }
+              .appshell-hamburger-«ri» { display: none !important; }
             }
             @media (max-width: 640px) {
-              .appshell-nav-links-_r_i_ {
+              .appshell-nav-links-«ri» {
                 display: none !important;
                 position: absolute;
                 inset-block-start: 56px;
@@ -283,7 +283,7 @@ exports[`AppShell > snapshot: default render with all props 1`] = `
                 padding-inline: 0.5rem;
                 z-index: 99;
               }
-              .appshell-nav-links-open-_r_i_ {
+              .appshell-nav-links-open-«ri» {
                 display: flex !important;
               }
             }
@@ -318,14 +318,14 @@ exports[`AppShell > snapshot: render with user=null (unauthenticated state) 1`] 
       <button
         aria-expanded="false"
         aria-label="Toggle navigation"
-        class="appshell-hamburger-_r_j_"
+        class="appshell-hamburger-«rj»"
         style="background: none; cursor: pointer; margin-inline-start: auto; margin-inline-end: 0.5rem; padding: 0.25rem; font-size: 1.5rem; line-height: 1; color: rgb(76, 84, 93);"
         type="button"
       >
         ☰
       </button>
       <div
-        class="appshell-nav-links-_r_j_ "
+        class="appshell-nav-links-«rj» "
         style="display: flex; align-items: center; gap: 0.25rem; margin-inline-start: 2rem; flex: 1 1 0%;"
       >
         <a
@@ -355,10 +355,10 @@ exports[`AppShell > snapshot: render with user=null (unauthenticated state) 1`] 
     <style>
       
             @media (min-width: 641px) {
-              .appshell-hamburger-_r_j_ { display: none !important; }
+              .appshell-hamburger-«rj» { display: none !important; }
             }
             @media (max-width: 640px) {
-              .appshell-nav-links-_r_j_ {
+              .appshell-nav-links-«rj» {
                 display: none !important;
                 position: absolute;
                 inset-block-start: 56px;
@@ -371,7 +371,7 @@ exports[`AppShell > snapshot: render with user=null (unauthenticated state) 1`] 
                 padding-inline: 0.5rem;
                 z-index: 99;
               }
-              .appshell-nav-links-open-_r_j_ {
+              .appshell-nav-links-open-«rj» {
                 display: flex !important;
               }
             }

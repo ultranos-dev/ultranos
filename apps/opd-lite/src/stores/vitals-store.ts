@@ -125,9 +125,11 @@ export const useVitalsStore = create<VitalsState>()(
 
         // Append-only: add new observations without deleting old ones (Tier 2 addenda).
         // Old versions are preserved for sync conflict resolution.
-        await db.transaction('rw', db.observations, async () => {
-          await db.observations.bulkAdd(observations)
-        })
+        // NOTE: no db.transaction() wrapper — `observations` is field-encrypted
+        // (async AES-GCM middleware). Awaiting Web Crypto inside a Dexie transaction
+        // detaches the transaction zone (PrematureCommitError). bulkAdd is atomic on
+        // its own, so the wrapper added nothing but that latent risk.
+        await db.observations.bulkAdd(observations)
 
         for (const obs of observations) {
           void enqueueSyncAction(syncQueue, {

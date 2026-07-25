@@ -3,6 +3,18 @@ import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { InstallPrompt } from '../components/InstallPrompt'
 
+// Mock next-intl to avoid NextIntlClientProvider context requirement
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, values?: Record<string, unknown>) =>
+    values ? `${key} ${JSON.stringify(values)}` : key,
+  useLocale: () => 'en',
+}))
+
+// Mock sidebar to avoid SidebarProvider context requirement
+vi.mock('@/components/ui/sidebar', () => ({
+  useSidebar: () => ({ state: 'expanded' }),
+}))
+
 function createBeforeInstallPromptEvent() {
   const promptFn = vi.fn().mockResolvedValue(undefined)
   const userChoicePromise = Promise.resolve({ outcome: 'accepted' as const })
@@ -58,7 +70,8 @@ describe('InstallPrompt', () => {
       vi.advanceTimersByTime(1)
     })
     expect(screen.getByRole('banner')).toBeDefined()
-    expect(screen.getByText('Install OPD Lite for offline access')).toBeDefined()
+    // Component renders t('prompt') — mock returns the key 'prompt'
+    expect(screen.getByText('prompt')).toBeDefined()
   })
 
   it('does not show banner after 2 minutes if no beforeinstallprompt event', () => {
@@ -80,7 +93,8 @@ describe('InstallPrompt', () => {
       vi.advanceTimersByTime(120_000)
     })
 
-    const installButton = screen.getByText('Install')
+    // Component renders t('install') — mock returns the key 'install'
+    const installButton = screen.getByText('install')
     // Need real timers for the async prompt call
     vi.useRealTimers()
     await userEvent.click(installButton)
@@ -98,7 +112,8 @@ describe('InstallPrompt', () => {
       vi.advanceTimersByTime(120_000)
     })
 
-    const dismissButton = screen.getByLabelText('Dismiss install banner')
+    // Component renders aria-label={t('dismiss')} — mock returns the key 'dismiss'
+    const dismissButton = screen.getByLabelText('dismiss')
     vi.useRealTimers()
     await userEvent.click(dismissButton)
 

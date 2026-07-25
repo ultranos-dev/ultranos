@@ -26,22 +26,22 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
   >
     <label
       cmdk-label=""
-      for="radix-_r_3e_"
-      id="radix-_r_3d_"
+      for="radix-«r3e»"
+      id="radix-«r3d»"
       style="position: absolute; width: 1px; height: 1px; padding: 0px; margin: -1px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; border-width: 0px;"
     >
       Clinical Command Palette
     </label>
     <input
       aria-autocomplete="list"
-      aria-controls="radix-_r_3c_"
+      aria-controls="radix-«r3c»"
       aria-expanded="true"
-      aria-labelledby="radix-_r_3d_"
+      aria-labelledby="radix-«r3d»"
       autocomplete="off"
       autocorrect="off"
       class="w-full border-b border-border bg-transparent px-4 py-3 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
       cmdk-input=""
-      id="radix-_r_3e_"
+      id="radix-«r3e»"
       placeholder="Search clinical actions..."
       role="combobox"
       spellcheck="false"
@@ -52,7 +52,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
       aria-label="Suggestions"
       class="max-h-72 overflow-y-auto p-2"
       cmdk-list=""
-      id="radix-_r_3c_"
+      id="radix-«r3c»"
       role="listbox"
       tabindex="-1"
     >
@@ -68,12 +68,12 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
           <div
             aria-hidden="true"
             cmdk-group-heading=""
-            id="radix-_r_3g_"
+            id="radix-«r3g»"
           >
             Clinical Sections
           </div>
           <div
-            aria-labelledby="radix-_r_3g_"
+            aria-labelledby="radix-«r3g»"
             cmdk-group-items=""
             role="group"
           >
@@ -85,7 +85,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
               data-disabled="false"
               data-selected="true"
               data-value="vitals"
-              id="radix-_r_3h_"
+              id="radix-«r3h»"
               role="option"
             >
               <span>
@@ -105,7 +105,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
               data-disabled="false"
               data-selected="false"
               data-value="subjective"
-              id="radix-_r_3i_"
+              id="radix-«r3i»"
               role="option"
             >
               <span>
@@ -125,7 +125,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
               data-disabled="false"
               data-selected="false"
               data-value="objective"
-              id="radix-_r_3j_"
+              id="radix-«r3j»"
               role="option"
             >
               <span>
@@ -145,7 +145,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
               data-disabled="false"
               data-selected="false"
               data-value="assessment"
-              id="radix-_r_3k_"
+              id="radix-«r3k»"
               role="option"
             >
               <span>
@@ -219,22 +219,22 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
   >
     <label
       cmdk-label=""
-      for="radix-_r_35_"
-      id="radix-_r_34_"
+      for="radix-«r35»"
+      id="radix-«r34»"
       style="position: absolute; width: 1px; height: 1px; padding: 0px; margin: -1px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; border-width: 0px;"
     >
       Clinical Command Palette
     </label>
     <input
       aria-autocomplete="list"
-      aria-controls="radix-_r_33_"
+      aria-controls="radix-«r33»"
       aria-expanded="true"
-      aria-labelledby="radix-_r_34_"
+      aria-labelledby="radix-«r34»"
       autocomplete="off"
       autocorrect="off"
       class="w-full border-b border-border bg-transparent px-4 py-3 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
       cmdk-input=""
-      id="radix-_r_35_"
+      id="radix-«r35»"
       placeholder="Search clinical actions..."
       role="combobox"
       spellcheck="false"
@@ -245,7 +245,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
       aria-label="Suggestions"
       class="max-h-72 overflow-y-auto p-2"
       cmdk-list=""
-      id="radix-_r_33_"
+      id="radix-«r33»"
       role="listbox"
       tabindex="-1"
     >
@@ -261,12 +261,12 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
           <div
             aria-hidden="true"
             cmdk-group-heading=""
-            id="radix-_r_37_"
+            id="radix-«r37»"
           >
             Clinical Sections
           </div>
           <div
-            aria-labelledby="radix-_r_37_"
+            aria-labelledby="radix-«r37»"
             cmdk-group-items=""
             role="group"
           >
@@ -278,7 +278,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
               data-disabled="false"
               data-selected="true"
               data-value="vitals"
-              id="radix-_r_38_"
+              id="radix-«r38»"
               role="option"
             >
               <span>
@@ -298,7 +298,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
               data-disabled="false"
               data-selected="false"
               data-value="subjective"
-              id="radix-_r_39_"
+              id="radix-«r39»"
               role="option"
             >
               <span>
@@ -318,7 +318,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
               data-disabled="false"
               data-selected="false"
               data-value="objective"
-              id="radix-_r_3a_"
+              id="radix-«r3a»"
               role="option"
             >
               <span>
@@ -338,7 +338,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
               data-disabled="false"
               data-selected="false"
               data-value="assessment"
-              id="radix-_r_3b_"
+              id="radix-«r3b»"
               role="option"
             >
               <span>

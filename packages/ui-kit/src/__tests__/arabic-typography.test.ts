@@ -158,10 +158,14 @@ describe('tokens.css RTL overrides', () => {
   })
 
   it('defines --font-sans for LTR using --font-manrope', () => {
-    expect(css).toContain('--font-sans: var(--font-manrope)')
+    // Arabic fonts are prepended for unicode-range rendering; Manrope is still the Latin primary
+    expect(css).toContain("var(--font-manrope), system-ui")
+    expect(css).toContain('--font-sans:')
   })
 
   it('defines --font-heading for LTR using --font-public-sans', () => {
-    expect(css).toContain('--font-heading: var(--font-public-sans)')
+    // Arabic fonts are prepended for unicode-range rendering; Public Sans is still the Latin heading primary
+    expect(css).toContain("var(--font-public-sans), system-ui")
+    expect(css).toContain('--font-heading:')
   })
 })

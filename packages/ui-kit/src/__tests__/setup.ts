@@ -1,5 +1,12 @@
 import '@testing-library/jest-dom/vitest'
 
+// Mock ResizeObserver — not implemented in jsdom but required by Radix UI primitives
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
 // Mock window.matchMedia for tests
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

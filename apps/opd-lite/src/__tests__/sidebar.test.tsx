@@ -20,6 +20,11 @@ vi.mock('@/components/ui/sidebar', () => ({
   SidebarMenuButton: ({ children, isActive }: { children: React.ReactNode; isActive?: boolean }) => (
     <button data-active={isActive}>{children}</button>
   ),
+  SidebarMenuSub: ({ children }: { children: React.ReactNode }) => <ul>{children}</ul>,
+  SidebarMenuSubItem: ({ children }: { children: React.ReactNode }) => <li>{children}</li>,
+  SidebarMenuSubButton: ({ children, isActive }: { children: React.ReactNode; isActive?: boolean }) => (
+    <button data-active={isActive}>{children}</button>
+  ),
 }))
 
 import { navGroups } from '../components/sidebar/nav-config'
@@ -27,13 +32,13 @@ import { NavMain } from '../components/sidebar/nav-main'
 import { OpdHeader } from '../components/sidebar/opd-header'
 
 describe('navGroups', () => {
-  it('has exactly 4 groups', () => {
-    expect(navGroups).toHaveLength(4)
+  it('has exactly 5 groups', () => {
+    expect(navGroups).toHaveLength(5)
   })
 
-  it('group titles are Core, Clinical, Admin, System', () => {
+  it('group titles are (empty singleton), Core, Clinical, Admin, System', () => {
     const titles = navGroups.map((g) => g.title)
-    expect(titles).toEqual(['Core', 'Clinical', 'Admin', 'System'])
+    expect(titles).toEqual(['', 'Core', 'Clinical', 'Admin', 'System'])
   })
 
   it('every item has a titleKey, url, and icon', () => {
@@ -65,12 +70,14 @@ describe('navGroups', () => {
 })
 
 describe('NavMain', () => {
-  it('renders all group labels', () => {
+  it('renders multi-item group labels (singleton groups render no label)', () => {
+    // In nav-config: Dashboard (''), Admin, and System are singleton groups → no label.
+    // Only Core (2 items) and Clinical (4 items) render SidebarGroupLabel.
     render(<NavMain groups={navGroups} />)
     expect(screen.getByText('Core')).toBeInTheDocument()
     expect(screen.getByText('Clinical')).toBeInTheDocument()
-    expect(screen.getByText('Admin')).toBeInTheDocument()
-    expect(screen.getByText('System')).toBeInTheDocument()
+    expect(screen.queryByText('Admin')).not.toBeInTheDocument()
+    expect(screen.queryByText('System')).not.toBeInTheDocument()
   })
 
   it('renders badge when count > 0', () => {
