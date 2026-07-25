@@ -53,7 +53,7 @@ describe('CORS utility (cors.ts)', () => {
       const { corsHeaders } = await import('../lib/cors')
       const headers = corsHeaders('https://opd.ultranos.app')
       expect(headers['Access-Control-Allow-Origin']).toBe('https://opd.ultranos.app')
-      expect(headers['Access-Control-Allow-Methods']).toBe('GET, POST')
+      expect(headers['Access-Control-Allow-Methods']).toBe('GET, POST, DELETE')
       expect(headers['Access-Control-Allow-Headers']).toBe('Content-Type, Authorization')
       expect(headers['Access-Control-Max-Age']).toBe('86400')
       expect(headers['Vary']).toBe('Origin')
@@ -234,7 +234,7 @@ describe('tRPC route CORS handling', () => {
 
     const headers = corsHeaders(origin)
     expect(headers['Access-Control-Allow-Origin']).toBe(origin)
-    expect(headers['Access-Control-Allow-Methods']).toBe('GET, POST')
+    expect(headers['Access-Control-Allow-Methods']).toBe('GET, POST, DELETE')
   })
 
   it('unknown origin does NOT get Access-Control-Allow-Origin', async () => {

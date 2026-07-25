@@ -224,6 +224,20 @@ describe('medication.getStatus — signature verification enforcement', () => {
     return vi.fn().mockImplementation((table: string) => {
       if (table === 'audit_log') return auditLogMock()
 
+      // enforceVerifiedOrg middleware — organization status check
+      if (table === 'organizations') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: { id: 'org-001', status: 'TRIAL', cancelled_at: null },
+                error: null,
+              }),
+            }),
+          }),
+        }
+      }
+
       // Entitlement middleware — return active subscription
       if (table === 'org_subscriptions') {
         return {
@@ -324,6 +338,18 @@ describe('medication.getStatus — signature verification enforcement', () => {
     })
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'audit_log') return auditLogMock()
+      if (table === 'organizations') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: { id: 'org-001', status: 'TRIAL', cancelled_at: null },
+                error: null,
+              }),
+            }),
+          }),
+        }
+      }
       if (table === 'org_subscriptions') {
         return {
           select: vi.fn().mockReturnValue({
@@ -504,6 +530,18 @@ describe('medication.getStatus — signature verification enforcement', () => {
     })
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'audit_log') return auditLogMock()
+      if (table === 'organizations') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: { id: 'org-001', status: 'TRIAL', cancelled_at: null },
+                error: null,
+              }),
+            }),
+          }),
+        }
+      }
       if (table === 'org_subscriptions') {
         return {
           select: vi.fn().mockReturnValue({

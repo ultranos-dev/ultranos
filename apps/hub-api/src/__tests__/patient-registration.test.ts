@@ -6,6 +6,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // duplicate rejection, audit emission, session return).
 // ============================================================
 
+// Must stub env vars before any module imports that read process.env
+vi.stubEnv('FIELD_ENCRYPTION_KEY', 'a'.repeat(64))
+vi.stubEnv('FIELD_ENCRYPTION_HMAC_KEY', 'b'.repeat(64))
+
 vi.mock('ioredis', () => ({
   default: vi.fn().mockImplementation(() => ({
     pipeline: vi.fn().mockReturnValue({ exec: vi.fn().mockResolvedValue([]) }),
@@ -53,6 +57,10 @@ const mockSupabaseClient = {
   rpc: vi.fn().mockImplementation((fn: string, params: Record<string, unknown>) => {
     rpcCalls.push({ fn, params })
     auditEvents.push(params)
+    // audit_emit_with_lock requires data[0].chain_hash to not throw
+    if (fn === 'audit_emit_with_lock') {
+      return Promise.resolve({ data: [{ chain_hash: 'mock_chain_hash' }], error: null })
+    }
     return Promise.resolve({ data: null, error: null })
   }),
 }
@@ -134,12 +142,6 @@ describe('Patient Self-Registration — Story 27.10', () => {
         error: null,
       })
 
-      const patientsTable = mockPatientsTable([])
-      mockSupabaseClient.from.mockImplementation((table: string) => {
-        if (table === 'patients') return patientsTable
-        return { select: vi.fn() }
-      })
-
       const caller = createCaller(createUnauthContext())
       const result = await caller.patientRegistration.register({
         phone: '+971501234567',
@@ -154,14 +156,16 @@ describe('Patient Self-Registration — Story 27.10', () => {
       expect(result.session.accessToken).toBe('mock-access-token')
       expect(result.session.refreshToken).toBe('mock-refresh-token')
 
-      // Verify patient was inserted with FREE tier and no org_id (AC #2, #3)
-      const insertCall = patientsTable.insert.mock.calls[0][0]
-      expect(insertCall.patientTier).toBe('FREE')
-      expect(insertCall.nameLocal).toBe('Ahmad')
-      expect(insertCall.birthDate).toBe('1990-01-15')
+      // Verify patient was created via rpc('create_patient_with_consent', ...)
+      // with FREE tier and no org_id (AC #2, #3)
+      const createCall = rpcCalls.find((c) => c.fn === 'create_patient_with_consent')
+      expect(createCall).toBeDefined()
+      const patientRow = createCall!.params['p_patient'] as Record<string, unknown>
+      expect(patientRow['patientTier'] ?? patientRow['patient_tier']).toBe('FREE')
+      expect(patientRow['nameLocal'] ?? patientRow['name_local']).toBe('Ahmad')
       // P15: Free-floating patient must not have org_id
-      expect(insertCall.orgId).toBeUndefined()
-      expect(insertCall.org_id).toBeUndefined()
+      expect(patientRow['orgId']).toBeUndefined()
+      expect(patientRow['org_id']).toBeUndefined()
     })
 
     it('returns generic error on duplicate phone (AC #8 — no enumeration)', async () => {
@@ -170,10 +174,18 @@ describe('Patient Self-Registration — Story 27.10', () => {
         error: null,
       })
 
-      const patientsTable = mockPatientsTable([{ id: 'existing-patient-id' }])
-      mockSupabaseClient.from.mockImplementation((table: string) => {
-        if (table === 'patients') return patientsTable
-        return { select: vi.fn() }
+      // Simulate the create_patient_with_consent RPC returning a unique violation
+      // (duplicate phone in telecom_phone column — 23505 unique constraint)
+      mockSupabaseClient.rpc.mockImplementationOnce((fn: string, params: Record<string, unknown>) => {
+        rpcCalls.push({ fn, params })
+        if (fn === 'fetch_mpi_candidates') return Promise.resolve({ data: null, error: null })
+        return Promise.resolve({ data: null, error: null })
+      }).mockImplementationOnce((fn: string, params: Record<string, unknown>) => {
+        rpcCalls.push({ fn, params })
+        if (fn === 'create_patient_with_consent') {
+          return Promise.resolve({ data: null, error: { code: '23505', message: 'unique constraint' } })
+        }
+        return Promise.resolve({ data: null, error: null })
       })
 
       const caller = createCaller(createUnauthContext())

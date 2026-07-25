@@ -194,7 +194,7 @@ describe('lab.verifyPatient', () => {
     )
 
     await expect(
-      caller.lab.verifyPatient({ query: 'patient-uuid-1', method: 'QR_SCAN' }),
+      caller.lab.verifyPatient({ query: '00000000-0000-4000-8000-000000000001', method: 'QR_SCAN' }),
     ).resolves.toBeDefined()
   })
 
@@ -427,7 +427,7 @@ describe('lab.verifyPatient', () => {
     )
 
     const result = await caller.lab.verifyPatient({
-      query: 'patient-uuid-1',
+      query: '00000000-0000-4000-8000-000000000001',
       method: 'QR_SCAN',
     })
 

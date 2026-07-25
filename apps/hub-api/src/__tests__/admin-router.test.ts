@@ -27,10 +27,32 @@ const { createCallerFactory } = await import('../trpc/init')
 const { adminRouter } = await import('../trpc/routers/admin')
 
 function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string | null; status?: string | null } | null) {
-  const single = vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } })
-  const eq = vi.fn().mockReturnValue({ single })
-  const select = vi.fn().mockReturnValue({ eq })
-  const from = vi.fn().mockReturnValue({ select })
+  // Build a fully chainable mock that handles the expanded dashboardStats query set:
+  // .select().eq(), .select().in(), .select().eq().in(), .select().eq().eq(),
+  // .select().not().order().range().lte().gte(), .select().order().limit().maybeSingle()
+  const makeFallbackChain = (): Record<string, any> => {
+    const c: Record<string, any> = {
+      data: null,
+      error: null,
+      count: 0,
+      single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+      then: undefined as any,
+    }
+    const methods = ['eq', 'in', 'not', 'order', 'limit', 'range', 'select', 'insert', 'update', 'delete', 'lte', 'gte', 'or']
+    for (const m of methods) {
+      c[m] = vi.fn().mockImplementation(() => makeFallbackChain())
+    }
+    return c
+  }
+
+  const from = vi.fn().mockImplementation(() => {
+    const c = makeFallbackChain()
+    c.select = vi.fn().mockImplementation(() => makeFallbackChain())
+    c.insert = vi.fn().mockResolvedValue({ data: null, error: null })
+    c.update = vi.fn().mockImplementation(() => makeFallbackChain())
+    return c
+  })
 
   return {
     supabase: { from } as never,
@@ -45,7 +67,7 @@ describe('Admin Router — ADMIN guard', () => {
       makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' }),
     )
     const result = await caller.dashboardStats()
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       pendingKycReviews: 0,
       pendingLabApprovals: 0,
       activeAlerts: 0,
@@ -229,7 +251,8 @@ describe('Admin Router — enrollChw split name', () => {
       if (table === 'practitioners') {
         return { insert: insertMock }
       }
-      return { select: vi.fn() }
+      // lab_technicians and others: provide insert support
+      return { insert: vi.fn().mockResolvedValue({ data: null, error: null }), select: vi.fn() }
     })
 
     const ctx = {
@@ -279,7 +302,8 @@ describe('Admin Router — enrollChw split name', () => {
         }
       }
       if (table === 'practitioners') return { insert: insertMock }
-      return { select: vi.fn() }
+      // lab_technicians and others: provide insert support
+      return { insert: vi.fn().mockResolvedValue({ data: null, error: null }), select: vi.fn() }
     })
 
     const ctx = {

@@ -45,18 +45,27 @@ async function createTestJwt(
 
 describe('verifySupabaseJwt', () => {
   it('returns decoded payload for a valid JWT', async () => {
+    vi.resetModules()
+    vi.stubEnv('SUPABASE_JWT_SECRET', 'test-secret-key-at-least-32-chars-long')
+
     const { verifySupabaseJwt } = await import('../lib/jwt')
 
-    const token = await createTestJwt(
-      { sub: 'user-123', role: 'DOCTOR', session_id: 'sess-abc' },
-      privateKey,
-    )
+    // Sign with HS256
+    const { SignJWT } = await import('jose')
+    const secret = new TextEncoder().encode('test-secret-key-at-least-32-chars-long')
+    const token = await new SignJWT({ sub: 'user-123', role: 'DOCTOR', session_id: 'sess-abc' })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('15m')
+      .sign(secret)
 
-    const result = await verifySupabaseJwt(token, jwkPublic)
+    const result = await verifySupabaseJwt(token)
     expect(result).not.toBeNull()
     expect(result!.sub).toBe('user-123')
     expect(result!.role).toBe('DOCTOR')
     expect(result!.session_id).toBe('sess-abc')
+
+    vi.unstubAllEnvs()
   })
 
   it('returns null for an expired JWT', async () => {
@@ -99,11 +108,8 @@ describe('verifySupabaseJwt', () => {
 
 describe('createTRPCContext — JWT integration', () => {
   it('populates user from valid JWT Authorization header', async () => {
-    // Dynamically set env for JWK
-    const jwkJson = JSON.stringify(jwkPublic)
-    vi.stubEnv('SUPABASE_JWT_JWK', jwkJson)
+    vi.stubEnv('SUPABASE_JWT_SECRET', 'test-secret-key-at-least-32-chars-long')
 
-    // Must re-import to pick up env stub
     vi.resetModules()
     vi.mock('@/lib/supabase', () => ({
       getSupabaseClient: vi.fn(() => ({ from: vi.fn() })),
@@ -117,10 +123,13 @@ describe('createTRPCContext — JWT integration', () => {
     }))
     const { createTRPCContext } = await import('../trpc/init')
 
-    const token = await createTestJwt(
-      { sub: 'user-456', role: 'PHARMACIST', session_id: 'sess-xyz' },
-      privateKey,
-    )
+    const { SignJWT } = await import('jose')
+    const secret = new TextEncoder().encode('test-secret-key-at-least-32-chars-long')
+    const token = await new SignJWT({ sub: 'user-456', role: 'PHARMACIST', session_id: 'sess-xyz' })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('15m')
+      .sign(secret)
 
     const ctx = await createTRPCContext({
       headers: new Headers({ authorization: `Bearer ${token}` }),

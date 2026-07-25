@@ -8,6 +8,14 @@ const mockUpdate = vi.fn()
 
 const mockNotificationInsert = vi.fn().mockResolvedValue({ data: null, error: null })
 
+// patients table mock for enforcePremiumTier middleware
+const mockPatientsTierChain = {
+  select: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnValue({
+    single: vi.fn().mockResolvedValue({ data: { patient_tier: 'PREMIUM' }, error: null }),
+  }),
+}
+
 const mockFrom = vi.fn((table: string) => {
   if (table === 'guardian_links') {
     return {
@@ -20,6 +28,10 @@ const mockFrom = vi.fn((table: string) => {
     return {
       insert: mockNotificationInsert,
     }
+  }
+  if (table === 'patients') {
+    // enforcePremiumTier queries .from('patients').select('patient_tier').eq('id', ...).single()
+    return mockPatientsTierChain
   }
   return {
     insert: vi.fn(),

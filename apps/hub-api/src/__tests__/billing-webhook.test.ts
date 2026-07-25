@@ -143,7 +143,9 @@ describe('billing.handleWebhook', () => {
     expect(from).toHaveBeenCalledWith('org_subscriptions')
   })
 
-  it('processes CHARGE_SUCCESS and calls RPC for atomic reactivation', async () => {
+  it('processes CHARGE_SUCCESS and clears grace period on org_subscriptions', async () => {
+    // The router clears grace_period_ends_at on org_subscriptions for CHARGE_SUCCESS.
+    // For a non-suspended org, transitionOrg is NOT called (no RPC).
     mockHandleWebhook.mockResolvedValue({
       eventType: 'CHARGE_SUCCESS',
       customerId: 'cus_123',
@@ -155,20 +157,17 @@ describe('billing.handleWebhook', () => {
 
     const from = mockTable({
       org_subscriptions: { data: { org_id: 'org-1' }, error: null },
-      organizations: { data: { id: 'org-1', name: 'Test Org', billing_email: 'b@t.com' }, error: null },
+      organizations: { data: { id: 'org-1', name: 'Test Org', billing_email: 'b@t.com', status: 'ACTIVE' }, error: null },
       billing_events: { data: { id: 'be-1' }, error: null },
     })
 
-    const mockRpc = vi.fn().mockResolvedValue({ data: { was_suspended: false, reactivated: false }, error: null })
-    const ctx = createTestContext({ supabaseFrom: from, supabaseRpc: mockRpc })
+    const ctx = createTestContext({ supabaseFrom: from })
     const caller = createCaller(ctx)
     const result = await caller.billing.handleWebhook({ payload: 'p', signature: 's' })
 
     expect(result).toEqual({ received: true })
-    expect(mockRpc).toHaveBeenCalledWith('billing_handle_charge_success', {
-      p_org_id: 'org-1',
-      p_subscription_id: null,
-    })
+    // Verify org_subscriptions was updated (grace period cleared)
+    expect(from).toHaveBeenCalledWith('org_subscriptions')
   })
 
   it('skips processing for null webhook events (unmapped event types)', async () => {

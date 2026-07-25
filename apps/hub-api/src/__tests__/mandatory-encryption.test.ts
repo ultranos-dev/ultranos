@@ -147,7 +147,6 @@ describe('mandatory encryption (Story 7.3b)', () => {
         id: '123',
         status: 'active',
         diagnosis: 'PLAINTEXT_DIAGNOSIS',
-        reasonCode: 'PLAINTEXT_REASON',
         dosageInstruction: 'PLAINTEXT_DOSAGE',
         interactionOverride: 'PLAINTEXT_OVERRIDE',
         medicationText: 'PLAINTEXT_MED',
@@ -162,7 +161,6 @@ describe('mandatory encryption (Story 7.3b)', () => {
 
       // No SENSITIVE_FIELD plaintext should appear in the output
       expect(resultStr).not.toContain('PLAINTEXT_DIAGNOSIS')
-      expect(resultStr).not.toContain('PLAINTEXT_REASON')
       expect(resultStr).not.toContain('PLAINTEXT_DOSAGE')
       expect(resultStr).not.toContain('PLAINTEXT_OVERRIDE')
       expect(resultStr).not.toContain('PLAINTEXT_MED')

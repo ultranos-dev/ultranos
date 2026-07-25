@@ -26,6 +26,7 @@ function createTestContext(overrides?: {
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
+    rpc: vi.fn().mockResolvedValue({ data: [{ chain_hash: 'abc123' }], error: null }),
   }
   return {
     supabase: supabase as never,
@@ -146,12 +147,15 @@ function mockFromForCreate(
 function mockFromForRead(selectResult: { data: unknown; error: unknown }) {
   return vi.fn((table: string) => {
     if (table === 'organizations') return mockOrganizationsTable()
+    if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
     if (table === 'consents') return mockConsentsTable()
     if (table === 'audit_log') return mockAuditTable()
     return {
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue(selectResult),
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue(selectResult),
+          }),
         }),
       }),
     }
@@ -277,8 +281,7 @@ describe('medication.create', () => {
     const caller = createCaller(ctx)
 
     await caller.medication.create(validCreateInput)
-    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
-    expect(fromCalls).toContain('audit_log')
+    expect(ctx.supabase.rpc).toHaveBeenCalled()
   })
 
   it('rejects create when interactionCheck is BLOCKED without interactionOverride', async () => {
@@ -306,8 +309,10 @@ describe('medication.create', () => {
   it('returns idempotent success on duplicate prescriptionId', async () => {
     const mockFrom = vi.fn((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'consents') return mockConsentsTable()
       if (table === 'audit_log') return mockAuditTable()
+      if (table === 'sync_conflicts') return mockSyncConflictsTable(0)
       return {
         insert: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
@@ -411,7 +416,6 @@ describe('medication.read', () => {
     const caller = createCaller(ctx)
 
     await caller.medication.read(validInput)
-    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
-    expect(fromCalls).toContain('audit_log')
+    expect(ctx.supabase.rpc).toHaveBeenCalled()
   })
 })

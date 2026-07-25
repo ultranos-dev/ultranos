@@ -53,40 +53,69 @@ function createMockFrom(tables: Record<string, any>) {
 }
 
 describe('Clinical Safety Monitor', () => {
+  // Helper: job_runs mock that supports both autoResolveAlert (.maybeSingle) and insert
+  function mockJobRunsTable() {
+    return {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          order: vi.fn().mockReturnValue({
+            limit: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: null, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    }
+  }
+
+  // Helper: sync_conflicts mock with full chain: .select().eq().in().order().limit()
+  function mockSyncConflictsTable(data: any[] = []) {
+    return {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          in: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({ data, error: null }),
+            }),
+          }),
+        }),
+      }),
+    }
+  }
+
+  // Helper: medication_requests mock that supports:
+  // Query 1: .select().gte().not() → { count } (total checks)
+  // Query 2: .select().gte().eq().not() → { count } (override count)
+  // Query 3 (when overrides>0): .select().gte().eq().not().limit() → { data } (topProviders)
+  function mockMedicationRequestsTable(totalCount: number, overrideCount: number) {
+    return {
+      select: vi.fn().mockImplementation(() => ({
+        gte: vi.fn().mockImplementation(() => ({
+          // Query 1: .gte().not() → count (total checks with interaction_check not null)
+          not: vi.fn().mockResolvedValue({ count: totalCount, error: null }),
+          // Query 2+3: .gte().eq() → { not }
+          eq: vi.fn().mockImplementation(() => ({
+            // Query 2: .eq().not() → count (override count)
+            // Query 3: .eq().not().limit() → data (topProviders, when overrides>0)
+            not: vi.fn().mockReturnValue({
+              // Allow being awaited directly (Query 2) OR chained with .limit() (Query 3)
+              then: (resolve: any, reject: any) => Promise.resolve({ count: overrideCount, error: null }).then(resolve, reject),
+              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+            }),
+          })),
+        })),
+      })),
+    }
+  }
+
   describe('CONTRAINDICATED override rate (AC #2)', () => {
     it('triggers P1 alert when override rate >2%', async () => {
       const mockFrom = createMockFrom({
-        medication_requests: {
-          select: vi.fn().mockImplementation(() => ({
-            gte: vi.fn().mockImplementation(() => ({
-              // Total checks query (not null)
-              not: vi.fn().mockResolvedValue({ count: 100, error: null }),
-              // BLOCKED + override query
-              eq: vi.fn().mockImplementation(() => ({
-                not: vi.fn().mockResolvedValue({ count: 3, error: null }),
-              })),
-            })),
-          })),
-        },
-        sync_conflicts: {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              in: vi.fn().mockResolvedValue({ data: [], error: null }),
-            }),
-          }),
-        },
-        job_runs: {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({ data: null, error: null }),
-                }),
-              }),
-            }),
-          }),
-          insert: vi.fn().mockResolvedValue({ error: null }),
-        },
+        medication_requests: mockMedicationRequestsTable(100, 3),
+        sync_conflicts: mockSyncConflictsTable([]),
+        job_runs: mockJobRunsTable(),
       })
       mockSupabaseClient.from = mockFrom
 
@@ -105,35 +134,9 @@ describe('Clinical Safety Monitor', () => {
 
     it('does not trigger alert when override rate <=2%', async () => {
       const mockFrom = createMockFrom({
-        medication_requests: {
-          select: vi.fn().mockImplementation(() => ({
-            gte: vi.fn().mockImplementation(() => ({
-              not: vi.fn().mockResolvedValue({ count: 100, error: null }),
-              eq: vi.fn().mockImplementation(() => ({
-                not: vi.fn().mockResolvedValue({ count: 1, error: null }),
-              })),
-            })),
-          })),
-        },
-        sync_conflicts: {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              in: vi.fn().mockResolvedValue({ data: [], error: null }),
-            }),
-          }),
-        },
-        job_runs: {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({ data: null, error: null }),
-                }),
-              }),
-            }),
-          }),
-          insert: vi.fn().mockResolvedValue({ error: null }),
-        },
+        medication_requests: mockMedicationRequestsTable(100, 1),
+        sync_conflicts: mockSyncConflictsTable([]),
+        job_runs: mockJobRunsTable(),
       })
       mockSupabaseClient.from = mockFrom
 
@@ -153,41 +156,12 @@ describe('Clinical Safety Monitor', () => {
       const oldConflictDate = new Date(Date.now() - 30 * 3600 * 1000).toISOString() // 30h old
 
       const mockFrom = createMockFrom({
-        medication_requests: {
-          select: vi.fn().mockImplementation(() => ({
-            gte: vi.fn().mockImplementation(() => ({
-              not: vi.fn().mockResolvedValue({ count: 50, error: null }),
-              eq: vi.fn().mockImplementation(() => ({
-                not: vi.fn().mockResolvedValue({ count: 0, error: null }),
-              })),
-            })),
-          })),
-        },
-        sync_conflicts: {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              in: vi.fn().mockResolvedValue({
-                data: [
-                  { id: 'c1', resource_type: 'AllergyIntolerance', patient_ref: 'Patient/p1', created_at: oldConflictDate },
-                  { id: 'c2', resource_type: 'MedicationRequest', patient_ref: 'Patient/p2', created_at: oldConflictDate },
-                ],
-                error: null,
-              }),
-            }),
-          }),
-        },
-        job_runs: {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({ data: null, error: null }),
-                }),
-              }),
-            }),
-          }),
-          insert: vi.fn().mockResolvedValue({ error: null }),
-        },
+        medication_requests: mockMedicationRequestsTable(50, 0),
+        sync_conflicts: mockSyncConflictsTable([
+          { id: 'c1', resource_type: 'AllergyIntolerance', patient_ref: 'Patient/p1', created_at: oldConflictDate },
+          { id: 'c2', resource_type: 'MedicationRequest', patient_ref: 'Patient/p2', created_at: oldConflictDate },
+        ]),
+        job_runs: mockJobRunsTable(),
       })
       mockSupabaseClient.from = mockFrom
 
@@ -211,40 +185,11 @@ describe('Clinical Safety Monitor', () => {
       const recentConflict = new Date(Date.now() - 2 * 3600 * 1000).toISOString() // 2h old
 
       const mockFrom = createMockFrom({
-        medication_requests: {
-          select: vi.fn().mockImplementation(() => ({
-            gte: vi.fn().mockImplementation(() => ({
-              not: vi.fn().mockResolvedValue({ count: 50, error: null }),
-              eq: vi.fn().mockImplementation(() => ({
-                not: vi.fn().mockResolvedValue({ count: 0, error: null }),
-              })),
-            })),
-          })),
-        },
-        sync_conflicts: {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              in: vi.fn().mockResolvedValue({
-                data: [
-                  { id: 'c1', resource_type: 'AllergyIntolerance', patient_ref: 'Patient/p1', created_at: recentConflict },
-                ],
-                error: null,
-              }),
-            }),
-          }),
-        },
-        job_runs: {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({ data: null, error: null }),
-                }),
-              }),
-            }),
-          }),
-          insert: vi.fn().mockResolvedValue({ error: null }),
-        },
+        medication_requests: mockMedicationRequestsTable(50, 0),
+        sync_conflicts: mockSyncConflictsTable([
+          { id: 'c1', resource_type: 'AllergyIntolerance', patient_ref: 'Patient/p1', created_at: recentConflict },
+        ]),
+        job_runs: mockJobRunsTable(),
       })
       mockSupabaseClient.from = mockFrom
 
@@ -258,33 +203,36 @@ describe('Clinical Safety Monitor', () => {
   describe('Interaction check completion rate (AC #1)', () => {
     it('triggers P2 alert when prescriptions created with UNAVAILABLE check', async () => {
       // Each from('medication_requests') call gets a fresh builder.
-      // The completion check does: .select().gte().eq('interaction_check', 'UNAVAILABLE')
-      // We need the .eq('interaction_check','UNAVAILABLE') path to return count: 5
-      // and the bare .gte() (total prescriptions) to return count: 100
+      // Query 1: .select().gte().not() → { count: 100 } (override rate total checks)
+      // Query 2: .select().gte().eq('BLOCKED').not() → { count: 0 } (override count, then topProviders skipped)
+      // Query 3: .select().gte() → { count: 100 } (total prescriptions for completion — awaited directly)
+      // Query 4: .select().gte().eq('UNAVAILABLE') → { count: 5 } (unchecked)
       mockSupabaseClient.from = vi.fn().mockImplementation((table: string) => {
         if (table === 'medication_requests') {
-          // Create a mock that supports both chain patterns:
-          // Pattern A: .select().gte().not() → { count }  (override rate total checks)
-          // Pattern B: .select().gte().eq('interaction_check','BLOCKED').not() → { count }
-          // Pattern C: .select().gte() → { count }  (total prescriptions for completion)
-          // Pattern D: .select().gte().eq('interaction_check','UNAVAILABLE') → { count }
           return {
             select: vi.fn().mockReturnValue({
               gte: vi.fn().mockImplementation(() => {
-                // This object needs to be a thenable (for .gte() resolving directly)
-                // AND have .not(), .eq() methods for further chaining
                 const chainObj: any = {
-                  then: (resolve: any) => resolve({ count: 100, error: null }),
+                  // For Query 3: total prescriptions, awaited directly after .gte()
+                  then: (resolve: any, reject: any) => Promise.resolve({ count: 100, error: null }).then(resolve, reject),
+                  // For Query 1: .gte().not() → total checks with interaction_check not null
                   not: vi.fn().mockResolvedValue({ count: 100, error: null }),
+                  // For Query 2+4: .gte().eq(col, val)
                   eq: vi.fn().mockImplementation((_col: string, val: string) => {
                     if (val === 'BLOCKED') {
-                      return { not: vi.fn().mockResolvedValue({ count: 0, error: null }) }
+                      // Query 2: override count, then topProviders skipped (count=0)
+                      return {
+                        not: vi.fn().mockReturnValue({
+                          then: (resolve: any, reject: any) => Promise.resolve({ count: 0, error: null }).then(resolve, reject),
+                          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+                        }),
+                      }
                     }
                     if (val === 'UNAVAILABLE') {
-                      // This is the completion rate UNAVAILABLE check — returns 5
-                      return { then: (resolve: any) => resolve({ count: 5, error: null }) }
+                      // Query 4: unchecked prescriptions count
+                      return { then: (resolve: any, reject: any) => Promise.resolve({ count: 5, error: null }).then(resolve, reject) }
                     }
-                    return { then: (resolve: any) => resolve({ count: 0, error: null }) }
+                    return { then: (resolve: any, reject: any) => Promise.resolve({ count: 0, error: null }).then(resolve, reject) }
                   }),
                 }
                 return chainObj
@@ -292,29 +240,8 @@ describe('Clinical Safety Monitor', () => {
             }),
           }
         }
-        if (table === 'sync_conflicts') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                in: vi.fn().mockResolvedValue({ data: [], error: null }),
-              }),
-            }),
-          }
-        }
-        if (table === 'job_runs') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockReturnValue({
-                  limit: vi.fn().mockReturnValue({
-                    single: vi.fn().mockResolvedValue({ data: null, error: null }),
-                  }),
-                }),
-              }),
-            }),
-            insert: vi.fn().mockResolvedValue({ error: null }),
-          }
-        }
+        if (table === 'sync_conflicts') return mockSyncConflictsTable([])
+        if (table === 'job_runs') return mockJobRunsTable()
         return { select: vi.fn().mockResolvedValue({ data: null, error: null }) }
       })
 
@@ -337,46 +264,12 @@ describe('Clinical Safety Monitor', () => {
       // Here we verify that the monitor job calls emitClinicalSafetyAlert for alerts
       const oldConflict = new Date(Date.now() - 30 * 3600 * 1000).toISOString()
 
-      mockSupabaseClient.from = vi.fn().mockImplementation((table: string) => {
-        if (table === 'medication_requests') {
-          return {
-            select: vi.fn().mockImplementation(() => ({
-              gte: vi.fn().mockImplementation(() => ({
-                not: vi.fn().mockResolvedValue({ count: 100, error: null }),
-                eq: vi.fn().mockImplementation(() => ({
-                  not: vi.fn().mockResolvedValue({ count: 5, error: null }),
-                })),
-              })),
-            })),
-          }
-        }
-        if (table === 'sync_conflicts') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                in: vi.fn().mockResolvedValue({
-                  data: [{ id: 'c1', resource_type: 'AllergyIntolerance', patient_ref: 'Patient/p1', created_at: oldConflict }],
-                  error: null,
-                }),
-              }),
-            }),
-          }
-        }
-        if (table === 'job_runs') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockReturnValue({
-                  limit: vi.fn().mockReturnValue({
-                    single: vi.fn().mockResolvedValue({ data: null, error: null }),
-                  }),
-                }),
-              }),
-            }),
-            insert: vi.fn().mockResolvedValue({ error: null }),
-          }
-        }
-        return { select: vi.fn().mockResolvedValue({ data: null, error: null }) }
+      mockSupabaseClient.from = createMockFrom({
+        medication_requests: mockMedicationRequestsTable(100, 5),
+        sync_conflicts: mockSyncConflictsTable([
+          { id: 'c1', resource_type: 'AllergyIntolerance', patient_ref: 'Patient/p1', created_at: oldConflict },
+        ]),
+        job_runs: mockJobRunsTable(),
       })
 
       const result = await runClinicalSafetyMonitor(mockSupabaseClient as any)

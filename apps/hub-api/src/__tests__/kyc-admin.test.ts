@@ -31,7 +31,10 @@ const mockSupabaseClient = {
   auth: {
     admin: { createUser: vi.fn() },
   },
-  rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
+  rpc: vi.fn().mockResolvedValue({
+    data: [{ id: 'audit-1', chain_hash: 'abc123', timestamp: new Date().toISOString() }],
+    error: null,
+  }),
   storage: {
     from: vi.fn().mockReturnValue({
       createSignedUrl: vi.fn().mockResolvedValue({
@@ -119,7 +122,14 @@ const mockSubmissionRow = {
   admin_message: null,
   reviewed_by: null,
   reviewed_at: null,
+  // Flat fields for listKycSubmissions (practitioners!inner(given_name, family_name, ...))
+  // FHIR name array for getKycSubmission (practitioners!inner(name, identifier, _ultranos))
   practitioners: {
+    given_name: 'Ahmed',
+    family_name: 'Hassan',
+    telecom_email: '',
+    kyc_status: 'PENDING_VERIFICATION',
+    org_id: '00000000-0000-4000-8000-000000000099',
     name: [{ given: ['Ahmed'], family: 'Hassan', text: 'Dr. Ahmed Hassan' }],
     identifier: [{ system: 'MOH', value: 'MOH-1234' }],
     _ultranos: { kycStatus: 'PENDING_VERIFICATION' },
@@ -139,16 +149,27 @@ function mockKycAdminTables(opts?: {
 
   return (table: string) => {
     if (table === 'kyc_submissions') {
+      // The second-level eq chain supports:
+      //   - .order().then() (SLA_BREACHED: awaited directly after .eq().eq().order())
+      //   - .single()       (getKycSubmission: .eq().eq().single())
+      const secondLevelEq = vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          then: (resolve: any, reject?: any) =>
+            Promise.resolve({ data: subs, error: null }).then(resolve, reject),
+        }),
+        single: vi.fn().mockResolvedValue({ data: detail, error: null }),
+      })
+
       return {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
             order: vi.fn().mockReturnValue({
               range: vi.fn().mockResolvedValue({ data: subs, error: null, count: subCount }),
             }),
+            // Two-level eq for SLA_BREACHED (.eq('status').eq('practitioners.org_id').order())
+            // and for getKycSubmission (.eq('id').eq('org_id').single())
+            eq: secondLevelEq,
             single: vi.fn().mockResolvedValue({ data: detail, error: null }),
-            select: vi.fn().mockReturnValue({
-              // for count query in dashboardStats
-            }),
           }),
         }),
         update: vi.fn().mockReturnValue({
@@ -192,16 +213,26 @@ function mockKycAdminTables(opts?: {
         }),
       }
     }
-    // Default fallback
+    // Default fallback — supports .select().eq()/.in()/.order()/.limit()/.maybeSingle()
+    const defaultChain: Record<string, any> = {
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+    }
+    const makeDefaultChain = (): Record<string, any> => {
+      const c: Record<string, any> = {
+        ...defaultChain,
+        eq: vi.fn().mockImplementation(() => makeDefaultChain()),
+        in: vi.fn().mockImplementation(() => makeDefaultChain()),
+        order: vi.fn().mockImplementation(() => makeDefaultChain()),
+        limit: vi.fn().mockImplementation(() => makeDefaultChain()),
+        range: vi.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
+        select: vi.fn().mockImplementation(() => makeDefaultChain()),
+        then: undefined as any,
+      }
+      return c
+    }
     return {
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: null, error: null }),
-          order: vi.fn().mockReturnValue({
-            range: vi.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
-          }),
-        }),
-      }),
+      select: vi.fn().mockImplementation(() => makeDefaultChain()),
       insert: vi.fn().mockResolvedValue({ error: null }),
       update: vi.fn().mockReturnValue({
         eq: vi.fn().mockResolvedValue({ error: null }),
@@ -225,7 +256,8 @@ describe('Story 22.2 — KYC Admin Endpoints', () => {
 
       expect(result.submissions).toHaveLength(1)
       expect(result.submissions[0].submissionId).toBe(SUBMISSION_UUID)
-      expect(result.submissions[0].providerName).toBe('Dr. Ahmed Hassan')
+      // Router builds providerName from flat given_name + family_name (not FHIR text field)
+      expect(result.submissions[0].providerName).toBe('Ahmed Hassan')
       expect(result.submissions[0].registryNumber).toBe('REG-12345')
       expect(result.total).toBe(1)
     })
@@ -281,10 +313,11 @@ describe('Story 22.2 — KYC Admin Endpoints', () => {
 
       await caller.admin.getKycSubmission({ submissionId: SUBMISSION_UUID })
 
-      const auditCalls = mockSupabaseClient.from.mock.calls.filter(
-        (c: any[]) => c[0] === 'audit_events',
+      // AuditLogger uses rpc('audit_emit_with_lock'), not from('audit_events')
+      expect(mockSupabaseClient.rpc).toHaveBeenCalledWith(
+        'audit_emit_with_lock',
+        expect.objectContaining({ p_action: 'PHI_READ', p_resource_type: 'KYC_SUBMISSION' }),
       )
-      expect(auditCalls.length).toBeGreaterThan(0)
     })
 
     it('rejects non-ADMIN callers', async () => {
@@ -360,10 +393,13 @@ describe('Story 22.2 — KYC Admin Endpoints', () => {
       })
       expect(approveResult.success).toBe(true)
 
-      // Verify that `from` was called — audit logger attempts to write via supabase
+      // AuditLogger uses rpc('audit_emit_with_lock'), not from('audit_events')
+      expect(mockSupabaseClient.rpc).toHaveBeenCalledWith(
+        'audit_emit_with_lock',
+        expect.objectContaining({ p_resource_type: 'KYC_SUBMISSION' }),
+      )
+      // Other tables must also be accessed
       const allFromCalls = mockSupabaseClient.from.mock.calls.map((c: any[]) => c[0])
-      // P15: Must assert audit_events was called (not just other tables)
-      expect(allFromCalls).toContain('audit_events')
       expect(allFromCalls).toContain('kyc_submissions')
       expect(allFromCalls).toContain('practitioners')
       expect(allFromCalls).toContain('notifications')
@@ -411,22 +447,76 @@ describe('Story 22.2 — KYC Admin Endpoints', () => {
     it('returns real pendingKycReviews count', async () => {
       mockSupabaseClient.from.mockImplementation((table: string) => {
         if (table === 'labs') {
+          // .select().eq() -> count, also .select().eq().order().limit().maybeSingle()
+          const eqResult: Record<string, any> = {
+            count: 2,
+            data: null,
+            error: null,
+            then: undefined as any,
+          }
+          eqResult.order = vi.fn().mockReturnValue({
+            limit: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          })
           return {
             select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ count: 2 }),
+              eq: vi.fn().mockReturnValue(eqResult),
             }),
           }
         }
         if (table === 'kyc_submissions') {
           return {
             select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ count: 5 }),
+              eq: vi.fn().mockResolvedValue({ count: 5, data: [], error: null }),
             }),
           }
         }
+        if (table === 'prescribing_anomalies') {
+          // .select().in() -> count; .select().eq().in() -> count
+          const inResult = { count: 0, data: null, error: null }
+          return {
+            select: vi.fn().mockReturnValue({
+              in: vi.fn().mockResolvedValue(inResult),
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockResolvedValue(inResult),
+              }),
+            }),
+          }
+        }
+        if (table === 'practitioners') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                count: 0,
+                data: null,
+                error: null,
+                eq: vi.fn().mockResolvedValue({ count: 0, data: null, error: null }),
+              }),
+            }),
+          }
+        }
+        if (table === 'audit_chain_verifications') {
+          return {
+            select: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+                }),
+              }),
+            }),
+          }
+        }
+        // Generic fallback
         return {
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ count: 0 }),
+            eq: vi.fn().mockResolvedValue({ count: 0, data: [], error: null }),
+            in: vi.fn().mockResolvedValue({ count: 0, data: [], error: null }),
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
           }),
         }
       })

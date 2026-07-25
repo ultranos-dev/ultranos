@@ -239,6 +239,7 @@ describe('analyzeFile', () => {
 
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn())
+    process.env.OCR_API_KEY = 'test-api-key'
   })
 
   afterEach(() => {

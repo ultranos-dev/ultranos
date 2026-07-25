@@ -118,7 +118,9 @@ describe('health.auditChainIntegrity', () => {
             return {
               select: vi.fn().mockReturnValue({
                 order: vi.fn().mockReturnValue({
-                  limit: vi.fn().mockResolvedValue({ data: chain, error: null }),
+                  // verifyChain(newest=true) fetches DESC then reverses in-memory.
+                  // Return entries in descending order so reversal yields ascending.
+                  limit: vi.fn().mockResolvedValue({ data: [...chain].reverse(), error: null }),
                 }),
               }),
             }
@@ -192,7 +194,9 @@ describe('health.auditChainIntegrity', () => {
             return {
               select: vi.fn().mockReturnValue({
                 order: vi.fn().mockReturnValue({
-                  limit: vi.fn().mockResolvedValue({ data: chain, error: null }),
+                  // verifyChain(newest=true) fetches DESC then reverses in-memory.
+                  // Return entries in descending order so reversal yields ascending.
+                  limit: vi.fn().mockResolvedValue({ data: [...chain].reverse(), error: null }),
                 }),
               }),
             }

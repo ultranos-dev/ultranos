@@ -62,6 +62,7 @@ function createTestContext(overrides?: {
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
+    rpc: vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null }),
   }
   return {
     supabase: supabase as never,
@@ -101,20 +102,30 @@ function mockOrganizationsTable() {
  * Each table can return different data and supports the query chain pattern used
  * by the checkInteractions procedure.
  */
+function mockOrgSubscriptionsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          in: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }),
+            limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }),
+          }),
+        }),
+      }),
+    }),
+  }
+}
+
 function buildMultiTableMock(tables: Record<string, { data: any; error: any }>) {
   return vi.fn((tableName: string) => {
     if (tableName === 'organizations') return mockOrganizationsTable()
+    if (tableName === 'org_subscriptions') return mockOrgSubscriptionsTable()
     const result = tables[tableName] ?? { data: [], error: null }
     return {
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           eq: vi.fn().mockResolvedValue(result),
-        }),
-        // For audit_log (order → limit → single chain)
-        order: vi.fn().mockReturnValue({
-          limit: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: null, error: null }),
-          }),
         }),
       }),
       insert: vi.fn().mockResolvedValue({ error: null }),
@@ -156,7 +167,12 @@ describe('medication.checkInteractions', () => {
   })
 
   it('rejects LAB_TECH (no MedicationRequest access) → FORBIDDEN', async () => {
-    const ctx = createTestContext({ user: LAB_TECH_USER })
+    const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+      return { select: vi.fn().mockReturnValue({ eq: vi.fn() }) }
+    })
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: LAB_TECH_USER })
     const caller = createCaller(ctx)
 
     await expect(

@@ -367,13 +367,10 @@ describe('tRPC subscription router: listOrgSubscriptions', () => {
     const mockEq = vi.fn().mockReturnValue({ order: mockOrder })
     const mockSelectFn = vi.fn().mockReturnValue({ eq: mockEq })
 
-    const mockAuditInsert = vi.fn().mockResolvedValue({ error: null })
-    const mockAuditSelect = vi.fn().mockReturnValue({
-      order: vi.fn().mockReturnValue({
-        limit: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: null }),
-        }),
-      }),
+    // AuditLogger now emits via ctx.supabase.rpc('audit_emit_with_lock', ...)
+    const mockRpc = vi.fn().mockResolvedValue({
+      data: [{ id: 'audit-1', chain_hash: 'abc123', timestamp: new Date().toISOString() }],
+      error: null,
     })
 
     const supabase = {
@@ -381,14 +378,9 @@ describe('tRPC subscription router: listOrgSubscriptions', () => {
         if (table === 'org_subscriptions') {
           return { select: mockSelectFn }
         }
-        if (table === 'audit_log') {
-          return {
-            select: mockAuditSelect,
-            insert: mockAuditInsert,
-          }
-        }
         return { select: vi.fn() }
       }),
+      rpc: mockRpc,
     }
 
     const { createCallerFactory } = await import('../trpc/init')
@@ -402,12 +394,11 @@ describe('tRPC subscription router: listOrgSubscriptions', () => {
 
     await caller.listOrgSubscriptions({})
 
-    // Verify audit_log was accessed (AuditLogger emits via insert)
-    expect(supabase.from).toHaveBeenCalledWith('audit_log')
-    expect(mockAuditInsert).toHaveBeenCalled()
-    const insertArg = mockAuditInsert.mock.calls[0][0]
-    expect(insertArg.action).toBe('READ')
-    expect(insertArg.resource_type).toBe('SUBSCRIPTION')
+    // AuditLogger emits via ctx.supabase.rpc('audit_emit_with_lock', ...)
+    expect(mockRpc).toHaveBeenCalledWith('audit_emit_with_lock', expect.objectContaining({
+      p_action: 'READ',
+      p_resource_type: 'SUBSCRIPTION',
+    }))
   })
 
   it('listOrgSubscriptions throws when orgId unavailable', async () => {

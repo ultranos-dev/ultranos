@@ -76,10 +76,10 @@ describe('blind index for national_id', () => {
 
     // The hash in the query should be an HMAC-SHA256 (deterministic with key),
     // not a plain SHA-256 hash
-    expect(orArg).toContain('ultranos_national_id_hash.eq.')
+    expect(orArg).toContain('national_id_hash.eq.')
 
     // The hash should be a 64-char hex string
-    const hashMatch = orArg.match(/ultranos_national_id_hash\.eq\.([0-9a-f]{64})/)
+    const hashMatch = orArg.match(/national_id_hash\.eq\.([0-9a-f]{64})/)
     expect(hashMatch).not.toBeNull()
 
     // Verify it's NOT the old plain SHA-256 (without HMAC key)

@@ -61,8 +61,8 @@ function makeBundle(overrides?: Partial<SignedPrescriptionBundle>): SignedPrescr
     payload,
     sig: uint8ToBase64(new Uint8Array(64).fill(1)),
     pub: uint8ToBase64(new Uint8Array(32).fill(2)),
-    issued_at: '2026-04-28T10:00:00Z',
-    expiry: '2026-05-28T10:00:00Z',
+    issued_at: '2028-04-28T10:00:00Z',
+    expiry: '2028-05-28T10:00:00Z',
     ...overrides,
   }
 }

@@ -39,7 +39,17 @@ function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: s
   const orMethod = vi.fn().mockReturnValue({ eq })
   const select = vi.fn().mockReturnValue({ eq, or: orMethod, order, single })
   const insert = vi.fn().mockReturnValue({ select })
-  const from = vi.fn().mockReturnValue({ select, insert })
+  const mockOrgFrom = vi.fn().mockReturnValue({
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { status: 'ACTIVE', id: 'org-test-001', cancelled_at: null }, error: null }),
+      }),
+    }),
+  })
+  const from = vi.fn().mockImplementation((table: string) => {
+    if (table === 'organizations') return mockOrgFrom(table)
+    return { select, insert }
+  })
 
   return {
     supabase: { from } as never,

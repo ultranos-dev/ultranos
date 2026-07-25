@@ -23,10 +23,15 @@ vi.mock('@ultranos/audit-logger', () => ({
 vi.mock('@ultranos/crypto/server', () => ({
   encryptField: vi.fn((v: string) => `enc:${v}`),
   decryptField: vi.fn((v: string) => v.replace('enc:', '')),
+  generateBlindIndex: vi.fn((v: string) => `idx:${v}`),
 }))
 
 vi.mock('@/lib/field-encryption', () => ({
-  getCachedEncryptionKey: vi.fn().mockResolvedValue('mock-key'),
+  getCachedEncryptionKey: vi.fn().mockResolvedValue('a'.repeat(64)),
+  getFieldEncryptionKeys: vi.fn().mockReturnValue({
+    encryptionKey: 'a'.repeat(64),
+    hmacKey: 'b'.repeat(64),
+  }),
 }))
 
 vi.mock('@/lib/screening-reminders', () => ({
@@ -84,6 +89,13 @@ function setupMocks(tableMap: Record<string, unknown>) {
     return chain
   })
 }
+
+// ── UUID constants for procedure inputs (Zod requires uuid format) ───
+const UUID_LAB_1 = '00000000-0000-4000-8000-000000000001'
+const UUID_LAB_2 = '00000000-0000-4000-8000-000000000002'
+const UUID_LAB_FOREIGN = '00000000-0000-4000-8000-000000000099'
+const UUID_LAB_CHW = '00000000-0000-4000-8000-000000000010'
+const UUID_OUTBREAK_1 = '00000000-0000-4000-8000-000000000011'
 
 // ── Tests ────────────────────────────────────────────
 describe('Story 55.7: Network & Outbreak Management', () => {
@@ -161,7 +173,7 @@ describe('Story 55.7: Network & Outbreak Management', () => {
 
         if (table === 'labs') {
           chain.then = (resolve: any) =>
-            Promise.resolve({ data: [{ id: 'lab-1' }, { id: 'lab-2' }], error: null }).then(resolve)
+            Promise.resolve({ data: [{ id: UUID_LAB_1 }, { id: UUID_LAB_2 }], error: null }).then(resolve)
         }
         if (table === 'outbreak_events') {
           chain.insert = vi.fn(() => ({ select: vi.fn(() => ({ single: insertSingle })) }))
@@ -178,7 +190,7 @@ describe('Story 55.7: Network & Outbreak Management', () => {
       const caller = createCallerFactory(adminRouter)(makeCtx())
       const result = await caller.activateOutbreakMode({
         pathogen: 'Cholera',
-        affectedLabIds: ['lab-1', 'lab-2', 'lab-1'], // duplicate lab-1
+        affectedLabIds: [UUID_LAB_1, UUID_LAB_2, UUID_LAB_1], // duplicate UUID_LAB_1
         notes: 'Urgent',
       })
 
@@ -203,7 +215,7 @@ describe('Story 55.7: Network & Outbreak Management', () => {
 
       const caller = createCallerFactory(adminRouter)(makeCtx())
       await expect(
-        caller.activateOutbreakMode({ pathogen: 'Cholera', affectedLabIds: ['lab-1', 'lab-foreign'] }),
+        caller.activateOutbreakMode({ pathogen: 'Cholera', affectedLabIds: [UUID_LAB_1, UUID_LAB_FOREIGN] }),
       ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
     })
 
@@ -219,7 +231,7 @@ describe('Story 55.7: Network & Outbreak Management', () => {
         chain.single = vi.fn().mockResolvedValue({ data: null, error: null })
         chain.then = (resolve: any) => Promise.resolve({ data: [], error: null }).then(resolve)
         if (table === 'labs') {
-          chain.then = (resolve: any) => Promise.resolve({ data: [{ id: 'lab-1' }], error: null }).then(resolve)
+          chain.then = (resolve: any) => Promise.resolve({ data: [{ id: UUID_LAB_1 }], error: null }).then(resolve)
         }
         if (table === 'outbreak_events') {
           chain.insert = vi.fn(() => ({ select: vi.fn(() => ({ single: insertSingle })) }))
@@ -231,14 +243,14 @@ describe('Story 55.7: Network & Outbreak Management', () => {
       })
 
       const caller = createCallerFactory(adminRouter)(makeCtx())
-      await caller.activateOutbreakMode({ pathogen: 'Measles', affectedLabIds: ['lab-1'] })
+      await caller.activateOutbreakMode({ pathogen: 'Measles', affectedLabIds: [UUID_LAB_1] })
 
       expect(mockAuditEmit).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'OUTBREAK_MODE_ACTIVATED',
           metadata: expect.objectContaining({
             pathogen: 'Measles',
-            affectedLabIds: expect.arrayContaining(['lab-1']),
+            affectedLabIds: expect.arrayContaining([UUID_LAB_1]),
           }),
         }),
       )
@@ -261,11 +273,10 @@ describe('Story 55.7: Network & Outbreak Management', () => {
         chain.single = fetchSingle
         chain.then = (resolve: any) => Promise.resolve({ data: [], error: null }).then(resolve)
         if (table === 'outbreak_events') {
+          // Router: .update().eq('id',...).eq('status','ACTIVE').select('id',{count:'exact',head:true})
           chain.update = vi.fn(() => ({
             eq: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                eq: vi.fn(() => ({ select: vi.fn(() => Promise.resolve(updateChain)) })),
-              })),
+              eq: vi.fn(() => ({ select: vi.fn(() => Promise.resolve(updateChain)) })),
             })),
           }))
         }
@@ -276,13 +287,13 @@ describe('Story 55.7: Network & Outbreak Management', () => {
       })
 
       const caller = createCallerFactory(adminRouter)(makeCtx())
-      const result = await caller.deactivateOutbreakMode({ outbreakId: 'ob-1' })
+      const result = await caller.deactivateOutbreakMode({ outbreakId: UUID_OUTBREAK_1 })
       expect(result.success).toBe(true)
     })
 
     it('rejects deactivation of an already-resolved outbreak (atomic update returns 0 rows)', async () => {
       const fetchSingle = vi.fn().mockResolvedValue({
-        data: { id: 'ob-1', status: 'RESOLVED', pathogen: 'Cholera', affected_lab_ids: ['lab-1'] },
+        data: { id: UUID_OUTBREAK_1, status: 'RESOLVED', pathogen: 'Cholera', affected_lab_ids: [UUID_LAB_1] },
         error: null,
       })
 
@@ -296,9 +307,7 @@ describe('Story 55.7: Network & Outbreak Management', () => {
         if (table === 'outbreak_events') {
           chain.update = vi.fn(() => ({
             eq: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                eq: vi.fn(() => ({ select: vi.fn(() => Promise.resolve({ count: 0, error: null })) })),
-              })),
+              eq: vi.fn(() => ({ select: vi.fn(() => Promise.resolve({ count: 0, error: null })) })),
             })),
           }))
         }
@@ -307,13 +316,13 @@ describe('Story 55.7: Network & Outbreak Management', () => {
 
       const caller = createCallerFactory(adminRouter)(makeCtx())
       await expect(
-        caller.deactivateOutbreakMode({ outbreakId: 'ob-1' }),
+        caller.deactivateOutbreakMode({ outbreakId: UUID_OUTBREAK_1 }),
       ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
     })
 
     it('emits OUTBREAK_MODE_DEACTIVATED audit event with pathogen and affectedLabIds', async () => {
       const fetchSingle = vi.fn().mockResolvedValue({
-        data: { id: 'ob-1', status: 'ACTIVE', pathogen: 'Typhoid', affected_lab_ids: ['lab-1', 'lab-2'] },
+        data: { id: UUID_OUTBREAK_1, status: 'ACTIVE', pathogen: 'Typhoid', affected_lab_ids: [UUID_LAB_1, UUID_LAB_2] },
         error: null,
       })
 
@@ -327,9 +336,7 @@ describe('Story 55.7: Network & Outbreak Management', () => {
         if (table === 'outbreak_events') {
           chain.update = vi.fn(() => ({
             eq: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                eq: vi.fn(() => ({ select: vi.fn(() => Promise.resolve({ count: 1, error: null })) })),
-              })),
+              eq: vi.fn(() => ({ select: vi.fn(() => Promise.resolve({ count: 1, error: null })) })),
             })),
           }))
         }
@@ -340,14 +347,14 @@ describe('Story 55.7: Network & Outbreak Management', () => {
       })
 
       const caller = createCallerFactory(adminRouter)(makeCtx())
-      await caller.deactivateOutbreakMode({ outbreakId: 'ob-1' })
+      await caller.deactivateOutbreakMode({ outbreakId: UUID_OUTBREAK_1 })
 
       expect(mockAuditEmit).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'OUTBREAK_MODE_DEACTIVATED',
           metadata: expect.objectContaining({
             pathogen: 'Typhoid',
-            affectedLabIds: expect.arrayContaining(['lab-1', 'lab-2']),
+            affectedLabIds: expect.arrayContaining([UUID_LAB_1, UUID_LAB_2]),
           }),
         }),
       )
@@ -361,7 +368,7 @@ describe('Story 55.7: Network & Outbreak Management', () => {
     it('creates practitioner with CHW role and inserts lab_technicians row', async () => {
       const practInsert = vi.fn().mockResolvedValue({ data: null, error: null })
       const techInsert = vi.fn().mockResolvedValue({ data: null, error: null })
-      const labSingle = vi.fn().mockResolvedValue({ data: { id: 'lab-1' }, error: null })
+      const labSingle = vi.fn().mockResolvedValue({ data: { id: UUID_LAB_CHW }, error: null })
 
       mockFrom.mockImplementation((table: string) => {
         const chain: Record<string, any> = {}
@@ -382,18 +389,18 @@ describe('Story 55.7: Network & Outbreak Management', () => {
         givenName: 'Fatima',
         familyName: 'Ahmadi',
         phone: '+93700000000',
-        assignedLabId: 'lab-1',
+        assignedLabId: UUID_LAB_CHW,
       })
 
       expect(result.success).toBe(true)
       expect(result.role).toBe('CHW')
       expect(result.status).toBe('ACTIVE')
-      expect(result.assignedLabId).toBe('lab-1')
+      expect(result.assignedLabId).toBe(UUID_LAB_CHW)
       expect(result.chwId).toBeTruthy()
 
       // Verify lab_technicians row was inserted (P2)
       expect(techInsert).toHaveBeenCalledWith(
-        expect.objectContaining({ lab_id: 'lab-1', lab_role: 'CHW' }),
+        expect.objectContaining({ lab_id: UUID_LAB_CHW, lab_role: 'CHW' }),
       )
 
       // Verify names were encrypted (P1/P9)
@@ -416,7 +423,7 @@ describe('Story 55.7: Network & Outbreak Management', () => {
 
       const caller = createCallerFactory(adminRouter)(makeCtx())
       await expect(
-        caller.enrollChw({ givenName: 'A', familyName: '', phone: '+93700000000', assignedLabId: 'lab-foreign' }),
+        caller.enrollChw({ givenName: 'A', familyName: '', phone: '+93700000000', assignedLabId: UUID_LAB_FOREIGN }),
       ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
     })
 
@@ -428,13 +435,13 @@ describe('Story 55.7: Network & Outbreak Management', () => {
         const chain: Record<string, any> = {}
         chain.select = vi.fn(() => chain)
         chain.eq = vi.fn(() => chain)
-        chain.single = vi.fn().mockResolvedValue({ data: { id: 'lab-1' }, error: null })
+        chain.single = vi.fn().mockResolvedValue({ data: { id: UUID_LAB_CHW }, error: null })
         return chain
       })
 
       const caller = createCallerFactory(adminRouter)(makeCtx())
       await expect(
-        caller.enrollChw({ givenName: 'Fatima', familyName: '', phone: '+93700000000', assignedLabId: 'lab-1' }),
+        caller.enrollChw({ givenName: 'Fatima', familyName: '', phone: '+93700000000', assignedLabId: UUID_LAB_CHW }),
       ).rejects.toMatchObject({ code: 'INTERNAL_SERVER_ERROR' })
     })
 
@@ -446,14 +453,14 @@ describe('Story 55.7: Network & Outbreak Management', () => {
         const chain: Record<string, any> = {}
         chain.select = vi.fn(() => chain)
         chain.eq = vi.fn(() => chain)
-        chain.single = vi.fn().mockResolvedValue({ data: { id: 'lab-1' }, error: null })
+        chain.single = vi.fn().mockResolvedValue({ data: { id: UUID_LAB_CHW }, error: null })
         if (table === 'practitioners') chain.insert = practInsert
         if (table === 'lab_technicians') chain.insert = techInsert
         return chain
       })
 
       const caller = createCallerFactory(adminRouter)(makeCtx())
-      await caller.enrollChw({ givenName: 'Fatima', familyName: '', phone: '+93700000000', assignedLabId: 'lab-1' })
+      await caller.enrollChw({ givenName: 'Fatima', familyName: '', phone: '+93700000000', assignedLabId: UUID_LAB_CHW })
 
       expect(mockAuditEmit).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -465,7 +472,7 @@ describe('Story 55.7: Network & Outbreak Management', () => {
       expect(auditCall.metadata).not.toHaveProperty('phone')
       expect(auditCall.metadata).not.toHaveProperty('fullName')
       expect(auditCall.metadata).not.toHaveProperty('givenName')
-      expect(auditCall.metadata).toHaveProperty('assignedLabId', 'lab-1')
+      expect(auditCall.metadata).toHaveProperty('assignedLabId', UUID_LAB_CHW)
     })
   })
 

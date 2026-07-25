@@ -218,7 +218,7 @@ describe('AuditLogger', () => {
       }
 
       const logger = new AuditLogger(mockDb as any)
-      const result = await logger.verifyChain(100)
+      const result = await logger.verifyChain(100, { newest: false })
 
       expect(result.valid).toBe(true)
       expect(result.checkedCount).toBe(3)
@@ -262,7 +262,7 @@ describe('AuditLogger', () => {
       }
 
       const logger = new AuditLogger(mockDb as any)
-      const result = await logger.verifyChain(100)
+      const result = await logger.verifyChain(100, { newest: false })
 
       expect(result.valid).toBe(false)
       expect(result.checkedCount).toBe(2)

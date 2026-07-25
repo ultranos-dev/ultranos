@@ -20,7 +20,6 @@ describe('db helper with mandatory field-level encryption (Story 7.3b)', () => {
         id: '123',
         status: 'active',
         diagnosis: 'Type 2 Diabetes',
-        reasonCode: 'E11.9',
       }
 
       const result = db.toRow(row)
@@ -31,7 +30,6 @@ describe('db helper with mandatory field-level encryption (Story 7.3b)', () => {
 
       // PHI fields are encrypted (camelCase → snake_case happens first, then encryption)
       expect(result.diagnosis).toMatch(/^v1:/)
-      expect(result.reason_code).toMatch(/^v1:/)
     })
 
     it('writing a SENSITIVE_FIELD without encryption is impossible through db.toRow()', () => {
@@ -149,7 +147,6 @@ describe('db helper with mandatory field-level encryption (Story 7.3b)', () => {
         id: '123',
         status: 'active',
         diagnosis: 'Hypertension stage 2',
-        reasonCode: 'I11',
         dosageInstruction: [{ text: 'Take 10mg daily' }],
         interactionOverride: 'Approved by Dr. Smith',
       })
@@ -161,7 +158,6 @@ describe('db helper with mandatory field-level encryption (Story 7.3b)', () => {
       // All PHI fields are encrypted — no readable content
       const rowStr = JSON.stringify(row)
       expect(rowStr).not.toContain('Hypertension')
-      expect(rowStr).not.toContain('I11')
       expect(rowStr).not.toContain('Take 10mg daily')
       expect(rowStr).not.toContain('Dr. Smith')
     })

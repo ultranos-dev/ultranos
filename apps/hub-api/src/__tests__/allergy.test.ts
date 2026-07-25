@@ -26,6 +26,7 @@ function createTestContext(overrides?: {
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
+    rpc: vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null }),
   }
   return {
     supabase: supabase as never,
@@ -159,18 +160,6 @@ describe('allergy.list', () => {
     const mockFrom = vi.fn((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
       if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
-      if (table === 'audit_log') {
-        return {
-          select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({ data: null, error: null }),
-              }),
-            }),
-          }),
-          insert: vi.fn().mockResolvedValue({ error: null }),
-        }
-      }
       // allergy_intolerances: .select().eq(patient_ref).order().eq(status) — then awaited
       const finalEqMock = vi.fn().mockResolvedValue({ data: [], error: null })
       const orderMock = vi.fn().mockReturnValue({ eq: finalEqMock })
@@ -185,8 +174,12 @@ describe('allergy.list', () => {
 
     await caller.allergy.list({ patientId: '00000000-0000-4000-8000-000000000001' })
 
-    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
-    expect(fromCalls).toContain('audit_log')
+    // AuditLogger.emit() uses supabase.rpc('audit_emit_with_lock') for hash-chained audit.
+    const rpcSpy = (ctx.supabase as any).rpc as ReturnType<typeof vi.fn>
+    expect(rpcSpy).toHaveBeenCalledWith('audit_emit_with_lock', expect.objectContaining({
+      p_action: 'PHI_READ',
+      p_resource_type: 'AllergyIntolerance',
+    }))
   })
 
   it('applies db.fromRow() transformation to each returned row', async () => {
@@ -268,18 +261,6 @@ describe('allergy.create', () => {
     const mockFrom = vi.fn((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
       if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
-      if (table === 'audit_log') {
-        return {
-          select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({ data: null, error: null }),
-              }),
-            }),
-          }),
-          insert: vi.fn().mockResolvedValue({ error: null }),
-        }
-      }
       return {
         insert: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
@@ -303,9 +284,12 @@ describe('allergy.create', () => {
     // Verify allergy_intolerances table was targeted
     expect(mockFrom).toHaveBeenCalledWith('allergy_intolerances')
 
-    // Verify audit event was emitted (second call to from() for audit_log)
-    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
-    expect(fromCalls).toContain('audit_log')
+    // AuditLogger.emit() uses supabase.rpc('audit_emit_with_lock') for hash-chained audit.
+    const rpcSpy = (ctx.supabase as any).rpc as ReturnType<typeof vi.fn>
+    expect(rpcSpy).toHaveBeenCalledWith('audit_emit_with_lock', expect.objectContaining({
+      p_action: 'PHI_WRITE',
+      p_resource_type: 'AllergyIntolerance',
+    }))
   })
 
   it('handles duplicate gracefully (idempotent)', async () => {
@@ -350,7 +334,12 @@ describe('allergy.create', () => {
   })
 
   it('denies access to ADMIN role', async () => {
-    const ctx = createTestContext({ user: ADMIN_USER })
+    const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
+      return { insert: vi.fn(), select: vi.fn() }
+    })
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: ADMIN_USER })
     const caller = createCaller(ctx)
 
     // Verify both: correct TRPCError code (FORBIDDEN not UNAUTHORIZED) and message

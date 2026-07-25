@@ -74,6 +74,7 @@ function makeCtx(user: { sub: string; role: string; sessionId: string }) {
  */
 function setupLabContext(labRole: string) {
   // labRestrictedProcedure calls: from('lab_technicians').select(...).eq(...).single()
+  // getMyRole calls: from('lab_technicians').select(...).eq(...).maybeSingle()
   mockFrom.mockImplementation((table: string) => {
     if (table === 'lab_technicians') {
       return {
@@ -87,6 +88,13 @@ function setupLabContext(labRole: string) {
                 practitioner_id: 'prac-1',
                 created_at: '2026-01-01T00:00:00Z',
                 labs: { id: 'lab-1', status: 'ACTIVE' },
+              },
+              error: null,
+            }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: {
+                lab_role: labRole,
+                labs: { status: 'ACTIVE' },
               },
               error: null,
             }),
@@ -147,6 +155,26 @@ describe('lab.getMyRole', () => {
   })
 
   it('returns null labRole for ADMIN users (no lab context)', async () => {
+    // Override mockFrom so maybeSingle() returns null (no lab_technician row for admin user)
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'lab_technicians') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        }
+      }
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+          }),
+        }),
+      }
+    })
+
     const { labRouter } = await import('../trpc/routers/lab')
     const caller = createCallerFactory(labRouter)(
       makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' }),

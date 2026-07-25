@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockFrom = vi.fn(() => ({ insert: vi.fn(), select: vi.fn() }))
+const mockFrom = vi.fn(() => ({
+  insert: vi.fn(),
+  select: vi.fn().mockReturnValue({
+    eq: vi.fn().mockReturnValue({
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    }),
+  }),
+}))
 const mockAuditEmit = vi.fn().mockResolvedValue({ id: 'audit-1' })
 
 vi.mock('@ultranos/audit-logger', () => ({
@@ -44,7 +51,7 @@ describe('lab.reportAuthEvent', () => {
 
     const result = await caller.lab.reportAuthEvent({
       event: 'LOGIN_SUCCESS',
-      actorId: 'tech-1',
+      actorId: '11111111-1111-1111-1111-111111111111',
     })
 
     expect(result.logged).toBe(true)
@@ -89,7 +96,7 @@ describe('lab.reportAuthEvent', () => {
 
     const result = await caller.lab.reportAuthEvent({
       event: 'MFA_VERIFY_FAILURE',
-      actorId: 'tech-1',
+      actorId: '11111111-1111-1111-1111-111111111111',
     })
 
     expect(result.logged).toBe(true)
@@ -109,7 +116,7 @@ describe('lab.reportAuthEvent', () => {
 
     const result = await caller.lab.reportAuthEvent({
       event: 'MFA_VERIFY_SUCCESS',
-      actorId: 'tech-1',
+      actorId: '11111111-1111-1111-1111-111111111111',
     })
 
     expect(result.logged).toBe(true)
@@ -136,7 +143,10 @@ describe('lab.reportAuthEvent', () => {
     expect(emittedMetadata.failedEmail).toBe('[REDACTED]')
   })
 
-  it('propagates error when audit.emit() throws (compliance failure)', async () => {
+  it('swallows audit error gracefully and still returns logged:true (compliance best-effort)', async () => {
+    // Router uses try/catch around audit.emit() for reportAuthEvent — audit failure is
+    // logged via console.warn but does NOT propagate. The endpoint must remain available
+    // for auth-event logging even if the audit pipeline is degraded.
     mockAuditEmit.mockRejectedValueOnce(new Error('Audit write failed'))
 
     const router = createTRPCRouter({ lab: labRouter })
@@ -144,12 +154,11 @@ describe('lab.reportAuthEvent', () => {
       makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
     )
 
-    await expect(
-      caller.lab.reportAuthEvent({
-        event: 'LOGIN_SUCCESS',
-        actorId: 'tech-1',
-      }),
-    ).rejects.toThrow()
+    const result = await caller.lab.reportAuthEvent({
+      event: 'LOGIN_SUCCESS',
+      actorId: '11111111-1111-1111-1111-111111111111',
+    })
+    expect(result).toEqual({ logged: true })
   })
 
   it('hashes IP address from x-forwarded-for header', async () => {
@@ -163,7 +172,7 @@ describe('lab.reportAuthEvent', () => {
 
     await caller.lab.reportAuthEvent({
       event: 'LOGIN_SUCCESS',
-      actorId: 'tech-1',
+      actorId: '11111111-1111-1111-1111-111111111111',
     })
 
     const emittedEvent = mockAuditEmit.mock.calls[0]![0]

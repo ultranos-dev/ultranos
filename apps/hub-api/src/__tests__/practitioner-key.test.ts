@@ -169,20 +169,17 @@ describe('practitioner key router', () => {
         sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1',
       }))
 
-      // Mock for the "is not null" + select chain
       const mockData = [
         { public_key_ed25519: 'key1', revoked_at: '2026-06-01T00:00:00Z' },
         { public_key_ed25519: 'key2', revoked_at: '2026-06-02T00:00:00Z' },
       ]
-      // Reset the chain for this specific query
-      const mockIsNotNull = vi.fn().mockResolvedValue({ data: mockData, error: null })
-      mockSelect.mockReturnValueOnce({ not: vi.fn().mockReturnValue({ is: vi.fn() }), eq: mockEq, single: mockSingle, in: mockIn, lte: mockLte, is: mockIs, gt: mockGt })
-      // Re-approach: mock from for practitioner_keys table
       mockFrom.mockReturnValueOnce({
         select: vi.fn().mockReturnValue({
-          not: vi.fn().mockReturnValue(
-            Promise.resolve({ data: mockData, error: null })
-          ),
+          not: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+            }),
+          }),
         }),
       })
 
@@ -215,14 +212,16 @@ describe('practitioner key router', () => {
       const mockUpdate = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           is: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                id: 'key-1',
-                practitioner_id: 'prac-1',
-                public_key_ed25519: 'dGVzdC1rZXk=',
-                revoked_at: '2026-06-01T00:00:00Z',
-              },
-              error: null,
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  id: 'key-1',
+                  practitioner_id: 'prac-1',
+                  public_key_ed25519: 'dGVzdC1rZXk=',
+                  revoked_at: '2026-06-01T00:00:00Z',
+                },
+                error: null,
+              }),
             }),
           }),
         }),

@@ -99,7 +99,9 @@ describe('ai.getModelManifest', () => {
     mockSupabaseClient.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
         order: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: sampleRows, error: null }),
+          order: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue({ data: sampleRows, error: null }),
+          }),
         }),
       }),
     })
@@ -119,7 +121,9 @@ describe('ai.getModelManifest', () => {
     mockSupabaseClient.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
         order: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
+          order: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+          }),
         }),
       }),
     })
@@ -134,7 +138,9 @@ describe('ai.getModelManifest', () => {
       select: vi.fn().mockReturnValue({
         order: vi.fn().mockReturnValue({
           order: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [sampleRows[2]], error: null }),
+            limit: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ data: [sampleRows[2]], error: null }),
+            }),
           }),
         }),
       }),
@@ -150,7 +156,9 @@ describe('ai.getModelManifest', () => {
     mockSupabaseClient.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
         order: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
+          order: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+          }),
         }),
       }),
     })
@@ -164,7 +172,9 @@ describe('ai.getModelManifest', () => {
     mockSupabaseClient.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
         order: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: null, error: { message: 'db error', code: '500' } }),
+          order: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue({ data: null, error: { message: 'db error', code: '500' } }),
+          }),
         }),
       }),
     })
@@ -334,13 +344,15 @@ describe('ai.getModelUpdateStats', () => {
   it('ADMIN can access model update stats', async () => {
     mockSupabaseClient.from.mockReturnValue({
       select: vi.fn().mockReturnValue({
-        gte: vi.fn().mockResolvedValue({
-          data: [
-            { model_id: 'soap-macros', event_type: 'MODEL_UPDATE_STARTED', metadata: {} },
-            { model_id: 'soap-macros', event_type: 'MODEL_UPDATE_COMPLETED', metadata: {} },
-            { model_id: 'drug-db-offline', event_type: 'MODEL_STALE_DEGRADED', metadata: { modelType: 'DRUG_DB_OFFLINE' } },
-          ],
-          error: null,
+        gte: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({
+            data: [
+              { model_id: 'soap-macros', event_type: 'MODEL_UPDATE_STARTED', metadata: {} },
+              { model_id: 'soap-macros', event_type: 'MODEL_UPDATE_COMPLETED', metadata: {} },
+              { model_id: 'drug-db-offline', event_type: 'MODEL_STALE_DEGRADED', metadata: { modelType: 'DRUG_DB_OFFLINE' } },
+            ],
+            error: null,
+          }),
         }),
       }),
     })

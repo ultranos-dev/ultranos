@@ -69,6 +69,18 @@ function makeAuthCtx(role = 'DOCTOR') {
   return {
     supabase: {
       from: vi.fn().mockImplementation((table: string) => {
+        if (table === 'organizations') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { status: 'ACTIVE', id: 'org-test-001', cancelled_at: null },
+                  error: null,
+                }),
+              }),
+            }),
+          }
+        }
         if (table === 'org_subscriptions') {
           return {
             select: vi.fn().mockReturnValue({
@@ -206,20 +218,25 @@ describe('Audit Integration — Router Emissions', () => {
   })
 
   describe('medication.getStatus', () => {
-    it('emits a PHI_READ audit event', async () => {
+    it('emits a SECURITY_VIOLATION audit event when prescriptionId is unsigned (Story 21.2)', async () => {
+      // Story 21.2: unsigned lookups are rejected before any DB access and emit
+      // a SECURITY_VIOLATION audit event — not PHI_READ. This is the correct behavior.
       const ctx = makeAuthCtx('PHARMACIST')
       const caller = createCaller(ctx)
 
-      await caller.medication.getStatus({ prescriptionId: '00000000-0000-0000-0000-000000000001' })
+      await expect(
+        caller.medication.getStatus({ prescriptionId: '00000000-0000-0000-0000-000000000001' }),
+      ).rejects.toMatchObject({ code: 'BAD_REQUEST', message: 'UNSIGNED_LOOKUP_REJECTED' })
 
-      const phiReadEvents = auditEmitCalls.filter(e => e.action === 'PHI_READ' && e.resourceType === 'PRESCRIPTION')
-      expect(phiReadEvents).toHaveLength(1)
-      expect(phiReadEvents[0]).toMatchObject({
-        action: 'PHI_READ',
+      const securityEvents = auditEmitCalls.filter(
+        e => e.action === 'SECURITY_VIOLATION' && e.resourceType === 'PRESCRIPTION',
+      )
+      expect(securityEvents).toHaveLength(1)
+      expect(securityEvents[0]).toMatchObject({
+        action: 'SECURITY_VIOLATION',
         resourceType: 'PRESCRIPTION',
-        resourceId: '00000000-0000-0000-0000-000000000001',
         actorId: 'user-001',
-        outcome: 'SUCCESS',
+        outcome: 'FAILURE',
       })
     })
   })
@@ -285,7 +302,7 @@ describe('Audit Integration — Chain Verification', () => {
       }),
     }
     const logger = new RealAuditLogger(mockDb as any)
-    const result = await logger.verifyChain(100)
+    const result = await logger.verifyChain(100, { newest: false })
 
     expect(result.valid).toBe(true)
     expect(result.checkedCount).toBe(3)
@@ -328,7 +345,7 @@ describe('Audit Integration — Chain Verification', () => {
       }),
     }
     const logger = new RealAuditLogger(mockDb as any)
-    const result = await logger.verifyChain(100)
+    const result = await logger.verifyChain(100, { newest: false })
 
     expect(result.valid).toBe(false)
     expect(result.brokenAt).toBe(chain[1]!.id)

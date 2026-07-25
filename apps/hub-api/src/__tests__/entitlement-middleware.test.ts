@@ -83,6 +83,20 @@ function mockSubscriptionQuery(result: { data: any; error: any }) {
   }
 }
 
+/**
+ * Creates a mock supabase.from for the organizations table query:
+ * .select().eq().single() — used by enforceEntitlement org status check.
+ */
+function mockOrgQuery(org: { id: string; status: string; cancelled_at?: string | null } | null) {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: org, error: org ? null : { message: 'not found' } }),
+      }),
+    }),
+  }
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
@@ -100,11 +114,14 @@ describe('enforceEntitlement — direct middleware test', () => {
   it('allows through when org has ACTIVE subscription', async () => {
     const middleware = enforceEntitlement('OPD_LITE')
     const nextFn = vi.fn().mockResolvedValue('ok')
+    // enforceEntitlement now queries organizations first, then org_subscriptions
     const supabase = {
-      from: vi.fn().mockReturnValue(mockSubscriptionQuery({
-        data: { id: 'sub-1', status: 'ACTIVE' },
-        error: null,
-      })),
+      from: vi.fn((table: string) => {
+        if (table === 'organizations') {
+          return mockOrgQuery({ id: ORG_ID, status: 'ACTIVE', cancelled_at: null })
+        }
+        return mockSubscriptionQuery({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null })
+      }),
     }
 
     await middleware({
@@ -127,10 +144,12 @@ describe('enforceEntitlement — direct middleware test', () => {
     const middleware = enforceEntitlement('OPD_LITE')
     const nextFn = vi.fn().mockResolvedValue('ok')
     const supabase = {
-      from: vi.fn().mockReturnValue(mockSubscriptionQuery({
-        data: { id: 'sub-2', status: 'TRIAL' },
-        error: null,
-      })),
+      from: vi.fn((table: string) => {
+        if (table === 'organizations') {
+          return mockOrgQuery({ id: ORG_ID, status: 'ACTIVE', cancelled_at: null })
+        }
+        return mockSubscriptionQuery({ data: { id: 'sub-2', status: 'TRIAL' }, error: null })
+      }),
     }
 
     await middleware({
@@ -153,10 +172,12 @@ describe('enforceEntitlement — direct middleware test', () => {
     const middleware = enforceEntitlement('PHARMACY_LITE')
     const nextFn = vi.fn()
     const supabase = {
-      from: vi.fn().mockReturnValue(mockSubscriptionQuery({
-        data: null,
-        error: null,
-      })),
+      from: vi.fn((table: string) => {
+        if (table === 'organizations') {
+          return mockOrgQuery({ id: ORG_ID, status: 'ACTIVE', cancelled_at: null })
+        }
+        return mockSubscriptionQuery({ data: null, error: null })
+      }),
     }
 
     await expect(
@@ -191,12 +212,18 @@ describe('enforceEntitlement — direct middleware test', () => {
     expect(nextFn).not.toHaveBeenCalled()
   })
 
-  it('ADMIN bypasses without DB query', async () => {
+  it('ADMIN bypasses module entitlement (but still passes org status check)', async () => {
+    // ADMIN with an orgId: the middleware checks org status (CANCELLED/SUSPENDED guard)
+    // but skips the module subscription entitlement check.
     const middleware = enforceEntitlement('LAB_LITE')
     const nextFn = vi.fn().mockResolvedValue('ok')
     const supabase = {
-      from: vi.fn(() => {
-        throw new Error('Should not query DB for ADMIN')
+      from: vi.fn((table: string) => {
+        if (table === 'organizations') {
+          return mockOrgQuery({ id: ORG_ID, status: 'ACTIVE', cancelled_at: null })
+        }
+        // org_subscriptions should NOT be queried for ADMIN
+        throw new Error('Should not query org_subscriptions for ADMIN')
       }),
     }
 
@@ -246,10 +273,13 @@ describe('enforceEntitlement — direct middleware test', () => {
     const middleware = enforceEntitlement('OPD_LITE')
     const nextFn = vi.fn()
     const supabase = {
-      from: vi.fn().mockReturnValue(mockSubscriptionQuery({
-        data: null, // DB returns null because status NOT IN ('ACTIVE', 'TRIAL')
-        error: null,
-      })),
+      from: vi.fn((table: string) => {
+        if (table === 'organizations') {
+          return mockOrgQuery({ id: ORG_ID, status: 'ACTIVE', cancelled_at: null })
+        }
+        // DB returns null because status NOT IN ('ACTIVE', 'TRIAL')
+        return mockSubscriptionQuery({ data: null, error: null })
+      }),
     }
 
     await expect(

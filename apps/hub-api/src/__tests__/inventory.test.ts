@@ -421,8 +421,15 @@ describe('Purchase Order Lifecycle', () => {
         }),
       }),
     })
+    // Router: .update().eq(id).eq(org_id).eq(status).select('id', {count:'exact',head:true})
     supabase.from('purchase_orders').update = vi.fn().mockReturnValue({
-      eq: vi.fn().mockResolvedValue({ error: null }),
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            select: vi.fn().mockResolvedValue({ error: null, count: 1 }),
+          }),
+        }),
+      }),
     })
 
     const caller = createCallerFactory(adminRouter)(makeCtx(supabase))
@@ -500,9 +507,12 @@ describe('Supplier CRUD', () => {
 
   it('updates a supplier and emits audit event', async () => {
     const supabase = buildMockSupabase()
+    // Router: .update().eq('id',...).eq('org_id',...).select('id', {count:'exact',head:true})
     supabase.from('suppliers').update = vi.fn().mockReturnValue({
       eq: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ error: null }),
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockResolvedValue({ error: null, count: 1 }),
+        }),
       }),
     })
 

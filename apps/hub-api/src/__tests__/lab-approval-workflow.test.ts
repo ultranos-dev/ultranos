@@ -106,7 +106,7 @@ describe('Story 22.3: Lab Approval & Suspension Workflow', () => {
       const labRows = [
         {
           id: '11111111-1111-1111-1111-111111111111',
-          name: 'Alpha Lab',
+          lab_name: 'Alpha Lab',
           license_ref: 'LIC-001',
           accreditation_ref: 'ACC-001',
           status: 'PENDING',
@@ -552,14 +552,44 @@ describe('Story 22.3: Lab Approval & Suspension Workflow', () => {
   // ────────────────────────────────────────────────────────────
   describe('admin.dashboardStats', () => {
     it('returns live pendingLabApprovals count', async () => {
-      const supabase = buildMockSupabase({
-        labs: {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ count: 3, error: null }),
-          }),
-        },
+      // Build a chainable mock that handles every table dashboardStats queries.
+      // The router calls: labs (count PENDING), kyc_submissions (count + data),
+      // prescribing_anomalies (.in() count x2), labs (oldest, .maybeSingle()),
+      // audit_chain_verifications (.maybeSingle()), practitioners (count x3).
+      const makeCountChain = (count: number) => {
+        const chain: Record<string, any> = {}
+        chain.eq = vi.fn().mockReturnValue(chain)
+        chain.in = vi.fn().mockReturnValue(chain)
+        chain.order = vi.fn().mockReturnValue(chain)
+        chain.limit = vi.fn().mockReturnValue(chain)
+        chain.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+        chain.then = (resolve: any) => resolve({ count, data: [], error: null })
+        return chain
+      }
+
+      let labsCallIndex = 0
+      const from = vi.fn((table: string) => {
+        if (table === 'labs') {
+          labsCallIndex++
+          if (labsCallIndex === 1) {
+            // First call: .select().eq('status','PENDING') → count=3
+            const chain: Record<string, any> = {}
+            chain.eq = vi.fn().mockReturnValue(chain)
+            chain.then = (resolve: any) => resolve({ count: 3, error: null })
+            return { select: vi.fn().mockReturnValue(chain) }
+          }
+          // Second call: oldest pending lab .eq().order().limit().maybeSingle()
+          const chain: Record<string, any> = {}
+          chain.eq = vi.fn().mockReturnValue(chain)
+          chain.order = vi.fn().mockReturnValue(chain)
+          chain.limit = vi.fn().mockReturnValue(chain)
+          chain.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+          return { select: vi.fn().mockReturnValue(chain) }
+        }
+        return { select: vi.fn().mockReturnValue(makeCountChain(0)) }
       })
 
+      const supabase = { from } as never
       const caller = createCallerFactory(adminRouter)(makeAdminCtx(supabase))
       const result = await caller.dashboardStats()
 

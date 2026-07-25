@@ -318,6 +318,7 @@ describe('medication.complete', () => {
           prescription_status: 'ACTIVE',
           status: 'active',
           interaction_check: 'CLEAR',
+          subject_reference: 'Patient/pat-001',
         },
         error: null,
       }),
@@ -343,6 +344,7 @@ describe('medication.complete', () => {
     const callCount = { n: 0 }
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return entitlementMock()
       callCount.n++
       if (callCount.n === 1) {
         return {
@@ -372,6 +374,7 @@ describe('medication.complete', () => {
   it('rejects completing an already-fulfilled prescription', async () => {
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return entitlementMock()
       return {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -403,6 +406,7 @@ describe('medication.complete', () => {
   it('rejects dispensing when interaction_check is BLOCKED', async () => {
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return entitlementMock()
       return {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -434,6 +438,7 @@ describe('medication.complete', () => {
   it('rejects dispensing when interaction_check is UNAVAILABLE', async () => {
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return entitlementMock()
       return {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -555,6 +560,7 @@ describe('medication.recordDispense', () => {
 
     return vi.fn().mockImplementation((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return entitlementMock()
       if (table === 'consents') return consentMock()
       if (table === 'audit_log') return auditLogMock()
 
@@ -750,8 +756,8 @@ describe('medication.recordDispense', () => {
       caller.medication.recordDispense(validInput),
     ).rejects.toThrow('Prescription has already been dispensed')
 
-    // Verify audit was called (AuditLogger calls from('audit_log') for chain + insert)
-    expect(mockFrom).toHaveBeenCalledWith('audit_log')
+    // Verify audit was called (AuditLogger uses rpc('audit_emit_with_lock', ...) not from('audit_log'))
+    expect(ctx.supabase.rpc).toHaveBeenCalled()
   })
 
   it('throws INTERNAL_SERVER_ERROR when dispense insert fails', async () => {
@@ -803,8 +809,8 @@ describe('medication.recordDispense', () => {
 
     await caller.medication.recordDispense(validInput)
 
-    // Audit logger calls from('audit_log') for the audit chain + insert
-    expect(mockFrom).toHaveBeenCalledWith('audit_log')
+    // Audit logger uses rpc('audit_emit_with_lock', ...) not from('audit_log')
+    expect(ctx.supabase.rpc).toHaveBeenCalled()
   })
 
   it('ignores dispense with older HLC when prescription already completed (AC 5)', async () => {

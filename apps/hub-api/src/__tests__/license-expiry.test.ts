@@ -73,16 +73,19 @@ function makeCtxWithProviders(providers: any[], total = providers.length) {
   const supabase = ctx.supabase as any
   const chain = supabase._mockChain
 
-  // The query chain is: .from().select().not().order().range() then optionally .lte()
-  // Then the chain is awaited. We need range to return the chain (with lte), and
+  // The query chain is: .from().select().not().order().range() then optionally .lte().gte()
+  // Then the chain is awaited. We need range to return the chain (with lte/gte), and
   // the chain itself must be thenable to resolve the query result.
-  const awaitableChain = {
+  const awaitableChain: Record<string, any> = {
     ...chain,
-    lte: vi.fn().mockImplementation(() => awaitableChain),
     then: (resolve: any, reject?: any) => {
       return Promise.resolve({ data: providers, error: null, count: total }).then(resolve, reject)
     },
   }
+  // lte and gte must both return awaitableChain so they can be chained and awaited
+  awaitableChain.lte = vi.fn().mockImplementation(() => awaitableChain)
+  awaitableChain.gte = vi.fn().mockImplementation(() => awaitableChain)
+  awaitableChain.or = vi.fn().mockImplementation(() => awaitableChain)
   chain.range = vi.fn().mockReturnValue(awaitableChain)
 
   return ctx

@@ -5,10 +5,15 @@ const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
 // Mock supabase for audit logging
+// AuditLogger now uses supabase.rpc('audit_emit_with_lock', ...) — not .from().insert()
 vi.mock('../lib/supabase', () => ({
   getSupabaseClient: vi.fn().mockReturnValue({
     from: vi.fn().mockReturnValue({
       insert: vi.fn().mockResolvedValue({ error: null }),
+    }),
+    rpc: vi.fn().mockResolvedValue({
+      data: [{ chain_hash: 'abc123' }],
+      error: null,
     }),
   }),
 }))
@@ -57,12 +62,12 @@ describe('Alert Notifier — Story 23.1 Task 7', () => {
 
     await sendAlert(baseAlert)
 
-    expect(mockSupabase.from).toHaveBeenCalledWith('audit_events')
-    const insertCall = (mockSupabase.from as ReturnType<typeof vi.fn>).mock.results[0].value.insert
-    expect(insertCall).toHaveBeenCalledWith(
+    // AuditLogger uses rpc('audit_emit_with_lock', ...) not .from('audit_events').insert()
+    expect((mockSupabase as any).rpc).toHaveBeenCalledWith(
+      'audit_emit_with_lock',
       expect.objectContaining({
-        actor_id: 'SYSTEM',
-        action: 'ALERT',
+        p_actor_id: 'SYSTEM',
+        p_action: 'ALERT',
       }),
     )
   })

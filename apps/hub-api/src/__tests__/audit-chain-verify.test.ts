@@ -99,7 +99,9 @@ function createMockSupabase(
           select: vi.fn().mockReturnValue({
             order: vi.fn().mockReturnValue({
               limit: vi.fn().mockResolvedValue({
-                data: chainEntries,
+                // verifyChain(newest=true) fetches DESC then reverses in-memory.
+                // Return entries in descending order so reversal yields ascending.
+                data: opts.rpcError ? null : [...chainEntries].reverse(),
                 error: opts.rpcError ? { message: 'query failed' } : null,
               }),
             }),

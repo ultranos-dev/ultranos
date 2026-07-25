@@ -321,6 +321,12 @@ describe('Story 55.5: Certification & Credential Management', () => {
   describe('admin.issueCredential', () => {
     it('issues credential when all milestones are approved', async () => {
       const fromImpl = vi.fn().mockImplementation((table: string) => {
+        if (table === 'certification_pathways') {
+          return chainMock({
+            data: { id: PATHWAY_ID, milestones: SAMPLE_MILESTONES, status: 'ACTIVE' },
+            error: null,
+          })
+        }
         if (table === 'certification_progress') {
           return chainMock({
             data: [
@@ -350,6 +356,12 @@ describe('Story 55.5: Certification & Credential Management', () => {
 
     it('rejects credential when milestones are not all approved', async () => {
       const fromImpl = vi.fn().mockImplementation((table: string) => {
+        if (table === 'certification_pathways') {
+          return chainMock({
+            data: { id: PATHWAY_ID, milestones: SAMPLE_MILESTONES, status: 'ACTIVE' },
+            error: null,
+          })
+        }
         if (table === 'certification_progress') {
           return chainMock({
             data: [
@@ -513,6 +525,12 @@ describe('Story 55.5: Certification & Credential Management', () => {
 
     it('emits CERTIFICATION_CREDENTIAL_ISSUED on issuance', async () => {
       const fromImpl = vi.fn().mockImplementation((table: string) => {
+        if (table === 'certification_pathways') {
+          return chainMock({
+            data: { id: PATHWAY_ID, milestones: SAMPLE_MILESTONES, status: 'ACTIVE' },
+            error: null,
+          })
+        }
         if (table === 'certification_progress') {
           return chainMock({
             data: [{ id: 'p1', status: 'APPROVED' }],
@@ -582,8 +600,10 @@ describe('Story 55.5: Certification & Credential Management', () => {
 
   describe('admin.archiveCertificationPathway', () => {
     it('archives a pathway', async () => {
+      // Router: .update().eq('id',...).eq('status','ACTIVE').select('id').single()
+      // single() must return { data: { id }, error: null } to avoid CONFLICT throw
       const fromImpl = vi.fn().mockImplementation(() =>
-        chainMock({ data: null, error: null }),
+        chainMock({ data: { id: PATHWAY_ID }, error: null }),
       )
 
       const caller = createCallerFactory(adminRouter)(makeAdminCtx(fromImpl))

@@ -26,6 +26,7 @@ function createTestContext(overrides?: {
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
+    rpc: vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null }),
   }
   return {
     supabase: supabase as never,
@@ -185,16 +186,15 @@ describe('consent.check', () => {
   })
 
   it('returns permitted=true when active consent exists', async () => {
+    // checkConsent queries: .from('consents').select().eq('patient_ref', ...).order('date_time', ...)
     const mockFrom = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockImplementation(() => ({
-          eq: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({
-              data: [{ id: 'c1', status: 'ACTIVE', category: ['PRESCRIPTIONS'] }],
-              error: null,
-            }),
+        eq: vi.fn().mockReturnValue({
+          order: vi.fn().mockResolvedValue({
+            data: [{ id: 'c1', status: 'ACTIVE', category: ['PRESCRIPTIONS'], date_time: '2026-01-01T00:00:00Z', provision_end: null }],
+            error: null,
           }),
-        })),
+        }),
       }),
     })
 
@@ -210,16 +210,15 @@ describe('consent.check', () => {
   })
 
   it('returns permitted=false when no consent exists', async () => {
+    // checkConsent queries: .from('consents').select().eq('patient_ref', ...).order('date_time', ...)
     const mockFrom = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockImplementation(() => ({
-          eq: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({
-              data: [],
-              error: null,
-            }),
+        eq: vi.fn().mockReturnValue({
+          order: vi.fn().mockResolvedValue({
+            data: [],
+            error: null,
           }),
-        })),
+        }),
       }),
     })
 

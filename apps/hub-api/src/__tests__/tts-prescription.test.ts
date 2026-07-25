@@ -315,6 +315,7 @@ describe('medication.logTTSPlayback', () => {
     const caller = createCaller(createTestContext({ user: PATIENT_USER }))
     const result = await caller.medication.logTTSPlayback({
       medicationRequestId: RX_UUID,
+      patientId: PATIENT_UUID,
       dialect: 'EN',
       source: 'CLOUD_TTS',
       completedAt: '2026-05-16T12:00:00Z',
@@ -336,6 +337,7 @@ describe('medication.logTTSPlayback', () => {
     const caller = createCaller(createTestContext({ user: PHARMACIST_USER }))
     const result = await caller.medication.logTTSPlayback({
       medicationRequestId: RX_UUID,
+      patientId: PATIENT_UUID,
       dialect: 'EN',
       source: 'CLOUD_TTS',
       completedAt: '2026-05-16T12:00:00Z',

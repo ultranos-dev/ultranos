@@ -33,11 +33,14 @@ const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
   supabaseFrom?: ReturnType<typeof vi.fn>
+  supabaseRpc?: ReturnType<typeof vi.fn>
   user?: { sub: string; role: string; sessionId: string } | null
   lab?: { technicianId: string; labId: string; labStatus: string } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
+    // AuditLogger.emit() uses rpc('audit_emit_with_lock') for hash-chained insert.
+    rpc: overrides?.supabaseRpc ?? vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null }),
   }
   return {
     supabase: supabase as never,
@@ -272,8 +275,12 @@ describe('diagnosticReport.read', () => {
     const caller = createCaller(ctx)
 
     await caller.diagnosticReport.read(validInput)
-    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
-    expect(fromCalls).toContain('audit_log')
+    // AuditLogger.emit() uses supabase.rpc('audit_emit_with_lock') for hash-chained audit.
+    const rpcSpy = (ctx.supabase as any).rpc as ReturnType<typeof vi.fn>
+    expect(rpcSpy).toHaveBeenCalledWith('audit_emit_with_lock', expect.objectContaining({
+      p_action: 'PHI_READ',
+      p_resource_type: 'DIAGNOSTIC_REPORT',
+    }))
   })
 })
 
@@ -413,8 +420,12 @@ describe('diagnosticReport.listByPatient', () => {
     const caller = createCaller(ctx)
 
     await caller.diagnosticReport.listByPatient(validInput)
-    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
-    expect(fromCalls).toContain('audit_log')
+    // AuditLogger.emit() uses supabase.rpc('audit_emit_with_lock') for hash-chained audit.
+    const rpcSpy = (ctx.supabase as any).rpc as ReturnType<typeof vi.fn>
+    expect(rpcSpy).toHaveBeenCalledWith('audit_emit_with_lock', expect.objectContaining({
+      p_action: 'PHI_READ',
+      p_resource_type: 'DIAGNOSTIC_REPORT',
+    }))
   })
 })
 
@@ -533,7 +544,7 @@ describe('diagnosticReport.listByLab', () => {
   })
 
   it('emits READ audit event (not PHI_READ)', async () => {
-    const insertSpy = vi.fn().mockResolvedValue({ error: null })
+    const rpcSpy = vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null })
     const mockFrom = vi.fn((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
       if (table === 'org_subscriptions') {
@@ -554,18 +565,6 @@ describe('diagnosticReport.listByLab', () => {
               }),
             }),
           }),
-        }
-      }
-      if (table === 'audit_log') {
-        return {
-          select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({ data: null, error: null }),
-              }),
-            }),
-          }),
-          insert: insertSpy,
         }
       }
       if (table === 'lab_technicians') {
@@ -593,17 +592,17 @@ describe('diagnosticReport.listByLab', () => {
       }
     })
 
-    const ctx = createTestContext({ supabaseFrom: mockFrom, user: LAB_TECH_USER, lab: LAB_CONTEXT })
+    const ctx = createTestContext({ supabaseFrom: mockFrom, supabaseRpc: rpcSpy, user: LAB_TECH_USER, lab: LAB_CONTEXT })
     const caller = createCaller(ctx)
 
     await caller.diagnosticReport.listByLab(validInput)
-    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
-    expect(fromCalls).toContain('audit_log')
 
+    // AuditLogger.emit() uses supabase.rpc('audit_emit_with_lock') for hash-chained audit.
     // Verify the audit event action is READ, not PHI_READ
-    expect(insertSpy).toHaveBeenCalled()
-    const auditPayload = insertSpy.mock.calls[0][0]
-    expect(auditPayload.action).toBe('READ')
+    expect(rpcSpy).toHaveBeenCalledWith('audit_emit_with_lock', expect.objectContaining({
+      p_action: 'READ',
+      p_resource_type: 'DIAGNOSTIC_REPORT',
+    }))
   })
 
   it('does not enforce consent middleware (lab-scoped)', async () => {

@@ -26,6 +26,7 @@ function createTestContext(overrides?: {
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
+    rpc: vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null }),
   }
   return {
     supabase: supabase as never,
@@ -149,6 +150,7 @@ function createMockFrom(opts: {
 
 describe('encounter.addSOAPNote', () => {
   const validInput = {
+    id: SOAP_NOTE_UUID,
     encounterId: ENCOUNTER_UUID,
     subjective: 'Patient reports headache',
     objective: 'BP 120/80',
@@ -234,8 +236,11 @@ describe('encounter.addSOAPNote', () => {
     const caller = createCaller(ctx)
 
     await caller.encounter.addSOAPNote(validInput)
-    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
-    expect(fromCalls).toContain('audit_log')
+    // AuditLogger.emit() uses supabase.rpc('audit_emit_with_lock') for hash-chained audit.
+    const rpcSpy = (ctx.supabase as any).rpc as ReturnType<typeof vi.fn>
+    expect(rpcSpy).toHaveBeenCalledWith('audit_emit_with_lock', expect.objectContaining({
+      p_action: 'PHI_WRITE',
+    }))
   })
 
   it('extracts practitioner_id from session context', async () => {
@@ -275,6 +280,7 @@ describe('encounter.addSOAPNote', () => {
     const caller = createCaller(ctx)
 
     const partialInput = {
+      id: SOAP_NOTE_UUID,
       encounterId: ENCOUNTER_UUID,
       subjective: 'Headache',
       hlcTimestamp: '000001715300000:00001:node-1',
@@ -405,8 +411,11 @@ describe('encounter.listSOAPNotes', () => {
     const caller = createCaller(ctx)
 
     await caller.encounter.listSOAPNotes(validInput)
-    const fromCalls = mockFrom.mock.calls.map((c: unknown[]) => c[0])
-    expect(fromCalls).toContain('audit_log')
+    // AuditLogger.emit() uses supabase.rpc('audit_emit_with_lock') for hash-chained audit.
+    const rpcSpy = (ctx.supabase as any).rpc as ReturnType<typeof vi.fn>
+    expect(rpcSpy).toHaveBeenCalledWith('audit_emit_with_lock', expect.objectContaining({
+      p_action: 'PHI_READ',
+    }))
   })
 
   it('maps response fields correctly', async () => {

@@ -109,7 +109,7 @@ const validInput = {
   fileBase64: Buffer.from('fake-pdf-content').toString('base64'),
   fileName: 'result.pdf',
   fileType: 'application/pdf' as const,
-  patientRef: 'hmac_patient-123',
+  patientRef: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
   loincCode: '58410-2',
   loincDisplay: 'Blood Work — CBC',
   collectionDate: '2026-04-28',

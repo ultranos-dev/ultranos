@@ -83,6 +83,34 @@ function createDispenseMockFrom() {
   capturedInsertArgs = []
 
   return vi.fn().mockImplementation((table: string) => {
+    if (table === 'organizations') {
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { status: 'ACTIVE', id: 'org-test-001', cancelled_at: null },
+              error: null,
+            }),
+          }),
+        }),
+      }
+    }
+    if (table === 'org_subscriptions') {
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              in: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue({
+                  data: [{ id: 'sub-1', status: 'ACTIVE' }],
+                  error: null,
+                }),
+              }),
+            }),
+          }),
+        }),
+      }
+    }
     if (table === 'consents') return consentMock()
     if (table === 'audit_log') return auditLogMock()
 
