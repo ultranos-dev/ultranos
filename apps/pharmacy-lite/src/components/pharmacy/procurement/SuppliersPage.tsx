@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { SupplierForm } from './SupplierForm'
 import { getAllSuppliers, deactivateSupplier } from '@/lib/procurement/supplier-service'
 import type { Supplier } from '@/lib/procurement/types'

@@ -4,6 +4,7 @@ import type { FulfillmentItem } from '@/stores/fulfillment-store'
 import { createMedicationDispense } from '@/lib/medication-dispense'
 import { db } from '@/lib/db'
 import { logDispenseEvent } from '@/services/dispenseAuditService'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
 
 function makeItems(): FulfillmentItem[] {
   return [
@@ -47,6 +48,11 @@ function makeItems(): FulfillmentItem[] {
 beforeEach(async () => {
   await db.delete()
   await db.open()
+  // Provide a real AES-GCM key so the encryption middleware can encrypt writes.
+  if (!encryptionKeyStore.isReady()) {
+    const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt'])
+    encryptionKeyStore.setKey(key)
+  }
 })
 
 describe('createMedicationDispense', () => {

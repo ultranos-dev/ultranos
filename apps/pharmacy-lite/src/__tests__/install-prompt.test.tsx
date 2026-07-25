@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { InstallPrompt } from '../components/InstallPrompt'
 
+// InstallPrompt calls useSidebar() internally; mock the sidebar module to avoid
+// "useSidebar must be used within a SidebarProvider" error in unit tests.
+vi.mock('@/components/ui/sidebar', () => ({
+  useSidebar: () => ({ state: 'expanded', open: true }),
+}))
+
 describe('InstallPrompt', () => {
   beforeEach(() => {
     vi.useFakeTimers()
@@ -36,17 +42,18 @@ describe('InstallPrompt', () => {
     })
 
     // Not visible yet
-    expect(screen.queryByText('Install Pharmacy Lite for quick access')).toBeNull()
+    // Component uses t('prompt') — i18n mock returns key string 'prompt'
+    expect(screen.queryByText('prompt')).toBeNull()
 
     // Advance past 2-minute delay
     act(() => {
       vi.advanceTimersByTime(2 * 60 * 1000)
     })
 
-    expect(screen.getByText('Install Pharmacy Lite for quick access')).toBeInTheDocument()
+    expect(screen.getByText('prompt')).toBeInTheDocument()
   })
 
-  it('dismisses and saves to sessionStorage when "Not now" clicked', async () => {
+  it('dismisses and saves to sessionStorage when dismiss button clicked', async () => {
     render(<InstallPrompt />)
 
     const promptEvent = new Event('beforeinstallprompt') as Event & {
@@ -66,8 +73,9 @@ describe('InstallPrompt', () => {
       vi.advanceTimersByTime(2 * 60 * 1000)
     })
 
-    fireEvent.click(screen.getByText('Not now'))
-    expect(screen.queryByText('Install Pharmacy Lite for quick access')).toBeNull()
+    // Component uses t('notNow') — i18n mock returns key string 'notNow'
+    fireEvent.click(screen.getByText('notNow'))
+    expect(screen.queryByText('prompt')).toBeNull()
     expect(sessionStorage.getItem('pharmacy-lite-install-dismissed')).toBe('1')
   })
 
@@ -82,6 +90,6 @@ describe('InstallPrompt', () => {
       vi.advanceTimersByTime(2 * 60 * 1000)
     })
 
-    expect(screen.queryByText('Install Pharmacy Lite for quick access')).toBeNull()
+    expect(screen.queryByText('prompt')).toBeNull()
   })
 })

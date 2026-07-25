@@ -667,6 +667,9 @@ importers:
       '@testing-library/user-event':
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.1)
+      '@types/jest-axe':
+        specifier: ^3.5.9
+        version: 3.5.9
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.39
@@ -685,6 +688,9 @@ importers:
       fake-indexeddb:
         specifier: ^6.0.0
         version: 6.2.5
+      jest-axe:
+        specifier: ^9.0.0
+        version: 9.0.0
       jsdom:
         specifier: ^24.0.0
         version: 24.1.3

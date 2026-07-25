@@ -13,6 +13,13 @@ vi.mock('@/lib/supabase', () => ({
   }),
 }))
 
+// AuthGuard uses usePathname() from next/navigation (not window.location.pathname)
+let mockPathname = '/scan'
+vi.mock('next/navigation', () => ({
+  usePathname: () => mockPathname,
+  useRouter: () => ({ push: vi.fn() }),
+}))
+
 let locationHref = '/'
 Object.defineProperty(window, 'location', {
   value: {
@@ -33,6 +40,7 @@ describe('AuthGuard (Pharmacy Lite)', () => {
     vi.clearAllMocks()
     useAuthSessionStore.getState().clearSession()
     locationHref = '/'
+    mockPathname = '/scan'
     Object.defineProperty(window.location, 'pathname', {
       value: '/scan',
       writable: true,
@@ -80,6 +88,8 @@ describe('AuthGuard (Pharmacy Lite)', () => {
   })
 
   it('renders children on /login without auth check', () => {
+    // AuthGuard uses usePathname() from next/navigation — set mock to /login
+    mockPathname = '/login'
     Object.defineProperty(window.location, 'pathname', {
       value: '/login',
       writable: true,

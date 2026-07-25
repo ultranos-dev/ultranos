@@ -46,7 +46,8 @@ describe('MedicationLabel', () => {
 
     it('renders duration', () => {
       render(<MedicationLabel item={makeItem()} />)
-      expect(screen.getByTestId('label-duration')).toHaveTextContent(/7 days/)
+      // Component uses tCommon('days', { count: 7 }) — i18n mock returns key + JSON
+      expect(screen.getByTestId('label-duration')).toHaveTextContent('days {"count":7}')
     })
 
     it('renders dosage timing icons for morning (Sun icon)', () => {
@@ -83,7 +84,8 @@ describe('MedicationLabel', () => {
 
     it('renders batch/lot number when provided', () => {
       render(<MedicationLabel item={makeItem()} />)
-      expect(screen.getByTestId('label-batch')).toHaveTextContent('LOT-2026-04A')
+      // tCommon('lot', { lot: 'LOT-2026-04A' }) → i18n mock returns key + JSON
+      expect(screen.getByTestId('label-batch')).toHaveTextContent('lot {"lot":"LOT-2026-04A"}')
     })
 
     it('omits batch/lot when empty', () => {

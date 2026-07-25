@@ -5,7 +5,7 @@ import { db } from '@/lib/db'
 vi.mock('@/lib/audit', () => ({
   auditPhiAccess: vi.fn(),
   AuditAction: { SYNC: 'SYNC' },
-  AuditResourceType: { PRACTITIONER_KEY: 'PRACTITIONER_KEY' },
+  AuditResourceType: { PRACTITIONER: 'PRACTITIONER' },
 }))
 
 // Mock trpc module
@@ -146,7 +146,7 @@ describe('krl-sync-worker', () => {
       expect(mockAudit).toHaveBeenCalledWith(
         'actor-1',
         'SYNC',
-        'PRACTITIONER_KEY',
+        'PRACTITIONER',
         'krl',
         undefined,
         expect.objectContaining({
@@ -172,7 +172,7 @@ describe('krl-sync-worker', () => {
       expect(mockAudit).toHaveBeenCalledWith(
         'actor-1',
         'SYNC',
-        'PRACTITIONER_KEY',
+        'PRACTITIONER',
         'krl',
         undefined,
         expect.objectContaining({ outcome: 'failure' }),
@@ -198,7 +198,7 @@ describe('krl-sync-worker', () => {
       expect(mockAudit).toHaveBeenCalledWith(
         'actor-1',
         'SYNC',
-        'PRACTITIONER_KEY',
+        'PRACTITIONER',
         'krl',
         undefined,
         expect.objectContaining({ purgedFromCache: 1 }),

@@ -15,7 +15,17 @@ vi.mock('@/stores/auth-session-store', () => ({
 import { useFulfillmentStore } from '@/stores/fulfillment-store'
 import type { VerifiedPrescription } from '@/lib/prescription-verify'
 
-// We import the real component — it doesn't exist yet, so this will fail (RED phase)
+// Mock DispensingConfirmationModal to immediately call onConfirm when rendered,
+// so tests of FulfillmentChecklist's "calls onConfirm" behavior don't need to
+// interact with the modal's drug-interaction checks or acknowledge checkbox.
+vi.mock('@/components/pharmacy/DispensingConfirmationModal', () => ({
+  DispensingConfirmationModal: ({ onConfirm }: { onConfirm: () => void; onCancel: () => void; items: unknown[] }) => (
+    <div data-testid="mock-modal">
+      <button data-testid="modal-confirm" onClick={onConfirm}>Confirm</button>
+    </div>
+  ),
+}))
+
 import { FulfillmentChecklist } from '@/components/pharmacy/FulfillmentChecklist'
 
 const sampleRx: VerifiedPrescription[] = [
@@ -132,8 +142,10 @@ describe('FulfillmentChecklist', () => {
       loadStore()
       render(<FulfillmentChecklist />)
 
-      expect(screen.getByTestId('brand-input-rx-001')).toBeInTheDocument()
-      expect(screen.getByTestId('brand-input-rx-002')).toBeInTheDocument()
+      // sampleRx has no atc → BrandSubstitutionPicker renders brand-freetext (free-text mode)
+      // There are 2 items, both selected, so 2 brand-freetext inputs rendered
+      const brandInputs = screen.getAllByTestId('brand-freetext')
+      expect(brandInputs).toHaveLength(2)
     })
 
     it('renders batch/lot input for each selected medication (optional)', () => {
@@ -149,8 +161,9 @@ describe('FulfillmentChecklist', () => {
       const user = userEvent.setup()
       render(<FulfillmentChecklist />)
 
-      const brandInput = screen.getByTestId('brand-input-rx-001')
-      await user.type(brandInput, 'Amoxil')
+      // BrandSubstitutionPicker renders brand-freetext (no atc on sampleRx prescriptions)
+      const brandInputs = screen.getAllByTestId('brand-freetext')
+      await user.type(brandInputs[0]!, 'Amoxil')
 
       const state = useFulfillmentStore.getState()
       expect(state.items[0]!.brandName).toBe('Amoxil')
@@ -173,13 +186,15 @@ describe('FulfillmentChecklist', () => {
       const user = userEvent.setup()
       render(<FulfillmentChecklist />)
 
-      // Deselect rx-001
+      // Deselect rx-001 — its brand/batch inputs should disappear
       await user.click(screen.getByTestId('fulfill-checkbox-rx-001'))
 
-      expect(screen.queryByTestId('brand-input-rx-001')).not.toBeInTheDocument()
+      // batch-input-rx-001 should be gone (input uses item id directly)
       expect(screen.queryByTestId('batch-input-rx-001')).not.toBeInTheDocument()
-      // rx-002 inputs should still be there
-      expect(screen.getByTestId('brand-input-rx-002')).toBeInTheDocument()
+      // rx-002 batch input should still be there
+      expect(screen.getByTestId('batch-input-rx-002')).toBeInTheDocument()
+      // Only 1 brand-freetext remains (rx-002 still selected)
+      expect(screen.getAllByTestId('brand-freetext')).toHaveLength(1)
     })
   })
 
@@ -211,7 +226,11 @@ describe('FulfillmentChecklist', () => {
       // Deselect rx-002 for partial fulfillment
       await user.click(screen.getByTestId('fulfill-checkbox-rx-002'))
 
+      // Open confirmation modal
       await user.click(screen.getByTestId('confirm-dispensing-btn'))
+
+      // DispensingConfirmationModal is mocked — click the mock confirm button
+      await user.click(screen.getByTestId('modal-confirm'))
 
       expect(onConfirm).toHaveBeenCalledTimes(1)
       const calledItems = onConfirm.mock.calls[0]![0]
@@ -234,7 +253,9 @@ describe('FulfillmentChecklist', () => {
       render(<FulfillmentChecklist />)
 
       const patientInfo = screen.getByTestId('patient-info')
-      expect(patientInfo).toHaveTextContent('Patient: Fatima, 34 y/o')
+      // Component uses t('patientInfoWithAge', { name: 'Fatima', age: 34 })
+      // Global i18n mock returns: 'patientInfoWithAge {"name":"Fatima","age":34}'
+      expect(patientInfo).toHaveTextContent('patientInfoWithAge {"name":"Fatima","age":34}')
     })
 
     it('omits patient info when not provided', () => {

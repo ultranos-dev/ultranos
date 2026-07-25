@@ -64,7 +64,8 @@ describe('ShiftSummary', () => {
     await waitFor(() => {
       const rateEl = screen.getByTestId('stat-sync-rate')
       expect(rateEl).toHaveTextContent('100%')
-      expect(rateEl.className).toContain('text-green-700')
+      // Component uses text-success (semantic token, not text-green-700)
+      expect(rateEl.className).toContain('text-success')
     })
   })
 

@@ -75,7 +75,8 @@ describe('DispensingHistoryView', () => {
 
     render(<DispensingHistoryView />)
     await waitFor(() => {
-      expect(screen.getByText('5 records found')).toBeInTheDocument()
+      // Component uses t('recordsFound', { count: 5 }) — i18n mock returns key + JSON values
+      expect(screen.getByText('recordsFound {"count":5}')).toBeInTheDocument()
     })
   })
 
@@ -142,7 +143,8 @@ describe('DispensingHistoryView', () => {
     })
 
     // Type in medication filter to trigger filter change
-    const medInput = screen.getByLabelText('Medication')
+    // HistoryFilterBar uses t('filterMedication') as label — i18n mock returns key string
+    const medInput = screen.getByLabelText('filterMedication')
     fireEvent.change(medInput, { target: { value: 'Ibuprofen' } })
 
     await waitFor(() => {

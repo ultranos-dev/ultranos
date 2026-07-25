@@ -79,10 +79,12 @@ describe('PharmacySettingsView', () => {
   it('renders all four settings sections', async () => {
     render(<PharmacySettingsView />)
 
-    expect(screen.getByText('Profile')).toBeDefined()
-    expect(screen.getByText('Pharmacy Info')).toBeDefined()
-    expect(screen.getByText('Session Info')).toBeDefined()
-    expect(screen.getByText('MFA Status')).toBeDefined()
+    // Component uses t('profile'), t('pharmacyInfo'), t('sessionInfo'), t('mfaStatus')
+    // Global i18n mock returns the key strings
+    expect(screen.getByText('profile')).toBeDefined()
+    expect(screen.getByText('pharmacyInfo')).toBeDefined()
+    expect(screen.getByText('sessionInfo')).toBeDefined()
+    expect(screen.getByText('mfaStatus')).toBeDefined()
   })
 
   // --- Task 2: Profile card ---
@@ -117,12 +119,13 @@ describe('PharmacySettingsView', () => {
     expect(screen.getByTestId('license-ref').textContent).toBe('PH-2026-0042')
   })
 
-  it('shows "Not configured" when pharmacy fields are missing', () => {
+  it('shows "notConfigured" when pharmacy fields are missing', () => {
     mockSession = { ...mockSession!, pharmacyName: undefined, licenseRef: undefined }
     render(<PharmacySettingsView />)
 
-    expect(screen.getByTestId('pharmacy-name').textContent).toBe('Not configured')
-    expect(screen.getByTestId('license-ref').textContent).toBe('Not configured')
+    // Component uses t('notConfigured') — i18n mock returns the key string
+    expect(screen.getByTestId('pharmacy-name').textContent).toBe('notConfigured')
+    expect(screen.getByTestId('license-ref').textContent).toBe('notConfigured')
   })
 
   // --- Task 4: Session info / countdown ---
@@ -179,18 +182,20 @@ describe('PharmacySettingsView', () => {
   })
 
   // --- Task 5: MFA status ---
-  it('shows "TOTP Enabled" with green badge when enrolled', async () => {
+  it('shows TOTP enabled badge when enrolled', async () => {
     const { container } = render(<PharmacySettingsView />)
 
     await waitFor(() => {
       const badge = container.querySelector('[data-testid="mfa-status"]')
       expect(badge).not.toBeNull()
-      expect(badge!.textContent).toBe('TOTP Enabled')
-      expect(badge!.className).toContain('bg-green-100')
+      // Component uses t('totpEnabled') — i18n mock returns key string
+      expect(badge!.textContent).toBe('totpEnabled')
+      // Component uses bg-success/10 (semantic token, not bg-green-100)
+      expect(badge!.className).toContain('bg-success')
     })
   })
 
-  it('shows "Not Configured" with amber badge when not enrolled', async () => {
+  it('shows TOTP not configured badge when not enrolled', async () => {
     mockListFactors.mockResolvedValue({
       data: { totp: [] },
       error: null,
@@ -201,8 +206,10 @@ describe('PharmacySettingsView', () => {
     await waitFor(() => {
       const badge = container.querySelector('[data-testid="mfa-status"]')
       expect(badge).not.toBeNull()
-      expect(badge!.textContent).toBe('Not Configured')
-      expect(badge!.className).toContain('bg-amber-100')
+      // Component uses t('totpNotConfigured') — i18n mock returns key string
+      expect(badge!.textContent).toBe('totpNotConfigured')
+      // Component uses bg-warning/10 (semantic token, not bg-amber-100)
+      expect(badge!.className).toContain('bg-warning')
     })
   })
 
@@ -212,7 +219,8 @@ describe('PharmacySettingsView', () => {
 
     render(<PharmacySettingsView />)
 
-    expect(screen.getByText('Loading MFA status...')).toBeDefined()
+    // Component uses t('loadingMfa') — i18n mock returns key string
+    expect(screen.getByText('loadingMfa')).toBeDefined()
   })
 
   it('shows error message when MFA check fails', async () => {
@@ -221,7 +229,8 @@ describe('PharmacySettingsView', () => {
     render(<PharmacySettingsView />)
 
     await waitFor(() => {
-      expect(screen.getByTestId('mfa-error').textContent).toBe('Unable to check MFA status')
+      // Component uses t('mfaCheckError') — i18n mock returns key string
+      expect(screen.getByTestId('mfa-error').textContent).toBe('mfaCheckError')
     })
   })
 
@@ -234,7 +243,7 @@ describe('PharmacySettingsView', () => {
     render(<PharmacySettingsView />)
 
     await waitFor(() => {
-      expect(screen.getByTestId('mfa-error').textContent).toBe('Unable to check MFA status')
+      expect(screen.getByTestId('mfa-error').textContent).toBe('mfaCheckError')
     })
   })
 })

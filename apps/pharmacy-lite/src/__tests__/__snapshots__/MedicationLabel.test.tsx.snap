@@ -31,7 +31,7 @@ exports[`MedicationLabel > RTL snapshot tests > matches snapshot in LTR mode 1`]
         capsule
       </p>
       <div
-        aria-label="Dosage timing"
+        aria-label="dosageTiming"
         class="mt-3 flex items-center gap-4"
         role="group"
       >
@@ -156,15 +156,13 @@ exports[`MedicationLabel > RTL snapshot tests > matches snapshot in LTR mode 1`]
         class="mt-3 text-base text-foreground"
         data-testid="label-duration"
       >
-        7
-         days
+        days {"count":7}
       </p>
       <p
         class="mt-1 text-xs text-muted-foreground"
         data-testid="label-batch"
       >
-        Lot: 
-        LOT-2026-04A
+        lot {"lot":"LOT-2026-04A"}
       </p>
     </div>
   </div>
@@ -202,7 +200,7 @@ exports[`MedicationLabel > RTL snapshot tests > matches snapshot in RTL mode 1`]
         capsule
       </p>
       <div
-        aria-label="Dosage timing"
+        aria-label="dosageTiming"
         class="mt-3 flex items-center gap-4"
         role="group"
       >
@@ -327,15 +325,13 @@ exports[`MedicationLabel > RTL snapshot tests > matches snapshot in RTL mode 1`]
         class="mt-3 text-base text-foreground"
         data-testid="label-duration"
       >
-        7
-         days
+        days {"count":7}
       </p>
       <p
         class="mt-1 text-xs text-muted-foreground"
         data-testid="label-batch"
       >
-        Lot: 
-        LOT-2026-04A
+        lot {"lot":"LOT-2026-04A"}
       </p>
     </div>
   </div>

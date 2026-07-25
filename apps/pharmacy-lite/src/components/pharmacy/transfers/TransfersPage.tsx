@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import {
   getTransfers,
   approveTransfer,

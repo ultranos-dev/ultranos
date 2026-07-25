@@ -69,7 +69,8 @@ describe('SwUpdateNotification', () => {
     stateChangeCallback!()
 
     await vi.waitFor(() => {
-      expect(screen.getByText('A new version is available')).toBeInTheDocument()
+      // Component uses t('newVersionAvailable') — global i18n mock returns the key string
+      expect(screen.getByText('newVersionAvailable')).toBeInTheDocument()
     })
   })
 
@@ -111,10 +112,12 @@ describe('SwUpdateNotification', () => {
     stateChangeCallback!()
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Later')).toBeInTheDocument()
+      // Component uses t('later') — global i18n mock returns the key string
+      expect(screen.getByText('later')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByText('Later'))
-    expect(screen.queryByText('A new version is available')).toBeNull()
+    fireEvent.click(screen.getByText('later'))
+    // After dismiss, the update banner should be gone
+    expect(screen.queryByText('newVersionAvailable')).toBeNull()
   })
 })

@@ -297,7 +297,8 @@ describe('QueueItemCard', () => {
     render(<QueueItemCard item={item as never} onSelect={vi.fn()} />)
 
     const badge = screen.getByTestId('phase-badge-card-1')
-    expect(badge.className).toContain('blue')
+    // Component uses semantic token: bg-primary/10 text-primary (not hardcoded 'blue')
+    expect(badge.className).toContain('primary')
   })
 
   it('renders phase badge with correct color for reviewing phase', async () => {
@@ -308,7 +309,8 @@ describe('QueueItemCard', () => {
     render(<QueueItemCard item={item as never} onSelect={vi.fn()} />)
 
     const badge = screen.getByTestId('phase-badge-card-2')
-    expect(badge.className).toContain('amber')
+    // Component uses semantic token: bg-warning/10 text-warning (not hardcoded 'amber')
+    expect(badge.className).toContain('warning')
   })
 
   it('renders phase badge with correct color for completed phase', async () => {
@@ -319,7 +321,8 @@ describe('QueueItemCard', () => {
     render(<QueueItemCard item={item as never} onSelect={vi.fn()} />)
 
     const badge = screen.getByTestId('phase-badge-card-3')
-    expect(badge.className).toContain('green')
+    // Component uses semantic token: bg-success/10 text-success (not hardcoded 'green')
+    expect(badge.className).toContain('success')
   })
 
   it('renders phase badge with animate-pulse for dispensing phase (D3)', async () => {
@@ -330,7 +333,8 @@ describe('QueueItemCard', () => {
     render(<QueueItemCard item={item as never} onSelect={vi.fn()} />)
 
     const badge = screen.getByTestId('phase-badge-card-6')
-    expect(badge.className).toContain('amber')
+    // Component uses semantic token: bg-warning/10 text-warning (not hardcoded 'amber')
+    expect(badge.className).toContain('warning')
     expect(badge.className).toContain('animate-pulse')
   })
 
@@ -343,7 +347,8 @@ describe('QueueItemCard', () => {
 
     const badge = screen.getByTestId('sync-badge-card-4')
     expect(badge).toHaveTextContent('Failed')
-    expect(badge.className).toContain('red')
+    // Component uses bg-destructive/10 text-destructive (semantic token, not 'red')
+    expect(badge.className).toContain('destructive')
   })
 
   it('calls onSelect when clicked', async () => {
