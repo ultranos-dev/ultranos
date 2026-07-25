@@ -8,7 +8,12 @@ vi.mock('@/lib/redis', () => ({
   getRedisClient: vi.fn(),
 }))
 
-import { signProceedToken, verifyProceedToken, consumeProceedToken } from '@/lib/mpi-proceed-token'
+import {
+  signProceedToken,
+  verifyProceedToken,
+  consumeProceedToken,
+  MpiReplayPreventionUnavailableError,
+} from '@/lib/mpi-proceed-token'
 import { getRedisClient } from '@/lib/redis'
 
 describe('mpi-proceed-token', () => {
@@ -115,22 +120,58 @@ describe('mpi-proceed-token', () => {
     await expect(signProceedToken({ candidateIds: [], maxScore: 0, issuedTo: 'u' })).rejects.toThrow(/MPI_TOKEN_PRIVATE_KEY/)
   })
 
-  it('verifyProceedToken skips replay check when Redis is unavailable (fail-open for dev)', async () => {
-    // NOTE: The current implementation is fail-open — when Redis is unavailable,
-    // the replay check is skipped and the token verifies successfully.
-    // This matches the code comment: "If Redis is unavailable, skip replay check (fail-open for dev)".
-    // SECURITY NOTE: Production deployments must ensure Redis is always available to enforce
-    // replay prevention. A future hardening story should add a FAIL_CLOSED env flag.
+  it('verifyProceedToken skips replay check when Redis is unavailable in dev (fail-open)', async () => {
+    // In dev/test (NODE_ENV !== 'production', flag unset) replay prevention is
+    // best-effort: when Redis is unavailable the check is skipped so local work
+    // does not require a running Redis. Production fails closed (see below).
     vi.mocked(getRedisClient).mockReturnValue(null as never)
     const token = await signProceedToken({
       candidateIds: ['p6'],
       maxScore: 65,
       issuedTo: 'user-uuid-006',
     })
-    // Fail-open: token verifies successfully when Redis is unavailable
     const payload = await verifyProceedToken(token)
     expect(payload.candidateIds).toEqual(['p6'])
     expect(payload.maxScore).toBe(65)
     expect(payload.issuedTo).toBe('user-uuid-006')
+  })
+
+  it('verifyProceedToken FAILS CLOSED when Redis unavailable and MPI_TOKEN_REQUIRE_REDIS=true', async () => {
+    vi.stubEnv('MPI_TOKEN_REQUIRE_REDIS', 'true')
+    vi.mocked(getRedisClient).mockReturnValue(null as never)
+    const token = await signProceedToken({ candidateIds: ['p7'], maxScore: 80, issuedTo: 'user-uuid-007' })
+    await expect(verifyProceedToken(token)).rejects.toThrow(MpiReplayPreventionUnavailableError)
+    vi.stubEnv('MPI_TOKEN_REQUIRE_REDIS', '')
+  })
+
+  it('verifyProceedToken FAILS CLOSED in production by default when Redis unavailable', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.mocked(getRedisClient).mockReturnValue(null as never)
+    const token = await signProceedToken({ candidateIds: ['p8'], maxScore: 90, issuedTo: 'user-uuid-008' })
+    await expect(verifyProceedToken(token)).rejects.toThrow(/replay prevention unavailable/i)
+    vi.stubEnv('NODE_ENV', 'test')
+  })
+
+  it('production fail-closed can be explicitly overridden with MPI_TOKEN_REQUIRE_REDIS=false', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('MPI_TOKEN_REQUIRE_REDIS', 'false')
+    vi.mocked(getRedisClient).mockReturnValue(null as never)
+    const token = await signProceedToken({ candidateIds: ['p9'], maxScore: 55, issuedTo: 'user-uuid-009' })
+    const payload = await verifyProceedToken(token) // opted out -> fail-open
+    expect(payload.candidateIds).toEqual(['p9'])
+    vi.stubEnv('NODE_ENV', 'test')
+    vi.stubEnv('MPI_TOKEN_REQUIRE_REDIS', '')
+  })
+
+  it('consumeProceedToken FAILS CLOSED when Redis unavailable and replay prevention required', async () => {
+    vi.stubEnv('MPI_TOKEN_REQUIRE_REDIS', 'true')
+    vi.mocked(getRedisClient).mockReturnValue(null as never)
+    await expect(consumeProceedToken('some-jti')).rejects.toThrow(MpiReplayPreventionUnavailableError)
+    vi.stubEnv('MPI_TOKEN_REQUIRE_REDIS', '')
+  })
+
+  it('consumeProceedToken is a no-op when Redis unavailable in dev (fail-open)', async () => {
+    vi.mocked(getRedisClient).mockReturnValue(null as never)
+    await expect(consumeProceedToken('some-jti')).resolves.toBeUndefined()
   })
 })

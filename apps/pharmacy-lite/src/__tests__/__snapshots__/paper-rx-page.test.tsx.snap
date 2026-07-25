@@ -1,0 +1,211 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Paper Prescription Scan Page (Story 24.3) > RTL snapshot tests > matches snapshot in LTR mode 1`] = `
+<div>
+  <div
+    dir="ltr"
+  >
+    <div
+      class="flex flex-col gap-4"
+    >
+      <div
+        aria-live="polite"
+        class="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3"
+        role="alert"
+      >
+        <div
+          class="flex items-center gap-2"
+        >
+          <span
+            class="text-destructive font-semibold text-sm"
+          >
+            Manual Verification Required
+          </span>
+        </div>
+        <p
+          class="text-destructive/80 text-xs mt-1"
+        >
+          Paper prescriptions cannot be digitally verified. The pharmacist takes full responsibility for verifying authenticity.
+        </p>
+      </div>
+      <div
+        class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2"
+        role="status"
+      >
+        <p
+          class="text-xs text-blue-800 font-medium"
+        >
+          No drug interaction check performed — external prescriber
+        </p>
+      </div>
+      <div
+        class="space-y-4"
+      >
+        <div
+          class="space-y-3"
+        >
+          <button
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 w-full"
+            data-size="default"
+            data-slot="button"
+            data-variant="outline"
+          >
+            <span
+              class="block text-lg font-medium text-foreground"
+            >
+              Open Camera
+            </span>
+            <span
+              class="text-sm text-muted-foreground"
+            >
+              Use webcam to capture prescription
+            </span>
+          </button>
+          <div
+            class="relative flex items-center gap-3"
+          >
+            <div
+              class="flex-1 border-t border-border"
+            />
+            <span
+              class="text-xs text-muted-foreground"
+            >
+              or
+            </span>
+            <div
+              class="flex-1 border-t border-border"
+            />
+          </div>
+          <button
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 w-full"
+            data-size="default"
+            data-slot="button"
+            data-variant="outline"
+          >
+            <span
+              class="block text-lg font-medium text-foreground"
+            >
+              Upload File
+            </span>
+            <span
+              class="text-sm text-muted-foreground"
+            >
+              Select an image file (JPEG, PNG)
+            </span>
+          </button>
+          <input
+            accept="image/jpeg,image/png"
+            class="hidden"
+            type="file"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Paper Prescription Scan Page (Story 24.3) > RTL snapshot tests > matches snapshot in RTL mode 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="flex flex-col gap-4"
+    >
+      <div
+        aria-live="polite"
+        class="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3"
+        role="alert"
+      >
+        <div
+          class="flex items-center gap-2"
+        >
+          <span
+            class="text-destructive font-semibold text-sm"
+          >
+            Manual Verification Required
+          </span>
+        </div>
+        <p
+          class="text-destructive/80 text-xs mt-1"
+        >
+          Paper prescriptions cannot be digitally verified. The pharmacist takes full responsibility for verifying authenticity.
+        </p>
+      </div>
+      <div
+        class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2"
+        role="status"
+      >
+        <p
+          class="text-xs text-blue-800 font-medium"
+        >
+          No drug interaction check performed — external prescriber
+        </p>
+      </div>
+      <div
+        class="space-y-4"
+      >
+        <div
+          class="space-y-3"
+        >
+          <button
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 w-full"
+            data-size="default"
+            data-slot="button"
+            data-variant="outline"
+          >
+            <span
+              class="block text-lg font-medium text-foreground"
+            >
+              Open Camera
+            </span>
+            <span
+              class="text-sm text-muted-foreground"
+            >
+              Use webcam to capture prescription
+            </span>
+          </button>
+          <div
+            class="relative flex items-center gap-3"
+          >
+            <div
+              class="flex-1 border-t border-border"
+            />
+            <span
+              class="text-xs text-muted-foreground"
+            >
+              or
+            </span>
+            <div
+              class="flex-1 border-t border-border"
+            />
+          </div>
+          <button
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 w-full"
+            data-size="default"
+            data-slot="button"
+            data-variant="outline"
+          >
+            <span
+              class="block text-lg font-medium text-foreground"
+            >
+              Upload File
+            </span>
+            <span
+              class="text-sm text-muted-foreground"
+            >
+              Select an image file (JPEG, PNG)
+            </span>
+          </button>
+          <input
+            accept="image/jpeg,image/png"
+            class="hidden"
+            type="file"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

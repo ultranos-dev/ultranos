@@ -6,6 +6,37 @@ const ALG = 'RS256'
 const TOKEN_TTL_SECONDS = 600 // 10 minutes
 const REDIS_KEY_PREFIX = 'mpi:token:'
 
+/**
+ * Thrown when Redis-backed replay prevention is required but Redis is not
+ * reachable. Verification/consumption FAIL CLOSED rather than silently accept a
+ * token whose single-use guarantee cannot be enforced.
+ */
+export class MpiReplayPreventionUnavailableError extends Error {
+  constructor() {
+    super(
+      'MPI proceed-token replay prevention unavailable: Redis is required but not reachable (fail-closed)',
+    )
+    this.name = 'MpiReplayPreventionUnavailableError'
+  }
+}
+
+/**
+ * Whether Redis-backed replay prevention is MANDATORY (fail-closed) when Redis
+ * is unavailable. Replay prevention is the only thing stopping a captured
+ * proceed token from being replayed to bypass MPI duplicate detection, so it
+ * must never be silently skipped in production.
+ *
+ * - MPI_TOKEN_REQUIRE_REDIS=true  -> always required (fail-closed everywhere)
+ * - MPI_TOKEN_REQUIRE_REDIS=false -> never required (explicit fail-open opt-out)
+ * - unset -> required in production (NODE_ENV==='production'); fail-open in dev/test
+ */
+function isRedisReplayRequired(): boolean {
+  const flag = process.env.MPI_TOKEN_REQUIRE_REDIS
+  if (flag === 'true') return true
+  if (flag === 'false') return false
+  return process.env.NODE_ENV === 'production'
+}
+
 function getPrivateKeyPem(): string {
   const key = process.env.MPI_TOKEN_PRIVATE_KEY
   if (!key) throw new Error('MPI_TOKEN_PRIVATE_KEY environment variable is not set')
@@ -52,8 +83,11 @@ export async function verifyProceedToken(token: string): Promise<MpiProceedToken
   if (redis) {
     const existing = await redis.get(`${REDIS_KEY_PREFIX}${jti}`)
     if (existing) throw new Error(`Proceed token already consumed (replay prevention): jti=${jti}`)
+  } else if (isRedisReplayRequired()) {
+    // Fail-closed: refuse a token whose single-use guarantee we cannot enforce.
+    throw new MpiReplayPreventionUnavailableError()
   }
-  // If Redis is unavailable, skip replay check (fail-open for dev)
+  // Otherwise (dev/test, or MPI_TOKEN_REQUIRE_REDIS=false): skip the replay check.
 
   if (!Array.isArray(payload['candidateIds'])) throw new Error('Invalid proceed token: candidateIds must be array')
   if (typeof payload['maxScore'] !== 'number') throw new Error('Invalid proceed token: maxScore must be number')
@@ -74,6 +108,11 @@ export async function verifyProceedToken(token: string): Promise<MpiProceedToken
  */
 export async function consumeProceedToken(jti: string): Promise<void> {
   const redis = getRedisClient()
-  if (!redis) return // Skip consume in dev without Redis (no replay prevention)
+  if (!redis) {
+    // Consume runs before the patient insert, so failing closed here is safe
+    // (no orphaned record) and prevents a later replay from succeeding.
+    if (isRedisReplayRequired()) throw new MpiReplayPreventionUnavailableError()
+    return // dev/test (or explicit opt-out): no replay prevention
+  }
   await redis.set(`${REDIS_KEY_PREFIX}${jti}`, 'consumed', 'EX', TOKEN_TTL_SECONDS)
 }

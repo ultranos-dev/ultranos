@@ -43,7 +43,7 @@ vi.mock('@/lib/trpc', () => ({
   getHubApiUrl: () => 'http://localhost:3000/api/trpc',
 }))
 
-import PaperRxPage from '@/app/paper-rx/page'
+import PaperRxPage from '@/app/[locale]/(app)/paper-rx/page'
 import { extractPrescriptionFields } from '@/lib/ocr'
 
 const mockExtract = extractPrescriptionFields as ReturnType<typeof vi.fn>
@@ -59,9 +59,12 @@ describe('Paper Prescription Scan Page (Story 24.3)', () => {
   it('renders capture phase with webcam and file upload options', () => {
     render(<PaperRxPage />)
 
-    expect(screen.getByText('Scan Paper Prescription')).toBeInTheDocument()
+    // The page title ("Scan Paper Prescription") is provided by the shell's
+    // BreadcrumbHeader (route-mapped), not the page component — so it is not
+    // present when the page is rendered in isolation. The capture phase itself:
     expect(screen.getByText('Open Camera')).toBeInTheDocument()
     expect(screen.getByText('Upload File')).toBeInTheDocument()
+    expect(document.querySelector('input[type="file"]')).toBeInTheDocument()
   })
 
   it('always shows Manual Verification Required banner', () => {
