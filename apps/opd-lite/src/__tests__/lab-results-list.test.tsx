@@ -3,6 +3,21 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { db } from '../lib/db'
 import type { FhirDiagnosticReport } from '@ultranos/shared-types'
 
+// Mock next-intl
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, values?: Record<string, unknown>) => {
+    if (values) {
+      let result = key
+      Object.entries(values).forEach(([k, v]) => {
+        result = result.replace(`{${k}}`, String(v))
+      })
+      return result
+    }
+    return key
+  },
+  useLocale: () => 'en',
+}))
+
 // Mock audit
 const mockAuditPhiAccess = vi.fn()
 vi.mock('../lib/audit', () => ({
@@ -80,7 +95,7 @@ describe('LabResultsList', () => {
     render(<LabResultsList patientId={TEST_PATIENT_ID} onSelectReport={onSelectReport} />)
 
     await waitFor(() => {
-      expect(screen.getByText(/No lab results available/)).toBeInTheDocument()
+      expect(screen.getByText('noResults')).toBeInTheDocument()
     })
   })
 
@@ -95,7 +110,7 @@ describe('LabResultsList', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('urgent-indicator')).toBeInTheDocument()
-      expect(screen.getByText('Urgent')).toBeInTheDocument()
+      expect(screen.getByText('urgent')).toBeInTheDocument()
     })
   })
 
@@ -138,7 +153,7 @@ describe('LabResultsList', () => {
     render(<LabResultsList patientId={TEST_PATIENT_ID} onSelectReport={onSelectReport} />)
 
     await waitFor(() => {
-      expect(screen.getByText('Preliminary')).toBeInTheDocument()
+      expect(screen.getByText('statusPreliminary')).toBeInTheDocument()
     })
   })
 
@@ -150,7 +165,7 @@ describe('LabResultsList', () => {
     render(<LabResultsList patientId={TEST_PATIENT_ID} onSelectReport={onSelectReport} />)
 
     await waitFor(() => {
-      expect(screen.getByText('Final')).toBeInTheDocument()
+      expect(screen.getByText('statusFinal')).toBeInTheDocument()
     })
   })
 
@@ -183,7 +198,7 @@ describe('LabResultsList', () => {
       expect(screen.getByText('CBC panel')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByLabelText(/View CBC panel/))
+    fireEvent.click(screen.getByLabelText('viewAriaLabel'))
 
     expect(onSelectReport).toHaveBeenCalledWith(
       expect.objectContaining({ id: report.id }),
@@ -227,7 +242,7 @@ describe('LabResultsList', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('consent-required')).toBeInTheDocument()
-      expect(screen.getByText(/Patient consent required/)).toBeInTheDocument()
+      expect(screen.getByText('consentRequired')).toBeInTheDocument()
     })
 
     // Should NOT show any lab results
@@ -242,7 +257,7 @@ describe('LabResultsList', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('consent-expired')).toBeInTheDocument()
-      expect(screen.getByText(/Consent has expired/)).toBeInTheDocument()
+      expect(screen.getByText('consentExpired')).toBeInTheDocument()
     })
   })
 

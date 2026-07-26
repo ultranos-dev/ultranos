@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
 import {
   searchMedications,
@@ -74,6 +75,7 @@ function highlightMatches(
 }
 
 export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patientSex, patientAge }: PrescriptionEntryProps) {
+  const t = useTranslations('prescription')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<MedicationSearchResult[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -186,7 +188,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
       setLocalNameEn('')
       setLocalNamePrs('')
     } catch {
-      setEnrichError('Failed to save local name')
+      setEnrichError(t('errorSaveLocalName'))
     } finally {
       setIsEnriching(false)
     }
@@ -200,11 +202,11 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
       const dosageNum = parseFloat(form.dosageQuantity)
       const durationNum = parseInt(form.durationDays, 10)
       if (isNaN(dosageNum) || dosageNum <= 0) {
-        setValidationError('Dosage must be a positive number')
+        setValidationError(t('errorDosagePositive'))
         return
       }
       if (isNaN(durationNum) || durationNum <= 0) {
-        setValidationError('Duration must be at least 1 day')
+        setValidationError(t('errorDurationMin'))
         return
       }
       setIsSubmitting(true)
@@ -247,19 +249,19 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
     'w-full rounded-xl border border-border bg-background ps-4 pe-4 py-2.5 ' +
     'text-base text-foreground placeholder:text-muted-foreground ' +
     'transition-colors focus:outline-none focus:ring-2 ' +
-    'focus:border-primary-400 focus:ring-primary-200 ' +
+    'focus:border-primary focus:ring-ring ' +
     'disabled:opacity-50 disabled:cursor-not-allowed'
 
   return (
     <div className="space-y-4">
-      <h3 className="text-2xl font-black tracking-tight text-foreground">
-        Prescription
+      <h3 className="text-2xl font-semibold tracking-tight text-foreground">
+        {t('title')}
       </h3>
 
       {/* Medication search autocomplete */}
       <div className="relative">
         <label htmlFor="medication-search" className="mb-1 block text-sm font-semibold text-foreground">
-          Medication
+          {t('medication')}
         </label>
         <div className="flex gap-2">
           <input
@@ -275,7 +277,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
             onBlur={() => {
               blurTimerRef.current = setTimeout(() => setIsOpen(false), 200)
             }}
-            placeholder="Search medication name..."
+            placeholder={t('searchPlaceholder')}
             disabled={disabled || hasMedication}
             role="combobox"
             aria-autocomplete="list"
@@ -284,16 +286,16 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
             aria-activedescendant={
               activeIndex >= 0 ? `medication-option-${activeIndex}` : undefined
             }
-            aria-label="Search medications"
+            aria-label={t('searchAria')}
             className={inputClasses}
           />
           {hasMedication && (
             <Button
               variant="outline"
               onClick={handleClearMedication}
-              aria-label="Clear selected medication"
+              aria-label={t('clearAria')}
             >
-              Clear
+              {t('clear')}
             </Button>
           )}
         </div>
@@ -303,7 +305,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
             ref={listRef}
             id="medication-results"
             role="listbox"
-            aria-label="Medication search results"
+            aria-label={t('resultsAria')}
             className={
               'absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl ' +
               'ring-[0.65px] ring-border/50 bg-background shadow-lg'
@@ -329,7 +331,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
                   <span className="font-semibold text-foreground">
                     {highlightMatches(result.item.display, getDisplayIndices(result))}
                   </span>
-                  <span className="text-sm font-bold text-primary-700">
+                  <span className="text-sm font-semibold text-primary">
                     {result.item.strength}
                   </span>
                 </div>
@@ -344,10 +346,10 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
         <div className="flex flex-wrap items-center gap-3">
           <a
             href={`pharmopedia://drug/${form.medicationCode}`}
-            className="text-sm font-medium text-primary-700 underline underline-offset-2"
-            aria-label="Open in Pharmopedia"
+            className="text-sm font-medium text-primary underline underline-offset-2"
+            aria-label={t('openInPharmopedia')}
           >
-            Open in Pharmopedia
+            {t('openInPharmopedia')}
           </a>
           <DrugMonographSheet atcCode={form.medicationCode} label={`${form.medicationDisplay} ${form.medicationStrength}`} />
         </div>
@@ -360,7 +362,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
       {hasMedication && brandOptions.length > 0 && (
         <div>
           <label htmlFor="brand-hint" className="mb-1 block text-sm font-semibold text-foreground">
-            Preferred brand (optional)
+            {t('preferredBrand')}
           </label>
           <select
             id="brand-hint"
@@ -369,9 +371,9 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
             onChange={(e) => setForm((prev) => ({ ...prev, brandHint: e.target.value || undefined }))}
             disabled={disabled}
             className={inputClasses}
-            aria-label="Preferred brand"
+            aria-label={t('preferredBrand')}
           >
-            <option value="">— Any brand —</option>
+            <option value="">{t('anyBrand')}</option>
             {brandOptions.map((b) => <option key={b} value={b}>{b}</option>)}
           </select>
         </div>
@@ -379,11 +381,11 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
 
       {hasMedication && canEnrich && (
         <div className="rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4 space-y-3">
-          <h4 className="text-sm font-semibold text-foreground">Add local name</h4>
+          <h4 className="text-sm font-semibold text-foreground">{t('addLocalName')}</h4>
           <input
             type="text"
-            placeholder="English name override"
-            aria-label="English name override"
+            placeholder={t('englishNameOverride')}
+            aria-label={t('englishNameOverride')}
             value={localNameEn}
             onChange={(e) => setLocalNameEn(e.target.value)}
             disabled={isEnriching}
@@ -391,8 +393,8 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
           />
           <input
             type="text"
-            placeholder="Dari name (دری)"
-            aria-label="Dari name"
+            placeholder={t('dariName')}
+            aria-label={t('dariNameAria')}
             value={localNamePrs}
             onChange={(e) => setLocalNamePrs(e.target.value)}
             disabled={isEnriching}
@@ -403,14 +405,14 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
             <p className="text-sm font-semibold text-destructive">{enrichError}</p>
           )}
           {enrichSuccess && (
-            <p className="text-sm font-semibold text-success">Saved</p>
+            <p className="text-sm font-semibold text-success">{t('saved')}</p>
           )}
           <Button
             variant="outline"
             onClick={handleEnrich}
             disabled={isEnriching || (!localNameEn && !localNamePrs)}
           >
-            {isEnriching ? 'Saving...' : 'Save name'}
+            {isEnriching ? t('saving') : t('saveName')}
           </Button>
         </div>
       )}
@@ -422,7 +424,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
             {/* Dosage quantity */}
             <div>
               <label htmlFor="dosage-quantity" className="mb-1 block text-sm font-semibold text-foreground">
-                Dosage
+                {t('dosage')}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -435,7 +437,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
                   onChange={(e) => setForm((prev) => ({ ...prev, dosageQuantity: e.target.value }))}
                   disabled={disabled}
                   className={inputClasses}
-                  aria-label="Dosage quantity"
+                  aria-label={t('dosageQuantityAria')}
                 />
                 <span className="shrink-0 text-sm font-semibold text-muted-foreground">
                   {form.dosageUnit}
@@ -446,7 +448,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
             {/* Frequency */}
             <div>
               <label htmlFor="frequency" className="mb-1 block text-sm font-semibold text-foreground">
-                Frequency
+                {t('frequency')}
               </label>
               <select
                 id="frequency"
@@ -454,7 +456,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
                 onChange={(e) => setForm((prev) => ({ ...prev, frequencyCode: e.target.value }))}
                 disabled={disabled}
                 className={inputClasses}
-                aria-label="Frequency"
+                aria-label={t('frequency')}
               >
                 {FREQUENCY_OPTIONS.map((opt) => (
                   <option key={opt.code} value={opt.code}>
@@ -467,7 +469,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
             {/* Duration */}
             <div>
               <label htmlFor="duration" className="mb-1 block text-sm font-semibold text-foreground">
-                Duration (days)
+                {t('duration')}
               </label>
               <input
                 id="duration"
@@ -479,7 +481,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
                 onChange={(e) => setForm((prev) => ({ ...prev, durationDays: e.target.value }))}
                 disabled={disabled}
                 className={inputClasses}
-                aria-label="Duration in days"
+                aria-label={t('durationAria')}
               />
             </div>
           </div>
@@ -487,18 +489,18 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
           {/* Notes */}
           <div>
             <label htmlFor="prescription-notes" className="mb-1 block text-sm font-semibold text-foreground">
-              Notes (optional)
+              {t('notes')}
             </label>
             <input
               id="prescription-notes"
               type="text"
               value={form.notes}
               onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
-              placeholder="e.g., Take with food"
+              placeholder={t('notesPlaceholder')}
               maxLength={500}
               disabled={disabled}
               className={inputClasses}
-              aria-label="Prescription notes"
+              aria-label={t('notesAria')}
             />
           </div>
 
@@ -511,7 +513,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
             type="submit"
             disabled={disabled || !hasMedication || isSubmitting}
           >
-            {isSubmitting ? 'Saving...' : 'Add Prescription'}
+            {isSubmitting ? t('saving') : t('addPrescription')}
           </Button>
         </form>
       )}

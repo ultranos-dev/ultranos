@@ -13,13 +13,13 @@ function describeSyncError(reason: string): string {
     return 'Encounters are unavailable because your organization is pending verification. Clinical data unlocks once KYC is approved.'
   }
   if (reason.includes('SUBSCRIPTION_REQUIRED')) {
-    return 'Encounters are unavailable — this organization does not have an active OPD Lite subscription.'
+    return 'Encounters are unavailable. This organization does not have an active OPD Lite subscription.'
   }
   if (reason.includes('ORG_SUSPENDED')) {
-    return 'Encounters are unavailable — organization access is suspended.'
+    return 'Encounters are unavailable. Organization access is suspended.'
   }
   if (reason.includes('HUB_REFRESH_FAILED')) {
-    return 'Couldn’t reach the Hub to refresh data — showing the last synced copy. It may be temporarily unreachable.'
+    return 'Couldn’t reach the Hub to refresh data. Showing the last synced copy. It may be temporarily unreachable.'
   }
   return `Couldn’t refresh encounters (${reason}). Push and the patient directory are unaffected.`
 }

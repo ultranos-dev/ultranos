@@ -94,6 +94,14 @@ describe('NavMain', () => {
     render(<NavMain groups={navGroups} badges={{ conflicts: 150 }} />)
     expect(screen.getByText('99+')).toBeInTheDocument()
   })
+
+  it('renders parent items of groups with children (overview sub-item behind collapsible)', () => {
+    // The patients group has children (registerPatient) which adds an auto-prepended
+    // Overview sub-item rendered via t('overview'). With pathname '/', the collapsible
+    // is closed so only the parent renders, but this confirms the nav renders without error.
+    render(<NavMain groups={navGroups} />)
+    expect(screen.getByText('patients')).toBeInTheDocument()
+  })
 })
 
 describe('OpdHeader', () => {

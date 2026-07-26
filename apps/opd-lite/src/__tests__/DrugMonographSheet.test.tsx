@@ -1,8 +1,13 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { db } from '@/lib/db'
 import { DrugMonographSheet } from '@/components/clinical/DrugMonographSheet'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
+
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
+}))
 
 const entry = (): DrugEntry =>
   ({ atcCode: 'J01CA04', innName: 'Amoxicillin', brandNames: [], doseForms: [], therapeuticClass: '',
@@ -25,6 +30,6 @@ describe('DrugMonographSheet', () => {
   it('shows a limited-data hint when the drug is not in the mirror', async () => {
     render(<DrugMonographSheet atcCode="ZZZ" label="Unknown" />)
     fireEvent.click(screen.getByTestId('monograph-trigger'))
-    await waitFor(() => expect(screen.getByText(/Limited data available/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('limitedDataAvailable')).toBeInTheDocument())
   })
 })

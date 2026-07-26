@@ -21,7 +21,7 @@ export function PediatricDosingBanner({ patientBirthDate, birthYearOnly }: Pedia
       dir="auto"
       className="mb-4"
     >
-      Weight-based dosing not supported — calculate manually
+      Weight-based dosing not supported. Calculate manually.
     </Alert>
   )
 }

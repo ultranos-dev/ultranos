@@ -36,7 +36,6 @@ export default function SettingsPage() {
         <ProfileCard />
         <SessionInfoCard />
         <MfaManagementCard />
-        <PreferencesCard />
 
         <Card
           as={Link}
@@ -48,7 +47,15 @@ export default function SettingsPage() {
             {isLoaded && (
               <div className="flex items-center gap-2">
                 <div className="w-24 h-1.5 rounded-full bg-border overflow-hidden">
-                  <div className={`h-full rounded-full ${barColor}`} style={{ width: `${usedPct}%` }} />
+                  <div
+                    className={`h-full rounded-full ${barColor}`}
+                    style={{ width: `${usedPct}%` }}
+                    role="progressbar"
+                    aria-valuenow={Math.round(usedPct)}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={t('sidebarUsed', { used: currentCycleUsedMB.toFixed(0) })}
+                  />
                 </div>
                 <span className={`text-xs ${textColor}`}>
                   {t('sidebarUsed', { used: currentCycleUsedMB.toFixed(0) })}
@@ -60,6 +67,8 @@ export default function SettingsPage() {
             <ChevronRight size={16} className="text-muted-foreground" />
           </DirectionalIcon>
         </Card>
+
+        <PreferencesCard />
       </div>
     </div>
   )

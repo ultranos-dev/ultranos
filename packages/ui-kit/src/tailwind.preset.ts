@@ -40,6 +40,7 @@ const preset: Partial<Config> = {
         },
         destructive: {
           DEFAULT: 'oklch(var(--destructive) / <alpha-value>)',
+          foreground: 'oklch(var(--destructive-foreground) / <alpha-value>)',
         },
         border:  { DEFAULT: 'oklch(var(--border) / <alpha-value>)' },
         input:   { DEFAULT: 'oklch(var(--input) / <alpha-value>)' },

@@ -36,7 +36,8 @@ describe('PillButton', () => {
     render(<PillButton onClick={onClick}>Select</PillButton>)
     const button = screen.getByRole('button', { name: 'Select' })
     expect(button).toBeDefined()
-    expect(button.className).toContain('rounded-pill')
+    // Pill radius now comes from the shared ui-kit Button base (rounded-full)
+    expect(button.className).toContain('rounded-full')
     expect(button.className).toContain('bg-primary')
   })
 

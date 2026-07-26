@@ -205,7 +205,7 @@ export function WeekScheduleView() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
       </div>
     )
   }
@@ -284,49 +284,50 @@ export function WeekScheduleView() {
 
         {/* Time slots for selected day */}
         <div className="space-y-1">
-          {cellDataMap.size === 0 && (
+          {cellDataMap.size === 0 ? (
             <EmptyState size="sm" icon={CalendarDays} title={t('noAppointments')} />
+          ) : (
+            TIME_SLOTS.map((time) => {
+              const cellKey = `${mobileDayOffset}-${time}`
+              const data = cellDataMap.get(cellKey)
+              return (
+                <Button
+                  key={time}
+                  variant="ghost"
+                  type="button"
+                  onClick={() => handleCellClick(currentDay, time)}
+                  className={`w-full rounded-xl border p-2.5 text-start ${
+                    data
+                      ? 'border-primary/20 bg-primary/10 hover:bg-primary/20'
+                      : 'border-border bg-background hover:bg-muted'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold tabular-nums text-foreground">
+                      {time}
+                    </span>
+                    {data && (
+                      <div className="flex items-center gap-1">
+                        {Object.entries(data.byType).map(
+                          ([type, count]) => (
+                            <span
+                              key={type}
+                              className={`inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold text-primary-foreground ${
+                                SERVICE_TYPE_COLORS[type] ??
+                                'bg-muted'
+                              }`}
+                            >
+                              {count}
+                            </span>
+                          ),
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </Button>
+              )
+            })
           )}
-          {TIME_SLOTS.map((time) => {
-            const cellKey = `${mobileDayOffset}-${time}`
-            const data = cellDataMap.get(cellKey)
-            return (
-              <Button
-                key={time}
-                variant="ghost"
-                type="button"
-                onClick={() => handleCellClick(currentDay, time)}
-                className={`w-full rounded-lg border p-2.5 text-start ${
-                  data
-                    ? 'border-primary/20 bg-primary/10 hover:bg-primary'
-                    : 'border-border bg-background hover:bg-muted'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold tabular-nums text-foreground">
-                    {time}
-                  </span>
-                  {data && (
-                    <div className="flex items-center gap-1">
-                      {Object.entries(data.byType).map(
-                        ([type, count]) => (
-                          <span
-                            key={type}
-                            className={`inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-bold text-white ${
-                              SERVICE_TYPE_COLORS[type] ??
-                              'bg-muted'
-                            }`}
-                          >
-                            {count}
-                          </span>
-                        ),
-                      )}
-                    </div>
-                  )}
-                </div>
-              </Button>
-            )
-          })}
         </div>
 
         <BookingModal
@@ -407,7 +408,7 @@ export function WeekScheduleView() {
                     key={idx}
                     className={`border-b border-border px-1 py-2 text-center text-xs font-semibold ${
                       isToday
-                        ? 'bg-primary-50 text-primary-800'
+                        ? 'bg-primary/10 text-primary'
                         : 'bg-muted text-foreground'
                     }`}
                   >
@@ -425,62 +426,63 @@ export function WeekScheduleView() {
             </tr>
           </thead>
           <tbody>
-            {weekAppointments.length === 0 && (
+            {weekAppointments.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-8">
                   <EmptyState size="sm" icon={CalendarDays} title={t('noAppointments')} />
                 </td>
               </tr>
-            )}
-            {TIME_SLOTS.map((time) => (
-              <tr key={time} className="group">
-                {/* Time label */}
-                <td className="sticky start-0 z-10 border-b border-e border-border bg-background px-2 py-1.5 text-xs font-medium tabular-nums text-muted-foreground">
-                  {time}
-                </td>
-                {/* Cells for each day */}
-                {weekDays.map((day, dayIdx) => {
-                  const cellKey = `${dayIdx}-${time}`
-                  const data = cellDataMap.get(cellKey)
-                  const isToday = isSameDay(day, today)
+            ) : (
+              TIME_SLOTS.map((time) => (
+                <tr key={time} className="group">
+                  {/* Time label */}
+                  <td className="sticky start-0 z-10 border-b border-e border-border bg-background px-2 py-1.5 text-xs font-medium tabular-nums text-muted-foreground">
+                    {time}
+                  </td>
+                  {/* Cells for each day */}
+                  {weekDays.map((day, dayIdx) => {
+                    const cellKey = `${dayIdx}-${time}`
+                    const data = cellDataMap.get(cellKey)
+                    const isToday = isSameDay(day, today)
 
-                  return (
-                    <td
-                      key={dayIdx}
-                      className={`border-b border-border px-0.5 py-0.5 ${
-                        isToday ? 'bg-primary-50/30' : ''
-                      }`}
-                    >
-                      <Button
-                        variant="ghost"
-                        type="button"
-                        onClick={() => handleCellClick(day, time)}
-                        className={`flex h-7 w-full items-center justify-center gap-0.5 rounded ${
-                          data
-                            ? 'hover:bg-primary'
-                            : 'hover:bg-muted'
+                    return (
+                      <td
+                        key={dayIdx}
+                        className={`border-b border-border px-0.5 py-0.5 ${
+                          isToday ? 'bg-primary/5' : ''
                         }`}
                       >
-                        {data &&
-                          Object.entries(data.byType).map(
-                            ([type, count]) => (
-                              <span
-                                key={type}
-                                className={`inline-flex h-5 min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ${
-                                  SERVICE_TYPE_COLORS[type] ??
-                                  'bg-muted'
-                                }`}
-                              >
-                                {count}
-                              </span>
-                            ),
-                          )}
-                      </Button>
-                    </td>
-                  )
-                })}
-              </tr>
-            ))}
+                        <Button
+                          variant="ghost"
+                          type="button"
+                          onClick={() => handleCellClick(day, time)}
+                          className={`flex min-h-11 w-full items-center justify-center gap-0.5 rounded ${
+                            data
+                              ? 'hover:bg-primary/20'
+                              : 'hover:bg-muted'
+                          }`}
+                        >
+                          {data &&
+                            Object.entries(data.byType).map(
+                              ([type, count]) => (
+                                <span
+                                  key={type}
+                                  className={`inline-flex h-5 min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-semibold text-primary-foreground ${
+                                    SERVICE_TYPE_COLORS[type] ??
+                                    'bg-muted'
+                                  }`}
+                                >
+                                  {count}
+                                </span>
+                              ),
+                            )}
+                        </Button>
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

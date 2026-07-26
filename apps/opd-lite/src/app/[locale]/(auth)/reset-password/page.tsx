@@ -6,6 +6,7 @@ import { Stethoscope, KeyRound } from '@ultranos/ui-kit/icons'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
 import { Button } from '@ultranos/ui-kit/components/ui/button'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { Label } from '@ultranos/ui-kit/components/ui/label'
 import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
@@ -111,7 +112,7 @@ export default function ResetPasswordPage() {
               <div className="flex flex-col items-center gap-4 text-center">
                 <KeyRound className="size-10 text-muted-foreground" />
                 <div>
-                  <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
+                  <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
                     {t('linkExpiredTitle')}
                   </h1>
                   <p className="mt-1.5 text-sm text-muted-foreground">{t('linkExpiredBody')}</p>
@@ -125,16 +126,16 @@ export default function ResetPasswordPage() {
             {state === 'form' && (
               <>
                 <div>
-                  <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
+                  <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
                     {t('resetPasswordTitle')}
                   </h1>
                   <p className="mt-1.5 text-sm text-muted-foreground">{t('resetPasswordSubtitle')}</p>
                 </div>
 
                 {error && (
-                  <div role="alert" className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  <Alert variant="destructive" role="alert">
                     {error}
-                  </div>
+                  </Alert>
                 )}
 
                 <form role="form" onSubmit={handleSubmit} className="space-y-4">
@@ -180,22 +181,22 @@ export default function ResetPasswordPage() {
           </div>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground">Ultranos Healthcare Platform</p>
+        <p className="text-center text-xs text-muted-foreground">{t('platformName')}</p>
       </div>
 
-      <div className="relative hidden overflow-hidden bg-primary lg:flex lg:flex-col lg:items-center lg:justify-center">
-        <div className="absolute -end-32 -top-32 size-[28rem] rounded-full bg-primary-foreground/5" />
-        <div className="absolute -bottom-40 -start-16 size-96 rounded-full bg-primary-foreground/5" />
-        <div className="relative z-10 px-12 text-center text-primary-foreground">
-          <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-2xl bg-primary-foreground/10 ring-1 ring-primary-foreground/20">
-            <Stethoscope className="size-10" />
+      <div className="relative hidden overflow-hidden bg-muted lg:flex lg:flex-col lg:items-center lg:justify-center">
+        <div className="absolute -end-32 -top-32 size-[28rem] rounded-full bg-primary/5" />
+        <div className="absolute -bottom-40 -start-16 size-96 rounded-full bg-primary/5" />
+        <div className="relative z-10 px-12 text-center text-foreground">
+          <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+            <Stethoscope className="size-10 text-primary" />
           </div>
           <h2 className="font-heading text-3xl font-bold">OPD Lite</h2>
-          <p className="mt-3 text-base text-primary-foreground/75">{t('panelTagline')}</p>
+          <p className="mt-3 text-base text-muted-foreground">{t('panelTagline')}</p>
           <ul className="mt-10 space-y-2 text-start">
             {[t('panelFeature1'), t('panelFeature2'), t('panelFeature3')].map((item) => (
-              <li key={item} className="flex items-center gap-2 text-sm text-primary-foreground/70">
-                <span className="size-1.5 shrink-0 rounded-full bg-primary-foreground/50" />
+              <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="size-1.5 shrink-0 rounded-full bg-primary" />
                 {item}
               </li>
             ))}

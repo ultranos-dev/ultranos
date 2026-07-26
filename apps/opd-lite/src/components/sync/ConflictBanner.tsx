@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { AlertTriangle, ArrowRight } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { db } from '@/lib/db'
@@ -17,9 +18,10 @@ interface ConflictBannerProps {
  * - Tier 1 (red, uncollapsible): blocks prescriptions, links to conflict review
  * - Tier 2 (yellow, informational): addenda available for review
  *
- * Renders at the TOP of the chart, same prominence rules as allergies (CLAUDE.md Rule #4).
+ * Renders at the TOP of the chart, same prominence rules as allergies (CLAUDE.md Rule 4).
  */
 export function ConflictBanner({ patientId }: ConflictBannerProps) {
+  const t = useTranslations('conflicts')
   const [tier1Count, setTier1Count] = useState(0)
   const [loading, setLoading] = useState(true)
 
@@ -55,7 +57,7 @@ export function ConflictBanner({ patientId }: ConflictBannerProps) {
 
   return (
     <div
-      className="mb-4 rounded-lg border-2 border-destructive bg-destructive/10 p-4"
+      className="mb-4 rounded-xl border-2 border-destructive bg-destructive/10 p-4"
       role="alert"
       aria-live="assertive"
       data-testid="conflict-banner"
@@ -64,17 +66,16 @@ export function ConflictBanner({ patientId }: ConflictBannerProps) {
         <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden="true" />
         <div className="flex-1">
           <p className="text-sm font-bold text-destructive">
-            {tier1Count} unresolved safety-critical conflict{tier1Count !== 1 ? 's' : ''} — prescription generation blocked
+            {t('bannerTitle', { count: tier1Count })}
           </p>
           <p className="mt-1 text-xs text-destructive">
-            Allergies, medications, or diagnoses have conflicting versions from another device.
-            Resolve before prescribing.
+            {t('bannerDetail')}
           </p>
           <Link
             href="/conflicts"
             className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-destructive underline hover:text-destructive"
           >
-            Review Conflicts
+            {t('reviewConflicts')}
             <DirectionalIcon category="navigation" aria-hidden={true}>
               <ArrowRight className="h-4 w-4" />
             </DirectionalIcon>

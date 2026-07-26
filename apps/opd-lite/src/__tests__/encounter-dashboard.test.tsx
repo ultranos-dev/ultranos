@@ -449,7 +449,7 @@ describe('Encounter Dashboard', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Allergy data still loading — please wait before prescribing/),
+        screen.getByText(/Allergy data still loading, please wait before prescribing/),
       ).toBeDefined()
     })
     // Prescription must be fully blocked — addPrescription must never be called
@@ -506,7 +506,7 @@ describe('Encounter Dashboard', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Allergy data unavailable — interaction check incomplete/),
+        screen.getByText(/Allergy data unavailable, interaction check incomplete/),
       ).toBeDefined()
     })
     // Prescription must still be saved (with UNAVAILABLE flag)

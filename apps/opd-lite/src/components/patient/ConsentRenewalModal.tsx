@@ -87,7 +87,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
               id="consent-method"
               value={method}
               onChange={(e) => setMethod(e.target.value as 'WRITTEN' | 'VERBAL_WITNESSED')}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
+              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
             >
               <option value="WRITTEN">Written</option>
               <option value="VERBAL_WITNESSED">Verbal (Witnessed)</option>
@@ -108,7 +108,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
                 value={witnessedBy}
                 onChange={(e) => setWitnessedBy(e.target.value)}
                 placeholder="UUID of witnessing practitioner"
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
+                className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
               />
             </div>
           )}
@@ -123,7 +123,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
               id="consent-language"
               value={language}
               onChange={(e) => setLanguage(e.target.value as 'en' | 'ar' | 'prs')}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
+              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
             >
               <option value="en">English</option>
               <option value="ar">Arabic</option>
@@ -144,7 +144,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
               value={version}
               onChange={(e) => setVersion(e.target.value)}
               placeholder="e.g. 2.0"
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
+              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
             />
           </div>
 

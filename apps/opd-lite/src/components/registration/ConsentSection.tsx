@@ -118,7 +118,7 @@ export function ConsentSection({
               aria-required="true"
               aria-invalid={!!errors?.witnessedBy}
               aria-describedby={errors?.witnessedBy ? 'consent-witness-error' : undefined}
-              className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+              className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                 errors?.witnessedBy
                   ? 'border-destructive focus:border-destructive focus:ring-destructive'
                   : 'border-border focus:border-primary focus:ring-ring'
@@ -149,7 +149,7 @@ export function ConsentSection({
             value={language}
             onChange={(e) => onLanguageChange(e.target.value as ConsentLanguage)}
             aria-invalid={!!errors?.language}
-            className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+            className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.language
                 ? 'border-destructive focus:border-destructive focus:ring-destructive'
                 : 'border-border focus:border-primary focus:ring-ring'

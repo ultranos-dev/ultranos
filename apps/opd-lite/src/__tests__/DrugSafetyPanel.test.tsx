@@ -1,8 +1,13 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { db } from '@/lib/db'
 import { DrugSafetyPanel } from '@/components/clinical/DrugSafetyPanel'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
+
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
+}))
 
 const entry = (over: Partial<DrugEntry> = {}): DrugEntry =>
   ({ atcCode: 'J01CA04', innName: 'Amoxicillin', brandNames: [], doseForms: [], therapeuticClass: '',
@@ -36,7 +41,7 @@ describe('DrugSafetyPanel', () => {
   it('shows an explicit "no data" line when contraindications are empty (rule #3)', async () => {
     await db.drugCatalogMirror.put(entry({ contraindications: [] }) as never)
     render(<DrugSafetyPanel atcCode="J01CA04" patientSex="male" patientAge={40} />)
-    await waitFor(() => expect(screen.getByText(/No contraindication data on file/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('noContraindicationData')).toBeInTheDocument())
   })
 
   it('renders nothing when the drug is not in the mirror', async () => {

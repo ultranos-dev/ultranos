@@ -20,6 +20,7 @@
  */
 
 import { useEffect, useCallback, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
 import { Check, Printer } from '@ultranos/ui-kit/icons'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
@@ -35,9 +36,9 @@ interface LabReportDetailProps {
 const SAFE_IMAGE_PREFIXES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']
 
 function formatDateTime(iso?: string): string {
-  if (!iso) return '—'
+  if (!iso) return ''
   const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return '—'
+  if (Number.isNaN(d.getTime())) return ''
   return d.toLocaleString(undefined, {
     year: 'numeric',
     month: 'short',
@@ -47,32 +48,32 @@ function formatDateTime(iso?: string): string {
   })
 }
 
-function statusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    preliminary: 'Preliminary',
-    final: 'Final',
-    amended: 'Amended',
-    corrected: 'Corrected',
-    registered: 'Registered',
-    cancelled: 'Cancelled',
+function statusLabel(status: string, t: (key: string) => string): string {
+  switch (status) {
+    case 'preliminary': return t('statusPreliminary')
+    case 'final': return t('statusFinal')
+    case 'amended': return t('statusAmended')
+    case 'corrected': return t('statusCorrected')
+    case 'registered': return t('statusRegistered')
+    default: return status
   }
-  return labels[status] ?? status
 }
 
-function flagBadge(flag?: string) {
+function flagBadge(flag: string | undefined, t: (key: string) => string) {
   switch (flag) {
     case 'critical':
-      return <span className="rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-bold text-destructive">Critical</span>
+      return <span className="rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-bold text-destructive">{t('flagCritical')}</span>
     case 'abnormal':
-      return <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-bold text-warning">Abnormal</span>
+      return <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-bold text-warning">{t('flagAbnormal')}</span>
     default:
-      return <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-bold text-success">Normal</span>
+      return <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-bold text-success">{t('flagNormal')}</span>
   }
 }
 
 function renderAttachment(
   attachment: { contentType?: string; data?: string; url?: string; title?: string },
   index: number,
+  t: (key: string, values?: Record<string, unknown>) => string,
 ) {
   const contentType = attachment.contentType ?? ''
   if (attachment.url && !attachment.data) {
@@ -96,7 +97,7 @@ function renderAttachment(
         )}
         <img
           src={dataUri}
-          alt={attachment.title ?? `Attachment ${index + 1}`}
+          alt={attachment.title ?? t('attachmentFallback', { n: index + 1 })}
           className="max-w-full rounded-xl ring-[0.65px] ring-border/50"
         />
       </div>
@@ -113,7 +114,7 @@ function renderAttachment(
           src={dataUri}
           type="application/pdf"
           className="h-96 w-full rounded-xl ring-[0.65px] ring-border/50"
-          title={attachment.title ?? `PDF ${index + 1}`}
+          title={attachment.title ?? t('pdfFallback', { n: index + 1 })}
         />
       </div>
     )
@@ -127,7 +128,7 @@ function renderAttachment(
           download={attachment.title ?? `attachment-${index + 1}`}
           className="text-sm font-medium text-primary underline hover:text-primary"
         >
-          Download {attachment.title ?? `Attachment ${index + 1}`}
+          {t('downloadTitle', { title: attachment.title ?? t('attachmentFallback', { n: index + 1 }) })}
         </a>
       </div>
     )
@@ -136,6 +137,7 @@ function renderAttachment(
 }
 
 export function LabReportDetail({ report, notification: notificationProp, onBack }: LabReportDetailProps) {
+  const t = useTranslations('labResults')
   const [notification, setNotification] = useState<NotificationItem | null>(notificationProp ?? null)
   const [acknowledged, setAcknowledged] = useState(
     notificationProp?.status === 'ACKNOWLEDGED' || !!report.acknowledgedAt,
@@ -188,7 +190,7 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
   }, [])
 
   const loincDisplay =
-    report.code.coding?.[0]?.display ?? report.code.coding?.[0]?.code ?? 'Unknown Test'
+    report.code.coding?.[0]?.display ?? report.code.coding?.[0]?.code ?? t('unknownTest')
   const loincCode = report.code.coding?.[0]?.code
   const performers = Array.isArray(report.performer) ? report.performer : []
   const isAmended = report.status === 'amended' || report.status === 'corrected'
@@ -198,12 +200,12 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
     <div data-testid="lab-report-detail">
       {/* Back button */}
       <div className="mb-4 flex items-center justify-between">
-        <Button variant="ghost" type="button" onClick={onBack} aria-label="Back to lab results">
-          &larr; Back to Results
+        <Button variant="ghost" type="button" onClick={onBack} aria-label={t('backAriaLabel')}>
+          &larr; {t('backToResults')}
         </Button>
-        <Button variant="ghost" type="button" onClick={handlePrint} aria-label="Print report">
+        <Button variant="ghost" type="button" onClick={handlePrint} aria-label={t('print')}>
           <Printer className="h-4 w-4" aria-hidden />
-          <span className="ms-1 text-sm">Print</span>
+          <span className="ms-1 text-sm">{t('print')}</span>
         </Button>
       </div>
 
@@ -211,44 +213,44 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
       <div className="flex flex-wrap items-start gap-2">
         <h3 className="text-xl font-bold text-foreground">{loincDisplay}</h3>
         {isAmended && (
-          <span className="rounded bg-primary px-2 py-0.5 text-xs font-bold text-primary">
-            {statusLabel(report.status)}
+          <span className="rounded bg-primary/20 px-2 py-0.5 text-xs font-bold text-primary">
+            {statusLabel(report.status, t)}
           </span>
         )}
-        {ext?.flagLevel && flagBadge(ext.flagLevel)}
+        {ext?.flagLevel && flagBadge(ext.flagLevel, t)}
       </div>
 
       {loincCode && (
-        <p className="mt-0.5 text-xs text-muted-foreground">LOINC: {loincCode}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{t('loincCode', { code: loincCode })}</p>
       )}
 
       {/* Metadata grid */}
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <div>
-          <span className="font-medium text-muted-foreground">Status</span>
-          <p className="font-semibold text-foreground">{statusLabel(report.status)}</p>
+          <span className="font-medium text-muted-foreground">{t('status')}</span>
+          <p className="font-semibold text-foreground">{statusLabel(report.status, t)}</p>
         </div>
         <div>
-          <span className="font-medium text-muted-foreground">Collection Date</span>
+          <span className="font-medium text-muted-foreground">{t('collectionDate')}</span>
           <p className="font-semibold text-foreground">{formatDateTime(report.effectiveDateTime)}</p>
         </div>
         <div>
-          <span className="font-medium text-muted-foreground">Issued</span>
+          <span className="font-medium text-muted-foreground">{t('issued')}</span>
           <p className="font-semibold text-foreground">{formatDateTime(report.issued)}</p>
         </div>
         <div>
-          <span className="font-medium text-muted-foreground">Lab</span>
-          <p className="font-semibold text-foreground">{performers[0]?.display ?? ext?.labId ?? '—'}</p>
+          <span className="font-medium text-muted-foreground">{t('lab')}</span>
+          <p className="font-semibold text-foreground">{performers[0]?.display ?? ext?.labId ?? ''}</p>
         </div>
         {ext?.sampleId && (
           <div>
-            <span className="font-medium text-muted-foreground">Sample ID</span>
+            <span className="font-medium text-muted-foreground">{t('sampleId')}</span>
             <p className="font-semibold text-foreground font-mono text-xs">{ext.sampleId.slice(0, 8)}…</p>
           </div>
         )}
         {ext?.templateVersion && (
           <div>
-            <span className="font-medium text-muted-foreground">Template</span>
+            <span className="font-medium text-muted-foreground">{t('templateVersion')}</span>
             <p className="font-semibold text-foreground text-xs">{ext.templateVersion}</p>
           </div>
         )}
@@ -257,7 +259,7 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
       {/* Performers */}
       {performers.length > 1 && (
         <div className="mt-4">
-          <span className="text-sm font-medium text-muted-foreground">Performers</span>
+          <span className="text-sm font-medium text-muted-foreground">{t('performers')}</span>
           <ul className="mt-1 space-y-0.5 text-sm text-foreground">
             {performers.map((p, i) => (
               <li key={i}>{p.display ?? p.reference}</li>
@@ -269,7 +271,7 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
       {/* Result observations (references — shown for completeness) */}
       {report.result && report.result.length > 0 && (
         <div className="mt-4">
-          <span className="text-sm font-medium text-muted-foreground">Observation References</span>
+          <span className="text-sm font-medium text-muted-foreground">{t('observationRefs')}</span>
           <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
             {report.result.map((ref, i) => (
               <li key={i} className="font-mono">{ref.reference}</li>
@@ -281,7 +283,7 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
       {/* Conclusion */}
       {report.conclusion && (
         <div className="mt-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4">
-          <h4 className="text-sm font-bold text-foreground">Conclusion</h4>
+          <h4 className="text-sm font-bold text-foreground">{t('conclusion')}</h4>
           <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">{report.conclusion}</p>
         </div>
       )}
@@ -289,15 +291,15 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
       {/* Attachments */}
       {report.presentedForm && report.presentedForm.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-bold text-foreground">Attached Files</h4>
-          {report.presentedForm.map((attachment, i) => renderAttachment(attachment, i))}
+          <h4 className="text-sm font-bold text-foreground">{t('attachedFiles')}</h4>
+          {report.presentedForm.map((attachment, i) => renderAttachment(attachment, i, t as (key: string, values?: Record<string, unknown>) => string))}
         </div>
       )}
 
       {/* Empty state */}
       {!report.conclusion && (!report.presentedForm || report.presentedForm.length === 0) && (
         <div className="mt-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4 text-sm text-muted-foreground">
-          No report content or attachments available. Result data may be pending.
+          {t('noContent')}
         </div>
       )}
 
@@ -311,14 +313,14 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
           className="mt-6"
           data-testid="acknowledge-button"
         >
-          {acknowledging ? 'Acknowledging...' : 'Acknowledge Result'}
+          {acknowledging ? t('acknowledging') : t('acknowledge')}
         </Button>
       )}
 
       {acknowledged && (
         <div className="mt-6 flex items-center gap-2 text-sm font-medium text-success">
           <Check className="h-5 w-5" />
-          Result Acknowledged
+          {t('acknowledged')}
         </div>
       )}
     </div>

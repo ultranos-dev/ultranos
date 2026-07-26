@@ -123,7 +123,7 @@ export function NavMain({ groups, badges = {} }: NavMainProps) {
                           <SidebarMenuSub>
                             <SidebarMenuSubItem>
                               <SidebarMenuSubButton asChild isActive={pathname === item.url}>
-                                <Link href={item.url}>Overview</Link>
+                                <Link href={item.url}>{t('overview')}</Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                             {item.children.map((child) => {

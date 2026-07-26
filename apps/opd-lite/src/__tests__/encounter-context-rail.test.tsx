@@ -36,6 +36,35 @@ describe('EncounterContextRail', () => {
     expect(screen.getByText('Penicillin')).toBeInTheDocument()
   })
 
+  it('renders a neutral chip (not the UNAVAILABLE failure label) when no check has run', () => {
+    // Safety rule #3: UNAVAILABLE means a check ran and FAILED. `null` means no
+    // prescription has been checked yet — it must NOT masquerade as a failure.
+    render(
+      <EncounterContextRail
+        patient={patient}
+        allergies={[]}
+        interactionStatus={null}
+        activeMeds={[]}
+      />,
+    )
+    const chip = screen.getByTestId('interaction-chip')
+    expect(chip).toHaveTextContent('railNoneRecorded')
+    expect(chip).not.toHaveTextContent('interactionStatusUnavailable')
+    expect(chip.className).not.toMatch(/destructive|warning/)
+  })
+
+  it('still renders the UNAVAILABLE warning when a check actually failed', () => {
+    render(
+      <EncounterContextRail
+        patient={patient}
+        allergies={[]}
+        interactionStatus="UNAVAILABLE"
+        activeMeds={[]}
+      />,
+    )
+    expect(screen.getByTestId('interaction-chip')).toHaveTextContent('interactionStatusUnavailable')
+  })
+
   it('renders no-known-allergies fallback with empty allergies list', () => {
     render(
       <EncounterContextRail

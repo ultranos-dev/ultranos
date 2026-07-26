@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Camera, Upload, X, User, AlertCircle } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/Card'
 import { PhotoCropModal } from './PhotoCropModal'
 
@@ -74,7 +75,7 @@ export function PatientPhotoSection({ photoDataUrl, onPhotoChange }: PatientPhot
             <div className="h-24 w-24 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
               {photoDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={photoDataUrl} alt="Patient photo" className="h-full w-full object-cover" />
+                <img src={photoDataUrl} alt={t('patientPhotoSection')} className="h-full w-full object-cover" />
               ) : (
                 <User className="h-10 w-10 text-muted-foreground" />
               )}
@@ -86,33 +87,33 @@ export function PatientPhotoSection({ photoDataUrl, onPhotoChange }: PatientPhot
             <p className="text-sm text-muted-foreground">{t('patientPhotoOptional')}</p>
 
             <div className="flex flex-wrap gap-2 mt-1">
-              <button
+              <Button
+                variant="outline"
                 type="button"
                 onClick={() => cameraInputRef.current?.click()}
-                className="flex items-center gap-1.5 min-h-[44px] rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
               >
                 <Camera className="h-4 w-4" />
                 {t('patientPhotoCapture')}
-              </button>
+              </Button>
 
-              <button
+              <Button
+                variant="outline"
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1.5 min-h-[44px] rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
               >
                 <Upload className="h-4 w-4" />
                 {t('patientPhotoUpload')}
-              </button>
+              </Button>
 
               {photoDataUrl && (
-                <button
+                <Button
+                  variant="danger"
                   type="button"
                   onClick={() => { onPhotoChange(null); setFileError('') }}
-                  className="flex items-center gap-1.5 min-h-[44px] rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/20 transition-colors"
                 >
                   <X className="h-4 w-4" />
                   {t('patientPhotoRemove')}
-                </button>
+                </Button>
               )}
             </div>
 

@@ -125,7 +125,7 @@ export function MpiResultModal({
         >
           <h2
             id="mpi-result-title"
-            className={`text-xl font-black ${
+            className={`text-xl font-semibold ${
               isBlock ? 'text-destructive' : 'text-warning'
             }`}
           >
@@ -150,9 +150,9 @@ export function MpiResultModal({
               return (
                 <li
                   key={candidate.id}
-                  className={`rounded-lg border overflow-hidden transition-colors ${
+                  className={`rounded-xl border overflow-hidden transition-colors ${
                     isBlock ? 'border-destructive/20' : 'border-warning/20'
-                  } ${isExpanded ? (isBlock ? 'bg-destructive/10' : 'bg-warning/10/50') : 'bg-background'}`}
+                  } ${isExpanded ? (isBlock ? 'bg-destructive/10' : 'bg-warning/10') : 'bg-background'}`}
                 >
                   {/* Collapsible header — always visible */}
                   <Button
@@ -190,7 +190,7 @@ export function MpiResultModal({
 
                     {/* Score badge */}
                     <span
-                      className={`shrink-0 inline-block rounded-full px-2.5 py-0.5 text-xs font-black ${
+                      className={`shrink-0 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold tabular-nums ${
                         candidate.mpiScore >= 80
                           ? 'bg-destructive/20 text-destructive'
                           : candidate.mpiScore >= 60

@@ -5,6 +5,13 @@ import { useAuthSessionStore } from '../stores/auth-session-store'
 import type { FhirEncounterZod, FhirCondition, FhirMedicationRequestZod } from '@ultranos/shared-types'
 import type { SoapLedgerEntry } from '../lib/db'
 
+// Mock next-intl
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, values?: Record<string, unknown>) =>
+    values ? `${key}(${JSON.stringify(values)})` : key,
+  useLocale: () => 'en',
+}))
+
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -178,7 +185,7 @@ describe('EncounterHistoryList', () => {
 
     await waitFor(() => {
       const badge = screen.getByTestId('status-badge')
-      expect(badge.textContent).toBe('Finished')
+      expect(badge.textContent).toBe('finished')
     })
   })
 
@@ -189,7 +196,7 @@ describe('EncounterHistoryList', () => {
 
     await waitFor(() => {
       const badge = screen.getByTestId('status-badge')
-      expect(badge.textContent).toBe('Cancelled')
+      expect(badge.textContent).toBe('cancelled')
     })
   })
 
@@ -225,7 +232,7 @@ describe('EncounterHistoryList', () => {
     render(<EncounterHistoryList patientId={TEST_PATIENT_ID} />)
 
     await waitFor(() => {
-      expect(screen.getByText('2 Rx')).toBeTruthy()
+      expect(screen.getByText('rxCount({"count":2})')).toBeTruthy()
     })
   })
 
@@ -241,7 +248,7 @@ describe('EncounterHistoryList', () => {
     // No modal until the card body is clicked
     expect(screen.queryByTestId('encounter-detail')).toBeNull()
 
-    const cardButton = screen.getByRole('button', { name: /view encounter on/i })
+    const cardButton = screen.getByRole('button', { name: /viewEncounterOn/i })
     fireEvent.click(cardButton)
 
     await waitFor(() => {

@@ -11,7 +11,7 @@ const CLINICAL_COMMANDS = [
   { id: 'vitals', label: 'Vitals', sectionId: 'vitals', shortcut: 'V' },
   { id: 'subjective', label: 'Subjective', sectionId: 'soap-subjective', shortcut: 'S' },
   { id: 'objective', label: 'Objective', sectionId: 'soap-objective', shortcut: 'O' },
-  { id: 'assessment', label: 'Assessment', sectionId: 'assessment', shortcut: 'A' },
+  { id: 'assessment', label: 'Assessment', sectionId: 'soap-assessment', shortcut: 'A' },
 ] as const
 
 export type ClinicalCommandId = (typeof CLINICAL_COMMANDS)[number]['id']
@@ -126,7 +126,7 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
                 value={cmd.id}
                 keywords={[cmd.label]}
                 onSelect={handleSelect}
-                className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+                className="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
               >
                 <span>{cmd.label}</span>
                 <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">

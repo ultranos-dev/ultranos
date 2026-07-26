@@ -445,12 +445,13 @@ describe('NotificationPanel — dropdown behavior', () => {
     const { NotificationBell } = await import('../components/NotificationPanel')
     render(<NotificationBell />)
 
-    const bell = screen.getByLabelText(/Notifications/)
+    // Wait for unread count to load so aria-label switches from bellAria to bellUnreadAria
+    const bell = await screen.findByLabelText('bellUnreadAria')
     fireEvent.click(bell)
 
     await waitFor(() => {
-      // Dropdown header
-      expect(screen.getByText('Notifications')).toBeInTheDocument()
+      // Dropdown header — t('title') returns key via mock
+      expect(screen.getByText('title')).toBeInTheDocument()
     })
   })
 })

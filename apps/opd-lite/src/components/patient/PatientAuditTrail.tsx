@@ -6,39 +6,11 @@ import { ChevronDown } from '@ultranos/ui-kit/icons'
 import { formatRelativeTime } from '@ultranos/ui-kit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { getHubBaseUrl } from '@/lib/hub-url'
+import { Card } from '@/components/Card'
+import { Button } from '@/components/ui/Button'
 
 const HUB_API_URL = getHubBaseUrl()
 
-/** Map camelCase field names to human-readable labels */
-const FIELD_LABELS: Record<string, string> = {
-  nameGiven: 'given name',
-  nameFather: "father's name",
-  nameGrandfather: "grandfather's name",
-  nameLocal: 'display name',
-  nameLatin: 'latin name',
-  gender: 'gender',
-  birthDate: 'date of birth',
-  birthYear: 'birth year',
-  birthYearOnly: 'birth year mode',
-  telecomPhone: 'phone',
-  nationalId: 'national ID',
-  addressProvinceOrigin: 'origin province',
-  addressDistrictOrigin: 'origin district',
-  addressVillageOrigin: 'origin village',
-  addressProvinceCurrent: 'current province',
-  addressDistrictCurrent: 'current district',
-  addressVillageCurrent: 'current village',
-  isNomadic: 'nomadic status',
-  preferredLanguage: 'preferred language',
-  bloodGroup: 'blood group',
-  photoUrl: 'photo',
-  consentVersion: 'consent',
-}
-
-function humanizeFields(fields: string[]): string {
-  if (fields.length === 0) return ''
-  return fields.map((f) => FIELD_LABELS[f] ?? f).join(', ')
-}
 
 interface AuditEntry {
   id: string
@@ -61,6 +33,36 @@ export function PatientAuditTrail({
 }: PatientAuditTrailProps) {
   const t = useTranslations('patient')
   const locale = useLocale()
+
+  const auditFieldLabels: Record<string, string> = {
+    nameGiven: t('auditField.nameGiven' as never),
+    nameFather: t('auditField.nameFather' as never),
+    nameGrandfather: t('auditField.nameGrandfather' as never),
+    nameLocal: t('auditField.nameLocal' as never),
+    nameLatin: t('auditField.nameLatin' as never),
+    gender: t('auditField.gender' as never),
+    birthDate: t('auditField.birthDate' as never),
+    birthYear: t('auditField.birthYear' as never),
+    birthYearOnly: t('auditField.birthYearOnly' as never),
+    telecomPhone: t('auditField.telecomPhone' as never),
+    nationalId: t('auditField.nationalId' as never),
+    addressProvinceOrigin: t('auditField.addressProvinceOrigin' as never),
+    addressDistrictOrigin: t('auditField.addressDistrictOrigin' as never),
+    addressVillageOrigin: t('auditField.addressVillageOrigin' as never),
+    addressProvinceCurrent: t('auditField.addressProvinceCurrent' as never),
+    addressDistrictCurrent: t('auditField.addressDistrictCurrent' as never),
+    addressVillageCurrent: t('auditField.addressVillageCurrent' as never),
+    isNomadic: t('auditField.isNomadic' as never),
+    preferredLanguage: t('auditField.preferredLanguage' as never),
+    bloodGroup: t('auditField.bloodGroup' as never),
+    photoUrl: t('auditField.photoUrl' as never),
+    consentVersion: t('auditField.consentVersion' as never),
+  }
+
+  function humanizeFields(fields: string[]): string {
+    if (fields.length === 0) return ''
+    return fields.map((f) => auditFieldLabels[f] ?? f).join(', ')
+  }
 
   const [isOpen, setIsOpen] = useState(false)
   const [entries, setEntries] = useState<AuditEntry[]>([])
@@ -142,13 +144,13 @@ export function PatientAuditTrail({
       entry.action === 'PHI_WRITE' ||
       entry.action === 'UPDATE'
     ) {
-      return fields ? t('auditUpdated', { fields }) : t('auditUpdated', { fields: 'record' })
+      return fields ? t('auditUpdated', { fields }) : t('auditUpdated', { fields: t('auditFieldRecord') })
     }
     return t('auditViewed')
   }
 
   return (
-    <div className="rounded-xl bg-card shadow-sm ring-[0.65px] ring-border/50">
+    <Card className="p-0">
       {/* Toggle header */}
       <button
         type="button"
@@ -188,44 +190,36 @@ export function PatientAuditTrail({
             <ul className="space-y-2 border-s-2 border-border ps-4">
               {entries.map((entry) => (
                 <li key={entry.id} className="text-sm text-foreground">
-                  <span className="font-medium">
-                    {entry.actorName ?? entry.actorRole}
-                  </span>
-                  {entry.actorName && (
-                    <span className="text-muted-foreground">
-                      {' '}({entry.actorRole})
-                    </span>
-                  )}
-                  <span className="text-muted-foreground"> — </span>
-                  <span>{formatEntry(entry)}</span>
-                  <span className="text-muted-foreground"> — </span>
-                  <time
-                    className="text-xs text-muted-foreground"
-                    dateTime={entry.timestamp}
-                    title={entry.timestamp}
-                  >
-                    {formatRelativeTime(
-                      entry.timestamp,
-                      locale as 'en' | 'ar' | 'prs',
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <span className="font-medium">{entry.actorName ?? entry.actorRole}</span>
+                    {entry.actorName && (
+                      <span className="text-xs text-muted-foreground">({entry.actorRole})</span>
                     )}
-                  </time>
+                  </div>
+                  <div className="flex flex-wrap items-baseline gap-x-2 text-muted-foreground">
+                    <span className="text-foreground">{formatEntry(entry)}</span>
+                    <time className="text-xs" dateTime={entry.timestamp} title={entry.timestamp}>
+                      {formatRelativeTime(entry.timestamp, locale as 'en' | 'ar' | 'prs')}
+                    </time>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
 
           {isAdmin && hasMore && (
-            <button
+            <Button
+              variant="ghost"
               type="button"
               onClick={handleLoadMore}
               disabled={loading}
-              className="mt-3 text-sm font-medium text-primary hover:text-primary disabled:text-muted-foreground"
+              className="mt-3"
             >
               {loading ? t('auditLoading') : t('auditLoadMore')}
-            </button>
+            </Button>
           )}
         </div>
       )}
-    </div>
+    </Card>
   )
 }

@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@ultranos/ui-kit/components/ui/sheet'
+import { Info } from '@ultranos/ui-kit/icons'
 import { isTier2 } from '@ultranos/drug-catalog-sync'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
 import { getMirrorDrugEntry } from '@/lib/drug-entry'
@@ -15,9 +17,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-const NoData = () => <p className="text-xs text-muted-foreground italic">No data on file.</p>
-
 export function DrugMonographSheet({ atcCode, label }: { atcCode: string; label: string }) {
+  const t = useTranslations('prescription')
+  const NoData = () => <p className="text-xs text-muted-foreground italic">{t('noDataOnFile')}</p>
   const [entry, setEntry] = useState<DrugEntry | null>(null)
   const [loaded, setLoaded] = useState(false)
 
@@ -32,8 +34,8 @@ export function DrugMonographSheet({ atcCode, label }: { atcCode: string; label:
   return (
     <Sheet onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
-        <button type="button" data-testid="monograph-trigger" className="text-sm font-medium text-primary-700 underline underline-offset-2">
-          ⓘ Drug info
+        <button type="button" data-testid="monograph-trigger" className="text-sm font-medium text-primary underline underline-offset-2">
+          <Info size={14} aria-hidden className="inline-block me-1" />{t('drugInfoTrigger')}
         </button>
       </SheetTrigger>
       <SheetContent side="right" className="overflow-y-auto">
@@ -41,25 +43,25 @@ export function DrugMonographSheet({ atcCode, label }: { atcCode: string; label:
           <SheetTitle>{label}</SheetTitle>
         </SheetHeader>
         <div className="mt-4 space-y-4">
-          {!loaded && <p className="text-sm text-muted-foreground">Loading…</p>}
-          {loaded && !entry && <p className="text-sm text-muted-foreground">Limited data available for this drug.</p>}
+          {!loaded && <p className="text-sm text-muted-foreground">{t('monographLoading')}</p>}
+          {loaded && !entry && <p className="text-sm text-muted-foreground">{t('limitedDataAvailable')}</p>}
           {t2 && (
             <>
-              <Section title="Mechanism of action">{t2.mechanismOfAction || <NoData />}</Section>
-              <Section title="Indications">{t2.indicationsClinical.length ? t2.indicationsClinical.join('; ') : <NoData />}</Section>
-              <Section title="Contraindications">
+              <Section title={t('mechanismOfAction')}>{t2.mechanismOfAction || <NoData />}</Section>
+              <Section title={t('indicationsClinical')}>{t2.indicationsClinical.length ? t2.indicationsClinical.join('; ') : <NoData />}</Section>
+              <Section title={t('contraindications')}>
                 {t2.contraindications.length ? (
                   <ul className="space-y-0.5">{t2.contraindications.map((c) => <li key={c}>&bull; {c}</li>)}</ul>
                 ) : <NoData />}
               </Section>
-              <Section title="Adult dosing">{t2.adultDosing.length ? t2.adultDosing.map((d, i) => <p key={i}>{d.indication}: {d.adultDose ?? d.frequency}</p>) : <NoData />}</Section>
-              <Section title="Pediatric dosing">{t2.pediatricDosing.length ? t2.pediatricDosing.map((d, i) => <p key={i}>{d.indication}: {d.pediatricDose ?? d.frequency}</p>) : <NoData />}</Section>
-              <Section title="Pregnancy / lactation">{t2.pregnancyClinical?.pregnancy || t2.pregnancyClinical?.lactation || <NoData />}</Section>
-              <Section title="Adverse effects">{t2.adverseEvents.length ? t2.adverseEvents.map((a) => a.effect).join(', ') : <NoData />}</Section>
-              <Section title="Pharmacokinetics">{t2.pharmacokinetics?.halfLife ? `Half-life: ${t2.pharmacokinetics.halfLife}` : <NoData />}</Section>
+              <Section title={t('adultDosing')}>{t2.adultDosing.length ? t2.adultDosing.map((d, i) => <p key={i}>{d.indication}: {d.adultDose ?? d.frequency}</p>) : <NoData />}</Section>
+              <Section title={t('pediatricDosing')}>{t2.pediatricDosing.length ? t2.pediatricDosing.map((d, i) => <p key={i}>{d.indication}: {d.pediatricDose ?? d.frequency}</p>) : <NoData />}</Section>
+              <Section title={t('pregnancyLactation')}>{t2.pregnancyClinical?.pregnancy || t2.pregnancyClinical?.lactation || <NoData />}</Section>
+              <Section title={t('adverseEffects')}>{t2.adverseEvents.length ? t2.adverseEvents.map((a) => a.effect).join(', ') : <NoData />}</Section>
+              <Section title={t('pharmacokinetics')}>{t2.pharmacokinetics?.halfLife ? t('halfLife', { value: t2.pharmacokinetics.halfLife }) : <NoData />}</Section>
             </>
           )}
-          {loaded && entry && !t2 && <p className="text-sm text-muted-foreground">Clinical detail not available at your access level.</p>}
+          {loaded && entry && !t2 && <p className="text-sm text-muted-foreground">{t('clinicalDetailUnavailable')}</p>}
         </div>
       </SheetContent>
     </Sheet>

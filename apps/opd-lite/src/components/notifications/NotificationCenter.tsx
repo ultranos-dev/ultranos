@@ -12,6 +12,7 @@ import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import type { NotificationItem } from '@/lib/notification-api'
 import { db } from '@/lib/db'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { notificationLabelKey } from '@/lib/notification-label'
 
 // --- Type grouping for tab filters ---
 
@@ -39,17 +40,7 @@ function filterByTab(notifications: NotificationItem[], tab: TabKey): Notificati
 
 // --- Notification type display helpers ---
 
-function notificationLabelKey(type: string): string {
-  switch (type) {
-    case 'LAB_RESULT_AVAILABLE': return 'typeLab'
-    case 'LAB_RESULT_ESCALATION': return 'typeLabUrgent'
-    case 'PRESCRIPTION_READY': return 'typePrescription'
-    case 'CONSENT_CHANGE': return 'typeConsent'
-    case 'SYNC_CONFLICT': return 'typeSyncConflict'
-    case 'ALLERGY_UPDATE': return 'typeAllergyUpdate'
-    default: return 'typeDefault'
-  }
-}
+// notificationLabelKey is imported from @/lib/notification-label (shared with NotificationPanel)
 
 function formatTimestamp(iso: string, locale: 'en' | 'ar' | 'prs' | 'ps'): string {
   const d = new Date(iso)
@@ -206,7 +197,7 @@ export function NotificationCenter() {
 
       {/* Notification list */}
       {!loading && filtered.length > 0 && (
-        <div className="divide-y divide-border overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-border/50">
+        <div className="divide-y divide-border overflow-hidden rounded-xl bg-background ring-[0.65px] ring-border/50">
           {filtered.map(n => (
             <NotificationRow
               key={n.id}
@@ -244,7 +235,7 @@ function NotificationRow({
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onClick(notification) }}
       className={`flex items-start gap-3 px-4 py-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
         deepLink ? 'cursor-pointer hover:bg-muted' : ''
-      } ${isUnread ? 'bg-primary/10' : ''} ${isEscalation ? 'border-s-4 border-s-destructive' : ''}`}
+      } ${isUnread ? 'bg-primary/10' : ''} ${isEscalation ? 'ring-1 ring-inset ring-destructive/40' : ''}`}
     >
       {/* Type icon */}
       <div className="mt-0.5 shrink-0">
@@ -266,7 +257,7 @@ function NotificationRow({
         {notification.payload.testCategory && (
           <p className="mt-0.5 text-xs text-muted-foreground">
             {notification.payload.testCategory}
-            {notification.payload.labName && ` — ${notification.payload.labName}`}
+            {notification.payload.labName && ` · ${notification.payload.labName}`}
           </p>
         )}
         {notification.payload.message && !notification.payload.testCategory && (

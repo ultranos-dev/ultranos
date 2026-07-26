@@ -6,6 +6,7 @@ import { formatDate } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { CalendarClock } from '@ultranos/ui-kit/icons'
 import { getHubTrpcUrl } from '@/lib/hub-url'
 
@@ -26,11 +27,13 @@ export default function ExpiringConsentsPage() {
   const t = useTranslations('consent')
   const [consents, setConsents] = useState<ExpiringConsent[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
   const [offset, setOffset] = useState(0)
   const limit = 50
 
   const loadConsents = useCallback(async () => {
     setLoading(true)
+    setFetchError(false)
     try {
       const hubUrl = getHubTrpcUrl()
       const input = JSON.stringify({ json: { limit, offset } })
@@ -46,7 +49,7 @@ export default function ExpiringConsentsPage() {
       }
       setConsents(body.result.data.json.consents)
     } catch {
-      // Network unavailable — keep empty list
+      setFetchError(true)
     } finally {
       setLoading(false)
     }
@@ -102,7 +105,13 @@ export default function ExpiringConsentsPage() {
           </div>
         )}
 
-        {!loading && consents.length === 0 && (
+        {!loading && fetchError && (
+          <Alert variant="destructive" role="alert">
+            {t('fetchError')}
+          </Alert>
+        )}
+
+        {!loading && !fetchError && consents.length === 0 && (
           <EmptyState
             icon={CalendarClock}
             title={t('emptyTitle')}
@@ -110,7 +119,7 @@ export default function ExpiringConsentsPage() {
           />
         )}
 
-        {!loading && consents.length > 0 && (
+        {!loading && !fetchError && consents.length > 0 && (
           <>
             <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
               <table className="w-full text-sm">

@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { usePathname } from 'next/navigation'
 import { useLocale } from 'next-intl'
+import { getDirection } from '@ultranos/ui-kit'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useNavBadges } from '@/hooks/useNavBadges'
 import { navGroups } from '@/components/sidebar/nav-config'
@@ -22,7 +23,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const badges = useNavBadges()
   const locale = useLocale()
-  const side = ['ar', 'prs', 'ps'].includes(locale) ? 'right' : 'left'
+  const side = getDirection(locale) === 'rtl' ? 'right' : 'left'
 
   // Don't render sidebar on login page or when unauthenticated
   if (!isAuthenticated || !session || pathname.endsWith('/login')) {

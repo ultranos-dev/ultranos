@@ -1,11 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
 import { useSoapNoteStore } from '@/stores/soap-note-store'
 import { parseSOAPWithAI, commitAISOAPNote, isAISOAPError } from '@/services/ai-scribe-service'
 import { searchSOAPMacros, type SOAPTemplate } from '@/lib/soap-macros'
 import { hlc, serializeHlc } from '@/lib/hlc'
+import { Brain, ClipboardList } from '@ultranos/ui-kit/icons'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 
 interface SOAPNoteEntryProps {
   subjective: string
@@ -38,6 +41,7 @@ export function SOAPNoteEntry({
   aiConsentGranted,
   isOnline,
 }: SOAPNoteEntryProps) {
+  const t = useTranslations('soap')
   const aiDiff = useSoapNoteStore((s) => s.aiDiff)
   const setAIDiffLoading = useSoapNoteStore((s) => s.setAIDiffLoading)
   const setAIDiffResult = useSoapNoteStore((s) => s.setAIDiffResult)
@@ -152,7 +156,7 @@ export function SOAPNoteEntry({
 
   const textareaClass = `w-full rounded-xl border border-border bg-background px-4 py-3
     text-base text-foreground placeholder:text-muted-foreground
-    focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200
+    focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring
     transition-colors`
 
   // === AI Diff View ===
@@ -161,34 +165,34 @@ export function SOAPNoteEntry({
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-foreground">
-            {aiDiff.isLoading ? 'AI is parsing your notes...' : 'AI Parsed SOAP — Review & Confirm'}
+          <h3 className="text-sm font-semibold text-foreground">
+            {aiDiff.isLoading ? t('aiParsing') : t('aiReviewTitle')}
           </h3>
           {!aiDiff.isLoading && (
-            <span className="text-xs text-muted-foreground" title={`Model: ${aiDiff.aiModelVersion}`}>
-              Model: {aiDiff.aiModelVersion}
+            <span className="text-xs text-muted-foreground" title={t('aiModel', { version: aiDiff.aiModelVersion })}>
+              {t('aiModel', { version: aiDiff.aiModelVersion })}
             </span>
           )}
         </div>
 
         {aiDiff.isLoading && (
-          <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/10 p-4">
+          <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/10 p-4">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <span className="text-sm font-semibold text-primary">AI is parsing your notes...</span>
+            <span className="text-sm font-semibold text-primary">{t('aiParsing')}</span>
           </div>
         )}
 
         {aiDiff.error && (
-          <div className="rounded-lg border border-warning/30 bg-warning/10 p-3" role="alert">
-            <p className="text-sm font-semibold text-warning">AI unavailable: {aiDiff.error}</p>
+          <Alert variant="warning" role="alert">
+            <p className="text-sm font-semibold">{t('aiUnavailable', { error: aiDiff.error })}</p>
             <Button
               variant="ghost"
               onClick={discardAIDiff}
-              className="mt-2 text-sm text-warning underline"
+              className="mt-2 text-sm underline"
             >
-              Return to manual editing
+              {t('aiReturnManual')}
             </Button>
-          </div>
+          </Alert>
         )}
 
         {!aiDiff.isLoading && !aiDiff.error && (
@@ -197,27 +201,27 @@ export function SOAPNoteEntry({
             <div className="grid grid-cols-2 gap-4">
               {/* Left: Original */}
               <div>
-                <h4 className="mb-2 text-xs font-bold uppercase text-muted-foreground">Original</h4>
+                <h4 className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{t('aiOriginal')}</h4>
                 <div className="rounded-xl ring-[0.65px] ring-border/50 bg-muted p-3 text-sm text-foreground whitespace-pre-wrap">
-                  {aiDiff.originalText || <span className="italic text-muted-foreground">No original text</span>}
+                  {aiDiff.originalText || <span className="italic text-muted-foreground">{t('aiNoOriginal')}</span>}
                 </div>
               </div>
 
               {/* Right: AI-parsed (editable) */}
               <div>
-                <h4 className="mb-2 text-xs font-bold uppercase text-success">AI Parsed (Editable)</h4>
+                <h4 className="mb-2 text-xs font-semibold uppercase text-success">{t('aiParsed')}</h4>
                 <div className="space-y-3">
-                  {(['Subjective', 'Objective', 'Assessment', 'Plan'] as const).map((section) => {
-                    const field = `ai${section}` as 'aiSubjective' | 'aiObjective' | 'aiAssessment' | 'aiPlan'
+                  {(['subjective', 'objective', 'assessment', 'plan'] as const).map((section) => {
+                    const field = `ai${section.charAt(0).toUpperCase()}${section.slice(1)}` as 'aiSubjective' | 'aiObjective' | 'aiAssessment' | 'aiPlan'
                     return (
                       <div key={section}>
-                        <label className="mb-1 block text-xs font-semibold text-success">{section}</label>
+                        <label className="mb-1 block text-xs font-semibold text-success">{t(section)}</label>
                         <textarea
                           value={aiDiff[field]}
                           onChange={(e) => updateAIDiffField(field, e.target.value)}
                           rows={3}
                           dir="auto"
-                          className="w-full rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm text-foreground focus:border-success focus:outline-none focus:ring-2 focus:ring-success/20"
+                          className="w-full rounded-xl border border-success/20 bg-success/10 px-3 py-2 text-sm text-foreground focus:border-success focus:outline-none focus:ring-2 focus:ring-success/20"
                         />
                       </div>
                     )
@@ -233,14 +237,14 @@ export function SOAPNoteEntry({
                 type="button"
                 onClick={handleConfirmSave}
               >
-                Confirm &amp; Save (Ctrl+Enter)
+                {t('aiConfirmSave')}
               </Button>
               <Button
                 variant="secondary"
                 type="button"
                 onClick={discardAIDiff}
               >
-                Discard AI
+                {t('aiDiscard')}
               </Button>
             </div>
           </>
@@ -256,36 +260,36 @@ export function SOAPNoteEntry({
       <div className="flex items-center gap-3">
         {isOnline ? (
           <Button
-            variant="primary"
+            variant="outline"
             type="button"
             onClick={handleAIAssist}
             disabled={!aiConsentGranted}
             title={
               !aiConsentGranted
-                ? 'Patient has not consented to AI processing'
-                : 'Parse notes with AI (Ctrl+K)'
+                ? t('aiNoConsentTitle')
+                : t('aiParseTitle')
             }
             className="gap-2"
           >
-            <span aria-hidden="true">✦</span>
-            AI Assist
+            <Brain className="h-4 w-4" aria-hidden="true" />
+            {t('aiAssist')}
           </Button>
         ) : (
-          <span className="inline-flex items-center gap-2 rounded-md bg-secondary px-3 py-1.5 text-sm font-semibold text-muted-foreground">
-            <span aria-hidden="true">📋</span>
-            Template Assist
+          <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1.5 text-sm font-semibold text-muted-foreground">
+            <ClipboardList className="h-4 w-4" aria-hidden="true" />
+            {t('templateAssist')}
           </span>
         )}
 
         {!aiConsentGranted && isOnline && (
           <span className="text-xs text-muted-foreground">
-            Patient has not consented to AI processing
+            {t('aiNoConsent')}
           </span>
         )}
 
         {!isOnline && (
           <span className="text-xs text-warning font-semibold">
-            AI unavailable offline — use template macros
+            {t('aiUnavailableOffline')}
           </span>
         )}
       </div>
@@ -293,7 +297,7 @@ export function SOAPNoteEntry({
       {/* Offline macro suggestions */}
       {!isOnline && macroMatches.length > 0 && (
         <div className="rounded-xl ring-[0.65px] ring-border/50 bg-background p-3">
-          <p className="mb-2 text-xs font-bold text-muted-foreground uppercase">Template Suggestions</p>
+          <p className="mb-2 text-xs font-semibold text-muted-foreground uppercase">{t('templateSuggestions')}</p>
           <div className="space-y-1">
             {macroMatches.map((template) => (
               <Button
@@ -315,7 +319,7 @@ export function SOAPNoteEntry({
           htmlFor="soap-subjective"
           className="mb-2 block text-sm font-semibold text-foreground"
         >
-          Subjective
+          {t('subjective')}
         </label>
         <textarea
           id="soap-subjective"
@@ -324,7 +328,7 @@ export function SOAPNoteEntry({
             onSubjectiveChange(e.target.value)
             handleTextChangeWithMacro(e.target.value)
           }}
-          placeholder="Patient's chief complaint, history of present illness, symptoms..."
+          placeholder={t('subjectivePlaceholder')}
           rows={5}
           maxLength={10000}
           dir="auto"
@@ -338,7 +342,7 @@ export function SOAPNoteEntry({
           htmlFor="soap-objective"
           className="mb-2 block text-sm font-semibold text-foreground"
         >
-          Objective
+          {t('objective')}
         </label>
         <textarea
           id="soap-objective"
@@ -347,7 +351,7 @@ export function SOAPNoteEntry({
             onObjectiveChange(e.target.value)
             handleTextChangeWithMacro(e.target.value)
           }}
-          placeholder="Physical examination findings, vital signs, lab results..."
+          placeholder={t('objectivePlaceholder')}
           rows={5}
           maxLength={10000}
           dir="auto"
@@ -361,7 +365,7 @@ export function SOAPNoteEntry({
           htmlFor="soap-assessment"
           className="mb-2 block text-sm font-semibold text-foreground"
         >
-          Assessment
+          {t('assessment')}
         </label>
         <textarea
           id="soap-assessment"
@@ -370,7 +374,7 @@ export function SOAPNoteEntry({
             onAssessmentChange(e.target.value)
             handleTextChangeWithMacro(e.target.value)
           }}
-          placeholder="Clinical impression, diagnosis or differential..."
+          placeholder={t('assessmentPlaceholder')}
           rows={4}
           maxLength={10000}
           dir="auto"
@@ -384,7 +388,7 @@ export function SOAPNoteEntry({
           htmlFor="soap-plan"
           className="mb-2 block text-sm font-semibold text-foreground"
         >
-          Plan
+          {t('plan')}
         </label>
         <textarea
           id="soap-plan"
@@ -393,7 +397,7 @@ export function SOAPNoteEntry({
             onPlanChange(e.target.value)
             handleTextChangeWithMacro(e.target.value)
           }}
-          placeholder="Treatment plan, medications, follow-up instructions..."
+          placeholder={t('planPlaceholder')}
           rows={4}
           maxLength={10000}
           dir="auto"

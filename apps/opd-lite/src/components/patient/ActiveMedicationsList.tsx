@@ -1,9 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { formatDate } from '@ultranos/ui-kit'
+import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { db } from '@/lib/db'
+import { Card } from '@/components/Card'
 
 interface ActiveMedicationsListProps {
   patientId: string
@@ -12,15 +15,13 @@ interface ActiveMedicationsListProps {
 interface MedicationRow {
   id: string
   drugName: string
-  dosage: string
-  frequency: string
   startDate: string
   hasOverride: boolean
 }
 
-/** Format ISO datetime to locale date string. */
+/** Format ISO datetime to locale date string. Returns empty string if no date. */
 function formatStartDate(iso: string | undefined, locale: 'en' | 'ar' | 'prs' | 'ps'): string {
-  if (!iso) return '--'
+  if (!iso) return ''
   try {
     return formatDate(iso, locale)
   } catch {
@@ -40,6 +41,7 @@ export function ActiveMedicationsList({
   patientId,
 }: ActiveMedicationsListProps) {
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
+  const t = useTranslations('patient')
   const [meds, setMeds] = useState<MedicationRow[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -79,13 +81,7 @@ export function ActiveMedicationsList({
           // Drug name
           const coding = stmt.medicationCodeableConcept?.coding?.[0]
           const drugName =
-            coding?.display ?? stmt.medicationCodeableConcept?.text ?? '--'
-
-          // Dosage — MedicationStatement uses dosage from the FHIR spec
-          // but our schema stores medicationCodeableConcept; dosage info
-          // comes from linked MedicationRequest. Show '--' if not available.
-          const dosage = '--'
-          const frequency = '--'
+            coding?.display ?? stmt.medicationCodeableConcept?.text ?? ''
 
           // Start date from effectivePeriod
           const startDate = formatStartDate(stmt.effectivePeriod?.start, locale)
@@ -98,8 +94,6 @@ export function ActiveMedicationsList({
           return {
             id: stmt.id,
             drugName,
-            dosage,
-            frequency,
             startDate,
             hasOverride,
           }
@@ -120,30 +114,34 @@ export function ActiveMedicationsList({
 
   if (loading) {
     return (
-      <div className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50">
+      <Card>
         <h3 className="mb-3 text-sm font-semibold text-foreground">
-          Active Medications
+          {t('activeMedications')}
         </h3>
-        <p className="text-sm text-muted-foreground">Loading...</p>
-      </div>
+        <div className="space-y-3">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      </Card>
     )
   }
 
   if (meds.length === 0) {
     return (
-      <div className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50">
+      <Card>
         <h3 className="mb-3 text-sm font-semibold text-foreground">
-          Active Medications
+          {t('activeMedications')}
         </h3>
-        <p className="text-sm text-muted-foreground">No active medications</p>
-      </div>
+        <EmptyState size="sm" title={t('noActiveMedications')} />
+      </Card>
     )
   }
 
   return (
-    <div className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50">
+    <Card>
       <h3 className="mb-3 text-sm font-semibold text-foreground">
-        Active Medications
+        {t('activeMedications')}
       </h3>
 
       <ul className="divide-y divide-border">
@@ -155,26 +153,20 @@ export function ActiveMedicationsList({
                   {med.drugName}
                   {med.hasOverride && (
                     <span className="ms-2 inline-block rounded-full bg-warning/20 px-2 py-0.5 text-xs font-semibold text-warning">
-                      Override
+                      {t('medicationOverride')}
                     </span>
                   )}
                 </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {med.dosage !== '--' && <span>{med.dosage}</span>}
-                  {med.dosage !== '--' && med.frequency !== '--' && (
-                    <span className="mx-1">&middot;</span>
-                  )}
-                  {med.frequency !== '--' && <span>{med.frequency}</span>}
-                  {(med.dosage !== '--' || med.frequency !== '--') && (
-                    <span className="mx-1">&middot;</span>
-                  )}
-                  <span>Started: {med.startDate}</span>
-                </p>
+                {med.startDate && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {t('medicationStarted', { date: med.startDate })}
+                  </p>
+                )}
               </div>
             </div>
           </li>
         ))}
       </ul>
-    </div>
+    </Card>
   )
 }

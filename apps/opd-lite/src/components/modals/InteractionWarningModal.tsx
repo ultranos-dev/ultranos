@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { DrugInteractionSeverity } from '@ultranos/shared-types'
 import type { InteractionResult } from '@/services/interactionService'
 import { Button } from '@/components/ui/Button'
@@ -12,26 +13,43 @@ interface InteractionWarningModalProps {
   onOverride: (justification: string) => void
 }
 
-const SEVERITY_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+const SEVERITY_STYLES: Record<
+  string,
+  { bg: string; text: string; border: string; badge: string; label?: string }
+> = {
+  // Highest severity: patient-specific allergy match. Strongest destructive
+  // treatment (solid badge + full-strength border) so it never reads as a
+  // generic drug–drug interaction, and a plain "ALLERGY" label.
+  [DrugInteractionSeverity.ALLERGY_MATCH]: {
+    bg: 'bg-destructive/20',
+    text: 'text-destructive',
+    border: 'border-destructive',
+    badge: 'bg-destructive text-destructive-foreground',
+    label: 'ALLERGY',
+  },
   [DrugInteractionSeverity.CONTRAINDICATED]: {
     bg: 'bg-destructive/20',
     text: 'text-destructive',
     border: 'border-destructive/30',
+    badge: 'bg-destructive/20 text-destructive',
   },
   [DrugInteractionSeverity.MAJOR]: {
     bg: 'bg-destructive/10',
     text: 'text-destructive',
     border: 'border-destructive/20',
+    badge: 'bg-destructive/10 text-destructive',
   },
   [DrugInteractionSeverity.MODERATE]: {
     bg: 'bg-warning/10',
     text: 'text-warning',
     border: 'border-warning/20',
+    badge: 'bg-warning/10 text-warning',
   },
   [DrugInteractionSeverity.MINOR]: {
     bg: 'bg-warning/10',
     text: 'text-warning',
     border: 'border-warning/20',
+    badge: 'bg-warning/10 text-warning',
   },
 }
 
@@ -45,6 +63,7 @@ export function InteractionWarningModal({
   onCancel,
   onOverride,
 }: InteractionWarningModalProps) {
+  const t = useTranslations('interactionModal')
   const [justification, setJustification] = useState('')
   const dialogRef = useRef<HTMLDivElement>(null)
 
@@ -93,7 +112,7 @@ export function InteractionWarningModal({
   const hasContraindicated = interactions.some(
     (i) => i.severity === DrugInteractionSeverity.CONTRAINDICATED || i.severity === DrugInteractionSeverity.ALLERGY_MATCH,
   )
-  const modalTitle = hasContraindicated ? 'Contraindication Detected' : 'Major Drug Interaction Detected'
+  const modalTitle = hasContraindicated ? t('contraindicationDetected') : t('majorInteractionDetected')
 
   const handleOverride = () => {
     if (justification.trim().length > 0) {
@@ -131,12 +150,12 @@ export function InteractionWarningModal({
         <div className="rounded-t-xl border-b border-destructive/20 bg-destructive/10 px-6 py-4">
           <h2
             id="interaction-warning-title"
-            className="text-xl font-black text-destructive"
+            className="text-xl font-semibold text-destructive"
           >
             {modalTitle}
           </h2>
           <p className="mt-1 text-sm font-semibold text-destructive">
-            Review the following drug interactions before proceeding.
+            {t('reviewInstructions')}
           </p>
         </div>
 
@@ -148,13 +167,15 @@ export function InteractionWarningModal({
               return (
                 <li
                   key={`${interaction.drugA}-${interaction.drugB}-${idx}`}
-                  className={`rounded-lg border ${style.border} ${style.bg} p-3`}
+                  className={`rounded-xl border ${style.border} ${style.bg} p-3`}
                 >
                   <div className="flex items-center gap-2">
                     <span
-                      className={`rounded px-2 py-0.5 text-xs font-black uppercase ${style.text} ${style.bg}`}
+                      className={`rounded px-2 py-0.5 text-xs font-semibold uppercase ${style.badge}`}
                     >
-                      {interaction.severity}
+                      {interaction.severity === DrugInteractionSeverity.ALLERGY_MATCH
+                        ? t('severityAllergy')
+                        : (style.label ?? interaction.severity)}
                     </span>
                     <span className="text-sm font-bold text-foreground">
                       {interaction.drugA} + {interaction.drugB}
@@ -175,13 +196,13 @@ export function InteractionWarningModal({
             htmlFor="override-justification"
             className="mb-2 block text-sm font-bold text-foreground"
           >
-            Override Justification (required to proceed)
+            {t('justificationLabel')}
           </label>
           <textarea
             id="override-justification"
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-destructive focus:outline-none focus:ring-1 focus:ring-destructive"
+            className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-destructive focus:outline-none focus:ring-1 focus:ring-destructive"
             rows={2}
-            placeholder="Enter clinical justification for overriding this warning..."
+            placeholder={t('justificationPlaceholder')}
             value={justification}
             onChange={(e) => setJustification(e.target.value)}
           />
@@ -193,18 +214,18 @@ export function InteractionWarningModal({
             variant="secondary"
             type="button"
             onClick={onCancel}
-            aria-label="Cancel prescription"
+            aria-label={t('cancelPrescription')}
           >
-            Cancel Prescription
+            {t('cancelPrescription')}
           </Button>
           <Button
             variant="danger"
             type="button"
             onClick={handleOverride}
             disabled={justification.trim().length === 0}
-            aria-label="Proceed anyway"
+            aria-label={t('proceedAnyway')}
           >
-            Proceed Anyway
+            {t('proceedAnyway')}
           </Button>
         </div>
       </div>

@@ -1,6 +1,10 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { AutosaveIndicator } from '@/components/clinical/autosave-indicator'
+
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+}))
 
 describe('AutosaveIndicator component', () => {
   it('should show saved state with cloud checkmark', () => {
@@ -33,6 +37,6 @@ describe('AutosaveIndicator component', () => {
 
   it('should show error state with warning message', () => {
     render(<AutosaveIndicator status="error" />)
-    expect(screen.getByText(/save failed/i)).toBeDefined()
+    expect(screen.getByText('saveFailed')).toBeDefined()
   })
 })

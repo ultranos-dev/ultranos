@@ -237,7 +237,8 @@ describe('SessionInfoCard', () => {
 
     const { SessionInfoCard } = await import('@/components/settings/SessionInfoCard')
     render(<SessionInfoCard />)
-    expect(screen.getByText(/Session Expiry/i)).toBeDefined()
+    // t('sessionExpiry') returns the key 'sessionExpiry' via the mock
+    expect(screen.getByText('sessionExpiry')).toBeDefined()
     // Should show a countdown value
     expect(screen.getByTestId('session-countdown')).toBeDefined()
   })
@@ -305,7 +306,7 @@ describe('MfaManagementCard', () => {
     setupAuthSession()
   })
 
-  it('shows "Enrolled" badge when TOTP is enrolled', async () => {
+  it('shows "totpEnrolled" badge key when TOTP is enrolled', async () => {
     mockListFactors.mockResolvedValue({
       data: { totp: [{ id: 'f1', factorType: 'totp', status: 'verified' }], phone: [] },
       error: null,
@@ -315,11 +316,11 @@ describe('MfaManagementCard', () => {
     render(<MfaManagementCard />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Enrolled')).toBeDefined()
+      expect(screen.getByText('totpEnrolled')).toBeDefined()
     })
   })
 
-  it('shows "Not Enrolled" badge when TOTP is not enrolled', async () => {
+  it('shows "totpNotEnrolled" badge key when TOTP is not enrolled', async () => {
     mockListFactors.mockResolvedValue({
       data: { totp: [], phone: [] },
       error: null,
@@ -329,11 +330,11 @@ describe('MfaManagementCard', () => {
     render(<MfaManagementCard />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Not Enrolled')).toBeDefined()
+      expect(screen.getByText('totpNotEnrolled')).toBeDefined()
     })
   })
 
-  it('shows Reconfigure TOTP button when enrolled', async () => {
+  it('shows reconfigureTotp button key when enrolled', async () => {
     mockListFactors.mockResolvedValue({
       data: { totp: [{ id: 'f1', factorType: 'totp', status: 'verified' }], phone: [] },
       error: null,
@@ -343,11 +344,11 @@ describe('MfaManagementCard', () => {
     render(<MfaManagementCard />)
 
     await vi.waitFor(() => {
-      expect(screen.getByRole('button', { name: /reconfigure totp/i })).toBeDefined()
+      expect(screen.getByRole('button', { name: 'reconfigureTotp' })).toBeDefined()
     })
   })
 
-  it('shows Enroll TOTP button when not enrolled', async () => {
+  it('shows enrollTotp button key when not enrolled', async () => {
     mockListFactors.mockResolvedValue({
       data: { totp: [], phone: [] },
       error: null,
@@ -357,18 +358,18 @@ describe('MfaManagementCard', () => {
     render(<MfaManagementCard />)
 
     await vi.waitFor(() => {
-      expect(screen.getByRole('button', { name: /enroll totp/i })).toBeDefined()
+      expect(screen.getByRole('button', { name: 'enrollTotp' })).toBeDefined()
     })
   })
 
-  it('shows offline warning when not connected', async () => {
+  it('shows mfaOffline key when not connected', async () => {
     const originalOnLine = navigator.onLine
     Object.defineProperty(navigator, 'onLine', { value: false, writable: true, configurable: true })
 
     const { MfaManagementCard } = await import('@/components/settings/MfaManagementCard')
     render(<MfaManagementCard />)
 
-    expect(screen.getByText(/offline/i)).toBeDefined()
+    expect(screen.getByText('mfaOffline')).toBeDefined()
 
     Object.defineProperty(navigator, 'onLine', { value: originalOnLine, writable: true, configurable: true })
   })

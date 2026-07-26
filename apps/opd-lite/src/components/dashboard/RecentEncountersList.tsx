@@ -7,6 +7,8 @@ import { db } from '@/lib/db'
 import { useEncounterStore } from '@/stores/encounter-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { Card } from '@/components/Card'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { CalendarClock } from '@ultranos/ui-kit/icons'
 
 interface RecentEncounter {
   id: string
@@ -129,23 +131,21 @@ export function RecentEncountersList() {
   if (encounters.length === 0) {
     return (
       <Card>
-        <h3 className="text-lg font-black text-foreground">{t('recentEncounters')}</h3>
-        <p className="mt-3 text-sm font-semibold text-muted-foreground">
-          {t('noEncountersYet')}
-        </p>
+        <h3 className="text-lg font-semibold text-foreground">{t('recentEncounters')}</h3>
+        <EmptyState size="sm" icon={CalendarClock} title={t('noEncountersYet')} />
       </Card>
     )
   }
 
   return (
     <Card>
-      <h3 className="text-lg font-black text-foreground">{t('recentEncounters')}</h3>
+      <h3 className="text-lg font-semibold text-foreground">{t('recentEncounters')}</h3>
       <ul className="mt-3 divide-y divide-border" role="list" aria-label={t('recentEncountersAria')}>
         {encounters.map((enc) => (
           <li key={enc.id}>
             <Link
               href={`/encounter/${enc.patientId}`}
-              className="flex items-center justify-between gap-3 py-3 transition-colors [@media(hover:hover)and(pointer:fine)]:hover:bg-muted rounded-lg ps-2 pe-2 -ms-2 -me-2"
+              className="flex items-center justify-between gap-3 py-3 transition-colors [@media(hover:hover)and(pointer:fine)]:hover:bg-muted rounded-xl ps-2 pe-2 -ms-2 -me-2"
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-foreground">
@@ -177,7 +177,7 @@ export function RecentEncountersList() {
             </Link>
             <Link
               href={`/patient/${enc.patientId}`}
-              className="block text-end text-xs font-semibold text-primary-500 hover:underline pe-2 pb-1 -mt-1"
+              className="block text-end text-xs font-semibold text-primary hover:underline pe-2 pb-1 -mt-1"
               aria-label={t('viewChartAria')}
             >
               {t('viewChart')}

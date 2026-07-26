@@ -17,7 +17,7 @@ interface AllergyBannerProps {
  * - Neutral (gray): no known allergies (NKA)
  * - Yellow (warning): allergy data unavailable (load error)
  *
- * CSS: sticky top, z-50 — always visible, never scrolls off.
+ * DOM position: renders first in the banner stack, never collapsed.
  * Accessibility: role="alert", aria-live="assertive" (warning/active states), "polite" (loading/NKA), contrast >= 4.5:1.
  */
 export function AllergyBanner({ patientId }: AllergyBannerProps) {

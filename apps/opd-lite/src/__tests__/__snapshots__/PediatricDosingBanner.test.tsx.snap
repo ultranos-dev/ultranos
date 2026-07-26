@@ -20,7 +20,7 @@ exports[`PediatricDosingBanner > renders correctly in RTL layout 1`] = `
           <div
             class=""
           >
-            Weight-based dosing not supported — calculate manually
+            Weight-based dosing not supported. Calculate manually.
           </div>
         </div>
       </div>

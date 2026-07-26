@@ -53,20 +53,18 @@ export function ClinicalDashboard() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Welcome message */}
+      {/* Greeting (page title is the shell BreadcrumbHeader, not an h1 here) */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        <p className="text-base font-semibold text-foreground">
           {t('welcome', { name: displayName })}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {displayRole}
         </p>
+        <p className="text-sm text-muted-foreground">{displayRole}</p>
       </div>
 
       {/* Primary CTAs */}
       <div className="flex items-center gap-3">
         <Button variant="primary" onClick={handleStartEncounter}>
-          {t('startEncounter')}
+          {t('findPatient')}
         </Button>
         <Button variant="outline" onClick={() => router.push('/register-patient')}>
           {t('registerNew')}
@@ -90,9 +88,9 @@ export function ClinicalDashboard() {
 
       {/* Summary cards grid */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <UnresolvedConflictsCard />
         <TodayEncountersCard />
         <PendingLabResultsCard />
-        <UnresolvedConflictsCard />
         <DuplicateReviewsCard />
       </section>
 

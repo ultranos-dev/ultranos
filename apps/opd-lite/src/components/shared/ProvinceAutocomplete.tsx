@@ -63,7 +63,7 @@ export function ProvinceAutocomplete({
   error,
 }: ProvinceAutocompleteProps) {
   const locale = useLocale()
-  const isRtl = locale === 'ar' || locale === 'prs'
+  const isRtl = locale === 'ar' || locale === 'prs' || locale === 'ps'
   const [query, setQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -165,7 +165,7 @@ export function ProvinceAutocomplete({
 
       <div className="relative">
         {value ? (
-          <div className="flex items-center min-h-[44px] rounded-lg border border-border bg-background px-3 py-2">
+          <div className="flex items-center min-h-[44px] rounded-xl border border-border bg-background px-3 py-2">
             <span className="flex-1 text-sm text-foreground">
               {getDisplayName(value)}
             </span>
@@ -197,7 +197,7 @@ export function ProvinceAutocomplete({
             aria-required={required}
             aria-invalid={!!error}
             autoComplete="off"
-            className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+            className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               error
                 ? 'border-destructive focus:border-destructive focus:ring-destructive'
                 : 'border-border focus:border-primary focus:ring-ring'

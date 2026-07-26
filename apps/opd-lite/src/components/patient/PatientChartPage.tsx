@@ -15,6 +15,7 @@ import {
   UUID_REGEX,
 } from '@/lib/patient-loader'
 import { Button } from '@/components/ui/Button'
+import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 
 import { DetailLayout } from '@ultranos/ui-kit/components/ui/detail-layout'
 
@@ -23,9 +24,7 @@ import { PatientBannerStack } from '@/components/patient/PatientBannerStack'
 import { PatientEditModal } from '@/components/patient/PatientEditModal'
 import { PatientContextRail } from '@/components/patient/PatientContextRail'
 import { EncounterHistoryList } from '@/components/patient/EncounterHistoryList'
-import { LabResultsList } from '@/components/clinical/LabResultsList'
-import { LabResultDetail } from '@/components/clinical/LabResultDetail'
-import type { LocalDiagnosticReport } from '@/lib/db'
+import { PatientResultTimeline } from '@/components/clinical/PatientResultTimeline'
 
 interface PatientChartPageProps {
   patientId: string
@@ -39,7 +38,6 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
   const [loading, setLoading] = useState(true)
   const [needsReauth, setNeedsReauth] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
-  const [selectedLabReport, setSelectedLabReport] = useState<LocalDiagnosticReport | null>(null)
   const [userRole, setUserRole] = useState<string>('DOCTOR')
 
   useEffect(() => {
@@ -127,7 +125,9 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
   if (loading) {
     return (
       <div className="mx-auto max-w-2xl flex flex-col gap-4">
-        <p className="font-semibold text-muted-foreground">{tPatient('loadingChart')}</p>
+        <Skeleton className="h-8 w-1/2" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-32 w-full" />
       </div>
     )
   }
@@ -179,25 +179,12 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
       }
     >
       <section aria-label={tPatient('encounterHistory')}>
-        <h2 className="mb-3 text-lg font-bold text-foreground">{tPatient('encounterHistory')}</h2>
+        <h2 className="mb-3 text-lg font-semibold text-foreground">{tPatient('encounterHistory')}</h2>
         <EncounterHistoryList patientId={patientId} />
       </section>
 
-      <section
-        className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
-        aria-label={tPatient('labResultsSection')}
-      >
-        {selectedLabReport ? (
-          <LabResultDetail
-            report={selectedLabReport}
-            onBack={() => setSelectedLabReport(null)}
-          />
-        ) : (
-          <LabResultsList
-            patientId={patientId}
-            onSelectReport={setSelectedLabReport}
-          />
-        )}
+      <section aria-label={tPatient('labResultsSection')}>
+        <PatientResultTimeline patientId={patientId} />
       </section>
 
       <PatientEditModal

@@ -81,7 +81,7 @@ export function SocialInfoSection({
             id="displacement-category"
             value={displacementCategory}
             onChange={(e) => onDisplacementCategoryChange(e.target.value as DisplacementCategory | '')}
-            className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
           >
             <option value="">{t('displacementNone')}</option>
             {DISPLACEMENT_OPTIONS.map((opt) => (
@@ -107,7 +107,7 @@ export function SocialInfoSection({
             id="nationality"
             value={nationality}
             onChange={(e) => onNationalityChange(e.target.value)}
-            className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
           >
             <option value="">{t('nationalitySelectPlaceholder')}</option>
             {NATIONALITY_OPTIONS.map((opt) => (
@@ -134,7 +134,7 @@ export function SocialInfoSection({
             type="text"
             dir="auto"
             maxLength={200}
-            className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
             placeholder={t('occupationPlaceholder')}
             value={occupation}
             onChange={(e) => onOccupationChange(e.target.value)}
@@ -156,7 +156,7 @@ export function SocialInfoSection({
             id="education-level"
             value={educationLevel}
             onChange={(e) => onEducationLevelChange(e.target.value as EducationLevel | '')}
-            className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
           >
             <option value="">{t('educationSelectPlaceholder')}</option>
             {EDUCATION_OPTIONS.map((opt) => (

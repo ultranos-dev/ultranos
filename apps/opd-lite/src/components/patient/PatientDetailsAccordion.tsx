@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { formatDate } from '@ultranos/ui-kit'
 import type { FhirPatient, PatientAddress } from '@ultranos/shared-types'
 import { ChevronDown } from '@ultranos/ui-kit/icons'
@@ -33,7 +33,7 @@ function addressesMatch(
 
 /** Format ISO date string to locale date. */
 function formatRegisteredDate(iso: string | undefined, locale: 'en' | 'ar' | 'prs' | 'ps'): string {
-  if (!iso) return '--'
+  if (!iso) return ''
   try {
     return formatDate(iso, locale)
   } catch {
@@ -59,6 +59,7 @@ export function PatientDetailsAccordion({
   patient,
 }: PatientDetailsAccordionProps) {
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
+  const t = useTranslations('patient')
   const [isOpen, setIsOpen] = useState(false)
 
   const ext = patient._ultranos
@@ -78,7 +79,7 @@ export function PatientDetailsAccordion({
         aria-controls="patient-details-content"
       >
         <span className="text-sm font-semibold text-foreground">
-          Patient Details
+          {t('detailsTitle')}
         </span>
         <ChevronDown
           className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
@@ -93,27 +94,27 @@ export function PatientDetailsAccordion({
         <div id="patient-details-content" className="px-5 pb-5">
           {/* ── Address & Geography ─────────────────────── */}
           <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-            Address &amp; Geography
+            {t('addressGeography')}
           </h4>
 
           <dl className="space-y-1 text-sm text-foreground">
             <div className="flex gap-2">
-              <dt className="font-medium text-muted-foreground shrink-0">Origin:</dt>
-              <dd>{originStr ?? '--'}</dd>
+              <dt className="font-medium text-muted-foreground shrink-0">{t('addressOriginLabel')}:</dt>
+              <dd>{originStr ?? t('notProvided')}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="font-medium text-muted-foreground shrink-0">Current:</dt>
+              <dt className="font-medium text-muted-foreground shrink-0">{t('addressCurrentLabel')}:</dt>
               <dd>
                 {isSameAddress
-                  ? 'Same as origin'
-                  : currentStr ?? '--'}
+                  ? t('addressSameAsOrigin')
+                  : currentStr ?? t('notProvided')}
               </dd>
             </div>
           </dl>
 
           {ext.isNomadic && (
             <span className="mt-2 inline-block rounded-full bg-warning/20 px-2.5 py-0.5 text-xs font-semibold text-warning">
-              Nomadic
+              {t('nomadicBadge')}
             </span>
           )}
 
@@ -121,13 +122,13 @@ export function PatientDetailsAccordion({
 
           {/* ── Identity & Records ──────────────────────── */}
           <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-            Identity &amp; Records
+            {t('identityRecords')}
           </h4>
 
           <dl className="space-y-1 text-sm text-foreground">
             {/* Tier */}
             <div className="flex items-center gap-2">
-              <dt className="font-medium text-muted-foreground shrink-0">Tier:</dt>
+              <dt className="font-medium text-muted-foreground shrink-0">{t('tierLabel')}:</dt>
               <dd>
                 <span
                   className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
@@ -143,31 +144,31 @@ export function PatientDetailsAccordion({
 
             {/* Registered */}
             <div className="flex gap-2">
-              <dt className="font-medium text-muted-foreground shrink-0">Registered:</dt>
+              <dt className="font-medium text-muted-foreground shrink-0">{t('registeredLabel')}:</dt>
               <dd>{formatRegisteredDate(ext.createdAt, locale)}</dd>
             </div>
 
             {/* Consent version */}
             <div className="flex gap-2">
-              <dt className="font-medium text-muted-foreground shrink-0">Consent:</dt>
-              <dd>{ext.consentVersion ?? '--'}</dd>
+              <dt className="font-medium text-muted-foreground shrink-0">{t('consentLabel')}:</dt>
+              <dd>{ext.consentVersion ?? t('notProvided')}</dd>
             </div>
 
             {/* Identifiers */}
             {ext.identifiers && ext.identifiers.length > 0 && (
               <div>
-                <dt className="font-medium text-muted-foreground mb-1">Identifiers:</dt>
+                <dt className="font-medium text-muted-foreground mb-1">{t('identifiersLabel')}:</dt>
                 <dd>
                   <ul className="ms-4 list-disc space-y-0.5 text-xs text-muted-foreground">
                     {ext.identifiers.map((ident, idx) => (
                       <li key={idx}>
                         <span className="font-medium">{ident.displayType}</span>
-                        {' — '}
+                        {' · '}
                         {maskHash(ident.valueHash)}
                         {/* Tazkira fields */}
                         {(ident.jild || ident.safa || ident.shumara) && (
                           <span className="ms-1 text-muted-foreground">
-                            (Jild: {ident.jild ?? '--'} / Safa: {ident.safa ?? '--'} / Shumara: {ident.shumara ?? '--'})
+                            ({t('tazkiraRef', { jild: ident.jild ?? '', safa: ident.safa ?? '', shumara: ident.shumara ?? '' })})
                           </span>
                         )}
                       </li>
@@ -179,7 +180,7 @@ export function PatientDetailsAccordion({
 
             {/* Status */}
             <div className="flex items-center gap-2">
-              <dt className="font-medium text-muted-foreground shrink-0">Status:</dt>
+              <dt className="font-medium text-muted-foreground shrink-0">{t('statusLabel')}:</dt>
               <dd>
                 <span
                   className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
@@ -188,14 +189,14 @@ export function PatientDetailsAccordion({
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >
-                  {ext.isActive ? 'Active' : 'Inactive'}
+                  {ext.isActive ? t('statusActive') : t('statusInactive')}
                 </span>
               </dd>
             </div>
 
             {/* Biometric */}
             <div className="flex items-center gap-2">
-              <dt className="font-medium text-muted-foreground shrink-0">Biometric:</dt>
+              <dt className="font-medium text-muted-foreground shrink-0">{t('biometricLabel')}:</dt>
               <dd>
                 <span
                   className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
@@ -204,7 +205,7 @@ export function PatientDetailsAccordion({
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >
-                  {ext.biometricFingerprintHash ? 'Enrolled' : 'Not enrolled'}
+                  {ext.biometricFingerprintHash ? t('biometricEnrolled') : t('biometricNotEnrolled')}
                 </span>
               </dd>
             </div>

@@ -42,7 +42,7 @@ function safeResourceLabel(resourceType: string): string {
 function safeDescription(entry: SyncQueueEntry): string {
   const label = safeResourceLabel(entry.resourceType)
   const shortId = entry.resourceId.slice(0, 8)
-  return `${label} — ID ${shortId}`
+  return `${label} · ID ${shortId}`
 }
 
 /** Generic failure reason — never expose server internals or PHI (AC: 9). */
@@ -293,7 +293,7 @@ export function SyncDashboard() {
       : phase === 'complete'
         ? 'Sync complete'
         : phase === 'error'
-          ? 'Sync failed — will retry'
+          ? 'Sync failed, will retry'
           : null
 
   return (
@@ -376,7 +376,7 @@ export function SyncDashboard() {
         {/* Queue items grouped by resource type (AC: 2, 3) */}
         <div className="max-h-[60vh] overflow-y-auto" data-testid="sync-item-list">
           {queueItems.length === 0 ? (
-            <EmptyState title="All synced — no pending items" size="sm" />
+            <EmptyState title="All synced, no pending items" size="sm" />
           ) : (
             groups.map((group) => {
               const isExpanded = expandedGroups.has(group.resourceType)

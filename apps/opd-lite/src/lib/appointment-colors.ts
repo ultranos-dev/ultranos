@@ -14,9 +14,9 @@ export const SERVICE_TYPE_COLORS: Record<string, string> = {
 /** Slot border/background classes by appointment status (used in AppointmentSlot) */
 export const STATUS_COLORS: Record<string, string> = {
   free: 'bg-success/10 border-success/20 hover:bg-success/20',
-  proposed: 'bg-primary/10 border-primary/20 hover:bg-primary',
-  pending: 'bg-primary/10 border-primary/20 hover:bg-primary',
-  booked: 'bg-primary/10 border-primary/20 hover:bg-primary',
+  proposed: 'bg-primary/10 border-primary/20 hover:bg-primary/20',
+  pending: 'bg-primary/10 border-primary/20 hover:bg-primary/20',
+  booked: 'bg-primary/10 border-primary/20 hover:bg-primary/20',
   arrived: 'bg-warning/10 border-warning/20 hover:bg-warning/20',
   fulfilled: 'bg-muted border-border',
   cancelled: 'bg-destructive/10 border-destructive/20',
@@ -26,7 +26,7 @@ export const STATUS_COLORS: Record<string, string> = {
 
 /** Pill badge colors for appointment status labels (used in AppointmentSlot) */
 export const STATUS_BADGE_COLORS: Record<string, string> = {
-  booked: 'bg-primary text-primary',
+  booked: 'bg-primary/20 text-primary',
   arrived: 'bg-warning/20 text-warning',
   fulfilled: 'bg-secondary text-foreground',
   cancelled: 'bg-destructive/20 text-destructive',

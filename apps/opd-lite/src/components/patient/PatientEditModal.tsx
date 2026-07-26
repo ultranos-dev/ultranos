@@ -440,7 +440,7 @@ export function PatientEditModal({
   if (!open) return null
 
   const inputClass = (error?: string) =>
-    `w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+    `w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
       error
         ? 'border-destructive focus:border-destructive focus:ring-destructive'
         : 'border-border focus:border-primary focus:ring-ring'
@@ -465,7 +465,7 @@ export function PatientEditModal({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             aria-label={t('close')}
           >
             <X className="h-5 w-5" aria-hidden="true" />
@@ -511,7 +511,7 @@ export function PatientEditModal({
                   </span>
                 </label>
                 {hasNationalId ? (
-                  <p className="min-h-[44px] flex items-center rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  <p className="min-h-[44px] flex items-center rounded-xl border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
                     {t('nationalId')} ••••••
                   </p>
                 ) : (
@@ -520,7 +520,7 @@ export function PatientEditModal({
                     type="text"
                     inputMode="text"
                     maxLength={200}
-                    className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                     placeholder={t('nationalIdPlaceholder')}
                     value={nationalId}
                     onChange={(e) => setNationalId(e.target.value)}
@@ -646,7 +646,7 @@ export function PatientEditModal({
                   type="tel"
                   dir="ltr"
                   inputMode="tel"
-                  className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                   placeholder={t('phonePlaceholder')}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -670,7 +670,7 @@ export function PatientEditModal({
                   onChange={(e) =>
                     setPreferredLanguage(e.target.value as 'en' | 'ar' | 'prs')
                   }
-                  className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                 >
                   <option value="en">English</option>
                   <option value="ar">{isRtl ? '\u0627\u0644\u0639\u0631\u0628\u064A\u0629' : 'Arabic'}</option>
@@ -720,7 +720,7 @@ export function PatientEditModal({
                 onChange={(e) => setBloodGroup(e.target.value)}
                 disabled={bloodGroupLocked}
                 aria-disabled={bloodGroupLocked}
-                className={`w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring ${
+                className={`w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring ${
                   bloodGroupLocked ? 'bg-muted text-muted-foreground cursor-not-allowed' : ''
                 }`}
               >
@@ -741,7 +741,7 @@ export function PatientEditModal({
           {/* Error banner */}
           {submitError && (
             <div
-              className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
               role="alert"
             >
               {submitError}

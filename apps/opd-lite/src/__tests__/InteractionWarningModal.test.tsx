@@ -4,6 +4,13 @@ import { InteractionWarningModal } from '@/components/modals/InteractionWarningM
 import { DrugInteractionSeverity } from '@ultranos/shared-types'
 import type { InteractionResult } from '@/services/interactionService'
 
+// next-intl context isn't provided in unit tests; return the key so assertions target keys.
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, values?: Record<string, unknown>) =>
+    values ? `${key} ${JSON.stringify(values)}` : key,
+  useLocale: () => 'en',
+}))
+
 const severeInteraction: InteractionResult = {
   severity: DrugInteractionSeverity.CONTRAINDICATED,
   drugA: 'Warfarin',
@@ -18,6 +25,13 @@ const majorInteraction: InteractionResult = {
   description: 'NSAIDs increase anticoagulant effect and risk of GI bleeding with warfarin',
 }
 
+const allergyInteraction: InteractionResult = {
+  severity: DrugInteractionSeverity.ALLERGY_MATCH,
+  drugA: 'Amoxicillin',
+  drugB: 'Penicillin allergy',
+  description: 'Patient has a documented allergy to this medication class',
+}
+
 describe('InteractionWarningModal', () => {
   it('renders when open with interactions', () => {
     render(
@@ -28,7 +42,7 @@ describe('InteractionWarningModal', () => {
         onOverride={vi.fn()}
       />,
     )
-    expect(screen.getByText(/Contraindication Detected/i)).toBeInTheDocument()
+    expect(screen.getByText('contraindicationDetected')).toBeInTheDocument()
   })
 
   it('does not render when open is false', () => {
@@ -40,7 +54,7 @@ describe('InteractionWarningModal', () => {
         onOverride={vi.fn()}
       />,
     )
-    expect(screen.queryByText(/Contraindication Detected/i)).not.toBeInTheDocument()
+    expect(screen.queryByText('contraindicationDetected')).not.toBeInTheDocument()
   })
 
   it('displays the severity label for each interaction', () => {
@@ -54,6 +68,26 @@ describe('InteractionWarningModal', () => {
     )
     expect(screen.getByText('CONTRAINDICATED')).toBeInTheDocument()
     expect(screen.getByText('MAJOR')).toBeInTheDocument()
+  })
+
+  it('renders ALLERGY_MATCH with a distinct highest-severity treatment (not MAJOR fallthrough)', () => {
+    render(
+      <InteractionWarningModal
+        open={true}
+        interactions={[allergyInteraction]}
+        onCancel={vi.fn()}
+        onOverride={vi.fn()}
+      />,
+    )
+    // The mock returns the key 'severityAllergy', not the raw enum, and not "MAJOR"
+    const badge = screen.getByText('severityAllergy')
+    expect(badge).toBeInTheDocument()
+    expect(screen.queryByText('MAJOR')).not.toBeInTheDocument()
+    // Strongest destructive treatment: solid fill via -foreground pair
+    expect(badge.className).toMatch(/bg-destructive\b/)
+    expect(badge.className).toMatch(/text-destructive-foreground/)
+    // An allergy match is a contraindication-tier warning
+    expect(screen.getByText('contraindicationDetected')).toBeInTheDocument()
   })
 
   it('displays the interaction description', () => {
@@ -91,7 +125,7 @@ describe('InteractionWarningModal', () => {
         onOverride={vi.fn()}
       />,
     )
-    fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
+    fireEvent.click(screen.getByRole('button', { name: /cancelPrescription/i }))
     expect(onCancel).toHaveBeenCalledOnce()
   })
 
@@ -104,7 +138,7 @@ describe('InteractionWarningModal', () => {
         onOverride={vi.fn()}
       />,
     )
-    const overrideBtn = screen.getByRole('button', { name: /proceed anyway/i })
+    const overrideBtn = screen.getByRole('button', { name: /proceedAnyway/i })
     expect(overrideBtn).toBeDisabled()
   })
 
@@ -117,9 +151,9 @@ describe('InteractionWarningModal', () => {
         onOverride={vi.fn()}
       />,
     )
-    const input = screen.getByPlaceholderText(/justification/i)
+    const input = screen.getByPlaceholderText(/justificationPlaceholder/i)
     fireEvent.change(input, { target: { value: 'Benefit outweighs risk for this patient' } })
-    const overrideBtn = screen.getByRole('button', { name: /proceed anyway/i })
+    const overrideBtn = screen.getByRole('button', { name: /proceedAnyway/i })
     expect(overrideBtn).not.toBeDisabled()
   })
 
@@ -133,9 +167,9 @@ describe('InteractionWarningModal', () => {
         onOverride={onOverride}
       />,
     )
-    const input = screen.getByPlaceholderText(/justification/i)
+    const input = screen.getByPlaceholderText(/justificationPlaceholder/i)
     fireEvent.change(input, { target: { value: 'Patient needs both medications' } })
-    fireEvent.click(screen.getByRole('button', { name: /proceed anyway/i }))
+    fireEvent.click(screen.getByRole('button', { name: /proceedAnyway/i }))
     expect(onOverride).toHaveBeenCalledWith('Patient needs both medications')
   })
 
@@ -148,7 +182,7 @@ describe('InteractionWarningModal', () => {
         onOverride={vi.fn()}
       />,
     )
-    const heading = screen.getByText(/Contraindication Detected/i)
+    const heading = screen.getByText('contraindicationDetected')
     expect(heading.className).toMatch(/destructive|danger/i)
   })
 

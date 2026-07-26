@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { useAppointments } from '@/hooks/useAppointments'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { PatientSummaryPopup } from './PatientSummaryPopup'
+import { STATUS_BADGE_COLORS } from '@/lib/appointment-colors'
 import type {
   FhirAppointmentZod,
   AppointmentServiceType,
@@ -15,14 +16,6 @@ function minutesElapsed(isoTimestamp: string): number {
   const created = new Date(isoTimestamp).getTime()
   const now = Date.now()
   return Math.max(0, Math.floor((now - created) / 60_000))
-}
-
-const STATUS_BADGE_COLORS: Record<string, string> = {
-  booked: 'bg-primary text-primary',
-  arrived: 'bg-warning/20 text-warning',
-  fulfilled: 'bg-secondary text-foreground',
-  cancelled: 'bg-destructive/20 text-destructive',
-  noshow: 'bg-destructive/20 text-destructive',
 }
 
 export function WalkInQueue() {
@@ -91,7 +84,7 @@ export function WalkInQueue() {
             value={patientSearch}
             onChange={(e) => setPatientSearch(e.target.value)}
             placeholder={t('selectPatient')}
-            className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
           />
 
           <div className="flex gap-3">
@@ -102,7 +95,7 @@ export function WalkInQueue() {
                 value="walk-in"
                 checked={walkInType === 'walk-in'}
                 onChange={() => setWalkInType('walk-in')}
-                className="text-primary-600"
+                className="text-primary"
               />
               {t('walkIn')}
             </label>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { formatDate } from '@ultranos/ui-kit'
 import { ConsentRenewalModal } from './ConsentRenewalModal'
@@ -16,12 +16,10 @@ interface ConsentExpiryBannerProps {
  * Amber warning banner shown on patient views when the patient's consent
  * is approaching expiry. Includes a "Renew Consent" button that opens
  * the renewal modal.
- *
- * TODO i18n: add keys under "consent" namespace:
- *   expiryWarning, renewConsent
  */
 export function ConsentExpiryBanner({ patientId, expiryDate }: ConsentExpiryBannerProps) {
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
+  const t = useTranslations('consent')
   const [showModal, setShowModal] = useState(false)
   const [renewed, setRenewed] = useState(false)
 
@@ -34,8 +32,7 @@ export function ConsentExpiryBanner({ patientId, expiryDate }: ConsentExpiryBann
       <Alert variant="warning" role="alert" className="mb-4">
         <div className="flex items-center justify-between gap-3">
           <p>
-            {/* TODO: t('consent.expiryWarning', { date: formattedDate }) */}
-            Consent expires on {formattedDate}
+            {t('expiryWarning', { date: formattedDate })}
           </p>
           <Button
             variant="warning"
@@ -43,8 +40,7 @@ export function ConsentExpiryBanner({ patientId, expiryDate }: ConsentExpiryBann
             type="button"
             onClick={() => setShowModal(true)}
           >
-            {/* TODO: t('consent.renewConsent') */}
-            Renew Consent
+            {t('renewConsent')}
           </Button>
         </div>
       </Alert>

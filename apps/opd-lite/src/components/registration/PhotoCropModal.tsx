@@ -31,7 +31,7 @@ export function PhotoCropModal({ open, rawDataUrl, onConfirm, onCancel }: PhotoC
         </DialogHeader>
 
         <div className="px-5 pb-3">
-          <div className="flex gap-2.5 rounded-lg bg-primary/10 border border-primary/20 px-3 py-2.5">
+          <div className="flex gap-2.5 rounded-xl bg-primary/10 border border-primary/20 px-3 py-2.5">
             <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
             <div>
               <p className="text-xs font-semibold text-foreground mb-1">{t('photoCropGuidelinesTitle')}</p>

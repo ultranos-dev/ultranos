@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/Card'
 
 export function MfaManagementCard() {
+  const t = useTranslations('settings')
   const [isEnrolled, setIsEnrolled] = useState<boolean | null>(null)
   const [existingFactorId, setExistingFactorId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -82,7 +84,7 @@ export function MfaManagementCard() {
         factorId: existingFactorId,
       })
       if (challengeErr || !challenge) {
-        if (activeRef.current) setError('Failed to create MFA challenge')
+        if (activeRef.current) setError(t('failedMfaChallenge'))
         return
       }
       const { error: verifyErr } = await supabase.auth.mfa.verify({
@@ -91,7 +93,7 @@ export function MfaManagementCard() {
         code: confirmingCode,
       })
       if (verifyErr) {
-        if (activeRef.current) setError('Current TOTP code is incorrect')
+        if (activeRef.current) setError(t('incorrectTotp'))
         return
       }
       if (!activeRef.current) return
@@ -100,7 +102,7 @@ export function MfaManagementCard() {
       setConfirmingCode('')
       await startEnrollment()
     } catch {
-      if (activeRef.current) setError('Verification failed')
+      if (activeRef.current) setError(t('verificationError'))
     }
   }, [existingFactorId, confirmingCode])
 
@@ -119,7 +121,7 @@ export function MfaManagementCard() {
       })
       if (!activeRef.current) return
       if (enrollError) {
-        setError('Failed to start TOTP enrollment')
+        setError(t('failedEnrollment'))
         setEnrolling(false)
         return
       }
@@ -127,7 +129,7 @@ export function MfaManagementCard() {
       setFactorId(factor.id)
     } catch {
       if (activeRef.current) {
-        setError('Failed to start TOTP enrollment')
+        setError(t('failedEnrollment'))
         setEnrolling(false)
       }
     }
@@ -144,7 +146,7 @@ export function MfaManagementCard() {
       })
       if (!activeRef.current) return
       if (challengeError) {
-        setError('Verification failed — check your code')
+        setError(t('verificationFailed'))
         return
       }
       setIsEnrolled(true)
@@ -154,7 +156,7 @@ export function MfaManagementCard() {
       setFactorId(null)
       setVerifyCode('')
     } catch {
-      if (activeRef.current) setError('Verification failed')
+      if (activeRef.current) setError(t('verificationError'))
     }
   }, [factorId, verifyCode])
 
@@ -179,27 +181,27 @@ export function MfaManagementCard() {
 
   return (
     <Card>
-      <h2 className="mb-4 text-sm font-semibold text-foreground">MFA Management</h2>
+      <h2 className="mb-4 text-sm font-semibold text-foreground">{t('mfaManagement')}</h2>
 
       {!isOnline && (
         <p className="mb-3 rounded-md bg-warning/10 px-3 py-2 text-xs text-warning">
-          MFA management requires an active connection. You are currently offline.
+          {t('mfaOffline')}
         </p>
       )}
 
-      {loading && <p className="text-sm text-muted-foreground">Loading MFA status...</p>}
+      {loading && <p className="text-sm text-muted-foreground">{t('mfaLoading')}</p>}
 
       {!loading && isEnrolled !== null && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <p className="text-xs font-medium text-muted-foreground">TOTP Status</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('totpStatus')}</p>
             {isEnrolled ? (
               <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-medium text-success">
-                Enrolled
+                {t('totpEnrolled')}
               </span>
             ) : (
               <span className="rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive">
-                Not Enrolled
+                {t('totpNotEnrolled')}
               </span>
             )}
           </div>
@@ -208,32 +210,32 @@ export function MfaManagementCard() {
             <Button
               variant="primary"
               onClick={isEnrolled ? handleStartReconfigure : startEnrollment}
-              aria-label={isEnrolled ? 'Reconfigure TOTP' : 'Enroll TOTP'}
+              aria-label={isEnrolled ? t('reconfigureTotp') : t('enrollTotp')}
             >
-              {isEnrolled ? 'Reconfigure TOTP' : 'Enroll TOTP'}
+              {isEnrolled ? t('reconfigureTotp') : t('enrollTotp')}
             </Button>
           )}
 
           {confirming && (
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground">
-                Enter your current TOTP code to confirm reconfiguration:
+                {t('confirmReconfigurePrompt')}
               </p>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={confirmingCode}
                   onChange={(e) => setConfirmingCode(e.target.value)}
-                  placeholder="Current 6-digit code"
+                  placeholder={t('currentTotpPlaceholder')}
                   className="rounded-xl border border-border px-3 py-1.5 text-sm"
                   maxLength={6}
-                  aria-label="Current TOTP code"
+                  aria-label={t('currentTotpAriaLabel')}
                 />
                 <Button variant="primary" disabled={confirmingCode.length < 6} onClick={handleConfirmCurrentTotp}>
-                  Confirm
+                  {t('confirm')}
                 </Button>
                 <Button variant="secondary" onClick={handleCancel}>
-                  Cancel
+                  {t('cancel')}
                 </Button>
               </div>
             </div>
@@ -242,24 +244,24 @@ export function MfaManagementCard() {
           {enrolling && qrCode && (
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground">
-                Scan this QR code with your authenticator app:
+                {t('scanQrPrompt')}
               </p>
-              <img src={qrCode} alt="TOTP QR Code" className="h-48 w-48" />
+              <img src={qrCode} alt={t('totpQrAlt')} className="h-48 w-48" />
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={verifyCode}
                   onChange={(e) => setVerifyCode(e.target.value)}
-                  placeholder="Enter 6-digit code"
+                  placeholder={t('enterCodePlaceholder')}
                   className="rounded-xl border border-border px-3 py-1.5 text-sm"
                   maxLength={6}
-                  aria-label="TOTP verification code"
+                  aria-label={t('totpVerifyAriaLabel')}
                 />
                 <Button variant="primary" disabled={verifyCode.length < 6} onClick={handleVerify}>
-                  Verify
+                  {t('verify')}
                 </Button>
                 <Button variant="secondary" onClick={handleCancel}>
-                  Cancel
+                  {t('cancel')}
                 </Button>
               </div>
             </div>

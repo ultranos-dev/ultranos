@@ -170,10 +170,13 @@ describe('TodayEncountersCard', () => {
 
   it('renders with zero encounters', async () => {
     // Card renders t('todayEncounters') — mock returns the i18n key
+    // After loading state resolves, the count 0 becomes visible
     const { TodayEncountersCard } = await import('@/components/dashboard/TodayEncountersCard')
     render(<TodayEncountersCard />)
     expect(screen.getByText('todayEncounters')).toBeDefined()
-    expect(screen.getByText('0')).toBeDefined()
+    await vi.waitFor(() => {
+      expect(screen.getByText('0')).toBeDefined()
+    })
   })
 
   it('shows count when encounters exist', async () => {
@@ -260,10 +263,13 @@ describe('UnresolvedConflictsCard', () => {
 
   it('renders with zero conflicts', async () => {
     // Card renders t('unresolvedConflicts') — mock returns the i18n key
+    // After loading state resolves, the count 0 becomes visible
     const { UnresolvedConflictsCard } = await import('@/components/dashboard/UnresolvedConflictsCard')
     render(<UnresolvedConflictsCard />)
     expect(screen.getByText('unresolvedConflicts')).toBeDefined()
-    expect(screen.getByText('0')).toBeDefined()
+    await vi.waitFor(() => {
+      expect(screen.getByText('0')).toBeDefined()
+    })
   })
 
   it('shows physician review badge when conflicts exist', async () => {
@@ -408,11 +414,11 @@ describe('ClinicalDashboard', () => {
     expect(screen.getByText('Doctor')).toBeDefined()
   })
 
-  it('renders Start New Encounter button', async () => {
-    // ClinicalDashboard renders t('startEncounter') — mock returns the i18n key 'startEncounter'.
+  it('renders Find patient button', async () => {
+    // ClinicalDashboard renders t('findPatient') — mock returns the i18n key 'findPatient'.
     const { ClinicalDashboard } = await import('@/components/dashboard/ClinicalDashboard')
     render(<ClinicalDashboard />)
-    expect(screen.getByText('startEncounter')).toBeDefined()
+    expect(screen.getByText('findPatient')).toBeDefined()
   })
 
   it('renders inline patient search', async () => {

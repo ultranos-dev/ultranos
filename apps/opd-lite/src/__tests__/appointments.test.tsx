@@ -52,7 +52,7 @@ vi.mock('next-intl', () => ({
       slotTaken: 'This slot has been taken',
       noAppointments: 'No appointments scheduled',
       noWalkIns: 'No walk-in patients',
-      schedulingConflict: 'Scheduling conflict detected — please review',
+      schedulingConflict: 'Scheduling conflict detected. Please review.',
       doubleBookWarning: 'Double-booking detected for this time slot',
     }
     return (key: string, params?: Record<string, unknown>) => {

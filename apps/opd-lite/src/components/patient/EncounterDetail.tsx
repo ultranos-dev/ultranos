@@ -1,6 +1,6 @@
 'use client'
 
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { formatDateTime, formatTime } from '@ultranos/ui-kit'
 import { useEncounterDetailData, formatVital } from '@/components/patient/useEncounterDetailData'
 
@@ -12,12 +12,14 @@ interface EncounterDetailProps {
 
 export function EncounterDetail({ encounterId, encounterDate, patientId }: EncounterDetailProps) {
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
+  const t = useTranslations('encounter')
+  const tCommon = useTranslations('common')
   const { data, loading } = useEncounterDetailData(encounterId, patientId, { encounterDate })
 
   if (loading) {
     return (
       <div className="border-t border-border p-4" data-testid="encounter-detail-loading">
-        <p className="text-sm text-muted-foreground">Loading details...</p>
+        <p className="text-sm text-muted-foreground">{t('loadingDetails')}</p>
       </div>
     )
   }
@@ -25,7 +27,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
   if (!data) {
     return (
       <div className="border-t border-border p-4">
-        <p className="text-sm text-muted-foreground">Unable to load encounter details.</p>
+        <p className="text-sm text-muted-foreground">{t('unableToLoadDetails')}</p>
       </div>
     )
   }
@@ -39,7 +41,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
       {data.allergiesAtVisit.length > 0 && (
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wide text-destructive">
-            Allergies at Time of Visit
+            {t('allergiesAtVisit')}
           </h4>
           <div className="mt-1 flex flex-wrap gap-1">
             {data.allergiesAtVisit.map((a) => (
@@ -48,7 +50,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
                 className="inline-flex rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-semibold text-destructive"
                 dir="auto"
               >
-                {a._ultranos?.substanceFreeText || a.code?.text || 'Unknown'}
+                {a._ultranos?.substanceFreeText || a.code?.text || tCommon('unknown')}
               </span>
             ))}
           </div>
@@ -59,7 +61,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
       {data.vitals.length > 0 && (
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-            Vital Signs
+            {t('vitalSigns')}
           </h4>
           <div className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {data.vitals.map((obs) => {
@@ -83,7 +85,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
       {data.allSoapEntries.length > 0 && (
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-            SOAP Notes
+            {t('soapNotes')}
           </h4>
           <div className="mt-1 space-y-4">
             {data.allSoapEntries.map((entry) => (
@@ -92,10 +94,10 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
                 <div className="mb-2 flex items-center gap-2">
                   {entry.source === 'AI_GENERATED' && (
                     <span
-                      className="inline-flex rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary"
+                      className="inline-flex rounded-full bg-primary/20 px-2 py-0.5 text-xs font-bold text-primary"
                       title={entry.aiModelVersion ? `Model: ${entry.aiModelVersion}` : undefined}
                     >
-                      AI Generated
+                      {t('aiGenerated')}
                     </span>
                   )}
                   {entry.source === 'AI_CONFIRMED' && (
@@ -103,7 +105,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
                       className="inline-flex rounded-full bg-success/20 px-2 py-0.5 text-xs font-bold text-success"
                       title={entry.confirmedBy ? `Confirmed by: ${entry.confirmedBy}${entry.confirmedAt ? ` at ${formatDateTime(entry.confirmedAt, locale)}` : ''}` : undefined}
                     >
-                      AI Confirmed
+                      {t('aiConfirmed')}
                     </span>
                   )}
                   <span className="text-xs text-muted-foreground">
@@ -113,25 +115,25 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
                 <div className="space-y-1">
                   {entry.subjective && (
                     <div>
-                      <span className="text-xs font-bold text-muted-foreground">S — Subjective</span>
+                      <span className="text-xs font-bold text-muted-foreground">{t('sSubjective')}</span>
                       <p className="text-sm text-foreground" dir="auto">{entry.subjective}</p>
                     </div>
                   )}
                   {entry.objective && (
                     <div>
-                      <span className="text-xs font-bold text-muted-foreground">O — Objective</span>
+                      <span className="text-xs font-bold text-muted-foreground">{t('oObjective')}</span>
                       <p className="text-sm text-foreground" dir="auto">{entry.objective}</p>
                     </div>
                   )}
                   {entry.assessment && (
                     <div>
-                      <span className="text-xs font-bold text-muted-foreground">A — Assessment</span>
+                      <span className="text-xs font-bold text-muted-foreground">{t('aAssessment')}</span>
                       <p className="text-sm text-foreground" dir="auto">{entry.assessment}</p>
                     </div>
                   )}
                   {entry.plan && (
                     <div>
-                      <span className="text-xs font-bold text-muted-foreground">P — Plan</span>
+                      <span className="text-xs font-bold text-muted-foreground">{t('pPlan')}</span>
                       <p className="text-sm text-foreground" dir="auto">{entry.plan}</p>
                     </div>
                   )}
@@ -146,7 +148,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
       {data.diagnoses.length > 0 && (
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-            Diagnoses
+            {t('diagnoses')}
           </h4>
           <ul className="mt-1 space-y-1">
             {data.diagnoses.map((c) => (
@@ -159,7 +161,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
                 <span className="font-semibold">
                   {c.code?.coding?.[0]?.code && `[${c.code.coding[0].code}] `}
                 </span>
-                {c.code?.text || c.code?.coding?.[0]?.display || 'Unspecified'}
+                {c.code?.text || c.code?.coding?.[0]?.display || t('unspecified')}
               </li>
             ))}
           </ul>
@@ -170,7 +172,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
       {data.prescriptions.length > 0 && (
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-            Prescriptions
+            {t('prescriptions')}
           </h4>
           <ul className="mt-1 space-y-1">
             {data.prescriptions.map((rx) => (
@@ -181,11 +183,11 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
                 data-testid="prescription-item"
               >
                 <span className="font-semibold">
-                  {rx.medicationCodeableConcept?.text || 'Unknown medication'}
+                  {rx.medicationCodeableConcept?.text || t('unknownMedication')}
                 </span>
                 {rx.dosageInstruction?.[0]?.text && (
                   <span className="ms-2 text-muted-foreground">
-                    — {rx.dosageInstruction[0].text}
+                    · {rx.dosageInstruction[0].text}
                   </span>
                 )}
               </li>
@@ -200,7 +202,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
         data.diagnoses.length === 0 &&
         data.prescriptions.length === 0 &&
         data.allergiesAtVisit.length === 0 && (
-          <p className="text-sm text-muted-foreground">No clinical data recorded for this encounter.</p>
+          <p className="text-sm text-muted-foreground">{t('noClinicalData')}</p>
         )}
     </div>
   )

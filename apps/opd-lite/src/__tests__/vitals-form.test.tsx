@@ -3,6 +3,13 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { VitalsForm } from '@/components/clinical/vitals-form'
 
+// next-intl context isn't provided in unit tests; return the key so assertions target keys.
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, values?: Record<string, unknown>) =>
+    values ? `${key} ${JSON.stringify(values)}` : key,
+  useLocale: () => 'en',
+}))
+
 const defaultProps = {
   weight: '',
   height: '',
@@ -24,8 +31,8 @@ describe('VitalsForm', () => {
 
     expect(screen.getByLabelText(/weight/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/height/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/systolic/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/diastolic/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/placeholderSys/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/placeholderDia/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/temperature/i)).toBeInTheDocument()
   })
 
@@ -41,10 +48,10 @@ describe('VitalsForm', () => {
     // with font-semibold. Verify all 4 vital sign labels are present and visible.
     render(<VitalsForm {...defaultProps} />)
 
-    expect(screen.getByText('Weight')).toBeInTheDocument()
-    expect(screen.getByText('Height')).toBeInTheDocument()
-    expect(screen.getByText('Blood Pressure')).toBeInTheDocument()
-    expect(screen.getByText('Temperature')).toBeInTheDocument()
+    expect(screen.getByText('weight')).toBeInTheDocument()
+    expect(screen.getByText('height')).toBeInTheDocument()
+    expect(screen.getByText('bloodPressure')).toBeInTheDocument()
+    expect(screen.getByText('temperature')).toBeInTheDocument()
   })
 
   it('calls onChange handlers when values change', async () => {
@@ -57,26 +64,26 @@ describe('VitalsForm', () => {
     expect(onWeightChange).toHaveBeenCalled()
   })
 
-  it('renders units labels (kg, cm, mmHg, C)', () => {
+  it('renders units labels (kg, cm, mmHg, unitCelsius)', () => {
     render(<VitalsForm {...defaultProps} />)
 
-    expect(screen.getByText(/kg/)).toBeInTheDocument()
-    expect(screen.getByText(/cm/)).toBeInTheDocument()
-    expect(screen.getByText(/mmHg/)).toBeInTheDocument()
-    expect(screen.getByText(/°C/)).toBeInTheDocument()
+    expect(screen.getByText('unitKg')).toBeInTheDocument()
+    expect(screen.getByText('unitCm')).toBeInTheDocument()
+    expect(screen.getByText('unitMmHg')).toBeInTheDocument()
+    expect(screen.getByText('unitCelsius')).toBeInTheDocument()
   })
 
   it('displays BMI when provided', () => {
     render(<VitalsForm {...defaultProps} bmi={24.5} />)
 
     expect(screen.getByText(/24\.5/)).toBeInTheDocument()
-    expect(screen.getByText(/BMI/)).toBeInTheDocument()
+    expect(screen.getByText('bmi')).toBeInTheDocument()
   })
 
   it('does not display BMI when null', () => {
     render(<VitalsForm {...defaultProps} bmi={null} />)
 
-    expect(screen.queryByText(/BMI/)).not.toBeInTheDocument()
+    expect(screen.queryByText('bmi')).not.toBeInTheDocument()
   })
 
   it('applies min/max constraints for clinical ranges', () => {
@@ -105,6 +112,17 @@ describe('VitalsForm', () => {
     expect(tempInput.className).toMatch(/border-destructive/)
   })
 
+  it('shows rangeCritical key text when panic status', () => {
+    render(
+      <VitalsForm
+        {...defaultProps}
+        temperature="42"
+        rangeStatuses={{ temperature: 'panic' }}
+      />,
+    )
+    expect(screen.getByText('rangeCritical')).toBeInTheDocument()
+  })
+
   it('applies warning (semantic) styling when rangeStatuses indicate warning', () => {
     // Design system replaced border-amber-* with semantic border-warning token
     render(
@@ -117,6 +135,17 @@ describe('VitalsForm', () => {
 
     const tempInput = screen.getByLabelText(/temperature/i)
     expect(tempInput.className).toMatch(/border-warning/)
+  })
+
+  it('shows rangeWarning key text when warning status', () => {
+    render(
+      <VitalsForm
+        {...defaultProps}
+        temperature="38.6"
+        rangeStatuses={{ temperature: 'warning' }}
+      />,
+    )
+    expect(screen.getByText('rangeWarning')).toBeInTheDocument()
   })
 
   it('uses dir="auto" for RTL support', () => {

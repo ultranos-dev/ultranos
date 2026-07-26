@@ -24,9 +24,9 @@ const EXPECTED_BIOMETRIC_VERSION =
  * Order:
  * 1. AllergyBanner — always rendered (handles its own empty/error states)
  * 2. ConflictBanner — always rendered (hides itself when no Tier 1 conflicts)
- * 3. MpiWarnBanner — when MPI duplicate score > 0
- * 4. NidMissingBanner — when no national ID hash
- * 5. ConsentExpiryBanner — when consent expiry date is provided
+ * 3. ConsentExpiryBanner — when consent expiry date is provided (deferred: no per-patient expiry-date source yet — stays unrendered)
+ * 4. MpiWarnBanner — when MPI duplicate score > 0
+ * 5. NidMissingBanner — when no national ID hash
  * 6. BiometricStaleBanner — when biometric algorithm version mismatches expected
  */
 export function PatientBannerStack({
@@ -47,21 +47,21 @@ export function PatientBannerStack({
       {/* 2. Sync conflicts — always rendered, self-hides when empty */}
       <ConflictBanner patientId={patientId} />
 
-      {/* 3. MPI duplicate warning — only when score > 0 */}
-      {mpiScore != null && mpiScore > 0 && (
-        <MpiWarnBanner mpiScore={mpiScore} patientId={patientId} />
-      )}
-
-      {/* 4. NID missing — only when no national ID hash */}
-      {!hasNationalId && <NidMissingBanner />}
-
-      {/* 5. Consent expiry — only when expiry date provided */}
+      {/* 3. Consent expiry — only when expiry date provided (deferred: consentExpiryDate not yet sourced — stays unrendered) */}
       {consentExpiryDate && (
         <ConsentExpiryBanner
           patientId={patientId}
           expiryDate={consentExpiryDate}
         />
       )}
+
+      {/* 4. MPI duplicate warning — only when score > 0 */}
+      {mpiScore != null && mpiScore > 0 && (
+        <MpiWarnBanner mpiScore={mpiScore} patientId={patientId} />
+      )}
+
+      {/* 5. NID missing — only when no national ID hash */}
+      {!hasNationalId && <NidMissingBanner />}
 
       {/* 6. Biometric stale — only when version mismatches */}
       <BiometricStaleBanner

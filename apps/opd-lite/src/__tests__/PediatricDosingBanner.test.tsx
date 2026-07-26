@@ -54,7 +54,7 @@ describe('PediatricDosingBanner', () => {
       <PediatricDosingBanner patientBirthDate={birthDateYearsAgo(10)} />,
     )
     expect(
-      screen.getByText('Weight-based dosing not supported — calculate manually'),
+      screen.getByText('Weight-based dosing not supported. Calculate manually.'),
     ).toBeDefined()
   })
 
@@ -105,7 +105,7 @@ describe('PediatricDosingBanner', () => {
     expect(banner).not.toBeNull()
     expect(banner?.getAttribute('dir')).toBe('auto')
     expect(
-      screen.getByText('Weight-based dosing not supported — calculate manually'),
+      screen.getByText('Weight-based dosing not supported. Calculate manually.'),
     ).toBeDefined()
     expect(container).toMatchSnapshot()
   })

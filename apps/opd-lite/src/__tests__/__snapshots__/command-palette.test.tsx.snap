@@ -80,7 +80,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
             <div
               aria-disabled="false"
               aria-selected="true"
-              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              class="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
               cmdk-item=""
               data-disabled="false"
               data-selected="true"
@@ -100,7 +100,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
             <div
               aria-disabled="false"
               aria-selected="false"
-              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              class="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
               cmdk-item=""
               data-disabled="false"
               data-selected="false"
@@ -120,7 +120,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
             <div
               aria-disabled="false"
               aria-selected="false"
-              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              class="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
               cmdk-item=""
               data-disabled="false"
               data-selected="false"
@@ -140,7 +140,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
             <div
               aria-disabled="false"
               aria-selected="false"
-              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              class="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
               cmdk-item=""
               data-disabled="false"
               data-selected="false"
@@ -273,7 +273,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
             <div
               aria-disabled="false"
               aria-selected="true"
-              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              class="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
               cmdk-item=""
               data-disabled="false"
               data-selected="true"
@@ -293,7 +293,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
             <div
               aria-disabled="false"
               aria-selected="false"
-              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              class="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
               cmdk-item=""
               data-disabled="false"
               data-selected="false"
@@ -313,7 +313,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
             <div
               aria-disabled="false"
               aria-selected="false"
-              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              class="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
               cmdk-item=""
               data-disabled="false"
               data-selected="false"
@@ -333,7 +333,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
             <div
               aria-disabled="false"
               aria-selected="false"
-              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              class="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
               cmdk-item=""
               data-disabled="false"
               data-selected="false"

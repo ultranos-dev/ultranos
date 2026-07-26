@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/Card'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { Users, FileSearch } from '@ultranos/ui-kit/icons'
+import { Users, UserCheck, AlertTriangle, Clock, FileSearch, ChevronUp, ChevronDown } from '@ultranos/ui-kit/icons'
+import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { formatDate, formatRelativeTime } from '@ultranos/ui-kit'
 import { db } from '@/lib/db'
 import type { LocalPatient } from '@/lib/db'
@@ -345,14 +346,12 @@ export function PatientDirectory() {
     )
   }
 
-  const showRegisterButton = sorted.length < 3
-
   return (
     <div className="flex flex-col gap-4">
       {/* Header row */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">
             {t('title')}
           </h1>
           {syncing && (
@@ -362,31 +361,41 @@ export function PatientDirectory() {
             </span>
           )}
         </div>
-        {showRegisterButton && (
-          <Button variant="primary" onClick={handleRegisterNew}>
-            {t('registerNew')}
-          </Button>
-        )}
+        <Button variant="primary" onClick={handleRegisterNew}>
+          {t('registerNew')}
+        </Button>
       </div>
 
       {/* Stat strip — derived from already-loaded patient rows */}
       {rows.length > 0 && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4" data-testid="stat-strip">
           <Card>
-            <p className="text-xs text-muted-foreground">{t('statTotal')}</p>
-            <p className="mt-1 text-2xl font-bold text-foreground" data-testid="stat-total">{stats.total}</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">{t('statTotal')}</p>
+              <Users className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </div>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground" data-testid="stat-total">{stats.total}</p>
           </Card>
           <Card>
-            <p className="text-xs text-muted-foreground">{t('statActive')}</p>
-            <p className="mt-1 text-2xl font-bold text-foreground" data-testid="stat-active">{stats.active}</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">{t('statActive')}</p>
+              <UserCheck className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </div>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground" data-testid="stat-active">{stats.active}</p>
           </Card>
           <Card>
-            <p className="text-xs text-muted-foreground">{t('statWithAllergies')}</p>
-            <p className="mt-1 text-2xl font-bold text-foreground" data-testid="stat-allergies">{stats.withAllergies}</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">{t('statWithAllergies')}</p>
+              <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
+            </div>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground" data-testid="stat-allergies">{stats.withAllergies}</p>
           </Card>
           <Card>
-            <p className="text-xs text-muted-foreground">{t('statRecentlyUpdated')}</p>
-            <p className="mt-1 text-2xl font-bold text-foreground" data-testid="stat-recently-updated">{stats.recentlyUpdated}</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">{t('statRecentlyUpdated')}</p>
+              <Clock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </div>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground" data-testid="stat-recently-updated">{stats.recentlyUpdated}</p>
           </Card>
         </div>
       )}
@@ -414,13 +423,13 @@ export function PatientDirectory() {
         </div>
 
         {/* Search */}
-        <input
+        <Input
           type="text"
           dir="auto"
           placeholder={t('searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="min-w-[200px] flex-1 rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+          className="min-w-[200px] flex-1"
           aria-label={t('searchPlaceholder')}
         />
 
@@ -467,7 +476,7 @@ export function PatientDirectory() {
       ) : (
         <>
           {/* Table */}
-          <div className="overflow-x-auto rounded-xl border border-border">
+          <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-muted">
                 <tr>
@@ -486,12 +495,13 @@ export function PatientDirectory() {
                       key={field}
                       className="cursor-pointer px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground"
                       onClick={() => handleSort(field)}
+                      aria-sort={sortField === field ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
                     >
                       {label}
                       {sortField === field && (
-                        <span className="ms-1">
-                          {sortDir === 'asc' ? '↑' : '↓'}
-                        </span>
+                        sortDir === 'asc'
+                          ? <ChevronUp className="ms-1 inline-block h-3.5 w-3.5 align-middle" aria-hidden="true" />
+                          : <ChevronDown className="ms-1 inline-block h-3.5 w-3.5 align-middle" aria-hidden="true" />
                       )}
                     </th>
                   ))}
@@ -511,19 +521,7 @@ export function PatientDirectory() {
                     <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground">
                       <span className="flex items-center gap-2">
                         <span>
-                          {row.nameSegments.length > 0
-                            ? row.nameSegments.map((seg, i) => (
-                                <span key={i}>
-                                  {i > 0 && (
-                                    <span
-                                      className="mx-2 inline-block h-2 w-2 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
-                                      aria-hidden="true"
-                                    />
-                                  )}
-                                  {seg}
-                                </span>
-                              ))
-                            : row.name}
+                          {row.nameSegments.length > 0 ? row.nameSegments.join(' ') : row.name}
                         </span>
                         {!row.hasNationalId && (
                           <span className="inline-flex rounded-full bg-warning/20 px-2 py-0.5 text-xs font-semibold text-warning">
@@ -533,18 +531,18 @@ export function PatientDirectory() {
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
-                      {row.age ?? '—'}
+                      {row.age ?? '·'}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
                       {row.gender}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground" dir="ltr">
-                      {row.phone || '—'}
+                      {row.phone || '·'}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
                       {row.lastVisit
                         ? formatDate(row.lastVisit, locale as 'en' | 'ar' | 'prs' | 'ps')
-                        : '—'}
+                        : '·'}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
                       <span
@@ -560,15 +558,17 @@ export function PatientDirectory() {
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
                       {row.lastUpdated
                         ? formatRelativeTime(row.lastUpdated, locale as 'en' | 'ar' | 'prs')
-                        : '—'}
+                        : '·'}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
                       {row.hasAllergies && (
                         <span
-                          className="inline-block h-3 w-3 rounded-full bg-destructive"
+                          className="inline-flex items-center gap-1 rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-semibold text-destructive"
                           aria-label={t('allergyFlag')}
-                          role="img"
-                        />
+                        >
+                          <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                          {t('allergyFlag')}
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -579,7 +579,7 @@ export function PatientDirectory() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <Button variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
                 {t('previous')}
               </Button>

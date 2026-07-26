@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { isTier2, hasList } from '@ultranos/drug-catalog-sync'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
 import { getMirrorDrugEntry } from '@/lib/drug-entry'
@@ -12,6 +13,7 @@ function isReproductiveAgeFemale(sex?: string, age?: number): boolean {
 export function DrugSafetyPanel({
   atcCode, patientSex, patientAge,
 }: { atcCode: string; patientSex?: string; patientAge?: number }) {
+  const t = useTranslations('prescription')
   const [entry, setEntry] = useState<DrugEntry | null>(null)
   const [loaded, setLoaded] = useState(false)
 
@@ -33,10 +35,10 @@ export function DrugSafetyPanel({
       data-testid="drug-safety-panel"
       className="rounded-xl ring-[0.65px] ring-destructive/30 bg-destructive/5 p-4 space-y-2"
     >
-      <h4 className="text-sm font-bold text-destructive">Clinical safety</h4>
+      <h4 className="text-sm font-bold text-destructive">{t('drugSafetyTitle')}</h4>
       {tier2 && hasList(tier2.contraindications) ? (
         <div>
-          <p className="text-xs font-semibold text-foreground">Contraindications</p>
+          <p className="text-xs font-semibold text-foreground">{t('contraindications')}</p>
           <ul className="mt-1 space-y-0.5">
             {tier2.contraindications.map((c) => (
               <li key={c} className="text-sm text-destructive">&bull; {c}</li>
@@ -44,14 +46,14 @@ export function DrugSafetyPanel({
           </ul>
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground">No contraindication data on file for this drug.</p>
+        <p className="text-xs text-muted-foreground">{t('noContraindicationData')}</p>
       )}
       {showPregnancy && (
         <div data-testid="pregnancy-note" className="border-t border-border pt-2">
-          <p className="text-xs font-semibold text-foreground">Pregnancy / lactation</p>
-          <p className="text-sm text-foreground">{pregText || 'No pregnancy data on file for this drug.'}</p>
+          <p className="text-xs font-semibold text-foreground">{t('pregnancyLactation')}</p>
+          <p className="text-sm text-foreground">{pregText || t('noPregnancyData')}</p>
           <p className="mt-1 text-xs text-muted-foreground italic">
-            Pregnancy status not recorded — confirm applicability with the patient.
+            {t('pregnancyApplicabilityNote')}
           </p>
         </div>
       )}

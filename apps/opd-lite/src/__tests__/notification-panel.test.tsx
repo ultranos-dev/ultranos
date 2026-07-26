@@ -58,36 +58,40 @@ describe('NotificationBell', () => {
       expect(screen.getByText('3')).toBeInTheDocument()
     })
 
-    expect(screen.getByLabelText(/Notifications.*3 unread/)).toBeInTheDocument()
+    // t('bellUnreadAria', { count: 3 }) returns key 'bellUnreadAria' via mock
+    expect(screen.getByLabelText('bellUnreadAria')).toBeInTheDocument()
   })
 
   it('opens notification panel on click', async () => {
     render(<NotificationBell />)
 
-    const bell = screen.getByLabelText(/Notifications/)
+    // Wait for count to load so aria-label switches to bellUnreadAria
+    const bell = await screen.findByLabelText('bellUnreadAria')
     fireEvent.click(bell)
 
     await waitFor(() => {
-      expect(screen.getByText('Notifications')).toBeInTheDocument()
+      // t('title') returns key via mock
+      expect(screen.getByText('title')).toBeInTheDocument()
     })
   })
 
   it('displays lab result notifications with correct labels', async () => {
     render(<NotificationBell />)
 
-    const bell = screen.getByLabelText(/Notifications/)
+    const bell = await screen.findByLabelText('bellUnreadAria')
     fireEvent.click(bell)
 
     await waitFor(() => {
-      expect(screen.getByText('Lab Result Available')).toBeInTheDocument()
-      expect(screen.getByText('Lab Result — Urgent')).toBeInTheDocument()
+      // Labels are now resolved via useTranslations('notifications'); the mock returns the i18n key
+      expect(screen.getByText('typeLab')).toBeInTheDocument()
+      expect(screen.getByText('typeLabUrgent')).toBeInTheDocument()
     })
   })
 
   it('shows test category and lab name in notification', async () => {
     render(<NotificationBell />)
 
-    const bell = screen.getByLabelText(/Notifications/)
+    const bell = await screen.findByLabelText('bellUnreadAria')
     fireEvent.click(bell)
 
     await waitFor(() => {
@@ -99,11 +103,12 @@ describe('NotificationBell', () => {
   it('renders View Report button for unread notifications with diagnosticReportId', async () => {
     render(<NotificationBell />)
 
-    const bell = screen.getByLabelText(/Notifications/)
+    const bell = await screen.findByLabelText('bellUnreadAria')
     fireEvent.click(bell)
 
     await waitFor(() => {
-      const viewButtons = screen.getAllByText('View Report')
+      // t('viewReport') returns key 'viewReport' via mock
+      const viewButtons = screen.getAllByText('viewReport')
       expect(viewButtons.length).toBeGreaterThan(0)
     })
   })
@@ -113,14 +118,15 @@ describe('NotificationBell', () => {
 
     render(<NotificationBell />)
 
-    const bell = screen.getByLabelText(/Notifications/)
+    const bell = await screen.findByLabelText('bellUnreadAria')
     fireEvent.click(bell)
 
     await waitFor(() => {
-      expect(screen.getAllByText('View Report').length).toBeGreaterThan(0)
+      // t('viewReport') returns key 'viewReport' via mock
+      expect(screen.getAllByText('viewReport').length).toBeGreaterThan(0)
     })
 
-    const viewBtn = screen.getAllByText('View Report')[0]
+    const viewBtn = screen.getAllByText('viewReport')[0]
     fireEvent.click(viewBtn)
 
     await waitFor(() => {

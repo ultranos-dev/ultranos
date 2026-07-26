@@ -47,13 +47,13 @@ export function CandidateComparisonCard({ candidate }: CandidateComparisonCardPr
   ]
 
   return (
-    <div className="rounded-xl bg-muted/70 backdrop-blur-md p-4 ring-[0.65px] ring-border/50">
+    <div className="rounded-xl bg-muted p-4 ring-[0.65px] ring-border/50">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           {t('candidateId', { id: candidate.id.slice(0, 8) })}
         </span>
         <span
-          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold ${badgeClasses}`}
+          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular-nums ${badgeClasses}`}
           role="status"
           aria-label={t('scoreAriaLabel', { score: candidate.mpiScore, level: scoreLabel })}
         >

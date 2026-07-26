@@ -80,7 +80,7 @@ export function UserDropdown() {
     <div className="relative" ref={ref}>
       <Button
         variant="icon"
-        className="h-9 w-9 bg-primary text-sm font-bold text-primary hover:bg-primary"
+        className="h-9 w-9 bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="User menu"
         aria-expanded={isOpen}
@@ -110,7 +110,7 @@ export function UserDropdown() {
           `}</style>
           <div
             role="menu"
-            className="dropdown-enter absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-border/50 shadow-lg"
+            className="dropdown-enter absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl bg-background ring-[0.65px] ring-border/50 shadow-lg"
             data-testid="user-dropdown-menu"
           >
             <div className="border-b border-border px-4 py-3">

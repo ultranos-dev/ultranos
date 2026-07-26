@@ -158,7 +158,7 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
 
   return (
     <div className="space-y-3">
-      <h3 className="text-2xl font-black tracking-tight text-foreground">
+      <h3 className="text-2xl font-semibold tracking-tight text-foreground">
         Diagnosis
       </h3>
 
@@ -210,7 +210,7 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
             'w-full rounded-xl border border-border bg-background px-4 py-3 ' +
             'text-base text-foreground placeholder:text-muted-foreground ' +
             'transition-colors focus:outline-none focus:ring-2 ' +
-            'focus:border-primary-400 focus:ring-primary-200 ' +
+            'focus:border-primary focus:ring-ring ' +
             'disabled:opacity-50 disabled:cursor-not-allowed'
           }
         />
@@ -245,7 +245,7 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
                     : 'hover:bg-muted')
                 }
               >
-                <span className="font-mono text-sm font-bold text-primary-700">
+                <span className="font-mono text-sm font-semibold text-primary">
                   {highlightMatches(result.item.code, getCodeIndices(result))}
                 </span>
                 <span className="mx-2 text-border">|</span>

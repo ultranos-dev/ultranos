@@ -136,8 +136,8 @@ describe('SOAPNoteEntry component', () => {
 
   it('should have section headings for Subjective and Objective', () => {
     render(<SOAPNoteEntry {...defaultProps} />)
-    expect(screen.getByText('Subjective')).toBeDefined()
-    expect(screen.getByText('Objective')).toBeDefined()
+    expect(screen.getByText('subjective')).toBeDefined()
+    expect(screen.getByText('objective')).toBeDefined()
   })
 
   it('should support RTL direction from parent context', () => {
@@ -160,12 +160,12 @@ describe('SOAPNoteEntry component', () => {
 
   it('should show Template Assist button when offline', () => {
     render(<SOAPNoteEntry {...defaultProps} isOnline={false} />)
-    expect(screen.getByText(/Template Assist/i)).toBeDefined()
+    expect(screen.getByText(/templateAssist/i)).toBeDefined()
   })
 
   it('should show AI Assist button when online', () => {
     render(<SOAPNoteEntry {...defaultProps} isOnline={true} aiConsentGranted={true} />)
-    expect(screen.getByText(/AI Assist/i)).toBeDefined()
+    expect(screen.getByText(/aiAssist/i)).toBeDefined()
   })
 
   describe('RTL snapshot tests', () => {

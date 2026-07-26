@@ -104,7 +104,7 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
       {results.length < 3 && (
         <Link
           href={`/register-patient${query ? `?nameGiven=${encodeURIComponent(query)}` : ''}`}
-          className="mt-4 flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[44px]"
+          className="mt-4 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[44px]"
         >
           {tReg('registerNew')}
         </Link>

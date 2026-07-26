@@ -188,7 +188,7 @@ export default function LoginPage() {
               </Alert>
             )}
             <div>
-              <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
+              <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
                 {step === 'credentials' ? t('signIn') : t('mfaTitle')}
               </h1>
               <p className="mt-1.5 text-sm text-muted-foreground">
@@ -197,12 +197,9 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div
-                role="alert"
-                className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-              >
+              <Alert variant="destructive" role="alert">
                 {error}
-              </div>
+              </Alert>
             )}
 
             {step === 'credentials' && (
@@ -289,29 +286,29 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground">
-          Ultranos Healthcare Platform
+          {t('platformName')}
         </p>
       </div>
 
       {/* ── Right: brand panel ── */}
-      <div className="relative hidden overflow-hidden bg-primary lg:flex lg:flex-col lg:items-center lg:justify-center">
-        <div className="absolute -end-32 -top-32 size-[28rem] rounded-full bg-primary-foreground/5" />
-        <div className="absolute -bottom-40 -start-16 size-96 rounded-full bg-primary-foreground/5" />
-        <div className="relative z-10 px-12 text-center text-primary-foreground">
-          <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-2xl bg-primary-foreground/10 ring-1 ring-primary-foreground/20">
-            <Stethoscope className="size-10" />
+      <div className="relative hidden overflow-hidden bg-muted lg:flex lg:flex-col lg:items-center lg:justify-center">
+        <div className="absolute -end-32 -top-32 size-[28rem] rounded-full bg-primary/5" />
+        <div className="absolute -bottom-40 -start-16 size-96 rounded-full bg-primary/5" />
+        <div className="relative z-10 px-12 text-center text-foreground">
+          <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+            <Stethoscope className="size-10 text-primary" />
           </div>
           <h2 className="font-heading text-3xl font-bold">OPD Lite</h2>
-          <p className="mt-3 text-base text-primary-foreground/75">
+          <p className="mt-3 text-base text-muted-foreground">
             {t('panelTagline')}
           </p>
           <ul className="mt-10 space-y-2 text-start">
             {[t('panelFeature1'), t('panelFeature2'), t('panelFeature3')].map((item) => (
               <li
                 key={item}
-                className="flex items-center gap-2 text-sm text-primary-foreground/70"
+                className="flex items-center gap-2 text-sm text-muted-foreground"
               >
-                <span className="size-1.5 shrink-0 rounded-full bg-primary-foreground/50" />
+                <span className="size-1.5 shrink-0 rounded-full bg-primary" />
                 {item}
               </li>
             ))}

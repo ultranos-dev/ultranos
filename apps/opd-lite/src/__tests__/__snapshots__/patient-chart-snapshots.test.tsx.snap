@@ -40,13 +40,16 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
                 class="flex items-center justify-between gap-3"
               >
                 <p>
-                  A newer biometric algorithm is available. Re-enrolling improves matching accuracy.
+                  biometricStaleMessage
                 </p>
                 <button
-                  class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+                  class="group/button inline-flex items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 shrink-0"
+                  data-size="default"
+                  data-slot="button"
+                  data-variant="default"
                   type="button"
                 >
-                  Update Biometric
+                  biometricStaleAction
                 </button>
               </div>
             </div>
@@ -65,19 +68,29 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
         aria-label="encounterHistory"
       >
         <h2
-          class="mb-3 text-lg font-bold text-foreground"
+          class="mb-3 text-lg font-semibold text-foreground"
         >
           encounterHistory
         </h2>
-        <p
-          class="text-sm font-semibold text-muted-foreground"
+        <div
+          class="space-y-3"
         >
-          Loading encounters...
-        </p>
+          <div
+            class="animate-pulse rounded-2xl bg-muted h-20 w-full"
+            data-slot="skeleton"
+          />
+          <div
+            class="animate-pulse rounded-2xl bg-muted h-20 w-full"
+            data-slot="skeleton"
+          />
+          <div
+            class="animate-pulse rounded-2xl bg-muted h-20 w-full"
+            data-slot="skeleton"
+          />
+        </div>
       </section>
       <section
         aria-label="labResultsSection"
-        class="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
       />
     </div>
     <aside
@@ -85,7 +98,7 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
       class="order-1 mb-4 flex flex-col gap-4 lg:order-2 lg:mb-0 lg:sticky lg:top-[4.5rem] lg:max-h-[calc(100svh-4.5rem)] lg:overflow-y-auto lg:pb-2"
     >
       <div
-        class="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
+        class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 "
       >
         <div
           class="flex items-start gap-5"
@@ -143,7 +156,7 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
             class="min-w-0 flex-1"
           >
             <h2
-              class="text-xl font-bold text-foreground leading-snug"
+              class="text-xl font-semibold text-foreground leading-snug"
               dir="auto"
             >
               Snapshot Patient Local
@@ -170,33 +183,82 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
               </span>
               --
             </p>
-            <p
-              class="mt-1 text-sm text-muted-foreground"
+            <dl
+              class="mt-3 grid grid-cols-4 gap-x-3 gap-y-1"
             >
-              Height: 
-              --
-              <span
-                class="mx-1"
+              <div
+                class="min-w-0"
               >
-                ·
-              </span>
-              Weight: 
-              --
-              <span
-                class="mx-1"
+                <dt
+                  class="text-xs text-muted-foreground"
+                >
+                  Height
+                </dt>
+                <dd
+                  class="truncate text-sm font-semibold text-foreground tabular-nums"
+                >
+                  <span
+                    class="font-normal text-muted-foreground"
+                  >
+                    Not recorded
+                  </span>
+                </dd>
+              </div>
+              <div
+                class="min-w-0"
               >
-                ·
-              </span>
-              BMI: 
-              --
-              <span
-                class="mx-1"
+                <dt
+                  class="text-xs text-muted-foreground"
+                >
+                  Weight
+                </dt>
+                <dd
+                  class="truncate text-sm font-semibold text-foreground tabular-nums"
+                >
+                  <span
+                    class="font-normal text-muted-foreground"
+                  >
+                    Not recorded
+                  </span>
+                </dd>
+              </div>
+              <div
+                class="min-w-0"
               >
-                ·
-              </span>
-              Blood: 
-              --
-            </p>
+                <dt
+                  class="text-xs text-muted-foreground"
+                >
+                  BMI
+                </dt>
+                <dd
+                  class="truncate text-sm font-semibold text-foreground tabular-nums"
+                >
+                  <span
+                    class="font-normal text-muted-foreground"
+                  >
+                    Not recorded
+                  </span>
+                </dd>
+              </div>
+              <div
+                class="min-w-0"
+              >
+                <dt
+                  class="text-xs text-muted-foreground"
+                >
+                  Blood
+                </dt>
+                <dd
+                  class="truncate text-sm font-semibold text-foreground tabular-nums"
+                >
+                  <span
+                    class="font-normal text-muted-foreground"
+                  >
+                    Not recorded
+                  </span>
+                </dd>
+              </div>
+            </dl>
             <p
               class="mt-1 text-xs text-muted-foreground"
             >
@@ -209,14 +271,17 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
         >
           <button
             aria-label="Edit patient profile"
-            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-transparent text-primary hover:bg-muted"
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground h-9 gap-1.5 px-4"
+            data-size="default"
+            data-slot="button"
+            data-variant="ghost"
             type="button"
           >
             Edit Profile
           </button>
           <a
             aria-label="Start New Encounter"
-            class="inline-flex items-center justify-center rounded-pill bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4"
             href="/encounter/44444444-4444-4444-4444-444444444444"
           >
             Start New Encounter
@@ -224,18 +289,29 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
         </div>
       </div>
       <div
-        class="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
+        class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 "
       >
         <h3
           class="mb-3 text-sm font-semibold text-foreground"
         >
-          Active Medications
+          activeMedications
         </h3>
-        <p
-          class="text-sm text-muted-foreground"
+        <div
+          class="space-y-3"
         >
-          Loading...
-        </p>
+          <div
+            class="animate-pulse rounded-2xl bg-muted h-10 w-full"
+            data-slot="skeleton"
+          />
+          <div
+            class="animate-pulse rounded-2xl bg-muted h-10 w-full"
+            data-slot="skeleton"
+          />
+          <div
+            class="animate-pulse rounded-2xl bg-muted h-10 w-full"
+            data-slot="skeleton"
+          />
+        </div>
       </div>
       <div
         class="rounded-xl bg-card shadow-sm ring-[0.65px] ring-border/50"
@@ -249,7 +325,7 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
           <span
             class="text-sm font-semibold text-foreground"
           >
-            Patient Details
+            detailsTitle
           </span>
           <svg
             aria-hidden="true"
@@ -271,7 +347,7 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
         </button>
       </div>
       <div
-        class="rounded-xl bg-card shadow-sm ring-[0.65px] ring-border/50"
+        class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 p-0"
       >
         <button
           aria-controls="patient-audit-trail-content"
@@ -348,13 +424,16 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
                 class="flex items-center justify-between gap-3"
               >
                 <p>
-                  A newer biometric algorithm is available. Re-enrolling improves matching accuracy.
+                  biometricStaleMessage
                 </p>
                 <button
-                  class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+                  class="group/button inline-flex items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 shrink-0"
+                  data-size="default"
+                  data-slot="button"
+                  data-variant="default"
                   type="button"
                 >
-                  Update Biometric
+                  biometricStaleAction
                 </button>
               </div>
             </div>
@@ -373,19 +452,29 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
         aria-label="encounterHistory"
       >
         <h2
-          class="mb-3 text-lg font-bold text-foreground"
+          class="mb-3 text-lg font-semibold text-foreground"
         >
           encounterHistory
         </h2>
-        <p
-          class="text-sm font-semibold text-muted-foreground"
+        <div
+          class="space-y-3"
         >
-          Loading encounters...
-        </p>
+          <div
+            class="animate-pulse rounded-2xl bg-muted h-20 w-full"
+            data-slot="skeleton"
+          />
+          <div
+            class="animate-pulse rounded-2xl bg-muted h-20 w-full"
+            data-slot="skeleton"
+          />
+          <div
+            class="animate-pulse rounded-2xl bg-muted h-20 w-full"
+            data-slot="skeleton"
+          />
+        </div>
       </section>
       <section
         aria-label="labResultsSection"
-        class="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
       />
     </div>
     <aside
@@ -393,7 +482,7 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
       class="order-1 mb-4 flex flex-col gap-4 lg:order-2 lg:mb-0 lg:sticky lg:top-[4.5rem] lg:max-h-[calc(100svh-4.5rem)] lg:overflow-y-auto lg:pb-2"
     >
       <div
-        class="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
+        class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 "
       >
         <div
           class="flex items-start gap-5"
@@ -451,7 +540,7 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
             class="min-w-0 flex-1"
           >
             <h2
-              class="text-xl font-bold text-foreground leading-snug"
+              class="text-xl font-semibold text-foreground leading-snug"
               dir="auto"
             >
               Snapshot Patient Local
@@ -478,33 +567,82 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
               </span>
               --
             </p>
-            <p
-              class="mt-1 text-sm text-muted-foreground"
+            <dl
+              class="mt-3 grid grid-cols-4 gap-x-3 gap-y-1"
             >
-              Height: 
-              --
-              <span
-                class="mx-1"
+              <div
+                class="min-w-0"
               >
-                ·
-              </span>
-              Weight: 
-              --
-              <span
-                class="mx-1"
+                <dt
+                  class="text-xs text-muted-foreground"
+                >
+                  Height
+                </dt>
+                <dd
+                  class="truncate text-sm font-semibold text-foreground tabular-nums"
+                >
+                  <span
+                    class="font-normal text-muted-foreground"
+                  >
+                    Not recorded
+                  </span>
+                </dd>
+              </div>
+              <div
+                class="min-w-0"
               >
-                ·
-              </span>
-              BMI: 
-              --
-              <span
-                class="mx-1"
+                <dt
+                  class="text-xs text-muted-foreground"
+                >
+                  Weight
+                </dt>
+                <dd
+                  class="truncate text-sm font-semibold text-foreground tabular-nums"
+                >
+                  <span
+                    class="font-normal text-muted-foreground"
+                  >
+                    Not recorded
+                  </span>
+                </dd>
+              </div>
+              <div
+                class="min-w-0"
               >
-                ·
-              </span>
-              Blood: 
-              --
-            </p>
+                <dt
+                  class="text-xs text-muted-foreground"
+                >
+                  BMI
+                </dt>
+                <dd
+                  class="truncate text-sm font-semibold text-foreground tabular-nums"
+                >
+                  <span
+                    class="font-normal text-muted-foreground"
+                  >
+                    Not recorded
+                  </span>
+                </dd>
+              </div>
+              <div
+                class="min-w-0"
+              >
+                <dt
+                  class="text-xs text-muted-foreground"
+                >
+                  Blood
+                </dt>
+                <dd
+                  class="truncate text-sm font-semibold text-foreground tabular-nums"
+                >
+                  <span
+                    class="font-normal text-muted-foreground"
+                  >
+                    Not recorded
+                  </span>
+                </dd>
+              </div>
+            </dl>
             <p
               class="mt-1 text-xs text-muted-foreground"
             >
@@ -517,14 +655,17 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
         >
           <button
             aria-label="Edit patient profile"
-            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-transparent text-primary hover:bg-muted"
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground h-9 gap-1.5 px-4"
+            data-size="default"
+            data-slot="button"
+            data-variant="ghost"
             type="button"
           >
             Edit Profile
           </button>
           <a
             aria-label="Start New Encounter"
-            class="inline-flex items-center justify-center rounded-pill bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4"
             href="/encounter/44444444-4444-4444-4444-444444444444"
           >
             Start New Encounter
@@ -532,18 +673,29 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
         </div>
       </div>
       <div
-        class="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
+        class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 "
       >
         <h3
           class="mb-3 text-sm font-semibold text-foreground"
         >
-          Active Medications
+          activeMedications
         </h3>
-        <p
-          class="text-sm text-muted-foreground"
+        <div
+          class="space-y-3"
         >
-          Loading...
-        </p>
+          <div
+            class="animate-pulse rounded-2xl bg-muted h-10 w-full"
+            data-slot="skeleton"
+          />
+          <div
+            class="animate-pulse rounded-2xl bg-muted h-10 w-full"
+            data-slot="skeleton"
+          />
+          <div
+            class="animate-pulse rounded-2xl bg-muted h-10 w-full"
+            data-slot="skeleton"
+          />
+        </div>
       </div>
       <div
         class="rounded-xl bg-card shadow-sm ring-[0.65px] ring-border/50"
@@ -557,7 +709,7 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
           <span
             class="text-sm font-semibold text-foreground"
           >
-            Patient Details
+            detailsTitle
           </span>
           <svg
             aria-hidden="true"
@@ -579,7 +731,7 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
         </button>
       </div>
       <div
-        class="rounded-xl bg-card shadow-sm ring-[0.65px] ring-border/50"
+        class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 p-0"
       >
         <button
           aria-controls="patient-audit-trail-content"

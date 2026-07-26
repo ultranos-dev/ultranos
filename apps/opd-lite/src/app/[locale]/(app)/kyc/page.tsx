@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { extractKycFields, fileToBase64, type OcrResult } from '@/lib/ocr'
 import { Button } from '@/components/ui/Button'
+import { buttonVariants } from '@ultranos/ui-kit/components/ui/button'
+import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { Card } from '@/components/Card'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
@@ -106,14 +108,14 @@ export default function KycPage() {
 
       // Validate file type
       if (!['image/jpeg', 'image/png', 'application/pdf'].includes(file.type)) {
-        setDoc((prev) => ({ ...prev, error: 'Only JPEG, PNG, or PDF files are allowed' }))
+        setDoc((prev) => ({ ...prev, error: t('invalidFileType') }))
         return
       }
 
       // Validate file size (max 10MB)
       const MAX_FILE_SIZE = 10 * 1024 * 1024
       if (file.size === 0 || file.size > MAX_FILE_SIZE) {
-        setDoc((prev) => ({ ...prev, error: file.size === 0 ? 'File is empty' : 'File exceeds 10MB limit' }))
+        setDoc((prev) => ({ ...prev, error: file.size === 0 ? t('emptyFile') : t('fileTooLarge') }))
         return
       }
 
@@ -142,7 +144,7 @@ export default function KycPage() {
               ocrResult: {
                 fields: [],
                 success: false,
-                error: 'Auto-extraction unavailable — please enter fields manually',
+                error: t('ocrUnavailable'),
               },
             }))
           }
@@ -153,7 +155,7 @@ export default function KycPage() {
             ocrResult: {
               fields: [],
               success: false,
-              error: 'PDF detected — please enter fields manually',
+              error: t('pdfManual'),
             },
           }))
         }
@@ -161,7 +163,7 @@ export default function KycPage() {
         setDoc((prev) => ({
           ...prev,
           uploading: false,
-          error: 'Upload failed — please try again',
+          error: t('uploadFailed'),
         }))
       }
     },
@@ -235,9 +237,9 @@ export default function KycPage() {
     } catch (err) {
       const message = err instanceof Error ? err.message : ''
       if (message === 'Not authenticated') {
-        setSubmitError('Your session has expired. Please log in again to continue.')
+        setSubmitError(t('sessionExpired'))
       } else {
-        setSubmitError('Submission failed — please try again')
+        setSubmitError(t('submissionFailed'))
       }
     } finally {
       setSubmitting(false)
@@ -246,10 +248,9 @@ export default function KycPage() {
 
   if (!session || loading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="text-muted-foreground" role="status" aria-label="Loading">
-          Loading...
-        </div>
+      <div className="flex min-h-[50vh] flex-col gap-4 p-4" role="status" aria-label="Loading">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-40 w-full max-w-2xl" />
       </div>
     )
   }
@@ -262,19 +263,18 @@ export default function KycPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="max-w-2xl">
+      <div className="max-w-2xl flex flex-col gap-4">
 
       {/* Rejection banner */}
       {isRejected && rejectionReason && step !== 'submitted' && (
         <Alert
           variant="destructive"
           role="alert"
-          className="mb-6"
           data-testid="rejection-banner"
-          title="Previous submission was rejected"
+          title={t('rejectedHeading')}
         >
           <p className="text-sm">{rejectionReason}</p>
-          <p className="mt-1 text-sm">Please update your documents and re-submit.</p>
+          <p className="mt-1 text-sm">{t('rejectedDetail')}</p>
         </Alert>
       )}
 
@@ -283,17 +283,17 @@ export default function KycPage() {
         <Alert
           variant="warning"
           role="alert"
-          className="mb-6"
           data-testid="info-request-banner"
-          title="Additional information requested"
+          title={t('additionalInfoHeading')}
         >
           <p className="text-sm">{adminMessage}</p>
         </Alert>
       )}
 
       {/* Step indicator */}
+      {/* DEFERRED: replace numbered circles with a real StepProgress component (design system enhancement) */}
       {step !== 'submitted' && (
-        <div className="mb-8 flex gap-2" aria-label="Progress steps">
+        <div className="flex gap-2" aria-label="Progress steps">
           {(['upload', 'review', 'confirm'] as const).map((s, i) => (
             <div
               key={s}
@@ -315,21 +315,29 @@ export default function KycPage() {
       {step === 'upload' && (
         <div className="space-y-4">
           <DocumentUploadZone
-            label="Medical License"
+            label={t('medicalLicense')}
             docType="MEDICAL_LICENSE"
             state={licenseDoc}
             onFileSelect={(e) => handleFileSelect('MEDICAL_LICENSE', e)}
+            fileHint={t('fileHint')}
+            selectFileLabel={t('selectFile')}
+            uploadingLabel={t('uploading')}
+            extractingLabel={t('extracting')}
           />
 
           <DocumentUploadZone
-            label="National ID"
+            label={t('nationalId')}
             docType="NATIONAL_ID"
             state={nationalIdDoc}
             onFileSelect={(e) => handleFileSelect('NATIONAL_ID', e)}
+            fileHint={t('fileHint')}
+            selectFileLabel={t('selectFile')}
+            uploadingLabel={t('uploading')}
+            extractingLabel={t('extracting')}
           />
 
           <Button variant="primary" fullWidth disabled={!licenseDoc.uploaded || !nationalIdDoc.uploaded} onClick={handleProceedToReview}>
-            Continue to Review
+            {t('continueToReview')}
           </Button>
         </div>
       )}
@@ -338,10 +346,10 @@ export default function KycPage() {
       {step === 'review' && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground">
-            Review Extracted Information
+            {t('reviewTitle')}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Please verify the information extracted from your documents.
+            {t('reviewDescription')}
           </p>
 
           {Object.entries(reviewFields).map(([fieldName, value]) => {
@@ -360,7 +368,7 @@ export default function KycPage() {
                       className="ms-2 rounded bg-warning/20 px-2 py-0.5 text-xs text-warning"
                       data-testid={`low-confidence-${fieldName}`}
                     >
-                      Please verify
+                      {t('pleaseVerify')}
                     </span>
                   )}
                 </label>
@@ -370,7 +378,7 @@ export default function KycPage() {
                   onChange={(e) =>
                     setReviewFields((prev) => ({ ...prev, [fieldName]: e.target.value }))
                   }
-                  className={`w-full rounded-lg border px-3 py-2 text-foreground ${
+                  className={`w-full rounded-xl border px-3 py-2 text-foreground ${
                     isLowConfidence
                       ? 'border-warning/50 bg-warning/10'
                       : 'border-border bg-background'
@@ -382,23 +390,23 @@ export default function KycPage() {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-foreground">
-              Professional Registry Number
+              {t('registryNumber')}
             </label>
             <input
               type="text"
               value={registryNumber}
               onChange={(e) => setRegistryNumber(e.target.value)}
-              placeholder="e.g., REG-2026-00123"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-foreground"
+              placeholder={t('registryPlaceholder')}
+              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground"
             />
           </div>
 
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => setStep('upload')}>
-              Back
+              {t('back')}
             </Button>
             <Button variant="primary" className="flex-1" disabled={!registryNumber.trim()} onClick={() => setStep('confirm')}>
-              Continue to Confirm
+              {t('continueToConfirm')}
             </Button>
           </div>
         </div>
@@ -408,26 +416,26 @@ export default function KycPage() {
       {step === 'confirm' && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground">
-            Confirm Submission
+            {t('confirmTitle')}
           </h2>
 
           <Card>
-            <h3 className="mb-3 text-sm font-medium text-muted-foreground">Summary</h3>
+            <h3 className="mb-3 text-sm font-medium text-muted-foreground">{t('summary')}</h3>
             <dl className="space-y-2 text-sm">
               {Object.entries(reviewFields).map(([key, value]) => (
                 <div key={key} className="flex justify-between">
                   <dt className="text-muted-foreground">{formatFieldName(key)}</dt>
-                  <dd className="font-medium text-foreground">{value || '—'}</dd>
+                  <dd className="font-medium text-foreground">{value || '·'}</dd>
                 </div>
               ))}
               <div className="flex justify-between">
-                <dt className="text-muted-foreground">Registry Number</dt>
+                <dt className="text-muted-foreground">{t('registryLabel')}</dt>
                 <dd className="font-medium text-foreground">{registryNumber}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-muted-foreground">Documents</dt>
+                <dt className="text-muted-foreground">{t('documents')}</dt>
                 <dd className="font-medium text-foreground">
-                  {[licenseDoc.uploaded && 'Medical License', nationalIdDoc.uploaded && 'National ID']
+                  {[licenseDoc.uploaded && t('medicalLicense'), nationalIdDoc.uploaded && t('nationalId')]
                     .filter(Boolean)
                     .join(', ')}
                 </dd>
@@ -443,7 +451,7 @@ export default function KycPage() {
               className="mt-0.5 h-4 w-4 rounded border-border"
             />
             <span className="text-sm text-foreground">
-              I confirm this information is accurate and the documents are genuine.
+              {t('confirmAccuracy')}
             </span>
           </Card>
 
@@ -455,10 +463,10 @@ export default function KycPage() {
 
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => setStep('review')}>
-              Back
+              {t('back')}
             </Button>
             <Button variant="primary" className="flex-1" disabled={!confirmed || submitting} onClick={handleSubmit}>
-              {submitting ? 'Submitting...' : 'Submit for Verification'}
+              {submitting ? t('submitting') : t('submitForVerification')}
             </Button>
           </div>
         </div>
@@ -485,30 +493,39 @@ function DocumentUploadZone({
   docType,
   state,
   onFileSelect,
+  fileHint,
+  selectFileLabel,
+  uploadingLabel,
+  extractingLabel,
 }: {
   label: string
   docType: string
   state: DocumentState
   onFileSelect: (e: ChangeEvent<HTMLInputElement>) => void
+  fileHint: string
+  selectFileLabel: string
+  uploadingLabel: string
+  extractingLabel: string
 }) {
   return (
     <div
-      className="rounded-lg border-2 border-dashed border-border p-6 text-center transition-colors hover:border-primary/50"
+      className="rounded-xl border-2 border-dashed border-border p-6 text-center transition-colors hover:border-primary/50"
       data-testid={`upload-zone-${docType}`}
     >
       <p className="mb-2 text-sm font-medium text-foreground">{label}</p>
 
       {state.uploading && (
-        <p className="text-sm text-primary" role="status">Uploading...</p>
+        <p className="text-sm text-primary" role="status">{uploadingLabel}</p>
       )}
 
       {state.ocrLoading && (
-        <p className="text-sm text-primary" role="status">Extracting fields...</p>
+        <p className="text-sm text-primary" role="status">{extractingLabel}</p>
       )}
 
       {state.uploaded && !state.ocrLoading && (
         <p className="text-sm text-success">
-          &#10003; {state.file?.name ?? 'Uploaded'}
+          <CircleCheck className="inline-block h-4 w-4 me-1 align-[-2px]" aria-hidden="true" />
+          {state.file?.name ?? uploadingLabel}
         </p>
       )}
 
@@ -519,10 +536,10 @@ function DocumentUploadZone({
       {!state.uploading && !state.uploaded && !state.ocrLoading && (
         <>
           <p className="mb-3 text-xs text-muted-foreground">
-            JPEG, PNG, or PDF — max 10MB
+            {fileHint}
           </p>
-          <label className="cursor-pointer rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-            Select File
+          <label className={`${buttonVariants({ variant: 'default' })} cursor-pointer`}>
+            {selectFileLabel}
             <input
               type="file"
               accept="image/jpeg,image/png,application/pdf"

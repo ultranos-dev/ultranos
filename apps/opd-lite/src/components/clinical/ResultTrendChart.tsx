@@ -11,7 +11,7 @@
  * CLAUDE.md Rule #4 (allergy prominence precedent): critical values get colored data points.
  */
 
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { formatDate } from '@ultranos/ui-kit'
 import type { TrendDataPoint } from '@/lib/lab-results/result-grouper'
 
@@ -29,11 +29,16 @@ interface ResultTrendChartProps {
   hoveredPoint?: TrendDataPoint | null
 }
 
+// Semantic tokens (resolve via inline `style`, which unlike SVG presentation
+// attributes evaluates CSS var()). Channel vars hold "L C H" so oklch(var(--x)) works.
+// These also adapt to dark mode, unlike the previous hardcoded hex.
 const FLAG_COLORS: Record<string, string> = {
-  normal: '#16a34a',    // green-600
-  abnormal: '#d97706',  // amber-600
-  critical: '#dc2626',  // red-600
+  normal: 'oklch(var(--success))',
+  abnormal: 'oklch(var(--warning))',
+  critical: 'oklch(var(--destructive))',
 }
+
+const AXIS_COLOR = 'oklch(var(--muted-foreground))'
 
 const PADDING = { top: 8, right: 12, bottom: 20, left: 8 }
 
@@ -62,6 +67,7 @@ export function ResultTrendChart({
   onPointHover,
   hoveredPoint,
 }: ResultTrendChartProps) {
+  const t = useTranslations('labResults')
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const innerW = width - PADDING.left - PADDING.right
   const innerH = height - PADDING.top - PADDING.bottom
@@ -77,7 +83,7 @@ export function ResultTrendChart({
         className="text-xs text-muted-foreground italic"
         data-testid="trend-chart-empty"
       >
-        No trend data
+        {t('noTrendData')}
       </div>
     )
   }
@@ -134,7 +140,7 @@ export function ResultTrendChart({
         <path
           d={linePath}
           fill="none"
-          stroke="#94a3b8"
+          style={{ stroke: AXIS_COLOR }}
           strokeWidth={1.5}
           strokeLinejoin="round"
           strokeLinecap="round"
@@ -150,10 +156,8 @@ export function ResultTrendChart({
               cx={x}
               cy={y}
               r={isHovered ? 5 : 3.5}
-              fill={color}
-              stroke="white"
               strokeWidth={1}
-              style={{ cursor: 'pointer' }}
+              style={{ fill: color, stroke: 'oklch(var(--background))', cursor: 'pointer' }}
               data-testid={`trend-point-${i}`}
               onMouseEnter={() => onPointHover?.(point)}
               onMouseLeave={() => onPointHover?.(null)}
@@ -170,7 +174,7 @@ export function ResultTrendChart({
           x={PADDING.left}
           y={height - 4}
           fontSize={9}
-          fill="#94a3b8"
+          style={{ fill: AXIS_COLOR }}
           textAnchor="start"
         >
           {yMin}
@@ -179,7 +183,7 @@ export function ResultTrendChart({
           x={PADDING.left}
           y={PADDING.top + 9}
           fontSize={9}
-          fill="#94a3b8"
+          style={{ fill: AXIS_COLOR }}
           textAnchor="start"
         >
           {yMax}
@@ -189,7 +193,7 @@ export function ResultTrendChart({
             x={width - PADDING.right}
             y={height - 4}
             fontSize={9}
-            fill="#94a3b8"
+            style={{ fill: AXIS_COLOR }}
             textAnchor="end"
           >
             {unit}
@@ -229,18 +233,19 @@ export function ResultSummaryTable({
 }: {
   results: { date: string; summary: string; flagLevel?: string }[]
 }) {
+  const t = useTranslations('labResults')
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   if (results.length === 0) return null
   return (
     <table
       className="w-full text-xs text-foreground"
       data-testid="result-summary-table"
-      aria-label="Result history"
+      aria-label={t('resultHistoryAria')}
     >
       <thead>
         <tr className="border-b border-border">
-          <th className="py-1 text-start font-medium text-muted-foreground">Date</th>
-          <th className="py-1 text-start font-medium text-muted-foreground">Result</th>
+          <th className="py-1 text-start font-medium text-muted-foreground">{t('dateHeader')}</th>
+          <th className="py-1 text-start font-medium text-muted-foreground">{t('resultHeader')}</th>
         </tr>
       </thead>
       <tbody>

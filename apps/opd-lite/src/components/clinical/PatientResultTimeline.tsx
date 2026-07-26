@@ -15,12 +15,15 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import type { LocalDiagnosticReport } from '@/lib/db'
 import { getPatientReports } from '@/lib/lab-results/report-aggregator'
 import { groupReportsByLoinc, type GroupedResults } from '@/lib/lab-results/result-grouper'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { checkLabsConsent } from '@/lib/consent-check'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { ResultTrendChart, ResultSummaryTable } from '@/components/clinical/ResultTrendChart'
 import { LabReportDetail } from '@/components/clinical/LabReportDetail'
 import { ChevronDown, ChevronRight, AlertCircle, AlertTriangle, CircleCheck, WifiOff } from '@ultranos/ui-kit/icons'
@@ -37,9 +40,9 @@ interface PatientResultTimelineProps {
 
 function flagBorderClass(flag?: string): string {
   switch (flag) {
-    case 'critical': return 'border-s-4 border-s-destructive bg-destructive/10'
-    case 'abnormal': return 'border-s-4 border-s-amber-400 bg-warning/10'
-    default: return 'border-s border-s-border'
+    case 'critical': return 'border border-destructive/30 bg-destructive/10'
+    case 'abnormal': return 'border border-warning/30 bg-warning/10'
+    default: return 'border border-border'
   }
 }
 
@@ -54,30 +57,31 @@ function flagDot(flag?: string) {
   }
 }
 
-function flagLabel(flag?: string): string {
+function flagLabel(flag: string | undefined, t: (key: string) => string): string {
   switch (flag) {
-    case 'critical': return 'Critical'
-    case 'abnormal': return 'Abnormal'
-    default: return 'Normal'
+    case 'critical': return t('flagCritical')
+    case 'abnormal': return t('flagAbnormal')
+    default: return t('flagNormal')
   }
 }
 
-function statusBadge(status: string) {
+function statusBadge(status: string, t: (key: string) => string) {
   switch (status) {
     case 'preliminary':
-      return <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-bold text-warning">Preliminary</span>
+      return <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-bold text-warning">{t('statusPreliminary')}</span>
     case 'final':
-      return <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-bold text-success">Final</span>
+      return <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-bold text-success">{t('statusFinal')}</span>
     case 'amended':
+      return <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-bold text-primary">{t('statusAmended')}</span>
     case 'corrected':
-      return <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary">{status.charAt(0).toUpperCase() + status.slice(1)}</span>
+      return <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-bold text-primary">{t('statusCorrected')}</span>
     default:
       return <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold text-muted-foreground">{status}</span>
   }
 }
 
 function formatDate(iso?: string): string {
-  if (!iso) return '—'
+  if (!iso) return ''
   return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
@@ -101,6 +105,7 @@ function GroupCard({
   group: GroupedResults
   onSelectReport: (report: LocalDiagnosticReport) => void
 }) {
+  const t = useTranslations('labResults')
   const [expanded, setExpanded] = useState(group.hasCritical)
   const [hoveredPoint, setHoveredPoint] = useState<TrendDataPoint | null>(null)
 
@@ -122,7 +127,7 @@ function GroupCard({
       {/* Header — always visible */}
       <button
         type="button"
-        className="flex w-full items-center gap-3 px-4 py-3 text-start hover:bg-black/5 transition-colors"
+        className="flex w-full items-center gap-3 px-4 py-3 text-start hover:bg-muted transition-colors"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
         aria-controls={`group-body-${group.loincCode}`}
@@ -133,16 +138,16 @@ function GroupCard({
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-foreground text-sm">{group.category}</span>
             {group.hasCritical && (
-              <span className="rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-bold text-destructive">Critical</span>
+              <span className="rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-bold text-destructive">{t('flagCritical')}</span>
             )}
             {!group.hasCritical && group.hasAbnormal && (
-              <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-bold text-warning">Abnormal</span>
+              <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-bold text-warning">{t('flagAbnormal')}</span>
             )}
-            {statusBadge(group.latestResult.status)}
+            {statusBadge(group.latestResult.status, t)}
           </div>
           <div className="mt-0.5 flex gap-3 text-xs text-muted-foreground">
             <span>{formatDate(group.latestResult.effectiveDateTime ?? group.latestResult.issued)}</span>
-            <span>{group.results.length} result{group.results.length !== 1 ? 's' : ''}</span>
+            <span>{t('resultCount', { count: group.results.length })}</span>
             <span>{group.latestResult.performer?.[0]?.display ?? group.latestResult._ultranos?.labId ?? ''}</span>
           </div>
         </div>
@@ -164,7 +169,7 @@ function GroupCard({
           {/* Trend visualization — AC #3 */}
           {group.trendData ? (
             <div>
-              <p className="mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">Trend</p>
+              <p className="mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('trendLabel')}</p>
               <ResultTrendChart
                 trendData={group.trendData}
                 label={group.category}
@@ -175,7 +180,7 @@ function GroupCard({
           ) : (
             group.results.length > 1 && (
               <div>
-                <p className="mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">History</p>
+                <p className="mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('historyLabel')}</p>
                 <ResultSummaryTable results={summaryRows} />
               </div>
             )
@@ -183,18 +188,18 @@ function GroupCard({
 
           {/* Individual result entries — AC #5 (link to detail) */}
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Results</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('resultsLabel')}</p>
             {group.results.map((report) => {
               const flag = report._ultranos?.flagLevel
               return (
                 <button
                   key={report.id}
                   type="button"
-                  className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-start text-sm hover:bg-muted transition-colors ${
+                  className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-start text-sm hover:bg-muted transition-colors ${
                     flag === 'critical'
                       ? 'border-destructive/20 bg-destructive/10'
                       : flag === 'abnormal'
-                      ? 'border-warning/20 bg-warning/10/50'
+                      ? 'border-warning/20 bg-warning/10'
                       : 'border-border bg-background'
                   }`}
                   onClick={() => onSelectReport(report)}
@@ -203,10 +208,10 @@ function GroupCard({
                   {flagDot(flag)}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-foreground">{flagLabel(flag)}</span>
-                      {statusBadge(report.status)}
+                      <span className="font-medium text-foreground">{flagLabel(flag, t)}</span>
+                      {statusBadge(report.status, t)}
                       {(report.status === 'amended' || report.status === 'corrected') && (
-                        <span className="rounded bg-primary px-1.5 py-0.5 text-xs text-primary">Amended</span>
+                        <span className="rounded bg-primary/20 px-1.5 py-0.5 text-xs text-primary">{t('amendedBadge')}</span>
                       )}
                     </div>
                     <div className="mt-0.5 flex gap-3 text-xs text-muted-foreground">
@@ -235,6 +240,7 @@ function GroupCard({
 // ─── Main timeline component ─────────────────────────────────────────────────
 
 export function PatientResultTimeline({ patientId }: PatientResultTimelineProps) {
+  const t = useTranslations('labResults')
   const [groups, setGroups] = useState<GroupedResults[]>([])
   const [pinnedCriticals, setPinnedCriticals] = useState<LocalDiagnosticReport[]>([])
   const [loading, setLoading] = useState(true)
@@ -313,8 +319,10 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="py-4 text-center text-sm text-muted-foreground" data-testid="timeline-loading">
-        Loading lab results...
+      <div className="space-y-3" data-testid="timeline-loading">
+        <Skeleton className="h-8 w-1/3" />
+        <Skeleton className="h-14 w-full" />
+        <Skeleton className="h-14 w-full" />
       </div>
     )
   }
@@ -322,21 +330,19 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
   // ── Consent denied ───────────────────────────────────────────────────────
   if (consentDenied) {
     return (
-      <div
-        className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm"
+      <Alert
+        variant="warning"
+        title={
+          consentDenied === 'expired'
+            ? t('consentExpired')
+            : t('consentRequired')
+        }
         data-testid="consent-denied"
       >
-        <p className="font-bold text-warning">
-          {consentDenied === 'expired'
-            ? 'Consent has expired — request renewal'
-            : 'Patient consent required to view lab results'}
-        </p>
-        <p className="mt-1 text-warning">
-          {consentDenied === 'expired'
-            ? "The patient's consent to view lab results has expired. Please request a renewed consent."
-            : 'The patient has not granted consent for lab data access.'}
-        </p>
-      </div>
+        {consentDenied === 'expired'
+          ? t('consentExpiredDetail')
+          : t('consentRequiredDetail')}
+      </Alert>
     )
   }
 
@@ -345,7 +351,7 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
     return (
       <EmptyState
         data-testid="timeline-empty"
-        title="No lab results available for this patient."
+        title={t('noResults')}
         size="sm"
       />
     )
@@ -355,13 +361,13 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
     <div className="space-y-3" data-testid="patient-result-timeline">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-foreground">
-          Lab Results ({allReports.length}{nextCursor ? '+' : ''})
+        <h3 className="text-lg font-semibold text-foreground">
+          {t('title', { count: allReports.length })}{nextCursor ? '+' : ''}
         </h3>
         {lastSyncedAt && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground" data-testid="last-synced">
             <WifiOff className="h-3.5 w-3.5" aria-hidden />
-            <span>Synced {formatDate(lastSyncedAt)}</span>
+            <span>{t('syncedDate', { date: formatDate(lastSyncedAt) })}</span>
           </div>
         )}
       </div>
@@ -372,23 +378,24 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
           className="rounded-xl border-2 border-destructive bg-destructive/10 p-3 space-y-2"
           data-testid="pinned-criticals"
           role="alert"
-          aria-label="Recent critical lab results"
+          aria-label={t('recentCritical')}
         >
           <p className="text-sm font-bold text-destructive">
-            ⚠ Recent Critical Results (last 7 days)
+            <AlertTriangle className="inline-block h-4 w-4 me-1 align-[-2px] text-destructive" aria-hidden={true} />
+            {t('recentCritical')}
           </p>
           {pinnedCriticals.map((report) => (
             <button
               key={report.id}
               type="button"
-              className="flex w-full items-center gap-2 rounded-lg border border-destructive/20 bg-background px-3 py-2 text-start hover:bg-destructive/10 transition-colors"
+              className="flex w-full items-center gap-2 rounded-xl border border-destructive/20 bg-background px-3 py-2 text-start hover:bg-destructive/10 transition-colors"
               onClick={() => setSelectedReport(report)}
               data-testid={`pinned-critical-${report.id}`}
             >
               <AlertCircle className="h-4 w-4 shrink-0 text-destructive" aria-hidden />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-destructive">
-                  {report.code.coding?.[0]?.display ?? report.code.coding?.[0]?.code ?? 'Unknown Test'}
+                  {report.code.coding?.[0]?.display ?? report.code.coding?.[0]?.code ?? t('unknownTest')}
                 </p>
                 <p className="text-xs text-destructive">
                   {formatDate(report.effectiveDateTime ?? report.issued)}
@@ -425,7 +432,7 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
           disabled={loadingMore}
           data-testid="load-more"
         >
-          {loadingMore ? 'Loading more...' : 'Load older results'}
+          {loadingMore ? t('loadingMore') : t('loadOlderResults')}
         </Button>
       )}
     </div>

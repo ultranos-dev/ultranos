@@ -1,6 +1,7 @@
 'use client'
 
 import type { ComponentType } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   Dialog,
   DialogContent,
@@ -130,6 +131,9 @@ export function EncounterDetailModal({
   doctorName,
   status,
 }: EncounterDetailModalProps) {
+  const t = useTranslations('encounter')
+  const tCommon = useTranslations('common')
+
   // Only load (and audit) once the modal is actually shown.
   const { data, loading } = useEncounterDetailData(encounterId, patientId, {
     encounterDate,
@@ -194,19 +198,19 @@ export function EncounterDetailModal({
         <div className="pt-4">
           {loading && (
             <p className="text-sm text-muted-foreground" data-testid="encounter-detail-loading">
-              Loading details...
+              {t('loadingDetails')}
             </p>
           )}
 
           {!loading && !data && (
-            <p className="text-sm text-muted-foreground">Unable to load encounter details.</p>
+            <p className="text-sm text-muted-foreground">{t('unableToLoadDetails')}</p>
           )}
 
           {!loading && data && (
             <div className="space-y-3">
               {/* Allergies — CLAUDE.md Rule #4: first, in red, prominent */}
               {allergies.length > 0 && (
-                <Section icon={AlertTriangle} title="Allergies at Time of Visit" danger>
+                <Section icon={AlertTriangle} title={t('allergiesAtVisit')} danger>
                   <div className="flex flex-wrap gap-1.5">
                     {allergies.map((a) => (
                       <span
@@ -214,7 +218,7 @@ export function EncounterDetailModal({
                         className="inline-flex items-center rounded-full bg-destructive/15 px-2.5 py-0.5 text-xs font-semibold text-destructive ring-1 ring-destructive/20"
                         dir="auto"
                       >
-                        {a._ultranos?.substanceFreeText || a.code?.text || 'Unknown'}
+                        {a._ultranos?.substanceFreeText || a.code?.text || tCommon('unknown')}
                       </span>
                     ))}
                   </div>
@@ -223,7 +227,7 @@ export function EncounterDetailModal({
 
               {/* Diagnoses */}
               {diagnoses.length > 0 && (
-                <Section icon={ClipboardList} title="Diagnoses">
+                <Section icon={ClipboardList} title={t('diagnoses')}>
                   <ul className="space-y-1.5">
                     {diagnoses.map((c) => (
                       <li
@@ -239,7 +243,7 @@ export function EncounterDetailModal({
                               [{c.code.coding[0].code}]{' '}
                             </span>
                           )}
-                          {c.code?.text || c.code?.coding?.[0]?.display || 'Unspecified'}
+                          {c.code?.text || c.code?.coding?.[0]?.display || t('unspecified')}
                         </span>
                       </li>
                     ))}
@@ -249,7 +253,7 @@ export function EncounterDetailModal({
 
               {/* Vital Signs — latest reading per type */}
               {vitals.length > 0 && (
-                <Section icon={HeartPulse} title="Vital Signs">
+                <Section icon={HeartPulse} title={t('vitalSigns')}>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {vitals.map((obs) => {
                       const v = formatVital(obs)
@@ -274,7 +278,7 @@ export function EncounterDetailModal({
 
               {/* SOAP Note — latest entry only */}
               {soap && (
-                <Section icon={FileText} title="SOAP Note">
+                <Section icon={FileText} title={t('soapNotes')}>
                   <div className="space-y-2">
                     {(soap.source === 'AI_GENERATED' || soap.source === 'AI_CONFIRMED') && (
                       <span
@@ -284,20 +288,20 @@ export function EncounterDetailModal({
                             : 'bg-primary/15 text-primary'
                         }`}
                       >
-                        {soap.source === 'AI_CONFIRMED' ? 'AI Confirmed' : 'AI Generated'}
+                        {soap.source === 'AI_CONFIRMED' ? t('aiConfirmed') : t('aiGenerated')}
                       </span>
                     )}
-                    <SoapField label="S — Subjective" value={soap.subjective} />
-                    <SoapField label="O — Objective" value={soap.objective} />
-                    <SoapField label="A — Assessment" value={soap.assessment} />
-                    <SoapField label="P — Plan" value={soap.plan} />
+                    <SoapField label={t('sSubjective')} value={soap.subjective} />
+                    <SoapField label={t('oObjective')} value={soap.objective} />
+                    <SoapField label={t('aAssessment')} value={soap.assessment} />
+                    <SoapField label={t('pPlan')} value={soap.plan} />
                   </div>
                 </Section>
               )}
 
               {/* Prescriptions — latest version per medication */}
               {prescriptions.length > 0 && (
-                <Section icon={Pill} title="Prescriptions">
+                <Section icon={Pill} title={t('prescriptions')}>
                   <ul className="space-y-2">
                     {prescriptions.map((rx) => (
                       <li
@@ -307,7 +311,7 @@ export function EncounterDetailModal({
                         data-testid="prescription-item"
                       >
                         <p className="text-sm font-semibold text-foreground">
-                          {rx.medicationCodeableConcept?.text || 'Unknown medication'}
+                          {rx.medicationCodeableConcept?.text || t('unknownMedication')}
                         </p>
                         {rx.dosageInstruction?.[0]?.text && (
                           <p className="mt-0.5 text-xs text-muted-foreground">{rx.dosageInstruction[0].text}</p>
@@ -322,8 +326,8 @@ export function EncounterDetailModal({
                 <EmptyState
                   size="sm"
                   icon={FileText}
-                  title="No clinical data"
-                  description="Nothing was recorded for this encounter."
+                  title={t('noClinicalDataTitle')}
+                  description={t('noClinicalDataDesc')}
                 />
               )}
             </div>

@@ -27,7 +27,7 @@ export function DistrictAutocomplete({
   error,
 }: DistrictAutocompleteProps) {
   const locale = useLocale()
-  const isRtl = locale === 'ar' || locale === 'prs'
+  const isRtl = locale === 'ar' || locale === 'prs' || locale === 'ps'
   const [query, setQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -146,7 +146,7 @@ export function DistrictAutocomplete({
       <div className="relative">
         {value && selectedDistrict ? (
           <div
-            className={`flex items-center min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 ${
+            className={`flex items-center min-h-[44px] rounded-xl border border-border bg-background px-3 py-2 ${
               disabled ? 'opacity-50' : ''
             }`}
           >
@@ -185,7 +185,7 @@ export function DistrictAutocomplete({
             aria-disabled={disabled}
             autoComplete="off"
             disabled={disabled}
-            className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+            className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               disabled
                 ? 'cursor-not-allowed border-border bg-muted text-muted-foreground'
                 : error

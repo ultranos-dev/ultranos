@@ -30,11 +30,13 @@ const publicSans = localFont({
 })
 
 export const viewport: Viewport = {
-  themeColor: '#1e40af',
+  // Ultranos Wise Green (brand primary). Must be a literal hex for the PWA
+  // theme-color meta; kept in sync with --primary / Colors.primary500.
+  themeColor: '#2e9e71',
 }
 
 export const metadata: Metadata = {
-  title: 'OPD Lite — Patient Search',
+  title: 'OPD Lite · Patient Search',
   description: 'Ultranos OPD Lite PWA for clinical encounters',
   manifest: '/manifest.webmanifest',
   appleWebApp: {

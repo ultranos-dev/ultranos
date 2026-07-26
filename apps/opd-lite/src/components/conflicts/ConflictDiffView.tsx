@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import type { SyncQueueEntry } from '@/lib/db'
 import {
   resolveConflict,
@@ -10,6 +11,32 @@ import {
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
+
+/**
+ * FHIR field keys whose translations live in conflicts.field.*.
+ * Falls back to the raw key if not mapped.
+ */
+const FIELD_LABEL_KEYS = new Set([
+  'clinicalStatus',
+  'verificationStatus',
+  'type',
+  'category',
+  'criticality',
+  'code',
+  'reaction',
+  'onsetDateTime',
+  'note',
+  'status',
+  'intent',
+  'medicationCodeableConcept',
+  'dosageInstruction',
+  'dispenseRequest',
+  'severity',
+  'bodySite',
+  'substance',
+  'display',
+  'text',
+])
 
 /** Fields to display for each resource type — never show raw IDs or internal fields. */
 const DISPLAY_FIELDS: Record<string, string[]> = {
@@ -49,7 +76,7 @@ function getDisplayFields(resourceType: string): string[] {
 
 /** Format a field value for display — never expose raw PHI strings in dev console. */
 function formatFieldValue(value: unknown): string {
-  if (value === null || value === undefined) return '—'
+  if (value === null || value === undefined) return '·'
   if (typeof value === 'string') return value
   if (typeof value === 'number' || typeof value === 'boolean') return String(value)
   if (Array.isArray(value)) {
@@ -59,7 +86,7 @@ function formatFieldValue(value: unknown): string {
       .map((item) => {
         if (typeof item === 'object' && item !== null) {
           const obj = item as Record<string, unknown>
-          return obj.display ?? obj.text ?? obj.code ?? JSON.stringify(obj)
+          return (obj.display ?? obj.text ?? obj.code ?? '(complex value)') as string
         }
         return String(item)
       })
@@ -74,7 +101,7 @@ function formatFieldValue(value: unknown): string {
     }
     if (obj.display) return String(obj.display)
     if (obj.code) return String(obj.code)
-    return JSON.stringify(value)
+    return '(complex value)'
   }
   return String(value)
 }
@@ -91,6 +118,7 @@ interface ConflictDiffViewProps {
 const PHYSICIAN_ROLES = ['DOCTOR', 'physician', 'PHYSICIAN']
 
 export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
+  const t = useTranslations('conflicts')
   const practitionerRef = useAuthSessionStore((s) => s.session?.practitionerId ?? '')
   const userRole = useAuthSessionStore((s) => s.session?.role ?? '')
   const canResolve = PHYSICIAN_ROLES.includes(userRole)
@@ -153,15 +181,15 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
         if (result.success) {
           onResolved()
         } else {
-          setError('Resolution failed — conflict may already be resolved.')
+          setError(t('resolutionFailed'))
         }
       } catch {
-        setError('An error occurred while resolving the conflict.')
+        setError(t('resolutionError'))
       } finally {
         setResolving(false)
       }
     },
-    [entry.id, practitionerRef, onResolved],
+    [entry.id, practitionerRef, onResolved, t],
   )
 
   const handleResolve = useCallback(
@@ -178,10 +206,9 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
 
   if (!remoteData) {
     return (
-      <div className="rounded-lg border border-warning/20 bg-warning/10 p-4">
+      <div className="rounded-xl border border-warning/20 bg-warning/10 p-4">
         <p className="text-sm text-warning">
-          Remote version data is not available for this conflict.
-          The conflict may need to be retried via sync.
+          {t('remoteUnavailable')}
         </p>
       </div>
     )
@@ -192,11 +219,11 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
       {/* Tier 1 safety warning */}
       {isTier1 && (
         <Alert variant="warning" role="alert" className="mb-4">
-          <p className="text-xs font-bold text-warning">
-            Safety-Critical Resource — &quot;Keep Both&quot; is recommended (append-only merge)
+          <p className="text-xs font-semibold text-warning">
+            {t('safetyRecommendation')}
           </p>
           <p className="text-xs text-warning">
-            &quot;Prefer Local&quot; or &quot;Prefer Remote&quot; will discard one version. Use with caution.
+            {t('safetyRecommendationDetail')}
           </p>
         </Alert>
       )}
@@ -208,40 +235,69 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
       >
         {/* Column headers */}
         <div className="bg-primary/10 ps-4 pe-4 py-2">
-          <span className="text-xs font-bold text-primary">Local Version</span>
+          <span className="text-xs font-semibold text-primary">{t('localVersion')}</span>
         </div>
         <div className="bg-secondary ps-4 pe-4 py-2">
-          <span className="text-xs font-bold text-foreground">Remote Version</span>
+          <span className="text-xs font-semibold text-foreground">{t('remoteVersion')}</span>
         </div>
 
         {/* Field rows */}
-        {fieldDiffs.map(({ field, localValue, remoteValue, isDifferent }) => (
-          <div key={field} className="contents">
-            <div
-              className={`ps-4 pe-4 py-2 ${
-                isDifferent ? 'bg-warning/10' : 'bg-background'
-              }`}
-            >
-              <p className="text-xs font-semibold text-muted-foreground">{field}</p>
-              <p className="mt-0.5 text-sm text-foreground break-words">{localValue}</p>
+        {fieldDiffs.map(({ field, localValue, remoteValue, isDifferent }) => {
+          const fieldLabel = FIELD_LABEL_KEYS.has(field)
+            ? t(`field.${field}` as Parameters<typeof t>[0])
+            : field
+          return (
+            <div key={field} className="contents">
+              <div
+                className={`ps-4 pe-4 py-2 ${
+                  isDifferent ? 'bg-warning/10' : 'bg-background'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    {fieldLabel}
+                  </p>
+                  {isDifferent && (
+                    <span
+                      className="text-xs font-semibold text-warning"
+                      aria-label="Value differs from remote version"
+                    >
+                      {t('differs')}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-0.5 text-sm text-foreground break-words">{localValue}</p>
+              </div>
+              <div
+                className={`ps-4 pe-4 py-2 ${
+                  isDifferent ? 'bg-warning/10' : 'bg-background'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    {fieldLabel}
+                  </p>
+                  {isDifferent && (
+                    <span
+                      className="text-xs font-semibold text-warning"
+                      aria-label="Value differs from local version"
+                    >
+                      {t('differs')}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-0.5 text-sm text-foreground break-words">{remoteValue}</p>
+              </div>
             </div>
-            <div
-              className={`ps-4 pe-4 py-2 ${
-                isDifferent ? 'bg-warning/10' : 'bg-background'
-              }`}
-            >
-              <p className="text-xs font-semibold text-muted-foreground">{field}</p>
-              <p className="mt-0.5 text-sm text-foreground break-words">{remoteValue}</p>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Resolution actions */}
       {!canResolve ? (
         <div className="mt-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-3">
           <p className="text-xs font-semibold text-muted-foreground">
-            Only physicians can resolve conflicts. Please contact a physician to review.
+            {t('physicianOnly')}
           </p>
         </div>
       ) : (
@@ -256,9 +312,9 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
             data-testid="resolve-keep-both"
           >
             {isTier1 && (
-              <span className="text-xs font-bold text-success">Recommended</span>
+              <span className="text-xs font-semibold text-success">{t('recommended')}</span>
             )}
-            Keep Both
+            {t('keepBoth')}
           </Button>
 
           {/* Prefer Local — de-emphasized for Tier 1 */}
@@ -270,7 +326,7 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
             disabled={resolving}
             data-testid="resolve-prefer-local"
           >
-            Prefer Local
+            {t('preferLocal')}
           </Button>
 
           {/* Prefer Remote — de-emphasized for Tier 1 */}
@@ -282,7 +338,7 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
             disabled={resolving}
             data-testid="resolve-prefer-remote"
           >
-            Prefer Remote
+            {t('preferRemote')}
           </Button>
         </div>
       )}
@@ -296,12 +352,13 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
           data-testid="confirm-destructive-dialog"
           className="mt-3"
         >
-          <p className="text-sm font-bold text-destructive">
-            Confirm: {confirmAction === 'prefer-local' ? 'Discard Remote' : 'Discard Local'} Version
+          <p className="text-sm font-semibold text-destructive">
+            {t('confirmDestructiveTitle', {
+              action: confirmAction === 'prefer-local' ? t('discardRemote') : t('discardLocal'),
+            })}
           </p>
           <p className="mt-1 text-xs text-destructive">
-            You are about to permanently discard one version of a safety-critical record.
-            This action cannot be undone. CLAUDE.md recommends &quot;Keep Both&quot; for Tier 1 resources.
+            {t('confirmDestructiveWarning')}
           </p>
           <div className="mt-3 flex gap-2">
             <Button
@@ -311,7 +368,7 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
               disabled={resolving}
               data-testid="confirm-destructive-yes"
             >
-              Yes, discard
+              {t('confirmYes')}
             </Button>
             <Button
               variant="secondary"
@@ -319,7 +376,7 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
               onClick={() => setConfirmAction(null)}
               data-testid="confirm-destructive-cancel"
             >
-              Cancel
+              {t('confirmCancel')}
             </Button>
           </div>
         </Alert>

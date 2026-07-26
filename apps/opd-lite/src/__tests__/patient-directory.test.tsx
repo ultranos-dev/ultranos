@@ -86,7 +86,17 @@ vi.mock('@ultranos/ui-kit/components/ui/empty-state', () => ({
 // Mock Lucide icons from ui-kit
 vi.mock('@ultranos/ui-kit/icons', () => ({
   Users: () => <svg data-testid="icon-users" />,
+  UserCheck: () => <svg data-testid="icon-user-check" />,
+  AlertTriangle: ({ className, 'aria-hidden': ariaHidden }: { className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }) => <svg data-testid="icon-alert-triangle" className={className} aria-hidden={ariaHidden} />,
+  Clock: () => <svg data-testid="icon-clock" />,
   FileSearch: () => <svg data-testid="icon-file-search" />,
+  ChevronUp: ({ className, 'aria-hidden': ariaHidden }: { className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }) => <svg data-testid="icon-chevron-up" className={className} aria-hidden={ariaHidden} />,
+  ChevronDown: ({ className, 'aria-hidden': ariaHidden }: { className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }) => <svg data-testid="icon-chevron-down" className={className} aria-hidden={ariaHidden} />,
+}))
+
+// Mock ui-kit Input so we don't pull in the full ui-kit chain
+vi.mock('@ultranos/ui-kit/components/ui/input', () => ({
+  Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
 }))
 
 // Mock app-local Card
@@ -207,8 +217,8 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad')).toBeDefined()
-      expect(screen.getByText('Fatima')).toBeDefined()
+      expect(screen.getByText('Ahmad Khan')).toBeDefined()
+      expect(screen.getByText('Fatima Ali')).toBeDefined()
     })
   })
 
@@ -219,7 +229,8 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      const flags = screen.getAllByRole('img', { name: 'Has allergies' })
+      // Allergy signal is now a labelled destructive pill (text visible + aria-label)
+      const flags = screen.getAllByLabelText('Has allergies')
       expect(flags).toHaveLength(1)
     })
   })
@@ -231,7 +242,7 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad')).toBeDefined()
+      expect(screen.getByText('Ahmad Khan')).toBeDefined()
     })
 
     const searchInput = screen.getByPlaceholderText('Search by name or phone...')
@@ -239,8 +250,8 @@ describe('PatientDirectory', () => {
 
     // Wait for debounce
     await vi.waitFor(() => {
-      expect(screen.queryByText('Ahmad')).toBeNull()
-      expect(screen.getByText('Fatima')).toBeDefined()
+      expect(screen.queryByText('Ahmad Khan')).toBeNull()
+      expect(screen.getByText('Fatima Ali')).toBeDefined()
     }, { timeout: 1000 })
   })
 
@@ -251,8 +262,8 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad')).toBeDefined()
-      expect(screen.getByText('Fatima')).toBeDefined()
+      expect(screen.getByText('Ahmad Khan')).toBeDefined()
+      expect(screen.getByText('Fatima Ali')).toBeDefined()
     })
 
     // Click the "Active" pill tab
@@ -260,8 +271,8 @@ describe('PatientDirectory', () => {
     fireEvent.click(activeTab)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad')).toBeDefined()
-      expect(screen.queryByText('Fatima')).toBeNull()
+      expect(screen.getByText('Ahmad Khan')).toBeDefined()
+      expect(screen.queryByText('Fatima Ali')).toBeNull()
     })
   })
 
@@ -295,7 +306,7 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad')).toBeDefined()
+      expect(screen.getByText('Ahmad Khan')).toBeDefined()
       expect(screen.getByText('20/06/2026')).toBeDefined()
     })
     expect(screen.queryByText('Invalid Date')).toBeNull()
@@ -314,14 +325,15 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad')).toBeDefined()
+      expect(screen.getByText('Ahmad Khan')).toBeDefined()
     })
-    expect(screen.queryAllByRole('img', { name: 'Has allergies' })).toHaveLength(0)
+    // Allergy pill has aria-label; before re-focus there should be none
+    expect(screen.queryAllByLabelText('Has allergies')).toHaveLength(0)
 
     // Returning to the tab re-reads Dexie and surfaces the newly-pulled allergy.
     fireEvent.focus(window)
     await vi.waitFor(() => {
-      expect(screen.getAllByRole('img', { name: 'Has allergies' })).toHaveLength(1)
+      expect(screen.getAllByLabelText('Has allergies')).toHaveLength(1)
     })
   })
 
@@ -341,11 +353,11 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad')).toBeDefined()
+      expect(screen.getByText('Ahmad Khan')).toBeDefined()
       // Last Visit from the Hub summary, rendered DD/MM/YYYY.
       expect(screen.getByText('20/06/2026')).toBeDefined()
-      // Allergy flag from the Hub summary even with no local allergy records.
-      expect(screen.getAllByRole('img', { name: 'Has allergies' })).toHaveLength(1)
+      // Allergy pill from the Hub summary even with no local allergy records.
+      expect(screen.getAllByLabelText('Has allergies')).toHaveLength(1)
     })
   })
 
@@ -394,7 +406,7 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad')).toBeDefined()
+      expect(screen.getByText('Ahmad Khan')).toBeDefined()
     })
 
     // Click "Inactive" tab — all patients are active so result is empty
@@ -417,7 +429,7 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad')).toBeDefined()
+      expect(screen.getByText('Ahmad Khan')).toBeDefined()
     })
 
     fireEvent.click(screen.getByRole('button', { name: 'Inactive' }))
@@ -491,7 +503,7 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad')).toBeDefined()
+      expect(screen.getByText('Ahmad Khan')).toBeDefined()
     })
 
     expect(screen.getByRole('button', { name: 'All' })).toBeDefined()
@@ -506,7 +518,7 @@ describe('PatientDirectory', () => {
     render(<PatientDirectory />)
 
     await vi.waitFor(() => {
-      expect(screen.getByText('Ahmad')).toBeDefined()
+      expect(screen.getByText('Ahmad Khan')).toBeDefined()
     })
 
     const allTab = screen.getByRole('button', { name: 'All' }) as HTMLButtonElement

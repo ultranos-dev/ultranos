@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { formatTime } from '@ultranos/ui-kit'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { Card } from '@/components/Card'
@@ -29,6 +29,7 @@ function countdownColor(remainingMs: number): string {
 }
 
 export function SessionInfoCard() {
+  const t = useTranslations('settings')
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const session = useAuthSessionStore((s) => s.session)
   const [remainingMs, setRemainingMs] = useState<number | null>(null)
@@ -49,29 +50,29 @@ export function SessionInfoCard() {
 
   if (!session) return null
 
-  const loginTime = loginAtMs ? formatTime(new Date(loginAtMs), locale) : 'Unknown'
+  const loginTime = loginAtMs ? formatTime(new Date(loginAtMs), locale) : t('unavailable')
 
   return (
     <Card>
-      <h2 className="mb-4 text-sm font-semibold text-foreground">Session Info</h2>
+      <h2 className="mb-4 text-sm font-semibold text-foreground">{t('sessionInfo')}</h2>
 
       <div className="space-y-3">
         <div>
-          <p className="text-xs font-medium text-muted-foreground">Login Time</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('loginTime')}</p>
           <p className="text-sm text-foreground">{loginTime}</p>
         </div>
 
         <div>
-          <p className="text-xs font-medium text-muted-foreground">Session Expiry</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('sessionExpiry')}</p>
           {remainingMs !== null ? (
             <p
               data-testid="session-countdown"
-              className={`text-lg font-bold ${countdownColor(remainingMs)}`}
+              className={`text-lg font-semibold tabular-nums ${countdownColor(remainingMs)}`}
             >
               {formatCountdown(remainingMs)}
             </p>
           ) : (
-            <p className="text-sm text-muted-foreground">Unavailable</p>
+            <p className="text-sm text-muted-foreground">{t('unavailable')}</p>
           )}
         </div>
       </div>

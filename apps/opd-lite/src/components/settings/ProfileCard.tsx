@@ -31,7 +31,7 @@ export function ProfileCard() {
 
       <div className="flex items-start gap-4">
         {/* Initials avatar */}
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
           {initials}
         </div>
 
@@ -50,7 +50,7 @@ export function ProfileCard() {
           </div>
           <div>
             <p className="text-xs font-medium text-muted-foreground">Email</p>
-            <p className="text-sm text-foreground">{session.email || '—'}</p>
+            <p className="text-sm text-foreground">{session.email || '·'}</p>
           </div>
         </div>
       </div>

@@ -1,5 +1,25 @@
-import { forwardRef, type ButtonHTMLAttributes } from 'react'
+'use client'
 
+import { forwardRef, type ButtonHTMLAttributes } from 'react'
+import { Button as UIKitButton, buttonVariants } from '@ultranos/ui-kit/components/ui/button'
+
+/**
+ * OPD-Lite Button.
+ *
+ * Thin adapter over the shared `@ultranos/ui-kit` ShadCN Button so that ALL
+ * button styling (pill radius, semantic colors, focus ring, press motion)
+ * lives in one place — the ui-kit source — and never drifts per-app. This file
+ * only maps OPD-Lite's historical variant vocabulary onto the ui-kit variants;
+ * it contains no styling of its own.
+ *
+ *   primary   -> default
+ *   secondary -> secondary
+ *   danger    -> destructive
+ *   warning   -> warning
+ *   ghost     -> ghost
+ *   outline   -> outline
+ *   icon      -> ghost + size="icon"
+ */
 type ButtonVariant =
   | 'primary'
   | 'secondary'
@@ -9,61 +29,36 @@ type ButtonVariant =
   | 'outline'
   | 'icon'
 
+type UIKitSize = 'default' | 'xs' | 'sm' | 'lg' | 'icon' | 'icon-xs' | 'icon-sm' | 'icon-lg'
+type UIKitVariant = NonNullable<NonNullable<Parameters<typeof buttonVariants>[0]>['variant']>
+
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
+  size?: UIKitSize
   fullWidth?: boolean
 }
 
-const variantClasses: Record<ButtonVariant, string> = {
-  primary:   'rounded-pill bg-primary text-primary-foreground hover:bg-primary/90',
-  secondary: 'rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80',
-  danger:    'rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90',
-  warning:   'rounded-md bg-warning/20 text-foreground border border-warning/50 hover:bg-warning/30',
-  ghost:     'rounded-md bg-transparent text-primary hover:bg-muted',
-  outline:   'rounded-md border border-border bg-background text-foreground hover:bg-muted',
-  icon:      'bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground',
+const VARIANT_MAP: Record<ButtonVariant, { variant: UIKitVariant; size?: UIKitSize }> = {
+  primary:   { variant: 'default' },
+  secondary: { variant: 'secondary' },
+  danger:    { variant: 'destructive' },
+  warning:   { variant: 'warning' },
+  ghost:     { variant: 'ghost' },
+  outline:   { variant: 'outline' },
+  icon:      { variant: 'ghost', size: 'icon' },
 }
 
-const baseText =
-  'inline-flex items-center justify-center ' +
-  'px-4 py-2 text-sm font-medium ' +
-  'transition-colors ' +
-  'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ' +
-  'disabled:opacity-50 disabled:cursor-not-allowed'
-
-const baseIcon =
-  'inline-flex items-center justify-center rounded-full ' +
-  'p-2 ' +
-  'transition-colors ' +
-  'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ' +
-  'disabled:opacity-50 disabled:cursor-not-allowed'
-
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      variant = 'primary',
-      fullWidth,
-      className = '',
-      children,
-      ...props
-    },
-    ref,
-  ) => {
-    const base = variant === 'icon' ? baseIcon : baseText
-
-    const classes = [
-      base,
-      variantClasses[variant],
-      fullWidth && 'w-full',
-      className,
-    ]
-      .filter(Boolean)
-      .join(' ')
-
+  ({ variant = 'primary', size, fullWidth, className, ...props }, ref) => {
+    const mapped = VARIANT_MAP[variant]
     return (
-      <button ref={ref} className={classes} {...props}>
-        {children}
-      </button>
+      <UIKitButton
+        ref={ref}
+        variant={mapped.variant}
+        size={size ?? mapped.size ?? 'default'}
+        className={[fullWidth && 'w-full', className].filter(Boolean).join(' ') || undefined}
+        {...props}
+      />
     )
   },
 )

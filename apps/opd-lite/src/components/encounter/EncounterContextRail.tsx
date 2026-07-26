@@ -18,7 +18,13 @@ const CHIP_CLASS: Record<InteractionStatus, string> = {
 export interface EncounterContextRailProps {
   patient: { display: string; ageSex: string; idSlice: string }
   allergies: string[]
-  interactionStatus: InteractionStatus
+  /**
+   * Last interaction-check result, or `null` when no check has run yet (no
+   * prescription entered). `null` must NOT render as UNAVAILABLE — UNAVAILABLE
+   * is reserved for a check that was attempted and failed (safety rule #3), so
+   * conflating "nothing to check" with "check failed" would dilute that warning.
+   */
+  interactionStatus: InteractionStatus | null
   activeMeds: string[]
 }
 
@@ -79,9 +85,13 @@ export function EncounterContextRail({
         </p>
         <span
           data-testid="interaction-chip"
-          className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${CHIP_CLASS[interactionStatus]}`}
+          className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+            interactionStatus === null
+              ? 'bg-muted text-muted-foreground'
+              : CHIP_CLASS[interactionStatus]
+          }`}
         >
-          {statusLabel[interactionStatus]}
+          {interactionStatus === null ? t('railNoneRecorded') : statusLabel[interactionStatus]}
         </span>
       </Card>
 

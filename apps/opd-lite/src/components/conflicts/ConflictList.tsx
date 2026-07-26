@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { formatDateTime } from '@ultranos/ui-kit'
 import { CircleCheck, ChevronDown } from '@ultranos/ui-kit/icons'
 import { db, type SyncQueueEntry } from '@/lib/db'
@@ -9,29 +9,13 @@ import { isTier1Resource, isConflictOverdue } from '@/lib/conflict-resolution'
 import { auditPhiAccess, AuditAction } from '@/lib/audit'
 import type { AuditResourceType } from '@/lib/audit'
 import { Button } from '@/components/ui/Button'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
+import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { ConflictDiffView } from './ConflictDiffView'
-
-const RESOURCE_LABELS: Record<string, string> = {
-  AllergyIntolerance: 'Allergy',
-  MedicationRequest: 'Medication',
-  Condition: 'Diagnosis',
-}
-
-function safeResourceLabel(resourceType: string): string {
-  return RESOURCE_LABELS[resourceType] ?? 'Record'
-}
-
-function formatConflictAge(createdAt: string): string {
-  const ageMs = Date.now() - new Date(createdAt).getTime()
-  const hours = Math.floor(ageMs / (60 * 60 * 1000))
-  if (hours < 1) return 'Less than 1 hour'
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ${hours % 24}h ago`
-}
 
 export function ConflictList() {
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
+  const t = useTranslations('conflicts')
   const [conflicts, setConflicts] = useState<SyncQueueEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
@@ -94,29 +78,51 @@ export function ConflictList() {
     loadConflicts()
   }, [loadConflicts])
 
+  function resourceLabel(resourceType: string): string {
+    if (resourceType === 'AllergyIntolerance') return t('resourceAllergy')
+    if (resourceType === 'MedicationRequest') return t('resourceMedication')
+    if (resourceType === 'Condition') return t('resourceDiagnosis')
+    return t('resourceDefault')
+  }
+
+  function conflictAge(createdAt: string): string {
+    const ageMs = Date.now() - new Date(createdAt).getTime()
+    const hours = Math.floor(ageMs / (60 * 60 * 1000))
+    if (hours < 1) return t('lessThanOneHour')
+    if (hours < 24) return t('hoursAgo', { hours })
+    const days = Math.floor(hours / 24)
+    return t('daysHoursAgo', { days, hours: hours % 24 })
+  }
+
   if (loading) {
     return (
-      <div className="rounded-xl bg-card/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-border/50 text-center">
-        <p className="text-sm text-muted-foreground">Loading conflicts...</p>
+      <div className="space-y-3" aria-label={t('loadingConflicts')} aria-busy="true">
+        <Skeleton className="h-14 w-full rounded-xl" />
+        <Skeleton className="h-14 w-full rounded-xl" />
+        <Skeleton className="h-14 w-full rounded-xl" />
       </div>
     )
   }
 
   if (loadError) {
     return (
-      <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-8 text-center" data-testid="conflict-load-error" role="alert">
-        <p className="text-sm font-semibold text-destructive">Unable to load conflict data</p>
-        <p className="mt-1 text-xs text-destructive">The conflict check could not read local data. This does not mean there are no conflicts.</p>
-      </div>
+      <Alert
+        variant="destructive"
+        data-testid="conflict-load-error"
+        role="alert"
+        title={t('unableToLoadTitle')}
+      >
+        <p className="text-xs">{t('unableToLoadDetail')}</p>
+      </Alert>
     )
   }
 
   if (conflicts.length === 0) {
     return (
-      <div className="rounded-xl bg-card/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-border/50 text-center" data-testid="no-conflicts">
+      <div className="rounded-xl bg-card p-8 shadow-sm ring-[0.65px] ring-border/50 text-center" data-testid="no-conflicts">
         <CircleCheck className="mx-auto h-12 w-12 text-success" />
-        <p className="mt-3 text-sm font-semibold text-foreground">No unresolved conflicts</p>
-        <p className="mt-1 text-xs text-muted-foreground">All Tier 1 safety-critical data is in sync.</p>
+        <p className="mt-3 text-sm font-semibold text-foreground">{t('noUnresolved')}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{t('noUnresolvedDetail')}</p>
       </div>
     )
   }
@@ -125,7 +131,7 @@ export function ConflictList() {
     <div className="space-y-3" data-testid="conflict-list">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground">
-          {conflicts.length} unresolved conflict{conflicts.length !== 1 ? 's' : ''}
+          {t('unresolvedCount', { count: conflicts.length })}
         </p>
       </div>
 
@@ -135,7 +141,7 @@ export function ConflictList() {
         const shortId = entry.resourceId.slice(0, 8)
         const patientShortId = entry.patientRef
           ? entry.patientRef.replace('Patient/', '').slice(0, 8)
-          : 'Unknown'
+          : t('resourceDefault')
 
         return (
           <div
@@ -157,22 +163,22 @@ export function ConflictList() {
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-foreground">
-                    {safeResourceLabel(entry.resourceType)}
+                  <span className="text-sm font-semibold text-foreground">
+                    {resourceLabel(entry.resourceType)}
                   </span>
-                  <span className="text-xs text-muted-foreground">ID {shortId}</span>
+                  <span className="text-xs text-muted-foreground">{t('idLabel', { id: shortId })}</span>
                   {overdue && (
                     <span
-                      className="inline-flex items-center rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground"
+                      className="inline-flex items-center rounded-full bg-destructive px-2 py-0.5 text-xs font-semibold text-destructive-foreground"
                       data-testid="overdue-badge"
                     >
-                      OVERDUE
+                      {t('overdue')}
                     </span>
                   )}
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                  <span>Patient: {patientShortId}</span>
-                  <span>{formatConflictAge(entry.createdAt)}</span>
+                  <span>{t('patientLabel', { id: patientShortId })}</span>
+                  <span>{conflictAge(entry.createdAt)}</span>
                   <span>{formatDateTime(entry.createdAt, locale)}</span>
                 </div>
               </div>

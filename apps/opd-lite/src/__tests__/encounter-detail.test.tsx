@@ -156,11 +156,11 @@ describe('EncounterDetail', () => {
     render(<EncounterDetail encounterId={ENC_ID} patientId={TEST_PATIENT_ID} />)
 
     await waitFor(() => {
-      expect(screen.getByText('S — Subjective')).toBeTruthy()
+      expect(screen.getByText('sSubjective')).toBeTruthy()
       expect(screen.getByText('Patient reports headache')).toBeTruthy()
-      expect(screen.getByText('O — Objective')).toBeTruthy()
+      expect(screen.getByText('oObjective')).toBeTruthy()
       expect(screen.getByText('BP 120/80, alert and oriented')).toBeTruthy()
-      expect(screen.getByText('P — Plan')).toBeTruthy()
+      expect(screen.getByText('pPlan')).toBeTruthy()
       expect(screen.getByText('Prescribe ibuprofen')).toBeTruthy()
     })
   })
@@ -171,8 +171,8 @@ describe('EncounterDetail', () => {
     render(<EncounterDetail encounterId={ENC_ID} patientId={TEST_PATIENT_ID} />)
 
     await waitFor(() => {
-      expect(screen.getByText('S — Subjective')).toBeTruthy()
-      expect(screen.queryByText('P — Plan')).toBeNull()
+      expect(screen.getByText('sSubjective')).toBeTruthy()
+      expect(screen.queryByText('pPlan')).toBeNull()
     })
   })
 
@@ -238,7 +238,7 @@ describe('EncounterDetail', () => {
     render(<EncounterDetail encounterId={ENC_ID} patientId={TEST_PATIENT_ID} />)
 
     await waitFor(() => {
-      expect(screen.getByText(/no clinical data recorded/i)).toBeTruthy()
+      expect(screen.getByText('noClinicalData')).toBeTruthy()
     })
   })
 })

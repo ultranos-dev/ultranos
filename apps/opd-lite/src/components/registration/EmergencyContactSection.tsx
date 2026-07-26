@@ -64,20 +64,20 @@ export function EmergencyContactSection({
         {contacts.map((contact, index) => (
           <div
             key={keys[index] ?? index}
-            className="rounded-lg border border-border p-4 space-y-3"
+            className="rounded-xl bg-muted/40 p-4 space-y-3"
           >
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-foreground">
                 {t('emergencyContactN', { n: index + 1 })}
               </p>
-              <button
+              <Button
+                variant="icon"
                 type="button"
                 onClick={() => removeContact(index)}
-                className="text-muted-foreground hover:text-destructive focus:outline-none focus:ring-1 focus:ring-ring rounded p-1"
                 aria-label={t('removeContact')}
               >
                 <Trash2 size={16} />
-              </button>
+              </Button>
             </div>
 
             {/* Relationship */}
@@ -93,7 +93,7 @@ export function EmergencyContactSection({
                 id={`contact-relationship-${index}`}
                 value={contact.relationship}
                 onChange={(e) => updateContact(index, { relationship: e.target.value as ContactRelationship })}
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 {RELATIONSHIP_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -117,7 +117,7 @@ export function EmergencyContactSection({
                 type="text"
                 dir="auto"
                 maxLength={200}
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                 placeholder={t('contactNamePlaceholder')}
                 value={contact.name}
                 onChange={(e) => updateContact(index, { name: e.target.value })}
@@ -141,7 +141,7 @@ export function EmergencyContactSection({
                 dir="ltr"
                 inputMode="tel"
                 maxLength={50}
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                 placeholder={t('phonePlaceholder')}
                 value={contact.phone ?? ''}
                 onChange={(e) => updateContact(index, { phone: e.target.value || undefined })}

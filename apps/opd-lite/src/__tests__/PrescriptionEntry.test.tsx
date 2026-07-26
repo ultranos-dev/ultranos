@@ -5,6 +5,11 @@ import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
 import { seedVocabularyIfEmpty } from '@/lib/vocabulary-seeder'
 
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
+}))
+
 beforeAll(async () => {
   await seedVocabularyIfEmpty()
 })
@@ -20,21 +25,21 @@ describe('PrescriptionEntry', () => {
 
   it('renders the medication search input', () => {
     setup()
-    expect(screen.getByRole('combobox', { name: /search medications/i })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'searchAria' })).toBeInTheDocument()
   })
 
   it('shows autocomplete results on typing', async () => {
     const { user } = setup()
-    const input = screen.getByRole('combobox', { name: /search medications/i })
+    const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Amox')
-    const listbox = await screen.findByRole('listbox', { name: /medication search results/i })
+    const listbox = await screen.findByRole('listbox', { name: 'resultsAria' })
     const options = within(listbox).getAllByRole('option')
     expect(options.length).toBeGreaterThan(0)
   })
 
   it('displays Name, Form, and Strength in search results', async () => {
     const { user } = setup()
-    const input = screen.getByRole('combobox', { name: /search medications/i })
+    const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Amoxicillin')
     const listbox = await screen.findByRole('listbox')
     const firstOption = within(listbox).getAllByRole('option')[0]
@@ -45,21 +50,21 @@ describe('PrescriptionEntry', () => {
 
   it('selects a medication and shows dosage form', async () => {
     const { user } = setup()
-    const input = screen.getByRole('combobox', { name: /search medications/i })
+    const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Amoxicillin')
     const listbox = await screen.findByRole('listbox')
     const firstOption = within(listbox).getAllByRole('option')[0]
     await user.click(firstOption)
 
     // Dosage form should now be visible
-    expect(screen.getByLabelText(/dosage quantity/i)).toBeInTheDocument()
+    expect(screen.getByLabelText('dosageQuantityAria')).toBeInTheDocument()
     expect(screen.getByLabelText(/frequency/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/duration in days/i)).toBeInTheDocument()
+    expect(screen.getByLabelText('durationAria')).toBeInTheDocument()
   })
 
   it('shows frequency options including BID, TID, QD, QID', async () => {
     const { user } = setup()
-    const input = screen.getByRole('combobox', { name: /search medications/i })
+    const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Paracetamol')
     const listbox = await screen.findByRole('listbox')
     await user.click(within(listbox).getAllByRole('option')[0])
@@ -76,12 +81,12 @@ describe('PrescriptionEntry', () => {
 
   it('calls onSubmit with form data when Add Prescription is clicked', async () => {
     const { user } = setup()
-    const input = screen.getByRole('combobox', { name: /search medications/i })
+    const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Amoxicillin')
     const listbox = await screen.findByRole('listbox')
     await user.click(within(listbox).getAllByRole('option')[0])
 
-    await user.click(screen.getByRole('button', { name: /add prescription/i }))
+    await user.click(screen.getByRole('button', { name: 'addPrescription' }))
 
     expect(onSubmit).toHaveBeenCalledTimes(1)
     const callArg = onSubmit.mock.calls[0][0]
@@ -94,21 +99,21 @@ describe('PrescriptionEntry', () => {
 
   it('resets the form after submission', async () => {
     const { user } = setup()
-    const input = screen.getByRole('combobox', { name: /search medications/i })
+    const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Amoxicillin')
     const listbox = await screen.findByRole('listbox')
     await user.click(within(listbox).getAllByRole('option')[0])
-    await user.click(screen.getByRole('button', { name: /add prescription/i }))
+    await user.click(screen.getByRole('button', { name: 'addPrescription' }))
 
     // Form should reset — search input should be empty again
-    const resetInput = screen.getByRole('combobox', { name: /search medications/i })
+    const resetInput = screen.getByRole('combobox', { name: 'searchAria' })
     expect(resetInput).toHaveValue('')
-    expect(screen.queryByLabelText(/dosage quantity/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('dosageQuantityAria')).not.toBeInTheDocument()
   })
 
   it('supports keyboard navigation in autocomplete', async () => {
     const { user } = setup()
-    const input = screen.getByRole('combobox', { name: /search medications/i })
+    const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Amox')
 
     await screen.findByRole('listbox')
@@ -119,28 +124,28 @@ describe('PrescriptionEntry', () => {
 
     // Medication should be selected — dosage form appears
     await waitFor(() => {
-      expect(screen.getByLabelText(/dosage quantity/i)).toBeInTheDocument()
+      expect(screen.getByLabelText('dosageQuantityAria')).toBeInTheDocument()
     })
   })
 
   it('clears medication selection with clear button', async () => {
     const { user } = setup()
-    const input = screen.getByRole('combobox', { name: /search medications/i })
+    const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Metformin')
     const listbox = await screen.findByRole('listbox')
     await user.click(within(listbox).getAllByRole('option')[0])
 
     // Clear button should be visible
-    const clearBtn = screen.getByRole('button', { name: /clear selected medication/i })
+    const clearBtn = screen.getByRole('button', { name: 'clearAria' })
     await user.click(clearBtn)
 
     // Should be back to empty search
-    expect(screen.getByRole('combobox', { name: /search medications/i })).toHaveValue('')
-    expect(screen.queryByLabelText(/dosage quantity/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'searchAria' })).toHaveValue('')
+    expect(screen.queryByLabelText('dosageQuantityAria')).not.toBeInTheDocument()
   })
 
   it('disables all inputs when disabled prop is true', () => {
     setup(true)
-    expect(screen.getByRole('combobox', { name: /search medications/i })).toBeDisabled()
+    expect(screen.getByRole('combobox', { name: 'searchAria' })).toBeDisabled()
   })
 })

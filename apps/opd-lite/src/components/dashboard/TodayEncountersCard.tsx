@@ -6,6 +6,8 @@ import { db } from '@/lib/db'
 import { Card } from '@/components/Card'
 import { useEncounterStore } from '@/stores/encounter-store'
 import { deserializeHlc } from '@ultranos/sync-engine'
+import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
+import { CalendarDays } from '@ultranos/ui-kit/icons'
 
 interface TodayStats {
   total: number
@@ -16,6 +18,7 @@ export function TodayEncountersCard() {
   const t = useTranslations('dashboard')
   const tEnc = useTranslations('encounter')
   const [stats, setStats] = useState<TodayStats>({ total: 0, hasActive: false })
+  const [loading, setLoading] = useState(true)
   const activeEncounter = useEncounterStore((s) => s.activeEncounter)
 
   useEffect(() => {
@@ -50,6 +53,8 @@ export function TodayEncountersCard() {
       } catch {
         // Dexie unavailable — show zero state
         setStats({ total: 0, hasActive: false })
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -58,10 +63,17 @@ export function TodayEncountersCard() {
 
   return (
     <Card>
-      <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wide">
-        {t('todayEncounters')}
-      </h3>
-      <p className="mt-2 text-3xl font-black text-foreground">{stats.total}</p>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          {t('todayEncounters')}
+        </h3>
+        <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      </div>
+      {loading ? (
+        <Skeleton className="mt-2 h-8 w-12" />
+      ) : (
+        <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">{stats.total}</p>
+      )}
       {stats.hasActive && (
         <span className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-success">
           <span className="inline-block h-2 w-2 rounded-full bg-success animate-pulse" />

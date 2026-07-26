@@ -8,6 +8,7 @@ import { Button } from '@ultranos/ui-kit/components/ui/button'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Database } from '@ultranos/ui-kit/icons'
+import { Card } from '@/components/Card'
 import { useDataBudgetStore } from '@/stores/data-budget-store'
 
 export function DataBudgetDashboard() {
@@ -83,7 +84,7 @@ export function DataBudgetDashboard() {
         </Alert>
       )}
 
-      <div className="rounded-lg border border-border bg-card p-4">
+      <Card>
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('usageTitle')}</h2>
         <div className="flex items-center gap-4">
           <div className="flex-1">
@@ -110,9 +111,9 @@ export function DataBudgetDashboard() {
         {!projectedExhaustionDate && (
           <p className="mt-2 text-xs text-muted-foreground">{t('projectionNoData')}</p>
         )}
-      </div>
+      </Card>
 
-      <div className="rounded-lg border border-border bg-card p-4">
+      <Card>
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('dailyUsageTitle')}</h2>
         <div className="flex items-end gap-0.5 h-16">
           {dailyUsage.map((d) => (
@@ -125,9 +126,9 @@ export function DataBudgetDashboard() {
             </div>
           ))}
         </div>
-      </div>
+      </Card>
 
-      <div className="rounded-lg border border-border bg-card p-4">
+      <Card>
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('categoryTitle')}</h2>
         {Object.keys(categoryBreakdown).length === 0 ? (
           <EmptyState size="sm" icon={Database} title={t('categoryEmpty')} />
@@ -143,15 +144,15 @@ export function DataBudgetDashboard() {
               {Object.entries(categoryBreakdown).map(([cat, mb]) => (
                 <tr key={cat} className="border-b border-border last:border-0">
                   <td className="py-1.5 text-foreground">{t(`category.${cat}`)}</td>
-                  <td className="py-1.5 text-end text-muted-foreground font-mono">{mb.toFixed(2)}</td>
+                  <td className="py-1.5 text-end text-muted-foreground tabular-nums">{mb.toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
 
-      <div className="rounded-lg border border-border bg-card p-4">
+      <Card>
         <h2 className="text-sm font-semibold text-muted-foreground mb-4">{t('settingsTitle')}</h2>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
@@ -197,7 +198,7 @@ export function DataBudgetDashboard() {
             {saved && <span className="text-xs text-success">{t('saved')}</span>}
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { PatientSummaryPopup } from '../components/appointments/PatientSummaryPopup'
 import type { FhirAppointmentZod, AppointmentStatus } from '@ultranos/shared-types'
 
@@ -67,6 +68,7 @@ describe('PatientSummaryPopup', () => {
   })
 
   it('calls onStatusChange when a status option is selected', async () => {
+    const user = userEvent.setup()
     const onStatusChange = vi.fn().mockResolvedValue(undefined)
     const onClose = vi.fn()
     render(
@@ -76,13 +78,18 @@ describe('PatientSummaryPopup', () => {
         onStatusChange={onStatusChange}
       />,
     )
-    // Open the status dropdown
-    fireEvent.click(screen.getByText('changeStatus'))
+    // Open the Radix DropdownMenu via userEvent (fires pointerdown + click properly)
+    await user.click(screen.getByRole('button', { name: 'changeStatus' }))
 
-    // Click a status option
-    fireEvent.click(screen.getByText('checkedIn'))
+    // Radix DropdownMenuItems render in a portal with role="menuitem"
+    await vi.waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'checkedIn' })).toBeInTheDocument()
+    })
+    await user.click(screen.getByRole('menuitem', { name: 'checkedIn' }))
 
-    expect(onStatusChange).toHaveBeenCalledWith('apt-001', 'arrived')
+    await vi.waitFor(() => {
+      expect(onStatusChange).toHaveBeenCalledWith('apt-001', 'arrived')
+    })
   })
 
   it('shows allergy warning in red when allergyStatus is present', () => {
@@ -94,8 +101,11 @@ describe('PatientSummaryPopup', () => {
         allergyStatus="present"
       />,
     )
-    const allergyText = screen.getByText(/Present/)
-    expect(allergyText.className).toContain('text-destructive')
+    // t('allergyPresent') returns key 'allergyPresent' via mock
+    // Walk up to the nearest element ancestor to check the class
+    const allergyTextNode = screen.getByText('allergyPresent')
+    const allergySpan = allergyTextNode.closest('span') ?? allergyTextNode
+    expect(allergySpan.className).toContain('text-destructive')
   })
 
   it('renders age when provided', () => {

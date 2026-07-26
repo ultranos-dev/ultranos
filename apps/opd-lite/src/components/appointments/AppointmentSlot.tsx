@@ -62,7 +62,7 @@ export function AppointmentSlot({
       variant="ghost"
       type="button"
       onClick={onClick}
-      className={`w-full rounded-lg border p-3 text-start transition-colors ${colorClasses}`}
+      className={`w-full rounded-xl border p-3 text-start transition-colors ${colorClasses}`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-semibold tabular-nums text-foreground">

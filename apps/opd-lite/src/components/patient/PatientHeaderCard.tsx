@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import type { FhirPatient } from '@ultranos/shared-types'
 import { formatRelativeTime } from '@ultranos/ui-kit'
+import { buttonVariants } from '@ultranos/ui-kit/components/ui/button'
 import { db } from '@/lib/db'
+import { Card } from '@/components/Card'
 import { PatientAvatar } from '@/components/patient/PatientAvatar'
 import { Button } from '@/components/ui/Button'
 
@@ -148,7 +150,7 @@ export function PatientHeaderCard({
   ].filter((s): s is string => !!s && s.trim().length > 0)
 
   return (
-    <div className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50">
+    <Card>
       <div className="flex items-start gap-5">
         {/* Avatar */}
         <div className="flex flex-col items-center gap-1">
@@ -162,16 +164,16 @@ export function PatientHeaderCard({
 
         {/* Patient info */}
         <div className="min-w-0 flex-1">
-          {/* Patronymic name chain — patient, father, grandfather, ring-separated */}
-          <h2 className="text-xl font-bold text-foreground leading-snug" dir="auto">
+          {/* Patronymic name chain — patient, father, grandfather, middot-separated */}
+          <h2 className="text-xl font-semibold text-foreground leading-snug" dir="auto">
             {nameSegments.length > 0
               ? nameSegments.map((name, i) => (
                   <span key={i}>
                     {i > 0 && (
                       <span
-                        className="mx-2.5 inline-block h-3 w-3 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
+                        className="mx-1.5 text-muted-foreground"
                         aria-hidden="true"
-                      />
+                      >&middot;</span>
                     )}
                     {name}
                   </span>
@@ -195,16 +197,22 @@ export function PatientHeaderCard({
             {phone}
           </p>
 
-          {/* Baseline vitals row */}
-          <p className="mt-1 text-sm text-muted-foreground">
-            Height: {vitals.height}
-            <span className="mx-1">&middot;</span>
-            Weight: {vitals.weight}
-            <span className="mx-1">&middot;</span>
-            BMI: {vitals.bmi}
-            <span className="mx-1">&middot;</span>
-            Blood: {bloodGroup}
-          </p>
+          {/* Baseline vitals grid */}
+          <dl className="mt-3 grid grid-cols-4 gap-x-3 gap-y-1">
+            {[
+              { label: 'Height', value: vitals.height },
+              { label: 'Weight', value: vitals.weight },
+              { label: 'BMI', value: vitals.bmi },
+              { label: 'Blood', value: bloodGroup },
+            ].map(({ label, value }) => (
+              <div key={label} className="min-w-0">
+                <dt className="text-xs text-muted-foreground">{label}</dt>
+                <dd className="truncate text-sm font-semibold text-foreground tabular-nums">
+                  {value && value !== '--' ? value : <span className="font-normal text-muted-foreground">Not recorded</span>}
+                </dd>
+              </div>
+            ))}
+          </dl>
 
           {/* Last updated by */}
           {patient._ultranos.updatedByName ? (
@@ -238,12 +246,12 @@ export function PatientHeaderCard({
 
         <Link
           href={`/encounter/${patientId}`}
-          className="inline-flex items-center justify-center rounded-pill bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          className={buttonVariants({ variant: 'default' })}
           aria-label="Start New Encounter"
         >
           Start New Encounter
         </Link>
       </div>
-    </div>
+    </Card>
   )
 }

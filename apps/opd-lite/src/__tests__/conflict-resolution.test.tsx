@@ -405,11 +405,13 @@ describe('ConflictList', () => {
     render(<ConflictList />)
 
     await waitFor(() => {
-      expect(screen.getByText('Allergy')).toBeInTheDocument()
-      expect(screen.getByText('Medication')).toBeInTheDocument()
+      // t('resourceAllergy') and t('resourceMedication') return keys via mock
+      expect(screen.getByText('resourceAllergy')).toBeInTheDocument()
+      expect(screen.getByText('resourceMedication')).toBeInTheDocument()
     })
 
-    expect(screen.getByText('2 unresolved conflicts')).toBeInTheDocument()
+    // t('unresolvedCount', { count: 2 }) returns the key via mock
+    expect(screen.getByText('unresolvedCount')).toBeInTheDocument()
   })
 
   it('shows "No unresolved conflicts" when queue is empty', async () => {
@@ -437,7 +439,8 @@ describe('ConflictList', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('overdue-badge')).toBeInTheDocument()
-      expect(screen.getByText('OVERDUE')).toBeInTheDocument()
+      // t('overdue') returns the key via mock
+      expect(screen.getByText('overdue')).toBeInTheDocument()
     })
   })
 
@@ -457,7 +460,8 @@ describe('ConflictList', () => {
     render(<ConflictList />)
 
     await waitFor(() => {
-      expect(screen.getByText('Allergy')).toBeInTheDocument()
+      // t('resourceAllergy') returns key via mock
+      expect(screen.getByText('resourceAllergy')).toBeInTheDocument()
     })
 
     expect(screen.queryByTestId('overdue-badge')).not.toBeInTheDocument()
@@ -485,8 +489,9 @@ describe('ConflictDiffView', () => {
     render(<ConflictDiffView entry={entry} onResolved={onResolved} />)
 
     expect(screen.getByTestId('diff-grid')).toBeInTheDocument()
-    expect(screen.getByText('Local Version')).toBeInTheDocument()
-    expect(screen.getByText('Remote Version')).toBeInTheDocument()
+    // t('localVersion') and t('remoteVersion') return keys via mock
+    expect(screen.getByText('localVersion')).toBeInTheDocument()
+    expect(screen.getByText('remoteVersion')).toBeInTheDocument()
   })
 
   it('"Keep Both" is default and emphasized for Tier 1 resources', () => {
@@ -500,10 +505,11 @@ describe('ConflictDiffView', () => {
 
     const keepBothBtn = screen.getByTestId('resolve-keep-both')
     expect(keepBothBtn).toBeInTheDocument()
-    expect(keepBothBtn.textContent).toContain('Recommended')
-    expect(keepBothBtn.textContent).toContain('Keep Both')
+    // t('recommended') and t('keepBoth') return keys via mock
+    expect(keepBothBtn.textContent).toContain('recommended')
+    expect(keepBothBtn.textContent).toContain('keepBoth')
 
-    // Check green border styling (Tier 1 emphasis)
+    // Check primary styling (Tier 1 emphasis)
     expect(keepBothBtn.className).toContain('bg-primary')
   })
 
@@ -541,8 +547,9 @@ describe('ConflictDiffView', () => {
     const onResolved = vi.fn()
     render(<ConflictDiffView entry={entry} onResolved={onResolved} />)
 
+    // t('safetyRecommendation') returns the key via mock
     expect(
-      screen.getByText(/Safety-Critical Resource/),
+      screen.getByText('safetyRecommendation'),
     ).toBeInTheDocument()
   })
 
@@ -555,8 +562,9 @@ describe('ConflictDiffView', () => {
     const onResolved = vi.fn()
     render(<ConflictDiffView entry={entry} onResolved={onResolved} />)
 
+    // t('remoteUnavailable') returns the key via mock
     expect(
-      screen.getByText(/Remote version data is not available/),
+      screen.getByText('remoteUnavailable'),
     ).toBeInTheDocument()
   })
 })

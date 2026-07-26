@@ -58,4 +58,19 @@ describe('ConsentTextModal', () => {
     fireEvent.click(footerBtn)
     expect(onClose).toHaveBeenCalledOnce()
   })
+
+  it('Pashto tab is present and shows textPs notice instead of full consent sections', () => {
+    render(<ConsentTextModal open={true} onClose={vi.fn()} />)
+
+    // Pashto tab label is present
+    const pashtoTab = screen.getByText('languagePashto')
+    expect(pashtoTab).toBeInTheDocument()
+
+    // Switch to Pashto
+    fireEvent.click(pashtoTab)
+    expect(pashtoTab).toHaveAttribute('aria-selected', 'true')
+
+    // The textPs notice is rendered (mocked t returns key)
+    expect(screen.getByText('textPs')).toBeInTheDocument()
+  })
 })

@@ -37,6 +37,7 @@ import { usePatientSync } from '@/hooks/usePatientSync'
 import { hasUnresolvedTier1Conflicts } from '@/lib/conflict-check'
 import { DetailLayout } from '@ultranos/ui-kit/components/ui/detail-layout'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
+import { AlertTriangle } from '@ultranos/ui-kit/icons'
 import { EncounterContextRail } from '@/components/encounter/EncounterContextRail'
 
 interface EncounterDashboardProps {
@@ -533,8 +534,10 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     .filter(Boolean)
 
   // interactionModal.checkResult is the last stored check result from the modal state.
-  // Falls back to 'UNAVAILABLE' when no prescription has been added yet (checkResult is null).
-  const railInteractionStatus = interactionModal.checkResult?.result ?? 'UNAVAILABLE'
+  // `null` means no check has run yet (no prescription added). This is deliberately
+  // NOT 'UNAVAILABLE': UNAVAILABLE is reserved for a check that ran and failed
+  // (safety rule #3). The rail renders `null` as a neutral "none recorded" chip.
+  const railInteractionStatus = interactionModal.checkResult?.result ?? null
 
   // MedicationStatement.medicationCodeableConcept is CodeableConcept: prefer text.
   // Also include any pending prescriptions from the current encounter session.
@@ -637,15 +640,12 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         as="section"
         aria-label={tEncounter('patientInfo')}
       >
-        <h2 className="text-xl font-bold text-foreground leading-snug" dir="auto">
+        <h2 className="text-xl font-semibold text-foreground leading-snug" dir="auto">
           {nameSegments.length > 0
             ? nameSegments.map((name, i) => (
                 <span key={i}>
                   {i > 0 && (
-                    <span
-                      className="mx-2.5 inline-block h-3 w-3 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
-                      aria-hidden="true"
-                    />
+                    <span className="mx-1.5 text-muted-foreground" aria-hidden="true">&middot;</span>
                   )}
                   {name}
                 </span>
@@ -676,7 +676,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                 className="inline-block h-3 w-3 rounded-full bg-success"
                 aria-hidden="true"
               />
-              <span className="text-lg font-bold text-success" role="status">
+              <span className="text-lg font-semibold text-success" role="status">
                 {tEncounter('activeConsultation')}
               </span>
             </div>
@@ -836,7 +836,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           />
 
           {prescriptionBlocked && (
-            <Alert variant="destructive" role="alert" className="mb-4">
+            <Alert variant="destructive" role="alert" className="mb-4" icon={<AlertTriangle className="h-4 w-4" />}>
               <p className="text-sm font-semibold text-destructive">
                 {tPrescription('prescriptionBlocked')}
               </p>
@@ -851,7 +851,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           />
 
           {prescriptionError && (
-            <Alert variant="destructive" role="alert" className="mt-3">
+            <Alert variant="destructive" role="alert" className="mt-3" icon={<AlertTriangle className="h-4 w-4" />}>
               <p className="text-sm font-semibold text-destructive">{prescriptionError}</p>
             </Alert>
           )}
@@ -859,46 +859,46 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           {/* Pending prescriptions list */}
           {pendingPrescriptions.length > 0 && (
             <div className="mt-6 space-y-3">
-              <h4 className="text-sm font-bold text-foreground">
+              <h4 className="text-sm font-semibold text-foreground">
                 {tPrescription('pendingTitle', { count: pendingPrescriptions.length })}
               </h4>
-              <ul className="space-y-2" aria-label={tPrescription('pendingTitle', { count: pendingPrescriptions.length })}>
+              <ul className="divide-y divide-border" aria-label={tPrescription('pendingTitle', { count: pendingPrescriptions.length })}>
                 {pendingPrescriptions.map((rx) => (
                   <li
                     key={rx.id}
-                    className="flex items-center justify-between rounded-xl ring-[0.65px] ring-border/50 bg-card px-4 py-3"
+                    className="flex items-center justify-between gap-3 py-3"
                   >
                     <div>
                       <span className="font-semibold text-foreground">
                         {rx.medicationCodeableConcept.text}
                       </span>
-                      <span className="ms-2 me-2 text-border">|</span>
+                      <span className="mx-2 text-muted-foreground" aria-hidden="true">&middot;</span>
                       <span className="text-sm text-muted-foreground">
                         {rx.dosageInstruction?.[0]?.text}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
                       {rx._ultranos.interactionCheckResult === 'WARNING' && (
-                        <span className="rounded-full bg-warning/20 px-3 py-1 text-xs font-bold text-foreground">
+                        <span className="rounded-full bg-warning/20 px-3 py-1 text-xs font-semibold text-foreground">
                           {tPrescription('interactionWarning')}
                         </span>
                       )}
                       {rx._ultranos.interactionCheckResult === 'BLOCKED' && (
-                        <span className="rounded-full bg-destructive/20 px-3 py-1 text-xs font-bold text-destructive" title={rx._ultranos.interactionOverrideReason}>
+                        <span className="rounded-full bg-destructive/20 px-3 py-1 text-xs font-semibold text-destructive" title={rx._ultranos.interactionOverrideReason}>
                           {tPrescription('interactionOverride')}
                         </span>
                       )}
                       {rx._ultranos.interactionCheckResult === 'CLEAR' && (
-                        <span className="rounded-full bg-success/20 px-3 py-1 text-xs font-bold text-success">
+                        <span className="rounded-full bg-success/20 px-3 py-1 text-xs font-semibold text-success">
                           {tPrescription('interactionClear')}
                         </span>
                       )}
                       {rx._ultranos.interactionCheckResult === 'UNAVAILABLE' && (
-                        <span className="rounded-full bg-muted px-3 py-1 text-xs font-bold text-muted-foreground">
+                        <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
                           {tPrescription('interactionUnchecked')}
                         </span>
                       )}
-                      <span className="rounded-full bg-warning/20 px-3 py-1 text-xs font-bold text-foreground">
+                      <span className="rounded-full bg-warning/20 px-3 py-1 text-xs font-semibold text-foreground">
                         {tPrescription('pendingFulfillment')}
                       </span>
                       <Button
@@ -918,7 +918,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
               {/* QR Code Generation — available when prescriptions exist and key is loaded */}
               {signingKey && signingPublicKey && (
                 <div className="mt-6 border-t border-border pt-6">
-                  <h4 className="mb-3 text-sm font-bold text-foreground">
+                  <h4 className="mb-3 text-sm font-semibold text-foreground">
                     {tPrescription('digitalPrescription')}
                   </h4>
                   <PrescriptionQR

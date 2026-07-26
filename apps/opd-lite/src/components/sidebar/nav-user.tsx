@@ -22,7 +22,8 @@ import {
   Moon,
   Sun,
 } from '@ultranos/ui-kit/icons'
-import { formatUserRole } from '@ultranos/ui-kit'
+import { useLocale } from 'next-intl'
+import { formatUserRole, getDirection } from '@ultranos/ui-kit'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +53,8 @@ export function NavUser() {
   const { isMobile } = useSidebar()
   const { theme, toggleTheme } = useTheme()
   const session = useAuthSessionStore((s) => s.session)
+  const locale = useLocale()
+  const isRtl = getDirection(locale) === 'rtl'
 
   const email = session?.email ?? ''
   const name = session?.name || email.split('@')[0] || 'Clinician'
@@ -93,25 +96,25 @@ export function NavUser() {
               <div className="flex shrink-0 size-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
                 {initials}
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              <div className="grid flex-1 text-start text-sm leading-tight">
                 <span className="truncate font-semibold">{name}</span>
                 <span className="truncate text-xs text-muted-foreground">{formatUserRole(role)}</span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <ChevronsUpDown className="ms-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56"
-            side={isMobile ? 'top' : 'right'}
+            side={isMobile ? 'top' : isRtl ? 'left' : 'right'}
             align="end"
             sideOffset={4}
           >
             <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+              <div className="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
                 <div className="flex shrink-0 size-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
                   {initials}
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                <div className="grid flex-1 text-start text-sm leading-tight">
                   <span className="truncate font-semibold">{name}</span>
                   <span className="truncate text-xs text-muted-foreground">{email}</span>
                 </div>
@@ -120,15 +123,15 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={toggleTheme}>
               {theme === 'light' ? (
-                <Moon className="mr-2 size-4" />
+                <Moon className="me-2 size-4" />
               ) : (
-                <Sun className="mr-2 size-4" />
+                <Sun className="me-2 size-4" />
               )}
               {theme === 'light' ? 'Dark mode' : 'Light mode'}
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/settings">
-                <Settings className="mr-2 size-4" />
+                <Settings className="me-2 size-4" />
                 Settings
               </Link>
             </DropdownMenuItem>
@@ -137,7 +140,7 @@ export function NavUser() {
               className="text-destructive focus:text-destructive focus:bg-destructive/10"
               onClick={handleSignOut}
             >
-              <LogOut className="mr-2 size-4" />
+              <LogOut className="me-2 size-4" />
               Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>

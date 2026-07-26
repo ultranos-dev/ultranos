@@ -1,12 +1,16 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import type { LocalEncounter, SoapLedgerEntry } from '@/lib/db'
 import { EncounterDetailModal } from '@/components/patient/EncounterDetailModal'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { StaleDataBanner } from '@ultranos/ui-kit'
+import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { buttonVariants } from '@ultranos/ui-kit/components/ui/button'
 import { useSyncStore } from '@/stores/sync-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import type { AuthSession } from '@/stores/auth-session-store'
@@ -53,9 +57,9 @@ function parseEncounterTimestamp(timestamp: string): Date | null {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
-function formatEncounterDate(timestamp: string): string {
+function formatEncounterDate(timestamp: string): string | null {
   const date = parseEncounterTimestamp(timestamp)
-  if (!date) return 'Unknown date'
+  if (!date) return null
   return date.toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
@@ -72,14 +76,14 @@ function formatEncounterTime(timestamp: string): string {
   })
 }
 
-function getStatusBadge(status: string): { label: string; classes: string } {
+function getStatusBadge(status: string, t: (key: string) => string): { label: string; classes: string } {
   switch (status) {
     case 'finished':
-      return { label: 'Finished', classes: 'bg-success/20 text-success' }
+      return { label: t('finished'), classes: 'bg-success/20 text-success' }
     case 'cancelled':
-      return { label: 'Cancelled', classes: 'bg-muted text-muted-foreground' }
+      return { label: t('cancelled'), classes: 'bg-muted text-muted-foreground' }
     case 'in-progress':
-      return { label: 'In Progress', classes: 'bg-primary/15 text-primary' }
+      return { label: t('inProgress'), classes: 'bg-primary/15 text-primary' }
     default:
       return { label: status, classes: 'bg-muted text-muted-foreground' }
   }
@@ -179,6 +183,7 @@ function sortEncountersDesc(encounters: LocalEncounter[]): void {
 }
 
 export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
+  const t = useTranslations('encounter')
   const [summaries, setSummaries] = useState<EncounterSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<EncounterSummary | null>(null)
@@ -262,7 +267,6 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
   }, [globalLastSyncedAt, loadFromDexie])
 
   const handleSyncNow = useCallback(async () => {
-    console.warn('[EncounterHistoryList] handleSyncNow clicked')
     // Use the sync engine pull path, then fall back to legacy revalidation
     try {
       const { getSupabaseBrowserClient } = await import('@/lib/supabase')
@@ -293,14 +297,22 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
 
 
   if (loading) {
-    return <p className="text-sm font-semibold text-muted-foreground">Loading encounters...</p>
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-20 w-full" />
+      </div>
+    )
   }
 
   if (summaries.length === 0) {
     return (
-      <p className="text-sm font-semibold text-muted-foreground" data-testid="no-encounters">
-        No encounters recorded for this patient
-      </p>
+      <EmptyState
+        size="sm"
+        title={t('noEncounters')}
+        data-testid="no-encounters"
+      />
     )
   }
 
@@ -315,10 +327,10 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
           />
         </div>
       )}
-    <ul className="space-y-3" role="list" aria-label="Patient encounter history">
+    <ul className="space-y-3" role="list" aria-label={t('historyAria')}>
       {summaries.map((summary) => {
         const { encounter, soapPreview, diagnoses, rxCount, doctorName } = summary
-        const badge = getStatusBadge(encounter.status)
+        const badge = getStatusBadge(encounter.status, t)
         const isActive = encounter.status === 'in-progress'
         const ts = getEncounterTimestamp(encounter)
         const dateLabel = formatEncounterDate(ts)
@@ -327,7 +339,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
         return (
           <li
             key={encounter.id}
-            className="rounded-xl bg-card/70 backdrop-blur-md shadow-sm ring-[0.65px] ring-border/50"
+            className="rounded-xl bg-card shadow-sm ring-[0.65px] ring-border/50"
             data-testid="encounter-item"
           >
             <div className="flex items-stretch">
@@ -337,11 +349,11 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
                 className="flex min-w-0 flex-1 flex-col gap-2 rounded-xl p-4 text-start transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                 onClick={() => setSelected(summary)}
                 aria-haspopup="dialog"
-                aria-label={`View encounter on ${dateLabel}`}
+                aria-label={t('viewEncounterOn', { date: dateLabel ?? t('unknownDate') })}
               >
                 {/* Date (bold) · Time · Doctor · [status badge] */}
                 <span className="flex w-full flex-wrap items-center gap-x-1.5 gap-y-1 text-sm" dir="auto">
-                  <span className="font-bold text-foreground">{dateLabel}</span>
+                  <span className="font-semibold text-foreground">{dateLabel ?? t('unknownDate')}</span>
                   {timeLabel && (
                     <>
                       <span className="text-muted-foreground" aria-hidden="true">·</span>
@@ -355,7 +367,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
                     </>
                   )}
                   <span
-                    className={`ms-1 inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${badge.classes}`}
+                    className={`ms-1 inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge.classes}`}
                     data-testid="status-badge"
                   >
                     {badge.label}
@@ -381,7 +393,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
                     ))}
                     {rxCount > 0 && (
                       <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                        {rxCount} Rx
+                        {t('rxCount', { count: rxCount })}
                       </span>
                     )}
                   </span>
@@ -393,10 +405,10 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
                 <div className="flex shrink-0 items-center ps-2 pe-4">
                   <Link
                     href={`/encounter/${patientId}`}
-                    className="inline-flex items-center justify-center rounded-pill bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                    aria-label="Continue active encounter"
+                    className={buttonVariants({ variant: 'default' })}
+                    aria-label={t('continueEncounterAria')}
                   >
-                    Continue
+                    {t('continueEncounter')}
                   </Link>
                 </div>
               )}
@@ -413,10 +425,10 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
         encounterId={selected.encounter.id}
         patientId={patientId}
         encounterDate={selected.encounter.period?.start}
-        dateLabel={formatEncounterDate(getEncounterTimestamp(selected.encounter))}
+        dateLabel={formatEncounterDate(getEncounterTimestamp(selected.encounter)) ?? t('unknownDate')}
         timeLabel={formatEncounterTime(getEncounterTimestamp(selected.encounter))}
         doctorName={selected.doctorName}
-        status={getStatusBadge(selected.encounter.status)}
+        status={getStatusBadge(selected.encounter.status, t)}
       />
     )}
     </div>

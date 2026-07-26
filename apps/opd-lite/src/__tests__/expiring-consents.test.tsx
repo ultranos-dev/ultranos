@@ -46,6 +46,13 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
   CalendarClock: () => <svg data-testid="icon-calendar-clock" />,
 }))
 
+// Mock Alert from ui-kit
+vi.mock('@ultranos/ui-kit/components/ui/alert', () => ({
+  Alert: ({ children, role }: { children: React.ReactNode; role?: string }) => (
+    <div role={role ?? 'status'} data-testid="alert">{children}</div>
+  ),
+}))
+
 // Mock Button
 vi.mock('../components/ui/Button', () => ({
   Button: ({ children, ...props }: React.ComponentProps<'button'>) => (
@@ -216,6 +223,32 @@ describe('ExpiringConsentsPage', () => {
         expect(screen.getAllByText('colVersion').length).toBeGreaterThanOrEqual(1)
         expect(screen.getAllByText('colGrantorRole').length).toBeGreaterThanOrEqual(1)
       })
+    })
+  })
+
+  describe('fetch error state', () => {
+    it('shows a destructive Alert on fetch failure instead of an empty state', async () => {
+      global.fetch = vi.fn().mockRejectedValue(new Error('Network error'))
+      render(<ExpiringConsentsPage />)
+
+      await waitFor(() => {
+        // The alert must be visible so a load failure is never mistaken for "no expiring consents"
+        expect(screen.getByRole('alert')).toBeInTheDocument()
+      })
+
+      // Must NOT show the "all clear" empty state
+      expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument()
+    })
+
+    it('does not render the data table on fetch failure', async () => {
+      global.fetch = vi.fn().mockRejectedValue(new Error('Network error'))
+      render(<ExpiringConsentsPage />)
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toBeInTheDocument()
+      })
+
+      expect(screen.queryByRole('table')).not.toBeInTheDocument()
     })
   })
 })

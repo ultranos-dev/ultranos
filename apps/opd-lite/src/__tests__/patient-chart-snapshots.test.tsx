@@ -52,12 +52,9 @@ vi.mock('../lib/trpc', () => ({
   fetchDiagnosticReportsForPatient: vi.fn().mockResolvedValue(undefined),
 }))
 
-// Mock lab components (Story 20.5)
-vi.mock('../components/clinical/LabResultsList', () => ({
-  LabResultsList: () => null,
-}))
-vi.mock('../components/clinical/LabResultDetail', () => ({
-  LabResultDetail: () => null,
+// Mock lab timeline (wired in place of the flat LabResultsList — Story 52.4)
+vi.mock('../components/clinical/PatientResultTimeline', () => ({
+  PatientResultTimeline: () => null,
 }))
 
 const { PatientChartPage } = await import('../components/patient/PatientChartPage')

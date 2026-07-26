@@ -19,6 +19,7 @@ const TABS = [
   { locale: 'en', labelKey: 'languageEnglish', dir: 'ltr' as const },
   { locale: 'ar', labelKey: 'languageArabic', dir: 'rtl' as const },
   { locale: 'prs', labelKey: 'languageDari', dir: 'rtl' as const },
+  { locale: 'ps', labelKey: 'languagePashto', dir: 'rtl' as const },
 ]
 
 const CONSENT_SECTIONS = [
@@ -32,7 +33,8 @@ const CONSENT_SECTIONS = [
 
 export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
   const t = useTranslations('registration')
-  const [activeTab, setActiveTab] = useState<'en' | 'ar' | 'prs'>('en')
+  const tConsent = useTranslations('consent')
+  const [activeTab, setActiveTab] = useState<'en' | 'ar' | 'prs' | 'ps'>('en')
 
   const activeDir = TABS.find((tab) => tab.locale === activeTab)?.dir ?? 'ltr'
 
@@ -41,7 +43,7 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
       <DialogContent className="max-w-2xl p-0">
         {/* Header */}
         <DialogHeader className="flex-row items-center justify-between rounded-t-xl border-b border-border bg-muted px-6 py-4">
-          <DialogTitle className="text-xl font-black text-foreground">
+          <DialogTitle className="text-xl font-semibold text-foreground">
             {t('consentDocumentTitle')}
           </DialogTitle>
         </DialogHeader>
@@ -54,7 +56,7 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
               variant={activeTab === tab.locale ? 'primary' : 'ghost'}
               role="tab"
               aria-selected={activeTab === tab.locale}
-              onClick={() => setActiveTab(tab.locale as 'en' | 'ar' | 'prs')}
+              onClick={() => setActiveTab(tab.locale as 'en' | 'ar' | 'prs' | 'ps')}
               className="flex-1 min-h-[44px]"
             >
               {t(tab.labelKey)}
@@ -71,16 +73,24 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
             {t('consentDocumentVersion')}
           </p>
 
-          {CONSENT_SECTIONS.map((section) => (
-            <div key={section} className="mb-5">
-              <h3 className="text-sm font-bold text-foreground mb-1">
-                {t(`consentDocument.${activeTab}.${section}Title`)}
-              </h3>
+          {activeTab === 'ps' ? (
+            <div className="mb-5">
               <p className="text-sm leading-relaxed text-foreground">
-                {t(`consentDocument.${activeTab}.${section}Body`)}
+                {tConsent('textPs')}
               </p>
             </div>
-          ))}
+          ) : (
+            CONSENT_SECTIONS.map((section) => (
+              <div key={section} className="mb-5">
+                <h3 className="text-sm font-bold text-foreground mb-1">
+                  {t(`consentDocument.${activeTab}.${section}Title`)}
+                </h3>
+                <p className="text-sm leading-relaxed text-foreground">
+                  {t(`consentDocument.${activeTab}.${section}Body`)}
+                </p>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Footer */}

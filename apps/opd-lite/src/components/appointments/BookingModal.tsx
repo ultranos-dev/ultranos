@@ -16,6 +16,7 @@ import { searchPatientsOnHub } from '@/lib/trpc'
 import { hashNationalId } from '@/lib/hash-national-id'
 import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import type { AppointmentServiceType, FhirPatient } from '@ultranos/shared-types'
+import { AlertTriangle } from '@ultranos/ui-kit/icons'
 
 /** Clinic hours: 08:00-17:00, 30-minute slots */
 const CLINIC_START_HOUR = 8
@@ -307,7 +308,8 @@ export function BookingModal({
 
         {/* Safety Rule 4: Allergy banner at highest prominence */}
         {hasAllergies && (
-          <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm font-semibold text-destructive">
+          <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm font-semibold text-destructive">
+            <AlertTriangle className="inline-block h-4 w-4 me-1.5 align-[-2px] shrink-0" aria-hidden="true" />
             {t('allergyWarning')}
           </div>
         )}
@@ -323,7 +325,7 @@ export function BookingModal({
               value={patientQuery}
               onChange={(e) => handlePatientQueryChange(e.target.value)}
               placeholder={t('selectPatient')}
-              className={`w-full rounded-xl border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 ${
+              className={`w-full rounded-xl border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring ${
                 selectedPatient
                   ? 'border-success bg-success/10'
                   : 'border-border'
@@ -344,7 +346,7 @@ export function BookingModal({
                       role="option"
                       aria-selected={false}
                       onClick={() => handleSelectPatient(patient)}
-                      className="flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-primary-50"
+                      className="flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-accent"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-medium text-foreground">
@@ -380,7 +382,7 @@ export function BookingModal({
               type="date"
               value={formatDateInput(bookingDate)}
               onChange={handleDateChange}
-              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
 
@@ -404,7 +406,7 @@ export function BookingModal({
                       isBusy
                         ? 'bg-muted text-muted-foreground cursor-not-allowed'
                         : isSelected
-                          ? 'bg-primary-600 text-white'
+                          ? 'bg-primary text-primary-foreground'
                           : 'bg-success/10 text-success hover:bg-success/20 border border-success/20'
                     }`}
                   >
@@ -432,7 +434,7 @@ export function BookingModal({
                     value={value}
                     checked={serviceType === value}
                     onChange={() => setServiceType(value)}
-                    className="text-primary-600"
+                    className="text-primary"
                   />
                   {t(key)}
                 </label>
@@ -449,13 +451,13 @@ export function BookingModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
 
           {/* Error message */}
           {error && (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm font-medium text-destructive">
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm font-medium text-destructive">
               {error}
             </div>
           )}

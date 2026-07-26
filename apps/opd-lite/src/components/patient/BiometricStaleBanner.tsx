@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { Button } from '@/components/ui/Button'
 
@@ -19,6 +20,8 @@ export function BiometricStaleBanner({
   expectedVersion,
   onUpdateBiometric,
 }: BiometricStaleBannerProps) {
+  const t = useTranslations('patient')
+
   if (currentVersion === expectedVersion) {
     return null
   }
@@ -27,8 +30,7 @@ export function BiometricStaleBanner({
     <Alert variant="info" className="mb-4">
       <div className="flex items-center justify-between gap-3">
         <p>
-          A newer biometric algorithm is available. Re-enrolling improves
-          matching accuracy.
+          {t('biometricStaleMessage')}
         </p>
         <Button
           variant="primary"
@@ -36,7 +38,7 @@ export function BiometricStaleBanner({
           type="button"
           onClick={onUpdateBiometric}
         >
-          Update Biometric
+          {t('biometricStaleAction')}
         </Button>
       </div>
     </Alert>

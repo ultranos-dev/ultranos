@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
+import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { UserSearch } from '@ultranos/ui-kit/icons'
 import { getHubApiUrl, getAuthHeaders } from '@/lib/hub-auth'
@@ -107,17 +109,19 @@ export function DuplicateReviewTable() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12" role="status">
-        <span className="text-sm text-muted-foreground">{t('loading')}</span>
+      <div className="space-y-2" aria-label={t('loading')} aria-busy="true">
+        <Skeleton className="h-12 w-full rounded-xl" />
+        <Skeleton className="h-12 w-full rounded-xl" />
+        <Skeleton className="h-12 w-full rounded-xl" />
       </div>
     )
   }
 
   if (error && rows.length === 0) {
     return (
-      <div role="alert" className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      <Alert variant="destructive" role="alert">
         {error}
-      </div>
+      </Alert>
     )
   }
 
@@ -130,9 +134,9 @@ export function DuplicateReviewTable() {
   return (
     <div>
       {error && (
-        <div role="alert" className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <Alert variant="destructive" role="alert" className="mb-4">
           {error}
-        </div>
+        </Alert>
       )}
 
       <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
@@ -217,9 +221,9 @@ function TableRow({
         role="row"
       >
         <td className={`px-4 py-3 font-medium${isPending ? ' text-foreground' : ''}`}>{row.patientLabel}</td>
-        <td className="px-4 py-3">{row.topScore}</td>
+        <td className="px-4 py-3 tabular-nums">{row.topScore}</td>
         <td className="px-4 py-3">
-          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold ${badge.classes}`}>
+          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${badge.classes}`}>
             {badge.label}
           </span>
         </td>

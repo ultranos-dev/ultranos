@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
 import { ChevronRight } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
@@ -16,25 +17,30 @@ interface LabResultsListProps {
 
 const URGENT_THRESHOLD_MS = 24 * 60 * 60 * 1000 // 24 hours
 
-function statusBadge(status: string) {
+function statusBadge(status: string, t: (key: string) => string) {
   switch (status) {
     case 'preliminary':
       return (
         <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-bold text-warning">
-          Preliminary
+          {t('statusPreliminary')}
         </span>
       )
     case 'final':
       return (
         <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-bold text-success">
-          Final
+          {t('statusFinal')}
         </span>
       )
     case 'amended':
+      return (
+        <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-bold text-primary">
+          {t('statusAmended')}
+        </span>
+      )
     case 'corrected':
       return (
-        <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary">
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+        <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-bold text-primary">
+          {t('statusCorrected')}
         </span>
       )
     default:
@@ -57,7 +63,7 @@ function isUrgent(report: LocalDiagnosticReport): boolean {
 }
 
 function formatDate(iso?: string): string {
-  if (!iso) return 'Unknown'
+  if (!iso) return ''
   return new Date(iso).toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
@@ -66,6 +72,7 @@ function formatDate(iso?: string): string {
 }
 
 export function LabResultsList({ patientId, onSelectReport }: LabResultsListProps) {
+  const t = useTranslations('labResults')
   const [reports, setReports] = useState<LocalDiagnosticReport[]>([])
   const [loading, setLoading] = useState(true)
   const [consentResult, setConsentResult] = useState<ConsentCheckResult | null>(null)
@@ -119,7 +126,7 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
   if (loading) {
     return (
       <div className="py-4 text-center text-sm text-muted-foreground">
-        Loading lab results...
+        {t('loading')}
       </div>
     )
   }
@@ -128,19 +135,19 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
   if (consentResult && !consentResult.granted) {
     if (consentResult.reason === 'expired') {
       return (
-        <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm" data-testid="consent-expired">
-          <p className="font-bold text-warning">Consent has expired — request renewal</p>
+        <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm" data-testid="consent-expired">
+          <p className="font-bold text-warning">{t('consentExpired')}</p>
           <p className="mt-1 text-warning">
-            The patient&apos;s consent to view lab results has expired. Please request a renewed consent before accessing lab data.
+            {t('consentExpiredDetail')}
           </p>
         </div>
       )
     }
     return (
-      <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm" data-testid="consent-required">
-        <p className="font-bold text-warning">Patient consent required to view lab results</p>
+      <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm" data-testid="consent-required">
+        <p className="font-bold text-warning">{t('consentRequired')}</p>
         <p className="mt-1 text-warning">
-          The patient has not granted consent for lab data access. Please obtain consent before viewing lab results.
+          {t('consentRequiredDetail')}
         </p>
       </div>
     )
@@ -150,28 +157,28 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
   const consentUnverified = consentResult?.granted && consentResult.unverified
 
   if (reports.length === 0) {
-    return <EmptyState title="No lab results available for this patient." size="sm" />
+    return <EmptyState title={t('noResults')} size="sm" />
   }
 
   return (
     <div className="space-y-2" data-testid="lab-results-list">
       {consentUnverified && (
-        <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm" data-testid="consent-unverified">
-          <p className="font-bold text-warning">Consent status could not be verified</p>
+        <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 text-sm" data-testid="consent-unverified">
+          <p className="font-bold text-warning">{t('consentUnverified')}</p>
           <p className="mt-1 text-warning">
-            Showing cached results. Consent will be re-checked when connectivity is restored.
+            {t('consentUnverifiedDetail')}
           </p>
         </div>
       )}
       <h3 className="text-lg font-bold text-foreground">
-        Lab Results ({reports.length})
+        {t('title', { count: reports.length })}
       </h3>
-      <ul className="space-y-2" aria-label="Lab results list">
+      <ul className="space-y-2" aria-label={t('listAriaLabel')}>
         {reports.map((report) => {
           const urgent = isUrgent(report)
           const loincDisplay =
-            report.code.coding?.[0]?.display ?? report.code.coding?.[0]?.code ?? 'Unknown Test'
-          const labName = report.performer?.[0]?.display ?? 'Unknown Lab'
+            report.code.coding?.[0]?.display ?? report.code.coding?.[0]?.code ?? t('unknownTest')
+          const labName = report.performer?.[0]?.display ?? t('unknownLab')
           const collectionDate = formatDate(report.effectiveDateTime ?? report.issued)
 
           return (
@@ -180,12 +187,12 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
                 variant="ghost"
                 type="button"
                 onClick={() => onSelectReport(report)}
-                className={`w-full rounded-lg border px-4 py-3 text-start hover:bg-muted ${
+                className={`w-full rounded-xl border px-4 py-3 text-start hover:bg-muted ${
                   urgent
                     ? 'border-destructive/30 bg-destructive/10'
                     : 'border-border bg-background'
                 }`}
-                aria-label={`View ${loincDisplay} from ${labName}`}
+                aria-label={t('viewAriaLabel', { test: loincDisplay, lab: labName })}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
@@ -193,13 +200,13 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
                       <span className="font-semibold text-foreground">
                         {loincDisplay}
                       </span>
-                      {statusBadge(report.status)}
+                      {statusBadge(report.status, t)}
                       {urgent && (
                         <span
-                          className="rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-white"
+                          className="rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground"
                           data-testid="urgent-indicator"
                         >
-                          Urgent
+                          {t('urgent')}
                         </span>
                       )}
                     </div>

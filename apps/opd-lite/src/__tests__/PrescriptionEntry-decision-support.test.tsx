@@ -1,8 +1,13 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { db } from '@/lib/db'
 import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
+
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
+}))
 
 const entry = (): DrugEntry =>
   ({ atcCode: 'J01CA04', innName: 'Amoxicillin', brandNames: ['Amoxil'], doseForms: ['capsule'], therapeuticClass: '',
@@ -21,7 +26,7 @@ beforeEach(async () => {
 describe('PrescriptionEntry decision support', () => {
   it('shows the safety panel after selecting a medication', async () => {
     render(<PrescriptionEntry onSubmit={() => {}} patientSex="male" patientAge={40} />)
-    fireEvent.change(screen.getByLabelText(/Search medications/i), { target: { value: 'Amox' } })
+    fireEvent.change(screen.getByLabelText('searchAria'), { target: { value: 'Amox' } })
     // Wait for the listbox to appear, then click the first option
     const option = await waitFor(() => {
       const options = screen.getAllByRole('option')
@@ -39,11 +44,11 @@ describe('PrescriptionEntry decision support', () => {
     await db.drugBrandsMirror.put({ id: 'b1', genericAtcCode: 'J01CA04', brandName: 'Amoxil' } as never)
     let submitted: import('@/lib/prescription-config').PrescriptionFormData | null = null
     render(<PrescriptionEntry onSubmit={(f) => { submitted = f }} patientSex="male" patientAge={40} />)
-    fireEvent.change(screen.getByLabelText(/Search medications/i), { target: { value: 'Amox' } })
+    fireEvent.change(screen.getByLabelText('searchAria'), { target: { value: 'Amox' } })
     fireEvent.mouseDown(await waitFor(() => screen.getAllByRole('option')[0]!))
     const brandSelect = await waitFor(() => screen.getByTestId('brand-hint-select'))
     fireEvent.change(brandSelect, { target: { value: 'Amoxil' } })
-    fireEvent.click(screen.getByRole('button', { name: /Add Prescription/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'addPrescription' }))
     await waitFor(() => expect(submitted).not.toBeNull())
     expect(submitted!.brandHint).toBe('Amoxil')
   })

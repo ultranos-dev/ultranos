@@ -575,7 +575,7 @@ export function PatientRegistrationForm({
                 value={gender}
                 onChange={(e) => setGender(e.target.value as AdministrativeGender)}
                 aria-invalid={!!fieldErrors.gender}
-                className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                   fieldErrors.gender
                     ? 'border-destructive focus:border-destructive focus:ring-destructive'
                     : 'border-border focus:border-primary focus:ring-ring'
@@ -628,7 +628,7 @@ export function PatientRegistrationForm({
                     min={1900}
                     max={CURRENT_YEAR}
                     aria-invalid={!!fieldErrors.birthYear}
-                    className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                    className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                       fieldErrors.birthYear
                         ? 'border-destructive focus:border-destructive focus:ring-destructive'
                         : 'border-border focus:border-primary focus:ring-ring'
@@ -656,7 +656,7 @@ export function PatientRegistrationForm({
                     id="birth-date"
                     type="date"
                     aria-invalid={!!fieldErrors.birthDate}
-                    className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                    className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                       fieldErrors.birthDate
                         ? 'border-destructive focus:border-destructive focus:ring-destructive'
                         : 'border-border focus:border-primary focus:ring-ring'
@@ -688,7 +688,7 @@ export function PatientRegistrationForm({
                 id="marital-status"
                 value={maritalStatus}
                 onChange={(e) => setMaritalStatus(e.target.value as MaritalStatus | '')}
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="">{t('maritalStatusPlaceholder')}</option>
                 <option value="M">{t('maritalMarried')}</option>
@@ -714,7 +714,7 @@ export function PatientRegistrationForm({
                 id="blood-group"
                 value={bloodGroup}
                 onChange={(e) => setBloodGroup(e.target.value)}
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 {BLOOD_GROUPS.map((bg) => (
                   <option key={bg} value={bg}>
@@ -749,7 +749,7 @@ export function PatientRegistrationForm({
                 type="text"
                 inputMode="text"
                 maxLength={200}
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                 placeholder={t('nationalIdPlaceholder')}
                 value={nationalId}
                 onChange={(e) => setNationalId(e.target.value)}
@@ -773,7 +773,7 @@ export function PatientRegistrationForm({
                   value={phoneUse}
                   onChange={(e) => setPhoneUse(e.target.value as 'home' | 'work' | 'mobile' | '')}
                   aria-label={t('phoneUse')}
-                  className="min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                 >
                   <option value="">{t('phoneUsePlaceholder')}</option>
                   <option value="mobile">{t('phoneUseMobile')}</option>
@@ -785,7 +785,7 @@ export function PatientRegistrationForm({
                   type="tel"
                   dir="ltr"
                   inputMode="tel"
-                  className="flex-1 min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="flex-1 min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                   placeholder={t('phonePlaceholder')}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -808,7 +808,7 @@ export function PatientRegistrationForm({
                 id="preferred-language"
                 value={preferredLanguage}
                 onChange={(e) => setPreferredLanguage(e.target.value as PatientLanguage)}
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="en">{t('languageEnglish')}</option>
                 <option value="ar">{t('languageArabic')}</option>
@@ -880,7 +880,7 @@ export function PatientRegistrationForm({
         )}
 
         {/* Sticky save bar */}
-        <div className="sticky bottom-0 z-10 flex items-center justify-between gap-4 border-t border-border bg-background/95 py-3 backdrop-blur">
+        <div className="sticky bottom-0 z-10 flex items-center justify-between gap-4 border-t border-border bg-background py-3">
           <span className="text-sm text-muted-foreground">
             {isDirty ? t('unsavedChanges') : null}
           </span>

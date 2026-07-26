@@ -10,6 +10,11 @@ vi.mock('@/lib/prescription-signing', () => ({
   signPrescriptionBundle: (...args: unknown[]) => mockSignBundle(...args),
 }))
 
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, values?: Record<string, unknown>) =>
+    values ? `${key} ${JSON.stringify(values)}` : key,
+}))
+
 function makeMockRx(overrides?: Partial<FhirMedicationRequestZod>): FhirMedicationRequestZod {
   return {
     id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
@@ -100,7 +105,7 @@ describe('PrescriptionQR', () => {
     await user.click(screen.getByRole('button', { name: /finalize/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/prescription finalized/i)).toBeInTheDocument()
+      expect(screen.getByText('finalized')).toBeInTheDocument()
     })
   })
 

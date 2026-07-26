@@ -3,6 +3,12 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import type { FhirDiagnosticReport } from '@ultranos/shared-types'
 import type { NotificationItem } from '../lib/notification-api'
 
+// Mock next-intl
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
+}))
+
 // Mock audit
 const mockAuditPhiAccess = vi.fn()
 vi.mock('../lib/audit', () => ({
@@ -93,8 +99,8 @@ describe('LabResultDetail', () => {
     render(<LabResultDetail report={report} onBack={onBack} />)
 
     expect(screen.getByText('CBC panel')).toBeInTheDocument()
-    expect(screen.getByText(/LOINC: 58410-2/)).toBeInTheDocument()
-    expect(screen.getByText('Final')).toBeInTheDocument()
+    expect(screen.getByText('loincCode')).toBeInTheDocument()
+    expect(screen.getByText('statusFinal')).toBeInTheDocument()
     expect(screen.getByText('Lab Alpha')).toBeInTheDocument()
     expect(screen.getByText('All values within normal range.')).toBeInTheDocument()
   })
@@ -141,7 +147,7 @@ describe('LabResultDetail', () => {
     render(<LabResultDetail report={report} notification={notification} onBack={onBack} />)
 
     expect(screen.getByTestId('acknowledge-button')).toBeInTheDocument()
-    expect(screen.getByText('Acknowledge Result')).toBeInTheDocument()
+    expect(screen.getByText('acknowledge')).toBeInTheDocument()
   })
 
   it('calls acknowledgeNotification on button click', async () => {
@@ -159,7 +165,7 @@ describe('LabResultDetail', () => {
 
     // Should show acknowledged state
     await waitFor(() => {
-      expect(screen.getByText('Result Acknowledged')).toBeInTheDocument()
+      expect(screen.getByText('acknowledged')).toBeInTheDocument()
     })
   })
 
@@ -194,7 +200,7 @@ describe('LabResultDetail', () => {
 
     render(<LabResultDetail report={report} onBack={onBack} />)
 
-    fireEvent.click(screen.getByLabelText('Back to lab results'))
+    fireEvent.click(screen.getByLabelText('backAriaLabel'))
     expect(onBack).toHaveBeenCalledOnce()
   })
 
@@ -204,7 +210,7 @@ describe('LabResultDetail', () => {
 
     render(<LabResultDetail report={report} onBack={onBack} />)
 
-    expect(screen.getByText(/No report content or attachments available/)).toBeInTheDocument()
+    expect(screen.getByText('noContent')).toBeInTheDocument()
   })
 
   it('does not show acknowledge button when no notification and none found', () => {

@@ -3,6 +3,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
 import { enrichDrug } from '@/lib/trpc'
 
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
+}))
+
 // Mock medication search to return an ATC-coded result
 vi.mock('@/lib/medication-search', () => ({
   searchMedications: vi.fn().mockResolvedValue([
@@ -50,15 +55,15 @@ describe('PrescriptionEntry — enrich form', () => {
   it('does not show enrich form when canEnrich is false (default)', async () => {
     render(<PrescriptionEntry onSubmit={vi.fn()} />)
     await selectAmoxicillin()
-    expect(screen.queryByPlaceholderText(/english name override/i)).toBeNull()
+    expect(screen.queryByPlaceholderText('englishNameOverride')).toBeNull()
   })
 
   it('shows enrich form when canEnrich is true', async () => {
     render(<PrescriptionEntry onSubmit={vi.fn()} canEnrich />)
     await selectAmoxicillin()
-    expect(screen.getByPlaceholderText(/english name override/i)).toBeTruthy()
-    expect(screen.getByPlaceholderText(/dari name/i)).toBeTruthy()
-    expect(screen.getByRole('button', { name: /save name/i })).toBeTruthy()
+    expect(screen.getByPlaceholderText('englishNameOverride')).toBeTruthy()
+    expect(screen.getByPlaceholderText('dariName')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'saveName' })).toBeTruthy()
   })
 
   it('calls enrichDrug with correct ATC code and localNames on submit', async () => {
@@ -66,13 +71,13 @@ describe('PrescriptionEntry — enrich form', () => {
     render(<PrescriptionEntry onSubmit={vi.fn()} canEnrich />)
     await selectAmoxicillin()
 
-    fireEvent.change(screen.getByPlaceholderText(/english name override/i), {
+    fireEvent.change(screen.getByPlaceholderText('englishNameOverride'), {
       target: { value: 'Amox local' },
     })
-    fireEvent.change(screen.getByPlaceholderText(/dari name/i), {
+    fireEvent.change(screen.getByPlaceholderText('dariName'), {
       target: { value: 'آموکسیسیلین' },
     })
-    fireEvent.click(screen.getByRole('button', { name: /save name/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'saveName' }))
 
     await waitFor(() => expect(mockEnrichDrug).toHaveBeenCalledWith('J01CA04', {
       localNames: { en: 'Amox local', prs: 'آموکسیسیلین' },
@@ -84,10 +89,10 @@ describe('PrescriptionEntry — enrich form', () => {
     render(<PrescriptionEntry onSubmit={vi.fn()} canEnrich />)
     await selectAmoxicillin()
 
-    fireEvent.change(screen.getByPlaceholderText(/english name override/i), {
+    fireEvent.change(screen.getByPlaceholderText('englishNameOverride'), {
       target: { value: 'Amox local' },
     })
-    fireEvent.click(screen.getByRole('button', { name: /save name/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'saveName' }))
 
     await waitFor(() => screen.getByText(/saved/i))
   })
@@ -97,25 +102,25 @@ describe('PrescriptionEntry — enrich form', () => {
     render(<PrescriptionEntry onSubmit={vi.fn()} canEnrich />)
     await selectAmoxicillin()
 
-    fireEvent.change(screen.getByPlaceholderText(/dari name/i), {
+    fireEvent.change(screen.getByPlaceholderText('dariName'), {
       target: { value: 'آموکسیسیلین' },
     })
-    fireEvent.click(screen.getByRole('button', { name: /save name/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'saveName' }))
 
-    await waitFor(() => screen.getByText(/failed to save local name/i))
+    await waitFor(() => screen.getByText('errorSaveLocalName'))
   })
 
   it('clears enrich form when medication is cleared', async () => {
     render(<PrescriptionEntry onSubmit={vi.fn()} canEnrich />)
     await selectAmoxicillin()
 
-    fireEvent.change(screen.getByPlaceholderText(/english name override/i), {
+    fireEvent.change(screen.getByPlaceholderText('englishNameOverride'), {
       target: { value: 'Some name' },
     })
 
     fireEvent.click(screen.getByRole('button', { name: /clear/i }))
 
     // After clearing, the drug is deselected — enrich form gone
-    expect(screen.queryByPlaceholderText(/english name override/i)).toBeNull()
+    expect(screen.queryByPlaceholderText('englishNameOverride')).toBeNull()
   })
 })

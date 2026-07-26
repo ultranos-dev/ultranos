@@ -400,7 +400,7 @@ export const PhotoCropper = forwardRef<PhotoCropperHandle, PhotoCropperProps>(
         {/* Error */}
         {error && (
           <div
-            className="mt-2 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2"
+            className="mt-2 flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2"
             style={{ width: VIEWPORT }}
           >
             <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
