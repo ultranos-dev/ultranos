@@ -8,7 +8,6 @@
  * No PHI in any function — all identifiers are opaque (CLAUDE.md Rule #1).
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import { LabRole } from '@ultranos/shared-types'
 import { hlc, serializeHlc } from './hlc'
 import { putOutbreakConfig, getActiveOutbreak, getDb } from './db'
@@ -102,7 +101,7 @@ export async function activateOutbreakMode(
   const isoNow = new Date().toISOString()
 
   const config: OutbreakModeConfig = {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     status: 'active',
     activatedBy: input.activatedBy,
     activatedAt: now,

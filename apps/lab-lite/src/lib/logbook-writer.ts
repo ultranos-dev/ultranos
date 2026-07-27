@@ -11,7 +11,6 @@
  *   - Error messages are generic — never include entry content
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import { getDb, appendLogbookEntry, appendLogbookAmendment, getLogbookEntryByDiagnosticReportId, enqueueSyncEvent } from './db'
 import type { LabLogbookEntry } from './db'
 import { getNextSequenceNumber, formatDisplayNumber } from './logbook-sequence'
@@ -60,7 +59,7 @@ export async function writeAuthorizedResultToLogbook(
   // Sequence assignment + insert in a single transaction to prevent gaps/duplicates
   const entryId = await db.transaction('rw', db.labLogbook, async () => {
     const seqNo = await getNextSequenceNumber()
-    const id = uuidv4()
+    const id = crypto.randomUUID()
     const entry: LabLogbookEntry = {
       id,
       seqNo,
@@ -147,7 +146,7 @@ export async function createLogbookAmendment(input: AmendmentInput): Promise<str
 
   const amendmentId = await db.transaction('rw', db.labLogbook, async () => {
     const seqNo = await getNextSequenceNumber()
-    const id = uuidv4()
+    const id = crypto.randomUUID()
     const amendment: LabLogbookEntry & { entryType: 'amendment'; amendmentOf: string; amendmentReason: string } = {
       id,
       seqNo,

@@ -18,7 +18,7 @@ type ReviewDecision = 'PENDING' | 'DISMISSED' | 'FLAGGED_FOR_MERGE'
 
 interface DuplicateReviewRow {
   id: string
-  /** Display label for the source patient (given name only — no PHI in logs). */
+  /** Display label for the source patient (given name only -- no PHI in logs). */
   patientLabel: string
   sourcePatientId: string
   candidates: DuplicateCandidate[]
@@ -55,6 +55,16 @@ async function submitDecision(
 }
 
 /* ------------------------------------------------------------------ */
+/*  Decision badge config                                              */
+/* ------------------------------------------------------------------ */
+
+const decisionBadgeConfig: Record<ReviewDecision, { labelKey: string; classes: string }> = {
+  PENDING: { labelKey: 'decisionPending', classes: 'bg-warning/20 text-warning' },
+  DISMISSED: { labelKey: 'decisionDismissed', classes: 'bg-muted text-muted-foreground' },
+  FLAGGED_FOR_MERGE: { labelKey: 'decisionFlagged', classes: 'bg-primary text-primary-foreground' },
+}
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -64,13 +74,19 @@ export function DuplicateReviewTable() {
   const [rows, setRows] = useState<DuplicateReviewRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  // selectedId replaces expandedId -- tracks the selected review in the master list
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [actioning, setActioning] = useState<string | null>(null)
 
   const loadRows = useCallback(async () => {
     try {
       const data = await fetchDuplicateReviews()
       setRows(data)
+      // Auto-select the first row for a better master-detail default experience
+      const first = data[0]
+      if (first !== undefined) {
+        setSelectedId(first.id)
+      }
       setError(null)
     } catch {
       setError(t('loadError'))
@@ -101,10 +117,6 @@ export function DuplicateReviewTable() {
     }
   }
 
-  const toggleExpand = (id: string) => {
-    setExpandedId((prev) => (prev === id ? null : id))
-  }
-
   /* ---- Loading / Error states ---- */
 
   if (loading) {
@@ -129,7 +141,9 @@ export function DuplicateReviewTable() {
     return <EmptyState title={t('noReviews')} />
   }
 
-  /* ---- Table ---- */
+  /* ---- Two-pane master-detail ---- */
+
+  const selectedRow = rows.find((r) => r.id === selectedId) ?? null
 
   return (
     <div>
@@ -139,142 +153,106 @@ export function DuplicateReviewTable() {
         </Alert>
       )}
 
-      <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted text-muted-foreground">
-              <th className="px-4 py-3 text-start font-semibold">{t('colPatient')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('colScore')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('colDecision')}</th>
-              <th className="px-4 py-3 text-start font-semibold">{t('colStatus')}</th>
-              <th className="px-4 py-3 text-end font-semibold">{t('colActions')}</th>
-            </tr>
-          </thead>
-          <tbody>
+      {/*
+        lg+: side-by-side grid (list-left | detail-right)
+        <lg: single column (list on top, detail below)
+      */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:gap-4 lg:items-start">
+
+        {/* ---- LEFT PANE: compact selectable list ---- */}
+        <div className="overflow-hidden rounded-xl ring-[0.65px] ring-border/50">
+          <ul
+            role="listbox"
+            aria-label={t('reviewListLabel')}
+            className="divide-y divide-border"
+          >
             {rows.map((row) => {
-              const isExpanded = expandedId === row.id
+              const isSelected = selectedId === row.id
               const isPending = row.decision === 'PENDING'
-              const isBusy = actioning === row.id
+              const cfg = decisionBadgeConfig[row.decision]
 
               return (
-                <TableRow
-                  key={row.id}
-                  row={row}
-                  isExpanded={isExpanded}
-                  isPending={isPending}
-                  isBusy={isBusy}
-                  onToggle={() => toggleExpand(row.id)}
-                  onDismiss={() => handleDecision(row.id, 'DISMISSED')}
-                  onFlag={() => handleDecision(row.id, 'FLAGGED_FOR_MERGE')}
-                  t={t}
-                />
+                <li key={row.id}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    aria-current={isSelected ? 'true' : undefined}
+                    aria-disabled={!isPending ? true : undefined}
+                    onClick={() => setSelectedId(row.id)}
+                    className={[
+                      'w-full px-4 py-3 text-start flex items-center justify-between gap-3 transition-colors',
+                      isSelected ? 'bg-muted' : 'hover:bg-muted/60',
+                      !isPending ? 'text-muted-foreground' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    <span className={`flex-1 font-medium truncate${isPending ? ' text-foreground' : ''}`}>
+                      {row.patientLabel}
+                    </span>
+                    <span className="tabular-nums text-sm shrink-0">{row.topScore}</span>
+                    <span
+                      className={`inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${cfg.classes}`}
+                    >
+                      {t(cfg.labelKey)}
+                    </span>
+                  </button>
+                </li>
               )
             })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
+          </ul>
+        </div>
 
-/* ------------------------------------------------------------------ */
-/*  Table Row (extracted for readability)                               */
-/* ------------------------------------------------------------------ */
+        {/* ---- RIGHT PANE: detail for selected review ---- */}
+        <div
+          className="mt-4 lg:mt-0"
+          aria-label={t('reviewDetailLabel')}
+        >
+          {selectedRow === null ? (
+            <EmptyState
+              icon={UserSearch}
+              title={t('selectPrompt')}
+            />
+          ) : (
+            <div className="rounded-xl ring-[0.65px] ring-border/50 p-4 flex flex-col gap-4">
+              {selectedRow.candidates.length === 0 ? (
+                <EmptyState size="sm" icon={UserSearch} title={t('noCandidates')} />
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {selectedRow.candidates.map((candidate) => (
+                    <CandidateComparisonCard key={candidate.id} candidate={candidate} />
+                  ))}
+                </div>
+              )}
 
-interface TableRowProps {
-  row: DuplicateReviewRow
-  isExpanded: boolean
-  isPending: boolean
-  isBusy: boolean
-  onToggle: () => void
-  onDismiss: () => void
-  onFlag: () => void
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  t: any
-}
-
-function TableRow({
-  row,
-  isExpanded,
-  isPending,
-  isBusy,
-  onToggle,
-  onDismiss,
-  onFlag,
-  t,
-}: TableRowProps) {
-  const decisionBadge: Record<ReviewDecision, { label: string; classes: string }> = {
-    PENDING: { label: t('decisionPending'), classes: 'bg-warning/20 text-warning' },
-    DISMISSED: { label: t('decisionDismissed'), classes: 'bg-muted text-muted-foreground' },
-    FLAGGED_FOR_MERGE: { label: t('decisionFlagged'), classes: 'bg-primary text-primary-foreground' },
-  }
-
-  const badge = decisionBadge[row.decision]
-
-  return (
-    <>
-      <tr
-        className={`border-b border-border hover:bg-muted cursor-pointer${!isPending ? ' text-muted-foreground' : ''}`}
-        onClick={onToggle}
-        aria-expanded={isExpanded}
-        aria-disabled={!isPending ? true : undefined}
-        role="row"
-      >
-        <td className={`px-4 py-3 font-medium${isPending ? ' text-foreground' : ''}`}>{row.patientLabel}</td>
-        <td className="px-4 py-3 tabular-nums">{row.topScore}</td>
-        <td className="px-4 py-3">
-          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${badge.classes}`}>
-            {badge.label}
-          </span>
-        </td>
-        <td className="px-4 py-3 text-muted-foreground text-xs">{row.createdAt}</td>
-        <td className="px-4 py-3 text-end">
-          {isPending && (
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                variant="outline"
-                disabled={isBusy}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDismiss()
-                }}
-                aria-label={t('dismissAriaLabel', { patient: row.patientLabel })}
-              >
-                {t('actionDismiss')}
-              </Button>
-              <Button
-                variant="primary"
-                disabled={isBusy}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onFlag()
-                }}
-                aria-label={t('flagAriaLabel', { patient: row.patientLabel })}
-              >
-                {t('actionFlagMerge')}
-              </Button>
+              {selectedRow.decision === 'PENDING' && (
+                <div className="flex items-center gap-2 pt-2 border-t border-border">
+                  <Button
+                    variant="outline"
+                    disabled={actioning === selectedRow.id}
+                    type="button"
+                    onClick={() => handleDecision(selectedRow.id, 'DISMISSED')}
+                    aria-label={t('dismissAriaLabel', { patient: selectedRow.patientLabel })}
+                  >
+                    {t('actionDismiss')}
+                  </Button>
+                  <Button
+                    variant="primary"
+                    disabled={actioning === selectedRow.id}
+                    type="button"
+                    onClick={() => handleDecision(selectedRow.id, 'FLAGGED_FOR_MERGE')}
+                    aria-label={t('flagAriaLabel', { patient: selectedRow.patientLabel })}
+                  >
+                    {t('actionFlagMerge')}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
-        </td>
-      </tr>
+        </div>
 
-      {isExpanded && (
-        <tr>
-          <td colSpan={5} className="bg-muted px-4 py-4">
-            {row.candidates.length === 0 ? (
-              <EmptyState size="sm" icon={UserSearch} title={t('noCandidates')} />
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {row.candidates.map((candidate) => (
-                  <CandidateComparisonCard key={candidate.id} candidate={candidate} />
-                ))}
-              </div>
-            )}
-          </td>
-        </tr>
-      )}
-    </>
+      </div>
+    </div>
   )
 }

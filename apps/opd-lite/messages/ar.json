@@ -982,7 +982,9 @@
     "photoCropZoom": "تكبير",
     "photoCropConfirm": "اقتصاص وحفظ",
     "photoCropSizeError": "لا تزال الصورة أكبر من 1 ميجابايت بعد الاقتصاص. يرجى تجربة صورة مصدر أصغر.",
-    "contactSection": "الاتصال والتعريف"
+    "contactSection": "الاتصال والتعريف",
+    "additionalInfoSection": "معلومات إضافية (اختياري)",
+    "errorCount": "{count, plural, one {حقل واحد يحتاج إلى الانتباه} other {{count} حقول تحتاج إلى الانتباه}}"
   },
   "sidebar": {
     "dashboard": "لوحة المعلومات",

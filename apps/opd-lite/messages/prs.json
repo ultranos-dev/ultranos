@@ -982,7 +982,9 @@
     "photoCropZoom": "بزرگ‌نمایی",
     "photoCropConfirm": "برش و ذخیره",
     "photoCropSizeError": "عکس پس از برش هنوز بیش از ۱ مگابایت است. لطفاً تصویر منبع کوچک‌تری امتحان کنید.",
-    "contactSection": "تماس و شناسایی"
+    "contactSection": "تماس و شناسایی",
+    "additionalInfoSection": "معلومات اضافی (اختیاری)",
+    "errorCount": "{count, plural, one {۱ فیلد نیاز به توجه دارد} other {{count} فیلد نیاز به توجه دارند}}"
   },
   "sidebar": {
     "dashboard": "داشبورد",

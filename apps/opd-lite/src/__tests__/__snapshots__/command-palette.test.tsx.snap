@@ -2,46 +2,46 @@
 
 exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`] = `
 <div
+  aria-describedby="radix-«r4l»"
   aria-label="Command Palette"
+  aria-labelledby="radix-«r4k»"
   aria-modal="true"
-  class="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]"
+  class="fixed top-[50%] left-[50%] z-50 w-full translate-x-[-50%] translate-y-[-50%] rounded-3xl bg-popover mx-4 shadow-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 max-w-lg overflow-hidden p-0 gap-0"
+  data-slot="dialog-content"
+  data-state="open"
+  id="radix-«r4j»"
   role="dialog"
+  tabindex="-1"
 >
-  <style>
-    
-        @keyframes backdropIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      
-  </style>
+  <h2
+    class="text-lg font-semibold text-foreground sr-only"
+    data-slot="dialog-title"
+    id="radix-«r4k»"
+  >
+    Command Palette
+  </h2>
   <div
-    aria-hidden="true"
-    class="absolute inset-0 bg-background/40 backdrop-blur-sm animate-[backdropIn_100ms_ease-out_forwards]"
-  />
-  <div
-    class="relative w-full max-w-lg overflow-hidden rounded-xl bg-background/95 ring-[0.65px] ring-border/50 shadow-lg backdrop-blur-md"
     cmdk-root=""
     tabindex="-1"
   >
     <label
       cmdk-label=""
-      for="radix-«r3e»"
-      id="radix-«r3d»"
+      for="radix-«r4o»"
+      id="radix-«r4n»"
       style="position: absolute; width: 1px; height: 1px; padding: 0px; margin: -1px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; border-width: 0px;"
     >
       Clinical Command Palette
     </label>
     <input
       aria-autocomplete="list"
-      aria-controls="radix-«r3c»"
+      aria-controls="radix-«r4m»"
       aria-expanded="true"
-      aria-labelledby="radix-«r3d»"
+      aria-labelledby="radix-«r4n»"
       autocomplete="off"
       autocorrect="off"
       class="w-full border-b border-border bg-transparent px-4 py-3 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
       cmdk-input=""
-      id="radix-«r3e»"
+      id="radix-«r4o»"
       placeholder="Search clinical actions..."
       role="combobox"
       spellcheck="false"
@@ -52,7 +52,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
       aria-label="Suggestions"
       class="max-h-72 overflow-y-auto p-2"
       cmdk-list=""
-      id="radix-«r3c»"
+      id="radix-«r4m»"
       role="listbox"
       tabindex="-1"
     >
@@ -68,12 +68,12 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
           <div
             aria-hidden="true"
             cmdk-group-heading=""
-            id="radix-«r3g»"
+            id="radix-«r4q»"
           >
             Clinical Sections
           </div>
           <div
-            aria-labelledby="radix-«r3g»"
+            aria-labelledby="radix-«r4q»"
             cmdk-group-items=""
             role="group"
           >
@@ -85,7 +85,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
               data-disabled="false"
               data-selected="true"
               data-value="vitals"
-              id="radix-«r3h»"
+              id="radix-«r4r»"
               role="option"
             >
               <span>
@@ -105,7 +105,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
               data-disabled="false"
               data-selected="false"
               data-value="subjective"
-              id="radix-«r3i»"
+              id="radix-«r4s»"
               role="option"
             >
               <span>
@@ -125,7 +125,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
               data-disabled="false"
               data-selected="false"
               data-value="objective"
-              id="radix-«r3j»"
+              id="radix-«r4t»"
               role="option"
             >
               <span>
@@ -145,7 +145,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
               data-disabled="false"
               data-selected="false"
               data-value="assessment"
-              id="radix-«r3k»"
+              id="radix-«r4u»"
               role="option"
             >
               <span>
@@ -190,51 +190,81 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
       </span>
     </div>
   </div>
+  <button
+    class="absolute top-4 right-4 rounded-full p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+    type="button"
+  >
+    <svg
+      aria-hidden="true"
+      class="lucide lucide-x h-4 w-4"
+      fill="none"
+      height="24"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M18 6 6 18"
+      />
+      <path
+        d="m6 6 12 12"
+      />
+    </svg>
+    <span
+      class="sr-only"
+    >
+      Close
+    </span>
+  </button>
 </div>
 `;
 
 exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`] = `
 <div
+  aria-describedby="radix-«r49»"
   aria-label="Command Palette"
+  aria-labelledby="radix-«r48»"
   aria-modal="true"
-  class="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]"
+  class="fixed top-[50%] left-[50%] z-50 w-full translate-x-[-50%] translate-y-[-50%] rounded-3xl bg-popover mx-4 shadow-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 max-w-lg overflow-hidden p-0 gap-0"
+  data-slot="dialog-content"
+  data-state="open"
+  id="radix-«r47»"
   role="dialog"
+  tabindex="-1"
 >
-  <style>
-    
-        @keyframes backdropIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      
-  </style>
+  <h2
+    class="text-lg font-semibold text-foreground sr-only"
+    data-slot="dialog-title"
+    id="radix-«r48»"
+  >
+    Command Palette
+  </h2>
   <div
-    aria-hidden="true"
-    class="absolute inset-0 bg-background/40 backdrop-blur-sm animate-[backdropIn_100ms_ease-out_forwards]"
-  />
-  <div
-    class="relative w-full max-w-lg overflow-hidden rounded-xl bg-background/95 ring-[0.65px] ring-border/50 shadow-lg backdrop-blur-md"
     cmdk-root=""
     tabindex="-1"
   >
     <label
       cmdk-label=""
-      for="radix-«r35»"
-      id="radix-«r34»"
+      for="radix-«r4c»"
+      id="radix-«r4b»"
       style="position: absolute; width: 1px; height: 1px; padding: 0px; margin: -1px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; border-width: 0px;"
     >
       Clinical Command Palette
     </label>
     <input
       aria-autocomplete="list"
-      aria-controls="radix-«r33»"
+      aria-controls="radix-«r4a»"
       aria-expanded="true"
-      aria-labelledby="radix-«r34»"
+      aria-labelledby="radix-«r4b»"
       autocomplete="off"
       autocorrect="off"
       class="w-full border-b border-border bg-transparent px-4 py-3 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
       cmdk-input=""
-      id="radix-«r35»"
+      id="radix-«r4c»"
       placeholder="Search clinical actions..."
       role="combobox"
       spellcheck="false"
@@ -245,7 +275,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
       aria-label="Suggestions"
       class="max-h-72 overflow-y-auto p-2"
       cmdk-list=""
-      id="radix-«r33»"
+      id="radix-«r4a»"
       role="listbox"
       tabindex="-1"
     >
@@ -261,12 +291,12 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
           <div
             aria-hidden="true"
             cmdk-group-heading=""
-            id="radix-«r37»"
+            id="radix-«r4e»"
           >
             Clinical Sections
           </div>
           <div
-            aria-labelledby="radix-«r37»"
+            aria-labelledby="radix-«r4e»"
             cmdk-group-items=""
             role="group"
           >
@@ -278,7 +308,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
               data-disabled="false"
               data-selected="true"
               data-value="vitals"
-              id="radix-«r38»"
+              id="radix-«r4f»"
               role="option"
             >
               <span>
@@ -298,7 +328,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
               data-disabled="false"
               data-selected="false"
               data-value="subjective"
-              id="radix-«r39»"
+              id="radix-«r4g»"
               role="option"
             >
               <span>
@@ -318,7 +348,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
               data-disabled="false"
               data-selected="false"
               data-value="objective"
-              id="radix-«r3a»"
+              id="radix-«r4h»"
               role="option"
             >
               <span>
@@ -338,7 +368,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
               data-disabled="false"
               data-selected="false"
               data-value="assessment"
-              id="radix-«r3b»"
+              id="radix-«r4i»"
               role="option"
             >
               <span>
@@ -383,5 +413,35 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
       </span>
     </div>
   </div>
+  <button
+    class="absolute top-4 right-4 rounded-full p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+    type="button"
+  >
+    <svg
+      aria-hidden="true"
+      class="lucide lucide-x h-4 w-4"
+      fill="none"
+      height="24"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M18 6 6 18"
+      />
+      <path
+        d="m6 6 12 12"
+      />
+    </svg>
+    <span
+      class="sr-only"
+    >
+      Close
+    </span>
+  </button>
 </div>
 `;

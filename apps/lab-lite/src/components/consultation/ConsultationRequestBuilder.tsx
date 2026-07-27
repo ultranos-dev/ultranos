@@ -16,7 +16,6 @@
 
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { v4 as uuidv4 } from 'uuid'
 import type {
   ConsultationRequest,
   ResultSummaryData,
@@ -86,7 +85,7 @@ async function compressPhoto(file: File): Promise<PhotoAttachment | null> {
           reader.onloadend = () => {
             if (typeof reader.result !== 'string') { resolve(null); return }
             resolve({
-              id: uuidv4(),
+              id: crypto.randomUUID(),
               data: reader.result.split(',')[1] ?? '',
               mimeType: 'image/jpeg',
               caption: '',

@@ -8,7 +8,6 @@
 // No DOB, no full name, no diagnosis, no father's name stored after lookup.
 // ---------------------------------------------------------------------------
 
-import { v4 as uuidv4 } from 'uuid'
 import {
   addCHWSampleAtomic,
   addCourierHandoff,
@@ -168,7 +167,7 @@ export async function collectSample(
 
   // Atomically assign label number + persist in a single Dexie transaction (F7)
   const sample = await addCHWSampleAtomic({
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     patientRef: input.patientRef,
     patientFirstName: input.patientFirstName, // first name ONLY — CLAUDE.md Rule #7
     patientAge: input.patientAge,
@@ -219,7 +218,7 @@ export async function recordCourierHandoff(
   }
 
   const handoff: CourierHandoff = {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     courierId: input.courierId.trim(),
     sampleIds: input.sampleIds,
     sampleCount: input.sampleIds.length,

@@ -16,7 +16,6 @@
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore — uuid has no bundled type declarations in this workspace
-import { v4 as uuidv4 } from 'uuid'
 import { hlc, serializeHlc } from '@/lib/hlc'
 import {
   createTransportSession,
@@ -44,7 +43,7 @@ import type { CustodyEvent } from '@/types/custody-event'
  * reportTransportAuditEvent() (consistent with all other audit callers in this codebase).
  */
 export async function startTransport(input: StartTransportInput): Promise<TransportSession> {
-  const sessionId = uuidv4()
+  const sessionId = crypto.randomUUID()
   // P1: Use ISO 8601 wall-clock timestamps for pickup/delivery — these are used for
   // stability window calculations (Date.parse). HLC is used for CustodyEvent.timestamp
   // (causal ordering for sync). Mixing them caused Date.parse to return NaN on HLC strings.
@@ -84,7 +83,7 @@ export async function startTransport(input: StartTransportInput): Promise<Transp
     // Create a custody pickup event for each sample (Story 42.3 timeline integration)
     for (const sampleId of input.sampleIds) {
       const custodyEvent: CustodyEvent = {
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         sampleId,
         eventType: 'transport-pickup',
         // P17: Both actor fields set to courierId — simplified model for courier-initiated transport.
@@ -225,7 +224,7 @@ export async function recordDelivery(
     // Create custody delivery events for each sample (Story 42.3 timeline integration)
     for (const sampleId of existing.sampleIds) {
       const custodyEvent: CustodyEvent = {
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         sampleId,
         eventType: 'transport-delivery',
         // P17: See startTransport for actor model explanation.

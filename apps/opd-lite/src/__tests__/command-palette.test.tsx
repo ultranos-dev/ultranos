@@ -133,15 +133,17 @@ describe('CommandPalette', () => {
   describe('RTL rendering', () => {
     it('renders correctly in RTL direction', () => {
       document.documentElement.setAttribute('dir', 'rtl')
-      const { container } = render(<CommandPalette open={true} onOpenChange={() => {}} />)
-      expect(container.firstChild).toMatchSnapshot()
+      render(<CommandPalette open={true} onOpenChange={() => {}} />)
+      // Dialog renders via a Radix Portal into document.body; snapshot the dialog element
+      expect(screen.getByRole('dialog')).toMatchSnapshot()
       document.documentElement.removeAttribute('dir')
     })
 
     it('renders correctly in LTR direction', () => {
       document.documentElement.setAttribute('dir', 'ltr')
-      const { container } = render(<CommandPalette open={true} onOpenChange={() => {}} />)
-      expect(container.firstChild).toMatchSnapshot()
+      render(<CommandPalette open={true} onOpenChange={() => {}} />)
+      // Dialog renders via a Radix Portal into document.body; snapshot the dialog element
+      expect(screen.getByRole('dialog')).toMatchSnapshot()
       document.documentElement.removeAttribute('dir')
     })
   })

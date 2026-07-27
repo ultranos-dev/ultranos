@@ -13,7 +13,6 @@
  * PHI note: patientRef is opaque. Physician ID is stored as a practitioner ID only.
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import {
   createEscalationChain,
   getEscalationChainById,
@@ -112,7 +111,7 @@ export async function initiateEscalation(
   orderingPhysicianId: string,
 ): Promise<EscalationChain> {
   const now = new Date()
-  const chainId = uuidv4()
+  const chainId = crypto.randomUUID()
 
   // Resolve escalation contacts (graceful fallbacks if not configured)
   const [directorContact, districtContact] = await Promise.all([

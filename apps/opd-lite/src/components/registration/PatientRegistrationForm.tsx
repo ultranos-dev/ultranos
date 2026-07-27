@@ -15,6 +15,7 @@ import type {
 } from '@ultranos/shared-types'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
+import { ChevronDown } from '@ultranos/ui-kit/icons'
 import { NameInputSection } from './NameInputSection'
 import { PatientPhotoSection } from './PatientPhotoSection'
 import { GeographySection } from './GeographySection'
@@ -197,6 +198,7 @@ export function PatientRegistrationForm({
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [isDirty, setIsDirty] = useState(!!prefilledNameGiven)
+  const [showAdditional, setShowAdditional] = useState(false)
   // Track whether the component has mounted so we can skip the first effect run
   const mountedRef = useRef(false)
 
@@ -428,6 +430,22 @@ export function PatientRegistrationForm({
     ],
   )
 
+  // ── Field-to-section mapping for scroll-to-first-error ──
+  // These are the DOM element ids that correspond to fieldErrors keys.
+  // Fields inside the "Additional information" collapsible group are listed here
+  // so we know to expand the group before scrolling.
+  // None of the current zod-required fields map to these sections, but the logic
+  // is implemented defensively in case the schema changes in the future.
+  const ADDITIONAL_SECTION_FIELD_IDS: Record<string, string> = {
+    // SocialInfoSection fields (all optional in schema)
+    displacementCategory: 'displacement-category',
+    nationality: 'nationality',
+    occupation: 'occupation',
+    educationLevel: 'education-level',
+    // EmergencyContactSection fields would use dynamic ids (contact-name-0, etc.)
+    // PatientPhotoSection has no schema-linked inputs
+  }
+
   // ── Submit handler ──
 
   const handleSubmit = useCallback(
@@ -435,7 +453,37 @@ export function PatientRegistrationForm({
       e.preventDefault()
       setSubmitError('')
 
-      if (!validate()) return
+      const isValid = validate()
+      if (!isValid) {
+        // Scroll to first invalid field; expand the Additional group if needed.
+        // We use the DOM (aria-invalid) rather than fieldErrors state because
+        // setFieldErrors is async — the DOM reflects the fresh render after rAF.
+        requestAnimationFrame(() => {
+          const additionalGroupEl = document.getElementById('additional-info-group')
+          const firstInvalid = document.querySelector<HTMLElement>('[aria-invalid="true"]')
+
+          const isInsideAdditional =
+            firstInvalid != null &&
+            additionalGroupEl != null &&
+            additionalGroupEl.contains(firstInvalid)
+
+          if (isInsideAdditional) {
+            // Expand the group first, then scroll after another frame
+            setShowAdditional(true)
+            requestAnimationFrame(() => {
+              const target = document.querySelector<HTMLElement>('[aria-invalid="true"]')
+              if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                target.focus()
+              }
+            })
+          } else if (firstInvalid) {
+            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            firstInvalid.focus()
+          }
+        })
+        return
+      }
 
       setSubmitting(true)
       try {
@@ -480,7 +528,7 @@ export function PatientRegistrationForm({
         setSubmitting(false)
       }
     },
-    [validate, buildPayload, savePatientLocally, router, locale, t],
+    [validate, buildPayload, savePatientLocally, setShowAdditional, router, locale, t],
   )
 
   // ── MPI modal handlers ──
@@ -527,16 +575,12 @@ export function PatientRegistrationForm({
     [router, locale],
   )
 
+  const errorCount = Object.keys(fieldErrors).length
+
   return (
     <>
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
-        {/* 1. Patient photo */}
-        <PatientPhotoSection
-          photoDataUrl={photoDataUrl}
-          onPhotoChange={setPhotoDataUrl}
-        />
-
-        {/* 2. Name section */}
+        {/* 1. Name section — first */}
         <NameInputSection
           nameGiven={nameGiven}
           nameFather={nameFather}
@@ -554,7 +598,7 @@ export function PatientRegistrationForm({
           }}
         />
 
-        {/* 3. Demographics — Gender, DOB, Marital Status, Blood Group */}
+        {/* 2. Demographics — Gender, DOB, Marital Status, Blood Group */}
         <Card as="fieldset">
           <legend className="text-base font-bold text-foreground">
             {t('demographicsSection')}
@@ -726,7 +770,7 @@ export function PatientRegistrationForm({
           </div>
         </Card>
 
-        {/* 4. Contact & Identification — National ID, Phone, Preferred Language */}
+        {/* 3. Contact & Identification — National ID, Phone, Preferred Language */}
         <Card as="fieldset">
           <legend className="text-base font-bold text-foreground">
             {t('contactSection')}
@@ -819,7 +863,7 @@ export function PatientRegistrationForm({
           </div>
         </Card>
 
-        {/* 5. Geography section */}
+        {/* 4. Geography section */}
         <GeographySection
           origin={addressOrigin}
           current={addressCurrent}
@@ -837,27 +881,55 @@ export function PatientRegistrationForm({
           }}
         />
 
-        {/* 6. Social / HMIS section */}
-        <SocialInfoSection
-          displacementCategory={displacementCategory}
-          nationality={nationality}
-          occupation={occupation}
-          educationLevel={educationLevel}
-          disability={disability}
-          onDisplacementCategoryChange={setDisplacementCategory}
-          onNationalityChange={setNationality}
-          onOccupationChange={setOccupation}
-          onEducationLevelChange={setEducationLevel}
-          onDisabilityChange={setDisability}
-        />
+        {/* 5. Additional information — collapsible (Photo + Social + Emergency) */}
+        <div>
+          <button
+            type="button"
+            aria-expanded={showAdditional}
+            aria-controls="additional-info-group"
+            onClick={() => setShowAdditional((prev) => !prev)}
+            className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <span>{t('additionalInfoSection')}</span>
+            <ChevronDown
+              size={18}
+              aria-hidden="true"
+              className={`text-muted-foreground transition-transform duration-200 ${showAdditional ? 'rotate-180' : ''}`}
+            />
+          </button>
 
-        {/* 7. Emergency contact section */}
-        <EmergencyContactSection
-          contacts={emergencyContacts}
-          onContactsChange={setEmergencyContacts}
-        />
+          {showAdditional && (
+            <div id="additional-info-group" className="mt-4 space-y-4">
+              {/* Patient photo */}
+              <PatientPhotoSection
+                photoDataUrl={photoDataUrl}
+                onPhotoChange={setPhotoDataUrl}
+              />
 
-        {/* 8. Consent section */}
+              {/* Social / HMIS section */}
+              <SocialInfoSection
+                displacementCategory={displacementCategory}
+                nationality={nationality}
+                occupation={occupation}
+                educationLevel={educationLevel}
+                disability={disability}
+                onDisplacementCategoryChange={setDisplacementCategory}
+                onNationalityChange={setNationality}
+                onOccupationChange={setOccupation}
+                onEducationLevelChange={setEducationLevel}
+                onDisabilityChange={setDisability}
+              />
+
+              {/* Emergency contact section */}
+              <EmergencyContactSection
+                contacts={emergencyContacts}
+                onContactsChange={setEmergencyContacts}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* 6. Consent section — always visible, never collapsed */}
         <ConsentSection
           method={consentMethod}
           witnessedBy={consentWitnessedBy}
@@ -881,12 +953,30 @@ export function PatientRegistrationForm({
 
         {/* Sticky save bar */}
         <div className="sticky bottom-0 z-10 flex items-center justify-between gap-4 border-t border-border bg-background py-3">
-          <span className="text-sm text-muted-foreground">
-            {isDirty ? t('unsavedChanges') : null}
-          </span>
-          <Button variant="primary" type="submit" disabled={submitting}>
-            {submitting ? t('submitting') : t('submitRegistration')}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => router.back()}
+            >
+              {t('cancel')}
+            </Button>
+            {errorCount > 0 && (
+              <span className="text-sm font-medium text-destructive">
+                {t('errorCount', { count: errorCount })}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {isDirty && (
+              <span className="text-sm text-muted-foreground">
+                {t('unsavedChanges')}
+              </span>
+            )}
+            <Button variant="primary" type="submit" disabled={submitting}>
+              {submitting ? t('submitting') : t('submitRegistration')}
+            </Button>
+          </div>
         </div>
       </form>
 

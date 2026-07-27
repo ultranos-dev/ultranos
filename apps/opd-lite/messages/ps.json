@@ -982,7 +982,9 @@
     "photoCropZoom": "زوم",
     "photoCropConfirm": "کراپ او خوندي کول",
     "photoCropSizeError": "عکس د کراپ کولو وروسته لا هم له ۱ MB څخه لوی دی. مهرباني وکړئ کوچنۍ سرچینه انځور وازمویئ.",
-    "contactSection": "اړیکه او پېژندنه"
+    "contactSection": "اړیکه او پېژندنه",
+    "additionalInfoSection": "اضافي معلومات (اختیاري)",
+    "errorCount": "{count, plural, one {۱ ساحه پاملرنې ته اړتیا لري} other {{count} ساحې پاملرنې ته اړتیا لري}}"
   },
   "sidebar": {
     "dashboard": "ډشبورډ",

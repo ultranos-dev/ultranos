@@ -11,16 +11,23 @@ export default defineConfig({
     setupFiles: ['./src/__tests__/setup.ts'],
   },
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
-      '@ultranos/sync-engine': path.resolve(__dirname, '../../packages/sync-engine/src/index.ts'),
-      '@ultranos/shared-types': path.resolve(__dirname, '../../packages/shared-types/src/index.ts'),
-      '@ultranos/audit-logger/client': path.resolve(__dirname, '../../packages/audit-logger/dist/client.js'),
-      '@ultranos/audit-logger/adapters/dexie': path.resolve(__dirname, '../../packages/audit-logger/dist/adapters/dexie-adapter.js'),
-      '@ultranos/audit-logger/drain': path.resolve(__dirname, '../../packages/audit-logger/dist/drain.js'),
-      '@ultranos/audit-logger': path.resolve(__dirname, '../../packages/audit-logger/dist/index.js'),
-      '@ultranos/ui-kit/icons': path.resolve(__dirname, '../../packages/ui-kit/src/icons.ts'),
-      '@ultranos/ui-kit': path.resolve(__dirname, '../../packages/ui-kit/src/index.ts'),
-    },
+    // Array form so the bare `@ultranos/ui-kit` alias can be an EXACT-match regex.
+    // As a plain string it prefix-matched deep subpaths (e.g.
+    // `@ultranos/ui-kit/components/ui/button`) and rewrote them to
+    // `.../src/index.ts/components/ui/button` — an invalid path — breaking every
+    // ui-kit component import. The regex matches only the bare specifier; deep
+    // subpaths fall through to the package `exports` map (which maps them to source).
+    alias: [
+      { find: '@ultranos/crypto', replacement: path.resolve(__dirname, '../../packages/crypto/src/index.ts') },
+      { find: '@ultranos/sync-engine', replacement: path.resolve(__dirname, '../../packages/sync-engine/src/index.ts') },
+      { find: '@ultranos/shared-types', replacement: path.resolve(__dirname, '../../packages/shared-types/src/index.ts') },
+      { find: '@ultranos/audit-logger/client', replacement: path.resolve(__dirname, '../../packages/audit-logger/dist/client.js') },
+      { find: '@ultranos/audit-logger/adapters/dexie', replacement: path.resolve(__dirname, '../../packages/audit-logger/dist/adapters/dexie-adapter.js') },
+      { find: '@ultranos/audit-logger/drain', replacement: path.resolve(__dirname, '../../packages/audit-logger/dist/drain.js') },
+      { find: '@ultranos/audit-logger', replacement: path.resolve(__dirname, '../../packages/audit-logger/dist/index.js') },
+      { find: '@ultranos/ui-kit/icons', replacement: path.resolve(__dirname, '../../packages/ui-kit/src/icons.ts') },
+      { find: /^@ultranos\/ui-kit$/, replacement: path.resolve(__dirname, '../../packages/ui-kit/src/index.ts') },
+      { find: /^@\//, replacement: path.resolve(__dirname, 'src') + '/' },
+    ],
   },
 })

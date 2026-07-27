@@ -14,7 +14,6 @@
  *   - 'high': 24+ months of data
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import { getDb } from './db'
 import type { SeasonalDemandPattern, SurgeAlert, PatternConfidence } from '@/types/seasonal-planner'
 
@@ -158,7 +157,7 @@ function buildPattern(
   const avgBaseline = monthlyBaseline.reduce((a, b) => a + b, 0) / 12
   if (avgBaseline === 0) {
     return {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       testCategory: loincCode,
       testCategoryDisplay: displayName ?? loincCode,
       monthlyBaseline,
@@ -190,7 +189,7 @@ function buildPattern(
     : undefined
 
   return {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     testCategory: loincCode,
     testCategoryDisplay: displayName ?? loincCode,
     monthlyBaseline,
@@ -208,7 +207,7 @@ function buildPattern(
  */
 function buildEmptyPattern(dataMonths: number): SeasonalDemandPattern {
   return {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     testCategory: 'ALL',
     testCategoryDisplay: 'All Tests',
     monthlyBaseline: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

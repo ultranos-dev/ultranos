@@ -5,7 +5,6 @@
  * QR codes embed a compact JSON payload — no PHI per CLAUDE.md.
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import type { CertificationPathway, DigitalCertificate, CertificateQrPayload } from '@/lib/certification-types'
 
 interface GenerateCertificateInput {
@@ -137,8 +136,8 @@ async function generatePdfBlob(
 export async function generateCertificate(input: GenerateCertificateInput): Promise<DigitalCertificate> {
   const { technicianId, technicianName, pathway, milestoneName } = input
 
-  const certId = uuidv4()
-  const verificationCode = uuidv4()
+  const certId = crypto.randomUUID()
+  const verificationCode = crypto.randomUUID()
   const issuedAt = new Date().toISOString()
 
   const qrPayload: CertificateQrPayload = {

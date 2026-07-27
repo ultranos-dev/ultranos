@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { v4 as uuidv4 } from 'uuid'
 import { getDb } from '@/lib/db'
 import type { SupervisedProcedure } from '@/lib/supervised-procedure-types'
 
@@ -66,7 +65,7 @@ export function LogSupervisedProcedure({
     try {
       const db = getDb()
       const procedure: SupervisedProcedure = {
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         technicianId,
         supervisorId,
         procedureRef: procedureCode.trim(),

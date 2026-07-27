@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
 // Mock next-intl
 vi.mock('next-intl', () => ({
@@ -13,7 +13,7 @@ vi.mock('@/lib/hub-auth', () => ({
   getAuthHeaders: () => Promise.resolve({ Authorization: 'Bearer test' }),
 }))
 
-// Mock EmptyState — avoids pulling in the full ui-kit bundle
+// Mock EmptyState -- avoids pulling in the full ui-kit bundle
 vi.mock('@ultranos/ui-kit/components/ui/empty-state', () => ({
   EmptyState: ({
     title,
@@ -115,50 +115,76 @@ describe('DuplicateReviewTable', () => {
     expect(classes).not.toContain('text-primary')
   })
 
-  it('renders EmptyState with UserSearch icon when candidates array is empty', async () => {
+  it('renders EmptyState with UserSearch icon when candidates array is empty (auto-selects first row)', async () => {
     setupFetch([makeRow({ candidates: [], decision: 'PENDING' })])
 
     render(<DuplicateReviewTable />)
 
-    // Wait for the row to appear
+    // Wait for the row to appear in the list
     await screen.findByText('Ahmad')
 
-    // Click to expand the row
-    fireEvent.click(screen.getByText('Ahmad'))
-
-    // The expanded row should show EmptyState with noCandidates key
-    const emptyState = screen.getByTestId('empty-state')
-    expect(emptyState).toBeDefined()
-    expect(emptyState.textContent).toContain('noCandidates')
-    // Icon should be rendered
+    // The first row is auto-selected; the detail pane shows noCandidates EmptyState immediately
+    // Multiple empty-state elements may be present (the detail pane "noCandidates" one).
+    // Find the one with noCandidates text.
+    const emptyStates = screen.getAllByTestId('empty-state')
+    const noCandidatesState = emptyStates.find((el) =>
+      el.textContent?.includes('noCandidates')
+    )
+    expect(noCandidatesState).toBeDefined()
+    // Icon should be rendered inside the detail pane
     expect(screen.getByTestId('icon-user-search')).toBeDefined()
-    // Size should be sm (compact affordance inside an expanded row)
-    expect(emptyState.getAttribute('data-size')).toBe('sm')
+    // Size should be sm (compact affordance inside the detail panel)
+    expect(noCandidatesState?.getAttribute('data-size')).toBe('sm')
   })
 
-  it('non-PENDING rows carry aria-disabled and muted text class', async () => {
+  it('clicking a different row selects it and shows its detail', async () => {
+    setupFetch([
+      makeRow({ id: 'row-1', patientLabel: 'Ahmad', topScore: 85 }),
+      makeRow({
+        id: 'row-2',
+        patientLabel: 'Sara',
+        topScore: 92,
+        candidates: [{ id: 'cand-99', mpiScore: 92 }],
+      }),
+    ])
+
+    render(<DuplicateReviewTable />)
+
+    // Both names appear in the list
+    await screen.findByText('Ahmad')
+    await screen.findByText('Sara')
+
+    // Select Sara's row
+    fireEvent.click(screen.getByText('Sara'))
+
+    // Detail pane should now show Sara's candidate card
+    expect(screen.getByTestId('candidate-card-cand-99')).toBeDefined()
+  })
+
+  it('non-PENDING list items carry aria-disabled and muted text class', async () => {
     setupFetch([makeRow({ decision: 'DISMISSED' })])
 
     const { container } = render(<DuplicateReviewTable />)
     await screen.findByText('Ahmad')
 
-    const row = container.querySelector('tr[aria-disabled="true"]')
+    // In the new layout the selectable list items are <button> elements
+    const row = container.querySelector('button[aria-disabled="true"]')
     expect(row).not.toBeNull()
     expect(row?.className).toContain('text-muted-foreground')
   })
 
-  it('PENDING rows do NOT carry aria-disabled', async () => {
+  it('PENDING list items do NOT carry aria-disabled', async () => {
     setupFetch([makeRow({ decision: 'PENDING' })])
 
     const { container } = render(<DuplicateReviewTable />)
     await screen.findByText('Ahmad')
 
-    // No tr should have aria-disabled=true for a pending row
-    const disabledRows = container.querySelectorAll('tr[aria-disabled="true"]')
-    expect(disabledRows.length).toBe(0)
+    // No list-item button should have aria-disabled=true for a pending row
+    const disabledItems = container.querySelectorAll('button[aria-disabled="true"]')
+    expect(disabledItems.length).toBe(0)
   })
 
-  it('renders candidate cards when candidates array is non-empty', async () => {
+  it('renders candidate cards when candidates array is non-empty (auto-selects first row)', async () => {
     setupFetch([
       makeRow({
         candidates: [
@@ -171,11 +197,92 @@ describe('DuplicateReviewTable', () => {
     render(<DuplicateReviewTable />)
     await screen.findByText('Ahmad')
 
-    fireEvent.click(screen.getByText('Ahmad'))
-
+    // First row is auto-selected, so candidate cards appear in the detail pane immediately
     expect(screen.getByTestId('candidate-card-cand-1')).toBeDefined()
     expect(screen.getByTestId('candidate-card-cand-2')).toBeDefined()
-    // EmptyState should NOT be shown
-    expect(screen.queryByTestId('empty-state')).toBeNull()
+    // EmptyState for noCandidates should NOT be shown (there are candidates)
+    const emptyStates = screen.queryAllByTestId('empty-state')
+    const noCandidatesState = emptyStates.find((el) =>
+      el.textContent?.includes('noCandidates')
+    )
+    expect(noCandidatesState).toBeUndefined()
+  })
+
+  it('approve (FLAGGED_FOR_MERGE) decision button calls submitDecision with FLAGGED_FOR_MERGE', async () => {
+    // Use mockResolvedValue (not Once) for load so repeated loadRows calls (from t() ref churn)
+    // always resolve successfully, keeping the component stable between async awaits.
+    const loadResponse = {
+      ok: true,
+      json: async () => ({
+        result: { data: { json: [makeRow({ decision: 'PENDING' })] } },
+      }),
+    } as Response
+    const decideResponse = { ok: true } as Response
+    // First call: initial load. Subsequent load calls get loadResponse again.
+    // The decide call (POST) is identified by method in assertions.
+    mockFetch.mockImplementation((_url: string, init?: RequestInit) => {
+      if (init?.method === 'POST') return Promise.resolve(decideResponse)
+      return Promise.resolve(loadResponse)
+    })
+
+    render(<DuplicateReviewTable />)
+    await screen.findByText('Ahmad')
+
+    // First row is auto-selected; decision buttons should be visible in the detail pane
+    const flagButton = screen.getByText('actionFlagMerge')
+    expect(flagButton).toBeDefined()
+
+    fireEvent.click(flagButton)
+
+    // Wait for submitDecision to have been called (a POST fetch)
+    await waitFor(() => {
+      const postCalls = mockFetch.mock.calls.filter(
+        (call: Parameters<typeof fetch>) => (call[1] as RequestInit)?.method === 'POST'
+      )
+      expect(postCalls.length).toBeGreaterThanOrEqual(1)
+    })
+
+    const postCalls = mockFetch.mock.calls.filter(
+      (call: Parameters<typeof fetch>) => (call[1] as RequestInit)?.method === 'POST'
+    )
+    const lastCallBody = JSON.parse((postCalls[0][1] as RequestInit).body as string)
+    expect(lastCallBody.json.decision).toBe('FLAGGED_FOR_MERGE')
+    expect(lastCallBody.json.reviewId).toBe('row-1')
+  })
+
+  it('dismiss button calls submitDecision with DISMISSED', async () => {
+    const loadResponse = {
+      ok: true,
+      json: async () => ({
+        result: { data: { json: [makeRow({ decision: 'PENDING' })] } },
+      }),
+    } as Response
+    const decideResponse = { ok: true } as Response
+    mockFetch.mockImplementation((_url: string, init?: RequestInit) => {
+      if (init?.method === 'POST') return Promise.resolve(decideResponse)
+      return Promise.resolve(loadResponse)
+    })
+
+    render(<DuplicateReviewTable />)
+    await screen.findByText('Ahmad')
+
+    const dismissButton = screen.getByText('actionDismiss')
+    expect(dismissButton).toBeDefined()
+
+    fireEvent.click(dismissButton)
+
+    await waitFor(() => {
+      const postCalls = mockFetch.mock.calls.filter(
+        (call: Parameters<typeof fetch>) => (call[1] as RequestInit)?.method === 'POST'
+      )
+      expect(postCalls.length).toBeGreaterThanOrEqual(1)
+    })
+
+    const postCalls = mockFetch.mock.calls.filter(
+      (call: Parameters<typeof fetch>) => (call[1] as RequestInit)?.method === 'POST'
+    )
+    const lastCallBody = JSON.parse((postCalls[0][1] as RequestInit).body as string)
+    expect(lastCallBody.json.decision).toBe('DISMISSED')
+    expect(lastCallBody.json.reviewId).toBe('row-1')
   })
 })

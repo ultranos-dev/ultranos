@@ -11,7 +11,6 @@
  * All mutations emit audit events via reportSendOutAuditEvent.
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import {
   getDb,
   createSendOut,
@@ -46,7 +45,7 @@ export async function initiateSendOut(
   actorId: string,
 ): Promise<SendOut> {
   const now = new Date().toISOString()
-  const id = uuidv4()
+  const id = crypto.randomUUID()
 
   const sendOut: SendOut = {
     id,
@@ -60,7 +59,7 @@ export async function initiateSendOut(
     processingStartedAt: null,
     resultsAvailableAt: null,
     cancelledAt: null,
-    referralFormId: uuidv4(),
+    referralFormId: crypto.randomUUID(),
     resultId: null,
     meta: { lastUpdated: now, versionId: '1' },
     _ultranos: { createdAt: now, hlcTimestamp: serializeHlc(hlc.now()) },
@@ -133,7 +132,7 @@ export async function updateSendOutStatus(
   await db.send_outs.put(updated)
 
   const transition: SendOutStatusTransition = {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     sendOutId,
     fromStatus: existing.status,
     toStatus: newStatus,
@@ -177,7 +176,7 @@ export async function importSendOutResult(
   if (!referenceLab) throw new Error(`Reference lab not found: ${sendOut.referenceLabId}`)
 
   const now = new Date().toISOString()
-  const resultId = uuidv4()
+  const resultId = crypto.randomUUID()
   const attribution = `Performed at: ${referenceLab.name}, Accreditation #${referenceLab.accreditationNumber}`
 
   // Whitelist safe fields from resultData — never spread untrusted external data (C4)
@@ -263,7 +262,7 @@ export function generateReferralForm(
   const dateSent = hlcToIso(sendOut.sentAt)
 
   return {
-    id: sendOut.referralFormId ?? uuidv4(),
+    id: sendOut.referralFormId ?? crypto.randomUUID(),
     sendOutId: sendOut.id,
     // Data-minimized: first name + age ONLY (CLAUDE.md Rule #7)
     patientFirstName,
@@ -287,7 +286,7 @@ export function generateShippingManifest(
   referenceLab: ReferenceLab,
 ): ShippingManifest {
   return {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     referenceLabId: referenceLab.id,
     referenceLabName: referenceLab.name,
     sendOutIds: sendOuts.map((s) => s.id),

@@ -8,7 +8,6 @@
  * or on-demand via manual trigger from SitrepView.
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import { hlc, serializeHlc } from './hlc'
 import { getDb, addDailySitrep } from './db'
 import type { OutbreakModeConfig, DailySitrep } from '@/types/outbreak'
@@ -166,7 +165,7 @@ export async function generateDailySitrep(
 
   const now = serializeHlc(hlc.now())
   const sitrep: DailySitrep = {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     outbreakConfigId: outbreakConfig.id,
     reportDate,
     totalTestsPerformed,

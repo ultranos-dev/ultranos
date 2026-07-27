@@ -15,7 +15,6 @@
  * metrics. No patient identifiers appear anywhere in this module.
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import { hlc, serializeHlc } from './hlc'
 import { getDb } from './db'
 import type {
@@ -420,7 +419,7 @@ export async function generateSeasonalPlan(
   )
 
   const now = new Date().toISOString()
-  const planId = uuidv4()
+  const planId = crypto.randomUUID()
 
   return {
     id: planId,

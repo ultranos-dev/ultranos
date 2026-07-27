@@ -12,7 +12,6 @@
  * No patient identifiers appear in this module.
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import type {
   SeasonalPlan,
   ActionableDeadline,
@@ -67,7 +66,7 @@ function makeDeadline(
   const overdue = isOverdue(deadlineDate)
   const urgency = classifyUrgency(deadlineDate)
   return {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     action,
     deadlineDate,
     leadTimeDays,

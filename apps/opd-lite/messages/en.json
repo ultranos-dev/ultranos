@@ -982,7 +982,9 @@
     "contactOther": "Other",
     "addEmergencyContact": "Add Emergency Contact",
     "removeContact": "Remove contact",
-    "unsavedChanges": "Unsaved changes"
+    "unsavedChanges": "Unsaved changes",
+    "additionalInfoSection": "Additional information (optional)",
+    "errorCount": "{count, plural, one {1 field needs attention} other {{count} fields need attention}}"
   },
   "sidebar": {
     "dashboard": "Dashboard",

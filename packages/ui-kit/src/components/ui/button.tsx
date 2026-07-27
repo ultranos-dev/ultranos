@@ -20,15 +20,18 @@ const buttonVariants = cva(
         warning:     "bg-warning/10 text-warning hover:bg-warning/20 focus-visible:border-warning/40 focus-visible:ring-warning/20",
         link:        "text-primary underline-offset-4 hover:underline",
       },
+      // Touch targets: on coarse pointers (touch), interactive text/icon buttons
+      // get a >=44px min hit-area (WCAG 2.5.5) while desktop keeps the compact
+      // visual height. `xs`/`icon-xs` stay tiny by design (dense-table/inline chips).
       size: {
-        default:   "h-9 gap-1.5 px-4",
+        default:   "h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11",
         xs:        "h-6 gap-1 px-2.5 text-xs [&_svg:not([class*='size-'])]:size-3",
-        sm:        "h-8 gap-1 px-3",
-        lg:        "h-10 gap-1.5 px-5",
-        icon:      "size-9",
+        sm:        "h-8 gap-1 px-3 [@media(pointer:coarse)]:min-h-11",
+        lg:        "h-10 gap-1.5 px-5 [@media(pointer:coarse)]:min-h-11",
+        icon:      "size-9 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11",
         "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-8",
-        "icon-lg": "size-10",
+        "icon-sm": "size-8 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11",
+        "icon-lg": "size-10 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11",
       },
     },
     defaultVariants: {

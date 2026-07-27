@@ -9,7 +9,6 @@
  * - AI-formatted text is shown to tech for review before submission (Rule #2)
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import { hlc, serializeHlc } from './hlc'
 
 // ---------------------------------------------------------------------------
@@ -99,7 +98,7 @@ export function createDraftRequest(input: CreateDraftRequestInput): Consultation
   const now = new Date().toISOString()
 
   return {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     sampleId: input.sampleId,
     resultSummary: input.resultSummary,
     observationsText: '',

@@ -1,10 +1,16 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { DrugInteractionSeverity } from '@ultranos/shared-types'
 import type { InteractionResult } from '@/services/interactionService'
 import { Button } from '@/components/ui/Button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@ultranos/ui-kit/components/ui/dialog'
 
 interface InteractionWarningModalProps {
   open: boolean
@@ -65,49 +71,11 @@ export function InteractionWarningModal({
 }: InteractionWarningModalProps) {
   const t = useTranslations('interactionModal')
   const [justification, setJustification] = useState('')
-  const dialogRef = useRef<HTMLDivElement>(null)
 
   // Reset justification when modal opens to prevent stale text from prior interactions
   useEffect(() => {
     if (open) setJustification('')
   }, [open])
-
-  // Focus trap: keep Tab cycling within the modal
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onCancel()
-      return
-    }
-    if (e.key !== 'Tab' || !dialogRef.current) return
-    const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), textarea, [tabindex]:not([tabindex="-1"])',
-    )
-    if (focusable.length === 0) return
-    const first = focusable[0]!
-    const last = focusable[focusable.length - 1]!
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault()
-      last.focus()
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault()
-      first.focus()
-    }
-  }, [onCancel])
-
-  useEffect(() => {
-    if (!open) return
-    document.addEventListener('keydown', handleKeyDown)
-    // Focus the first interactive element on open
-    const timer = setTimeout(() => {
-      dialogRef.current?.querySelector<HTMLElement>('textarea')?.focus()
-    }, 0)
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-      clearTimeout(timer)
-    }
-  }, [open, handleKeyDown])
-
-  if (!open) return null
 
   const hasContraindicated = interactions.some(
     (i) => i.severity === DrugInteractionSeverity.CONTRAINDICATED || i.severity === DrugInteractionSeverity.ALLERGY_MATCH,
@@ -122,42 +90,21 @@ export function InteractionWarningModal({
   }
 
   return (
-    <div
-      ref={dialogRef}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="interaction-warning-title"
-    >
-      <style>{`
-        @keyframes backdropFadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes modalSlideIn {
-          from { opacity: 0; transform: scale(0.97); }
-          to { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 animate-[backdropFadeIn_150ms_ease-out_forwards]"
-        aria-hidden="true"
-      />
-      {/* Modal panel */}
-      <div className="relative mx-4 w-full max-w-lg rounded-xl border-2 border-destructive bg-background shadow-2xl animate-[modalSlideIn_200ms_ease-out_forwards]">
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onCancel() }}>
+      <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        className="max-w-lg p-0 gap-0 overflow-hidden border-2 border-destructive"
+      >
         {/* Header */}
-        <div className="rounded-t-xl border-b border-destructive/20 bg-destructive/10 px-6 py-4">
-          <h2
-            id="interaction-warning-title"
-            className="text-xl font-semibold text-destructive"
-          >
+        <DialogHeader className="border-b border-destructive/20 bg-destructive/10 px-6 py-4">
+          <DialogTitle className="text-xl font-semibold text-destructive">
             {modalTitle}
-          </h2>
+          </DialogTitle>
           <p className="mt-1 text-sm font-semibold text-destructive">
             {t('reviewInstructions')}
           </p>
-        </div>
+        </DialogHeader>
 
         {/* Interaction list */}
         <div className="max-h-64 overflow-y-auto px-6 py-4">
@@ -228,7 +175,7 @@ export function InteractionWarningModal({
             {t('proceedAnyway')}
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

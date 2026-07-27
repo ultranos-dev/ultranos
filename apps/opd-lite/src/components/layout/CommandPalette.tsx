@@ -2,6 +2,11 @@
 
 import { Command } from 'cmdk'
 import { useCallback } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@ultranos/ui-kit/components/ui/dialog'
 
 const FOCUSABLE_SELECTOR =
   'input, textarea, select, button, [tabindex]:not([tabindex="-1"])'
@@ -57,99 +62,61 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
     [onOpenChange, onSelect],
   )
 
-  const handleDialogKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onOpenChange(false)
-        return
-      }
-      if (e.key === 'Tab') {
-        const focusables = e.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
-        if (focusables.length === 0) return
-        const first = focusables[0]!
-        const last = focusables[focusables.length - 1]!
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault()
-          last.focus()
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault()
-          first.focus()
-        }
-      }
-    },
-    [onOpenChange],
-  )
-
-  if (!open) return null
-
+  // modal={false} disables Radix's focus trap so focusSection() can move focus
+  // to clinical sections outside the palette. onCloseAutoFocus prevention is
+  // handled internally by Radix's non-modal path.
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Command Palette"
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]"
-      onKeyDown={handleDialogKeyDown}
-    >
-      <style>{`
-        @keyframes backdropIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `}</style>
-
-      {/* Backdrop with glassmorphism blur */}
-      <div
-        className="absolute inset-0 bg-background/40 backdrop-blur-sm animate-[backdropIn_100ms_ease-out_forwards]"
-        onClick={() => onOpenChange(false)}
-        aria-hidden="true"
-      />
-
-      {/* Palette container */}
-      <Command
-        className="relative w-full max-w-lg overflow-hidden rounded-xl bg-background/95 ring-[0.65px] ring-border/50 shadow-lg backdrop-blur-md"
-        label="Clinical Command Palette"
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
+      <DialogContent
+        onCloseAutoFocus={(e) => e.preventDefault()}
+        className="max-w-lg overflow-hidden p-0 gap-0"
+        aria-label="Command Palette"
+        aria-modal="true"
       >
-        <Command.Input
-          placeholder="Search clinical actions..."
-          className="w-full border-b border-border bg-transparent px-4 py-3 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
-          autoFocus
-        />
-        <Command.List className="max-h-72 overflow-y-auto p-2">
-          <Command.Empty className="px-4 py-6 text-center text-sm text-muted-foreground">
-            No matching actions found.
-          </Command.Empty>
+        <DialogTitle className="sr-only">Command Palette</DialogTitle>
+        <Command label="Clinical Command Palette">
+          <Command.Input
+            placeholder="Search clinical actions..."
+            className="w-full border-b border-border bg-transparent px-4 py-3 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
+            autoFocus
+          />
+          <Command.List className="max-h-72 overflow-y-auto p-2">
+            <Command.Empty className="px-4 py-6 text-center text-sm text-muted-foreground">
+              No matching actions found.
+            </Command.Empty>
 
-          <Command.Group heading="Clinical Sections" className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {CLINICAL_COMMANDS.map((cmd) => (
-              <Command.Item
-                key={cmd.id}
-                value={cmd.id}
-                keywords={[cmd.label]}
-                onSelect={handleSelect}
-                className="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
-              >
-                <span>{cmd.label}</span>
-                <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                  {cmd.shortcut}
-                </kbd>
-              </Command.Item>
-            ))}
-          </Command.Group>
-        </Command.List>
+            <Command.Group heading="Clinical Sections" className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {CLINICAL_COMMANDS.map((cmd) => (
+                <Command.Item
+                  key={cmd.id}
+                  value={cmd.id}
+                  keywords={[cmd.label]}
+                  onSelect={handleSelect}
+                  className="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
+                >
+                  <span>{cmd.label}</span>
+                  <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                    {cmd.shortcut}
+                  </kbd>
+                </Command.Item>
+              ))}
+            </Command.Group>
+          </Command.List>
 
-        {/* Footer hint */}
-        <div className="flex items-center gap-3 border-t border-border px-4 py-2 text-xs text-muted-foreground">
-          <span>
-            <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-semibold">↑↓</kbd> Navigate
-          </span>
-          <span>
-            <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-semibold">↵</kbd> Select
-          </span>
-          <span>
-            <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-semibold">Esc</kbd> Close
-          </span>
-        </div>
-      </Command>
-    </div>
+          {/* Footer hint */}
+          <div className="flex items-center gap-3 border-t border-border px-4 py-2 text-xs text-muted-foreground">
+            <span>
+              <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-semibold">↑↓</kbd> Navigate
+            </span>
+            <span>
+              <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-semibold">↵</kbd> Select
+            </span>
+            <span>
+              <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-semibold">Esc</kbd> Close
+            </span>
+          </div>
+        </Command>
+      </DialogContent>
+    </Dialog>
   )
 }

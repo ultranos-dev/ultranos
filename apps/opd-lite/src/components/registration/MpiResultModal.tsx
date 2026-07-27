@@ -1,8 +1,14 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronRight } from '@ultranos/ui-kit/icons'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@ultranos/ui-kit/components/ui/dialog'
 import { Button } from '@/components/ui/Button'
 
 interface MpiCandidate {
@@ -36,7 +42,6 @@ export function MpiResultModal({
   onGoToPatient,
 }: MpiResultModalProps) {
   const t = useTranslations('registration')
-  const dialogRef = useRef<HTMLDivElement>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   // Auto-expand first candidate when modal opens
@@ -53,92 +58,38 @@ export function MpiResultModal({
     setExpandedId((prev) => (prev === id ? null : id))
   }
 
-  // Focus trap
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onCancel()
-        return
-      }
-      if (e.key !== 'Tab' || !dialogRef.current) return
-      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      )
-      if (focusable.length === 0) return
-      const first = focusable[0]!
-      const last = focusable[focusable.length - 1]!
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault()
-        last.focus()
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault()
-        first.focus()
-      }
-    },
-    [onCancel],
-  )
-
-  useEffect(() => {
-    if (!open) return
-    document.addEventListener('keydown', handleKeyDown)
-    const timer = setTimeout(() => {
-      dialogRef.current?.querySelector<HTMLElement>('button')?.focus()
-    }, 0)
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-      clearTimeout(timer)
-    }
-  }, [open, handleKeyDown])
-
-  if (!open) return null
-
   const isBlock = decision === 'BLOCK'
 
   return (
-    <div
-      ref={dialogRef}
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="mpi-result-title"
-    >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        aria-hidden="true"
-        onClick={onCancel}
-      />
-
-      {/* Modal panel */}
-      <div
-        className={`relative mx-4 w-full max-w-xl rounded-xl border-2 bg-background shadow-2xl ${
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onCancel() }}>
+      <DialogContent
+        className={`max-w-xl p-0 gap-0 overflow-hidden rounded-xl border-2 bg-background ${
           isBlock ? 'border-destructive' : 'border-warning'
         }`}
       >
         {/* Header */}
-        <div
-          className={`rounded-t-xl border-b px-6 py-4 ${
+        <DialogHeader
+          className={`rounded-t-xl border-b px-6 py-4 space-y-1 ${
             isBlock
               ? 'border-destructive/20 bg-destructive/10'
               : 'border-warning/20 bg-warning/10'
           }`}
         >
-          <h2
-            id="mpi-result-title"
+          <DialogTitle
             className={`text-xl font-semibold ${
               isBlock ? 'text-destructive' : 'text-warning'
             }`}
           >
             {isBlock ? t('mpiBlockTitle') : t('mpiWarnTitle')}
-          </h2>
+          </DialogTitle>
           <p
-            className={`mt-1 text-sm font-semibold ${
+            className={`text-sm font-semibold ${
               isBlock ? 'text-destructive' : 'text-warning'
             }`}
           >
             {isBlock ? t('mpiBlockDescription') : t('mpiWarnDescription')}
           </p>
-        </div>
+        </DialogHeader>
 
         {/* Candidate list — accordion, one at a time */}
         <div className="max-h-96 overflow-y-auto px-6 py-4">
@@ -296,7 +247,7 @@ export function MpiResultModal({
             </Button>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

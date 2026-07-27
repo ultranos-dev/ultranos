@@ -8,7 +8,6 @@
  * No PHI involved — reference labs are institutional records only.
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import { getDb, putReferenceLab, getActiveReferenceLabs } from './db'
 import { hlc, serializeHlc } from './hlc'
 import { reportSendOutAuditEvent } from './audit-client'
@@ -21,7 +20,7 @@ export async function addReferenceLab(
 ): Promise<ReferenceLab> {
   const now = new Date().toISOString()
   const lab: ReferenceLab = {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     name: input.name,
     accreditationNumber: input.accreditationNumber,
     address: input.address,

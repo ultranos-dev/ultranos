@@ -16,7 +16,6 @@
  * - No patient names, IDs, or individual results are included in any alert.
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import type { SurveillanceAlert } from './surveillance-types'
 import {
   getActiveReportableDiseases,
@@ -134,7 +133,7 @@ async function generateAlert(
 
   const alert: SurveillanceAlert = {
     ...alertData,
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     message,
     createdAt: now,
     transmissionStatus: 'pending',
