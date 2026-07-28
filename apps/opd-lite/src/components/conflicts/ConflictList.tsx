@@ -9,8 +9,10 @@ import { isTier1Resource, isConflictOverdue } from '@/lib/conflict-resolution'
 import { auditPhiAccess, AuditAction } from '@/lib/audit'
 import type { AuditResourceType } from '@/lib/audit'
 import { Button } from '@/components/ui/Button'
+import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { ConflictDiffView } from './ConflictDiffView'
 
 export function ConflictList() {
@@ -20,6 +22,9 @@ export function ConflictList() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [statusTab, setStatusTab] = useState<'all' | 'overdue'>('all')
+  const [typeFilter, setTypeFilter] = useState<'all' | 'AllergyIntolerance' | 'MedicationRequest' | 'Condition'>('all')
 
   const loadConflicts = useCallback(async () => {
     try {
@@ -94,9 +99,22 @@ export function ConflictList() {
     return t('daysHoursAgo', { days, hours: hours % 24 })
   }
 
+  const query = search.trim().toLowerCase()
+  const visible = conflicts.filter((entry) => {
+    if (statusTab === 'overdue' && !isConflictOverdue(entry.createdAt)) return false
+    if (typeFilter !== 'all' && entry.resourceType !== typeFilter) return false
+    if (!query) return true
+    const haystack = `${entry.resourceId} ${entry.patientRef ?? ''}`.toLowerCase()
+    return haystack.includes(query)
+  })
+
   if (loading) {
     return (
-      <div className="space-y-3" aria-label={t('loadingConflicts')} aria-busy="true">
+      <div
+        className="space-y-3 rounded-xl bg-card p-3 shadow-card ring-[0.65px] ring-border/50"
+        aria-label={t('loadingConflicts')}
+        aria-busy="true"
+      >
         <Skeleton className="h-14 w-full rounded-xl" />
         <Skeleton className="h-14 w-full rounded-xl" />
         <Skeleton className="h-14 w-full rounded-xl" />
@@ -117,42 +135,92 @@ export function ConflictList() {
     )
   }
 
-  if (conflicts.length === 0) {
-    return (
-      <div className="rounded-xl bg-card p-8 shadow-sm ring-[0.65px] ring-border/50 text-center" data-testid="no-conflicts">
-        <CircleCheck className="mx-auto h-12 w-12 text-success" />
-        <p className="mt-3 text-sm font-semibold text-foreground">{t('noUnresolved')}</p>
-        <p className="mt-1 text-xs text-muted-foreground">{t('noUnresolvedDetail')}</p>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-3" data-testid="conflict-list">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground">
-          {t('unresolvedCount', { count: conflicts.length })}
-        </p>
+      {/* Toolbar: tab-bar + search + type filter (matches Patients directory) */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {(['all', 'overdue'] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setStatusTab(tab)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                statusTab === tab
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              aria-pressed={statusTab === tab}
+            >
+              {tab === 'all' ? t('tabAll') : t('tabOverdue')}
+            </button>
+          ))}
+        </div>
+
+        <Input
+          type="text"
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          aria-label={t('searchPlaceholder')}
+        />
+
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
+          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+          aria-label={t('typeAll')}
+        >
+          <option value="all">{t('typeAll')}</option>
+          <option value="AllergyIntolerance">{t('typeAllergy')}</option>
+          <option value="MedicationRequest">{t('typeMedication')}</option>
+          <option value="Condition">{t('typeDiagnosis')}</option>
+        </select>
       </div>
 
-      {conflicts.map((entry) => {
-        const overdue = isConflictOverdue(entry.createdAt)
-        const isExpanded = expandedId === entry.id
-        const shortId = entry.resourceId.slice(0, 8)
-        const patientShortId = entry.patientRef
-          ? entry.patientRef.replace('Patient/', '').slice(0, 8)
-          : t('resourceDefault')
+      {conflicts.length > 0 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-foreground">
+            {t('unresolvedCount', { count: visible.length })}
+          </p>
+        </div>
+      )}
 
-        return (
-          <div
-            key={entry.id}
-            className={`rounded-xl border bg-background shadow-sm transition-colors ${
-              overdue
-                ? 'border-destructive/30 bg-destructive/10'
-                : 'border-border'
-            }`}
-            data-testid="conflict-item"
-          >
+      <div
+        className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
+        data-testid="conflict-panel"
+      >
+        {conflicts.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              data-testid="no-conflicts"
+              icon={CircleCheck}
+              title={t('noUnresolved')}
+              description={t('noUnresolvedDetail')}
+            />
+          </div>
+        ) : visible.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState icon={CircleCheck} title={t('noResults')} />
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {visible.map((entry) => {
+              const overdue = isConflictOverdue(entry.createdAt)
+              const isExpanded = expandedId === entry.id
+              const shortId = entry.resourceId.slice(0, 8)
+              const patientShortId = entry.patientRef
+                ? entry.patientRef.replace('Patient/', '').slice(0, 8)
+                : t('resourceDefault')
+
+              return (
+                <div
+                  key={entry.id}
+                  className={`transition-colors ${overdue ? 'bg-destructive/10' : ''}`}
+                  data-testid="conflict-item"
+                >
             {/* Conflict summary row */}
             <Button
               variant="ghost"
@@ -197,9 +265,12 @@ export function ConflictList() {
                 <ConflictDiffView entry={entry} onResolved={handleResolved} />
               </div>
             )}
+                </div>
+              )
+            })}
           </div>
-        )
-      })}
+        )}
+      </div>
     </div>
   )
 }

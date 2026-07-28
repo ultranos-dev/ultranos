@@ -4,11 +4,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatDate } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
+import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { CalendarClock } from '@ultranos/ui-kit/icons'
-import { getHubTrpcUrl } from '@/lib/hub-url'
+import { getHubApiUrl, getAuthHeaders } from '@/lib/hub-auth'
 
 interface ExpiringConsent {
   id: string
@@ -25,21 +26,27 @@ interface ExpiringConsent {
 export default function ExpiringConsentsPage() {
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const t = useTranslations('consent')
+  const tNav = useTranslations('sidebar')
   const [consents, setConsents] = useState<ExpiringConsent[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
   const [offset, setOffset] = useState(0)
+  const [search, setSearch] = useState('')
+  const [windowFilter, setWindowFilter] = useState<'all' | '30' | '60' | '90'>('all')
   const limit = 50
 
   const loadConsents = useCallback(async () => {
     setLoading(true)
     setFetchError(false)
     try {
-      const hubUrl = getHubTrpcUrl()
+      const hubUrl = getHubApiUrl()
       const input = JSON.stringify({ json: { limit, offset } })
+      // consent.expiringSoon is a protectedProcedure — must carry the bearer
+      // token, or the Hub returns 401 (surfaced to the user as fetchError).
+      const headers = await getAuthHeaders()
       const res = await fetch(
         `${hubUrl}/consent.expiringSoon?input=${encodeURIComponent(input)}`,
-        { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+        { method: 'GET', headers }
       )
 
       if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
@@ -75,8 +82,18 @@ export default function ExpiringConsentsPage() {
     return 'inline-flex rounded-full px-2 py-0.5 text-xs font-bold bg-muted text-muted-foreground'
   }
 
+  const query = search.trim().toLowerCase()
+  const filtered = consents.filter((c) => {
+    if (windowFilter !== 'all' && daysUntilExpiry(c.provision_end) > Number(windowFilter)) {
+      return false
+    }
+    if (!query) return true
+    return extractPatientId(c.patient_ref).toLowerCase().includes(query)
+  })
+
   return (
     <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-semibold text-foreground">{tNav('expiringConsents')}</h1>
 
         {loading && (
           <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
@@ -111,16 +128,41 @@ export default function ExpiringConsentsPage() {
           </Alert>
         )}
 
-        {!loading && !fetchError && consents.length === 0 && (
-          <EmptyState
-            icon={CalendarClock}
-            title={t('emptyTitle')}
-            description={t('emptyDescription')}
-          />
-        )}
-
-        {!loading && !fetchError && consents.length > 0 && (
+        {!loading && !fetchError && (
           <>
+            {/* Toolbar: search + expiry-window filter (always visible, matches Patients directory) */}
+            <div className="flex flex-wrap items-center gap-3">
+              <Input
+                type="text"
+                dir="auto"
+                placeholder={t('searchPlaceholder')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="min-w-[200px] flex-1"
+                aria-label={t('searchPlaceholder')}
+              />
+              <select
+                value={windowFilter}
+                onChange={(e) => setWindowFilter(e.target.value as typeof windowFilter)}
+                className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+                aria-label={t('windowAll')}
+              >
+                <option value="all">{t('windowAll')}</option>
+                <option value="30">{t('window30')}</option>
+                <option value="60">{t('window60')}</option>
+                <option value="90">{t('window90')}</option>
+              </select>
+            </div>
+
+            {consents.length === 0 ? (
+              <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+                <EmptyState icon={CalendarClock} title={t('emptyTitle')} description={t('emptyDescription')} />
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+                <EmptyState icon={CalendarClock} title={t('noResultsFiltered')} />
+              </div>
+            ) : (
             <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
               <table className="w-full text-sm">
                 <thead className="bg-muted text-muted-foreground">
@@ -133,7 +175,7 @@ export default function ExpiringConsentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {consents.map((c) => {
+                  {filtered.map((c) => {
                     const days = daysUntilExpiry(c.provision_end)
                     return (
                       <tr key={c.id} className="hover:bg-muted/50">
@@ -156,15 +198,18 @@ export default function ExpiringConsentsPage() {
                 </tbody>
               </table>
             </div>
+            )}
 
-            <div className="mt-4 flex items-center gap-4">
-              <Button variant="outline" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>
-                {t('previous')}
-              </Button>
-              <Button variant="outline" disabled={consents.length < limit} onClick={() => setOffset(offset + limit)}>
-                {t('next')}
-              </Button>
-            </div>
+            {consents.length > 0 && (
+              <div className="mt-4 flex items-center gap-4">
+                <Button variant="outline" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>
+                  {t('previous')}
+                </Button>
+                <Button variant="outline" disabled={consents.length < limit} onClick={() => setOffset(offset + limit)}>
+                  {t('next')}
+                </Button>
+              </div>
+            )}
           </>
         )}
     </div>

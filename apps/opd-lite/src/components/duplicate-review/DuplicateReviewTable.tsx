@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
+import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
@@ -34,22 +35,31 @@ async function fetchDuplicateReviews(): Promise<DuplicateReviewRow[]> {
   const res = await fetch(url, { method: 'GET', headers })
   if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
   const body = (await res.json()) as unknown
+  // Hub returns `{ result: { data: { json: { reviews: [...] } } } }` — the rows
+  // live under `.reviews`, not directly under `.json`.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rows = (body as any)?.result?.data?.json
+  const rows = (body as any)?.result?.data?.json?.reviews
   if (!Array.isArray(rows)) throw new Error('Unexpected response shape from Hub API')
   return rows as DuplicateReviewRow[]
 }
 
 async function submitDecision(
   reviewId: string,
-  decision: 'DISMISSED' | 'FLAGGED_FOR_MERGE'
+  decision: 'DISMISSED' | 'FLAGGED_FOR_MERGE',
+  sourcePatientId: string
 ): Promise<void> {
   const headers = await getAuthHeaders()
-  const url = `${getHubApiUrl()}/duplicateReview.decide`
-  const res = await fetch(url, {
+  // The Hub exposes two distinct mutations, not a single `decide` endpoint:
+  //   - dismiss      → { reviewId, patientId } (also clears the patient's mpi_warn)
+  //   - flagForMerge → { reviewId }
+  const { procedure, payload } =
+    decision === 'DISMISSED'
+      ? { procedure: 'duplicateReview.dismiss', payload: { reviewId, patientId: sourcePatientId } }
+      : { procedure: 'duplicateReview.flagForMerge', payload: { reviewId } }
+  const res = await fetch(`${getHubApiUrl()}/${procedure}`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ json: { reviewId, decision } }),
+    body: JSON.stringify({ json: payload }),
   })
   if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
 }
@@ -77,6 +87,8 @@ export function DuplicateReviewTable() {
   // selectedId replaces expandedId -- tracks the selected review in the master list
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [actioning, setActioning] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [statusTab, setStatusTab] = useState<'all' | 'pending' | 'resolved'>('all')
 
   const loadRows = useCallback(async () => {
     try {
@@ -101,11 +113,12 @@ export function DuplicateReviewTable() {
 
   const handleDecision = async (
     reviewId: string,
-    decision: 'DISMISSED' | 'FLAGGED_FOR_MERGE'
+    decision: 'DISMISSED' | 'FLAGGED_FOR_MERGE',
+    sourcePatientId: string
   ) => {
     setActioning(reviewId)
     try {
-      await submitDecision(reviewId, decision)
+      await submitDecision(reviewId, decision, sourcePatientId)
       // Optimistically update the row
       setRows((prev) =>
         prev.map((r) => (r.id === reviewId ? { ...r, decision } : r))
@@ -137,36 +150,85 @@ export function DuplicateReviewTable() {
     )
   }
 
-  if (rows.length === 0) {
-    return <EmptyState title={t('noReviews')} />
-  }
-
   /* ---- Two-pane master-detail ---- */
 
   const selectedRow = rows.find((r) => r.id === selectedId) ?? null
 
+  const query = search.trim().toLowerCase()
+  const filteredRows = rows.filter((row) => {
+    if (statusTab === 'pending' && row.decision !== 'PENDING') return false
+    if (statusTab === 'resolved' && row.decision === 'PENDING') return false
+    if (!query) return true
+    return row.patientLabel.toLowerCase().includes(query)
+  })
+
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       {error && (
-        <Alert variant="destructive" role="alert" className="mb-4">
+        <Alert variant="destructive" role="alert">
           {error}
         </Alert>
       )}
 
-      {/*
+      {/* Toolbar: tab-bar + search (matches Patients directory) */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {(['all', 'pending', 'resolved'] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setStatusTab(tab)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                statusTab === tab
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              aria-pressed={statusTab === tab}
+            >
+              {tab === 'all'
+                ? t('statusTabAll')
+                : tab === 'pending'
+                  ? t('statusTabPending')
+                  : t('statusTabResolved')}
+            </button>
+          ))}
+        </div>
+
+        <Input
+          type="text"
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          aria-label={t('searchPlaceholder')}
+        />
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <EmptyState title={t('noReviews')} />
+        </div>
+      ) : (
+      /*
         lg+: side-by-side grid (list-left | detail-right)
         <lg: single column (list on top, detail below)
-      */}
+      */
       <div className="lg:grid lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:gap-4 lg:items-start">
 
         {/* ---- LEFT PANE: compact selectable list ---- */}
         <div className="overflow-hidden rounded-xl ring-[0.65px] ring-border/50">
+          {filteredRows.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState icon={UserSearch} title={t('noResultsFiltered')} />
+            </div>
+          ) : (
           <ul
             role="listbox"
             aria-label={t('reviewListLabel')}
             className="divide-y divide-border"
           >
-            {rows.map((row) => {
+            {filteredRows.map((row) => {
               const isSelected = selectedId === row.id
               const isPending = row.decision === 'PENDING'
               const cfg = decisionBadgeConfig[row.decision]
@@ -202,6 +264,7 @@ export function DuplicateReviewTable() {
               )
             })}
           </ul>
+          )}
         </div>
 
         {/* ---- RIGHT PANE: detail for selected review ---- */}
@@ -210,10 +273,12 @@ export function DuplicateReviewTable() {
           aria-label={t('reviewDetailLabel')}
         >
           {selectedRow === null ? (
-            <EmptyState
-              icon={UserSearch}
-              title={t('selectPrompt')}
-            />
+            <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+              <EmptyState
+                icon={UserSearch}
+                title={t('selectPrompt')}
+              />
+            </div>
           ) : (
             <div className="rounded-xl ring-[0.65px] ring-border/50 p-4 flex flex-col gap-4">
               {selectedRow.candidates.length === 0 ? (
@@ -232,7 +297,7 @@ export function DuplicateReviewTable() {
                     variant="outline"
                     disabled={actioning === selectedRow.id}
                     type="button"
-                    onClick={() => handleDecision(selectedRow.id, 'DISMISSED')}
+                    onClick={() => handleDecision(selectedRow.id, 'DISMISSED', selectedRow.sourcePatientId)}
                     aria-label={t('dismissAriaLabel', { patient: selectedRow.patientLabel })}
                   >
                     {t('actionDismiss')}
@@ -241,7 +306,7 @@ export function DuplicateReviewTable() {
                     variant="primary"
                     disabled={actioning === selectedRow.id}
                     type="button"
-                    onClick={() => handleDecision(selectedRow.id, 'FLAGGED_FOR_MERGE')}
+                    onClick={() => handleDecision(selectedRow.id, 'FLAGGED_FOR_MERGE', selectedRow.sourcePatientId)}
                     aria-label={t('flagAriaLabel', { patient: selectedRow.patientLabel })}
                   >
                     {t('actionFlagMerge')}
@@ -253,6 +318,7 @@ export function DuplicateReviewTable() {
         </div>
 
       </div>
+      )}
     </div>
   )
 }

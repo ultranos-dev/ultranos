@@ -14,6 +14,7 @@ import { useDataBudgetStore } from '@/stores/data-budget-store'
 
 export default function SettingsPage() {
   const t = useTranslations('dataBudget')
+  const tSettings = useTranslations('settings')
   const { planSizeMB, currentCycleUsedMB, thresholdLevel, isLoaded, loadFromDexie } = useDataBudgetStore()
 
   useEffect(() => {
@@ -32,8 +33,13 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="max-w-2xl flex flex-col gap-4">
-        <ProfileCard />
+      {/* Page header — mirrors the Patient Directory layout */}
+      <h1 className="text-2xl font-semibold text-foreground">{tSettings('title')}</h1>
+
+      {/* Identity spans full width; remaining settings fill the content in a 2-col grid */}
+      <ProfileCard />
+
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
         <SessionInfoCard />
         <MfaManagementCard />
 

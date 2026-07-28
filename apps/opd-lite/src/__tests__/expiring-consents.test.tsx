@@ -14,9 +14,11 @@ vi.mock('next-intl', () => ({
   useLocale: () => 'en',
 }))
 
-// Mock hub-url
-vi.mock('../lib/hub-url', () => ({
-  getHubTrpcUrl: () => 'https://hub.test',
+// Mock hub-auth — the page fetches the protected consent.expiringSoon endpoint,
+// so it must attach a bearer token via getAuthHeaders (else the Hub 401s).
+vi.mock('../lib/hub-auth', () => ({
+  getHubApiUrl: () => 'https://hub.test',
+  getAuthHeaders: () => Promise.resolve({ Authorization: 'Bearer test', 'Content-Type': 'application/json' }),
 }))
 
 // Mock formatDate from ui-kit
@@ -147,6 +149,21 @@ describe('ExpiringConsentsPage', () => {
     })
   })
 
+  describe('auth', () => {
+    it('attaches the bearer token to the protected expiringSoon request', async () => {
+      mockFetch([])
+      render(<ExpiringConsentsPage />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('empty-state')).toBeInTheDocument()
+      })
+
+      const [url, init] = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0]
+      expect(String(url)).toContain('consent.expiringSoon')
+      expect((init as RequestInit).headers).toHaveProperty('Authorization', 'Bearer test')
+    })
+  })
+
   describe('table rendering', () => {
     it('renders a table row for each returned consent', async () => {
       mockFetch([
@@ -248,6 +265,86 @@ describe('ExpiringConsentsPage', () => {
         expect(screen.getByRole('alert')).toBeInTheDocument()
       })
 
+      expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('toolbar filtering (Patients-style)', () => {
+    it('renders a search input and an expiry-window dropdown when data is present', async () => {
+      mockFetch([makeConsent()])
+      render(<ExpiringConsentsPage />)
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('searchPlaceholder')).toBeInTheDocument()
+      })
+      expect(screen.getByLabelText('windowAll')).toBeInTheDocument()
+    })
+
+    it('renders the toolbar even when there are no consents (empty state)', async () => {
+      mockFetch([])
+      render(<ExpiringConsentsPage />)
+
+      // Empty state renders, and the search + window filter are still present above it
+      await waitFor(() => {
+        expect(screen.getByText('emptyTitle')).toBeInTheDocument()
+      })
+      expect(screen.getByLabelText('searchPlaceholder')).toBeInTheDocument()
+      expect(screen.getByLabelText('windowAll')).toBeInTheDocument()
+      expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    })
+
+    it('expiry-window dropdown filters rows by days until expiry', async () => {
+      const soon = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString()
+      const far = new Date(Date.now() + 75 * 24 * 60 * 60 * 1000).toISOString()
+      mockFetch([
+        makeConsent({ id: 'c-soon', patient_ref: 'Patient/p-soon', provision_end: soon }),
+        makeConsent({ id: 'c-far', patient_ref: 'Patient/p-far', provision_end: far }),
+      ])
+      render(<ExpiringConsentsPage />)
+
+      await waitFor(() => {
+        expect(screen.getByText('p-soon')).toBeInTheDocument()
+        expect(screen.getByText('p-far')).toBeInTheDocument()
+      })
+
+      // Window <= 30 days -> only the 15-day consent survives
+      const { fireEvent } = await import('@testing-library/react')
+      fireEvent.change(screen.getByLabelText('windowAll'), { target: { value: '30' } })
+
+      expect(screen.getByText('p-soon')).toBeInTheDocument()
+      expect(screen.queryByText('p-far')).not.toBeInTheDocument()
+    })
+
+    it('search filters rows by patient ID', async () => {
+      mockFetch([
+        makeConsent({ id: 'c-1', patient_ref: 'Patient/p-001' }),
+        makeConsent({ id: 'c-2', patient_ref: 'Patient/p-002' }),
+      ])
+      render(<ExpiringConsentsPage />)
+
+      await waitFor(() => {
+        expect(screen.getByText('p-001')).toBeInTheDocument()
+      })
+
+      const { fireEvent } = await import('@testing-library/react')
+      fireEvent.change(screen.getByLabelText('searchPlaceholder'), { target: { value: '002' } })
+
+      expect(screen.getByText('p-002')).toBeInTheDocument()
+      expect(screen.queryByText('p-001')).not.toBeInTheDocument()
+    })
+
+    it('shows a filtered-empty state (not the table) when filters match nothing', async () => {
+      mockFetch([makeConsent({ patient_ref: 'Patient/p-001' })])
+      render(<ExpiringConsentsPage />)
+
+      await waitFor(() => {
+        expect(screen.getByText('p-001')).toBeInTheDocument()
+      })
+
+      const { fireEvent } = await import('@testing-library/react')
+      fireEvent.change(screen.getByLabelText('searchPlaceholder'), { target: { value: 'zzz-no-match' } })
+
+      expect(screen.getByText('noResultsFiltered')).toBeInTheDocument()
       expect(screen.queryByRole('table')).not.toBeInTheDocument()
     })
   })

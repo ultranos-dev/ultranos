@@ -580,7 +580,10 @@
     "submissionFailed": "ارسال ناکام شد. لطفاً دوباره تلاش کنید.",
     "back": "بازگشت",
     "loading": "در حال بارگذاری...",
-    "sessionExpired": "جلسه شما منقضی شده. لطفاً دوباره وارد شوید تا ادامه دهید."
+    "sessionExpired": "جلسه شما منقضی شده. لطفاً دوباره وارد شوید تا ادامه دهید.",
+    "stepUpload": "بارگذاری",
+    "stepReview": "بازبینی",
+    "stepConfirm": "تایید"
   },
   "labResults": {
     "title": "نتایج لابراتوار ({count})",
@@ -704,7 +707,15 @@
       "substance": "ماده",
       "display": "نمایش",
       "text": "متن"
-    }
+    },
+    "searchPlaceholder": "جستجو با مریض یا شناسه سابقه...",
+    "tabAll": "همه",
+    "tabOverdue": "تاخیر شده",
+    "typeAll": "همه انواع",
+    "typeAllergy": "حساسیت‌ها",
+    "typeMedication": "دواها",
+    "typeDiagnosis": "تشخیص‌ها",
+    "noResults": "هیچ تعارضی با فیلترهای شما مطابقت ندارد"
   },
   "pediatric": {
     "manualDosingWarning": "دوز بر اساس وزن پشتیبانی نمی‌شود. دستی حساب کنید."
@@ -746,7 +757,12 @@
     "markAllReadAria": "علامت‌گذاری همه به عنوان خوانده شده",
     "offlineError": "اطلاعیه‌ها در حالت آفلاین در دسترس نیست. لطفاً اتصال خود را بررسی کنید.",
     "loadingNotifications": "در حال بارگذاری اطلاعیه‌ها...",
-    "noNotifications": "اطلاعیه‌ای وجود ندارد"
+    "noNotifications": "اطلاعیه‌ای وجود ندارد",
+    "searchPlaceholder": "جستجو در اعلان‌ها...",
+    "statusAll": "همه حالت‌ها",
+    "statusUnread": "ناخوانده",
+    "statusRead": "خوانده‌شده",
+    "noResults": "هیچ اعلانی با فیلترهای شما مطابقت ندارد"
   },
   "registration": {
     "title": "ثبت مریض جدید",
@@ -1080,7 +1096,23 @@
     "actionFlagMerge": "علامت‌گذاری برای ادغام",
     "dismissAriaLabel": "رد بررسی تکراری برای {patient}",
     "flagAriaLabel": "علامت‌گذاری برای ادغام {patient}",
-    "noCandidates": "هیچ سابقه نامزدی یافت نشد"
+    "noCandidates": "هیچ سابقه نامزدی یافت نشد",
+    "searchPlaceholder": "جستجو با مریض...",
+    "statusTabAll": "همه",
+    "statusTabPending": "معلق",
+    "statusTabResolved": "حل‌شده",
+    "noResultsFiltered": "هیچ بازبینی با فیلترهای شما مطابقت ندارد",
+    "reviewListLabel": "فهرست بازبینی موارد تکراری",
+    "reviewDetailLabel": "جزئیات بازبینی",
+    "candidateId": "کاندید {id}",
+    "scoreLabel": "امتیاز {score}",
+    "scoreAriaLabel": "امتیاز تطابق {score}، احتمال {level}",
+    "fieldGivenName": "نام",
+    "fieldFatherName": "نام پدر",
+    "fieldBirthYear": "سال تولد",
+    "fieldGender": "جنسیت",
+    "fieldDistrict": "ولسوالی مبدأ",
+    "notAvailable": "ثبت نشده"
   },
   "appointments": {
     "title": "وقت‌ها",
@@ -1179,7 +1211,14 @@
     "next": "بعدی",
     "expiryWarning": "رضایت در تاریخ {date} منقضی می‌شود",
     "renewConsent": "تجدید رضایت",
-    "textPs": "توجه: ترجمه پشتو این سند رضایت در انتظار بررسی حقوقی حرفه‌ای است. این ترجمه تایید نشده است. لطفاً از نسخه انگلیسی، عربی یا دری استفاده کنید. ترجمه پشتو معتبر به زودی در دسترس قرار خواهد گرفت."
+    "textPs": "توجه: ترجمه پشتو این سند رضایت در انتظار بررسی حقوقی حرفه‌ای است. این ترجمه تایید نشده است. لطفاً از نسخه انگلیسی، عربی یا دری استفاده کنید. ترجمه پشتو معتبر به زودی در دسترس قرار خواهد گرفت.",
+    "searchPlaceholder": "جستجو با شناسه مریض...",
+    "windowAll": "همه بازه‌ها",
+    "window30": "≤۳۰ روز",
+    "window60": "≤۶۰ روز",
+    "window90": "≤۹۰ روز",
+    "noResultsFiltered": "هیچ رضایتی با فیلترهای شما مطابقت ندارد",
+    "fetchError": "بارگیری رضایت‌های در حال انقضا ناکام شد. لطفاً دوباره تلاش کنید."
   },
   "patientPhoto": {
     "title": "تصویر مریض را بروز کنید",

@@ -319,7 +319,10 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="space-y-3" data-testid="timeline-loading">
+      <div
+        className="space-y-3 rounded-xl bg-card p-3 shadow-card ring-[0.65px] ring-border/50"
+        data-testid="timeline-loading"
+      >
         <Skeleton className="h-8 w-1/3" />
         <Skeleton className="h-14 w-full" />
         <Skeleton className="h-14 w-full" />
@@ -349,11 +352,12 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
   // ── Empty state ──────────────────────────────────────────────────────────
   if (groups.length === 0) {
     return (
-      <EmptyState
-        data-testid="timeline-empty"
-        title={t('noResults')}
-        size="sm"
-      />
+      <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        <EmptyState
+          data-testid="timeline-empty"
+          title={t('noResults')}
+        />
+      </div>
     )
   }
 

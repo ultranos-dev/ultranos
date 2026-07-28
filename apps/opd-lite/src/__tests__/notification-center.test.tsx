@@ -428,6 +428,67 @@ describe('NotificationCenter', () => {
       })
     })
   })
+
+  // --- Toolbar: search + read-status filter (Patients-style) ---
+  describe('Toolbar filtering', () => {
+    it('renders a search input and a read-status dropdown', async () => {
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('searchPlaceholder')).toBeInTheDocument()
+        expect(screen.getByLabelText('statusAll')).toBeInTheDocument()
+      })
+    })
+
+    it('search filters notifications by lab name', async () => {
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('notification-n1')).toBeInTheDocument()
+      })
+
+      // n1 has labName "Lab Alpha"; n2 has "Lab Beta"
+      fireEvent.change(screen.getByLabelText('searchPlaceholder'), { target: { value: 'Alpha' } })
+
+      expect(screen.getByTestId('notification-n1')).toBeInTheDocument()
+      expect(screen.queryByTestId('notification-n2')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('notification-n3')).not.toBeInTheDocument()
+    })
+
+    it('read-status dropdown filters to read-only and unread-only', async () => {
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('notification-n7')).toBeInTheDocument()
+      })
+
+      // n7 is ACKNOWLEDGED (read); n1 is unread
+      fireEvent.change(screen.getByLabelText('statusAll'), { target: { value: 'read' } })
+      expect(screen.getByTestId('notification-n7')).toBeInTheDocument()
+      expect(screen.queryByTestId('notification-n1')).not.toBeInTheDocument()
+
+      fireEvent.change(screen.getByLabelText('statusAll'), { target: { value: 'unread' } })
+      expect(screen.getByTestId('notification-n1')).toBeInTheDocument()
+      expect(screen.queryByTestId('notification-n7')).not.toBeInTheDocument()
+    })
+
+    it('shows a filtered-empty state when a search matches nothing', async () => {
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('notification-n1')).toBeInTheDocument()
+      })
+
+      fireEvent.change(screen.getByLabelText('searchPlaceholder'), { target: { value: 'zzz-no-match' } })
+
+      expect(screen.getByText('noResults')).toBeInTheDocument()
+      expect(screen.queryByTestId('notification-n1')).not.toBeInTheDocument()
+    })
+  })
 })
 
 // --- NotificationPanel dropdown ---

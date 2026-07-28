@@ -157,7 +157,11 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
   const consentUnverified = consentResult?.granted && consentResult.unverified
 
   if (reports.length === 0) {
-    return <EmptyState title={t('noResults')} size="sm" />
+    return (
+      <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        <EmptyState title={t('noResults')} />
+      </div>
+    )
   }
 
   return (

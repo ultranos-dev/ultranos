@@ -131,7 +131,9 @@ export function DataBudgetDashboard() {
       <Card>
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('categoryTitle')}</h2>
         {Object.keys(categoryBreakdown).length === 0 ? (
-          <EmptyState size="sm" icon={Database} title={t('categoryEmpty')} />
+          <div className="flex min-h-[12rem] items-center justify-center">
+            <EmptyState icon={Database} title={t('categoryEmpty')} />
+          </div>
         ) : (
           <table className="w-full text-sm">
             <thead>

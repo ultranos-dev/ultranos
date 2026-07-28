@@ -469,6 +469,119 @@ describe('ConflictList', () => {
 })
 
 // =====================================================
+// Component Tests: ConflictList toolbar filtering (Patients-style)
+// =====================================================
+
+describe('ConflictList toolbar filtering', () => {
+  beforeEach(async () => {
+    await db.syncQueue.clear()
+  })
+
+  afterEach(async () => {
+    await db.syncQueue.clear()
+  })
+
+  it('renders a search input, an All/Overdue tab-bar, and a type dropdown', async () => {
+    await seedQueue([
+      makeConflictEntry({ id: 't1', resourceType: 'AllergyIntolerance', conflictFlag: true, status: 'failed' }),
+    ])
+    render(<ConflictList />)
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('searchPlaceholder')).toBeInTheDocument()
+    })
+    expect(screen.getByRole('button', { name: 'tabAll' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'tabOverdue' })).toBeInTheDocument()
+    expect(screen.getByLabelText('typeAll')).toBeInTheDocument()
+  })
+
+  it('renders the toolbar even when there are no conflicts (empty state)', async () => {
+    // Empty queue — the search/tabs/filter must still render above the empty state
+    render(<ConflictList />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('no-conflicts')).toBeInTheDocument()
+    })
+    expect(screen.getByLabelText('searchPlaceholder')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'tabAll' })).toBeInTheDocument()
+    expect(screen.getByLabelText('typeAll')).toBeInTheDocument()
+  })
+
+  it('type dropdown filters to a single resource type', async () => {
+    await seedQueue([
+      makeConflictEntry({ id: 'a1', resourceType: 'AllergyIntolerance', resourceId: 'allergy-a1', conflictFlag: true, status: 'failed' }),
+      makeConflictEntry({ id: 'm1', resourceType: 'MedicationRequest', resourceId: 'med-m1', conflictFlag: true, status: 'failed' }),
+    ])
+    render(<ConflictList />)
+
+    await waitFor(() => {
+      expect(screen.getByText('resourceAllergy')).toBeInTheDocument()
+      expect(screen.getByText('resourceMedication')).toBeInTheDocument()
+    })
+
+    fireEvent.change(screen.getByLabelText('typeAll'), { target: { value: 'MedicationRequest' } })
+
+    expect(screen.getByText('resourceMedication')).toBeInTheDocument()
+    expect(screen.queryByText('resourceAllergy')).not.toBeInTheDocument()
+    expect(screen.getAllByTestId('conflict-item')).toHaveLength(1)
+  })
+
+  it('Overdue tab shows only overdue conflicts', async () => {
+    const oldDate = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString()
+    const recentDate = new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+    await seedQueue([
+      makeConflictEntry({ id: 'old', resourceType: 'AllergyIntolerance', resourceId: 'allergy-old', conflictFlag: true, status: 'failed', createdAt: oldDate }),
+      makeConflictEntry({ id: 'new', resourceType: 'MedicationRequest', resourceId: 'med-new', conflictFlag: true, status: 'failed', createdAt: recentDate }),
+    ])
+    render(<ConflictList />)
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('conflict-item')).toHaveLength(2)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'tabOverdue' }))
+
+    expect(screen.getAllByTestId('conflict-item')).toHaveLength(1)
+    expect(screen.getByTestId('overdue-badge')).toBeInTheDocument()
+    expect(screen.queryByText('resourceMedication')).not.toBeInTheDocument()
+  })
+
+  it('search filters conflicts by patient reference', async () => {
+    await seedQueue([
+      makeConflictEntry({ id: 'p1', resourceType: 'AllergyIntolerance', resourceId: 'allergy-p1', patientRef: 'Patient/aaa111', conflictFlag: true, status: 'failed' }),
+      makeConflictEntry({ id: 'p2', resourceType: 'MedicationRequest', resourceId: 'med-p2', patientRef: 'Patient/bbb222', conflictFlag: true, status: 'failed' }),
+    ])
+    render(<ConflictList />)
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('conflict-item')).toHaveLength(2)
+    })
+
+    fireEvent.change(screen.getByLabelText('searchPlaceholder'), { target: { value: 'aaa111' } })
+
+    expect(screen.getAllByTestId('conflict-item')).toHaveLength(1)
+    expect(screen.getByText('resourceAllergy')).toBeInTheDocument()
+    expect(screen.queryByText('resourceMedication')).not.toBeInTheDocument()
+  })
+
+  it('shows a filtered-empty state when filters match nothing', async () => {
+    await seedQueue([
+      makeConflictEntry({ id: 'e1', resourceType: 'AllergyIntolerance', resourceId: 'allergy-e1', conflictFlag: true, status: 'failed' }),
+    ])
+    render(<ConflictList />)
+
+    await waitFor(() => {
+      expect(screen.getByText('resourceAllergy')).toBeInTheDocument()
+    })
+
+    fireEvent.change(screen.getByLabelText('searchPlaceholder'), { target: { value: 'no-such-record' } })
+
+    expect(screen.getByText('noResults')).toBeInTheDocument()
+    expect(screen.queryByTestId('conflict-item')).not.toBeInTheDocument()
+  })
+})
+
+// =====================================================
 // Component Tests: ConflictDiffView
 // =====================================================
 

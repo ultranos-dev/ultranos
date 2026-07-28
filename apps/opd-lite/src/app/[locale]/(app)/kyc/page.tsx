@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, type ChangeEvent } from 'react'
+import { Fragment, useEffect, useState, useCallback, type ChangeEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { extractKycFields, fileToBase64, type OcrResult } from '@/lib/ocr'
@@ -21,6 +21,12 @@ import {
 } from '@/lib/kyc-api'
 
 type KycStep = 'upload' | 'review' | 'confirm' | 'submitted'
+
+const KYC_STEPS: { key: Exclude<KycStep, 'submitted'>; labelKey: string }[] = [
+  { key: 'upload', labelKey: 'stepUpload' },
+  { key: 'review', labelKey: 'stepReview' },
+  { key: 'confirm', labelKey: 'stepConfirm' },
+]
 
 interface DocumentState {
   file: File | null
@@ -248,9 +254,10 @@ export default function KycPage() {
 
   if (!session || loading) {
     return (
-      <div className="flex min-h-[50vh] flex-col gap-4 p-4" role="status" aria-label="Loading">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-40 w-full max-w-2xl" />
+      <div className="flex flex-col gap-4" role="status" aria-label="Loading">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-80" />
+        <Skeleton className="h-64 w-full rounded-xl" />
       </div>
     )
   }
@@ -263,7 +270,11 @@ export default function KycPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="max-w-2xl flex flex-col gap-4">
+      {/* Page header */}
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('description')}</p>
+      </div>
 
       {/* Rejection banner */}
       {isRejected && rejectionReason && step !== 'submitted' && (
@@ -290,30 +301,47 @@ export default function KycPage() {
         </Alert>
       )}
 
-      {/* Step indicator */}
-      {/* DEFERRED: replace numbered circles with a real StepProgress component (design system enhancement) */}
+      {/* Step progress indicator */}
       {step !== 'submitted' && (
-        <div className="flex gap-2" aria-label="Progress steps">
-          {(['upload', 'review', 'confirm'] as const).map((s, i) => (
-            <div
-              key={s}
-              className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-                step === s
-                  ? 'bg-primary text-primary-foreground'
-                  : (['upload', 'review', 'confirm'] as const).indexOf(step) > i
-                    ? 'bg-success/20 text-success'
-                    : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {i + 1}
-            </div>
-          ))}
+        <div className="flex items-center" aria-label="Progress steps">
+          {KYC_STEPS.map((s, i) => {
+            const currentIndex = KYC_STEPS.findIndex((x) => x.key === step)
+            const isDone = currentIndex > i
+            const isActive = step === s.key
+            return (
+              <Fragment key={s.key}>
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-medium ${
+                      isActive
+                        ? 'bg-primary text-primary-foreground'
+                        : isDone
+                          ? 'bg-success/20 text-success'
+                          : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {isDone ? <CircleCheck className="h-4 w-4" aria-hidden="true" /> : i + 1}
+                  </div>
+                  <span
+                    className={`text-sm font-medium ${
+                      isActive ? 'text-foreground' : 'text-muted-foreground'
+                    }`}
+                  >
+                    {t(s.labelKey)}
+                  </span>
+                </div>
+                {i < KYC_STEPS.length - 1 && (
+                  <div className="mx-3 h-px flex-1 bg-border" />
+                )}
+              </Fragment>
+            )
+          })}
         </div>
       )}
 
       {/* Step 1: Document Upload */}
       {step === 'upload' && (
-        <div className="space-y-4">
+        <Card className="flex flex-col gap-4">
           <DocumentUploadZone
             label={t('medicalLicense')}
             docType="MEDICAL_LICENSE"
@@ -339,18 +367,20 @@ export default function KycPage() {
           <Button variant="primary" fullWidth disabled={!licenseDoc.uploaded || !nationalIdDoc.uploaded} onClick={handleProceedToReview}>
             {t('continueToReview')}
           </Button>
-        </div>
+        </Card>
       )}
 
       {/* Step 2: Review Extracted Fields */}
       {step === 'review' && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">
-            {t('reviewTitle')}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {t('reviewDescription')}
-          </p>
+        <Card className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">
+              {t('reviewTitle')}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t('reviewDescription')}
+            </p>
+          </div>
 
           {Object.entries(reviewFields).map(([fieldName, value]) => {
             const ocrField = [
@@ -409,17 +439,17 @@ export default function KycPage() {
               {t('continueToConfirm')}
             </Button>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Step 3: Confirm and Submit */}
       {step === 'confirm' && (
-        <div className="space-y-4">
+        <Card className="flex flex-col gap-4">
           <h2 className="text-lg font-semibold text-foreground">
             {t('confirmTitle')}
           </h2>
 
-          <Card>
+          <div className="rounded-xl bg-muted/40 p-4">
             <h3 className="mb-3 text-sm font-medium text-muted-foreground">{t('summary')}</h3>
             <dl className="space-y-2 text-sm">
               {Object.entries(reviewFields).map(([key, value]) => (
@@ -441,9 +471,9 @@ export default function KycPage() {
                 </dd>
               </div>
             </dl>
-          </Card>
+          </div>
 
-          <Card as="label" className="flex cursor-pointer items-start gap-3">
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-muted/40 p-4">
             <input
               type="checkbox"
               checked={confirmed}
@@ -453,7 +483,7 @@ export default function KycPage() {
             <span className="text-sm text-foreground">
               {t('confirmAccuracy')}
             </span>
-          </Card>
+          </label>
 
           {submitError && (
             <Alert variant="destructive" role="alert">
@@ -469,12 +499,15 @@ export default function KycPage() {
               {submitting ? t('submitting') : t('submitForVerification')}
             </Button>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Step 4: Submitted confirmation */}
       {step === 'submitted' && (
-        <div data-testid="kyc-submitted">
+        <div
+          data-testid="kyc-submitted"
+          className="flex min-h-[18rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
+        >
           <EmptyState
             icon={CircleCheck}
             title={t('pendingTitle')}
@@ -482,7 +515,6 @@ export default function KycPage() {
           />
         </div>
       )}
-      </div>
     </div>
   )
 }

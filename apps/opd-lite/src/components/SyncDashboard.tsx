@@ -376,7 +376,9 @@ export function SyncDashboard() {
         {/* Queue items grouped by resource type (AC: 2, 3) */}
         <div className="max-h-[60vh] overflow-y-auto" data-testid="sync-item-list">
           {queueItems.length === 0 ? (
-            <EmptyState title="All synced, no pending items" size="sm" />
+            <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+              <EmptyState title="All synced, no pending items" />
+            </div>
           ) : (
             groups.map((group) => {
               const isExpanded = expandedGroups.has(group.resourceType)

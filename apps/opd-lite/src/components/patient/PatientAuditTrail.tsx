@@ -2,8 +2,9 @@
 
 import { useState, useCallback } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { ChevronDown } from '@ultranos/ui-kit/icons'
+import { ChevronDown, History } from '@ultranos/ui-kit/icons'
 import { formatRelativeTime } from '@ultranos/ui-kit'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { getHubBaseUrl } from '@/lib/hub-url'
 import { Card } from '@/components/Card'
@@ -183,7 +184,7 @@ export function PatientAuditTrail({
           )}
 
           {loaded && entries.length === 0 && (
-            <p className="text-sm text-muted-foreground">{t('auditEmpty')}</p>
+            <EmptyState size="sm" icon={History} title={t('auditEmpty')} />
           )}
 
           {entries.length > 0 && (

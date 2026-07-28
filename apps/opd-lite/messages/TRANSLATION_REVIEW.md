@@ -8,7 +8,7 @@
 >
 > HIGHEST PRIORITY: the ConsentTextModal Pashto consent BODY needs a CERTIFIED LEGAL translation — it currently renders a "translation pending, use another language" notice, not a machine-translated legal document.
 
-Total keys to review: **207** (each across ar / prs / ps).
+Total keys to review: **231** (each across ar / prs / ps). Includes a 24-key addendum (2026-07-27) for the list-page toolbars — see the end of this file.
 
 ---
 
@@ -1254,3 +1254,153 @@ Total keys to review: **207** (each across ar / prs / ps).
 - **prs:** "خارج از محدوده مورد انتظار"
 - **ps:** "د تمه وړ سیمې بهر"
 
+
+---
+
+## Addendum — 2026-07-27: list-page toolbar labels (24 keys)
+
+> Added when the Notifications, Conflicts, Duplicate Reviews, and Expiring Consents pages were given Patients-style toolbars (search + filter dropdowns + tab-bars). ar/prs/ps below are MACHINE-GENERATED and REQUIRE native-speaker review.
+
+### `notificationCenter.searchPlaceholder`
+- **en:** "Search notifications..."
+- **ar:** "بحث في الإشعارات..."
+- **prs:** "جستجو در اعلان‌ها..."
+- **ps:** "په خبرتیاوو کې لټون..."
+
+### `notificationCenter.statusAll`
+- **en:** "All statuses"
+- **ar:** "كل الحالات"
+- **prs:** "همه حالت‌ها"
+- **ps:** "ټولې حالتونه"
+
+### `notificationCenter.statusUnread`
+- **en:** "Unread"
+- **ar:** "غير مقروء"
+- **prs:** "ناخوانده"
+- **ps:** "نالوستل شوی"
+
+### `notificationCenter.statusRead`
+- **en:** "Read"
+- **ar:** "مقروء"
+- **prs:** "خوانده‌شده"
+- **ps:** "لوستل شوی"
+
+### `notificationCenter.noResults`
+- **en:** "No notifications match your filters"
+- **ar:** "لا توجد إشعارات تطابق الفلاتر"
+- **prs:** "هیچ اعلانی با فیلترهای شما مطابقت ندارد"
+- **ps:** "ستاسو فلترونو سره هیڅ خبرتیا سمون نه خوري"
+
+### `conflicts.searchPlaceholder`
+- **en:** "Search by patient or record ID..."
+- **ar:** "بحث حسب المريض أو رقم السجل..."
+- **prs:** "جستجو با مریض یا شناسه سابقه..."
+- **ps:** "د ناروغ یا ریکارډ پیژندنې په واسطه لټون..."
+
+### `conflicts.tabAll`
+- **en:** "All"
+- **ar:** "الكل"
+- **prs:** "همه"
+- **ps:** "ټول"
+
+### `conflicts.tabOverdue`
+- **en:** "Overdue"
+- **ar:** "متأخر"
+- **prs:** "تاخیر شده"
+- **ps:** "ناوخته"
+
+### `conflicts.typeAll`
+- **en:** "All types"
+- **ar:** "كل الأنواع"
+- **prs:** "همه انواع"
+- **ps:** "ټول ډولونه"
+
+### `conflicts.typeAllergy`
+- **en:** "Allergies"
+- **ar:** "حساسيات"
+- **prs:** "حساسیت‌ها"
+- **ps:** "حساسیتونه"
+
+### `conflicts.typeMedication`
+- **en:** "Medications"
+- **ar:** "أدوية"
+- **prs:** "دواها"
+- **ps:** "درمل"
+
+### `conflicts.typeDiagnosis`
+- **en:** "Diagnoses"
+- **ar:** "تشخيصات"
+- **prs:** "تشخیص‌ها"
+- **ps:** "تشخیصونه"
+
+### `conflicts.noResults`
+- **en:** "No conflicts match your filters"
+- **ar:** "لا توجد تعارضات تطابق الفلاتر"
+- **prs:** "هیچ تعارضی با فیلترهای شما مطابقت ندارد"
+- **ps:** "ستاسو فلترونو سره هیڅ شخړه سمون نه خوري"
+
+### `duplicateReview.searchPlaceholder`
+- **en:** "Search by patient..."
+- **ar:** "بحث حسب المريض..."
+- **prs:** "جستجو با مریض..."
+- **ps:** "د ناروغ په واسطه لټون..."
+
+### `duplicateReview.statusTabAll`
+- **en:** "All"
+- **ar:** "الكل"
+- **prs:** "همه"
+- **ps:** "ټول"
+
+### `duplicateReview.statusTabPending`
+- **en:** "Pending"
+- **ar:** "معلق"
+- **prs:** "معلق"
+- **ps:** "انتظار کې"
+
+### `duplicateReview.statusTabResolved`
+- **en:** "Resolved"
+- **ar:** "تم الحل"
+- **prs:** "حل‌شده"
+- **ps:** "حل شوی"
+
+### `duplicateReview.noResultsFiltered`
+- **en:** "No reviews match your filters"
+- **ar:** "لا توجد مراجعات تطابق الفلاتر"
+- **prs:** "هیچ بازبینی با فیلترهای شما مطابقت ندارد"
+- **ps:** "ستاسو فلترونو سره هیڅ کتنه سمون نه خوري"
+
+### `consent.searchPlaceholder`
+- **en:** "Search by patient ID..."
+- **ar:** "بحث حسب رقم المريض..."
+- **prs:** "جستجو با شناسه مریض..."
+- **ps:** "د ناروغ پیژندنې په واسطه لټون..."
+
+### `consent.windowAll`
+- **en:** "All windows"
+- **ar:** "كل الفترات"
+- **prs:** "همه بازه‌ها"
+- **ps:** "ټولې مودې"
+
+### `consent.window30`
+- **en:** "≤30 days"
+- **ar:** "≤30 يوم"
+- **prs:** "≤۳۰ روز"
+- **ps:** "≤۳۰ ورځې"
+
+### `consent.window60`
+- **en:** "≤60 days"
+- **ar:** "≤60 يوم"
+- **prs:** "≤۶۰ روز"
+- **ps:** "≤۶۰ ورځې"
+
+### `consent.window90`
+- **en:** "≤90 days"
+- **ar:** "≤90 يوم"
+- **prs:** "≤۹۰ روز"
+- **ps:** "≤۹۰ ورځې"
+
+### `consent.noResultsFiltered`
+- **en:** "No consents match your filters"
+- **ar:** "لا توجد موافقات تطابق الفلاتر"
+- **prs:** "هیچ رضایتی با فیلترهای شما مطابقت ندارد"
+- **ps:** "ستاسو فلترونو سره هیڅ رضایت سمون نه خوري"

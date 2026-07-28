@@ -580,7 +580,10 @@
     "submissionFailed": "فشل التقديم. يرجى المحاولة مرة أخرى.",
     "back": "رجوع",
     "loading": "جاري التحميل...",
-    "sessionExpired": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى للمتابعة."
+    "sessionExpired": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى للمتابعة.",
+    "stepUpload": "رفع",
+    "stepReview": "مراجعة",
+    "stepConfirm": "تأكيد"
   },
   "labResults": {
     "title": "نتائج المختبر ({count})",
@@ -704,7 +707,15 @@
       "substance": "المادة",
       "display": "العرض",
       "text": "النص"
-    }
+    },
+    "searchPlaceholder": "بحث حسب المريض أو رقم السجل...",
+    "tabAll": "الكل",
+    "tabOverdue": "متأخر",
+    "typeAll": "كل الأنواع",
+    "typeAllergy": "حساسيات",
+    "typeMedication": "أدوية",
+    "typeDiagnosis": "تشخيصات",
+    "noResults": "لا توجد تعارضات تطابق الفلاتر"
   },
   "pediatric": {
     "manualDosingWarning": "الجرعات حسب الوزن غير مدعومة. احسب الجرعة يدويًا."
@@ -746,7 +757,12 @@
     "markAllReadAria": "تعيين الكل كمقروءة",
     "offlineError": "الإشعارات غير متاحة دون اتصال. يرجى التحقق من الاتصال.",
     "loadingNotifications": "جاري تحميل الإشعارات...",
-    "noNotifications": "لا توجد إشعارات"
+    "noNotifications": "لا توجد إشعارات",
+    "searchPlaceholder": "بحث في الإشعارات...",
+    "statusAll": "كل الحالات",
+    "statusUnread": "غير مقروء",
+    "statusRead": "مقروء",
+    "noResults": "لا توجد إشعارات تطابق الفلاتر"
   },
   "registration": {
     "title": "تسجيل مريض جديد",
@@ -1080,7 +1096,23 @@
     "actionFlagMerge": "علامة للدمج",
     "dismissAriaLabel": "رفض مراجعة التكرار لـ {patient}",
     "flagAriaLabel": "وضع علامة دمج لـ {patient}",
-    "noCandidates": "لم يتم العثور على سجلات مرشحة"
+    "noCandidates": "لم يتم العثور على سجلات مرشحة",
+    "searchPlaceholder": "بحث حسب المريض...",
+    "statusTabAll": "الكل",
+    "statusTabPending": "معلق",
+    "statusTabResolved": "تم الحل",
+    "noResultsFiltered": "لا توجد مراجعات تطابق الفلاتر",
+    "reviewListLabel": "قائمة مراجعة التكرارات",
+    "reviewDetailLabel": "تفاصيل المراجعة",
+    "candidateId": "مرشح {id}",
+    "scoreLabel": "الدرجة {score}",
+    "scoreAriaLabel": "درجة التطابق {score}، احتمالية {level}",
+    "fieldGivenName": "الاسم الأول",
+    "fieldFatherName": "اسم الأب",
+    "fieldBirthYear": "سنة الميلاد",
+    "fieldGender": "الجنس",
+    "fieldDistrict": "منطقة المنشأ",
+    "notAvailable": "غير مُسجَّل"
   },
   "appointments": {
     "title": "المواعيد",
@@ -1179,7 +1211,14 @@
     "next": "التالي",
     "expiryWarning": "تنتهي الموافقة في {date}",
     "renewConsent": "تجديد الموافقة",
-    "textPs": "ملاحظة: ترجمة وثيقة الموافقة هذه إلى اللغة البشتوية قيد المراجعة القانونية المهنية. لم تتم مصادقة هذه الترجمة. يرجى استخدام النسخة الإنجليزية أو العربية أو الدرية. ستُتاح ترجمة بشتوية معتمدة فور الانتهاء منها."
+    "textPs": "ملاحظة: ترجمة وثيقة الموافقة هذه إلى اللغة البشتوية قيد المراجعة القانونية المهنية. لم تتم مصادقة هذه الترجمة. يرجى استخدام النسخة الإنجليزية أو العربية أو الدرية. ستُتاح ترجمة بشتوية معتمدة فور الانتهاء منها.",
+    "searchPlaceholder": "بحث حسب رقم المريض...",
+    "windowAll": "كل الفترات",
+    "window30": "≤30 يوم",
+    "window60": "≤60 يوم",
+    "window90": "≤90 يوم",
+    "noResultsFiltered": "لا توجد موافقات تطابق الفلاتر",
+    "fetchError": "تعذّر تحميل الموافقات المنتهية قريبًا. يرجى المحاولة مرة أخرى."
   },
   "patientPhoto": {
     "title": "تحديث صورة المريض",

@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { Users } from '@ultranos/ui-kit/icons'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Button } from '@/components/ui/Button'
 import { useAppointments } from '@/hooks/useAppointments'
 import { useAppointmentStore } from '@/stores/appointment-store'
@@ -125,7 +127,9 @@ export function WalkInQueue() {
 
       {/* Walk-in list */}
       {walkIns.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t('noWalkIns')}</p>
+        <div className="flex min-h-[12rem] items-center justify-center">
+          <EmptyState icon={Users} title={t('noWalkIns')} />
+        </div>
       ) : (
         <div className="space-y-2">
           {walkIns.map((walkIn) => {

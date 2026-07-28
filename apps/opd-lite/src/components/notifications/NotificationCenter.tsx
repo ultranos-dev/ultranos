@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { formatDate } from '@ultranos/ui-kit'
 import { Beaker, Check, Settings } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
+import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
@@ -92,8 +93,26 @@ function TypeIcon({ type, id }: { type: string; id: string }) {
 
 // --- Main Component ---
 
+type StatusKey = 'all' | 'unread' | 'read'
+
+function matchesSearch(n: NotificationItem, query: string): boolean {
+  if (!query) return true
+  const haystack = [
+    n.type,
+    n.payload?.message,
+    n.payload?.testCategory,
+    n.payload?.labName,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+  return haystack.includes(query)
+}
+
 export function NotificationCenter() {
   const [activeTab, setActiveTab] = useState<TabKey>('all')
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<StatusKey>('all')
   const router = useRouter()
   const t = useTranslations('notificationCenter')
 
@@ -106,7 +125,13 @@ export function NotificationCenter() {
     acknowledgeAll,
   } = useNotificationPoll()
 
-  const filtered = filterByTab(notifications, activeTab)
+  const query = search.trim().toLowerCase()
+  const filtered = filterByTab(notifications, activeTab).filter((n) => {
+    const isRead = n.status === 'ACKNOWLEDGED'
+    if (statusFilter === 'unread' && isRead) return false
+    if (statusFilter === 'read' && !isRead) return false
+    return matchesSearch(n, query)
+  })
 
   const handleNotificationClick = useCallback(async (notification: NotificationItem) => {
     // Acknowledge on click
@@ -141,13 +166,48 @@ export function NotificationCenter() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Header with Mark All Read */}
-      <div className="flex items-center justify-between">
-        <div>
-          <span className="text-sm text-muted-foreground">
-            {unreadCount > 0 ? t('unreadCount', { count: unreadCount }) : t('allCaughtUp')}
-          </span>
+      {/* Toolbar: tab-bar + search + status filter + Mark All Read (matches Patients directory) */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div role="tablist" className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                activeTab === tab.key
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t(tab.labelKey)}
+            </button>
+          ))}
         </div>
+
+        <Input
+          type="text"
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          aria-label={t('searchPlaceholder')}
+        />
+
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as StatusKey)}
+          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+          aria-label={t('statusAll')}
+        >
+          <option value="all">{t('statusAll')}</option>
+          <option value="unread">{t('statusUnread')}</option>
+          <option value="read">{t('statusRead')}</option>
+        </select>
+
         <Button
           variant="primary"
           disabled={unreadCount === 0}
@@ -158,53 +218,35 @@ export function NotificationCenter() {
         </Button>
       </div>
 
-      {/* Tab bar */}
-      <div role="tablist" className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
-        {TABS.map(tab => (
-          <button
-            key={tab.key}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
-              activeTab === tab.key
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t(tab.labelKey)}
-          </button>
-        ))}
-      </div>
-
       {/* Error state */}
       {error && (
         <Alert variant="warning" role="alert">{t('offlineError')}</Alert>
       )}
 
-      {/* Loading state */}
-      {loading && (
-        <div className="py-12 text-center text-sm text-muted-foreground">
-          {t('loadingNotifications')}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!loading && filtered.length === 0 && !error && (
-        <EmptyState title={t('noNotifications')} size="sm" />
-      )}
-
-      {/* Notification list */}
-      {!loading && filtered.length > 0 && (
-        <div className="divide-y divide-border overflow-hidden rounded-xl bg-background ring-[0.65px] ring-border/50">
-          {filtered.map(n => (
-            <NotificationRow
-              key={n.id}
-              notification={n}
-              onClick={handleNotificationClick}
-            />
-          ))}
+      {/* Content panel: loading / empty / list */}
+      {!error && (
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          {loading ? (
+            <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">
+              {t('loadingNotifications')}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState
+                title={notifications.length > 0 ? t('noResults') : t('noNotifications')}
+              />
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {filtered.map(n => (
+                <NotificationRow
+                  key={n.id}
+                  notification={n}
+                  onClick={handleNotificationClick}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

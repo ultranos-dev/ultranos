@@ -580,7 +580,10 @@
     "submissionFailed": "لیږل ناکام شو. مهرباني وکړئ بیا هڅه وکړئ.",
     "back": "شاته",
     "loading": "لوډ کیږي...",
-    "sessionExpired": "ستاسو ناسته پای ته رسیدلې ده. مهرباني وکړئ د دوام لپاره بیا ننوځئ."
+    "sessionExpired": "ستاسو ناسته پای ته رسیدلې ده. مهرباني وکړئ د دوام لپاره بیا ننوځئ.",
+    "stepUpload": "پورته کول",
+    "stepReview": "بیاکتنه",
+    "stepConfirm": "تایید"
   },
   "labResults": {
     "title": "لابراتوار پایلې ({count})",
@@ -704,7 +707,15 @@
       "substance": "ماده",
       "display": "ښودنه",
       "text": "متن"
-    }
+    },
+    "searchPlaceholder": "د ناروغ یا ریکارډ پیژندنې په واسطه لټون...",
+    "tabAll": "ټول",
+    "tabOverdue": "ناوخته",
+    "typeAll": "ټول ډولونه",
+    "typeAllergy": "حساسیتونه",
+    "typeMedication": "درمل",
+    "typeDiagnosis": "تشخیصونه",
+    "noResults": "ستاسو فلترونو سره هیڅ شخړه سمون نه خوري"
   },
   "pediatric": {
     "manualDosingWarning": "د وزن پر بنسټ مقدار ملاتړ نه کیږي. لاسي حساب وکړئ."
@@ -746,7 +757,12 @@
     "markAllReadAria": "ټول لوستل شوي کړئ",
     "offlineError": "خبرتیاوې آفلاین شتون نلري. مهرباني وکړئ خپل اتصال وازمایئ.",
     "loadingNotifications": "خبرتیاوې لوډ کیږي...",
-    "noNotifications": "خبرتیا نشته"
+    "noNotifications": "خبرتیا نشته",
+    "searchPlaceholder": "په خبرتیاوو کې لټون...",
+    "statusAll": "ټولې حالتونه",
+    "statusUnread": "نالوستل شوی",
+    "statusRead": "لوستل شوی",
+    "noResults": "ستاسو فلترونو سره هیڅ خبرتیا سمون نه خوري"
   },
   "registration": {
     "title": "نوي ناروغ ثبت کول",
@@ -1080,7 +1096,23 @@
     "actionFlagMerge": "د یوځای کولو نښه",
     "dismissAriaLabel": "د {patient} لپاره د تکرار بیاکتنه رد کړئ",
     "flagAriaLabel": "د {patient} لپاره د یوځای کولو نښه",
-    "noCandidates": "د نوماندانو هیڅ ریکارډ ونه موندل شو"
+    "noCandidates": "د نوماندانو هیڅ ریکارډ ونه موندل شو",
+    "searchPlaceholder": "د ناروغ په واسطه لټون...",
+    "statusTabAll": "ټول",
+    "statusTabPending": "انتظار کې",
+    "statusTabResolved": "حل شوی",
+    "noResultsFiltered": "ستاسو فلترونو سره هیڅ کتنه سمون نه خوري",
+    "reviewListLabel": "د دوه‌ګوني بیاکتنې لړلیک",
+    "reviewDetailLabel": "د بیاکتنې جزئیات",
+    "candidateId": "کاندید {id}",
+    "scoreLabel": "نمره {score}",
+    "scoreAriaLabel": "د سمون نمره {score}، د {level} احتمال",
+    "fieldGivenName": "نوم",
+    "fieldFatherName": "د پلار نوم",
+    "fieldBirthYear": "د زیږون کال",
+    "fieldGender": "جنسیت",
+    "fieldDistrict": "د اصلي ولسوالۍ",
+    "notAvailable": "نه دی ثبت شوی"
   },
   "appointments": {
     "title": "وختونه",
@@ -1179,7 +1211,14 @@
     "next": "بعدی",
     "expiryWarning": "رضایت د {date} نه ختمیږي",
     "renewConsent": "رضایت تازه کول",
-    "textPs": "خبرداری: د دې رضایت سند پښتو ژباړه د مسلکي قانوني بیاکتنې تر لاندې ده. دا ژباړه تصدیق شوې نه ده. مهرباني وکړئ د انګلیسي، عربي، یا دري نسخه وکاروئ. تصدیق شوې پښتو ژباړه به ژر د لاسرسي وړ وي."
+    "textPs": "خبرداری: د دې رضایت سند پښتو ژباړه د مسلکي قانوني بیاکتنې تر لاندې ده. دا ژباړه تصدیق شوې نه ده. مهرباني وکړئ د انګلیسي، عربي، یا دري نسخه وکاروئ. تصدیق شوې پښتو ژباړه به ژر د لاسرسي وړ وي.",
+    "searchPlaceholder": "د ناروغ پیژندنې په واسطه لټون...",
+    "windowAll": "ټولې مودې",
+    "window30": "≤۳۰ ورځې",
+    "window60": "≤۶۰ ورځې",
+    "window90": "≤۹۰ ورځې",
+    "noResultsFiltered": "ستاسو فلترونو سره هیڅ رضایت سمون نه خوري",
+    "fetchError": "د پای ته رسیدونکو رضایتونو بارول ناکام شول. مهرباني وکړئ بیا هڅه وکړئ."
   },
   "patientPhoto": {
     "title": "د ناروغ عکس تازه کړئ",

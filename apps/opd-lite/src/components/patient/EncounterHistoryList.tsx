@@ -298,7 +298,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
 
   if (loading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-3 rounded-xl bg-card p-3 shadow-card ring-[0.65px] ring-border/50">
         <Skeleton className="h-20 w-full" />
         <Skeleton className="h-20 w-full" />
         <Skeleton className="h-20 w-full" />
@@ -308,11 +308,12 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
 
   if (summaries.length === 0) {
     return (
-      <EmptyState
-        size="sm"
-        title={t('noEncounters')}
-        data-testid="no-encounters"
-      />
+      <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        <EmptyState
+          title={t('noEncounters')}
+          data-testid="no-encounters"
+        />
+      </div>
     )
   }
 

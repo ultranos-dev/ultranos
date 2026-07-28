@@ -75,8 +75,8 @@ export function SyncPulse() {
 
   return (
     <Button
-      variant="icon"
-      className="relative gap-2 rounded-lg p-2"
+      variant="ghost"
+      className="relative h-9 gap-2 rounded-lg px-2"
       onClick={() => setDashboardOpen(!isDashboardOpen)}
       aria-label={`Sync status: ${ariaStatus}`}
       data-testid="sync-pulse"

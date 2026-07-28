@@ -580,7 +580,10 @@
     "submissionFailed": "Submission failed. Please try again.",
     "back": "Back",
     "loading": "Loading...",
-    "sessionExpired": "Your session has expired. Please log in again to continue."
+    "sessionExpired": "Your session has expired. Please log in again to continue.",
+    "stepUpload": "Upload",
+    "stepReview": "Review",
+    "stepConfirm": "Confirm"
   },
   "labResults": {
     "title": "Lab Results ({count})",
@@ -704,7 +707,15 @@
       "substance": "Substance",
       "display": "Display",
       "text": "Text"
-    }
+    },
+    "searchPlaceholder": "Search by patient or record ID...",
+    "tabAll": "All",
+    "tabOverdue": "Overdue",
+    "typeAll": "All types",
+    "typeAllergy": "Allergies",
+    "typeMedication": "Medications",
+    "typeDiagnosis": "Diagnoses",
+    "noResults": "No conflicts match your filters"
   },
   "pediatric": {
     "manualDosingWarning": "Weight-based dosing not supported. Calculate manually."
@@ -746,7 +757,12 @@
     "markAllReadAria": "Mark All Read",
     "offlineError": "Notifications unavailable offline. Please check your connection.",
     "loadingNotifications": "Loading notifications...",
-    "noNotifications": "No notifications"
+    "noNotifications": "No notifications",
+    "searchPlaceholder": "Search notifications...",
+    "statusAll": "All statuses",
+    "statusUnread": "Unread",
+    "statusRead": "Read",
+    "noResults": "No notifications match your filters"
   },
   "registration": {
     "title": "Register New Patient",
@@ -1080,7 +1096,23 @@
     "actionFlagMerge": "Flag for Merge",
     "dismissAriaLabel": "Dismiss duplicate review for {patient}",
     "flagAriaLabel": "Flag {patient} for merge",
-    "noCandidates": "No candidate records found"
+    "noCandidates": "No candidate records found",
+    "searchPlaceholder": "Search by patient...",
+    "statusTabAll": "All",
+    "statusTabPending": "Pending",
+    "statusTabResolved": "Resolved",
+    "noResultsFiltered": "No reviews match your filters",
+    "reviewListLabel": "Duplicate review list",
+    "reviewDetailLabel": "Review details",
+    "candidateId": "Candidate {id}",
+    "scoreLabel": "Score {score}",
+    "scoreAriaLabel": "Match score {score}, {level} likelihood",
+    "fieldGivenName": "Given name",
+    "fieldFatherName": "Father's name",
+    "fieldBirthYear": "Birth year",
+    "fieldGender": "Gender",
+    "fieldDistrict": "District of origin",
+    "notAvailable": "Not recorded"
   },
   "appointments": {
     "title": "Appointments",
@@ -1179,7 +1211,14 @@
     "next": "Next",
     "expiryWarning": "Consent expires on {date}",
     "renewConsent": "Renew Consent",
-    "textPs": "NOTICE: Pashto translation of this consent document is pending professional legal review. This translation has not been certified. Please use the English, Arabic, or Dari version. A certified Pashto translation will be provided as soon as it is available."
+    "textPs": "NOTICE: Pashto translation of this consent document is pending professional legal review. This translation has not been certified. Please use the English, Arabic, or Dari version. A certified Pashto translation will be provided as soon as it is available.",
+    "searchPlaceholder": "Search by patient ID...",
+    "windowAll": "All windows",
+    "window30": "≤30 days",
+    "window60": "≤60 days",
+    "window90": "≤90 days",
+    "noResultsFiltered": "No consents match your filters",
+    "fetchError": "Failed to load expiring consents. Please try again."
   },
   "patientPhoto": {
     "title": "Update patient photo",

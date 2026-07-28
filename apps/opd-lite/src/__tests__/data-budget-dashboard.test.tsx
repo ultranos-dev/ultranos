@@ -133,7 +133,10 @@ describe('DataBudgetDashboard — design-system tokens', () => {
     render(<DataBudgetDashboard />)
     const empty = screen.getByTestId('empty-state')
     expect(empty).toBeDefined()
-    expect(empty.getAttribute('data-size')).toBe('sm')
+    // Empty state is now the centered (md) variant inside a flex centering wrapper
+    expect(empty.getAttribute('data-size')).not.toBe('sm')
+    expect(empty.parentElement?.className).toContain('items-center')
+    expect(empty.parentElement?.className).toContain('justify-center')
     // i18n mock returns the key itself
     expect(empty.textContent).toBe('categoryEmpty')
   })

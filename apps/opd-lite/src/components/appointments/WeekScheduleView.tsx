@@ -285,7 +285,9 @@ export function WeekScheduleView() {
         {/* Time slots for selected day */}
         <div className="space-y-1">
           {cellDataMap.size === 0 ? (
-            <EmptyState size="sm" icon={CalendarDays} title={t('noAppointments')} />
+            <div className="flex min-h-[14rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+              <EmptyState icon={CalendarDays} title={t('noAppointments')} />
+            </div>
           ) : (
             TIME_SLOTS.map((time) => {
               const cellKey = `${mobileDayOffset}-${time}`
@@ -429,7 +431,9 @@ export function WeekScheduleView() {
             {weekAppointments.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-8">
-                  <EmptyState size="sm" icon={CalendarDays} title={t('noAppointments')} />
+                  <div className="flex min-h-[16rem] items-center justify-center">
+                    <EmptyState icon={CalendarDays} title={t('noAppointments')} />
+                  </div>
                 </td>
               </tr>
             ) : (

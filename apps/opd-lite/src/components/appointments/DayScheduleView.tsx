@@ -141,7 +141,9 @@ export function DayScheduleView() {
 
       {/* Time grid */}
       {appointmentsByTime.size === 0 && (
-        <EmptyState size="sm" icon={CalendarDays} title={t('noAppointments')} />
+        <div className="flex items-center justify-center rounded-xl bg-card py-8 shadow-card ring-[0.65px] ring-border/50">
+          <EmptyState icon={CalendarDays} title={t('noAppointments')} />
+        </div>
       )}
       <div className="space-y-2">
         {TIME_SLOTS.map((time) => {

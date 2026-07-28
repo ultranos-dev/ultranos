@@ -36,24 +36,24 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* ── Right: brand panel ── */}
-      <div className="relative hidden overflow-hidden bg-muted lg:flex lg:flex-col lg:items-center lg:justify-center">
-        <div className="absolute -end-32 -top-32 size-[28rem] rounded-full bg-primary/5" />
-        <div className="absolute -bottom-40 -start-16 size-96 rounded-full bg-primary/5" />
-        <div className="relative z-10 px-12 text-center text-foreground">
-          <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-            <Stethoscope className="size-10 text-primary" />
+      <div className="relative hidden overflow-hidden bg-primary lg:flex lg:flex-col lg:items-center lg:justify-center">
+        <div className="absolute -end-32 -top-32 size-[28rem] rounded-full bg-primary-foreground/5" />
+        <div className="absolute -bottom-40 -start-16 size-96 rounded-full bg-primary-foreground/5" />
+        <div className="relative z-10 px-12 text-center text-primary-foreground">
+          <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-2xl bg-primary-foreground/10 ring-1 ring-primary-foreground/20">
+            <Stethoscope className="size-10" />
           </div>
           <h2 className="font-heading text-3xl font-bold">OPD Lite</h2>
-          <p className="mt-3 text-base text-muted-foreground">
+          <p className="mt-3 text-base text-primary-foreground/75">
             {t('panelTagline')}
           </p>
           <ul className="mt-10 space-y-2 text-start">
             {[t('panelFeature1'), t('panelFeature2'), t('panelFeature3')].map((item) => (
               <li
                 key={item}
-                className="flex items-center gap-2 text-sm text-muted-foreground"
+                className="flex items-center gap-2 text-sm text-primary-foreground/70"
               >
-                <span className="size-1.5 shrink-0 rounded-full bg-primary" />
+                <span className="size-1.5 shrink-0 rounded-full bg-primary-foreground/50" />
                 {item}
               </li>
             ))}
