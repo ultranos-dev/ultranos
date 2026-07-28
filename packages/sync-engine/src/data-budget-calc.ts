@@ -6,6 +6,31 @@
 export type ThresholdLevel = 'normal' | 'warning' | 'critical'
 
 /**
+ * Serialize a Date's LOCAL calendar day as YYYY-MM-DD.
+ * Avoids `toISOString()`, which converts to UTC and can shift the date across
+ * midnight in non-UTC timezones (both positive and negative offsets).
+ */
+function formatLocalDate(d: Date): string {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
+ * Parse a YYYY-MM-DD string as a LOCAL-midnight Date.
+ * Avoids `new Date('YYYY-MM-DD')`, which parses as UTC midnight and, read back
+ * via local getters, can land on the previous/next calendar day off-server-tz.
+ */
+function parseLocalDate(iso: string): Date {
+  const parts = iso.split('-')
+  const year = Number(parts[0])
+  const month = Number(parts[1])
+  const day = Number(parts[2])
+  return new Date(year, month - 1, day)
+}
+
+/**
  * Determine the threshold level based on usage percentage.
  * <75% = normal, 75-90% = warning, >=90% = critical
  */
@@ -32,22 +57,26 @@ export function calculateProjectedExhaustion(params: {
 
   if (avgDailyUsageMB <= 0) return null
 
+  const today = new Date()
+
   const remainingMB = planSizeMB - usedMB
   if (remainingMB <= 0) {
     // Already exhausted
-    return new Date().toISOString().slice(0, 10)
+    return formatLocalDate(today)
   }
 
   const daysRemaining = remainingMB / avgDailyUsageMB
-  const projectedDate = new Date()
+  const projectedDate = new Date(today)
   projectedDate.setDate(projectedDate.getDate() + Math.round(daysRemaining))
 
-  const cycleEnd = new Date(cycleEndDate)
-  if (projectedDate > cycleEnd) {
-    return cycleEndDate
-  }
+  // Cap at the billing cycle end, but never project a date in the past
+  // (a stale/past cycle end must not surface as an exhaustion date before today).
+  const cycleEnd = parseLocalDate(cycleEndDate)
+  const capped = projectedDate > cycleEnd ? cycleEnd : projectedDate
+  const todayMidnight = parseLocalDate(formatLocalDate(today))
+  const result = capped < todayMidnight ? todayMidnight : capped
 
-  return projectedDate.toISOString().slice(0, 10)
+  return formatLocalDate(result)
 }
 
 /**
@@ -61,23 +90,23 @@ export function getCycleStartDate(billingCycleDay: number, referenceDate: Date =
 
   if (day >= billingCycleDay) {
     // Cycle started this month
-    return new Date(year, month, billingCycleDay).toISOString().slice(0, 10)
+    return formatLocalDate(new Date(year, month, billingCycleDay))
   }
   // Cycle started last month
-  return new Date(year, month - 1, billingCycleDay).toISOString().slice(0, 10)
+  return formatLocalDate(new Date(year, month - 1, billingCycleDay))
 }
 
 /**
  * Calculate the billing cycle end date (day before next cycle starts).
  */
 export function getCycleEndDate(billingCycleDay: number, cycleStart: string): string {
-  const start = new Date(cycleStart)
+  const start = parseLocalDate(cycleStart)
   // Next cycle start
   const nextStart = new Date(start.getFullYear(), start.getMonth() + 1, billingCycleDay)
   // End is one day before
   const end = new Date(nextStart)
   end.setDate(end.getDate() - 1)
-  return end.toISOString().slice(0, 10)
+  return formatLocalDate(end)
 }
 
 /**

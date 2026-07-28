@@ -31,7 +31,7 @@ export const duplicateReviewRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       let query = ctx.supabase
         .from('duplicate_reviews')
-        .select('*')
+        .select('id, patient_id, candidate_ids, candidate_scores, top_score, status, created_at')
         .order('created_at', { ascending: false })
         .range(input.offset, input.offset + input.limit - 1)
 
@@ -46,6 +46,83 @@ export const duplicateReviewRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to list reviews' })
       }
 
+      const reviewRows = (data ?? []) as Array<{
+        id: string
+        patient_id: string
+        candidate_ids: string[] | null
+        candidate_scores: number[] | null
+        top_score: number
+        status: string
+        created_at: string
+      }>
+
+      // Hydrate demographics for the source patients AND every candidate in one
+      // query — same direct-column read the patient directory uses (patient.list).
+      // No PHI is logged; names live only in the returned payload.
+      const patientIds = Array.from(
+        new Set(reviewRows.flatMap((r) => [r.patient_id, ...(r.candidate_ids ?? [])])),
+      )
+
+      const demographics = new Map<string, {
+        nameGiven?: string
+        nameFather?: string
+        birthYear?: number
+        gender?: string
+        districtOrigin?: string
+      }>()
+
+      if (patientIds.length > 0) {
+        const { data: patientData, error: patientError } = await ctx.supabase
+          .from('patients')
+          .select('id, name_given, name_father, birth_year, gender, address_district_origin')
+          .in('id', patientIds)
+
+        if (patientError) {
+          console.error('[DUPLICATE_REVIEW] Patient hydration error:', { code: patientError.code })
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to list reviews' })
+        }
+
+        for (const p of (patientData ?? []) as Array<Record<string, unknown>>) {
+          demographics.set(p.id as string, {
+            nameGiven:      (p.name_given as string) ?? undefined,
+            nameFather:     (p.name_father as string) ?? undefined,
+            birthYear:      (p.birth_year as number) ?? undefined,
+            gender:         (p.gender as string) ?? undefined,
+            districtOrigin: (p.address_district_origin as string) ?? undefined,
+          })
+        }
+      }
+
+      // Shape raw rows into the DuplicateReviewRow contract OPD Lite expects.
+      const reviews = reviewRows.map((row) => {
+        const source = demographics.get(row.patient_id)
+        const scores = row.candidate_scores ?? []
+        return {
+          id: row.id,
+          // Given name only — never the full name — as the list label; falls back
+          // to a short opaque id when the source patient has no given name.
+          patientLabel: source?.nameGiven || `#${row.patient_id.slice(0, 8)}`,
+          sourcePatientId: row.patient_id,
+          candidates: (row.candidate_ids ?? []).map((candidateId, i) => {
+            const demo = demographics.get(candidateId)
+            return {
+              id: candidateId,
+              nameGiven:      demo?.nameGiven,
+              nameFather:     demo?.nameFather,
+              birthYear:      demo?.birthYear,
+              gender:         demo?.gender,
+              districtOrigin: demo?.districtOrigin,
+              // Per-candidate score (frozen at flag time); falls back to the row's
+              // top score for older rows that predate candidate_scores.
+              mpiScore: scores[i] ?? row.top_score,
+            }
+          }),
+          topScore: row.top_score,
+          decision: row.status,
+          createdAt: row.created_at,
+        }
+      })
+
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
@@ -56,13 +133,13 @@ export const duplicateReviewRouter = createTRPCRouter({
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
-          metadata: { operation: 'duplicate_review_list', resultCount: (data ?? []).length },
+          metadata: { operation: 'duplicate_review_list', resultCount: reviewRows.length },
         })
       } catch {
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceId: 'duplicate-review-list' })
       }
 
-      return { reviews: data ?? [] }
+      return { reviews }
     }),
 
   dismiss: protectedProcedure

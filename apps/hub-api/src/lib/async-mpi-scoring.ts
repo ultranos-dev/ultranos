@@ -65,10 +65,14 @@ export async function runAsyncMpiScoring(
         .update({ mpi_warn: true, mpi_score: mpiResult.topScore })
         .eq('id', patientId)
 
-      // Create a review entry
+      // Create a review entry. candidate_ids and candidate_scores are parallel
+      // arrays derived from the same ordered mpiResult.candidates list, so
+      // candidate_scores[i] is the score for candidate_ids[i]. Scores are frozen
+      // here at flag time — the reviewer adjudicates what the system matched.
       await supabase.from('duplicate_reviews').insert({
         patient_id: patientId,
         candidate_ids: mpiResult.candidates.map((c: any) => c.candidate.id),
+        candidate_scores: mpiResult.candidates.map((c: any) => c.score),
         top_score: mpiResult.topScore,
         mpi_decision: mpiResult.decision,
         status: 'PENDING',

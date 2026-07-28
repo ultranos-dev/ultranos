@@ -15,6 +15,33 @@ import type { AuditEvent, AuditEventInput } from '@ultranos/shared-types'
 const AUDIT_TABLE = 'audit_log'
 const GENESIS_HASH = '0000000000000000000000000000000000000000000000000000000000000000'
 
+/**
+ * Order audit rows by their TRUE chain position, ascending.
+ *
+ * `chain_seq` (migration 045) is assigned inside the emit RPC's advisory lock, so
+ * it strictly increases in insertion/chain order — unlike the JS `timestamp`, which
+ * is stamped before the lock and can land out of order under concurrency. Rows that
+ * predate chain_seq have `chain_seq = null` (append-only forbids backfilling them);
+ * those are always chain-earlier than any seq'd row and fall back to timestamp order.
+ */
+function sortByChainOrderAsc<T extends { chain_seq?: number | string | null; timestamp: string; id: string }>(
+  rows: T[],
+): T[] {
+  const isNull = (v: unknown) => v === null || v === undefined
+  return [...rows].sort((a, b) => {
+    const aNull = isNull(a.chain_seq)
+    const bNull = isNull(b.chain_seq)
+    if (aNull && bNull) {
+      if (a.timestamp < b.timestamp) return -1
+      if (a.timestamp > b.timestamp) return 1
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
+    }
+    if (aNull) return -1 // legacy (null-seq) rows are chain-earlier than any seq'd row
+    if (bNull) return 1
+    return Number(a.chain_seq) - Number(b.chain_seq)
+  })
+}
+
 function computeChainHash(prevHash: string, event: AuditEventInput & { id: string; timestamp: string }): string {
   const data = JSON.stringify({
     prevHash,
@@ -44,7 +71,12 @@ export class AuditLogger {
   ) {}
 
   async emit(input: AuditEventInput): Promise<AuditEvent> {
-    // Generate id and timestamp in JS (preserves existing behavior)
+    // Generate id and timestamp in JS (preserves existing behavior).
+    // NOTE: `timestamp` is the wall-clock time the event was observed — stamped
+    // here, before the RPC's advisory lock. It is NOT the chain-ordering key.
+    // Chain order is assigned inside the locked RPC as `chain_seq` (migration 045),
+    // so concurrent emits whose JS timestamps land out of order still chain — and
+    // verify (see verifyChain) — in true insertion order.
     const id = randomUUID()
     const timestamp = new Date().toISOString()
 
@@ -109,14 +141,19 @@ export class AuditLogger {
       // Fetch limit+1 entries (the extra entry provides the baseline hash)
       const { data: descRows, error } = await this.db
         .from(AUDIT_TABLE)
-        .select('id, timestamp, actor_id, actor_role, action, resource_type, resource_id, patient_id, outcome, chain_hash')
+        .select('id, timestamp, actor_id, actor_role, action, resource_type, resource_id, patient_id, outcome, chain_hash, chain_seq')
         .order('timestamp', { ascending: false })
         .limit(limit + 1)
 
       if (error || !descRows) return { valid: false, checkedCount: 0, brokenAt: 'query_failed' }
 
-      // Reverse to chronological order for forward chain walk
-      const rows = descRows.reverse()
+      // Order by TRUE chain position (chain_seq), not wall-clock timestamp — concurrent
+      // emits can be stored with timestamps out of order relative to insertion order.
+      // If no row in the window carries a chain_seq (pre-migration data), preserve the
+      // original timestamp ordering exactly (reverse of the DESC fetch).
+      const rows = descRows.some((r: { chain_seq?: number | string | null }) => r.chain_seq != null)
+        ? sortByChainOrderAsc(descRows)
+        : descRows.reverse()
 
       if (rows.length === 0) return { valid: true, checkedCount: 0 }
 
@@ -151,13 +188,19 @@ export class AuditLogger {
     }
 
     // Legacy: verify from the beginning (oldest first)
-    const { data: rows, error } = await this.db
+    const { data: ascRows, error } = await this.db
       .from(AUDIT_TABLE)
-      .select('id, timestamp, actor_id, actor_role, action, resource_type, resource_id, patient_id, outcome, chain_hash')
+      .select('id, timestamp, actor_id, actor_role, action, resource_type, resource_id, patient_id, outcome, chain_hash, chain_seq')
       .order('timestamp', { ascending: true })
       .limit(limit)
 
-    if (error || !rows) return { valid: false, checkedCount: 0, brokenAt: 'query_failed' }
+    if (error || !ascRows) return { valid: false, checkedCount: 0, brokenAt: 'query_failed' }
+
+    // Order by true chain position (chain_seq); fall back to the original ascending
+    // timestamp order when no row carries a chain_seq (pre-migration data). See newest branch.
+    const rows = ascRows.some((r: { chain_seq?: number | string | null }) => r.chain_seq != null)
+      ? sortByChainOrderAsc(ascRows)
+      : ascRows
 
     let prevHash = GENESIS_HASH
     let checkedCount = 0

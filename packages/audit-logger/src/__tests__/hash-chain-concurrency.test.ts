@@ -65,8 +65,10 @@ function createSerializedMockSupabase() {
           outcome: params.p_outcome as string,
         })
         currentChainHash = chainHash
-        insertedRows.push({ ...params, chain_hash: chainHash, prev_hash: prevHash })
-        return { data: [{ ...params, chain_hash: chainHash }], error: null }
+        // Emulate migration 045: the RPC assigns a monotonic chain_seq under the lock.
+        const chainSeq = insertedRows.length + 1
+        insertedRows.push({ ...params, chain_hash: chainHash, prev_hash: prevHash, chain_seq: chainSeq })
+        return { data: [{ ...params, chain_hash: chainHash, chain_seq: chainSeq }], error: null }
       }),
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
@@ -210,6 +212,7 @@ describe('Hash Chain Concurrency — Story 21.6', () => {
                   patient_id: r.p_patient_id,
                   outcome: r.p_outcome,
                   chain_hash: r.chain_hash,
+                  chain_seq: r.chain_seq,
                 })),
                 error: null,
               }),
@@ -256,6 +259,65 @@ describe('Hash Chain Concurrency — Story 21.6', () => {
 
       // First row should chain from genesis
       expect(rows[0]!.prev_hash).toBe(GENESIS_HASH)
+    })
+  })
+
+  describe('chain_seq ordering (migration 045)', () => {
+    // Build a valid chain r0->r1->r2 (from genesis) whose wall-clock timestamps are
+    // INVERTED relative to chain order — simulating concurrent emit()s that stamped
+    // their JS timestamp before the RPC's advisory lock serialized them.
+    // Non-null patient/resource ids keep the hash unambiguous (null-strip parity is
+    // out of scope here — this test isolates ordering).
+    function buildInvertedChain() {
+      const spec = [
+        { id: 'aaaaaaaa-0000-0000-0000-000000000001', ts: '2026-07-27T00:00:03.000Z', seq: 102 }, // chain pos 0, latest ts
+        { id: 'bbbbbbbb-0000-0000-0000-000000000002', ts: '2026-07-27T00:00:02.000Z', seq: 103 }, // chain pos 1
+        { id: 'cccccccc-0000-0000-0000-000000000003', ts: '2026-07-27T00:00:01.000Z', seq: 104 }, // chain pos 2, earliest ts
+      ]
+      let prev = GENESIS_HASH
+      return spec.map((s) => {
+        const chainHash = computeExpectedHash(prev, {
+          id: s.id, timestamp: s.ts, actorId: 'user-001', actorRole: 'DOCTOR',
+          action: 'PHI_READ', resourceType: 'PATIENT', resourceId: 'patient-001',
+          patientId: 'patient-001', outcome: 'SUCCESS',
+        })
+        prev = chainHash
+        return {
+          id: s.id, timestamp: s.ts, actor_id: 'user-001', actor_role: 'DOCTOR',
+          action: 'PHI_READ', resource_type: 'PATIENT', resource_id: 'patient-001',
+          patient_id: 'patient-001', outcome: 'SUCCESS', chain_hash: chainHash, chain_seq: s.seq,
+        }
+      })
+    }
+
+    function verifyMockReturning(rows: Array<Record<string, unknown>>) {
+      return {
+        from: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({ data: rows, error: null }),
+            }),
+          }),
+        }),
+      }
+    }
+
+    it('verifies a chain whose timestamps are out of order, using chain_seq', async () => {
+      const rows = buildInvertedChain()
+      const logger = new AuditLogger(verifyMockReturning(rows) as any)
+      const result = await logger.verifyChain(1000)
+      expect(result.valid).toBe(true)
+      expect(result.checkedCount).toBe(3)
+      expect(result.brokenAt).toBeUndefined()
+    })
+
+    it('control: the same out-of-order rows FAIL when chain_seq is absent (timestamp order != chain order)', async () => {
+      // Strip chain_seq -> verifyChain falls back to timestamp order, which is inverted
+      // relative to the real chain -> the walk mis-links and reports invalid.
+      const rows = buildInvertedChain().map(({ chain_seq: _omit, ...rest }) => rest)
+      const logger = new AuditLogger(verifyMockReturning(rows) as any)
+      const result = await logger.verifyChain(1000)
+      expect(result.valid).toBe(false)
     })
   })
 

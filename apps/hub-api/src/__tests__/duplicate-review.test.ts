@@ -154,3 +154,116 @@ describe('duplicateReview.flagForMerge', () => {
     expect(result).toHaveProperty('success', true)
   })
 })
+
+describe('duplicateReview.list', () => {
+  const createCaller = createCallerFactory(appRouter)
+
+  const CANDIDATE_UUID = '88888888-8888-8888-8888-888888888888'
+
+  function listMockFrom(reviewRows: any[], patientRows: any[]) {
+    return vi.fn().mockImplementation((table: string) => {
+      if (table === 'duplicate_reviews') {
+        return {
+          select: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              range: vi.fn().mockResolvedValue({ data: reviewRows, error: null }),
+            }),
+          }),
+        }
+      }
+      if (table === 'patients') {
+        return {
+          select: vi.fn().mockReturnValue({
+            in: vi.fn().mockResolvedValue({ data: patientRows, error: null }),
+          }),
+        }
+      }
+      return {}
+    })
+  }
+
+  it('hydrates raw rows into the DuplicateReviewRow shape the UI expects', async () => {
+    const reviewRow = {
+      id: REVIEW_UUID,
+      patient_id: PATIENT_UUID,
+      candidate_ids: [CANDIDATE_UUID],
+      candidate_scores: [88],
+      top_score: 91,
+      status: 'PENDING',
+      created_at: '2026-07-01T00:00:00Z',
+    }
+    const patientRows = [
+      { id: PATIENT_UUID, name_given: 'Ahmad', name_father: 'Yusuf', birth_year: 1990, gender: 'male', address_district_origin: 'Kabul' },
+      { id: CANDIDATE_UUID, name_given: 'Ahmed', name_father: 'Yousef', birth_year: 1991, gender: 'male', address_district_origin: 'Herat' },
+    ]
+
+    const ctx = createTestContext(listMockFrom([reviewRow], patientRows))
+    const caller = createCaller(ctx)
+    const result = await caller.duplicateReview.list({})
+
+    expect(result.reviews).toHaveLength(1)
+    const row = result.reviews[0]!
+    expect(row.id).toBe(REVIEW_UUID)
+    // given name only, mapped from the source patient
+    expect(row.patientLabel).toBe('Ahmad')
+    expect(row.sourcePatientId).toBe(PATIENT_UUID)
+    // top_score -> topScore, status -> decision
+    expect(row.topScore).toBe(91)
+    expect(row.decision).toBe('PENDING')
+    // candidate_ids -> hydrated candidate objects
+    expect(row.candidates).toHaveLength(1)
+    expect(row.candidates[0]!.id).toBe(CANDIDATE_UUID)
+    expect(row.candidates[0]!.nameGiven).toBe('Ahmed')
+    expect(row.candidates[0]!.districtOrigin).toBe('Herat')
+    // per-candidate score (88), NOT the row top_score (91)
+    expect(row.candidates[0]!.mpiScore).toBe(88)
+  })
+
+  it('falls back to top_score when a candidate has no persisted per-candidate score', async () => {
+    const reviewRow = {
+      id: REVIEW_UUID,
+      patient_id: PATIENT_UUID,
+      candidate_ids: [CANDIDATE_UUID],
+      candidate_scores: [], // legacy row: no per-candidate scores persisted
+      top_score: 77,
+      status: 'PENDING',
+      created_at: '2026-07-01T00:00:00Z',
+    }
+    const patientRows = [
+      { id: PATIENT_UUID, name_given: 'Ahmad', name_father: null, birth_year: null, gender: null, address_district_origin: null },
+      { id: CANDIDATE_UUID, name_given: 'Ahmed', name_father: null, birth_year: null, gender: null, address_district_origin: null },
+    ]
+
+    const ctx = createTestContext(listMockFrom([reviewRow], patientRows))
+    const caller = createCaller(ctx)
+    const result = await caller.duplicateReview.list({})
+
+    expect(result.reviews[0]!.candidates[0]!.mpiScore).toBe(77)
+  })
+
+  it('returns an empty reviews array without hydrating when there are no rows', async () => {
+    const mockFrom = listMockFrom([], [])
+    const ctx = createTestContext(mockFrom)
+    const caller = createCaller(ctx)
+    const result = await caller.duplicateReview.list({})
+
+    expect(result.reviews).toEqual([])
+    // patients table must not be queried when there are no reviews
+    const tables = mockFrom.mock.calls.map((c: any[]) => c[0])
+    expect(tables).not.toContain('patients')
+  })
+
+  it('emits a PHI_READ audit event', async () => {
+    mockAuditEmit.mockClear()
+    const ctx = createTestContext(listMockFrom([], []))
+    const caller = createCaller(ctx)
+    await caller.duplicateReview.list({})
+
+    expect(mockAuditEmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'PHI_READ',
+        metadata: expect.objectContaining({ operation: 'duplicate_review_list' }),
+      }),
+    )
+  })
+})
