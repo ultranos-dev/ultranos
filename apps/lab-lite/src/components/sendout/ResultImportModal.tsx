@@ -107,9 +107,9 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
 
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
           {/* Attribution (non-editable) */}
-          <div className="rounded-md bg-blue-50 border border-blue-100 px-3 py-2 text-sm">
-            <p className="text-xs text-blue-600 font-medium mb-0.5">{t('importAttributionLabel')}</p>
-            <p className="text-blue-900 font-medium">{t('importAttributionPerformedAt', { lab: labName || '…' })}</p>
+          <div className="rounded-md bg-primary/10 border border-primary px-3 py-2 text-sm">
+            <p className="text-xs text-primary font-medium mb-0.5">{t('importAttributionLabel')}</p>
+            <p className="text-primary font-medium">{t('importAttributionPerformedAt', { lab: labName || '…' })}</p>
           </div>
 
           {/* Mode selector */}
@@ -121,7 +121,7 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
                 onClick={() => setMode(m)}
                 className={`flex-1 py-2 text-sm font-medium transition-colors ${
                   mode === m
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-primary text-white'
                     : 'bg-card text-muted-foreground hover:bg-muted/30'
                 }`}
               >
@@ -143,7 +143,7 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
                   value={manualValue}
                   onChange={(e) => setManualValue(e.target.value)}
                   required
-                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                   placeholder={t('importResultValuePlaceholder')}
                 />
               </div>
@@ -154,7 +154,7 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
                   type="text"
                   value={manualUnit}
                   onChange={(e) => setManualUnit(e.target.value)}
-                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                   placeholder={t('importResultUnitPlaceholder')}
                 />
               </div>
@@ -164,7 +164,7 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
                   id="result-flag"
                   value={manualFlag}
                   onChange={(e) => setManualFlag(e.target.value as typeof manualFlag)}
-                  className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:border-ring focus:outline-none"
                 >
                   <option value="normal">{t('importFlagNormal')}</option>
                   <option value="high">{t('importFlagHigh')}</option>
@@ -183,7 +183,7 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
               </label>
               <label
                 htmlFor="result-file-input"
-                className="flex cursor-pointer flex-col items-center rounded-md border-2 border-dashed border-border px-4 py-6 text-center hover:border-blue-400"
+                className="flex cursor-pointer flex-col items-center rounded-md border-2 border-dashed border-border px-4 py-6 text-center hover:border-primary"
               >
                 <Upload size={24} className="mb-2 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">

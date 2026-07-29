@@ -134,10 +134,10 @@ export function QueueBatchDialog({
     >
       <div className="w-full max-w-md rounded-xl bg-card shadow-xl p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-900">{t('queueBatch')}</h2>
+          <h2 className="text-base font-semibold text-foreground">{t('queueBatch')}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-muted-foreground hover:text-muted-foreground"
             aria-label="Close"
           >
             ✕
@@ -146,7 +146,7 @@ export function QueueBatchDialog({
 
         {/* Instrument selector */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
             {t('selectInstrument') ?? 'Instrument'} <span className="text-red-500">*</span>
           </label>
           <select
@@ -171,7 +171,7 @@ export function QueueBatchDialog({
 
         {/* Test type */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
             {t('testType') ?? 'Test Type'} <span className="text-red-500">*</span>
           </label>
           <input
@@ -186,7 +186,7 @@ export function QueueBatchDialog({
 
         {/* Sample count */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
             {t('sampleCount') ?? 'Sample Count'} <span className="text-red-500">*</span>
           </label>
           <input
@@ -201,7 +201,7 @@ export function QueueBatchDialog({
 
         {/* Run time override (optional) */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
             {t('runTimeOverride') ?? 'Run Time Override (min, optional)'}
           </label>
           <input
@@ -217,7 +217,7 @@ export function QueueBatchDialog({
 
         {/* Estimated wait */}
         {estimatedWaitMinutes !== null && (
-          <p className="rounded bg-blue-50 px-3 py-2 text-sm text-blue-700" data-testid="estimated-wait">
+          <p className="rounded bg-primary/10 px-3 py-2 text-sm text-primary" data-testid="estimated-wait">
             {t('estimatedWait') ?? 'Estimated wait'}: <strong>{formatWait(estimatedWaitMinutes)}</strong>
           </p>
         )}

@@ -129,7 +129,7 @@ export function WasteDashboardView() {
 
   if (loading) {
     return (
-      <div className="p-4 text-sm text-gray-500" aria-busy="true">
+      <div className="p-4 text-sm text-muted-foreground" aria-busy="true">
         {t('loading')}
       </div>
     )
@@ -145,8 +145,8 @@ export function WasteDashboardView() {
             onClick={() => setPeriod(p)}
             className={`rounded-full px-3 py-1 text-sm font-medium border transition-colors ${
               period === p
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-card text-gray-700 border-gray-300 hover:border-blue-400'
+                ? 'bg-primary text-white border-primary'
+                : 'bg-card text-foreground border-border hover:border-primary'
             }`}
           >
             {t(`period.${p.replace('-', '_')}`)}
@@ -236,20 +236,20 @@ export function WasteDashboardView() {
         </div>
 
         {activeReagents.length === 0 ? (
-          <p className="text-sm text-gray-500 py-4">{t('noActiveReagents')}</p>
+          <p className="text-sm text-muted-foreground py-4">{t('noActiveReagents')}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
               <thead>
-                <tr className="border-b border-gray-200 text-start">
-                  <th className="py-2 pe-3 text-start font-medium text-gray-600">{t('col.name')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-gray-600">{t('col.lot')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-gray-600">{t('col.openDate')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-gray-600">{t('col.expiryDate')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-gray-600">{t('col.progress')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-gray-600">{t('col.efficiency')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-gray-600">{t('col.daysLeft')}</th>
-                  <th className="py-2 text-start font-medium text-gray-600">{t('col.alert')}</th>
+                <tr className="border-b border-border text-start">
+                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.name')}</th>
+                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.lot')}</th>
+                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.openDate')}</th>
+                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.expiryDate')}</th>
+                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.progress')}</th>
+                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.efficiency')}</th>
+                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.daysLeft')}</th>
+                  <th className="py-2 text-start font-medium text-muted-foreground">{t('col.alert')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -266,14 +266,14 @@ export function WasteDashboardView() {
                   return (
                     <tr
                       key={entry.reagentId}
-                      className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                      className="border-b border-border hover:bg-muted cursor-pointer"
                       onClick={() => router.push(`/finance/reagents/${entry.reagentId}`)}
                     >
                       <td className={`py-2 pe-3 ${colorClass}`}>{entry.name}</td>
-                      <td className="py-2 pe-3 text-gray-700">{entry.lotNumber}</td>
-                      <td className="py-2 pe-3 text-gray-700">{entry.openDate}</td>
-                      <td className="py-2 pe-3 text-gray-700">{entry.expiryDate}</td>
-                      <td className="py-2 pe-3 text-gray-700">
+                      <td className="py-2 pe-3 text-foreground">{entry.lotNumber}</td>
+                      <td className="py-2 pe-3 text-foreground">{entry.openDate}</td>
+                      <td className="py-2 pe-3 text-foreground">{entry.expiryDate}</td>
+                      <td className="py-2 pe-3 text-foreground">
                         {entry.testsPerformed}/{entry.expectedTests}
                       </td>
                       <td className={`py-2 pe-3 font-medium ${colorClass}`}>
@@ -285,7 +285,7 @@ export function WasteDashboardView() {
                             ? 'text-red-700 font-medium'
                             : daysLeft <= 14
                               ? 'text-amber-700'
-                              : 'text-gray-700'
+                              : 'text-foreground'
                         }`}
                       >
                         {daysLeft}
@@ -316,15 +316,15 @@ export function WasteDashboardView() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="py-2 pe-3 text-start font-medium text-gray-600">{t('col.name')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-gray-600">{t('col.lot')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-gray-600">{t('col.openDate')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-gray-600">{t('col.disposalDate')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-gray-600">{t('col.progress')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-gray-600">{t('col.wasteReason')}</th>
+                <tr className="border-b border-border">
+                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.name')}</th>
+                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.lot')}</th>
+                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.openDate')}</th>
+                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.disposalDate')}</th>
+                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.progress')}</th>
+                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.wasteReason')}</th>
                   <th
-                    className="py-2 text-start font-medium text-gray-600 cursor-pointer select-none"
+                    className="py-2 text-start font-medium text-muted-foreground cursor-pointer select-none"
                     onClick={() => setSortWasteDesc((p) => !p)}
                   >
                     {t('col.financialLoss')} {sortWasteDesc ? '↓' : '↑'}
@@ -341,18 +341,18 @@ export function WasteDashboardView() {
                         ).toFixed(0)
                       : '0'
                   return (
-                    <tr key={entry.reagentId} className="border-b border-gray-100">
-                      <td className="py-2 pe-3 text-gray-800">{entry.name}</td>
-                      <td className="py-2 pe-3 text-gray-700">{entry.lotNumber}</td>
-                      <td className="py-2 pe-3 text-gray-700">{entry.openDate}</td>
-                      <td className="py-2 pe-3 text-gray-700">{entry.disposalDate ?? '—'}</td>
-                      <td className="py-2 pe-3 text-gray-700">
+                    <tr key={entry.reagentId} className="border-b border-border">
+                      <td className="py-2 pe-3 text-foreground">{entry.name}</td>
+                      <td className="py-2 pe-3 text-foreground">{entry.lotNumber}</td>
+                      <td className="py-2 pe-3 text-foreground">{entry.openDate}</td>
+                      <td className="py-2 pe-3 text-foreground">{entry.disposalDate ?? '—'}</td>
+                      <td className="py-2 pe-3 text-foreground">
                         {entry.testsPerformed}/{entry.expectedTests}
                       </td>
-                      <td className="py-2 pe-3 text-gray-700">{entry.disposalReason ?? '—'}</td>
+                      <td className="py-2 pe-3 text-foreground">{entry.disposalReason ?? '—'}</td>
                       <td
                         className={`py-2 font-medium ${
-                          Number(loss) > 0 ? 'text-red-700' : 'text-gray-700'
+                          Number(loss) > 0 ? 'text-red-700' : 'text-foreground'
                         }`}
                       >
                         {loss} AFN
@@ -372,15 +372,15 @@ export function WasteDashboardView() {
 function SummaryCard({
   label,
   value,
-  colorClass = 'text-gray-900',
+  colorClass = 'text-foreground',
 }: {
   label: string
   value: string
   colorClass?: string
 }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-card p-4 shadow-sm">
-      <p className="text-xs text-gray-500 mb-1">{label}</p>
+    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className={`text-2xl font-bold ${colorClass}`}>{value}</p>
     </div>
   )

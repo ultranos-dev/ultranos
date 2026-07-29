@@ -51,23 +51,23 @@ function StageIcon({ stage, state }: StageIconProps) {
   }
   if (state === 'current') {
     const icons: Partial<Record<ResupplyStatus, React.ReactNode>> = {
-      submitted: <Clock className="text-blue-600" size={20} />,
-      received: <Package className="text-blue-600" size={20} />,
-      approved: <CheckCircle className="text-blue-600" size={20} />,
-      ordered: <ShoppingBag className="text-blue-600" size={20} />,
-      shipped: <Truck className="text-blue-600" size={20} />,
+      submitted: <Clock className="text-primary" size={20} />,
+      received: <Package className="text-primary" size={20} />,
+      approved: <CheckCircle className="text-primary" size={20} />,
+      ordered: <ShoppingBag className="text-primary" size={20} />,
+      shipped: <Truck className="text-primary" size={20} />,
       delivered: <CheckCircle className="text-green-600" size={20} />,
     }
     return (
-      <span className={`${base} bg-blue-100 ring-2 ring-blue-500`}>
-        {icons[stage] ?? <Clock className="text-blue-600" size={20} />}
+      <span className={`${base} bg-primary/10 ring-2 ring-primary`}>
+        {icons[stage] ?? <Clock className="text-primary" size={20} />}
       </span>
     )
   }
   // future
   return (
-    <span className={`${base} bg-gray-100`}>
-      <span className="h-2 w-2 rounded-full bg-gray-300" />
+    <span className={`${base} bg-muted`}>
+      <span className="h-2 w-2 rounded-full bg-muted" />
     </span>
   )
 }
@@ -92,10 +92,10 @@ function StatusHistoryEntry({ entry }: { entry: StatusUpdate }) {
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium capitalize">{entry.status}</span>
-          <span className="text-xs text-gray-400">{formatDate(entry.updatedAt)}</span>
+          <span className="text-xs text-muted-foreground">{formatDate(entry.updatedAt)}</span>
         </div>
-        {entry.note && <p className="text-xs text-gray-500">{entry.note}</p>}
-        <p className="text-xs text-gray-400">by {entry.updatedBy}</p>
+        {entry.note && <p className="text-xs text-muted-foreground">{entry.note}</p>}
+        <p className="text-xs text-muted-foreground">by {entry.updatedBy}</p>
       </div>
     </li>
   )
@@ -121,7 +121,7 @@ export function OrderStatusPipeline({ request }: OrderStatusPipelineProps) {
     <div className="flex flex-col gap-4">
       {/* ETA banner */}
       {etaDisplay && (
-        <div className="flex items-center gap-2 rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-700">
+        <div className="flex items-center gap-2 rounded-md bg-primary/10 px-3 py-2 text-sm text-primary">
           <Truck size={16} />
           <span>{etaDisplay}</span>
         </div>
@@ -156,12 +156,12 @@ export function OrderStatusPipeline({ request }: OrderStatusPipelineProps) {
                 <span
                   className={`text-xs capitalize ${
                     state === 'current'
-                      ? 'font-semibold text-blue-700'
+                      ? 'font-semibold text-primary'
                       : state === 'completed'
                       ? 'text-green-700'
                       : state === 'failed'
                       ? 'text-red-600'
-                      : 'text-gray-400'
+                      : 'text-muted-foreground'
                   }`}
                 >
                   {stage}
@@ -170,7 +170,7 @@ export function OrderStatusPipeline({ request }: OrderStatusPipelineProps) {
               {!isLast && (
                 <div
                   className={`mx-1 h-0.5 w-6 shrink-0 ${
-                    idx < currentStageIndex ? 'bg-green-400' : 'bg-gray-200'
+                    idx < currentStageIndex ? 'bg-green-400' : 'bg-muted'
                   }`}
                 />
               )}
@@ -194,10 +194,10 @@ export function OrderStatusPipeline({ request }: OrderStatusPipelineProps) {
 
       {/* Status history log */}
       <details className="rounded-md border">
-        <summary className="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700">
+        <summary className="cursor-pointer px-4 py-2 text-sm font-medium text-foreground">
           Status history ({request.statusHistory.length} events)
         </summary>
-        <ul className="divide-y divide-gray-100 px-4">
+        <ul className="divide-y divide-border px-4">
           {[...request.statusHistory].reverse().map((entry, i) => (
             <StatusHistoryEntry key={i} entry={entry} />
           ))}

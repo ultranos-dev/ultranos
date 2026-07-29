@@ -129,7 +129,7 @@ export function DriftAlertAcknowledgment({
                       value={opt.value}
                       checked={resolution === opt.value}
                       onChange={() => setResolution(opt.value)}
-                      className="h-4 w-4 text-blue-600"
+                      className="h-4 w-4 text-primary"
                       required
                     />
                     <span className="text-sm text-foreground">{t(opt.labelKey)}</span>
@@ -155,7 +155,7 @@ export function DriftAlertAcknowledgment({
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 maxLength={500}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                 placeholder={t('notesPlaceholder')}
               />
             </div>
@@ -179,7 +179,7 @@ export function DriftAlertAcknowledgment({
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
               >
                 {submitting ? t('acknowledging') : t('confirmAcknowledge')}
               </button>

@@ -175,7 +175,7 @@ export function DelegateRegistration({
           placeholder={t('phonePlaceholder')}
           disabled={!activeConsent || submitting}
           aria-describedby={errors.phone ? 'phone-error' : undefined}
-          className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-border dark:bg-muted"
+          className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 dark:border-border dark:bg-muted"
         />
         {errors.phone && (
           <p id="phone-error" className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -195,7 +195,7 @@ export function DelegateRegistration({
           onChange={(e) => setRelationship(e.target.value as DelegateRelationship)}
           disabled={!activeConsent || submitting}
           aria-describedby={errors.relationship ? 'relationship-error' : undefined}
-          className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-border dark:bg-muted"
+          className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 dark:border-border dark:bg-muted"
         >
           <option value="" disabled>—</option>
           {RELATIONSHIP_OPTIONS.map((rel) => (
@@ -223,7 +223,7 @@ export function DelegateRegistration({
           onChange={(e) => setDelegateName(e.target.value)}
           placeholder={t('namePlaceholder')}
           disabled={!activeConsent || submitting}
-          className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-border dark:bg-muted"
+          className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 dark:border-border dark:bg-muted"
         />
       </div>
 
@@ -247,7 +247,7 @@ export function DelegateRegistration({
           type="button"
           onClick={handleSubmit}
           disabled={!activeConsent || submitting}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
         >
           {submitting ? t('registering') : t('register')}
         </button>

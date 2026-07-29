@@ -211,7 +211,7 @@ export function PatientVerificationForm({
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-gray-900">
+        <h2 className="text-base font-semibold text-foreground">
           {t('verification.title')}
         </h2>
         {completenessIndicator}
@@ -219,7 +219,7 @@ export function PatientVerificationForm({
 
       {/* QR auto-import notice */}
       {verificationSource === 'qr' && defaultMethods.includes(PatientVerificationMethod.QR_CODE) && (
-        <p className="text-xs text-blue-700 bg-blue-50 px-3 py-2 rounded" data-testid="qr-import-notice">
+        <p className="text-xs text-primary bg-primary/10 px-3 py-2 rounded" data-testid="qr-import-notice">
           {t('verification.qrImported')}
         </p>
       )}
@@ -242,14 +242,14 @@ export function PatientVerificationForm({
                   checked={checked}
                   readOnly={isQrAutoChecked}
                   onChange={() => !isQrAutoChecked && toggleMethod(config.method)}
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-ring"
                   aria-describedby={config.descriptionKey ? `desc-${config.method}` : undefined}
                 />
-                <span className="text-sm text-gray-800">{t(config.labelKey)}</span>
+                <span className="text-sm text-foreground">{t(config.labelKey)}</span>
               </label>
 
               {config.descriptionKey && (
-                <p id={`desc-${config.method}`} className="text-xs text-gray-500 ms-6">
+                <p id={`desc-${config.method}`} className="text-xs text-muted-foreground ms-6">
                   {t(config.descriptionKey)}
                 </p>
               )}
@@ -257,7 +257,7 @@ export function PatientVerificationForm({
               {/* Detail input (shown when method is selected AND has detail) */}
               {config.requiresDetail && checked && (
                 <div className="ms-6 mt-1">
-                  <label className="block text-xs text-gray-600 mb-1">
+                  <label className="block text-xs text-muted-foreground mb-1">
                     {config.detailLabelKey ? t(config.detailLabelKey) : ''}
                   </label>
                   <input
@@ -266,7 +266,7 @@ export function PatientVerificationForm({
                     value={methodDetails[config.method] ?? ''}
                     onChange={(e) => handleDetailChange(config.method, e.target.value)}
                     placeholder={config.detailPlaceholderKey ? t(config.detailPlaceholderKey) : ''}
-                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     maxLength={config.method === PatientVerificationMethod.NATIONAL_ID_SCANNED ? 4 : 200}
                   />
                 </div>
@@ -330,7 +330,7 @@ export function PatientVerificationForm({
           type="button"
           onClick={handleProceed}
           disabled={!canProceed}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           aria-label={t('verification.proceed')}
         >
           {isSubmitting ? t('verification.proceeding') : t('verification.proceed')}

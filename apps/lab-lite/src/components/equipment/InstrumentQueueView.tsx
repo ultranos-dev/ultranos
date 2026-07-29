@@ -48,11 +48,11 @@ function CancelBatchModal({
       aria-label={t('cancelBatch') ?? 'Cancel Batch'}
     >
       <div className="w-full max-w-sm rounded-xl bg-card shadow-xl p-6 space-y-4">
-        <h2 className="text-base font-semibold text-gray-900">
+        <h2 className="text-base font-semibold text-foreground">
           {t('cancelBatch') ?? 'Cancel Batch'}
         </h2>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
             {t('cancelReasonPrompt') ?? 'Reason for cancelling:'}
           </label>
           <input
@@ -270,7 +270,7 @@ export function InstrumentQueueView() {
       {/* Instrument selector */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex-1 min-w-0">
-          <label className="block text-xs font-medium text-gray-600 mb-1">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
             {t('instruments')}
           </label>
           <select
@@ -304,7 +304,7 @@ export function InstrumentQueueView() {
       {/* Status pill for selected instrument */}
       {selectedInstrument && (
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-500">{selectedInstrument.name}</span>
+          <span className="text-muted-foreground">{selectedInstrument.name}</span>
           <span
             className={`rounded-full px-2 py-0.5 text-xs font-medium ${
               selectedInstrument.status === 'IN_SERVICE'
@@ -314,7 +314,7 @@ export function InstrumentQueueView() {
           >
             {selectedInstrument.status === 'IN_SERVICE' ? t('inService') : t('outOfService')}
           </span>
-          <span className="text-gray-400 text-xs">
+          <span className="text-muted-foreground text-xs">
             {t('avgRunTime')}: {selectedInstrument.avgRunTimeMinutes} min
           </span>
         </div>
@@ -359,9 +359,9 @@ export function InstrumentQueueView() {
 
       {/* Queue list */}
       {loading ? (
-        <div className="py-8 text-center text-sm text-gray-500">
+        <div className="py-8 text-center text-sm text-muted-foreground">
           <svg
-            className="animate-spin mx-auto h-5 w-5 text-gray-400"
+            className="animate-spin mx-auto h-5 w-5 text-muted-foreground"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

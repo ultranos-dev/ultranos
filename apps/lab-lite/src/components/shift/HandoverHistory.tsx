@@ -6,22 +6,15 @@ import { getAllHandoverReports } from '@/lib/db'
 import type { HandoverReport } from '@/lib/db'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { ClipboardList } from '@ultranos/ui-kit/icons'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/Button'
 
 type StatusFilter = 'ALL' | 'PENDING' | 'ACKNOWLEDGED' | 'EXPIRED'
 
 function StatusBadge({ status }: { status: HandoverReport['status'] }) {
-  const classes =
-    status === 'ACKNOWLEDGED'
-      ? 'bg-green-100 text-green-700'
-      : status === 'PENDING'
-        ? 'bg-amber-100 text-amber-700'
-        : 'bg-muted text-muted-foreground'
-
-  return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${classes}`}>
-      {status}
-    </span>
-  )
+  const variant =
+    status === 'ACKNOWLEDGED' ? 'success' : status === 'PENDING' ? 'warning' : 'secondary'
+  return <Badge variant={variant}>{status}</Badge>
 }
 
 /**
@@ -66,14 +59,15 @@ export function HandoverHistory() {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">{t('historyTitle')}</h2>
+    <div className="flex flex-col gap-4">
+      {/* Toolbar: title + status filter — one row, always visible */}
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="text-2xl font-semibold text-foreground">{t('historyTitle')}</h2>
         <select
-          aria-label="Filter by status"
+          aria-label={t('allFilter')}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground focus:border-blue-500 focus:outline-none"
+          className="ms-auto rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
         >
           <option value="ALL">{t('allFilter')}</option>
           <option value="PENDING">{t('statusPending')}</option>
@@ -82,80 +76,76 @@ export function HandoverHistory() {
         </select>
       </div>
 
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-        </div>
-      )}
-
-      {error && (
-        <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
-      )}
-
-      {!isLoading && !error && filtered.length === 0 && (
-        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
-          <EmptyState icon={ClipboardList} title={t('noHistory')} description={t('noHistoryHint')} />
-        </div>
-      )}
-
-      {!isLoading && !error && filtered.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-start text-xs text-muted-foreground">
-                <th className="pb-2 pe-4 font-medium">{t('shiftDate')}</th>
-                <th className="pb-2 pe-4 font-medium">{t('outgoingTech')}</th>
-                <th className="pb-2 pe-4 font-medium">{t('incomingTech')}</th>
-                <th className="pb-2 pe-4 font-medium">{t('statusColumn')}</th>
-                <th className="pb-2 pe-4 font-medium">{t('pendingSamplesColumn')}</th>
-                <th className="pb-2 font-medium">{t('actionsColumn')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((r) => (
-                <tr
-                  key={r.id}
-                  className="border-b border-border/50 last:border-0"
-                >
-                  <td className="py-2 pe-4 text-foreground">
-                    {r.shiftDate}
-                    <span className="ms-1 text-xs text-muted-foreground">
-                      {new Date(r.createdAt).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  </td>
-                  <td className="py-2 pe-4 text-foreground">{r.outgoingTechName}</td>
-                  <td className="py-2 pe-4 text-muted-foreground">
-                    {r.incomingTechName ?? (r.incomingTechId ? r.incomingTechId : '—')}
-                  </td>
-                  <td className="py-2 pe-4">
-                    <StatusBadge status={r.status} />
-                  </td>
-                  <td className="py-2 pe-4 text-foreground">
-                    {r.pendingSamples.stat + r.pendingSamples.routine}
-                    {r.pendingSamples.stat > 0 && (
-                      <span className="ms-1 text-xs font-medium text-red-600">
-                        ({r.pendingSamples.stat} STAT)
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelected(r)}
-                      className="text-blue-600 underline hover:text-blue-800"
-                    >
-                      {t('viewAction')}
-                    </button>
-                  </td>
+      {/* Content box — single cohesive box (loading / error / empty / table) */}
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        {isLoading ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : error ? (
+          <div className="flex min-h-[16rem] items-center justify-center px-4 text-center text-sm text-destructive">
+            {error}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState icon={ClipboardList} title={t('noHistory')} description={t('noHistoryHint')} />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('shiftDate')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('outgoingTech')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('incomingTech')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('statusColumn')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('pendingSamplesColumn')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('actionsColumn')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filtered.map((r) => (
+                  <tr key={r.id} className="transition-colors hover:bg-muted/50">
+                    <td className="px-4 py-3 text-foreground">
+                      {r.shiftDate}
+                      <span className="ms-1 text-xs text-muted-foreground">
+                        {new Date(r.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-foreground">{r.outgoingTechName}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {r.incomingTechName ?? (r.incomingTechId ? r.incomingTechId : '—')}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={r.status} />
+                    </td>
+                    <td className="px-4 py-3 text-foreground">
+                      {r.pendingSamples.stat + r.pendingSamples.routine}
+                      {r.pendingSamples.stat > 0 && (
+                        <span className="ms-1 text-xs font-medium text-destructive">
+                          ({r.pendingSamples.stat} STAT)
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => setSelected(r)}
+                        className="font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+                      >
+                        {t('viewAction')}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -170,19 +160,16 @@ function HandoverDetail({
   const t = useTranslations('shift')
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <button
-        type="button"
-        onClick={onBack}
-        className="mb-4 text-sm text-blue-600 hover:text-blue-800"
-      >
+    <div className="flex flex-col gap-4">
+      <Button variant="ghost" size="sm" onClick={onBack} className="w-fit px-0">
         {t('backToHistory')}
-      </button>
+      </Button>
 
-      <div className="mb-4 flex items-center gap-3">
-        <h2 className="text-lg font-semibold text-foreground">{t('handoverReportTitle')}</h2>
+      <div className="flex items-center gap-3">
+        <h2 className="text-2xl font-semibold text-foreground">{t('handoverReportTitle')}</h2>
         <StatusBadge status={report.status} />
       </div>
+      <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
 
       <dl className="mb-6 grid grid-cols-2 gap-3 text-sm">
         <div>
@@ -231,7 +218,7 @@ function HandoverDetail({
             </h3>
             <ul className="space-y-1">
               {report.equipmentAlerts.map((a) => (
-                <li key={a.instrumentId} className="text-sm text-red-700">
+                <li key={a.instrumentId} className="text-sm text-destructive">
                   {a.instrumentName} — {a.alertType}
                 </li>
               ))}
@@ -271,6 +258,7 @@ function HandoverDetail({
             </p>
           </section>
         )}
+      </div>
       </div>
     </div>
   )

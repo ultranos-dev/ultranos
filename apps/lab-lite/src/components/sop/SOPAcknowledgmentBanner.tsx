@@ -64,7 +64,7 @@ export function SOPAcknowledgmentBanner() {
           </ul>
           <Link
             href="/sops"
-            className="mt-2 inline-block text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400"
+            className="mt-2 inline-block text-sm font-medium text-primary hover:text-primary/80 dark:text-primary"
           >
             {t('reviewNow')}
           </Link>

@@ -364,7 +364,7 @@ export function P2PSendDialog({
         {/* PHASE: discovering */}
         {phase === 'discovering' && (
           <div className="flex flex-col items-center gap-3 py-8">
-            <Loader2 size={32} className="animate-spin text-blue-600" />
+            <Loader2 size={32} className="animate-spin text-primary" />
             <p className="text-sm text-muted-foreground dark:text-muted-foreground">{t('searching')}</p>
           </div>
         )}
@@ -378,7 +378,7 @@ export function P2PSendDialog({
                 <p className="text-sm text-muted-foreground dark:text-muted-foreground">{t('noDevicesFound')}</p>
                 <button
                   onClick={() => void startDiscovery()}
-                  className="mt-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  className="mt-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
                 >
                   {t('retry')}
                 </button>
@@ -425,7 +425,7 @@ export function P2PSendDialog({
             </p>
             <div
               aria-label={t('pairingCode')}
-              className="rounded-xl bg-blue-50 px-6 py-4 text-center text-4xl font-bold tracking-widest text-blue-800 dark:bg-blue-950 dark:text-blue-200"
+              className="rounded-xl bg-primary/10 px-6 py-4 text-center text-4xl font-bold tracking-widest text-primary dark:bg-blue-950"
             >
               {pairingCode}
             </div>
@@ -450,7 +450,7 @@ export function P2PSendDialog({
         {phase === 'transferring' && (
           <div className="flex flex-col gap-4 py-4">
             <div className="flex items-center gap-2">
-              <Loader2 size={18} className="animate-spin text-blue-600" />
+              <Loader2 size={18} className="animate-spin text-primary" />
               <p className="text-sm text-muted-foreground dark:text-muted-foreground">{t('transferring')}</p>
             </div>
             {progress.total > 0 && (
@@ -463,7 +463,7 @@ export function P2PSendDialog({
                   className="h-2 w-full overflow-hidden rounded-full bg-muted dark:bg-muted"
                 >
                   <div
-                    className="h-full bg-blue-600 transition-all duration-150"
+                    className="h-full bg-primary transition-all duration-150"
                     style={{ width: `${Math.round((progress.sent / progress.total) * 100)}%` }}
                   />
                 </div>
@@ -513,7 +513,7 @@ export function P2PSendDialog({
               </button>
               <button
                 onClick={() => void startDiscovery()}
-                className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
               >
                 {t('retry')}
               </button>

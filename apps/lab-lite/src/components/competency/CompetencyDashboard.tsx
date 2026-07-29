@@ -174,7 +174,7 @@ function CompetencyRow({
     >
       <td className="py-3 pe-4 ps-2">
         <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-medium text-foreground dark:text-white">
+          <span className="text-sm font-medium text-foreground">
             {row.procedureName}
           </span>
           <span className="text-xs text-muted-foreground dark:text-muted-foreground">

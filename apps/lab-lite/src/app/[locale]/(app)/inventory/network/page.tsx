@@ -16,7 +16,6 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { AuthGuard } from '@/components/AuthGuard'
 import { NetworkInventoryHeatMap } from '@/components/inventory/NetworkInventoryHeatMap'
 import { LabInventoryDetail } from '@/components/inventory/LabInventoryDetail'
 import { RedistributionPanel } from '@/components/inventory/RedistributionPanel'
@@ -56,12 +55,12 @@ function NetworkInventoryContent() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">{t('networkInventoryTitle')}</h1>
-        <p className="mt-1 text-sm text-gray-500">{t('networkInventorySubtitle')}</p>
+        <h1 className="text-xl font-semibold text-foreground">{t('networkInventoryTitle')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('networkInventorySubtitle')}</p>
       </div>
 
       {/* Tab bar */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-border">
         <nav className="-mb-px flex gap-6" aria-label={t('inventoryTabs')}>
           {tabs.map(tab => (
             <button
@@ -70,8 +69,8 @@ function NetworkInventoryContent() {
               onClick={() => setActiveTab(tab.id)}
               className={`whitespace-nowrap border-b-2 pb-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
               }`}
               aria-current={activeTab === tab.id ? 'page' : undefined}
             >
@@ -99,8 +98,6 @@ function NetworkInventoryContent() {
 
 export default function NetworkInventoryPage() {
   return (
-    <AuthGuard>
       <NetworkInventoryContent />
-    </AuthGuard>
   )
 }

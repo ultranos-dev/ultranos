@@ -113,7 +113,7 @@ export function SendOutModal({
                 value={selectedLabId}
                 onChange={(e) => setSelectedLabId(e.target.value)}
                 required
-                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="">{t('sendOutSelectLabPlaceholder')}</option>
                 {labs.map((lab) => (
@@ -136,7 +136,7 @@ export function SendOutModal({
               onChange={(e) => setClinicalContext(e.target.value)}
               rows={3}
               placeholder={t('sendOutClinicalContextPlaceholder')}
-              className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
             />
             <p className="mt-1 text-xs text-muted-foreground">
               {t('sendOutClinicalContextHint')}
@@ -148,20 +148,20 @@ export function SendOutModal({
             <button
               type="button"
               onClick={() => setShowPreview((p) => !p)}
-              className="text-sm text-blue-600 underline"
+              className="text-sm text-primary underline"
             >
               {showPreview ? t('sendOutPreviewHide') : t('sendOutPreviewShow')}
             </button>
           )}
 
           {showPreview && selectedLab && (
-            <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm space-y-1">
-              <p className="font-medium text-blue-900">{t('sendOutPreviewTitle')}</p>
-              <p><span className="text-blue-700">{t('sendOutPreviewPatient')}</span> {patientFirstName}, {patientAge}y</p>
-              <p><span className="text-blue-700">{t('sendOutPreviewSampleType')}</span> {sampleType}</p>
-              <p><span className="text-blue-700">{t('sendOutPreviewTest')}</span> {loincDisplay} ({loincCode})</p>
-              <p><span className="text-blue-700">{t('sendOutPreviewContext')}</span> {clinicalContext || '—'}</p>
-              <p><span className="text-blue-700">{t('sendOutPreviewLab')}</span> {selectedLab.name} ({t('sendOutPreviewAccredNumber', { number: selectedLab.accreditationNumber })})</p>
+            <div className="rounded-md border border-primary bg-primary/10 p-3 text-sm space-y-1">
+              <p className="font-medium text-primary">{t('sendOutPreviewTitle')}</p>
+              <p><span className="text-primary">{t('sendOutPreviewPatient')}</span> {patientFirstName}, {patientAge}y</p>
+              <p><span className="text-primary">{t('sendOutPreviewSampleType')}</span> {sampleType}</p>
+              <p><span className="text-primary">{t('sendOutPreviewTest')}</span> {loincDisplay} ({loincCode})</p>
+              <p><span className="text-primary">{t('sendOutPreviewContext')}</span> {clinicalContext || '—'}</p>
+              <p><span className="text-primary">{t('sendOutPreviewLab')}</span> {selectedLab.name} ({t('sendOutPreviewAccredNumber', { number: selectedLab.accreditationNumber })})</p>
             </div>
           )}
 
@@ -181,7 +181,7 @@ export function SendOutModal({
             <button
               type="submit"
               disabled={loading || !selectedLabId}
-              className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
             >
               <Send size={16} />
               {loading ? t('sendOutSendingButton') : t('sendOutConfirmButton')}

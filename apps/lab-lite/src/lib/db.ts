@@ -24,6 +24,7 @@ import type { WasteContainer, WasteDisposalRecord } from '@/types/waste-tracking
 import type { PatientCulturalPreferences, CulturalFlag } from '@/lib/cultural-flags'
 import type { PeerPost, PeerResponse, ModerationFlag } from '@/lib/peer-network-types'
 import type { SafetyReport } from '@/types/safety-reporting'
+import type { SpillIncident } from '@/types/spill-protocol'
 import type { LabLocation, NetworkStatusSnapshot } from '@/types/lab-network'
 import type { TransportSession } from '@/types/transport'
 import type { TemperatureReading, TemperatureLocation, TemperatureExcursion } from '@/types/temperature-monitoring'
@@ -793,6 +794,9 @@ class LabLiteDatabase extends Dexie {
   // Access is restricted to clinical staff. Not in audit metadata (audit uses chainId only).
   escalation_chains!: Dexie.Table<EscalationChain, number>
   escalation_contacts!: Dexie.Table<EscalationContact, number>
+  // v46 — Spill & Decontamination Protocol (Story 47.5)
+  // No PHI — techId is an opaque practitioner ID; no patient data in any field.
+  spill_incidents!: Dexie.Table<SpillIncident, string>
 
   constructor() {
     super('lab-lite-db')
@@ -1703,6 +1707,13 @@ class LabLiteDatabase extends Dexie {
     this.version(45).stores({
       escalation_chains: '++id, &chainId, resultId, status, currentStep, createdAt',
       escalation_contacts: '++id, role, isDefault',
+    })
+    // v46 — Spill & Decontamination Protocol (Story 47.5)
+    // spill_incidents: app-generated string id primary key; occurredAt indexed for the
+    //   getAllSpillIncidents() orderBy; spillType/syncStatus/completedAt indexed for
+    //   history filtering and sync sweeps. No PHI — techId is an opaque practitioner ID.
+    this.version(46).stores({
+      spill_incidents: '&id, occurredAt, spillType, syncStatus, completedAt',
     })
   }
 }
@@ -2987,6 +2998,18 @@ export async function getPendingHandoverReports(): Promise<HandoverReport[]> {
 export async function getAllHandoverReports(): Promise<HandoverReport[]> {
   const db = getDb()
   return db.handover_reports.orderBy('createdAt').reverse().toArray()
+}
+
+/**
+ * Count lab results awaiting supervisor authorization (for the sidebar badge).
+ * `authorizationStatus` is not an indexed field, so use a filtered scan
+ * (badge count only — runs infrequently).
+ */
+export async function getPendingAuthorizationCount(): Promise<number> {
+  const db = getDb()
+  return db.lab_results
+    .filter((r) => (r as { authorizationStatus?: string }).authorizationStatus === 'PENDING')
+    .count()
 }
 
 export async function putShiftSession(session: ShiftSession): Promise<void> {

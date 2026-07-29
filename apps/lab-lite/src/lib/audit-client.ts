@@ -2202,3 +2202,203 @@ export function reportGuidanceEvent(payload: {
     // Never throws — audit failures must not surface as UI errors
   }
 }
+
+// ---------------------------------------------------------------------------
+// Logbook Audit Events (append-only lab logbook — Story 43.x)
+// PHI rule: NEVER include patient identifiers, names, or result values.
+// Only opaque entry ids, sequence numbers, counts, and non-PHI filter dates.
+// ---------------------------------------------------------------------------
+export function reportLogbookEvent(payload: {
+  action: 'LOGBOOK_ENTRY_CREATED' | 'LOGBOOK_AMENDMENT_CREATED' | 'LOGBOOK_EXPORTED'
+  entryId: string
+  seqNo?: number
+  originalSeqNo?: number
+  technicianId?: string
+  entryCount?: number
+  filterCriteria?: Record<string, unknown>
+}): void {
+  try {
+    const session = useAuthSessionStore.getState().session
+    const actionMap: Record<typeof payload.action, AuditAction> = {
+      // Amendments are append-only (a new corrective entry is created).
+      LOGBOOK_ENTRY_CREATED: AuditAction.CREATE,
+      LOGBOOK_AMENDMENT_CREATED: AuditAction.CREATE,
+      // Export is a bulk read of PHI-derived records.
+      LOGBOOK_EXPORTED: AuditAction.READ,
+    }
+    const input: ClientAuditEventInput = {
+      actorId: session?.userId ?? payload.technicianId ?? 'unknown',
+      actorRole: UserRole.LAB_TECH,
+      action: actionMap[payload.action],
+      resourceType: 'LOGBOOK' as AuditResourceType,
+      resourceId: payload.entryId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        logbookEvent: payload.action,
+        outcome: 'SUCCESS',
+        ...(payload.seqNo !== undefined ? { seqNo: payload.seqNo } : {}),
+        ...(payload.originalSeqNo !== undefined ? { originalSeqNo: payload.originalSeqNo } : {}),
+        ...(payload.entryCount !== undefined ? { entryCount: payload.entryCount } : {}),
+        ...(payload.filterCriteria ? { filterCriteria: payload.filterCriteria } : {}),
+        ...(payload.technicianId ? { technicianId: payload.technicianId } : {}),
+        source: 'lab-lite',
+      },
+    }
+    void emitClientAudit(input)
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Network Inventory Audit Events (data-minimized network inventory view)
+// PHI rule: no PHI — only opaque lab ids and actor ids.
+// ---------------------------------------------------------------------------
+export function reportInventoryAuditEvent(payload: {
+  action: 'NETWORK_INVENTORY_VIEWED'
+  labId: string
+  actorId: string
+}): void {
+  try {
+    const session = useAuthSessionStore.getState().session
+    const input: ClientAuditEventInput = {
+      actorId: session?.userId ?? payload.actorId,
+      actorRole: UserRole.LAB_TECH,
+      action: AuditAction.READ,
+      resourceType: 'REAGENT_INVENTORY' as AuditResourceType,
+      resourceId: payload.labId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        inventoryEvent: payload.action,
+        outcome: 'SUCCESS',
+        labId: payload.labId,
+        source: 'lab-lite',
+      },
+    }
+    void emitClientAudit(input)
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Staff Portfolio Audit Events (supervisor access to a technician's portfolio)
+// PHI rule: no patient PHI — only staff (technician) ids and non-PHI date ranges.
+// ---------------------------------------------------------------------------
+export function reportPortfolioAuditEvent(payload: {
+  action: 'PORTFOLIO_VIEWED_BY_SUPERVISOR' | 'PORTFOLIO_EXPORTED'
+  targetTechId: string
+  viewedBy: string
+  dateRange?: unknown
+}): void {
+  try {
+    const session = useAuthSessionStore.getState().session
+    const input: ClientAuditEventInput = {
+      actorId: session?.userId ?? payload.viewedBy,
+      actorRole: UserRole.LAB_TECH,
+      action: AuditAction.READ,
+      resourceType: 'STAFF_PORTFOLIO' as AuditResourceType,
+      resourceId: payload.targetTechId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        portfolioEvent: payload.action,
+        outcome: 'SUCCESS',
+        targetTechId: payload.targetTechId,
+        viewedBy: payload.viewedBy,
+        ...(payload.dateRange !== undefined ? { dateRange: payload.dateRange } : {}),
+        source: 'lab-lite',
+      },
+    }
+    void emitClientAudit(input)
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Spill Decontamination Audit Events (Story 47.5 — safety/spill workflow)
+// PHI rule: no patient PHI — spills are location/hazard events, not patient events.
+// ---------------------------------------------------------------------------
+export function reportSpillAuditEvent(payload: {
+  action: 'SPILL_PROTOCOL_STARTED' | 'SPILL_STEP_COMPLETED' | 'SPILL_PROTOCOL_COMPLETED'
+  incidentId: string
+  spillType: string
+  riskTier: string
+  location: string
+  techId: string
+  stepNumber?: number
+}): void {
+  try {
+    const session = useAuthSessionStore.getState().session
+    const actionMap: Record<typeof payload.action, AuditAction> = {
+      SPILL_PROTOCOL_STARTED: AuditAction.CREATE,
+      SPILL_STEP_COMPLETED: AuditAction.UPDATE,
+      SPILL_PROTOCOL_COMPLETED: AuditAction.UPDATE,
+    }
+    const input: ClientAuditEventInput = {
+      actorId: session?.userId ?? payload.techId,
+      actorRole: UserRole.LAB_TECH,
+      action: actionMap[payload.action],
+      resourceType: 'SAFETY_PROTOCOL' as AuditResourceType,
+      resourceId: payload.incidentId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        spillEvent: payload.action,
+        outcome: 'SUCCESS',
+        spillType: payload.spillType,
+        riskTier: payload.riskTier,
+        location: payload.location,
+        techId: payload.techId,
+        ...(payload.stepNumber !== undefined ? { stepNumber: payload.stepNumber } : {}),
+        source: 'lab-lite',
+      },
+    }
+    void emitClientAudit(input)
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Plausibility Flag Audit Events (acknowledging an implausible-result flag)
+// This is a PHI-access event — records the opaque patientRef as the subject
+// (Rule #6). Metadata carries only non-PHI rule/flag descriptors.
+// ---------------------------------------------------------------------------
+export function reportPlausibilityEvent(payload: {
+  event: 'PLAUSIBILITY_FLAG_ACKNOWLEDGED'
+  flagId: string
+  resultId: string
+  patientRef: string
+  loincCode: string
+  ruleType: string
+  severity: string
+  explanationLength: number
+  technicianId: string
+}): void {
+  try {
+    const session = useAuthSessionStore.getState().session
+    const input: ClientAuditEventInput = {
+      actorId: session?.userId ?? payload.technicianId,
+      actorRole: UserRole.LAB_TECH,
+      action: AuditAction.UPDATE,
+      resourceType: AuditResourceType.LAB_RESULT,
+      resourceId: payload.resultId,
+      patientRef: payload.patientRef, // opaque Patient/<uuid> — never a name
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        plausibilityEvent: payload.event,
+        outcome: 'SUCCESS',
+        flagId: payload.flagId,
+        loincCode: payload.loincCode,
+        ruleType: payload.ruleType,
+        severity: payload.severity,
+        explanationLength: payload.explanationLength,
+        technicianId: payload.technicianId,
+        source: 'lab-lite',
+      },
+    }
+    void emitClientAudit(input)
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}

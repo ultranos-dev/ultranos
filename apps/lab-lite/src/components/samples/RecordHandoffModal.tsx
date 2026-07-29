@@ -92,7 +92,7 @@ export function RecordHandoffModal({
               value={toActorId}
               onChange={(e) => setToActorId(e.target.value)}
               placeholder={t('handoff.toPlaceholder')}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
               data-testid="handoff-to-input"
             />
           </div>
@@ -108,7 +108,7 @@ export function RecordHandoffModal({
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder={t('handoff.notesPlaceholder')}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring resize-none"
               data-testid="handoff-notes-input"
             />
           </div>
@@ -131,7 +131,7 @@ export function RecordHandoffModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
               data-testid="handoff-submit-button"
             >
               {isSubmitting ? t('form.processing') : t('handoff.submit')}

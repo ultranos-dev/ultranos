@@ -107,12 +107,12 @@ export function SupervisorAuthGate({
       <div className="bg-card rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
         <h2
           id="supervisor-auth-title"
-          className="text-lg font-semibold text-gray-900 mb-4"
+          className="text-lg font-semibold text-foreground mb-4"
         >
           {t('title')}
         </h2>
 
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="text-sm text-muted-foreground mb-6">
           {isSupervisor ? t('bodySelf') : t('bodyCross')}
         </p>
 
@@ -121,7 +121,7 @@ export function SupervisorAuthGate({
             <div>
               <label
                 htmlFor="supervisor-id-input"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 {t('supervisorIdLabel')}
               </label>
@@ -131,7 +131,7 @@ export function SupervisorAuthGate({
                 value={supervisorId}
                 onChange={(e) => setSupervisorId(e.target.value)}
                 placeholder={t('supervisorIdPlaceholder')}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 autoComplete="off"
                 data-testid="supervisor-id-input"
               />
@@ -145,10 +145,10 @@ export function SupervisorAuthGate({
                 type="checkbox"
                 checked={acknowledged}
                 onChange={(e) => setAcknowledged(e.target.checked)}
-                className="mt-0.5 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                className="mt-0.5 h-4 w-4 text-primary border-border rounded"
                 data-testid="self-auth-acknowledge"
               />
-              <label htmlFor="self-auth-acknowledge" className="text-sm text-gray-700">
+              <label htmlFor="self-auth-acknowledge" className="text-sm text-foreground">
                 {t('selfAcknowledgeLabel')}
               </label>
             </div>
@@ -166,7 +166,7 @@ export function SupervisorAuthGate({
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+            className="px-4 py-2 text-sm text-foreground border border-border rounded-md hover:bg-muted disabled:opacity-50"
             data-testid="auth-cancel-btn"
           >
             {t('cancelButton')}
@@ -175,7 +175,7 @@ export function SupervisorAuthGate({
             type="button"
             onClick={handleAuthorize}
             disabled={loading || (!isSupervisor && !supervisorId.trim()) || (isSupervisor && !acknowledged)}
-            className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            className="px-4 py-2 text-sm text-white bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             data-testid="auth-authorize-btn"
           >
             {loading ? t('authorizingButton') : t('authorizeButton')}

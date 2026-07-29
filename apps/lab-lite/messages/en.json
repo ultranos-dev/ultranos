@@ -298,7 +298,8 @@
     "errorBirthDateRequired": "Birth date is required.",
     "errorBirthYearRange": "Birth year must be between 1900 and the current year.",
     "errorWitnessRequired": "Witness name is required for verbal consent.",
-    "errorUnexpected": "An unexpected error occurred."
+    "errorUnexpected": "An unexpected error occurred.",
+    "viewRecord": "View record"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -336,7 +337,12 @@
     "portfolio": "My Portfolio",
     "readinessBoard": "Readiness Board",
     "mentorship": "Mentorship",
-    "escalations": "Escalations"
+    "escalations": "Escalations",
+    "sendOuts": "Send-Outs",
+    "logbook": "Logbook",
+    "procurement": "Procurement",
+    "workload": "Workload",
+    "spillResponse": "Spill Response"
   },
   "network": {
     "networkDashboard": "Lab Network",
@@ -400,7 +406,8 @@
     },
     "manualModeInfo": "Manual mode: drag to reorder. Auto-refresh paused. Stability badges still active.",
     "emptyTitle": "No samples in queue",
-    "emptyHint": "Received samples will appear here automatically."
+    "emptyHint": "Received samples will appear here automatically.",
+    "enterResult": "Enter Result"
   },
   "orders": {
     "title": "Test Orders",
@@ -424,7 +431,12 @@
       "specialInstructions": "Special Instructions",
       "orderedAt": "Ordered"
     },
-    "badge": "pending"
+    "badge": "pending",
+    "searchPlaceholder": "Search by order ID…",
+    "loading": "Loading orders…",
+    "noResultsTitle": "No matching orders",
+    "noResultsDescription": "No orders match the current filters.",
+    "clearFilters": "Clear filters"
   },
   "settings": {
     "title": "Settings",
@@ -485,7 +497,9 @@
     "smsTestPhone": "Test Phone Number",
     "smsConfigSaved": "SMS configuration saved",
     "smsTestSent": "Test SMS queued",
-    "criticalValues": "Critical Values & Escalation"
+    "criticalValues": "Critical Values & Escalation",
+    "loading": "Loading…",
+    "criticalValuesDesc": "Critical result thresholds and escalation contacts"
   },
   "queuePage": {
     "title": "Upload Queue",
@@ -1126,7 +1140,8 @@
     "syncStatusCol": "Sync Status",
     "synced": "Synced",
     "pendingSync": "Pending",
-    "noAcknowledgments": "No acknowledgments yet"
+    "noAcknowledgments": "No acknowledgments yet",
+    "clearFilters": "Clear filters"
   },
   "peerNetwork": {
     "pageTitle": "Ask a Tech",
@@ -1752,7 +1767,11 @@
     "retryButton": "Retry",
     "rangeUpdated": "Range updated since result. Current: {min}–{max}",
     "commentPlaceholder": "Enter reason...",
-    "commentAriaLabel": "Comments"
+    "commentAriaLabel": "Comments",
+    "searchPlaceholder": "Search results…",
+    "noResultsTitle": "No matching results",
+    "noResultsDescription": "No pending results match the current filters.",
+    "clearFilters": "Clear filters"
   },
   "delegates": {
     "addDelegate": "Add Family Delegate",
@@ -2009,7 +2028,8 @@
     "outgoingNotesLabel": "Outgoing Notes",
     "incomingNotesLabel": "Incoming Notes",
     "readyStatus": "Ready",
-    "noHistoryHint": "Completed shift handovers will appear here."
+    "noHistoryHint": "Completed shift handovers will appear here.",
+    "historyRestricted": "Handover history is available to Supervisors and Lab Managers only."
   },
   "visualAtlas": {
     "categoryNavLabel": "Atlas categories",
@@ -2529,7 +2549,11 @@
     "reagentConsumption": "Reagent & Supply Consumption",
     "qualityIndicatorsTitle": "Quality Indicators",
     "dhis2OrgUnitTitle": "DHIS2 Organisation Unit",
-    "dhis2OrgUnitDescription": "Enter the DHIS2 organisation unit ID for this facility. This ID is assigned by your DHIS2 administrator."
+    "dhis2OrgUnitDescription": "Enter the DHIS2 organisation unit ID for this facility. This ID is assigned by your DHIS2 administrator.",
+    "surveillanceTitle": "Surveillance",
+    "surveillanceDescription": "Disease surveillance alerts and outbreak signals",
+    "donorTitle": "Donor Report",
+    "donorDescription": "Blood donor program summary reports"
   },
   "anomalyFlags": {
     "sectionTitle": "Statistical Pattern Flags",
@@ -3279,7 +3303,28 @@
     "refLabFieldTestsPlaceholder": "2085-9, 4548-4, 10524-7",
     "refLabFieldTatPlaceholder": "2085-9:5, 4548-4:3",
     "importResultValuePlaceholder": "e.g., 5.2",
-    "importResultUnitPlaceholder": "e.g., mmol/L"
+    "importResultUnitPlaceholder": "e.g., mmol/L",
+    "pageTitle": "Send-Outs",
+    "searchPlaceholder": "Search send-outs…",
+    "filterStatusAria": "Filter by status",
+    "filterStatusAll": "All statuses",
+    "filterLabAria": "Filter by reference lab",
+    "filterLabAll": "All labs",
+    "overdueBanner": "{count, plural, one {# send-out is overdue.} other {# send-outs are overdue.}}",
+    "viewPending": "View pending send-outs",
+    "colTrackingId": "Tracking ID",
+    "colReferenceLab": "Reference Lab",
+    "colTestRequested": "Test Requested",
+    "colDateSent": "Date Sent",
+    "colStatus": "Status",
+    "colElapsed": "Elapsed",
+    "colActions": "Actions",
+    "loading": "Loading send-outs…",
+    "noResultsTitle": "No send-outs found",
+    "noResultsDescription": "No referral send-outs match the current filters.",
+    "clearFilters": "Clear filters",
+    "actionUpdateStatus": "Update Status",
+    "actionImportResult": "Import Result"
   },
   "outbreak": {
     "activateAriaLabel": "Activate Outbreak Mode",
@@ -3546,7 +3591,38 @@
         "sms_physician": "SMS to Physician",
         "sms_director": "SMS to Medical Director",
         "flag_district": "District Health Officer Alert"
-      }
+      },
+      "refresh": "Refresh",
+      "activeAlert": "{count, plural, one {# active escalation needs attention.} other {# active escalations need attention.}}",
+      "searchPlaceholder": "Search escalations…",
+      "noResults": "No matching escalations",
+      "clearSearch": "Clear search"
     }
+  },
+  "logbook": {
+    "title": "Logbook",
+    "authorized": "Authorized",
+    "amended": "Amended",
+    "amendmentOf": "Amends #{seqNo}",
+    "loadingMore": "Loading…",
+    "exportPdf": "Export PDF",
+    "exporting": "Exporting…",
+    "filterByDate": "Date",
+    "filterByTestType": "Test type",
+    "filterByTechnician": "Technician",
+    "filterByPatient": "Patient",
+    "searchPlaceholder": "Search by patient…",
+    "noResults": "No matching entries",
+    "noEntries": "No logbook entries yet",
+    "seqNo": "Seq #",
+    "date": "Date",
+    "patientRef": "Patient",
+    "age": "Age",
+    "testType": "Test Type",
+    "resultSummary": "Result",
+    "technician": "Technician",
+    "authStatus": "Status",
+    "loadMore": "Load more",
+    "clearFilters": "Clear filters"
   }
 }

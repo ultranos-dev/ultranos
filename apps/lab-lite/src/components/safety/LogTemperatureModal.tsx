@@ -145,7 +145,7 @@ export function LogTemperatureModal({
             max={MAX_PLAUSIBLE}
             value={temperature}
             onChange={(e) => handleTemperatureChange(e.target.value)}
-            className="w-full rounded border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
             autoFocus
           />
         </div>

@@ -1,12 +1,9 @@
 'use client'
 
-import { AuthGuard } from '@/components/AuthGuard'
 import { SOPLibrary } from '@/components/sop/SOPLibrary'
 
+// Auth is already enforced by the app layout's ClientErrorBoundary → AuthGuard.
+// A page-level <AuthGuard> here would double-guard and blank the route.
 export default function SOPsPage() {
-  return (
-    <AuthGuard>
-      <SOPLibrary />
-    </AuthGuard>
-  )
+  return <SOPLibrary />
 }

@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl'
 import { GraduationCap } from '@ultranos/ui-kit/icons'
-import { AuthGuard } from '@/components/AuthGuard'
 import { CompetencyDashboard } from '@/components/competency/CompetencyDashboard'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
@@ -13,15 +12,14 @@ export default function CompetencyPage() {
   const technicianId = session?.practitionerId ?? session?.userId ?? 'unknown'
 
   return (
-    <AuthGuard>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <GraduationCap size={28} className="text-blue-600 dark:text-blue-400" />
+          <GraduationCap size={28} className="text-primary dark:text-primary" />
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-xl font-bold text-foreground">
               {t('pageTitle')}
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               {t('pageSubtitle')}
             </p>
           </div>
@@ -29,6 +27,5 @@ export default function CompetencyPage() {
 
         <CompetencyDashboard technicianId={technicianId} />
       </div>
-    </AuthGuard>
   )
 }

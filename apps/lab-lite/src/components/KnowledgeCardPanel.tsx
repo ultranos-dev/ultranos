@@ -40,7 +40,7 @@ function SeverityBadge({ severity }: { severity: KnowledgeCard['severity'] }) {
     warning:
       'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700',
     informational:
-      'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-300 dark:border-blue-700',
+      'bg-primary/10 text-primary border border-primary dark:border-primary',
   }
   return (
     <span
@@ -103,7 +103,7 @@ function KnowledgeCardItem({
           type="button"
           onClick={() => onPin(card.id)}
           aria-label={t('knowledgeCards.pinCard', { title: t(card.title) })}
-          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-card dark:hover:text-muted-foreground"
+          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring dark:hover:bg-card dark:hover:text-muted-foreground"
         >
           {/* Pin icon (simple SVG) */}
           <svg
@@ -147,7 +147,7 @@ function KnowledgeCardItem({
           type="button"
           onClick={toggleContext}
           aria-expanded={contextOpen}
-          className="flex w-full items-center justify-between px-3 py-2 text-left text-xs font-medium text-muted-foreground hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-card dark:text-muted-foreground"
+          className="flex w-full items-center justify-between px-3 py-2 text-left text-xs font-medium text-muted-foreground hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring dark:hover:bg-card dark:text-muted-foreground"
         >
           <span>{t('knowledgeCards.clinicalContext')}</span>
           <ChevronDown
@@ -238,7 +238,7 @@ export function KnowledgeCardPanel({
             onClick={() => setCollapsed((v) => !v)}
             aria-label={collapsed ? t('expand') : t('collapse')}
             aria-expanded={!collapsed}
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-card dark:hover:text-muted-foreground"
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring dark:hover:bg-card dark:hover:text-muted-foreground"
           >
             <ChevronDown
               size={14}
@@ -251,7 +251,7 @@ export function KnowledgeCardPanel({
             type="button"
             onClick={onDismiss}
             aria-label={t('dismiss')}
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-card dark:hover:text-muted-foreground"
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring dark:hover:bg-card dark:hover:text-muted-foreground"
           >
             <X size={14} aria-hidden="true" />
           </button>

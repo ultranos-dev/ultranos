@@ -11,12 +11,14 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { CircleCheck } from '@ultranos/ui-kit/icons'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
+import { CircleCheck, FileSearch } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/Button'
 import { useRouter } from 'next/navigation'
 import { getDb } from '@/lib/db'
 import { canAuthorize, canReject, canHold } from '@/lib/permissions'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
-import { LabRole } from '@ultranos/shared-types'
+import type { LabRole } from '@ultranos/shared-types'
 import type { LabResult } from '@/lib/db'
 import type { AbnormalityFlag } from '@/types/authorization'
 import { AuthorizationStatus } from '@/types/authorization'
@@ -43,8 +45,8 @@ function FlagBadge({ flag }: { flag: AbnormalityFlag }) {
       className={[
         'inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold',
         critical
-          ? 'bg-red-100 text-red-800'
-          : 'bg-amber-100 text-amber-800',
+          ? 'bg-destructive/10 text-destructive'
+          : 'bg-warning/10 text-warning',
       ].join(' ')}
     >
       {flag}
@@ -69,6 +71,7 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
   const [sortKey, setSortKey] = useState<SortKey>('severity')
   const [categoryFilter, setCategoryFilter] = useState<FilterCategory>(null)
   const [techFilter, setTechFilter] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     if (externalResults) return
@@ -109,12 +112,31 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
   )
 
   // Filter
+  const query = search.trim().toLowerCase()
   const filtered = useMemo(() => {
     let rows = results
     if (categoryFilter) rows = rows.filter((r) => r.testCategory === categoryFilter)
     if (techFilter) rows = rows.filter((r) => r.enteredBy === techFilter)
+    if (query) {
+      rows = rows.filter((r) => {
+        const rec = r as unknown as Record<string, unknown>
+        return ['patientFirstName', 'testCategory', 'loincCode', 'enteredBy']
+          .map((k) => rec[k])
+          .filter((v): v is string => typeof v === 'string')
+          .join(' ')
+          .toLowerCase()
+          .includes(query)
+      })
+    }
     return rows
-  }, [results, categoryFilter, techFilter])
+  }, [results, categoryFilter, techFilter, query])
+
+  const filtersActive = categoryFilter !== null || techFilter !== null || query !== ''
+  const clearFilters = () => {
+    setCategoryFilter(null)
+    setTechFilter(null)
+    setSearch('')
+  }
 
   // Sort
   const sorted = useMemo(() => {
@@ -134,7 +156,6 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
       }
 
       if (sortKey === 'urgency') {
-        const urgencyOrder = { stat: 0, asap: 1, urgent: 2, routine: 3 }
         // lab_results don't carry urgency directly, fall back to severity sort
         const diff = flagSeverityScore(bFlags) - flagSeverityScore(aFlags)
         if (diff !== 0) return diff
@@ -154,22 +175,21 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
     return `${Math.floor(hours / 24)}d ago`
   }
 
-  if (loading) {
-    return (
-      <div className="animate-pulse space-y-3 p-4" aria-busy="true" aria-label={t('loading')}>
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-14 rounded-lg bg-muted" />
-        ))}
-      </div>
-    )
-  }
-
   return (
     <div className="flex flex-col gap-4">
-      {/* Filter bar */}
-      <div className="flex flex-wrap gap-3">
+      {/* Toolbar: search + sort + filters — one row, always visible */}
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
+          type="text"
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          aria-label={t('searchPlaceholder')}
+        />
         <select
-          className="rounded border border-border px-3 py-1.5 text-sm"
+          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
           value={sortKey}
           onChange={(e) => setSortKey(e.target.value as SortKey)}
           aria-label={t('sortBy')}
@@ -181,7 +201,7 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
 
         {categories.length > 0 && (
           <select
-            className="rounded border border-border px-3 py-1.5 text-sm"
+            className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
             value={categoryFilter ?? ''}
             onChange={(e) => setCategoryFilter(e.target.value || null)}
             aria-label={t('filterCategory')}
@@ -195,7 +215,7 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
 
         {technicians.length > 0 && (
           <select
-            className="rounded border border-border px-3 py-1.5 text-sm"
+            className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
             value={techFilter ?? ''}
             onChange={(e) => setTechFilter(e.target.value || null)}
             aria-label={t('filterTechnician')}
@@ -208,27 +228,35 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
         )}
       </div>
 
-      {/* Table / Card list */}
-      {sorted.length === 0 ? (
-        <EmptyState
-          icon={CircleCheck}
-          title={t('emptyTitle')}
-          description={t('emptySubtitle')}
-        />
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-sm">
-          <table className="w-full text-sm" role="table" aria-label={t('queueTitle')}>
-            <thead className="bg-muted/30">
-              <tr>
-                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colPatient')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colTest')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colTech')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colTime')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colFlags')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colActions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
+      {/* Content box — single cohesive box (loading / empty / table) */}
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        {loading ? (
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground" aria-busy="true" aria-label={t('loading')}>
+            {t('loading')}
+          </div>
+        ) : sorted.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              icon={filtersActive ? FileSearch : CircleCheck}
+              title={filtersActive ? t('noResultsTitle') : t('emptyTitle')}
+              description={filtersActive ? t('noResultsDescription') : t('emptySubtitle')}
+              action={filtersActive ? { label: t('clearFilters'), onClick: clearFilters } : undefined}
+            />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border text-sm" role="table" aria-label={t('queueTitle')}>
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colPatient')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colTest')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colTech')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colTime')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colFlags')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colActions')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
               {sorted.map((result) => {
                 const flags = (result.abnormalityFlags ?? []) as AbnormalityFlag[]
                 const critical = isCriticalResult(flags)
@@ -246,8 +274,8 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
                   <tr
                     key={result.id}
                     className={[
-                      'transition-colors hover:bg-muted/30',
-                      critical ? 'border-s-4 border-s-red-500' : '',
+                      'transition-colors hover:bg-muted/50',
+                      critical ? 'border-s-4 border-s-destructive' : '',
                     ].join(' ')}
                     role="row"
                   >
@@ -262,7 +290,7 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
                         </span>
                       )}
                       {critical && (
-                        <span className="ms-2 inline-flex items-center rounded bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white uppercase tracking-wide">
+                        <span className="ms-2 inline-flex items-center rounded bg-destructive px-1.5 py-0.5 text-xs font-bold text-destructive-foreground uppercase tracking-wide">
                           {t('criticalBadge')}
                         </span>
                       )}
@@ -296,22 +324,24 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
 
                     {/* Actions */}
                     <td className="px-4 py-3">
-                      <button
+                      <Button
+                        variant="primary"
+                        size="sm"
                         onClick={() => router.push(`authorization/${result.id}`)}
-                        className="rounded bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-40"
                         disabled={!rowCanAuthorize && !rowCanReject && !rowCanHold}
                         aria-label={`${t('reviewButton')} ${result.patientFirstName ?? ''}`}
                       >
                         {t('reviewButton')}
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 )
               })}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

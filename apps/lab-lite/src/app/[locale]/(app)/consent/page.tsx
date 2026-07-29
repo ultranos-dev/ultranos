@@ -34,17 +34,17 @@ function StepIndicatorBar({ currentStep }: { currentStep: Step }) {
           <div
             className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
               i <= currentIndex
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                ? 'bg-primary text-white'
+                : 'bg-muted text-muted-foreground dark:text-muted-foreground'
             }`}
           >
             {i + 1}
           </div>
-          <span className={`hidden text-sm sm:inline ${i <= currentIndex ? 'font-medium' : 'text-gray-400'}`}>
+          <span className={`hidden text-sm sm:inline ${i <= currentIndex ? 'font-medium' : 'text-muted-foreground'}`}>
             {labels[step]}
           </span>
           {i < STEPS.length - 1 && (
-            <div className={`h-0.5 w-6 ${i < currentIndex ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`} />
+            <div className={`h-0.5 w-6 ${i < currentIndex ? 'bg-primary' : 'bg-muted'}`} />
           )}
         </div>
       ))}
@@ -166,7 +166,7 @@ export default function ConsentPage() {
                   value={patientRef}
                   onChange={(e) => setPatientRef(e.target.value)}
                   placeholder="Patient/<uuid>"
-                  className="mt-1 block w-full rounded-md border px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                  className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
                 />
               </label>
               <label className="block text-sm font-medium">
@@ -176,14 +176,14 @@ export default function ConsentPage() {
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
                   placeholder="First name"
-                  className="mt-1 block w-full rounded-md border px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                  className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
                 />
               </label>
               <button
                 type="button"
                 onClick={() => handlePatientSelect(patientRef, patientName)}
                 disabled={!patientRef}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded-md bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90 disabled:opacity-50"
               >
                 {t('common.next', { ns: 'common' })}
                 Next
@@ -196,11 +196,11 @@ export default function ConsentPage() {
         {step === 'listen' && (
           <div className="space-y-4">
             <h2 className="text-lg font-medium">{t('steps.listenExplanation')}</h2>
-            <div className="rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+            <div className="rounded-lg border bg-muted p-4">
               <h3 className="mb-2 font-medium">{t('labCollection.title')}</h3>
               <p className="mb-3 text-sm">{t('labCollection.bodyText')}</p>
               <p className="text-sm font-medium text-red-600 dark:text-red-400">{t('labCollection.rightToRefuse')}</p>
-              <p className="mt-2 text-xs text-gray-400">{t('labCollection.version', { version: CURRENT_CONSENT_VERSION })}</p>
+              <p className="mt-2 text-xs text-muted-foreground">{t('labCollection.version', { version: CURRENT_CONSENT_VERSION })}</p>
             </div>
 
             <ConsentAudioPlayer
@@ -212,7 +212,7 @@ export default function ConsentPage() {
               type="button"
               onClick={() => setStep('capture')}
               disabled={!canProceedToCapture}
-              className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+              className="mt-4 rounded-md bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90 disabled:opacity-50"
             >
               Next
             </button>
@@ -233,8 +233,8 @@ export default function ConsentPage() {
                   onClick={() => setCaptureMethod(method)}
                   className={`rounded-md border px-4 py-2 text-sm ${
                     captureMethod === method
-                      ? 'border-blue-600 bg-blue-50 font-medium text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                      ? 'border-primary bg-primary/10 font-medium text-primary'
+                      : 'hover:bg-muted'
                   }`}
                 >
                   {t(`method.${method}`)}
@@ -244,7 +244,7 @@ export default function ConsentPage() {
 
             {/* Audio recorder */}
             {(captureMethod === 'audio' || captureMethod === 'both') && (
-              <div className="rounded-lg border p-4 dark:border-gray-700">
+              <div className="rounded-lg border p-4">
                 <h3 className="mb-4 text-sm font-medium">{t('method.audio')}</h3>
                 <AudioRecorder onRecordingComplete={setAudioBlob} />
               </div>
@@ -252,7 +252,7 @@ export default function ConsentPage() {
 
             {/* Thumbprint capture */}
             {(captureMethod === 'thumbprint' || captureMethod === 'both') && (
-              <div className="rounded-lg border p-4 dark:border-gray-700">
+              <div className="rounded-lg border p-4">
                 <h3 className="mb-4 text-sm font-medium">{t('method.thumbprint')}</h3>
                 <ThumbprintCapture onCaptureComplete={setThumbprintBlob} />
               </div>
@@ -262,7 +262,7 @@ export default function ConsentPage() {
               <button
                 type="button"
                 onClick={() => setStep('listen')}
-                className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="rounded-md border px-4 py-2 text-sm hover:bg-muted"
               >
                 Back
               </button>
@@ -270,7 +270,7 @@ export default function ConsentPage() {
                 type="button"
                 onClick={() => setStep('review')}
                 disabled={!canProceedToReview}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded-md bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90 disabled:opacity-50"
               >
                 Next
               </button>
@@ -283,25 +283,25 @@ export default function ConsentPage() {
           <div className="space-y-4">
             <h2 className="text-lg font-medium">{t('review.summary')}</h2>
 
-            <dl className="space-y-2 rounded-lg border p-4 dark:border-gray-700">
+            <dl className="space-y-2 rounded-lg border p-4">
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500 dark:text-gray-400">{t('review.patient')}</dt>
+                <dt className="text-sm text-muted-foreground">{t('review.patient')}</dt>
                 <dd className="text-sm font-medium">{patientName || patientRef}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500 dark:text-gray-400">{t('review.method')}</dt>
+                <dt className="text-sm text-muted-foreground">{t('review.method')}</dt>
                 <dd className="text-sm font-medium">{t(`method.${captureMethod}`)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500 dark:text-gray-400">{t('review.language')}</dt>
+                <dt className="text-sm text-muted-foreground">{t('review.language')}</dt>
                 <dd className="text-sm font-medium">{locale.toUpperCase()}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500 dark:text-gray-400">{t('review.consentVersion')}</dt>
+                <dt className="text-sm text-muted-foreground">{t('review.consentVersion')}</dt>
                 <dd className="text-sm font-medium">{CURRENT_CONSENT_VERSION}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500 dark:text-gray-400">{t('review.witness')}</dt>
+                <dt className="text-sm text-muted-foreground">{t('review.witness')}</dt>
                 <dd className="text-sm font-medium">{session?.email ?? 'N/A'}</dd>
               </div>
             </dl>
@@ -320,7 +320,7 @@ export default function ConsentPage() {
               <button
                 type="button"
                 onClick={() => setStep('capture')}
-                className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="rounded-md border px-4 py-2 text-sm hover:bg-muted"
               >
                 Back
               </button>

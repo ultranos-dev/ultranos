@@ -181,7 +181,7 @@ export function TemperatureLocationSettings() {
 
       {/* Add/Edit form */}
       {showForm && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-3">
+        <div className="rounded-lg border border-primary bg-primary/10 p-4 space-y-3">
           <h3 className="text-sm font-semibold text-foreground">
             {editingId ? t('editLocation') : t('addLocation')}
           </h3>

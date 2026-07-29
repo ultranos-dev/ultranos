@@ -327,7 +327,7 @@ export function SampleDetailView({
                 type="button"
                 onClick={handleBeginProcessing}
                 disabled={isTransitioning || (!transportFlagsAcknowledged && !!(specimen._ultranos.transportFlags?.length))}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
                 data-testid="begin-processing-button"
               >
                 {t('actions.beginProcessing')}

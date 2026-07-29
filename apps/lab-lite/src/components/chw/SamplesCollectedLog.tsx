@@ -18,9 +18,9 @@ import type { CHWSampleCollection, CHWSampleType } from '@/types/chw-mode'
 const SAMPLE_TYPE_COLORS: Record<CHWSampleType, string> = {
   blood: 'bg-red-100 text-red-700',
   urine: 'bg-yellow-100 text-yellow-700',
-  swab: 'bg-gray-100 text-gray-700',
+  swab: 'bg-muted text-foreground',
   stool: 'bg-amber-100 text-amber-700',
-  other: 'bg-blue-100 text-blue-700',
+  other: 'bg-primary/10 text-primary',
 }
 
 // Single-letter abbreviations for small icon badge
@@ -56,22 +56,22 @@ export function SamplesCollectedLog({ onBack }: Props) {
     <div className="flex flex-col gap-4 p-4">
       {/* Header with count badge */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">{t('title')}</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t('title')}</h2>
         {!loading && (
-          <span className="rounded-full bg-blue-600 px-3 py-1 text-lg font-bold text-white">
+          <span className="rounded-full bg-primary px-3 py-1 text-lg font-bold text-white">
             {samples.length}
           </span>
         )}
       </div>
 
       {!loading && samples.length > 0 && (
-        <p className="text-lg text-gray-600">{t('countBadge', { count: samples.length })}</p>
+        <p className="text-lg text-muted-foreground">{t('countBadge', { count: samples.length })}</p>
       )}
 
       {loading ? (
-        <div className="flex h-32 items-center justify-center text-gray-500">…</div>
+        <div className="flex h-32 items-center justify-center text-muted-foreground">…</div>
       ) : samples.length === 0 ? (
-        <div className="flex h-32 items-center justify-center rounded-2xl bg-gray-50 text-xl text-gray-500">
+        <div className="flex h-32 items-center justify-center rounded-2xl bg-muted text-xl text-muted-foreground">
           {t('empty')}
         </div>
       ) : (
@@ -86,7 +86,7 @@ export function SamplesCollectedLog({ onBack }: Props) {
         <button
           type="button"
           onClick={onBack}
-          className="mt-4 min-h-[56px] w-full rounded-xl bg-gray-200 px-6 py-4 text-xl font-semibold text-gray-800 hover:bg-gray-300"
+          className="mt-4 min-h-[56px] w-full rounded-xl bg-muted px-6 py-4 text-xl font-semibold text-foreground hover:bg-muted/70"
         >
           ← Back
         </button>
@@ -103,7 +103,7 @@ function SampleRow({ sample }: { sample: CHWSampleCollection }) {
   const timeDisplay = hlcToTimeDisplay(sample.collectedAt)
 
   return (
-    <li className="flex items-center gap-4 rounded-xl border border-gray-100 bg-card p-4 shadow-sm">
+    <li className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm">
       {/* Sample type icon badge */}
       <div
         className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold ${colorClass}`}
@@ -114,16 +114,16 @@ function SampleRow({ sample }: { sample: CHWSampleCollection }) {
 
       <div className="min-w-0 flex-1">
         {/* Label number */}
-        <p className="font-mono text-lg font-bold text-gray-900">{sample.labelNumber}</p>
+        <p className="font-mono text-lg font-bold text-foreground">{sample.labelNumber}</p>
         {/* Patient first name + age — ONLY these two fields (CLAUDE.md Rule #7) */}
-        <p className="text-base text-gray-700">
+        <p className="text-base text-foreground">
           {sample.patientFirstName}
           {sample.patientAge > 0 ? `, ${sample.patientAge} yrs` : ''}
         </p>
       </div>
 
       {/* Timestamp */}
-      <div className="flex shrink-0 items-center gap-1 text-gray-500">
+      <div className="flex shrink-0 items-center gap-1 text-muted-foreground">
         <Clock size={14} aria-hidden />
         <span className="text-sm">{timeDisplay}</span>
       </div>

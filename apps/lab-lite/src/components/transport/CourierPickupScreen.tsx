@@ -53,7 +53,7 @@ export function CourierPickupScreen({
       <div className="flex flex-col gap-4 p-4" data-testid="courier-pickup-screen">
         <StepHeader icon={<Truck size={32} aria-hidden />} title="Enter Courier ID" step={1} total={5} />
         <div className="flex flex-col gap-1">
-          <label className="text-lg font-medium text-gray-700" htmlFor="courier-id-input">
+          <label className="text-lg font-medium text-foreground" htmlFor="courier-id-input">
             Courier ID
           </label>
           <input
@@ -63,7 +63,7 @@ export function CourierPickupScreen({
             value={courierId}
             onChange={(e) => setCourierId(e.target.value)}
             placeholder="e.g. CRR-001"
-            className="min-h-[56px] rounded-xl border border-gray-300 px-4 py-3 text-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className="min-h-[56px] rounded-xl border border-border px-4 py-3 text-xl focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
             autoFocus
           />
         </div>
@@ -83,7 +83,7 @@ export function CourierPickupScreen({
 
         {/* Single-option radio — extensible to multi-location in future */}
         <div className="flex flex-col gap-3">
-          <label className="flex items-center gap-3 rounded-xl border-2 border-blue-500 bg-blue-50 p-4 cursor-pointer">
+          <label className="flex items-center gap-3 rounded-xl border-2 border-primary bg-primary/10 p-4 cursor-pointer">
             <input
               type="radio"
               name="destination"
@@ -93,8 +93,8 @@ export function CourierPickupScreen({
               className="h-5 w-5 accent-blue-600"
             />
             <div>
-              <p className="text-lg font-semibold text-gray-900">Main Laboratory</p>
-              <p className="text-sm text-gray-500">ID: {destinationLocationId}</p>
+              <p className="text-lg font-semibold text-foreground">Main Laboratory</p>
+              <p className="text-sm text-muted-foreground">ID: {destinationLocationId}</p>
             </div>
           </label>
         </div>
@@ -136,8 +136,8 @@ export function CourierPickupScreen({
         <StepHeader icon={<Scan size={32} aria-hidden />} title="Scan Samples" step={3} total={5} />
 
         {/* Camera viewfinder placeholder */}
-        <div className="flex h-36 items-center justify-center rounded-2xl border-4 border-dashed border-blue-300 bg-blue-50">
-          <Scan size={48} className="text-blue-400" aria-hidden />
+        <div className="flex h-36 items-center justify-center rounded-2xl border-4 border-dashed border-primary bg-primary/10">
+          <Scan size={48} className="text-primary" aria-hidden />
         </div>
 
         <div className="flex gap-2">
@@ -148,7 +148,7 @@ export function CourierPickupScreen({
             onChange={(e) => { setScanInput(e.target.value); setScanError(null) }}
             onKeyDown={handleScanKeyDown}
             placeholder="Scan or type label number"
-            className="min-h-[56px] flex-1 rounded-xl border border-gray-300 px-4 py-3 text-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className="min-h-[56px] flex-1 rounded-xl border border-border px-4 py-3 text-xl focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
             aria-label="Sample label number"
           />
           <button
@@ -156,7 +156,7 @@ export function CourierPickupScreen({
             data-testid="add-sample-button"
             onClick={handleAddSample}
             disabled={!scanInput.trim()}
-            className="flex h-[56px] w-[56px] items-center justify-center rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="flex h-[56px] w-[56px] items-center justify-center rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
             aria-label="Add sample"
           >
             +
@@ -170,13 +170,13 @@ export function CourierPickupScreen({
         )}
 
         {scannedLabels.length > 0 && (
-          <div className="rounded-xl bg-gray-50 p-3">
-            <p className="mb-2 text-base font-semibold text-gray-700">
+          <div className="rounded-xl bg-muted p-3">
+            <p className="mb-2 text-base font-semibold text-foreground">
               {scannedLabels.length} sample{scannedLabels.length !== 1 ? 's' : ''} added
             </p>
             <ul className="flex flex-col gap-1">
               {scannedLabels.map((label) => (
-                <li key={label} className="flex items-center gap-2 text-base text-gray-800">
+                <li key={label} className="flex items-center gap-2 text-base text-foreground">
                   <CheckCircle size={14} className="text-green-600 shrink-0" aria-hidden />
                   <span className="font-mono">{label}</span>
                 </li>
@@ -207,7 +207,7 @@ export function CourierPickupScreen({
         <StepHeader icon={<Thermometer size={32} aria-hidden />} title="Temperature at Pickup" step={4} total={5} />
 
         <div className="flex flex-col gap-1">
-          <label className="text-lg font-medium text-gray-700" htmlFor="temperature-input">
+          <label className="text-lg font-medium text-foreground" htmlFor="temperature-input">
             Temperature (°C) — optional
           </label>
           <input
@@ -217,7 +217,7 @@ export function CourierPickupScreen({
             value={temperature}
             onChange={(e) => setTemperature(e.target.value)}
             placeholder="e.g. 22"
-            className="min-h-[56px] rounded-xl border border-gray-300 px-4 py-3 text-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className="min-h-[56px] rounded-xl border border-border px-4 py-3 text-xl focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
             inputMode="decimal"
           />
         </div>
@@ -228,7 +228,7 @@ export function CourierPickupScreen({
             type="button"
             data-testid="skip-temperature-button"
             onClick={() => { setTemperature(''); setStep('summary') }}
-            className="min-h-[56px] rounded-xl border border-gray-300 px-5 py-4 text-xl font-semibold text-gray-700 hover:bg-gray-50"
+            className="min-h-[56px] rounded-xl border border-border px-5 py-4 text-xl font-semibold text-foreground hover:bg-muted"
           >
             Skip
           </button>
@@ -293,7 +293,7 @@ export function CourierPickupScreen({
       <div className="flex flex-col gap-4 p-4" data-testid="courier-pickup-screen">
         <StepHeader icon={<ClipboardList size={32} aria-hidden />} title="Confirm Transport" step={5} total={5} />
 
-        <div className="rounded-2xl bg-gray-50 p-5 flex flex-col gap-3">
+        <div className="rounded-2xl bg-muted p-5 flex flex-col gap-3">
           <SummaryRow label="Courier ID" value={courierId} />
           <SummaryRow label="Destination" value="Main Laboratory" />
           <SummaryRow label="Samples" value={String(scannedLabels.length)} />
@@ -331,8 +331,8 @@ export function CourierPickupScreen({
         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
           <CheckCircle size={48} className="text-green-700" aria-hidden />
         </div>
-        <h2 className="text-center text-2xl font-bold text-gray-900">Transport Started</h2>
-        <p className="text-center text-xl text-gray-600">
+        <h2 className="text-center text-2xl font-bold text-foreground">Transport Started</h2>
+        <p className="text-center text-xl text-muted-foreground">
           {scannedLabels.length} sample{scannedLabels.length !== 1 ? 's' : ''} logged for transport
         </p>
       </div>
@@ -340,7 +340,7 @@ export function CourierPickupScreen({
       {/* Manifest text — no PHI, safe to display per CLAUDE.md Rule #7 */}
       <pre
         data-testid="manifest-text"
-        className="rounded-xl bg-gray-50 p-4 text-sm font-mono text-gray-800 overflow-x-auto whitespace-pre-wrap"
+        className="rounded-xl bg-muted p-4 text-sm font-mono text-foreground overflow-x-auto whitespace-pre-wrap"
       >
         {manifestText}
       </pre>
@@ -349,7 +349,7 @@ export function CourierPickupScreen({
         type="button"
         data-testid="done-button"
         onClick={onDone}
-        className="min-h-[56px] rounded-xl bg-blue-600 px-6 py-4 text-xl font-semibold text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+        className="min-h-[56px] rounded-xl bg-primary px-6 py-4 text-xl font-semibold text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         Done
       </button>
@@ -374,14 +374,14 @@ function StepHeader({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
         {icon}
       </div>
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Step {step} of {total}
         </p>
-        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+        <h2 className="text-xl font-bold text-foreground">{title}</h2>
       </div>
     </div>
   )
@@ -390,8 +390,8 @@ function StepHeader({
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-lg text-gray-600">{label}</span>
-      <span className="text-lg font-semibold text-gray-900">{value}</span>
+      <span className="text-lg text-muted-foreground">{label}</span>
+      <span className="text-lg font-semibold text-foreground">{value}</span>
     </div>
   )
 }
@@ -415,7 +415,7 @@ function LargeButton({
       data-testid={testId}
       onClick={onClick}
       disabled={disabled}
-      className={`min-h-[56px] rounded-xl bg-blue-600 px-6 py-4 text-xl font-semibold text-white hover:bg-blue-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${className}`}
+      className={`min-h-[56px] rounded-xl bg-primary px-6 py-4 text-xl font-semibold text-white hover:bg-primary/90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${className}`}
     >
       {children}
     </button>
@@ -427,7 +427,7 @@ function BackButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="min-h-[56px] rounded-xl border border-gray-300 px-5 py-4 text-xl font-semibold text-gray-700 hover:bg-gray-50"
+      className="min-h-[56px] rounded-xl border border-border px-5 py-4 text-xl font-semibold text-foreground hover:bg-muted"
       aria-label="Back"
     >
       ←

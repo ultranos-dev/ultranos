@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import type { CheckDuplicatesResult } from '@/lib/trpc'
 
@@ -83,13 +84,21 @@ export function MpiResultModal({
               >
                 {c.mpiScore}%
               </span>
-              <Button
-                variant="outline"
-                className="ms-3 shrink-0 text-xs"
-                onClick={() => onSelectExisting(c.id)}
-              >
-                {t('useExisting')}
-              </Button>
+              <div className="ms-3 flex shrink-0 flex-col items-end gap-1">
+                <Button
+                  variant="outline"
+                  className="text-xs"
+                  onClick={() => onSelectExisting(c.id)}
+                >
+                  {t('useExisting')}
+                </Button>
+                <Link
+                  href={`/patients/${c.id}`}
+                  className="text-xs font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+                >
+                  {t('viewRecord')}
+                </Link>
+              </div>
             </li>
           ))}
         </ul>

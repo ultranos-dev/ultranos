@@ -59,7 +59,7 @@ function ConfirmDialog({
   const variantClass = {
     green: 'bg-green-600 hover:bg-green-700 text-white',
     red: 'bg-amber-600 hover:bg-amber-700 text-white',
-    blue: 'bg-blue-600 hover:bg-blue-700 text-white',
+    blue: 'bg-primary hover:bg-primary/90 text-white',
   }[confirmVariant]
 
   function handleConfirm() {
@@ -101,7 +101,7 @@ function ConfirmDialog({
 
         {requireComment && (
           <textarea
-            className="mt-4 w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-4 w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             rows={3}
             placeholder={t('commentPlaceholder')}
             value={comment}
@@ -137,7 +137,7 @@ function ConfirmDialog({
 
 const BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-muted text-muted-foreground',
-  blue: 'bg-blue-50 text-blue-700',
+  blue: 'bg-primary/10 text-primary',
   green: 'bg-green-50 text-green-700',
   yellow: 'bg-amber-50 text-amber-700',
 }

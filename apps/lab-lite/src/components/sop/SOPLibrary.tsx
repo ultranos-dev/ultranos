@@ -5,6 +5,10 @@ import { useTranslations } from 'next-intl'
 import { getDb } from '@/lib/db'
 import { SOPCategory, type SOP } from '@/lib/sop-types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
+import { BookOpen, FileSearch } from '@ultranos/ui-kit/icons'
+import { Badge } from '@/components/ui/badge'
 import { SOPDetailView } from './SOPDetailView'
 
 const CATEGORY_ORDER: SOPCategory[] = [
@@ -94,85 +98,64 @@ export function SOPLibrary() {
     return t(key)
   }
 
-  return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">{t('title')}</h1>
+  const filtersActive = selectedCategory !== 'ALL' || searchQuery.trim() !== ''
 
-      {/* Search */}
-      <div className="mb-4">
-        <input
+  return (
+    <div className="flex flex-col gap-4">
+      <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
+
+      {/* Toolbar: search + category filter — one row, always visible */}
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
           type="text"
+          dir="auto"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={t('searchPlaceholder')}
           aria-label={t('searchPlaceholder')}
-          className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="min-w-[200px] flex-1"
         />
-      </div>
-
-      {/* Category tabs */}
-      <div className="mb-6 flex flex-wrap gap-2" role="tablist" aria-label={t('categoryFilter')}>
-        <button
-          role="tab"
-          aria-selected={selectedCategory === 'ALL'}
-          onClick={() => setSelectedCategory('ALL')}
-          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-            selectedCategory === 'ALL'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
-          }`}
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value as SOPCategory | 'ALL')}
+          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+          aria-label={t('categoryFilter')}
         >
-          {t('allCategories')}
-        </button>
-        {CATEGORY_ORDER.map((cat) => (
-          <button
-            key={cat}
-            role="tab"
-            aria-selected={selectedCategory === cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              selectedCategory === cat
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
-            }`}
-          >
-            {categoryLabel(cat)}
-          </button>
-        ))}
+          <option value="ALL">{t('allCategories')}</option>
+          {CATEGORY_ORDER.map((cat) => (
+            <option key={cat} value={cat}>{categoryLabel(cat)}</option>
+          ))}
+        </select>
       </div>
 
-      {/* Loading state */}
-      {loading && (
-        <div className="flex items-center justify-center py-12 text-gray-500">
-          {t('loading')}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!loading && filteredSOPs.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-          <p>{searchQuery ? t('noSearchResults') : t('empty')}</p>
-        </div>
-      )}
-
-      {/* SOP cards */}
-      {!loading && filteredSOPs.length > 0 && (
-        <div className="space-y-3" role="tabpanel">
-          {filteredSOPs.map((sop) => {
-            const isAcked = acknowledgedSet.has(`${sop.id}:${sop.version}`)
-            return (
-              <button
-                key={sop.id}
-                onClick={() => setSelectedSOP(sop)}
-                className="w-full rounded-lg border border-gray-200 bg-card p-4 text-start shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750"
-              >
-                <div className="flex items-start justify-between gap-3">
+      {/* Content box — single cohesive box (loading / empty / list) */}
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        {loading ? (
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">
+            {t('loading')}
+          </div>
+        ) : filteredSOPs.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              icon={filtersActive ? FileSearch : BookOpen}
+              title={filtersActive ? t('noSearchResults') : t('empty')}
+              action={filtersActive ? { label: t('clearFilters'), onClick: () => { setSearchQuery(''); setSelectedCategory('ALL') } } : undefined}
+            />
+          </div>
+        ) : (
+          <div className="divide-y divide-border" role="list">
+            {filteredSOPs.map((sop) => {
+              const isAcked = acknowledgedSet.has(`${sop.id}:${sop.version}`)
+              return (
+                <button
+                  key={sop.id}
+                  onClick={() => setSelectedSOP(sop)}
+                  className="flex w-full items-start justify-between gap-3 px-4 py-3 text-start transition-colors hover:bg-muted/50"
+                >
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                      {sop.title}
-                    </h3>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                      <span className="rounded bg-gray-100 px-2 py-0.5 font-medium dark:bg-gray-700">
+                    <h3 className="text-base font-semibold text-foreground">{sop.title}</h3>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <span className="rounded bg-muted px-2 py-0.5 font-medium">
                         {categoryLabel(sop.category)}
                       </span>
                       <span>v{sop.version}</span>
@@ -180,22 +163,16 @@ export function SOPLibrary() {
                     </div>
                   </div>
                   <div className="flex-shrink-0">
-                    {isAcked ? (
-                      <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
-                        {t('acknowledged')}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200">
-                        {t('unacknowledged')}
-                      </span>
-                    )}
+                    <Badge variant={isAcked ? 'success' : 'warning'}>
+                      {isAcked ? t('acknowledged') : t('unacknowledged')}
+                    </Badge>
                   </div>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

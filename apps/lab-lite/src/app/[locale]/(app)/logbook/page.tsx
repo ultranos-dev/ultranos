@@ -2,7 +2,6 @@
 
 import { useCallback, useState } from 'react'
 import { useLocale } from 'next-intl'
-import { AuthGuard } from '@/components/AuthGuard'
 import { useLogbook } from '@/hooks/useLogbook'
 import { LogbookList } from '@/components/logbook/LogbookList'
 import { exportLogbookPdf } from '@/lib/logbook-pdf'
@@ -91,8 +90,6 @@ function LogbookContent() {
 
 export default function LogbookPage() {
   return (
-    <AuthGuard>
       <LogbookContent />
-    </AuthGuard>
   )
 }

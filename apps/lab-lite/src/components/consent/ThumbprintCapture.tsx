@@ -158,7 +158,7 @@ export function ThumbprintCapture({ onCaptureComplete }: ThumbprintCaptureProps)
         <button
           type="button"
           onClick={handleClear}
-          className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+          className="rounded-md border px-4 py-2 text-sm hover:bg-muted"
         >
           {t('thumbprint.retry')}
         </button>
@@ -168,12 +168,12 @@ export function ThumbprintCapture({ onCaptureComplete }: ThumbprintCaptureProps)
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <p className="text-sm text-gray-600 dark:text-gray-400">{t('thumbprint.instruction')}</p>
+      <p className="text-sm text-muted-foreground">{t('thumbprint.instruction')}</p>
 
       <canvas
         ref={canvasRef}
         style={{ width: CANVAS_CSS_SIZE, height: CANVAS_CSS_SIZE }}
-        className="touch-none rounded-lg border-2 border-gray-300 dark:border-gray-600"
+        className="touch-none rounded-lg border-2 border-border"
         onTouchStart={handleStart}
         onTouchMove={handleMove}
         onTouchEnd={handleEnd}
@@ -190,14 +190,14 @@ export function ThumbprintCapture({ onCaptureComplete }: ThumbprintCaptureProps)
         <button
           type="button"
           onClick={handleClear}
-          className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+          className="rounded-md border px-4 py-2 text-sm hover:bg-muted"
         >
           {t('thumbprint.clear')}
         </button>
         <button
           type="button"
           onClick={handleCapture}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+          className="rounded-md bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90"
         >
           {t('thumbprint.capture')}
         </button>

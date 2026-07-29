@@ -8,7 +8,7 @@ interface SampleStatusBadgeProps {
 }
 
 const STATUS_CONFIG: Record<PipelineStatus, { labelKey: string; className: string }> = {
-  received: { labelKey: 'received', className: 'bg-blue-50 text-blue-700' },
+  received: { labelKey: 'received', className: 'bg-primary/10 text-primary' },
   'in-processing': { labelKey: 'inProcessing', className: 'bg-amber-50 text-amber-700' },
   completed: { labelKey: 'completed', className: 'bg-green-50 text-green-700' },
   reported: { labelKey: 'reported', className: 'bg-indigo-50 text-indigo-700' },

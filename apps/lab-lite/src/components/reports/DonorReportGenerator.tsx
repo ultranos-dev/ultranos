@@ -134,11 +134,11 @@ export function DonorReportGenerator() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-lg font-semibold text-gray-800">{t('title')}</h1>
+      <h1 className="text-lg font-semibold text-foreground">{t('title')}</h1>
 
       {/* Program selector */}
-      <div className="rounded-lg border border-gray-200 bg-card p-4 space-y-4">
-        <h2 className="text-sm font-semibold text-gray-700">{t('generate')}</h2>
+      <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+        <h2 className="text-sm font-semibold text-foreground">{t('generate')}</h2>
 
         {programs.length === 0 ? (
           <div className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-700">
@@ -147,9 +147,9 @@ export function DonorReportGenerator() {
         ) : (
           <>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">{t('selectProgram')}</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">{t('selectProgram')}</label>
               <select
-                className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded border border-border px-3 py-2 text-sm"
                 value={selectedCode}
                 onChange={(e) => setSelectedCode(e.target.value)}
                 data-testid="program-selector"
@@ -163,20 +163,20 @@ export function DonorReportGenerator() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">{t('periodStart')}</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">{t('periodStart')}</label>
                 <input
                   type="date"
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded border border-border px-3 py-2 text-sm"
                   value={periodStart}
                   onChange={(e) => setPeriodStart(e.target.value)}
                   data-testid="period-start"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">{t('periodEnd')}</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">{t('periodEnd')}</label>
                 <input
                   type="date"
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded border border-border px-3 py-2 text-sm"
                   value={periodEnd}
                   onChange={(e) => setPeriodEnd(e.target.value)}
                   data-testid="period-end"

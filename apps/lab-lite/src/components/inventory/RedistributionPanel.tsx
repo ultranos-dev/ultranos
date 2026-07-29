@@ -78,7 +78,7 @@ export function RedistributionPanel({ myLabId, isNetworkAdmin = false }: Props) 
     return (
       <div className="animate-pulse space-y-3">
         {[1, 2].map(i => (
-          <div key={i} className="h-24 rounded-lg bg-gray-100" />
+          <div key={i} className="h-24 rounded-lg bg-muted" />
         ))}
       </div>
     )
@@ -86,7 +86,7 @@ export function RedistributionPanel({ myLabId, isNetworkAdmin = false }: Props) 
 
   if (recommendations.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-gray-300 px-8 py-10 text-center text-sm text-gray-500">
+      <div className="rounded-lg border border-dashed border-border px-8 py-10 text-center text-sm text-muted-foreground">
         {t('noRedistributionRecommendations')}
       </div>
     )
@@ -110,7 +110,7 @@ export function RedistributionPanel({ myLabId, isNetworkAdmin = false }: Props) 
             <button
               type="button"
               onClick={() => handleDismiss(id)}
-              className="absolute end-3 top-3 rounded p-1 text-gray-400 hover:text-gray-600"
+              className="absolute end-3 top-3 rounded p-1 text-muted-foreground hover:text-muted-foreground"
               aria-label={t('dismiss')}
             >
               <X className="h-4 w-4" aria-hidden />
@@ -122,7 +122,7 @@ export function RedistributionPanel({ myLabId, isNetworkAdmin = false }: Props) 
                 className={`mb-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                   isDeficit
                     ? 'bg-red-100 text-red-700'
-                    : 'bg-blue-100 text-blue-700'
+                    : 'bg-primary/10 text-primary'
                 }`}
               >
                 {isDeficit ? t('yourLabNeeds') : t('yourLabCanSupply')}
@@ -130,27 +130,27 @@ export function RedistributionPanel({ myLabId, isNetworkAdmin = false }: Props) 
             )}
 
             {/* Reagent and labs */}
-            <p className="pe-6 text-sm font-semibold text-gray-900">
+            <p className="pe-6 text-sm font-semibold text-foreground">
               {rec.reagentDisplay}
             </p>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-700">
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-foreground">
               <span className="font-medium text-red-700">{rec.deficitLabName}</span>
               <DirectionalIcon category="navigation">
-                <ArrowRight className="h-4 w-4 text-gray-400" aria-hidden />
+                <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden />
               </DirectionalIcon>
               <span className="font-medium text-green-700">{rec.sourceLabName}</span>
-              <span className="text-xs text-gray-500">({rec.distanceLabel})</span>
+              <span className="text-xs text-muted-foreground">({rec.distanceLabel})</span>
             </div>
 
             {/* Stats */}
-            <div className="mt-2 flex flex-wrap gap-4 text-xs text-gray-600">
+            <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
               <span>
                 {t('deficit')}: {rec.deficitDaysOfSupply} {t('days')}
               </span>
               <span>
                 {t('source')}: {rec.sourceDaysOfSupply} {t('days')}
               </span>
-              <span className="font-medium text-gray-800">
+              <span className="font-medium text-foreground">
                 {t('suggested')}: {rec.suggestedTransferQty} {t('units')}
               </span>
             </div>

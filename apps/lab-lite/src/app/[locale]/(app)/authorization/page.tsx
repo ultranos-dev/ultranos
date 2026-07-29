@@ -35,15 +35,13 @@ export default function AuthorizationQueuePage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            {t('queueTitle')}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t('queueSubtitle')}
-          </p>
-        </div>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold text-foreground">
+          {t('queueTitle')}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {t('queueSubtitle')}
+        </p>
       </div>
       <AuthorizationQueue />
     </div>

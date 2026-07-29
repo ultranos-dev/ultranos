@@ -69,7 +69,7 @@ function TestIcon({ testCategory }: { testCategory: string }) {
     return <Heart size={24} aria-hidden="true" className="text-pink-400" />
   }
   // Activity / chart for everything else
-  return <Activity size={24} aria-hidden="true" className="text-blue-400" />
+  return <Activity size={24} aria-hidden="true" className="text-primary" />
 }
 
 // ---------------------------------------------------------------------------
@@ -98,7 +98,7 @@ function ResultCard({ result, locale }: ResultCardProps) {
   const hasApprovedAudio = script !== null && isScriptApproved(script)
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
       {/* Header row: icon + test name + color indicator */}
       <div className="flex items-start gap-3">
         <span className="mt-0.5 flex-shrink-0">
@@ -107,7 +107,7 @@ function ResultCard({ result, locale }: ResultCardProps) {
 
         <div className="min-w-0 flex-1">
           {/* Plain-language test name only — NO LOINC codes, NO raw values */}
-          <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
+          <p className="text-base font-semibold text-foreground">
             {plainTestName}
           </p>
           <div className="mt-1">
@@ -131,7 +131,7 @@ function ResultCard({ result, locale }: ResultCardProps) {
         ) : (
           /* Fallback inline text when no approved audio */
           fallbackText ? (
-            <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+            <p className="text-sm leading-relaxed text-foreground">
               {fallbackText}
             </p>
           ) : null
@@ -144,13 +144,13 @@ function ResultCard({ result, locale }: ResultCardProps) {
           <button
             type="button"
             onClick={() => setExpanded(v => !v)}
-            className="text-sm text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+            className="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-blue-200"
             aria-expanded={expanded}
           >
             {expanded ? '▲ Hide explanation' : '▼ Read explanation'}
           </button>
           {expanded && (
-            <p className="mt-2 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+            <p className="mt-2 text-sm leading-relaxed text-foreground">
               {fallbackText}
             </p>
           )}
@@ -194,7 +194,7 @@ export function PatientResultSummary({ results, locale }: PatientResultSummaryPr
       <button
         type="button"
         onClick={handlePlayAll}
-        className="self-start rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+        className="self-start rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         aria-label={t('playAll')}
         data-testid="play-all-button"
       >

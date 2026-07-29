@@ -136,7 +136,7 @@ export function DailyLogGenerator() {
   }, [currentLog])
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-foreground mb-6">{t('title')}</h1>
 
       {/* Date selector + Generate */}
@@ -155,13 +155,13 @@ export function DailyLogGenerator() {
               value={date}
               max={todayISO()}
               onChange={(e) => setDate(e.target.value)}
-              className="block w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="block w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <button
             onClick={handleGenerate}
             disabled={state === 'generating'}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {state === 'generating' ? t('generating') : t('generateDaily')}
           </button>
@@ -223,7 +223,7 @@ export function DailyLogGenerator() {
             <p className="mt-2 text-sm text-muted-foreground">{t('shareUnsupported')}</p>
           )}
           {shareResult === 'downloaded' && (
-            <p className="mt-2 text-sm text-blue-600">{t('downloading')}</p>
+            <p className="mt-2 text-sm text-primary">{t('downloading')}</p>
           )}
         </div>
       )}

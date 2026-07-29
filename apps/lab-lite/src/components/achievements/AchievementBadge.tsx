@@ -41,7 +41,7 @@ const ACHIEVEMENT_CONFIG: Record<AchievementType, AchievementConfig> = {
   },
   [AchievementType.SPEED_STAR]: {
     icon: <Zap size={20} aria-hidden="true" />,
-    colorClass: 'bg-blue-50 border-blue-200 text-blue-800',
+    colorClass: 'bg-primary/10 border-primary text-primary',
     nameKey: 'Speed Star',
   },
   [AchievementType.CONSISTENCY_AWARD]: {

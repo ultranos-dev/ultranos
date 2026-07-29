@@ -106,31 +106,31 @@ export function ContainerDetailView({
         &larr; {t('backToList')}
       </button>
 
-      <div className="rounded-lg border border-gray-200 p-4">
+      <div className="rounded-lg border border-border p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">{container.location}</h2>
-          <span className="rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">
+          <span className="rounded-full px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary">
             {t(`type.${container.type}`)}
           </span>
         </div>
 
         <dl className="grid grid-cols-2 gap-2 text-sm">
           <div>
-            <dt className="text-gray-500">{t('startDate')}</dt>
+            <dt className="text-muted-foreground">{t('startDate')}</dt>
             <dd>{new Date(container.startDate).toLocaleDateString()}</dd>
           </div>
           <div>
-            <dt className="text-gray-500">{t('daysActiveLabel')}</dt>
+            <dt className="text-muted-foreground">{t('daysActiveLabel')}</dt>
             <dd>{daysActive}</dd>
           </div>
           {avgFillDays !== null && (
             <div>
-              <dt className="text-gray-500">{t('avgFillDays')}</dt>
+              <dt className="text-muted-foreground">{t('avgFillDays')}</dt>
               <dd>{avgFillDays}</dd>
             </div>
           )}
           <div>
-            <dt className="text-gray-500">{t('status.label')}</dt>
+            <dt className="text-muted-foreground">{t('status.label')}</dt>
             <dd>{t(`status.${container.status}`)}</dd>
           </div>
         </dl>
@@ -138,7 +138,7 @@ export function ContainerDetailView({
 
       {/* Fill level update (active containers only) */}
       {isActive && !showDisposal && (
-        <div className="rounded-lg border border-gray-200 p-4">
+        <div className="rounded-lg border border-border p-4">
           <h3 className="text-sm font-medium mb-3">{t('updateFillLevel')}</h3>
           <div className="grid grid-cols-4 gap-2">
             {FILL_LEVELS.map(({ level, label }) => (
@@ -150,7 +150,7 @@ export function ContainerDetailView({
                 className={`rounded-lg border py-3 text-center text-sm font-semibold transition-colors ${
                   container.fillLevel === level
                     ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                    : 'border-border text-muted-foreground hover:bg-muted'
                 } disabled:opacity-50`}
               >
                 {label}
@@ -169,7 +169,7 @@ export function ContainerDetailView({
 
           <div className="flex flex-col gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 {t('disposalMethod')}
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -181,7 +181,7 @@ export function ContainerDetailView({
                     className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                       disposalMethod === method
                         ? 'border-primary-500 bg-primary-50 text-primary-700'
-                        : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                        : 'border-border text-muted-foreground hover:bg-muted'
                     }`}
                   >
                     {t(`disposal.${method}`)}
@@ -193,7 +193,7 @@ export function ContainerDetailView({
             <div>
               <label
                 htmlFor="quantity-estimate"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 {t('quantityEstimate')}
               </label>
@@ -204,7 +204,7 @@ export function ContainerDetailView({
                 onChange={(e) => setQuantityEstimate(e.target.value)}
                 placeholder={t('quantityPlaceholder')}
                 required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
               />
             </div>
 
@@ -231,18 +231,18 @@ export function ContainerDetailView({
 
       {/* Fill history timeline */}
       {container.fillHistory.length > 0 && (
-        <div className="rounded-lg border border-gray-200 p-4">
+        <div className="rounded-lg border border-border p-4">
           <h3 className="text-sm font-medium mb-3">{t('fillHistory')}</h3>
           <ol className="flex flex-col gap-2">
             {[...container.fillHistory].reverse().map((entry, i) => (
               <li
                 key={i}
-                className="flex items-center justify-between text-sm border-b border-gray-100 pb-1 last:border-0"
+                className="flex items-center justify-between text-sm border-b border-border pb-1 last:border-0"
               >
                 <span className="font-medium">
                   {t(`fillLevel.${entry.level}`)}
                 </span>
-                <span className="text-gray-500">
+                <span className="text-muted-foreground">
                   {new Date(entry.recordedAt).toLocaleString()}
                 </span>
               </li>

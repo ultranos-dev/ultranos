@@ -60,7 +60,7 @@ export function WasteSummaryView() {
           <button
             type="button"
             onClick={goToPreviousMonth}
-            className="rounded px-2 py-1 text-sm hover:bg-gray-100"
+            className="rounded px-2 py-1 text-sm hover:bg-muted"
             aria-label={t('previousMonth')}
           >
             &larr;
@@ -74,7 +74,7 @@ export function WasteSummaryView() {
           <button
             type="button"
             onClick={goToNextMonth}
-            className="rounded px-2 py-1 text-sm hover:bg-gray-100"
+            className="rounded px-2 py-1 text-sm hover:bg-muted"
             aria-label={t('nextMonth')}
           >
             &rarr;
@@ -87,7 +87,7 @@ export function WasteSummaryView() {
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="h-24 animate-pulse rounded-lg bg-gray-200"
+              className="h-24 animate-pulse rounded-lg bg-muted"
               aria-busy="true"
             />
           ))}
@@ -95,15 +95,15 @@ export function WasteSummaryView() {
       ) : summary ? (
         <>
           {/* Total disposed card */}
-          <div className="rounded-lg border border-gray-200 p-4 text-center">
+          <div className="rounded-lg border border-border p-4 text-center">
             <p className="text-3xl font-bold">
               {summary.totalContainersDisposed}
             </p>
-            <p className="text-sm text-gray-500">{t('totalDisposed')}</p>
+            <p className="text-sm text-muted-foreground">{t('totalDisposed')}</p>
           </div>
 
           {/* Breakdown by type */}
-          <div className="rounded-lg border border-gray-200 p-4">
+          <div className="rounded-lg border border-border p-4">
             <h3 className="text-sm font-medium mb-3">{t('byType')}</h3>
             <div className="flex flex-col gap-2">
               {Object.values(ContainerType).map((type) => {
@@ -119,7 +119,7 @@ export function WasteSummaryView() {
                     <span className="text-xs w-24 text-end">
                       {t(`type.${type}`)}
                     </span>
-                    <div className="flex-1 h-4 bg-gray-100 rounded-full">
+                    <div className="flex-1 h-4 bg-muted rounded-full">
                       <div
                         className={`h-4 rounded-full ${TYPE_COLORS[type]}`}
                         style={{ width: `${pct}%` }}
@@ -134,7 +134,7 @@ export function WasteSummaryView() {
 
           {/* Breakdown by location */}
           {Object.keys(summary.byLocation).length > 0 && (
-            <div className="rounded-lg border border-gray-200 p-4">
+            <div className="rounded-lg border border-border p-4">
               <h3 className="text-sm font-medium mb-3">{t('byLocation')}</h3>
               <ul className="flex flex-col gap-1">
                 {Object.entries(summary.byLocation)
@@ -153,7 +153,7 @@ export function WasteSummaryView() {
           )}
 
           {/* Average fill times */}
-          <div className="rounded-lg border border-gray-200 p-4">
+          <div className="rounded-lg border border-border p-4">
             <h3 className="text-sm font-medium mb-3">{t('avgFillTimes')}</h3>
             <div className="grid grid-cols-3 gap-3 text-center">
               {Object.values(ContainerType).map((type) => (
@@ -161,10 +161,10 @@ export function WasteSummaryView() {
                   <p className="text-xl font-bold">
                     {summary.averageFillDaysByType[type] || '\u2014'}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {t(`type.${type}`)}
                   </p>
-                  <p className="text-xs text-gray-400">{t('days')}</p>
+                  <p className="text-xs text-muted-foreground">{t('days')}</p>
                 </div>
               ))}
             </div>

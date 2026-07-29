@@ -181,7 +181,7 @@ export function QCDrillDown({ details, onBack }: QCDrillDownProps) {
       )}
 
       {/* Action hint — informational only */}
-      <div className="flex items-start gap-2 rounded-md bg-blue-50 border border-blue-200 px-3 py-2.5 text-xs text-blue-700">
+      <div className="flex items-start gap-2 rounded-md bg-primary/10 border border-primary px-3 py-2.5 text-xs text-primary">
         <Info size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
         <span>{t('rag.drillDown.reRunQcHint')}</span>
       </div>

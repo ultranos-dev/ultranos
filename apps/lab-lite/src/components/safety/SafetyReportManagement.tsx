@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/Button'
 
 const STATUS_COLORS: Record<ReportStatus, string> = {
   [ReportStatus.SUBMITTED]: 'bg-amber-100 text-amber-800',
-  [ReportStatus.ACKNOWLEDGED]: 'bg-blue-100 text-blue-800',
+  [ReportStatus.ACKNOWLEDGED]: 'bg-primary/10 text-primary',
   [ReportStatus.INVESTIGATING]: 'bg-purple-100 text-purple-800',
   [ReportStatus.CLOSED]: 'bg-green-100 text-green-800',
 }
@@ -108,7 +108,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
   // Detail view
   if (selectedReport) {
     return (
-      <div className="mx-auto max-w-2xl flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <button
           type="button"
           onClick={() => setSelectedReport(null)}
@@ -228,7 +228,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
 
   // List view
   return (
-    <div className="mx-auto max-w-3xl flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">{t('managementTitle')}</h1>
         {onViewTrends && (

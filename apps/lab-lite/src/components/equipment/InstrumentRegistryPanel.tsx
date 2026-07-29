@@ -77,7 +77,7 @@ function FormField({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1">
+      <label className="block text-xs font-medium text-muted-foreground mb-1">
         {label}
         {required && <span className="text-red-500 ms-0.5">*</span>}
       </label>
@@ -110,12 +110,12 @@ function OutOfServiceModal({
       aria-label={t('setOutOfService') ?? 'Set Out of Service'}
     >
       <div className="w-full max-w-sm rounded-xl bg-card shadow-xl p-6 space-y-4">
-        <h2 className="text-base font-semibold text-gray-900">
+        <h2 className="text-base font-semibold text-foreground">
           {t('setOutOfService') ?? 'Set Out of Service'}
         </h2>
-        <p className="text-sm text-gray-600">{instrumentName}</p>
+        <p className="text-sm text-muted-foreground">{instrumentName}</p>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
             {t('outOfServiceReason') ?? 'Reason'}
           </label>
           <input
@@ -254,7 +254,7 @@ export function InstrumentRegistryPanel() {
         )}
 
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-700">{t('instruments')}</h3>
+          <h3 className="text-sm font-semibold text-foreground">{t('instruments')}</h3>
           <Button onClick={handleAddNew} data-testid="add-instrument-btn">
             {t('addInstrument')}
           </Button>
@@ -267,16 +267,16 @@ export function InstrumentRegistryPanel() {
             {instruments.map((inst) => (
               <li
                 key={inst.id}
-                className="flex items-start justify-between rounded-lg border border-gray-200 px-3 py-2 gap-2"
+                className="flex items-start justify-between rounded-lg border border-border px-3 py-2 gap-2"
                 data-testid={`instrument-item-${inst.id}`}
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-800 truncate">{inst.name}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm font-medium text-foreground truncate">{inst.name}</p>
+                  <p className="text-xs text-muted-foreground">
                     {inst.type} · {inst.model}
                     {inst.serialNumber && ` · S/N: ${inst.serialNumber}`}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-muted-foreground">
                     {t('avgRunTime')}: {inst.avgRunTimeMinutes} min
                   </p>
                   {inst.status === 'OUT_OF_SERVICE' && inst.outOfServiceReason && (
@@ -300,7 +300,7 @@ export function InstrumentRegistryPanel() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(inst)}
-                      className="text-xs text-blue-600 hover:underline"
+                      className="text-xs text-primary hover:underline"
                       data-testid={`edit-instrument-${inst.id}`}
                     >
                       {t('editInstrument') ?? 'Edit'}
@@ -335,14 +335,14 @@ export function InstrumentRegistryPanel() {
         {/* P9: RTL-safe back arrow using DirectionalIcon */}
         <button
           onClick={() => setView('list')}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-muted-foreground hover:text-foreground"
           aria-label={t('backToList') ?? 'Back to list'}
         >
           <DirectionalIcon category="navigation">
             <ChevronLeft size={18} />
           </DirectionalIcon>
         </button>
-        <h3 className="text-sm font-semibold text-gray-700">
+        <h3 className="text-sm font-semibold text-foreground">
           {view === 'add' ? t('addInstrument') : t('editInstrument') ?? 'Edit Instrument'}
         </h3>
       </div>

@@ -103,7 +103,7 @@ export function PaymentForm() {
 
   if (successPayment) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-6">
+      <div className="flex flex-col gap-4">
         <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
           <p className="text-lg font-semibold text-green-800">{t('success')}</p>
           <p className="mt-2 text-sm text-green-700">
@@ -136,7 +136,7 @@ export function PaymentForm() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-foreground mb-6">{t('title')}</h1>
 
       <div className="flex flex-col gap-4">
@@ -153,7 +153,7 @@ export function PaymentForm() {
               setPatientRef(e.target.value)
             }}
             placeholder="Ahmad, 45"
-            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
 
@@ -171,7 +171,7 @@ export function PaymentForm() {
                     type="checkbox"
                     checked={test.selected}
                     onChange={() => toggleTest(idx)}
-                    className="h-4 w-4 rounded border-border text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-ring"
                   />
                   <span className="text-sm text-foreground">{test.testName}</span>
                 </div>
@@ -200,7 +200,7 @@ export function PaymentForm() {
             min="0"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
           />
           {amountNum > 0 && amountNum < totalDue && (
             <p className="mt-2 text-sm text-amber-600">
@@ -221,7 +221,7 @@ export function PaymentForm() {
                   value={m}
                   checked={method === m}
                   onChange={() => setMethod(m)}
-                  className="h-4 w-4 border-border text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 border-border text-primary focus:ring-ring"
                 />
                 <span className="text-sm text-foreground">
                   {t(m.toLowerCase() as 'cash' | 'card' | 'insurance' | 'waiver')}
@@ -237,7 +237,7 @@ export function PaymentForm() {
                 value={waiverReason}
                 onChange={(e) => setWaiverReason(e.target.value)}
                 placeholder={t('waiverReasonPlaceholder')}
-                className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                 rows={2}
               />
             </div>
@@ -251,7 +251,7 @@ export function PaymentForm() {
                 value={insurancePolicyRef}
                 onChange={(e) => setInsurancePolicyRef(e.target.value)}
                 placeholder={t('insurancePolicyPlaceholder')}
-                className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
               />
             </div>
           )}

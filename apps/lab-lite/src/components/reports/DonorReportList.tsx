@@ -19,12 +19,12 @@ export function DonorReportList({ programCode, onOpenReport }: Props) {
   const t = useTranslations('donorReport')
   const { reports, loading } = useDonorReports({ programCode })
 
-  if (loading) return <p className="text-sm text-gray-400 animate-pulse">Loading…</p>
+  if (loading) return <p className="text-sm text-muted-foreground animate-pulse">Loading…</p>
 
   if (reports.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-gray-200 p-4 text-center">
-        <p className="text-sm text-gray-500">{t('noReports')}</p>
+      <div className="rounded-lg border border-dashed border-border p-4 text-center">
+        <p className="text-sm text-muted-foreground">{t('noReports')}</p>
       </div>
     )
   }
@@ -38,22 +38,22 @@ export function DonorReportList({ programCode, onOpenReport }: Props) {
 
   return (
     <div className="space-y-4" data-testid="donor-report-list">
-      <h2 className="text-sm font-semibold text-gray-700">{t('reportHistory')}</h2>
+      <h2 className="text-sm font-semibold text-foreground">{t('reportHistory')}</h2>
       {Array.from(grouped.entries()).map(([code, groupReports]) => (
-        <div key={code} className="rounded-lg border border-gray-200 bg-card overflow-hidden">
-          <div className="bg-gray-50 px-3 py-2 border-b border-gray-200">
-            <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+        <div key={code} className="rounded-lg border border-border bg-card overflow-hidden">
+          <div className="bg-muted px-3 py-2 border-b border-border">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               {groupReports[0]?.programName} ({code})
             </h3>
           </div>
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-border">
             {groupReports.map((r) => (
               <li key={r.id} className="flex items-center px-3 py-2.5 gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {r.periodStart} — {r.periodEnd}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-muted-foreground">
                     {new Date(r.generatedAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -66,7 +66,7 @@ export function DonorReportList({ programCode, onOpenReport }: Props) {
                 </span>
                 <button
                   onClick={() => onOpenReport(r)}
-                  className="flex-shrink-0 text-xs text-blue-600 hover:underline"
+                  className="flex-shrink-0 text-xs text-primary hover:underline"
                   data-testid={`open-report-${r.id}`}
                 >
                   {r.status === 'finalized' ? t('exportPdf') : t('reviewTitle')}

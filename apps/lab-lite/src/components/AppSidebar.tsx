@@ -32,6 +32,12 @@ import {
   Award,
   Wrench,
   Trophy,
+  Send,
+  NotebookText,
+  GraduationCap,
+  ShoppingCart,
+  Activity,
+  Droplets,
 } from '@ultranos/ui-kit/icons'
 import {
   Sidebar,
@@ -212,7 +218,9 @@ export function AppSidebar() {
           items: [
             { title: t('orders'), url: '/orders', icon: ClipboardList, badge: ordersBadge },
             { title: t('worklist'), url: '/worklist', icon: ClipboardList },
+            { title: t('sendOuts'), url: '/sendouts', icon: Send },
             { title: t('upload'), url: '/upload', icon: Upload, badge: uploadQueueBadge },
+            { title: t('logbook'), url: '/logbook', icon: NotebookText },
             { title: t('reports'), url: '/reports', icon: FileText },
             { title: t('dailyLog'), url: '/reports/daily' },
           ],
@@ -231,6 +239,7 @@ export function AppSidebar() {
           items: [
             { title: t('qualityDashboard'), url: '/quality', icon: TrendingUp },
             { title: t('safetyReporting'), url: '/safety-reporting', icon: AlertTriangle },
+            { title: t('spillResponse'), url: '/safety/spill', icon: Droplets },
             { title: t('escalations'), url: '/escalations', icon: AlertTriangle },
             { title: t('equipment'), url: '/equipment', icon: Wrench },
             { title: t('sops'), url: '/sops', icon: BookOpen },
@@ -242,8 +251,10 @@ export function AppSidebar() {
           items: [
             { title: t('shiftHandover'), url: '/shift-handover', icon: RefreshCw, badge: handoverBadge },
             { title: t('portfolio'), url: '/portfolio', icon: BarChart3 },
+            { title: t('workload'), url: '/workload', icon: Activity },
             { title: t('mentorship'), url: '/mentorship', icon: UserCheck },
             { title: t('certification'), url: '/certification', icon: Award },
+            { title: t('competency'), url: '/competency', icon: GraduationCap },
             { title: t('teamAchievements'), url: '/achievements', icon: Trophy },
             { title: t('peerNetwork'), url: '/peer-network', icon: MessageCircle },
             ...(canAccessAuth
@@ -258,6 +269,7 @@ export function AppSidebar() {
             { title: t('receipts'), url: '/finance/receipts', icon: Receipt },
             { title: t('reconciliation'), url: '/finance/reconciliation', icon: Scale },
             { title: t('reagents'), url: '/finance/reagents', icon: FlaskConical },
+            { title: t('procurement'), url: '/procurement', icon: ShoppingCart },
             ...(canAccessCostAnalysis
               ? [
                   { title: t('costAnalysis'), url: '/finance/cost-analysis', icon: BarChart3 },

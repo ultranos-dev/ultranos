@@ -169,7 +169,7 @@ export function HandoverAcknowledgment({
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder={t('incomingNotesPlaceholder')}
-              className="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
             />
 
             {error && (

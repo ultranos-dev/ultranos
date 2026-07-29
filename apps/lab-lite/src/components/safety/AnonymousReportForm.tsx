@@ -88,14 +88,14 @@ export function AnonymousReportForm({ onSubmitted }: AnonymousReportFormProps) {
   return (
     <div className="mx-auto max-w-lg flex flex-col gap-4">
       {/* Privacy notice */}
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+      <div className="rounded-lg border border-primary bg-primary/10 p-4">
         <div className="flex items-start gap-3">
           <span className="text-xl">🔒</span>
           <div>
-            <h3 className="text-sm font-semibold text-blue-800">
+            <h3 className="text-sm font-semibold text-primary">
               {t('privacyNoticeTitle')}
             </h3>
-            <p className="mt-1 text-sm text-blue-700">
+            <p className="mt-1 text-sm text-primary">
               {t('privacyNoticeBody')}
             </p>
           </div>

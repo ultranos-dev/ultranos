@@ -18,7 +18,7 @@ const FILL_PERCENT: Record<FillLevel, number> = {
 const STATUS_COLORS: Record<ContainerStatus, string> = {
   [ContainerStatus.ACTIVE]: 'bg-green-100 text-green-800',
   [ContainerStatus.FULL]: 'bg-red-100 text-red-800',
-  [ContainerStatus.DISPOSED]: 'bg-gray-100 text-gray-600',
+  [ContainerStatus.DISPOSED]: 'bg-muted text-muted-foreground',
 }
 
 interface WasteContainerListProps {
@@ -77,7 +77,7 @@ export function WasteContainerList({
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="h-20 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"
+            className="h-20 animate-pulse rounded-lg bg-muted"
             aria-busy="true"
           />
         ))}
@@ -95,7 +95,7 @@ export function WasteContainerList({
       </div>
 
       {sorted.length === 0 ? (
-        <p className="text-center text-gray-500 py-8">{t('empty')}</p>
+        <p className="text-center text-muted-foreground py-8">{t('empty')}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {sorted.map((container) => {
@@ -110,13 +110,13 @@ export function WasteContainerList({
               <li key={container.id}>
                 <button
                   type="button"
-                  className="w-full rounded-lg border border-gray-200 p-4 text-start hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-300 transition-colors"
+                  className="w-full rounded-lg border border-border p-4 text-start hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary-300 transition-colors"
                   onClick={() => onSelectContainer(container)}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{container.location}</span>
-                      <span className="rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="rounded-full px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary">
                         {t(`type.${container.type}`)}
                       </span>
                     </div>
@@ -142,13 +142,13 @@ export function WasteContainerList({
 
                   {container.status !== ContainerStatus.DISPOSED && (
                     <div className="mt-2">
-                      <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                         <span>{t('fillLevel')}: {fillPct}%</span>
                         <span>
                           {t('daysActive', { days: daysActive })}
                         </span>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-gray-200">
+                      <div className="h-2 w-full rounded-full bg-muted">
                         <div
                           className={`h-2 rounded-full transition-all ${
                             fillPct >= 75

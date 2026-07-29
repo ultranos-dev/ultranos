@@ -31,7 +31,7 @@ export default function ReagentDetailPage() {
   if (loading) {
     return (
       <div className="flex flex-col gap-4" aria-busy="true">
-        <p className="text-sm text-gray-500">{t('loading')}</p>
+        <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </div>
     )
   }
@@ -64,19 +64,19 @@ export default function ReagentDetailPage() {
           </div>
 
           <dl className="grid grid-cols-2 gap-2 text-sm">
-            <dt className="text-gray-500">{t('detail.lot')}</dt>
+            <dt className="text-muted-foreground">{t('detail.lot')}</dt>
             <dd>{reagent.lotNumber}</dd>
-            <dt className="text-gray-500">{t('detail.status')}</dt>
+            <dt className="text-muted-foreground">{t('detail.status')}</dt>
             <dd>{reagent.status}</dd>
-            <dt className="text-gray-500">{t('detail.openDate')}</dt>
+            <dt className="text-muted-foreground">{t('detail.openDate')}</dt>
             <dd>{reagent.openDate}</dd>
-            <dt className="text-gray-500">{t('detail.expiryDate')}</dt>
+            <dt className="text-muted-foreground">{t('detail.expiryDate')}</dt>
             <dd>{reagent.expiryDate}</dd>
-            <dt className="text-gray-500">{t('detail.expectedTests')}</dt>
+            <dt className="text-muted-foreground">{t('detail.expectedTests')}</dt>
             <dd>{reagent.expectedTests}</dd>
-            <dt className="text-gray-500">{t('detail.testsPerformed')}</dt>
+            <dt className="text-muted-foreground">{t('detail.testsPerformed')}</dt>
             <dd>{reagent.testsPerformed}</dd>
-            <dt className="text-gray-500">{t('detail.costPerUnit')}</dt>
+            <dt className="text-muted-foreground">{t('detail.costPerUnit')}</dt>
             <dd>{reagent.costPerUnit} AFN</dd>
           </dl>
 

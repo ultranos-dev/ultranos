@@ -257,6 +257,39 @@ export async function listNotifications(token: string): Promise<NotificationItem
 }
 
 /**
+ * A lab report synced to the Hub (data-minimized — no PHI beyond the test label).
+ * Used by the Upload History view to show reports that reached the Hub.
+ */
+export interface LabReport {
+  id: string
+  loincDisplay?: string
+  issued?: string
+  collectionDate?: string
+  /** Report status (e.g. FHIR DiagnosticReport.status: 'final', 'partial', …). */
+  status?: string
+}
+
+/**
+ * Fetch synced lab reports from the Hub API (paginated).
+ * Callers wrap this in try/catch and fall back to local upload history if the
+ * Hub is unreachable, so a network/endpoint failure degrades gracefully.
+ */
+export async function listLabReports(
+  token: string,
+  opts: { limit: number; cursor?: string },
+): Promise<{ reports: LabReport[]; nextCursor?: string }> {
+  const params = new URLSearchParams({ limit: String(opts.limit) })
+  if (opts.cursor) params.set('cursor', opts.cursor)
+  const res = await fetch(`${getHubApiUrl()}/lab.listReports?${params.toString()}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) throw new Error('Failed to fetch lab reports')
+  const body = await res.json() as { result: { data: { json: { reports: LabReport[]; nextCursor?: string } } } }
+  return body.result.data.json
+}
+
+/**
  * Mark a single notification as acknowledged.
  */
 export async function acknowledgeNotification(id: string, token: string): Promise<void> {

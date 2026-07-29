@@ -1,0 +1,801 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PowerScheduleForm RTL snapshots > renders in LTR 1`] = `
+<div>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <h2
+      class="text-lg font-semibold text-foreground"
+    >
+      scheduler.powerSchedule.title
+    </h2>
+    <div
+      class="rounded-lg border border-border bg-card p-4"
+    >
+      <div
+        class="flex flex-col gap-3"
+      >
+        <label
+          class="flex flex-col gap-1"
+        >
+          <span
+            class="text-sm font-medium text-foreground"
+          >
+            scheduler.powerSchedule.dayOfWeek
+          </span>
+          <select
+            class="rounded-md border border-border px-3 py-2 text-sm"
+          >
+            <option
+              value="default"
+            >
+              scheduler.powerSchedule.defaultSchedule
+            </option>
+            <option
+              value="0"
+            >
+              scheduler.powerSchedule.sunday
+            </option>
+            <option
+              value="1"
+            >
+              scheduler.powerSchedule.monday
+            </option>
+            <option
+              value="2"
+            >
+              scheduler.powerSchedule.tuesday
+            </option>
+            <option
+              value="3"
+            >
+              scheduler.powerSchedule.wednesday
+            </option>
+            <option
+              value="4"
+            >
+              scheduler.powerSchedule.thursday
+            </option>
+            <option
+              value="5"
+            >
+              scheduler.powerSchedule.friday
+            </option>
+            <option
+              value="6"
+            >
+              scheduler.powerSchedule.saturday
+            </option>
+          </select>
+        </label>
+        <label
+          class="flex flex-col gap-1"
+        >
+          <span
+            class="text-sm font-medium text-foreground"
+          >
+            scheduler.powerSchedule.startTime
+          </span>
+          <input
+            class="rounded-md border border-border px-3 py-2 text-sm"
+            type="time"
+            value="09:00"
+          />
+        </label>
+        <label
+          class="flex flex-col gap-1"
+        >
+          <span
+            class="text-sm font-medium text-foreground"
+          >
+            scheduler.powerSchedule.duration
+          </span>
+          <input
+            class="rounded-md border border-border px-3 py-2 text-sm"
+            min="0.5"
+            step="0.5"
+            type="number"
+            value="4"
+          />
+        </label>
+        <label
+          class="flex items-center gap-2"
+        >
+          <input
+            checked=""
+            class="h-4 w-4 rounded border-border"
+            type="checkbox"
+          />
+          <span
+            class="text-sm text-foreground"
+          >
+            scheduler.powerSchedule.active
+          </span>
+        </label>
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+          data-size="default"
+          data-slot="button"
+          data-variant="default"
+        >
+          scheduler.powerSchedule.save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`PowerScheduleForm RTL snapshots > renders in RTL 1`] = `
+<div>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <h2
+      class="text-lg font-semibold text-foreground"
+    >
+      scheduler.powerSchedule.title
+    </h2>
+    <div
+      class="rounded-lg border border-border bg-card p-4"
+    >
+      <div
+        class="flex flex-col gap-3"
+      >
+        <label
+          class="flex flex-col gap-1"
+        >
+          <span
+            class="text-sm font-medium text-foreground"
+          >
+            scheduler.powerSchedule.dayOfWeek
+          </span>
+          <select
+            class="rounded-md border border-border px-3 py-2 text-sm"
+          >
+            <option
+              value="default"
+            >
+              scheduler.powerSchedule.defaultSchedule
+            </option>
+            <option
+              value="0"
+            >
+              scheduler.powerSchedule.sunday
+            </option>
+            <option
+              value="1"
+            >
+              scheduler.powerSchedule.monday
+            </option>
+            <option
+              value="2"
+            >
+              scheduler.powerSchedule.tuesday
+            </option>
+            <option
+              value="3"
+            >
+              scheduler.powerSchedule.wednesday
+            </option>
+            <option
+              value="4"
+            >
+              scheduler.powerSchedule.thursday
+            </option>
+            <option
+              value="5"
+            >
+              scheduler.powerSchedule.friday
+            </option>
+            <option
+              value="6"
+            >
+              scheduler.powerSchedule.saturday
+            </option>
+          </select>
+        </label>
+        <label
+          class="flex flex-col gap-1"
+        >
+          <span
+            class="text-sm font-medium text-foreground"
+          >
+            scheduler.powerSchedule.startTime
+          </span>
+          <input
+            class="rounded-md border border-border px-3 py-2 text-sm"
+            type="time"
+            value="09:00"
+          />
+        </label>
+        <label
+          class="flex flex-col gap-1"
+        >
+          <span
+            class="text-sm font-medium text-foreground"
+          >
+            scheduler.powerSchedule.duration
+          </span>
+          <input
+            class="rounded-md border border-border px-3 py-2 text-sm"
+            min="0.5"
+            step="0.5"
+            type="number"
+            value="4"
+          />
+        </label>
+        <label
+          class="flex items-center gap-2"
+        >
+          <input
+            checked=""
+            class="h-4 w-4 rounded border-border"
+            type="checkbox"
+          />
+          <span
+            class="text-sm text-foreground"
+          >
+            scheduler.powerSchedule.active
+          </span>
+        </label>
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+          data-size="default"
+          data-slot="button"
+          data-variant="default"
+        >
+          scheduler.powerSchedule.save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`TestTimeConfigPanel RTL snapshots > renders in LTR 1`] = `
+<div>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <div
+      class="flex items-center justify-between"
+    >
+      <h2
+        class="text-lg font-semibold text-foreground"
+      >
+        scheduler.config.title
+      </h2>
+      <button
+        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+        data-size="default"
+        data-slot="button"
+        data-variant="outline"
+      >
+        scheduler.config.resetDefaults
+      </button>
+    </div>
+    <div
+      class="overflow-x-auto"
+    >
+      <table
+        class="w-full text-sm"
+      >
+        <thead>
+          <tr
+            class="border-b border-border text-start"
+          >
+            <th
+              class="py-2 pe-3 text-start font-medium text-muted-foreground"
+            >
+              scheduler.config.testName
+            </th>
+            <th
+              class="py-2 pe-3 text-start font-medium text-muted-foreground"
+            >
+              scheduler.config.estimatedMinutes
+            </th>
+            <th
+              class="py-2 pe-3 text-start font-medium text-muted-foreground"
+            >
+              scheduler.config.requiresPower
+            </th>
+            <th
+              class="py-2 text-start font-medium text-muted-foreground"
+            >
+              scheduler.config.batchSize
+            </th>
+          </tr>
+        </thead>
+        <tbody />
+      </table>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`TestTimeConfigPanel RTL snapshots > renders in RTL 1`] = `
+<div>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <div
+      class="flex items-center justify-between"
+    >
+      <h2
+        class="text-lg font-semibold text-foreground"
+      >
+        scheduler.config.title
+      </h2>
+      <button
+        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+        data-size="default"
+        data-slot="button"
+        data-variant="outline"
+      >
+        scheduler.config.resetDefaults
+      </button>
+    </div>
+    <div
+      class="overflow-x-auto"
+    >
+      <table
+        class="w-full text-sm"
+      >
+        <thead>
+          <tr
+            class="border-b border-border text-start"
+          >
+            <th
+              class="py-2 pe-3 text-start font-medium text-muted-foreground"
+            >
+              scheduler.config.testName
+            </th>
+            <th
+              class="py-2 pe-3 text-start font-medium text-muted-foreground"
+            >
+              scheduler.config.estimatedMinutes
+            </th>
+            <th
+              class="py-2 pe-3 text-start font-medium text-muted-foreground"
+            >
+              scheduler.config.requiresPower
+            </th>
+            <th
+              class="py-2 text-start font-medium text-muted-foreground"
+            >
+              scheduler.config.batchSize
+            </th>
+          </tr>
+        </thead>
+        <tbody />
+      </table>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`WorkloadScheduleCard RTL snapshots > renders in LTR 1`] = `
+<div>
+  <div
+    class="rounded-lg border border-border bg-card p-4"
+  >
+    <div
+      class="flex items-center justify-between mb-3"
+    >
+      <h3
+        class="text-sm font-semibold text-muted-foreground"
+      >
+        scheduler.workload.title
+      </h3>
+      <div
+        class="flex items-center gap-2"
+      >
+        <a
+          class="text-xs text-primary hover:underline"
+          href="/ar/settings/power-schedule"
+        >
+          scheduler.workload.configureLink
+        </a>
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+          data-size="default"
+          data-slot="button"
+          data-variant="ghost"
+        >
+          scheduler.workload.refresh
+        </button>
+      </div>
+    </div>
+    <p
+      class="text-sm text-foreground mb-2"
+    >
+      scheduler.workload.powerWindow
+    </p>
+    <div
+      class="mb-3"
+    >
+      <div
+        aria-valuemax="100"
+        aria-valuemin="0"
+        aria-valuenow="6"
+        class="h-3 w-full rounded-full bg-muted"
+        role="progressbar"
+      >
+        <div
+          class="h-full rounded-full transition-all bg-primary"
+          style="width: 6.25%;"
+        />
+      </div>
+      <div
+        class="flex justify-between text-xs text-muted-foreground mt-1"
+      >
+        <span>
+          scheduler.workload.analyzerTimeNeeded
+          : 
+          15
+          min
+        </span>
+        <span>
+          scheduler.workload.available
+          : 
+          240
+          min
+        </span>
+      </div>
+    </div>
+    <div
+      class="mt-3"
+    >
+      <p
+        class="text-xs font-medium text-muted-foreground mb-1"
+      >
+        scheduler.workload.phaseHeaderPower
+      </p>
+      <div
+        class="flex flex-col gap-1"
+      >
+        <div
+          class="flex items-center justify-between rounded-md px-3 py-2 text-sm bg-primary/5"
+        >
+          <div
+            class="flex items-center gap-2 min-w-0"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-activity shrink-0 text-primary"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"
+              />
+            </svg>
+            <span
+              class="font-medium text-foreground truncate"
+            >
+              CBC
+            </span>
+          </div>
+          <div
+            class="flex items-center gap-2 shrink-0 ms-2"
+          >
+            <span
+              class="text-xs text-muted-foreground"
+            >
+              scheduler.workload.testCount
+            </span>
+            <span
+              class="text-xs text-muted-foreground"
+            >
+              scheduler.workload.estimatedTime
+            </span>
+            <span
+              class="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+            >
+              scheduler.workload.requiresPower
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="mt-3"
+    >
+      <p
+        class="text-xs font-medium text-muted-foreground mb-1"
+      >
+        scheduler.workload.phaseHeaderManual
+      </p>
+      <div
+        class="flex flex-col gap-1"
+      >
+        <div
+          class="flex items-center justify-between rounded-md px-3 py-2 text-sm bg-muted/50"
+        >
+          <div
+            class="flex items-center gap-2 min-w-0"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-microscope shrink-0 text-muted-foreground"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M6 18h8"
+              />
+              <path
+                d="M3 22h18"
+              />
+              <path
+                d="M14 22a7 7 0 1 0 0-14h-1"
+              />
+              <path
+                d="M9 14h2"
+              />
+              <path
+                d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"
+              />
+              <path
+                d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"
+              />
+            </svg>
+            <span
+              class="font-medium text-foreground truncate"
+            >
+              Urinalysis
+            </span>
+          </div>
+          <div
+            class="flex items-center gap-2 shrink-0 ms-2"
+          >
+            <span
+              class="text-xs text-muted-foreground"
+            >
+              scheduler.workload.testCount
+            </span>
+            <span
+              class="text-xs text-muted-foreground"
+            >
+              scheduler.workload.estimatedTime
+            </span>
+            <span
+              class="inline-flex rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
+            >
+              scheduler.workload.manual
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`WorkloadScheduleCard RTL snapshots > renders in RTL 1`] = `
+<div>
+  <div
+    class="rounded-lg border border-border bg-card p-4"
+  >
+    <div
+      class="flex items-center justify-between mb-3"
+    >
+      <h3
+        class="text-sm font-semibold text-muted-foreground"
+      >
+        scheduler.workload.title
+      </h3>
+      <div
+        class="flex items-center gap-2"
+      >
+        <a
+          class="text-xs text-primary hover:underline"
+          href="/ar/settings/power-schedule"
+        >
+          scheduler.workload.configureLink
+        </a>
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+          data-size="default"
+          data-slot="button"
+          data-variant="ghost"
+        >
+          scheduler.workload.refresh
+        </button>
+      </div>
+    </div>
+    <p
+      class="text-sm text-foreground mb-2"
+    >
+      scheduler.workload.powerWindow
+    </p>
+    <div
+      class="mb-3"
+    >
+      <div
+        aria-valuemax="100"
+        aria-valuemin="0"
+        aria-valuenow="6"
+        class="h-3 w-full rounded-full bg-muted"
+        role="progressbar"
+      >
+        <div
+          class="h-full rounded-full transition-all bg-primary"
+          style="width: 6.25%;"
+        />
+      </div>
+      <div
+        class="flex justify-between text-xs text-muted-foreground mt-1"
+      >
+        <span>
+          scheduler.workload.analyzerTimeNeeded
+          : 
+          15
+          min
+        </span>
+        <span>
+          scheduler.workload.available
+          : 
+          240
+          min
+        </span>
+      </div>
+    </div>
+    <div
+      class="mt-3"
+    >
+      <p
+        class="text-xs font-medium text-muted-foreground mb-1"
+      >
+        scheduler.workload.phaseHeaderPower
+      </p>
+      <div
+        class="flex flex-col gap-1"
+      >
+        <div
+          class="flex items-center justify-between rounded-md px-3 py-2 text-sm bg-primary/5"
+        >
+          <div
+            class="flex items-center gap-2 min-w-0"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-activity shrink-0 text-primary"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"
+              />
+            </svg>
+            <span
+              class="font-medium text-foreground truncate"
+            >
+              CBC
+            </span>
+          </div>
+          <div
+            class="flex items-center gap-2 shrink-0 ms-2"
+          >
+            <span
+              class="text-xs text-muted-foreground"
+            >
+              scheduler.workload.testCount
+            </span>
+            <span
+              class="text-xs text-muted-foreground"
+            >
+              scheduler.workload.estimatedTime
+            </span>
+            <span
+              class="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+            >
+              scheduler.workload.requiresPower
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="mt-3"
+    >
+      <p
+        class="text-xs font-medium text-muted-foreground mb-1"
+      >
+        scheduler.workload.phaseHeaderManual
+      </p>
+      <div
+        class="flex flex-col gap-1"
+      >
+        <div
+          class="flex items-center justify-between rounded-md px-3 py-2 text-sm bg-muted/50"
+        >
+          <div
+            class="flex items-center gap-2 min-w-0"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-microscope shrink-0 text-muted-foreground"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M6 18h8"
+              />
+              <path
+                d="M3 22h18"
+              />
+              <path
+                d="M14 22a7 7 0 1 0 0-14h-1"
+              />
+              <path
+                d="M9 14h2"
+              />
+              <path
+                d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"
+              />
+              <path
+                d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"
+              />
+            </svg>
+            <span
+              class="font-medium text-foreground truncate"
+            >
+              Urinalysis
+            </span>
+          </div>
+          <div
+            class="flex items-center gap-2 shrink-0 ms-2"
+          >
+            <span
+              class="text-xs text-muted-foreground"
+            >
+              scheduler.workload.testCount
+            </span>
+            <span
+              class="text-xs text-muted-foreground"
+            >
+              scheduler.workload.estimatedTime
+            </span>
+            <span
+              class="inline-flex rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
+            >
+              scheduler.workload.manual
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

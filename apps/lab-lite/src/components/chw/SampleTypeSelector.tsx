@@ -66,9 +66,9 @@ const SAMPLE_TYPES: SampleTypeOption[] = [
         <ellipse cx="28" cy="48" rx="8" ry="6" fill="#f9fafb" stroke="#d1d5db" strokeWidth="1.5" />
       </svg>
     ),
-    bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-200',
-    selectedBg: 'bg-gray-100 border-gray-500',
+    bgColor: 'bg-muted',
+    borderColor: 'border-border',
+    selectedBg: 'bg-muted border-gray-500',
   },
   {
     type: 'stool',
@@ -97,7 +97,7 @@ export function SampleTypeSelector({ onConfirm }: Props) {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <h2 className="text-center text-2xl font-bold text-gray-900">{t('title')}</h2>
+      <h2 className="text-center text-2xl font-bold text-foreground">{t('title')}</h2>
 
       <div className="grid grid-cols-2 gap-4" role="radiogroup" aria-label={t('title')}>
         {SAMPLE_TYPES.map((option) => {
@@ -112,9 +112,9 @@ export function SampleTypeSelector({ onConfirm }: Props) {
               className={`
                 flex min-h-[140px] flex-col items-center justify-center gap-3
                 rounded-2xl border-2 p-4 transition-all
-                focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500
+                focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring
                 ${isSelected
-                  ? option.selectedBg + ' ring-2 ring-offset-2 ring-blue-500'
+                  ? option.selectedBg + ' ring-2 ring-offset-2 ring-primary'
                   : option.bgColor + ' ' + option.borderColor + ' hover:opacity-80'
                 }
               `}
@@ -123,7 +123,7 @@ export function SampleTypeSelector({ onConfirm }: Props) {
               <DirectionalIcon category="medical">
                 {option.icon}
               </DirectionalIcon>
-              <span className="text-lg font-semibold text-gray-800">
+              <span className="text-lg font-semibold text-foreground">
                 {t(option.type)}
               </span>
             </button>
@@ -135,7 +135,7 @@ export function SampleTypeSelector({ onConfirm }: Props) {
         type="button"
         disabled={!selected}
         onClick={() => selected && onConfirm(selected)}
-        className="mt-2 min-h-[56px] w-full rounded-xl bg-blue-600 px-6 py-4 text-xl font-semibold text-white hover:bg-blue-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+        className="mt-2 min-h-[56px] w-full rounded-xl bg-primary px-6 py-4 text-xl font-semibold text-white hover:bg-primary/90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         {t('confirm')}
       </button>

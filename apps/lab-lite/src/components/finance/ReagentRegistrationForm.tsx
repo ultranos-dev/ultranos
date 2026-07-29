@@ -166,7 +166,7 @@ export function ReagentRegistrationForm({
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -181,7 +181,7 @@ export function ReagentRegistrationForm({
           required
           value={lotNumber}
           onChange={(e) => setLotNumber(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -195,7 +195,7 @@ export function ReagentRegistrationForm({
           type="text"
           value={manufacturer}
           onChange={(e) => setManufacturer(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -211,7 +211,7 @@ export function ReagentRegistrationForm({
           value={openDate}
           max={today}
           onChange={(e) => setOpenDate(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -227,7 +227,7 @@ export function ReagentRegistrationForm({
           value={expiryDate}
           min={openDate}
           onChange={(e) => setExpiryDate(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -243,7 +243,7 @@ export function ReagentRegistrationForm({
           min={1}
           value={expectedTests}
           onChange={(e) => setExpectedTests(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -256,7 +256,7 @@ export function ReagentRegistrationForm({
           id="reagent-unit"
           value={unit}
           onChange={(e) => setUnit(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
           {UNIT_OPTIONS.map((u) => (
             <option key={u} value={u}>
@@ -279,7 +279,7 @@ export function ReagentRegistrationForm({
           step="0.01"
           value={costPerUnit}
           onChange={(e) => setCostPerUnit(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -293,7 +293,7 @@ export function ReagentRegistrationForm({
           required
           value={linkedTestCode}
           onChange={(e) => setLinkedTestCode(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <option value="">{t('selectTestCode')}</option>
           {LOINC_CATEGORIES.map((c) => (

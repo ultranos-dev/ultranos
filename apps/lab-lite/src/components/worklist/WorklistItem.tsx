@@ -1,6 +1,8 @@
 'use client'
 
 import { useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import type { PrioritizedSample } from '@/lib/prioritization-engine'
 import type { SampleLock } from '@/lib/db'
 import { UrgencyBadge } from './UrgencyBadge'
@@ -51,6 +53,8 @@ export function WorklistItem({
   activeLock,
   currentTechId,
 }: WorklistItemProps) {
+  const router = useRouter()
+  const t = useTranslations('worklist')
   const isLockedByOther = activeLock?.status === 'ACTIVE' && activeLock.techId !== currentTechId
   const rowRef = useRef<HTMLDivElement>(null)
 
@@ -63,7 +67,7 @@ export function WorklistItem({
     <div
       ref={rowRef}
       className={`relative flex items-center gap-3 rounded-lg border bg-card px-4 py-3 shadow-sm transition-opacity select-none
-        ${isDragging ? 'opacity-50 border-dashed border-blue-400' : 'border-border hover:border-border'}
+        ${isDragging ? 'opacity-50 border-dashed border-primary' : 'border-border hover:border-border'}
         ${sample.stabilityStatus === 'expired' ? 'border-red-300 bg-red-50' : ''}
         ${isLockedByOther ? 'opacity-60' : ''}
       `}
@@ -114,19 +118,31 @@ export function WorklistItem({
       {/* Manual override chip */}
       {sample.isManualOverride && (
         <div className="flex items-center gap-1">
-          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
             Manual
           </span>
           <button
             type="button"
             onClick={() => onResetOverride(sample.sampleId)}
-            className="text-xs text-blue-600 underline hover:text-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+            className="text-xs text-primary underline hover:text-primary/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
             aria-label={`Reset manual override for ${sample.patientRef.firstName}`}
           >
             Reset
           </button>
         </div>
       )}
+
+      {/* Enter results for this sample — primary action (guarded when locked by another tech) */}
+      <button
+        type="button"
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={() => router.push(`/results/${sample.sampleId}/enter`)}
+        disabled={isLockedByOther}
+        className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+        aria-label={`${t('enterResult')} — ${sample.patientRef.firstName}`}
+      >
+        {t('enterResult')}
+      </button>
     </div>
   )
 }

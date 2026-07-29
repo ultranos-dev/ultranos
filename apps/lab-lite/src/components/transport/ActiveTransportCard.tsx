@@ -93,16 +93,16 @@ export function ActiveTransportCard({ session, onClick }: ActiveTransportCardPro
       onClick={onClick}
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick() } : undefined}
       className={[
-        'rounded-lg border border-gray-200 bg-card p-4 shadow-sm',
-        onClick ? 'cursor-pointer hover:border-gray-300 hover:shadow-md transition-shadow' : '',
+        'rounded-lg border border-border bg-card p-4 shadow-sm',
+        onClick ? 'cursor-pointer hover:border-border hover:shadow-md transition-shadow' : '',
       ].join(' ')}
     >
       {/* Header: courier ID + stability badge */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <Truck size={18} className="shrink-0 text-gray-500" aria-hidden="true" />
+          <Truck size={18} className="shrink-0 text-muted-foreground" aria-hidden="true" />
           {/* TODO i18n: t('courierLabel') */}
-          <span className="truncate text-sm font-medium text-gray-900">
+          <span className="truncate text-sm font-medium text-foreground">
             Courier: {session.courierId}
           </span>
         </div>
@@ -119,7 +119,7 @@ export function ActiveTransportCard({ session, onClick }: ActiveTransportCardPro
       </div>
 
       {/* Origin → Destination */}
-      <div className="mt-2 text-sm text-gray-600">
+      <div className="mt-2 text-sm text-muted-foreground">
         {/* TODO i18n: t('routeLabel') — replace raw IDs with resolved names when API provides them */}
         <span className="font-mono text-xs">{session.originLocationId}</span>
         {' → '}
@@ -128,13 +128,13 @@ export function ActiveTransportCard({ session, onClick }: ActiveTransportCardPro
 
       {/* Footer: sample count + elapsed time */}
       <div className="mt-3 flex items-center gap-4">
-        <div className="flex items-center gap-1.5 text-sm text-gray-600">
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Package size={15} className="shrink-0" aria-hidden="true" />
           {/* TODO i18n: t('sampleCount', { count: session.sampleCount }) */}
           <span data-testid="sample-count">{session.sampleCount} samples</span>
         </div>
 
-        <div className="flex items-center gap-1.5 text-sm text-gray-600">
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Clock size={15} className="shrink-0" aria-hidden="true" />
           {/* TODO i18n: t('elapsed') */}
           <span data-testid="elapsed-time">{formatElapsed(elapsedHours)}</span>

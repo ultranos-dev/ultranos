@@ -48,12 +48,12 @@ export function TripRecommendation({
         {waitTests.length > 0 && (
           <section
             data-testid="trip-wait-section"
-            className="rounded-lg border border-blue-200 bg-blue-50 p-4"
+            className="rounded-lg border border-primary bg-primary/10 p-4"
             aria-label={t('waitSection')}
           >
             <div className="mb-3 flex items-center gap-2">
               <span role="img" aria-label="clock" className="text-2xl">🕐</span>
-              <p className="text-base font-semibold text-blue-900">
+              <p className="text-base font-semibold text-primary">
                 {t('pleaseWait', { minutes: estimatedWaitMinutes })}
               </p>
             </div>

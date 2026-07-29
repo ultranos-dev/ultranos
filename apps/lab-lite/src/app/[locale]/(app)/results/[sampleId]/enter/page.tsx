@@ -344,7 +344,7 @@ export default function ResultEntryPage({ params }: PageProps) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+          className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 dark:text-primary"
         >
           <span aria-hidden>‹</span>
           {t('backToSample')}

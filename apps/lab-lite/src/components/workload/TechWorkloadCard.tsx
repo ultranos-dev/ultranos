@@ -129,7 +129,7 @@ export function TechWorkloadCard({
     : loadLevelBorderClass(workload.loadLevel)
 
   const dropTargetClass = isDragOver && dragEnabled
-    ? 'ring-2 ring-blue-400 ring-offset-1'
+    ? 'ring-2 ring-primary ring-offset-1'
     : ''
 
   return (
@@ -177,7 +177,7 @@ export function TechWorkloadCard({
         <MetricPill
           label={t('inProgress')}
           value={workload.inProgressCount}
-          colorClass="bg-blue-50 text-blue-700"
+          colorClass="bg-primary/10 text-primary"
         />
         <MetricPill
           label={t('completedToday')}

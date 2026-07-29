@@ -276,5 +276,13 @@ export {
   Octagon,
 } from 'lucide-react'
 
+// ─── Added: lab-lite sidebar nav + competency dashboard ─────────────
+export {
+  ArrowUp,
+  ArrowDown,
+  GraduationCap,
+  NotebookText,
+} from 'lucide-react'
+
 // ─── Type re-export for consumers ───────────────────────────────────
 export type { LucideProps, LucideIcon } from 'lucide-react'

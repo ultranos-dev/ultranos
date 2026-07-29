@@ -249,7 +249,7 @@ export function CriticalValueAlert({
         </div>
 
         {/* Patient info — first name + age only (CLAUDE.md Rule #7) */}
-        <div className="mt-4 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-700">
+        <div className="mt-4 rounded-lg bg-muted px-4 py-3 text-sm text-foreground">
           <div className="flex justify-between">
             <span className="font-medium">{t('patient')}:</span>
             <span>
@@ -277,7 +277,7 @@ export function CriticalValueAlert({
               className="mt-1 h-5 w-5 flex-shrink-0 accent-red-600"
               aria-required="true"
             />
-            <span className="text-sm font-medium text-gray-800 leading-snug">
+            <span className="text-sm font-medium text-foreground leading-snug">
               {t('acknowledgmentText')}
             </span>
           </label>

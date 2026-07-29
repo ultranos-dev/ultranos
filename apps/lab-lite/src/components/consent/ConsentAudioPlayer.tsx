@@ -90,9 +90,9 @@ export function ConsentAudioPlayer({
       </audio>
 
       {/* Progress bar */}
-      <div className="h-2 w-full max-w-sm overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+      <div className="h-2 w-full max-w-sm overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full bg-blue-500 transition-all"
+          className="h-full bg-primary transition-all"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
@@ -103,7 +103,7 @@ export function ConsentAudioPlayer({
           <button
             type="button"
             onClick={handlePlay}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white hover:bg-primary/90"
             aria-label={t('audio.play')}
           >
             <Play size={20} aria-hidden="true" />
@@ -112,7 +112,7 @@ export function ConsentAudioPlayer({
           <button
             type="button"
             onClick={handlePause}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white hover:bg-primary/90"
             aria-label={t('audio.pause')}
           >
             <Pause size={20} aria-hidden="true" />
@@ -122,7 +122,7 @@ export function ConsentAudioPlayer({
         <button
           type="button"
           onClick={handleRestart}
-          className="flex h-10 w-10 items-center justify-center rounded-full border hover:bg-gray-50 dark:hover:bg-gray-800"
+          className="flex h-10 w-10 items-center justify-center rounded-full border hover:bg-muted"
           aria-label={t('audio.restart')}
         >
           <RotateCcw size={16} aria-hidden="true" />
@@ -130,7 +130,7 @@ export function ConsentAudioPlayer({
       </div>
 
       {isPlaying && (
-        <p className="text-sm text-blue-600 dark:text-blue-400">{t('audio.playing')}</p>
+        <p className="text-sm text-primary dark:text-primary">{t('audio.playing')}</p>
       )}
 
       {hasCompleted && (
@@ -143,11 +143,11 @@ export function ConsentAudioPlayer({
           <button
             type="button"
             onClick={handleTechOverride}
-            className="text-sm text-gray-500 underline hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-sm text-muted-foreground underline hover:text-foreground dark:text-muted-foreground dark:hover:text-gray-200"
           >
             {t('audio.techOverride')}
           </button>
-          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+          <p className="mt-1 text-xs text-muted-foreground">
             {t('audio.techOverrideConfirm')}
           </p>
         </div>

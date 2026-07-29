@@ -118,10 +118,10 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
           <button
             type="button"
             onClick={() => { setSource('hub'); setStep('import') }}
-            className="w-full py-4 border-2 border-blue-300 rounded-lg font-semibold
-              text-blue-800 hover:border-blue-500 hover:bg-blue-50
+            className="w-full py-4 border-2 border-primary rounded-lg font-semibold
+              text-primary hover:border-primary hover:bg-primary/10
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-              focus-visible:outline-blue-600"
+              focus-visible:outline-ring"
           >
             ☁️ {t('restoration.fromHub')}
           </button>
@@ -156,7 +156,7 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
               onChange={(e) => setKeyInput(e.target.value)}
               placeholder={t('restoration.keyPlaceholder')}
               className="w-full border border-border rounded px-3 py-2 text-sm
-                font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                font-mono focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -168,10 +168,10 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
             type="button"
             onClick={handleFileRestore}
             disabled={isRestoring}
-            className="w-full py-4 bg-blue-600 text-white rounded-lg font-bold text-base
-              disabled:opacity-40 hover:bg-blue-700
+            className="w-full py-4 bg-primary text-white rounded-lg font-bold text-base
+              disabled:opacity-40 hover:bg-primary/90
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-              focus-visible:outline-blue-600"
+              focus-visible:outline-ring"
           >
             {isRestoring ? t('restoration.restoring') : t('restoration.restoreButton')}
           </button>
@@ -192,7 +192,7 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
               onChange={(e) => setHubUrl(e.target.value)}
               placeholder="https://hub.ultranos.com"
               className="w-full border border-border rounded px-3 py-2 text-sm
-                font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                font-mono focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -206,7 +206,7 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
               onChange={(e) => setHubToken(e.target.value)}
               placeholder={t('restoration.tokenPlaceholder')}
               className="w-full border border-border rounded px-3 py-2 text-sm
-                font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                font-mono focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -234,10 +234,10 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
               }
             }}
             disabled={isRestoring}
-            className="w-full py-4 bg-blue-600 text-white rounded-lg font-bold text-base
-              disabled:opacity-40 hover:bg-blue-700
+            className="w-full py-4 bg-primary text-white rounded-lg font-bold text-base
+              disabled:opacity-40 hover:bg-primary/90
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-              focus-visible:outline-blue-600"
+              focus-visible:outline-ring"
           >
             {isRestoring ? t('restoration.restoring') : t('restoration.restoreFromHubButton')}
           </button>

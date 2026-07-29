@@ -67,7 +67,7 @@ const COLOR_CLASSES: Record<HeatColor, string> = {
   green:  'bg-green-100 text-green-800 border-green-200',
   yellow: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   red:    'bg-red-100 text-red-800 border-red-200',
-  gray:   'bg-gray-100 text-gray-400 border-gray-200',
+  gray:   'bg-muted text-muted-foreground border-border',
 }
 
 const CATEGORIES = [
@@ -232,7 +232,7 @@ export function NetworkInventoryHeatMap({ myLabId }: Props) {
       <div className="flex items-center justify-between">
         <div>
           {lastSyncedAt && !isStale && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               {t('lastSynced')}: {new Date(lastSyncedAt).toLocaleString()}
             </p>
           )}
@@ -241,7 +241,7 @@ export function NetworkInventoryHeatMap({ myLabId }: Props) {
           type="button"
           onClick={handleSyncNow}
           disabled={isSyncing}
-          className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-card px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} aria-hidden />
           {isSyncing ? t('syncing') : t('syncNow')}
@@ -250,37 +250,37 @@ export function NetworkInventoryHeatMap({ myLabId }: Props) {
 
       {/* Heat map matrix */}
       {rows.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 px-8 py-12 text-center text-sm text-gray-500">
+        <div className="rounded-lg border border-dashed border-border px-8 py-12 text-center text-sm text-muted-foreground">
           {t('noNetworkData')}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="min-w-full divide-y divide-border text-sm">
+            <thead className="bg-muted">
               <tr>
-                <th className="px-4 py-3 text-start font-medium text-gray-600">
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground">
                   {t('lab')}
                 </th>
                 {CATEGORIES.map(cat => (
                   <th
                     key={cat}
-                    className="px-3 py-3 text-center font-medium text-gray-600 capitalize"
+                    className="px-3 py-3 text-center font-medium text-muted-foreground capitalize"
                   >
                     {t(`category.${cat}`, { defaultValue: cat })}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-card">
+            <tbody className="divide-y divide-border bg-card">
               {rows.map(row => (
                 <tr
                   key={row.labId}
-                  className={row.labId === myLabId ? 'bg-blue-50' : ''}
+                  className={row.labId === myLabId ? 'bg-primary/10' : ''}
                 >
-                  <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-900">
+                  <td className="whitespace-nowrap px-4 py-3 font-medium text-foreground">
                     {row.labName}
                     {row.labId === myLabId && (
-                      <span className="ms-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">
+                      <span className="ms-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
                         {t('myLab')}
                       </span>
                     )}
@@ -334,34 +334,34 @@ export function NetworkInventoryHeatMap({ myLabId }: Props) {
             className="w-full max-w-sm rounded-xl bg-card p-6 shadow-xl"
             onClick={e => e.stopPropagation()}
           >
-            <h3 className="text-base font-semibold text-gray-900">
+            <h3 className="text-base font-semibold text-foreground">
               {drillDown.labName} — {drillDown.category}
             </h3>
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-gray-500">{t('daysOfSupply')}</dt>
-                <dd className="font-medium text-gray-900">
+                <dt className="text-muted-foreground">{t('daysOfSupply')}</dt>
+                <dd className="font-medium text-foreground">
                   {drillDown.item.isStockedOut
                     ? t('stockedOut')
                     : `${drillDown.item.daysOfSupply} ${t('days')}`}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">{t('currentQuantity')}</dt>
-                <dd className="font-medium text-gray-900">
+                <dt className="text-muted-foreground">{t('currentQuantity')}</dt>
+                <dd className="font-medium text-foreground">
                   {drillDown.item.currentQuantity}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">{t('dailyRate')}</dt>
-                <dd className="font-medium text-gray-900">
+                <dt className="text-muted-foreground">{t('dailyRate')}</dt>
+                <dd className="font-medium text-foreground">
                   {drillDown.item.dailyConsumptionRate.toFixed(1)} / {t('day')}
                 </dd>
               </div>
               {drillDown.item.expiryDate && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500">{t('nearestExpiry')}</dt>
-                  <dd className="font-medium text-gray-900">
+                  <dt className="text-muted-foreground">{t('nearestExpiry')}</dt>
+                  <dd className="font-medium text-foreground">
                     {drillDown.item.expiryDate}
                   </dd>
                 </div>
@@ -379,7 +379,7 @@ export function NetworkInventoryHeatMap({ myLabId }: Props) {
       )}
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
         {(
           [
             ['green', t('legendGreen', { defaultValue: '>30 days' })],

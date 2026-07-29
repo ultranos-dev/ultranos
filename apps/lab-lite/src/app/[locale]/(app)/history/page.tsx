@@ -1,10 +1,11 @@
 'use client'
 
-import { AuthGuard } from '@/components/AuthGuard'
+import { useTranslations } from 'next-intl'
 import { useUploadHistory } from '@/hooks/useUploadHistory'
 import { UploadHistoryList } from '@/components/history/UploadHistoryList'
 
 function HistoryContent() {
+  const t = useTranslations('history')
   const {
     items,
     loading,
@@ -20,9 +21,9 @@ function HistoryContent() {
   if (loading) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-bold text-foreground">Upload History</h1>
-        <div className="rounded-lg border border-border bg-card p-6">
-          <p className="text-sm text-muted-foreground">Loading upload history...</p>
+        <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
+        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 text-sm text-muted-foreground">
+          {t('loading')}
         </div>
       </div>
     )
@@ -30,10 +31,10 @@ function HistoryContent() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold text-foreground">Upload History</h1>
+      <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
 
       {error && (
-        <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-700" role="alert">
+        <div className="rounded-2xl bg-warning/10 p-3 text-sm text-warning" role="alert">
           {error}
         </div>
       )}
@@ -53,8 +54,6 @@ function HistoryContent() {
 
 export default function HistoryPage() {
   return (
-    <AuthGuard>
       <HistoryContent />
-    </AuthGuard>
   )
 }

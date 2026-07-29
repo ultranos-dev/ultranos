@@ -35,18 +35,18 @@ export function LabelDisplay({ sampleId, labelNumber, patientAge, sampleType, ch
 
   return (
     <div className="flex flex-col items-center gap-6 p-4">
-      <h2 className="text-center text-2xl font-bold text-gray-900">{t('title')}</h2>
+      <h2 className="text-center text-2xl font-bold text-foreground">{t('title')}</h2>
 
       {/* Large label number — minimum 32px font per story spec */}
-      <div className="flex w-full flex-col items-center rounded-2xl border-4 border-dashed border-blue-400 bg-blue-50 px-6 py-8">
+      <div className="flex w-full flex-col items-center rounded-2xl border-4 border-dashed border-primary bg-primary/10 px-6 py-8">
         <p
-          className="font-mono text-4xl font-bold tracking-widest text-blue-900"
+          className="font-mono text-4xl font-bold tracking-widest text-primary"
           aria-label={`Label number: ${labelNumber}`}
           style={{ fontSize: 'clamp(2rem, 8vw, 3rem)' }}
         >
           {displayLabel}
         </p>
-        <p className="mt-3 text-lg text-blue-700">
+        <p className="mt-3 text-lg text-primary">
           {t('ageLabel', { age: patientAge })} · {t('typeLabel', { type: sampleType })}
         </p>
       </div>
@@ -62,7 +62,7 @@ export function LabelDisplay({ sampleId, labelNumber, patientAge, sampleType, ch
         <button
           type="button"
           onClick={handlePrint}
-          className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl bg-gray-700 px-6 py-4 text-xl font-semibold text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+          className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl bg-gray-700 px-6 py-4 text-xl font-semibold text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
           <Printer size={24} aria-hidden />
           {t('printButton')}
@@ -73,7 +73,7 @@ export function LabelDisplay({ sampleId, labelNumber, patientAge, sampleType, ch
       <button
         type="button"
         onClick={onDone}
-        className="min-h-[56px] w-full rounded-xl bg-green-600 px-6 py-4 text-xl font-semibold text-white hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+        className="min-h-[56px] w-full rounded-xl bg-green-600 px-6 py-4 text-xl font-semibold text-white hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         {t('doneButton')}
       </button>

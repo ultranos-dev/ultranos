@@ -238,7 +238,7 @@ export function QualityDashboard() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col gap-4" dir="auto">
+    <div className="flex flex-col gap-4" dir="auto">
       {/* Streaks section */}
       <section aria-labelledby="streaks-heading">
         <h2 id="streaks-heading" className="text-lg font-semibold mb-4 text-foreground">

@@ -13,7 +13,7 @@ export default function PowerSchedulePage() {
       <div>
         <Link
           href="/settings"
-          className="text-sm text-blue-600 hover:underline"
+          className="w-fit text-sm font-medium text-primary hover:underline"
         >
           &larr; {t('powerSchedule.title')}
         </Link>

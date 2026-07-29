@@ -93,7 +93,7 @@ export function TemperatureDashboard() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-6" aria-busy="true">
+      <div className="flex flex-col gap-4" aria-busy="true">
         <div className="animate-pulse space-y-4">
           <div className="h-8 w-48 rounded bg-muted" />
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -107,7 +107,7 @@ export function TemperatureDashboard() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
+    <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-foreground mb-6">
         {t('dashboardTitle')}
       </h1>

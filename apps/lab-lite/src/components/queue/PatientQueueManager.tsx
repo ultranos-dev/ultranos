@@ -161,7 +161,7 @@ export function PatientQueueManager() {
         <button
           type="button"
           onClick={() => setShowRegister(true)}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
         >
           {t('tokens.registerPatient')}
         </button>
@@ -215,7 +215,7 @@ export function PatientQueueManager() {
               type="button"
               onClick={handleRegister}
               disabled={!selectedPatientId}
-              className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
             >
               {t('tokens.confirm')}
             </button>
@@ -232,9 +232,9 @@ export function PatientQueueManager() {
 
       {/* Print token card overlay */}
       {printToken && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <div className="rounded-lg border border-primary bg-primary/10 p-4">
           <div className="flex items-start justify-between mb-3">
-            <h3 className="font-semibold text-blue-900">
+            <h3 className="font-semibold text-primary">
               {t('tokens.tokenAssigned')}
             </h3>
             <button
@@ -332,7 +332,7 @@ export function PatientQueueManager() {
                   <button
                     type="button"
                     onClick={() => entry.id != null && handleCall(entry.id)}
-                    className="rounded px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200"
+                    className="rounded px-2 py-1 text-xs font-medium bg-primary/10 text-primary hover:bg-blue-200"
                   >
                     {t('tokens.call')}
                   </button>

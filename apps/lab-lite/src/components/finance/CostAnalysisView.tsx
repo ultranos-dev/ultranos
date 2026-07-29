@@ -123,14 +123,14 @@ export function CostAnalysisView() {
   }
 
   if (!isLoaded) {
-    return <div className="p-6 text-sm text-gray-500">{tCommon('loading')}</div>
+    return <div className="p-6 text-sm text-muted-foreground">{tCommon('loading')}</div>
   }
 
   if (analyses.length === 0) {
     return (
       <div className="flex flex-col gap-4">
         <h1 className="text-xl font-semibold">{t('title')}</h1>
-        <p className="text-sm text-gray-500">{t('emptyState')}</p>
+        <p className="text-sm text-muted-foreground">{t('emptyState')}</p>
       </div>
     )
   }
@@ -138,14 +138,14 @@ export function CostAnalysisView() {
   const SortIcon = ({ col }: { col: SortKey }) => {
     if (col !== sortKey) return <span className="ms-1 text-gray-300">↕</span>
     return (
-      <span className="ms-1 text-blue-600" aria-hidden="true">
+      <span className="ms-1 text-primary" aria-hidden="true">
         {sortDir === 'asc' ? '↑' : '↓'}
       </span>
     )
   }
 
   return (
-    <div className="max-w-6xl mx-auto flex flex-col gap-4 print:p-0">
+    <div className="flex flex-col gap-4 print:p-0">
       <h1 className="text-xl font-semibold print:text-2xl">{t('title')}</h1>
 
       {/* Stale data warning */}
@@ -178,14 +178,14 @@ export function CostAnalysisView() {
       <div className="flex gap-3 print:hidden">
         <button
           onClick={() => exportCostAnalysisCSV(analyses)}
-          className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+          className="rounded border border-border px-4 py-2 text-sm hover:bg-muted"
         >
           {/* finance.cost.export.exportCSV */}
           Export CSV
         </button>
         <button
           onClick={() => exportCostAnalysisPDF()}
-          className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+          className="rounded border border-border px-4 py-2 text-sm hover:bg-muted"
         >
           {/* finance.cost.export.exportPDF */}
           Print / PDF
@@ -193,9 +193,9 @@ export function CostAnalysisView() {
       </div>
 
       {/* Test-by-test table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <div className="overflow-x-auto rounded-lg border border-border">
         <table className="min-w-full text-sm" aria-label={t('title')}>
-          <thead className="bg-gray-50">
+          <thead className="bg-muted">
             <tr>
               {(
                 [
@@ -213,7 +213,7 @@ export function CostAnalysisView() {
                 <th
                   key={key}
                   scope="col"
-                  className="px-4 py-3 text-start font-medium text-gray-700 cursor-pointer select-none hover:bg-gray-100"
+                  className="px-4 py-3 text-start font-medium text-foreground cursor-pointer select-none hover:bg-muted"
                   onClick={() => handleSort(key)}
                   aria-sort={sortKey === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
@@ -221,28 +221,28 @@ export function CostAnalysisView() {
                   <SortIcon col={key} />
                 </th>
               ))}
-              <th scope="col" className="px-4 py-3 text-start font-medium text-gray-700">
+              <th scope="col" className="px-4 py-3 text-start font-medium text-foreground">
                 {t('columnStatus')}
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-border">
             {sorted.map((a) => (
               <tr
                 key={a.testCode}
                 className={a.isProfitable ? undefined : 'bg-red-50'}
               >
-                <td className="px-4 py-2 font-medium text-gray-900 whitespace-nowrap">{a.testName}</td>
-                <td className="px-4 py-2 text-gray-600">{formatAFN(a.reagentCostPerTest)}</td>
-                <td className="px-4 py-2 text-gray-600">{formatAFN(a.consumableCost)}</td>
-                <td className="px-4 py-2 text-gray-600">{formatAFN(a.laborAllocation)}</td>
-                <td className="px-4 py-2 text-gray-600">{formatAFN(a.overheadAllocation)}</td>
-                <td className="px-4 py-2 font-medium text-gray-900">{formatAFN(a.totalCost)}</td>
-                <td className="px-4 py-2 text-gray-600">{formatAFN(a.currentPrice)}</td>
+                <td className="px-4 py-2 font-medium text-foreground whitespace-nowrap">{a.testName}</td>
+                <td className="px-4 py-2 text-muted-foreground">{formatAFN(a.reagentCostPerTest)}</td>
+                <td className="px-4 py-2 text-muted-foreground">{formatAFN(a.consumableCost)}</td>
+                <td className="px-4 py-2 text-muted-foreground">{formatAFN(a.laborAllocation)}</td>
+                <td className="px-4 py-2 text-muted-foreground">{formatAFN(a.overheadAllocation)}</td>
+                <td className="px-4 py-2 font-medium text-foreground">{formatAFN(a.totalCost)}</td>
+                <td className="px-4 py-2 text-muted-foreground">{formatAFN(a.currentPrice)}</td>
                 <td className={`px-4 py-2 font-medium ${a.margin >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                   {formatAFN(a.margin)}
                 </td>
-                <td className={`px-4 py-2 ${a.marginPercent === null ? 'text-gray-400' : a.marginPercent >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                <td className={`px-4 py-2 ${a.marginPercent === null ? 'text-muted-foreground' : a.marginPercent >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                   {a.marginPercent === null ? t('noPriceSet') : `${a.marginPercent.toFixed(1)}%`}
                 </td>
                 <td className="px-4 py-2">
@@ -264,7 +264,7 @@ export function CostAnalysisView() {
 
       {/* Recommendations panel */}
       {subsidizedWithRecs.length > 0 && (
-        <section aria-labelledby="recommendations-heading" className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2 print:border-gray-300 print:bg-card">
+        <section aria-labelledby="recommendations-heading" className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2 print:border-border print:bg-card">
           <h2 id="recommendations-heading" className="text-base font-medium text-amber-800">
             {t('recommendationsTitle')}
           </h2>
@@ -292,7 +292,7 @@ function SummaryCard({
   color: 'gray' | 'green' | 'red'
 }) {
   const colorClasses = {
-    gray: 'bg-gray-50 text-gray-900',
+    gray: 'bg-muted text-foreground',
     green: 'bg-green-50 text-green-800',
     red: 'bg-red-50 text-red-800',
   }

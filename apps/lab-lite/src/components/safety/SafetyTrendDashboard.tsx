@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/Button'
 type TimePeriod = '30d' | '90d' | '12m'
 
 const CATEGORY_COLORS: Record<SafetyConcernCategory, string> = {
-  [SafetyConcernCategory.HAND_HYGIENE]: 'bg-blue-500',
+  [SafetyConcernCategory.HAND_HYGIENE]: 'bg-primary',
   [SafetyConcernCategory.PPE_NON_USE]: 'bg-amber-500',
   [SafetyConcernCategory.IMPROPER_WASTE_DISPOSAL]: 'bg-red-500',
   [SafetyConcernCategory.EQUIPMENT_MISUSE]: 'bg-purple-500',
@@ -111,7 +111,7 @@ export function SafetyTrendDashboard({ onBack }: SafetyTrendDashboardProps) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       {onBack && (
         <button
           type="button"

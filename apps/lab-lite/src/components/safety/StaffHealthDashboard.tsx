@@ -121,7 +121,7 @@ export function StaffHealthDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8" role="status" aria-busy="true">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     )
   }
@@ -130,7 +130,7 @@ export function StaffHealthDashboard() {
     return (
       <div className="p-6 text-center">
         <p className="text-red-600 font-medium">{t('accessDenied')}</p>
-        <p className="text-sm text-gray-500 mt-2">{t('labManagerRequired')}</p>
+        <p className="text-sm text-muted-foreground mt-2">{t('labManagerRequired')}</p>
       </div>
     )
   }
@@ -150,21 +150,21 @@ export function StaffHealthDashboard() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="rounded-lg border p-4 text-center">
             <p className="text-2xl font-bold">{stats.totalStaff}</p>
-            <p className="text-sm text-gray-500">{t('totalStaff')}</p>
+            <p className="text-sm text-muted-foreground">{t('totalStaff')}</p>
           </div>
           <div className="rounded-lg border p-4 text-center">
             <p className="text-2xl font-bold text-green-600">{stats.hepBImmunePercent}%</p>
-            <p className="text-sm text-gray-500">{t('hepBImmunity')}</p>
+            <p className="text-sm text-muted-foreground">{t('hepBImmunity')}</p>
           </div>
           <div className="rounded-lg border p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">{stats.tbCurrentPercent}%</p>
-            <p className="text-sm text-gray-500">{t('tbCurrent')}</p>
+            <p className="text-2xl font-bold text-primary">{stats.tbCurrentPercent}%</p>
+            <p className="text-sm text-muted-foreground">{t('tbCurrent')}</p>
           </div>
           <div className="rounded-lg border p-4 text-center">
             <p className={`text-2xl font-bold ${stats.overdueCount > 0 ? 'text-red-600' : 'text-green-600'}`}>
               {stats.overdueCount}
             </p>
-            <p className="text-sm text-gray-500">{t('overdueScreenings')}</p>
+            <p className="text-sm text-muted-foreground">{t('overdueScreenings')}</p>
           </div>
         </div>
       )}
@@ -175,13 +175,13 @@ export function StaffHealthDashboard() {
           <button
             key={staff.practitionerId}
             onClick={() => setSelectedPractitioner(staff.practitionerId)}
-            className="w-full flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-start"
+            className="w-full flex items-center justify-between rounded-lg border p-4 hover:bg-muted transition-colors text-start"
           >
             <div className="flex items-center gap-3">
               <span className={`w-3 h-3 rounded-full ${STATE_COLORS[staff.worstReminderState]}`} />
               <span className="font-medium text-sm">{staff.practitionerId}</span>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-muted-foreground">
               {staff.reminderCount > 0
                 ? t('reminderCount', { count: staff.reminderCount })
                 : t('upToDate')}
@@ -190,7 +190,7 @@ export function StaffHealthDashboard() {
         ))}
 
         {staffSummaries.length === 0 && (
-          <p className="text-center text-gray-500 py-8">{t('noStaffRecords')}</p>
+          <p className="text-center text-muted-foreground py-8">{t('noStaffRecords')}</p>
         )}
       </div>
     </div>

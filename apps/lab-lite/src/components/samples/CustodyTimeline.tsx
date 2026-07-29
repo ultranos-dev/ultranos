@@ -21,8 +21,8 @@ const EVENT_TYPE_CONFIG: Record<
   { colorClass: string; bgClass: string; icon: React.ReactNode }
 > = {
   received: {
-    colorClass: 'text-blue-600',
-    bgClass: 'bg-blue-50 ring-blue-200',
+    colorClass: 'text-primary',
+    bgClass: 'bg-primary/10 ring-primary',
     icon: (
       // Inbox icon — semantic, not directional
       <svg

@@ -80,7 +80,7 @@ export default function CHWCollectPage() {
     return (
       <div className="min-h-screen bg-card">
         {collecting ? (
-          <div className="flex h-32 items-center justify-center text-gray-500 text-xl">…</div>
+          <div className="flex h-32 items-center justify-center text-muted-foreground text-xl">…</div>
         ) : (
           <>
             {collectionError && (

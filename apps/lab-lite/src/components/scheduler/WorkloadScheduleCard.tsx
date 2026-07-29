@@ -4,7 +4,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { useWorkloadSchedule } from '@/hooks/useWorkloadSchedule'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
-import { FlaskConical, Microscope, Zap, TestTube2, Activity, Droplets, Syringe } from '@ultranos/ui-kit/icons'
+import { FlaskConical, Microscope, Zap, Activity, Droplets } from '@ultranos/ui-kit/icons'
 import type { ScheduledGroup, TimeWarning } from '@/lib/workload-scheduler'
 
 // ---------------------------------------------------------------------------
@@ -23,7 +23,7 @@ const LOINC_ICON_MAP: Record<string, React.ComponentType<{ size?: number; classN
 }
 
 function TestTypeIcon({ loincCode, phase }: { loincCode: string; phase: ScheduledGroup['phase'] }) {
-  const Icon = LOINC_ICON_MAP[loincCode] ?? TestTube2
+  const Icon = LOINC_ICON_MAP[loincCode] ?? FlaskConical
   const colorClass =
     phase === 'overflow' ? 'text-destructive' : phase === 'manual' ? 'text-muted-foreground' : 'text-primary'
   return <Icon size={14} className={`shrink-0 ${colorClass}`} />

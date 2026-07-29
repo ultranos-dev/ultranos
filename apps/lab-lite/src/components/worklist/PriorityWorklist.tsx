@@ -177,7 +177,7 @@ export function PriorityWorklist({
           <div key={sample.sampleId} className="relative" data-worklist-index={index}>
             {/* Blue insertion line above drop target */}
             {isDropTarget && (
-              <div className="absolute -top-1 inset-x-0 h-0.5 rounded bg-blue-500" aria-hidden="true" />
+              <div className="absolute -top-1 inset-x-0 h-0.5 rounded bg-primary" aria-hidden="true" />
             )}
             <WorklistItem
               sample={sample}

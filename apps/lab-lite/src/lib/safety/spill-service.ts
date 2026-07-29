@@ -119,15 +119,22 @@ export async function completeSpillIncident(
     hlcTimestamp: serializeHlc(hlc.now()),
   })
 
-  await enqueueSyncEvent({
-    resourceType: 'SPILL_INCIDENT',
-    resourceId: incidentId,
-    status: 'pending',
-    payload: { ...incident, completedAt: now, notes },
-    createdAt: now,
-    lastAttemptAt: null,
-    retryCount: 0,
-  })
+  // Offline-first: the local record above is the source of truth. Queueing for Hub
+  // sync is best-effort — a queue failure (e.g. offline) must not block completion.
+  // The record stays syncStatus:'pending' so a later sync sweep can re-queue it.
+  try {
+    await enqueueSyncEvent({
+      resourceType: 'SPILL_INCIDENT',
+      resourceId: incidentId,
+      status: 'pending',
+      payload: { ...incident, completedAt: now, notes },
+      createdAt: now,
+      lastAttemptAt: null,
+      retryCount: 0,
+    })
+  } catch {
+    // Swallow — local completion already succeeded; no PHI to log (techId is opaque).
+  }
 
   reportSpillAuditEvent({
     action: 'SPILL_PROTOCOL_COMPLETED',

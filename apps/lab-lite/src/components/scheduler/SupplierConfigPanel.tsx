@@ -93,7 +93,7 @@ function SupplierForm({
         type={type}
         value={values[name]}
         onChange={(ev) => setValues((v) => ({ ...v, [name]: ev.target.value }))}
-        className={`rounded border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+        className={`rounded border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
           errors[name] ? 'border-red-400' : 'border-border'
         }`}
         {...extra}
@@ -146,7 +146,7 @@ function ReagentMappingRow({
           aria-label={t('assignSupplier', { reagent: reagent.name })}
           value={currentSupplierId ?? ''}
           onChange={(e) => onChange(reagent.reagentId, e.target.value || null)}
-          className="rounded border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="rounded border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           data-testid={`mapping-${reagent.reagentId}`}
         >
           <option value="">{t('noSupplier')}</option>

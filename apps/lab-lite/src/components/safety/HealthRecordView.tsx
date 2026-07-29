@@ -22,7 +22,7 @@ const STATUS_COLORS: Record<VaccinationStatus, string> = {
   [VaccinationStatus.COMPLETE]: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
   [VaccinationStatus.INCOMPLETE]: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
   [VaccinationStatus.NOT_STARTED]: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-  [VaccinationStatus.UNKNOWN]: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+  [VaccinationStatus.UNKNOWN]: 'bg-muted text-foreground',
 }
 
 export function HealthRecordView({
@@ -66,7 +66,7 @@ export function HealthRecordView({
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8" role="status" aria-busy="true">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     )
   }
@@ -92,7 +92,7 @@ export function HealthRecordView({
             {t('back')}
           </Button>
         )}
-        <p className="text-gray-500">{t('noRecord')}</p>
+        <p className="text-muted-foreground">{t('noRecord')}</p>
       </div>
     )
   }
@@ -133,7 +133,7 @@ export function HealthRecordView({
                   ? 'bg-red-50 border-red-200 text-red-800'
                   : state === 'DUE'
                     ? 'bg-amber-50 border-amber-200 text-amber-800'
-                    : 'bg-blue-50 border-blue-200 text-blue-800'
+                    : 'bg-primary/10 border-primary text-primary'
               return (
                 <div
                   key={r.screeningType}
@@ -161,15 +161,15 @@ export function HealthRecordView({
                 {t(`status.${record.hepBStatus}`)}
               </span>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               {t('doses')}: {record.hepBDoses}
             </p>
             {record.hepBTiterDate && (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {t('titerDate')}: {record.hepBTiterDate}
               </p>
             )}
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               {t('immunity')}: {t(`immunityStatus.${record.hepBTiterResult}`)}
             </p>
           </div>
@@ -183,7 +183,7 @@ export function HealthRecordView({
               </span>
             </div>
             {record.tetanusDate && (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {t('lastDose')}: {record.tetanusDate}
               </p>
             )}
@@ -197,11 +197,11 @@ export function HealthRecordView({
                 {t(`status.${record.covidStatus}`)}
               </span>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               {t('doses')}: {record.covidDoses}
             </p>
             {record.covidDate && (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {t('lastDose')}: {record.covidDate}
               </p>
             )}
@@ -216,13 +216,13 @@ export function HealthRecordView({
                   ? 'bg-green-100 text-green-800'
                   : record.tbScreeningResult === TbScreeningResult.POSITIVE
                     ? 'bg-red-100 text-red-800'
-                    : 'bg-gray-100 text-gray-800'
+                    : 'bg-muted text-foreground'
               }`}>
                 {t(`tbResult.${record.tbScreeningResult}`)}
               </span>
             </div>
             {record.tbScreeningDate && (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {t('lastScreening')}: {record.tbScreeningDate}
               </p>
             )}
@@ -238,7 +238,7 @@ export function HealthRecordView({
             {record.tbScreeningHistory.map((entry, i) => (
               <div
                 key={`${entry.date}-${i}`}
-                className="flex items-center justify-between border-s-4 border-gray-300 ps-3 py-1"
+                className="flex items-center justify-between border-s-4 border-border ps-3 py-1"
               >
                 <span className="text-sm">{entry.date}</span>
                 <span className={`text-sm font-medium ${
@@ -246,7 +246,7 @@ export function HealthRecordView({
                     ? 'text-green-700'
                     : entry.result === TbScreeningResult.POSITIVE
                       ? 'text-red-700'
-                      : 'text-gray-700'
+                      : 'text-foreground'
                 }`}>
                   {t(`tbResult.${entry.result}`)}
                 </span>
@@ -268,12 +268,12 @@ export function HealthRecordView({
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-sm">{entry.date}</span>
-                  <span className="text-xs text-gray-500">{entry.type}</span>
+                  <span className="text-xs text-muted-foreground">{entry.type}</span>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {t('pepTaken')}: {entry.pepTaken ? t('yes') : t('no')}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {t('outcome')}: {entry.outcome}
                 </p>
               </div>
@@ -286,12 +286,12 @@ export function HealthRecordView({
       {record.notes && (
         <section>
           <h3 className="text-lg font-medium mb-2">{t('notes')}</h3>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap">{record.notes}</p>
+          <p className="text-sm text-foreground whitespace-pre-wrap">{record.notes}</p>
         </section>
       )}
 
       {/* Metadata */}
-      <div className="text-xs text-gray-400 pt-4 border-t">
+      <div className="text-xs text-muted-foreground pt-4 border-t">
         <p>{t('lastUpdated')}: {record.lastUpdated}</p>
       </div>
 

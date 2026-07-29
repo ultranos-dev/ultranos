@@ -271,7 +271,7 @@ export function ConsultationRequestBuilder({
           <h2 className="text-base font-semibold">{t('resultSummaryTitle')}</h2>
           <ResultSummaryView resultSummary={resultSummary} t={t} />
           <button
-            className="self-end rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="self-end rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/90"
             onClick={() => setStep('observations')}
           >
             {t('next')}
@@ -283,10 +283,10 @@ export function ConsultationRequestBuilder({
       {step === 'observations' && (
         <div className="flex flex-col gap-4">
           <h2 className="text-base font-semibold">{t('observationsTitle')}</h2>
-          <p className="text-sm text-gray-600">{t('observationsHint')}</p>
+          <p className="text-sm text-muted-foreground">{t('observationsHint')}</p>
 
           <textarea
-            className="min-h-[120px] w-full rounded-lg border border-gray-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="min-h-[120px] w-full rounded-lg border border-border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             placeholder={t('observationsPlaceholder')}
             value={observations}
             onChange={(e) => setObservations(e.target.value)}
@@ -296,11 +296,11 @@ export function ConsultationRequestBuilder({
           {/* Suggestion chips (from Story 53.1 integration) */}
           {offlineSuggestions.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              <span className="text-xs text-gray-500">{t('considerMentioning')}</span>
+              <span className="text-xs text-muted-foreground">{t('considerMentioning')}</span>
               {offlineSuggestions.map((s) => (
                 <button
                   key={s}
-                  className="rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-xs text-blue-700 hover:bg-blue-100"
+                  className="rounded-full border border-primary bg-primary/10 px-3 py-1 text-xs text-primary hover:bg-primary/10"
                   onClick={() => setObservations((prev) => prev ? `${prev}\n${s}` : s)}
                 >
                   {s}
@@ -311,13 +311,13 @@ export function ConsultationRequestBuilder({
 
           <div className="flex gap-3 self-end">
             <button
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"
               onClick={() => setStep('result-summary')}
             >
               {t('back')}
             </button>
             <button
-              className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/90"
               onClick={() => setStep('photos')}
             >
               {t('next')}
@@ -330,7 +330,7 @@ export function ConsultationRequestBuilder({
       {step === 'photos' && (
         <div className="flex flex-col gap-4">
           <h2 className="text-base font-semibold">{t('photosTitle')}</h2>
-          <p className="text-sm text-gray-600">{t('photosHint', { max: MAX_PHOTOS })}</p>
+          <p className="text-sm text-muted-foreground">{t('photosHint', { max: MAX_PHOTOS })}</p>
 
           {/* Photo grid */}
           {photos.length > 0 && (
@@ -344,7 +344,7 @@ export function ConsultationRequestBuilder({
                     className="h-24 w-full rounded-lg object-cover"
                   />
                   <input
-                    className="rounded border border-gray-200 px-2 py-1 text-xs"
+                    className="rounded border border-border px-2 py-1 text-xs"
                     placeholder={t('captionPlaceholder')}
                     value={photo.caption}
                     onChange={(e) => updatePhotoCaption(photo.id, e.target.value)}
@@ -373,7 +373,7 @@ export function ConsultationRequestBuilder({
                 onChange={handleFileSelect}
               />
               <button
-                className="flex items-center gap-2 self-start rounded-lg border border-dashed border-gray-400 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+                className="flex items-center gap-2 self-start rounded-lg border border-dashed border-gray-400 px-4 py-2 text-sm text-muted-foreground hover:bg-muted"
                 onClick={() => fileInputRef.current?.click()}
               >
                 {t('addPhoto')}
@@ -383,13 +383,13 @@ export function ConsultationRequestBuilder({
 
           <div className="flex gap-3 self-end">
             <button
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"
               onClick={() => setStep('observations')}
             >
               {t('back')}
             </button>
             <button
-              className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/90"
               onClick={() => setStep(knowledgeCardId ? 'knowledge-card' : 'recipient')}
             >
               {t('next')}
@@ -402,26 +402,26 @@ export function ConsultationRequestBuilder({
       {step === 'knowledge-card' && knowledgeCardId && (
         <div className="flex flex-col gap-4">
           <h2 className="text-base font-semibold">{t('knowledgeCardTitle')}</h2>
-          <p className="text-sm text-gray-600">{t('knowledgeCardHint')}</p>
+          <p className="text-sm text-muted-foreground">{t('knowledgeCardHint')}</p>
           <label className="flex cursor-pointer items-center gap-3">
             <input
               type="checkbox"
               checked={includeKnowledgeCard}
               onChange={(e) => setIncludeKnowledgeCard(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-border"
             />
             <span className="text-sm">{t('includeKnowledgeCard')}</span>
           </label>
 
           <div className="flex gap-3 self-end">
             <button
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"
               onClick={() => setStep('photos')}
             >
               {t('back')}
             </button>
             <button
-              className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/90"
               onClick={() => setStep('recipient')}
             >
               {t('next')}
@@ -443,7 +443,7 @@ export function ConsultationRequestBuilder({
             <div className="flex flex-col gap-2">
               {pathologists.length > 0 && (
                 <>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {t('pathologists')}
                   </p>
                   {pathologists.map((r) => (
@@ -459,7 +459,7 @@ export function ConsultationRequestBuilder({
               )}
               {referenceLabs.length > 0 && (
                 <>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {t('referenceLabs')}
                   </p>
                   {referenceLabs.map((r) => (
@@ -478,13 +478,13 @@ export function ConsultationRequestBuilder({
 
           <div className="flex gap-3 self-end">
             <button
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"
               onClick={() => setStep(knowledgeCardId ? 'knowledge-card' : 'photos')}
             >
               {t('back')}
             </button>
             <button
-              className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!selectedRecipient || isFormatting}
               onClick={handleRequestFormatting}
             >
@@ -500,22 +500,22 @@ export function ConsultationRequestBuilder({
           <h2 className="text-base font-semibold">{t('aiPreviewTitle')}</h2>
 
           {/* Confidence inversion warning (Story 53.5) */}
-          <p className="text-sm text-gray-600">{t('aiPreviewHint')}</p>
+          <p className="text-sm text-muted-foreground">{t('aiPreviewHint')}</p>
 
           {/* Side-by-side: AI suggestion vs tech edit */}
           <div className="grid gap-4 lg:grid-cols-2">
             <div>
-              <p className="mb-1 text-xs font-medium text-gray-500">{t('aiSuggestion')}</p>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">{t('aiSuggestion')}</p>
               <AiOutputWrapper confidence={aiOutput.confidence} context="consultation-formatter">
-                <pre className="rounded-lg bg-gray-50 p-3 text-sm whitespace-pre-wrap border border-gray-200">
+                <pre className="rounded-lg bg-muted p-3 text-sm whitespace-pre-wrap border border-border">
                   {aiOutput.formattedText}
                 </pre>
               </AiOutputWrapper>
             </div>
             <div>
-              <p className="mb-1 text-xs font-medium text-gray-500">{t('yourVersion')}</p>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">{t('yourVersion')}</p>
               <textarea
-                className="min-h-[200px] w-full rounded-lg border border-gray-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="min-h-[200px] w-full rounded-lg border border-border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 value={editedText}
                 onChange={(e) => setEditedText(e.target.value)}
                 dir="auto"
@@ -524,14 +524,14 @@ export function ConsultationRequestBuilder({
           </div>
 
           {/* Mandatory confirmation checkbox — CLAUDE.md Rule #2 */}
-          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-primary bg-primary/10 p-4">
             <input
               type="checkbox"
               checked={confirmed}
               onChange={(e) => setConfirmed(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-gray-300"
+              className="mt-0.5 h-4 w-4 rounded border-border"
             />
-            <span className="text-sm font-medium text-blue-900">{t('confirmationLabel')}</span>
+            <span className="text-sm font-medium text-primary">{t('confirmationLabel')}</span>
           </label>
 
           {submitError && (
@@ -542,13 +542,13 @@ export function ConsultationRequestBuilder({
 
           <div className="flex gap-3 self-end">
             <button
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"
               onClick={() => setStep('recipient')}
             >
               {t('back')}
             </button>
             <button
-              className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!confirmed || editedText.trim() === '' || isSubmitting}
               onClick={handleSubmit}
             >
@@ -561,7 +561,7 @@ export function ConsultationRequestBuilder({
       {/* Cancel button at bottom */}
       {step !== 'submitted' && (
         <button
-          className="self-center text-sm text-gray-500 hover:underline"
+          className="self-center text-sm text-muted-foreground hover:underline"
           onClick={onCancel}
         >
           {t('cancel')}
@@ -581,14 +581,14 @@ function ResultSummaryView({
   t: ReturnType<typeof useTranslations<'consultation'>>
 }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-      <p className="mb-3 text-sm font-semibold text-gray-800">
+    <div className="rounded-lg border border-border bg-muted p-4">
+      <p className="mb-3 text-sm font-semibold text-foreground">
         {resultSummary.templateName}{' '}
-        <span className="font-normal text-gray-500">({resultSummary.templateLoincCode})</span>
+        <span className="font-normal text-muted-foreground">({resultSummary.templateLoincCode})</span>
       </p>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-200 text-xs text-gray-500">
+          <tr className="border-b border-border text-xs text-muted-foreground">
             <th className="pb-1 text-start">{t('fieldName')}</th>
             <th className="pb-1 text-end">{t('fieldValue')}</th>
             <th className="pb-1 text-end">{t('fieldUnit')}</th>
@@ -603,7 +603,7 @@ function ResultSummaryView({
             >
               <td className="py-1">{field.name}</td>
               <td className="py-1 text-end">{field.value ?? '—'}</td>
-              <td className="py-1 text-end text-gray-500">{field.unit}</td>
+              <td className="py-1 text-end text-muted-foreground">{field.unit}</td>
               <td className="py-1 text-end">
                 {field.flag && (
                   <span
@@ -641,17 +641,17 @@ function RecipientOption({
       onClick={onSelect}
       className={`flex w-full items-start gap-3 rounded-lg border p-3 text-start transition-colors ${
         selected
-          ? 'border-blue-500 bg-blue-50'
-          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+          ? 'border-primary bg-primary/10'
+          : 'border-border hover:border-border hover:bg-muted'
       } ${!recipient.isAvailable ? 'opacity-50' : ''}`}
       disabled={!recipient.isAvailable}
     >
       <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-current mt-0.5">
-        {selected && <div className="h-2 w-2 rounded-full bg-blue-500" />}
+        {selected && <div className="h-2 w-2 rounded-full bg-primary" />}
       </div>
       <div className="flex flex-col gap-0.5">
         <span className="text-sm font-medium">{recipient.name}</span>
-        <span className="text-xs text-gray-500">{recipient.specialization}</span>
+        <span className="text-xs text-muted-foreground">{recipient.specialization}</span>
         {!recipient.isAvailable && (
           <span className="text-xs text-amber-600">{t('recipientUnavailable')}</span>
         )}
@@ -687,7 +687,7 @@ function StepIndicator({
   if (step === 'submitted') return null
 
   return (
-    <div className="flex items-center gap-1 text-xs text-gray-500">
+    <div className="flex items-center gap-1 text-xs text-muted-foreground">
       <span>
         {t('stepOf', { current: currentIdx + 1, total: totalSteps })}
       </span>
@@ -696,7 +696,7 @@ function StepIndicator({
           <div
             key={s}
             className={`h-1.5 w-6 rounded-full ${
-              i <= currentIdx ? 'bg-blue-500' : 'bg-gray-200'
+              i <= currentIdx ? 'bg-primary' : 'bg-muted'
             }`}
           />
         ))}

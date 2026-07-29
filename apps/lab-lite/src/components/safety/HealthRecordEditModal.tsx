@@ -111,14 +111,14 @@ export function HealthRecordEditModal({
       aria-modal="true"
       aria-label={isNew ? t('createRecord') : t('editRecord')}
     >
-      <div className="bg-card dark:bg-gray-900 rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6 space-y-4">
+      <div className="bg-card rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">
             {isNew ? t('createRecord') : t('editRecord')}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
+            className="text-muted-foreground hover:text-muted-foreground text-2xl"
             aria-label={t('close')}
           >
             ×
@@ -136,11 +136,11 @@ export function HealthRecordEditModal({
           <legend className="text-lg font-medium">{t('hepB')}</legend>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">{t('statusLabel')}</span>
+              <span className="text-sm font-medium text-foreground">{t('statusLabel')}</span>
               <select
                 value={hepBStatus}
                 onChange={(e) => setHepBStatus(e.target.value as VaccinationStatus)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-sm"
               >
                 {Object.values(VaccinationStatus).map((s) => (
                   <option key={s} value={s}>{t(`status.${s}`)}</option>
@@ -148,31 +148,31 @@ export function HealthRecordEditModal({
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">{t('doses')}</span>
+              <span className="text-sm font-medium text-foreground">{t('doses')}</span>
               <input
                 type="number"
                 min={0}
                 step={1}
                 value={hepBDoses}
                 onChange={(e) => setHepBDoses(parseInt(e.target.value) || 0)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-sm"
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">{t('titerDate')}</span>
+              <span className="text-sm font-medium text-foreground">{t('titerDate')}</span>
               <input
                 type="date"
                 value={hepBTiterDate}
                 onChange={(e) => setHepBTiterDate(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-sm"
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">{t('titerResult')}</span>
+              <span className="text-sm font-medium text-foreground">{t('titerResult')}</span>
               <select
                 value={hepBTiterResult}
                 onChange={(e) => setHepBTiterResult(e.target.value as HepBImmunityStatus)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-sm"
               >
                 {Object.values(HepBImmunityStatus).map((s) => (
                   <option key={s} value={s}>{t(`immunityStatus.${s}`)}</option>
@@ -187,20 +187,20 @@ export function HealthRecordEditModal({
           <legend className="text-lg font-medium">{t('tetanus')}</legend>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">{t('lastDose')}</span>
+              <span className="text-sm font-medium text-foreground">{t('lastDose')}</span>
               <input
                 type="date"
                 value={tetanusDate}
                 onChange={(e) => setTetanusDate(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-sm"
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">{t('statusLabel')}</span>
+              <span className="text-sm font-medium text-foreground">{t('statusLabel')}</span>
               <select
                 value={tetanusStatus}
                 onChange={(e) => setTetanusStatus(e.target.value as VaccinationStatus)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-sm"
               >
                 {Object.values(VaccinationStatus).map((s) => (
                   <option key={s} value={s}>{t(`status.${s}`)}</option>
@@ -215,20 +215,20 @@ export function HealthRecordEditModal({
           <legend className="text-lg font-medium">{t('covid')}</legend>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">{t('lastDose')}</span>
+              <span className="text-sm font-medium text-foreground">{t('lastDose')}</span>
               <input
                 type="date"
                 value={covidDate}
                 onChange={(e) => setCovidDate(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-sm"
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">{t('statusLabel')}</span>
+              <span className="text-sm font-medium text-foreground">{t('statusLabel')}</span>
               <select
                 value={covidStatus}
                 onChange={(e) => setCovidStatus(e.target.value as VaccinationStatus)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-sm"
               >
                 {Object.values(VaccinationStatus).map((s) => (
                   <option key={s} value={s}>{t(`status.${s}`)}</option>
@@ -236,14 +236,14 @@ export function HealthRecordEditModal({
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">{t('doses')}</span>
+              <span className="text-sm font-medium text-foreground">{t('doses')}</span>
               <input
                 type="number"
                 min={0}
                 step={1}
                 value={covidDoses}
                 onChange={(e) => setCovidDoses(parseInt(e.target.value) || 0)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-sm"
               />
             </label>
           </div>
@@ -254,20 +254,20 @@ export function HealthRecordEditModal({
           <legend className="text-lg font-medium">{t('tbScreening')}</legend>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">{t('screeningDate')}</span>
+              <span className="text-sm font-medium text-foreground">{t('screeningDate')}</span>
               <input
                 type="date"
                 value={tbScreeningDate}
                 onChange={(e) => setTbScreeningDate(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-sm"
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">{t('result')}</span>
+              <span className="text-sm font-medium text-foreground">{t('result')}</span>
               <select
                 value={tbScreeningResult}
                 onChange={(e) => setTbScreeningResult(e.target.value as TbScreeningResult)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-sm"
               >
                 {Object.values(TbScreeningResult).map((s) => (
                   <option key={s} value={s}>{t(`tbResult.${s}`)}</option>
@@ -279,12 +279,12 @@ export function HealthRecordEditModal({
 
         {/* Notes */}
         <label className="block">
-          <span className="text-sm font-medium text-gray-700">{t('notes')}</span>
+          <span className="text-sm font-medium text-foreground">{t('notes')}</span>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+            className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring text-sm"
           />
         </label>
 

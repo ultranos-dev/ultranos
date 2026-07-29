@@ -156,15 +156,15 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
     <div className="space-y-4 p-4" data-testid="donor-report-review">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <button onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700">←</button>
-        <h2 className="text-base font-semibold text-gray-800">{t('reviewTitle')}</h2>
+        <button onClick={onBack} className="text-sm text-muted-foreground hover:text-foreground">←</button>
+        <h2 className="text-base font-semibold text-foreground">{t('reviewTitle')}</h2>
         <span className={`ms-auto rounded-full px-2 py-0.5 text-xs font-medium ${isFinalized ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
           {isFinalized ? t('statusFinalized') : t('statusDraft')}
         </span>
       </div>
 
       {/* Report meta */}
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm space-y-1">
+      <div className="rounded-lg border border-border bg-muted p-3 text-sm space-y-1">
         <p><span className="font-medium">{t('programName')}:</span> {report.programName}</p>
         <p><span className="font-medium">{t('selectPeriod')}:</span> {report.periodStart} — {report.periodEnd}</p>
         <p><span className="font-medium">Generated:</span> {new Date(report.generatedAt).toLocaleDateString()}</p>
@@ -178,18 +178,18 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
 
       {/* Sections */}
       {report.sections.map((section, sectionIdx) => (
-        <div key={section.sectionId} className="rounded-lg border border-gray-200 bg-card overflow-hidden">
-          <div className="bg-blue-600 px-3 py-2">
+        <div key={section.sectionId} className="rounded-lg border border-border bg-card overflow-hidden">
+          <div className="bg-primary px-3 py-2">
             <h3 className="text-sm font-semibold text-white">{section.sectionTitle}</h3>
           </div>
           {section.rows.length === 0 ? (
-            <p className="p-3 text-sm text-gray-500 italic">{t('noDataForPeriod')}</p>
+            <p className="p-3 text-sm text-muted-foreground italic">{t('noDataForPeriod')}</p>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
+                <tr className="bg-muted border-b border-border">
                   {Object.keys(section.rows[0] ?? {}).filter((k) => k !== 'loincCode').map((k) => (
-                    <th key={k} className="px-3 py-2 text-start text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                    <th key={k} className="px-3 py-2 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       {k}
                     </th>
                   ))}
@@ -197,16 +197,16 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
               </thead>
               <tbody>
                 {section.rows.map((row, rowIdx) => (
-                  <tr key={rowIdx} className="border-b border-gray-100 last:border-0">
+                  <tr key={rowIdx} className="border-b border-border last:border-0">
                     {Object.entries(row)
                       .filter(([k]) => k !== 'loincCode')
                       .map(([k, v]) => (
-                        <td key={k} className="px-3 py-2 text-gray-700">
+                        <td key={k} className="px-3 py-2 text-foreground">
                           {!isFinalized && typeof v === 'number' ? (
                             <input
                               key={`${sectionIdx}-${rowIdx}-${k}-${v}`}
                               type="number"
-                              className="w-20 rounded border border-gray-200 px-1 py-0.5 text-sm text-end"
+                              className="w-20 rounded border border-border px-1 py-0.5 text-sm text-end"
                               defaultValue={v}
                               onBlur={(e) => {
                                 const n = Number(e.target.value)
@@ -229,15 +229,15 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
 
       {/* Reimbursement summary */}
       {report.reimbursement && (
-        <div className="rounded-lg border border-gray-200 bg-card p-4 space-y-2">
-          <h3 className="text-sm font-semibold text-gray-700">{t('reimbursement')}</h3>
+        <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+          <h3 className="text-sm font-semibold text-foreground">{t('reimbursement')}</h3>
           {report.reimbursement.lineItems.map((item) => (
             <div key={item.loincCode} className="flex justify-between text-sm">
-              <span className="text-gray-600">{item.testLabel} × {item.count}</span>
+              <span className="text-muted-foreground">{item.testLabel} × {item.count}</span>
               <span className="font-medium">{report.reimbursement!.currency} {item.subtotal.toLocaleString()}</span>
             </div>
           ))}
-          <div className="flex justify-between border-t border-gray-200 pt-2 text-sm font-semibold">
+          <div className="flex justify-between border-t border-border pt-2 text-sm font-semibold">
             <span>{t('grandTotal')}</span>
             <span>{report.reimbursement.currency} {report.reimbursement.grandTotal.toLocaleString()}</span>
           </div>
@@ -246,7 +246,7 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
 
       {/* Corrections note */}
       {report.corrections.length > 0 && (
-        <p className="text-xs text-gray-500 italic">
+        <p className="text-xs text-muted-foreground italic">
           {t('corrections')}: {report.corrections.length} field(s) corrected
         </p>
       )}

@@ -32,7 +32,7 @@ interface AuditChecklistViewProps {
 const ROW_CLASSES: Record<ChecklistItemStatus, string> = {
   [ChecklistItemStatus.PASS]: 'bg-green-50 border-green-200',
   [ChecklistItemStatus.FAIL]: 'bg-red-50 border-red-200',
-  [ChecklistItemStatus.NOT_APPLICABLE]: 'bg-gray-50 border-gray-200',
+  [ChecklistItemStatus.NOT_APPLICABLE]: 'bg-muted border-border',
 }
 
 /** Tailwind classes for the active status toggle button. */
@@ -150,7 +150,7 @@ export function AuditChecklistView({
   const previewScore = calculateComplianceScore(audit)
 
   return (
-    <div className="mx-auto max-w-3xl flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

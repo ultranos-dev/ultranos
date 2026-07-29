@@ -10,7 +10,7 @@ export default function SuppliersPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <Link href="/settings" className="text-sm text-blue-600 hover:underline">
+        <Link href="/settings" className="w-fit text-sm font-medium text-primary hover:underline">
           &larr; {t('backToSettings')}
         </Link>
       </div>

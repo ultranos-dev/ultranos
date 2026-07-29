@@ -108,10 +108,10 @@ export function SampleLockBlocker({
               disabled={requesting}
               data-testid="request-release-button"
               className="
-                w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white
-                hover:bg-blue-700 disabled:opacity-60 transition-colors
+                w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white
+                hover:bg-primary/90 disabled:opacity-60 transition-colors
                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-                focus-visible:outline-blue-600
+                focus-visible:outline-ring
               "
             >
               {requesting ? '…' : t('requestRelease')}

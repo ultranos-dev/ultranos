@@ -2,7 +2,7 @@
  * Logbook PDF Export — Story 42.8
  *
  * Generates a PDF matching the Afghan MoPH paper register layout.
- * Uses jsPDF + jspdf-autotable — runs entirely client-side, works offline.
+ * Uses jsPDF + jspdf-autotable (dep added) — runs entirely client-side, works offline.
  *
  * PHI safety: PDF export is a PHI operation — audit event must be emitted
  * BEFORE calling this function (handled in the page component).

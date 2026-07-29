@@ -381,7 +381,7 @@ export function ResultEntryForm({
                 readOnly={isAutoCalc}
                 onChange={(e) => handleNumericChange(field.code, e.target.value)}
                 className={[
-                  'w-full rounded-md border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-border dark:bg-card dark:text-foreground',
+                  'w-full rounded-md border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring dark:border-border dark:bg-card dark:text-foreground',
                   isAutoCalc
                     ? 'cursor-default bg-muted dark:bg-muted'
                     : 'bg-card',
@@ -397,7 +397,7 @@ export function ResultEntryForm({
                 type="text"
                 value={(displayValue as string) ?? ''}
                 onChange={(e) => handleTextChange(field.code, e.target.value)}
-                className="w-full rounded-md border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-border dark:bg-card dark:text-foreground"
+                className="w-full rounded-md border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring dark:border-border dark:bg-card dark:text-foreground"
               />
             )}
 
@@ -406,7 +406,7 @@ export function ResultEntryForm({
                 id={`${formId}-${field.code}`}
                 value={(values[field.code] as string) ?? ''}
                 onChange={(e) => handleSelectChange(field.code, e.target.value)}
-                className="w-full rounded-md border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-border dark:bg-card dark:text-foreground"
+                className="w-full rounded-md border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring dark:border-border dark:bg-card dark:text-foreground"
               >
                 <option value="">{t('selectPlaceholder')}</option>
                 {field.options?.map((opt) => (
@@ -426,7 +426,7 @@ export function ResultEntryForm({
                 onChange={(e) =>
                   setFieldComments((prev) => ({ ...prev, [field.code]: e.target.value }))
                 }
-                className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-border dark:bg-card dark:text-foreground"
+                className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring dark:border-border dark:bg-card dark:text-foreground"
                 aria-label={t('fieldCommentAriaLabel', { field: t(field.label.replace('resultEntry.', '')) })}
               />
             )}
@@ -444,7 +444,7 @@ export function ResultEntryForm({
               onClick={() => toggleComment(field.code)}
               aria-label={t('toggleFieldComment')}
               aria-expanded={commentOpen}
-              className="rounded p-1 text-muted-foreground hover:text-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-muted-foreground dark:hover:text-blue-400"
+              className="rounded p-1 text-muted-foreground hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring dark:text-muted-foreground dark:hover:text-primary"
             >
               <MessageSquare className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -479,7 +479,7 @@ export function ResultEntryForm({
               {t('sampleId', { id: sampleId })}
             </p>
           </div>
-          <span className="rounded bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+          <span className="rounded bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
             {template.loincDisplay}
           </span>
         </div>
@@ -513,7 +513,7 @@ export function ResultEntryForm({
       <div className="flex items-center justify-end border-b border-border/50 px-4 py-2 dark:border-border">
         <Link
           href="/atlas"
-          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+          className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:text-primary dark:hover:text-blue-300"
           aria-label={tAtlas('openAtlasAriaLabel')}
         >
           {tAtlas('openAtlas')}
@@ -535,7 +535,7 @@ export function ResultEntryForm({
           value={reportComment}
           onChange={(e) => setReportComment(e.target.value)}
           placeholder={t('reportCommentPlaceholder')}
-          className="mt-1 w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-border dark:bg-card dark:text-foreground"
+          className="mt-1 w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring dark:border-border dark:bg-card dark:text-foreground"
         />
       </div>
 
@@ -545,7 +545,7 @@ export function ResultEntryForm({
           type="button"
           onClick={handleSaveDraft}
           disabled={savingDraft || saving}
-          className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50 dark:border-border dark:bg-card dark:text-muted-foreground"
+          className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50 dark:border-border dark:bg-card dark:text-muted-foreground"
         >
           {savingDraft ? t('savingDraft') : t('saveAsDraft')}
         </button>
@@ -553,7 +553,7 @@ export function ResultEntryForm({
           type="button"
           onClick={handleComplete}
           disabled={!canSubmit}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50"
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
         >
           {saving ? t('completing') : t('completeAndSubmit')}
         </button>

@@ -17,7 +17,7 @@ const badgeConfig: Record<VerificationSource, { label: string; classes: string }
   },
   cached: {
     label: 'Verified from Cache',
-    classes: 'bg-blue-100 text-blue-800 border-blue-200',
+    classes: 'bg-primary/10 text-primary border-primary',
   },
 }
 

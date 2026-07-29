@@ -145,7 +145,7 @@ export function ReferenceLabConfigPanel() {
           <button
             type="button"
             onClick={() => { setEditingId('new'); setForm(EMPTY_FORM) }}
-            className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+            className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90"
           >
             <Plus size={14} /> {t('refLabAddButton')}
           </button>
@@ -156,8 +156,8 @@ export function ReferenceLabConfigPanel() {
 
       {/* Add/Edit form */}
       {editingId !== null && (
-        <form onSubmit={handleSave} className="rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-3">
-          <p className="text-sm font-medium text-blue-900">
+        <form onSubmit={handleSave} className="rounded-lg border border-primary bg-primary/10 p-4 space-y-3">
+          <p className="text-sm font-medium text-primary">
             {editingId === 'new' ? t('refLabFormAddTitle') : t('refLabFormEditTitle')}
           </p>
           {[
@@ -180,7 +180,7 @@ export function ReferenceLabConfigPanel() {
                 onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
                 required={required}
                 placeholder={placeholder}
-                className="w-full rounded border border-border px-2.5 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full rounded border border-border px-2.5 py-1.5 text-sm focus:border-ring focus:outline-none"
               />
             </div>
           ))}
@@ -195,7 +195,7 @@ export function ReferenceLabConfigPanel() {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90 disabled:opacity-50"
             >
               {loading ? t('refLabFormSaving') : t('refLabFormSave')}
             </button>
@@ -223,7 +223,7 @@ export function ReferenceLabConfigPanel() {
                     type="button"
                     onClick={() => startEdit(lab)}
                     aria-label={t('refLabEditAriaLabel', { name: lab.name })}
-                    className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-blue-600"
+                    className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-primary"
                   >
                     <Edit size={16} />
                   </button>

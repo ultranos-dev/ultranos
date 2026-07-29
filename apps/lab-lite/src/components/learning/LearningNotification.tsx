@@ -71,21 +71,21 @@ export function LearningNotification({
     <div
       role="alert"
       aria-live="polite"
-      className="rounded-lg border border-blue-300 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20"
+      className="rounded-lg border border-primary bg-primary/10 p-3 dark:border-primary"
       data-testid="learning-notification"
     >
       <div className="flex items-start gap-3">
         {/* Book icon — not a directional icon, no RTL mirroring needed */}
-        <BookOpen size={20} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+        <BookOpen size={20} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-primary dark:text-primary" />
 
         <div className="flex-1">
-          <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+          <p className="text-sm font-medium text-primary">
             {t('notificationTitle', {
               procedureName: trigger.procedureName,
               minutes: trigger.durationMinutes,
             })}
           </p>
-          <p className="mt-0.5 text-xs text-blue-600 dark:text-blue-400">
+          <p className="mt-0.5 text-xs text-primary dark:text-primary">
             {t(`triggerReason.${trigger.type}`)}
           </p>
 
@@ -93,7 +93,7 @@ export function LearningNotification({
             <button
               type="button"
               onClick={handleStart}
-              className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:bg-blue-500 dark:hover:bg-blue-400"
+              className="rounded bg-primary px-3 py-1 text-xs font-medium text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:bg-primary dark:hover:bg-blue-400"
               data-testid="learning-notification-start"
             >
               {t('start')}
@@ -101,7 +101,7 @@ export function LearningNotification({
             <button
               type="button"
               onClick={handleDismiss}
-              className="rounded border border-blue-300 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-blue-600 dark:text-blue-300 dark:hover:bg-blue-900/40"
+              className="rounded border border-primary px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:border-primary dark:hover:bg-blue-900/40"
               data-testid="learning-notification-dismiss"
             >
               {t('dismiss')}

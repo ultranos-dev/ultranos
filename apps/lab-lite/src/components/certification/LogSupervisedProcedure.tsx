@@ -86,11 +86,11 @@ export function LogSupervisedProcedure({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-foreground mb-1">
           {t('procedure')}
         </label>
         <select
-          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-card dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           onChange={(e) => handleProcedureSelect(e.target.value)}
           defaultValue=""
         >
@@ -105,12 +105,12 @@ export function LogSupervisedProcedure({
       {customProcedure && (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               {t('loincCode')}
             </label>
             <input
               type="text"
-              className="w-full rounded border border-gray-300 dark:border-gray-600 bg-card dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="e.g. 58410-2"
               value={procedureCode}
               onChange={(e) => setProcedureCode(e.target.value)}
@@ -118,12 +118,12 @@ export function LogSupervisedProcedure({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               {t('procedureName')}
             </label>
             <input
               type="text"
-              className="w-full rounded border border-gray-300 dark:border-gray-600 bg-card dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder={t('procedureNamePlaceholder')}
               value={procedureName}
               onChange={(e) => setProcedureName(e.target.value)}
@@ -134,12 +134,12 @@ export function LogSupervisedProcedure({
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-foreground mb-1">
           {t('performedAt')}
         </label>
         <input
           type="datetime-local"
-          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-card dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           value={performedAt}
           onChange={(e) => setPerformedAt(e.target.value)}
           required
@@ -147,11 +147,11 @@ export function LogSupervisedProcedure({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          {t('supervisorNotes')} <span className="text-gray-400">({t('optional')})</span>
+        <label className="block text-sm font-medium text-foreground mb-1">
+          {t('supervisorNotes')} <span className="text-muted-foreground">({t('optional')})</span>
         </label>
         <textarea
-          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-card dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           rows={3}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -168,7 +168,7 @@ export function LogSupervisedProcedure({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+            className="px-4 py-2 text-sm rounded border border-border hover:bg-muted"
           >
             {t('cancel')}
           </button>
@@ -176,7 +176,7 @@ export function LogSupervisedProcedure({
         <button
           type="submit"
           disabled={saving || !procedureCode || !procedureName}
-          className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 text-sm rounded bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? t('logging') : t('logProcedure')}
         </button>

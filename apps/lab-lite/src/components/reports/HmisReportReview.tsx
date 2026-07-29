@@ -253,7 +253,7 @@ export function HmisReportReview({ report, onUpdate, onBack }: HmisReportReviewP
   const period = formatReportingPeriod(localReport.reportYear, localReport.reportMonth)
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

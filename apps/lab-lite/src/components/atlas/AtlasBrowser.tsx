@@ -224,7 +224,7 @@ export function AtlasBrowser() {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('searchPlaceholder')}
               aria-label={t('searchAriaLabel')}
-              className="w-full rounded-md border border-border bg-card py-1.5 ps-8 pe-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-border dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
+              className="w-full rounded-md border border-border bg-card py-1.5 ps-8 pe-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring dark:border-border dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
             />
           </div>
         </div>
@@ -243,7 +243,7 @@ export function AtlasBrowser() {
                   <button
                     type="button"
                     onClick={() => toggleCategory(cat.id)}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm font-semibold text-foreground hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-muted-foreground dark:hover:bg-card"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm font-semibold text-foreground hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring dark:text-muted-foreground dark:hover:bg-card"
                     aria-label={t(cat.name)}
                   >
                     <span className="text-muted-foreground dark:text-muted-foreground">
@@ -265,9 +265,9 @@ export function AtlasBrowser() {
                             onClick={() => selectSubcategory(sub)}
                             className={[
                               'flex w-full items-center gap-2 py-1.5 pe-3 text-sm',
-                              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500',
+                              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring',
                               selectedSubcategoryId === sub.id
-                                ? 'font-semibold text-blue-600 dark:text-blue-400'
+                                ? 'font-semibold text-primary dark:text-primary'
                                 : 'text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground',
                             ].join(' ')}
                           >
@@ -371,7 +371,7 @@ function EntryCard({
       <button
         type="button"
         onClick={() => onSelect(entry)}
-        className="group flex w-full flex-col overflow-hidden rounded-lg border border-border bg-card text-start shadow-sm transition hover:border-blue-400 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-border dark:bg-card dark:hover:border-blue-500"
+        className="group flex w-full flex-col overflow-hidden rounded-lg border border-border bg-card text-start shadow-sm transition hover:border-primary hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring dark:border-border dark:bg-card dark:hover:border-primary"
         aria-label={name}
       >
         {/* Thumbnail */}
@@ -407,7 +407,7 @@ function PlaceholderThumbnail({ name }: { name: string }) {
       className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-blue-50 to-neutral-100 dark:from-blue-900/20 dark:to-neutral-800"
       aria-label={name}
     >
-      <span className="text-blue-300 dark:text-blue-600">
+      <span className="text-blue-300 dark:text-primary">
         <CircleX size={16} aria-hidden="true" />
       </span>
       <span className="text-center text-[10px] leading-tight text-muted-foreground px-2 line-clamp-2 dark:text-muted-foreground">
@@ -435,12 +435,12 @@ function EntryDetailView({
   const nextSteps = entry.nextSteps.map((key) => t(key))
 
   return (
-    <article className="mx-auto max-w-2xl p-4">
+    <article className="flex flex-col gap-4 p-4">
       {/* Back button */}
       <button
         type="button"
         onClick={onBack}
-        className="mb-4 flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-blue-400 dark:hover:text-blue-200"
+        className="mb-4 flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring dark:text-primary dark:hover:text-blue-200"
         aria-label={t('backToGrid')}
       >
         <ArrowLeft size={16} aria-hidden="true" className="rtl:scale-x-[-1]" />
@@ -495,7 +495,7 @@ function EntryDetailView({
         <ul className="space-y-1">
           {nextSteps.map((step, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-foreground dark:text-muted-foreground">
-              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" aria-hidden />
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
               {step}
             </li>
           ))}

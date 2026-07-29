@@ -24,25 +24,26 @@ export default function WorklistPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Page header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">{t('title')}</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">{t('subtitle')}</p>
-        </div>
+      {/* Header */}
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
+      </div>
 
-        {/* Auto / Manual toggle */}
-        <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-1">
+      {/* Toolbar: Auto / Manual mode pills — one row */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div role="tablist" className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {(['auto', 'manual'] as WorklistMode[]).map((m) => (
             <button
               key={m}
               type="button"
+              role="tab"
               onClick={() => setMode(m)}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500
-                ${mode === m
-                  ? 'bg-card text-foreground shadow-sm'
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                mode === m
+                  ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
-                }`}
+              }`}
               aria-pressed={mode === m}
               aria-label={t(`mode.${m}`)}
             >
@@ -57,7 +58,7 @@ export default function WorklistPage() {
 
       {/* Mode description */}
       {mode === 'manual' && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-700">
+        <div className="rounded-2xl bg-warning/10 px-4 py-2 text-sm text-warning">
           {t('manualModeInfo')}
         </div>
       )}
@@ -69,17 +70,17 @@ export default function WorklistPage() {
             <strong className="text-foreground">{samples.length}</strong> {t('samplesInQueue')}
           </span>
           {samples.filter((s) => s.urgency === 'stat').length > 0 && (
-            <span className="font-medium text-red-600">
+            <span className="font-medium text-destructive">
               {samples.filter((s) => s.urgency === 'stat').length} STAT
             </span>
           )}
           {samples.filter((s) => s.stabilityStatus === 'expired').length > 0 && (
-            <span className="font-medium text-red-600">
+            <span className="font-medium text-destructive">
               {samples.filter((s) => s.stabilityStatus === 'expired').length} {t('expired')}
             </span>
           )}
           {samples.filter((s) => s.stabilityStatus === 'critical').length > 0 && (
-            <span className="font-medium text-amber-600">
+            <span className="font-medium text-warning">
               {samples.filter((s) => s.stabilityStatus === 'critical').length} {t('critical')}
             </span>
           )}

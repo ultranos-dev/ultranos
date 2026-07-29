@@ -303,7 +303,12 @@
     "readinessBoard": "لوحة الاستعداد",
     "mentorship": "Mentorship",
     "visualAtlas": "الأطلس المرئي",
-    "escalations": "التصعيدات"
+    "escalations": "التصعيدات",
+    "sendOuts": "الإحالات الخارجية",
+    "logbook": "سجل العمل",
+    "procurement": "المشتريات",
+    "workload": "عبء العمل",
+    "spillResponse": "الاستجابة للانسكاب"
   },
   "patients": {
     "registerTitle": "تسجيل مريض جديد",
@@ -336,7 +341,8 @@
     "errorBirthDateRequired": "تاريخ الميلاد مطلوب.",
     "errorBirthYearRange": "يجب أن تكون سنة الميلاد بين 1900 والسنة الحالية.",
     "errorWitnessRequired": "اسم الشاهد مطلوب للموافقة الشفوية.",
-    "errorUnexpected": "حدث خطأ غير متوقّع."
+    "errorUnexpected": "حدث خطأ غير متوقّع.",
+    "viewRecord": "عرض السجل"
   },
   "network": {
     "networkDashboard": "شبكة المختبر",
@@ -400,7 +406,8 @@
     },
     "manualModeInfo": "الوضع اليدوي: اسحب لإعادة الترتيب. التحديث التلقائي متوقف. شارات الثبات لا تزال نشطة.",
     "emptyTitle": "لا توجد عينات في قائمة الانتظار",
-    "emptyHint": "ستظهر العينات المستلمة هنا تلقائيًا."
+    "emptyHint": "ستظهر العينات المستلمة هنا تلقائيًا.",
+    "enterResult": "إدخال النتيجة"
   },
   "orders": {
     "title": "طلبات الفحوصات",
@@ -424,7 +431,12 @@
       "specialInstructions": "تعليمات خاصة",
       "orderedAt": "تاريخ الطلب"
     },
-    "badge": "معلقة"
+    "badge": "معلقة",
+    "searchPlaceholder": "البحث برقم الطلب…",
+    "loading": "جارٍ تحميل الطلبات…",
+    "noResultsTitle": "لا توجد طلبات مطابقة",
+    "noResultsDescription": "لا توجد طلبات تطابق عوامل التصفية الحالية.",
+    "clearFilters": "مسح عوامل التصفية"
   },
   "settings": {
     "title": "الإعدادات",
@@ -486,7 +498,8 @@
     "smsTestPhone": "رقم الهاتف للاختبار",
     "smsConfigSaved": "تم حفظ إعدادات SMS",
     "smsTestSent": "تم إضافة رسالة SMS الاختبارية إلى قائمة الانتظار",
-    "criticalValues": "القيم الحرجة والتصعيد"
+    "criticalValues": "القيم الحرجة والتصعيد",
+    "criticalValuesDesc": "حدود النتائج الحرجة وجهات اتصال التصعيد"
   },
   "queuePage": {
     "title": "قائمة التحميل",
@@ -1127,7 +1140,8 @@
     "syncStatusCol": "حالة المزامنة",
     "synced": "تمت المزامنة",
     "pendingSync": "قيد الانتظار",
-    "noAcknowledgments": "لا توجد إقرارات بعد"
+    "noAcknowledgments": "لا توجد إقرارات بعد",
+    "clearFilters": "مسح عوامل التصفية"
   },
   "peerNetwork": {
     "pageTitle": "اسأل فنيًا",
@@ -1753,7 +1767,11 @@
     "retryButton": "إعادة المحاولة",
     "rangeUpdated": "تم تحديث النطاق منذ النتيجة. الحالي: {min}–{max}",
     "commentPlaceholder": "أدخل السبب...",
-    "commentAriaLabel": "التعليقات"
+    "commentAriaLabel": "التعليقات",
+    "searchPlaceholder": "البحث في النتائج…",
+    "noResultsTitle": "لا توجد نتائج مطابقة",
+    "noResultsDescription": "لا توجد نتائج معلقة تطابق عوامل التصفية الحالية.",
+    "clearFilters": "مسح عوامل التصفية"
   },
   "delegates": {
     "addDelegate": "إضافة مندوب عائلي",
@@ -2010,7 +2028,8 @@
     "outgoingNotesLabel": "ملاحظات المغادر",
     "incomingNotesLabel": "ملاحظات الوافد",
     "readyStatus": "جاهز",
-    "noHistoryHint": "ستظهر عمليات تسليم المناوبة المكتملة هنا."
+    "noHistoryHint": "ستظهر عمليات تسليم المناوبة المكتملة هنا.",
+    "historyRestricted": "سجل التسليم متاح للمشرفين ومديري المختبر فقط."
   },
   "visualAtlas": {
     "categoryNavLabel": "تصنيفات الأطلس",
@@ -2530,7 +2549,11 @@
     "reagentConsumption": "استهلاك الكواشف والمستلزمات",
     "qualityIndicatorsTitle": "مؤشرات الجودة",
     "dhis2OrgUnitTitle": "وحدة منظمة DHIS2",
-    "dhis2OrgUnitDescription": "أدخل معرف وحدة المنظمة في DHIS2 لهذه المنشأة. يتم تعيين هذا المعرف من قبل مسؤول DHIS2."
+    "dhis2OrgUnitDescription": "أدخل معرف وحدة المنظمة في DHIS2 لهذه المنشأة. يتم تعيين هذا المعرف من قبل مسؤول DHIS2.",
+    "surveillanceTitle": "الترصد",
+    "surveillanceDescription": "تنبيهات الترصد وإشارات تفشي الأمراض",
+    "donorTitle": "تقرير المتبرعين",
+    "donorDescription": "تقارير موجزة لبرنامج المتبرعين بالدم"
   },
   "surveillance": {
     "title": "مراقبة الأمراض",
@@ -3280,7 +3303,28 @@
     "refLabFieldTestsPlaceholder": "2085-9, 4548-4, 10524-7",
     "refLabFieldTatPlaceholder": "2085-9:5, 4548-4:3",
     "importResultValuePlaceholder": "مثال: 5.2",
-    "importResultUnitPlaceholder": "مثال: mmol/L"
+    "importResultUnitPlaceholder": "مثال: mmol/L",
+    "pageTitle": "الإحالات الخارجية",
+    "searchPlaceholder": "البحث في الإحالات…",
+    "filterStatusAria": "التصفية حسب الحالة",
+    "filterStatusAll": "كل الحالات",
+    "filterLabAria": "التصفية حسب المختبر المرجعي",
+    "filterLabAll": "كل المختبرات",
+    "overdueBanner": "{count, plural, one {# إحالة متأخرة.} other {# إحالات متأخرة.}}",
+    "viewPending": "عرض الإحالات المعلقة",
+    "colTrackingId": "رقم التتبع",
+    "colReferenceLab": "المختبر المرجعي",
+    "colTestRequested": "الفحص المطلوب",
+    "colDateSent": "تاريخ الإرسال",
+    "colStatus": "الحالة",
+    "colElapsed": "المدة المنقضية",
+    "colActions": "الإجراءات",
+    "loading": "جارٍ تحميل الإحالات…",
+    "noResultsTitle": "لا توجد إحالات",
+    "noResultsDescription": "لا توجد إحالات تطابق عوامل التصفية الحالية.",
+    "clearFilters": "مسح عوامل التصفية",
+    "actionUpdateStatus": "تحديث الحالة",
+    "actionImportResult": "استيراد النتيجة"
   },
   "outbreak": {
     "activateAriaLabel": "تفعيل وضع التفشي",
@@ -3547,7 +3591,38 @@
         "sms_physician": "رسالة نصية للطبيب",
         "sms_director": "رسالة نصية للمدير الطبي",
         "flag_district": "تنبيه مسؤول المنطقة"
-      }
+      },
+      "refresh": "تحديث",
+      "activeAlert": "{count, plural, one {# تصعيد نشط يحتاج إلى انتباه.} other {# تصعيدات نشطة تحتاج إلى انتباه.}}",
+      "searchPlaceholder": "البحث في التصعيدات…",
+      "noResults": "لا توجد تصعيدات مطابقة",
+      "clearSearch": "مسح البحث"
     }
+  },
+  "logbook": {
+    "title": "سجل العمل",
+    "authorized": "معتمد",
+    "amended": "مُعدّل",
+    "amendmentOf": "يعدّل #{seqNo}",
+    "loadingMore": "جارٍ التحميل…",
+    "exportPdf": "تصدير PDF",
+    "exporting": "جارٍ التصدير…",
+    "filterByDate": "التاريخ",
+    "filterByTestType": "نوع الفحص",
+    "filterByTechnician": "الفني",
+    "filterByPatient": "المريض",
+    "searchPlaceholder": "البحث حسب المريض…",
+    "noResults": "لا توجد إدخالات مطابقة",
+    "noEntries": "لا توجد إدخالات في السجل بعد",
+    "seqNo": "رقم التسلسل",
+    "date": "التاريخ",
+    "patientRef": "المريض",
+    "age": "العمر",
+    "testType": "نوع الفحص",
+    "resultSummary": "النتيجة",
+    "technician": "الفني",
+    "authStatus": "الحالة",
+    "loadMore": "تحميل المزيد",
+    "clearFilters": "مسح عوامل التصفية"
   }
 }

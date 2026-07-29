@@ -123,8 +123,8 @@ export function ResupplyRequestForm({
       <div className="flex flex-col items-center gap-4 py-8 text-center">
         <CheckCircle className="text-green-600" size={48} />
         <h2 className="text-xl font-semibold">{t('form.successTitle')}</h2>
-        <p className="text-sm text-gray-600">{t('form.successBody')}</p>
-        <p className="font-mono text-xs text-gray-400">{submittedRequestId}</p>
+        <p className="text-sm text-muted-foreground">{t('form.successBody')}</p>
+        <p className="font-mono text-xs text-muted-foreground">{submittedRequestId}</p>
       </div>
     )
   }
@@ -141,12 +141,12 @@ export function ResupplyRequestForm({
           </span>
         </div>
 
-        <ul className="divide-y divide-gray-100 rounded-md border">
+        <ul className="divide-y divide-border rounded-md border">
           {items.map((item, i) => (
             <li key={i} className="flex items-center justify-between px-4 py-3">
               <div>
                 <p className="font-medium">{item.reagentDisplay || item.reagentCode}</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   {item.reagentCode} · {t('form.currentStock')}: {item.currentStock} {item.unitOfMeasure}
                 </p>
               </div>
@@ -158,7 +158,7 @@ export function ResupplyRequestForm({
         </ul>
 
         {notes && (
-          <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-700">
+          <div className="rounded-md bg-muted p-3 text-sm text-foreground">
             <span className="font-medium">{t('form.notesLabel')}: </span>
             {notes}
           </div>
@@ -176,7 +176,7 @@ export function ResupplyRequestForm({
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
-            className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="flex-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
           >
             {submitting ? t('form.submitting') : t('form.confirm')}
           </button>
@@ -196,7 +196,7 @@ export function ResupplyRequestForm({
         {(['routine', 'urgent', 'critical'] as const).map((u) => (
           <label
             key={u}
-            className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 ${urgency === u ? URGENCY_CONFIG[u].color : 'border-gray-200'}`}
+            className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 ${urgency === u ? URGENCY_CONFIG[u].color : 'border-border'}`}
           >
             <input
               type="radio"
@@ -208,7 +208,7 @@ export function ResupplyRequestForm({
             />
             <div>
               <p className="font-medium">{t(`urgency.${u}`)}</p>
-              <p className="text-xs text-gray-600">{t(`urgencyHelp.${u}`)}</p>
+              <p className="text-xs text-muted-foreground">{t(`urgencyHelp.${u}`)}</p>
             </div>
           </label>
         ))}
@@ -223,7 +223,7 @@ export function ResupplyRequestForm({
             <div className="flex items-start gap-2">
               <div className="flex-1 grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <label className="mb-1 block text-xs text-gray-600">{t('form.reagentCode')}</label>
+                  <label className="mb-1 block text-xs text-muted-foreground">{t('form.reagentCode')}</label>
                   <input
                     type="text"
                     value={item.reagentCode}
@@ -233,7 +233,7 @@ export function ResupplyRequestForm({
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="mb-1 block text-xs text-gray-600">{t('form.reagentDisplay')}</label>
+                  <label className="mb-1 block text-xs text-muted-foreground">{t('form.reagentDisplay')}</label>
                   <input
                     type="text"
                     value={item.reagentDisplay}
@@ -243,7 +243,7 @@ export function ResupplyRequestForm({
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-gray-600">{t('form.quantity')}</label>
+                  <label className="mb-1 block text-xs text-muted-foreground">{t('form.quantity')}</label>
                   <input
                     type="number"
                     min={1}
@@ -253,7 +253,7 @@ export function ResupplyRequestForm({
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-gray-600">{t('form.unit')}</label>
+                  <label className="mb-1 block text-xs text-muted-foreground">{t('form.unit')}</label>
                   <select
                     value={item.unitOfMeasure}
                     onChange={(e) => updateItem(i, { unitOfMeasure: e.target.value })}
@@ -271,7 +271,7 @@ export function ResupplyRequestForm({
                 <button
                   type="button"
                   onClick={() => removeItem(i)}
-                  className="mt-1 text-gray-400 hover:text-red-600"
+                  className="mt-1 text-muted-foreground hover:text-red-600"
                   aria-label={t('form.removeItem')}
                 >
                   <Trash2 size={16} />
@@ -284,7 +284,7 @@ export function ResupplyRequestForm({
         <button
           type="button"
           onClick={addItem}
-          className="flex items-center gap-1 rounded-md border border-dashed px-4 py-2 text-sm text-blue-600 hover:border-blue-400"
+          className="flex items-center gap-1 rounded-md border border-dashed px-4 py-2 text-sm text-primary hover:border-primary"
         >
           <Plus size={14} />
           {t('form.addItem')}
@@ -302,7 +302,7 @@ export function ResupplyRequestForm({
           placeholder={t('form.notesPlaceholder')}
           className="w-full rounded border px-3 py-2 text-sm"
         />
-        <p className="mt-1 text-end text-xs text-gray-400">{notes.length}/500</p>
+        <p className="mt-1 text-end text-xs text-muted-foreground">{notes.length}/500</p>
       </div>
 
       {/* Validation errors */}
@@ -331,7 +331,7 @@ export function ResupplyRequestForm({
         <button
           type="button"
           onClick={handleReview}
-          className="flex-1 flex items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="flex-1 flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
         >
           <ShoppingCart size={16} />
           {t('form.review')}

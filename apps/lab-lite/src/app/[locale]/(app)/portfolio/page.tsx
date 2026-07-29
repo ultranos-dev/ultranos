@@ -12,7 +12,6 @@
 
 import { useState } from 'react'
 import { Users } from '@ultranos/ui-kit/icons'
-import { AuthGuard } from '@/components/AuthGuard'
 import { PortfolioDashboard } from '@/components/portfolio/PortfolioDashboard'
 import { StaffPortfolioList } from '@/components/portfolio/StaffPortfolioList'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -38,7 +37,6 @@ export default function PortfolioPage() {
   }
 
   return (
-    <AuthGuard>
       <div className="flex">
         {/* Sidebar: staff list for supervisors */}
         {isSupervisor && !selectedTechId && (
@@ -59,6 +57,5 @@ export default function PortfolioPage() {
           />
         </div>
       </div>
-    </AuthGuard>
   )
 }

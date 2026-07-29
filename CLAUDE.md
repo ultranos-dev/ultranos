@@ -208,6 +208,16 @@ BreadcrumbHeader / PageHeader  →  h-14, sticky, border-b
 - ❌ `mt-6`/`mt-4` on section divs
 - ❌ `mb-8`/`mb-6` on flex-column children
 
+#### Page layout standard — pages WITHOUT stat boxes (align to OPD-Lite Notifications)
+
+Every non-auth page that is **not** a stat-card dashboard (i.e. list/table, search-first, form, detail, or action page) must match the **OPD-Lite Notifications** reference: `apps/opd-lite/src/components/notifications/NotificationCenter.tsx`. Full playbook: `docs/opd-list-page-remediation-guide.md`. The three defining properties (most pages get these wrong):
+
+1. **Full-width, standalone `<h1>`.** Page root is exactly `<div className="flex flex-col gap-4">` — **never** `mx-auto`, `max-w-*`, a nested `<main>`, `p-6`/`px-6` wrappers, or inline `style={{ maxWidth, margin: '0 auto' }}` (that centers + caps the page — the #1 not-full-width cause). The `<h1>` is `text-2xl font-semibold text-foreground` from an i18n key — **no** primary-action button beside it in a header row.
+2. **ONE toolbar row** (`flex flex-wrap items-center gap-3`), always rendered (never behind a `loading`/`data.length>0` gate): pill tabs → **wide** `SearchInput` (`className="min-w-[200px] flex-1"`, from `@ultranos/ui-kit/components/ui/search-input`) → filter `<select>`s → the **primary action folded into the END of this row** (Create/Export/Refresh/etc.). The search is the space-filler; do not push a lone action to the far right with `ms-auto` (that recreates the split-header anti-pattern). Filter selects: `rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm`. Pill tabs: `rounded-full border border-border bg-card p-1 w-fit`, active `bg-primary text-primary-foreground`, inactive `text-muted-foreground hover:text-foreground`, buttons `rounded-full px-4 py-1.5`.
+3. **ONE content box** wrapping loading / centered-empty / table-or-list: `overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50`. Table: `<thead className="bg-muted">` with `th` = `px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide`; `<tbody className="divide-y divide-border">` with **no** `bg-background`/`bg-popover` (inherits the box); rows `hover:bg-muted/50`. Non-tabular list → `divide-y divide-border` of rows instead of a `<table>`. Empty/loading states go **inside** this same box (`flex min-h-[16rem] items-center justify-center`); use the ui-kit `EmptyState`, never ad-hoc `<p>No data</p>`. Pagination is a root sibling **below** the box.
+
+**Detail/form/action pages** (no toolbar): standalone h1, left-aligned back button `<Button variant="ghost" size="sm" className="w-fit px-0">` (the `w-fit` is mandatory — a ghost button as a direct flex-col child stretches full-width and centers its text otherwise), equal cards in `grid gap-4 md:grid-cols-2` each using the box idiom `rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50`, boxed form sections. Convert inline `style={{}}` and hardcoded hex to semantic tokens; keep intentional prominence (critical/allergy/emergency = `destructive`, which is red).
+
 ### Icons
 
 All icons across every app and the admin-portal are standardized on **lucide-react** via the shared `@ultranos/ui-kit` package.

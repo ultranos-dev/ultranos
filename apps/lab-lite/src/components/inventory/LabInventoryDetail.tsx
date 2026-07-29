@@ -104,7 +104,7 @@ export function LabInventoryDetail({ labId, labName }: Props) {
     return (
       <div className="animate-pulse space-y-2">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-12 rounded-lg bg-gray-100" />
+          <div key={i} className="h-12 rounded-lg bg-muted" />
         ))}
       </div>
     )
@@ -112,7 +112,7 @@ export function LabInventoryDetail({ labId, labName }: Props) {
 
   if (!myEntry) {
     return (
-      <div className="rounded-lg border border-dashed border-gray-300 px-8 py-10 text-center text-sm text-gray-500">
+      <div className="rounded-lg border border-dashed border-border px-8 py-10 text-center text-sm text-muted-foreground">
         {t('noInventoryData')}
       </div>
     )
@@ -125,37 +125,37 @@ export function LabInventoryDetail({ labId, labName }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-baseline gap-2">
-        <h2 className="text-base font-semibold text-gray-900">{labName}</h2>
-        <span className="text-xs text-gray-500">
+        <h2 className="text-base font-semibold text-foreground">{labName}</h2>
+        <span className="text-xs text-muted-foreground">
           {t('lastSynced')}: {new Date(myEntry.snapshotAt).toLocaleString()}
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="min-w-full divide-y divide-border text-sm">
+          <thead className="bg-muted">
             <tr>
-              <th className="px-4 py-3 text-start font-medium text-gray-600">
+              <th className="px-4 py-3 text-start font-medium text-muted-foreground">
                 {t('reagent')}
               </th>
-              <th className="px-3 py-3 text-center font-medium text-gray-600">
+              <th className="px-3 py-3 text-center font-medium text-muted-foreground">
                 {t('qty')}
               </th>
-              <th className="px-3 py-3 text-center font-medium text-gray-600">
+              <th className="px-3 py-3 text-center font-medium text-muted-foreground">
                 {t('dailyRate')}
               </th>
-              <th className="px-3 py-3 text-center font-medium text-gray-600">
+              <th className="px-3 py-3 text-center font-medium text-muted-foreground">
                 {t('daysOfSupply')}
               </th>
-              <th className="px-3 py-3 text-center font-medium text-gray-600">
+              <th className="px-3 py-3 text-center font-medium text-muted-foreground">
                 {t('expiry')}
               </th>
-              <th className="px-4 py-3 text-start font-medium text-gray-600">
+              <th className="px-4 py-3 text-start font-medium text-muted-foreground">
                 {t('networkComparison')}
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 bg-card">
+          <tbody className="divide-y divide-border bg-card">
             {sortedItems.map((item: InventorySnapshotItem) => {
               const colorClass = getCellColor(item)
               const stats = computeNetworkStats(item.reagentCode, item.daysOfSupply, allEntries)
@@ -168,16 +168,16 @@ export function LabInventoryDetail({ labId, labName }: Props) {
               )
 
               return (
-                <tr key={item.reagentCode} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-900">
+                <tr key={item.reagentCode} className="hover:bg-muted">
+                  <td className="px-4 py-3 text-foreground">
                     <div className="font-medium">{item.reagentDisplay}</div>
-                    <div className="text-xs text-gray-400">{item.category}</div>
+                    <div className="text-xs text-muted-foreground">{item.category}</div>
                   </td>
-                  <td className="px-3 py-3 text-center text-gray-700">
+                  <td className="px-3 py-3 text-center text-foreground">
                     {item.currentQuantity}
-                    <span className="text-xs text-gray-400"> {item.unitOfMeasure}</span>
+                    <span className="text-xs text-muted-foreground"> {item.unitOfMeasure}</span>
                   </td>
-                  <td className="px-3 py-3 text-center text-gray-700">
+                  <td className="px-3 py-3 text-center text-foreground">
                     {item.dailyConsumptionRate.toFixed(1)}
                   </td>
                   <td className="px-3 py-3 text-center">
@@ -189,19 +189,19 @@ export function LabInventoryDetail({ labId, labName }: Props) {
                             ? 'bg-yellow-100 text-yellow-800'
                             : colorClass === 'red'
                               ? 'bg-red-100 text-red-800'
-                              : 'bg-gray-100 text-gray-500'
+                              : 'bg-muted text-muted-foreground'
                       }`}
                     >
                       {item.isStockedOut ? t('stockedOut') : `${item.daysOfSupply}d`}
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-center text-xs text-gray-600">
+                  <td className="px-3 py-3 text-center text-xs text-muted-foreground">
                     {item.expiryDate ?? '—'}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {/* Bar */}
-                      <div className="h-2 w-24 overflow-hidden rounded-full bg-gray-200">
+                      <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
                         <div
                           className={`h-full rounded-full ${colorBarClass(item.daysOfSupply)}`}
                           style={{ width: `${barFill}%` }}
@@ -212,11 +212,11 @@ export function LabInventoryDetail({ labId, labName }: Props) {
                         />
                       </div>
                       {/* Percentile label */}
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         {t('pctile', { pct: stats.percentile })}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-xs text-gray-400">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       {t('networkAvg')}: {stats.avg}d
                     </p>
                   </td>

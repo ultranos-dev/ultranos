@@ -170,7 +170,7 @@ export function ChecklistTemplateEditor() {
           <button
             type="button"
             onClick={openAddForm}
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring"
           >
             {t('addItem')}
           </button>
@@ -206,7 +206,7 @@ export function ChecklistTemplateEditor() {
             <button
               type="button"
               onClick={() => setShowResetConfirm(false)}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+              className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-muted"
             >
               {t('cancel')}
             </button>
@@ -216,8 +216,8 @@ export function ChecklistTemplateEditor() {
 
       {/* Add item form */}
       {showAddForm && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 flex flex-col gap-3">
-          <h3 className="text-sm font-semibold text-blue-800">{t('addItemTitle')}</h3>
+        <div className="rounded-lg border border-primary bg-primary/10 p-4 flex flex-col gap-3">
+          <h3 className="text-sm font-semibold text-primary">{t('addItemTitle')}</h3>
 
           {addError && (
             <p className="text-xs text-red-600" role="alert">
@@ -226,14 +226,14 @@ export function ChecklistTemplateEditor() {
           )}
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-700">{t('fieldCategory')}</label>
+            <label className="text-xs font-medium text-foreground">{t('fieldCategory')}</label>
             <select
               value={addCategory}
               onChange={(e) => {
                 setAddCategory(e.target.value)
                 setAddError('')
               }}
-              className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="rounded border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {categoryOptions.map((cat) => (
                 <option key={cat} value={cat}>
@@ -248,13 +248,13 @@ export function ChecklistTemplateEditor() {
                 value={addNewCategory}
                 onChange={(e) => setAddNewCategory(e.target.value)}
                 placeholder={t('newCategoryPlaceholder')}
-                className="mt-1 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="mt-1 rounded border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             )}
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-700">{t('fieldDescription')}</label>
+            <label className="text-xs font-medium text-foreground">{t('fieldDescription')}</label>
             <input
               type="text"
               value={addDescription}
@@ -262,7 +262,7 @@ export function ChecklistTemplateEditor() {
                 setAddDescription(e.target.value)
                 setAddError('')
               }}
-              className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="rounded border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -272,21 +272,21 @@ export function ChecklistTemplateEditor() {
               type="checkbox"
               checked={addRequiresPhoto}
               onChange={(e) => setAddRequiresPhoto(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-400"
+              className="h-4 w-4 rounded border-border text-primary focus:ring-ring"
             />
-            <label htmlFor="add-requires-photo" className="text-sm text-gray-700">
+            <label htmlFor="add-requires-photo" className="text-sm text-foreground">
               {t('fieldRequiresPhoto')}
             </label>
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-700">{t('fieldOrder')}</label>
+            <label className="text-xs font-medium text-foreground">{t('fieldOrder')}</label>
             <input
               type="number"
               value={addOrder}
               onChange={(e) => setAddOrder(Number(e.target.value))}
               min={1}
-              className="w-24 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-24 rounded border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -294,14 +294,14 @@ export function ChecklistTemplateEditor() {
             <button
               type="button"
               onClick={handleAdd}
-              className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90"
             >
               {t('save')}
             </button>
             <button
               type="button"
               onClick={() => setShowAddForm(false)}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+              className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-muted"
             >
               {t('cancel')}
             </button>
@@ -313,18 +313,18 @@ export function ChecklistTemplateEditor() {
       {loading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-12 animate-pulse rounded-lg bg-gray-200" aria-busy="true" />
+            <div key={i} className="h-12 animate-pulse rounded-lg bg-muted" aria-busy="true" />
           ))}
         </div>
       ) : templates.length === 0 ? (
-        <p className="text-sm text-gray-500">{t('noTemplates')}</p>
+        <p className="text-sm text-muted-foreground">{t('noTemplates')}</p>
       ) : (
         <div className="flex flex-col gap-4">
           {allCategories.map((category) => (
             <section key={category} aria-labelledby={`cat-heading-${category}`}>
               <h3
                 id={`cat-heading-${category}`}
-                className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500"
+                className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground"
               >
                 {category}
               </h3>
@@ -334,21 +334,21 @@ export function ChecklistTemplateEditor() {
                     key={item.id}
                     className={`rounded-lg border p-3 ${
                       item.isActive
-                        ? 'border-gray-200 bg-card'
-                        : 'border-gray-100 bg-gray-50 opacity-60'
+                        ? 'border-border bg-card'
+                        : 'border-border bg-muted opacity-60'
                     }`}
                   >
                     {editingId === item.id && !item.isDefault ? (
                       /* Inline edit form for custom items */
                       <div className="flex flex-col gap-2">
                         <div className="flex flex-col gap-1">
-                          <label className="text-xs font-medium text-gray-600">
+                          <label className="text-xs font-medium text-muted-foreground">
                             {t('fieldCategory')}
                           </label>
                           <select
                             value={editCategory}
                             onChange={(e) => setEditCategory(e.target.value)}
-                            className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="rounded border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                           >
                             {categoryOptions.map((cat) => (
                               <option key={cat} value={cat}>
@@ -363,19 +363,19 @@ export function ChecklistTemplateEditor() {
                               value={editNewCategory}
                               onChange={(e) => setEditNewCategory(e.target.value)}
                               placeholder={t('newCategoryPlaceholder')}
-                              className="mt-1 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              className="mt-1 rounded border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                             />
                           )}
                         </div>
                         <div className="flex flex-col gap-1">
-                          <label className="text-xs font-medium text-gray-600">
+                          <label className="text-xs font-medium text-muted-foreground">
                             {t('fieldDescription')}
                           </label>
                           <input
                             type="text"
                             value={editDescription}
                             onChange={(e) => setEditDescription(e.target.value)}
-                            className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="rounded border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                           />
                         </div>
                         <div className="flex items-center gap-2">
@@ -384,11 +384,11 @@ export function ChecklistTemplateEditor() {
                             type="checkbox"
                             checked={editRequiresPhoto}
                             onChange={(e) => setEditRequiresPhoto(e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                            className="h-4 w-4 rounded border-border text-primary"
                           />
                           <label
                             htmlFor={`edit-photo-${item.id}`}
-                            className="text-sm text-gray-700"
+                            className="text-sm text-foreground"
                           >
                             {t('fieldRequiresPhoto')}
                           </label>
@@ -397,14 +397,14 @@ export function ChecklistTemplateEditor() {
                           <button
                             type="button"
                             onClick={() => handleSaveEdit(item)}
-                            className="rounded-md bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700"
+                            className="rounded-md bg-primary px-2 py-1 text-xs font-medium text-white hover:bg-primary/90"
                           >
                             {t('save')}
                           </button>
                           <button
                             type="button"
                             onClick={() => setEditingId(null)}
-                            className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                            className="rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-muted"
                           >
                             {t('cancel')}
                           </button>
@@ -414,7 +414,7 @@ export function ChecklistTemplateEditor() {
                       /* Read view */
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex flex-col gap-1 min-w-0">
-                          <p className="text-sm text-gray-800 break-words">{item.description}</p>
+                          <p className="text-sm text-foreground break-words">{item.description}</p>
                           <div className="flex flex-wrap gap-1.5 mt-0.5">
                             {item.requiresPhoto && (
                               <span className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700">
@@ -422,12 +422,12 @@ export function ChecklistTemplateEditor() {
                               </span>
                             )}
                             {!item.isActive && (
-                              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                              <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                                 {t('badgeInactive')}
                               </span>
                             )}
                             {item.isDefault && (
-                              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600">
+                              <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                                 {t('badgeDefault')}
                               </span>
                             )}
@@ -454,7 +454,7 @@ export function ChecklistTemplateEditor() {
                               <button
                                 type="button"
                                 onClick={() => startEdit(item)}
-                                className="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                                className="rounded border border-border px-2 py-1 text-xs font-medium text-foreground hover:bg-muted"
                               >
                                 {t('edit')}
                               </button>

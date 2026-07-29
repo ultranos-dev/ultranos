@@ -101,7 +101,7 @@ export function HmisReportGenerator() {
   const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1)
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold">{t('title')}</h1>
 
       {state === 'error' && (

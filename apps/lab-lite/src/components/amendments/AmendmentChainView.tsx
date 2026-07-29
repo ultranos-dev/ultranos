@@ -86,7 +86,7 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
 
   if (loading) {
     return (
-      <div className="py-4 text-sm text-gray-500" data-testid="chain-loading">
+      <div className="py-4 text-sm text-muted-foreground" data-testid="chain-loading">
         {tCommon('loading')}
       </div>
     )
@@ -102,7 +102,7 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
 
   if (chain.length === 0) {
     return (
-      <div className="py-4 text-sm text-gray-500" data-testid="chain-empty">
+      <div className="py-4 text-sm text-muted-foreground" data-testid="chain-empty">
         {t('noAmendments')}
       </div>
     )
@@ -110,20 +110,20 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
 
   return (
     <div className="space-y-3" data-testid="amendment-chain">
-      <h3 className="text-sm font-medium text-gray-700">
+      <h3 className="text-sm font-medium text-foreground">
         {t('historyTitle', { count: chain.length })}
       </h3>
 
-      <ol className="relative border-s border-gray-200 ms-4 space-y-4">
+      <ol className="relative border-s border-border ms-4 space-y-4">
         {chain.map((amendment, index) => (
           <li key={amendment.id} className="ms-4" data-testid={`chain-entry-${index}`}>
             {/* Timeline dot */}
-            <div className="absolute -start-1.5 w-3 h-3 rounded-full bg-blue-600 border-2 border-white" />
+            <div className="absolute -start-1.5 w-3 h-3 rounded-full bg-primary border-2 border-white" />
 
-            <div className="bg-gray-50 border border-gray-200 rounded-md p-3 text-sm">
+            <div className="bg-muted border border-border rounded-md p-3 text-sm">
               {/* Version header */}
               <div className="flex items-center justify-between mb-2">
-                <span className="font-medium text-gray-900">
+                <span className="font-medium text-foreground">
                   {t('versionLabel', { version: index + 1 })}
                 </span>
                 <span
@@ -138,7 +138,7 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
               </div>
 
               {/* Reason */}
-              <div className="space-y-1 text-gray-700">
+              <div className="space-y-1 text-foreground">
                 <div className="flex gap-2">
                   <span className="font-medium w-28 shrink-0">{t('reason')}</span>
                   <span>
@@ -151,38 +151,38 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
                 {amendment.reasonText && (
                   <div className="flex gap-2">
                     <span className="font-medium w-28 shrink-0">{t('explanation')}</span>
-                    <span className="text-gray-600">{amendment.reasonText}</span>
+                    <span className="text-muted-foreground">{amendment.reasonText}</span>
                   </div>
                 )}
 
                 <div className="flex gap-2">
                   <span className="font-medium w-28 shrink-0">{t('initiatedBy')}</span>
-                  <span className="font-mono text-xs text-gray-500">{amendment.initiatedBy}</span>
+                  <span className="font-mono text-xs text-muted-foreground">{amendment.initiatedBy}</span>
                 </div>
 
                 {amendment.authorizedBy && (
                   <div className="flex gap-2">
                     <span className="font-medium w-28 shrink-0">{t('authorizedBy')}</span>
-                    <span className="font-mono text-xs text-gray-500">{amendment.authorizedBy}</span>
+                    <span className="font-mono text-xs text-muted-foreground">{amendment.authorizedBy}</span>
                   </div>
                 )}
 
                 <div className="flex gap-2">
                   <span className="font-medium w-28 shrink-0">{t('initiated')}</span>
-                  <span className="text-gray-500">{formatTimestamp(amendment.initiatedAt)}</span>
+                  <span className="text-muted-foreground">{formatTimestamp(amendment.initiatedAt)}</span>
                 </div>
 
                 {amendment.authorizedAt && (
                   <div className="flex gap-2">
                     <span className="font-medium w-28 shrink-0">{t('authorized')}</span>
-                    <span className="text-gray-500">{formatTimestamp(amendment.authorizedAt)}</span>
+                    <span className="text-muted-foreground">{formatTimestamp(amendment.authorizedAt)}</span>
                   </div>
                 )}
 
                 {/* Diff summary */}
-                <div className="mt-2 pt-2 border-t border-gray-200">
-                  <p className="text-xs font-medium text-gray-600 mb-1">{t('diffSummaryTitle')}</p>
-                  <div className="font-mono text-xs text-gray-500">
+                <div className="mt-2 pt-2 border-t border-border">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">{t('diffSummaryTitle')}</p>
+                  <div className="font-mono text-xs text-muted-foreground">
                     {Object.keys(amendment.originalValues).length > 0 || Object.keys(amendment.amendedValues).length > 0
                       ? Object.keys({ ...amendment.originalValues, ...amendment.amendedValues }).map((key) => (
                           <div key={key}>

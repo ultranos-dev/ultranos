@@ -10,26 +10,17 @@ export default function OrdersPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-          {t('title')}
-        </h1>
-        <button
-          type="button"
-          onClick={refresh}
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-        >
-          {t('refresh', { defaultMessage: 'Refresh' })}
-        </button>
-      </div>
+      <h1 className="text-2xl font-semibold text-foreground">
+        {t('title')}
+      </h1>
 
       {error && (
-        <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+        <div className="rounded-2xl bg-warning/10 p-3 text-sm text-warning">
           {error}
         </div>
       )}
 
-      <OrdersWorklist orders={orders} loading={loading} />
+      <OrdersWorklist orders={orders} loading={loading} onRefresh={refresh} />
     </div>
   )
 }

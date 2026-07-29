@@ -117,15 +117,15 @@ export function AudioResultPlayer({
   if (showFallback) {
     return (
       <div
-        className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800"
+        className="rounded-lg border border-border bg-muted p-4"
         role="status"
         aria-label={t('audioUnavailable')}
       >
-        <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+        <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {t('audioUnavailable')}
         </p>
         {fallbackText ? (
-          <p className="text-base leading-relaxed text-gray-800 dark:text-gray-200">
+          <p className="text-base leading-relaxed text-foreground">
             {fallbackText}
           </p>
         ) : null}
@@ -150,14 +150,14 @@ export function AudioResultPlayer({
 
       {/* Progress bar */}
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+        className="h-2 w-full overflow-hidden rounded-full bg-muted"
         role="progressbar"
         aria-valuenow={Math.round(progressPercent)}
         aria-valuemin={0}
         aria-valuemax={100}
       >
         <div
-          className="h-full bg-blue-500 transition-all duration-200"
+          className="h-full bg-primary transition-all duration-200"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
@@ -169,7 +169,7 @@ export function AudioResultPlayer({
           <button
             type="button"
             onClick={handlePlay}
-            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             aria-label={t('playExplanation')}
             data-testid="play-button"
           >
@@ -179,7 +179,7 @@ export function AudioResultPlayer({
           <button
             type="button"
             onClick={handlePause}
-            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             aria-label={t('playExplanation')}
             data-testid="pause-button"
           >
@@ -191,7 +191,7 @@ export function AudioResultPlayer({
         <button
           type="button"
           onClick={handleReplay}
-          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-gray-300 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-gray-600 dark:hover:bg-gray-800"
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-border hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           aria-label={t('replay')}
           data-testid="replay-button"
         >

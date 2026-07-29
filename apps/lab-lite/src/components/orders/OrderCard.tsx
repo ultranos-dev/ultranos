@@ -16,10 +16,10 @@ const URGENCY_STYLES: Record<string, string> = {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  RECEIVED: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  RECEIVED: 'bg-primary/10 text-primary',
   IN_PROGRESS: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
   COMPLETED: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  CANCELLED: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
+  CANCELLED: 'bg-muted text-muted-foreground dark:text-muted-foreground',
 }
 
 function timeAgo(iso: string): string {
@@ -45,11 +45,11 @@ export function OrderCard({ order }: { order: LabOrderEntry }) {
   }, [order.patientRef])
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {/* Patient: first name + age */}
-          <p className="truncate text-base font-semibold text-gray-900 dark:text-gray-100">
+          <p className="truncate text-base font-semibold text-foreground">
             {order.patientFirstName}, {order.patientAge != null ? `${order.patientAge}y` : '?'}
           </p>
 
@@ -75,23 +75,23 @@ export function OrderCard({ order }: { order: LabOrderEntry }) {
           )}
 
           {/* Tests */}
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-1 text-sm text-muted-foreground">
             <span className="font-medium">{t('card.testsRequested')}:</span>{' '}
             {order.testsRequested.map((t) => t.loincDisplay).join(', ')}
           </p>
 
           {/* Ordering physician */}
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-muted-foreground">
             {t('card.orderedBy')}: {order.orderingPhysicianName}
           </p>
 
           {/* Special instructions */}
           {order.specialInstructions && (
             <details className="mt-2">
-              <summary className="cursor-pointer text-sm font-medium text-gray-600 dark:text-gray-400">
+              <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
                 {t('card.specialInstructions')}
               </summary>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {order.specialInstructions}
               </p>
             </details>
@@ -110,7 +110,7 @@ export function OrderCard({ order }: { order: LabOrderEntry }) {
           >
             {t(`filters.${order.status === 'IN_PROGRESS' ? 'inProgress' : order.status.toLowerCase()}`)}
           </span>
-          <span className="text-xs text-gray-400" title={order.authoredOn}>
+          <span className="text-xs text-muted-foreground" title={order.authoredOn}>
             {t('card.orderedAt')} {timeAgo(order.authoredOn)}
           </span>
         </div>

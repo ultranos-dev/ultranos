@@ -298,7 +298,8 @@
     "errorBirthDateRequired": "تاریخ تولد ضروری است.",
     "errorBirthYearRange": "سال تولد باید بین ۱۹۰۰ و سال جاری باشد.",
     "errorWitnessRequired": "نام شاهد برای رضایت شفاهی ضروری است.",
-    "errorUnexpected": "یک خطای غیرمنتظره رخ داد."
+    "errorUnexpected": "یک خطای غیرمنتظره رخ داد.",
+    "viewRecord": "مشاهده سابقه"
   },
   "sidebar": {
     "dashboard": "داشبورد",
@@ -336,7 +337,12 @@
     "readinessBoard": "تابلوی آمادگی",
     "mentorship": "Mentorship",
     "visualAtlas": "اطلس بصری",
-    "escalations": "ارتقاءها"
+    "escalations": "ارتقاءها",
+    "sendOuts": "ارجاعات بیرونی",
+    "logbook": "دفتر ثبت",
+    "procurement": "تدارکات",
+    "workload": "حجم کار",
+    "spillResponse": "واکنش به ریختگی"
   },
   "network": {
     "networkDashboard": "شبکه لابراتوار",
@@ -400,7 +406,8 @@
     },
     "manualModeInfo": "حالت دستی: برای مرتب‌سازی مجدد بکشید. به‌روزرسانی خودکار متوقف شده. نشانگرهای پایداری هنوز فعال هستند.",
     "emptyTitle": "هیچ نمونه‌ای در صف نیست",
-    "emptyHint": "نمونه‌های دریافت‌شده به‌طور خودکار در اینجا نمایش داده می‌شوند."
+    "emptyHint": "نمونه‌های دریافت‌شده به‌طور خودکار در اینجا نمایش داده می‌شوند.",
+    "enterResult": "ثبت نتیجه"
   },
   "orders": {
     "title": "درخواست‌های آزمایش",
@@ -424,7 +431,12 @@
       "specialInstructions": "دستورات خاص",
       "orderedAt": "تاریخ درخواست"
     },
-    "badge": "در انتظار"
+    "badge": "در انتظار",
+    "searchPlaceholder": "جستجو با شناسه سفارش…",
+    "loading": "در حال بارگیری سفارش‌ها…",
+    "noResultsTitle": "سفارشی مطابق یافت نشد",
+    "noResultsDescription": "هیچ سفارشی با فیلترهای فعلی مطابقت ندارد.",
+    "clearFilters": "پاک کردن فیلترها"
   },
   "settings": {
     "title": "تنظیمات",
@@ -486,7 +498,8 @@
     "smsTestPhone": "شماره تلفن آزمایشی",
     "smsConfigSaved": "پیکربندی SMS ذخیره شد",
     "smsTestSent": "پیامک آزمایشی در صف قرار گرفت",
-    "criticalValues": "ارزش‌های بحرانی و ارتقاء"
+    "criticalValues": "ارزش‌های بحرانی و ارتقاء",
+    "criticalValuesDesc": "آستانه‌های نتایج بحرانی و مخاطبین تشدید"
   },
   "queuePage": {
     "title": "صف بارگذاری",
@@ -1127,7 +1140,8 @@
     "syncStatusCol": "وضعیت همگام‌سازی",
     "synced": "همگام شده",
     "pendingSync": "در انتظار",
-    "noAcknowledgments": "هنوز تأییدی ثبت نشده"
+    "noAcknowledgments": "هنوز تأییدی ثبت نشده",
+    "clearFilters": "پاک کردن فیلترها"
   },
   "peerNetwork": {
     "pageTitle": "از تخنیکر بپرسید",
@@ -1753,7 +1767,11 @@
     "retryButton": "تلاش مجدد",
     "rangeUpdated": "محدوده از زمان نتیجه به‌روز شده. فعلی: {min}–{max}",
     "commentPlaceholder": "دلیل را وارد کنید...",
-    "commentAriaLabel": "نظرات"
+    "commentAriaLabel": "نظرات",
+    "searchPlaceholder": "جستجوی نتایج…",
+    "noResultsTitle": "نتیجه‌ای مطابق یافت نشد",
+    "noResultsDescription": "هیچ نتیجه در انتظاری با فیلترهای فعلی مطابقت ندارد.",
+    "clearFilters": "پاک کردن فیلترها"
   },
   "delegates": {
     "addDelegate": "افزودن نماینده خانوادگی",
@@ -2010,7 +2028,8 @@
     "outgoingNotesLabel": "یادداشت‌های خروجی",
     "incomingNotesLabel": "یادداشت‌های ورودی",
     "readyStatus": "آماده",
-    "noHistoryHint": "تحویل‌دهی‌های تکمیل‌شدهٔ شیفت در اینجا نمایش داده می‌شوند."
+    "noHistoryHint": "تحویل‌دهی‌های تکمیل‌شدهٔ شیفت در اینجا نمایش داده می‌شوند.",
+    "historyRestricted": "تاریخچه تحویل فقط برای ناظران و مدیران آزمایشگاه در دسترس است."
   },
   "visualAtlas": {
     "categoryNavLabel": "دسته‌بندی‌های اطلس",
@@ -2530,7 +2549,11 @@
     "reagentConsumption": "مصرف معرفها و تجهیزات",
     "qualityIndicatorsTitle": "شاخصهای کیفیت",
     "dhis2OrgUnitTitle": "واحد سازمانی DHIS2",
-    "dhis2OrgUnitDescription": "شناسه واحد سازمانی DHIS2 برای این تأسیسات را وارد کنید. این شناسه توسط مدیر DHIS2 شما تعیین می‌شود."
+    "dhis2OrgUnitDescription": "شناسه واحد سازمانی DHIS2 برای این تأسیسات را وارد کنید. این شناسه توسط مدیر DHIS2 شما تعیین می‌شود.",
+    "surveillanceTitle": "نظارت بیماری‌ها",
+    "surveillanceDescription": "هشدارهای نظارت و نشانه‌های شیوع بیماری",
+    "donorTitle": "گزارش اهداکنندگان",
+    "donorDescription": "گزارش‌های خلاصه برنامه اهدای خون"
   },
   "surveillance": {
     "title": "نظارت بر بیماری‌ها",
@@ -3280,7 +3303,28 @@
     "refLabFieldTestsPlaceholder": "2085-9, 4548-4, 10524-7",
     "refLabFieldTatPlaceholder": "2085-9:5, 4548-4:3",
     "importResultValuePlaceholder": "مثال: 5.2",
-    "importResultUnitPlaceholder": "مثال: mmol/L"
+    "importResultUnitPlaceholder": "مثال: mmol/L",
+    "pageTitle": "ارجاعات بیرونی",
+    "searchPlaceholder": "جستجوی ارجاعات…",
+    "filterStatusAria": "فیلتر بر اساس وضعیت",
+    "filterStatusAll": "همه وضعیت‌ها",
+    "filterLabAria": "فیلتر بر اساس آزمایشگاه مرجع",
+    "filterLabAll": "همه آزمایشگاه‌ها",
+    "overdueBanner": "{count, plural, one {# ارجاع معوقه است.} other {# ارجاع معوقه است.}}",
+    "viewPending": "مشاهده ارجاعات در انتظار",
+    "colTrackingId": "شناسه پیگیری",
+    "colReferenceLab": "آزمایشگاه مرجع",
+    "colTestRequested": "آزمایش درخواستی",
+    "colDateSent": "تاریخ ارسال",
+    "colStatus": "وضعیت",
+    "colElapsed": "زمان سپری‌شده",
+    "colActions": "اقدامات",
+    "loading": "در حال بارگیری ارجاعات…",
+    "noResultsTitle": "هیچ ارجاعی یافت نشد",
+    "noResultsDescription": "هیچ ارجاعی با فیلترهای فعلی مطابقت ندارد.",
+    "clearFilters": "پاک کردن فیلترها",
+    "actionUpdateStatus": "به‌روزرسانی وضعیت",
+    "actionImportResult": "وارد کردن نتیجه"
   },
   "outbreak": {
     "activateAriaLabel": "فعال کردن حالت اپیدمی",
@@ -3547,7 +3591,38 @@
         "sms_physician": "پیامک به داکتر",
         "sms_director": "پیامک به مدیر طبی",
         "flag_district": "هشدار مسؤول ولسوالی"
-      }
+      },
+      "refresh": "تازه‌سازی",
+      "activeAlert": "{count, plural, one {# تشدید فعال نیاز به توجه دارد.} other {# تشدید فعال نیاز به توجه دارد.}}",
+      "searchPlaceholder": "جستجوی تشدیدها…",
+      "noResults": "تشدید مطابقی یافت نشد",
+      "clearSearch": "پاک کردن جستجو"
     }
+  },
+  "logbook": {
+    "title": "دفتر ثبت",
+    "authorized": "تأییدشده",
+    "amended": "اصلاح‌شده",
+    "amendmentOf": "اصلاح #{seqNo}",
+    "loadingMore": "در حال بارگیری…",
+    "exportPdf": "خروجی PDF",
+    "exporting": "در حال خروجی‌گیری…",
+    "filterByDate": "تاریخ",
+    "filterByTestType": "نوع آزمایش",
+    "filterByTechnician": "تکنسین",
+    "filterByPatient": "بیمار",
+    "searchPlaceholder": "جستجو بر اساس بیمار…",
+    "noResults": "ورودی مطابقی یافت نشد",
+    "noEntries": "هنوز ورودی در دفتر ثبت نیست",
+    "seqNo": "شماره ترتیب",
+    "date": "تاریخ",
+    "patientRef": "بیمار",
+    "age": "سن",
+    "testType": "نوع آزمایش",
+    "resultSummary": "نتیجه",
+    "technician": "تکنسین",
+    "authStatus": "وضعیت",
+    "loadMore": "بارگیری بیشتر",
+    "clearFilters": "پاک کردن فیلترها"
   }
 }

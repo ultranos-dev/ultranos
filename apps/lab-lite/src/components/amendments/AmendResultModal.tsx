@@ -148,15 +148,15 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
       >
         <div className="bg-card rounded-lg shadow-xl w-full max-w-2xl mx-4 flex flex-col max-h-[90vh]">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 id="amend-modal-title" className="text-lg font-semibold text-gray-900">
+          <div className="px-6 py-4 border-b border-border">
+            <h2 id="amend-modal-title" className="text-lg font-semibold text-foreground">
               {t('title', { step })}
             </h2>
             <div className="mt-2 flex gap-2" aria-hidden="true">
               {([1, 2, 3, 4] as Step[]).map((s) => (
                 <div
                   key={s}
-                  className={`h-1.5 flex-1 rounded-full ${s <= step ? 'bg-blue-600' : 'bg-gray-200'}`}
+                  className={`h-1.5 flex-1 rounded-full ${s <= step ? 'bg-primary' : 'bg-muted'}`}
                 />
               ))}
             </div>
@@ -167,26 +167,26 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
             {/* Step 1: Original vs corrected values */}
             {step === 1 && (
               <div className="space-y-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {t('step1Review')}
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">{t('step1OriginalTitle')}</h3>
-                    <div className="bg-gray-50 border border-gray-200 rounded-md p-3 text-sm text-gray-700 min-h-[80px]">
-                      <p className="text-xs text-gray-500 mb-1">{t('step1ConclusionLabel')}</p>
+                    <h3 className="text-sm font-medium text-foreground mb-2">{t('step1OriginalTitle')}</h3>
+                    <div className="bg-muted border border-border rounded-md p-3 text-sm text-foreground min-h-[80px]">
+                      <p className="text-xs text-muted-foreground mb-1">{t('step1ConclusionLabel')}</p>
                       <p>{result.conclusion ?? '—'}</p>
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">{t('step1CorrectedTitle')}</h3>
+                    <h3 className="text-sm font-medium text-foreground mb-2">{t('step1CorrectedTitle')}</h3>
                     <div className="space-y-2">
-                      <label className="block text-xs text-gray-500">{t('step1ConclusionLabel')}</label>
+                      <label className="block text-xs text-muted-foreground">{t('step1ConclusionLabel')}</label>
                       <textarea
                         value={correctedConclusion}
                         onChange={(e) => setCorrectedConclusion(e.target.value)}
                         rows={4}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         data-testid="corrected-conclusion-input"
                       />
                     </div>
@@ -198,18 +198,18 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
             {/* Step 2: Reason code + free-text */}
             {step === 2 && (
               <div className="space-y-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {t('step2Review')}
                 </p>
                 <div>
-                  <label htmlFor="reason-code-select" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="reason-code-select" className="block text-sm font-medium text-foreground mb-1">
                     {t('step2ReasonCodeLabel')} <span className="text-red-600" aria-hidden="true">*</span>
                   </label>
                   <select
                     id="reason-code-select"
                     value={reasonCode}
                     onChange={(e) => setReasonCode(e.target.value as AmendmentReasonCode)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     data-testid="reason-code-select"
                   >
                     <option value="">{t('step2ReasonCodePlaceholder')}</option>
@@ -226,7 +226,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                 )}
 
                 <div>
-                  <label htmlFor="reason-text-input" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="reason-text-input" className="block text-sm font-medium text-foreground mb-1">
                     {t('step2ExplanationLabel')} <span className="text-red-600" aria-hidden="true">*</span>
                   </label>
                   <textarea
@@ -235,7 +235,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                     onChange={(e) => setReasonText(e.target.value)}
                     rows={4}
                     placeholder={t('step2ExplanationPlaceholder')}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     data-testid="reason-text-input"
                   />
                   <p className={`text-xs mt-1 ${reasonText.trim().length < 10 ? 'text-red-500' : 'text-green-600'}`}>
@@ -251,19 +251,19 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                 {supervisorAuth ? (
                   <div className="text-green-600">
                     <p className="text-lg font-medium">{t('step3AuthorizedTitle')}</p>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       {t('step3AuthorizedBy', { supervisorId: supervisorAuth.supervisorId })}
                     </p>
                   </div>
                 ) : (
                   <>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       {t('step3AuthRequired')}
                     </p>
                     <button
                       type="button"
                       onClick={() => setShowSupervisorGate(true)}
-                      className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                      className="px-4 py-2 text-sm text-white bg-primary rounded-md hover:bg-primary/90"
                       data-testid="open-supervisor-gate-btn"
                     >
                       {t('step3AuthorizeButton')}
@@ -276,13 +276,13 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
             {/* Step 4: Confirmation diff summary */}
             {step === 4 && (
               <div className="space-y-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {t('step4Review')}
                 </p>
 
-                <div className="border border-gray-200 rounded-md overflow-hidden">
-                  <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                    <h3 className="text-sm font-medium text-gray-700">{t('step4SummaryTitle')}</h3>
+                <div className="border border-border rounded-md overflow-hidden">
+                  <div className="bg-muted px-4 py-2 border-b border-border">
+                    <h3 className="text-sm font-medium text-foreground">{t('step4SummaryTitle')}</h3>
                   </div>
                   <div className="p-4 space-y-3 text-sm">
                     <div className="flex gap-2">
@@ -291,24 +291,24 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                     </div>
                     <div className="flex gap-2">
                       <span className="font-medium w-32 shrink-0">{t('step4ExplanationLabel')}</span>
-                      <span className="text-gray-700">{reasonText}</span>
+                      <span className="text-foreground">{reasonText}</span>
                     </div>
                     <div className="flex gap-2">
                       <span className="font-medium w-32 shrink-0">{t('step4AuthorizedByLabel')}</span>
                       <span>{supervisorAuth?.supervisorId ?? '—'}</span>
                     </div>
-                    <hr className="border-gray-200" />
+                    <hr className="border-border" />
                     <div>
                       <p className="font-medium mb-1">{t('step4ConclusionLabel')}</p>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">{t('step4OriginalLabel')}</p>
+                          <p className="text-xs text-muted-foreground mb-1">{t('step4OriginalLabel')}</p>
                           <p className="bg-red-50 border border-red-200 rounded px-2 py-1 line-through text-red-700">
                             {result.conclusion ?? '—'}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">{t('step4CorrectedLabel')}</p>
+                          <p className="text-xs text-muted-foreground mb-1">{t('step4CorrectedLabel')}</p>
                           <p className="bg-green-50 border border-green-200 rounded px-2 py-1 text-green-800">
                             {correctedConclusion || '—'}
                           </p>
@@ -328,12 +328,12 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+          <div className="px-6 py-4 border-t border-border flex justify-between items-center">
             <button
               type="button"
               onClick={step === 1 ? onCancel : () => setStep((s) => Math.max(1, s - 1) as Step)}
               disabled={loading}
-              className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+              className="px-4 py-2 text-sm text-foreground border border-border rounded-md hover:bg-muted disabled:opacity-50"
               data-testid="modal-back-btn"
             >
               {step === 1 ? t('cancelButton') : t('backButton')}
@@ -351,7 +351,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                   loading ||
                   (step === 2 && (!reasonCode || !reasonTextValid))
                 }
-                className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                className="px-4 py-2 text-sm text-white bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 data-testid="modal-next-btn"
               >
                 {loading ? t('processingButton') : step === 3 ? t('authorizeButton') : t('nextButton')}

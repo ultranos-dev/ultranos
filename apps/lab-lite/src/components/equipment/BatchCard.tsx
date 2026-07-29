@@ -32,10 +32,10 @@ function formatTime(date: Date | null): string {
 function StatusBadge({ status }: { status: QueuedBatchWithTimes['status'] }) {
   const t = useTranslations('equipment')
   const colorMap: Record<QueuedBatchWithTimes['status'], string> = {
-    QUEUED: 'bg-blue-50 text-blue-700',
+    QUEUED: 'bg-primary/10 text-primary',
     RUNNING: 'bg-amber-50 text-amber-700',
     COMPLETED: 'bg-green-50 text-green-700',
-    CANCELLED: 'bg-gray-100 text-gray-500',
+    CANCELLED: 'bg-muted text-muted-foreground',
   }
   const labelMap: Record<QueuedBatchWithTimes['status'], string> = {
     QUEUED: t('statusQueued') ?? 'Queued',
@@ -75,7 +75,7 @@ export function BatchCard({
       className={`rounded-lg border px-3 py-2 ${
         isCurrent
           ? 'border-amber-300 bg-amber-50'
-          : 'border-gray-200 bg-card'
+          : 'border-border bg-card'
       }`}
       data-testid={`batch-card-${batch.id}`}
     >
@@ -84,7 +84,7 @@ export function BatchCard({
           {/* Position badge */}
           <span
             className={`shrink-0 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-              isCurrent ? 'bg-amber-500 text-white' : 'bg-gray-200 text-gray-600'
+              isCurrent ? 'bg-amber-500 text-white' : 'bg-muted text-muted-foreground'
             }`}
             data-testid={`batch-position-${batch.id}`}
           >
@@ -92,8 +92,8 @@ export function BatchCard({
           </span>
 
           <div className="min-w-0">
-            <p className="text-sm font-medium text-gray-800 truncate">{batch.techName}</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-sm font-medium text-foreground truncate">{batch.techName}</p>
+            <p className="text-xs text-muted-foreground">
               {batch.sampleCount} {t('samples') ?? 'samples'} · {batch.testType}
             </p>
           </div>
@@ -108,7 +108,7 @@ export function BatchCard({
               <button
                 onClick={() => onMoveUp?.(batch.id)}
                 disabled={isFirst}
-                className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                className="text-xs text-muted-foreground hover:text-muted-foreground disabled:opacity-30"
                 aria-label={t('moveUp') ?? 'Move up'}
                 data-testid={`move-up-${batch.id}`}
               >
@@ -117,7 +117,7 @@ export function BatchCard({
               <button
                 onClick={() => onMoveDown?.(batch.id)}
                 disabled={isLast}
-                className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                className="text-xs text-muted-foreground hover:text-muted-foreground disabled:opacity-30"
                 aria-label={t('moveDown') ?? 'Move down'}
                 data-testid={`move-down-${batch.id}`}
               >
@@ -129,17 +129,17 @@ export function BatchCard({
       </div>
 
       {/* Time estimates */}
-      <div className="mt-1.5 flex gap-4 text-xs text-gray-500">
+      <div className="mt-1.5 flex gap-4 text-xs text-muted-foreground">
         <span>
           {t('estimatedStart')}:{' '}
-          <strong className="text-gray-700">
+          <strong className="text-foreground">
             {isCurrent && batch.status === 'QUEUED'
               ? (t('now') ?? 'Now')
               : formatTime(batch.estimatedStartTime)}
           </strong>
         </span>
         <span>
-          {t('estimatedCompletion')}: <strong className="text-gray-700">{formatTime(batch.estimatedCompletionTime)}</strong>
+          {t('estimatedCompletion')}: <strong className="text-foreground">{formatTime(batch.estimatedCompletionTime)}</strong>
         </span>
       </div>
 

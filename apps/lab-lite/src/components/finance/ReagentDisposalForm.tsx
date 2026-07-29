@@ -136,7 +136,7 @@ export function ReagentDisposalForm({ reagent, onSuccess }: ReagentDisposalFormP
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       <h2 className="text-lg font-semibold">{t('title')}</h2>
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted-foreground">
         {t('reagentLabel')}: <strong>{reagent.name}</strong> — {t('lot')}: {reagent.lotNumber}
       </p>
 
@@ -160,7 +160,7 @@ export function ReagentDisposalForm({ reagent, onSuccess }: ReagentDisposalFormP
           id="disposal-status"
           value={newStatus}
           onChange={(e) => setNewStatus(e.target.value as ReagentStatus)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
           {DISPOSAL_STATUSES.map((s) => (
             <option key={s} value={s}>
@@ -179,7 +179,7 @@ export function ReagentDisposalForm({ reagent, onSuccess }: ReagentDisposalFormP
           id="disposal-reason"
           value={disposalReason}
           onChange={(e) => setDisposalReason(e.target.value as ReagentDisposalReason)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
           {DISPOSAL_REASONS.map((r) => (
             <option key={r} value={r}>
@@ -199,7 +199,7 @@ export function ReagentDisposalForm({ reagent, onSuccess }: ReagentDisposalFormP
           value={disposalNotes}
           onChange={(e) => setDisposalNotes(e.target.value)}
           rows={2}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -214,9 +214,9 @@ export function ReagentDisposalForm({ reagent, onSuccess }: ReagentDisposalFormP
           min={0}
           value={remainingOverride}
           onChange={(e) => setRemainingOverride(e.target.value)}
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           {t('autoCalcNote', { calculated: autoRemaining })}
         </p>
       </div>

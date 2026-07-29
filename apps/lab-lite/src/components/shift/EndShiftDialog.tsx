@@ -95,7 +95,7 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
         <div className="max-h-[60vh] overflow-y-auto px-6 py-4">
           {isLoading && (
             <div className="flex items-center justify-center py-12">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               <span className="ms-3 text-sm text-muted-foreground">{t('generatingReport')}</span>
             </div>
           )}
@@ -199,7 +199,7 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
                   placeholder={t('notesPlaceholder')}
-                  className="w-full rounded-md border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </section>
             </div>
@@ -221,7 +221,7 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
             <button
               type="button"
               onClick={() => setStep('confirm')}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
             >
               {t('reviewAndConfirm')}
             </button>

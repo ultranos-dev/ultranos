@@ -248,7 +248,7 @@ export async function exportHmisPdf(
     theme: 'striped',
   })
 
-  cursorY = (doc as any).lastAutoTable.finalY + 8
+  cursorY = ((doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? cursorY + 40) + 8
 
   // ---------------------------------------------------------------------------
   // Section B: Test Volume Summary
@@ -281,7 +281,7 @@ export async function exportHmisPdf(
     theme: 'striped',
   })
 
-  cursorY = (doc as any).lastAutoTable.finalY + 8
+  cursorY = ((doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? cursorY + 40) + 8
 
   // ---------------------------------------------------------------------------
   // Section C: Reportable Disease Surveillance
@@ -310,7 +310,7 @@ export async function exportHmisPdf(
     theme: 'striped',
   })
 
-  cursorY = (doc as any).lastAutoTable.finalY + 8
+  cursorY = ((doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? cursorY + 40) + 8
 
   // ---------------------------------------------------------------------------
   // Section D: Demographic Distribution
@@ -339,7 +339,7 @@ export async function exportHmisPdf(
     theme: 'striped',
   })
 
-  cursorY = (doc as any).lastAutoTable.finalY + 8
+  cursorY = ((doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? cursorY + 40) + 8
 
   // ---------------------------------------------------------------------------
   // Section E: Reagent Consumption
@@ -371,7 +371,7 @@ export async function exportHmisPdf(
     theme: 'striped',
   })
 
-  cursorY = (doc as any).lastAutoTable.finalY + 8
+  cursorY = ((doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? cursorY + 40) + 8
 
   // ---------------------------------------------------------------------------
   // Section F: Quality Indicators
@@ -401,7 +401,7 @@ export async function exportHmisPdf(
     theme: 'striped',
   })
 
-  cursorY = (doc as any).lastAutoTable.finalY + 12
+  cursorY = ((doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? cursorY + 40) + 12
 
   // Add new page for footer if needed
   if (cursorY > 260) {

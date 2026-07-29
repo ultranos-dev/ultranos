@@ -89,12 +89,12 @@ export function FlagAcknowledgmentDialog({ flag, resultId, patientRef, onConfirm
       aria-labelledby="ack-dialog-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
     >
-      <div className="w-full max-w-md rounded-lg bg-card shadow-xl dark:bg-gray-900">
+      <div className="w-full max-w-md rounded-lg bg-card shadow-xl">
         {/* Header */}
-        <div className="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+        <div className="border-b border-border px-5 py-4">
           <h2
             id="ack-dialog-title"
-            className="text-base font-semibold text-gray-900 dark:text-white"
+            className="text-base font-semibold text-foreground"
           >
             {t('dialogTitle')}
           </h2>
@@ -102,20 +102,20 @@ export function FlagAcknowledgmentDialog({ flag, resultId, patientRef, onConfirm
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-muted-foreground">
             {t('dialogDescription')}
           </p>
 
           {/* Flag summary */}
-          <div className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800">
+          <div className="rounded border border-border bg-muted px-3 py-2 text-sm">
             <div className="flex gap-2">
-              <span className="font-medium text-gray-700 dark:text-gray-300">
+              <span className="font-medium text-foreground">
                 {t('dialogAnalyte')}:
               </span>
-              <span className="text-gray-900 dark:text-white">{flag.analyte}</span>
+              <span className="text-foreground">{flag.analyte}</span>
             </div>
             <div className="mt-1 flex gap-2">
-              <span className="font-medium text-gray-700 dark:text-gray-300">
+              <span className="font-medium text-foreground">
                 {t('dialogFlag')}:
               </span>
               <span
@@ -134,7 +134,7 @@ export function FlagAcknowledgmentDialog({ flag, resultId, patientRef, onConfirm
           <div>
             <label
               htmlFor={explanationId}
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="block text-sm font-medium text-foreground"
             >
               {t('dialogExplanationLabel')}
             </label>
@@ -145,7 +145,7 @@ export function FlagAcknowledgmentDialog({ flag, resultId, patientRef, onConfirm
               placeholder={t('dialogExplanationPlaceholder')}
               rows={3}
               disabled={submitting}
-              className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+              className="mt-1 block w-full rounded border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50 dark:placeholder:text-muted-foreground"
             />
             {explanation.length > 0 && !isValid && (
               <p className="mt-1 text-xs text-red-600 dark:text-red-400">
@@ -166,14 +166,14 @@ export function FlagAcknowledgmentDialog({ flag, resultId, patientRef, onConfirm
               type="button"
               onClick={onCancel}
               disabled={submitting}
-              className="rounded px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="rounded px-4 py-2 text-sm font-medium text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 disabled:opacity-50"
             >
               {t('dialogCancel')}
             </button>
             <button
               type="submit"
               disabled={!isValid || submitting}
-              className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-600"
+              className="rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:opacity-50 dark:bg-primary dark:hover:bg-primary"
             >
               {submitting ? '…' : t('dialogSubmit')}
             </button>

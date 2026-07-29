@@ -74,14 +74,14 @@ export function ReconciliationView() {
   }, [date, session])
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded-md border border-border px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="rounded-md border border-border px-3 py-1.5 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
         />
       </div>
 

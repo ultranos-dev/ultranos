@@ -22,17 +22,17 @@ export function EquipmentPage() {
   const [activeTab, setActiveTab] = useState<Tab>('queue')
 
   return (
-    <div className="mx-auto max-w-2xl flex flex-col gap-4">
-      <h1 className="text-xl font-bold text-gray-900">{t('equipmentTitle') ?? 'Equipment'}</h1>
+    <div className="flex flex-col gap-4">
+      <h1 className="text-xl font-bold text-foreground">{t('equipmentTitle') ?? 'Equipment'}</h1>
 
       {/* Tab bar */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-border">
         <button
           onClick={() => setActiveTab('queue')}
           className={`px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'queue'
               ? 'border-b-2 border-primary-500 text-primary-600'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
           data-testid="tab-queue"
         >
@@ -44,7 +44,7 @@ export function EquipmentPage() {
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === 'instruments'
                 ? 'border-b-2 border-primary-500 text-primary-600'
-                : 'text-gray-500 hover:text-gray-700'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
             data-testid="tab-instruments"
           >

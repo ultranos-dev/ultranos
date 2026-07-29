@@ -106,7 +106,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
           <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
             <CheckCircle size={48} className="text-green-700" aria-hidden />
           </div>
-          <h2 className="text-center text-2xl font-bold text-gray-900">Delivery Recorded</h2>
+          <h2 className="text-center text-2xl font-bold text-foreground">Delivery Recorded</h2>
         </div>
 
         {flagCount > 0 && (
@@ -131,32 +131,32 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
     <div className="flex flex-col gap-4 p-4" data-testid="courier-delivery-screen">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Truck size={28} aria-hidden />
         </div>
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Record Delivery</p>
-          <h2 className="text-xl font-bold text-gray-900">Transport {shortSessionId}</h2>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Record Delivery</p>
+          <h2 className="text-xl font-bold text-foreground">Transport {shortSessionId}</h2>
         </div>
       </div>
 
       {/* Session details */}
-      <div className="rounded-xl bg-gray-50 p-4 flex flex-col gap-2">
+      <div className="rounded-xl bg-muted p-4 flex flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-base text-gray-600">Samples</span>
-          <span className="text-base font-semibold text-gray-900">{session.sampleCount}</span>
+          <span className="text-base text-muted-foreground">Samples</span>
+          <span className="text-base font-semibold text-foreground">{session.sampleCount}</span>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <span className="text-base text-gray-600">Route</span>
-          <span className="text-base font-semibold text-gray-900 text-end">
+          <span className="text-base text-muted-foreground">Route</span>
+          <span className="text-base font-semibold text-foreground text-end">
             {session.originLocationId} → {session.destinationLocationId}
           </span>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <span className="flex items-center gap-1 text-base text-gray-600">
+          <span className="flex items-center gap-1 text-base text-muted-foreground">
             <Clock size={14} aria-hidden /> Elapsed
           </span>
-          <span className="text-base font-semibold text-gray-900" data-testid="elapsed-time">
+          <span className="text-base font-semibold text-foreground" data-testid="elapsed-time">
             {formatElapsedTime(elapsedHours)}
           </span>
         </div>
@@ -188,7 +188,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
 
       {/* Temperature at arrival */}
       <div className="flex flex-col gap-1">
-        <label className="flex items-center gap-2 text-lg font-medium text-gray-700" htmlFor="delivery-temp-input">
+        <label className="flex items-center gap-2 text-lg font-medium text-foreground" htmlFor="delivery-temp-input">
           <Thermometer size={18} aria-hidden /> Temperature at Arrival (°C) — optional
         </label>
         <input
@@ -198,17 +198,17 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
           value={deliveryTemp}
           onChange={(e) => setDeliveryTemp(e.target.value)}
           placeholder="e.g. 24"
-          className="min-h-[56px] rounded-xl border border-gray-300 px-4 py-3 text-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          className="min-h-[56px] rounded-xl border border-border px-4 py-3 text-xl focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
           inputMode="decimal"
         />
       </div>
 
       {/* Condition assessment */}
       <div className="flex flex-col gap-2">
-        <p className="text-lg font-medium text-gray-700">Sample Condition</p>
+        <p className="text-lg font-medium text-foreground">Sample Condition</p>
         <div className="flex flex-col gap-2">
           <label className={`flex items-center gap-3 rounded-xl border-2 p-4 cursor-pointer transition-colors ${
-            condition === 'acceptable' ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-card hover:bg-gray-50'
+            condition === 'acceptable' ? 'border-green-500 bg-green-50' : 'border-border bg-card hover:bg-muted'
           }`}>
             <input
               data-testid="condition-acceptable"
@@ -219,11 +219,11 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
               onChange={() => setCondition('acceptable')}
               className="h-5 w-5 accent-green-600"
             />
-            <span className="text-lg font-semibold text-gray-900">Acceptable</span>
+            <span className="text-lg font-semibold text-foreground">Acceptable</span>
           </label>
 
           <label className={`flex items-center gap-3 rounded-xl border-2 p-4 cursor-pointer transition-colors ${
-            condition === 'damaged' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-card hover:bg-gray-50'
+            condition === 'damaged' ? 'border-red-500 bg-red-50' : 'border-border bg-card hover:bg-muted'
           }`}>
             <input
               data-testid="condition-damaged"
@@ -234,11 +234,11 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
               onChange={() => setCondition('damaged')}
               className="h-5 w-5 accent-red-600"
             />
-            <span className="text-lg font-semibold text-gray-900">Damaged</span>
+            <span className="text-lg font-semibold text-foreground">Damaged</span>
           </label>
 
           <label className={`flex items-center gap-3 rounded-xl border-2 p-4 cursor-pointer transition-colors ${
-            condition === 'temperature-excursion' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-card hover:bg-gray-50'
+            condition === 'temperature-excursion' ? 'border-amber-500 bg-amber-50' : 'border-border bg-card hover:bg-muted'
           }`}>
             <input
               data-testid="condition-temperature-excursion"
@@ -249,7 +249,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
               onChange={() => setCondition('temperature-excursion')}
               className="h-5 w-5 accent-amber-600"
             />
-            <span className="text-lg font-semibold text-gray-900">Temperature Excursion</span>
+            <span className="text-lg font-semibold text-foreground">Temperature Excursion</span>
           </label>
         </div>
       </div>

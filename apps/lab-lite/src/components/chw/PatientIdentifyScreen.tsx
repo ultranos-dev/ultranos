@@ -108,12 +108,12 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
   if (mode === 'choose') {
     return (
       <div className="flex flex-col gap-4 p-4">
-        <h2 className="text-center text-2xl font-bold text-gray-900">{t('title')}</h2>
+        <h2 className="text-center text-2xl font-bold text-foreground">{t('title')}</h2>
         <ChoiceButton
           icon={<QrCode size={48} aria-hidden />}
           label={t('scanQR')}
           onClick={() => setMode('qr')}
-          color="bg-blue-600 hover:bg-blue-700"
+          color="bg-primary hover:bg-primary/90"
         />
         <ChoiceButton
           icon={<Keyboard size={48} aria-hidden />}
@@ -130,10 +130,10 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
   if (mode === 'qr') {
     return (
       <div className="flex flex-col gap-4 p-4">
-        <h2 className="text-center text-2xl font-bold text-gray-900">{t('scanQR')}</h2>
+        <h2 className="text-center text-2xl font-bold text-foreground">{t('scanQR')}</h2>
         {/* QR viewfinder placeholder — real impl uses device camera */}
-        <div className="flex h-48 items-center justify-center rounded-2xl border-4 border-dashed border-blue-300 bg-blue-50">
-          <QrCode size={64} className="text-blue-400" aria-hidden />
+        <div className="flex h-48 items-center justify-center rounded-2xl border-4 border-dashed border-primary bg-primary/10">
+          <QrCode size={64} className="text-primary" aria-hidden />
         </div>
         {/* Manual QR data entry (for testing and external scanners) */}
         <input
@@ -141,7 +141,7 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
           value={qrInput}
           onChange={(e) => setQrInput(e.target.value)}
           placeholder="Scan or paste QR data"
-          className="min-h-[48px] rounded-xl border border-gray-300 px-4 py-3 text-lg"
+          className="min-h-[48px] rounded-xl border border-border px-4 py-3 text-lg"
           aria-label="QR data"
         />
         {qrError && (
@@ -165,7 +165,7 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
   if (mode === 'name') {
     return (
       <div className="flex flex-col gap-4 p-4">
-        <h2 className="text-center text-2xl font-bold text-gray-900">{t('title')}</h2>
+        <h2 className="text-center text-2xl font-bold text-foreground">{t('title')}</h2>
         <LargeInput
           label={t('patientName')}
           placeholder={t('namePlaceholder')}
@@ -204,16 +204,16 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
       <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
         <User size={40} className="text-green-700" aria-hidden />
       </div>
-      <h2 className="text-2xl font-bold text-gray-900">{t('confirmed')}</h2>
+      <h2 className="text-2xl font-bold text-foreground">{t('confirmed')}</h2>
       {patient && (
-        <div className="rounded-2xl bg-gray-50 px-8 py-6 text-center">
-          <p className="text-4xl font-bold text-gray-900">{patient.firstName}</p>
+        <div className="rounded-2xl bg-muted px-8 py-6 text-center">
+          <p className="text-4xl font-bold text-foreground">{patient.firstName}</p>
           {patient.age === null ? (
-            <p className="mt-2 text-xl text-gray-400">{t('ageUnknown')}</p>
+            <p className="mt-2 text-xl text-muted-foreground">{t('ageUnknown')}</p>
           ) : patient.age === 0 ? (
-            <p className="mt-2 text-xl text-gray-600">&lt; 1 yr</p>
+            <p className="mt-2 text-xl text-muted-foreground">&lt; 1 yr</p>
           ) : (
-            <p className="mt-2 text-xl text-gray-600">{patient.age} yrs</p>
+            <p className="mt-2 text-xl text-muted-foreground">{patient.age} yrs</p>
           )}
         </div>
       )}
@@ -243,7 +243,7 @@ function ChoiceButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex min-h-[96px] w-full flex-col items-center justify-center gap-3 rounded-2xl px-4 py-5 text-white shadow-md transition-transform active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${color}`}
+      className={`flex min-h-[96px] w-full flex-col items-center justify-center gap-3 rounded-2xl px-4 py-5 text-white shadow-md transition-transform active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${color}`}
     >
       {icon}
       <span className="text-xl font-semibold">{label}</span>
@@ -264,13 +264,13 @@ function LargeInput({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-lg font-medium text-gray-700">{label}</label>
+      <label className="text-lg font-medium text-foreground">{label}</label>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="min-h-[56px] rounded-xl border border-gray-300 px-4 py-3 text-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+        className="min-h-[56px] rounded-xl border border-border px-4 py-3 text-xl focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
       />
     </div>
   )
@@ -292,7 +292,7 @@ function LargeButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`min-h-[56px] w-full rounded-xl bg-blue-600 px-6 py-4 text-xl font-semibold text-white hover:bg-blue-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${className}`}
+      className={`min-h-[56px] w-full rounded-xl bg-primary px-6 py-4 text-xl font-semibold text-white hover:bg-primary/90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${className}`}
     >
       {children}
     </button>
@@ -305,7 +305,7 @@ function BackButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="mt-2 min-h-[48px] min-w-[48px] text-lg text-gray-500 underline"
+      className="mt-2 min-h-[48px] min-w-[48px] text-lg text-muted-foreground underline"
     >
       ← Back
     </button>

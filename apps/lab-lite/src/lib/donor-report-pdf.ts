@@ -127,7 +127,7 @@ export async function exportDonorPdf(report: DonorReport, locale: string): Promi
       })
     }
 
-    cursorY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8
+    cursorY = ((doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? cursorY + 40) + 8
   }
 
   // ---------------------------------------------------------------------------
@@ -170,7 +170,7 @@ export async function exportDonorPdf(report: DonorReport, locale: string): Promi
       },
     })
 
-    cursorY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8
+    cursorY = ((doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? cursorY + 40) + 8
   }
 
   // ---------------------------------------------------------------------------

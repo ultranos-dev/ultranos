@@ -81,7 +81,7 @@ export default function CHWPage() {
     <div className="flex min-h-screen flex-col bg-card px-4 py-6">
       {/* Header */}
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
       </div>
 
       {/* Three main action buttons */}
@@ -90,7 +90,7 @@ export default function CHWPage() {
           icon={<FlaskConical size={48} aria-hidden />}
           label={t('collectSample')}
           onClick={() => router.push(`/${locale}/chw/collect`)}
-          color="bg-blue-600 hover:bg-blue-700"
+          color="bg-primary hover:bg-primary/90"
         />
         <ActionButton
           icon={<Truck size={48} aria-hidden />}
@@ -107,8 +107,8 @@ export default function CHWPage() {
       </div>
 
       {/* Bottom status bar */}
-      <div className="mt-8 flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3">
-        <span className="text-lg font-semibold text-gray-800">
+      <div className="mt-8 flex items-center justify-between rounded-xl bg-muted px-4 py-3">
+        <span className="text-lg font-semibold text-foreground">
           {t('samplesCount', { count: todayCount })}
         </span>
         <span className={`flex items-center gap-1.5 text-sm font-medium ${syncColor}`}>
@@ -140,7 +140,7 @@ function ActionButton({ icon, label, onClick, color }: ActionButtonProps) {
         flex min-h-[96px] w-full flex-col items-center justify-center gap-3
         rounded-2xl px-4 py-5 text-white shadow-md transition-transform
         active:scale-95 focus-visible:outline focus-visible:outline-2
-        focus-visible:outline-offset-2 focus-visible:outline-blue-500
+        focus-visible:outline-offset-2 focus-visible:outline-ring
         ${color}
       `}
       aria-label={label}

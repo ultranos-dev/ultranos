@@ -45,18 +45,18 @@ const HISTORY_STATUSES: ResupplyRequest['status'][] = ['delivered', 'cancelled',
 
 function StatusBadge({ status }: { status: ResupplyRequest['status'] }) {
   const colors: Record<string, string> = {
-    submitted: 'bg-gray-100 text-gray-700',
-    received: 'bg-blue-100 text-blue-700',
+    submitted: 'bg-muted text-foreground',
+    received: 'bg-primary/10 text-primary',
     approved: 'bg-indigo-100 text-indigo-700',
     ordered: 'bg-purple-100 text-purple-700',
     shipped: 'bg-orange-100 text-orange-700',
     delivered: 'bg-green-100 text-green-700',
-    cancelled: 'bg-gray-100 text-gray-500',
+    cancelled: 'bg-muted text-muted-foreground',
     rejected: 'bg-red-100 text-red-700',
-    draft: 'bg-gray-100 text-gray-400',
+    draft: 'bg-muted text-muted-foreground',
   }
   return (
-    <span className={`rounded px-2 py-0.5 text-xs font-medium capitalize ${colors[status] ?? 'bg-gray-100 text-gray-600'}`}>
+    <span className={`rounded px-2 py-0.5 text-xs font-medium capitalize ${colors[status] ?? 'bg-muted text-muted-foreground'}`}>
       {status}
     </span>
   )
@@ -84,12 +84,12 @@ function ActiveRequestCard({ request, onClick }: RequestCardProps) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-md border bg-card p-4 text-start hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+      className="w-full rounded-md border bg-card p-4 text-start hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className="truncate font-medium text-sm">{reagentSummary}</p>
-          <p className="text-xs text-gray-500 mt-0.5">{formatDate(request.requestedAt)}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{formatDate(request.requestedAt)}</p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
           <span className={`rounded px-2 py-0.5 text-xs font-medium capitalize ${URGENCY_BADGE[request.urgency]}`}>
@@ -99,13 +99,13 @@ function ActiveRequestCard({ request, onClick }: RequestCardProps) {
         </div>
       </div>
       {etaDays !== null && (
-        <p className="mt-2 flex items-center gap-1 text-xs text-blue-600">
+        <p className="mt-2 flex items-center gap-1 text-xs text-primary">
           <Clock size={12} />
           {etaDays > 0 ? `Arriving in ${etaDays}d` : 'Expected today'}
         </p>
       )}
       {request.syncStatus === 'pending' && (
-        <p className="mt-1 text-xs text-gray-400">Pending sync</p>
+        <p className="mt-1 text-xs text-muted-foreground">Pending sync</p>
       )}
       {request.syncStatus === 'failed' && (
         <p className="mt-1 text-xs text-red-500">Sync failed — tap to retry</p>
@@ -126,22 +126,22 @@ function HistoryRequestCard({ request, onClick }: RequestCardProps) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-md border bg-card p-4 text-start hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+      className="w-full rounded-md border bg-card p-4 text-start hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className="truncate font-medium text-sm">{reagentSummary}</p>
-          {delivered && <p className="text-xs text-gray-500 mt-0.5">Delivered {formatDate(delivered)}</p>}
+          {delivered && <p className="text-xs text-muted-foreground mt-0.5">Delivered {formatDate(delivered)}</p>}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
           <StatusBadge status={request.status} />
           {totalCost > 0 && (
-            <span className="text-xs font-medium text-gray-700">{formatAfn(totalCost)}</span>
+            <span className="text-xs font-medium text-foreground">{formatAfn(totalCost)}</span>
           )}
         </div>
       </div>
       {leadDays !== null && (
-        <p className="mt-2 text-xs text-gray-500">Lead time: {leadDays} day{leadDays !== 1 ? 's' : ''}</p>
+        <p className="mt-2 text-xs text-muted-foreground">Lead time: {leadDays} day{leadDays !== 1 ? 's' : ''}</p>
       )}
     </button>
   )
@@ -195,7 +195,7 @@ export function MyOrdersView() {
         <button
           type="button"
           onClick={() => setSelected(null)}
-          className="text-start text-sm text-blue-600"
+          className="text-start text-sm text-primary"
         >
           ← {t('orders.back')}
         </button>
@@ -208,12 +208,12 @@ export function MyOrdersView() {
               <li key={i} className="flex items-center justify-between px-4 py-3">
                 <div>
                   <p className="text-sm font-medium">{item.reagentDisplay}</p>
-                  <p className="text-xs text-gray-500">{item.reagentCode}</p>
+                  <p className="text-xs text-muted-foreground">{item.reagentCode}</p>
                 </div>
                 <div className="text-end text-sm">
                   <p>{item.quantityRequested} {item.unitOfMeasure}</p>
                   {item.unitPrice !== null && (
-                    <p className="text-xs text-gray-500">{formatAfn(item.unitPrice)}/unit</p>
+                    <p className="text-xs text-muted-foreground">{formatAfn(item.unitPrice)}/unit</p>
                   )}
                 </div>
               </li>
@@ -235,12 +235,12 @@ export function MyOrdersView() {
             aria-selected={tab === t2}
             onClick={() => setTab(t2)}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              tab === t2 ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-600 hover:text-gray-900'
+              tab === t2 ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             {t(`orders.tabs.${t2}`)}
             {t2 === 'active' && requests.filter((r) => ACTIVE_STATUSES.includes(r.status)).length > 0 && (
-              <span className="ms-1.5 rounded-full bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700">
+              <span className="ms-1.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
                 {requests.filter((r) => ACTIVE_STATUSES.includes(r.status)).length}
               </span>
             )}
@@ -250,7 +250,7 @@ export function MyOrdersView() {
 
       {/* Sort */}
       <div className="flex items-center gap-2">
-        <label className="text-xs text-gray-600">{t('orders.sortBy')}</label>
+        <label className="text-xs text-muted-foreground">{t('orders.sortBy')}</label>
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortField)}
@@ -264,7 +264,7 @@ export function MyOrdersView() {
 
       {/* List */}
       {loading ? (
-        <p className="text-sm text-gray-500 py-4 text-center">{t('orders.loading')}</p>
+        <p className="text-sm text-muted-foreground py-4 text-center">{t('orders.loading')}</p>
       ) : sorted.length === 0 ? (
         <EmptyState
           icon={Package}

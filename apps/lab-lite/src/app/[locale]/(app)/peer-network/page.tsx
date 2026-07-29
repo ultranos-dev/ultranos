@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
-import { AuthGuard } from '@/components/AuthGuard'
 import { PostFeed } from '@/components/peer-network/PostFeed'
 import { PostDetail } from '@/components/peer-network/PostDetail'
 import { CreatePostForm } from '@/components/peer-network/CreatePostForm'
@@ -132,7 +131,7 @@ function PeerNetworkContent() {
                     </span>
                   )}
                   {post.status === 'resolved' && !hasVerifiedAnswer && (
-                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                       {t('resolved')}
                     </span>
                   )}
@@ -153,8 +152,6 @@ function PeerNetworkContent() {
 
 export default function PeerNetworkPage() {
   return (
-    <AuthGuard>
       <PeerNetworkContent />
-    </AuthGuard>
   )
 }

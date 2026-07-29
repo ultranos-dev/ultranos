@@ -57,7 +57,7 @@ export function SOPAcknowledgmentTracker() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-500">
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
         {t('loading')}
       </div>
     )
@@ -65,31 +65,31 @@ export function SOPAcknowledgmentTracker() {
 
   if (rows.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-500">
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
         {t('empty')}
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
+    <div className="flex flex-col gap-4">
       <h2 className="mb-4 text-xl font-bold">{t('trackerTitle')}</h2>
       <div className="space-y-4">
         {rows.map(({ sop, acknowledgments }) => (
           <div
             key={sop.id}
-            className="rounded-lg border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+            className="rounded-lg border border-border bg-card p-4 shadow-sm"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                <h3 className="font-semibold text-foreground">
                   {sop.title}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   v{sop.version} — {new Date(sop.effectiveDate).toLocaleDateString()}
                 </p>
               </div>
-              <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                 {t('ackCount', { count: acknowledgments.length })}
               </span>
             </div>
@@ -98,7 +98,7 @@ export function SOPAcknowledgmentTracker() {
               <div className="mt-3">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 text-start text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                    <tr className="border-b border-border text-start text-xs text-muted-foreground dark:text-muted-foreground">
                       <th className="pb-2 font-medium">{t('technicianCol')}</th>
                       <th className="pb-2 font-medium">{t('acknowledgedAtCol')}</th>
                       <th className="pb-2 font-medium">{t('syncStatusCol')}</th>
@@ -108,12 +108,12 @@ export function SOPAcknowledgmentTracker() {
                     {acknowledgments.map((ack) => (
                       <tr
                         key={ack.id}
-                        className="border-b border-gray-100 last:border-0 dark:border-gray-700"
+                        className="border-b border-border last:border-0"
                       >
-                        <td className="py-2 text-gray-900 dark:text-gray-100">
+                        <td className="py-2 text-foreground">
                           {ack.technicianId}
                         </td>
-                        <td className="py-2 text-gray-600 dark:text-gray-400">
+                        <td className="py-2 text-muted-foreground">
                           {new Date(ack.acknowledgedAt).toLocaleString()}
                         </td>
                         <td className="py-2">
@@ -135,7 +135,7 @@ export function SOPAcknowledgmentTracker() {
             )}
 
             {acknowledgments.length === 0 && (
-              <p className="mt-3 text-sm text-gray-400 dark:text-gray-500">
+              <p className="mt-3 text-sm text-muted-foreground">
                 {t('noAcknowledgments')}
               </p>
             )}

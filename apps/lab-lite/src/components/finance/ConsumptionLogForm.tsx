@@ -162,7 +162,7 @@ export function ConsumptionLogForm({ reagent, onSuccess }: ConsumptionLogFormPro
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label={t('progressLabel')}
-          className="h-2 rounded-full bg-gray-200 overflow-hidden"
+          className="h-2 rounded-full bg-muted overflow-hidden"
         >
           <div
             className={`h-full rounded-full transition-all ${
@@ -175,7 +175,7 @@ export function ConsumptionLogForm({ reagent, onSuccess }: ConsumptionLogFormPro
             style={{ width: `${progressPct}%` }}
           />
         </div>
-        <p className="text-xs text-gray-500 mt-1">{t('efficiency', { pct: progressPct })}</p>
+        <p className="text-xs text-muted-foreground mt-1">{t('efficiency', { pct: progressPct })}</p>
       </div>
 
       {/* Quick-log button */}
@@ -213,7 +213,7 @@ export function ConsumptionLogForm({ reagent, onSuccess }: ConsumptionLogFormPro
             min={1}
             value={testsConsumed}
             onChange={(e) => setTestsConsumed(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 
@@ -226,7 +226,7 @@ export function ConsumptionLogForm({ reagent, onSuccess }: ConsumptionLogFormPro
             type="text"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 

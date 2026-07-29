@@ -30,35 +30,22 @@ export default function SpillPage() {
   }
 
   return (
-    <div
-      style={{ padding: '1rem', maxWidth: '40rem', margin: '0 auto' }}
-      dir="auto"
-    >
+    <div className="flex flex-col gap-4" dir="auto">
       {/* Page header */}
-      <h1 style={{ fontSize: '1.375rem', fontWeight: 700, color: '#111827', marginBottom: '0.5rem' }}>
-        {t('safety.spill.selector.title')}
-      </h1>
-      <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '1.5rem' }}>
-        {t('safety.spill.history.title')}
-      </p>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold text-foreground">
+          {t('safety.spill.selector.title')}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {t('safety.spill.history.title')}
+        </p>
+      </div>
 
-      {/* Emergency CTA */}
+      {/* Emergency CTA — red prominence retained via the destructive token */}
       <button
         type="button"
         onClick={() => setShowSelector(true)}
-        style={{
-          backgroundColor: '#dc2626',
-          color: 'white',
-          border: 'none',
-          borderRadius: '0.5rem',
-          padding: '1rem 2rem',
-          fontSize: '1.25rem',
-          fontWeight: 700,
-          cursor: 'pointer',
-          minHeight: '64px',
-          width: '100%',
-          marginBottom: '2rem',
-        }}
+        className="flex min-h-[64px] w-full items-center justify-center gap-2 rounded-xl bg-destructive px-8 py-4 text-xl font-bold text-destructive-foreground transition-colors hover:bg-destructive/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         ⚠️ {t('safety.spill.selector.subtitle')}
       </button>

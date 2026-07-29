@@ -345,7 +345,7 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
                     className={
                       'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' +
                       (isMentor(pairing, currentUserId)
-                        ? 'bg-blue-100 text-blue-800'
+                        ? 'bg-primary/10 text-primary'
                         : 'bg-emerald-100 text-emerald-800')
                     }
                   >

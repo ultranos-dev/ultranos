@@ -10,7 +10,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
       data-testid="self-assessment"
     >
       <h3
-        class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+        class="text-sm font-semibold text-foreground"
       >
         Self-Check
       </h3>
@@ -19,7 +19,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
         data-testid="question-0"
       >
         <p
-          class="text-sm font-medium text-gray-800 dark:text-gray-200"
+          class="text-sm font-medium text-foreground"
         >
           1
           . 
@@ -30,7 +30,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
         >
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -44,7 +44,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
           </li>
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -58,7 +58,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
           </li>
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -77,7 +77,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
         data-testid="question-1"
       >
         <p
-          class="text-sm font-medium text-gray-800 dark:text-gray-200"
+          class="text-sm font-medium text-foreground"
         >
           2
           . 
@@ -88,7 +88,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
         >
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -102,7 +102,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
           </li>
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -116,7 +116,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
           </li>
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -135,7 +135,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
         data-testid="question-2"
       >
         <p
-          class="text-sm font-medium text-gray-800 dark:text-gray-200"
+          class="text-sm font-medium text-foreground"
         >
           3
           . 
@@ -146,7 +146,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
         >
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -160,7 +160,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
           </li>
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -174,7 +174,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
           </li>
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -192,14 +192,14 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`]
         class="flex justify-between gap-2 pt-1"
       >
         <button
-          class="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          class="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
           data-testid="quiz-back"
           type="button"
         >
           Back
         </button>
         <button
-          class="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+          class="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 hover:bg-primary/90 dark:bg-primary dark:hover:bg-blue-400"
           data-testid="quiz-submit"
           disabled=""
           type="button"
@@ -222,7 +222,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
       data-testid="self-assessment"
     >
       <h3
-        class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+        class="text-sm font-semibold text-foreground"
       >
         Self-Check
       </h3>
@@ -231,7 +231,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
         data-testid="question-0"
       >
         <p
-          class="text-sm font-medium text-gray-800 dark:text-gray-200"
+          class="text-sm font-medium text-foreground"
         >
           1
           . 
@@ -242,7 +242,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
         >
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -256,7 +256,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
           </li>
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -270,7 +270,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
           </li>
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -289,7 +289,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
         data-testid="question-1"
       >
         <p
-          class="text-sm font-medium text-gray-800 dark:text-gray-200"
+          class="text-sm font-medium text-foreground"
         >
           2
           . 
@@ -300,7 +300,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
         >
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -314,7 +314,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
           </li>
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -328,7 +328,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
           </li>
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -347,7 +347,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
         data-testid="question-2"
       >
         <p
-          class="text-sm font-medium text-gray-800 dark:text-gray-200"
+          class="text-sm font-medium text-foreground"
         >
           3
           . 
@@ -358,7 +358,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
         >
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -372,7 +372,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
           </li>
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -386,7 +386,7 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
           </li>
           <li>
             <label
-              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted"
             >
               <input
                 class="accent-blue-600"
@@ -404,14 +404,14 @@ exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`]
         class="flex justify-between gap-2 pt-1"
       >
         <button
-          class="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          class="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
           data-testid="quiz-back"
           type="button"
         >
           Back
         </button>
         <button
-          class="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+          class="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 hover:bg-primary/90 dark:bg-primary dark:hover:bg-blue-400"
           data-testid="quiz-submit"
           disabled=""
           type="button"

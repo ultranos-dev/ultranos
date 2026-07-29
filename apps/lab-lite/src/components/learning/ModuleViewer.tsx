@@ -62,16 +62,16 @@ export function ModuleViewer({
 
   return (
     <div
-      className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-card p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+      className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-lg"
       data-testid="module-viewer"
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-base font-semibold text-foreground">
             {module.title}
           </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-muted-foreground">
             {module.procedureName} · {module.durationMinutes} {t('minutes')}
           </p>
         </div>
@@ -79,7 +79,7 @@ export function ModuleViewer({
           type="button"
           onClick={onClose}
           aria-label={t('close')}
-          className="rounded p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+          className="rounded p-1 text-muted-foreground hover:text-muted-foreground dark:hover:text-gray-200"
           data-testid="module-viewer-close"
         >
           <X size={18} aria-hidden="true" />
@@ -90,7 +90,7 @@ export function ModuleViewer({
       {phase === 'steps' && currentStep && (
         <div className="flex flex-col gap-3" data-testid="module-step">
           {/* Progress */}
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          <p className="text-xs font-medium text-muted-foreground">
             {t('stepOf', { current: stepIndex + 1, total: totalSteps })}
           </p>
 
@@ -99,7 +99,7 @@ export function ModuleViewer({
             className="prose prose-sm max-w-none dark:prose-invert"
             data-testid="step-content"
           >
-            <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-800 dark:text-gray-200">
+            <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
               {currentStep.text}
             </pre>
           </div>
@@ -109,7 +109,7 @@ export function ModuleViewer({
             <img
               src={`data:${currentStep.imageMimeType};base64,${currentStep.imageBase64}`}
               alt={currentStep.imageAlt ?? ''}
-              className="max-h-48 w-auto rounded-lg border border-gray-200 dark:border-gray-600"
+              className="max-h-48 w-auto rounded-lg border border-border"
               data-testid="step-image"
             />
           )}
@@ -120,7 +120,7 @@ export function ModuleViewer({
               type="button"
               onClick={handleBack}
               disabled={isFirstStep}
-              className="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 disabled:opacity-40 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground disabled:opacity-40 hover:bg-muted"
               data-testid="step-back"
             >
               {t('back')}
@@ -128,7 +128,7 @@ export function ModuleViewer({
             <button
               type="button"
               onClick={handleNext}
-              className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+              className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90 dark:bg-primary dark:hover:bg-blue-400"
               data-testid="step-next"
             >
               {isLastStep ? t('viewTips') : t('next')}
@@ -140,13 +140,13 @@ export function ModuleViewer({
       {/* Phase: Key Tips */}
       {phase === 'tips' && (
         <div className="flex flex-col gap-3" data-testid="module-tips">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h3 className="text-sm font-semibold text-foreground">
             {t('keyTips')}
           </h3>
           <ul className="space-y-2">
             {module.keyTips.map((tip, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                <span className="mt-0.5 flex-shrink-0 text-blue-500">✓</span>
+              <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                <span className="mt-0.5 flex-shrink-0 text-primary">✓</span>
                 {tip}
               </li>
             ))}
@@ -156,7 +156,7 @@ export function ModuleViewer({
             <button
               type="button"
               onClick={handleBack}
-              className="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
               data-testid="tips-back"
             >
               {t('back')}
@@ -164,7 +164,7 @@ export function ModuleViewer({
             <button
               type="button"
               onClick={() => setPhase('quiz')}
-              className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+              className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90 dark:bg-primary dark:hover:bg-blue-400"
               data-testid="tips-start-quiz"
             >
               {t('startQuiz')}

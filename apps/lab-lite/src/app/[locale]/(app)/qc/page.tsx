@@ -32,47 +32,20 @@ export default function QcDashboardPage() {
   }
 
   return (
-    <main
-      style={{
-        maxWidth: '60rem',
-        marginInline: 'auto',
-        padding: '1.5rem 1rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '2rem',
-      }}
-    >
-      <header>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginBlock: 0 }}>
-          {t('dashboard.title')}
-        </h1>
-        <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBlockStart: '0.25rem' }}>
-          {t('dashboard.subtitle')}
-        </p>
-      </header>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold text-foreground">{t('dashboard.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('dashboard.subtitle')}</p>
+      </div>
 
       {/* QC Run Entry */}
-      <section
-        style={{
-          padding: '1.25rem',
-          borderRadius: '0.5rem',
-          border: '1px solid #e5e7eb',
-          backgroundColor: '#fff',
-        }}
-      >
+      <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
         <QcRunEntryForm onSaved={handleSaved} />
       </section>
 
       {/* QC History for last saved analyte/instrument */}
       {lastSaved && (
-        <section
-          style={{
-            padding: '1.25rem',
-            borderRadius: '0.5rem',
-            border: '1px solid #e5e7eb',
-            backgroundColor: '#fff',
-          }}
-        >
+        <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
           <QcHistoryView
             analyte={lastSaved.analyte}
             instrumentId={lastSaved.instrumentId}
@@ -82,10 +55,8 @@ export default function QcDashboardPage() {
       )}
 
       {!lastSaved && (
-        <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
-          {t('dashboard.noHistoryHint')}
-        </p>
+        <p className="text-sm text-muted-foreground">{t('dashboard.noHistoryHint')}</p>
       )}
-    </main>
+    </div>
   )
 }

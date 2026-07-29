@@ -26,12 +26,12 @@ export function ConfidencePrincipleInfo({ variant = 'tooltip' }: ConfidencePrinc
 
   if (variant === 'panel') {
     return (
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+      <div className="rounded-lg border border-primary bg-primary/10 p-4">
         <div className="flex items-center gap-2 mb-2">
-          <Info size={16} className="text-blue-600 shrink-0" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-blue-900">{t('principle.title')}</h3>
+          <Info size={16} className="text-primary shrink-0" aria-hidden="true" />
+          <h3 className="text-sm font-semibold text-primary">{t('principle.title')}</h3>
         </div>
-        <p className="text-sm text-blue-800 leading-relaxed">{t('principle.body')}</p>
+        <p className="text-sm text-primary leading-relaxed">{t('principle.body')}</p>
       </div>
     )
   }
@@ -44,7 +44,7 @@ export function ConfidencePrincipleInfo({ variant = 'tooltip' }: ConfidencePrinc
         aria-label={t('principle.title')}
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className="inline-flex items-center justify-center w-5 h-5 rounded-full text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full text-primary hover:text-primary/80 hover:bg-primary/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         <Info size={16} aria-hidden="true" />
       </button>
@@ -61,9 +61,9 @@ export function ConfidencePrincipleInfo({ variant = 'tooltip' }: ConfidencePrinc
           />
           <div
             role="tooltip"
-            className="absolute z-20 left-1/2 -translate-x-1/2 mt-2 w-72 rounded-lg border border-blue-200 bg-card shadow-lg p-4"
+            className="absolute z-20 left-1/2 -translate-x-1/2 mt-2 w-72 rounded-lg border border-primary bg-card shadow-lg p-4"
           >
-            <p className="text-xs font-semibold text-blue-900 mb-1">{t('principle.title')}</p>
+            <p className="text-xs font-semibold text-primary mb-1">{t('principle.title')}</p>
             <p className="text-xs text-foreground leading-relaxed">{t('principle.body')}</p>
           </div>
         </>

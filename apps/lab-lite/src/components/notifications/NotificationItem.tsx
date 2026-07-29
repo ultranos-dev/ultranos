@@ -40,7 +40,7 @@ function getNotificationDisplay(type: string): NotificationDisplay {
     case 'LAB_STATUS_SUSPENDED':
       return {
         labelKey: 'labStatusChanged',
-        iconColor: 'text-blue-600',
+        iconColor: 'text-primary',
         icon: <ShieldCheck size={20} className="h-5 w-5" aria-hidden="true" />,
       }
     default:
@@ -104,7 +104,7 @@ export function NotificationItemRow({
         if (isUnread) onAcknowledge(notification.id)
       }}
       className={`flex w-full items-start gap-3 border-b border-border/50 px-4 py-3 text-start transition-colors hover:bg-muted/30 ${
-        isUnread ? 'bg-blue-50' : ''
+        isUnread ? 'bg-primary/10' : ''
       }`}
       data-testid="notification-item"
       aria-label={isUnread ? t('unreadMessage', { message }) : message}
@@ -126,7 +126,7 @@ export function NotificationItemRow({
       {/* Unread dot indicator */}
       {isUnread && (
         <span
-          className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-blue-500"
+          className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-primary"
           aria-label={t('unreadAriaLabel')}
           data-testid="unread-dot"
         />

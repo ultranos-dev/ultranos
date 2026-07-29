@@ -74,11 +74,11 @@ export function InspectionReadinessView() {
       <h2 className="text-lg font-semibold">{t('inspectionReadinessTitle')}</h2>
 
       {/* Date range selector */}
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 flex flex-wrap gap-4 items-end">
+      <div className="rounded-lg border border-border bg-muted p-4 flex flex-wrap gap-4 items-end">
         <div className="flex flex-col gap-1">
           <label
             htmlFor="inspection-start-date"
-            className="text-xs font-medium text-gray-700"
+            className="text-xs font-medium text-foreground"
           >
             {t('startDate')}
           </label>
@@ -88,13 +88,13 @@ export function InspectionReadinessView() {
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             max={endDate}
-            className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="rounded border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
         <div className="flex flex-col gap-1">
           <label
             htmlFor="inspection-end-date"
-            className="text-xs font-medium text-gray-700"
+            className="text-xs font-medium text-foreground"
           >
             {t('endDate')}
           </label>
@@ -105,14 +105,14 @@ export function InspectionReadinessView() {
             onChange={(e) => setEndDate(e.target.value)}
             min={startDate}
             max={toDateInputValue(new Date())}
-            className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="rounded border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
         <button
           type="button"
           onClick={handleGenerate}
           disabled={loading || !startDate || !endDate}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ring"
         >
           {loading ? t('generating') : t('generatePack')}
         </button>
@@ -132,7 +132,7 @@ export function InspectionReadinessView() {
       {loading && (
         <div className="flex flex-col gap-3" aria-busy="true">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-lg bg-gray-200" />
+            <div key={i} className="h-16 animate-pulse rounded-lg bg-muted" />
           ))}
         </div>
       )}
@@ -142,7 +142,7 @@ export function InspectionReadinessView() {
         <div className="flex flex-col gap-4">
           {/* Generated at + Export */}
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               {t('generatedAt')}:{' '}
               <time dateTime={pack.generatedAt}>
                 {new Date(pack.generatedAt).toLocaleString()}
@@ -151,14 +151,14 @@ export function InspectionReadinessView() {
             <button
               type="button"
               onClick={handleExportJson}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-gray-400"
             >
               {t('exportJson')}
             </button>
           </div>
 
           {/* Overall Score — prominent display */}
-          <div className="rounded-lg border border-gray-200 bg-card p-6 text-center">
+          <div className="rounded-lg border border-border bg-card p-6 text-center">
             <p
               className={`text-5xl font-bold ${
                 pack.overallComplianceScore >= 80
@@ -170,19 +170,19 @@ export function InspectionReadinessView() {
             >
               {pack.overallComplianceScore.toFixed(1)}%
             </p>
-            <p className="mt-1 text-sm text-gray-500">{t('overallComplianceScore')}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t('overallComplianceScore')}</p>
           </div>
 
           {/* Audit Scores */}
           <section
             aria-labelledby="audit-scores-heading"
-            className="rounded-lg border border-gray-200 bg-card p-4"
+            className="rounded-lg border border-border bg-card p-4"
           >
             <h3 id="audit-scores-heading" className="text-sm font-semibold mb-3">
               {t('auditScoresSection')}
             </h3>
             {pack.auditResults.length === 0 ? (
-              <p className="text-sm text-gray-500">{t('noAuditData')}</p>
+              <p className="text-sm text-muted-foreground">{t('noAuditData')}</p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {pack.auditResults.map((audit) => (
@@ -190,13 +190,13 @@ export function InspectionReadinessView() {
                     key={audit.id}
                     className="flex items-center justify-between text-sm"
                   >
-                    <span className="text-gray-700">
+                    <span className="text-foreground">
                       {new Date(audit.auditDate).toLocaleDateString()}
                     </span>
                     <span
                       className={`font-medium ${
                         audit.complianceScore === null
-                          ? 'text-gray-400'
+                          ? 'text-muted-foreground'
                           : audit.complianceScore >= 80
                             ? 'text-green-600'
                             : audit.complianceScore >= 60
@@ -217,7 +217,7 @@ export function InspectionReadinessView() {
           {/* Waste Compliance */}
           <section
             aria-labelledby="waste-compliance-heading"
-            className="rounded-lg border border-gray-200 bg-card p-4"
+            className="rounded-lg border border-border bg-card p-4"
           >
             <h3 id="waste-compliance-heading" className="text-sm font-semibold mb-2">
               {t('wasteComplianceSection')}
@@ -227,7 +227,7 @@ export function InspectionReadinessView() {
                 {t('wasteNotAvailable')}
               </p>
             ) : (
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-foreground">
                 {t('wasteSummaryCount', { count: pack.wasteSummaries.length })}
               </p>
             )}
@@ -236,7 +236,7 @@ export function InspectionReadinessView() {
           {/* Temperature Compliance */}
           <section
             aria-labelledby="temp-compliance-heading"
-            className="rounded-lg border border-gray-200 bg-card p-4"
+            className="rounded-lg border border-border bg-card p-4"
           >
             <h3 id="temp-compliance-heading" className="text-sm font-semibold mb-2">
               {t('temperatureComplianceSection')}
@@ -248,16 +248,16 @@ export function InspectionReadinessView() {
             ) : (
               <div className="flex flex-wrap gap-6 text-sm">
                 <div>
-                  <p className="text-xl font-bold text-gray-800">
+                  <p className="text-xl font-bold text-foreground">
                     {pack.temperatureCompliance.totalReadings}
                   </p>
-                  <p className="text-xs text-gray-500">{t('tempTotalReadings')}</p>
+                  <p className="text-xs text-muted-foreground">{t('tempTotalReadings')}</p>
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-gray-800">
+                  <p className="text-xl font-bold text-foreground">
                     {pack.temperatureCompliance.excursionCount}
                   </p>
-                  <p className="text-xs text-gray-500">{t('tempExcursions')}</p>
+                  <p className="text-xs text-muted-foreground">{t('tempExcursions')}</p>
                 </div>
                 <div>
                   <p
@@ -269,7 +269,7 @@ export function InspectionReadinessView() {
                   >
                     {(pack.temperatureCompliance.excursionRate * 100).toFixed(1)}%
                   </p>
-                  <p className="text-xs text-gray-500">{t('tempExcursionRate')}</p>
+                  <p className="text-xs text-muted-foreground">{t('tempExcursionRate')}</p>
                 </div>
               </div>
             )}
@@ -278,7 +278,7 @@ export function InspectionReadinessView() {
           {/* Spill Incidents */}
           <section
             aria-labelledby="spill-incidents-heading"
-            className="rounded-lg border border-gray-200 bg-card p-4"
+            className="rounded-lg border border-border bg-card p-4"
           >
             <h3 id="spill-incidents-heading" className="text-sm font-semibold mb-2">
               {t('spillIncidentsSection')}
@@ -288,7 +288,7 @@ export function InspectionReadinessView() {
                 {t('spillNotAvailable')}
               </p>
             ) : (
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-foreground">
                 {t('spillCount', { count: (pack.spillIncidents as unknown[]).length })}
               </p>
             )}

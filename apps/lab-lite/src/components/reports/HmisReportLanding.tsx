@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
 import Link from 'next/link'
-import { FileText, BarChart3, Calendar } from '@ultranos/ui-kit/icons'
+import { FileText, BarChart3, Calendar, Activity, Heart } from '@ultranos/ui-kit/icons'
 
 export function HmisReportLanding() {
   const t = useTranslations('hmisReport')
@@ -17,16 +17,27 @@ export function HmisReportLanding() {
       description: t('hmisDescription'),
     },
     {
-      href: '#',
+      href: `/${locale}/reports/daily`,
       icon: <Calendar size={24} />,
       title: t('dailyLogTitle'),
-      description: `${t('dailyLogDescription')} (Coming Soon)`,
-      disabled: true,
+      description: t('dailyLogDescription'),
+    },
+    {
+      href: `/${locale}/reports/surveillance`,
+      icon: <Activity size={24} />,
+      title: t('surveillanceTitle'),
+      description: t('surveillanceDescription'),
+    },
+    {
+      href: `/${locale}/reports/donor`,
+      icon: <Heart size={24} />,
+      title: t('donorTitle'),
+      description: t('donorDescription'),
     },
   ]
 
   return (
-    <div className="mx-auto max-w-2xl flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold flex items-center gap-2">
         <FileText size={24} aria-hidden="true" />
         {t('reportsTitle')}
@@ -37,10 +48,9 @@ export function HmisReportLanding() {
           <Link
             key={link.href}
             href={link.href}
-            aria-disabled={link.disabled || undefined}
-            className={`flex items-start gap-4 rounded-lg border border-border p-4 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring ${link.disabled ? 'pointer-events-none opacity-50' : 'hover:bg-accent'}`}
+            className="flex items-start gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
           >
-            <span className={`mt-0.5 ${link.disabled ? 'text-muted-foreground' : 'text-primary'}`} aria-hidden="true">{link.icon}</span>
+            <span className="mt-0.5 text-primary" aria-hidden="true">{link.icon}</span>
             <div>
               <p className="font-semibold">{link.title}</p>
               <p className="text-sm text-muted-foreground mt-1">{link.description}</p>

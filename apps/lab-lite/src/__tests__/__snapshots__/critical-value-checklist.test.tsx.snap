@@ -284,7 +284,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15a renders in LTR 1`] = `
         class="flex items-center justify-end gap-3 border-t border-border/50 px-4 py-3 rounded-b-xl"
       >
         <button
-          class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           data-testid="checklist-cancel-button"
           type="button"
         >
@@ -589,7 +589,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15b renders in RTL 1`] = `
         class="flex items-center justify-end gap-3 border-t border-border/50 px-4 py-3 rounded-b-xl"
       >
         <button
-          class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           data-testid="checklist-cancel-button"
           type="button"
         >

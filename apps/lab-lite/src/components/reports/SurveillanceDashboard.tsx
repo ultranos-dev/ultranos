@@ -21,7 +21,7 @@ export function SurveillanceDashboard({ highlightAlertId }: SurveillanceDashboar
   const t = useTranslations('surveillance')
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
+    <div className="flex flex-col gap-4">
       {/* Page header */}
       <div className="mb-6 flex items-center gap-3">
         <Shield size={24} className="text-primary-600 shrink-0" aria-hidden />

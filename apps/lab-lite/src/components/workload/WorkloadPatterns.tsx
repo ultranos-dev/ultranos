@@ -139,7 +139,7 @@ export function WorkloadPatternsView({ techLabels = {} }: WorkloadPatternsProps)
             onClick={() => setRange(d)}
             className={`rounded px-2 py-1 text-xs font-medium ${
               range === d
-                ? 'bg-blue-600 text-white'
+                ? 'bg-primary text-white'
                 : 'border border-border bg-card text-muted-foreground hover:bg-muted/30'
             }`}
           >

@@ -169,7 +169,7 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
         <button
           type="button"
           onClick={reRecord}
-          className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+          className="rounded-md border px-4 py-2 text-sm hover:bg-muted"
         >
           {t('recording.reRecord')}
         </button>
@@ -189,7 +189,7 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
           >
             <Mic size={32} aria-hidden="true" />
           </button>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{t('recording.idle')}</p>
+          <p className="text-sm text-muted-foreground">{t('recording.idle')}</p>
         </>
       )}
 
@@ -206,7 +206,7 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
           <p className="text-sm font-medium text-red-600 dark:text-red-400">
             {t('recording.recording', { elapsed })}
           </p>
-          <div className="h-1 w-full max-w-xs overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+          <div className="h-1 w-full max-w-xs overflow-hidden rounded-full bg-muted">
             <div
               className="h-full bg-red-500 transition-all"
               style={{ width: `${(elapsed / MAX_RECORDING_DURATION_S) * 100}%` }}

@@ -101,7 +101,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
                         isDone
                           ? 'bg-green-100 text-green-700'
                           : isCurrent
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-primary text-white'
                           : 'bg-muted text-muted-foreground'
                       }`}
                     >
@@ -129,7 +129,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder={t('statusNotesPlaceholder')}
-              className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
 
@@ -154,7 +154,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
                   type="button"
                   onClick={handleAdvance}
                   disabled={loading}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
                 >
                   {loading ? t('statusUpdatingButton') : t('statusMarkAsButton', { status: STATUS_LABELS[nextStatus] })}
                 </button>

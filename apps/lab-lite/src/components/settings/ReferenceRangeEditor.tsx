@@ -42,7 +42,7 @@ export function canEditRanges(labRole: string | undefined): boolean {
 
 const BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-muted text-muted-foreground',
-  blue: 'bg-blue-50 text-blue-700',
+  blue: 'bg-primary/10 text-primary',
   green: 'bg-green-50 text-green-700',
   yellow: 'bg-amber-50 text-amber-700',
 }
@@ -593,7 +593,7 @@ export function ReferenceRangeEditor() {
                               <button
                                 type="button"
                                 onClick={() => openEditModal(r)}
-                                className="rounded px-1.5 py-0.5 text-blue-600 hover:bg-blue-50 text-xs"
+                                className="rounded px-1.5 py-0.5 text-primary hover:bg-primary/10 text-xs"
                                 aria-label={`Edit ${group.analyteName} range`}
                               >
                                 Edit
@@ -704,19 +704,19 @@ export function ReferenceRangeEditor() {
                   </div>
                   <div>
                     <p className="text-muted-foreground">New</p>
-                    <p className="text-blue-700">
+                    <p className="text-primary">
                       {editForm.rangeMin}–{editForm.rangeMax} {editForm.unit}
                     </p>
-                    <p className="text-blue-600">
+                    <p className="text-primary">
                       Critical: {formatCritical(
                         editForm.criticalMin !== '' ? Number(editForm.criticalMin) : undefined,
                         editForm.criticalMax !== '' ? Number(editForm.criticalMax) : undefined,
                       )}
                     </p>
-                    <p className="text-blue-600">
+                    <p className="text-primary">
                       Age: {editForm.ageMin}–{editForm.ageMax} · Gender: {editForm.gender}
                     </p>
-                    <p className="text-blue-600">
+                    <p className="text-primary">
                       Alt: {editForm.altitudeMin}m{editForm.altitudeMax ? `–${editForm.altitudeMax}m` : '+'} · Source: {SOURCE_DISPLAY_LABEL[editForm.source]}
                     </p>
                   </div>
@@ -914,7 +914,7 @@ export function ReferenceRangeEditor() {
                 type="button"
                 onClick={() => void handleSave()}
                 disabled={saving}
-                className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
                 data-testid="save-range-button"
               >
                 {saving ? 'Saving…' : 'Save'}

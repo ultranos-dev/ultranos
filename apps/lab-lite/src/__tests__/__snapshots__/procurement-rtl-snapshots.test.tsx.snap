@@ -6,7 +6,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
     class="flex flex-col gap-4"
   >
     <div
-      class="flex items-center gap-2 rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-700"
+      class="flex items-center gap-2 rounded-md bg-primary/10 px-3 py-2 text-sm text-primary"
     >
       <svg
         data-size="16"
@@ -82,22 +82,22 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-blue-100 ring-2 ring-blue-500"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-primary/10 ring-2 ring-primary"
           >
             <svg
-              class="text-blue-600"
+              class="text-primary"
               data-size="20"
               data-testid="check-circle"
             />
           </span>
           <span
-            class="text-xs capitalize font-semibold text-blue-700"
+            class="text-xs capitalize font-semibold text-primary"
           >
             approved
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
         />
       </div>
       <div
@@ -108,20 +108,20 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             ordered
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
         />
       </div>
       <div
@@ -132,20 +132,20 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             shipped
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
         />
       </div>
       <div
@@ -156,14 +156,14 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             delivered
           </span>
@@ -174,14 +174,14 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
       class="rounded-md border"
     >
       <summary
-        class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700"
+        class="cursor-pointer px-4 py-2 text-sm font-medium text-foreground"
       >
         Status history (
         3
          events)
       </summary>
       <ul
-        class="divide-y divide-gray-100 px-4"
+        class="divide-y divide-border px-4"
       >
         <li
           class="flex items-start gap-3 py-2"
@@ -201,13 +201,13 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
                 approved
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 3, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               coordinator-001
@@ -232,13 +232,13 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
                 received
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 2, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               coordinator-001
@@ -263,13 +263,13 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
                 submitted
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 1, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               tech-001
@@ -301,20 +301,20 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             submitted
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
         />
       </div>
       <div
@@ -325,20 +325,20 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             received
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
         />
       </div>
       <div
@@ -349,20 +349,20 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             approved
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
         />
       </div>
       <div
@@ -373,20 +373,20 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             ordered
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
         />
       </div>
       <div
@@ -397,20 +397,20 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             shipped
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
         />
       </div>
       <div
@@ -421,14 +421,14 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             delivered
           </span>
@@ -460,14 +460,14 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
       class="rounded-md border"
     >
       <summary
-        class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700"
+        class="cursor-pointer px-4 py-2 text-sm font-medium text-foreground"
       >
         Status history (
         4
          events)
       </summary>
       <ul
-        class="divide-y divide-gray-100 px-4"
+        class="divide-y divide-border px-4"
       >
         <li
           class="flex items-start gap-3 py-2"
@@ -487,18 +487,18 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
                 cancelled
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 4, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-500"
+              class="text-xs text-muted-foreground"
             >
               Another lab offered transfer
             </p>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               coordinator-001
@@ -523,13 +523,13 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
                 approved
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 3, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               coordinator-001
@@ -554,13 +554,13 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
                 received
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 2, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               coordinator-001
@@ -585,13 +585,13 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
                 submitted
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 1, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               tech-001
@@ -753,7 +753,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-blue-100 ring-2 ring-blue-500"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-primary/10 ring-2 ring-primary"
           >
             <svg
               class="text-green-600"
@@ -762,7 +762,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
             />
           </span>
           <span
-            class="text-xs capitalize font-semibold text-blue-700"
+            class="text-xs capitalize font-semibold text-primary"
           >
             delivered
           </span>
@@ -773,14 +773,14 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
       class="rounded-md border"
     >
       <summary
-        class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700"
+        class="cursor-pointer px-4 py-2 text-sm font-medium text-foreground"
       >
         Status history (
         6
          events)
       </summary>
       <ul
-        class="divide-y divide-gray-100 px-4"
+        class="divide-y divide-border px-4"
       >
         <li
           class="flex items-start gap-3 py-2"
@@ -800,13 +800,13 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
                 delivered
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 15, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               system
@@ -831,13 +831,13 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
                 shipped
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 5, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               coordinator-001
@@ -862,13 +862,13 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
                 ordered
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 4, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               coordinator-001
@@ -893,13 +893,13 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
                 approved
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 3, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               coordinator-001
@@ -924,13 +924,13 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
                 received
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 2, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               coordinator-001
@@ -955,13 +955,13 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
                 submitted
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 1, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               tech-001
@@ -993,22 +993,22 @@ exports[`OrderStatusPipeline — LTR snapshot > renders submitted status in LTR 
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-blue-100 ring-2 ring-blue-500"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-primary/10 ring-2 ring-primary"
           >
             <svg
-              class="text-blue-600"
+              class="text-primary"
               data-size="20"
               data-testid="clock"
             />
           </span>
           <span
-            class="text-xs capitalize font-semibold text-blue-700"
+            class="text-xs capitalize font-semibold text-primary"
           >
             submitted
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
         />
       </div>
       <div
@@ -1019,20 +1019,20 @@ exports[`OrderStatusPipeline — LTR snapshot > renders submitted status in LTR 
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             received
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
         />
       </div>
       <div
@@ -1043,20 +1043,20 @@ exports[`OrderStatusPipeline — LTR snapshot > renders submitted status in LTR 
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             approved
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
         />
       </div>
       <div
@@ -1067,20 +1067,20 @@ exports[`OrderStatusPipeline — LTR snapshot > renders submitted status in LTR 
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             ordered
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
         />
       </div>
       <div
@@ -1091,20 +1091,20 @@ exports[`OrderStatusPipeline — LTR snapshot > renders submitted status in LTR 
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             shipped
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
         />
       </div>
       <div
@@ -1115,14 +1115,14 @@ exports[`OrderStatusPipeline — LTR snapshot > renders submitted status in LTR 
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
           >
             <span
-              class="h-2 w-2 rounded-full bg-gray-300"
+              class="h-2 w-2 rounded-full bg-muted"
             />
           </span>
           <span
-            class="text-xs capitalize text-gray-400"
+            class="text-xs capitalize text-muted-foreground"
           >
             delivered
           </span>
@@ -1133,14 +1133,14 @@ exports[`OrderStatusPipeline — LTR snapshot > renders submitted status in LTR 
       class="rounded-md border"
     >
       <summary
-        class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700"
+        class="cursor-pointer px-4 py-2 text-sm font-medium text-foreground"
       >
         Status history (
         1
          events)
       </summary>
       <ul
-        class="divide-y divide-gray-100 px-4"
+        class="divide-y divide-border px-4"
       >
         <li
           class="flex items-start gap-3 py-2"
@@ -1160,13 +1160,13 @@ exports[`OrderStatusPipeline — LTR snapshot > renders submitted status in LTR 
                 submitted
               </span>
               <span
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 May 1, 2026
               </span>
             </div>
             <p
-              class="text-xs text-gray-400"
+              class="text-xs text-muted-foreground"
             >
               by 
               tech-001
@@ -1188,7 +1188,7 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
       class="flex flex-col gap-4"
     >
       <div
-        class="flex items-center gap-2 rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-700"
+        class="flex items-center gap-2 rounded-md bg-primary/10 px-3 py-2 text-sm text-primary"
       >
         <svg
           data-size="16"
@@ -1316,22 +1316,22 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
             class="flex flex-col items-center gap-1"
           >
             <span
-              class="flex items-center justify-center rounded-full w-8 h-8 bg-blue-100 ring-2 ring-blue-500"
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-primary/10 ring-2 ring-primary"
             >
               <svg
-                class="text-blue-600"
+                class="text-primary"
                 data-size="20"
                 data-testid="truck"
               />
             </span>
             <span
-              class="text-xs capitalize font-semibold text-blue-700"
+              class="text-xs capitalize font-semibold text-primary"
             >
               shipped
             </span>
           </div>
           <div
-            class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+            class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
           />
         </div>
         <div
@@ -1342,14 +1342,14 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
             class="flex flex-col items-center gap-1"
           >
             <span
-              class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
             >
               <span
-                class="h-2 w-2 rounded-full bg-gray-300"
+                class="h-2 w-2 rounded-full bg-muted"
               />
             </span>
             <span
-              class="text-xs capitalize text-gray-400"
+              class="text-xs capitalize text-muted-foreground"
             >
               delivered
             </span>
@@ -1360,14 +1360,14 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
         class="rounded-md border"
       >
         <summary
-          class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700"
+          class="cursor-pointer px-4 py-2 text-sm font-medium text-foreground"
         >
           Status history (
           5
            events)
         </summary>
         <ul
-          class="divide-y divide-gray-100 px-4"
+          class="divide-y divide-border px-4"
         >
           <li
             class="flex items-start gap-3 py-2"
@@ -1387,13 +1387,13 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
                   shipped
                 </span>
                 <span
-                  class="text-xs text-gray-400"
+                  class="text-xs text-muted-foreground"
                 >
                   May 5, 2026
                 </span>
               </div>
               <p
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 by 
                 coordinator-001
@@ -1418,13 +1418,13 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
                   ordered
                 </span>
                 <span
-                  class="text-xs text-gray-400"
+                  class="text-xs text-muted-foreground"
                 >
                   May 4, 2026
                 </span>
               </div>
               <p
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 by 
                 coordinator-001
@@ -1449,13 +1449,13 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
                   approved
                 </span>
                 <span
-                  class="text-xs text-gray-400"
+                  class="text-xs text-muted-foreground"
                 >
                   May 3, 2026
                 </span>
               </div>
               <p
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 by 
                 coordinator-001
@@ -1480,13 +1480,13 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
                   received
                 </span>
                 <span
-                  class="text-xs text-gray-400"
+                  class="text-xs text-muted-foreground"
                 >
                   May 2, 2026
                 </span>
               </div>
               <p
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 by 
                 coordinator-001
@@ -1511,13 +1511,13 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
                   submitted
                 </span>
                 <span
-                  class="text-xs text-gray-400"
+                  class="text-xs text-muted-foreground"
                 >
                   May 1, 2026
                 </span>
               </div>
               <p
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 by 
                 tech-001
@@ -1631,22 +1631,22 @@ exports[`OrderStatusPipeline — RTL snapshot > renders in RTL direction (dir=au
             class="flex flex-col items-center gap-1"
           >
             <span
-              class="flex items-center justify-center rounded-full w-8 h-8 bg-blue-100 ring-2 ring-blue-500"
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-primary/10 ring-2 ring-primary"
             >
               <svg
-                class="text-blue-600"
+                class="text-primary"
                 data-size="20"
                 data-testid="shopping-bag"
               />
             </span>
             <span
-              class="text-xs capitalize font-semibold text-blue-700"
+              class="text-xs capitalize font-semibold text-primary"
             >
               ordered
             </span>
           </div>
           <div
-            class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+            class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
           />
         </div>
         <div
@@ -1657,20 +1657,20 @@ exports[`OrderStatusPipeline — RTL snapshot > renders in RTL direction (dir=au
             class="flex flex-col items-center gap-1"
           >
             <span
-              class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
             >
               <span
-                class="h-2 w-2 rounded-full bg-gray-300"
+                class="h-2 w-2 rounded-full bg-muted"
               />
             </span>
             <span
-              class="text-xs capitalize text-gray-400"
+              class="text-xs capitalize text-muted-foreground"
             >
               shipped
             </span>
           </div>
           <div
-            class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+            class="mx-1 h-0.5 w-6 shrink-0 bg-muted"
           />
         </div>
         <div
@@ -1681,14 +1681,14 @@ exports[`OrderStatusPipeline — RTL snapshot > renders in RTL direction (dir=au
             class="flex flex-col items-center gap-1"
           >
             <span
-              class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-muted"
             >
               <span
-                class="h-2 w-2 rounded-full bg-gray-300"
+                class="h-2 w-2 rounded-full bg-muted"
               />
             </span>
             <span
-              class="text-xs capitalize text-gray-400"
+              class="text-xs capitalize text-muted-foreground"
             >
               delivered
             </span>
@@ -1699,14 +1699,14 @@ exports[`OrderStatusPipeline — RTL snapshot > renders in RTL direction (dir=au
         class="rounded-md border"
       >
         <summary
-          class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700"
+          class="cursor-pointer px-4 py-2 text-sm font-medium text-foreground"
         >
           Status history (
           1
            events)
         </summary>
         <ul
-          class="divide-y divide-gray-100 px-4"
+          class="divide-y divide-border px-4"
         >
           <li
             class="flex items-start gap-3 py-2"
@@ -1726,13 +1726,13 @@ exports[`OrderStatusPipeline — RTL snapshot > renders in RTL direction (dir=au
                   submitted
                 </span>
                 <span
-                  class="text-xs text-gray-400"
+                  class="text-xs text-muted-foreground"
                 >
                   May 1, 2026
                 </span>
               </div>
               <p
-                class="text-xs text-gray-400"
+                class="text-xs text-muted-foreground"
               >
                 by 
                 tech-001

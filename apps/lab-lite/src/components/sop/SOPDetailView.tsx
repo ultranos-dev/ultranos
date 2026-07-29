@@ -31,7 +31,7 @@ function renderMarkdown(content: string, images: SOP['images']): string {
 
   // Code blocks (``` ... ```)
   html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_m, _lang, code) => {
-    return `<pre class="bg-gray-100 dark:bg-gray-700 rounded p-3 overflow-x-auto text-sm my-3"><code>${code.trim()}</code></pre>`
+    return `<pre class="bg-muted rounded p-3 overflow-x-auto text-sm my-3"><code>${code.trim()}</code></pre>`
   })
 
   // Headings
@@ -45,12 +45,12 @@ function renderMarkdown(content: string, images: SOP['images']): string {
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
 
   // Inline code
-  html = html.replace(/`([^`]+)`/g, '<code class="bg-gray-100 dark:bg-gray-700 rounded px-1 py-0.5 text-sm">$1</code>')
+  html = html.replace(/`([^`]+)`/g, '<code class="bg-muted rounded px-1 py-0.5 text-sm">$1</code>')
 
   // Image references: ![alt](image:id)
   html = html.replace(/!\[([^\]]*)\]\(image:([^)]+)\)/g, (_m, alt, id) => {
     const img = imageMap.get(id)
-    if (!img) return `<span class="text-gray-400">[${alt}]</span>`
+    if (!img) return `<span class="text-muted-foreground">[${alt}]</span>`
     return `<img src="data:${img.mimeType};base64,${img.data}" alt="${alt}" class="max-w-full rounded my-3" />`
   })
 
@@ -105,22 +105,22 @@ export function SOPDetailView({
   const renderedContent = renderMarkdown(sop.content, sop.images)
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
+    <div className="flex flex-col gap-4">
       {/* Back button */}
       <button
         onClick={onBack}
-        className="mb-4 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400"
+        className="mb-4 inline-flex items-center gap-1 text-sm text-primary hover:text-primary/80 dark:text-primary"
       >
         <ChevronLeft size={16} aria-hidden="true" />
         {t('backToLibrary')}
       </button>
 
       {/* Metadata header */}
-      <div className="mb-6 rounded-lg border border-gray-200 bg-card p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <div className="mb-6 rounded-lg border border-border bg-card p-6 shadow-sm">
+        <h1 className="text-2xl font-bold text-foreground">
           {sop.title}
         </h1>
-        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-gray-400">
+        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
           <div>
             <span className="font-medium">{t('version')}:</span> {sop.version}
           </div>
@@ -153,7 +153,7 @@ export function SOPDetailView({
 
       {/* Markdown content */}
       <div
-        className="prose prose-sm max-w-none rounded-lg border border-gray-200 bg-card p-6 shadow-sm dark:prose-invert dark:border-gray-700 dark:bg-gray-800"
+        className="prose prose-sm max-w-none rounded-lg border border-border bg-card p-6 shadow-sm dark:prose-invert"
         dangerouslySetInnerHTML={{ __html: renderedContent }}
       />
 
@@ -166,7 +166,7 @@ export function SOPDetailView({
           <button
             onClick={handleAcknowledge}
             disabled={acknowledging}
-            className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
           >
             {acknowledging ? t('acknowledging') : t('acknowledgeButton')}
           </button>

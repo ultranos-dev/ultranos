@@ -6,6 +6,7 @@ import { getDb, type PaymentEntry } from '@/lib/db'
 import { ReceiptView } from '@/components/finance/ReceiptView'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Receipt } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/Button'
 
 export default function ReceiptsPage() {
   const t = useTranslations('finance.receipt')
@@ -24,13 +25,9 @@ export default function ReceiptsPage() {
   if (selected) {
     return (
       <div className="flex flex-col gap-4">
-        <button
-          type="button"
-          onClick={() => setSelected(null)}
-          className="self-start text-sm text-primary hover:underline"
-        >
+        <Button variant="ghost" size="sm" onClick={() => setSelected(null)} className="w-fit px-0">
           &larr; {t('title')}
-        </button>
+        </Button>
         <ReceiptView payment={selected} />
       </div>
     )

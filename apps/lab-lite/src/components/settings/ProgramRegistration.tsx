@@ -173,33 +173,33 @@ export function ProgramRegistration() {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-700">{t('programRegistration')}</h3>
+          <h3 className="text-sm font-semibold text-foreground">{t('programRegistration')}</h3>
           <Button onClick={handleAddNew}>{t('addProgram')}</Button>
         </div>
 
         {programs.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">{t('noPrograms')}</p>
+          <p className="text-sm text-muted-foreground italic">{t('noPrograms')}</p>
         ) : (
           <ul className="space-y-2">
             {programs.map((p) => (
-              <li key={p.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+              <li key={p.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
                 <div>
-                  <p className="text-sm font-medium text-gray-800">{p.programName}</p>
-                  <p className="text-xs text-gray-500">{p.donorOrganization} · {p.programCode}</p>
+                  <p className="text-sm font-medium text-foreground">{p.programName}</p>
+                  <p className="text-xs text-muted-foreground">{p.donorOrganization} · {p.programCode}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'}`}>
                     {p.status === 'active' ? t('active') : t('inactive')}
                   </span>
                   <button
                     onClick={() => handleToggleStatus(p)}
-                    className="text-xs text-blue-600 hover:underline"
+                    className="text-xs text-primary hover:underline"
                   >
                     {p.status === 'active' ? t('inactive') : t('active')}
                   </button>
                   <button
                     onClick={() => handleEditProgram(p)}
-                    className="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+                    className="text-xs text-muted-foreground hover:text-foreground hover:underline"
                   >
                     {t('editProgram')}
                   </button>
@@ -216,19 +216,19 @@ export function ProgramRegistration() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <button onClick={() => setView('list')} className="text-sm text-gray-500 hover:text-gray-700">←</button>
-        <h3 className="text-sm font-semibold text-gray-700">
+        <button onClick={() => setView('list')} className="text-sm text-muted-foreground hover:text-foreground">←</button>
+        <h3 className="text-sm font-semibold text-foreground">
           {view === 'add' ? t('addProgram') : t('editProgram')}
         </h3>
       </div>
 
       {view === 'add' && (
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
             {t('selectPreset')}
           </label>
           <select
-            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+            className="w-full rounded border border-border px-2 py-1 text-sm"
             value=""
             onChange={(e) => { if (e.target.value) handleSelectPreset(e.target.value) }}
           >
@@ -282,7 +282,7 @@ export function ProgramRegistration() {
               value={form.contractStartDate}
               onChange={(e) => setForm({ ...form, contractStartDate: e.target.value })}
             />
-            <span className="self-center text-gray-400">–</span>
+            <span className="self-center text-muted-foreground">–</span>
             <input
               type="date"
               className="form-input flex-1"
@@ -310,7 +310,7 @@ export function ProgramRegistration() {
 function FormField({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1">
+      <label className="block text-xs font-medium text-muted-foreground mb-1">
         {label}{required && <span className="text-red-500 ms-0.5">*</span>}
       </label>
       {children}

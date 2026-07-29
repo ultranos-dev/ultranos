@@ -231,7 +231,7 @@ export function ReceiveSampleModal({
                 type="button"
                 data-testid="confirmation-done-button"
                 onClick={() => onSuccess(confirmedSampleId)}
-                className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 {t('modal.done')}
               </button>
@@ -278,7 +278,7 @@ export function ReceiveSampleModal({
               id="sample-type"
               value={sampleType}
               onChange={(e) => setSampleType(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
               data-testid="sample-type-select"
             >
               <option value="blood">{t('sampleTypes.blood')}</option>
@@ -308,7 +308,7 @@ export function ReceiveSampleModal({
                         setCondition(c)
                         setRejectionReason('')
                       }}
-                      className="h-4 w-4 text-blue-600"
+                      className="h-4 w-4 text-primary"
                       data-testid={`condition-${c}`}
                     />
                     <span className="text-sm text-foreground">{t(`conditions.${c}`)}</span>
@@ -353,7 +353,7 @@ export function ReceiveSampleModal({
               value={receivedFrom}
               onChange={(e) => setReceivedFrom(e.target.value)}
               placeholder={t('form.receivedFromPlaceholder')}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
               data-testid="received-from-input"
             />
           </div>
@@ -369,7 +369,7 @@ export function ReceiveSampleModal({
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder={t('form.notesPlaceholder')}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring resize-none"
               data-testid="notes-input"
             />
           </div>
@@ -397,7 +397,7 @@ export function ReceiveSampleModal({
               className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${
                 isNonAcceptable
                   ? 'bg-red-600 hover:bg-red-700'
-                  : 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-primary hover:bg-primary/90'
               }`}
               data-testid="submit-button"
             >

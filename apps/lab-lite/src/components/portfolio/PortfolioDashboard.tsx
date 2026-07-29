@@ -112,7 +112,7 @@ export function PortfolioDashboard({ targetTechId, targetTechName }: PortfolioDa
   const displayDays: DayRange[] = [30, 60, 90]
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col gap-4" data-testid="portfolio-dashboard">
+    <div className="flex flex-col gap-4" data-testid="portfolio-dashboard">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -138,12 +138,12 @@ export function PortfolioDashboard({ targetTechId, targetTechName }: PortfolioDa
       {/* Supervisor banner — AC 4 */}
       {!viewingOwnPortfolio && targetTechName && (
         <div
-          className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3"
+          className="flex items-start gap-3 rounded-lg border border-primary bg-primary/10 px-4 py-3"
           role="note"
           data-testid="supervisor-banner"
         >
-          <Info size={16} className="text-blue-600 mt-0.5 shrink-0" aria-hidden />
-          <p className="text-sm text-blue-800">
+          <Info size={16} className="text-primary mt-0.5 shrink-0" aria-hidden />
+          <p className="text-sm text-primary">
             {t('sharedBanner', { name: targetTechName })}
           </p>
         </div>

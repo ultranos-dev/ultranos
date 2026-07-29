@@ -259,7 +259,7 @@ export function LabSettingsView() {
   }, [])
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-foreground mb-6">{t('title')}</h1>
 
       <div className="flex flex-col gap-4">
@@ -274,7 +274,7 @@ export function LabSettingsView() {
             <div className="flex justify-between">
               <dt className="text-sm text-muted-foreground">{t('role')}</dt>
               <dd>
-                <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                   {session?.labRole
                     ? t(ROLE_I18N_KEY[session.labRole as LabRole] ?? 'labTech')
                     : t('labTech')}
@@ -396,7 +396,7 @@ export function LabSettingsView() {
                   })
                 }}
                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${
-                  lowDataMode ? 'bg-blue-600' : 'bg-muted'
+                  lowDataMode ? 'bg-primary' : 'bg-muted'
                 }`}
               >
                 <span
@@ -410,7 +410,7 @@ export function LabSettingsView() {
             {/* Link to full dashboard */}
             <Link
               href="/settings/data-budget"
-              className="block text-sm text-blue-600 hover:text-blue-700 mt-2"
+              className="block text-sm text-primary hover:text-primary/80 mt-2"
             >
               {tData('viewDashboard')} &rarr;
             </Link>
@@ -460,7 +460,7 @@ export function LabSettingsView() {
                           type="button"
                           data-testid={`tat-reset-${profile.loincCode}`}
                           onClick={() => handleResetTatOverride(profile.loincCode)}
-                          className="text-xs text-blue-600 hover:text-blue-700"
+                          className="text-xs text-primary hover:text-primary/80"
                         >
                           {t('tatReset')}
                         </button>
@@ -557,6 +557,19 @@ export function LabSettingsView() {
           <ChevronRight size={20} className="text-muted-foreground rtl:-scale-x-100" aria-hidden="true" />
         </Link>
 
+        {/* Critical Value Thresholds & Escalation Contacts — links to the dedicated page */}
+        <Link
+          href="/settings/critical-values"
+          data-testid="critical-values-link"
+          className="rounded-lg border border-border bg-card p-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
+        >
+          <div>
+            <h2 className="text-sm font-semibold text-muted-foreground">{t('criticalValues')}</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('criticalValuesDesc')}</p>
+          </div>
+          <ChevronRight size={20} className="text-muted-foreground rtl:-scale-x-100" aria-hidden="true" />
+        </Link>
+
         {/* Critical Value Checklist Config — Story 43.7 (AC #4) — lab_manager only */}
         {isManager && (
           <div
@@ -613,7 +626,7 @@ export function LabSettingsView() {
                 type="button"
                 onClick={() => void handleAddChecklistItem()}
                 disabled={!newChecklistLabel.trim()}
-                className="rounded bg-blue-600 px-3 py-1 text-sm text-white disabled:opacity-40 hover:bg-blue-700 transition-colors"
+                className="rounded bg-primary px-3 py-1 text-sm text-white disabled:opacity-40 hover:bg-primary/90 transition-colors"
                 data-testid="add-checklist-item-button"
               >
                 +
@@ -663,7 +676,7 @@ export function LabSettingsView() {
                 type="time"
                 value={dailySettings.autoTriggerTime}
                 onChange={(e) => void handleDailySettingChange('autoTriggerTime', e.target.value)}
-                className="block w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="block w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
@@ -675,7 +688,7 @@ export function LabSettingsView() {
                 type="text"
                 value={dailySettings.facilityName}
                 onChange={(e) => void handleDailySettingChange('facilityName', e.target.value)}
-                className="block w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="block w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
@@ -687,7 +700,7 @@ export function LabSettingsView() {
                 type="text"
                 value={dailySettings.watermarkText}
                 onChange={(e) => void handleDailySettingChange('watermarkText', e.target.value)}
-                className="block w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="block w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div>
@@ -704,7 +717,7 @@ export function LabSettingsView() {
                   if (file.size > 102400) return // max 100KB
                   void handleDailySettingChange('logoBlob', file)
                 }}
-                className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+                className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary hover:file:bg-primary/10"
               />
             </div>
           </div>
@@ -764,8 +777,8 @@ export function LabSettingsView() {
                   aria-checked={gamificationEnabled}
                   data-testid="gamification-toggle"
                   onClick={() => void handleGamificationToggle(!gamificationEnabled)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
-                    gamificationEnabled ? 'bg-blue-600' : 'bg-muted'
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+                    gamificationEnabled ? 'bg-primary' : 'bg-muted'
                   }`}
                 >
                   <span
@@ -793,8 +806,8 @@ export function LabSettingsView() {
                   aria-checked={showOnTeamDashboard}
                   data-testid="show-on-dashboard-toggle"
                   onClick={() => void handleShowOnDashboardToggle(!showOnTeamDashboard)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
-                    showOnTeamDashboard ? 'bg-blue-600' : 'bg-muted'
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+                    showOnTeamDashboard ? 'bg-primary' : 'bg-muted'
                   }`}
                 >
                   <span
@@ -899,7 +912,7 @@ function ThresholdRow({ threshold, onSave }: ThresholdRowProps) {
           <button
             type="button"
             onClick={handleSave}
-            className="ms-1 rounded bg-blue-600 px-1.5 py-0.5 text-xs text-white hover:bg-blue-700"
+            className="ms-1 rounded bg-primary px-1.5 py-0.5 text-xs text-white hover:bg-primary/90"
             data-testid={`threshold-save-${threshold.loincCode}`}
           >
             ✓

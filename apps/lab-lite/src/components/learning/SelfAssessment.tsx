@@ -90,19 +90,19 @@ export function SelfAssessment({
   if (phase === 'quiz') {
     return (
       <div className="flex flex-col gap-4" data-testid="self-assessment">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        <h3 className="text-sm font-semibold text-foreground">
           {t('quizTitle')}
         </h3>
 
         {questions.map((q, qi) => (
           <div key={q.id} className="flex flex-col gap-2" data-testid={`question-${qi}`}>
-            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+            <p className="text-sm font-medium text-foreground">
               {qi + 1}. {q.question}
             </p>
             <ul className="space-y-1.5">
               {q.options.map((option, oi) => (
                 <li key={oi}>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-border p-2 text-sm text-foreground hover:bg-muted">
                     <input
                       type="radio"
                       name={`q-${qi}`}
@@ -130,7 +130,7 @@ export function SelfAssessment({
           <button
             type="button"
             onClick={onBack}
-            className="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
             data-testid="quiz-back"
           >
             {t('back')}
@@ -139,7 +139,7 @@ export function SelfAssessment({
             type="button"
             onClick={handleSubmit}
             disabled={!allAnswered}
-            className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+            className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 hover:bg-primary/90 dark:bg-primary dark:hover:bg-blue-400"
             data-testid="quiz-submit"
           >
             {t('submitQuiz')}
@@ -176,7 +176,7 @@ export function SelfAssessment({
           const isCorrect = selectedIndex === q.correctIndex
           return (
             <div key={q.id} data-testid={`result-${qi}`} className="flex flex-col gap-1">
-              <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+              <p className="text-sm font-medium text-foreground">
                 {qi + 1}. {q.question}
               </p>
               <p
@@ -199,7 +199,7 @@ export function SelfAssessment({
       <button
         type="button"
         onClick={onComplete}
-        className="w-full rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+        className="w-full rounded bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary/90 dark:bg-primary dark:hover:bg-blue-400"
         data-testid="assessment-done"
       >
         {t('done')}

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { AuthGuard } from '@/components/AuthGuard'
 import { useRequireLabRole } from '@/hooks/useLabPermission'
 import { AnonymousReportForm } from '@/components/safety/AnonymousReportForm'
 import { SafetyReportManagement } from '@/components/safety/SafetyReportManagement'
@@ -46,8 +45,6 @@ function SafetyReportingContent() {
 
 export default function SafetyReportingPage() {
   return (
-    <AuthGuard>
       <SafetyReportingContent />
-    </AuthGuard>
   )
 }

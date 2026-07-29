@@ -82,7 +82,7 @@ export function CertificationDashboard({ technicianId, technicianName }: Certifi
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-500 dark:text-gray-400">
+      <div className="flex items-center justify-center h-48 text-muted-foreground">
         {t('loading')}
       </div>
     )
@@ -121,12 +121,12 @@ export function CertificationDashboard({ technicianId, technicianName }: Certifi
       {/* Certificate viewer modal */}
       {selectedCertificate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-card dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-              <h2 className="font-semibold text-gray-900 dark:text-white">{t('certificate')}</h2>
+          <div className="bg-card rounded-lg shadow-xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="font-semibold text-foreground">{t('certificate')}</h2>
               <button
                 onClick={() => setSelectedCertificate(null)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-muted-foreground hover:text-muted-foreground dark:hover:text-gray-300"
               >
                 ✕
               </button>
@@ -141,12 +141,12 @@ export function CertificationDashboard({ technicianId, technicianName }: Certifi
       {/* Log supervised procedure modal */}
       {showLogProcedure && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-card dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-              <h2 className="font-semibold text-gray-900 dark:text-white">{t('logSupervisedProcedure')}</h2>
+          <div className="bg-card rounded-lg shadow-xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="font-semibold text-foreground">{t('logSupervisedProcedure')}</h2>
               <button
                 onClick={() => setShowLogProcedure(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-muted-foreground hover:text-muted-foreground dark:hover:text-gray-300"
               >
                 ✕
               </button>
@@ -199,25 +199,25 @@ function PathwayCard({
   const sorted = [...pathway.milestones].sort((a, b) => a.order - b.order)
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="rounded-lg border border-border overflow-hidden">
       {/* Pathway header */}
-      <div className="bg-gray-50 dark:bg-gray-800/60 px-4 py-3 flex items-center justify-between">
+      <div className="bg-muted/60 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Award size={20} className="text-blue-600 dark:text-blue-400 shrink-0" />
+          <Award size={20} className="text-primary dark:text-primary shrink-0" />
           <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white">{pathway.name}</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{pathway.description}</p>
+            <h3 className="font-semibold text-foreground">{pathway.name}</h3>
+            <p className="text-xs text-muted-foreground">{pathway.description}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {progress && (
-            <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+            <span className="text-sm font-medium text-primary dark:text-primary">
               {progress.overallPercent}%
             </span>
           )}
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="text-muted-foreground hover:text-muted-foreground dark:hover:text-gray-300"
             aria-label={expanded ? t('collapse') : t('expand')}
           >
             <DirectionalIcon category="navigation">
@@ -233,18 +233,18 @@ function PathwayCard({
       {/* Overall progress bar */}
       {progress && (
         <div className="px-4 pt-3 pb-1">
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
             <span>{t('overallProgress')}</span>
             <span>{progress.overallPercent}%</span>
           </div>
-          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-blue-500 rounded-full transition-all duration-500"
+              className="h-full bg-primary rounded-full transition-all duration-500"
               style={{ width: `${progress.overallPercent}%` }}
             />
           </div>
           {progress.currentLevel && (
-            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+            <p className="text-xs text-primary dark:text-primary mt-1">
               {t('currentLevel')}: {progress.currentLevel}
             </p>
           )}
@@ -253,7 +253,7 @@ function PathwayCard({
 
       {/* Milestone list */}
       {expanded && (
-        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+        <div className="divide-y divide-border dark:divide-gray-800">
           {sorted.map((milestone) => {
             const mp = progress?.milestoneProgress.find((p) => p.milestoneId === milestone.id)
             const current = mp?.currentValue ?? 0
@@ -270,24 +270,24 @@ function PathwayCard({
                     ) : current > 0 ? (
                       <Clock size={18} className="text-yellow-500" />
                     ) : (
-                      <AlertCircle size={18} className="text-gray-300 dark:text-gray-600" />
+                      <AlertCircle size={18} className="text-gray-300 dark:text-muted-foreground" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      <p className="text-sm font-medium text-foreground truncate">
                         {milestone.name}
                       </p>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
+                      <span className="text-xs text-muted-foreground shrink-0">
                         {current}/{target}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {milestone.description}
                     </p>
-                    <div className="mt-2 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${complete ? 'bg-green-500' : 'bg-blue-500'}`}
+                        className={`h-full rounded-full transition-all duration-500 ${complete ? 'bg-green-500' : 'bg-primary'}`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -299,7 +299,7 @@ function PathwayCard({
                     {milestone.category === 'supervised_procedures' && !complete && (
                       <button
                         onClick={onLogProcedure}
-                        className="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                        className="mt-1 text-xs text-primary dark:text-primary hover:underline"
                       >
                         + {t('logSupervisedProcedure')}
                       </button>
@@ -314,8 +314,8 @@ function PathwayCard({
 
       {/* Certificates section */}
       {certificates.length > 0 && (
-        <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-3">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+        <div className="border-t border-border px-4 py-3">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
             {t('earnedCertificates')}
           </p>
           <div className="space-y-2">
@@ -326,15 +326,15 @@ function PathwayCard({
               >
                 <div className="flex items-center gap-2">
                   <Award size={14} className="text-yellow-500 shrink-0" />
-                  <span className="text-gray-900 dark:text-white">{cert.milestoneName}</span>
+                  <span className="text-foreground">{cert.milestoneName}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-muted-foreground">
                     {new Date(cert.issuedAt).toLocaleDateString()}
                   </span>
                   <button
                     onClick={() => onViewCertificate(cert)}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                    className="text-xs text-primary dark:text-primary hover:underline"
                   >
                     {t('view')}
                   </button>
@@ -346,10 +346,10 @@ function PathwayCard({
       )}
 
       {/* Refresh button */}
-      <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-2 flex justify-end">
+      <div className="border-t border-border px-4 py-2 flex justify-end">
         <button
           onClick={onRefresh}
-          className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          className="text-xs text-muted-foreground hover:text-muted-foreground dark:hover:text-gray-300"
         >
           {t('refreshProgress')}
         </button>

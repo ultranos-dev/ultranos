@@ -58,7 +58,7 @@ export function ReceiptView({ payment }: ReceiptViewProps) {
   }, [receipt])
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-foreground mb-6">{t('preview')}</h1>
 
       <div className="rounded-lg border border-border bg-card p-4">

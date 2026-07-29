@@ -18,7 +18,7 @@ import Link from 'next/link'
 import { RefreshCw, Settings, ChevronDown, ChevronUp } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { PackageSearch } from '@ultranos/ui-kit/icons'
+import { Package } from '@ultranos/ui-kit/icons'
 import { useReagentBurndown } from '@/hooks/useReagentBurndown'
 import type { BurndownResult } from '@/lib/reagent-burndown'
 import type { AlertLevel } from '@/lib/db'
@@ -32,7 +32,7 @@ function AlertBadge({ level }: { level: AlertLevel }) {
   if (level === 'none') return null
 
   const styles: Record<Exclude<AlertLevel, 'none'>, string> = {
-    info: 'bg-blue-100 text-blue-700',
+    info: 'bg-primary/10 text-primary',
     warning: 'bg-amber-100 text-amber-700',
     critical: 'bg-red-100 text-red-700',
   }
@@ -321,7 +321,7 @@ export function ReagentBurndownCard() {
         data-testid="burndown-card"
       >
         <EmptyState
-          icon={PackageSearch}
+          icon={Package}
           title={t('emptyState')}
           action={{
             label: t('emptyStateAction'),
@@ -353,7 +353,7 @@ export function ReagentBurndownCard() {
             </span>
           )}
           {(counts.info ?? 0) > 0 && (
-            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
               {counts.info} {t('alertInfo')}
             </span>
           )}
@@ -449,7 +449,7 @@ export function ReagentBurndownCard() {
             <div className="border-t border-border/50 px-4 py-2">
               <button
                 onClick={() => setShowAll((v) => !v)}
-                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                className="flex items-center gap-1 text-xs text-primary hover:text-primary/80"
                 data-testid="toggle-all"
               >
                 {showAll ? (

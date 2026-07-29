@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl'
 import { Award } from '@ultranos/ui-kit/icons'
-import { AuthGuard } from '@/components/AuthGuard'
 import { CertificationDashboard } from '@/components/certification/CertificationDashboard'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
@@ -14,15 +13,14 @@ export default function CertificationPage() {
   const technicianName = session?.email?.split('@')[0] ?? t('technician')
 
   return (
-    <AuthGuard>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <Award size={28} className="text-blue-600 dark:text-blue-400" />
+          <Award size={28} className="text-primary dark:text-primary" />
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-xl font-bold text-foreground">
               {t('pageTitle')}
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               {t('pageSubtitle')}
             </p>
           </div>
@@ -33,6 +31,5 @@ export default function CertificationPage() {
           technicianName={technicianName}
         />
       </div>
-    </AuthGuard>
   )
 }

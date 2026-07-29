@@ -61,7 +61,7 @@ export function ProgramTagSelector({ testLoincCode, value, onChange }: Props) {
 
   return (
     <div className="space-y-1" data-testid="program-tag-selector">
-      <label className="block text-xs font-medium text-gray-600">
+      <label className="block text-xs font-medium text-muted-foreground">
         {t('tagTests')}
       </label>
       <div className="flex flex-wrap gap-2">
@@ -75,8 +75,8 @@ export function ProgramTagSelector({ testLoincCode, value, onChange }: Props) {
               onClick={() => toggle(p.programCode)}
               className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 selected
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-primary text-white'
+                  : 'bg-muted text-muted-foreground hover:bg-muted'
               }`}
               aria-pressed={selected}
               data-testid={`program-tag-${p.programCode}`}
@@ -90,7 +90,7 @@ export function ProgramTagSelector({ testLoincCode, value, onChange }: Props) {
         })}
       </div>
       {autoTagged.length > 0 && (
-        <p className="text-xs text-gray-400">{t('autoTagged')}</p>
+        <p className="text-xs text-muted-foreground">{t('autoTagged')}</p>
       )}
     </div>
   )

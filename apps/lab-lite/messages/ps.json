@@ -298,7 +298,8 @@
     "errorBirthDateRequired": "د زیږیدو نیټه اړینه ده.",
     "errorBirthYearRange": "د زیږیدو کال باید د ۱۹۰۰ او اوسني کال ترمنځ وي.",
     "errorWitnessRequired": "د شفاهي رضایت لپاره د شاهد نوم اړین دی.",
-    "errorUnexpected": "یوه غیر متوقعه تېروتنه پیښه شوه."
+    "errorUnexpected": "یوه غیر متوقعه تېروتنه پیښه شوه.",
+    "viewRecord": "ریکارډ وګورئ"
   },
   "sidebar": {
     "dashboard": "ډشبورډ",
@@ -336,7 +337,12 @@
     "readinessBoard": "د چمتوالي بورډ",
     "mentorship": "Mentorship",
     "visualAtlas": "لیداری اطلس",
-    "escalations": "لوړیدنې"
+    "escalations": "لوړیدنې",
+    "sendOuts": "بهرنۍ لېږنې",
+    "logbook": "د کار کتابچه",
+    "procurement": "اکمالات",
+    "workload": "د کار بار",
+    "spillResponse": "د توییدنې ځواب"
   },
   "network": {
     "networkDashboard": "د لابراتوار شبکه",
@@ -400,7 +406,8 @@
     },
     "manualModeInfo": "لاسي حالت: د ترتیب لپاره راکش کړئ. اتوماتیک تازه کول بند دي. د ثبات نښې لاهم فعالې دي.",
     "emptyTitle": "په قطار کې هیڅ نمونه نشته",
-    "emptyHint": "ترلاسه شوې نمونې به په اتوماتيک ډول دلته ښکاره شي."
+    "emptyHint": "ترلاسه شوې نمونې به په اتوماتيک ډول دلته ښکاره شي.",
+    "enterResult": "پایله دننه کړئ"
   },
   "orders": {
     "title": "د ازموینو غوښتنې",
@@ -424,7 +431,12 @@
       "specialInstructions": "ځانګړې لارښوونې",
       "orderedAt": "د غوښتنې نېټه"
     },
-    "badge": "پاتې"
+    "badge": "پاتې",
+    "searchPlaceholder": "د فرمایش پېژندنې له مخې لټون…",
+    "loading": "فرمایشونه بارېږي…",
+    "noResultsTitle": "سمون لرونکی فرمایش ونه موندل شو",
+    "noResultsDescription": "هیڅ فرمایش د اوسنیو فلټرونو سره سمون نه لري.",
+    "clearFilters": "فلټرونه پاک کړئ"
   },
   "settings": {
     "title": "ترتیبات",
@@ -486,7 +498,8 @@
     "smsTestPhone": "د ازموینې د تلیفون شمیره",
     "smsConfigSaved": "د SMS ترتیبات خوندي شول",
     "smsTestSent": "د ازموینې SMS صف کې اضافه شو",
-    "criticalValues": "بحراني ارزښتونه او لوړیدنه"
+    "criticalValues": "بحراني ارزښتونه او لوړیدنه",
+    "criticalValuesDesc": "د بحراني پایلو حدونه او د زیاتون اړیکې"
   },
   "queuePage": {
     "title": "د پورته کولو لیست",
@@ -1127,7 +1140,8 @@
     "syncStatusCol": "د همغږۍ حالت",
     "synced": "همغږ شوې",
     "pendingSync": "په انتظار کې",
-    "noAcknowledgments": "تر اوسه هیڅ تاییدونه نشته"
+    "noAcknowledgments": "تر اوسه هیڅ تاییدونه نشته",
+    "clearFilters": "فلټرونه پاک کړئ"
   },
   "peerNetwork": {
     "pageTitle": "له تخنیکر څخه وپوښتئ",
@@ -1753,7 +1767,11 @@
     "retryButton": "بیا هڅه",
     "rangeUpdated": "د پایلې راهیسې سلسله تازه شوې. اوسنۍ: {min}–{max}",
     "commentPlaceholder": "دلیل دننه کړئ...",
-    "commentAriaLabel": "تبصرې"
+    "commentAriaLabel": "تبصرې",
+    "searchPlaceholder": "د پایلو لټون…",
+    "noResultsTitle": "سمون لرونکې پایله ونه موندل شوه",
+    "noResultsDescription": "هیڅ پاتې پایله د اوسنیو فلټرونو سره سمون نه لري.",
+    "clearFilters": "فلټرونه پاک کړئ"
   },
   "delegates": {
     "addDelegate": "د کورنۍ استازی اضافه کړئ",
@@ -2010,7 +2028,8 @@
     "outgoingNotesLabel": "د {name} یادداشتونه",
     "incomingNotesLabel": "د راتلونکي تکنیسین یادداشتونه",
     "readyStatus": "چمتو",
-    "noHistoryHint": "د بشپړ شویو شفټ سپارنو دلته ښکاره شي."
+    "noHistoryHint": "د بشپړ شویو شفټ سپارنو دلته ښکاره شي.",
+    "historyRestricted": "د سپارلو تاریخچه یوازې د څارونکو او د لابراتوار مدیرانو لپاره شته."
   },
   "visualAtlas": {
     "categoryNavLabel": "د اطلس کټګورۍ",
@@ -2530,7 +2549,11 @@
     "reagentConsumption": "د معرفونو او تجهیزاتو مصرف",
     "qualityIndicatorsTitle": "د کیفیت شاخصونه",
     "dhis2OrgUnitTitle": "د DHIS2 سازماني واحد",
-    "dhis2OrgUnitDescription": "د دې تاسیساتو لپاره د DHIS2 سازماني واحد پیژندنه دننه کړئ. دا پیژندنه ستاسو د DHIS2 مدیر لخوا ټاکل کیږي."
+    "dhis2OrgUnitDescription": "د دې تاسیساتو لپاره د DHIS2 سازماني واحد پیژندنه دننه کړئ. دا پیژندنه ستاسو د DHIS2 مدیر لخوا ټاکل کیږي.",
+    "surveillanceTitle": "څارنه",
+    "surveillanceDescription": "د ناروغیو د څارنې خبرتیاوې او د خپرېدو نښې",
+    "donorTitle": "د وینه ورکوونکو راپور",
+    "donorDescription": "د وینې ورکولو پروګرام لنډیز راپورونه"
   },
   "surveillance": {
     "title": "د ناروغۍ کتنه",
@@ -3280,7 +3303,28 @@
     "refLabFieldTestsPlaceholder": "2085-9, 4548-4, 10524-7",
     "refLabFieldTatPlaceholder": "2085-9:5, 4548-4:3",
     "importResultValuePlaceholder": "مثال: 5.2",
-    "importResultUnitPlaceholder": "مثال: mmol/L"
+    "importResultUnitPlaceholder": "مثال: mmol/L",
+    "pageTitle": "بهرنۍ لېږنې",
+    "searchPlaceholder": "د لېږنو لټون…",
+    "filterStatusAria": "د حالت له مخې فلټر",
+    "filterStatusAll": "ټول حالتونه",
+    "filterLabAria": "د ریفرنس لابراتوار له مخې فلټر",
+    "filterLabAll": "ټول لابراتوارونه",
+    "overdueBanner": "{count, plural, one {# لېږنه ځنډېدلې.} other {# لېږنې ځنډېدلې.}}",
+    "viewPending": "د پاتې لېږنو کتنه",
+    "colTrackingId": "د تعقیب پېژندنه",
+    "colReferenceLab": "ریفرنس لابراتوار",
+    "colTestRequested": "غوښتل شوی معاینه",
+    "colDateSent": "د لېږلو نېټه",
+    "colStatus": "حالت",
+    "colElapsed": "تېر شوی وخت",
+    "colActions": "کړنې",
+    "loading": "لېږنې بارېږي…",
+    "noResultsTitle": "هیڅ لېږنه ونه موندل شوه",
+    "noResultsDescription": "هیڅ لېږنه د اوسنیو فلټرونو سره سمون نه لري.",
+    "clearFilters": "فلټرونه پاک کړئ",
+    "actionUpdateStatus": "حالت تازه کړئ",
+    "actionImportResult": "پایله وارد کړئ"
   },
   "outbreak": {
     "activateAriaLabel": "د اوباشی حالت فعالول",
@@ -3547,7 +3591,38 @@
         "sms_physician": "ډاکتر ته SMS",
         "sms_director": "طبي مدیر ته SMS",
         "flag_district": "د ولسوالۍ مسؤول خبردارۍ"
-      }
+      },
+      "refresh": "تازه کول",
+      "activeAlert": "{count, plural, one {# فعاله زیاتونه پاملرنې ته اړتیا لري.} other {# فعالې زیاتونې پاملرنې ته اړتیا لري.}}",
+      "searchPlaceholder": "د زیاتونو لټون…",
+      "noResults": "سمون لرونکې زیاتونه ونه موندل شوه",
+      "clearSearch": "لټون پاک کړئ"
     }
+  },
+  "logbook": {
+    "title": "د کار کتابچه",
+    "authorized": "تصویب شوی",
+    "amended": "اصلاح شوی",
+    "amendmentOf": "اصلاح #{seqNo}",
+    "loadingMore": "بارېږي…",
+    "exportPdf": "PDF صادرول",
+    "exporting": "صادرېږي…",
+    "filterByDate": "نېټه",
+    "filterByTestType": "د معاینې ډول",
+    "filterByTechnician": "تخنیکر",
+    "filterByPatient": "ناروغ",
+    "searchPlaceholder": "د ناروغ له مخې لټون…",
+    "noResults": "سمون لرونکی ننوت ونه موندل شو",
+    "noEntries": "تر اوسه د کتابچې ننوتنه نشته",
+    "seqNo": "د ترتیب شمېره",
+    "date": "نېټه",
+    "patientRef": "ناروغ",
+    "age": "عمر",
+    "testType": "د معاینې ډول",
+    "resultSummary": "پایله",
+    "technician": "تخنیکر",
+    "authStatus": "حالت",
+    "loadMore": "نور بار کړئ",
+    "clearFilters": "فلټرونه پاک کړئ"
   }
 }

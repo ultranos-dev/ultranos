@@ -102,7 +102,7 @@ export function SurveillanceConfig() {
           key={disease.diseaseCode}
           className={`rounded-lg border p-3 transition-colors ${
             disease.isActive
-              ? 'border-blue-200 bg-blue-50/40'
+              ? 'border-primary bg-primary/10/40'
               : 'border-border bg-muted/30 opacity-70'
           }`}
           data-testid={`disease-row-${disease.diseaseCode}`}
@@ -132,8 +132,8 @@ export function SurveillanceConfig() {
               aria-label={`${t('activeToggle')} ${disease.diseaseLabel}`}
               data-testid={`disease-toggle-${disease.diseaseCode}`}
               onClick={() => void handleToggle(disease.diseaseCode)}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
-                disease.isActive ? 'bg-blue-600' : 'bg-muted'
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+                disease.isActive ? 'bg-primary' : 'bg-muted'
               }`}
             >
               <span

@@ -130,19 +130,19 @@ export function ThresholdConfigPanel() {
   }
 
   if (loading) {
-    return <p className="text-sm text-gray-500 p-4">{t('loading')}</p>
+    return <p className="text-sm text-muted-foreground p-4">{t('loading')}</p>
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">{t('title')}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('title')}</h2>
         {canEdit && (
           <button
             type="button"
             onClick={handleReset}
             disabled={resetting}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground hover:bg-muted disabled:opacity-50"
           >
             {resetting ? t('resetting') : t('resetToDefaults')}
           </button>
@@ -155,23 +155,23 @@ export function ThresholdConfigPanel() {
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
+          <thead className="bg-muted">
             <tr>
-              <th className="px-4 py-3 text-start font-medium text-gray-700">{t('col.analyte')}</th>
-              <th className="px-4 py-3 text-start font-medium text-gray-700">{t('col.testName')}</th>
-              <th className="px-4 py-3 text-end font-medium text-gray-700">{t('col.criticalLow')}</th>
-              <th className="px-4 py-3 text-end font-medium text-gray-700">{t('col.criticalHigh')}</th>
-              <th className="px-4 py-3 text-start font-medium text-gray-700">{t('col.unit')}</th>
-              <th className="px-4 py-3 text-center font-medium text-gray-700">{t('col.active')}</th>
+              <th className="px-4 py-3 text-start font-medium text-foreground">{t('col.analyte')}</th>
+              <th className="px-4 py-3 text-start font-medium text-foreground">{t('col.testName')}</th>
+              <th className="px-4 py-3 text-end font-medium text-foreground">{t('col.criticalLow')}</th>
+              <th className="px-4 py-3 text-end font-medium text-foreground">{t('col.criticalHigh')}</th>
+              <th className="px-4 py-3 text-start font-medium text-foreground">{t('col.unit')}</th>
+              <th className="px-4 py-3 text-center font-medium text-foreground">{t('col.active')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-border">
             {thresholds.map((threshold) => (
               <tr key={threshold.id} className={threshold.isActive ? '' : 'opacity-50'}>
-                <td className="px-4 py-3 font-medium text-gray-900">{threshold.analyte}</td>
-                <td className="px-4 py-3 text-gray-600">{threshold.testName}</td>
+                <td className="px-4 py-3 font-medium text-foreground">{threshold.analyte}</td>
+                <td className="px-4 py-3 text-muted-foreground">{threshold.testName}</td>
 
                 {/* Critical Low — inline editable */}
                 <td className="px-4 py-3 text-end">
@@ -182,7 +182,7 @@ export function ThresholdConfigPanel() {
                       onChange={(e) => setEditing({ ...editing, value: e.target.value })}
                       onBlur={commitEdit}
                       onKeyDown={(e) => e.key === 'Enter' && commitEdit()}
-                      className="w-20 rounded border border-blue-400 px-2 py-1 text-end text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-20 rounded border border-primary px-2 py-1 text-end text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                       aria-label={t('editCriticalLow', { analyte: threshold.analyte })}
                       autoFocus
                     />
@@ -190,7 +190,7 @@ export function ThresholdConfigPanel() {
                     <button
                       type="button"
                       onClick={() => startEditing(threshold.id!, 'criticalLow', threshold.criticalLow)}
-                      className={`rounded px-2 py-1 text-end ${canEdit ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'}`}
+                      className={`rounded px-2 py-1 text-end ${canEdit ? 'hover:bg-primary/10 cursor-pointer' : 'cursor-default'}`}
                       disabled={!canEdit}
                       aria-label={canEdit ? t('editCriticalLow', { analyte: threshold.analyte }) : undefined}
                     >
@@ -208,7 +208,7 @@ export function ThresholdConfigPanel() {
                       onChange={(e) => setEditing({ ...editing, value: e.target.value })}
                       onBlur={commitEdit}
                       onKeyDown={(e) => e.key === 'Enter' && commitEdit()}
-                      className="w-20 rounded border border-blue-400 px-2 py-1 text-end text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-20 rounded border border-primary px-2 py-1 text-end text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                       aria-label={t('editCriticalHigh', { analyte: threshold.analyte })}
                       autoFocus
                     />
@@ -216,7 +216,7 @@ export function ThresholdConfigPanel() {
                     <button
                       type="button"
                       onClick={() => startEditing(threshold.id!, 'criticalHigh', threshold.criticalHigh)}
-                      className={`rounded px-2 py-1 text-end ${canEdit ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'}`}
+                      className={`rounded px-2 py-1 text-end ${canEdit ? 'hover:bg-primary/10 cursor-pointer' : 'cursor-default'}`}
                       disabled={!canEdit}
                       aria-label={canEdit ? t('editCriticalHigh', { analyte: threshold.analyte }) : undefined}
                     >
@@ -225,7 +225,7 @@ export function ThresholdConfigPanel() {
                   )}
                 </td>
 
-                <td className="px-4 py-3 text-gray-500">{threshold.unit}</td>
+                <td className="px-4 py-3 text-muted-foreground">{threshold.unit}</td>
 
                 {/* Active toggle */}
                 <td className="px-4 py-3 text-center">
@@ -236,7 +236,7 @@ export function ThresholdConfigPanel() {
                     onClick={() => toggleActive(threshold)}
                     disabled={!canEdit}
                     className={`inline-flex h-5 w-10 items-center rounded-full transition ${
-                      threshold.isActive ? 'bg-green-500' : 'bg-gray-300'
+                      threshold.isActive ? 'bg-green-500' : 'bg-muted'
                     } disabled:opacity-50`}
                     aria-label={t('toggleActive', { analyte: threshold.analyte })}
                   >
@@ -254,7 +254,7 @@ export function ThresholdConfigPanel() {
       </div>
 
       {!canEdit && (
-        <p className="text-xs text-gray-500">{t('readOnlyNotice')}</p>
+        <p className="text-xs text-muted-foreground">{t('readOnlyNotice')}</p>
       )}
     </div>
   )

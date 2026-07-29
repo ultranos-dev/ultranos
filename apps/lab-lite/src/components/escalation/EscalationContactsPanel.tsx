@@ -144,23 +144,23 @@ export function EscalationContactsPanel() {
   }
 
   if (loading) {
-    return <p className="text-sm text-gray-500 p-4">{t('loading')}</p>
+    return <p className="text-sm text-muted-foreground p-4">{t('loading')}</p>
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">{t('title')}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('title')}</h2>
       </div>
 
-      <p className="text-sm text-gray-500">{t('description')}</p>
+      <p className="text-sm text-muted-foreground">{t('description')}</p>
 
       {CONTACT_ROLES.map((role) => {
         const form = forms[role]
         return (
-          <div key={role} className="rounded-lg border border-gray-200 p-4 space-y-4">
+          <div key={role} className="rounded-lg border border-border p-4 space-y-4">
             <div className="flex items-center gap-2">
-              <h3 className="font-medium text-gray-900">{t(`role.${role}`)}</h3>
+              <h3 className="font-medium text-foreground">{t(`role.${role}`)}</h3>
               {form.saved && (
                 <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
                   {t('saved')}
@@ -179,7 +179,7 @@ export function EscalationContactsPanel() {
               <div>
                 <label
                   htmlFor={`${role}-name`}
-                  className="mb-1 block text-sm font-medium text-gray-700"
+                  className="mb-1 block text-sm font-medium text-foreground"
                 >
                   {t('nameLabel')}
                   <span className="ms-1 text-red-500" aria-hidden="true">*</span>
@@ -191,7 +191,7 @@ export function EscalationContactsPanel() {
                   onChange={(e) => updateField(role, 'name', e.target.value)}
                   disabled={!canEdit}
                   placeholder={t('namePlaceholder')}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-muted disabled:text-muted-foreground"
                   aria-required="true"
                 />
               </div>
@@ -200,7 +200,7 @@ export function EscalationContactsPanel() {
               <div>
                 <label
                   htmlFor={`${role}-phone`}
-                  className="mb-1 block text-sm font-medium text-gray-700"
+                  className="mb-1 block text-sm font-medium text-foreground"
                 >
                   {t('phoneLabel')}
                 </label>
@@ -211,7 +211,7 @@ export function EscalationContactsPanel() {
                   onChange={(e) => updateField(role, 'phone', e.target.value)}
                   disabled={!canEdit}
                   placeholder={t('phonePlaceholder')}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-muted disabled:text-muted-foreground"
                   autoComplete="tel"
                 />
               </div>
@@ -223,7 +223,7 @@ export function EscalationContactsPanel() {
                   type="button"
                   onClick={() => save(role)}
                   disabled={!form.dirty || form.saving}
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {form.saving ? t('saving') : t('save')}
                 </button>
@@ -234,11 +234,11 @@ export function EscalationContactsPanel() {
       })}
 
       {!canEdit && (
-        <p className="text-xs text-gray-500">{t('readOnlyNotice')}</p>
+        <p className="text-xs text-muted-foreground">{t('readOnlyNotice')}</p>
       )}
 
       {/* Info box: physician contact is per-order */}
-      <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+      <div className="rounded-lg border border-primary bg-primary/10 px-4 py-3 text-sm text-primary">
         {t('physicianNote')}
       </div>
     </div>

@@ -52,7 +52,7 @@ export function WithdrawConsentDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true">
-      <div className="mx-4 w-full max-w-md rounded-lg bg-card p-6 shadow-xl dark:bg-gray-800">
+      <div className="mx-4 w-full max-w-md rounded-lg bg-card p-6 shadow-xl">
         <h2 className="mb-4 text-lg font-semibold text-red-600 dark:text-red-400">{t('withdraw.title')}</h2>
 
         <p className="mb-4 text-sm">{t('withdraw.confirm')}</p>
@@ -67,7 +67,7 @@ export function WithdrawConsentDialog({
             }}
             placeholder={t('withdraw.reasonPlaceholder')}
             rows={3}
-            className="mt-1 block w-full rounded-md border px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700"
+            className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
           />
         </label>
 
@@ -78,7 +78,7 @@ export function WithdrawConsentDialog({
             type="button"
             onClick={onCancel}
             disabled={submitting}
-            className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+            className="rounded-md border px-4 py-2 text-sm hover:bg-muted"
           >
             {t('common.cancel', { ns: 'common' })}
             Cancel
