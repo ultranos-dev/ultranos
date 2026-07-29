@@ -101,6 +101,10 @@ vi.mock('@/components/sidebar/nav-user', () => ({
   ),
 }))
 
+vi.mock('@/components/dashboard/SubscriptionWidget', () => ({
+  SubscriptionWidget: () => null,
+}))
+
 const { AppSidebar } = await import('../components/sidebar/app-sidebar')
 
 describe('AppSidebar — updated nav items and footer', () => {

@@ -35,7 +35,7 @@ describe('Dashboard Page', () => {
     mockQuery.mockReturnValue(new Promise(() => {})) // Never resolves
     render(<DashboardPage />)
 
-    expect(screen.getByText('Pending KYC Reviews')).toBeTruthy()
+    expect(screen.getByText('Users')).toBeTruthy()
     expect(screen.getByText('Pending Lab Approvals')).toBeTruthy()
     expect(screen.getByText('Active Alerts')).toBeTruthy()
     expect(screen.getByText('Recent Audit Events')).toBeTruthy()
@@ -48,6 +48,7 @@ describe('Dashboard Page', () => {
   it('shows live data when stats load', async () => {
     mockQuery.mockResolvedValue({
       pendingKycReviews: 2,
+      userCounts: { total: 7, active: 5, suspended: 1, pendingInvite: 1, withoutMfa: 0 },
       pendingLabApprovals: 5,
       activeAlerts: 1,
       recentAuditEvents: 10,
@@ -59,7 +60,7 @@ describe('Dashboard Page', () => {
       expect(screen.getByText('5')).toBeTruthy()
     })
 
-    expect(screen.getByText('2')).toBeTruthy()
+    expect(screen.getByText('7')).toBeTruthy()
     expect(screen.getByText('1')).toBeTruthy()
     expect(screen.getByText('10')).toBeTruthy()
   })

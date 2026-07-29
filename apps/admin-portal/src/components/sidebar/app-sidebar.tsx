@@ -6,6 +6,7 @@ import { navGroups } from './nav-config'
 import { LocationSwitcher } from './location-switcher'
 import { NavMain } from './nav-main'
 import { NavUser } from './nav-user'
+import { SubscriptionWidget } from '@/components/dashboard/SubscriptionWidget'
 import {
   Sidebar,
   SidebarContent,
@@ -26,6 +27,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <NavMain groups={navGroups} />
       </SidebarContent>
       <SidebarFooter>
+        <SubscriptionWidget />
         <NavUser />
       </SidebarFooter>
     </Sidebar>

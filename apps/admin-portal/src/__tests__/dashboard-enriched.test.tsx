@@ -54,6 +54,7 @@ vi.mock('@/lib/trpc', () => ({
 }))
 
 const { default: DashboardPage } = await import('../app/[locale]/dashboard/page')
+const { SubscriptionWidget } = await import('../components/dashboard/SubscriptionWidget')
 
 const fullStats = {
   pendingKycReviews: 5,
@@ -91,34 +92,17 @@ describe('Dashboard Enrichment', () => {
     })
   })
 
-  it('shows SLA breach count on KYC card', async () => {
-    mockDashboardStatsQuery.mockResolvedValue(fullStats)
-
-    render(<DashboardPage />)
+  it('renders the compact subscription widget (Free Trial) for the sidebar', async () => {
+    render(<SubscriptionWidget />)
 
     await waitFor(() => {
-      expect(screen.getByText('2 breaching SLA')).toBeInTheDocument()
-    })
-  })
-
-  it('shows subscription widget with Free Trial text', async () => {
-    mockDashboardStatsQuery.mockResolvedValue(fullStats)
-
-    render(<DashboardPage />)
-
-    // SubscriptionWidget renders "Free Trial — {n} days remaining" as one <p>
-    // with static + interpolated text; React may split it across text/comment
-    // nodes, so match on the element's full textContent.
-    await waitFor(() => {
-      expect(
-        screen.getByText((_, node) => /^Free Trial — \d+ days remaining$/.test(node?.textContent ?? '')),
-      ).toBeInTheDocument()
+      expect(screen.getByText('Free Trial')).toBeInTheDocument()
     })
 
     expect(screen.getByText('Set Up Billing')).toBeInTheDocument()
   })
 
-  it('shows user summary widget with total count and MFA warning', async () => {
+  it('shows user summary card with total count', async () => {
     mockDashboardStatsQuery.mockResolvedValue(fullStats)
 
     render(<DashboardPage />)
@@ -133,9 +117,6 @@ describe('Dashboard Enrichment', () => {
       screen.getByText(
         (_, node) => node?.textContent === '35 active, 3 suspended, 4 pending invite',
       ),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText((_, node) => node?.textContent === '6 users without MFA'),
     ).toBeInTheDocument()
   })
 

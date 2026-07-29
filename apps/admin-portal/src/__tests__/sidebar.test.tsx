@@ -96,6 +96,10 @@ vi.mock('@/components/sidebar/nav-user', () => ({
   NavUser: () => <div data-testid="nav-user">admin@ultranos.com</div>,
 }))
 
+vi.mock('@/components/dashboard/SubscriptionWidget', () => ({
+  SubscriptionWidget: () => null,
+}))
+
 const { AppSidebar } = await import('../components/sidebar/app-sidebar')
 
 describe('AppSidebar', () => {
