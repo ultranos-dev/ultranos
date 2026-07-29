@@ -8,6 +8,8 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ResultReviewPanel } from '@/components/authorization/ResultReviewPanel'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { FileX } from '@ultranos/ui-kit/icons'
 import { canAccessAuthorizationQueue } from '@/lib/permissions'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getDb } from '@/lib/db'
@@ -74,14 +76,15 @@ export default function ResultDetailPage() {
 
   if (notFound || !result) {
     return (
-      <div className="mx-auto max-w-xl py-20 text-center text-muted-foreground">
-        <p className="text-lg">{t('resultNotFound')}</p>
-        <button
-          className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          onClick={() => router.push(`/${params.locale}/authorization`)}
-        >
-          {t('backToQueue')}
-        </button>
+      <div className="flex min-h-[18rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        <EmptyState
+          icon={FileX}
+          title={t('resultNotFound')}
+          action={{
+            label: t('backToQueue'),
+            onClick: () => router.push(`/${params.locale}/authorization`),
+          }}
+        />
       </div>
     )
   }

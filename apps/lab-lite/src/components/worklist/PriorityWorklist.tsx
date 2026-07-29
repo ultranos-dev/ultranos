@@ -1,7 +1,9 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { ClipboardList } from '@ultranos/ui-kit/icons'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import type { PrioritizedSample } from '@/lib/prioritization-engine'
 import { WorklistItem } from './WorklistItem'
 
@@ -31,6 +33,7 @@ export function PriorityWorklist({
   onReorder,
   onResetOverride,
 }: PriorityWorklistProps) {
+  const t = useTranslations('worklist')
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null)
 
@@ -152,10 +155,8 @@ export function PriorityWorklist({
 
   if (samples.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-muted/30 px-6 py-12 text-center">
-        <ClipboardList size={40} className="mb-3 text-muted-foreground" aria-hidden="true" />
-        <p className="text-sm font-medium text-muted-foreground">No samples in queue</p>
-        <p className="mt-1 text-xs text-muted-foreground">Received samples will appear here automatically.</p>
+      <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        <EmptyState icon={ClipboardList} title={t('emptyTitle')} description={t('emptyHint')} />
       </div>
     )
   }

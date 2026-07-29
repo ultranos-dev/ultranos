@@ -149,7 +149,7 @@ export default function ConsentPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <h1 className="text-xl font-semibold">{t('title')}</h1>
       <StepIndicatorBar currentStep={step} />
 

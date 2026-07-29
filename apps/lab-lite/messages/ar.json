@@ -398,7 +398,9 @@
       "auto": "تلقائي",
       "manual": "يدوي"
     },
-    "manualModeInfo": "الوضع اليدوي: اسحب لإعادة الترتيب. التحديث التلقائي متوقف. شارات الثبات لا تزال نشطة."
+    "manualModeInfo": "الوضع اليدوي: اسحب لإعادة الترتيب. التحديث التلقائي متوقف. شارات الثبات لا تزال نشطة.",
+    "emptyTitle": "لا توجد عينات في قائمة الانتظار",
+    "emptyHint": "ستظهر العينات المستلمة هنا تلقائيًا."
   },
   "orders": {
     "title": "طلبات الفحوصات",
@@ -550,7 +552,9 @@
       "copySms": "نسخ رسالة SMS",
       "smsCopied": "تم نسخ نص الرسالة",
       "preview": "معاينة الإيصال",
-      "thankYou": "شكراً لدفعكم"
+      "thankYou": "شكراً لدفعكم",
+      "empty": "لا توجد إيصالات بعد",
+      "emptyHint": "ستظهر المدفوعات المسجلة هنا."
     },
     "reconciliation": {
       "title": "تسوية نهاية اليوم",
@@ -1370,7 +1374,9 @@
       "validation": {
         "nameRequired": "اسم المورد مطلوب.",
         "leadTimeRange": "يجب أن يكون وقت التسليم 1-365 يومًا."
-      }
+      },
+      "pageTitle": "تكوين المورّد",
+      "backToSettings": "الإعدادات"
     }
   },
   "confidence": {
@@ -2003,7 +2009,8 @@
     "sampleIdsLabel": "معرفات العينات",
     "outgoingNotesLabel": "ملاحظات المغادر",
     "incomingNotesLabel": "ملاحظات الوافد",
-    "readyStatus": "جاهز"
+    "readyStatus": "جاهز",
+    "noHistoryHint": "ستظهر عمليات تسليم المناوبة المكتملة هنا."
   },
   "visualAtlas": {
     "categoryNavLabel": "تصنيفات الأطلس",
@@ -2564,7 +2571,9 @@
     "loading": "جارٍ...",
     "retry": "إعادة المحاولة",
     "ihrReportable": "قابل للإبلاغ دوليا",
-    "diseaseCode": "رمز المرض"
+    "diseaseCode": "رمز المرض",
+    "emptyDiseases": "لم يتم تكوين أمراض قابلة للإبلاغ",
+    "emptyDiseasesHint": "أضف أمراضًا قابلة للإبلاغ لتفعيل تنبيهات الترصد."
   },
   "inventory": {
     "networkInventoryTitle": "مخزون الشبكة",

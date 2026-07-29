@@ -6,7 +6,8 @@ import { getDb } from '@/lib/db'
 import { getOverdueSendOuts } from '@/lib/sendout-tat'
 import { StatusUpdateModal } from '@/components/sendout/StatusUpdateModal'
 import { ResultImportModal } from '@/components/sendout/ResultImportModal'
-import { AlertTriangle, Clock } from '@ultranos/ui-kit/icons'
+import { AlertTriangle, Clock, Send } from '@ultranos/ui-kit/icons'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import type { SendOut, ReferenceLab, SendOutStatus } from '@/types/reference-lab'
 
 type FilterStatus = SendOutStatus | 'all'
@@ -72,7 +73,7 @@ export default function SendOutsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-foreground">Send-Outs</h1>
+      <h1 className="text-2xl font-semibold text-foreground">Send-Outs</h1>
 
       {/* Overdue alert banner */}
       {overdueSendOuts.length > 0 && (
@@ -130,8 +131,8 @@ export default function SendOutsPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border py-12 text-center">
-          <p className="text-sm text-muted-foreground">No send-outs found.</p>
+        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <EmptyState icon={Send} title="No send-outs found" description="No referral send-outs match the current filters." />
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">

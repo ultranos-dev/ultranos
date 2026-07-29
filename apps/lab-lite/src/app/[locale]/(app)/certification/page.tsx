@@ -15,7 +15,7 @@ export default function CertificationPage() {
 
   return (
     <AuthGuard>
-      <div className="max-w-2xl mx-auto flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <Award size={28} className="text-blue-600 dark:text-blue-400" />
           <div>

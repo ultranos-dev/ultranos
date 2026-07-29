@@ -50,7 +50,7 @@ export default function ReagentDetailPage() {
   const isActive = reagent.status === ReagentStatus.ACTIVE
 
   return (
-    <div className="max-w-xl mx-auto flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       {view === 'detail' && (
         <>
           <div className="flex items-center justify-between">

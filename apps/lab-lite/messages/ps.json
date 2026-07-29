@@ -398,7 +398,9 @@
       "auto": "اتوماتیک",
       "manual": "لاسي"
     },
-    "manualModeInfo": "لاسي حالت: د ترتیب لپاره راکش کړئ. اتوماتیک تازه کول بند دي. د ثبات نښې لاهم فعالې دي."
+    "manualModeInfo": "لاسي حالت: د ترتیب لپاره راکش کړئ. اتوماتیک تازه کول بند دي. د ثبات نښې لاهم فعالې دي.",
+    "emptyTitle": "په قطار کې هیڅ نمونه نشته",
+    "emptyHint": "ترلاسه شوې نمونې به په اتوماتيک ډول دلته ښکاره شي."
   },
   "orders": {
     "title": "د ازموینو غوښتنې",
@@ -550,7 +552,9 @@
       "copySms": "د پیغام کاپی",
       "smsCopied": "د پیغام متن کاپی شو",
       "preview": "د رسید مخکتنه",
-      "thankYou": "د تادیې مننه"
+      "thankYou": "د تادیې مننه",
+      "empty": "تر اوسه هیڅ رسید نشته",
+      "emptyHint": "ثبت شوي تادیات به دلته ښکاره شي."
     },
     "reconciliation": {
       "title": "د ورځې پای تسویه",
@@ -1370,7 +1374,9 @@
       "validation": {
         "nameRequired": "د عرضه کوونکي نوم اړین دی.",
         "leadTimeRange": "د تحویلۍ وخت باید ۱-۳۶۵ ورځې وي."
-      }
+      },
+      "pageTitle": "د عرضه کوونکي تنظیم",
+      "backToSettings": "تنظیمات"
     }
   },
   "security": {
@@ -2003,7 +2009,8 @@
     "sampleIdsLabel": "IDs: {ids}",
     "outgoingNotesLabel": "د {name} یادداشتونه",
     "incomingNotesLabel": "د راتلونکي تکنیسین یادداشتونه",
-    "readyStatus": "چمتو"
+    "readyStatus": "چمتو",
+    "noHistoryHint": "د بشپړ شویو شفټ سپارنو دلته ښکاره شي."
   },
   "visualAtlas": {
     "categoryNavLabel": "د اطلس کټګورۍ",
@@ -2564,7 +2571,9 @@
     "loading": "بار کیۚی...",
     "retry": "بیا هۚه وکړې",
     "ihrReportable": "د نۚیوالو روغتیایی مقرراتو له مخې د راپور وړ",
-    "diseaseCode": "د ناروغۍ کوډ"
+    "diseaseCode": "د ناروغۍ کوډ",
+    "emptyDiseases": "د راپور وړ ناروغۍ نه دي تنظیم شوي",
+    "emptyDiseasesHint": "د څارنې خبرتیاوو د فعالولو لپاره د راپور وړ ناروغۍ اضافه کړئ."
   },
   "inventory": {
     "networkInventoryTitle": "د شبکې ذخیره",

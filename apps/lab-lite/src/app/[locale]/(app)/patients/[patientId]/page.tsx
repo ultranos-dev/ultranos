@@ -26,7 +26,7 @@ export default function PatientProfilePage({ params }: PatientProfilePageProps) 
   const patientRef = `Patient/${patientId}`
 
   return (
-    <div className="mx-auto max-w-2xl flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <h1 className="text-xl font-bold text-foreground">{t('profileTitle')}</h1>
       <DelegateManagementSection patientRef={patientRef} />
     </div>

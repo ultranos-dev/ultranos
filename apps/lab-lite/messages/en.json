@@ -398,7 +398,9 @@
       "auto": "Auto",
       "manual": "Manual"
     },
-    "manualModeInfo": "Manual mode: drag to reorder. Auto-refresh paused. Stability badges still active."
+    "manualModeInfo": "Manual mode: drag to reorder. Auto-refresh paused. Stability badges still active.",
+    "emptyTitle": "No samples in queue",
+    "emptyHint": "Received samples will appear here automatically."
   },
   "orders": {
     "title": "Test Orders",
@@ -549,7 +551,9 @@
       "copySms": "Copy SMS",
       "smsCopied": "SMS text copied to clipboard",
       "preview": "Receipt Preview",
-      "thankYou": "Thank you for your payment"
+      "thankYou": "Thank you for your payment",
+      "empty": "No receipts yet",
+      "emptyHint": "Recorded payments will appear here."
     },
     "reconciliation": {
       "title": "End-of-Day Reconciliation",
@@ -2004,7 +2008,8 @@
     "sampleIdsLabel": "Sample IDs",
     "outgoingNotesLabel": "Outgoing Notes",
     "incomingNotesLabel": "Incoming Notes",
-    "readyStatus": "Ready"
+    "readyStatus": "Ready",
+    "noHistoryHint": "Completed shift handovers will appear here."
   },
   "visualAtlas": {
     "categoryNavLabel": "Atlas categories",
@@ -2641,7 +2646,9 @@
     "loading": "Loading...",
     "retry": "Retry",
     "ihrReportable": "IHR Reportable",
-    "diseaseCode": "Disease Code"
+    "diseaseCode": "Disease Code",
+    "emptyDiseases": "No reportable diseases configured",
+    "emptyDiseasesHint": "Add reportable diseases to enable surveillance alerts."
   },
   "donorReport": {
     "title": "Donor Reports",

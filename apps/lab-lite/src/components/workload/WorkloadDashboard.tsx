@@ -191,11 +191,12 @@ export function WorkloadDashboard() {
           {loading ? (
             <WorkloadSkeleton />
           ) : workloads.length === 0 ? (
-            <EmptyState
-              title={t('noAssignments')}
-              description={t('noAssignmentsHint')}
-              size="sm"
-            />
+            <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+              <EmptyState
+                title={t('noAssignments')}
+                description={t('noAssignmentsHint')}
+              />
+            </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {workloads.map((w) => (

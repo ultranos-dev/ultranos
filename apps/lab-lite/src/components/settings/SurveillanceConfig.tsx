@@ -15,6 +15,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Shield } from '@ultranos/ui-kit/icons'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import type { ReportableDiseaseConfig } from '@/lib/surveillance-types'
 import { getAllReportableDiseases, putReportableDisease } from '@/lib/db'
 import { seedReportableDiseases } from '@/lib/surveillance-config'
@@ -87,7 +88,11 @@ export function SurveillanceConfig() {
   }
 
   if (diseases.length === 0) {
-    return <p className="text-sm text-muted-foreground">No reportable diseases configured.</p>
+    return (
+      <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        <EmptyState icon={Shield} title={t('emptyDiseases')} description={t('emptyDiseasesHint')} />
+      </div>
+    )
   }
 
   return (
