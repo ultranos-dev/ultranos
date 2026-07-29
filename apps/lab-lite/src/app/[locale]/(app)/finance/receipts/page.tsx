@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { getDb, type PaymentEntry } from '@/lib/db'
 import { ReceiptView } from '@/components/finance/ReceiptView'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Receipt } from '@ultranos/ui-kit/icons'
 
 export default function ReceiptsPage() {
   const t = useTranslations('finance.receipt')
@@ -25,7 +27,7 @@ export default function ReceiptsPage() {
         <button
           type="button"
           onClick={() => setSelected(null)}
-          className="self-start text-sm text-blue-600 hover:underline"
+          className="self-start text-sm text-primary hover:underline"
         >
           &larr; {t('title')}
         </button>
@@ -36,20 +38,22 @@ export default function ReceiptsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+      <h1 className="text-2xl font-semibold text-foreground">
         {t('title')}
       </h1>
 
       {payments.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No receipts yet.</p>
+        <div className="flex min-h-[18rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <EmptyState icon={Receipt} title={t('empty')} description={t('emptyHint')} />
+        </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="divide-y divide-border overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
           {payments.map((p) => (
             <button
               key={p.paymentId}
               type="button"
               onClick={() => setSelected(p)}
-              className="flex items-center justify-between rounded-lg border border-border bg-card p-3 text-start hover:bg-muted/30"
+              className="flex w-full items-center justify-between p-3 text-start hover:bg-muted/30"
             >
               <div>
                 <span className="text-sm font-medium text-foreground">{p.receiptNumber}</span>

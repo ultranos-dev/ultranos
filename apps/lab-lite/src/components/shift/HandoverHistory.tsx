@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { getAllHandoverReports } from '@/lib/db'
 import type { HandoverReport } from '@/lib/db'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { ClipboardList } from '@ultranos/ui-kit/icons'
 
 type StatusFilter = 'ALL' | 'PENDING' | 'ACKNOWLEDGED' | 'EXPIRED'
 
@@ -91,7 +93,9 @@ export function HandoverHistory() {
       )}
 
       {!isLoading && !error && filtered.length === 0 && (
-        <p className="py-8 text-center text-sm text-muted-foreground">No handover records found.</p>
+        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <EmptyState icon={ClipboardList} title={t('noHistory')} description={t('noHistoryHint')} />
+        </div>
       )}
 
       {!isLoading && !error && filtered.length > 0 && (

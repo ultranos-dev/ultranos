@@ -4,7 +4,7 @@ import { ReagentRegistrationForm } from '@/components/finance/ReagentRegistratio
 
 export default function NewReagentPage() {
   return (
-    <div className="max-w-xl mx-auto flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <ReagentRegistrationForm />
     </div>
   )

@@ -13,6 +13,7 @@
 
 import { useState, useEffect } from 'react'
 import { FlaskConical, CheckCircle, AlertCircle, Clock } from '@ultranos/ui-kit/icons'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { getDb, type MonitoringFlag, type MonitoringFlagStatus } from '@/lib/db'
 
 interface GroupedMedication {
@@ -149,14 +150,16 @@ export function MonitoringHistory({ patientRef, patientFirstName, patientAge }: 
 
   if (groups.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card p-4 text-center">
-        <FlaskConical size={24} className="mx-auto text-muted-foreground" aria-hidden="true" />
-        <p className="mt-2 text-sm text-muted-foreground">No monitoring flags on record</p>
-        {patientFirstName && patientAge && (
-          <p className="mt-1 text-xs text-muted-foreground">
-            {patientFirstName}, {patientAge} yr — no medications requiring lab follow-up
-          </p>
-        )}
+      <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        <EmptyState
+          icon={FlaskConical}
+          title="No monitoring flags on record"
+          description={
+            patientFirstName && patientAge
+              ? `${patientFirstName}, ${patientAge} yr — no medications requiring lab follow-up`
+              : undefined
+          }
+        />
       </div>
     )
   }

@@ -10,7 +10,7 @@ export default function DataBudgetPage() {
   const t = useTranslations('dataBudget')
 
   return (
-    <div className="mx-auto max-w-3xl flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <Link
           href="/settings"

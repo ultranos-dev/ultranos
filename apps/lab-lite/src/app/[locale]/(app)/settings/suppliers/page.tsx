@@ -8,7 +8,7 @@ export default function SuppliersPage() {
   const t = useTranslations('scheduler.supplier')
 
   return (
-    <div className="mx-auto max-w-2xl flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div>
         <Link href="/settings" className="text-sm text-blue-600 hover:underline">
           &larr; {t('backToSettings')}
