@@ -226,7 +226,15 @@
     "phaseLoaded": "Loaded",
     "phaseReviewing": "Reviewing",
     "phaseDispensing": "Dispensing",
-    "phaseCompleted": "Completed"
+    "phaseCompleted": "Completed",
+    "title": "Prescription Queue",
+    "searchPlaceholder": "Search by patient...",
+    "noResultsTitle": "No matching prescriptions",
+    "noResultsDescription": "Try adjusting your search.",
+    "clearFilters": "Clear filters",
+    "emptyActiveDescription": "Scan a prescription QR code to start filling orders.",
+    "emptyOtherDescription": "Completed and failed items will appear here.",
+    "scanPrescription": "Scan Prescription"
   },
   "settings": {
     "title": "Settings",
@@ -459,7 +467,11 @@
     "records": "{count} record(s) found",
     "previous": "Previous",
     "next": "Next",
-    "scheduleNote": "Controlled substance classification not yet available in dispense schema"
+    "scheduleNote": "Controlled substance classification not yet available in dispense schema",
+    "searchPlaceholder": "Search by patient or medication...",
+    "noResultsTitle": "No matching records",
+    "noResultsDescription": "Try adjusting your search or filters.",
+    "clearFilters": "Clear filters"
   },
   "unverified": {
     "title": "Unverified Dispenses",
@@ -483,7 +495,11 @@
     "reviewNotConnected": "Review endpoint not connected yet",
     "offlineWarning": "Review actions require an internet connection",
     "pendingReview": "Pending Review",
-    "unverifiedDispenses": "Unverified Dispenses"
+    "unverifiedDispenses": "Unverified Dispenses",
+    "searchPlaceholder": "Search dispenses...",
+    "noResultsTitle": "No matching dispenses",
+    "noResultsDescription": "Try adjusting your search.",
+    "clearFilters": "Clear filters"
   },
   "registration": {
     "title": "Register New Patient",
@@ -701,7 +717,13 @@
     "categoryCol": "Category",
     "stockCol": "Stock",
     "reorderPointCol": "Reorder Point",
-    "filterAll": "All"
+    "filterAll": "All",
+    "noResultsTitle": "No matching catalog items",
+    "noResultsDescription": "Try adjusting your search.",
+    "clearFilters": "Clear filters",
+    "globalDrugCatalog": "Global drug catalog",
+    "atcCodeCol": "ATC Code",
+    "doseFormsCol": "Dose Forms"
   },
   "pos": {
     "cashDrawer": "Cash Drawer",
@@ -762,7 +784,16 @@
     "enterValidPaymentAmount": "Enter a valid payment amount.",
     "cash": "Cash",
     "card": "Card",
-    "credit": "Credit"
+    "credit": "Credit",
+    "filterAll": "All",
+    "statusDraft": "Draft",
+    "statusFinalized": "Finalized",
+    "statusPartial": "Partial",
+    "searchInvoicesPlaceholder": "Search invoices...",
+    "searchAccountsPlaceholder": "Search patient accounts...",
+    "noResultsTitle": "No matching results",
+    "noResultsDescription": "Try adjusting your search or filters.",
+    "clearFilters": "Clear filters"
   },
   "reports": {
     "title": "Reports",
@@ -795,7 +826,12 @@
     "ship": "Ship",
     "receive": "Receive",
     "cancel": "Cancel",
-    "cancelledByUser": "Cancelled by user"
+    "cancelledByUser": "Cancelled by user",
+    "filterAll": "All",
+    "searchPlaceholder": "Search transfers...",
+    "noResultsTitle": "No matching transfers",
+    "noResultsDescription": "Try adjusting your search or filters.",
+    "clearFilters": "Clear filters"
   },
   "procurement": {
     "suppliersTitle": "Suppliers",
@@ -844,7 +880,15 @@
     "completing": "Completing...",
     "completeCount": "Complete Count",
     "completeCountWithVariances": "Complete Count ({variances} variances)",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "filterAll": "All",
+    "filterActive": "Active",
+    "searchSuppliersPlaceholder": "Search suppliers...",
+    "noResultsTitle": "No matching suppliers",
+    "noResultsDescription": "Try adjusting your search or filters.",
+    "clearFilters": "Clear filters",
+    "noRecentCountsTitle": "No recent counts",
+    "noRecentCountsDescription": "Completed stock counts will appear here."
   },
   "offlineGrace": {
     "supervisorName": "Supervisor Name",

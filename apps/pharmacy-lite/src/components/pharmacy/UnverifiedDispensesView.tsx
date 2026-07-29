@@ -1,8 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { ShieldAlert, FileSearch } from '@ultranos/ui-kit/icons'
 import { useTranslations } from 'next-intl'
 import { getHubApiUrl } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -111,6 +113,7 @@ export function UnverifiedDispensesView() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionInFlight, setActionInFlight] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
 
   const fetchReviews = useCallback(async () => {
     setLoading(true)
@@ -160,251 +163,268 @@ export function UnverifiedDispensesView() {
     }
   }
 
+  const query = search.trim().toLowerCase()
+  const filtered = useMemo(
+    () =>
+      reviews.filter((r) => {
+        if (!query) return true
+        return [r.dispense_id, r.override_reason, r.override_supervisor, r.reviewed_by]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(query)
+      }),
+    [reviews, query],
+  )
+  const filtersActive = query !== ''
+
+  function clearFilters() {
+    setSearch('')
+  }
+
+  const TABS: { key: Tab; label: string }[] = [
+    { key: 'pending', label: t('pending') },
+    { key: 'resolved', label: t('resolved') },
+  ]
+
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold text-foreground">
+      <h1 className="text-2xl font-semibold text-foreground">
         {t('title')}
       </h1>
 
-      {/* Tab switcher */}
-      <div
-        className="flex gap-1 rounded-lg bg-muted p-1"
-        role="tablist"
-      >
-        <button
-          role="tab"
-          aria-selected={activeTab === 'pending'}
-          onClick={() => {
-            setActiveTab('pending')
-          }}
-          className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'pending'
-              ? 'bg-card text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          {t('pending')}
-        </button>
-        <button
-          role="tab"
-          aria-selected={activeTab === 'resolved'}
-          onClick={() => {
-            setActiveTab('resolved')
-          }}
-          className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'resolved'
-              ? 'bg-card text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          {t('resolved')}
-        </button>
+      {/* Toolbar: pending/resolved tabs + search — always visible */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div role="tablist" className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {TABS.map((tb) => (
+            <button
+              key={tb.key}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tb.key}
+              onClick={() => setActiveTab(tb.key)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                activeTab === tb.key
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {tb.label}
+            </button>
+          ))}
+        </div>
+        <SearchInput
+          type="text"
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          aria-label={t('searchPlaceholder')}
+        />
       </div>
 
-      {/* Loading */}
-      {loading && (
-        <div className="py-12 text-center text-sm text-muted-foreground">
-          {t('loading')}
-        </div>
-      )}
-
-      {/* Error */}
-      {!loading && error && (
-        <div className="py-12 text-center text-sm text-destructive">
-          {error}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!loading && !error && reviews.length === 0 && (
-        <EmptyState title={t('noRecords')} />
-      )}
-
-      {/* Pending reviews table */}
-      {!loading && !error && reviews.length > 0 && activeTab === 'pending' && (
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="min-w-full divide-y divide-border">
-            <thead className="bg-muted">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >
-                  {t('date')}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >
-                  {t('dispenseId')}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >
-                  {t('reason')}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >
-                  {t('supervisor')}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >
-                  {/* Actions */}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {reviews.map((r) => (
-                <tr
-                  key={r.id}
-                  className="hover:bg-accent"
-                >
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
-                    {formatDateTime(r.created_at)}
-                  </td>
-                  <td
-                    className="whitespace-nowrap px-4 py-3 text-sm font-mono text-muted-foreground"
-                    title={r.dispense_id}
+      {/* Content panel — single cohesive box */}
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        {loading ? (
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">
+            {t('loading')}
+          </div>
+        ) : error ? (
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-destructive">
+            {error}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              icon={filtersActive ? FileSearch : ShieldAlert}
+              title={filtersActive ? t('noResultsTitle') : t('noRecords')}
+              description={filtersActive ? t('noResultsDescription') : undefined}
+              action={filtersActive ? { label: t('clearFilters'), onClick: clearFilters } : undefined}
+            />
+          </div>
+        ) : activeTab === 'pending' ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
                   >
-                    {truncateUuid(r.dispense_id)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {r.override_reason ?? '---'}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
-                    {r.override_supervisor
-                      ? truncateUuid(r.override_supervisor)
-                      : '---'}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="default"
-                        onClick={() => handleAction(r.id, 'APPROVED')}
-                        disabled={actionInFlight === r.id}
-                      >
-                        {t('approve')}
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={() => handleAction(r.id, 'FLAGGED')}
-                        disabled={actionInFlight === r.id}
-                      >
-                        {t('flag')}
-                      </Button>
-                    </div>
-                  </td>
+                    {t('date')}
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    {t('dispenseId')}
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    {t('reason')}
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    {t('supervisor')}
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    {/* Actions */}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Resolved reviews table */}
-      {!loading && !error && reviews.length > 0 && activeTab === 'resolved' && (
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="min-w-full divide-y divide-border">
-            <thead className="bg-muted">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >
-                  {t('date')}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >
-                  {t('dispenseId')}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >
-                  {t('reason')}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >
-                  {t('supervisor')}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >
-                  {t('status')}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >
-                  {t('reviewedBy')}
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                >
-                  {t('reviewedAt')}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {reviews.map((r) => (
-                <tr
-                  key={r.id}
-                  className="hover:bg-accent"
-                >
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
-                    {formatDateTime(r.created_at)}
-                  </td>
-                  <td
-                    className="whitespace-nowrap px-4 py-3 text-sm font-mono text-muted-foreground"
-                    title={r.dispense_id}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filtered.map((r) => (
+                  <tr
+                    key={r.id}
+                    className="transition-colors hover:bg-muted/50"
                   >
-                    {truncateUuid(r.dispense_id)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {r.override_reason ?? '---'}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
-                    {r.override_supervisor
-                      ? truncateUuid(r.override_supervisor)
-                      : '---'}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm">
-                    <span
-                      className={
-                        r.status === 'APPROVED'
-                          ? 'text-success'
-                          : 'text-destructive'
-                      }
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
+                      {formatDateTime(r.created_at)}
+                    </td>
+                    <td
+                      className="whitespace-nowrap px-4 py-3 text-sm font-mono text-muted-foreground"
+                      title={r.dispense_id}
                     >
-                      {r.status === 'APPROVED' ? t('approved') : t('flagged')}
-                    </span>
-                  </td>
-                  <td
-                    className="whitespace-nowrap px-4 py-3 text-sm font-mono text-muted-foreground"
-                    title={r.reviewed_by ?? undefined}
+                      {truncateUuid(r.dispense_id)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {r.override_reason ?? '---'}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
+                      {r.override_supervisor
+                        ? truncateUuid(r.override_supervisor)
+                        : '---'}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="default"
+                          onClick={() => handleAction(r.id, 'APPROVED')}
+                          disabled={actionInFlight === r.id}
+                        >
+                          {t('approve')}
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => handleAction(r.id, 'FLAGGED')}
+                          disabled={actionInFlight === r.id}
+                        >
+                          {t('flag')}
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
                   >
-                    {r.reviewed_by ? truncateUuid(r.reviewed_by) : '---'}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
-                    {formatDateTime(r.reviewed_at)}
-                  </td>
+                    {t('date')}
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    {t('dispenseId')}
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    {t('reason')}
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    {t('supervisor')}
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    {t('status')}
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    {t('reviewedBy')}
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    {t('reviewedAt')}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filtered.map((r) => (
+                  <tr
+                    key={r.id}
+                    className="transition-colors hover:bg-muted/50"
+                  >
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
+                      {formatDateTime(r.created_at)}
+                    </td>
+                    <td
+                      className="whitespace-nowrap px-4 py-3 text-sm font-mono text-muted-foreground"
+                      title={r.dispense_id}
+                    >
+                      {truncateUuid(r.dispense_id)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {r.override_reason ?? '---'}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
+                      {r.override_supervisor
+                        ? truncateUuid(r.override_supervisor)
+                        : '---'}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm">
+                      <span
+                        className={
+                          r.status === 'APPROVED'
+                            ? 'text-success'
+                            : 'text-destructive'
+                        }
+                      >
+                        {r.status === 'APPROVED' ? t('approved') : t('flagged')}
+                      </span>
+                    </td>
+                    <td
+                      className="whitespace-nowrap px-4 py-3 text-sm font-mono text-muted-foreground"
+                      title={r.reviewed_by ?? undefined}
+                    >
+                      {r.reviewed_by ? truncateUuid(r.reviewed_by) : '---'}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
+                      {formatDateTime(r.reviewed_at)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

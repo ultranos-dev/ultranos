@@ -17,7 +17,7 @@ export function WastageCard() {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
         <p className="text-sm text-muted-foreground">{t('loadingWastage')}</p>
       </div>
     )
@@ -26,7 +26,7 @@ export function WastageCard() {
   if (!data) return null
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
       <h3 className="mb-4 text-sm font-medium text-foreground">
         {t('wastageTitle')}
       </h3>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import type { HistoryFilters, SyncStatus } from '@/lib/history-data'
 
 interface HistoryFilterBarProps {
@@ -14,11 +15,10 @@ export function HistoryFilterBar({ filters, onFiltersChange }: HistoryFilterBarP
     onFiltersChange({ ...filters, ...patch })
   }
 
+  // `contents` lets these controls participate directly in the parent toolbar's
+  // flex row (single Notifications-style row: date filters -> wide search -> select).
   return (
-    <div
-      data-testid="history-filter-bar"
-      className="flex flex-wrap items-end gap-3"
-    >
+    <div data-testid="history-filter-bar" className="contents">
       <div className="flex flex-col gap-1">
         <label htmlFor="filter-date-from" className="text-xs font-medium text-muted-foreground">
           {t('filterFrom')}
@@ -28,7 +28,7 @@ export function HistoryFilterBar({ filters, onFiltersChange }: HistoryFilterBarP
           type="date"
           value={filters.dateFrom ?? ''}
           onChange={(e) => update({ dateFrom: e.target.value || undefined })}
-          className="rounded-md border border-border px-3 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
+          className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
         />
       </div>
 
@@ -41,42 +41,35 @@ export function HistoryFilterBar({ filters, onFiltersChange }: HistoryFilterBarP
           type="date"
           value={filters.dateTo ?? ''}
           onChange={(e) => update({ dateTo: e.target.value || undefined })}
-          className="rounded-md border border-border px-3 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
+          className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
         />
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="filter-medication" className="text-xs font-medium text-muted-foreground">
-          {t('filterMedication')}
-        </label>
-        <input
-          id="filter-medication"
-          type="text"
-          placeholder={t('filterMedicationPlaceholder')}
-          value={filters.medicationName ?? ''}
-          onChange={(e) => update({ medicationName: e.target.value || undefined })}
-          className="rounded-md border border-border px-3 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
-        />
-      </div>
+      <SearchInput
+        id="filter-medication"
+        type="text"
+        dir="auto"
+        placeholder={t('filterMedicationPlaceholder')}
+        value={filters.medicationName ?? ''}
+        onChange={(e) => update({ medicationName: e.target.value || undefined })}
+        className="min-w-[200px] flex-1"
+        aria-label={t('filterMedication')}
+      />
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="filter-sync-status" className="text-xs font-medium text-muted-foreground">
-          {t('filterSyncStatus')}
-        </label>
-        <select
-          id="filter-sync-status"
-          value={filters.syncStatus ?? ''}
-          onChange={(e) =>
-            update({ syncStatus: (e.target.value || undefined) as SyncStatus | undefined })
-          }
-          className="rounded-md border border-border px-3 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
-        >
-          <option value="">{t('filterAll')}</option>
-          <option value="synced">{t('filterSynced')}</option>
-          <option value="pending">{t('filterPending')}</option>
-          <option value="failed">{t('filterFailed')}</option>
-        </select>
-      </div>
+      <select
+        id="filter-sync-status"
+        value={filters.syncStatus ?? ''}
+        onChange={(e) =>
+          update({ syncStatus: (e.target.value || undefined) as SyncStatus | undefined })
+        }
+        className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+        aria-label={t('filterSyncStatus')}
+      >
+        <option value="">{t('filterAll')}</option>
+        <option value="synced">{t('filterSynced')}</option>
+        <option value="pending">{t('filterPending')}</option>
+        <option value="failed">{t('filterFailed')}</option>
+      </select>
     </div>
   )
 }

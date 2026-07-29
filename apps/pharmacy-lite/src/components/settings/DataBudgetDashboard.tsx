@@ -60,26 +60,26 @@ export function DataBudgetDashboard() {
   const remainingMB = Math.max(planSizeMB - currentCycleUsedMB, 0)
 
   const barColor =
-    thresholdLevel === 'critical' ? 'bg-red-500'
-    : thresholdLevel === 'warning' ? 'bg-yellow-500'
-    : 'bg-green-500'
+    thresholdLevel === 'critical' ? 'bg-destructive'
+    : thresholdLevel === 'warning' ? 'bg-warning'
+    : 'bg-success'
 
   const maxDailyMB = Math.max(...dailyUsage.map((d) => d.totalMB), 0.01)
 
   return (
     <div className="flex flex-col gap-4">
       {thresholdLevel === 'warning' && (
-        <div role="alert" className="rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800" data-testid="data-budget-warning">
+        <div role="alert" className="rounded-xl bg-warning/10 px-5 py-4 text-sm text-warning shadow-card ring-[0.65px] ring-warning/30" data-testid="data-budget-warning">
           {t('warningBanner')}
         </div>
       )}
       {thresholdLevel === 'critical' && (
-        <div role="alert" className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800" data-testid="data-budget-critical">
+        <div role="alert" className="rounded-xl bg-destructive/10 px-5 py-4 text-sm text-destructive shadow-card ring-[0.65px] ring-destructive/30" data-testid="data-budget-critical">
           {t('criticalBanner')}
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('usageTitle')}</h2>
         <div className="flex items-center gap-4">
           <div className="flex-1">
@@ -108,7 +108,7 @@ export function DataBudgetDashboard() {
         )}
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('dailyUsageTitle')}</h2>
         <div className="flex items-end gap-0.5 h-16">
           {dailyUsage.map((d) => (
@@ -124,20 +124,20 @@ export function DataBudgetDashboard() {
       </div>
 
       {Object.keys(categoryBreakdown).length > 0 && (
-        <div className="rounded-lg border border-border bg-card p-4">
+        <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
           <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('categoryTitle')}</h2>
           <table className="w-full text-sm">
-            <thead>
+            <thead className="bg-muted">
               <tr className="border-b border-border">
-                <th className="pb-2 text-start font-medium text-muted-foreground">{t('categoryHeader')}</th>
-                <th className="pb-2 text-end font-medium text-muted-foreground">MB</th>
+                <th className="px-3 py-2 text-start font-medium text-muted-foreground">{t('categoryHeader')}</th>
+                <th className="px-3 py-2 text-end font-medium text-muted-foreground">MB</th>
               </tr>
             </thead>
             <tbody>
               {Object.entries(categoryBreakdown).map(([cat, mb]) => (
                 <tr key={cat} className="border-b border-border last:border-0">
-                  <td className="py-1.5 text-foreground">{t(`category.${cat}`)}</td>
-                  <td className="py-1.5 text-end text-muted-foreground font-mono">{mb.toFixed(2)}</td>
+                  <td className="px-3 py-1.5 text-foreground">{t(`category.${cat}`)}</td>
+                  <td className="px-3 py-1.5 text-end text-muted-foreground font-mono">{mb.toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
@@ -145,7 +145,7 @@ export function DataBudgetDashboard() {
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
         <h2 className="text-sm font-semibold text-muted-foreground mb-4">{t('settingsTitle')}</h2>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
@@ -188,7 +188,7 @@ export function DataBudgetDashboard() {
 
           <div className="flex items-center gap-3">
             <Button onClick={handleSave} size="sm">{t('save')}</Button>
-            {saved && <span className="text-xs text-green-600">{t('saved')}</span>}
+            {saved && <span className="text-xs text-success">{t('saved')}</span>}
           </div>
         </div>
       </div>

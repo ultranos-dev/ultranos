@@ -13,34 +13,37 @@ export function InventoryAlertCard() {
 
   if (total === 0) {
     return (
-      <div className="rounded-lg border border-success/20 bg-success/5 p-4" data-testid="inventory-alert-card">
-        <p className="text-sm font-medium text-success">{t('inventoryHealthy')}</p>
+      <div
+        className="flex flex-col rounded-xl bg-card p-5 text-start shadow-card ring-[0.65px] ring-border/50"
+        data-testid="inventory-alert-card"
+      >
+        <p className="text-sm font-medium text-muted-foreground">{t('inventoryAlerts')}</p>
+        <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground tabular-nums">0</p>
+        <p className="mt-1 text-sm font-medium text-muted-foreground">{t('inventoryHealthy')}</p>
       </div>
     )
   }
 
   return (
     <Link href="/inventory" data-testid="inventory-alert-card">
-      <div className="rounded-lg border border-warning/20 bg-warning/5 p-4 transition-colors hover:bg-warning/10">
-        <h3 className="text-xs font-semibold text-warning uppercase tracking-wide mb-2">{t('inventoryAlerts')}</h3>
-        <div className="grid grid-cols-3 gap-3 text-center">
+      <div className="flex flex-col rounded-xl bg-card p-5 text-start shadow-card ring-2 ring-warning/50 transition-colors hover:bg-muted/40">
+        <p className="text-sm font-medium text-muted-foreground">{t('inventoryAlerts')}</p>
+        <p className="mt-2 text-3xl font-semibold tracking-tight text-warning tabular-nums">{total}</p>
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm font-medium">
           {alerts.lowStockCount > 0 && (
-            <div>
-              <p className="text-lg font-bold tabular-nums text-warning">{alerts.lowStockCount}</p>
-              <p className="text-[10px] text-warning">{t('lowStock')}</p>
-            </div>
+            <span className="text-warning tabular-nums">
+              {alerts.lowStockCount} <span className="text-muted-foreground">{t('lowStock')}</span>
+            </span>
           )}
           {alerts.nearExpiryCount > 0 && (
-            <div>
-              <p className="text-lg font-bold tabular-nums text-warning">{alerts.nearExpiryCount}</p>
-              <p className="text-[10px] text-warning">{t('nearExpiry')}</p>
-            </div>
+            <span className="text-warning tabular-nums">
+              {alerts.nearExpiryCount} <span className="text-muted-foreground">{t('nearExpiry')}</span>
+            </span>
           )}
           {alerts.quarantinedCount > 0 && (
-            <div>
-              <p className="text-lg font-bold tabular-nums text-destructive">{alerts.quarantinedCount}</p>
-              <p className="text-[10px] text-destructive">{t('quarantined')}</p>
-            </div>
+            <span className="text-destructive tabular-nums">
+              {alerts.quarantinedCount} <span className="text-muted-foreground">{t('quarantined')}</span>
+            </span>
           )}
         </div>
       </div>

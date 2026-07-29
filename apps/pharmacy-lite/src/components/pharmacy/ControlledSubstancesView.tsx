@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Pill, FileSearch } from '@ultranos/ui-kit/icons'
 import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import type { LocalMedicationDispense } from '@/lib/medication-dispense'
@@ -78,6 +80,7 @@ export function ControlledSubstancesView() {
     dateFrom: '',
     dateTo: '',
   })
+  const [search, setSearch] = useState('')
   const [balances, setBalances] = useState<{ catalogItemId: string; catalogItemName: string; schedule: string; totalOnHand: number; batchCount: number }[]>([])
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
@@ -115,16 +118,26 @@ export function ControlledSubstancesView() {
       }
 
       const all = await query.reverse().toArray()
-      setTotalCount(all.length)
+
+      const q = search.trim().toLowerCase()
+      const matched = q
+        ? all.filter((d) => {
+            const patient = d.subject.reference?.toLowerCase() ?? ''
+            const medication = extractMedicationDisplay(d).toLowerCase()
+            return patient.includes(q) || medication.includes(q)
+          })
+        : all
+
+      setTotalCount(matched.length)
 
       const offset = (page - 1) * PAGE_SIZE
-      setDispenses(all.slice(offset, offset + PAGE_SIZE))
+      setDispenses(matched.slice(offset, offset + PAGE_SIZE))
     } catch {
       setError(t('error'))
     } finally {
       setLoading(false)
     }
-  }, [filters, page, t])
+  }, [filters, page, search, t])
 
   useEffect(() => {
     fetchData()
@@ -140,18 +153,32 @@ export function ControlledSubstancesView() {
     setPage(1)
   }
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value)
+    setPage(1)
+  }
+
+  const filtersActive =
+    search.trim() !== '' || filters.dateFrom !== '' || filters.dateTo !== ''
+
+  function clearFilters() {
+    setSearch('')
+    setFilters({ dateFrom: '', dateTo: '' })
+    setPage(1)
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold text-foreground">
+      <h1 className="text-2xl font-semibold text-foreground">
         {t('title')}
       </h1>
 
-      {/* Date range filter */}
+      {/* Toolbar: date range filters + search — one row, always visible */}
       <div className="flex flex-wrap items-end gap-3">
-        <div>
+        <div className="flex flex-col gap-1">
           <label
             htmlFor="cs-date-from"
-            className="block text-xs font-medium text-muted-foreground"
+            className="text-xs font-medium text-muted-foreground"
           >
             {t('dateFrom')}
           </label>
@@ -160,13 +187,13 @@ export function ControlledSubstancesView() {
             type="date"
             value={filters.dateFrom}
             onChange={handleDateFromChange}
-            className="mt-1 rounded-md border border-border px-3 py-1.5 text-sm"
+            className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
           />
         </div>
-        <div>
+        <div className="flex flex-col gap-1">
           <label
             htmlFor="cs-date-to"
-            className="block text-xs font-medium text-muted-foreground"
+            className="text-xs font-medium text-muted-foreground"
           >
             {t('dateTo')}
           </label>
@@ -175,9 +202,18 @@ export function ControlledSubstancesView() {
             type="date"
             value={filters.dateTo}
             onChange={handleDateToChange}
-            className="mt-1 rounded-md border border-border px-3 py-1.5 text-sm"
+            className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
           />
         </div>
+        <SearchInput
+          type="text"
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={handleSearchChange}
+          className="min-w-[200px] flex-1"
+          aria-label={t('searchPlaceholder')}
+        />
       </div>
 
       {/* Running Balances */}
@@ -197,33 +233,34 @@ export function ControlledSubstancesView() {
         </div>
       )}
 
-      {/* Loading */}
-      {loading && (
-        <div className="py-12 text-center text-sm text-muted-foreground">
-          {t('loading')}
-        </div>
-      )}
-
-      {/* Error */}
-      {!loading && error && (
-        <div className="py-12 text-center text-sm text-destructive">
-          {error}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!loading && !error && dispenses.length === 0 && (
-        <EmptyState title={t('noRecords')} />
-      )}
-
-      {/* Table */}
+      {/* Record count */}
       {!loading && !error && dispenses.length > 0 && (
-        <>
-          <div className="mt-2 text-xs text-muted-foreground">
-            {t('records', { count: totalCount })}
-          </div>
+        <div className="text-xs text-muted-foreground">
+          {t('records', { count: totalCount })}
+        </div>
+      )}
 
-          <div className="mt-2 overflow-x-auto rounded-lg border border-border">
+      {/* Content panel — single cohesive box */}
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        {loading ? (
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">
+            {t('loading')}
+          </div>
+        ) : error ? (
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-destructive">
+            {error}
+          </div>
+        ) : dispenses.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              icon={filtersActive ? FileSearch : Pill}
+              title={filtersActive ? t('noResultsTitle') : t('noRecords')}
+              description={filtersActive ? t('noResultsDescription') : undefined}
+              action={filtersActive ? { label: t('clearFilters'), onClick: clearFilters } : undefined}
+            />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-muted">
                 <tr>
@@ -270,7 +307,7 @@ export function ControlledSubstancesView() {
                 {dispenses.map((d) => (
                   <tr
                     key={d.id}
-                    className="hover:bg-accent"
+                    className="transition-colors hover:bg-muted/50"
                   >
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
                       {formatDateTime(d.meta?.lastUpdated)}
@@ -306,30 +343,30 @@ export function ControlledSubstancesView() {
               </tbody>
             </table>
           </div>
+        )}
+      </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-center gap-4">
-              <Button
-                variant="secondary"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-              >
-                {t('previous')}
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {t('page')} {page} {t('of')} {totalPages}
-              </span>
-              <Button
-                variant="secondary"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-              >
-                {t('next')}
-              </Button>
-            </div>
-          )}
-        </>
+      {/* Pagination — root sibling below the box */}
+      {!loading && !error && dispenses.length > 0 && totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4">
+          <Button
+            variant="secondary"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+          >
+            {t('previous')}
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {t('page')} {page} {t('of')} {totalPages}
+          </span>
+          <Button
+            variant="secondary"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+          >
+            {t('next')}
+          </Button>
+        </div>
       )}
     </div>
   )

@@ -8,9 +8,14 @@ exports[`Paper Prescription Scan Page (Story 24.3) > RTL snapshot tests > matche
     <div
       class="flex flex-col gap-4"
     >
+      <h1
+        class="text-2xl font-semibold text-foreground"
+      >
+        scanPaperPrescription
+      </h1>
       <div
         aria-live="polite"
-        class="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3"
+        class="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3"
         role="alert"
       >
         <div
@@ -29,11 +34,11 @@ exports[`Paper Prescription Scan Page (Story 24.3) > RTL snapshot tests > matche
         </p>
       </div>
       <div
-        class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2"
+        class="rounded-2xl border border-warning/20 bg-warning/10 px-4 py-2"
         role="status"
       >
         <p
-          class="text-xs text-blue-800 font-medium"
+          class="text-xs text-warning font-medium"
         >
           No drug interaction check performed — external prescriber
         </p>
@@ -113,9 +118,14 @@ exports[`Paper Prescription Scan Page (Story 24.3) > RTL snapshot tests > matche
     <div
       class="flex flex-col gap-4"
     >
+      <h1
+        class="text-2xl font-semibold text-foreground"
+      >
+        scanPaperPrescription
+      </h1>
       <div
         aria-live="polite"
-        class="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3"
+        class="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3"
         role="alert"
       >
         <div
@@ -134,11 +144,11 @@ exports[`Paper Prescription Scan Page (Story 24.3) > RTL snapshot tests > matche
         </p>
       </div>
       <div
-        class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2"
+        class="rounded-2xl border border-warning/20 bg-warning/10 px-4 py-2"
         role="status"
       >
         <p
-          class="text-xs text-blue-800 font-medium"
+          class="text-xs text-warning font-medium"
         >
           No drug interaction check performed — external prescriber
         </p>

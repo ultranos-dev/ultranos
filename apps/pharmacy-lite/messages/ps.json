@@ -226,7 +226,15 @@
     "phaseLoaded": "بار شوی",
     "phaseReviewing": "بیاکتنه کیږي",
     "phaseDispensing": "ورکول کیږي",
-    "phaseCompleted": "بشپړ شوی"
+    "phaseCompleted": "بشپړ شوی",
+    "title": "د نسخو کتار",
+    "searchPlaceholder": "د ناروغ له مخې لټون...",
+    "noResultsTitle": "هیڅ سمون لرونکې نسخه نشته",
+    "noResultsDescription": "خپل لټون سم کړئ.",
+    "clearFilters": "فلټرونه پاک کړئ",
+    "emptyActiveDescription": "د امرونو د بشپړولو پیل لپاره د نسخې QR کوډ سکن کړئ.",
+    "emptyOtherDescription": "بشپړ شوي او ناکام توکي به دلته ښکاره شي.",
+    "scanPrescription": "نسخه سکن کړئ"
   },
   "settings": {
     "title": "تنظیمات",
@@ -459,7 +467,11 @@
     "records": "{count} ریکارد(ونه) وموندل شول",
     "previous": "مخکینی",
     "next": "راتلونکی",
-    "scheduleNote": "د کنترول شویو موادو طبقه بندي لا تر اوسه د ورکولو سکیما کې نشته"
+    "scheduleNote": "د کنترول شویو موادو طبقه بندي لا تر اوسه د ورکولو سکیما کې نشته",
+    "searchPlaceholder": "د ناروغ یا درملو له مخې لټون...",
+    "noResultsTitle": "هیڅ سمون لرونکی ریکارډ نشته",
+    "noResultsDescription": "خپل لټون یا فلټرونه سم کړئ.",
+    "clearFilters": "فلټرونه پاک کړئ"
   },
   "unverified": {
     "title": "نه تایید شوي ورکول",
@@ -483,7 +495,11 @@
     "reviewNotConnected": "د بیاکتنې نقطه لا تر اوسه وصل نه ده",
     "offlineWarning": "د بیاکتنې کړنې انترنیت اړتیا لري",
     "pendingReview": "د بیاکتنې په تمه",
-    "unverifiedDispenses": "نه تایید شوي ورکول"
+    "unverifiedDispenses": "نه تایید شوي ورکول",
+    "searchPlaceholder": "د توزیع لټون...",
+    "noResultsTitle": "هیڅ سمون لرونکی توزیع نشته",
+    "noResultsDescription": "خپل لټون سم کړئ.",
+    "clearFilters": "فلټرونه پاک کړئ"
   },
   "registration": {
     "title": "نوی ناروغ ثبت کړئ",
@@ -701,7 +717,13 @@
     "categoryCol": "کټګوري",
     "stockCol": "ذخیره",
     "reorderPointCol": "د بیا امر نقطه",
-    "filterAll": "ټول"
+    "filterAll": "ټول",
+    "noResultsTitle": "هیڅ سمون لرونکی فهرست توکی نشته",
+    "noResultsDescription": "خپل لټون سم کړئ.",
+    "clearFilters": "فلټرونه پاک کړئ",
+    "globalDrugCatalog": "نړیوال درمل فهرست",
+    "atcCodeCol": "د ATC کوډ",
+    "doseFormsCol": "د دوز بڼې"
   },
   "pos": {
     "cashDrawer": "د نقدو دراز",
@@ -762,7 +784,16 @@
     "enterValidPaymentAmount": "د تادیې معتبر مبلغ دننه کړئ.",
     "cash": "نقدي",
     "card": "کارت",
-    "credit": "اعتباري"
+    "credit": "اعتباري",
+    "filterAll": "ټول",
+    "statusDraft": "مسوده",
+    "statusFinalized": "نهایي شوی",
+    "statusPartial": "جزوي",
+    "searchInvoicesPlaceholder": "د بیلونو لټون...",
+    "searchAccountsPlaceholder": "د ناروغ حسابونو لټون...",
+    "noResultsTitle": "هیڅ سمون لرونکې پایله نشته",
+    "noResultsDescription": "خپل لټون یا فلټرونه سم کړئ.",
+    "clearFilters": "فلټرونه پاک کړئ"
   },
   "reports": {
     "title": "راپورونه",
@@ -795,7 +826,12 @@
     "ship": "لیږل",
     "receive": "ترلاسه کول",
     "cancel": "لغوول",
-    "cancelledByUser": "کارونکي لغو کړو"
+    "cancelledByUser": "کارونکي لغو کړو",
+    "filterAll": "ټول",
+    "searchPlaceholder": "د لیږدونو لټون...",
+    "noResultsTitle": "هیڅ سمون لرونکی لیږد نشته",
+    "noResultsDescription": "خپل لټون یا فلټرونه سم کړئ.",
+    "clearFilters": "فلټرونه پاک کړئ"
   },
   "procurement": {
     "suppliersTitle": "عرضه کوونکي",
@@ -844,7 +880,15 @@
     "completing": "بشپړیږي...",
     "completeCount": "شمیرنه بشپړول",
     "completeCountWithVariances": "شمیرنه بشپړول ({variances} توپیرونه)",
-    "cancel": "لغوه"
+    "cancel": "لغوه",
+    "filterAll": "ټول",
+    "filterActive": "فعال",
+    "searchSuppliersPlaceholder": "د اکمالوونکو لټون...",
+    "noResultsTitle": "هیڅ سمون لرونکی اکمالوونکی نشته",
+    "noResultsDescription": "خپل لټون یا فلټرونه سم کړئ.",
+    "clearFilters": "فلټرونه پاک کړئ",
+    "noRecentCountsTitle": "وروستي شمیرنې نشته",
+    "noRecentCountsDescription": "بشپړ شوي ذخیره شمیرنې به دلته ښکاره شي."
   },
   "offlineGrace": {
     "supervisorName": "د سرپرست نوم",

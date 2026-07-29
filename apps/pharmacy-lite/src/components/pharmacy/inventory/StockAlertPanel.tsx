@@ -28,10 +28,12 @@ export function StockAlertPanel({
         <button
           type="button"
           onClick={onFilterLowStock}
-          className="rounded-lg border border-warning/20 bg-warning/5 px-4 py-3 text-start transition-colors hover:bg-warning/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning"
+          className="flex flex-col rounded-xl bg-card p-5 text-start shadow-card ring-2 ring-warning/50 transition-colors hover:bg-warning/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning"
         >
-          <span className="block text-2xl font-bold text-warning">{alerts.lowStockCount}</span>
-          <span className="text-sm text-warning">{t('lowStock')}</span>
+          <span className="text-sm font-medium text-muted-foreground">{t('lowStock')}</span>
+          <span className="mt-2 text-3xl font-semibold tracking-tight text-warning">
+            {alerts.lowStockCount}
+          </span>
         </button>
       )}
 
@@ -39,12 +41,12 @@ export function StockAlertPanel({
         <button
           type="button"
           onClick={onFilterNearExpiry}
-          className="rounded-lg border border-warning/20 bg-warning/5 px-4 py-3 text-start transition-colors hover:bg-warning/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning"
+          className="flex flex-col rounded-xl bg-card p-5 text-start shadow-card ring-2 ring-warning/50 transition-colors hover:bg-warning/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning"
         >
-          <span className="block text-2xl font-bold text-warning">
+          <span className="text-sm font-medium text-muted-foreground">{t('nearExpiry')}</span>
+          <span className="mt-2 text-3xl font-semibold tracking-tight text-warning">
             {alerts.nearExpiryCount}
           </span>
-          <span className="text-sm text-warning">{t('nearExpiry')}</span>
         </button>
       )}
 
@@ -52,12 +54,12 @@ export function StockAlertPanel({
         <button
           type="button"
           onClick={onFilterQuarantined}
-          className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-start transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
+          className="flex flex-col rounded-xl bg-card p-5 text-start shadow-card ring-2 ring-destructive/50 transition-colors hover:bg-destructive/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
         >
-          <span className="block text-2xl font-bold text-destructive">
+          <span className="text-sm font-medium text-muted-foreground">{t('quarantined')}</span>
+          <span className="mt-2 text-3xl font-semibold tracking-tight text-destructive">
             {alerts.quarantinedCount}
           </span>
-          <span className="text-sm text-destructive">{t('quarantined')}</span>
         </button>
       )}
     </div>

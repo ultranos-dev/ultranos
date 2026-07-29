@@ -136,9 +136,9 @@ export function PharmacyScannerView({
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-bold text-foreground">
-        Pharmacy Prescription Scanner
-      </h2>
+      <h1 className="text-2xl font-semibold text-foreground">
+        {t('scannerTitle')}
+      </h1>
 
       {/* Camera scanner viewport */}
       {phase.step === 'scanning' && (
@@ -212,7 +212,7 @@ export function PharmacyScannerView({
       {/* Verifying state */}
       {phase.step === 'verifying' && (
         <div
-          className="rounded-2xl border border-border bg-muted p-6 text-center"
+          className="rounded-xl bg-muted/40 p-6 text-center ring-[0.65px] ring-border/50"
           role="status"
           data-testid="verifying-status"
         >
@@ -237,7 +237,7 @@ export function PharmacyScannerView({
       {/* Error state */}
       {phase.step === 'error' && (
         <div
-          className="rounded-2xl border border-destructive/20 bg-destructive/10 p-6"
+          className="rounded-xl border border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="scan-error"
         >
@@ -276,7 +276,7 @@ function ResultDisplay({
     case 'verified':
       return (
         <div
-          className="rounded-2xl border-2 border-success/20 bg-success/10 p-6"
+          className="rounded-xl border-2 border-success/20 bg-success/10 p-6"
           role="status"
           data-testid="verification-success"
         >
@@ -292,7 +292,7 @@ function ResultDisplay({
             {result.prescriptions.map((rx) => (
               <div
                 key={rx.id}
-                className="rounded-md border border-success/20 bg-card p-3"
+                className="rounded-xl bg-muted/40 p-4"
                 data-testid={`rx-item-${rx.id}`}
               >
                 <p className="font-semibold text-foreground">{rx.medN}</p>
@@ -328,7 +328,7 @@ function ResultDisplay({
     case 'invalid_signature':
       return (
         <div
-          className="rounded-2xl border-2 border-destructive/20 bg-destructive/10 p-6"
+          className="rounded-xl border-2 border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="fraud-warning"
         >
@@ -357,7 +357,7 @@ function ResultDisplay({
     case 'expired':
       return (
         <div
-          className="rounded-2xl border-2 border-warning/20 bg-warning/10 p-6"
+          className="rounded-xl border-2 border-warning/20 bg-warning/10 p-6"
           role="alert"
           data-testid="expired-warning"
         >
@@ -383,7 +383,7 @@ function ResultDisplay({
     case 'unknown_clinician':
       return (
         <div
-          className="rounded-2xl border-2 border-warning/20 bg-warning/10 p-6"
+          className="rounded-xl border-2 border-warning/20 bg-warning/10 p-6"
           role="alert"
           data-testid="unknown-clinician-warning"
         >
@@ -419,7 +419,7 @@ function ResultDisplay({
     case 'key_revoked':
       return (
         <div
-          className="rounded-2xl border-2 border-destructive/20 bg-destructive/10 p-6"
+          className="rounded-xl border-2 border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="key-revoked-warning"
         >
@@ -447,7 +447,7 @@ function ResultDisplay({
     case 'key_untrusted_offline':
       return (
         <div
-          className="rounded-2xl border-2 border-warning/20 bg-warning/10 p-6"
+          className="rounded-xl border-2 border-warning/20 bg-warning/10 p-6"
           role="alert"
           data-testid="key-untrusted-offline-warning"
         >
@@ -486,7 +486,7 @@ function ResultDisplay({
     case 'untrusted':
       return (
         <div
-          className="rounded-2xl border-2 border-destructive/20 bg-destructive/10 p-6"
+          className="rounded-xl border-2 border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="untrusted-warning"
         >
@@ -508,7 +508,7 @@ function ResultDisplay({
     case 'parse_error':
       return (
         <div
-          className="rounded-2xl border border-destructive/20 bg-destructive/10 p-6"
+          className="rounded-xl border border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="scan-error"
         >

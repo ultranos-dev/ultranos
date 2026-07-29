@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { FileSearch, Package } from '@ultranos/ui-kit/icons'
 import { db } from '@/lib/db'
 import type { StockBatch, CatalogItem, StockBatchStatus } from '@/lib/inventory/types'
 
@@ -9,6 +11,9 @@ interface StockTableProps {
   filterStatus: 'all' | 'active' | 'quarantined' | 'depleted'
   filterLowStock: boolean
   filterNearExpiry: boolean
+  search: string
+  filtersActive: boolean
+  onClearFilters: () => void
   expiryAlertDays?: number
 }
 
@@ -21,11 +26,13 @@ export function StockTable({
   filterStatus,
   filterLowStock,
   filterNearExpiry,
+  search,
+  filtersActive,
+  onClearFilters,
   expiryAlertDays = 90,
 }: StockTableProps) {
   const t = useTranslations('inventory')
   const [rows, setRows] = useState<StockRow[]>([])
-  const [search, setSearch] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -92,48 +99,41 @@ export function StockTable({
   const isNearExpiry = (date: string) => date <= expiryThreshold
 
   return (
-    <div className="space-y-4">
-      <div>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t('searchByProduct')}
-          className="w-full rounded-lg border border-border px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-        />
-      </div>
-
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted">
-            <tr>
-              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {t('productCol')}
-              </th>
-              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {t('batchCol')}
-              </th>
-              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {t('qtyCol')}
-              </th>
-              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {t('expiryCol')}
-              </th>
-              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {t('statusCol')}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {filtered.length === 0 ? (
+    <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+      {filtered.length === 0 ? (
+        <div className="flex min-h-[16rem] items-center justify-center">
+          <EmptyState
+            icon={filtersActive ? FileSearch : Package}
+            title={filtersActive ? t('noResultsTitle') : t('noStockBatches')}
+            description={filtersActive ? t('noResultsDescription') : undefined}
+            action={filtersActive ? { label: t('clearFilters'), onClick: onClearFilters } : undefined}
+          />
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-border text-sm">
+            <thead className="bg-muted">
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                  {t('noStockBatches')}
-                </td>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  {t('productCol')}
+                </th>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  {t('batchCol')}
+                </th>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  {t('qtyCol')}
+                </th>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  {t('expiryCol')}
+                </th>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  {t('statusCol')}
+                </th>
               </tr>
-            ) : (
-              filtered.map((r) => (
-                <tr key={r.batch.id} className="hover:bg-accent">
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filtered.map((r) => (
+                <tr key={r.batch.id} className="transition-colors hover:bg-muted/50">
                   <td className="px-4 py-3">
                     <span className="font-medium text-foreground">
                       {r.catalogItem?.name ?? t('unknown')}
@@ -159,11 +159,11 @@ export function StockTable({
                     <StatusBadge status={r.batch.status} tActive={t('active')} tDepleted={t('depleted')} tQuarantined={t('quarantined')} />
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

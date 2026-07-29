@@ -10,7 +10,9 @@ import { getTotalStockOnHand } from '@/lib/inventory/fefo'
 import { searchDrugCatalog } from '@/lib/trpc'
 import type { CatalogItem } from '@/lib/inventory/types'
 import type { DrugSearchResult } from '@ultranos/shared-types'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Package, FileSearch } from '@ultranos/ui-kit/icons'
 
 interface CatalogRowData {
   item: CatalogItem
@@ -73,32 +75,37 @@ export function CatalogBrowsePage() {
     return () => clearTimeout(timer)
   }, [search, filtered.length])
 
+  const query = search.trim()
+  const filtersActive = query !== ''
+
+  function clearFilters() {
+    setSearch('')
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">{t('catalog')}</h1>
+      <h1 className="text-2xl font-semibold text-foreground">{t('catalog')}</h1>
+
+      {/* Toolbar: search + sync indicator — one row, always visible */}
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
+          type="text"
+          dir="auto"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t('searchByName')}
+          className="min-w-[200px] flex-1"
+          aria-label={t('searchByName')}
+        />
         {isSyncingCatalog && (
           <span className="text-sm text-muted-foreground">{t('syncing')}</span>
         )}
       </div>
 
-      {/* Search */}
-      <div>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t('searchByName')}
-          className="w-full rounded-lg border border-border px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-        />
-      </div>
-
       {/* Local catalog table */}
-      {filtered.length === 0 && !search.trim() ? (
-        <EmptyState title={t('noCatalogItems')} />
-      ) : filtered.length > 0 ? (
-        <div className="overflow-x-auto rounded-lg border border-border">
+      {filtered.length > 0 ? (
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted">
               <tr>
@@ -127,7 +134,7 @@ export function CatalogBrowsePage() {
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.map((r) => (
-                <tr key={r.item.id} className="hover:bg-accent">
+                <tr key={r.item.id} className="transition-colors hover:bg-muted/50">
                   <td className="px-4 py-3">
                     <span className="font-medium text-foreground">{r.item.name}</span>
                     {r.item.controlledSchedule && (
@@ -166,44 +173,59 @@ export function CatalogBrowsePage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
-      ) : null}
+      ) : search.trim().length >= 2 && hubResults.length > 0 ? null : (
+        /* No local results and no Hub fallback — centered boxed empty */
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              icon={filtersActive ? FileSearch : Package}
+              title={filtersActive ? t('noResultsTitle') : t('noCatalogItems')}
+              description={filtersActive ? t('noResultsDescription') : undefined}
+              action={filtersActive ? { label: t('clearFilters'), onClick: clearFilters } : undefined}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Hub drug catalog fallback section */}
       {filtered.length === 0 && search.trim().length >= 2 && hubResults.length > 0 && (
-        <div>
-          <h2 className="mb-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Global drug catalog
+        <div className="flex flex-col gap-2">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            {t('globalDrugCatalog')}
           </h2>
-          <div className="overflow-x-auto rounded-lg border border-border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">Name</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">ATC Code</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">Dose Forms</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">{/* link */}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {hubResults.map((r) => (
-                  <tr key={r.atcCode} className="hover:bg-accent">
-                    <td className="px-4 py-3 font-medium text-foreground">{r.innName}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{r.atcCode}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{r.doseForms.join(', ')}</td>
-                    <td className="px-4 py-3">
-                      <a
-                        href={`pharmopedia://drug/${r.atcCode}`}
-                        className="text-xs font-medium text-primary-700 underline underline-offset-2"
-                        aria-label="Open in Pharmopedia"
-                      >
-                        Pharmopedia
-                      </a>
-                    </td>
+          <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">{t('nameCol')}</th>
+                    <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">{t('atcCodeCol')}</th>
+                    <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">{t('doseFormsCol')}</th>
+                    <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">{/* link */}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {hubResults.map((r) => (
+                    <tr key={r.atcCode} className="transition-colors hover:bg-muted/50">
+                      <td className="px-4 py-3 font-medium text-foreground">{r.innName}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{r.atcCode}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{r.doseForms.join(', ')}</td>
+                      <td className="px-4 py-3">
+                        <a
+                          href={`pharmopedia://drug/${r.atcCode}`}
+                          className="text-xs font-medium text-primary-700 underline underline-offset-2"
+                          aria-label="Open in Pharmopedia"
+                        >
+                          Pharmopedia
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

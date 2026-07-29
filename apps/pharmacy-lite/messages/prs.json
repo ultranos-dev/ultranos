@@ -226,7 +226,15 @@
     "phaseLoaded": "بارگذاری شده",
     "phaseReviewing": "در حال بررسی",
     "phaseDispensing": "در حال تحویل",
-    "phaseCompleted": "تکمیل شده"
+    "phaseCompleted": "تکمیل شده",
+    "title": "صف نسخه‌ها",
+    "searchPlaceholder": "جستجو بر اساس بیمار...",
+    "noResultsTitle": "هیچ نسخه‌ای مطابقت ندارد",
+    "noResultsDescription": "جستجو را تنظیم کنید.",
+    "clearFilters": "پاک کردن فیلترها",
+    "emptyActiveDescription": "برای شروع تکمیل سفارش‌ها، کد QR نسخه را اسکن کنید.",
+    "emptyOtherDescription": "موارد تکمیل‌شده و ناموفق اینجا نمایش داده می‌شوند.",
+    "scanPrescription": "اسکن نسخه"
   },
   "settings": {
     "title": "تنظیمات",
@@ -459,7 +467,11 @@
     "records": "{count} سابقه یافت شد",
     "previous": "قبلی",
     "next": "بعدی",
-    "scheduleNote": "طبقه‌بندی مواد کنترول شده هنوز در سکیمای تحویل وجود ندارد"
+    "scheduleNote": "طبقه‌بندی مواد کنترول شده هنوز در سکیمای تحویل وجود ندارد",
+    "searchPlaceholder": "جستجو بر اساس بیمار یا دارو...",
+    "noResultsTitle": "هیچ سابقه‌ای مطابقت ندارد",
+    "noResultsDescription": "جستجو یا فیلترها را تنظیم کنید.",
+    "clearFilters": "پاک کردن فیلترها"
   },
   "unverified": {
     "title": "تحویل‌های تایید نشده",
@@ -483,7 +495,11 @@
     "reviewNotConnected": "نقطه بررسی هنوز وصل نشده است",
     "offlineWarning": "اقدامات بررسی نیاز به اتصال انترنت دارد",
     "pendingReview": "در انتظار بررسی",
-    "unverifiedDispenses": "تحویل‌های تایید نشده"
+    "unverifiedDispenses": "تحویل‌های تایید نشده",
+    "searchPlaceholder": "جستجوی توزیع‌ها...",
+    "noResultsTitle": "هیچ توزیعی مطابقت ندارد",
+    "noResultsDescription": "جستجو را تنظیم کنید.",
+    "clearFilters": "پاک کردن فیلترها"
   },
   "registration": {
     "title": "ثبت مریض جدید",
@@ -701,7 +717,13 @@
     "categoryCol": "دسته‌بندی",
     "stockCol": "موجودی",
     "reorderPointCol": "نقطه سفارش مجدد",
-    "filterAll": "همه"
+    "filterAll": "همه",
+    "noResultsTitle": "هیچ قلم فهرستی مطابقت ندارد",
+    "noResultsDescription": "جستجو را تنظیم کنید.",
+    "clearFilters": "پاک کردن فیلترها",
+    "globalDrugCatalog": "فهرست جهانی داروها",
+    "atcCodeCol": "کد ATC",
+    "doseFormsCol": "اشکال دارویی"
   },
   "pos": {
     "cashDrawer": "کشوی نقدی",
@@ -762,7 +784,16 @@
     "enterValidPaymentAmount": "مبلغ پرداخت معتبر وارد کنید.",
     "cash": "نقدی",
     "card": "کارت",
-    "credit": "اعتباری"
+    "credit": "اعتباری",
+    "filterAll": "همه",
+    "statusDraft": "پیش‌نویس",
+    "statusFinalized": "نهایی‌شده",
+    "statusPartial": "جزئی",
+    "searchInvoicesPlaceholder": "جستجوی فاکتورها...",
+    "searchAccountsPlaceholder": "جستجوی حساب‌های بیمار...",
+    "noResultsTitle": "هیچ نتیجه‌ای مطابقت ندارد",
+    "noResultsDescription": "جستجو یا فیلترها را تنظیم کنید.",
+    "clearFilters": "پاک کردن فیلترها"
   },
   "reports": {
     "title": "گزارش‌ها",
@@ -795,7 +826,12 @@
     "ship": "ارسال",
     "receive": "دریافت",
     "cancel": "لغو",
-    "cancelledByUser": "توسط کاربر لغو شد"
+    "cancelledByUser": "توسط کاربر لغو شد",
+    "filterAll": "همه",
+    "searchPlaceholder": "جستجوی انتقال‌ها...",
+    "noResultsTitle": "هیچ انتقالی مطابقت ندارد",
+    "noResultsDescription": "جستجو یا فیلترها را تنظیم کنید.",
+    "clearFilters": "پاک کردن فیلترها"
   },
   "procurement": {
     "suppliersTitle": "تامین‌کنندگان",
@@ -844,7 +880,15 @@
     "completing": "در حال تکمیل...",
     "completeCount": "تکمیل شمارش",
     "completeCountWithVariances": "تکمیل شمارش ({variances} تفاوت)",
-    "cancel": "لغو"
+    "cancel": "لغو",
+    "filterAll": "همه",
+    "filterActive": "فعال",
+    "searchSuppliersPlaceholder": "جستجوی تأمین‌کنندگان...",
+    "noResultsTitle": "هیچ تأمین‌کننده‌ای مطابقت ندارد",
+    "noResultsDescription": "جستجو یا فیلترها را تنظیم کنید.",
+    "clearFilters": "پاک کردن فیلترها",
+    "noRecentCountsTitle": "شمارش اخیری وجود ندارد",
+    "noRecentCountsDescription": "شمارش‌های موجودی تکمیل‌شده اینجا نمایش داده می‌شوند."
   },
   "offlineGrace": {
     "supervisorName": "نام سرپرست",

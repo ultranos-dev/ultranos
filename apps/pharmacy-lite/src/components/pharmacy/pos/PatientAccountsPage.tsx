@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Wallet, FileSearch } from '@ultranos/ui-kit/icons'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { db } from '@/lib/db'
 import {
@@ -50,6 +52,7 @@ export function PatientAccountsPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
 
   const loadAccounts = useCallback(async () => {
     const raw = await getAccountsWithBalance()
@@ -111,31 +114,23 @@ export function PatientAccountsPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-muted-foreground">{t('recording')}</p>
-      </div>
-    )
-  }
-
   // Patient ledger detail view
   if (selectedPatientId) {
     const account = accounts.find((a) => a.patientId === selectedPatientId)
 
     return (
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">
-            {t('patientAccount', { name: account?.patientName ?? 'Patient' })}
-          </h1>
-          <Button variant="secondary" onClick={() => setSelectedPatientId(null)}>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => setSelectedPatientId(null)}>
             {t('backToList')}
           </Button>
+          <h1 className="text-2xl font-semibold text-foreground">
+            {t('patientAccount', { name: account?.patientName ?? 'Patient' })}
+          </h1>
         </div>
 
         {/* Balance */}
-        <div className="rounded-lg border border-border bg-card p-4 text-center">
+        <div className="rounded-xl bg-card p-5 text-center shadow-card ring-[0.65px] ring-border/50">
           <p className="text-sm text-muted-foreground">{t('outstandingBalance')}</p>
           <p className="text-2xl font-bold tabular-nums text-warning">
             {fmt(account?.balance ?? 0)}
@@ -165,7 +160,7 @@ export function PatientAccountsPage() {
         )}
 
         {/* Payment input */}
-        <form onSubmit={handleRecordPayment} className="rounded-lg border border-border bg-card p-4 space-y-3">
+        <form onSubmit={handleRecordPayment} className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 space-y-3">
           <div className="space-y-1">
             <label htmlFor="credit-payment" className="text-sm font-medium text-foreground">
               {t('recordPayment')}
@@ -192,64 +187,106 @@ export function PatientAccountsPage() {
         {/* Ledger entries */}
         <div className="space-y-2">
           <h2 className="text-sm font-medium text-muted-foreground">{t('ledger')}</h2>
-          {ledger.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('noEntries')}</p>
-          ) : (
-            <ul className="divide-y divide-border rounded-lg border border-border bg-card">
-              {ledger.map((entry) => {
-                const isCharge = entry.amount > 0
-                return (
-                  <li key={entry.id} className="flex items-center justify-between px-4 py-3">
-                    <div>
-                      <p className="text-sm text-foreground capitalize">{entry.type}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(entry.timestamp).toLocaleDateString()}
-                        {entry.note && ` — ${entry.note}`}
+          <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+            {ledger.length === 0 ? (
+              <div className="flex min-h-[16rem] items-center justify-center">
+                <EmptyState size="sm" title={t('noEntries')} />
+              </div>
+            ) : (
+              <ul className="divide-y divide-border">
+                {ledger.map((entry) => {
+                  const isCharge = entry.amount > 0
+                  return (
+                    <li key={entry.id} className="flex items-center justify-between px-4 py-3">
+                      <div>
+                        <p className="text-sm text-foreground capitalize">{entry.type}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(entry.timestamp).toLocaleDateString()}
+                          {entry.note && ` — ${entry.note}`}
+                        </p>
+                      </div>
+                      <p className={`text-sm font-semibold tabular-nums ${isCharge ? 'text-destructive' : 'text-success'}`}>
+                        {isCharge ? '+' : ''}{fmtRaw(entry.amount)}
                       </p>
-                    </div>
-                    <p className={`text-sm font-semibold tabular-nums ${isCharge ? 'text-destructive' : 'text-success'}`}>
-                      {isCharge ? '+' : ''}{fmtRaw(entry.amount)}
-                    </p>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
     )
   }
 
+  const query = search.trim().toLowerCase()
+  const filtersActive = query !== ''
+  const filtered = accounts.filter((account) => {
+    if (!query) return true
+    return account.patientName.toLowerCase().includes(query)
+  })
+
+  function clearFilters() {
+    setSearch('')
+  }
+
   // Account list view
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-foreground">{t('patientAccounts')}</h1>
+      <h1 className="text-2xl font-semibold text-foreground">{t('patientAccounts')}</h1>
 
-      {accounts.length === 0 ? (
-        <EmptyState title={t('noOutstandingAccounts')} />
-      ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border bg-card">
-          {accounts.map((account) => (
-            <li key={account.id}>
-              <button
-                type="button"
-                onClick={() => selectPatient(account.patientId)}
-                className="flex w-full items-center justify-between px-4 py-3 text-start hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500"
-              >
-                <div>
-                  <p className="text-sm font-medium text-foreground">{account.patientName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t('lastActivity', { date: new Date(account.lastActivityAt).toLocaleDateString() })}
+      {/* Toolbar: search — always visible */}
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
+          type="text"
+          dir="auto"
+          placeholder={t('searchAccountsPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          aria-label={t('searchAccountsPlaceholder')}
+        />
+      </div>
+
+      {/* Content panel — single cohesive box */}
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        {loading ? (
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">
+            {t('recording')}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              icon={filtersActive ? FileSearch : Wallet}
+              title={filtersActive ? t('noResultsTitle') : t('noOutstandingAccounts')}
+              description={filtersActive ? t('noResultsDescription') : undefined}
+              action={filtersActive ? { label: t('clearFilters'), onClick: clearFilters } : undefined}
+            />
+          </div>
+        ) : (
+          <ul className="divide-y divide-border">
+            {filtered.map((account) => (
+              <li key={account.id}>
+                <button
+                  type="button"
+                  onClick={() => selectPatient(account.patientId)}
+                  className="flex w-full items-center justify-between px-4 py-3 text-start transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{account.patientName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('lastActivity', { date: new Date(account.lastActivityAt).toLocaleDateString() })}
+                    </p>
+                  </div>
+                  <p className="text-sm font-semibold tabular-nums text-warning">
+                    {fmt(account.balance)}
                   </p>
-                </div>
-                <p className="text-sm font-semibold tabular-nums text-warning">
-                  {fmt(account.balance)}
-                </p>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }

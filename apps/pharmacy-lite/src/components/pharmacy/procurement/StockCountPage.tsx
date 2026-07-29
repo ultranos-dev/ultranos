@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { ClipboardList } from '@ultranos/ui-kit/icons'
 import { StockCountForm } from './StockCountForm'
 import {
   startStockCount,
@@ -69,46 +71,53 @@ export function StockCountPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">{t('stockCountTitle')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t('startNewCount')}</p>
+      <h1 className="text-2xl font-semibold text-foreground">{t('stockCountTitle')}</h1>
+
+      <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
+        <p className="text-sm text-muted-foreground">{t('startNewCount')}</p>
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Button
+            variant="default"
+            className="w-full py-6 text-base"
+            onClick={() => handleStart('full')}
+          >
+            {t('fullCount')}
+          </Button>
+          <Button
+            variant="secondary"
+            className="w-full py-6 text-base"
+            onClick={() => handleStart('spot')}
+          >
+            {t('spotCheck')}
+          </Button>
+          <Button
+            variant="destructive"
+            className="w-full py-6 text-base"
+            onClick={() => handleStart('controlled_only')}
+          >
+            {t('controlledOnly')}
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Button
-          variant="default"
-          className="w-full py-6 text-base"
-          onClick={() => handleStart('full')}
-        >
-          {t('fullCount')}
-        </Button>
-        <Button
-          variant="secondary"
-          className="w-full py-6 text-base"
-          onClick={() => handleStart('spot')}
-        >
-          {t('spotCheck')}
-        </Button>
-        <Button
-          variant="destructive"
-          className="w-full py-6 text-base"
-          onClick={() => handleStart('controlled_only')}
-        >
-          {t('controlledOnly')}
-        </Button>
-      </div>
-
-      {recentCounts.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-foreground">{t('recentCounts')}</h2>
-          <div className="overflow-hidden rounded-xl border border-border">
+      <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
+        <h2 className="text-sm font-semibold text-foreground">{t('recentCounts')}</h2>
+        {recentCounts.length === 0 ? (
+          <EmptyState
+            className="mt-4"
+            icon={ClipboardList}
+            title={t('noRecentCountsTitle')}
+            description={t('noRecentCountsDescription')}
+          />
+        ) : (
+          <div className="mt-4 overflow-hidden rounded-xl ring-[0.65px] ring-border/50">
             <table className="w-full text-sm">
-              <thead className="border-b border-border bg-muted">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground">{t('typeCol')}</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground">{t('completedCol')}</th>
-                  <th className="px-4 py-3 text-end font-medium text-muted-foreground">{t('itemsCol')}</th>
-                  <th className="px-4 py-3 text-end font-medium text-muted-foreground">{t('variancesCol')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('typeCol')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('completedCol')}</th>
+                  <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('itemsCol')}</th>
+                  <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('variancesCol')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -135,8 +144,8 @@ export function StockCountPage() {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import { DispensingSummaryCard } from './DispensingSummaryCard'
 import { SyncQueueCard } from './SyncQueueCard'
@@ -97,6 +98,7 @@ async function queryDashboardStats(): Promise<DashboardStats> {
 }
 
 export function PharmacyDashboard() {
+  const tSidebar = useTranslations('sidebar')
   const [stats, setStats] = useState<DashboardStats>({
     dispensedToday: 0,
     pendingSync: 0,
@@ -148,7 +150,9 @@ export function PharmacyDashboard() {
   }, [refreshStats])
 
   return (
-    <div className="mx-auto max-w-3xl flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
+      <h1 className="text-2xl font-semibold text-foreground">{tSidebar('dashboard')}</h1>
+
       {/* Multi-entry action hub */}
       <section>
         <DashboardActionHub />

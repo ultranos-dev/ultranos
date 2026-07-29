@@ -226,7 +226,15 @@
     "phaseLoaded": "محمّلة",
     "phaseReviewing": "قيد المراجعة",
     "phaseDispensing": "قيد الصرف",
-    "phaseCompleted": "مكتملة"
+    "phaseCompleted": "مكتملة",
+    "title": "قائمة انتظار الوصفات",
+    "searchPlaceholder": "البحث حسب المريض...",
+    "noResultsTitle": "لا توجد وصفات مطابقة",
+    "noResultsDescription": "حاول تعديل البحث.",
+    "clearFilters": "مسح عوامل التصفية",
+    "emptyActiveDescription": "امسح رمز QR للوصفة لبدء تعبئة الطلبات.",
+    "emptyOtherDescription": "ستظهر العناصر المكتملة والفاشلة هنا.",
+    "scanPrescription": "مسح الوصفة"
   },
   "settings": {
     "title": "الإعدادات",
@@ -459,7 +467,11 @@
     "records": "تم العثور على {count} سجل(ات)",
     "previous": "السابق",
     "next": "التالي",
-    "scheduleNote": "تصنيف المواد الخاضعة للرقابة غير متوفر بعد في مخطط الصرف"
+    "scheduleNote": "تصنيف المواد الخاضعة للرقابة غير متوفر بعد في مخطط الصرف",
+    "searchPlaceholder": "البحث حسب المريض أو الدواء...",
+    "noResultsTitle": "لا توجد سجلات مطابقة",
+    "noResultsDescription": "حاول تعديل البحث أو عوامل التصفية.",
+    "clearFilters": "مسح عوامل التصفية"
   },
   "unverified": {
     "title": "صرف غير موثق",
@@ -483,7 +495,11 @@
     "reviewNotConnected": "نقطة نهاية المراجعة غير متصلة بعد",
     "offlineWarning": "إجراءات المراجعة تتطلب اتصالاً بالإنترنت",
     "pendingReview": "قيد المراجعة",
-    "unverifiedDispenses": "صرف غير موثق"
+    "unverifiedDispenses": "صرف غير موثق",
+    "searchPlaceholder": "البحث عن عمليات الصرف...",
+    "noResultsTitle": "لا توجد عمليات صرف مطابقة",
+    "noResultsDescription": "حاول تعديل البحث.",
+    "clearFilters": "مسح عوامل التصفية"
   },
   "registration": {
     "title": "تسجيل مريض جديد",
@@ -701,7 +717,13 @@
     "categoryCol": "الفئة",
     "stockCol": "المخزون",
     "reorderPointCol": "نقطة إعادة الطلب",
-    "filterAll": "الكل"
+    "filterAll": "الكل",
+    "noResultsTitle": "لا توجد أصناف مطابقة في الفهرس",
+    "noResultsDescription": "حاول تعديل البحث.",
+    "clearFilters": "مسح عوامل التصفية",
+    "globalDrugCatalog": "فهرس الأدوية العالمي",
+    "atcCodeCol": "رمز ATC",
+    "doseFormsCol": "الأشكال الجرعية"
   },
   "pos": {
     "cashDrawer": "درج النقود",
@@ -762,7 +784,16 @@
     "enterValidPaymentAmount": "أدخل مبلغ دفع صحيح.",
     "cash": "نقداً",
     "card": "بطاقة",
-    "credit": "ائتمان"
+    "credit": "ائتمان",
+    "filterAll": "الكل",
+    "statusDraft": "مسودة",
+    "statusFinalized": "نهائي",
+    "statusPartial": "جزئي",
+    "searchInvoicesPlaceholder": "البحث عن الفواتير...",
+    "searchAccountsPlaceholder": "البحث عن حسابات المرضى...",
+    "noResultsTitle": "لا توجد نتائج مطابقة",
+    "noResultsDescription": "حاول تعديل البحث أو عوامل التصفية.",
+    "clearFilters": "مسح عوامل التصفية"
   },
   "reports": {
     "title": "التقارير",
@@ -795,7 +826,12 @@
     "ship": "شحن",
     "receive": "استلام",
     "cancel": "إلغاء",
-    "cancelledByUser": "ألغاه المستخدم"
+    "cancelledByUser": "ألغاه المستخدم",
+    "filterAll": "الكل",
+    "searchPlaceholder": "البحث عن التحويلات...",
+    "noResultsTitle": "لا توجد تحويلات مطابقة",
+    "noResultsDescription": "حاول تعديل البحث أو عوامل التصفية.",
+    "clearFilters": "مسح عوامل التصفية"
   },
   "procurement": {
     "suppliersTitle": "الموردون",
@@ -844,7 +880,15 @@
     "completing": "جاري الاكتمال...",
     "completeCount": "إكمال الجرد",
     "completeCountWithVariances": "إكمال الجرد ({variances} فارق)",
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "filterAll": "الكل",
+    "filterActive": "نشط",
+    "searchSuppliersPlaceholder": "البحث عن الموردين...",
+    "noResultsTitle": "لا يوجد موردون مطابقون",
+    "noResultsDescription": "حاول تعديل البحث أو عوامل التصفية.",
+    "clearFilters": "مسح عوامل التصفية",
+    "noRecentCountsTitle": "لا توجد عمليات جرد حديثة",
+    "noRecentCountsDescription": "ستظهر عمليات الجرد المكتملة هنا."
   },
   "offlineGrace": {
     "supervisorName": "اسم المشرف",

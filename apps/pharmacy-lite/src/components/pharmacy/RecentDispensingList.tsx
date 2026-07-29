@@ -61,7 +61,7 @@ export function RecentDispensingList({ items }: RecentDispensingListProps) {
           size="sm"
         />
       ) : (
-        <ul className="divide-y divide-border rounded-2xl border border-border bg-card overflow-hidden">
+        <ul className="divide-y divide-border overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
           {items.map((item) => (
             <li
               key={item.id}

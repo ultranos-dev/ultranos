@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { searchCatalog } from '@/lib/inventory/catalog-sync'
 import type { CatalogItem } from '@/lib/inventory/types'
 
@@ -37,12 +38,13 @@ export function CatalogSearchInput({ onSelect, placeholder }: CatalogSearchInput
 
   return (
     <div className="relative">
-      <input
+      <SearchInput
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onSearch={() => handleSearch(query)}
         placeholder={placeholder ?? 'Search by name or scan barcode...'}
-        className="w-full rounded-lg border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+        className="w-full"
         data-testid="catalog-search-input"
       />
       {isOpen && (

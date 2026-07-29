@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { RefreshCw } from '@ultranos/ui-kit/icons'
 import { db, type SyncQueueEntry as SyncQueueEntryType } from '@/lib/db'
 import { SyncQueueEntry } from './SyncQueueEntry'
 import { syncDispenseToHub } from '@/lib/dispense-sync'
@@ -179,14 +181,16 @@ export function SyncQueueDashboard() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-lg font-semibold text-foreground">{t('syncQueue')}</h1>
+      <h1 className="text-2xl font-semibold text-foreground">{t('syncQueue')}</h1>
 
       {totalCount === 0 && (
-        <p className="text-sm text-muted-foreground">{t('noItems')}</p>
+        <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
+          <EmptyState icon={RefreshCw} title={t('noItems')} />
+        </div>
       )}
 
       {entries.failed.length > 0 && (
-        <section>
+        <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-sm font-semibold text-destructive">
               {t('failedCount', { count: entries.failed.length })}
@@ -218,7 +222,7 @@ export function SyncQueueDashboard() {
       )}
 
       {entries.inFlight.length > 0 && (
-        <section>
+        <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
           <h2 className="text-sm font-semibold text-primary mb-2">
             {t('inFlightCount', { count: entries.inFlight.length })}
           </h2>
@@ -235,7 +239,7 @@ export function SyncQueueDashboard() {
       )}
 
       {entries.pending.length > 0 && (
-        <section>
+        <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
           <h2 className="text-sm font-semibold text-warning mb-2">
             {t('pendingCount', { count: entries.pending.length })}
           </h2>
@@ -248,7 +252,7 @@ export function SyncQueueDashboard() {
       )}
 
       {entries.synced.length > 0 && (
-        <section>
+        <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
           <h2 className="text-sm font-semibold text-success mb-2">
             {t('recentlySynced', { count: entries.synced.length })}
           </h2>

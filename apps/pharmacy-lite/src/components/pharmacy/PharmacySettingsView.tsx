@@ -50,7 +50,7 @@ function ProfileCard() {
   const initials = getInitials(displayName)
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6" aria-labelledby="profile-heading">
+    <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50" aria-labelledby="profile-heading">
       <h2 id="profile-heading" className="mb-4 text-sm font-semibold text-foreground">{t('profile')}</h2>
       <div className="flex items-start gap-4">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
@@ -64,7 +64,7 @@ function ProfileCard() {
           <div>
             <p className="text-xs font-medium text-muted-foreground">{t('role')}</p>
             <span
-              className="inline-block rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700"
+              className="inline-block rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
               data-testid="profile-role"
             >
               {formatRole(session.role)}
@@ -87,7 +87,7 @@ function PharmacyInfoCard() {
   if (!session) return null
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6" aria-labelledby="pharmacy-heading">
+    <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50" aria-labelledby="pharmacy-heading">
       <h2 id="pharmacy-heading" className="mb-4 text-sm font-semibold text-foreground">{t('pharmacyInfo')}</h2>
       <div className="space-y-3">
         <div>
@@ -133,7 +133,7 @@ function SessionInfoCard() {
   const loginTime = loginAtMs ? new Date(loginAtMs).toLocaleTimeString() : t('unavailable')
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6" aria-labelledby="session-heading">
+    <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50" aria-labelledby="session-heading">
       <h2 id="session-heading" className="mb-4 text-sm font-semibold text-foreground">{t('sessionInfo')}</h2>
       <div className="space-y-3">
         <div>
@@ -192,7 +192,7 @@ function MfaStatusCard() {
   }, [])
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6" aria-labelledby="mfa-heading">
+    <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50" aria-labelledby="mfa-heading">
       <h2 id="mfa-heading" className="mb-4 text-sm font-semibold text-foreground">{t('mfaStatus')}</h2>
 
       {loading && <p className="text-sm text-muted-foreground">{t('loadingMfa')}</p>}
@@ -236,14 +236,14 @@ function DataBudgetCard() {
 
   const usedPct = planSizeMB > 0 ? Math.min((currentCycleUsedMB / planSizeMB) * 100, 100) : 0
   const barColor =
-    thresholdLevel === 'critical' ? 'bg-red-500'
-    : thresholdLevel === 'warning' ? 'bg-yellow-500'
-    : 'bg-green-500'
+    thresholdLevel === 'critical' ? 'bg-destructive'
+    : thresholdLevel === 'warning' ? 'bg-warning'
+    : 'bg-success'
 
   return (
     <Link
       href="/settings/data-budget"
-      className="rounded-2xl border border-border bg-card p-6 flex items-center justify-between hover:bg-muted/30 transition-colors"
+      className="flex items-center justify-between rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 transition-colors hover:bg-muted/30"
       aria-label={tData('viewDashboard')}
     >
       <div className="flex flex-col gap-2 min-w-0">
@@ -266,8 +266,10 @@ function DataBudgetCard() {
 
 // --- Main Settings View ---
 export function PharmacySettingsView() {
+  const t = useTranslations('settings')
   return (
     <div className="flex flex-col gap-4" data-testid="pharmacy-settings-view">
+      <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
       <ProfileCard />
       <PharmacyInfoCard />
       <SessionInfoCard />

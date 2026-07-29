@@ -271,9 +271,25 @@ describe('PrescriptionQueueView', () => {
   it('shows empty state when no items in tab', async () => {
     await renderQueue()
 
+    // Empty state renders the i18n key for the active tab's no-data title
+    // (global next-intl mock returns keys). Real app resolves queue.noActive.
     await waitFor(() => {
-      expect(screen.getByText(/no active/i)).toBeInTheDocument()
+      expect(screen.getByText('noActive')).toBeInTheDocument()
     })
+  })
+
+  it('keeps the toolbar (tabs + search) visible when the list is empty', async () => {
+    // Regression: the toolbar must render even with no items, so search/tabs
+    // stay usable in the empty state (OPD-Lite list-page standard).
+    await renderQueue()
+
+    await waitFor(() => {
+      expect(screen.getByText('noActive')).toBeInTheDocument()
+    })
+    expect(screen.getByRole('tab', { name: /active/i })).toBeInTheDocument()
+    expect(
+      screen.getByPlaceholderText(/searchPlaceholder/i),
+    ).toBeInTheDocument()
   })
 
   it('shows error state when loadData fails (P5)', async () => {

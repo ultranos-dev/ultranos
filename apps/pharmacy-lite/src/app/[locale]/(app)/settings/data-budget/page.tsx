@@ -4,21 +4,23 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { ChevronLeft } from '@ultranos/ui-kit/icons'
+import { Button } from '@ultranos/ui-kit/components/ui/button'
 import { DataBudgetDashboard } from '@/components/settings/DataBudgetDashboard'
 
 export default function DataBudgetPage() {
   const t = useTranslations('dataBudget')
 
   return (
-    <div className="mx-auto max-w-3xl flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <Link href="/settings" className="text-muted-foreground hover:text-foreground" aria-label={t('backToSettings')}>
+    <div className="flex flex-col gap-4">
+      <Button asChild variant="ghost" size="sm" className="w-fit px-0">
+        <Link href="/settings" aria-label={t('backToSettings')}>
           <DirectionalIcon category="navigation">
             <ChevronLeft size={20} />
           </DirectionalIcon>
+          {t('backToSettings')}
         </Link>
-        <h1 className="text-2xl font-bold text-foreground">{t('usageTitle')}</h1>
-      </div>
+      </Button>
+      <h1 className="text-2xl font-semibold text-foreground">{t('usageTitle')}</h1>
       <DataBudgetDashboard />
     </div>
   )

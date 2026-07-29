@@ -20,7 +20,7 @@ export function ControlledDiscrepancyCard() {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
         <p className="text-sm text-muted-foreground">
           {t('loadingDiscrepancies')}
         </p>
@@ -30,7 +30,7 @@ export function ControlledDiscrepancyCard() {
 
   if (discrepancies.length === 0) {
     return (
-      <div className="rounded-lg border border-success/20 bg-success/5 p-4">
+      <div className="rounded-xl bg-success/5 p-5 shadow-card ring-[0.65px] ring-success/20">
         <h3 className="mb-1 text-sm font-medium text-success">
           {t('controlledDiscrepancies')}
         </h3>
@@ -40,7 +40,7 @@ export function ControlledDiscrepancyCard() {
   }
 
   return (
-    <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+    <div className="rounded-xl bg-destructive/5 p-5 shadow-card ring-[0.65px] ring-destructive/20">
       <h3 className="mb-3 text-sm font-medium text-destructive">
         {t('controlledDiscrepancies')}
       </h3>

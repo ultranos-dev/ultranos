@@ -15,11 +15,12 @@ export function ReceiveStockPage() {
   if (showSuccess) {
     return (
       <div className="flex flex-col gap-4">
-        <div className="rounded-lg border-2 border-success bg-success/5 p-6 text-center" data-testid="receipt-success">
+        <h1 className="text-2xl font-semibold text-foreground">{t('receiveStock')}</h1>
+        <div className="rounded-xl bg-card p-5 text-center shadow-card ring-[0.65px] ring-success/40" data-testid="receipt-success">
           <p className="text-lg font-bold text-success">{t('stockReceivedSuccess')}</p>
-          <p className="text-sm text-success mt-1">{t('itemsAddedToInventory')}</p>
-          <div className="mt-4 flex gap-3 justify-center">
-            <button type="button" onClick={() => setShowSuccess(false)} className="text-sm font-semibold text-primary-700 hover:text-primary-800">{t('receiveMore')}</button>
+          <p className="mt-1 text-sm text-success">{t('itemsAddedToInventory')}</p>
+          <div className="mt-4 flex justify-center gap-3">
+            <button type="button" onClick={() => setShowSuccess(false)} className="text-sm font-semibold text-primary hover:text-primary/80">{t('receiveMore')}</button>
             <button type="button" onClick={() => router.push('/inventory')} className="text-sm font-semibold text-muted-foreground hover:text-foreground">{t('viewStock')}</button>
           </div>
         </div>
@@ -29,9 +30,13 @@ export function ReceiveStockPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold text-foreground">{t('receiveStock')}</h1>
-      <p className="text-sm text-muted-foreground">{t('searchOrScanProduct')}</p>
-      <ReceiveStockForm locationId={locationId} currencyMinorUnits={currencyMinorUnits} onComplete={() => setShowSuccess(true)} />
+      <h1 className="text-2xl font-semibold text-foreground">{t('receiveStock')}</h1>
+      <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
+        <p className="text-sm text-muted-foreground">{t('searchOrScanProduct')}</p>
+        <div className="mt-4">
+          <ReceiveStockForm locationId={locationId} currencyMinorUnits={currencyMinorUnits} onComplete={() => setShowSuccess(true)} />
+        </div>
+      </div>
     </div>
   )
 }

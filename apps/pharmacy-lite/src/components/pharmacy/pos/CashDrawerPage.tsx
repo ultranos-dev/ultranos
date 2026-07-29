@@ -98,11 +98,11 @@ export function CashDrawerPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-foreground">{t('cashDrawer')}</h1>
+      <h1 className="text-2xl font-semibold text-foreground">{t('cashDrawer')}</h1>
 
       {/* Active drawer or open form */}
       {activeCashDrawer ? (
-        <div className="rounded-lg border-2 border-success bg-card p-4 space-y-4">
+        <div className="rounded-xl bg-card p-5 shadow-card ring-2 ring-success space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-success">{t('drawerOpen')}</h2>
             <span className="text-xs text-muted-foreground">
@@ -167,7 +167,7 @@ export function CashDrawerPage() {
           </form>
         </div>
       ) : (
-        <form onSubmit={handleOpen} className="rounded-lg border border-border bg-card p-4 space-y-3">
+        <form onSubmit={handleOpen} className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 space-y-3">
           <h2 className="text-lg font-semibold text-foreground">{t('openCashDrawer')}</h2>
           <div className="space-y-1">
             <label htmlFor="opening-balance" className="text-sm font-medium text-foreground">
@@ -195,7 +195,8 @@ export function CashDrawerPage() {
       {recentDrawers.length > 0 && (
         <div className="space-y-2">
           <h2 className="text-sm font-medium text-muted-foreground">{t('recentSessions')}</h2>
-          <ul className="divide-y divide-border rounded-lg border border-border bg-card">
+          <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <ul className="divide-y divide-border">
             {recentDrawers.map((d) => {
               const disc = d.discrepancy ?? 0
               return (
@@ -220,6 +221,7 @@ export function CashDrawerPage() {
               )
             })}
           </ul>
+          </div>
         </div>
       )}
     </div>

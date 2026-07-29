@@ -26,7 +26,7 @@ export function DashboardActionHub() {
   return (
     <div className="space-y-4" data-testid="dashboard-action-hub">
       {/* Patient Search — primary action for walk-ins */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
         <h3 className="mb-3 text-sm font-semibold text-foreground">{t('findOrRegisterPatient')}</h3>
         <PatientSearchBar
           onSelectPatient={handleSelectPatient}
@@ -35,33 +35,33 @@ export function DashboardActionHub() {
       </div>
 
       {/* Three entry paths */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-4">
         <Link
           href="/scan"
-          className="flex flex-col items-center gap-2 rounded-2xl border border-primary-200 bg-primary-50/50 p-4 text-center transition-colors hover:bg-primary-50"
+          className="flex flex-col items-center gap-2 rounded-xl bg-card p-5 text-center shadow-card ring-[0.65px] ring-border/50 transition-colors hover:bg-muted/40"
           data-testid="action-scan-qr"
         >
-          <Scan size={24} className="text-primary-700" />
-          <span className="text-xs font-semibold text-primary-800">{t('scanQrRx')}</span>
+          <Scan size={24} className="text-primary" />
+          <span className="text-xs font-semibold text-foreground">{t('scanQrRx')}</span>
           <span className="text-[10px] text-muted-foreground">{t('fromOpdLite')}</span>
         </Link>
 
         <Link
           href="/paper-rx"
-          className="flex flex-col items-center gap-2 rounded-2xl border border-warning/20 bg-warning/10 p-4 text-center transition-colors hover:bg-warning/20"
+          className="flex flex-col items-center gap-2 rounded-xl bg-card p-5 text-center shadow-card ring-[0.65px] ring-border/50 transition-colors hover:bg-muted/40"
           data-testid="action-paper-rx"
         >
-          <FileText size={24} className="text-warning" />
-          <span className="text-xs font-semibold text-warning">{t('paperRx')}</span>
+          <FileText size={24} className="text-primary" />
+          <span className="text-xs font-semibold text-foreground">{t('paperRx')}</span>
           <span className="text-[10px] text-muted-foreground">{t('ocrScan')}</span>
         </Link>
 
         <Link
           href="/register-patient"
-          className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-muted/50 p-4 text-center transition-colors hover:bg-accent"
+          className="flex flex-col items-center gap-2 rounded-xl bg-card p-5 text-center shadow-card ring-[0.65px] ring-border/50 transition-colors hover:bg-muted/40"
           data-testid="action-walk-in"
         >
-          <UserPlus size={24} className="text-foreground" />
+          <UserPlus size={24} className="text-primary" />
           <span className="text-xs font-semibold text-foreground">{t('walkIn')}</span>
           <span className="text-[10px] text-muted-foreground">{t('newPatient')}</span>
         </Link>

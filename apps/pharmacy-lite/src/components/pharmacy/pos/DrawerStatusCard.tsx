@@ -36,7 +36,7 @@ export function DrawerStatusCard() {
   return (
     <Link
       href="/pos/cash-drawer"
-      className="block rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+      className="block rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       <div className="flex items-center justify-between">
         <div>

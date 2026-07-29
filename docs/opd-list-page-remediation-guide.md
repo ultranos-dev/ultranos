@@ -90,8 +90,8 @@ Never add: `mx-auto`, `max-w-*`, a nested `<main>`, a second `<h1>`, `p-6`/`px-6
     ))}
   </div>
 
-  {/* wide search */}
-  <Input
+  {/* wide search — SearchInput renders the field + a trailing circular magnifier button */}
+  <SearchInput
     type="text"
     dir="auto"
     placeholder={t('searchPlaceholder')}
@@ -99,6 +99,8 @@ Never add: `mx-auto`, `max-w-*`, a nested `<main>`, a second `<h1>`, `p-6`/`px-6
     onChange={(e) => setSearch(e.target.value)}
     className="min-w-[200px] flex-1"
     aria-label={t('searchPlaceholder')}
+    // onSearch optional: omit for live-filter bars (button focuses the field);
+    // wire it for load-on-submit / typeahead bars to execute the fetch.
   />
 
   {/* optional secondary filter(s) */}
@@ -117,7 +119,7 @@ Never add: `mx-auto`, `max-w-*`, a nested `<main>`, a second `<h1>`, `p-6`/`px-6
 ```
 Rules:
 - `px-4` on tab buttons — **not** `px-5`.
-- Search is `min-w-[200px] flex-1` (fills the row). Use the ui-kit `Input` (`@/components/ui/input` in admin-portal; `@ultranos/ui-kit/components/ui/input` elsewhere).
+- **Search is the shared `SearchInput`** (`@ultranos/ui-kit/components/ui/search-input`), `min-w-[200px] flex-1` so it fills the row. `SearchInput` wraps the ui-kit `Input` and adds a **trailing circular magnifier button** at the inline-end — see §2g. The search must be the **wide** element in the row (never a narrow labeled field boxed between other controls — that reads as a form, not the OPD toolbar). Don't leave stacked field labels on the search/selects; use placeholders + `aria-label`.
 - The primary action(s) live at the **end of this row**, not in a separate header row.
 - The toolbar is **always rendered** — never behind a `loading`/`data.length>0` gate, so search/tabs stay visible when the list is empty. (Only the content-box below swaps.)
 
@@ -187,6 +189,37 @@ Critical details:
 )}
 ```
 (Pagination "Previous/Next/Showing" text is pre-existing English and out of scope for i18n unless the app already keys it.)
+
+### 2g. Search field — `SearchInput` with a trailing circular magnifier button
+
+**Every search bar** (list toolbars, search-first pages, typeaheads, dashboard patient search) uses the shared **`SearchInput`** from `@ultranos/ui-kit/components/ui/search-input` — never a bare `Input` or a native `<input>`. It composes the ui-kit `Input` + a **circular magnifier `Button`** pinned to the inline-**end** of the field, so the user has an explicit control to execute the search.
+
+Source of truth: **`packages/ui-kit/src/components/ui/search-input.tsx`** (read the live file; it wins over this guide).
+
+```tsx
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
+
+<SearchInput
+  type="text"
+  dir="auto"
+  placeholder={t('searchPlaceholder')}
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  className="min-w-[200px] flex-1"     // layout classes go on the WRAPPER; the input is w-full
+  aria-label={t('searchPlaceholder')}
+  onSearch={runSearch}                 // OPTIONAL — see below
+/>
+```
+
+How it's built (for parity if you ever need to hand-roll it): a `relative` wrapper holds the `Input` (given `pe-11` to reserve room) and a `<Button variant="default" size="icon-sm">` (the ui-kit Button is already `rounded-full`, so `icon-sm` = a 32px circle) carrying `<Search className="size-4" />` from `@ultranos/ui-kit/icons`, positioned `absolute end-1.5 top-1/2 -translate-y-1/2`.
+
+Rules:
+- **RTL:** the button is at the logical `end` (`end-1.5`) — right in LTR, **left in RTL**. Never hardcode `right-*`.
+- **`onSearch` semantics.** It fires on button click **and** on Enter. **Omit it for live-filter bars** (results already update on `onChange`; the button then focuses the field so it's never inert). **Wire it for load-on-submit / typeahead bars** to run the fetch immediately (e.g. `onSearch={() => handleSearch(query)}`).
+- **No new i18n keys** — the button's `aria-label` auto-derives from the field's `aria-label`, then `placeholder`. (Pass `searchLabel` only to override.)
+- **`className` sizes the wrapper** (put `min-w-[200px] flex-1` here); the inner input is always `w-full`. Use `inputClassName` for input-only tweaks.
+- **The search must be the wide element** in the toolbar. Do NOT wrap it in a `flex-col` with a stacked label, and do NOT box it narrowly between other controls — that regresses the toolbar into a labeled form (real example: the pharmacy `HistoryFilterBar` originally rendered a narrow labeled "Medication" field; it was rewritten to a wide unlabeled `SearchInput` with the date/select filters using `display:contents` so everything sits in one Notifications-style row).
+- **Test gotcha:** the field and its magnifier button share the same accessible name (both derive from `aria-label`/`placeholder`), so `getByLabelText(...)` will match **two** elements. Query the field by **`getByPlaceholderText`** or a `data-testid` instead.
 
 ---
 
@@ -390,4 +423,4 @@ Run checks atomically (§8) to dodge the store thrash.
 ---
 
 ### One-line summary
-Every non-auth **list page**: full-width root → standalone `<h1>` → **one toolbar row** (pill tabs · wide search · filters · **folded primary action**) → **one content box** (`rounded-xl bg-card shadow-card ring`) wrapping loading / centered-empty / table-with-`bg-muted`-header → pagination below. Detail/form pages get the box idiom (equal cards, `w-fit` back button, boxed forms). Dashboards get uniform stat cards. **Then render every page in a browser and confirm it — don't claim it.**
+Every non-auth **list page**: full-width root → standalone `<h1>` → **one toolbar row** (pill tabs · **wide `SearchInput` with its trailing circular magnifier button** · filters · **folded primary action**) → **one content box** (`rounded-xl bg-card shadow-card ring`) wrapping loading / centered-empty / table-with-`bg-muted`-header → pagination below. Detail/form pages get the box idiom (equal cards, `w-fit` back button, boxed forms). Dashboards get uniform stat cards. **Then render every page in a browser and confirm it — don't claim it.**

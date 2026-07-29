@@ -3,6 +3,8 @@
 import { useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Package } from '@ultranos/ui-kit/icons'
 import { CatalogSearchInput } from './CatalogSearchInput'
 import { ReceiveStockItemRow, type ReceiveLineItem } from './ReceiveStockItemRow'
 import { processGoodsReceipt } from '@/lib/inventory/goods-receipt-service'
@@ -98,9 +100,10 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }:
         <div role="alert" className="rounded-md bg-destructive/5 border border-destructive/20 px-4 py-2 text-sm text-destructive">{error}</div>
       )}
       {items.length === 0 ? (
-        <div className="rounded-lg border border-border bg-muted p-8 text-center">
-          <p className="text-sm text-muted-foreground">{t('searchOrScanProduct')}</p>
-        </div>
+        <EmptyState
+          icon={Package}
+          title={t('searchOrScanProduct')}
+        />
       ) : (
         <div className="space-y-3">
           {items.map((item, index) => (

@@ -284,9 +284,11 @@ export default function PaperRxPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <h1 className="text-2xl font-semibold text-foreground">{tPrescription('scanPaperPrescription')}</h1>
+
       {/* AC #9: Non-dismissible Manual Verification Required banner */}
       <div
-        className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3"
+        className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3"
         role="alert"
         aria-live="polite"
       >
@@ -303,10 +305,10 @@ export default function PaperRxPage() {
 
       {/* Drug interaction info banner — CLAUDE.md Rule #3 compliance */}
       <div
-        className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2"
+        className="rounded-2xl border border-warning/20 bg-warning/10 px-4 py-2"
         role="status"
       >
-        <p className="text-xs text-blue-800 font-medium">
+        <p className="text-xs text-warning font-medium">
           No drug interaction check performed — external prescriber
         </p>
       </div>
@@ -323,7 +325,7 @@ export default function PaperRxPage() {
                 playsInline
                 muted
                 onLoadedData={handleVideoReady}
-                className="w-full rounded-lg border border-border"
+                className="w-full rounded-xl border border-border"
               />
               <canvas ref={canvasRef} className="hidden" />
               <Button
@@ -398,11 +400,11 @@ export default function PaperRxPage() {
       {phase === 'review' && (
         <div className="space-y-4">
           {isManualMode && (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2">
-              <p className="text-sm font-medium text-amber-800">
+            <div className="rounded-2xl border border-warning/30 bg-warning/10 px-4 py-2">
+              <p className="text-sm font-medium text-warning">
                 Manual Entry Mode
               </p>
-              <p className="text-xs text-amber-700">
+              <p className="text-xs text-warning/80">
                 Auto-extraction unavailable. Please enter all fields manually.
               </p>
             </div>
@@ -431,7 +433,7 @@ export default function PaperRxPage() {
                 >
                   {label}
                   {isLowConfidence(key) && (
-                    <span className="ms-2 inline-block rounded bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                    <span className="ms-2 inline-block rounded bg-warning/15 px-2 py-0.5 text-xs font-medium text-warning">
                       Please verify
                     </span>
                   )}
@@ -443,7 +445,7 @@ export default function PaperRxPage() {
                   onChange={(e) => handleFieldChange(key, e.target.value)}
                   className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-ring ${
                     isLowConfidence(key)
-                      ? 'border-yellow-400 bg-yellow-50'
+                      ? 'border-warning bg-warning/10'
                       : 'border-border bg-background text-foreground'
                   }`}
                 />
@@ -478,8 +480,8 @@ export default function PaperRxPage() {
       {/* Phase: Success */}
       {phase === 'success' && (
         <div className="space-y-4 text-center py-8">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-            <Check className="h-6 w-6 text-green-600" />
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success/15">
+            <Check className="h-6 w-6 text-success" />
           </div>
           <p className="text-lg font-medium text-foreground">
             Paper prescription recorded as LEGACY_PAPER

@@ -17,7 +17,7 @@ export function ConsumptionChart() {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
         <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </div>
     )
@@ -25,7 +25,7 @@ export function ConsumptionChart() {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
         <h3 className="mb-2 text-sm font-medium text-foreground">
           {t('topDispensed')}
         </h3>
@@ -37,7 +37,7 @@ export function ConsumptionChart() {
   const maxCount = Math.max(...items.map((i) => i.totalDispensed))
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
       <h3 className="mb-4 text-sm font-medium text-foreground">
         {t('topDispensed')}
       </h3>

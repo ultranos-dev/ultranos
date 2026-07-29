@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Package } from '@ultranos/ui-kit/icons'
 import { CatalogSearchInput } from '@/components/pharmacy/inventory/CatalogSearchInput'
 import { addCountItem, completeStockCount } from '@/lib/procurement/stock-count-service'
 import { getFefoBatches } from '@/lib/inventory/fefo'
@@ -97,77 +99,78 @@ export function StockCountForm({ count, onCompleted }: StockCountFormProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">{t('stockCountTitle')}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {typeLabels[count.type]} — started{' '}
-            {new Date(count.startedAt).toLocaleString()}
-          </p>
-        </div>
-      </div>
+      <h1 className="text-2xl font-semibold text-foreground">{t('stockCountTitle')}</h1>
 
-      <div>
-        <CatalogSearchInput
-          onSelect={handleProductSelect}
-          placeholder={t('searchProductsPlaceholder')}
-        />
-      </div>
-
-      {items.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border py-12 text-center">
-          <p className="text-muted-foreground">{t('noItemsAdded')}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{t('searchProductsToCount')}</p>
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-xl border border-border">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border bg-muted">
-              <tr>
-                <th className="px-4 py-3 text-start font-medium text-muted-foreground">{t('productCol')}</th>
-                <th className="px-4 py-3 text-start font-medium text-muted-foreground">{t('batchCol')}</th>
-                <th className="px-4 py-3 text-end font-medium text-muted-foreground">{t('expectedCol')}</th>
-                <th className="px-4 py-3 text-end font-medium text-muted-foreground">{t('actualCol')}</th>
-                <th className="px-4 py-3 text-end font-medium text-muted-foreground">{t('varianceCol')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {items.map((item, index) => (
-                <tr
-                  key={item.stockBatchId}
-                  className={item.variance !== 0 ? 'bg-warning/5' : ''}
-                >
-                  <td className="px-4 py-3 font-medium text-foreground">
-                    {item.catalogItemName}
-                  </td>
-                  <td className="px-4 py-3 font-mono text-muted-foreground">{item.batchNumber}</td>
-                  <td className="px-4 py-3 text-end text-muted-foreground">{item.expectedQty}</td>
-                  <td className="px-4 py-3 text-end">
-                    <input
-                      type="number"
-                      value={item.actualQty}
-                      onChange={(e) => handleActualQtyChange(index, e.target.value)}
-                      min={0}
-                      className="w-20 rounded border border-border px-2 py-1 text-end text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
-                    />
-                  </td>
-                  <td className={`px-4 py-3 text-end font-medium ${varianceColor(item.variance)}`}>
-                    {item.variance > 0 ? '+' : ''}{item.variance}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between pt-2">
+      <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
         <p className="text-sm text-muted-foreground">
-          {t('itemsWithVariance', { count: items.length, variances: varianceCount })}
+          {typeLabels[count.type]} — started{' '}
+          {new Date(count.startedAt).toLocaleString()}
         </p>
-        <Button onClick={handleComplete} disabled={completing || items.length === 0}>
-          {completing ? t('completing') : varianceCount > 0 ? t('completeCountWithVariances', { variances: varianceCount }) : t('completeCount')}
-        </Button>
+
+        <div className="mt-4">
+          <CatalogSearchInput
+            onSelect={handleProductSelect}
+            placeholder={t('searchProductsPlaceholder')}
+          />
+        </div>
+
+        {items.length === 0 ? (
+          <EmptyState
+            className="mt-4"
+            icon={Package}
+            title={t('noItemsAdded')}
+            description={t('searchProductsToCount')}
+          />
+        ) : (
+          <div className="mt-4 overflow-hidden rounded-xl ring-[0.65px] ring-border/50">
+            <table className="w-full text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('productCol')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('batchCol')}</th>
+                  <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expectedCol')}</th>
+                  <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('actualCol')}</th>
+                  <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('varianceCol')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {items.map((item, index) => (
+                  <tr
+                    key={item.stockBatchId}
+                    className={item.variance !== 0 ? 'bg-warning/5' : ''}
+                  >
+                    <td className="px-4 py-3 font-medium text-foreground">
+                      {item.catalogItemName}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-muted-foreground">{item.batchNumber}</td>
+                    <td className="px-4 py-3 text-end text-muted-foreground">{item.expectedQty}</td>
+                    <td className="px-4 py-3 text-end">
+                      <input
+                        type="number"
+                        value={item.actualQty}
+                        onChange={(e) => handleActualQtyChange(index, e.target.value)}
+                        min={0}
+                        className="w-20 rounded border border-border px-2 py-1 text-end text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+                      />
+                    </td>
+                    <td className={`px-4 py-3 text-end font-medium ${varianceColor(item.variance)}`}>
+                      {item.variance > 0 ? '+' : ''}{item.variance}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {t('itemsWithVariance', { count: items.length, variances: varianceCount })}
+          </p>
+          <Button onClick={handleComplete} disabled={completing || items.length === 0}>
+            {completing ? t('completing') : varianceCount > 0 ? t('completeCountWithVariances', { variances: varianceCount }) : t('completeCount')}
+          </Button>
+        </div>
       </div>
     </div>
   )

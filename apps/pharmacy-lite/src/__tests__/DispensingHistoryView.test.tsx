@@ -142,9 +142,10 @@ describe('DispensingHistoryView', () => {
       expect(screen.getByTestId('history-list')).toBeInTheDocument()
     })
 
-    // Type in medication filter to trigger filter change
-    // HistoryFilterBar uses t('filterMedication') as label — i18n mock returns key string
-    const medInput = screen.getByLabelText('filterMedication')
+    // Type in medication filter to trigger filter change. The field is
+    // placeholder-identified in the toolbar (its aria-label is shared with the
+    // SearchInput magnifier button, so query by placeholder for uniqueness).
+    const medInput = screen.getByPlaceholderText('filterMedicationPlaceholder')
     fireEvent.change(medInput, { target: { value: 'Ibuprofen' } })
 
     await waitFor(() => {
