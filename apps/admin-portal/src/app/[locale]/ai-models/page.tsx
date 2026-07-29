@@ -99,12 +99,7 @@ export default function AIModelsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
-          <Button onClick={() => setShowPublishForm(!showPublishForm)}>
-            {showPublishForm ? t('cancelPublish') : t('publishNewVersion')}
-          </Button>
-        </div>
+        <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
 
         {error && (
           <div className="rounded-2xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive">
@@ -146,8 +141,13 @@ export default function AIModelsPage() {
 
         {/* Model Registry Table */}
         <div>
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">{t('manifestTitle')}</h2>
-          <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('manifestTitle')}</h2>
+            <Button onClick={() => setShowPublishForm(!showPublishForm)}>
+              {showPublishForm ? t('cancelPublish') : t('publishNewVersion')}
+            </Button>
+          </div>
+          <div className="overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
             <table className="min-w-full">
               <thead className="bg-muted">
                 <tr>
@@ -159,7 +159,7 @@ export default function AIModelsPage() {
                   <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colDeltaFrom')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-background">
+              <tbody className="divide-y divide-border">
                 {loading ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">{t('loading')}</td>
@@ -170,7 +170,7 @@ export default function AIModelsPage() {
                   </tr>
                 ) : (
                   models.map((model) => (
-                    <tr key={`${model.modelId}-${model.currentVersion}`} className="hover:bg-primary/10 transition-colors">
+                    <tr key={`${model.modelId}-${model.currentVersion}`} className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 text-sm font-medium text-foreground">{model.modelId}</td>
                       <td className="px-4 py-3 text-sm"><ModelTypeBadge type={model.modelType} /></td>
                       <td className="px-4 py-3 text-sm text-foreground font-mono">{model.currentVersion}</td>
@@ -189,7 +189,7 @@ export default function AIModelsPage() {
         {stats && stats.modelStats.length > 0 && (
           <div>
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">{t('updateStatsTitle')}</h2>
-            <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+            <div className="overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
               <table className="min-w-full">
                 <thead className="bg-muted">
                   <tr>
@@ -201,9 +201,9 @@ export default function AIModelsPage() {
                     <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colStale')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-background">
+                <tbody className="divide-y divide-border">
                   {stats.modelStats.map((s) => (
-                    <tr key={s.modelId} className="hover:bg-primary/10 transition-colors">
+                    <tr key={s.modelId} className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 text-sm font-medium text-foreground">{s.modelId}</td>
                       <td className="px-4 py-3 text-sm">
                         {s.successRate !== null ? (

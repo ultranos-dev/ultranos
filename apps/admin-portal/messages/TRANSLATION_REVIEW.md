@@ -486,3 +486,8 @@ Total keys to review: **79** (each across ar / prs / ps).
 - **prs:** "در حال بارگذاری…"
 - **ps:** "بارول کیږي…"
 
+### `audit.searchActorPlaceholder`
+- **en:** "Search actor name..."
+- **ar:** "البحث حسب اسم المنفِّذ..."
+- **prs:** "جستجو بر اساس نام کاربر..."
+- **ps:** "د فاعل د نوم لټون..."

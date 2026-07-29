@@ -26,7 +26,6 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale()
   const dir = getDirection(locale)
-  const isRtl = dir === 'rtl'
 
   return (
     <html

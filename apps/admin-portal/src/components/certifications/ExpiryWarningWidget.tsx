@@ -34,21 +34,21 @@ export function ExpiryWarningWidget() {
   return (
     <div className="flex gap-4">
       {buckets.within30 > 0 && (
-        <div className="flex-1 rounded-2xl border border-red-300 bg-red-50 dark:bg-red-950/30 dark:border-red-800 p-4">
-          <p className="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide">Expiring in 30 days</p>
-          <p className="mt-1 text-2xl font-bold text-red-700 dark:text-red-300">{buckets.within30}</p>
+        <div className="flex-1 rounded-xl border border-destructive/30 bg-destructive/10 p-4">
+          <p className="text-xs font-medium text-destructive uppercase tracking-wide">Expiring in 30 days</p>
+          <p className="mt-1 text-2xl font-bold text-destructive">{buckets.within30}</p>
         </div>
       )}
       {buckets.within60 > buckets.within30 && (
-        <div className="flex-1 rounded-2xl border border-orange-300 bg-orange-50 dark:bg-orange-950/30 dark:border-orange-800 p-4">
-          <p className="text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">Expiring in 60 days</p>
-          <p className="mt-1 text-2xl font-bold text-orange-700 dark:text-orange-300">{buckets.within60 - buckets.within30}</p>
+        <div className="flex-1 rounded-xl border border-warning/30 bg-warning/10 p-4">
+          <p className="text-xs font-medium text-warning uppercase tracking-wide">Expiring in 60 days</p>
+          <p className="mt-1 text-2xl font-bold text-warning">{buckets.within60 - buckets.within30}</p>
         </div>
       )}
       {buckets.within90 > buckets.within60 && (
-        <div className="flex-1 rounded-2xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-4">
-          <p className="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide">Expiring in 90 days</p>
-          <p className="mt-1 text-2xl font-bold text-amber-700 dark:text-amber-300">{buckets.within90 - buckets.within60}</p>
+        <div className="flex-1 rounded-xl border border-warning/20 bg-warning/5 p-4">
+          <p className="text-xs font-medium text-warning uppercase tracking-wide">Expiring in 90 days</p>
+          <p className="mt-1 text-2xl font-bold text-warning">{buckets.within90 - buckets.within60}</p>
         </div>
       )}
     </div>

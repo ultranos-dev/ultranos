@@ -66,7 +66,7 @@ Object.defineProperty(window, 'matchMedia', {
 // jsdom does not implement <canvas> 2D context; stub it so chart/sparkline
 // widgets (dashboard, audit trend) render without throwing.
 if (typeof HTMLCanvasElement !== 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   HTMLCanvasElement.prototype.getContext = (() => ({
     fillRect: () => {}, clearRect: () => {}, getImageData: () => ({ data: [] }),
     putImageData: () => {}, createImageData: () => [], setTransform: () => {},

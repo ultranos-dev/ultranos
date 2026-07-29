@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Network, FileSearch } from '@ultranos/ui-kit/icons'
@@ -128,12 +129,12 @@ function StatsCards({ stats, loading }: { stats: MentorshipStats | null; loading
       className:
         stats && stats.unmatchedTechs > 0
           ? 'bg-warning/10 border-warning/20'
-          : 'bg-popover border-border',
+          : 'bg-card border-border',
     },
     {
       label: t('statsAvgDuration'),
       value: stats ? formatDuration(stats.avgPairingDurationDays) : placeholder,
-      className: 'bg-popover border-border',
+      className: 'bg-card border-border',
     },
     {
       label: t('statsCheckInRate'),
@@ -145,7 +146,7 @@ function StatsCards({ stats, loading }: { stats: MentorshipStats | null; loading
             ? 'bg-warning/10 border-warning/20'
             : stats
               ? 'bg-destructive/10 border-destructive/20'
-              : 'bg-popover border-border',
+              : 'bg-card border-border',
     },
   ]
 
@@ -154,7 +155,7 @@ function StatsCards({ stats, loading }: { stats: MentorshipStats | null; loading
       {cards.map((card) => (
         <div
           key={card.label}
-          className={`rounded-2xl border p-6 shadow-card ${card.className}`}
+          className={`rounded-xl border p-6 shadow-card ${card.className}`}
         >
           <p className="text-sm font-medium text-muted-foreground">{card.label}</p>
           <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
@@ -626,8 +627,7 @@ export default function MentorshipPage() {
               </button>
             ))}
           </div>
-          <Input
-            type="text"
+          <SearchInput
             dir="auto"
             placeholder={t('searchPlaceholder')}
             value={search}

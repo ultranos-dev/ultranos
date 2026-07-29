@@ -7,7 +7,7 @@ import { PathwayCreateModal } from '@/components/certifications/PathwayCreateMod
 import { ExpiryWarningWidget } from '@/components/certifications/ExpiryWarningWidget'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Award, FileSearch } from '@ultranos/ui-kit/icons'
 
@@ -131,8 +131,7 @@ export default function CertificationsPage() {
               </button>
             ))}
           </div>
-          <Input
-            type="text"
+          <SearchInput
             dir="auto"
             placeholder={t('searchPlaceholder')}
             value={search}

@@ -6,8 +6,7 @@ import { useTranslations } from 'next-intl'
 import type { LabRole as SharedLabRole } from '@ultranos/shared-types'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Users, FileSearch } from '@ultranos/ui-kit/icons'
 import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
@@ -31,26 +30,11 @@ const ROLE_LABELS: Record<LabRole, string> = {
   LAB_MANAGER: 'Lab Manager',
 }
 
-const ROLE_BADGE_VARIANTS: Record<LabRole, 'secondary' | 'default' | 'warning' | 'success'> = {
-  LAB_TECH: 'secondary',
-  SENIOR_TECH: 'default',
-  SUPERVISOR: 'warning',
-  LAB_MANAGER: 'success',
-}
-
 interface StaffMember {
   practitionerId: string
   email: string
   labRole: LabRole
   createdAt: string
-}
-
-function RoleBadge({ role }: { role: LabRole }) {
-  return (
-    <Badge variant={ROLE_BADGE_VARIANTS[role] ?? 'secondary'}>
-      {ROLE_LABELS[role] ?? role}
-    </Badge>
-  )
 }
 
 function formatDate(iso: string): string {
@@ -64,7 +48,6 @@ function truncate(s: string, len: number): string {
 
 /** Confirmation modal for role changes (AC #2, #3) */
 function RoleChangeModal({
-  email,
   currentRole,
   newRole,
   onConfirm,
@@ -72,7 +55,6 @@ function RoleChangeModal({
   submitting,
   open,
 }: {
-  email: string
   currentRole: LabRole
   newRole: LabRole
   onConfirm: () => void
@@ -95,7 +77,7 @@ function RoleChangeModal({
         </DialogHeader>
 
         {isDemotingManager && (
-          <div className="mt-1 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+          <div className="mt-1 rounded-xl border border-warning/20 bg-warning/10 p-3 text-sm text-warning">
             This will remove their manager privileges. If they are the last manager, this operation will be blocked.
           </div>
         )}
@@ -115,13 +97,11 @@ function RoleChangeModal({
 
 /** Confirmation modal for staff removal */
 function RemoveStaffModal({
-  email,
   onConfirm,
   onCancel,
   submitting,
   open,
 }: {
-  email: string
   onConfirm: () => void
   onCancel: () => void
   submitting: boolean
@@ -266,22 +246,20 @@ export default function LabStaffPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push(`/labs/${labId}`)}
-          >
-            {t('staffBackToLab')}
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-fit px-0"
+          onClick={() => router.push(`/labs/${labId}`)}
+        >
+          {t('staffBackToLab')}
+        </Button>
 
         <h1 className="text-2xl font-semibold text-foreground">{t('staffPageTitle')}</h1>
 
         {/* Toolbar: search + add staff — one row, always visible */}
         <div className="flex flex-wrap items-center gap-3">
-          <Input
-            type="text"
+          <SearchInput
             dir="auto"
             placeholder={t('staffSearchPlaceholder')}
             value={search}
@@ -391,7 +369,6 @@ export default function LabStaffPage() {
         {pendingChange && (
           <RoleChangeModal
             open={pendingChange !== null}
-            email={pendingChange.email}
             currentRole={pendingChange.currentRole}
             newRole={pendingChange.newRole}
             onConfirm={handleConfirmRoleChange}
@@ -403,7 +380,6 @@ export default function LabStaffPage() {
         {pendingRemove && (
           <RemoveStaffModal
             open={pendingRemove !== null}
-            email={pendingRemove.email}
             onConfirm={handleConfirmRemove}
             onCancel={() => setPendingRemove(null)}
             submitting={submittingRemove}

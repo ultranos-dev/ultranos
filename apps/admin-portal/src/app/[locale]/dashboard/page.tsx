@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
-import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { DunningBanner } from '@/components/subscriptions/DunningBanner'
 import { SubscriptionWidget } from '@/components/dashboard/SubscriptionWidget'
 import { UserSummaryWidget } from '@/components/dashboard/UserSummaryWidget'
@@ -33,7 +32,6 @@ interface DashboardStats {
 export default function DashboardPage() {
   const router = useRouter()
   const t = useTranslations('dashboard')
-  const { locationId } = useLocationFilter()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [statsError, setStatsError] = useState(false)
 
@@ -83,8 +81,8 @@ export default function DashboardPage() {
             <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
               {stats?.pendingLabApprovals ?? '—'}
             </p>
-            <p className={`mt-1 text-sm font-medium ${stats && stats.oldestPendingLabDays > 7 ? 'text-warning' : 'text-muted-foreground'}`}>
-              {stats ? t('oldestDaysAgo', { days: stats.oldestPendingLabDays }) : ' '}
+            <p className={`mt-1 text-sm font-medium ${stats && stats.pendingLabApprovals > 0 && stats.oldestPendingLabDays > 7 ? 'text-warning' : 'text-muted-foreground'}`}>
+              {stats && stats.pendingLabApprovals > 0 ? t('oldestDaysAgo', { days: stats.oldestPendingLabDays ?? 0 }) : ' '}
             </p>
           </button>
 

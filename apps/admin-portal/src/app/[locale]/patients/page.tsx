@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Search, FileSearch } from '@ultranos/ui-kit/icons'
 
@@ -113,8 +113,7 @@ export default function PatientsPage() {
         {/* Toolbar: search + filters + merge action — one row */}
         <div className="flex flex-wrap items-center gap-3">
             {/* Search input */}
-            <Input
-              type="text"
+            <SearchInput
               dir="auto"
               placeholder={t('searchPlaceholder')}
               value={search}

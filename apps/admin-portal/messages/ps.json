@@ -185,7 +185,8 @@
     "noEvents": "آډیټ پیښه ونه موندل شوه.",
     "errorLoad": "د آډیټ معلوماتو بارول ناکام شو",
     "noHistoryDescription": "کله چې زنځیر وګورل شي، د تصدیق چلونه به دلته ښکاره شي.",
-    "noEventsDescription": "خپل فلټرونه یا د نیټې حد تنظیم کړئ."
+    "noEventsDescription": "خپل فلټرونه یا د نیټې حد تنظیم کړئ.",
+    "searchActorPlaceholder": "د فاعل د نوم لټون..."
   },
   "certifications": {
     "pageTitle": "تصدیقونه",

@@ -696,15 +696,16 @@ export const adminRouter = createTRPCRouter({
       // Query practitioners with license_expiry set
       let query = ctx.supabase
         .from('practitioners')
-        .select('id, name, identifier, _ultranos, meta', { count: 'exact' })
-        .not('_ultranos->>licenseExpiry', 'is', null)
-        .order('_ultranos->>licenseExpiry', { ascending: true })
+        .select('id, given_name, family_name, telecom_email, kyc_status, license_expiry', { count: 'exact' })
+        .eq('org_id', ctx.user.orgId)
+        .not('license_expiry', 'is', null)
+        .order('license_expiry', { ascending: true })
         .range(input.cursor, input.cursor + input.limit - 1)
 
       if (windowDate) {
         const todayDate = now.toISOString().split('T')[0]
-        query = query.lte('_ultranos->>licenseExpiry', windowDate)
-          .gte('_ultranos->>licenseExpiry', todayDate)
+        query = query.lte('license_expiry', windowDate)
+          .gte('license_expiry', todayDate)
       }
 
       // Epic C: search filter — filter by practitioner name/email
@@ -724,27 +725,22 @@ export const adminRouter = createTRPCRouter({
 
       const todayStr = now.toISOString().split('T')[0]
       const providers = (rows ?? []).map((row: Record<string, unknown>) => {
-        const r = db.fromRow(row)
-        const ultranos = r._ultranos as {
-          licenseExpiry?: string
-          kycStatus: string
-        }
-        const name = (r.name as { family: string; given: string[]; text?: string }[])?.[0]
-        const identifier = (r.identifier as { system: string; value: string }[])?.[0]
-
-        const expiryDate = ultranos.licenseExpiry ?? ''
+        // The practitioners table stores flat columns — license_expiry and kyc_status —
+        // not a `_ultranos` jsonb. (Registry/license number lives on kyc_submissions and
+        // is not joined here, so licenseNumber/issuingBody are left blank.)
+        const expiryDate = (row.license_expiry as string) ?? ''
         const daysRemaining = expiryDate
           ? Math.ceil((new Date(expiryDate).getTime() - new Date(todayStr).getTime()) / 86_400_000)
           : null
 
         return {
-          practitionerId: r.id as string,
-          name: name?.text ?? `${name?.given?.join(' ') ?? ''} ${name?.family ?? ''}`.trim(),
-          licenseNumber: identifier?.value ?? '',
-          issuingBody: identifier?.system ?? '',
+          practitionerId: row.id as string,
+          name: `${(row.given_name as string) ?? ''} ${(row.family_name as string) ?? ''}`.trim(),
+          licenseNumber: '',
+          issuingBody: '',
           expiryDate,
           daysRemaining,
-          kycStatus: ultranos.kycStatus,
+          kycStatus: (row.kyc_status as string) ?? '',
         }
       })
 
@@ -3448,10 +3444,10 @@ export const adminRouter = createTRPCRouter({
 
     const { data: rows, error } = await ctx.supabase
       .from('practitioners')
-      .select('id, given_name, family_name, telecom_email, role, _ultranos')
+      .select('id, given_name, family_name, telecom_email, role, kyc_status, license_expiry')
       .eq('org_id', orgId)
-      .not('_ultranos->>licenseExpiry', 'is', null)
-      .order('_ultranos->>licenseExpiry', { ascending: true })
+      .not('license_expiry', 'is', null)
+      .order('license_expiry', { ascending: true })
 
     if (error) {
       throw new TRPCError({
@@ -3462,15 +3458,14 @@ export const adminRouter = createTRPCRouter({
 
     const headers = ['ID', 'Given Name', 'Family Name', 'Email', 'Role', 'License Expiry', 'KYC Status']
     const csvRows = (rows ?? []).map((row: Record<string, unknown>) => {
-      const ultranos = (row._ultranos as Record<string, unknown>) ?? {}
       return [
         row.id as string,
         (row.given_name as string) ?? '',
         (row.family_name as string) ?? '',
         (row.telecom_email as string) ?? '',
         (row.role as string) ?? '',
-        (ultranos.licenseExpiry as string) ?? '',
-        (ultranos.kycStatus as string) ?? '',
+        (row.license_expiry as string) ?? '',
+        (row.kyc_status as string) ?? '',
       ]
     })
 
@@ -5963,13 +5958,12 @@ export const adminRouter = createTRPCRouter({
       const now = new Date()
       const cutoff = new Date(now.getTime() + input.daysAhead * 24 * 60 * 60 * 1000).toISOString()
 
+      // PostgREST has no cached FK relationship between certification_credentials and
+      // practitioners/certification_pathways, so embedded selects fail. Fetch the scalar
+      // credential rows, then resolve pathway + practitioner names via separate lookups.
       const { data: rows, error } = await ctx.supabase
         .from('certification_credentials')
-        .select(`
-          id, practitioner_id, pathway_id, issued_at, expires_at, certificate_hash,
-          certification_pathways!inner(name),
-          practitioners!certification_credentials_practitioner_id_fkey(given_name, family_name)
-        `)
+        .select('id, practitioner_id, pathway_id, issued_at, expires_at, certificate_hash')
         .not('expires_at', 'is', null)
         .lte('expires_at', cutoff)
         .gte('expires_at', now.toISOString())
@@ -5982,19 +5976,33 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      const credentials = (rows ?? []).map((row: any) => {
-        const expiresAt = new Date(row.expires_at)
+      const credRows = rows ?? []
+      const pathwayIds = [...new Set(credRows.map((r: Record<string, unknown>) => r.pathway_id as string).filter(Boolean))]
+      const practitionerIds = [...new Set(credRows.map((r: Record<string, unknown>) => r.practitioner_id as string).filter(Boolean))]
+
+      const [pathwaysRes, practitionersRes] = await Promise.all([
+        pathwayIds.length > 0
+          ? ctx.supabase.from('certification_pathways').select('id, name').in('id', pathwayIds)
+          : Promise.resolve({ data: [] as Record<string, unknown>[], error: null }),
+        practitionerIds.length > 0
+          ? ctx.supabase.from('practitioners').select('id, given_name, family_name').in('id', practitionerIds)
+          : Promise.resolve({ data: [] as Record<string, unknown>[], error: null }),
+      ])
+
+      const pathwayNameById = new Map((pathwaysRes.data ?? []).map((p: Record<string, unknown>) => [p.id as string, p.name as string]))
+      const practitionerNameById = new Map((practitionersRes.data ?? []).map((p: Record<string, unknown>) =>
+        [p.id as string, `${(p.given_name as string) ?? ''} ${(p.family_name as string) ?? ''}`.trim()],
+      ))
+
+      const credentials = credRows.map((row: Record<string, unknown>) => {
+        const expiresAt = new Date(row.expires_at as string)
         const daysRemaining = Math.ceil((expiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
-        const practitioner = row.practitioners
-        const pathway = row.certification_pathways
 
         return {
           id: row.id as string,
           practitionerId: row.practitioner_id as string,
-          practitionerName: practitioner
-            ? `${practitioner.given_name ?? ''} ${practitioner.family_name ?? ''}`.trim()
-            : 'Unknown',
-          pathwayName: pathway?.name ?? 'Unknown',
+          practitionerName: practitionerNameById.get(row.practitioner_id as string) || 'Unknown',
+          pathwayName: pathwayNameById.get(row.pathway_id as string) || 'Unknown',
           expiresAt: row.expires_at as string,
           daysRemaining,
           urgency: daysRemaining <= 30 ? 'red' as const
@@ -6545,7 +6553,7 @@ export const adminRouter = createTRPCRouter({
 
     const { data: labs, error: labsError } = await ctx.supabase
       .from('labs')
-      .select('id, lab_name, status, last_sync_at, created_at')
+      .select('id, lab_name, status, created_at')
       .eq('org_id', orgId)
       .order('lab_name')
       .limit(200)
@@ -6591,7 +6599,7 @@ export const adminRouter = createTRPCRouter({
         stockAlertCount: stockAlertCounts[labId] ?? 0,
         stockDataAvailable,
         staffCount: staffCounts[labId] ?? 0,
-        lastSyncAt: (lab.last_sync_at as string) ?? null,
+        lastSyncAt: null,
       }
     })
 

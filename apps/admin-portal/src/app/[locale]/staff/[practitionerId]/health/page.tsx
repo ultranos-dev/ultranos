@@ -46,13 +46,13 @@ function ScreeningBanner({ reminders }: { reminders: { tbScreening: { status: st
   if (status === 'UP_TO_DATE') return null
 
   const colorMap: Record<string, string> = {
-    OVERDUE: 'bg-red-100 border-red-400 text-red-800',
-    DUE_SOON: 'bg-amber-100 border-amber-400 text-amber-800',
-    NOT_RECORDED: 'bg-amber-100 border-amber-400 text-amber-800',
+    OVERDUE: 'bg-destructive/10 border-destructive/40 text-destructive',
+    DUE_SOON: 'bg-warning/10 border-warning/40 text-warning',
+    NOT_RECORDED: 'bg-warning/10 border-warning/40 text-warning',
   }
 
   return (
-    <div className={`rounded-lg border-s-4 p-4 ${colorMap[status] ?? ''}`} role="alert">
+    <div className={`rounded-xl border-s-4 p-4 ${colorMap[status] ?? ''}`} role="alert">
       <p className="font-medium">{message}</p>
     </div>
   )

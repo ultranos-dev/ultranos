@@ -185,7 +185,8 @@
     "noEvents": "لا توجد أحداث تدقيق.",
     "errorLoad": "فشل في تحميل بيانات التدقيق",
     "noHistoryDescription": "ستظهر عمليات التحقق هنا بمجرد فحص السلسلة.",
-    "noEventsDescription": "حاول تعديل عوامل التصفية أو نطاق التاريخ."
+    "noEventsDescription": "حاول تعديل عوامل التصفية أو نطاق التاريخ.",
+    "searchActorPlaceholder": "البحث حسب اسم المنفِّذ..."
   },
   "certifications": {
     "pageTitle": "الشهادات",

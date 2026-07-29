@@ -33,6 +33,26 @@ interface SurveillanceConfigFormProps {
   onSaved?: () => void
 }
 
+/**
+ * Turn a raw error message into a human-readable string. tRPC surfaces server-side
+ * Zod validation failures as a JSON-stringified issue array; without this, that raw
+ * array (`[{"code":"too_big",...}]`) would be dumped into the UI. Extract the issue
+ * messages instead and fall back to the raw/fallback text for non-Zod errors.
+ */
+function toFriendlyMessage(raw: string | undefined, fallback: string): string {
+  if (!raw) return fallback
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) {
+      const msgs = parsed.map((issue) => issue?.message).filter(Boolean)
+      if (msgs.length > 0) return msgs.join('; ')
+    }
+  } catch {
+    // Not JSON — use the raw message as-is.
+  }
+  return raw
+}
+
 export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -60,7 +80,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
         setLoading(true)
         const [configResult, labsResult] = await Promise.all([
           trpc.admin.getSurveillanceConfig.query(),
-          trpc.admin.listLabs.query({ cursor: 0, limit: 500 }),
+          trpc.admin.listLabs.query({ cursor: 0, limit: 100 }),
         ])
 
         const labs = labsResult.labs ?? []
@@ -75,7 +95,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
           setEmailEnabled(!!cfg.channels.email)
         }
       } catch (err: unknown) {
-        setError((err as Error)?.message ?? 'Failed to load configuration')
+        setError(toFriendlyMessage((err as Error)?.message, 'Failed to load configuration'))
       } finally {
         setLoading(false)
       }
@@ -170,7 +190,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
       if (successTimerRef.current) clearTimeout(successTimerRef.current)
       successTimerRef.current = setTimeout(() => setSuccess(false), 3000)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to save configuration')
+      setError(toFriendlyMessage((err as Error)?.message, 'Failed to save configuration'))
     } finally {
       setSaving(false)
     }
@@ -206,7 +226,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
             allLabs.map((lab) => (
               <label
                 key={lab.id}
-                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-primary/10 transition-colors"
+                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
               >
                 <input
                   type="checkbox"
@@ -230,7 +250,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
       {/* Section 2: Positivity Rate Thresholds */}
       <section>
         <h3 className="text-lg font-semibold text-foreground">Positivity Rate Thresholds</h3>
-        <div className="mt-3 overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+        <div className="mt-3 overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
           <table className="w-full text-sm">
             <thead className="bg-muted">
               <tr>
@@ -239,7 +259,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                 <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border bg-background">
+            <tbody className="divide-y divide-border">
               {thresholds.map((t, i) => (
                 <tr key={i}>
                   <td className="px-4 py-3">
@@ -382,11 +402,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
 
       {/* Save button */}
       <div className="flex justify-end">
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          className="rounded-full bg-lime-400 text-lime-950 hover:bg-lime-300"
-        >
+        <Button onClick={handleSave} disabled={saving}>
           {saving ? 'Saving...' : 'Save Configuration'}
         </Button>
       </div>

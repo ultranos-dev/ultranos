@@ -42,7 +42,7 @@ describe('SuppliersPage — §5.5 toolbar-visible-when-empty + wired filtering',
 
     // Toolbar controls must be present even with zero rows (§5.5)
     await waitFor(() => {
-      expect(screen.getByLabelText('suppliersSearchPlaceholder')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('suppliersSearchPlaceholder')).toBeInTheDocument()
     })
     // Status pill tabs render
     expect(screen.getByRole('button', { name: 'filterAll' })).toBeInTheDocument()
@@ -61,7 +61,7 @@ describe('SuppliersPage — §5.5 toolbar-visible-when-empty + wired filtering',
     })
     expect(screen.getByText('Beta Supplies')).toBeInTheDocument()
 
-    await userEvent.type(screen.getByLabelText('suppliersSearchPlaceholder'), 'Beta')
+    await userEvent.type(screen.getByPlaceholderText('suppliersSearchPlaceholder'), 'Beta')
 
     await waitFor(() => {
       expect(screen.queryByText('Alpha Reagents')).not.toBeInTheDocument()
@@ -85,11 +85,11 @@ describe('SuppliersPage — §5.5 toolbar-visible-when-empty + wired filtering',
     expect(screen.getByText('Alpha Reagents')).toBeInTheDocument()
 
     // Now search for a name that cannot match within the ACTIVE set → filtered-empty
-    await userEvent.type(screen.getByLabelText('suppliersSearchPlaceholder'), 'zzzz')
+    await userEvent.type(screen.getByPlaceholderText('suppliersSearchPlaceholder'), 'zzzz')
     await waitFor(() => {
       expect(screen.getByText('noResultsTitle')).toBeInTheDocument()
     })
     // Toolbar is still present alongside the filtered-empty state
-    expect(screen.getByLabelText('suppliersSearchPlaceholder')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('suppliersSearchPlaceholder')).toBeInTheDocument()
   })
 })

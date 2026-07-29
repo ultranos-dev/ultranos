@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
-import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -258,7 +257,6 @@ function ClinicalSafetySection() {
 export default function AlertsPage() {
   const router = useRouter()
   const t = useTranslations('alerts')
-  const { locationId } = useLocationFilter()
   const [activeTab, setActiveTab] = useState<AlertTab>('anomalies')
   const [alerts, setAlerts] = useState<AlertEntry[]>([])
   const [total, setTotal] = useState(0)

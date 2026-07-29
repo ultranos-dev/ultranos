@@ -76,36 +76,33 @@ export default function NetworkPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        {/* Header + action buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
-          <div className="flex items-center gap-3 flex-wrap">
-            <Button variant="destructive" size="lg" onClick={() => setShowOutbreakModal(true)}>
-              {t('activateOutbreakMode')}
-            </Button>
-            <Button size="lg" onClick={() => setShowChwModal(true)}>
-              {t('enrollChw')}
-            </Button>
-          </div>
-        </div>
+        <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
 
-        {/* Filter tabs */}
-        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
-          {STATUS_FILTERS.map((s) => (
-            <button
-              key={s}
-              type="button"
-              aria-pressed={filter === s}
-              onClick={() => setFilter(s)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                filter === s
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {s === 'ALL' ? t('filterAll') : s === 'ACTIVE' ? t('filterActive') : s === 'PENDING' ? t('filterPending') : t('filterSuspended')}
-            </button>
-          ))}
+        {/* Toolbar: filter tabs + actions — one row, always visible */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+            {STATUS_FILTERS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                aria-pressed={filter === s}
+                onClick={() => setFilter(s)}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  filter === s
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {s === 'ALL' ? t('filterAll') : s === 'ACTIVE' ? t('filterActive') : s === 'PENDING' ? t('filterPending') : t('filterSuspended')}
+              </button>
+            ))}
+          </div>
+          <Button variant="destructive" onClick={() => setShowOutbreakModal(true)}>
+            {t('activateOutbreakMode')}
+          </Button>
+          <Button onClick={() => setShowChwModal(true)}>
+            {t('enrollChw')}
+          </Button>
         </div>
 
         {error && (
@@ -134,7 +131,7 @@ export default function NetworkPage() {
             )}
 
             {/* Outbreak Dashboard */}
-            <div className="border-t border-border pt-6">
+            <div className="border-t border-border pt-4">
               <OutbreakDashboard
                 outbreaks={outbreaks}
                 onResolve={() => {}}

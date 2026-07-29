@@ -66,21 +66,15 @@ function formatDateTime(iso: string): string {
   })
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-}
-
 /** AC #8: Confirmation dialog with optional reason field */
 function ConfirmationDialog({
   action,
-  labName,
   onConfirm,
   onCancel,
   submitting,
   open,
 }: {
   action: LabAction
-  labName: string
   onConfirm: (reason: string) => void
   onCancel: () => void
   submitting: boolean
@@ -191,7 +185,7 @@ export default function LabDetailPage() {
     try {
       setSubmitting(true)
       setError(null)
-      const result = await trpc.admin.reviewLab.mutate({
+      await trpc.admin.reviewLab.mutate({
         labId,
         action: pendingAction,
         ...(reason ? { reason } : {}),
@@ -357,7 +351,6 @@ export default function LabDetailPage() {
           <ConfirmationDialog
             open={pendingAction !== null}
             action={pendingAction}
-            labName={lab.labName}
             onConfirm={handleAction}
             onCancel={() => setPendingAction(null)}
             submitting={submitting}

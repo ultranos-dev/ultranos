@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
-import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { EventBrowser } from '@/components/audit/EventBrowser'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -79,7 +78,6 @@ const PAGE_SIZE = 30
 
 export default function AuditChainPage() {
   const t = useTranslations('audit')
-  const { locationId } = useLocationFilter()
   const [tab, setTab] = useState<'integrity' | 'events'>('integrity')
   const [status, setStatus] = useState<ChainStatus | null>(null)
   const [verifications, setVerifications] = useState<Verification[]>([])

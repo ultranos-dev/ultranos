@@ -4,11 +4,10 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
-import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FlaskConical, FileSearch } from '@ultranos/ui-kit/icons'
 
@@ -48,7 +47,6 @@ const PAGE_SIZE = 25
 export default function LabsPage() {
   const t = useTranslations('labs')
   const router = useRouter()
-  const { locationId } = useLocationFilter()
   const [labs, setLabs] = useState<LabEntry[]>([])
   const [total, setTotal] = useState(0)
   const [cursor, setCursor] = useState(0)
@@ -114,8 +112,7 @@ export default function LabsPage() {
               </button>
             ))}
           </div>
-          <Input
-            type="text"
+          <SearchInput
             dir="auto"
             placeholder={t('searchPlaceholder')}
             value={search}

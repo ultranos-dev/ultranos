@@ -185,7 +185,8 @@
     "noEvents": "رویداد ممیزی یافت نشد.",
     "errorLoad": "بارگذاری داده ممیزی ناکام شد",
     "noHistoryDescription": "پس از بررسی زنجیره، اجرای تأییدها اینجا نمایش داده می‌شود.",
-    "noEventsDescription": "فیلترها یا بازه تاریخ را تنظیم کنید."
+    "noEventsDescription": "فیلترها یا بازه تاریخ را تنظیم کنید.",
+    "searchActorPlaceholder": "جستجو بر اساس نام کاربر..."
   },
   "certifications": {
     "pageTitle": "گواهی‌نامه‌ها",

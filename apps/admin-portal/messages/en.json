@@ -185,7 +185,8 @@
     "noEvents": "No audit events found.",
     "errorLoad": "Failed to load audit data",
     "noHistoryDescription": "Verification runs will appear here once the chain is checked.",
-    "noEventsDescription": "Try adjusting your filters or date range."
+    "noEventsDescription": "Try adjusting your filters or date range.",
+    "searchActorPlaceholder": "Search actor name..."
   },
   "certifications": {
     "pageTitle": "Certifications",

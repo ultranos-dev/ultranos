@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
+import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FileText } from '@ultranos/ui-kit/icons'
 
@@ -191,13 +192,12 @@ export function EventBrowser() {
             <option value="FAILURE">FAILURE</option>
           </select>
 
-          <input
-            type="text"
-            placeholder="Search actor name..."
+          <SearchInput
+            placeholder={t('searchActorPlaceholder')}
             value={actorSearch}
             onChange={(e) => handleFilterChange(setActorSearch)(e.target.value)}
-            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary w-52"
-            aria-label="Search actor name"
+            className="w-64"
+            aria-label={t('searchActorPlaceholder')}
           />
         </div>
 

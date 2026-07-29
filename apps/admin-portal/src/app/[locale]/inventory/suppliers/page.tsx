@@ -6,6 +6,7 @@ import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Truck, FileSearch } from '@ultranos/ui-kit/icons'
 import {
@@ -174,8 +175,7 @@ export default function SuppliersPage() {
               </button>
             ))}
           </div>
-          <Input
-            type="text"
+          <SearchInput
             dir="auto"
             placeholder={t('suppliersSearchPlaceholder')}
             value={search}

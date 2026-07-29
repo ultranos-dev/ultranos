@@ -10,6 +10,7 @@ import { MergePreview } from '@/components/patients/MergePreview'
 import { Check, Users } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
 
 interface Patient {
@@ -261,8 +262,7 @@ export default function MergeWizardPage() {
             {survivor && (
               <div>
                 <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">{t('mergeFindDuplicate')}</h3>
-                <Input
-                  type="text"
+                <SearchInput
                   placeholder={t('mergeSearchPlaceholder')}
                   value={duplicateSearch}
                   onChange={(e) => setDuplicateSearch(e.target.value)}
@@ -280,7 +280,7 @@ export default function MergeWizardPage() {
                       <button
                         key={p.id}
                         onClick={() => setDuplicate(p)}
-                        className="w-full text-start rounded-2xl border border-border bg-card p-4 hover:bg-primary/5 transition-colors"
+                        className="w-full text-start rounded-xl border border-border bg-card p-4 hover:bg-primary/5 transition-colors"
                       >
                         <p className="text-sm font-medium text-foreground">{formatName(p)}</p>
                         <p className="text-xs text-muted-foreground">

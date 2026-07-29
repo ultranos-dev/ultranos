@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
-import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { HeatMapGrid } from '@/components/inventory/HeatMapGrid'
 import { RedistributionCard } from '@/components/inventory/RedistributionCard'
 import { CreatePurchaseOrderModal } from '@/components/inventory/CreatePurchaseOrderModal'
@@ -64,7 +63,6 @@ const PAGE_SIZE = 25
 
 export default function InventoryPage() {
   const t = useTranslations('inventory')
-  const { locationId } = useLocationFilter()
   const [tab, setTab] = useState<ActiveTab>('heatmap')
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -168,36 +166,35 @@ export default function InventoryPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        {/* Header + tab toggle + Create PO button */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
-              <button
-                type="button"
-                aria-pressed={tab === 'heatmap'}
-                onClick={() => setTab('heatmap')}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  tab === 'heatmap' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {t('tabHeatMap')}
-              </button>
-              <button
-                type="button"
-                aria-pressed={tab === 'orders'}
-                onClick={() => setTab('orders')}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  tab === 'orders' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {t('tabPurchaseOrders')}
-              </button>
-            </div>
-            <Button onClick={() => setShowCreateModal(true)}>
-              {t('createPurchaseOrder')}
-            </Button>
+        <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+
+        {/* Toolbar: tab toggle + Create PO — one row, always visible */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+            <button
+              type="button"
+              aria-pressed={tab === 'heatmap'}
+              onClick={() => setTab('heatmap')}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                tab === 'heatmap' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t('tabHeatMap')}
+            </button>
+            <button
+              type="button"
+              aria-pressed={tab === 'orders'}
+              onClick={() => setTab('orders')}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                tab === 'orders' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t('tabPurchaseOrders')}
+            </button>
           </div>
+          <Button onClick={() => setShowCreateModal(true)}>
+            {t('createPurchaseOrder')}
+          </Button>
         </div>
 
         {error && (
@@ -252,10 +249,10 @@ export default function InventoryPage() {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+                <div className="overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
                   <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-muted">
+                    <thead className="bg-muted">
+                      <tr>
                         <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">PO ID</th>
                         <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Supplier</th>
                         <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">Items</th>
@@ -265,7 +262,7 @@ export default function InventoryPage() {
                         <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border bg-background">
+                    <tbody className="divide-y divide-border">
                       {orders.map((order) => {
                         const next = getNextStatus(order.status)
                         return (

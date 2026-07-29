@@ -8,7 +8,7 @@ import { trpc } from '@/lib/trpc'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { SearchInput } from '@/components/ui/search-input'
 import { FileText, ClipboardList, FileSearch } from '@ultranos/ui-kit/icons'
 import { EmptyState } from '@/components/ui/empty-state'
 
@@ -156,8 +156,7 @@ export default function KycQueuePage() {
               </button>
             ))}
           </div>
-          <Input
-            type="text"
+          <SearchInput
             dir="auto"
             placeholder={t('searchPlaceholder')}
             value={search}
