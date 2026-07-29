@@ -97,7 +97,7 @@ const MOCK_OUTBREAKS = [
   },
 ]
 
-const { default: NetworkPage } = await import('../app/network/page')
+const { default: NetworkPage } = await import('../app/[locale]/network/page')
 
 describe('Story 55.7: Network Page', () => {
   beforeEach(() => {
@@ -210,7 +210,7 @@ describe('Story 55.7: Network Page', () => {
 
       // Select a lab checkbox
       const checkboxes = screen.getAllByRole('checkbox')
-      await user.click(checkboxes[0])
+      await user.click(checkboxes[0]!)
 
       // Click Review
       await user.click(screen.getByText('Review'))
@@ -234,7 +234,7 @@ describe('Story 55.7: Network Page', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Enroll Community Health Worker')).toBeDefined()
-        expect(screen.getByLabelText(/Full Name/)).toBeDefined()
+        expect(screen.getByLabelText(/Given Name/)).toBeDefined()
         expect(screen.getByLabelText(/Phone Number/)).toBeDefined()
         expect(screen.getByLabelText(/Assigned Collection Point/)).toBeDefined()
       })
@@ -247,7 +247,7 @@ describe('Story 55.7: Network Page', () => {
       await waitFor(() => screen.getByText('Enroll CHW'))
       // Click the first "Enroll CHW" button (page action button)
       const actionButtons = screen.getAllByText('Enroll CHW')
-      await user.click(actionButtons[0])
+      await user.click(actionButtons[0]!)
 
       await waitFor(() => {
         // After modal opens, there are now two "Enroll CHW" texts — page button + modal submit

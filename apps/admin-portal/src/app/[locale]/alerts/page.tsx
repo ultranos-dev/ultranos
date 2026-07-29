@@ -9,6 +9,7 @@ import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Bell, FileText } from '@ultranos/ui-kit/icons'
 
 type AlertTab = 'anomalies' | 'clinical-safety'
 type StatusFilter = 'ALL' | 'UNREVIEWED' | 'ESCALATED' | 'DISMISSED' | 'SUSPENDED'
@@ -116,7 +117,7 @@ function MetricCard({ label, value, status, detail }: {
   }
 
   return (
-    <div className={`rounded-2xl border p-4 ${statusColor[status]}`}>
+    <div className={`rounded-xl border p-4 ${statusColor[status]}`}>
       <div className="flex items-center gap-2">
         <div className={`h-2.5 w-2.5 rounded-full ${dotColor[status]}`} />
         <span className="text-sm font-medium text-foreground">{label}</span>
@@ -128,6 +129,7 @@ function MetricCard({ label, value, status, detail }: {
 }
 
 function ClinicalSafetySection() {
+  const t = useTranslations('alerts')
   const [metrics, setMetrics] = useState<ClinicalSafetyMetrics | null>(null)
   const [reports, setReports] = useState<ReportEntry[]>([])
   const [selectedReport, setSelectedReport] = useState<Record<string, unknown> | null>(null)
@@ -201,17 +203,19 @@ function ClinicalSafetySection() {
       <div>
         <h3 className="text-lg font-semibold text-foreground">Monthly Reports</h3>
         {reports.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">No monthly reports generated yet.</p>
+          <div className="mt-2">
+            <EmptyState size="sm" icon={FileText} title={t('noReports')} />
+          </div>
         ) : (
-          <div className="mt-2 rounded-2xl border border-border overflow-hidden">
+          <div className="mt-2 overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
             <table className="w-full text-sm">
-              <thead className="bg-card">
+              <thead className="bg-muted">
                 <tr>
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Period</th>
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Generated</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-popover">
+              <tbody className="divide-y divide-border bg-background">
                 {reports.map((r) => (
                   <tr
                     key={r.id}
@@ -232,14 +236,14 @@ function ClinicalSafetySection() {
         {/* Report detail panel */}
         {reportLoading && <p className="mt-3 text-sm text-muted-foreground">Loading report...</p>}
         {selectedReport && !reportLoading && (
-          <div className="mt-4 rounded-2xl border border-border bg-popover p-4 shadow-card">
+          <div className="mt-4 rounded-xl bg-card p-4 shadow-card ring-[0.65px] ring-border/50">
             <div className="flex items-center justify-between">
               <h4 className="font-semibold text-foreground">Report Detail</h4>
               <Button variant="ghost" size="sm" onClick={() => setSelectedReport(null)}>
                 Close
               </Button>
             </div>
-            <pre className="mt-3 max-h-96 overflow-auto rounded bg-card p-3 text-xs text-foreground">
+            <pre className="mt-3 max-h-96 overflow-auto rounded-xl bg-muted/40 p-3 text-xs text-foreground">
               {JSON.stringify(selectedReport, null, 2)}
             </pre>
           </div>
@@ -296,11 +300,15 @@ export default function AlertsPage() {
 
   return (
     <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+
         {/* Section tabs — Story 23.2 AC #10 */}
         <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           <button
+            type="button"
+            aria-pressed={activeTab === 'anomalies'}
             onClick={() => setActiveTab('anomalies')}
-            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               activeTab === 'anomalies'
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -309,8 +317,10 @@ export default function AlertsPage() {
             {t('tabPrescribing')}
           </button>
           <button
+            type="button"
+            aria-pressed={activeTab === 'clinical-safety'}
             onClick={() => setActiveTab('clinical-safety')}
-            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               activeTab === 'clinical-safety'
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -324,14 +334,16 @@ export default function AlertsPage() {
           <ClinicalSafetySection />
         ) : (
         <>
-        {/* Filter tabs + Export — AC #11 */}
-        <div className="flex items-center gap-3">
+        {/* Toolbar: status filter tabs + Export — one row — AC #11 */}
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
+                type="button"
+                aria-pressed={filter === s}
                 onClick={() => handleFilterChange(s)}
-                className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   filter === s
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -348,16 +360,18 @@ export default function AlertsPage() {
           <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
-        {loading ? (
-          <div className="text-muted-foreground">{t('loadingAlerts')}</div>
-        ) : alerts.length === 0 ? (
-          <EmptyState title={t('noAlerts')} />
-        ) : (
-          <>
-            {/* Alert queue table — AC #1, #2 */}
-            <div className="rounded-2xl border border-border overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-card">
+        {/* Content panel — single cohesive box */}
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          {loading ? (
+            <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">{t('loadingAlerts')}</div>
+          ) : alerts.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState icon={Bell} title={t('noAlerts')} description={t('noAlertsDescription')} />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colProviderName')}</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colAnomalyType')}</th>
@@ -367,12 +381,12 @@ export default function AlertsPage() {
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-popover">
+                <tbody className="divide-y divide-border">
                   {alerts.map((alert) => (
                     <tr
                       key={alert.id}
                       onClick={() => router.push(`/alerts/${alert.id}`)}
-                      className="cursor-pointer hover:bg-primary/10 transition-colors"
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
                     >
                       <td className="px-4 py-3 font-medium">{alert.practitionerName}</td>
                       <td className="px-4 py-3 text-muted-foreground">{ANOMALY_TYPE_LABELS[alert.anomalyType] ?? alert.anomalyType}</td>
@@ -385,35 +399,35 @@ export default function AlertsPage() {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-                <span>
-                  Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
-                    disabled={cursor === 0}
-                  >
-                    Previous
-                  </Button>
-                  <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCursor(cursor + PAGE_SIZE)}
-                    disabled={cursor + PAGE_SIZE >= total}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
+        {/* Pagination — below the content box */}
+        {!loading && alerts.length > 0 && totalPages > 1 && (
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
+                disabled={cursor === 0}
+              >
+                Previous
+              </Button>
+              <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCursor(cursor + PAGE_SIZE)}
+                disabled={cursor + PAGE_SIZE >= total}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         )}
         </>
         )}

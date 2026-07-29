@@ -154,7 +154,9 @@
     "detailConfirmSuspendDesc": "سيؤدي هذا إلى تعليق حساب المزود. لن يتمكن من تسجيل الدخول حتى إعادة التفعيل.",
     "detailActionSuccess": "تم تنفيذ الإجراء بنجاح",
     "detailActionError": "فشل في تنفيذ الإجراء",
-    "detailNotFound": "التنبيه غير موجود"
+    "detailNotFound": "التنبيه غير موجود",
+    "noAlertsDescription": "لا توجد تنبيهات شذوذ وصف مطابقة للعامل الحالي.",
+    "noReports": "لم يتم إنشاء أي تقارير شهرية بعد."
   },
   "audit": {
     "pageTitle": "سجل التدقيق",
@@ -181,7 +183,9 @@
     "colResource": "المورد",
     "colResourceId": "معرف المورد",
     "noEvents": "لا توجد أحداث تدقيق.",
-    "errorLoad": "فشل في تحميل بيانات التدقيق"
+    "errorLoad": "فشل في تحميل بيانات التدقيق",
+    "noHistoryDescription": "ستظهر عمليات التحقق هنا بمجرد فحص السلسلة.",
+    "noEventsDescription": "حاول تعديل عوامل التصفية أو نطاق التاريخ."
   },
   "certifications": {
     "pageTitle": "الشهادات",
@@ -204,7 +208,15 @@
     "archiveTitle": "أرشفة المسار",
     "archiveDesc": "هل أنت متأكد من أرشفة هذا المسار؟",
     "archiveSuccess": "تمت أرشفة المسار",
-    "archiveError": "فشل في أرشفة المسار"
+    "archiveError": "فشل في أرشفة المسار",
+    "searchPlaceholder": "البحث في المسارات",
+    "filterAll": "الكل",
+    "filterActive": "نشط",
+    "filterArchived": "مؤرشف",
+    "noPathwaysDescription": "أنشئ مسار اعتماد لتتبّع إنجازات الموظفين.",
+    "noResultsTitle": "لا توجد مسارات مطابقة",
+    "noResultsDescription": "جرّب مصطلح بحث أو عامل تصفية مختلف.",
+    "clearSearch": "مسح البحث"
   },
   "inventory": {
     "pageTitle": "المخزون",
@@ -243,7 +255,19 @@
     "saveChanges": "حفظ التغييرات",
     "supplierAdded": "تمت إضافة المورد بنجاح",
     "supplierUpdated": "تم تحديث المورد بنجاح",
-    "supplierError": "فشل في حفظ المورد"
+    "supplierError": "فشل في حفظ المورد",
+    "filterAll": "الكل",
+    "filterActive": "نشط",
+    "filterInactive": "غير نشط",
+    "suppliersSearchPlaceholder": "البحث عن الموردين",
+    "loadingSuppliers": "جارٍ تحميل الموردين…",
+    "noSuppliersDescription": "أضف موردًا لتتبّع مهل توريد الكواشف والطلبات.",
+    "noResultsTitle": "لا يوجد موردون مطابقون",
+    "noResultsDescription": "جرّب مصطلح بحث أو عامل تصفية مختلف.",
+    "clearFilters": "مسح عوامل التصفية",
+    "noPurchaseOrdersDescription": "أنشئ أمر شراء للبدء.",
+    "noHeatmapData": "لا توجد بيانات مخزون",
+    "noHeatmapDescription": "لا توجد مختبرات تُبلّغ عن المخزون بعد."
   },
   "labs": {
     "pageTitle": "المختبرات",
@@ -302,7 +326,17 @@
     "staffRemoveTitle": "إزالة موظف",
     "staffRemoveDesc": "هل أنت متأكد من إزالة هذا الموظف من المختبر؟",
     "staffActionSuccess": "تم تنفيذ الإجراء بنجاح",
-    "staffActionError": "فشل في تنفيذ الإجراء"
+    "staffActionError": "فشل في تنفيذ الإجراء",
+    "searchPlaceholder": "البحث عن المختبرات",
+    "noLabsDescription": "لم يتم تسجيل أي مختبرات بعد. أنشئ أول مختبر للبدء.",
+    "noResultsTitle": "لا توجد مختبرات مطابقة",
+    "noResultsDescription": "لا توجد مختبرات مطابقة لعوامل التصفية الحالية. حاول تعديل بحثك أو التصفية.",
+    "clearSearch": "مسح البحث",
+    "staffSearchPlaceholder": "البحث عن الموظفين بالاسم أو البريد الإلكتروني",
+    "staffNoStaffDescription": "لم يتم تعيين أي موظفين لهذا المختبر بعد. أضف موظفين للبدء.",
+    "staffLoading": "جارٍ تحميل الموظفين…",
+    "detailNoTechnician": "لا يوجد فني مرتبط.",
+    "detailNoStatusHistory": "لم يتم تسجيل أي تغييرات في الحالة."
   },
   "mentorship": {
     "pageTitle": "الإرشاد المهني",
@@ -335,7 +369,12 @@
     "dissolveDesc": "هل أنت متأكد من حل هذا الاقتران الإرشادي؟",
     "dissolveReason": "السبب",
     "dissolveSuccess": "تم حل الاقتران",
-    "dissolveError": "فشل في حل الاقتران"
+    "dissolveError": "فشل في حل الاقتران",
+    "searchPlaceholder": "البحث باسم الموجّه أو المتدرّب",
+    "noPairingsDescription": "أنشئ اقترانًا لربط الفنيين ذوي الخبرة بالموظفين المبتدئين.",
+    "noResultsTitle": "لا توجد اقترانات مطابقة",
+    "noResultsDescription": "لا توجد اقترانات مطابقة لعوامل التصفية الحالية. حاول تعديل بحثك أو التصفية.",
+    "clearSearch": "مسح البحث"
   },
   "network": {
     "pageTitle": "الشبكة",
@@ -355,7 +394,8 @@
     "outbreakModeTitle": "تفعيل وضع الوباء",
     "outbreakModeDesc": "سيؤدي هذا إلى تنبيه جميع عقد الشبكة وتفعيل بروتوكولات الطوارئ.",
     "outbreakModeSuccess": "تم تفعيل وضع الوباء",
-    "outbreakModeError": "فشل في تفعيل وضع الوباء"
+    "outbreakModeError": "فشل في تفعيل وضع الوباء",
+    "noNodesDescription": "لا توجد عُقد شبكة مطابقة للعامل المحدد."
   },
   "patients": {
     "pageTitle": "المرضى",
@@ -405,7 +445,11 @@
     "mergeConfirmButton": "تأكيد الدمج",
     "mergeSuccess": "تم دمج المرضى بنجاح",
     "mergeError": "فشل في دمج المرضى",
-    "mergeSearchPlaceholder": "البحث عن مريض…"
+    "mergeSearchPlaceholder": "البحث عن مريض…",
+    "searchPromptDescription": "أدخل اسمًا لبدء البحث في سجلات المرضى.",
+    "noPatientsDescription": "جرّب مصطلح بحث مختلف أو عدّل عوامل التصفية.",
+    "mergeNoSurvivorTitle": "لم يتم اختيار سجل مُبقى",
+    "mergeNoSurvivorDescription": "انتقل من صفحة تفاصيل المريض أو قدّم معلمة ?survivor= في الرابط."
   },
   "providers": {
     "pageTitle": "المزودون",
@@ -464,7 +508,21 @@
     "profileLicenseTimeline": "الجدول الزمني للترخيص",
     "profileAlertHistory": "سجل تنبيهات الوصفات",
     "profileLicenseExpiredWarning": "انتهت صلاحية الترخيص",
-    "profileNotFound": "المزود غير موجود"
+    "profileNotFound": "المزود غير موجود",
+    "noProvidersDescription": "ستظهر طلبات التحقق من مقدمي الخدمة الجدد هنا للمراجعة.",
+    "noResultsTitle": "لا يوجد مقدمو خدمة مطابقون",
+    "noResultsDescription": "جرّب مصطلح بحث أو عامل تصفية مختلف.",
+    "clearFilters": "مسح عوامل التصفية",
+    "colLicenseDoc": "وثيقة الترخيص",
+    "colRegistryStatus": "حالة السجل",
+    "expiryNoProvidersDescription": "لا يوجد مقدمو خدمة تنتهي تراخيصهم في هذه الفترة.",
+    "detailNoDocuments": "لا توجد مستندات متاحة.",
+    "detailNoOcrData": "لا توجد بيانات OCR متاحة.",
+    "detailNoFieldsExtracted": "لم يتم استخراج أي حقول.",
+    "profileNoKycSubmissions": "لم يتم العثور على طلبات تحقق.",
+    "profileNoKycSubmissionsDescription": "لا يوجد لدى مقدم الخدمة سجل طلبات تحقق.",
+    "profileNoAlerts": "لا توجد تنبيهات وصف.",
+    "profileNoAlertsDescription": "لا يوجد لدى مقدم الخدمة تنبيهات وصف مسجّلة."
   },
   "settings": {
     "pageTitle": "الإعدادات",
@@ -511,7 +569,9 @@
     "thresholdsTitle": "الحدود",
     "modulesTitle": "الوحدات",
     "alertConfigTitle": "إعداد التنبيهات",
-    "errorLoad": "فشل في تحميل الإعدادات"
+    "errorLoad": "فشل في تحميل الإعدادات",
+    "modulesEmptyTitle": "لا توجد وحدات مُهيأة",
+    "modulesEmptyDescription": "اشترك في وحدة لرؤية إعداداتها هنا."
   },
   "staff": {
     "certificationsPageTitle": "شهادات الموظفين",
@@ -562,7 +622,8 @@
     "healthTbResultNegative": "سلبي",
     "healthTbResultPositive": "إيجابي",
     "healthTbResultIndeterminate": "غير محدد",
-    "healthTbResultSelect": "اختر…"
+    "healthTbResultSelect": "اختر…",
+    "certNoneDescription": "لم يتم تعيين أي مسارات اعتماد لهذا الممارس بعد."
   },
   "subscriptions": {
     "pageTitle": "الاشتراكات",
@@ -608,7 +669,9 @@
     "invoicesDownloadPdf": "تحميل PDF",
     "invoicesNoInvoices": "لا توجد فواتير.",
     "invoicesLoading": "جارٍ تحميل الفواتير…",
-    "invoicesErrorLoad": "فشل في تحميل الفواتير"
+    "invoicesErrorLoad": "فشل في تحميل الفواتير",
+    "invoicesNoInvoicesDescription": "لم يتم إنشاء أي فواتير بعد.",
+    "noModulesDescription": "لا توجد وحدات مشترك بها حاليًا لهذه المؤسسة."
   },
   "users": {
     "pageTitle": "المستخدمون",
@@ -640,7 +703,22 @@
     "detailActionSuccess": "تم تنفيذ الإجراء بنجاح",
     "detailActionError": "فشل في تنفيذ الإجراء",
     "detailSuspensionReasonLabel": "سبب الإيقاف",
-    "detailNotFound": "المستخدم غير موجود"
+    "detailNotFound": "المستخدم غير موجود",
+    "searchPlaceholder": "البحث بالاسم أو البريد الإلكتروني",
+    "filterByRole": "التصفية حسب الدور",
+    "noUsers": "لا يوجد مستخدمون موظفون بعد",
+    "noUsersDescription": "ابدأ بدعوة أول عضو في فريقك.",
+    "createUser": "إنشاء مستخدم",
+    "noResultsTitle": "لا يوجد مستخدمون مطابقون",
+    "noResultsDescription": "حاول تعديل عوامل التصفية أو البحث.",
+    "clearFilters": "مسح عوامل التصفية",
+    "noLabStaff": "لم يتم تعيين موظفي مختبر",
+    "noLabStaffDescription": "عيّن موظفين لمختبر للبدء.",
+    "assignToLab": "تعيين إلى مختبر",
+    "detailSave": "حفظ التغييرات",
+    "detailCancel": "إلغاء",
+    "detailNever": "أبدًا",
+    "detailSuspendPlaceholder": "سبب التعليق"
   },
   "aiModels": {
     "pageTitle": "نماذج الذكاء الاصطناعي",
@@ -678,7 +756,8 @@
     "publishButton": "نشر",
     "publishing": "جارٍ النشر…",
     "publishError": "فشل في النشر",
-    "errorLoad": "فشل في جلب البيانات"
+    "errorLoad": "فشل في جلب البيانات",
+    "loading": "جارٍ التحميل…"
   },
   "register": {
     "pageTitle": "تسجيل مؤسستك",

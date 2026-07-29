@@ -8,6 +8,8 @@ import { RemoveModuleDialog } from '@/components/subscriptions/RemoveModuleDialo
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
+import { CreditCard } from '@ultranos/ui-kit/icons'
 
 interface OrgInfo {
   id: string
@@ -96,9 +98,11 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+
         {/* Org Identity Card */}
         {org && (
-          <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+          <div className="rounded-xl bg-card p-6 shadow-card ring-[0.65px] ring-border/50">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{org.name}</h2>
@@ -122,13 +126,13 @@ export default function SubscriptionsPage() {
           </div>
 
           {subscriptions.length === 0 ? (
-            <div className="rounded-2xl border border-border bg-popover p-8 text-center shadow-card">
-              <p className="text-muted-foreground">{t('noModules')}</p>
+            <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+              <EmptyState icon={CreditCard} title={t('noModules')} description={t('noModulesDescription')} />
             </div>
           ) : (
-            <div className="rounded-2xl border border-border overflow-hidden">
+            <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
               <table className="w-full text-sm">
-                <thead className="bg-card">
+                <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colModule')}</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
@@ -138,7 +142,7 @@ export default function SubscriptionsPage() {
                     <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colActions')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-popover">
+                <tbody className="divide-y divide-border bg-background">
                   {subscriptions.map((sub) => (
                     <tr key={sub.id} className="hover:bg-primary/10 transition-colors">
                       <td className="px-4 py-3 font-medium text-foreground">{sub.moduleName}</td>
@@ -164,7 +168,7 @@ export default function SubscriptionsPage() {
                   ))}
                 </tbody>
                 {/* Total monthly cost footer */}
-                <tfoot className="border-t border-border bg-popover">
+                <tfoot className="border-t border-border bg-background">
                   <tr>
                     <td colSpan={4} className="px-4 py-3 font-medium text-end text-foreground">{t('totalMonthlyCost')}</td>
                     <td className="px-4 py-3 text-end font-semibold text-foreground">${totalCost.toFixed(2)}</td>

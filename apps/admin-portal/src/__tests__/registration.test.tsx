@@ -43,11 +43,12 @@ vi.mock('@/stores/auth-session-store', () => ({
   ),
 }))
 
-const { default: RegisterPage } = await import('../app/register/page')
+const { default: RegisterPage } = await import('../app/[locale]/register/page')
 
 describe('Registration Page', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.unstubAllGlobals()
     Object.defineProperty(window, 'location', {
       value: { pathname: '/register', search: '', href: '' },
       writable: true,
@@ -189,7 +190,13 @@ describe('Registration Page', () => {
       },
       error: null,
     })
-    mockSelectInitialModules.mockResolvedValue({ success: true, subscriptions: [] })
+    // Module selection is sent via a direct fetch (not the tRPC mutate) to
+    // guarantee the bearer token is attached — see register/page.tsx.
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, subscriptions: [] }),
+    })
+    vi.stubGlobal('fetch', mockFetch)
 
     render(<RegisterPage />)
 
@@ -222,10 +229,13 @@ describe('Registration Page', () => {
     })
 
     await waitFor(() => {
-      expect(mockSelectInitialModules).toHaveBeenCalledWith({
-        orgId: 'org-123',
-        moduleCodes: ['OPD_LITE'],
-      })
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/registration.selectInitialModules'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ json: { orgId: 'org-123', moduleCodes: ['OPD_LITE'] } }),
+        }),
+      )
     })
 
     // Redirects to dashboard

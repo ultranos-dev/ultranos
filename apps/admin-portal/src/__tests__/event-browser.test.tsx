@@ -8,6 +8,13 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }))
 
+// Mock next-intl (echo the key) — EventBrowser now renders its empty state via
+// the shared EmptyState + useTranslations('audit'); at runtime the shell provides
+// the intl context. In tests we echo the key.
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+}))
+
 // Mock trpc client
 const mockListAuditEvents = vi.fn()
 const mockExportAuditEvents = vi.fn()
@@ -48,6 +55,22 @@ const mockEvents = [
     outcome: 'DENIED' as const,
     metadata: { ip: '192.168.1.1' },
   },
+  {
+    // Second denied-outcome event so the "DENIED" badge renders ≥2 times.
+    // The outcome dropdown only offers SUCCESS/FAILURE options (not DENIED), so
+    // every "DENIED" text on screen is a rendered badge — mirrors the SUCCESS
+    // assertion below.
+    id: 'evt-3',
+    timestamp: '2026-05-16T09:00:00Z',
+    action: 'KYC_REJECTED',
+    actorId: 'u3',
+    actorName: 'Carol Reviewer',
+    actorRole: 'ADMIN',
+    resourceType: 'KycSubmission',
+    resourceId: 'kyc-def45678-abc9-0123',
+    outcome: 'DENIED' as const,
+    metadata: { reason: 'Incomplete documents' },
+  },
 ]
 
 describe('EventBrowser', () => {
@@ -79,10 +102,11 @@ describe('EventBrowser', () => {
 
     render(<EventBrowser />)
 
+    // Empty state now renders via the shared EmptyState + i18n keys (mock echoes keys).
     await waitFor(() => {
-      expect(screen.getByText('No audit events found')).toBeTruthy()
+      expect(screen.getByText('noEvents')).toBeTruthy()
     })
 
-    expect(screen.getByText('Try adjusting your filters or date range.')).toBeTruthy()
+    expect(screen.getByText('noEventsDescription')).toBeTruthy()
   })
 })

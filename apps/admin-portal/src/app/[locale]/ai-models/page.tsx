@@ -99,7 +99,8 @@ export default function AIModelsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <div className="flex items-start justify-end">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
           <Button onClick={() => setShowPublishForm(!showPublishForm)}>
             {showPublishForm ? t('cancelPublish') : t('publishNewVersion')}
           </Button>
@@ -114,17 +115,17 @@ export default function AIModelsPage() {
         {/* Stats Cards */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+            <div className="rounded-xl bg-card p-6 shadow-card ring-[0.65px] ring-border/50">
               <p className="text-sm font-medium text-muted-foreground">{t('statsRegisteredModels')}</p>
               <p className="text-2xl font-bold text-foreground mt-1">{models.length}</p>
             </div>
-            <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+            <div className="rounded-xl bg-card p-6 shadow-card ring-[0.65px] ring-border/50">
               <p className="text-sm font-medium text-muted-foreground">{t('statsStaleDeviceEvents')}</p>
               <p className={`text-2xl font-bold mt-1 ${stats.totalStaleDeviceEvents > 0 ? 'text-warning' : 'text-success'}`}>
                 {stats.totalStaleDeviceEvents}
               </p>
             </div>
-            <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+            <div className="rounded-xl bg-card p-6 shadow-card ring-[0.65px] ring-border/50">
               <p className="text-sm font-medium text-muted-foreground">{t('statsDrugDbStaleness')}</p>
               <p className={`text-2xl font-bold mt-1 ${stats.drugDbStalenessIncidents > 0 ? 'text-destructive' : 'text-success'}`}>
                 {stats.drugDbStalenessIncidents}
@@ -146,9 +147,9 @@ export default function AIModelsPage() {
         {/* Model Registry Table */}
         <div>
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">{t('manifestTitle')}</h2>
-          <div className="rounded-2xl border border-border overflow-hidden">
+          <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
             <table className="min-w-full">
-              <thead className="bg-card">
+              <thead className="bg-muted">
                 <tr>
                   <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colModel')}</th>
                   <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colType')}</th>
@@ -158,7 +159,7 @@ export default function AIModelsPage() {
                   <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colDeltaFrom')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-popover">
+              <tbody className="divide-y divide-border bg-background">
                 {loading ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">{t('loading')}</td>
@@ -188,9 +189,9 @@ export default function AIModelsPage() {
         {stats && stats.modelStats.length > 0 && (
           <div>
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">{t('updateStatsTitle')}</h2>
-            <div className="rounded-2xl border border-border overflow-hidden">
+            <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
               <table className="min-w-full">
-                <thead className="bg-card">
+                <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colModel')}</th>
                     <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colSuccessRate')}</th>
@@ -200,7 +201,7 @@ export default function AIModelsPage() {
                     <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colStale')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-popover">
+                <tbody className="divide-y divide-border bg-background">
                   {stats.modelStats.map((s) => (
                     <tr key={s.modelId} className="hover:bg-primary/10 transition-colors">
                       <td className="px-4 py-3 text-sm font-medium text-foreground">{s.modelId}</td>
@@ -264,7 +265,7 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl bg-popover border border-border p-6 space-y-4 shadow-card">
+    <form onSubmit={handleSubmit} className="rounded-xl bg-card p-6 space-y-4 shadow-card ring-[0.65px] ring-border/50">
       <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('publishFormTitle')}</h2>
 
       {formError && (

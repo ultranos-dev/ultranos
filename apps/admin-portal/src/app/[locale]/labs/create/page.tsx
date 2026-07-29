@@ -38,12 +38,15 @@ export default function CreateLabPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl flex flex-col gap-4">
-        <Button variant="outline" onClick={() => router.push('/labs')}>
-          {t('backToLabs')}
-        </Button>
+    <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => router.push('/labs')}>
+            {t('backToLabs')}
+          </Button>
+          <h1 className="text-2xl font-semibold text-foreground">{t('createPageTitle')}</h1>
+        </div>
 
-        <div className="rounded-2xl border border-border bg-popover p-6 flex flex-col gap-4">
+        <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-6 flex flex-col gap-4">
           <div>
             <label
               htmlFor="lab-name"
@@ -84,7 +87,7 @@ export default function CreateLabPage() {
               className="block text-sm font-medium text-muted-foreground mb-1"
             >
               {t('accreditationRef')}{' '}
-              <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+              <span className="text-muted-foreground text-xs font-normal">({tCommon('optional')})</span>
             </label>
             <Input
               id="accreditation-ref"

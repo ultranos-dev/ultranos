@@ -52,7 +52,7 @@ vi.mock('@/lib/trpc', () => ({
 }))
 
 // Dynamic imports after mock setup
-const { default: BillingPage } = await import('../app/subscriptions/billing/page')
+const { default: BillingPage } = await import('../app/[locale]/subscriptions/billing/page')
 
 describe('Task 7 — Billing Page', () => {
   beforeEach(() => {
@@ -72,11 +72,15 @@ describe('Task 7 — Billing Page', () => {
   })
 
   it('shows card details when payment method exists', async () => {
+    // The getPaymentMethod endpoint returns { paymentMethod: {...} }, and the page
+    // reads result.paymentMethod — so the mock must wrap the card in that shape.
     mockQuery.mockResolvedValue({
-      brand: 'Visa',
-      last4: '4242',
-      expMonth: 12,
-      expYear: 2027,
+      paymentMethod: {
+        brand: 'Visa',
+        last4: '4242',
+        expMonth: 12,
+        expYear: 2027,
+      },
     })
 
     render(<BillingPage />)

@@ -3,10 +3,14 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Users, FileSearch } from '@ultranos/ui-kit/icons'
 
 type RoleFilter = 'ALL' | 'ADMIN' | 'CLINICIAN' | 'DOCTOR' | 'PHARMACIST' | 'LAB_TECH'
 type StatusFilter = 'ALL' | 'ACTIVE' | 'SUSPENDED' | 'PENDING_INVITE'
@@ -74,6 +78,7 @@ const STATUS_LABELS: Record<StatusFilter, string> = {
 const PAGE_SIZE = 20
 
 export default function AllUsersTab() {
+  const t = useTranslations('users')
   const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
   const [totalCount, setTotalCount] = useState(0)
@@ -123,69 +128,79 @@ export default function AllUsersTab() {
     setPage(1)
   }
 
+  function clearFilters() {
+    setRoleFilter('ALL')
+    setStatusFilter('ALL')
+    setSearch('')
+    setPage(1)
+  }
+
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
   const hasSuspendedUsers = users.some((u) => u.status === 'SUSPENDED')
+  const filtersActive = roleFilter !== 'ALL' || statusFilter !== 'ALL' || search.trim() !== ''
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Top bar: filters + CTA */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Role filter */}
-          <select
-            value={roleFilter}
-            onChange={(e) => handleRoleFilterChange(e.target.value as RoleFilter)}
-            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Filter by role"
-          >
-            {ROLE_FILTERS.map((r) => (
-              <option key={r} value={r}>
-                {r === 'ALL' ? 'All Roles' : r.replace('_', ' ')}
-              </option>
-            ))}
-          </select>
-
-          {/* Status filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => handleStatusFilterChange(e.target.value as StatusFilter)}
-            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Filter by status"
-          >
-            {STATUS_FILTERS.map((s) => (
-              <option key={s} value={s}>
-                {STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
-
-          {/* Search input */}
-          <input
-            type="text"
-            placeholder="Search name or email..."
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary w-60"
-            aria-label="Search users"
-          />
+      {/* Toolbar: filters + search + CTA — one row, always rendered */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Status filter — pill tab-bar (primary) */}
+        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {STATUS_FILTERS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => handleStatusFilterChange(s)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                statusFilter === s
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              aria-pressed={statusFilter === s}
+            >
+              {STATUS_LABELS[s]}
+            </button>
+          ))}
         </div>
+
+        {/* Role filter — secondary select */}
+        <select
+          value={roleFilter}
+          onChange={(e) => handleRoleFilterChange(e.target.value as RoleFilter)}
+          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+          aria-label={t('filterByRole')}
+        >
+          {ROLE_FILTERS.map((r) => (
+            <option key={r} value={r}>
+              {r === 'ALL' ? 'All Roles' : r.replace('_', ' ')}
+            </option>
+          ))}
+        </select>
+
+        {/* Search input */}
+        <Input
+          type="text"
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          className="min-w-[200px] flex-1"
+          aria-label={t('searchPlaceholder')}
+        />
 
         {/* Export + Create User CTA */}
-        <div className="flex items-center gap-3">
-          <ExportButton exportFn={() => trpc.admin.exportUsers.query()} filters={{}} />
-          <Button asChild>
-            <Link href="/users/create">Create User</Link>
-          </Button>
-        </div>
+        <ExportButton exportFn={() => trpc.admin.exportUsers.query()} filters={{}} />
+        <Button asChild>
+          <Link href="/users/create">Create User</Link>
+        </Button>
       </div>
 
       {error && (
-        <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+        <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
       {/* Suspended users banner */}
       {hasSuspendedUsers && (
-        <div className="mt-4 rounded-2xl bg-warning/10 p-3 text-sm text-warning">
+        <div className="rounded-2xl bg-warning/10 p-3 text-sm text-warning">
           Some users are suspended.{' '}
           <Link href="/subscriptions" className="underline font-medium hover:text-warning/80">
             Review subscriptions
@@ -193,24 +208,32 @@ export default function AllUsersTab() {
         </div>
       )}
 
-      {loading ? (
-        <div className="mt-6 text-muted-foreground">Loading users...</div>
-      ) : users.length === 0 ? (
-        <div className="mt-6 rounded-3xl border border-border bg-card p-12 text-center">
-          <p className="text-lg font-medium text-foreground">No staff users yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Get started by inviting your first team member.
-          </p>
-          <Button asChild className="mt-4">
-            <Link href="/users/create">Create User</Link>
-          </Button>
-        </div>
-      ) : (
-        <>
-          {/* Users table */}
-          <div className="mt-4 overflow-hidden rounded-2xl border border-border">
-            <table className="w-full text-sm">
-              <thead className="bg-card">
+      {/* Content panel — single cohesive box */}
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        {loading ? (
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">Loading users...</div>
+        ) : users.length === 0 && !filtersActive ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              icon={Users}
+              title={t('noUsers')}
+              description={t('noUsersDescription')}
+              action={{ label: t('createUser'), onClick: () => router.push('/users/create') }}
+            />
+          </div>
+        ) : users.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              icon={FileSearch}
+              title={t('noResultsTitle')}
+              description={t('noResultsDescription')}
+              action={{ label: t('clearFilters'), onClick: clearFilters }}
+            />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border text-sm">
+              <thead className="bg-muted">
                 <tr>
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Email</th>
@@ -220,12 +243,12 @@ export default function AllUsersTab() {
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Last Login</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-popover">
+              <tbody className="divide-y divide-border">
                 {users.map((user) => (
                   <tr
                     key={user.id}
                     onClick={() => router.push(`/users/${user.id}`)}
-                    className="cursor-pointer transition-colors hover:bg-primary/5"
+                    className="cursor-pointer transition-colors hover:bg-muted/50"
                   >
                     <td className="px-4 py-3 font-medium text-foreground">
                       <Link
@@ -251,33 +274,33 @@ export default function AllUsersTab() {
               </tbody>
             </table>
           </div>
+        )}
+      </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-              <span>
-                Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <span className="flex items-center px-2">Page {page} of {totalPages}</span>
-                <Button
-                  variant="outline"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page >= totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </>
+      {/* Pagination — below the content box */}
+      {!loading && users.length > 0 && totalPages > 1 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            <span className="flex items-center px-2">Page {page} of {totalPages}</span>
+            <Button
+              variant="outline"
+              onClick={() => setPage(page + 1)}
+              disabled={page >= totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   )

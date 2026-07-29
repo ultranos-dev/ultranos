@@ -27,8 +27,8 @@ vi.mock('@/lib/trpc', () => ({
   },
 }))
 
-const { default: KycQueuePage } = await import('../app/providers/page')
-const { default: KycSubmissionDetailPage } = await import('../app/providers/[submissionId]/page')
+const { default: KycQueuePage } = await import('../app/[locale]/providers/page')
+const { default: KycSubmissionDetailPage } = await import('../app/[locale]/providers/[submissionId]/page')
 
 // Fresh submission (not breached)
 const freshDate = new Date()
@@ -125,13 +125,13 @@ describe('Story 22.2 — KYC Dashboard UI', () => {
         expect(screen.getByText('Dr. Ahmed Hassan')).toBeInTheDocument()
       })
 
-      // Column headers — AC #2
+      // Column headers — AC #2 (i18n values from en.json → providers namespace)
       expect(screen.getByText('Provider Name')).toBeInTheDocument()
-      expect(screen.getByText('Submitted Date')).toBeInTheDocument()
+      expect(screen.getByText('Submitted')).toBeInTheDocument()
       expect(screen.getByText('License Doc')).toBeInTheDocument()
       expect(screen.getByText('Registry Status')).toBeInTheDocument()
-      expect(screen.getByText('SLA Countdown')).toBeInTheDocument()
-      expect(screen.getByText('KYC Status')).toBeInTheDocument()
+      expect(screen.getByText('Days Pending')).toBeInTheDocument()
+      expect(screen.getByText('Status')).toBeInTheDocument()
 
       // Data
       expect(screen.getByText('Dr. Sara Ali')).toBeInTheDocument()
@@ -181,7 +181,10 @@ describe('Story 22.2 — KYC Dashboard UI', () => {
         expect(screen.getByText('Dr. Ahmed Hassan')).toBeInTheDocument()
       })
 
-      await user.click(screen.getByText('Dr. Ahmed Hassan'))
+      // The provider-name cell is now a Link to the profile with stopPropagation,
+      // so click the row itself (not the inner link) to trigger the row navigation.
+      const row = screen.getByText('Dr. Ahmed Hassan').closest('tr')!
+      await user.click(row)
       expect(mockPush).toHaveBeenCalledWith('/providers/sub-1')
     })
   })
@@ -241,9 +244,10 @@ describe('Story 22.2 — KYC Dashboard UI', () => {
 
       await user.click(screen.getByText('Approve'))
 
-      // Confirmation dialog appears
+      // Confirmation dialog appears (title = providers.detailConfirmApproveTitle,
+      // reason field label = providers.detailReason = "Reason")
       expect(screen.getByText('Approve Provider')).toBeInTheDocument()
-      expect(screen.getByLabelText(/Notes/)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Reason/)).toBeInTheDocument()
     })
 
     it('shows confirmation dialog with required reason for reject — AC #4', async () => {
@@ -258,9 +262,10 @@ describe('Story 22.2 — KYC Dashboard UI', () => {
 
       await user.click(screen.getByText('Reject'))
 
-      // Confirmation dialog with required reason
-      expect(screen.getByText('Reject Provider')).toBeInTheDocument()
-      expect(screen.getByLabelText(/Rejection reason/)).toBeInTheDocument()
+      // Confirmation dialog with required reason (title = providers.detailConfirmRejectTitle
+      // = "Reject Submission"; reason field label = providers.detailReason = "Reason")
+      expect(screen.getByText('Reject Submission')).toBeInTheDocument()
+      expect(screen.getByLabelText(/Reason/)).toBeInTheDocument()
     })
 
     it('redirects back to queue after successful action', async () => {
@@ -277,10 +282,11 @@ describe('Story 22.2 — KYC Dashboard UI', () => {
       await user.click(screen.getByText('Approve'))
       // Click confirm in dialog
       const confirmButtons = screen.getAllByText('Approve')
-      await user.click(confirmButtons[confirmButtons.length - 1])
+      await user.click(confirmButtons[confirmButtons.length - 1]!)
 
+      // Success toast text = providers.detailActionSuccess = "Action completed successfully"
       await waitFor(() => {
-        expect(screen.getByText(/approved successfully/)).toBeInTheDocument()
+        expect(screen.getByText(/Action completed successfully/)).toBeInTheDocument()
       })
     })
   })

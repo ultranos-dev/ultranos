@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { MilestoneReviewModal } from '@/components/certifications/MilestoneReviewModal'
-import { ChevronRight } from '@ultranos/ui-kit/icons'
+import { ChevronRight, Award } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -150,24 +150,27 @@ export default function PractitionerCertificationsPage() {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <div className="flex justify-end mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-2xl font-semibold text-foreground">{t('certificationsPageTitle')}</h1>
           <Button onClick={openAssignModal}>
             {t('certAssignPathway')}
           </Button>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
           <div className="text-muted-foreground">{t('certLoading')}</div>
         ) : pathways.length === 0 ? (
-          <EmptyState title={t('certNone')} />
+          <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+            <EmptyState icon={Award} title={t('certNone')} description={t('certNoneDescription')} />
+          </div>
         ) : (
           <div className="space-y-4">
             {pathways.map((pathway) => (
-              <div key={pathway.pathwayId} className="rounded-2xl border border-border overflow-hidden">
+              <div key={pathway.pathwayId} className="overflow-hidden rounded-xl ring-[0.65px] ring-border/50">
                 {/* Pathway header */}
                 <button
                   onClick={() => togglePathway(pathway.pathwayId)}
@@ -207,7 +210,7 @@ export default function PractitionerCertificationsPage() {
 
                 {/* Milestones */}
                 {expandedPathways.has(pathway.pathwayId) && (
-                  <div className="divide-y divide-border bg-popover">
+                  <div className="divide-y divide-border bg-background">
                     {pathway.milestones.map((milestone) => (
                       <div key={milestone.progressId} className="flex items-center justify-between px-6 py-3">
                         <div className="flex-1">

@@ -54,7 +54,7 @@ vi.mock('@/lib/trpc', () => ({
   },
 }))
 
-const { default: MentorshipPage } = await import('../app/mentorship/page')
+const { default: MentorshipPage } = await import('../app/[locale]/mentorship/page')
 
 const MOCK_STATS = {
   totalPaired: 8,
@@ -162,11 +162,12 @@ describe('MentorshipPage', () => {
     await user.click(dissolveBtn)
 
     // Modal appears with title and action button
+    // dissolveDesc en.json value (drifted from old "This will end..." copy)
     await waitFor(() => {
-      expect(screen.getByText('This will end the mentorship pairing. This action cannot be undone.')).toBeInTheDocument()
+      expect(screen.getByText('Are you sure you want to dissolve this mentorship pairing?')).toBeInTheDocument()
     })
 
-    // Reason dropdown should be visible
+    // Reason dropdown should be visible (dissolveReason = "Reason")
     expect(screen.getByText('Reason')).toBeInTheDocument()
     expect(screen.getByText('Cancel')).toBeInTheDocument()
   })
@@ -187,8 +188,14 @@ describe('MentorshipPage', () => {
       expect(screen.getByText('Create Mentorship Pairing')).toBeInTheDocument()
     })
 
-    expect(screen.getByText('Mentor (Supervisor / Lab Manager)')).toBeInTheDocument()
-    expect(screen.getByText('Goals')).toBeInTheDocument()
+    // Mentor select label is now t('mentor') = "Mentor" (drifted from
+    // the old "Mentor (Supervisor / Lab Manager)" label). Both the dialog
+    // title and this label render "Mentor"-prefixed text, so scope the
+    // label assertion to the field label element to stay unambiguous.
+    expect(screen.getByText('Mentor', { selector: 'label' })).toBeInTheDocument()
+    // Goals field label is now t('notes') = "Notes"
+    expect(screen.getByText('Notes', { selector: 'label' })).toBeInTheDocument()
+    // Dialog title (submit button reads "Create Pairing", so title is unique)
     expect(screen.getByText('Create Mentorship Pairing')).toBeInTheDocument()
   })
 
@@ -226,10 +233,12 @@ describe('MentorshipPage', () => {
 
     render(<MentorshipPage />)
 
+    // EmptyState now uses t('noPairings') = "No mentorship pairings found."
     await waitFor(() => {
-      expect(screen.getByText('No mentorship pairings yet')).toBeInTheDocument()
+      expect(screen.getByText('No mentorship pairings found.')).toBeInTheDocument()
     })
 
+    // Description is t('noPairingsDescription'), unchanged value
     expect(screen.getByText('Create a pairing to connect experienced techs with junior staff.')).toBeInTheDocument()
   })
 })

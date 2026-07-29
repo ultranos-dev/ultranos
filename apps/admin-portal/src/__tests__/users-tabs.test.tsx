@@ -61,7 +61,7 @@ describe('LabAssignmentsTab', () => {
   })
 
   it('renders the lab staff table with rows', async () => {
-    const { default: LabAssignmentsTab } = await import('../app/users/_components/LabAssignmentsTab')
+    const { default: LabAssignmentsTab } = await import('../app/[locale]/users/_components/LabAssignmentsTab')
     mockListAllLabStaff.mockResolvedValue({
       items: [
         {
@@ -89,18 +89,19 @@ describe('LabAssignmentsTab', () => {
   })
 
   it('shows empty state when no staff found', async () => {
-    const { default: LabAssignmentsTab } = await import('../app/users/_components/LabAssignmentsTab')
+    const { default: LabAssignmentsTab } = await import('../app/[locale]/users/_components/LabAssignmentsTab')
     mockListAllLabStaff.mockResolvedValue({ items: [], nextCursor: null })
 
     render(<LabAssignmentsTab />)
 
+    // Empty state now uses t('noLabStaff') = "No lab staff assigned"
     await waitFor(() => {
-      expect(screen.getByText('No staff found')).toBeTruthy()
+      expect(screen.getByText('No lab staff assigned')).toBeTruthy()
     })
   })
 
   it('shows managerless labs warning when count > 0', async () => {
-    const { default: LabAssignmentsTab } = await import('../app/users/_components/LabAssignmentsTab')
+    const { default: LabAssignmentsTab } = await import('../app/[locale]/users/_components/LabAssignmentsTab')
     mockGetManagerlessLabs.mockResolvedValue([{ id: 'lab1' }, { id: 'lab2' }])
     mockListAllLabStaff.mockResolvedValue({ items: [], nextCursor: null })
 
@@ -112,19 +113,22 @@ describe('LabAssignmentsTab', () => {
   })
 
   it('renders "Assign to Lab" button', async () => {
-    const { default: LabAssignmentsTab } = await import('../app/users/_components/LabAssignmentsTab')
+    const { default: LabAssignmentsTab } = await import('../app/[locale]/users/_components/LabAssignmentsTab')
     mockListAllLabStaff.mockResolvedValue({ items: [], nextCursor: null })
     mockListLabsForFilter.mockResolvedValue([{ id: 'lab-1', labName: 'Lab Alpha' }])
 
     render(<LabAssignmentsTab />)
 
+    // With no staff + no active filters the empty state also renders an
+    // "Assign to Lab" action button, so there are two matching buttons
+    // (toolbar + empty-state). Assert at least the toolbar one exists.
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Assign to Lab' })).toBeTruthy()
+      expect(screen.getAllByRole('button', { name: 'Assign to Lab' })[0]).toBeTruthy()
     })
   })
 
   it('"Assign to Lab" button opens AssignStaffModal with lab dropdown', async () => {
-    const { default: LabAssignmentsTab } = await import('../app/users/_components/LabAssignmentsTab')
+    const { default: LabAssignmentsTab } = await import('../app/[locale]/users/_components/LabAssignmentsTab')
     mockListAllLabStaff.mockResolvedValue({ items: [], nextCursor: null })
     mockListLabsForFilter.mockResolvedValue([
       { id: 'lab-1', labName: 'Lab Alpha' },
@@ -135,11 +139,13 @@ describe('LabAssignmentsTab', () => {
 
     render(<LabAssignmentsTab />)
 
+    // Empty state duplicates the "Assign to Lab" label as its action button,
+    // so scope to the toolbar (first) button for both the wait and the click.
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Assign to Lab' })).toBeTruthy()
+      expect(screen.getAllByRole('button', { name: 'Assign to Lab' })[0]).toBeTruthy()
     })
 
-    await user.click(screen.getByRole('button', { name: 'Assign to Lab' }))
+    await user.click(screen.getAllByRole('button', { name: 'Assign to Lab' })[0]!)
 
     await waitFor(() => {
       expect(screen.getByText('Assign Staff to Lab')).toBeTruthy()
@@ -158,7 +164,7 @@ describe('UsersPage tab shell', () => {
   })
 
   it('renders "All Users" tab link and "Lab Assignments" tab link', async () => {
-    const { default: UsersPage } = await import('../app/users/page')
+    const { default: UsersPage } = await import('../app/[locale]/users/page')
     render(<UsersPage />)
     expect(screen.getByRole('link', { name: 'All Users' })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Lab Assignments' })).toBeTruthy()

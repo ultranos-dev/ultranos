@@ -28,7 +28,7 @@ vi.mock('@/lib/trpc', () => ({
   setAccessToken: vi.fn(),
 }))
 
-const { default: AllUsersTab, formatRelativeTime } = await import('../app/users/_components/AllUsersTab')
+const { default: AllUsersTab, formatRelativeTime } = await import('../app/[locale]/users/_components/AllUsersTab')
 
 const mockUsers = [
   {

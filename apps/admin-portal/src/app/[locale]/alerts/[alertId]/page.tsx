@@ -246,7 +246,7 @@ export default function AlertDetailPage() {
   if (error && !alert) {
     return (
       <div>
-        <Button variant="ghost" onClick={() => router.push('/alerts')}>{t('detailBackToAlerts')}</Button>
+        <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => router.push('/alerts')}>{t('detailBackToAlerts')}</Button>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -260,7 +260,9 @@ export default function AlertDetailPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <Button variant="ghost" onClick={() => router.push('/alerts')}>{t('detailBackToAlerts')}</Button>
+        <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => router.push('/alerts')}>{t('detailBackToAlerts')}</Button>
+
+        <h1 className="text-2xl font-semibold text-foreground">{ANOMALY_TYPE_LABELS[alert.anomalyType] ?? alert.anomalyType}</h1>
 
         {/* Header badges */}
         <div className="flex items-center gap-2">
@@ -303,7 +305,7 @@ export default function AlertDetailPage() {
         {/* Detail grid — AC #9 */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* Prescribing Summary */}
-          <div className="rounded-2xl border border-border bg-popover p-6 shadow-card">
+          <div className="rounded-xl bg-card p-6 shadow-card ring-[0.65px] ring-border/50">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailPrescribingSummary')}</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
@@ -322,7 +324,7 @@ export default function AlertDetailPage() {
           </div>
 
           {/* Flagged Pattern Details */}
-          <div className="rounded-2xl border border-border bg-popover p-6 shadow-card">
+          <div className="rounded-xl bg-card p-6 shadow-card ring-[0.65px] ring-border/50">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailFlaggedPattern')}</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
@@ -373,13 +375,13 @@ export default function AlertDetailPage() {
 
         {/* Timeline visualization — AC #9: dates and counts, no patient identifiers */}
         {alert.timeline.length > 0 && (
-          <div className="rounded-2xl border border-border bg-popover p-6 shadow-card">
+          <div className="rounded-xl bg-card p-6 shadow-card ring-[0.65px] ring-border/50">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailPrescriptionTimeline')}</h2>
             <div className="mt-4 space-y-2">
               {alert.timeline.map((entry) => (
                 <div key={entry.date} className="flex items-center gap-3">
                   <span className="w-28 text-xs text-muted-foreground shrink-0">{formatDate(entry.date)}</span>
-                  <div className="flex-1 h-5 bg-card rounded-full overflow-hidden">
+                  <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full ${entry.count > alert.threshold ? 'bg-destructive' : 'bg-success'}`}
                       style={{ width: `${Math.max(4, (entry.count / maxTimelineCount) * 100)}%` }}
@@ -394,7 +396,7 @@ export default function AlertDetailPage() {
 
         {/* Review history (if already reviewed) */}
         {alert.reviewAction && (
-          <div className="rounded-2xl border border-border bg-popover p-6 shadow-card">
+          <div className="rounded-xl bg-card p-6 shadow-card ring-[0.65px] ring-border/50">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailReviewHistory')}</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">

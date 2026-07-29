@@ -41,7 +41,7 @@ export function AddModuleDialog({ open, onOpenChange, onModuleAdded }: AddModule
     async function load() {
       try {
         const result = await trpc.subscription.getAvailableModules.query()
-        setModules(result.modules)
+        setModules(result?.modules ?? [])
       } catch (err: unknown) {
         setError((err as Error)?.message ?? 'Failed to load available modules')
       } finally {

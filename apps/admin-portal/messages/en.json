@@ -154,7 +154,9 @@
     "detailConfirmSuspendDesc": "This will suspend the provider's account. They will not be able to log in until reactivated.",
     "detailActionSuccess": "Action completed successfully",
     "detailActionError": "Failed to perform action",
-    "detailNotFound": "Alert not found"
+    "detailNotFound": "Alert not found",
+    "noAlertsDescription": "No prescribing anomaly alerts match the current filter.",
+    "noReports": "No monthly reports generated yet."
   },
   "audit": {
     "pageTitle": "Audit Log",
@@ -181,7 +183,9 @@
     "colResource": "Resource",
     "colResourceId": "Resource ID",
     "noEvents": "No audit events found.",
-    "errorLoad": "Failed to load audit data"
+    "errorLoad": "Failed to load audit data",
+    "noHistoryDescription": "Verification runs will appear here once the chain is checked.",
+    "noEventsDescription": "Try adjusting your filters or date range."
   },
   "certifications": {
     "pageTitle": "Certifications",
@@ -204,7 +208,15 @@
     "archiveTitle": "Archive Pathway",
     "archiveDesc": "Are you sure you want to archive this pathway?",
     "archiveSuccess": "Pathway archived",
-    "archiveError": "Failed to archive pathway"
+    "archiveError": "Failed to archive pathway",
+    "searchPlaceholder": "Search pathways",
+    "filterAll": "All",
+    "filterActive": "Active",
+    "filterArchived": "Archived",
+    "noPathwaysDescription": "Create a certification pathway to track staff milestones.",
+    "noResultsTitle": "No matching pathways",
+    "noResultsDescription": "Try a different search term or filter.",
+    "clearSearch": "Clear search"
   },
   "inventory": {
     "pageTitle": "Inventory",
@@ -243,7 +255,19 @@
     "saveChanges": "Save Changes",
     "supplierAdded": "Supplier added successfully",
     "supplierUpdated": "Supplier updated successfully",
-    "supplierError": "Failed to save supplier"
+    "supplierError": "Failed to save supplier",
+    "filterAll": "All",
+    "filterActive": "Active",
+    "filterInactive": "Inactive",
+    "suppliersSearchPlaceholder": "Search suppliers",
+    "loadingSuppliers": "Loading suppliers…",
+    "noSuppliersDescription": "Add a supplier to track reagent lead times and orders.",
+    "noResultsTitle": "No matching suppliers",
+    "noResultsDescription": "Try a different search term or filter.",
+    "clearFilters": "Clear filters",
+    "noPurchaseOrdersDescription": "Create a purchase order to get started.",
+    "noHeatmapData": "No inventory data",
+    "noHeatmapDescription": "No labs are reporting inventory yet."
   },
   "labs": {
     "pageTitle": "Labs",
@@ -302,7 +326,17 @@
     "staffRemoveTitle": "Remove Staff Member",
     "staffRemoveDesc": "Are you sure you want to remove this staff member from the lab?",
     "staffActionSuccess": "Action completed successfully",
-    "staffActionError": "Failed to perform action"
+    "staffActionError": "Failed to perform action",
+    "searchPlaceholder": "Search labs",
+    "noLabsDescription": "No labs have been registered yet. Create the first lab to get started.",
+    "noResultsTitle": "No matching labs",
+    "noResultsDescription": "No labs match your current filters. Try adjusting your search or filter.",
+    "clearSearch": "Clear search",
+    "staffSearchPlaceholder": "Search staff by name or email",
+    "staffNoStaffDescription": "No staff members are assigned to this lab yet. Add staff to get started.",
+    "staffLoading": "Loading staff…",
+    "detailNoTechnician": "No technician associated.",
+    "detailNoStatusHistory": "No status transitions recorded."
   },
   "mentorship": {
     "pageTitle": "Mentorship",
@@ -335,7 +369,12 @@
     "dissolveDesc": "Are you sure you want to dissolve this mentorship pairing?",
     "dissolveReason": "Reason",
     "dissolveSuccess": "Pairing dissolved",
-    "dissolveError": "Failed to dissolve pairing"
+    "dissolveError": "Failed to dissolve pairing",
+    "searchPlaceholder": "Search by mentor or mentee name",
+    "noPairingsDescription": "Create a pairing to connect experienced techs with junior staff.",
+    "noResultsTitle": "No matching pairings",
+    "noResultsDescription": "No pairings match your current filters. Try adjusting your search or filter.",
+    "clearSearch": "Clear search"
   },
   "network": {
     "pageTitle": "Network",
@@ -355,7 +394,8 @@
     "outbreakModeTitle": "Activate Outbreak Mode",
     "outbreakModeDesc": "This will alert all network nodes and enable emergency protocols.",
     "outbreakModeSuccess": "Outbreak mode activated",
-    "outbreakModeError": "Failed to activate outbreak mode"
+    "outbreakModeError": "Failed to activate outbreak mode",
+    "noNodesDescription": "No network nodes match the selected filter."
   },
   "patients": {
     "pageTitle": "Patients",
@@ -405,7 +445,11 @@
     "mergeConfirmButton": "Confirm Merge",
     "mergeSuccess": "Patients merged successfully",
     "mergeError": "Failed to merge patients",
-    "mergeSearchPlaceholder": "Search patient…"
+    "mergeSearchPlaceholder": "Search patient…",
+    "searchPromptDescription": "Enter a name to begin searching patient records.",
+    "noPatientsDescription": "Try a different search term or adjust filters.",
+    "mergeNoSurvivorTitle": "No survivor selected",
+    "mergeNoSurvivorDescription": "Navigate from a patient detail page or provide a ?survivor= URL parameter."
   },
   "providers": {
     "pageTitle": "Providers",
@@ -464,7 +508,21 @@
     "profileLicenseTimeline": "License Timeline",
     "profileAlertHistory": "Prescribing Alert History",
     "profileLicenseExpiredWarning": "License has expired",
-    "profileNotFound": "Provider not found"
+    "profileNotFound": "Provider not found",
+    "noProvidersDescription": "New provider KYC submissions will appear here for review.",
+    "noResultsTitle": "No matching providers",
+    "noResultsDescription": "Try a different search term or filter.",
+    "clearFilters": "Clear filters",
+    "colLicenseDoc": "License Doc",
+    "colRegistryStatus": "Registry Status",
+    "expiryNoProvidersDescription": "No providers have licenses expiring in this window.",
+    "detailNoDocuments": "No documents available.",
+    "detailNoOcrData": "No OCR data available.",
+    "detailNoFieldsExtracted": "No fields extracted.",
+    "profileNoKycSubmissions": "No KYC submissions found.",
+    "profileNoKycSubmissionsDescription": "This provider has no KYC submission history.",
+    "profileNoAlerts": "No prescribing alerts.",
+    "profileNoAlertsDescription": "This provider has no recorded prescribing alerts."
   },
   "settings": {
     "pageTitle": "Settings",
@@ -511,7 +569,9 @@
     "thresholdsTitle": "Thresholds",
     "modulesTitle": "Modules",
     "alertConfigTitle": "Alert Configuration",
-    "errorLoad": "Failed to load settings"
+    "errorLoad": "Failed to load settings",
+    "modulesEmptyTitle": "No modules configured",
+    "modulesEmptyDescription": "Subscribe to a module to see its settings here."
   },
   "staff": {
     "certificationsPageTitle": "Staff Certifications",
@@ -562,7 +622,8 @@
     "healthTbResultNegative": "Negative",
     "healthTbResultPositive": "Positive",
     "healthTbResultIndeterminate": "Indeterminate",
-    "healthTbResultSelect": "Select…"
+    "healthTbResultSelect": "Select…",
+    "certNoneDescription": "No certification pathways have been assigned to this practitioner yet."
   },
   "subscriptions": {
     "pageTitle": "Subscriptions",
@@ -608,7 +669,9 @@
     "invoicesDownloadPdf": "Download PDF",
     "invoicesNoInvoices": "No invoices found.",
     "invoicesLoading": "Loading invoices…",
-    "invoicesErrorLoad": "Failed to load invoices"
+    "invoicesErrorLoad": "Failed to load invoices",
+    "invoicesNoInvoicesDescription": "No invoices have been generated yet.",
+    "noModulesDescription": "No modules are currently subscribed for this organization."
   },
   "users": {
     "pageTitle": "Users",
@@ -640,7 +703,22 @@
     "detailActionSuccess": "Action completed successfully",
     "detailActionError": "Failed to perform action",
     "detailSuspensionReasonLabel": "Reason for suspension",
-    "detailNotFound": "User not found"
+    "detailNotFound": "User not found",
+    "searchPlaceholder": "Search name or email",
+    "filterByRole": "Filter by role",
+    "noUsers": "No staff users yet",
+    "noUsersDescription": "Get started by inviting your first team member.",
+    "createUser": "Create User",
+    "noResultsTitle": "No matching users",
+    "noResultsDescription": "Try adjusting your filters or search.",
+    "clearFilters": "Clear filters",
+    "noLabStaff": "No lab staff assigned",
+    "noLabStaffDescription": "Assign staff to a lab to get started.",
+    "assignToLab": "Assign to Lab",
+    "detailSave": "Save Changes",
+    "detailCancel": "Cancel",
+    "detailNever": "Never",
+    "detailSuspendPlaceholder": "Reason for suspension"
   },
   "aiModels": {
     "pageTitle": "AI Models",
@@ -678,7 +756,8 @@
     "publishButton": "Publish",
     "publishing": "Publishing…",
     "publishError": "Failed to publish",
-    "errorLoad": "Failed to fetch data"
+    "errorLoad": "Failed to fetch data",
+    "loading": "Loading…"
   },
   "register": {
     "pageTitle": "Register Your Organization",

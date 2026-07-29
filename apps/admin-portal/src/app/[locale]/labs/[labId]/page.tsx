@@ -7,6 +7,8 @@ import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Users, ClipboardList } from '@ultranos/ui-kit/icons'
 import {
   Dialog,
   DialogContent,
@@ -213,7 +215,7 @@ export default function LabDetailPage() {
   if (error && !lab) {
     return (
       <div>
-        <Button variant="ghost" onClick={() => router.push('/labs')}>{t('detailBackToLabs')}</Button>
+        <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => router.push('/labs')}>{t('detailBackToLabs')}</Button>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -223,10 +225,11 @@ export default function LabDetailPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <Button variant="ghost" onClick={() => router.push('/labs')}>{t('detailBackToLabs')}</Button>
+        <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => router.push('/labs')}>{t('detailBackToLabs')}</Button>
 
         {/* Header */}
-        <div className="flex items-center justify-end">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-2xl font-semibold text-foreground">{lab.labName}</h1>
           <StatusBadge status={lab.status} />
         </div>
 
@@ -276,7 +279,7 @@ export default function LabDetailPage() {
         {/* Lab details grid — AC #9 */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* Registration Documents */}
-          <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+          <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-6">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailRegistrationInfo')}</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
@@ -295,7 +298,7 @@ export default function LabDetailPage() {
           </div>
 
           {/* Technician Credentials */}
-          <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+          <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-6">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailTechnician')}</h2>
             {lab.technician ? (
               <dl className="mt-3 space-y-2 text-sm">
@@ -317,16 +320,16 @@ export default function LabDetailPage() {
                 </div>
               </dl>
             ) : (
-              <p className="mt-3 text-sm text-muted-foreground">No technician associated.</p>
+              <EmptyState size="sm" icon={Users} title={t('detailNoTechnician')} />
             )}
           </div>
         </div>
 
         {/* Status Transition History — AC #9 */}
-        <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+        <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-6">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailStatusHistory')}</h2>
           {lab.statusHistory.length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">No status transitions recorded.</p>
+            <EmptyState size="sm" icon={ClipboardList} title={t('detailNoStatusHistory')} />
           ) : (
             <div className="mt-3 space-y-3">
               {lab.statusHistory.map((entry, i) => (

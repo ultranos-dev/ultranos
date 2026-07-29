@@ -52,7 +52,7 @@ vi.mock('@/lib/trpc', () => ({
   },
 }))
 
-const { default: InventoryPage } = await import('../app/inventory/page')
+const { default: InventoryPage } = await import('../app/[locale]/inventory/page')
 
 const MOCK_OVERVIEW = {
   labs: [

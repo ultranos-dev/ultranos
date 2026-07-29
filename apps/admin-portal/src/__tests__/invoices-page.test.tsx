@@ -49,25 +49,30 @@ vi.mock('@/lib/trpc', () => ({
 }))
 
 // Dynamic imports after mock setup
-const { default: InvoicesPage } = await import('../app/subscriptions/invoices/page')
+const { default: InvoicesPage } = await import('../app/[locale]/subscriptions/invoices/page')
 
+// Mock shape matches the current listInvoices API contract:
+// { invoiceId, amount (cents), currency, status, pdfUrl, createdAt }.
+// The page renders columns Date / Amount / Status / Action — there is no
+// "description" field or column anymore, so the old "OPD Lite - May 2026"
+// assertions no longer apply.
 const mockInvoices = {
   invoices: [
     {
-      id: 'inv-1',
-      date: '2026-05-01T00:00:00Z',
-      description: 'OPD Lite - May 2026',
-      amountUsd: 50,
+      invoiceId: 'inv-1',
+      amount: 5000, // cents → $50.00
+      currency: 'usd',
       status: 'PAID' as const,
-      downloadUrl: 'https://example.com/inv-1.pdf',
+      pdfUrl: 'https://example.com/inv-1.pdf',
+      createdAt: '2026-05-15T12:00:00Z',
     },
     {
-      id: 'inv-2',
-      date: '2026-04-01T00:00:00Z',
-      description: 'OPD Lite - April 2026',
-      amountUsd: 50,
-      status: 'PENDING' as const,
-      downloadUrl: 'https://example.com/inv-2.pdf',
+      invoiceId: 'inv-2',
+      amount: 5000,
+      currency: 'usd',
+      status: 'OPEN' as const,
+      pdfUrl: 'https://example.com/inv-2.pdf',
+      createdAt: '2026-04-15T12:00:00Z',
     },
   ],
   totalCount: 2,
@@ -83,14 +88,19 @@ describe('Task 8 — Invoice History Page', () => {
 
     render(<InvoicesPage />)
 
+    // The table renders Date / Amount / Status / Action columns.
+    // Dates are formatted with the en-US locale from createdAt.
     await waitFor(() => {
-      expect(screen.getByText('OPD Lite - May 2026')).toBeInTheDocument()
+      expect(screen.getByText('May 15, 2026')).toBeInTheDocument()
     })
 
-    expect(screen.getByText('OPD Lite - April 2026')).toBeInTheDocument()
+    expect(screen.getByText('Apr 15, 2026')).toBeInTheDocument()
+    // amount is cents / 100 → $50.00 for both rows
     expect(screen.getAllByText('$50.00')).toHaveLength(2)
+    // status badges render the upper-cased status
     expect(screen.getByText('PAID')).toBeInTheDocument()
-    expect(screen.getByText('PENDING')).toBeInTheDocument()
+    expect(screen.getByText('OPEN')).toBeInTheDocument()
+    // download links use t('invoicesDownloadPdf') = "Download PDF"
     expect(screen.getAllByText('Download PDF')).toHaveLength(2)
   })
 
@@ -99,10 +109,12 @@ describe('Task 8 — Invoice History Page', () => {
 
     render(<InvoicesPage />)
 
+    // EmptyState now uses t('invoicesNoInvoices') = "No invoices found."
     await waitFor(() => {
-      expect(screen.getByText('No invoices yet')).toBeInTheDocument()
+      expect(screen.getByText('No invoices found.')).toBeInTheDocument()
     })
 
-    expect(screen.getByText(/Invoices will appear here once your first billing cycle completes/)).toBeInTheDocument()
+    // Description is t('invoicesNoInvoicesDescription')
+    expect(screen.getByText('No invoices have been generated yet.')).toBeInTheDocument()
   })
 })

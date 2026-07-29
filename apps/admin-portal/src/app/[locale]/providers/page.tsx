@@ -8,7 +8,8 @@ import { trpc } from '@/lib/trpc'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { FileText } from '@ultranos/ui-kit/icons'
+import { Input } from '@/components/ui/input'
+import { FileText, ClipboardList, FileSearch } from '@ultranos/ui-kit/icons'
 import { EmptyState } from '@/components/ui/empty-state'
 
 type StatusFilter = 'ALL' | 'PENDING' | 'SLA_BREACHED'
@@ -130,31 +131,39 @@ export default function KycQueuePage() {
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
 
+  const filtersActive = search.trim() !== '' || filter !== 'ALL'
+
   return (
     <div className="flex flex-col gap-4">
-        {/* Filter tabs + Search + Export — AC #11 */}
-        <div className="flex items-center gap-3">
+        <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+
+        {/* Toolbar: filter tabs + search + export — one row, always visible */}
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
+                type="button"
                 onClick={() => handleFilterChange(s)}
-                className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   filter === s
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
+                aria-pressed={filter === s}
               >
                 {getFilterLabel(s)}
               </button>
             ))}
           </div>
-          <input
+          <Input
             type="text"
+            dir="auto"
             placeholder={t('searchPlaceholder')}
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="rounded-xl border border-border px-4 py-2 text-sm max-w-xs"
+            className="min-w-[200px] flex-1"
+            aria-label={t('searchPlaceholder')}
           />
           <ExportButton exportFn={() => trpc.admin.exportKycSubmissions.query()} filters={{}} />
         </div>
@@ -163,26 +172,33 @@ export default function KycQueuePage() {
           <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
-        {loading ? (
-          <div className="text-muted-foreground">{t('loadingProviders')}</div>
-        ) : submissions.length === 0 ? (
-          <EmptyState title={t('noProviders')} />
-        ) : (
-          <>
-            {/* KYC queue table — AC #1, #2, #7 */}
-            <div className="overflow-hidden rounded-2xl border border-border">
-              <table className="w-full text-sm">
-                <thead className="bg-card">
+        {/* Content panel — single cohesive box (matches OPD notifications) */}
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          {loading ? (
+            <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">{t('loadingProviders')}</div>
+          ) : submissions.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState
+                icon={filtersActive ? FileSearch : ClipboardList}
+                title={filtersActive ? t('noResultsTitle') : t('noProviders')}
+                description={filtersActive ? t('noResultsDescription') : t('noProvidersDescription')}
+                action={filtersActive ? { label: t('clearFilters'), onClick: () => { setSearch(''); handleFilterChange('ALL') } } : undefined}
+              />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colProviderName')}</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colSubmittedAt')}</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">License Doc</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Registry Status</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colLicenseDoc')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colRegistryStatus')}</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDaysPending')}</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-popover">
+                <tbody className="divide-y divide-border">
                   {submissions.map((sub) => (
                     <tr
                       key={sub.submissionId}
@@ -190,7 +206,7 @@ export default function KycQueuePage() {
                       className={`cursor-pointer transition-colors ${
                         sub.slaBreached
                           ? 'bg-destructive/10 hover:bg-destructive/10'
-                          : 'hover:bg-primary/10'
+                          : 'hover:bg-muted/50'
                       }`}
                     >
                       <td className="px-4 py-3 font-medium">
@@ -223,36 +239,36 @@ export default function KycQueuePage() {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
 
-            {/* Pagination — AC #12 */}
-            {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-                <span>
-                  Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
-                    disabled={cursor === 0}
-                  >
-                    Previous
-                  </Button>
-                  <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCursor(cursor + PAGE_SIZE)}
-                    disabled={cursor + PAGE_SIZE >= total}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
+        {/* Pagination — below the content box */}
+        {!loading && submissions.length > 0 && totalPages > 1 && (
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
+                disabled={cursor === 0}
+              >
+                Previous
+              </Button>
+              <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCursor(cursor + PAGE_SIZE)}
+                disabled={cursor + PAGE_SIZE >= total}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         )}
-      </div>
+    </div>
   )
 }

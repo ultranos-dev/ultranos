@@ -100,18 +100,18 @@ export default function CreateUserPage() {
   }
 
   if (error) {
-    return <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">Error: {error}</div>
+    return <div className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">Error: {error}</div>
   }
 
   return (
-    <div className="max-w-2xl flex flex-col gap-4">
-      <h1 className="text-4xl font-bold tracking-tight">Create Staff User</h1>
+    <div className="flex flex-col gap-4">
+      <h1 className="text-2xl font-semibold text-foreground">Create Staff User</h1>
       <p className="text-muted-foreground">
         Assign roles based on your organization&apos;s active module subscriptions.
       </p>
 
       <form onSubmit={handleSubmit}>
-        <div className="rounded-3xl bg-popover p-5 border border-border space-y-4">
+        <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-5 space-y-4">
           {/* Given Name Field */}
           <div>
             <label htmlFor="givenName" className="block text-sm font-medium text-muted-foreground">
@@ -188,7 +188,7 @@ export default function CreateUserPage() {
               className="mt-1.5"
             />
             {confirmPassword && password !== confirmPassword && (
-              <p className="mt-1.5 text-sm text-red-600">Passwords do not match</p>
+              <p className="mt-1.5 text-sm text-destructive">Passwords do not match</p>
             )}
           </div>
 
@@ -250,13 +250,13 @@ export default function CreateUserPage() {
 
         {/* Submission feedback */}
         {submitError && (
-          <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-2xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
             {submitError}
           </div>
         )}
 
         {submitSuccess && createdUser && (
-          <div className="rounded-2xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+          <div className="rounded-2xl bg-success/10 border border-success/20 px-4 py-3 text-sm text-success">
             <p className="font-semibold text-base mb-2">User created successfully</p>
             <p><span className="font-medium">Name:</span> {createdUser.givenName} {createdUser.familyName}</p>
             <p><span className="font-medium">Email:</span> {createdUser.email}</p>
@@ -267,7 +267,7 @@ export default function CreateUserPage() {
             {!createdUser.emailSent && createdUser.setupLink && (
               <div className="mt-2">
                 <p>Email delivery is not configured. Share this setup link manually:</p>
-                <code className="mt-1 block break-all rounded-lg bg-green-100 px-3 py-2 font-mono text-xs text-green-900">
+                <code className="mt-1 block break-all rounded-lg bg-success/15 px-3 py-2 font-mono text-xs text-success">
                   {createdUser.setupLink}
                 </code>
               </div>

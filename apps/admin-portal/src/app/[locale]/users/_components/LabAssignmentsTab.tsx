@@ -2,13 +2,15 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import type { LabRole } from '@ultranos/shared-types'
 import { ExportButton } from '@/components/ExportButton'
-import { TriangleAlert } from '@ultranos/ui-kit/icons'
+import { TriangleAlert, Users, FileSearch } from '@ultranos/ui-kit/icons'
 import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 
 type LabRoleFilter = 'ALL' | 'LAB_TECH' | 'SENIOR_TECH' | 'SUPERVISOR' | 'LAB_MANAGER'
 type ActivityFilter = 'ALL' | 'ACTIVE_7D' | 'INACTIVE'
@@ -85,6 +87,7 @@ function RoleBadge({ role }: { role: string }) {
 
 
 export default function LabAssignmentsTab() {
+  const t = useTranslations('users')
   const router = useRouter()
   const [staff, setStaff] = useState<StaffRow[]>([])
   const [labs, setLabs] = useState<LabOption[]>([])
@@ -157,104 +160,123 @@ export default function LabAssignmentsTab() {
     setPageIndex((prev) => prev - 1)
   }
 
+  function clearFilters() {
+    setRoleFilter('ALL')
+    setLabFilter('')
+    setActivityFilter('ALL')
+    resetPagination()
+  }
+
+  const filtersActive = roleFilter !== 'ALL' || labFilter !== '' || activityFilter !== 'ALL'
+
   return (
     <div className="flex flex-col gap-4">
-      {/* Filter bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Role filter — tab-style buttons */}
-          <div className="flex rounded-full border border-border overflow-hidden">
-            {ROLE_FILTERS.map((r) => (
-              <button
-                key={r}
-                onClick={() => { setRoleFilter(r); resetPagination() }}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  roleFilter === r
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-card text-muted-foreground hover:bg-primary/10'
-                }`}
-              >
-                {ROLE_LABELS[r]}
-              </button>
-            ))}
-          </div>
-
-          {/* Lab filter */}
-          <select
-            value={labFilter}
-            onChange={(e) => { setLabFilter(e.target.value); resetPagination() }}
-            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Filter by lab"
-          >
-            <option value="">All Labs</option>
-            {labsError && <option disabled>Failed to load labs</option>}
-            {labs.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.labName}
-              </option>
-            ))}
-          </select>
-
-          {/* Activity filter */}
-          <select
-            value={activityFilter}
-            onChange={(e) => { setActivityFilter(e.target.value as ActivityFilter); resetPagination() }}
-            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Filter by activity"
-          >
-            <option value="ALL">All Activity</option>
-            <option value="ACTIVE_7D">Active (7d)</option>
-            <option value="INACTIVE">Inactive</option>
-          </select>
+      {/* Toolbar: filters + actions — one row */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Role filter — pill tab-bar */}
+        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {ROLE_FILTERS.map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => { setRoleFilter(r); resetPagination() }}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                roleFilter === r
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              aria-pressed={roleFilter === r}
+            >
+              {ROLE_LABELS[r]}
+            </button>
+          ))}
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={() => setShowAssignModal(true)}
-            aria-label="Assign to Lab"
-          >
-            Assign to Lab
-          </Button>
-          <ExportButton
-            exportFn={() =>
-              trpc.admin.exportLabStaffCsv.mutate({
-                ...(roleFilter !== 'ALL' && { roleFilter: roleFilter as LabRole }),
-                ...(labFilter && { labFilter }),
-                activityFilter,
-              })
-            }
-            filters={{}}
-          />
-        </div>
+        {/* Lab filter */}
+        <select
+          value={labFilter}
+          onChange={(e) => { setLabFilter(e.target.value); resetPagination() }}
+          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+          aria-label="Filter by lab"
+        >
+          <option value="">All Labs</option>
+          {labsError && <option disabled>Failed to load labs</option>}
+          {labs.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.labName}
+            </option>
+          ))}
+        </select>
+
+        {/* Activity filter */}
+        <select
+          value={activityFilter}
+          onChange={(e) => { setActivityFilter(e.target.value as ActivityFilter); resetPagination() }}
+          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+          aria-label="Filter by activity"
+        >
+          <option value="ALL">All Activity</option>
+          <option value="ACTIVE_7D">Active (7d)</option>
+          <option value="INACTIVE">Inactive</option>
+        </select>
+
+        <Button
+          onClick={() => setShowAssignModal(true)}
+          aria-label="Assign to Lab"
+          className="ms-auto"
+        >
+          Assign to Lab
+        </Button>
+        <ExportButton
+          exportFn={() =>
+            trpc.admin.exportLabStaffCsv.mutate({
+              ...(roleFilter !== 'ALL' && { roleFilter: roleFilter as LabRole }),
+              ...(labFilter && { labFilter }),
+              activityFilter,
+            })
+          }
+          filters={{}}
+        />
       </div>
 
       {error && (
-        <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+        <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
       {/* Org-wide managerless lab warning banner (AC #4) */}
       {managerlessCount > 0 && (
-        <div className="mt-4 flex items-center gap-2 rounded-2xl bg-warning/10 p-3 text-sm text-warning">
+        <div className="flex items-center gap-2 rounded-2xl bg-warning/10 p-3 text-sm text-warning">
           <TriangleAlert className="h-4 w-4 shrink-0" />
           Warning: {managerlessCount} lab{managerlessCount > 1 ? 's' : ''} have no Lab Manager assigned
         </div>
       )}
 
-      {loading ? (
-        <div className="mt-6 text-muted-foreground">Loading staff...</div>
-      ) : staff.length === 0 ? (
-        <div className="mt-6 rounded-3xl border border-border bg-card p-12 text-center">
-          <p className="text-lg font-medium text-foreground">No staff found</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Adjust your filters or add staff to a lab.
-          </p>
-        </div>
-      ) : (
-        <>
-          {/* Staff table */}
-          <div className="mt-4 overflow-hidden rounded-2xl border border-border">
-            <table className="w-full text-sm">
-              <thead className="bg-card">
+      {/* Content panel — single cohesive box */}
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        {loading ? (
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">Loading staff...</div>
+        ) : staff.length === 0 && !filtersActive ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              icon={Users}
+              title={t('noLabStaff')}
+              description={t('noLabStaffDescription')}
+              action={{ label: t('assignToLab'), onClick: () => setShowAssignModal(true) }}
+            />
+          </div>
+        ) : staff.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              icon={FileSearch}
+              title={t('noResultsTitle')}
+              description={t('noResultsDescription')}
+              action={{ label: t('clearFilters'), onClick: clearFilters }}
+            />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border text-sm">
+              <thead className="bg-muted">
                 <tr>
                   <th className="ps-4 pe-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Email</th>
                   <th className="ps-4 pe-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Lab Name</th>
@@ -263,7 +285,7 @@ export default function LabAssignmentsTab() {
                   <th className="ps-4 pe-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Assigned</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-popover">
+              <tbody className="divide-y divide-border">
                 {staff.map((row) => (
                   <tr
                     key={`${row.practitionerId}-${row.labId}`}
@@ -271,7 +293,7 @@ export default function LabAssignmentsTab() {
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/labs/${row.labId}/staff`) }}
                     tabIndex={0}
                     role="button"
-                    className="cursor-pointer transition-colors hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+                    className="cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
                   >
                     <td className="ps-4 pe-4 py-3 text-muted-foreground">{truncateEmail(row.email)}</td>
                     <td className="ps-4 pe-4 py-3 font-medium text-foreground">
@@ -290,28 +312,30 @@ export default function LabAssignmentsTab() {
               </tbody>
             </table>
           </div>
+        )}
+      </div>
 
-          {/* Pagination */}
-          <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-            <span>Page {pageIndex + 1}</span>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={pageIndex === 0}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleNext}
-                disabled={!nextCursor}
-              >
-                Next
-              </Button>
-            </div>
+      {/* Pagination — below the content box */}
+      {!loading && staff.length > 0 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>Page {pageIndex + 1}</span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={pageIndex === 0}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleNext}
+              disabled={!nextCursor}
+            >
+              Next
+            </Button>
           </div>
-        </>
+        </div>
       )}
 
       <AssignStaffModal

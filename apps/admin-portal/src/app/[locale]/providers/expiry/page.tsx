@@ -8,6 +8,9 @@ import { RenewLicenseModal } from '@/components/providers/RenewLicenseModal'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Award, FileSearch } from '@ultranos/ui-kit/icons'
 
 type ExpiryWindow = '7d' | '30d' | '60d' | 'all'
 
@@ -80,75 +83,81 @@ export default function LicenseExpiryPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
 
+  const filtersActive = search.trim() !== '' || expiryWindow !== 'all'
+
   return (
     <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ExportButton exportFn={() => trpc.admin.exportExpiringProviders.query()} filters={{}} />
-            <input
-              type="text"
-              placeholder={t('expirySearchPlaceholder')}
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setCursor(0) }}
-              className="rounded-xl border border-border px-4 py-2 text-sm max-w-xs"
-            />
-          </div>
+        <h1 className="text-2xl font-semibold text-foreground">{t('expiryPageTitle')}</h1>
+
+        {/* Toolbar: window tabs + search + export — one row, always visible */}
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {(['all', '60d', '30d', '7d'] as const).map((w) => (
               <button
                 key={w}
+                type="button"
                 onClick={() => { setExpiryWindow(w); setCursor(0) }}
-                className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   expiryWindow === w
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
+                aria-pressed={expiryWindow === w}
               >
                 {w === 'all' ? t('expiryFilterAll') : w === '7d' ? t('expiryFilter7d') : w === '30d' ? t('expiryFilter30d') : t('expiryFilter60d')}
               </button>
             ))}
           </div>
+          <Input
+            type="text"
+            dir="auto"
+            placeholder={t('expirySearchPlaceholder')}
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setCursor(0) }}
+            className="min-w-[200px] flex-1"
+            aria-label={t('expirySearchPlaceholder')}
+          />
+          <ExportButton exportFn={() => trpc.admin.exportExpiringProviders.query()} filters={{}} />
         </div>
 
         {error && (
-          <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-2xl mb-4">
-            {error}
-          </div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
-        <div className="bg-popover rounded-2xl border border-border overflow-hidden shadow-card">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-card">
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColProvider')}</th>
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColLicense')}</th>
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColIssuingBody')}</th>
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColExpiryDate')}</th>
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColDaysRemaining')}</th>
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColKycStatus')}</th>
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColAction')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                    {t('expiryLoadingProviders')}
-                  </td>
-                </tr>
-              ) : providers.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                    {t('expiryNoProviders')}
-                  </td>
-                </tr>
-              ) : (
-                providers.map((p) => {
+        {/* Content panel — single cohesive box */}
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          {loading ? (
+            <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">{t('expiryLoadingProviders')}</div>
+          ) : providers.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState
+                icon={filtersActive ? FileSearch : Award}
+                title={filtersActive ? t('noResultsTitle') : t('expiryNoProviders')}
+                description={filtersActive ? t('noResultsDescription') : t('expiryNoProvidersDescription')}
+                action={filtersActive ? { label: t('clearFilters'), onClick: () => { setSearch(''); setExpiryWindow('all'); setCursor(0) } } : undefined}
+              />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColProvider')}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColLicense')}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColIssuingBody')}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColExpiryDate')}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColDaysRemaining')}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColKycStatus')}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColAction')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {providers.map((p) => {
                   const badge = getUrgencyBadge(p.daysRemaining)
                   return (
                     <tr
                       key={p.practitionerId}
-                      className="border-b border-border hover:bg-primary/10 cursor-pointer transition-colors"
+                      className="hover:bg-muted/50 cursor-pointer transition-colors"
                       onClick={() => setRenewTarget(p)}
                     >
                       <td className="px-4 py-3 font-medium text-foreground">
@@ -188,38 +197,39 @@ export default function LicenseExpiryPage() {
                       </td>
                     </tr>
                   )
-                })
-              )}
-            </tbody>
-          </table>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-card">
-              <span className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages} ({total} providers)
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={cursor === 0}
-                  onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={currentPage >= totalPages}
-                  onClick={() => setCursor(cursor + PAGE_SIZE)}
-                >
-                  Next
-                </Button>
-              </div>
+                })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
+
+        {/* Pagination — below the content box */}
+        {!loading && providers.length > 0 && totalPages > 1 && (
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              Page {currentPage} of {totalPages} ({total} providers)
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={cursor === 0}
+                onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCursor(cursor + PAGE_SIZE)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
 
         <RenewLicenseModal
           provider={renewTarget ?? { practitionerId: '', name: '', licenseNumber: '', kycStatus: '', expiryDate: '', daysRemaining: null }}

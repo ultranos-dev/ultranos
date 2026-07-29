@@ -11,6 +11,7 @@ import { OrderStatusPipeline, getNextStatus } from '@/components/inventory/Order
 import { PurchaseOrderDetailModal } from '@/components/inventory/PurchaseOrderDetailModal'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Package, TrendingUp } from '@ultranos/ui-kit/icons'
 
 type ActiveTab = 'heatmap' | 'orders'
 
@@ -167,29 +168,36 @@ export default function InventoryPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        {/* Tab toggle + Create PO button */}
-        <div className="flex items-center justify-between">
-          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
-            <button
-              onClick={() => setTab('heatmap')}
-              className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
-                tab === 'heatmap' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {t('tabHeatMap')}
-            </button>
-            <button
-              onClick={() => setTab('orders')}
-              className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
-                tab === 'orders' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {t('tabPurchaseOrders')}
-            </button>
+        {/* Header + tab toggle + Create PO button */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+              <button
+                type="button"
+                aria-pressed={tab === 'heatmap'}
+                onClick={() => setTab('heatmap')}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  tab === 'heatmap' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {t('tabHeatMap')}
+              </button>
+              <button
+                type="button"
+                aria-pressed={tab === 'orders'}
+                onClick={() => setTab('orders')}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  tab === 'orders' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {t('tabPurchaseOrders')}
+              </button>
+            </div>
+            <Button onClick={() => setShowCreateModal(true)}>
+              {t('createPurchaseOrder')}
+            </Button>
           </div>
-          <Button onClick={() => setShowCreateModal(true)}>
-            {t('createPurchaseOrder')}
-          </Button>
         </div>
 
         {error && (
@@ -201,6 +209,14 @@ export default function InventoryPage() {
           <div className="space-y-4">
             {heatmapLoading ? (
               <div className="text-muted-foreground">Loading inventory overview...</div>
+            ) : labs.length === 0 ? (
+              <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+                <EmptyState
+                  icon={TrendingUp}
+                  title={t('noHeatmapData')}
+                  description={t('noHeatmapDescription')}
+                />
+              </div>
             ) : (
               <>
                 <HeatMapGrid labs={labs} reagentCategories={reagentCategories} cells={cells} />
@@ -227,13 +243,19 @@ export default function InventoryPage() {
             {ordersLoading ? (
               <div className="text-muted-foreground">Loading purchase orders...</div>
             ) : orders.length === 0 ? (
-              <EmptyState title={t('noPurchaseOrders')} />
+              <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+                <EmptyState
+                  icon={Package}
+                  title={t('noPurchaseOrders')}
+                  description={t('noPurchaseOrdersDescription')}
+                />
+              </div>
             ) : (
               <>
-                <div className="overflow-hidden rounded-2xl border border-border">
+                <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-card">
+                      <tr className="bg-muted">
                         <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">PO ID</th>
                         <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Supplier</th>
                         <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">Items</th>
@@ -243,7 +265,7 @@ export default function InventoryPage() {
                         <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border bg-popover">
+                    <tbody className="divide-y divide-border bg-background">
                       {orders.map((order) => {
                         const next = getNextStatus(order.status)
                         return (

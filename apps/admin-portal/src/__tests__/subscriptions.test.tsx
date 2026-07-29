@@ -15,11 +15,18 @@ vi.mock('@/lib/trpc', () => ({
       addModule: { mutate: (...args: any[]) => mockMutate('addModule', ...args) },
       removeModule: { mutate: (...args: any[]) => mockMutate('removeModule', ...args) },
     },
+    // RemoveModuleDialog looks up the count of users affected by removing a module
+    // via admin.listUsers in a useEffect; provide it so the effect doesn't throw.
+    // Return a resolved promise directly (not routed through mockQuery, which has
+    // no default resolved value in the RemoveModuleDialog tests) so the .then() is safe.
+    admin: {
+      listUsers: { query: () => Promise.resolve({ total: 0 }) },
+    },
   },
 }))
 
 // Dynamic imports after mock setup
-const { default: SubscriptionsPage } = await import('../app/subscriptions/page')
+const { default: SubscriptionsPage } = await import('../app/[locale]/subscriptions/page')
 const { AddModuleDialog } = await import('../components/subscriptions/AddModuleDialog')
 const { RemoveModuleDialog } = await import('../components/subscriptions/RemoveModuleDialog')
 

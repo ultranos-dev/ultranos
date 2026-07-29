@@ -16,7 +16,7 @@ vi.mock('@/lib/trpc', () => ({
   },
 }))
 
-const { default: CreateUserPage } = await import('../app/users/create/page')
+const { default: CreateUserPage } = await import('../app/[locale]/users/create/page')
 
 const mockAvailableRoles = {
   availableRoles: [
@@ -98,11 +98,14 @@ describe('Story 27.7 — User Creation Role Selector', () => {
       expect(screen.getByText('ADMIN')).toBeInTheDocument()
     })
 
-    // Select ADMIN role and fill in the form
+    // Select ADMIN role and fill in the form. The page splits the name into
+    // "Given Name" + "Family Name" and requires a password (min 8 chars) plus a
+    // matching confirmation before the submit button enables.
     const user = userEvent.setup()
-    await user.click(screen.getByLabelText('Full Name'))
-    await user.type(screen.getByLabelText('Full Name'), 'Test User')
+    await user.type(screen.getByLabelText('Given Name'), 'Test User')
     await user.type(screen.getByLabelText('Email'), 'test@example.com')
+    await user.type(screen.getByLabelText('Password'), 'password123')
+    await user.type(screen.getByLabelText('Confirm Password'), 'password123')
     await user.click(screen.getByText('ADMIN'))
 
     // Submit should work for available role
@@ -123,8 +126,10 @@ describe('Story 27.7 — User Creation Role Selector', () => {
     })
 
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Full Name'), 'Test User')
+    await user.type(screen.getByLabelText('Given Name'), 'Test User')
     await user.type(screen.getByLabelText('Email'), 'test@example.com')
+    await user.type(screen.getByLabelText('Password'), 'password123')
+    await user.type(screen.getByLabelText('Confirm Password'), 'password123')
     await user.click(screen.getByText('ADMIN'))
 
     // Override the selected role validation to fail

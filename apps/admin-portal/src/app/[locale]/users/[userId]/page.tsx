@@ -197,20 +197,22 @@ export default function UserDetailPage() {
     <div className="flex flex-col gap-4">
         <Link href="/users" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('detailBackToUsers')}</Link>
 
+        <h1 className="text-2xl font-semibold text-foreground">{user.name}</h1>
+
         {/* Messages */}
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
         {saveMessage && (
-          <div className="mt-4 rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{saveMessage}</div>
+          <div className="rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{saveMessage}</div>
         )}
         {actionMessage && (
-          <div className="mt-4 rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{actionMessage}</div>
+          <div className="rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{actionMessage}</div>
         )}
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Section A: Profile */}
-          <div className="rounded-3xl bg-card p-5 border border-border">
+          <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               <span className="wavy-divider">{t('detailProfile')}</span>
             </h2>
@@ -279,7 +281,7 @@ export default function UserDetailPage() {
           </div>
 
           {/* Section B: Actions */}
-          <div className="rounded-3xl bg-card p-5 border border-border">
+          <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               <span className="wavy-divider">{t('detailActions')}</span>
             </h2>

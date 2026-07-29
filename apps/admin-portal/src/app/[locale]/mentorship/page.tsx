@@ -6,6 +6,8 @@ import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Network, FileSearch } from '@ultranos/ui-kit/icons'
 import {
   Dialog,
   DialogContent,
@@ -530,6 +532,7 @@ export default function MentorshipPage() {
   const [pairings, setPairings] = useState<MentorshipPairing[]>([])
   const [stats, setStats] = useState<MentorshipStats | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [statsLoading, setStatsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -591,30 +594,47 @@ export default function MentorshipPage() {
     fetchStats()
   }
 
+  const q = search.trim().toLowerCase()
+  const visible = pairings.filter(
+    (p) => !q || p.mentorName.toLowerCase().includes(q) || p.menteeName.toLowerCase().includes(q),
+  )
+
   return (
     <>
       <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+
         {/* Stats cards */}
         <StatsCards stats={stats} loading={statsLoading} />
 
-        {/* Top bar: filter tabs + CTA */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Toolbar: filter tabs + search + create action — always visible */}
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab}
+                type="button"
                 onClick={() => handleFilterChange(tab)}
-                className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   statusFilter === tab
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
+                aria-pressed={statusFilter === tab}
               >
                 {tab === 'ALL' ? t('filterAll') : tab === 'ACTIVE' ? t('filterActive') : t('filterDissolved')}
               </button>
             ))}
           </div>
-
+          <Input
+            type="text"
+            dir="auto"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="min-w-[200px] flex-1"
+            aria-label={t('searchPlaceholder')}
+          />
           <Button onClick={() => setShowCreateModal(true)}>
             {t('createPairing')}
           </Button>
@@ -624,24 +644,32 @@ export default function MentorshipPage() {
           <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
-        {/* Pairings table */}
-        {loading && pairings.length === 0 ? (
-          <div className="text-muted-foreground">{t('loadingPairings')}</div>
-        ) : pairings.length === 0 ? (
-          <div className="rounded-3xl border border-border bg-card p-12 text-center">
-            <p className="text-lg font-medium text-foreground">{t('noPairings')}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Create a pairing to connect experienced techs with junior staff.
-            </p>
-            <Button className="mt-4" onClick={() => setShowCreateModal(true)}>
-              {t('createPairing')}
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-hidden rounded-2xl border border-border">
-              <table className="w-full text-sm">
-                <thead className="bg-card">
+        {/* Content panel — single cohesive box */}
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          {loading && pairings.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">{t('loadingPairings')}</div>
+          ) : pairings.length === 0 ? (
+            <div className="flex min-h-[18rem] items-center justify-center">
+              <EmptyState
+                icon={Network}
+                title={t('noPairings')}
+                description={t('noPairingsDescription')}
+                action={{ label: t('createPairing'), onClick: () => setShowCreateModal(true) }}
+              />
+            </div>
+          ) : visible.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState
+                icon={FileSearch}
+                title={t('noResultsTitle')}
+                description={t('noResultsDescription')}
+                action={{ label: t('clearSearch'), onClick: () => setSearch('') }}
+              />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colMentor')}</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colMentee')}</th>
@@ -651,12 +679,12 @@ export default function MentorshipPage() {
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colActions')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-popover">
-                  {pairings.map((p) => (
+                <tbody className="divide-y divide-border">
+                  {visible.map((p) => (
                     <Fragment key={p.id}>
                       <tr
                         onClick={() => setExpandedPairingId(expandedPairingId === p.id ? null : p.id)}
-                        className="cursor-pointer transition-colors hover:bg-primary/5"
+                        className="cursor-pointer transition-colors hover:bg-muted/50"
                       >
                         <td className="px-4 py-3">
                           <p className="font-medium text-foreground">{p.mentorName}</p>
@@ -695,20 +723,20 @@ export default function MentorshipPage() {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
 
-            {/* Load more */}
-            {nextCursor && (
-              <div className="mt-4 flex justify-center">
-                <Button
-                  variant="outline"
-                  onClick={() => fetchPairings(nextCursor)}
-                  disabled={loading}
-                >
-                  {loading ? 'Loading...' : 'Load More'}
-                </Button>
-              </div>
-            )}
-          </>
+        {/* Load more — below the content box */}
+        {visible.length > 0 && nextCursor && (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              onClick={() => fetchPairings(nextCursor)}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Load More'}
+            </Button>
+          </div>
         )}
       </div>
 

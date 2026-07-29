@@ -23,13 +23,21 @@ vi.mock('@/lib/trpc', () => ({
       getLabDetail: { query: (...args: any[]) => mockQuery('getLabDetail', ...args) },
       reviewLab: { mutate: (...args: any[]) => mockMutate('reviewLab', ...args) },
       dashboardStats: { query: (...args: any[]) => mockQuery('dashboardStats', ...args) },
+      // The dashboard also renders RecentActivityFeed; stub so it doesn't throw.
+      recentActivity: { query: () => Promise.resolve({ activities: [] }) },
+    },
+    // DunningBanner + SubscriptionWidget on the dashboard use this.
+    subscription: {
+      getOrgSubscriptions: {
+        query: () => Promise.resolve({ organization: { status: 'ACTIVE' }, subscriptions: [], totalMonthlyCostUsd: 0 }),
+      },
     },
   },
 }))
 
-const { default: LabsPage } = await import('../app/labs/page')
-const { default: LabDetailPage } = await import('../app/labs/[labId]/page')
-const { default: DashboardPage } = await import('../app/dashboard/page')
+const { default: LabsPage } = await import('../app/[locale]/labs/page')
+const { default: LabDetailPage } = await import('../app/[locale]/labs/[labId]/page')
+const { default: DashboardPage } = await import('../app/[locale]/dashboard/page')
 
 const mockLabList = {
   labs: [

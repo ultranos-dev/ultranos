@@ -230,16 +230,16 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
       {/* Section 2: Positivity Rate Thresholds */}
       <section>
         <h3 className="text-lg font-semibold text-foreground">Positivity Rate Thresholds</h3>
-        <div className="mt-3 rounded-2xl border border-border overflow-hidden">
+        <div className="mt-3 overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
           <table className="w-full text-sm">
-            <thead className="bg-black text-white">
+            <thead className="bg-muted">
               <tr>
-                <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Test Category</th>
-                <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Threshold (%)</th>
-                <th className="px-4 py-3 text-end font-medium text-xs uppercase tracking-wide">Actions</th>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Test Category</th>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Threshold (%)</th>
+                <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border bg-popover">
+            <tbody className="divide-y divide-border bg-background">
               {thresholds.map((t, i) => (
                 <tr key={i}>
                   <td className="px-4 py-3">

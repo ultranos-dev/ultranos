@@ -27,6 +27,15 @@ vi.mock('@/lib/supabase', () => ({
 
 const mockReportAdminAuthEvent = vi.fn()
 
+// The login page uses useRouter/useSearchParams (and next/link). Without a
+// next/navigation mock, rendering throws "invariant expected app router to be
+// mounted". Mock exactly the hooks the page calls.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(''),
+  usePathname: () => '/login',
+}))
+
 vi.mock('@/lib/trpc', () => ({
   reportAdminAuthEvent: (...args: unknown[]) => mockReportAdminAuthEvent(...args),
 }))
@@ -44,7 +53,7 @@ vi.mock('@/stores/auth-session-store', () => ({
   ),
 }))
 
-const { default: AdminLoginPage } = await import('../app/login/page')
+const { default: AdminLoginPage } = await import('../app/[locale]/login/page')
 
 describe('Admin Login Page', () => {
   beforeEach(() => {
@@ -83,12 +92,19 @@ describe('Admin Login Page', () => {
     )
   })
 
-  it('shows FIDO2 required message when no WebAuthn factor enrolled and emits failure audit', async () => {
+  it('denies access and emits failure audit when the authenticated user is not an admin', async () => {
     const user = userEvent.setup()
+    // JWT payload: { sub: 'u1', user_metadata: { role: 'CLINICIAN' }, session_id: 's1' }
+    const nonAdminJwt =
+      'eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1MSIsInVzZXJfbWV0YWRhdGEiOnsicm9sZSI6IkNMSU5JQ0lBTiJ9LCJzZXNzaW9uX2lkIjoiczEifQ.sig'
     mockSignInWithPassword.mockResolvedValue({
-      data: { user: { id: 'u1' } },
+      data: {
+        user: { id: 'u1' },
+        session: { access_token: nonAdminJwt, user: { email: 'admin@test.com' } },
+      },
       error: null,
     })
+    // No verified WebAuthn factor → page falls through to the role guard.
     mockListFactors.mockResolvedValue({
       data: { all: [], totp: [] },
       error: null,
@@ -100,7 +116,7 @@ describe('Admin Login Page', () => {
     await user.type(screen.getByLabelText('Password'), 'pass123')
     await user.click(screen.getByRole('button', { name: 'Sign In' }))
 
-    await screen.findByText(/hardware security key.*required.*admin access/i)
+    await screen.findByText('Access denied — admin role required')
     expect(mockReportAdminAuthEvent).toHaveBeenCalledWith(
       'ADMIN_LOGIN_FAILURE',
       expect.objectContaining({ actorId: 'u1' }),

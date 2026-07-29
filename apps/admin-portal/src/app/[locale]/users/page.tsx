@@ -21,7 +21,9 @@ function UsersContent() {
   const activeTab: TabId = rawTab === 'lab-assignments' ? 'lab-assignments' : 'all-users'
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
+      <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+
       <div>
         <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {TABS.map((tab) => (
@@ -42,7 +44,7 @@ function UsersContent() {
       </div>
 
       {activeTab === 'all-users' ? <AllUsersTab /> : <LabAssignmentsTab />}
-    </>
+    </div>
   )
 }
 

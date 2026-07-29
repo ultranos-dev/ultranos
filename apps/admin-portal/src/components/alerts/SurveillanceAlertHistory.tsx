@@ -121,19 +121,19 @@ export function SurveillanceAlertHistory() {
         <EmptyState className="mt-6" title={`No surveillance alerts found${filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.`} />
       ) : (
         <>
-          <div className="mt-4 rounded-2xl border border-border overflow-hidden">
+          <div className="mt-4 overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
             <table className="w-full text-sm">
-              <thead className="bg-black text-white">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Date/Time</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Lab</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Test Category</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Positivity Rate</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Status</th>
-                  <th className="px-4 py-3 text-end font-medium text-xs uppercase tracking-wide">Actions</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Date/Time</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Lab</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Test Category</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Positivity Rate</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                  <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-popover">
+              <tbody className="divide-y divide-border bg-background">
                 {alerts.map((alert) => (
                   <tr key={alert.id} className="hover:bg-primary/10 transition-colors">
                     <td className="px-4 py-3 text-muted-foreground">{formatDateTime(alert.triggeredAt)}</td>

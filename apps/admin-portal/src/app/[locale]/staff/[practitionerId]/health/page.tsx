@@ -169,7 +169,7 @@ export default function EmployeeHealthPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <div className="animate-pulse space-y-4">
           <div className="h-8 w-48 rounded bg-card" />
           <div className="h-40 rounded bg-card" />
@@ -180,23 +180,26 @@ export default function EmployeeHealthPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl flex flex-col gap-4">
-        {/* Back link */}
-        <Button
-          variant="link"
-          onClick={() => router.push('/users?tab=lab-assignments')}
-          className="mb-4 px-0"
-        >
-          {t('healthBack')}
-        </Button>
+    <div className="flex flex-col gap-4">
+        {/* Header + back link */}
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant="link"
+            onClick={() => router.push('/users?tab=lab-assignments')}
+            className="px-0"
+          >
+            {t('healthBack')}
+          </Button>
+          <h1 className="text-2xl font-semibold text-foreground">{t('healthPageTitle')}</h1>
+        </div>
 
         {/* Toast */}
         {toast && (
           <div
-            className={`mb-4 rounded-lg px-4 py-3 text-sm font-medium ${
+            className={`rounded-lg px-4 py-3 text-sm font-medium ${
               toast.type === 'success'
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
+                ? 'bg-success/15 text-success'
+                : 'bg-destructive/15 text-destructive'
             }`}
             role="status"
           >

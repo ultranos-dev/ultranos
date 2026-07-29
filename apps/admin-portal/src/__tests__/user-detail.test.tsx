@@ -59,7 +59,7 @@ vi.mock('@/lib/trpc', () => ({
   setAccessToken: vi.fn(),
 }))
 
-const { default: UserDetailPage } = await import('../app/users/[userId]/page')
+const { default: UserDetailPage } = await import('../app/[locale]/users/[userId]/page')
 
 const activeUser = {
   id: 'u1',
@@ -192,7 +192,9 @@ describe('User Detail Page', () => {
       expect(screen.getByDisplayValue('Dr. Alice Smith')).toBeTruthy()
     })
 
-    const saveBtn = screen.getByText('Save Changes')
+    // Save button renders t('detailSave') = "Save Changes" (missing key added to
+    // all four locales as part of the test-catchup i18n fix).
+    const saveBtn = screen.getByRole('button', { name: 'Save Changes' })
     expect(saveBtn).toHaveProperty('disabled', true)
   })
 })

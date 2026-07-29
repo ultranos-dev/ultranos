@@ -8,7 +8,9 @@ import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/ui/empty-state'
+import { FlaskConical, FileSearch } from '@ultranos/ui-kit/icons'
 
 type StatusFilter = 'ALL' | 'PENDING' | 'ACTIVE' | 'SUSPENDED'
 
@@ -51,6 +53,7 @@ export default function LabsPage() {
   const [total, setTotal] = useState(0)
   const [cursor, setCursor] = useState(0)
   const [filter, setFilter] = useState<StatusFilter>('ALL')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -85,47 +88,77 @@ export default function LabsPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
 
+  const q = search.trim().toLowerCase()
+  const visible = labs.filter((lab) => !q || lab.labName.toLowerCase().includes(q))
+
   return (
     <div className="flex flex-col gap-4">
-        {/* Filter tabs + Export — AC #7 */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+
+        {/* Toolbar: filter tabs + search + actions — one row, always visible */}
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
+                type="button"
                 onClick={() => handleFilterChange(s)}
-                className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   filter === s
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
+                aria-pressed={filter === s}
               >
                 {s === 'ALL' ? t('filterAll') : s === 'PENDING' ? t('filterPending') : s === 'ACTIVE' ? t('filterActive') : t('filterSuspended')}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-3">
-            <Button onClick={() => router.push('/labs/create')}>
-              {t('createLab')}
-            </Button>
-            <ExportButton exportFn={() => trpc.admin.exportLabs.query()} filters={{}} />
-          </div>
+          <Input
+            type="text"
+            dir="auto"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="min-w-[200px] flex-1"
+            aria-label={t('searchPlaceholder')}
+          />
+          <Button onClick={() => router.push('/labs/create')}>
+            {t('createLab')}
+          </Button>
+          <ExportButton exportFn={() => trpc.admin.exportLabs.query()} filters={{}} />
         </div>
 
         {error && (
           <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
-        {loading ? (
-          <div className="text-muted-foreground">{t('loadingLabs')}</div>
-        ) : labs.length === 0 ? (
-          <EmptyState title={t('noLabs')} />
-        ) : (
-          <>
-            {/* Lab queue table — AC #1, #2 */}
-            <div className="overflow-hidden rounded-2xl border border-border">
-              <table className="w-full text-sm">
-                <thead className="bg-card">
+        {/* Content panel — single cohesive box */}
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          {loading ? (
+            <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">{t('loadingLabs')}</div>
+          ) : labs.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState
+                icon={FlaskConical}
+                title={t('noLabs')}
+                description={t('noLabsDescription')}
+                action={{ label: t('createLab'), onClick: () => router.push('/labs/create') }}
+              />
+            </div>
+          ) : visible.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState
+                icon={FileSearch}
+                title={t('noResultsTitle')}
+                description={t('noResultsDescription')}
+                action={{ label: t('clearSearch'), onClick: () => setSearch('') }}
+              />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colLabName')}</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colLicenseRef')}</th>
@@ -135,12 +168,12 @@ export default function LabsPage() {
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-popover">
-                  {labs.map((lab) => (
+                <tbody className="divide-y divide-border">
+                  {visible.map((lab) => (
                     <tr
                       key={lab.id}
                       onClick={() => router.push(`/labs/${lab.id}`)}
-                      className="cursor-pointer hover:bg-primary/10 transition-colors"
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
                     >
                       <td className="px-4 py-3 font-medium">{lab.labName}</td>
                       <td className="px-4 py-3 text-muted-foreground">{lab.licenseReference}</td>
@@ -153,35 +186,35 @@ export default function LabsPage() {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>
-                  Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
-                    disabled={cursor === 0}
-                  >
-                    Previous
-                  </Button>
-                  <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCursor(cursor + PAGE_SIZE)}
-                    disabled={cursor + PAGE_SIZE >= total}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
+        {/* Pagination — below the content box */}
+        {!loading && visible.length > 0 && totalPages > 1 && (
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
+                disabled={cursor === 0}
+              >
+                Previous
+              </Button>
+              <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCursor(cursor + PAGE_SIZE)}
+                disabled={cursor + PAGE_SIZE >= total}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         )}
       </div>
   )

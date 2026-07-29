@@ -104,13 +104,15 @@ export default function PatientDetailPage() {
     <div className="flex flex-col gap-4">
         <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('detailBackToPatients')}</Link>
 
+        <h1 className="text-2xl font-semibold text-foreground">{formatName(patient)}</h1>
+
         {error && (
           <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Demographics card */}
-          <div className="rounded-3xl bg-card p-5 border border-border">
+          <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-5">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               <span className="wavy-divider">{t('detailDemographics')}</span>
             </h2>
@@ -126,7 +128,7 @@ export default function PatientDetailPage() {
           </div>
 
           {/* MPI & Status card */}
-          <div className="rounded-3xl bg-card p-5 border border-border">
+          <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-5">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               <span className="wavy-divider">{t('detailMpiStatus')}</span>
             </h2>

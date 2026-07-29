@@ -1,6 +1,17 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 
+// jsdom does not implement IntersectionObserver. The settings page constructs
+// one in a mount effect (scroll-spy for the section nav); without this stub the
+// effect throws and rendering fails. Provide a no-op implementation.
+class MockIntersectionObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() { return [] }
+}
+vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
+
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
   redirect: vi.fn(),
@@ -41,7 +52,7 @@ vi.mock('@/lib/trpc', () => ({
   reportAdminAuthEvent: vi.fn(),
 }))
 
-const { default: SettingsPage } = await import('../app/settings/page')
+const { default: SettingsPage } = await import('../app/[locale]/settings/page')
 
 describe('Settings Page — Restructured', () => {
   it('renders "My Account" section', () => {

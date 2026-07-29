@@ -154,7 +154,9 @@
     "detailConfirmSuspendDesc": "حساب ارائه‌دهنده تعلیق می‌شود. تا زمان فعال‌سازی مجدد نمی‌تواند وارد شود.",
     "detailActionSuccess": "اقدام با موفقیت انجام شد",
     "detailActionError": "اقدام ناکام شد",
-    "detailNotFound": "هشدار یافت نشد"
+    "detailNotFound": "هشدار یافت نشد",
+    "noAlertsDescription": "هیچ هشدار ناهنجاری تجویزی با فیلتر فعلی مطابقت ندارد.",
+    "noReports": "هنوز هیچ گزارش ماهانه‌ای ایجاد نشده است."
   },
   "audit": {
     "pageTitle": "گزارش ممیزی",
@@ -181,7 +183,9 @@
     "colResource": "منبع",
     "colResourceId": "شناسه منبع",
     "noEvents": "رویداد ممیزی یافت نشد.",
-    "errorLoad": "بارگذاری داده ممیزی ناکام شد"
+    "errorLoad": "بارگذاری داده ممیزی ناکام شد",
+    "noHistoryDescription": "پس از بررسی زنجیره، اجرای تأییدها اینجا نمایش داده می‌شود.",
+    "noEventsDescription": "فیلترها یا بازه تاریخ را تنظیم کنید."
   },
   "certifications": {
     "pageTitle": "گواهی‌نامه‌ها",
@@ -204,7 +208,15 @@
     "archiveTitle": "بایگانی مسیر",
     "archiveDesc": "آیا مطمئن هستید می‌خواهید این مسیر را بایگانی کنید؟",
     "archiveSuccess": "مسیر بایگانی شد",
-    "archiveError": "بایگانی مسیر ناکام شد"
+    "archiveError": "بایگانی مسیر ناکام شد",
+    "searchPlaceholder": "جستجوی مسیرها",
+    "filterAll": "همه",
+    "filterActive": "فعال",
+    "filterArchived": "بایگانی‌شده",
+    "noPathwaysDescription": "برای پیگیری نقاط عطف کارکنان یک مسیر تأیید ایجاد کنید.",
+    "noResultsTitle": "هیچ مسیر مطابقی یافت نشد",
+    "noResultsDescription": "یک عبارت جستجو یا فیلتر دیگر را امتحان کنید.",
+    "clearSearch": "پاک کردن جستجو"
   },
   "inventory": {
     "pageTitle": "انبارداری",
@@ -243,7 +255,19 @@
     "saveChanges": "ذخیره تغییرات",
     "supplierAdded": "تأمین‌کننده با موفقیت افزوده شد",
     "supplierUpdated": "تأمین‌کننده با موفقیت بروزرسانی شد",
-    "supplierError": "ذخیره تأمین‌کننده ناکام شد"
+    "supplierError": "ذخیره تأمین‌کننده ناکام شد",
+    "filterAll": "همه",
+    "filterActive": "فعال",
+    "filterInactive": "غیرفعال",
+    "suppliersSearchPlaceholder": "جستجوی تأمین‌کنندگان",
+    "loadingSuppliers": "در حال بارگذاری تأمین‌کنندگان…",
+    "noSuppliersDescription": "برای پیگیری زمان تحویل معرف‌ها و سفارش‌ها یک تأمین‌کننده اضافه کنید.",
+    "noResultsTitle": "هیچ تأمین‌کننده مطابقی یافت نشد",
+    "noResultsDescription": "یک عبارت جستجو یا فیلتر دیگر را امتحان کنید.",
+    "clearFilters": "پاک کردن فیلترها",
+    "noPurchaseOrdersDescription": "برای شروع یک سفارش خرید ایجاد کنید.",
+    "noHeatmapData": "هیچ داده موجودی نیست",
+    "noHeatmapDescription": "هنوز هیچ آزمایشگاهی موجودی را گزارش نمی‌کند."
   },
   "labs": {
     "pageTitle": "آزمایشگاه‌ها",
@@ -302,7 +326,17 @@
     "staffRemoveTitle": "حذف کارمند",
     "staffRemoveDesc": "آیا مطمئن هستید می‌خواهید این کارمند را از آزمایشگاه حذف کنید؟",
     "staffActionSuccess": "اقدام با موفقیت انجام شد",
-    "staffActionError": "اقدام ناکام شد"
+    "staffActionError": "اقدام ناکام شد",
+    "searchPlaceholder": "جستجوی آزمایشگاه‌ها",
+    "noLabsDescription": "هنوز هیچ آزمایشگاهی ثبت نشده است. برای شروع اولین آزمایشگاه را ایجاد کنید.",
+    "noResultsTitle": "هیچ آزمایشگاه مطابقی یافت نشد",
+    "noResultsDescription": "هیچ آزمایشگاهی با فیلترهای فعلی مطابقت ندارد. جستجو یا فیلتر را تنظیم کنید.",
+    "clearSearch": "پاک کردن جستجو",
+    "staffSearchPlaceholder": "جستجوی کارکنان با نام یا ایمیل",
+    "staffNoStaffDescription": "هنوز هیچ کارمندی به این آزمایشگاه اختصاص نیافته است. برای شروع کارمند اضافه کنید.",
+    "staffLoading": "در حال بارگذاری کارکنان…",
+    "detailNoTechnician": "هیچ تکنسینی مرتبط نیست.",
+    "detailNoStatusHistory": "هیچ تغییر وضعیتی ثبت نشده است."
   },
   "mentorship": {
     "pageTitle": "راهنمایی",
@@ -335,7 +369,12 @@
     "dissolveDesc": "آیا مطمئن هستید می‌خواهید این جفت‌سازی راهنمایی را منحل کنید؟",
     "dissolveReason": "دلیل",
     "dissolveSuccess": "جفت‌سازی منحل شد",
-    "dissolveError": "انحلال جفت‌سازی ناکام شد"
+    "dissolveError": "انحلال جفت‌سازی ناکام شد",
+    "searchPlaceholder": "جستجو با نام مربی یا کارآموز",
+    "noPairingsDescription": "برای اتصال تکنسین‌های باتجربه با کارکنان تازه‌کار یک جفت ایجاد کنید.",
+    "noResultsTitle": "هیچ جفت مطابقی یافت نشد",
+    "noResultsDescription": "هیچ جفتی با فیلترهای فعلی مطابقت ندارد. جستجو یا فیلتر را تنظیم کنید.",
+    "clearSearch": "پاک کردن جستجو"
   },
   "network": {
     "pageTitle": "شبکه",
@@ -355,7 +394,8 @@
     "outbreakModeTitle": "فعال‌سازی حالت همه‌گیری",
     "outbreakModeDesc": "این همه گره‌های شبکه را هشدار می‌دهد و پروتکل‌های اضطراری را فعال می‌کند.",
     "outbreakModeSuccess": "حالت همه‌گیری فعال شد",
-    "outbreakModeError": "فعال‌سازی حالت همه‌گیری ناکام شد"
+    "outbreakModeError": "فعال‌سازی حالت همه‌گیری ناکام شد",
+    "noNodesDescription": "هیچ گره شبکه‌ای با فیلتر انتخاب‌شده مطابقت ندارد."
   },
   "patients": {
     "pageTitle": "بیماران",
@@ -405,7 +445,11 @@
     "mergeConfirmButton": "تأیید ادغام",
     "mergeSuccess": "بیماران با موفقیت ادغام شدند",
     "mergeError": "ادغام بیماران ناکام شد",
-    "mergeSearchPlaceholder": "جستجوی بیمار…"
+    "mergeSearchPlaceholder": "جستجوی بیمار…",
+    "searchPromptDescription": "برای شروع جستجوی سوابق بیمار یک نام وارد کنید.",
+    "noPatientsDescription": "یک عبارت جستجوی دیگر امتحان کنید یا فیلترها را تنظیم کنید.",
+    "mergeNoSurvivorTitle": "هیچ رکورد باقی‌مانده انتخاب نشده",
+    "mergeNoSurvivorDescription": "از صفحه جزئیات بیمار بروید یا پارامتر ?survivor= را در URL وارد کنید."
   },
   "providers": {
     "pageTitle": "ارائه‌دهندگان",
@@ -464,7 +508,21 @@
     "profileLicenseTimeline": "جدول زمانی مجوز",
     "profileAlertHistory": "تاریخچه هشدارهای نسخه",
     "profileLicenseExpiredWarning": "مجوز منقضی شده است",
-    "profileNotFound": "ارائه‌دهنده یافت نشد"
+    "profileNotFound": "ارائه‌دهنده یافت نشد",
+    "noProvidersDescription": "درخواست‌های احراز هویت ارائه‌دهندگان جدید برای بررسی اینجا نمایش داده می‌شود.",
+    "noResultsTitle": "هیچ ارائه‌دهنده مطابقی یافت نشد",
+    "noResultsDescription": "یک عبارت جستجو یا فیلتر دیگر را امتحان کنید.",
+    "clearFilters": "پاک کردن فیلترها",
+    "colLicenseDoc": "سند مجوز",
+    "colRegistryStatus": "وضعیت ثبت",
+    "expiryNoProvidersDescription": "هیچ ارائه‌دهنده‌ای مجوزش در این بازه منقضی نمی‌شود.",
+    "detailNoDocuments": "هیچ سندی موجود نیست.",
+    "detailNoOcrData": "هیچ داده OCR موجود نیست.",
+    "detailNoFieldsExtracted": "هیچ فیلدی استخراج نشد.",
+    "profileNoKycSubmissions": "هیچ درخواست احراز هویتی یافت نشد.",
+    "profileNoKycSubmissionsDescription": "این ارائه‌دهنده سابقه درخواست احراز هویت ندارد.",
+    "profileNoAlerts": "هیچ هشدار تجویزی نیست.",
+    "profileNoAlertsDescription": "این ارائه‌دهنده هیچ هشدار تجویزی ثبت‌شده‌ای ندارد."
   },
   "settings": {
     "pageTitle": "تنظیمات",
@@ -511,7 +569,9 @@
     "thresholdsTitle": "آستانه‌ها",
     "modulesTitle": "ماژول‌ها",
     "alertConfigTitle": "پیکربندی هشدار",
-    "errorLoad": "بارگذاری تنظیمات ناکام شد"
+    "errorLoad": "بارگذاری تنظیمات ناکام شد",
+    "modulesEmptyTitle": "هیچ ماژولی پیکربندی نشده",
+    "modulesEmptyDescription": "برای دیدن تنظیمات یک ماژول، در آن مشترک شوید."
   },
   "staff": {
     "certificationsPageTitle": "گواهی‌نامه‌های کارکنان",
@@ -562,7 +622,8 @@
     "healthTbResultNegative": "منفی",
     "healthTbResultPositive": "مثبت",
     "healthTbResultIndeterminate": "نامشخص",
-    "healthTbResultSelect": "انتخاب کنید…"
+    "healthTbResultSelect": "انتخاب کنید…",
+    "certNoneDescription": "هنوز هیچ مسیر تأییدی به این پزشک اختصاص نیافته است."
   },
   "subscriptions": {
     "pageTitle": "اشتراک‌ها",
@@ -608,7 +669,9 @@
     "invoicesDownloadPdf": "دانلود PDF",
     "invoicesNoInvoices": "فاکتوری یافت نشد.",
     "invoicesLoading": "در حال بارگذاری فاکتورها…",
-    "invoicesErrorLoad": "بارگذاری فاکتورها ناکام شد"
+    "invoicesErrorLoad": "بارگذاری فاکتورها ناکام شد",
+    "invoicesNoInvoicesDescription": "هنوز هیچ فاکتوری ایجاد نشده است.",
+    "noModulesDescription": "در حال حاضر هیچ ماژولی برای این سازمان مشترک نشده است."
   },
   "users": {
     "pageTitle": "کاربران",
@@ -640,7 +703,22 @@
     "detailActionSuccess": "اقدام با موفقیت انجام شد",
     "detailActionError": "اقدام ناکام شد",
     "detailSuspensionReasonLabel": "دلیل تعلیق",
-    "detailNotFound": "کاربر یافت نشد"
+    "detailNotFound": "کاربر یافت نشد",
+    "searchPlaceholder": "جستجوی نام یا ایمیل",
+    "filterByRole": "فیلتر بر اساس نقش",
+    "noUsers": "هنوز هیچ کاربر کارمندی نیست",
+    "noUsersDescription": "با دعوت از اولین عضو تیم خود شروع کنید.",
+    "createUser": "ایجاد کاربر",
+    "noResultsTitle": "هیچ کاربر مطابقی یافت نشد",
+    "noResultsDescription": "فیلترها یا جستجو را تنظیم کنید.",
+    "clearFilters": "پاک کردن فیلترها",
+    "noLabStaff": "هیچ کارمند آزمایشگاهی اختصاص نیافته",
+    "noLabStaffDescription": "برای شروع کارکنان را به یک آزمایشگاه اختصاص دهید.",
+    "assignToLab": "اختصاص به آزمایشگاه",
+    "detailSave": "ذخیره تغییرات",
+    "detailCancel": "لغو",
+    "detailNever": "هرگز",
+    "detailSuspendPlaceholder": "دلیل تعلیق"
   },
   "aiModels": {
     "pageTitle": "مدل‌های هوش مصنوعی",
@@ -678,7 +756,8 @@
     "publishButton": "انتشار",
     "publishing": "در حال انتشار…",
     "publishError": "انتشار ناکام شد",
-    "errorLoad": "دریافت داده ناکام شد"
+    "errorLoad": "دریافت داده ناکام شد",
+    "loading": "در حال بارگذاری…"
   },
   "register": {
     "pageTitle": "ثبت سازمان شما",

@@ -55,7 +55,7 @@ vi.mock('@/lib/trpc', () => ({
   },
 }))
 
-const { default: CertificationsPage } = await import('../app/certifications/page')
+const { default: CertificationsPage } = await import('../app/[locale]/certifications/page')
 
 const MOCK_PATHWAYS = {
   pathways: [

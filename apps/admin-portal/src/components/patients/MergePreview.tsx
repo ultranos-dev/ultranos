@@ -38,7 +38,7 @@ export function MergePreview({
       </div>
 
       {/* Summary card */}
-      <div className="rounded-3xl bg-card p-5 border border-border">
+      <div className="rounded-xl bg-card p-5 border border-border">
         <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
           <span className="wavy-divider">Merge Summary</span>
         </h3>

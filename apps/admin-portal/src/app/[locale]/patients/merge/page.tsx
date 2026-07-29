@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { PatientComparisonTable } from '@/components/patients/PatientComparisonTable'
 import { MergePreview } from '@/components/patients/MergePreview'
-import { Check } from '@ultranos/ui-kit/icons'
+import { Check, Users } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -40,7 +40,7 @@ const MERGE_FIELDS = [
 
 function PatientCard({ patient, label }: { patient: Patient; label: string }) {
   return (
-    <div className="rounded-3xl bg-card p-5 border border-border">
+    <div className="rounded-xl bg-card p-5 border border-border">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
       <p className="mt-2 text-lg font-semibold text-foreground">
         {[patient.name_given, patient.name_father].filter(Boolean).join(' ') || 'Unknown'}
@@ -174,7 +174,7 @@ export default function MergeWizardPage() {
   if (mergeResult?.success && survivor) {
     return (
       <div className="flex flex-col gap-4">
-          <div className="rounded-3xl bg-card p-8 border border-border text-center">
+          <div className="rounded-xl bg-card p-8 border border-border text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
               <Check className="h-8 w-8 text-success" />
             </div>
@@ -200,7 +200,10 @@ export default function MergeWizardPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Patients</Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Patients</Link>
+          <h1 className="text-2xl font-semibold text-foreground">{t('mergePageTitle')}</h1>
+        </div>
 
         {error && (
           <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
@@ -244,10 +247,13 @@ export default function MergeWizardPage() {
               ) : survivor ? (
                 <PatientCard patient={survivor} label="Survivor (will be kept)" />
               ) : (
-                <EmptyState
-                  title="No survivor selected."
-                  description="Navigate from a patient detail page or provide a ?survivor= URL parameter."
-                />
+                <div className="flex min-h-[12rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+                  <EmptyState
+                    icon={Users}
+                    title={t('mergeNoSurvivorTitle')}
+                    description={t('mergeNoSurvivorDescription')}
+                  />
+                </div>
               )}
             </div>
 
@@ -350,7 +356,7 @@ export default function MergeWizardPage() {
             />
 
             {/* Confirmation input */}
-            <div className="rounded-3xl bg-card p-5 border border-border">
+            <div className="rounded-xl bg-card p-5 border border-border">
               <p className="text-sm text-muted-foreground">
                 Type <span className="font-mono font-semibold text-foreground">MERGE</span> below to confirm this operation.
               </p>

@@ -9,9 +9,10 @@ import { ThresholdSettings } from '@/components/settings/ThresholdSettings'
 import { ModuleSettingsCard } from '@/components/settings/ModuleSettingsCard'
 import { SurveillanceConfigForm } from '@/components/alerts/SurveillanceConfigForm'
 import { SurveillanceAlertHistory } from '@/components/alerts/SurveillanceAlertHistory'
-import { KeyRound } from '@ultranos/ui-kit/icons'
+import { KeyRound, Package } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/empty-state'
 
 /* ─── Types ─── */
 
@@ -407,6 +408,8 @@ export default function SettingsPage() {
 
   return (
     <>
+      <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+
       {/* Section Navigation (sticky top) */}
       <div className="sticky top-0 z-10 bg-card border-b border-border">
         <nav className="flex gap-1 py-3" aria-label="Settings sections">
@@ -431,7 +434,7 @@ export default function SettingsPage() {
         {/* ═══ Section 1: My Account ═══ */}
         <section id="my-account" className="scroll-mt-24">
           <h2 className="text-lg font-semibold text-foreground mb-4">{t('navMyAccount')}</h2>
-          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border space-y-0">
+          <div className="rounded-xl bg-card p-5 border border-border space-y-0">
 
             {/* a. Profile */}
             <div className="space-y-4 py-4">
@@ -629,7 +632,7 @@ export default function SettingsPage() {
         {/* ═══ Section 2: Organization ═══ */}
         <section id="organization" className="scroll-mt-24">
           <h2 className="text-lg font-semibold text-foreground mb-4">{t('orgTitle')}</h2>
-          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border space-y-4">
+          <div className="rounded-xl bg-card p-5 border border-border space-y-4">
             {orgDraft ? (
               <>
                 <label className="block">
@@ -709,7 +712,7 @@ export default function SettingsPage() {
         {/* ═══ Section 3: Notifications ═══ */}
         <section id="notifications" className="scroll-mt-24">
           <h2 className="text-lg font-semibold text-foreground mb-4">{t('notificationsTitle')}</h2>
-          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border">
+          <div className="rounded-xl bg-card p-5 border border-border">
             <NotificationPreferences email={profile?.email} />
           </div>
         </section>
@@ -717,7 +720,7 @@ export default function SettingsPage() {
         {/* ═══ Section 4: Thresholds ═══ */}
         <section id="thresholds" className="scroll-mt-24">
           <h2 className="text-lg font-semibold text-foreground mb-4">{t('thresholdsTitle')}</h2>
-          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border">
+          <div className="rounded-xl bg-card p-5 border border-border">
             <ThresholdSettings />
           </div>
         </section>
@@ -725,9 +728,15 @@ export default function SettingsPage() {
         {/* ═══ Section 5: Modules ═══ */}
         <section id="modules" className="scroll-mt-24">
           <h2 className="text-lg font-semibold text-foreground mb-4">{t('modulesTitle')}</h2>
-          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border">
+          <div className="rounded-xl bg-card p-5 border border-border">
             {subscribedModules.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No modules configured. Subscribe to a module to see its settings.</p>
+              <div className="flex min-h-[12rem] items-center justify-center">
+                <EmptyState
+                  icon={Package}
+                  title={t('modulesEmptyTitle')}
+                  description={t('modulesEmptyDescription')}
+                />
+              </div>
             ) : (
               <div className="space-y-4">
                 {subscribedModules.map((mod) => (
@@ -741,7 +750,7 @@ export default function SettingsPage() {
         {/* ═══ Section 6: Alert Config ═══ */}
         <section id="alert-config" className="scroll-mt-24 mb-12">
           <h2 className="text-lg font-semibold text-foreground mb-4">{t('alertConfigTitle')}</h2>
-          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border space-y-4">
+          <div className="rounded-xl bg-card p-5 border border-border space-y-4">
             <SurveillanceConfigForm />
             <div className="border-t border-border pt-6">
               <SurveillanceAlertHistory />

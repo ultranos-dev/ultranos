@@ -7,6 +7,9 @@ import type { LabRole as SharedLabRole } from '@ultranos/shared-types'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Users, FileSearch } from '@ultranos/ui-kit/icons'
 import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
 import {
   Dialog,
@@ -161,6 +164,7 @@ export default function LabStaffPage() {
   const labId = params.labId as string
 
   const [staff, setStaff] = useState<StaffMember[]>([])
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
@@ -255,15 +259,36 @@ export default function LabStaffPage() {
     }
   }
 
+  const q = search.trim().toLowerCase()
+  const visible = staff.filter(
+    (m) => !q || m.email.toLowerCase().includes(q) || m.practitionerId.toLowerCase().includes(q),
+  )
+
   return (
     <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
+        <div>
           <Button
             variant="ghost"
+            size="sm"
             onClick={() => router.push(`/labs/${labId}`)}
           >
             {t('staffBackToLab')}
           </Button>
+        </div>
+
+        <h1 className="text-2xl font-semibold text-foreground">{t('staffPageTitle')}</h1>
+
+        {/* Toolbar: search + add staff — one row, always visible */}
+        <div className="flex flex-wrap items-center gap-3">
+          <Input
+            type="text"
+            dir="auto"
+            placeholder={t('staffSearchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="min-w-[200px] flex-1"
+            aria-label={t('staffSearchPlaceholder')}
+          />
           <Button
             onClick={() => setShowAssignModal(true)}
             aria-label={t('staffAddStaff')}
@@ -284,72 +309,82 @@ export default function LabStaffPage() {
           <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
-        {/* Staff table */}
-        <div className="overflow-x-auto rounded-2xl border border-border shadow-card">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-card">
-                <th className="px-4 py-3 text-start font-medium">{t('staffColName')}</th>
-                <th className="px-4 py-3 text-start font-medium">{t('staffColEmail')}</th>
-                <th className="px-4 py-3 text-start font-medium">{t('staffColRole')}</th>
-                <th className="px-4 py-3 text-start font-medium">{t('staffColStatus')}</th>
-                <th className="px-4 py-3 text-start font-medium">{t('staffColActions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                    {t('staffNoStaff')}
-                  </td>
-                </tr>
-              ) : staff.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                    {t('staffNoStaff')}
-                  </td>
-                </tr>
-              ) : (
-                staff.map((member) => (
-                  <tr key={member.practitionerId} className="border-t border-border hover:bg-card">
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                      {member.practitionerId.slice(0, 8)}...
-                    </td>
-                    <td className="px-4 py-3 text-foreground">
-                      {truncate(member.email, 25)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <select
-                        value={member.labRole}
-                        onChange={(e) => handleRoleSelect(member, e.target.value as LabRole)}
-                        className="rounded-lg border border-border bg-card px-2 py-1 text-xs focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
-                      >
-                        {LAB_ROLES.map((role) => (
-                          <option key={role} value={role}>
-                            {ROLE_LABELS[role]}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {formatDate(member.createdAt)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPendingRemove({ practitionerId: member.practitionerId, email: member.email })}
-                        aria-label={t('staffRemove')}
-                        className="text-destructive border-destructive hover:bg-destructive/10"
-                      >
-                        {t('staffRemove')}
-                      </Button>
-                    </td>
+        {/* Staff table — single cohesive box */}
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          {loading ? (
+            <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">{t('staffLoading')}</div>
+          ) : staff.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState
+                icon={Users}
+                title={t('staffNoStaff')}
+                description={t('staffNoStaffDescription')}
+                action={{ label: t('staffAddStaff'), onClick: () => setShowAssignModal(true) }}
+              />
+            </div>
+          ) : visible.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState
+                icon={FileSearch}
+                title={t('noResultsTitle')}
+                description={t('noResultsDescription')}
+                action={{ label: t('clearSearch'), onClick: () => setSearch('') }}
+              />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('staffColName')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('staffColEmail')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('staffColRole')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('staffColStatus')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('staffColActions')}</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {visible.map((member) => (
+                    <tr key={member.practitionerId} className="hover:bg-muted/50 transition-colors">
+                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                        {member.practitionerId.slice(0, 8)}...
+                      </td>
+                      <td className="px-4 py-3 text-foreground">
+                        {truncate(member.email, 25)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={member.labRole}
+                          onChange={(e) => handleRoleSelect(member, e.target.value as LabRole)}
+                          className="rounded-lg border border-border bg-card px-2 py-1 text-xs focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        >
+                          {LAB_ROLES.map((role) => (
+                            <option key={role} value={role}>
+                              {ROLE_LABELS[role]}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {formatDate(member.createdAt)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPendingRemove({ practitionerId: member.practitionerId, email: member.email })}
+                          aria-label={t('staffRemove')}
+                          className="text-destructive border-destructive hover:bg-destructive/10"
+                        >
+                          {t('staffRemove')}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Confirmation modal */}

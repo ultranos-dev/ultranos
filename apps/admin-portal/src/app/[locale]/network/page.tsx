@@ -9,6 +9,7 @@ import { OutbreakDashboard } from '@/components/network/OutbreakDashboard'
 import { ChwEnrollmentModal } from '@/components/network/ChwEnrollmentModal'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Network } from '@ultranos/ui-kit/icons'
 
 type StatusFilter = 'ALL' | 'ACTIVE' | 'PENDING' | 'SUSPENDED'
 
@@ -75,14 +76,17 @@ export default function NetworkPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        {/* Action buttons */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <Button variant="destructive" size="lg" onClick={() => setShowOutbreakModal(true)}>
-            {t('activateOutbreakMode')}
-          </Button>
-          <Button size="lg" onClick={() => setShowChwModal(true)}>
-            {t('enrollChw')}
-          </Button>
+        {/* Header + action buttons */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button variant="destructive" size="lg" onClick={() => setShowOutbreakModal(true)}>
+              {t('activateOutbreakMode')}
+            </Button>
+            <Button size="lg" onClick={() => setShowChwModal(true)}>
+              {t('enrollChw')}
+            </Button>
+          </div>
         </div>
 
         {/* Filter tabs */}
@@ -90,8 +94,10 @@ export default function NetworkPage() {
           {STATUS_FILTERS.map((s) => (
             <button
               key={s}
+              type="button"
+              aria-pressed={filter === s}
               onClick={() => setFilter(s)}
-              className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 filter === s
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -112,7 +118,13 @@ export default function NetworkPage() {
           <>
             {/* Lab grid */}
             {filteredLabs.length === 0 ? (
-              <EmptyState title={t('noNodes')} />
+              <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+                <EmptyState
+                  icon={Network}
+                  title={t('noNodes')}
+                  description={t('noNodesDescription')}
+                />
+              </div>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredLabs.map((lab) => (

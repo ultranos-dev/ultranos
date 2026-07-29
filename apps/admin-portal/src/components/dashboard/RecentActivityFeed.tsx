@@ -16,9 +16,10 @@ interface Activity {
   description: string
 }
 
-function dotColor(action: string): string {
-  if (action.toLowerCase().includes('approv')) return 'bg-success'
-  if (action.toLowerCase().includes('suspend') || action.toLowerCase().includes('revok')) return 'bg-destructive'
+function dotColor(action: string | undefined | null): string {
+  const a = (action ?? '').toLowerCase()
+  if (a.includes('approv')) return 'bg-success'
+  if (a.includes('suspend') || a.includes('revok')) return 'bg-destructive'
   return 'bg-primary'
 }
 

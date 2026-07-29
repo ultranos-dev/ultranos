@@ -7,6 +7,8 @@ import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
+import { EmptyState } from '@/components/ui/empty-state'
+import { FileText, Search } from '@ultranos/ui-kit/icons'
 import {
   Dialog,
   DialogContent,
@@ -254,7 +256,7 @@ export default function KycSubmissionDetailPage() {
   if (error && !detail) {
     return (
       <div>
-        <Button variant="ghost" onClick={() => router.push('/providers')}>{t('detailBackToQueue')}</Button>
+        <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => router.push('/providers')}>{t('detailBackToQueue')}</Button>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -266,31 +268,32 @@ export default function KycSubmissionDetailPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <Button variant="ghost" onClick={() => router.push('/providers')}>{t('detailBackToQueue')}</Button>
+        <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => router.push('/providers')}>{t('detailBackToQueue')}</Button>
 
         {/* Header */}
-        <div className="mt-4 flex items-center justify-between">
-          <div>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-2xl font-semibold text-foreground">{detail.providerName}</h1>
+          <div className="flex items-center gap-2">
             {detail.slaBreached && (
               <Badge variant="destructive">SLA Breached</Badge>
             )}
+            <KycStatusBadge status={detail.kycStatus} />
           </div>
-          <KycStatusBadge status={detail.kycStatus} />
         </div>
 
         {/* Success toast */}
         {successMessage && (
-          <div className="mt-4 rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{successMessage}</div>
+          <div className="rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{successMessage}</div>
         )}
 
         {/* Error */}
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Action buttons — AC #4 */}
         {isPending && (
-          <div className="mt-6 flex gap-3">
+          <div className="flex gap-3">
             <Button
               variant="success"
               onClick={() => setPendingAction('APPROVE')}
@@ -315,10 +318,12 @@ export default function KycSubmissionDetailPage() {
         {/* Side-by-side: Document viewer + OCR fields — AC #3 */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Left panel: Document viewer */}
-          <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+          <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-6">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailDocuments')}</h2>
             {detail.documentUrls.length === 0 ? (
-              <p className="mt-3 text-sm text-muted-foreground">No documents available.</p>
+              <div className="mt-3">
+                <EmptyState size="sm" icon={FileText} title={t('detailNoDocuments')} />
+              </div>
             ) : (
               <div className="mt-3 space-y-4">
                 {detail.documentUrls.map((doc) => (
@@ -348,17 +353,19 @@ export default function KycSubmissionDetailPage() {
           </div>
 
           {/* Right panel: OCR-extracted fields — AC #3 */}
-          <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+          <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-6">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailOcrFields')}</h2>
             {detail.ocrFields.length === 0 ? (
-              <p className="mt-3 text-sm text-muted-foreground">No OCR data available.</p>
+              <div className="mt-3">
+                <EmptyState size="sm" icon={Search} title={t('detailNoOcrData')} />
+              </div>
             ) : (
               <div className="mt-3 space-y-4">
                 {detail.ocrFields.map((section) => (
                   <div key={section.documentType}>
                     <p className="text-sm font-medium text-foreground mb-2">{DOC_TYPE_LABELS[section.documentType] ?? section.documentType}</p>
                     {section.fields.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No fields extracted.</p>
+                      <EmptyState size="sm" icon={Search} title={t('detailNoFieldsExtracted')} />
                     ) : (
                       <dl className="space-y-2">
                         {section.fields.map((field, i) => (
@@ -380,7 +387,7 @@ export default function KycSubmissionDetailPage() {
         </div>
 
         {/* Submission metadata */}
-        <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+        <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-6">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailSubmissionInfo')}</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between">

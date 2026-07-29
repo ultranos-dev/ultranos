@@ -49,7 +49,7 @@ vi.mock('@/lib/trpc', () => ({
   },
 }))
 
-const { default: LabStaffPage } = await import('../app/labs/[labId]/staff/page')
+const { default: LabStaffPage } = await import('../app/[locale]/labs/[labId]/staff/page')
 
 const mockStaffList = [
   {
@@ -86,11 +86,13 @@ describe('Lab Staff Page', () => {
       expect(screen.getByText('11111111...')).toBeInTheDocument()
     })
 
-    // Column headers
-    expect(screen.getByText('Practitioner ID')).toBeInTheDocument()
+    // Column headers — first column header is now t('staffColName') = "Name"
+    // (drifted from the old "Practitioner ID"). The status/assigned column
+    // header is t('staffColStatus') = "Status".
+    expect(screen.getByText('Name')).toBeInTheDocument()
     expect(screen.getByText('Email')).toBeInTheDocument()
     expect(screen.getByText('Role')).toBeInTheDocument()
-    expect(screen.getByText('Assigned')).toBeInTheDocument()
+    expect(screen.getByText('Status')).toBeInTheDocument()
 
     // Staff data rendered
     expect(screen.getByText('tech1@lab.com')).toBeInTheDocument()
@@ -107,8 +109,9 @@ describe('Lab Staff Page', () => {
 
     render(<LabStaffPage />)
 
+    // EmptyState now uses t('staffNoStaff') = "No staff members found."
     await waitFor(() => {
-      expect(screen.getByText('No staff assigned to this lab')).toBeInTheDocument()
+      expect(screen.getByText('No staff members found.')).toBeInTheDocument()
     })
   })
 
@@ -134,7 +137,7 @@ describe('Lab Staff Page', () => {
 
     // Change role of first staff member via dropdown
     const selects = screen.getAllByRole('combobox')
-    await user.selectOptions(selects[0], 'SUPERVISOR')
+    await user.selectOptions(selects[0]!, 'SUPERVISOR')
 
     // Confirmation modal should appear
     await waitFor(() => {
@@ -156,7 +159,7 @@ describe('Lab Staff Page', () => {
 
     // Change role of LAB_MANAGER to LAB_TECH
     const selects = screen.getAllByRole('combobox')
-    await user.selectOptions(selects[1], 'LAB_TECH')
+    await user.selectOptions(selects[1]!, 'LAB_TECH')
 
     // Warning should appear about manager demotion
     await waitFor(() => {
@@ -177,7 +180,7 @@ describe('Lab Staff Page', () => {
 
     // Change role
     const selects = screen.getAllByRole('combobox')
-    await user.selectOptions(selects[0], 'SUPERVISOR')
+    await user.selectOptions(selects[0]!, 'SUPERVISOR')
 
     // Confirm
     await waitFor(() => {
@@ -199,7 +202,8 @@ describe('Lab Staff Page', () => {
       expect(mockQuery).toHaveBeenCalledTimes(2)
     })
 
-    expect(screen.getByText('Role updated successfully')).toBeInTheDocument()
+    // Success toast now uses t('staffActionSuccess') = "Action completed successfully"
+    expect(screen.getByText('Action completed successfully')).toBeInTheDocument()
   })
 
   it('last-manager CONFLICT error shows error message', async () => {
@@ -215,7 +219,7 @@ describe('Lab Staff Page', () => {
 
     // Try to demote manager
     const selects = screen.getAllByRole('combobox')
-    await user.selectOptions(selects[1], 'LAB_TECH')
+    await user.selectOptions(selects[1]!, 'LAB_TECH')
 
     await waitFor(() => {
       expect(screen.getByText('Confirm')).toBeInTheDocument()
@@ -239,7 +243,7 @@ describe('Lab Staff Page', () => {
     })
 
     const selects = screen.getAllByRole('combobox')
-    await user.selectOptions(selects[0], 'SUPERVISOR')
+    await user.selectOptions(selects[0]!, 'SUPERVISOR')
 
     await waitFor(() => {
       expect(screen.getByText('Change Staff Role')).toBeInTheDocument()
@@ -320,7 +324,7 @@ describe('Lab Staff Page', () => {
     })
 
     const removeButtons = screen.getAllByRole('button', { name: 'Remove' })
-    await user.click(removeButtons[0])
+    await user.click(removeButtons[0]!)
 
     await waitFor(() => {
       expect(screen.getByText('Remove Staff Member')).toBeInTheDocument()
@@ -346,7 +350,7 @@ describe('Lab Staff Page', () => {
     })
 
     const removeButtons = screen.getAllByRole('button', { name: 'Remove' })
-    await user.click(removeButtons[0])
+    await user.click(removeButtons[0]!)
 
     await waitFor(() => {
       expect(screen.getByText('Remove Staff Member')).toBeInTheDocument()
@@ -386,7 +390,7 @@ describe('Lab Staff Page', () => {
 
     // Remove the LAB_MANAGER (index 1)
     const removeButtons = screen.getAllByRole('button', { name: 'Remove' })
-    await user.click(removeButtons[1])
+    await user.click(removeButtons[1]!)
 
     await waitFor(() => {
       expect(screen.getByText('Remove Staff Member')).toBeInTheDocument()

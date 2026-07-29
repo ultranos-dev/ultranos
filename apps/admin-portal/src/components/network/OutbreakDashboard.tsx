@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc'
-import { ChevronRight } from '@ultranos/ui-kit/icons'
+import { ChevronRight, Activity } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 
 interface Outbreak {
   id: string
@@ -73,11 +74,13 @@ export function OutbreakDashboard({ outbreaks, onResolve: _onResolve, onRefresh 
           Active Outbreaks ({active.length})
         </h3>
         {active.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">No active outbreaks.</p>
+          <div className="mt-2">
+            <EmptyState size="sm" icon={Activity} title="No active outbreaks." />
+          </div>
         ) : (
           <div className="mt-2 space-y-3">
             {active.map((ob) => (
-              <div key={ob.id} className="rounded-2xl border border-destructive/30 bg-destructive/10/30 p-4">
+              <div key={ob.id} className="rounded-xl border border-destructive/30 bg-destructive/10 p-4">
                 <div className="flex items-start justify-between">
                   <div>
                     <h4 className="font-semibold text-foreground">{ob.pathogen}</h4>
@@ -146,9 +149,9 @@ export function OutbreakDashboard({ outbreaks, onResolve: _onResolve, onRefresh 
           </Button>
 
           {showResolved && (
-            <div className="mt-3 overflow-hidden rounded-2xl border border-border">
+            <div className="mt-3 overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
               <table className="w-full text-sm">
-                <thead className="bg-card">
+                <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Pathogen</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Labs</th>
@@ -157,7 +160,7 @@ export function OutbreakDashboard({ outbreaks, onResolve: _onResolve, onRefresh 
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Duration</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-popover">
+                <tbody className="divide-y divide-border bg-background">
                   {resolved.map((ob) => (
                     <tr key={ob.id}>
                       <td className="px-4 py-3 font-medium">{ob.pathogen}</td>

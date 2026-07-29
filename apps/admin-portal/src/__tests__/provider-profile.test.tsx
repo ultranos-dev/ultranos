@@ -48,7 +48,7 @@ vi.mock('@/lib/trpc', () => ({
   setAccessToken: vi.fn(),
 }))
 
-const { default: ProviderProfilePage } = await import('../app/providers/profile/[practitionerId]/page')
+const { default: ProviderProfilePage } = await import('../app/[locale]/providers/profile/[practitionerId]/page')
 
 const baseProfile = {
   practitioner: {

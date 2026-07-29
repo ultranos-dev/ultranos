@@ -7,6 +7,9 @@ import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Search, FileSearch } from '@ultranos/ui-kit/icons'
 
 interface Patient {
   id: string
@@ -105,16 +108,18 @@ export default function PatientsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        {/* Top bar: search + filters */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
+        <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+
+        {/* Toolbar: search + filters + merge action — one row */}
+        <div className="flex flex-wrap items-center gap-3">
             {/* Search input */}
-            <input
+            <Input
               type="text"
+              dir="auto"
               placeholder={t('searchPlaceholder')}
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-72 rounded-full border border-border bg-card px-4 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              className="min-w-[200px] flex-1"
               aria-label="Search patients"
             />
 
@@ -139,39 +144,40 @@ export default function PatientsPage() {
               />
               {t('includeInactive')}
             </label>
-          </div>
 
-          <Button asChild>
-            <Link href="/patients/merge">{t('mergePatients')}</Link>
-          </Button>
+            <Button asChild>
+              <Link href="/patients/merge">{t('mergePatients')}</Link>
+            </Button>
         </div>
 
         {error && (
           <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
-        {!search.trim() && !loading ? (
-          <div className="rounded-3xl border border-border bg-card p-12 text-center">
-            <p className="text-lg font-medium text-foreground">{t('searchPrompt')}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Enter a name to begin searching patient records.
-            </p>
-          </div>
-        ) : loading ? (
-          <div className="text-muted-foreground">{t('loadingPatients')}</div>
-        ) : patients.length === 0 ? (
-          <div className="rounded-3xl border border-border bg-card p-12 text-center">
-            <p className="text-lg font-medium text-foreground">{t('noPatients')}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Try a different search term or adjust filters.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Patients table */}
-            <div className="overflow-hidden rounded-2xl border border-border">
-              <table className="w-full text-sm">
-                <thead className="bg-card">
+        {/* Content panel — single cohesive box */}
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          {!search.trim() && !loading ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState
+                icon={Search}
+                title={t('searchPrompt')}
+                description={t('searchPromptDescription')}
+              />
+            </div>
+          ) : loading ? (
+            <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">{t('loadingPatients')}</div>
+          ) : patients.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState
+                icon={FileSearch}
+                title={t('noPatients')}
+                description={t('noPatientsDescription')}
+              />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colName')}</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colGender')}</th>
@@ -183,12 +189,12 @@ export default function PatientsPage() {
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colTier')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-popover">
+                <tbody className="divide-y divide-border">
                   {patients.map((patient) => (
                     <tr
                       key={patient.id}
                       onClick={() => router.push(`/patients/${patient.id}`)}
-                      className="cursor-pointer transition-colors hover:bg-primary/5"
+                      className="cursor-pointer transition-colors hover:bg-muted/50"
                     >
                       <td className="px-4 py-3 font-medium text-foreground">
                         <Link
@@ -211,31 +217,33 @@ export default function PatientsPage() {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
 
-            {/* Pagination */}
-            <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-              <span>
-                Showing {(page - 1) * PAGE_SIZE + 1}&ndash;{(page - 1) * PAGE_SIZE + patients.length}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <span className="flex items-center px-2">Page {page}</span>
-                <Button
-                  variant="outline"
-                  onClick={() => setPage(page + 1)}
-                  disabled={!hasMore}
-                >
-                  Next
-                </Button>
-              </div>
+        {/* Pagination — below the content box */}
+        {!loading && patients.length > 0 && (
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              Showing {(page - 1) * PAGE_SIZE + 1}&ndash;{(page - 1) * PAGE_SIZE + patients.length}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page === 1}
+              >
+                Previous
+              </Button>
+              <span className="flex items-center px-2">Page {page}</span>
+              <Button
+                variant="outline"
+                onClick={() => setPage(page + 1)}
+                disabled={!hasMore}
+              >
+                Next
+              </Button>
             </div>
-          </>
+          </div>
         )}
       </div>
   )

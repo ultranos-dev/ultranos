@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
+import { FileText, ShieldAlert } from '@ultranos/ui-kit/icons'
 
 interface Practitioner {
   id: string
@@ -222,12 +223,14 @@ export default function ProviderProfilePage() {
     <div className="flex flex-col gap-4">
         <Link href="/providers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('profileBack')}</Link>
 
+        <h1 className="text-2xl font-semibold text-foreground">{practitioner.name}</h1>
+
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Section A: Identity Card */}
-        <div className="rounded-3xl bg-card p-5 border border-border">
+        <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-5">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             <span className="wavy-divider">{t('profileIdentity')}</span>
           </h2>
@@ -253,17 +256,23 @@ export default function ProviderProfilePage() {
         </div>
 
         {/* Section B: KYC History */}
-        <div className="rounded-3xl bg-card p-5 border border-border">
+        <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-5">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             <span className="wavy-divider">{t('profileKycHistory')}</span>
           </h2>
 
           {kycSubmissions.length === 0 ? (
-            <EmptyState className="mt-4" title="No KYC submissions found." />
+            <div className="flex min-h-[12rem] items-center justify-center">
+              <EmptyState
+                icon={FileText}
+                title={t('profileNoKycSubmissions')}
+                description={t('profileNoKycSubmissionsDescription')}
+              />
+            </div>
           ) : (
-            <div className="mt-4 overflow-hidden rounded-2xl border border-border">
+            <div className="mt-4 overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
               <table className="w-full text-sm">
-                <thead className="bg-card">
+                <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Submission ID</th>
                     <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Status</th>
@@ -272,7 +281,7 @@ export default function ProviderProfilePage() {
                     <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-popover">
+                <tbody className="divide-y divide-border bg-background">
                   {kycSubmissions.map((sub) => (
                     <tr key={sub.id} className="hover:bg-primary/10 transition-colors">
                       <td className="px-4 py-3 font-mono text-xs">{truncateId(sub.id)}</td>
@@ -296,7 +305,7 @@ export default function ProviderProfilePage() {
         </div>
 
         {/* Section C: License Timeline */}
-        <div className="rounded-3xl bg-card p-5 border border-border">
+        <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-5">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             <span className="wavy-divider">{t('profileLicenseTimeline')}</span>
           </h2>
@@ -316,7 +325,7 @@ export default function ProviderProfilePage() {
         </div>
 
         {/* Section D: Prescribing Alert History */}
-        <div className="rounded-3xl bg-card p-5 border border-border">
+        <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-5">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             <span className="wavy-divider">{t('profileAlertHistory')}</span>
           </h2>
@@ -334,11 +343,17 @@ export default function ProviderProfilePage() {
           )}
 
           {alerts.length === 0 ? (
-            <EmptyState className="mt-4" title="No prescribing alerts." />
+            <div className="flex min-h-[12rem] items-center justify-center">
+              <EmptyState
+                icon={ShieldAlert}
+                title={t('profileNoAlerts')}
+                description={t('profileNoAlertsDescription')}
+              />
+            </div>
           ) : (
-            <div className="mt-4 overflow-hidden rounded-2xl border border-border">
+            <div className="mt-4 overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
               <table className="w-full text-sm">
-                <thead className="bg-card">
+                <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Alert ID</th>
                     <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Type</th>
@@ -348,7 +363,7 @@ export default function ProviderProfilePage() {
                     <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-popover">
+                <tbody className="divide-y divide-border bg-background">
                   {alerts.map((alert) => (
                     <tr key={alert.id} className="hover:bg-primary/10 transition-colors">
                       <td className="px-4 py-3 font-mono text-xs">{truncateId(alert.id)}</td>

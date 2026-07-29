@@ -7,7 +7,9 @@ import { PathwayCreateModal } from '@/components/certifications/PathwayCreateMod
 import { ExpiryWarningWidget } from '@/components/certifications/ExpiryWarningWidget'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Award, FileSearch } from '@ultranos/ui-kit/icons'
 
 type StatusFilter = 'ALL' | 'ACTIVE' | 'ARCHIVED'
 
@@ -47,6 +49,7 @@ export default function CertificationsPage() {
   const [total, setTotal] = useState(0)
   const [cursor, setCursor] = useState(0)
   const [filter, setFilter] = useState<StatusFilter>('ALL')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -91,28 +94,52 @@ export default function CertificationsPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
 
+  const visible = pathways.filter(
+    (p) => !search.trim() || p.name.toLowerCase().includes(search.trim().toLowerCase()),
+  )
+
+  const filterLabel: Record<StatusFilter, string> = {
+    ALL: t('filterAll'),
+    ACTIVE: t('filterActive'),
+    ARCHIVED: t('filterArchived'),
+  }
+
   return (
-    <div className="flex flex-col gap-4">
+    <>
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+
         {/* Expiry Warning Widget (AC #6) */}
         <ExpiryWarningWidget />
 
-        {/* Filter tabs + Create button */}
-        <div className="flex items-center justify-between">
+        {/* Toolbar: status tabs + search + create — one row, always visible */}
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
+                type="button"
                 onClick={() => handleFilterChange(s)}
-                className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   filter === s
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
+                aria-pressed={filter === s}
               >
-                {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
+                {filterLabel[s]}
               </button>
             ))}
           </div>
+          <Input
+            type="text"
+            dir="auto"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="min-w-[200px] flex-1"
+            aria-label={t('searchPlaceholder')}
+          />
           <Button onClick={() => setShowCreateModal(true)}>
             {t('createPathway')}
           </Button>
@@ -122,16 +149,32 @@ export default function CertificationsPage() {
           <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
-        {loading ? (
-          <div className="text-muted-foreground">{t('loadingPathways')}</div>
-        ) : pathways.length === 0 ? (
-          <EmptyState title={t('noPathways')} />
-        ) : (
-          <>
-            {/* Pathway table (AC #1) */}
-            <div className="overflow-hidden rounded-2xl border border-border">
-              <table className="w-full text-sm">
-                <thead className="bg-card">
+        {/* Content panel — single cohesive box */}
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          {loading ? (
+            <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">{t('loadingPathways')}</div>
+          ) : pathways.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState
+                icon={Award}
+                title={t('noPathways')}
+                description={t('noPathwaysDescription')}
+                action={{ label: t('createPathway'), onClick: () => setShowCreateModal(true) }}
+              />
+            </div>
+          ) : visible.length === 0 ? (
+            <div className="flex min-h-[16rem] items-center justify-center">
+              <EmptyState
+                icon={FileSearch}
+                title={t('noResultsTitle')}
+                description={t('noResultsDescription')}
+                action={{ label: t('clearSearch'), onClick: () => setSearch('') }}
+              />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border text-sm">
+                <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colName')}</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDescription')}</th>
@@ -140,9 +183,9 @@ export default function CertificationsPage() {
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colActions')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-popover">
-                  {pathways.map((pathway) => (
-                    <tr key={pathway.id} className="hover:bg-primary/10 transition-colors">
+                <tbody className="divide-y divide-border">
+                  {visible.map((pathway) => (
+                    <tr key={pathway.id} className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 font-medium">{pathway.name}</td>
                       <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">{pathway.description ?? '—'}</td>
                       <td className="px-4 py-3 text-muted-foreground">{pathway.milestoneCount}</td>
@@ -164,35 +207,35 @@ export default function CertificationsPage() {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-                <span>
-                  Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
-                    disabled={cursor === 0}
-                  >
-                    Previous
-                  </Button>
-                  <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCursor(cursor + PAGE_SIZE)}
-                    disabled={cursor + PAGE_SIZE >= total}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
+        {/* Pagination — below the content box */}
+        {!loading && visible.length > 0 && totalPages > 1 && (
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
+                disabled={cursor === 0}
+              >
+                Previous
+              </Button>
+              <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCursor(cursor + PAGE_SIZE)}
+                disabled={cursor + PAGE_SIZE >= total}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 
@@ -204,5 +247,6 @@ export default function CertificationsPage() {
           fetchPathways()
         }}
       />
+    </>
   )
 }

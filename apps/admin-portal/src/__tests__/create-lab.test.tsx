@@ -43,7 +43,7 @@ vi.mock('@/lib/trpc', () => ({
   setAccessToken: vi.fn(),
 }))
 
-const { default: CreateLabPage } = await import('../app/labs/create/page')
+const { default: CreateLabPage } = await import('../app/[locale]/labs/create/page')
 
 describe('Create Lab Page', () => {
   beforeEach(() => {
@@ -55,13 +55,13 @@ describe('Create Lab Page', () => {
     expect(screen.getByLabelText('Lab Name')).toBeTruthy()
     expect(screen.getByLabelText('License Reference')).toBeTruthy()
     expect(screen.getByLabelText('Accreditation Reference')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Create Lab' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Create New Lab' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeTruthy()
   })
 
   it('Create Lab button is disabled when required fields are empty', () => {
     render(<CreateLabPage />)
-    expect(screen.getByRole('button', { name: 'Create Lab' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Create New Lab' })).toBeDisabled()
   })
 
   it('Create Lab button enables when both required fields are filled', async () => {
@@ -71,7 +71,7 @@ describe('Create Lab Page', () => {
     await user.type(screen.getByLabelText('Lab Name'), 'Central Lab')
     await user.type(screen.getByLabelText('License Reference'), 'LIC-2026-001')
 
-    expect(screen.getByRole('button', { name: 'Create Lab' })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Create New Lab' })).not.toBeDisabled()
   })
 
   it('submits with all fields and redirects to /labs', async () => {
@@ -82,7 +82,7 @@ describe('Create Lab Page', () => {
     await user.type(screen.getByLabelText('Lab Name'), 'Central Lab')
     await user.type(screen.getByLabelText('License Reference'), 'LIC-2026-001')
     await user.type(screen.getByLabelText('Accreditation Reference'), 'ACCR-001')
-    await user.click(screen.getByRole('button', { name: 'Create Lab' }))
+    await user.click(screen.getByRole('button', { name: 'Create New Lab' }))
 
     await waitFor(() => {
       expect(mockCreateLab).toHaveBeenCalledWith({
@@ -101,7 +101,7 @@ describe('Create Lab Page', () => {
 
     await user.type(screen.getByLabelText('Lab Name'), 'Central Lab')
     await user.type(screen.getByLabelText('License Reference'), 'LIC-2026-001')
-    await user.click(screen.getByRole('button', { name: 'Create Lab' }))
+    await user.click(screen.getByRole('button', { name: 'Create New Lab' }))
 
     await waitFor(() => {
       expect(mockCreateLab).toHaveBeenCalledWith({
@@ -119,7 +119,7 @@ describe('Create Lab Page', () => {
 
     await user.type(screen.getByLabelText('Lab Name'), 'Central Lab')
     await user.type(screen.getByLabelText('License Reference'), 'LIC-2026-001')
-    await user.click(screen.getByRole('button', { name: 'Create Lab' }))
+    await user.click(screen.getByRole('button', { name: 'Create New Lab' }))
 
     await waitFor(() => {
       expect(screen.getByText('Failed to create lab')).toBeTruthy()

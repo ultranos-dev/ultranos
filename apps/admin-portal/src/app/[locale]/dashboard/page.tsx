@@ -44,6 +44,8 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+
         <DunningBanner />
 
         {statsError && (
@@ -52,79 +54,71 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Row 1: 4 stat cards */}
+        {/* Row 1: 4 stat cards — uniform box idiom, equal height, consistent value size */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Pending KYC Reviews */}
-          <div
+          <button
+            type="button"
             onClick={() => router.push('/providers')}
-            className={`rounded-2xl bg-primary/10 p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card border ${
-              stats && stats.slaBreachedKycCount > 0
-                ? 'border-destructive'
-                : 'border-primary/20'
+            className={`flex flex-col rounded-xl bg-card p-5 text-start shadow-card ring-[0.65px] transition-colors hover:bg-muted/40 ${
+              stats && stats.slaBreachedKycCount > 0 ? 'ring-2 ring-destructive/50' : 'ring-border/50'
             }`}
           >
             <p className="text-sm font-medium text-muted-foreground">{t('pendingKyc')}</p>
             <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-              {stats?.pendingKycReviews ?? '\u2014'}
+              {stats?.pendingKycReviews ?? '—'}
             </p>
-            {stats && (
-              <p className={`mt-1 text-sm font-medium ${stats.slaBreachedKycCount > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                {t('breachingSla', { count: stats.slaBreachedKycCount })}
-              </p>
-            )}
-          </div>
+            <p className={`mt-1 text-sm font-medium ${stats && stats.slaBreachedKycCount > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {stats ? t('breachingSla', { count: stats.slaBreachedKycCount }) : ' '}
+            </p>
+          </button>
 
           {/* Pending Lab Approvals */}
-          <div
+          <button
+            type="button"
             onClick={() => router.push('/labs')}
-            className="rounded-2xl bg-popover border border-border p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card"
+            className="flex flex-col rounded-xl bg-card p-5 text-start shadow-card ring-[0.65px] ring-border/50 transition-colors hover:bg-muted/40"
           >
             <p className="text-sm font-medium text-muted-foreground">{t('pendingLabApprovals')}</p>
-            <p className="mt-2 text-xl font-semibold tracking-tight text-foreground">
-              {stats?.pendingLabApprovals ?? '\u2014'}
+            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+              {stats?.pendingLabApprovals ?? '—'}
             </p>
-            {stats && (
-              <p className={`mt-1 text-sm font-medium ${stats.oldestPendingLabDays > 7 ? 'text-warning' : 'text-muted-foreground'}`}>
-                {t('oldestDaysAgo', { days: stats.oldestPendingLabDays })}
-              </p>
-            )}
-          </div>
+            <p className={`mt-1 text-sm font-medium ${stats && stats.oldestPendingLabDays > 7 ? 'text-warning' : 'text-muted-foreground'}`}>
+              {stats ? t('oldestDaysAgo', { days: stats.oldestPendingLabDays }) : ' '}
+            </p>
+          </button>
 
           {/* Active Alerts */}
-          <div
+          <button
+            type="button"
             onClick={() => router.push('/alerts')}
-            className={`rounded-2xl bg-popover p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card border ${
-              stats && stats.activeAlerts > 0
-                ? 'border-s-2 border-s-destructive border-border'
-                : 'border-border'
+            className={`flex flex-col rounded-xl bg-card p-5 text-start shadow-card ring-[0.65px] transition-colors hover:bg-muted/40 ${
+              stats && stats.activeAlerts > 0 ? 'ring-2 ring-destructive/50' : 'ring-border/50'
             }`}
           >
             <p className="text-sm font-medium text-muted-foreground">{t('activeAlerts')}</p>
-            <p className={`mt-2 text-xl font-semibold tracking-tight ${stats && stats.activeAlerts > 0 ? 'text-destructive' : 'text-foreground'}`}>
-              {stats?.activeAlerts ?? '\u2014'}
+            <p className={`mt-2 text-3xl font-semibold tracking-tight ${stats && stats.activeAlerts > 0 ? 'text-destructive' : 'text-foreground'}`}>
+              {stats?.activeAlerts ?? '—'}
             </p>
-            {stats && (
-              <p className={`mt-1 text-sm font-medium ${stats.highSeverityAlertCount > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                {t('highSeverityCount', { count: stats.highSeverityAlertCount })}
-              </p>
-            )}
-          </div>
+            <p className={`mt-1 text-sm font-medium ${stats && stats.highSeverityAlertCount > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {stats ? t('highSeverityCount', { count: stats.highSeverityAlertCount }) : ' '}
+            </p>
+          </button>
 
           {/* Audit Events — clickable to /audit */}
-          <div
+          <button
+            type="button"
             onClick={() => router.push('/audit')}
-            className="rounded-2xl bg-popover border border-border p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card"
+            className="flex flex-col rounded-xl bg-card p-5 text-start shadow-card ring-[0.65px] ring-border/50 transition-colors hover:bg-muted/40"
           >
             <p className="text-sm font-medium text-muted-foreground">{t('recentAuditEvents')}</p>
-            <p className="mt-2 text-xl font-semibold tracking-tight text-foreground">
-              {stats?.recentAuditEvents ?? '\u2014'}
+            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+              {stats?.recentAuditEvents ?? '—'}
             </p>
-            {stats && (
-              <p className={`mt-1 text-sm font-medium ${stats.auditChainHealthy ? 'text-success' : 'text-destructive'}`}>
-                {stats.auditChainHealthy ? t('chainStatusHealthy') : t('chainStatusBroken')}
-              </p>
-            )}
-          </div>
+            <p className={`mt-1 text-sm font-medium ${stats && !stats.auditChainHealthy ? 'text-destructive' : stats ? 'text-success' : 'text-muted-foreground'}`}>
+              {stats ? (stats.auditChainHealthy ? t('chainStatusHealthy') : t('chainStatusBroken')) : ' '}
+            </p>
+          </button>
         </div>
 
         {/* Row 2: Subscription + User Summary */}

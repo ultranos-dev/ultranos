@@ -45,7 +45,7 @@ vi.mock('@/lib/trpc', () => ({
   },
 }))
 
-const { default: EmployeeHealthPage } = await import('../app/staff/[practitionerId]/health/page')
+const { default: EmployeeHealthPage } = await import('../app/[locale]/staff/[practitionerId]/health/page')
 
 const MOCK_RECORD = {
   id: 'rec-1',
@@ -136,7 +136,7 @@ describe('EmployeeHealthPage', () => {
     expect(removeButtons.length).toBe(2)
 
     // Remove the new entry
-    await user.click(removeButtons[1])
+    await user.click(removeButtons[1]!)
     await waitFor(() => {
       expect(screen.getAllByText('Remove').length).toBe(1)
     })

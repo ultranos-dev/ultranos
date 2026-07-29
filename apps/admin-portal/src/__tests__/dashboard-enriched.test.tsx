@@ -53,7 +53,7 @@ vi.mock('@/lib/trpc', () => ({
   },
 }))
 
-const { default: DashboardPage } = await import('../app/dashboard/page')
+const { default: DashboardPage } = await import('../app/[locale]/dashboard/page')
 
 const fullStats = {
   pendingKycReviews: 5,
@@ -106,11 +106,15 @@ describe('Dashboard Enrichment', () => {
 
     render(<DashboardPage />)
 
+    // SubscriptionWidget renders "Free Trial — {n} days remaining" as one <p>
+    // with static + interpolated text; React may split it across text/comment
+    // nodes, so match on the element's full textContent.
     await waitFor(() => {
-      expect(screen.getByText(/Free Trial/)).toBeInTheDocument()
+      expect(
+        screen.getByText((_, node) => /^Free Trial — \d+ days remaining$/.test(node?.textContent ?? '')),
+      ).toBeInTheDocument()
     })
 
-    expect(screen.getByText(/days remaining/)).toBeInTheDocument()
     expect(screen.getByText('Set Up Billing')).toBeInTheDocument()
   })
 
@@ -123,8 +127,16 @@ describe('Dashboard Enrichment', () => {
       expect(screen.getByText('42')).toBeInTheDocument()
     })
 
-    expect(screen.getByText('35 active, 3 suspended, 4 pending invite')).toBeInTheDocument()
-    expect(screen.getByText('6 users without MFA')).toBeInTheDocument()
+    // These lines interleave static text with multiple {count} expressions, so
+    // React splits them across text nodes — match on the element's textContent.
+    expect(
+      screen.getByText(
+        (_, node) => node?.textContent === '35 active, 3 suspended, 4 pending invite',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText((_, node) => node?.textContent === '6 users without MFA'),
+    ).toBeInTheDocument()
   })
 
   it('shows recent activity feed', async () => {
@@ -138,7 +150,10 @@ describe('Dashboard Enrichment', () => {
 
     expect(screen.getByText('Nurse B was suspended')).toBeInTheDocument()
     expect(screen.getByText('Recent Activity')).toBeInTheDocument()
-    expect(screen.getByText(/View All/)).toBeInTheDocument()
+    // "View All →" — static text + entity may split; match on textContent.
+    expect(
+      screen.getByText((_, node) => /^View All/.test(node?.textContent ?? '') && node?.tagName === 'BUTTON'),
+    ).toBeInTheDocument()
   })
 
   it('shows audit chain health status', async () => {

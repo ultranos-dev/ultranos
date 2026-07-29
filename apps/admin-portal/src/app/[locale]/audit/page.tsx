@@ -6,6 +6,8 @@ import { trpc } from '@/lib/trpc'
 import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { EventBrowser } from '@/components/audit/EventBrowser'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
+import { ClipboardList } from '@ultranos/ui-kit/icons'
 
 interface Verification {
   id: string
@@ -152,19 +154,25 @@ export default function AuditChainPage() {
 
   return (
     <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
+
         {/* Tab bar */}
         <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           <button
+            type="button"
+            aria-pressed={tab === 'integrity'}
             onClick={() => setTab('integrity')}
-            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               tab === 'integrity' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {t('tabChainIntegrity')}
           </button>
           <button
+            type="button"
+            aria-pressed={tab === 'events'}
             onClick={() => setTab('events')}
-            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               tab === 'events' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -185,14 +193,14 @@ export default function AuditChainPage() {
           <>
             {/* Status cards (AC #8) */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl bg-popover p-4 border border-border shadow-card">
+              <div className="rounded-xl bg-card p-4 shadow-card ring-[0.65px] ring-border/50">
                 <p className="text-sm font-medium text-muted-foreground">{t('chainStatus')}</p>
                 <div className="mt-2">
                   <ChainStatusBadge valid={status?.chainHealthy ?? null} />
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-popover p-4 border border-border shadow-card">
+              <div className="rounded-xl bg-card p-4 shadow-card ring-[0.65px] ring-border/50">
                 <p className="text-sm font-medium text-muted-foreground">{t('lastVerified')}</p>
                 <p className="mt-1 text-lg font-semibold">
                   {status?.lastVerifiedAt ? timeAgo(status.lastVerifiedAt) : 'Never'}
@@ -202,14 +210,14 @@ export default function AuditChainPage() {
                 )}
               </div>
 
-              <div className="rounded-2xl bg-popover p-4 border border-border shadow-card">
+              <div className="rounded-xl bg-card p-4 shadow-card ring-[0.65px] ring-border/50">
                 <p className="text-sm font-medium text-muted-foreground">{t('entriesVerified')}</p>
                 <p className="mt-1 text-lg font-semibold">
                   {status?.lastCheckedCount?.toLocaleString() ?? '0'}
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-popover p-4 border border-border shadow-card">
+              <div className="rounded-xl bg-card p-4 shadow-card ring-[0.65px] ring-border/50">
                 <p className="text-sm font-medium text-muted-foreground">{t('consecutiveSuccesses')}</p>
                 <p className="mt-1 text-lg font-semibold">
                   {status?.consecutiveSuccesses ?? 0}
@@ -258,28 +266,30 @@ export default function AuditChainPage() {
             </div>
 
             {/* Verification history table (AC #6) */}
-            <div className="rounded-2xl border border-border overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-card">
-                  <tr>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colVerifiedAt')}</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colEntriesChecked')}</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDuration')}</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Type</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Triggered By</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Broken Event ID</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border bg-popover">
-                  {verifications.length === 0 ? (
+            {verifications.length === 0 ? (
+              <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+                <EmptyState
+                  icon={ClipboardList}
+                  title={t('noHistory')}
+                  description={t('noHistoryDescription')}
+                />
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted">
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                        {t('noHistory')}
-                      </td>
+                      <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colVerifiedAt')}</th>
+                      <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
+                      <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colEntriesChecked')}</th>
+                      <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDuration')}</th>
+                      <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Type</th>
+                      <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Triggered By</th>
+                      <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Broken Event ID</th>
                     </tr>
-                  ) : (
-                    verifications.map((v) => (
+                  </thead>
+                  <tbody className="divide-y divide-border bg-background">
+                    {verifications.map((v) => (
                       <tr key={v.id} className="hover:bg-primary/10 transition-colors">
                         <td className="px-4 py-3">{formatDate(v.verifiedAt)}</td>
                         <td className="px-4 py-3"><ResultIcon valid={v.valid} /></td>
@@ -291,15 +301,15 @@ export default function AuditChainPage() {
                           {v.brokenAtEventId ? v.brokenAtEventId.slice(0, 8) + '...' : ''}
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <span>
                   Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
                 </span>

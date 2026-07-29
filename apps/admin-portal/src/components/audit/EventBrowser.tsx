@@ -1,9 +1,12 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
+import { FileText } from '@ultranos/ui-kit/icons'
 
 interface AuditEvent {
   id: string
@@ -94,6 +97,7 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 export function EventBrowser() {
+  const t = useTranslations('audit')
   const [events, setEvents] = useState<AuditEvent[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [page, setPage] = useState(1)
@@ -143,7 +147,7 @@ export function EventBrowser() {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
   return (
-    <div className="mt-6">
+    <div className="flex flex-col gap-4">
       {/* Filters */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
@@ -210,24 +214,25 @@ export function EventBrowser() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+        <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
       {loading ? (
-        <div className="mt-6 text-muted-foreground">Loading audit events...</div>
+        <div className="text-muted-foreground">Loading audit events...</div>
       ) : events.length === 0 ? (
-        <div className="mt-6 rounded-3xl border border-border bg-card p-12 text-center">
-          <p className="text-lg font-medium text-foreground">No audit events found</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Try adjusting your filters or date range.
-          </p>
+        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <EmptyState
+            icon={FileText}
+            title={t('noEvents')}
+            description={t('noEventsDescription')}
+          />
         </div>
       ) : (
         <>
           {/* Events table */}
-          <div className="mt-4 overflow-hidden rounded-2xl border border-border">
+          <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
             <table className="w-full text-sm">
-              <thead className="bg-card">
+              <thead className="bg-muted">
                 <tr>
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Timestamp</th>
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Action</th>
@@ -236,7 +241,7 @@ export function EventBrowser() {
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Outcome</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-popover">
+              <tbody className="divide-y divide-border bg-background">
                 {events.map((event) => (
                   <EventRow
                     key={event.id}
@@ -250,7 +255,7 @@ export function EventBrowser() {
           </div>
 
           {/* Pagination */}
-          <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
               Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
             </span>

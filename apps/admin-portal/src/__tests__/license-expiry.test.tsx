@@ -21,7 +21,7 @@ vi.mock('@/lib/trpc', () => ({
   },
 }))
 
-const { default: LicenseExpiryPage } = await import('../app/providers/expiry/page')
+const { default: LicenseExpiryPage } = await import('../app/[locale]/providers/expiry/page')
 
 describe('License Expiry View Page', () => {
   it('renders the page heading and filter buttons', async () => {
@@ -42,26 +42,10 @@ describe('License Expiry View Page', () => {
   })
 
   it('renders table columns correctly', async () => {
-    mockListExpiringProviders.mockResolvedValue({
-      providers: [],
-      total: 0,
-      cursor: 0,
-      limit: 25,
-    })
-
-    render(<LicenseExpiryPage />)
-
-    await waitFor(() => {
-      expect(screen.getByText('Provider Name')).toBeTruthy()
-      expect(screen.getByText('License Number')).toBeTruthy()
-      expect(screen.getByText('Issuing Body')).toBeTruthy()
-      expect(screen.getByText('Expiry Date')).toBeTruthy()
-      expect(screen.getByText('Days Remaining')).toBeTruthy()
-      expect(screen.getByText('KYC Status')).toBeTruthy()
-    })
-  })
-
-  it('renders color-coded urgency badges — red for <=7d', async () => {
+    // The table (and its headers) only render when there is at least one
+    // provider row — otherwise the page shows the empty state. Provide a
+    // row so the header cells are present. Column headers come from
+    // en.json: expiryColProvider = "Provider Name", etc.
     mockListExpiringProviders.mockResolvedValue({
       providers: [
         {
@@ -82,14 +66,47 @@ describe('License Expiry View Page', () => {
     render(<LicenseExpiryPage />)
 
     await waitFor(() => {
-      const badge = screen.getByText('5d')
-      expect(badge).toBeTruthy()
-      expect(badge.className).toContain('bg-red-100')
-      expect(badge.className).toContain('text-red-800')
+      expect(screen.getByText('Provider Name')).toBeTruthy()
+      expect(screen.getByText('License Number')).toBeTruthy()
+      expect(screen.getByText('Issuing Body')).toBeTruthy()
+      expect(screen.getByText('Expiry Date')).toBeTruthy()
+      expect(screen.getByText('Days Remaining')).toBeTruthy()
+      expect(screen.getByText('KYC Status')).toBeTruthy()
     })
   })
 
-  it('renders color-coded urgency badges — orange for <=30d', async () => {
+  it('renders color-coded urgency badges — destructive for <=7d', async () => {
+    mockListExpiringProviders.mockResolvedValue({
+      providers: [
+        {
+          practitionerId: 'p1',
+          name: 'Dr. Smith',
+          licenseNumber: 'LIC-001',
+          issuingBody: 'HAAD',
+          expiryDate: '2026-05-20',
+          daysRemaining: 5,
+          kycStatus: 'ACTIVE',
+        },
+      ],
+      total: 1,
+      cursor: 0,
+      limit: 25,
+    })
+
+    render(<LicenseExpiryPage />)
+
+    // Urgency badges now use the shared Badge component's semantic variants
+    // (oklch tokens) instead of hardcoded Tailwind palette classes.
+    // <=7d → variant="destructive" → bg-destructive/10 text-destructive
+    await waitFor(() => {
+      const badge = screen.getByText('5d')
+      expect(badge).toBeTruthy()
+      expect(badge.className).toContain('bg-destructive/10')
+      expect(badge.className).toContain('text-destructive')
+    })
+  })
+
+  it('renders color-coded urgency badges — warning for <=30d', async () => {
     mockListExpiringProviders.mockResolvedValue({
       providers: [
         {
@@ -109,15 +126,16 @@ describe('License Expiry View Page', () => {
 
     render(<LicenseExpiryPage />)
 
+    // <=30d → variant="warning" → bg-warning/10 text-warning
     await waitFor(() => {
       const badge = screen.getByText('25d')
       expect(badge).toBeTruthy()
-      expect(badge.className).toContain('bg-orange-100')
-      expect(badge.className).toContain('text-orange-800')
+      expect(badge.className).toContain('bg-warning/10')
+      expect(badge.className).toContain('text-warning')
     })
   })
 
-  it('renders color-coded urgency badges — yellow for <=60d', async () => {
+  it('renders color-coded urgency badges — warning for <=60d', async () => {
     mockListExpiringProviders.mockResolvedValue({
       providers: [
         {
@@ -137,11 +155,12 @@ describe('License Expiry View Page', () => {
 
     render(<LicenseExpiryPage />)
 
+    // <=60d also maps to variant="warning" → bg-warning/10 text-warning
     await waitFor(() => {
       const badge = screen.getByText('45d')
       expect(badge).toBeTruthy()
-      expect(badge.className).toContain('bg-yellow-100')
-      expect(badge.className).toContain('text-yellow-800')
+      expect(badge.className).toContain('bg-warning/10')
+      expect(badge.className).toContain('text-warning')
     })
   })
 
@@ -218,7 +237,7 @@ describe('License Expiry View Page', () => {
 
     // Click the "Renew License" button in the modal
     const renewButtons = screen.getAllByText('Renew License')
-    const modalRenewButton = renewButtons[renewButtons.length - 1]
+    const modalRenewButton = renewButtons[renewButtons.length - 1]!
     fireEvent.click(modalRenewButton)
 
     // Should show confirmation dialog

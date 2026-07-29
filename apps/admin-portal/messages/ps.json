@@ -154,7 +154,9 @@
     "detailConfirmSuspendDesc": "د چمتو کوونکي حساب به معلق شي. تر بیا فعالیدو به نه شي ننوتلی.",
     "detailActionSuccess": "اقدام بریالي شو",
     "detailActionError": "اقدام ناکام شو",
-    "detailNotFound": "خبرتیا ونه موندل شوه"
+    "detailNotFound": "خبرتیا ونه موندل شوه",
+    "noAlertsDescription": "د نسخې د بې نظمۍ هیڅ خبرداری د اوسني فلټر سره سمون نه خوري.",
+    "noReports": "تر اوسه هیڅ میاشتنی راپور نه دی جوړ شوی."
   },
   "audit": {
     "pageTitle": "د آډیټ لاګ",
@@ -181,7 +183,9 @@
     "colResource": "سرچینه",
     "colResourceId": "د سرچینې پیژند",
     "noEvents": "آډیټ پیښه ونه موندل شوه.",
-    "errorLoad": "د آډیټ معلوماتو بارول ناکام شو"
+    "errorLoad": "د آډیټ معلوماتو بارول ناکام شو",
+    "noHistoryDescription": "کله چې زنځیر وګورل شي، د تصدیق چلونه به دلته ښکاره شي.",
+    "noEventsDescription": "خپل فلټرونه یا د نیټې حد تنظیم کړئ."
   },
   "certifications": {
     "pageTitle": "تصدیقونه",
@@ -204,7 +208,15 @@
     "archiveTitle": "لار آرشیف کول",
     "archiveDesc": "ایا ډاډه یاست چې دا لار آرشیف کول غواړئ؟",
     "archiveSuccess": "لار آرشیف شوه",
-    "archiveError": "د لار آرشیف کول ناکام شو"
+    "archiveError": "د لار آرشیف کول ناکام شو",
+    "searchPlaceholder": "د مسیرونو لټون",
+    "filterAll": "ټول",
+    "filterActive": "فعال",
+    "filterArchived": "آرشیف شوی",
+    "noPathwaysDescription": "د کارمندانو د مرحلو د تعقیب لپاره د تصدیق مسیر جوړ کړئ.",
+    "noResultsTitle": "هیڅ ورته مسیر ونه موندل شو",
+    "noResultsDescription": "بله د لټون کلمه یا فلټر وآزمویئ.",
+    "clearSearch": "لټون پاک کړئ"
   },
   "inventory": {
     "pageTitle": "زیرمه",
@@ -243,7 +255,19 @@
     "saveChanges": "بدلونونه خوندي کول",
     "supplierAdded": "چمتو کوونکی بریالۍ اضافه شو",
     "supplierUpdated": "چمتو کوونکی بریالۍ تازه شو",
-    "supplierError": "د چمتو کوونکي خوندي کول ناکام شو"
+    "supplierError": "د چمتو کوونکي خوندي کول ناکام شو",
+    "filterAll": "ټول",
+    "filterActive": "فعال",
+    "filterInactive": "غیر فعال",
+    "suppliersSearchPlaceholder": "د عرضه کوونکو لټون",
+    "loadingSuppliers": "عرضه کوونکي بارول کیږي…",
+    "noSuppliersDescription": "د ری‌ایجنټ د رارسیدو وخت او امرونو د تعقیب لپاره عرضه کوونکی اضافه کړئ.",
+    "noResultsTitle": "هیڅ ورته عرضه کوونکی ونه موندل شو",
+    "noResultsDescription": "بله د لټون کلمه یا فلټر وآزمویئ.",
+    "clearFilters": "فلټرونه پاک کړئ",
+    "noPurchaseOrdersDescription": "د پیل لپاره د پیرود امر جوړ کړئ.",
+    "noHeatmapData": "د زېرمې هیڅ معلومات نشته",
+    "noHeatmapDescription": "تر اوسه هیڅ لابراتوار د زېرمې راپور نه ورکوي."
   },
   "labs": {
     "pageTitle": "لابراتوارونه",
@@ -302,7 +326,17 @@
     "staffRemoveTitle": "کارمند لرې کول",
     "staffRemoveDesc": "ایا ډاډه یاست چې دا کارمند له لابراتوار نه لرې کول غواړئ؟",
     "staffActionSuccess": "اقدام بریالي شو",
-    "staffActionError": "اقدام ناکام شو"
+    "staffActionError": "اقدام ناکام شو",
+    "searchPlaceholder": "د لابراتوارونو لټون",
+    "noLabsDescription": "تر اوسه هیڅ لابراتوار نه دی ثبت شوی. د پیل لپاره لومړی لابراتوار جوړ کړئ.",
+    "noResultsTitle": "هیڅ ورته لابراتوار ونه موندل شو",
+    "noResultsDescription": "هیڅ لابراتوار ستاسو د اوسنیو فلټرونو سره سمون نه خوري. خپل لټون یا فلټر تنظیم کړئ.",
+    "clearSearch": "لټون پاک کړئ",
+    "staffSearchPlaceholder": "د نوم یا بریښنالیک له مخې د کارمندانو لټون",
+    "staffNoStaffDescription": "تر اوسه دې لابراتوار ته هیڅ کارمند نه دی ټاکل شوی. د پیل لپاره کارمند اضافه کړئ.",
+    "staffLoading": "کارمندان بارول کیږي…",
+    "detailNoTechnician": "هیڅ تخنیکر تړاو نلري.",
+    "detailNoStatusHistory": "د حالت هیڅ بدلون نه دی ثبت شوی."
   },
   "mentorship": {
     "pageTitle": "لارښوونه",
@@ -335,7 +369,12 @@
     "dissolveDesc": "ایا ډاډه یاست چې دا د لارښوونې جوړه منحل کول غواړئ؟",
     "dissolveReason": "دلیل",
     "dissolveSuccess": "جوړه منحله شوه",
-    "dissolveError": "د جوړې منحل کول ناکام شو"
+    "dissolveError": "د جوړې منحل کول ناکام شو",
+    "searchPlaceholder": "د لارښود یا زده کوونکي په نوم لټون",
+    "noPairingsDescription": "د تجربه لرونکو تخنیکرانو د نوي کارمندانو سره د نښلولو لپاره یوه جوړه جوړه کړئ.",
+    "noResultsTitle": "هیڅ ورته جوړه ونه موندل شوه",
+    "noResultsDescription": "هیڅ جوړه ستاسو د اوسنیو فلټرونو سره سمون نه خوري. خپل لټون یا فلټر تنظیم کړئ.",
+    "clearSearch": "لټون پاک کړئ"
   },
   "network": {
     "pageTitle": "شبکه",
@@ -355,7 +394,8 @@
     "outbreakModeTitle": "د اپیدیمي حالت فعالول",
     "outbreakModeDesc": "دا به د شبکې ټول نوډونه خبر کړي او بیړني پروتوکلونه فعال کړي.",
     "outbreakModeSuccess": "د اپیدیمي حالت فعال شو",
-    "outbreakModeError": "د اپیدیمي حالت فعالول ناکام شو"
+    "outbreakModeError": "د اپیدیمي حالت فعالول ناکام شو",
+    "noNodesDescription": "هیڅ شبکه نوډ د ټاکل شوي فلټر سره سمون نه خوري."
   },
   "patients": {
     "pageTitle": "ناروغان",
@@ -405,7 +445,11 @@
     "mergeConfirmButton": "یوځای کول تایید کول",
     "mergeSuccess": "ناروغان بریالۍ یوځای شول",
     "mergeError": "د ناروغانو یوځای کول ناکام شو",
-    "mergeSearchPlaceholder": "ناروغ لټون…"
+    "mergeSearchPlaceholder": "ناروغ لټون…",
+    "searchPromptDescription": "د ناروغانو د اسنادو د لټون د پیل لپاره یو نوم دننه کړئ.",
+    "noPatientsDescription": "بله د لټون کلمه وآزمویئ یا فلټرونه تنظیم کړئ.",
+    "mergeNoSurvivorTitle": "هیڅ پاتې ریکارډ نه دی ټاکل شوی",
+    "mergeNoSurvivorDescription": "د ناروغ د جزئیاتو له پاڼې لاړ شئ یا د ?survivor= پارامیټر ورکړئ."
   },
   "providers": {
     "pageTitle": "چمتو کوونکي",
@@ -464,7 +508,21 @@
     "profileLicenseTimeline": "د جواز وخت جدول",
     "profileAlertHistory": "د نسخه خبرتیاوو تاریخچه",
     "profileLicenseExpiredWarning": "جواز پای ته رسیدلی دی",
-    "profileNotFound": "چمتو کوونکی ونه موندل شو"
+    "profileNotFound": "چمتو کوونکی ونه موندل شو",
+    "noProvidersDescription": "د نویو خدمت وړاندې کوونکو د پیژندنې غوښتنې به دلته د کتنې لپاره ښکاره شي.",
+    "noResultsTitle": "هیڅ ورته وړاندې کوونکی ونه موندل شو",
+    "noResultsDescription": "بله د لټون کلمه یا فلټر وآزمویئ.",
+    "clearFilters": "فلټرونه پاک کړئ",
+    "colLicenseDoc": "د جواز سند",
+    "colRegistryStatus": "د راجستر حالت",
+    "expiryNoProvidersDescription": "په دې موده کې د هیڅ وړاندې کوونکي جواز نه پای ته رسیږي.",
+    "detailNoDocuments": "هیڅ سند شتون نلري.",
+    "detailNoOcrData": "د OCR هیڅ معلومات شتون نلري.",
+    "detailNoFieldsExtracted": "هیڅ ساحه ونه ایستل شوه.",
+    "profileNoKycSubmissions": "د پیژندنې هیڅ غوښتنه ونه موندل شوه.",
+    "profileNoKycSubmissionsDescription": "دا وړاندې کوونکی د پیژندنې د غوښتنې تاریخچه نلري.",
+    "profileNoAlerts": "د نسخې هیڅ خبرداری نشته.",
+    "profileNoAlertsDescription": "دا وړاندې کوونکی د نسخې ثبت شوی خبرداری نلري."
   },
   "settings": {
     "pageTitle": "ترتیبات",
@@ -511,7 +569,9 @@
     "thresholdsTitle": "حدونه",
     "modulesTitle": "ماډلونه",
     "alertConfigTitle": "د خبرتیا ترتیب",
-    "errorLoad": "د ترتیباتو بارول ناکام شو"
+    "errorLoad": "د ترتیباتو بارول ناکام شو",
+    "modulesEmptyTitle": "هیڅ ماډل نه دی تنظیم شوی",
+    "modulesEmptyDescription": "د یوه ماډل تنظیمات لیدلو لپاره یې ګډون وکړئ."
   },
   "staff": {
     "certificationsPageTitle": "د کارمندانو تصدیقونه",
@@ -562,7 +622,8 @@
     "healthTbResultNegative": "منفي",
     "healthTbResultPositive": "مثبت",
     "healthTbResultIndeterminate": "نامعلوم",
-    "healthTbResultSelect": "وټاکئ…"
+    "healthTbResultSelect": "وټاکئ…",
+    "certNoneDescription": "تر اوسه دې کارکوونکي ته د تصدیق هیڅ مسیر نه دی ټاکل شوی."
   },
   "subscriptions": {
     "pageTitle": "ګډونونه",
@@ -608,7 +669,9 @@
     "invoicesDownloadPdf": "PDF ډاونلوډ",
     "invoicesNoInvoices": "بیل ونه موندل شو.",
     "invoicesLoading": "بیلونه بارول روان دي…",
-    "invoicesErrorLoad": "د بیلونو بارول ناکام شو"
+    "invoicesErrorLoad": "د بیلونو بارول ناکام شو",
+    "invoicesNoInvoicesDescription": "تر اوسه هیڅ بیل نه دی جوړ شوی.",
+    "noModulesDescription": "دا مهال د دې سازمان لپاره هیڅ ماډل نه دی ګډون شوی."
   },
   "users": {
     "pageTitle": "کارونکي",
@@ -640,7 +703,22 @@
     "detailActionSuccess": "اقدام بریالي شو",
     "detailActionError": "اقدام ناکام شو",
     "detailSuspensionReasonLabel": "د تعلیق دلیل",
-    "detailNotFound": "کارونکی ونه موندل شو"
+    "detailNotFound": "کارونکی ونه موندل شو",
+    "searchPlaceholder": "د نوم یا بریښنالیک لټون",
+    "filterByRole": "د رول له مخې فلټر",
+    "noUsers": "تر اوسه هیڅ کارمند کاروونکی نشته",
+    "noUsersDescription": "د خپل ټیم د لومړي غړي په بلنه پیل وکړئ.",
+    "createUser": "کاروونکی جوړ کړئ",
+    "noResultsTitle": "هیڅ ورته کاروونکی ونه موندل شو",
+    "noResultsDescription": "خپل فلټرونه یا لټون تنظیم کړئ.",
+    "clearFilters": "فلټرونه پاک کړئ",
+    "noLabStaff": "هیڅ لابراتوار کارمند نه دی ټاکل شوی",
+    "noLabStaffDescription": "د پیل لپاره کارمندان یو لابراتوار ته وګمارئ.",
+    "assignToLab": "لابراتوار ته وګمارئ",
+    "detailSave": "بدلونونه خوندي کړئ",
+    "detailCancel": "لغوه کول",
+    "detailNever": "هیڅکله",
+    "detailSuspendPlaceholder": "د تعلیق لامل"
   },
   "aiModels": {
     "pageTitle": "د مصنوعي ذهانت ماډلونه",
@@ -678,7 +756,8 @@
     "publishButton": "خپرول",
     "publishing": "خپرول روان دي…",
     "publishError": "خپرول ناکام شو",
-    "errorLoad": "معلوماتو راوړل ناکام شو"
+    "errorLoad": "معلوماتو راوړل ناکام شو",
+    "loading": "بارول کیږي…"
   },
   "register": {
     "pageTitle": "خپله اداره ثبت کړئ",
