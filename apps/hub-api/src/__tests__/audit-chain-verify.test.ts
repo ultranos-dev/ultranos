@@ -37,7 +37,7 @@ function buildChain(count: number) {
       id, timestamp, actor_id: 'user-001', actor_role: 'DOCTOR',
       action: 'PHI_READ', resource_type: 'PATIENT',
       resource_id: `patient-${i}`, patient_id: `patient-${i}`,
-      outcome: 'SUCCESS', chain_hash: chainHash,
+      outcome: 'SUCCESS', chain_hash: chainHash, chain_seq: i + 1,
     })
     prevHash = chainHash
   }
@@ -150,7 +150,8 @@ describe('Story 23.3: Audit Chain Integrity Monitoring', () => {
       const result = await runAuditChainVerify(supabase)
 
       expect(result.valid).toBe(true)
-      expect(result.checkedCount).toBe(5)
+      // Oldest seq'd row is the trusted anchor, so 4 of 5 are verified forward
+      expect(result.checkedCount).toBe(4)
       expect(result.brokenAtEventId).toBeUndefined()
       expect(result.jobDurationMs).toBeGreaterThanOrEqual(0)
       expect(result.isFullVerification).toBe(false)

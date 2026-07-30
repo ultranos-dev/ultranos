@@ -121,6 +121,47 @@ describe('Hash Chain Concurrency — Story 21.6', () => {
       expect(hash).toBe('0fec0ba87e0a4a8765b09665461a1feeccd0e41932aa4cb6226b78276c7499b6')
     })
 
+    it('verifyChain validates DB-shaped rows (null columns, +00:00 timestamps) against the PG-stored hash', async () => {
+      // A single row exactly as Supabase RETURNS it after audit_emit_with_lock stored it:
+      //  - optional columns come back as null (not undefined)
+      //  - the timestamptz serialises as +00:00 (not the ...Z text that was hashed)
+      //  - chain_hash is the PG value proven in the null-fields test above
+      // The oldest seq'd row is the trusted anchor (its hash links onto out-of-scope rows);
+      // verification walks forward from it, so we anchor with a GENESIS-hashed row and then
+      // verify the DB-shaped null-column row chains onto it.
+      const anchorRow = {
+        id: 'anchor', timestamp: '2023-12-31T00:00:00.000+00:00', actor_id: null,
+        actor_role: 'DOCTOR', action: 'PHI_READ', resource_type: 'PATIENT',
+        resource_id: null, patient_id: null, outcome: 'SUCCESS',
+        chain_hash: GENESIS_HASH, chain_seq: 1,
+      }
+      const dbRow = {
+        id: 'test-id',
+        timestamp: '2024-01-01T00:00:00.000+00:00',
+        actor_id: null,
+        actor_role: 'DOCTOR',
+        action: 'PHI_READ',
+        resource_type: 'PATIENT',
+        resource_id: null,
+        patient_id: null,
+        outcome: 'SUCCESS',
+        chain_hash: '0fec0ba87e0a4a8765b09665461a1feeccd0e41932aa4cb6226b78276c7499b6',
+        chain_seq: 2,
+      }
+      const mock = {
+        from: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({ data: [anchorRow, dbRow], error: null }),
+            }),
+          }),
+        }),
+      }
+      const result = await new AuditLogger(mock as any).verifyChain(100)
+      expect(result.valid).toBe(true)
+      expect(result.checkedCount).toBe(1)
+    })
+
     it('different prevHash produces different chain hash', () => {
       const event = {
         id: 'test-id',
@@ -225,7 +266,7 @@ describe('Hash Chain Concurrency — Story 21.6', () => {
       const result = await verifyLogger.verifyChain(100)
 
       expect(result.valid).toBe(true)
-      expect(result.checkedCount).toBe(5)
+      expect(result.checkedCount).toBe(4)
       expect(result.brokenAt).toBeUndefined()
     })
   })
@@ -307,17 +348,19 @@ describe('Hash Chain Concurrency — Story 21.6', () => {
       const logger = new AuditLogger(verifyMockReturning(rows) as any)
       const result = await logger.verifyChain(1000)
       expect(result.valid).toBe(true)
-      expect(result.checkedCount).toBe(3)
+      expect(result.checkedCount).toBe(2)
       expect(result.brokenAt).toBeUndefined()
     })
 
-    it('control: the same out-of-order rows FAIL when chain_seq is absent (timestamp order != chain order)', async () => {
-      // Strip chain_seq -> verifyChain falls back to timestamp order, which is inverted
-      // relative to the real chain -> the walk mis-links and reports invalid.
+    it('excludes rows without a chain_seq (legacy/seeded rows are not part of the verifiable chain)', async () => {
+      // Rows written outside the locked emit RPC carry a null chain_seq. verifyChain scopes
+      // to seq'd rows only, so a set of purely null-seq rows is an empty verifiable chain
+      // (valid, nothing to verify) rather than walked in an unreliable timestamp order.
       const rows = buildInvertedChain().map(({ chain_seq: _omit, ...rest }) => rest)
       const logger = new AuditLogger(verifyMockReturning(rows) as any)
       const result = await logger.verifyChain(1000)
-      expect(result.valid).toBe(false)
+      expect(result.valid).toBe(true)
+      expect(result.checkedCount).toBe(0)
     })
   })
 

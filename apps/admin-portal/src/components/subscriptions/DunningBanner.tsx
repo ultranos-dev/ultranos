@@ -69,9 +69,9 @@ export function DunningBanner() {
     return (
       <div
         role="alert"
-        className="rounded-2xl bg-amber-50 border border-amber-200 px-5 py-3 flex items-center justify-between gap-4"
+        className="rounded-2xl bg-warning/10 border border-warning/20 px-5 py-3 flex items-center justify-between gap-4"
       >
-        <p className="text-sm font-semibold text-amber-800">
+        <p className="text-sm font-semibold text-warning">
           Payment failed. You have {dunning.graceDays} day(s) to update your payment method
           before your subscription is suspended.
         </p>
@@ -86,9 +86,9 @@ export function DunningBanner() {
   return (
     <div
       role="alert"
-      className="rounded-2xl bg-amber-50 border border-amber-200 px-5 py-3 flex items-center justify-between gap-4"
+      className="rounded-2xl bg-warning/10 border border-warning/20 px-5 py-3 flex items-center justify-between gap-4"
     >
-      <p className="text-sm font-semibold text-amber-800">
+      <p className="text-sm font-semibold text-warning">
         Your last payment failed. Update your payment method to avoid service interruption.
       </p>
       <Button asChild size="sm" className="shrink-0">

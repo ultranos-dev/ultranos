@@ -130,7 +130,7 @@ export default function SubscriptionsPage() {
               <EmptyState icon={CreditCard} title={t('noModules')} description={t('noModulesDescription')} />
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+            <div className="overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
               <table className="w-full text-sm">
                 <thead className="bg-muted">
                   <tr>
@@ -142,9 +142,9 @@ export default function SubscriptionsPage() {
                     <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colActions')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-background">
+                <tbody className="divide-y divide-border">
                   {subscriptions.map((sub) => (
-                    <tr key={sub.id} className="hover:bg-primary/10 transition-colors">
+                    <tr key={sub.id} className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 font-medium text-foreground">{sub.moduleName}</td>
                       <td className="px-4 py-3">
                         <StatusBadge status={sub.status} />

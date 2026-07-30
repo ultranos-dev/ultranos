@@ -65,7 +65,9 @@ export function SubscriptionWidget() {
       : 0
     const barColor =
       trialDaysRemaining > 7 ? 'bg-success' : trialDaysRemaining >= 3 ? 'bg-warning' : 'bg-destructive'
-    const barPct = Math.min(100, Math.max(0, (trialDaysRemaining / 30) * 100))
+    // Elapsed trial progress: fills up as the 30-day trial runs down, so a fresh
+    // trial (e.g. 29 days left) reads as ~3% used rather than nearly full.
+    const barPct = Math.min(100, Math.max(0, ((30 - trialDaysRemaining) / 30) * 100))
     return (
       <div className={`${shell} border-border bg-card`}>
         <div className="flex items-baseline justify-between gap-2">

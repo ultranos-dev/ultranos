@@ -77,7 +77,7 @@ export function RemoveModuleDialog({ subscription, isLastActive, open, onOpenCha
         )}
 
         {affectedUserCount !== null && affectedUserCount > 0 && (
-          <div className="mt-3 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+          <div className="mt-3 rounded-2xl bg-warning/10 border border-warning/20 px-4 py-3 text-sm text-warning">
             {affectedUserCount} active user(s) with roles requiring this module will be suspended when the billing period ends.
           </div>
         )}

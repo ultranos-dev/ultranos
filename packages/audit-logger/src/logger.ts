@@ -43,19 +43,30 @@ function sortByChainOrderAsc<T extends { chain_seq?: number | string | null; tim
 }
 
 function computeChainHash(prevHash: string, event: AuditEventInput & { id: string; timestamp: string }): string {
-  const data = JSON.stringify({
-    prevHash,
-    id: event.id,
-    timestamp: event.timestamp,
-    actorId: event.actorId,
-    actorRole: event.actorRole,
-    action: event.action,
-    resourceType: event.resourceType,
-    resourceId: event.resourceId,
-    patientId: event.patientId,
-    outcome: event.outcome,
-  })
-  return createHash('sha256').update(data).digest('hex')
+  // Parity with the write path (audit_emit_with_lock RPC), which stores the hash as
+  //   encode(digest(json_strip_nulls(json_build_object('prevHash',…,'timestamp',p_timestamp,…))::text,'sha256'),'hex')
+  // over the ORIGINAL ISO timestamp text. To validate the server-stored chain, verify must:
+  //   1. OMIT null/undefined fields (json_strip_nulls parity). Supabase returns null for empty
+  //      columns, so serialising them as "key":null would never match the stored hash.
+  //   2. Use the canonical ms-precision ISO (…Z) that emit stamped; the timestamptz column
+  //      serialises as …+00:00 on read, so normalise it back before hashing.
+  const fields: Array<[string, unknown]> = [
+    ['prevHash', prevHash],
+    ['id', event.id],
+    ['timestamp', new Date(event.timestamp).toISOString()],
+    ['actorId', event.actorId],
+    ['actorRole', event.actorRole],
+    ['action', event.action],
+    ['resourceType', event.resourceType],
+    ['resourceId', event.resourceId],
+    ['patientId', event.patientId],
+    ['outcome', event.outcome],
+  ]
+  const payload: Record<string, unknown> = {}
+  for (const [key, value] of fields) {
+    if (value !== null && value !== undefined) payload[key] = value
+  }
+  return createHash('sha256').update(JSON.stringify(payload)).digest('hex')
 }
 
 export class AuditLogger {
@@ -147,27 +158,19 @@ export class AuditLogger {
 
       if (error || !descRows) return { valid: false, checkedCount: 0, brokenAt: 'query_failed' }
 
-      // Order by TRUE chain position (chain_seq), not wall-clock timestamp — concurrent
-      // emits can be stored with timestamps out of order relative to insertion order.
-      // If no row in the window carries a chain_seq (pre-migration data), preserve the
-      // original timestamp ordering exactly (reverse of the DESC fetch).
-      const rows = descRows.some((r: { chain_seq?: number | string | null }) => r.chain_seq != null)
-        ? sortByChainOrderAsc(descRows)
-        : descRows.reverse()
+      // Scope to rows written under the locked emit RPC (they carry a chain_seq and form
+      // the verifiable hash chain); pre-migration/seeded rows (null chain_seq) are excluded.
+      const rows = sortByChainOrderAsc(
+        descRows.filter((r: { chain_seq?: number | string | null }) => r.chain_seq != null),
+      )
 
       if (rows.length === 0) return { valid: true, checkedCount: 0 }
 
-      // If we got limit+1 rows, the first is the baseline (its hash is trusted).
-      // If we got fewer, we reached the beginning of the table — start from GENESIS_HASH.
-      let prevHash: string
-      let startIdx: number
-      if (rows.length > limit) {
-        prevHash = rows[0]!.chain_hash
-        startIdx = 1
-      } else {
-        prevHash = GENESIS_HASH
-        startIdx = 0
-      }
+      // The oldest seq'd row in the window is the trusted anchor: it links onto rows outside
+      // this scope (older seq'd rows beyond the limit, or the pre-seq legacy tip), so we
+      // verify forward from it rather than recomputing its own hash.
+      let prevHash = rows[0]!.chain_hash
+      const startIdx = 1
 
       let checkedCount = 0
       for (let i = startIdx; i < rows.length; i++) {

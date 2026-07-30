@@ -121,7 +121,7 @@ export function SurveillanceAlertHistory() {
         <EmptyState className="mt-6" title={`No surveillance alerts found${filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.`} />
       ) : (
         <>
-          <div className="mt-4 overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+          <div className="mt-4 overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
             <table className="w-full text-sm">
               <thead className="bg-muted">
                 <tr>
@@ -133,9 +133,9 @@ export function SurveillanceAlertHistory() {
                   <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-background">
+              <tbody className="divide-y divide-border">
                 {alerts.map((alert) => (
-                  <tr key={alert.id} className="hover:bg-primary/10 transition-colors">
+                  <tr key={alert.id} className="hover:bg-muted/50 transition-colors">
                     <td className="px-4 py-3 text-muted-foreground">{formatDateTime(alert.triggeredAt)}</td>
                     <td className="px-4 py-3 font-medium">{alert.labName}</td>
                     <td className="px-4 py-3 text-muted-foreground">{alert.testCategory}</td>

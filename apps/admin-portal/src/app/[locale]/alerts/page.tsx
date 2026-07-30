@@ -206,7 +206,7 @@ function ClinicalSafetySection() {
             <EmptyState size="sm" icon={FileText} title={t('noReports')} />
           </div>
         ) : (
-          <div className="mt-2 overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+          <div className="mt-2 overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
             <table className="w-full text-sm">
               <thead className="bg-muted">
                 <tr>
@@ -214,12 +214,12 @@ function ClinicalSafetySection() {
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Generated</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-background">
+              <tbody className="divide-y divide-border">
                 {reports.map((r) => (
                   <tr
                     key={r.id}
                     onClick={() => viewReport(r.month, r.year)}
-                    className="cursor-pointer hover:bg-primary/10 transition-colors"
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
                   >
                     <td className="px-4 py-3 font-medium">
                       {new Date(r.year, r.month - 1).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })}

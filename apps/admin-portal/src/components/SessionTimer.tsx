@@ -54,7 +54,7 @@ export function SessionTimer() {
     <p
       className={`text-xs ${
         isWarning
-          ? 'text-amber-400 font-semibold'
+          ? 'text-warning font-semibold'
           : 'text-primary-foreground/40'
       }`}
     >

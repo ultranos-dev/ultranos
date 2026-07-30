@@ -150,7 +150,7 @@ export function PathwayCreateModal({ open, onOpenChange, onCreated }: Props) {
                       <select
                         value={milestone.type}
                         onChange={(e) => updateMilestone(index, 'type', e.target.value)}
-                        className="flex-1 rounded-lg border border-border bg-popover px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         {MILESTONE_TYPES.map((mt) => (
                           <option key={mt.value} value={mt.value}>{mt.label}</option>

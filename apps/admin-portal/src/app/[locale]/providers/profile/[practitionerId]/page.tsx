@@ -270,7 +270,7 @@ export default function ProviderProfilePage() {
               />
             </div>
           ) : (
-            <div className="mt-4 overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+            <div className="mt-4 overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
               <table className="w-full text-sm">
                 <thead className="bg-muted">
                   <tr>
@@ -281,9 +281,9 @@ export default function ProviderProfilePage() {
                     <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-background">
+                <tbody className="divide-y divide-border">
                   {kycSubmissions.map((sub) => (
-                    <tr key={sub.id} className="hover:bg-primary/10 transition-colors">
+                    <tr key={sub.id} className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 font-mono text-xs">{truncateId(sub.id)}</td>
                       <td className="px-4 py-3"><SubmissionStatusBadge status={sub.status} /></td>
                       <td className="px-4 py-3 text-muted-foreground">{formatDate(sub.submittedAt)}</td>
@@ -351,7 +351,7 @@ export default function ProviderProfilePage() {
               />
             </div>
           ) : (
-            <div className="mt-4 overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+            <div className="mt-4 overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
               <table className="w-full text-sm">
                 <thead className="bg-muted">
                   <tr>
@@ -363,9 +363,9 @@ export default function ProviderProfilePage() {
                     <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-background">
+                <tbody className="divide-y divide-border">
                   {alerts.map((alert) => (
-                    <tr key={alert.id} className="hover:bg-primary/10 transition-colors">
+                    <tr key={alert.id} className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 font-mono text-xs">{truncateId(alert.id)}</td>
                       <td className="px-4 py-3 text-foreground">{alert.anomalyType}</td>
                       <td className="px-4 py-3"><SeverityBadge severity={alert.severity} /></td>

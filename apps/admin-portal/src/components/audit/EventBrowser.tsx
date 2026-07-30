@@ -150,13 +150,12 @@ export function EventBrowser() {
   return (
     <div className="flex flex-col gap-4">
       {/* Filters */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => handleFilterChange(setDateFrom)(e.target.value)}
-            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Date from"
           />
           <span className="text-sm text-muted-foreground">to</span>
@@ -164,14 +163,14 @@ export function EventBrowser() {
             type="date"
             value={dateTo}
             onChange={(e) => handleFilterChange(setDateTo)(e.target.value)}
-            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Date to"
           />
 
           <select
             value={actionGroup}
             onChange={(e) => handleFilterChange(setActionGroup)(e.target.value as ActionGroup)}
-            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Filter by action type"
           >
             {(Object.keys(ACTION_GROUP_LABELS) as ActionGroup[]).map((g) => (
@@ -184,7 +183,7 @@ export function EventBrowser() {
           <select
             value={outcomeFilter}
             onChange={(e) => handleFilterChange(setOutcomeFilter)(e.target.value as OutcomeFilter)}
-            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Filter by outcome"
           >
             <option value="ALL">All Outcomes</option>
@@ -196,10 +195,9 @@ export function EventBrowser() {
             placeholder={t('searchActorPlaceholder')}
             value={actorSearch}
             onChange={(e) => handleFilterChange(setActorSearch)(e.target.value)}
-            className="w-64"
+            className="min-w-[200px] flex-1"
             aria-label={t('searchActorPlaceholder')}
           />
-        </div>
 
         <ExportButton
           exportFn={() =>
@@ -217,10 +215,11 @@ export function EventBrowser() {
         <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
       {loading ? (
-        <div className="text-muted-foreground">Loading audit events...</div>
+        <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">Loading audit events...</div>
       ) : events.length === 0 ? (
-        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        <div className="flex min-h-[16rem] items-center justify-center">
           <EmptyState
             icon={FileText}
             title={t('noEvents')}
@@ -228,9 +227,7 @@ export function EventBrowser() {
           />
         </div>
       ) : (
-        <>
-          {/* Events table */}
-          <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+        <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted">
                 <tr>
@@ -241,7 +238,7 @@ export function EventBrowser() {
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Outcome</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-background">
+              <tbody className="divide-y divide-border">
                 {events.map((event) => (
                   <EventRow
                     key={event.id}
@@ -253,9 +250,11 @@ export function EventBrowser() {
               </tbody>
             </table>
           </div>
+        )}
+      </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
+      {!loading && events.length > 0 && totalPages > 1 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
               Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
             </span>
@@ -279,7 +278,6 @@ export function EventBrowser() {
               </Button>
             </div>
           </div>
-        </>
       )}
     </div>
   )
@@ -300,7 +298,7 @@ function EventRow({
     <>
       <tr
         onClick={onToggle}
-        className="cursor-pointer transition-colors hover:bg-primary/5"
+        className="cursor-pointer transition-colors hover:bg-muted/50"
       >
         <td className="px-4 py-3 text-muted-foreground">{formatTimestamp(event.timestamp)}</td>
         <td className="px-4 py-3 font-mono text-xs font-medium text-foreground">{event.action}</td>

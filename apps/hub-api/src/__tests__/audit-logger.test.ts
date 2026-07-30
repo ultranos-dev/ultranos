@@ -340,7 +340,10 @@ describe('AuditLogger', () => {
       }
 
       const logger = new AuditLogger(mockDb as any)
-      const result = await logger.verifyChain()
+      // Genesis-break detection requires verifying the first record against GENESIS. The
+      // default (newest) path is a rolling window that trusts its oldest in-scope row as an
+      // anchor, so full-from-genesis verification is the legacy (newest: false) path.
+      const result = await logger.verifyChain(100, { newest: false })
 
       expect(result.valid).toBe(false)
       expect(result.checkedCount).toBe(1)

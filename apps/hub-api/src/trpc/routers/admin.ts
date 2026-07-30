@@ -2830,28 +2830,33 @@ export const adminRouter = createTRPCRouter({
    * Get current admin's profile from practitioners table.
    */
   getProfile: adminProcedure.query(async ({ ctx }) => {
-    const { data: profile, error } = await ctx.supabase
-      .from('practitioners')
-      .select('id, auth_user_id, given_name, family_name, role, telecom_email, created_at')
-      .eq('auth_user_id', ctx.user.sub)
-      .single()
+    // Admins are auth users, not practitioners: their identity lives in Supabase auth
+    // metadata (name/role), set at createUser time. Querying `practitioners` would 404
+    // for every admin (adminProcedure is ADMIN-only), so read the auth user directly.
+    const { data, error } = await ctx.supabase.auth.admin.getUserById(ctx.user.sub)
 
-    if (error || !profile) {
+    if (error || !data?.user) {
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: 'Admin profile not found',
       })
     }
 
+    const authUser = data.user
+    const meta = (authUser.user_metadata ?? {}) as Record<string, unknown>
+    const givenName = (meta.given_name as string) ?? ''
+    const familyName = (meta.family_name as string) ?? ''
+    const name = ((meta.name as string) ?? (givenName + ' ' + familyName)).trim()
+
     return {
-      id: profile.id as string,
-      authUserId: (profile.auth_user_id as string) ?? null,
-      name: `${(profile.given_name as string) ?? ''} ${(profile.family_name as string) ?? ''}`.trim(),
-      givenName: (profile.given_name as string) ?? '',
-      familyName: (profile.family_name as string) ?? '',
-      email: (profile.telecom_email as string) ?? null,
-      role: (profile.role as string) ?? '',
-      createdAt: (profile.created_at as string) ?? null,
+      id: authUser.id,
+      authUserId: authUser.id,
+      name,
+      givenName,
+      familyName,
+      email: authUser.email ?? null,
+      role: ((meta.role as string) ?? ctx.user.role ?? '').toUpperCase(),
+      createdAt: authUser.created_at ?? null,
     }
   }),
 
@@ -2865,17 +2870,19 @@ export const adminRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const nameParts = input.name.trim().split(/\s+/)
+      const trimmed = input.name.trim()
+      const nameParts = trimmed.split(/\s+/)
       const familyName = nameParts.length > 1 ? nameParts.pop()! : ''
       const givenName = nameParts.join(' ')
 
-      const { error } = await ctx.supabase
-        .from('practitioners')
-        .update({
-          given_name: givenName,
-          family_name: familyName,
-        })
-        .eq('auth_user_id', ctx.user.sub)
+      // Admins live in auth metadata (not practitioners): merge into the existing
+      // metadata so role/org_id and other claims are preserved.
+      const { data: existing } = await ctx.supabase.auth.admin.getUserById(ctx.user.sub)
+      const prevMeta = (existing?.user?.user_metadata ?? {}) as Record<string, unknown>
+
+      const { error } = await ctx.supabase.auth.admin.updateUserById(ctx.user.sub, {
+        user_metadata: { ...prevMeta, name: trimmed, given_name: givenName, family_name: familyName },
+      })
 
       if (error) {
         throw new TRPCError({
@@ -2895,13 +2902,13 @@ export const adminRouter = createTRPCRouter({
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
-          metadata: { updatedFields: ['given_name', 'family_name'] },
+          metadata: { updatedFields: ['name'] },
         })
       } catch {
         console.warn('[AUDIT_FAILURE]', { action: 'PROFILE_UPDATED', resourceType: 'USER_ACCOUNT' })
       }
 
-      return { success: true, name: input.name }
+      return { success: true, name: trimmed }
     }),
 
   /**

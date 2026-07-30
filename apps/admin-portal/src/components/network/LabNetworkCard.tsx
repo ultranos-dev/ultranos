@@ -39,7 +39,7 @@ function formatRelativeTime(iso: string | null): string {
 
 export function LabNetworkCard({ lab }: { lab: LabSummary }) {
   return (
-    <div className="rounded-2xl border border-border bg-popover p-4 hover:shadow-card transition-shadow">
+    <div className="rounded-xl border border-border bg-card p-4 hover:shadow-card transition-shadow">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground">{lab.labName}</h3>
         <StatusBadge status={lab.status} />

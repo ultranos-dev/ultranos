@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { trpc, reportAdminAuthEvent } from '@/lib/trpc'
@@ -41,14 +41,22 @@ interface OrgData {
 
 /* ─── Constants ─── */
 
-const MENA_COUNTRIES = [
-  'Afghanistan', 'Bahrain', 'Egypt', 'Iran', 'Iraq', 'Jordan', 'Kuwait',
-  'Kazakhstan', 'Kyrgyzstan', 'Lebanon', 'Oman', 'Pakistan', 'Palestine',
-  'Qatar', 'Saudi Arabia', 'Syria', 'Tajikistan', 'Turkey', 'Turkmenistan',
-  'UAE', 'Uzbekistan', 'Yemen',
+const MENA_COUNTRIES: { code: string; name: string }[] = [
+  { code: 'AF', name: 'Afghanistan' }, { code: 'BH', name: 'Bahrain' },
+  { code: 'EG', name: 'Egypt' }, { code: 'IR', name: 'Iran' },
+  { code: 'IQ', name: 'Iraq' }, { code: 'JO', name: 'Jordan' },
+  { code: 'KW', name: 'Kuwait' }, { code: 'KZ', name: 'Kazakhstan' },
+  { code: 'KG', name: 'Kyrgyzstan' }, { code: 'LB', name: 'Lebanon' },
+  { code: 'OM', name: 'Oman' }, { code: 'PK', name: 'Pakistan' },
+  { code: 'PS', name: 'Palestine' }, { code: 'QA', name: 'Qatar' },
+  { code: 'SA', name: 'Saudi Arabia' }, { code: 'SY', name: 'Syria' },
+  { code: 'TJ', name: 'Tajikistan' }, { code: 'TR', name: 'Turkey' },
+  { code: 'TM', name: 'Turkmenistan' }, { code: 'AE', name: 'United Arab Emirates' },
+  { code: 'UZ', name: 'Uzbekistan' }, { code: 'YE', name: 'Yemen' },
 ]
 
 const IANA_TIMEZONES = [
+  'UTC',
   'Africa/Cairo', 'Asia/Aden', 'Asia/Almaty', 'Asia/Amman', 'Asia/Ashgabat',
   'Asia/Baghdad', 'Asia/Bahrain', 'Asia/Bishkek', 'Asia/Damascus',
   'Asia/Dubai', 'Asia/Dushanbe', 'Asia/Gaza', 'Asia/Kabul', 'Asia/Karachi',
@@ -56,14 +64,18 @@ const IANA_TIMEZONES = [
   'Asia/Tehran',
 ]
 
-const NAV_ITEM_IDS = [
-  'my-account',
-  'organization',
-  'notifications',
-  'thresholds',
-  'modules',
-  'alert-config',
-] as const
+type TabId =
+  | 'my-account'
+  | 'organization'
+  | 'notifications'
+  | 'thresholds'
+  | 'modules'
+  | 'alert-config'
+
+/* Shared card idiom for settings sections */
+const CARD = 'rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50'
+const CARD_TITLE = 'text-sm font-semibold text-foreground uppercase tracking-wide'
+const FIELD_LABEL = 'text-xs font-medium text-muted-foreground'
 
 /* ─── Page Component ─── */
 
@@ -71,7 +83,7 @@ export default function SettingsPage() {
   const t = useTranslations('settings')
   const supabase = getSupabaseBrowserClient()
 
-  const NAV_ITEMS = [
+  const TABS: { id: TabId; label: string }[] = [
     { id: 'my-account', label: t('navMyAccount') },
     { id: 'organization', label: t('navOrganization') },
     { id: 'notifications', label: t('navNotifications') },
@@ -80,38 +92,7 @@ export default function SettingsPage() {
     { id: 'alert-config', label: t('navAlertConfig') },
   ]
 
-  /* Active section tracking via IntersectionObserver */
-  const [activeSection, setActiveSection] = useState<string>('my-account')
-  const observerRef = useRef<IntersectionObserver | null>(null)
-
-  useEffect(() => {
-    const sectionIds = NAV_ITEM_IDS
-    // Track which sections are currently intersecting
-    const visibleSections = new Set<string>()
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            visibleSections.add(entry.target.id)
-          } else {
-            visibleSections.delete(entry.target.id)
-          }
-        })
-        // Activate the topmost visible section
-        const topmost = sectionIds.find((id) => visibleSections.has(id))
-        if (topmost) setActiveSection(topmost)
-      },
-      { rootMargin: '-20% 0px -60% 0px', threshold: 0 },
-    )
-
-    sectionIds.forEach((id) => {
-      const el = document.getElementById(id)
-      if (el) observerRef.current?.observe(el)
-    })
-
-    return () => observerRef.current?.disconnect()
-  }, [])
+  const [activeTab, setActiveTab] = useState<TabId>('my-account')
 
   /* Profile state */
   const [profile, setProfile] = useState<AdminProfile | null>(null)
@@ -243,7 +224,7 @@ export default function SettingsPage() {
     }
   }
 
-  /* ─── FIDO2 Security Keys (preserved from original) ─── */
+  /* ─── FIDO2 Security Keys ─── */
 
   async function loadFactors() {
     setFidoLoading(true)
@@ -407,41 +388,43 @@ export default function SettingsPage() {
   const verifiedFactors = factors.filter((f) => f.status === 'verified')
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
 
-      {/* Section Navigation (sticky top) */}
-      <div className="sticky top-0 z-10 bg-card border-b border-border">
-        <nav className="flex gap-1 py-3" aria-label="Settings sections">
-            {NAV_ITEMS.map((item) => (
-              <a
-                key={item.id}
-                href={`#${item.id}`}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  activeSection === item.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {item.label}
-              </a>
-            ))}
-        </nav>
+      {/* Tab bar */}
+      <div
+        className="flex w-fit max-w-full flex-wrap items-center gap-1 rounded-full border border-border bg-card p-1"
+        role="tablist"
+        aria-label={t('pageTitle')}
+      >
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              activeTab === tab.id
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      <div className="flex flex-col gap-4">
-
-        {/* ═══ Section 1: My Account ═══ */}
-        <section id="my-account" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-foreground mb-4">{t('navMyAccount')}</h2>
-          <div className="rounded-xl bg-card p-5 border border-border space-y-0">
-
-            {/* a. Profile */}
-            <div className="space-y-4 py-4">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('profileTitle')}</h3>
+      {/* ═══ My Account ═══ */}
+      {activeTab === 'my-account' && (
+        <div className="flex flex-col gap-4">
+          {/* Profile */}
+          <div className={CARD}>
+            <div className="space-y-4">
+              <h2 className={CARD_TITLE}>{t('profileTitle')}</h2>
               <div className="space-y-3">
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">{t('profileFullName')}</span>
+                  <span className={FIELD_LABEL}>{t('profileFullName')}</span>
                   <Input
                     type="text"
                     value={profileName}
@@ -450,15 +433,15 @@ export default function SettingsPage() {
                   />
                 </label>
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground">{t('profileEmail')}</span>
+                  <span className={FIELD_LABEL}>{t('profileEmail')}</span>
                   <p className="mt-1 text-sm text-foreground">{profile?.email ?? '...'}</p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground">{t('profileRole')}</span>
+                  <span className={FIELD_LABEL}>{t('profileRole')}</span>
                   <p className="mt-1 text-sm text-foreground">{profile?.role ?? '...'}</p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground">{t('profileCreated')}</span>
+                  <span className={FIELD_LABEL}>{t('profileCreated')}</span>
                   <p className="mt-1 text-sm text-foreground">
                     {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '...'}
                   </p>
@@ -478,15 +461,15 @@ export default function SettingsPage() {
                 {profileSaving ? t('profileSaving') : t('profileSave')}
               </Button>
             </div>
+          </div>
 
-            <hr className="border-border" />
-
-            {/* b. Change Password */}
-            <div className="space-y-4 py-4">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('changePasswordTitle')}</h3>
+          {/* Change Password */}
+          <div className={CARD}>
+            <div className="space-y-4">
+              <h2 className={CARD_TITLE}>{t('changePasswordTitle')}</h2>
               <div className="space-y-3">
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">{t('changePasswordCurrent')}</span>
+                  <span className={FIELD_LABEL}>{t('changePasswordCurrent')}</span>
                   <Input
                     type="password"
                     value={currentPassword}
@@ -495,7 +478,7 @@ export default function SettingsPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">{t('changePasswordNew')}</span>
+                  <span className={FIELD_LABEL}>{t('changePasswordNew')}</span>
                   <Input
                     type="password"
                     value={newPassword}
@@ -504,7 +487,7 @@ export default function SettingsPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">{t('changePasswordConfirm')}</span>
+                  <span className={FIELD_LABEL}>{t('changePasswordConfirm')}</span>
                   <Input
                     type="password"
                     value={confirmPassword}
@@ -527,12 +510,12 @@ export default function SettingsPage() {
                 {passwordSaving ? t('profileSaving') : t('changePasswordSave')}
               </Button>
             </div>
+          </div>
 
-            <hr className="border-border" />
-
-            {/* c. Security Keys (FIDO2) — preserved from original */}
-            <div className="space-y-4 py-4">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('securityKeysTitle')}</h3>
+          {/* Security Keys (FIDO2) */}
+          <div className={CARD}>
+            <div className="space-y-4">
+              <h2 className={CARD_TITLE}>{t('securityKeysTitle')}</h2>
               <p className="text-muted-foreground text-sm">
                 Register a hardware security key (e.g., YubiKey) to add an extra layer of protection to your account.
                 Once enrolled, you will be prompted for your key on every sign-in.
@@ -559,7 +542,7 @@ export default function SettingsPage() {
                       {verifiedFactors.map((factor) => (
                         <div
                           key={factor.id}
-                          className="flex items-center justify-between rounded-xl bg-card px-4 py-3"
+                          className="flex items-center justify-between rounded-xl border border-border px-4 py-3"
                         >
                           <div className="flex items-center gap-3">
                             <KeyRound className="h-5 w-5 text-muted-foreground" />
@@ -604,12 +587,12 @@ export default function SettingsPage() {
                 </>
               )}
             </div>
+          </div>
 
-            <hr className="border-border" />
-
-            {/* d. Active Sessions */}
-            <div className="space-y-4 py-4">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('sessionsTitle')}</h3>
+          {/* Active Sessions */}
+          <div className={CARD}>
+            <div className="space-y-4">
+              <h2 className={CARD_TITLE}>{t('sessionsTitle')}</h2>
               <p className="text-muted-foreground text-sm">
                 Sign out of all other browser sessions. Your current session will remain active.
               </p>
@@ -627,16 +610,18 @@ export default function SettingsPage() {
               </Button>
             </div>
           </div>
-        </section>
+        </div>
+      )}
 
-        {/* ═══ Section 2: Organization ═══ */}
-        <section id="organization" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-foreground mb-4">{t('orgTitle')}</h2>
-          <div className="rounded-xl bg-card p-5 border border-border space-y-4">
+      {/* ═══ Organization ═══ */}
+      {activeTab === 'organization' && (
+        <div className={CARD}>
+          <div className="space-y-4">
+            <h2 className={CARD_TITLE}>{t('orgTitle')}</h2>
             {orgDraft ? (
               <>
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">{t('orgName')}</span>
+                  <span className={FIELD_LABEL}>{t('orgName')}</span>
                   <Input
                     type="text"
                     value={orgDraft.name}
@@ -646,21 +631,21 @@ export default function SettingsPage() {
                 </label>
 
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">{t('orgCountry')}</span>
+                  <span className={FIELD_LABEL}>{t('orgCountry')}</span>
                   <select
                     value={orgDraft.countryCode}
                     onChange={(e) => setOrgDraft({ ...orgDraft, countryCode: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="mt-1 block w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Select a country</option>
                     {MENA_COUNTRIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c.code} value={c.code}>{c.name}</option>
                     ))}
                   </select>
                 </label>
 
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">{t('orgBillingEmail')}</span>
+                  <span className={FIELD_LABEL}>{t('orgBillingEmail')}</span>
                   <Input
                     type="email"
                     value={orgDraft.billingEmail}
@@ -670,11 +655,11 @@ export default function SettingsPage() {
                 </label>
 
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">{t('orgTimezone')}</span>
+                  <span className={FIELD_LABEL}>{t('orgTimezone')}</span>
                   <select
                     value={orgDraft.timezone}
                     onChange={(e) => setOrgDraft({ ...orgDraft, timezone: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="mt-1 block w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Select a timezone</option>
                     {IANA_TIMEZONES.map((tz) => (
@@ -684,7 +669,7 @@ export default function SettingsPage() {
                 </label>
 
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground">{t('orgId')}</span>
+                  <span className={FIELD_LABEL}>{t('orgId')}</span>
                   <p className="mt-1 text-sm font-mono text-foreground">{org?.id ?? '...'}</p>
                 </div>
 
@@ -707,28 +692,34 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">{t('errorLoad')}</p>
             )}
           </div>
-        </section>
+        </div>
+      )}
 
-        {/* ═══ Section 3: Notifications ═══ */}
-        <section id="notifications" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-foreground mb-4">{t('notificationsTitle')}</h2>
-          <div className="rounded-xl bg-card p-5 border border-border">
+      {/* ═══ Notifications ═══ */}
+      {activeTab === 'notifications' && (
+        <div className={CARD}>
+          <div className="space-y-4">
+            <h2 className={CARD_TITLE}>{t('notificationsTitle')}</h2>
             <NotificationPreferences email={profile?.email} />
           </div>
-        </section>
+        </div>
+      )}
 
-        {/* ═══ Section 4: Thresholds ═══ */}
-        <section id="thresholds" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-foreground mb-4">{t('thresholdsTitle')}</h2>
-          <div className="rounded-xl bg-card p-5 border border-border">
+      {/* ═══ Thresholds ═══ */}
+      {activeTab === 'thresholds' && (
+        <div className={CARD}>
+          <div className="space-y-4">
+            <h2 className={CARD_TITLE}>{t('thresholdsTitle')}</h2>
             <ThresholdSettings />
           </div>
-        </section>
+        </div>
+      )}
 
-        {/* ═══ Section 5: Modules ═══ */}
-        <section id="modules" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-foreground mb-4">{t('modulesTitle')}</h2>
-          <div className="rounded-xl bg-card p-5 border border-border">
+      {/* ═══ Modules ═══ */}
+      {activeTab === 'modules' && (
+        <div className={CARD}>
+          <div className="space-y-4">
+            <h2 className={CARD_TITLE}>{t('modulesTitle')}</h2>
             {subscribedModules.length === 0 ? (
               <div className="flex min-h-[12rem] items-center justify-center">
                 <EmptyState
@@ -745,20 +736,21 @@ export default function SettingsPage() {
               </div>
             )}
           </div>
-        </section>
+        </div>
+      )}
 
-        {/* ═══ Section 6: Alert Config ═══ */}
-        <section id="alert-config" className="scroll-mt-24 mb-12">
-          <h2 className="text-lg font-semibold text-foreground mb-4">{t('alertConfigTitle')}</h2>
-          <div className="rounded-xl bg-card p-5 border border-border space-y-4">
+      {/* ═══ Alert Config ═══ */}
+      {activeTab === 'alert-config' && (
+        <div className={CARD}>
+          <div className="space-y-4">
+            <h2 className={CARD_TITLE}>{t('alertConfigTitle')}</h2>
             <SurveillanceConfigForm />
-            <div className="border-t border-border pt-6">
+            <div className="border-t border-border pt-4">
               <SurveillanceAlertHistory />
             </div>
           </div>
-        </section>
-      </div>
-    </>
+        </div>
+      )}
+    </div>
   )
 }
-

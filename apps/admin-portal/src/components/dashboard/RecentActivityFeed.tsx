@@ -49,7 +49,7 @@ export function RecentActivityFeed() {
   if (error) return null
 
   return (
-    <div className="rounded-2xl bg-popover border border-border p-6 shadow-card">
+    <div className="rounded-xl bg-card border border-border p-6 shadow-card">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-muted-foreground">Recent Activity</p>
         <Button

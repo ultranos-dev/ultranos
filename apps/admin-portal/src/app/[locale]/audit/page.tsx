@@ -62,7 +62,7 @@ function ChainStatusBadge({ valid }: { valid: boolean | null }) {
   }
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1 text-sm font-medium text-muted-foreground">
-      <span className="h-2 w-2 rounded-full bg-text-secondary" />
+      <span className="h-2 w-2 rounded-full bg-muted-foreground" />
       Unknown
     </span>
   )
@@ -227,12 +227,13 @@ export default function AuditChainPage() {
             {trendDays.length > 0 && (
               <div>
                 <h2 className="text-sm font-medium text-muted-foreground">{t('healthTrend30d')}</h2>
-                <div className="mt-2 flex items-end gap-0.5">
+                <div className="mt-2 flex items-center gap-4">
+                  <div className="flex flex-1 items-end gap-0.5">
                   {trendDays.map((day) => (
                     <div
                       key={day.date}
                       title={`${day.date}: ${day.status}`}
-                      className={`h-6 w-2 rounded-sm ${
+                      className={`h-6 flex-1 rounded-sm ${
                         day.status === 'pass' ? 'bg-success' :
                         day.status === 'fail' ? 'bg-destructive' :
                         day.status === 'error' ? 'bg-warning' :
@@ -240,6 +241,15 @@ export default function AuditChainPage() {
                       }`}
                     />
                   ))}
+                  </div>
+                  <div className="flex shrink-0 flex-col items-center gap-1">
+                    <Button onClick={handleFullVerification} disabled={fullVerifyLoading}>
+                      {fullVerifyLoading ? t('verificationRunning') : t('runFullVerification')}
+                    </Button>
+                    {fullVerifyResult && (
+                      <p className="text-xs text-muted-foreground text-center">{fullVerifyResult}</p>
+                    )}
+                  </div>
                 </div>
                 <div className="mt-1 flex gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-success" /> Pass</span>
@@ -250,22 +260,10 @@ export default function AuditChainPage() {
               </div>
             )}
 
-            {/* Full verification button (AC #9) */}
-            <div className="flex items-center gap-4">
-              <Button
-                onClick={handleFullVerification}
-                disabled={fullVerifyLoading}
-              >
-                {fullVerifyLoading ? t('verificationRunning') : t('runFullVerification')}
-              </Button>
-              {fullVerifyResult && (
-                <p className="text-sm text-muted-foreground">{fullVerifyResult}</p>
-              )}
-            </div>
-
             {/* Verification history table (AC #6) */}
+            <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
             {verifications.length === 0 ? (
-              <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+              <div className="flex min-h-[16rem] items-center justify-center">
                 <EmptyState
                   icon={ClipboardList}
                   title={t('noHistory')}
@@ -273,7 +271,7 @@ export default function AuditChainPage() {
                 />
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+              <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted">
                     <tr>
@@ -286,9 +284,9 @@ export default function AuditChainPage() {
                       <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Broken Event ID</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border bg-background">
+                  <tbody className="divide-y divide-border">
                     {verifications.map((v) => (
-                      <tr key={v.id} className="hover:bg-primary/10 transition-colors">
+                      <tr key={v.id} className="hover:bg-muted/50 transition-colors">
                         <td className="px-4 py-3">{formatDate(v.verifiedAt)}</td>
                         <td className="px-4 py-3"><ResultIcon valid={v.valid} /></td>
                         <td className="px-4 py-3 text-muted-foreground">{v.checkedCount.toLocaleString()}</td>
@@ -304,6 +302,7 @@ export default function AuditChainPage() {
                 </table>
               </div>
             )}
+            </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
@@ -343,11 +342,17 @@ export default function AuditChainPage() {
  * Build a 30-day trend from verification results.
  * Each day gets the worst result from that day: fail > error > pass > no-data.
  */
+function localDay(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return d.getFullYear() + '-' + m + '-' + day
+}
+
 function buildTrend(verifications: Verification[]): Array<{ date: string; status: string }> {
   const dayMap = new Map<string, string>()
 
   for (const v of verifications) {
-    const day = v.verifiedAt.slice(0, 10)
+    const day = localDay(new Date(v.verifiedAt))
     const current = dayMap.get(day)
     if (v.valid === false) {
       dayMap.set(day, 'fail')
@@ -363,7 +368,7 @@ function buildTrend(verifications: Verification[]): Array<{ date: string; status
   for (let i = 29; i >= 0; i--) {
     const d = new Date(now)
     d.setDate(d.getDate() - i)
-    const dateStr = d.toISOString().slice(0, 10)
+    const dateStr = localDay(d)
     days.push({ date: dateStr, status: dayMap.get(dateStr) ?? 'no-data' })
   }
 

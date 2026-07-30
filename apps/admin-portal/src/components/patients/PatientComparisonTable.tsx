@@ -30,7 +30,7 @@ export function PatientComparisonTable({
   return (
     <div className="overflow-hidden rounded-2xl border border-border">
       <table className="w-full text-sm">
-        <thead className="bg-card">
+        <thead className="bg-muted">
           <tr>
             <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Field</th>
             <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Survivor Value</th>
@@ -38,7 +38,7 @@ export function PatientComparisonTable({
             <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Duplicate Value</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border bg-popover">
+        <tbody className="divide-y divide-border">
           {fields.map((field) => (
             <FieldResolutionRow
               key={field}

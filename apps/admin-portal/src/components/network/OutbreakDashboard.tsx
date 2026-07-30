@@ -149,7 +149,7 @@ export function OutbreakDashboard({ outbreaks, onResolve: _onResolve, onRefresh 
           </Button>
 
           {showResolved && (
-            <div className="mt-3 overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+            <div className="mt-3 overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
               <table className="w-full text-sm">
                 <thead className="bg-muted">
                   <tr>
@@ -160,7 +160,7 @@ export function OutbreakDashboard({ outbreaks, onResolve: _onResolve, onRefresh 
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Duration</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-background">
+                <tbody className="divide-y divide-border">
                   {resolved.map((ob) => (
                     <tr key={ob.id}>
                       <td className="px-4 py-3 font-medium">{ob.pathogen}</td>

@@ -38,7 +38,7 @@ function buildChain(count: number) {
       id, timestamp, actor_id: 'user-001', actor_role: 'DOCTOR',
       action: 'PHI_READ', resource_type: 'PATIENT',
       resource_id: `patient-${i}`, patient_id: `patient-${i}`,
-      outcome: 'SUCCESS', chain_hash: chainHash,
+      outcome: 'SUCCESS', chain_hash: chainHash, chain_seq: i + 1,
     })
     prevHash = chainHash
   }
@@ -140,7 +140,8 @@ describe('health.auditChainIntegrity', () => {
     const result = await caller.health.auditChainIntegrity({ limit: 100 })
 
     expect(result.valid).toBe(true)
-    expect(result.checkedCount).toBe(5)
+    // Oldest seq'd row is the trusted anchor, so 4 of 5 are verified forward
+    expect(result.checkedCount).toBe(4)
     expect(result.brokenAt).toBeUndefined()
   })
 
@@ -217,6 +218,7 @@ describe('health.auditChainIntegrity', () => {
 
     expect(result.valid).toBe(false)
     expect(result.brokenAt).toBe(chain[1]!.id)
-    expect(result.checkedCount).toBe(2)
+    // row0 is the trusted anchor; the tampered row1 is the first (and only) row verified
+    expect(result.checkedCount).toBe(1)
   })
 })

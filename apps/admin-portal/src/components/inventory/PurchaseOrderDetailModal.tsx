@@ -72,14 +72,14 @@ export function PurchaseOrderDetailModal({ order, labNames, open, onOpenChange }
           <div className="mt-2 overflow-hidden rounded-xl border border-border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-card">
+                <tr className="bg-muted">
                   <th className="px-4 py-2.5 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground">Lab</th>
                   <th className="px-4 py-2.5 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground">Reagent Category</th>
                   <th className="px-4 py-2.5 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">Qty</th>
                   <th className="px-4 py-2.5 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground">Unit</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-popover">
+              <tbody className="divide-y divide-border">
                 {order.items.map((item, idx) => (
                   <tr key={idx}>
                     <td className="px-4 py-2.5 font-medium">{labNames[item.lab_id] ?? item.lab_id.slice(0, 8) + '…'}</td>
