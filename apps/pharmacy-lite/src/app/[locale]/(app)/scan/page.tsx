@@ -1,7 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { PharmacyScannerView } from '@/components/pharmacy/PharmacyScannerView'
 
 export default function ScanPage() {
-  return <PharmacyScannerView />
+  const router = useRouter()
+  return <PharmacyScannerView onNavigateToReview={() => router.push('/fulfillment')} />
 }

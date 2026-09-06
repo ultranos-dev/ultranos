@@ -129,6 +129,75 @@ describe('sync.push', () => {
     expect(result.results[0]!.resourceId).toBe('enc-1')
   })
 
+  it('rejects a duplicate open encounter (DUPLICATE_OPEN_ENCOUNTER) and returns the canonical id', async () => {
+    const mockFrom = vi.fn()
+
+    // 1. conflict-detection existence check by id → none
+    mockFrom.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    })
+
+    // 2. upsert → the open-per-(patient,practitioner) partial unique index fires
+    mockFrom.mockReturnValueOnce({
+      upsert: vi.fn().mockResolvedValue({
+        error: {
+          code: '23505',
+          message:
+            'duplicate key value violates unique constraint "uq_encounters_open_per_patient_practitioner"',
+          details: '',
+        },
+      }),
+    })
+
+    // 3. findOpen → the canonical open encounter the spoke should resume
+    const canonicalSelect: Record<string, unknown> = {}
+    Object.assign(canonicalSelect, {
+      eq: vi.fn(() => canonicalSelect),
+      contains: vi.fn(() => canonicalSelect),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'canonical-open-enc' }, error: null }),
+    })
+    mockFrom.mockReturnValueOnce({ select: vi.fn(() => canonicalSelect) })
+
+    // default: audit_log (chain-tail read + insert)
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })
+
+    mockSupabaseClient.from = mockFrom
+
+    const caller = createCaller(createAuthContext())
+
+    const result = await caller.sync.push({
+      operations: [{
+        resourceType: 'Encounter',
+        resourceId: 'enc-dup',
+        action: 'create',
+        payload: JSON.stringify({
+          id: 'enc-dup',
+          status: 'in-progress',
+          class: { code: 'AMB' },
+          subject: { reference: 'Patient/pat-1' },
+          participant: [{ individual: { reference: 'Practitioner/doc-1' } }],
+          period: { start: '2026-06-26T20:45:31Z' },
+        }),
+        hlcTimestamp: '000001700000000:00000:node-1',
+      }],
+    })
+
+    expect(result.results[0]!.success).toBe(false)
+    expect(result.results[0]!.error).toBe('DUPLICATE_OPEN_ENCOUNTER')
+    expect((result.results[0] as { canonicalId?: string }).canonicalId).toBe('canonical-open-enc')
+  })
+
   it('stamps synced_by/synced_at when pushing an AllergyIntolerance (Tier-1 provenance)', async () => {
     const mockFrom = vi.fn()
     const upsertSpy = vi.fn().mockResolvedValue({ error: null })

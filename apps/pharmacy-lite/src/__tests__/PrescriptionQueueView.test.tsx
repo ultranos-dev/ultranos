@@ -180,7 +180,7 @@ describe('PrescriptionQueueView', () => {
     expect(screen.getByTestId('phase-badge-a1')).toBeInTheDocument()
   })
 
-  it('clicking active item uses stored originalPrescription and navigates to /scan (AC #3, D1)', async () => {
+  it('clicking active item uses stored originalPrescription and navigates to /fulfillment (AC #3, D1)', async () => {
     mockGetActiveItems.mockResolvedValue([
       makeQueueItem({ id: 'a2' }),
     ])
@@ -200,7 +200,7 @@ describe('PrescriptionQueueView', () => {
       undefined,
       { name: 'Ahmad', age: 35 },
     )
-    expect(mockRouterPush).toHaveBeenCalledWith('/scan')
+    expect(mockRouterPush).toHaveBeenCalledWith('/fulfillment')
   })
 
   it('switches to Completed tab and shows completed items with sync badges (AC #4)', async () => {

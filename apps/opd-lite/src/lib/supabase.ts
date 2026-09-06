@@ -14,11 +14,21 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * Used for authentication (Supabase Auth) only.
  * OPD Lite clinical data access goes through Hub API — not directly via Supabase.
  */
+/**
+ * App-specific auth cookie name. All Ultranos web apps share one Supabase
+ * project; without a distinct name they'd share the default `sb-<ref>-auth-token`
+ * cookie, which is shared across ports on `localhost` (cookies ignore port),
+ * causing the last login in any app to leak into every other app's tab.
+ */
+export const AUTH_COOKIE_NAME = 'sb-opd-auth'
+
 let client: ReturnType<typeof createBrowserClient> | null = null
 
 export function getSupabaseBrowserClient() {
   if (!client) {
-    client = createBrowserClient(supabaseUrl!, supabaseAnonKey!)
+    client = createBrowserClient(supabaseUrl!, supabaseAnonKey!, {
+      cookieOptions: { name: AUTH_COOKIE_NAME },
+    })
   }
   return client
 }

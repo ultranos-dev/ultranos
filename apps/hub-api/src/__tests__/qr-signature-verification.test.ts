@@ -395,6 +395,87 @@ describe('medication.getStatus — signature verification enforcement', () => {
     expect(mockEq).toHaveBeenCalledWith('id', RX_UUID)
   })
 
+  // Story 3.4 (OPD-Lite bundle reconciliation): the signed payload is an ARRAY
+  // of compact prescriptions; the checked id is passed as targetPrescriptionId
+  // and MUST be provably present in the signed array before any DB lookup.
+  const OTHER_UUID = '00000000-0000-4000-8000-000000000002'
+
+  function makeSignedArrayBundle(rxList: Array<Record<string, unknown>>) {
+    const payloadStr = JSON.stringify(rxList)
+    const sig = signPayload(payloadStr, testKeyPair.privateKey)
+    return { payload: payloadStr, sig, pub: publicKeyBase64 }
+  }
+
+  it('array payload + targetPrescriptionId present in signed array → returns that prescription status', async () => {
+    const signedBundle = makeSignedArrayBundle([
+      { id: RX_UUID, med: 'AMX500', medN: 'Amoxicillin' },
+      { id: OTHER_UUID, med: 'IBU400', medN: 'Ibuprofen' },
+    ])
+    const mockEq = vi.fn().mockReturnValue({
+      single: vi.fn().mockResolvedValue({
+        data: {
+          id: RX_UUID,
+          prescription_status: 'DISPENSED',
+          status: 'completed',
+          medication_display: 'Amoxicillin 500mg',
+          authored_on: '2026-04-20T10:00:00Z',
+          dispensed_at: '2026-05-02T09:00:00Z',
+        },
+        error: null,
+      }),
+    })
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'audit_log') return auditLogMock()
+      if (table === 'organizations') {
+        return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: 'org-001', status: 'TRIAL', cancelled_at: null }, error: null }) }) }) }
+      }
+      if (table === 'org_subscriptions') {
+        return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
+      }
+      if (table === 'practitioner_keys') {
+        return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { revoked_at: null }, error: null }) }) }) }
+      }
+      if (table === 'medication_requests') {
+        return { select: vi.fn().mockReturnValue({ eq: mockEq }) }
+      }
+      return { select: vi.fn().mockResolvedValue({ data: null, error: null }) }
+    })
+    const caller = createCaller(createTestContext(mockFrom))
+
+    const result = await caller.medication.getStatus({ signedBundle, targetPrescriptionId: RX_UUID })
+
+    expect(result.status).toBe('FULFILLED')
+    expect(result.prescriptionId).toBe(RX_UUID)
+    // Lookup is bound to the target id (which was verified present in the signed array).
+    expect(mockEq).toHaveBeenCalledWith('id', RX_UUID)
+  })
+
+  it('array payload + targetPrescriptionId NOT in signed array → rejected, no DB lookup', async () => {
+    const signedBundle = makeSignedArrayBundle([{ id: RX_UUID, med: 'AMX500', medN: 'Amoxicillin' }])
+    const mockFrom = createMockFrom({})
+    const caller = createCaller(createTestContext(mockFrom))
+
+    await expect(
+      caller.medication.getStatus({ signedBundle, targetPrescriptionId: OTHER_UUID }),
+    ).rejects.toThrow('TARGET_NOT_IN_PAYLOAD')
+
+    const fromCalls = mockFrom.mock.calls.map((c: any[]) => c[0])
+    expect(fromCalls).not.toContain('medication_requests')
+  })
+
+  it('array payload without targetPrescriptionId → rejected before DB lookup', async () => {
+    const signedBundle = makeSignedArrayBundle([{ id: RX_UUID, med: 'AMX500', medN: 'Amoxicillin' }])
+    const mockFrom = createMockFrom({})
+    const caller = createCaller(createTestContext(mockFrom))
+
+    await expect(
+      caller.medication.getStatus({ signedBundle }),
+    ).rejects.toThrow(/targetPrescriptionId is required/)
+
+    const fromCalls = mockFrom.mock.calls.map((c: any[]) => c[0])
+    expect(fromCalls).not.toContain('medication_requests')
+  })
+
   it('AC2: invalid signature → INVALID_SIGNATURE error, no DB lookup', async () => {
     const payload = JSON.stringify({ prescriptionId: RX_UUID })
     const signedBundle = {

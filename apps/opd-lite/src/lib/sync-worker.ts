@@ -75,6 +75,7 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
           success: boolean
           conflict?: { remoteVersion: SyncRecord }
           error?: string
+          canonicalId?: string
         }> } } }
       }
 
@@ -85,6 +86,27 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
 
       if (opResult.conflict) {
         return { success: false, conflict: opResult.conflict }
+      }
+
+      // Duplicate-open-encounter backstop: the Hub rejected a 2nd open encounter for
+      // this (patient, practitioner). Re-parent the local duplicate's children onto
+      // the canonical encounter and drop the duplicate, then treat the op as resolved
+      // so it stops retrying. Primary prevention (spoke adopt + Hub resume + DB index)
+      // makes this path rare; this keeps clinical data from being stranded when it hits.
+      if (
+        !opResult.success &&
+        opResult.error === 'DUPLICATE_OPEN_ENCOUNTER' &&
+        entry.resourceType === 'Encounter' &&
+        opResult.canonicalId
+      ) {
+        try {
+          const { reconcileDuplicateEncounter } = await import('./reconcile-duplicate-encounter')
+          await reconcileDuplicateEncounter(entry.resourceId, opResult.canonicalId)
+          return { success: true }
+        } catch {
+          // Reconciliation failed — fall back to a normal failure so it retries later.
+          return { success: false, error: 'DUPLICATE_OPEN_ENCOUNTER_RECONCILE_FAILED' }
+        }
       }
 
       if (!opResult.success) {

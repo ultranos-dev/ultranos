@@ -79,6 +79,58 @@ function mockOrgSubscriptionsTable() {
   }
 }
 
+/** Shared audit_log table mock (chain-tail read + insert). */
+function mockAuditLogTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      order: vi.fn().mockReturnValue({
+        limit: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    }),
+    insert: vi.fn().mockResolvedValue({ error: null }),
+  }
+}
+
+/**
+ * Mock for the `encounters` table in encounter.create tests. create() now:
+ *  1) findOpenForPractitioner:  .select('id').eq().eq().contains().maybeSingle()  → { data: open }
+ *  2) insert:                   .insert(row).select('id').single()                → insert result / error
+ *  3) (on 23505) raceOpen:      same as (1)                                       → { data: open }
+ *  4) (on 23505) ownership:     .select('subject_id').eq('id').single()           → { data: ownership }
+ * maybeSingle terminal returns the open-encounter probe; single terminal returns ownership.
+ */
+function mockEncountersCreateTable(opts?: {
+  open?: { id: string } | null
+  insertError?: { code: string; message: string } | null
+  insertData?: { id: string }
+  ownership?: { subject_id: string } | null
+}) {
+  const open = opts?.open ?? null
+  const insertError = opts?.insertError ?? null
+  const insertData = opts?.insertData ?? { id: ENCOUNTER_UUID }
+  const ownership = opts?.ownership ?? { subject_id: PATIENT_UUID }
+  const selectChain: Record<string, unknown> = {}
+  Object.assign(selectChain, {
+    eq: vi.fn(() => selectChain),
+    contains: vi.fn(() => selectChain),
+    maybeSingle: vi.fn().mockResolvedValue({ data: open, error: null }),
+    single: vi.fn().mockResolvedValue({ data: ownership, error: null }),
+  })
+  return {
+    select: vi.fn(() => selectChain),
+    insert: vi.fn(() => ({
+      select: vi.fn(() => ({
+        single: vi.fn().mockResolvedValue({
+          data: insertError ? null : insertData,
+          error: insertError,
+        }),
+      })),
+    })),
+  }
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
@@ -113,28 +165,8 @@ describe('encounter.create', () => {
     const mockFrom = vi.fn((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
       if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
-      if (table === 'audit_log') {
-        return {
-          select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({ data: null, error: null }),
-              }),
-            }),
-          }),
-          insert: vi.fn().mockResolvedValue({ error: null }),
-        }
-      }
-      return {
-        insert: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: { id: ENCOUNTER_UUID },
-              error: null,
-            }),
-          }),
-        }),
-      }
+      if (table === 'audit_log') return mockAuditLogTable()
+      return mockEncountersCreateTable()
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
@@ -147,47 +179,42 @@ describe('encounter.create', () => {
     expect(mockFrom).toHaveBeenCalledWith('encounters')
   })
 
-  it('handles duplicate key (23505) idempotently', async () => {
-    let callCount = 0
+  it('resumes an existing open encounter for the same patient+practitioner', async () => {
+    // findOpenForPractitioner returns a DIFFERENT open encounter id → resume it,
+    // never insert a duplicate (the duplicate-open-encounter fix).
+    const EXISTING_OPEN_ID = '00000000-0000-4000-8000-0000000009ff'
+    const insertSpy = vi.fn()
     const mockFrom = vi.fn((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
       if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
-      if (table === 'audit_log') {
-        return {
-          select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({ data: null, error: null }),
-              }),
-            }),
-          }),
-          insert: vi.fn().mockResolvedValue({ error: null }),
-        }
-      }
-      callCount++
-      if (callCount === 1) {
-        return {
-          insert: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: null,
-                error: { code: '23505', message: 'duplicate' },
-              }),
-            }),
-          }),
-        }
-      }
-      // Ownership verification call — code compares existing.subject_id
-      return {
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: { subject_id: PATIENT_UUID },
-              error: null,
-            }),
-          }),
-        }),
-      }
+      if (table === 'audit_log') return mockAuditLogTable()
+      const t = mockEncountersCreateTable({ open: { id: EXISTING_OPEN_ID } })
+      t.insert = insertSpy
+      return t
+    })
+
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
+    const caller = createCaller(ctx)
+
+    const result = await caller.encounter.create(validInput)
+    expect(result.success).toBe(true)
+    expect(result.encounterId).toBe(EXISTING_OPEN_ID)
+    expect((result as { resumed?: boolean }).resumed).toBe(true)
+    expect(insertSpy).not.toHaveBeenCalled() // no duplicate insert
+  })
+
+  it('handles duplicate key (23505) idempotently', async () => {
+    // No pre-existing open encounter (open: null) so the flow reaches insert,
+    // which returns 23505; raceOpen is also null → same-id idempotent path.
+    const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+      if (table === 'audit_log') return mockAuditLogTable()
+      return mockEncountersCreateTable({
+        open: null,
+        insertError: { code: '23505', message: 'duplicate' },
+        ownership: { subject_id: PATIENT_UUID },
+      })
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
@@ -202,28 +229,8 @@ describe('encounter.create', () => {
     const mockFrom = vi.fn((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
       if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
-      if (table === 'audit_log') {
-        return {
-          select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({ data: null, error: null }),
-              }),
-            }),
-          }),
-          insert: vi.fn().mockResolvedValue({ error: null }),
-        }
-      }
-      return {
-        insert: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: { id: ENCOUNTER_UUID },
-              error: null,
-            }),
-          }),
-        }),
-      }
+      if (table === 'audit_log') return mockAuditLogTable()
+      return mockEncountersCreateTable()
     })
 
     const rpc = vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null })
@@ -244,28 +251,8 @@ describe('encounter.create', () => {
     const mockFrom = vi.fn((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
       if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
-      if (table === 'audit_log') {
-        return {
-          select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({ data: null, error: null }),
-              }),
-            }),
-          }),
-          insert: vi.fn().mockResolvedValue({ error: null }),
-        }
-      }
-      return {
-        insert: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: { id: ENCOUNTER_UUID },
-              error: null,
-            }),
-          }),
-        }),
-      }
+      if (table === 'audit_log') return mockAuditLogTable()
+      return mockEncountersCreateTable()
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })

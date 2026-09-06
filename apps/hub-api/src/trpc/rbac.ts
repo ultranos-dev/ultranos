@@ -126,11 +126,17 @@ export const labRestrictedProcedure = protectedProcedure.use(async (opts) => {
     })
   }
 
-  // Resolve lab affiliation from the labs/lab_technicians tables
+  // Resolve lab affiliation from the labs/lab_technicians tables.
+  //
+  // IMPORTANT: `lab_technicians.practitioner_id` is the practitioner PK
+  // (`practitioners.id`), which is NOT the auth user id. `ctx.user.sub` is the
+  // auth user id (JWT sub). The two are linked by `practitioners.auth_user_id`,
+  // so we must filter through the joined practitioner — matching on
+  // `practitioner_id` directly finds nothing and 403s every real technician.
   const { data: technicianRecord, error } = await opts.ctx.supabase
     .from('lab_technicians')
-    .select('id, lab_id, lab_role, labs!inner(id, status)')
-    .eq('practitioner_id', opts.ctx.user.sub)
+    .select('id, lab_id, lab_role, labs!inner(id, status), practitioners!inner(auth_user_id)')
+    .eq('practitioners.auth_user_id', opts.ctx.user.sub)
     .single()
 
   if (error || !technicianRecord) {

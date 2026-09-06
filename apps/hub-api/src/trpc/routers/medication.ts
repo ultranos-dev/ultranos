@@ -225,6 +225,10 @@ async function checkAIProcessingConsent(
 const GetStatusInputSchema = z.object({
   prescriptionId: z.string().uuid().optional(),
   qrCodeId: z.string().min(1).optional(),
+  // Story 3.4: when the signed payload is a multi-prescription array (the OPD-Lite
+  // QR bundle format), the caller names which prescription it is checking. The id
+  // must be provably present in the signed array before any DB lookup (see handler).
+  targetPrescriptionId: z.string().uuid().optional(),
   // P3: signedBundle is schematically optional to preserve specific error messages
   // and audit events for unsigned lookup attempts (AC 4). Always required at runtime.
   signedBundle: z.object({
@@ -619,17 +623,56 @@ export const medicationRouter = createTRPCRouter({
         })
       }
 
-      const payloadResult = SignedPayloadSchema.safeParse(rawPayload)
-      if (!payloadResult.success) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Signed payload must contain prescriptionId (UUID) or qrCodeId',
-        })
-      }
-      const parsedPayload = payloadResult.data
+      let lookupColumn: 'id' | 'qr_code_id'
+      let lookupValue: string
 
-      const lookupColumn = parsedPayload.prescriptionId ? 'id' : 'qr_code_id'
-      const lookupValue = (parsedPayload.prescriptionId ?? parsedPayload.qrCodeId)!
+      if (Array.isArray(rawPayload)) {
+        // Story 3.4: OPD-Lite signs a compact ARRAY of prescriptions ([{ id, ... }]).
+        // The caller must name which one it is checking via targetPrescriptionId, and
+        // that id must be present in the signed array — this binds the checked id to
+        // the verified signature (an attacker cannot substitute an arbitrary id).
+        if (!input.targetPrescriptionId) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'targetPrescriptionId is required for a multi-prescription bundle',
+          })
+        }
+        const signedIds = rawPayload
+          .map((rx) => (rx && typeof rx === 'object' ? (rx as { id?: unknown }).id : undefined))
+          .filter((id): id is string => typeof id === 'string')
+        if (!signedIds.includes(input.targetPrescriptionId)) {
+          try {
+            await audit.emit({
+              action: 'SECURITY_VIOLATION',
+              resourceType: 'PRESCRIPTION',
+              actorId: ctx.user.sub,
+              actorRole: ctx.user.role,
+              outcome: 'FAILURE',
+              sessionId: ctx.user.sessionId,
+              metadata: { reason: 'target_not_in_payload', attemptedPrescriptionId: input.targetPrescriptionId },
+            })
+          } catch {
+            console.warn('[AUDIT_FAILURE]', { action: 'SECURITY_VIOLATION', reason: 'target_not_in_payload' })
+          }
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'TARGET_NOT_IN_PAYLOAD',
+          })
+        }
+        lookupColumn = 'id'
+        lookupValue = input.targetPrescriptionId
+      } else {
+        const payloadResult = SignedPayloadSchema.safeParse(rawPayload)
+        if (!payloadResult.success) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Signed payload must contain prescriptionId (UUID) or qrCodeId',
+          })
+        }
+        const parsedPayload = payloadResult.data
+        lookupColumn = parsedPayload.prescriptionId ? 'id' : 'qr_code_id'
+        lookupValue = (parsedPayload.prescriptionId ?? parsedPayload.qrCodeId)!
+      }
 
       const { data, error } = await ctx.supabase
         .from('medication_requests')

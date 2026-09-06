@@ -24,6 +24,13 @@ export interface CompletePrescriptionResult {
   dispensedAt: string
 }
 
+/** The signed prescription bundle scanned from the QR (payload/sig/pub). */
+export interface SignedBundleInput {
+  payload: string
+  sig: string
+  pub: string
+}
+
 function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
     return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
@@ -32,11 +39,18 @@ function getHubApiUrl(): string {
 }
 
 /**
- * AC 1, 2: Check prescription status against the Hub API.
- * AC 4: Returns null when offline (caller must show warning).
+ * Story 3.4: Check a prescription's global status against the Hub.
+ *
+ * The Hub verifies the Ed25519 signature over the payload before any DB lookup,
+ * so we send the full signed bundle plus the specific prescription id we are
+ * checking (`targetPrescriptionId`). The Hub confirms that id is present in the
+ * signed payload array before resolving its status — binding the checked id to
+ * the verified signature. Callers handle the thrown error (e.g. Hub offline) by
+ * warning and proceeding, per the offline-first policy.
  */
 export async function checkPrescriptionStatus(
-  prescriptionId: string,
+  signedBundle: SignedBundleInput,
+  targetPrescriptionId: string,
   authToken: string,
   signal?: AbortSignal,
 ): Promise<PrescriptionStatusResult> {
@@ -44,7 +58,7 @@ export async function checkPrescriptionStatus(
   url.pathname = url.pathname.replace(/\/$/, '') + '/medication.getStatus'
   url.searchParams.set(
     'input',
-    JSON.stringify({ json: { prescriptionId } }),
+    JSON.stringify({ json: { signedBundle, targetPrescriptionId } }),
   )
 
   const res = await fetch(url.toString(), {

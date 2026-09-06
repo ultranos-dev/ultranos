@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useFulfillmentStore } from '@/stores/fulfillment-store'
+import { usePosStore } from '@/stores/pos-store'
 import type { VerifiedPrescription } from '@/lib/prescription-verify'
+import type { CatalogItem, StockBatch } from '@/lib/inventory/types'
 import { db } from '@/lib/db'
 import { encryptionKeyStore } from '@/lib/encryption-key-store'
 
@@ -279,5 +281,85 @@ describe('FulfillmentStore confirmDispense (Story 4.3)', () => {
     // Phase should not have transitioned
     expect(useFulfillmentStore.getState().phase).not.toBe('dispensing')
     expect(useFulfillmentStore.getState().phase).not.toBe('completed')
+  })
+})
+
+describe('FulfillmentStore createInvoiceAfterDispense pricing (Story 4.4)', () => {
+  function makeCatalogItem(over: Partial<CatalogItem> = {}): CatalogItem {
+    return {
+      id: 'cat-amx',
+      name: 'Amoxicillin',
+      form: 'capsule',
+      strength: '500',
+      strengthUnit: 'mg',
+      packSize: 1,
+      category: 'antibiotic',
+      defaultSellingPrice: 200,
+      reorderPoint: 10,
+      isActive: true,
+      lastSyncedAt: '2026-04-28T10:00:00Z',
+      ...over,
+    }
+  }
+
+  function makeStockBatch(over: Partial<StockBatch> = {}): StockBatch {
+    return {
+      id: 'batch-amx-1',
+      catalogItemId: 'cat-amx',
+      batchNumber: 'B-001',
+      expiryDate: '2027-01-01',
+      quantityOnHand: 100,
+      costPrice: 150,
+      sellingPrice: 350,
+      receivedAt: '2026-04-28T10:00:00Z',
+      status: 'active',
+      locationId: 'loc-1',
+      hlcTimestamp: '0000',
+      ...over,
+    }
+  }
+
+  const rxQty2: VerifiedPrescription[] = [
+    {
+      id: 'rx-amx',
+      med: 'AMX500',
+      medN: 'Amoxicillin',
+      medT: 'Amoxicillin 500mg Capsule',
+      dos: { qty: 2, unit: 'capsule', freqN: 3, per: 1, perU: 'd' },
+      dur: 7,
+      req: 'pract-001',
+      pat: 'pat-001',
+      at: '2026-04-28T10:00:00Z',
+    },
+  ]
+
+  it('prices each line from the dispensed batch sellingPrice × quantity', async () => {
+    await db.catalogItems.add(makeCatalogItem())
+    await db.stockBatches.add(makeStockBatch({ sellingPrice: 350 }))
+
+    useFulfillmentStore.getState().loadPrescriptions(rxQty2)
+    await useFulfillmentStore.getState().assignFefoBatches()
+    await useFulfillmentStore.getState().createInvoiceAfterDispense('Practitioner/p1')
+
+    const invoice = usePosStore.getState().activeInvoice
+    expect(invoice).not.toBeNull()
+    const line = invoice!.items[0]!
+    expect(line.unitPrice).toBe(350)
+    expect(line.lineTotal).toBe(700) // 350 × 2
+    expect(invoice!.subtotal).toBe(700)
+    expect(invoice!.total).toBe(700)
+  })
+
+  it('falls back to catalog defaultSellingPrice when no batch is assigned', async () => {
+    // Catalog item exists but has NO stock batch → assignFefoBatches finds none.
+    await db.catalogItems.add(makeCatalogItem({ defaultSellingPrice: 200 }))
+
+    useFulfillmentStore.getState().loadPrescriptions(rxQty2)
+    await useFulfillmentStore.getState().assignFefoBatches()
+    await useFulfillmentStore.getState().createInvoiceAfterDispense('Practitioner/p1')
+
+    const line = usePosStore.getState().activeInvoice!.items[0]!
+    expect(line.unitPrice).toBe(200)
+    expect(line.lineTotal).toBe(400) // 200 × 2
   })
 })

@@ -14,6 +14,7 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { AUTH_COOKIE_NAME } from '@/lib/supabase'
 
 const SYSTEM_PROMPT = `You are a communication assistant helping lab technicians structure consultation requests clearly for remote expert review.
 
@@ -50,7 +51,11 @@ export async function POST(request: Request): Promise<NextResponse> {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll() } },
+    {
+      cookies: { getAll: () => cookieStore.getAll() },
+      // Must match the browser client's cookie name, or getUser() won't find the session.
+      cookieOptions: { name: AUTH_COOKIE_NAME },
+    },
   )
   const {
     data: { user },

@@ -273,28 +273,48 @@ export const useFulfillmentStore = create<FulfillmentState>()(
     },
 
     createInvoiceAfterDispense: async (practitionerId: string) => {
-      const state = get()
-      const selectedItems = state.items.filter((i) => i.selected)
+      const selectedItems = get().items.filter((i) => i.selected)
       if (selectedItems.length === 0) return
 
-      const lineItems: InvoiceLineItem[] = selectedItems.map((item) => ({
-        catalogItemId: item.prescription.med,
-        stockBatchId: item.fefoBatchId ?? '',
-        description: item.prescription.medT || item.prescription.medN,
-        quantity: item.prescription.dos.qty,
-        unitPrice: 0,
-        lineTotal: 0,
-      }))
-
       try {
+        // Tax rate + invoice prefix come from stored pharmacy settings.
+        const settings = await db.pharmacySettings.toCollection().first()
+        const taxRate = settings?.taxRate ?? 0
+
+        // Price each line from the dispensed FEFO batch's selling price,
+        // falling back to the catalog item's default selling price, then 0.
+        const lineItems: InvoiceLineItem[] = await Promise.all(
+          selectedItems.map(async (item) => {
+            const batch = item.fefoBatchId ? await db.stockBatches.get(item.fefoBatchId) : undefined
+            const catalogItem = await db.catalogItems
+              .filter((c) => c.name === item.prescription.medN || c.barcode === item.prescription.med)
+              .first()
+            const unitPrice =
+              (batch?.sellingPrice && batch.sellingPrice > 0 ? batch.sellingPrice : undefined) ??
+              (catalogItem?.defaultSellingPrice && catalogItem.defaultSellingPrice > 0
+                ? catalogItem.defaultSellingPrice
+                : undefined) ??
+              0
+            const quantity = item.prescription.dos.qty
+            return {
+              catalogItemId: catalogItem?.id ?? item.prescription.med,
+              stockBatchId: item.fefoBatchId ?? '',
+              description: item.prescription.medT || item.prescription.medN,
+              quantity,
+              unitPrice,
+              lineTotal: unitPrice * quantity,
+            }
+          }),
+        )
+
         const invoice = await createInvoiceFromDispense({
           dispenseIds: selectedItems.map((i) => i.prescription.id),
           patientId: undefined,
           items: lineItems,
-          taxRate: 0,
+          taxRate,
           createdBy: practitionerId,
           hlcTimestamp: serializeHlc(hlc.now()),
-          prefix: 'INV-',
+          prefix: settings?.invoicePrefix ?? 'INV-',
         })
         usePosStore.getState().setActiveInvoice(invoice)
       } catch {

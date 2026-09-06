@@ -173,6 +173,24 @@ describe('labRestrictedProcedure includes labRole in context', () => {
     expect(result.labRole).toBe('SUPERVISOR')
   })
 
+  it('resolves affiliation via practitioners.auth_user_id, not the raw auth id', async () => {
+    // Regression: lab_technicians.practitioner_id holds the practitioner PK, which
+    // is NOT the auth user id (ctx.user.sub). The lookup must join through
+    // practitioners.auth_user_id — otherwise every real LAB_TECH gets 403.
+    setupLabTech(LabRole.LAB_TECH)
+
+    const router = createTRPCRouter({
+      check: labRestrictedProcedure.query(() => 'ok'),
+    })
+    const caller = createCallerFactory(router)(
+      makeCtx({ sub: 'auth-uuid-123', role: 'LAB_TECH', sessionId: 's1' }),
+    )
+    await caller.check()
+
+    expect(mockEq).toHaveBeenCalledWith('practitioners.auth_user_id', 'auth-uuid-123')
+    expect(mockEq).not.toHaveBeenCalledWith('practitioner_id', 'auth-uuid-123')
+  })
+
   it('defaults labRole to LAB_TECH when column is null', async () => {
     mockSingle.mockResolvedValue({
       data: {

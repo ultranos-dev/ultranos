@@ -20,6 +20,11 @@ function getOrCreateNodeId(): string {
 
 const hlc = new HybridLogicalClock(getOrCreateNodeId())
 
+/** The practitioner reference on an encounter (participant[0].individual.reference). */
+function encounterPractitionerRef(e: FhirEncounterZod): string | undefined {
+  return e.participant?.[0]?.individual?.reference
+}
+
 interface EncounterState {
   activeEncounter: FhirEncounterZod | null
   isStarting: boolean
@@ -28,7 +33,7 @@ interface EncounterState {
 
   startEncounter: (patientId: string, practitionerRef: string) => Promise<void>
   endEncounter: () => Promise<void>
-  loadActiveEncounter: (patientId: string) => Promise<void>
+  loadActiveEncounter: (patientId: string, practitionerRef?: string) => Promise<void>
   loadMedicationHistory: (patientId: string) => Promise<void>
   clearPhiState: () => void
 }
@@ -41,15 +46,52 @@ export const useEncounterStore = create<EncounterState>()(
     activeMedicationStatements: [],
 
     startEncounter: async (patientId: string, practitionerRef: string) => {
-      // P2: Guard against concurrent/duplicate encounters
+      // P2: Guard against concurrent/duplicate encounters (in-memory, patient-scoped).
       const existing = get().activeEncounter
-      if (existing && existing.status === 'in-progress') return
+      if (
+        existing &&
+        existing.status === 'in-progress' &&
+        existing.subject.reference === `Patient/${patientId}`
+      ) {
+        return
+      }
 
       set((state) => {
         state.isStarting = true
       })
 
       try {
+        // Authoritative local guard against the duplicate-open-encounter bug:
+        // before creating, adopt any existing in-progress encounter for THIS
+        // (patient, practitioner) from the local cache. This survives the
+        // in-memory guard being lost across sessions/tab-refocus/devices — the
+        // exact gap that produced two open encounters. Dexie is hydrated on login
+        // by pullPractitionerEncounters and per-chart by pullPatientChanges, and
+        // the Hub + a partial unique index enforce the same invariant server-side.
+        // NOTE: participant is an ENCRYPTED (non-indexed) field, so it is NOT
+        // readable inside Dexie's .filter() predicate (which runs before the
+        // decryption middleware). Filter on the indexed/plaintext `status`, then
+        // materialize (.toArray() decrypts) and match the practitioner in JS.
+        const openForPatient = await db.encounters
+          .where('subject.reference')
+          .equals(`Patient/${patientId}`)
+          .filter((e) => e.status === 'in-progress')
+          .toArray()
+        const localOpen = openForPatient.find(
+          (e) => encounterPractitionerRef(e) === practitionerRef,
+        )
+
+        if (localOpen) {
+          set((state) => {
+            state.activeEncounter = localOpen
+            state.isStarting = false
+          })
+          auditPhiAccess(AuditAction.READ, AuditResourceType.ENCOUNTER, localOpen.id, patientId, {
+            phiAccess: 'encounter_resume',
+          })
+          return
+        }
+
         const ts = hlc.now()
         const hlcString = serializeHlc(ts)
         const nowIso = new Date().toISOString()
@@ -168,15 +210,23 @@ export const useEncounterStore = create<EncounterState>()(
       }
     },
 
-    loadActiveEncounter: async (patientId: string) => {
+    loadActiveEncounter: async (patientId: string, practitionerRef?: string) => {
       // P5: Skip load if a start is in progress to avoid race condition
       if (get().isStarting) return
 
-      const active = await db.encounters
+      // Scope to THIS practitioner when provided: under the one-open-encounter-per-
+      // (patient, practitioner) model, an open encounter belonging to a different
+      // doctor must not surface as this clinician's active consultation.
+      // participant is encrypted, so materialize (decrypt) before matching it —
+      // it is not readable inside .filter() (see startEncounter for detail).
+      const openForPatient = await db.encounters
         .where('subject.reference')
         .equals(`Patient/${patientId}`)
         .filter((e) => e.status === 'in-progress')
-        .first()
+        .toArray()
+      const active = practitionerRef
+        ? (openForPatient.find((e) => encounterPractitionerRef(e) === practitionerRef) ?? null)
+        : (openForPatient[0] ?? null)
 
       // P5: Re-check after async — don't overwrite a freshly started encounter for this patient
       const current = get().activeEncounter

@@ -232,14 +232,42 @@ export const diagnosticReportRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      // Lab affiliation resolved by labRestrictedProcedure — scope to ctx.lab.labId.
-      // ADMIN users have no ctx.lab; they must pass labId explicitly (not supported in this endpoint).
+      // Report scope depends on the caller:
+      // - LAB_TECH: labRestrictedProcedure injected ctx.lab → their own lab only.
+      // - ADMIN: no ctx.lab; scope to EVERY lab in their org (labs.org_id = orgId),
+      //   mirroring admin.ts lab-oversight scoping. Lab-Lite is used by org ADMINs
+      //   too, so an org admin can review all their org's synced reports.
       const labId = (ctx as any).lab?.labId
+      let orgLabIds: string[] | null = null
+
       if (!labId) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Lab affiliation required',
-        })
+        if (ctx.user.role === 'ADMIN' && ctx.user.orgId) {
+          const { data: orgLabs, error: orgLabsError } = await ctx.supabase
+            .from('labs')
+            .select('id')
+            .eq('org_id', ctx.user.orgId)
+
+          if (orgLabsError) {
+            console.error('DiagnosticReport listByLab org-labs error:', { code: orgLabsError.code })
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to resolve organization labs',
+            })
+          }
+
+          orgLabIds = (orgLabs ?? []).map((l: { id: string }) => l.id)
+
+          // Org has no labs → nothing to list. Return empty rather than issuing an
+          // `.in('lab_id', [])` (ambiguous) or a 403 (there's simply no data yet).
+          if (orgLabIds.length === 0) {
+            return { reports: [], nextCursor: undefined }
+          }
+        } else {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Lab affiliation required',
+          })
+        }
       }
 
       let query = ctx.supabase
@@ -247,7 +275,8 @@ export const diagnosticReportRouter = createTRPCRouter({
         .select(
           'id, status, loinc_code, loinc_display, patient_ref, performer_id, lab_id, issued, collection_date, virus_scan_status, _ultranos_created_at'
         )
-        .eq('lab_id', labId)
+      query = labId ? query.eq('lab_id', labId) : query.in('lab_id', orgLabIds!)
+      query = query
         .order('issued', { ascending: false })
         .order('id', { ascending: false })
         .limit(input.limit + 1)
@@ -297,12 +326,14 @@ export const diagnosticReportRouter = createTRPCRouter({
         await audit.emit({
           action: 'READ',
           resourceType: 'DIAGNOSTIC_REPORT',
-          resourceId: `lab-reports:${labId}`,
+          resourceId: labId ? `lab-reports:${labId}` : `org-reports:${ctx.user.orgId}`,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
-          metadata: { labId, resultCount: items.length },
+          metadata: labId
+            ? { labId, resultCount: items.length }
+            : { orgId: ctx.user.orgId, labCount: orgLabIds!.length, resultCount: items.length },
         })
       } catch {
         console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'DIAGNOSTIC_REPORT' })

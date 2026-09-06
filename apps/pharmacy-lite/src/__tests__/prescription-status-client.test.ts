@@ -18,8 +18,10 @@ function mockTrpcResponse(data: unknown) {
   }
 }
 
+const signedBundle = { payload: '[{"id":"rx-001"}]', sig: 'sig-abc', pub: 'pub-xyz' }
+
 describe('checkPrescriptionStatus', () => {
-  it('calls the correct tRPC endpoint with prescription ID and auth', async () => {
+  it('sends the signed bundle + targetPrescriptionId to the Hub with auth', async () => {
     mockFetch.mockResolvedValue(
       mockTrpcResponse({
         prescriptionId: 'rx-001',
@@ -30,14 +32,18 @@ describe('checkPrescriptionStatus', () => {
       }),
     )
 
-    const result = await checkPrescriptionStatus('rx-001', 'token-abc')
+    const result = await checkPrescriptionStatus(signedBundle, 'rx-001', 'token-abc')
 
     expect(result.status).toBe('AVAILABLE')
     expect(result.prescriptionId).toBe('rx-001')
     expect(mockFetch).toHaveBeenCalledTimes(1)
 
-    const calledUrl = mockFetch.mock.calls[0]![0] as string
+    const calledUrl = decodeURIComponent(mockFetch.mock.calls[0]![0] as string)
     expect(calledUrl).toContain('medication.getStatus')
+    // The signed bundle (not a raw id) must be sent, along with the target id.
+    expect(calledUrl).toContain('signedBundle')
+    expect(calledUrl).toContain('sig-abc')
+    expect(calledUrl).toContain('targetPrescriptionId')
     expect(calledUrl).toContain('rx-001')
 
     const fetchOpts = mockFetch.mock.calls[0]![1] as RequestInit
@@ -59,7 +65,7 @@ describe('checkPrescriptionStatus', () => {
       }),
     )
 
-    const result = await checkPrescriptionStatus('rx-002', 'token-abc')
+    const result = await checkPrescriptionStatus(signedBundle, 'rx-002', 'token-abc')
     expect(result.status).toBe('FULFILLED')
     expect(result.dispensedAt).toBe('2026-04-19T14:00:00Z')
   })
@@ -72,7 +78,7 @@ describe('checkPrescriptionStatus', () => {
         Promise.resolve({ error: { message: 'Prescription not found' } }),
     })
 
-    await expect(checkPrescriptionStatus('rx-bad', 'token-abc')).rejects.toThrow(
+    await expect(checkPrescriptionStatus(signedBundle, 'rx-bad', 'token-abc')).rejects.toThrow(
       'Prescription not found',
     )
   })
@@ -80,7 +86,7 @@ describe('checkPrescriptionStatus', () => {
   it('throws on network failure (offline)', async () => {
     mockFetch.mockRejectedValue(new TypeError('Failed to fetch'))
 
-    await expect(checkPrescriptionStatus('rx-001', 'token-abc')).rejects.toThrow(
+    await expect(checkPrescriptionStatus(signedBundle, 'rx-001', 'token-abc')).rejects.toThrow(
       'Failed to fetch',
     )
   })

@@ -223,6 +223,73 @@ describe('encounter store', () => {
     })
   })
 
+  // Regression: duplicate-open-encounter bug. Two separate sessions/devices for the
+  // same (patient, practitioner) each created their own open encounter because the
+  // guard was in-memory only. startEncounter must now adopt an existing OPEN
+  // encounter from the local cache instead of creating a second one.
+  describe('duplicate-open-encounter prevention', () => {
+    function seedOpenEncounter(patientId: string, practitionerRef: string, id: string) {
+      return db.encounters.put({
+        id,
+        resourceType: 'Encounter',
+        status: 'in-progress',
+        class: { system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode', code: 'AMB', display: 'ambulatory' },
+        subject: { reference: `Patient/${patientId}` },
+        participant: [{ individual: { reference: practitionerRef } }],
+        period: { start: new Date().toISOString() },
+        _ultranos: { isOfflineCreated: true, hlcTimestamp: '001700000000000:00000:seed-node', createdAt: new Date().toISOString() },
+        meta: { lastUpdated: new Date().toISOString(), versionId: '1' },
+      } as unknown as Parameters<typeof db.encounters.put>[0])
+    }
+
+    it('adopts an existing open encounter for the same patient+practitioner (no duplicate)', async () => {
+      // Simulate encounter started in a prior session, present in local cache,
+      // but with the in-memory guard cleared (new session).
+      await seedOpenEncounter(TEST_PATIENT_ID, TEST_PRACTITIONER_REF, 'existing-open-1')
+      resetStore()
+
+      await useEncounterStore.getState().startEncounter(TEST_PATIENT_ID, TEST_PRACTITIONER_REF)
+
+      const active = useEncounterStore.getState().activeEncounter!
+      expect(active.id).toBe('existing-open-1')
+      const all = await db.encounters.toArray()
+      expect(all.length).toBe(1) // adopted, not duplicated
+    })
+
+    it('does NOT adopt another practitioner\'s open encounter — starts its own', async () => {
+      await seedOpenEncounter(TEST_PATIENT_ID, 'Practitioner/other-doc', 'other-doc-open')
+      resetStore()
+
+      await useEncounterStore.getState().startEncounter(TEST_PATIENT_ID, TEST_PRACTITIONER_REF)
+
+      const active = useEncounterStore.getState().activeEncounter!
+      expect(active.id).not.toBe('other-doc-open')
+      expect(active.participant![0]!.individual!.reference).toBe(TEST_PRACTITIONER_REF)
+      const all = await db.encounters.toArray()
+      expect(all.length).toBe(2) // both doctors have their own open encounter
+    })
+
+    it('loadActiveEncounter scoped to a practitioner ignores another practitioner\'s open encounter', async () => {
+      await seedOpenEncounter(TEST_PATIENT_ID, 'Practitioner/other-doc', 'other-doc-open-2')
+      resetStore()
+
+      await useEncounterStore.getState().loadActiveEncounter(TEST_PATIENT_ID, TEST_PRACTITIONER_REF)
+      expect(useEncounterStore.getState().activeEncounter).toBeNull()
+
+      // Without a practitioner filter it still finds the patient's open encounter.
+      await useEncounterStore.getState().loadActiveEncounter(TEST_PATIENT_ID)
+      expect(useEncounterStore.getState().activeEncounter!.id).toBe('other-doc-open-2')
+    })
+
+    it('loadActiveEncounter loads THIS practitioner\'s open encounter (positive match through decryption)', async () => {
+      await seedOpenEncounter(TEST_PATIENT_ID, TEST_PRACTITIONER_REF, 'mine-open')
+      resetStore()
+
+      await useEncounterStore.getState().loadActiveEncounter(TEST_PATIENT_ID, TEST_PRACTITIONER_REF)
+      expect(useEncounterStore.getState().activeEncounter!.id).toBe('mine-open')
+    })
+  })
+
   describe('loadActiveEncounter stale state', () => {
     it('should clear activeEncounter when no in-progress encounter exists for patient', async () => {
       // Set a stale encounter in state

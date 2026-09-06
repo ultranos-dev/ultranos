@@ -271,6 +271,12 @@ export interface LabReport {
 
 /**
  * Fetch synced lab reports from the Hub API (paginated).
+ *
+ * Backed by the `diagnosticReport.listByLab` procedure (Story 17.3), which
+ * scopes reports to the requesting technician's lab, orders by `issued` DESC,
+ * and returns a `{ reports, nextCursor }` page keyed by report id. (There is no
+ * `lab.listReports` procedure — an earlier client pointed there and 404'd.)
+ *
  * Callers wrap this in try/catch and fall back to local upload history if the
  * Hub is unreachable, so a network/endpoint failure degrades gracefully.
  */
@@ -278,9 +284,12 @@ export async function listLabReports(
   token: string,
   opts: { limit: number; cursor?: string },
 ): Promise<{ reports: LabReport[]; nextCursor?: string }> {
-  const params = new URLSearchParams({ limit: String(opts.limit) })
-  if (opts.cursor) params.set('cursor', opts.cursor)
-  const res = await fetch(`${getHubApiUrl()}/lab.listReports?${params.toString()}`, {
+  // tRPC GET input is a superjson-wrapped JSON blob in the `input` query param —
+  // NOT raw `?limit=` params (those would be ignored and the input mis-parsed).
+  const input = encodeURIComponent(
+    JSON.stringify({ json: { limit: opts.limit, ...(opts.cursor ? { cursor: opts.cursor } : {}) } }),
+  )
+  const res = await fetch(`${getHubApiUrl()}/diagnosticReport.listByLab?input=${input}`, {
     method: 'GET',
     headers: { Authorization: `Bearer ${token}` },
   })

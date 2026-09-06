@@ -105,7 +105,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const [loading, setLoading] = useState(false)
   const [needsReauth, setNeedsReauth] = useState(false)
 
-  const { isSyncing: _isSyncing } = usePatientSync(patientId)
+  const { isSyncing } = usePatientSync(patientId)
   const [prescriptionBlocked, setPrescriptionBlocked] = useState(false)
 
   // Shallow selectors to prevent unnecessary re-renders (perf guardrail)
@@ -227,10 +227,22 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     }
   }, [patientId, selectedPatient])
 
-  // Load any active encounter from Dexie for this patient
+  // Load any active encounter for this patient + practitioner from Dexie.
   useEffect(() => {
-    loadActiveEncounter(patientId)
-  }, [patientId, loadActiveEncounter])
+    loadActiveEncounter(patientId, practitionerRef || undefined)
+  }, [patientId, practitionerRef, loadActiveEncounter])
+
+  // Re-check after a sync pull completes: login/chart hydration may bring a
+  // still-open encounter (started in another session/device) into the local
+  // cache AFTER the initial mount read. Without this re-run, the dashboard would
+  // keep showing "Start" and let the clinician open a duplicate.
+  const prevSyncingRef = useRef(false)
+  useEffect(() => {
+    if (prevSyncingRef.current && !isSyncing) {
+      loadActiveEncounter(patientId, practitionerRef || undefined)
+    }
+    prevSyncingRef.current = isSyncing
+  }, [isSyncing, patientId, practitionerRef, loadActiveEncounter])
 
   // Initialize SOAP note and vitals when encounter becomes active
   useEffect(() => {

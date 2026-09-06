@@ -12,6 +12,7 @@ import {
 import { useFulfillmentStore } from '@/stores/fulfillment-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getHubApiUrl } from '@/lib/trpc'
+import { checkPrescriptionStatus, type SignedBundleInput } from '@/lib/prescription-status-client'
 
 type ViewPhase =
   | { step: 'idle' }
@@ -19,6 +20,14 @@ type ViewPhase =
   | { step: 'verifying' }
   | { step: 'result'; result: VerificationResult; rawQr: string }
   | { step: 'error'; message: string }
+
+// Story 3.4: Global invalidation check state, entered when the pharmacist
+// proceeds from a verified scan to fulfillment.
+type ProceedState =
+  | { kind: 'idle' }
+  | { kind: 'checking' }
+  | { kind: 'blocked'; medName: string; status: 'FULFILLED' | 'VOIDED'; dispensedAt: string | null }
+  | { kind: 'offline'; prescriptions: VerifiedPrescription[]; practitionerName?: string }
 
 interface PharmacyScannerViewProps {
   onNavigateToReview?: () => void
@@ -30,6 +39,7 @@ export function PharmacyScannerView({
   const t = useTranslations('prescription')
   const [phase, setPhase] = useState<ViewPhase>({ step: 'idle' })
   const [pasteInput, setPasteInput] = useState('')
+  const [proceed, setProceed] = useState<ProceedState>({ kind: 'idle' })
   const scannerRef = useRef<HTMLDivElement>(null)
   const html5QrRef = useRef<unknown>(null)
   const processingRef = useRef(false)
@@ -120,7 +130,7 @@ export function PharmacyScannerView({
   }, [handleVerify])
 
   // Load into fulfillment store and navigate
-  const handleProceedToReview = useCallback(
+  const finishProceed = useCallback(
     (prescriptions: VerifiedPrescription[], practitionerName?: string) => {
       loadPrescriptions(prescriptions, practitionerName)
       onNavigateToReview?.()
@@ -128,10 +138,60 @@ export function PharmacyScannerView({
     [loadPrescriptions, onNavigateToReview],
   )
 
+  // Story 3.4: Global Prescription Invalidation Check. Before dispensing, confirm
+  // with the Hub that this prescription hasn't already been fulfilled or voided at
+  // another pharmacy. Fail-closed on a FULFILLED/VOIDED result (block). Fail-OPEN on
+  // an unreachable Hub (warn + allow) — dispensing must work offline; the Hub's
+  // TOCTOU guard on recordDispense is the backstop against a true double-dispense.
+  const handleProceedToReview = useCallback(
+    async (prescriptions: VerifiedPrescription[], rawQr: string, practitionerName?: string) => {
+      setProceed({ kind: 'checking' })
+
+      let bundle: SignedBundleInput
+      try {
+        const b = JSON.parse(rawQr) as SignedBundleInput
+        bundle = { payload: b.payload, sig: b.sig, pub: b.pub }
+      } catch {
+        // Already-verified QR that no longer parses shouldn't happen — proceed.
+        finishProceed(prescriptions, practitionerName)
+        return
+      }
+
+      let token: string | null = null
+      try {
+        token = await useAuthSessionStore.getState().getAccessToken()
+      } catch {
+        token = null
+      }
+      if (!token) {
+        setProceed({ kind: 'offline', prescriptions, practitionerName })
+        return
+      }
+
+      for (const rx of prescriptions) {
+        try {
+          const result = await checkPrescriptionStatus(bundle, rx.id, token)
+          if (result.status === 'FULFILLED' || result.status === 'VOIDED') {
+            setProceed({ kind: 'blocked', medName: rx.medN, status: result.status, dispensedAt: result.dispensedAt })
+            return
+          }
+        } catch {
+          // Hub unreachable → warn + allow (offline-first).
+          setProceed({ kind: 'offline', prescriptions, practitionerName })
+          return
+        }
+      }
+
+      finishProceed(prescriptions, practitionerName)
+    },
+    [finishProceed],
+  )
+
   const handleReset = useCallback(() => {
     processingRef.current = false
     setPhase({ step: 'idle' })
     setPasteInput('')
+    setProceed({ kind: 'idle' })
   }, [])
 
   return (
@@ -223,7 +283,7 @@ export function PharmacyScannerView({
       )}
 
       {/* Result states */}
-      {phase.step === 'result' && (
+      {phase.step === 'result' && proceed.kind === 'idle' && (
         <ResultDisplay
           result={phase.result}
           rawQr={phase.rawQr}
@@ -232,6 +292,68 @@ export function PharmacyScannerView({
           onRetryVerify={handleRetryVerify}
           onReset={handleReset}
         />
+      )}
+
+      {/* Story 3.4: Global invalidation check in progress */}
+      {proceed.kind === 'checking' && (
+        <div
+          className="rounded-xl bg-muted/40 p-6 text-center ring-[0.65px] ring-border/50"
+          role="status"
+          data-testid="status-checking"
+        >
+          <p className="text-sm font-semibold text-muted-foreground">
+            Checking global fulfillment status…
+          </p>
+        </div>
+      )}
+
+      {/* Story 3.4: Already dispensed/voided elsewhere — fail-closed, no proceed */}
+      {proceed.kind === 'blocked' && (
+        <div
+          className="rounded-xl border-2 border-destructive/20 bg-destructive/10 p-6"
+          role="alert"
+          data-testid="already-dispensed-warning"
+        >
+          <p className="text-lg font-bold text-destructive">
+            Already {proceed.status === 'VOIDED' ? 'Voided' : 'Dispensed'} Elsewhere
+          </p>
+          <p className="mt-2 text-sm font-semibold text-destructive">
+            {proceed.medName} was already {proceed.status === 'VOIDED' ? 'voided' : 'dispensed'}
+            {proceed.dispensedAt ? ` on ${new Date(proceed.dispensedAt).toLocaleDateString()}` : ''} at
+            another location. DO NOT dispense this prescription again.
+          </p>
+          <Button variant="destructive" className="mt-4" type="button" onClick={handleReset}>
+            Dismiss
+          </Button>
+        </div>
+      )}
+
+      {/* Story 3.4: Hub unreachable — warn but allow (offline-first) */}
+      {proceed.kind === 'offline' && (
+        <div
+          className="rounded-xl border-2 border-warning/20 bg-warning/10 p-6"
+          role="alert"
+          data-testid="status-check-unavailable"
+        >
+          <p className="text-lg font-bold text-warning">Global fulfillment check unavailable</p>
+          <p className="mt-2 text-sm text-warning">
+            The Hub is offline, so we could not confirm this prescription has not already been
+            dispensed at another pharmacy. The signature is valid — proceed with caution.
+          </p>
+          <div className="mt-4 flex gap-3">
+            <Button
+              variant="default"
+              type="button"
+              data-testid="proceed-anyway-btn"
+              onClick={() => finishProceed(proceed.prescriptions, proceed.practitionerName)}
+            >
+              Proceed to Fulfillment
+            </Button>
+            <Button variant="secondary" type="button" onClick={handleReset}>
+              Cancel
+            </Button>
+          </div>
+        </div>
       )}
 
       {/* Error state */}
@@ -266,7 +388,7 @@ function ResultDisplay({
 }: {
   result: VerificationResult
   rawQr: string
-  onProceedToReview: (rx: VerifiedPrescription[], name?: string) => void
+  onProceedToReview: (rx: VerifiedPrescription[], rawQr: string, name?: string) => void
   onFetchKey: (rawQr: string) => void
   onRetryVerify: (rawQr: string) => void
   onReset: () => void
@@ -309,7 +431,7 @@ function ResultDisplay({
             <Button
               variant="default"
               type="button"
-              onClick={() => onProceedToReview(result.prescriptions, result.practitionerName)}
+              onClick={() => onProceedToReview(result.prescriptions, rawQr, result.practitionerName)}
               data-testid="proceed-to-review-btn"
             >
               Proceed to Fulfillment

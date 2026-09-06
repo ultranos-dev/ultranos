@@ -96,7 +96,7 @@ export function PrescriptionQueueView() {
         undefined,
         { name: patientName, age: patientAge },
       )
-      router.push('/scan')
+      router.push('/fulfillment')
     },
     [loadPrescriptions, resetFulfillment, router],
   )

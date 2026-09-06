@@ -48,12 +48,19 @@ vi.mock('@/lib/trpc', () => ({
   getHubApiUrl: vi.fn(() => 'http://hub'),
 }))
 
+// Mock the global prescription-status client (Story 3.4 invalidation check)
+vi.mock('@/lib/prescription-status-client', () => ({
+  checkPrescriptionStatus: vi.fn(),
+}))
+
 import { verifyPrescriptionQr, fetchAndCachePractitionerKey } from '@/lib/prescription-verify'
+import { checkPrescriptionStatus } from '@/lib/prescription-status-client'
 import { PharmacyScannerView } from '@/components/pharmacy/PharmacyScannerView'
 import type { SignedPrescriptionBundle } from '@ultranos/shared-types'
 
 const mockVerifyQr = vi.mocked(verifyPrescriptionQr)
 const _mockFetchKey = vi.mocked(fetchAndCachePractitionerKey)
+const mockCheckStatus = vi.mocked(checkPrescriptionStatus)
 
 function uint8ToBase64(bytes: Uint8Array): string {
   let binary = ''
@@ -81,6 +88,14 @@ function makeQrData(): string {
 beforeEach(() => {
   vi.clearAllMocks()
   mockLoadPrescriptions.mockClear()
+  // Default: prescription is globally available (not yet dispensed elsewhere).
+  mockCheckStatus.mockResolvedValue({
+    prescriptionId: 'rx-001',
+    status: 'AVAILABLE',
+    medicationDisplay: 'Amoxicillin 500mg',
+    authoredOn: '2026-04-28T10:00:00Z',
+    dispensedAt: null,
+  })
 })
 
 describe('PharmacyScannerView', () => {
@@ -199,6 +214,67 @@ describe('PharmacyScannerView', () => {
 
     await user.click(screen.getByTestId('proceed-to-review-btn'))
 
+    // Global invalidation check runs first (AVAILABLE) → then load + navigate.
+    await waitFor(() => expect(onNavigate).toHaveBeenCalled())
+    expect(mockCheckStatus).toHaveBeenCalled()
+    expect(mockLoadPrescriptions).toHaveBeenCalledWith(rxList, 'Dr. Ahmad')
+  })
+
+  it('blocks navigation when the prescription was already dispensed elsewhere (Story 3.4)', async () => {
+    const rxList = [{
+      id: 'rx-001', med: 'AMX500', medN: 'Amoxicillin',
+      medT: 'Amoxicillin 500mg Capsule',
+      dos: { qty: 1, unit: 'capsule', freqN: 3, per: 1, perU: 'd' },
+      dur: 7, req: 'pract-001', pat: 'pat-001', at: '2026-04-28T10:00:00Z',
+    }]
+    mockVerifyQr.mockResolvedValue({ status: 'verified', prescriptions: rxList, practitionerName: 'Dr. Ahmad' })
+    mockCheckStatus.mockResolvedValue({
+      prescriptionId: 'rx-001',
+      status: 'FULFILLED',
+      medicationDisplay: 'Amoxicillin 500mg',
+      authoredOn: '2026-04-28T10:00:00Z',
+      dispensedAt: '2026-05-01T09:00:00Z',
+    })
+
+    const onNavigate = vi.fn()
+    const user = userEvent.setup()
+    render(<PharmacyScannerView onNavigateToReview={onNavigate} />)
+
+    fireEvent.change(screen.getByTestId('qr-paste-input'), { target: { value: makeQrData() } })
+    await user.click(screen.getByTestId('verify-btn'))
+    await waitFor(() => expect(screen.getByTestId('proceed-to-review-btn')).toBeInTheDocument())
+    await user.click(screen.getByTestId('proceed-to-review-btn'))
+
+    await waitFor(() => expect(screen.getByTestId('already-dispensed-warning')).toBeInTheDocument())
+    // Fail-closed: no navigation, no load into fulfillment.
+    expect(onNavigate).not.toHaveBeenCalled()
+    expect(mockLoadPrescriptions).not.toHaveBeenCalled()
+  })
+
+  it('warns but allows proceeding when the Hub is unreachable (offline-first, Story 3.4)', async () => {
+    const rxList = [{
+      id: 'rx-001', med: 'AMX500', medN: 'Amoxicillin',
+      medT: 'Amoxicillin 500mg Capsule',
+      dos: { qty: 1, unit: 'capsule', freqN: 3, per: 1, perU: 'd' },
+      dur: 7, req: 'pract-001', pat: 'pat-001', at: '2026-04-28T10:00:00Z',
+    }]
+    mockVerifyQr.mockResolvedValue({ status: 'verified', prescriptions: rxList, practitionerName: 'Dr. Ahmad' })
+    mockCheckStatus.mockRejectedValue(new TypeError('Failed to fetch'))
+
+    const onNavigate = vi.fn()
+    const user = userEvent.setup()
+    render(<PharmacyScannerView onNavigateToReview={onNavigate} />)
+
+    fireEvent.change(screen.getByTestId('qr-paste-input'), { target: { value: makeQrData() } })
+    await user.click(screen.getByTestId('verify-btn'))
+    await waitFor(() => expect(screen.getByTestId('proceed-to-review-btn')).toBeInTheDocument())
+    await user.click(screen.getByTestId('proceed-to-review-btn'))
+
+    // Warning shown, dispense NOT auto-blocked — pharmacist may proceed explicitly.
+    await waitFor(() => expect(screen.getByTestId('status-check-unavailable')).toBeInTheDocument())
+    expect(onNavigate).not.toHaveBeenCalled()
+
+    await user.click(screen.getByTestId('proceed-anyway-btn'))
     expect(mockLoadPrescriptions).toHaveBeenCalledWith(rxList, 'Dr. Ahmad')
     expect(onNavigate).toHaveBeenCalled()
   })

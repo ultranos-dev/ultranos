@@ -120,6 +120,11 @@ export const syncRouter = createTRPCRouter({
           }
         }
         error?: string
+        /**
+         * For a rejected duplicate-open-encounter create: the id of the
+         * canonical open encounter the spoke should adopt/resume instead.
+         */
+        canonicalId?: string
       }> = []
 
       for (const op of input.operations) {
@@ -364,6 +369,72 @@ export const syncRouter = createTRPCRouter({
             .upsert(row, { onConflict: 'id' })
 
           if (upsertError) {
+            // Backstop for the duplicate-open-encounter bug: the partial unique index
+            // uq_encounters_open_per_patient_practitioner forbids a 2nd in-progress
+            // encounter for the same (patient, practitioner). A spoke that created one
+            // offline/in a separate session (its local cache lacked the still-open
+            // encounter) will hit this on push. Do NOT create a second open encounter —
+            // resolve to the canonical open encounter the spoke should resume, and
+            // report it non-destructively (the invariant is preserved at the Hub).
+            const isOpenEncounterDup =
+              op.resourceType === 'Encounter' &&
+              upsertError.code === '23505' &&
+              `${upsertError.message} ${upsertError.details ?? ''}`.includes(
+                'uq_encounters_open_per_patient_practitioner',
+              )
+
+            if (isOpenEncounterDup) {
+              const subjectId = (payload.subject as { reference?: string } | undefined)?.reference?.replace(
+                'Patient/',
+                '',
+              )
+              const practitionerRef = (
+                payload.participant as Array<{ individual?: { reference?: string } }> | undefined
+              )?.[0]?.individual?.reference
+
+              let canonicalId: string | undefined
+              if (subjectId && practitionerRef) {
+                const { data: openEnc } = await ctx.supabase
+                  .from('encounters')
+                  .select('id')
+                  .eq('subject_id', subjectId)
+                  .eq('status', 'in-progress')
+                  .contains(
+                    'participant',
+                    JSON.stringify([{ individual: { reference: practitionerRef } }]),
+                  )
+                  .maybeSingle()
+                canonicalId = openEnc?.id
+              }
+
+              try {
+                await audit.emit({
+                  actorId: ctx.user.sub,
+                  actorRole: ctx.user.role as Parameters<typeof audit.emit>[0]['actorRole'],
+                  action: 'SYNC' as Parameters<typeof audit.emit>[0]['action'],
+                  resourceType: 'Encounter' as Parameters<typeof audit.emit>[0]['resourceType'],
+                  resourceId: op.resourceId,
+                  sessionId: ctx.user.sessionId,
+                  outcome: 'DENIED' as const,
+                  metadata: {
+                    source: 'sync.push',
+                    reason: 'duplicate_open_encounter_rejected',
+                    canonicalId: canonicalId ?? null,
+                  },
+                })
+              } catch {
+                // Audit failure should not change the response
+              }
+
+              results.push({
+                resourceId: op.resourceId,
+                success: false,
+                error: 'DUPLICATE_OPEN_ENCOUNTER',
+                canonicalId,
+              })
+              continue
+            }
+
             results.push({
               resourceId: op.resourceId,
               success: false,

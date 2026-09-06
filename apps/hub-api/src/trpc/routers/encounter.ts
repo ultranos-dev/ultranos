@@ -43,13 +43,60 @@ export const encounterRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const practitionerRef = `Practitioner/${input.participantPractitionerId}`
+      // jsonb containment value MUST be a JSON string (cs.[...]) — mirrors listByPractitioner.
+      const participantFilter = JSON.stringify([{ individual: { reference: practitionerRef } }])
+
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+
+      /**
+       * Resume-on-existing: at most one in-progress encounter may exist per
+       * (patient, practitioner) — enforced by the uq_encounters_open_per_patient_practitioner
+       * partial unique index. If one already exists, return it instead of creating a
+       * duplicate. This makes create idempotent across separate spoke sessions/devices
+       * whose local caches did not carry the still-open encounter (the duplicate-open
+       * encounter bug). A same-id re-push falls through to the insert → idempotent path.
+       */
+      const findOpenForPractitioner = () =>
+        ctx.supabase
+          .from('encounters')
+          .select('id')
+          .eq('subject_id', input.patientId)
+          .eq('status', 'in-progress')
+          .contains('participant', participantFilter)
+          .maybeSingle()
+
+      const emitResumed = async (existingId: string) => {
+        try {
+          await audit.emit({
+            action: 'PHI_WRITE',
+            resourceType: 'Encounter',
+            resourceId: existingId,
+            patientId: input.patientId,
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'SUCCESS',
+            sessionId: ctx.user.sessionId,
+            metadata: { operation: 'create', resumed: true, requestedId: input.id },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'Encounter' })
+        }
+      }
+
+      const { data: existingOpen } = await findOpenForPractitioner()
+      if (existingOpen && existingOpen.id !== input.id) {
+        await emitResumed(existingOpen.id)
+        return { success: true, encounterId: existingOpen.id, resumed: true, alreadySynced: false }
+      }
+
       const row = db.toRow({
         id: input.id,
         subjectId: input.patientId,
         status: input.status,
         classCode: input.classCode,
         periodStart: input.periodStart,
-        participant: [{ individual: { reference: `Practitioner/${input.participantPractitionerId}` } }],
+        participant: [{ individual: { reference: practitionerRef } }],
         reasonCode: input.reasonCode ?? null,
         hlcTimestamp: input.hlcTimestamp,
       })
@@ -62,6 +109,16 @@ export const encounterRouter = createTRPCRouter({
 
       if (error) {
         if (error.code === '23505') {
+          // A 23505 here is one of two cases:
+          //  (b) the open-per-(patient,practitioner) index — a concurrent create won
+          //      the race. Return the winning open encounter (resume).
+          const { data: raceOpen } = await findOpenForPractitioner()
+          if (raceOpen && raceOpen.id !== input.id) {
+            await emitResumed(raceOpen.id)
+            return { success: true, encounterId: raceOpen.id, resumed: true, alreadySynced: false }
+          }
+
+          //  (a) the primary-key id — the same encounter was re-pushed (idempotent).
           const { data: existing } = await ctx.supabase
             .from('encounters')
             .select('subject_id')
@@ -76,7 +133,6 @@ export const encounterRouter = createTRPCRouter({
           }
 
           // AC 6: Audit idempotent create path
-          const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
           try {
             await audit.emit({
               action: 'PHI_WRITE',
@@ -102,7 +158,6 @@ export const encounterRouter = createTRPCRouter({
         })
       }
 
-      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_WRITE',

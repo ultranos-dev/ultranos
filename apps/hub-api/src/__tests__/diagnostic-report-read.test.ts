@@ -53,6 +53,7 @@ function createTestContext(overrides?: {
 const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
 const LAB_TECH_USER = { sub: 'lab-001', role: 'LAB_TECH', sessionId: 'sess-2', orgId: 'org-test-001' }
 const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
+const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-4', orgId: 'org-test-001' }
 const REPORT_UUID = '00000000-0000-4000-8000-000000000200'
 const PATIENT_REF = 'Patient/00000000-0000-4000-8000-000000000001'
 const LAB_UUID = '00000000-0000-4000-8000-000000000300'
@@ -497,10 +498,63 @@ describe('diagnosticReport.listByLab', () => {
     })
   }
 
+  // ADMIN has no ctx.lab (labRestrictedProcedure bypasses without injecting one),
+  // so listByLab must org-scope: return reports for every lab where labs.org_id
+  // matches the admin's org (mirrors admin.ts lab-oversight scoping). Lab-Lite is
+  // used by org ADMINs too, not only LAB_TECH accounts.
+  function createAdminListMockFrom(reportRows: any[], orgLabRows: any[] = [{ id: LAB_UUID }]) {
+    return vi.fn((table: string) => {
+      // enforceVerifiedOrg + enforceEntitlement (ADMIN bypasses module check) read organizations
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'labs') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ data: orgLabRows, error: null }),
+          }),
+        }
+      }
+      // diagnostic_reports — ADMIN path scopes with .in('lab_id', orgLabIds)
+      return {
+        select: vi.fn().mockReturnValue({
+          in: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue({ data: reportRows, error: null }),
+              }),
+            }),
+          }),
+        }),
+      }
+    })
+  }
+
   it('requires authentication', async () => {
     const ctx = createTestContext({ user: null })
     const caller = createCaller(ctx)
     await expect(caller.diagnosticReport.listByLab(validInput)).rejects.toThrow()
+  })
+
+  it('ADMIN (no lab affiliation) sees reports across all labs in their org', async () => {
+    const mockRows = [
+      { id: REPORT_UUID, status: 'final', loinc_code: '26436-6', loinc_display: 'Lab', patient_ref: PATIENT_REF, performer_id: null, lab_id: LAB_UUID, issued: '2026-05-10T10:00:00Z', collection_date: '2026-05-10T08:00:00Z', virus_scan_status: 'clean', _ultranos_created_at: '2026-05-10T10:00:00Z' },
+      { id: '00000000-0000-4000-8000-000000000201', status: 'preliminary', loinc_code: '26436-6', loinc_display: 'Lab', patient_ref: PATIENT_REF, performer_id: null, lab_id: '00000000-0000-4000-8000-000000000301', issued: '2026-05-09T10:00:00Z', collection_date: '2026-05-09T08:00:00Z', virus_scan_status: 'clean', _ultranos_created_at: '2026-05-09T10:00:00Z' },
+    ]
+    const mockFrom = createAdminListMockFrom(mockRows, [{ id: LAB_UUID }, { id: '00000000-0000-4000-8000-000000000301' }])
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: ADMIN_USER }) // no lab context
+    const caller = createCaller(ctx)
+
+    const result = await caller.diagnosticReport.listByLab(validInput)
+    expect(result.reports).toHaveLength(2)
+  })
+
+  it('ADMIN whose org has no labs gets an empty list (no 403)', async () => {
+    const mockFrom = createAdminListMockFrom([], []) // org has zero labs
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: ADMIN_USER })
+    const caller = createCaller(ctx)
+
+    const result = await caller.diagnosticReport.listByLab(validInput)
+    expect(result.reports).toHaveLength(0)
+    expect(result.nextCursor).toBeUndefined()
   })
 
   it('returns reports ordered by issued DESC', async () => {
