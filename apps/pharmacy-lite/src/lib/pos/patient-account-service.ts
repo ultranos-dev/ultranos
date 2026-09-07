@@ -1,5 +1,7 @@
 import { db } from '@/lib/db'
 import type { PatientAccount, LedgerEntry } from './types'
+import { computeAging, type AgingBuckets } from './aging'
+export type { AgingBuckets } from './aging'
 
 /**
  * Returns all patient accounts with a non-zero balance.
@@ -22,17 +24,6 @@ export async function getPatientLedger(patientId: string): Promise<LedgerEntry[]
   return entries
 }
 
-export interface AgingBuckets {
-  /** 0-30 days outstanding */
-  current: number
-  /** 31-60 days outstanding */
-  thirtyDay: number
-  /** 61-90 days outstanding */
-  sixtyDay: number
-  /** 90+ days outstanding */
-  ninetyPlus: number
-}
-
 /**
  * Computes aging buckets for a patient's outstanding charges.
  * Only considers positive-amount (charge) entries not fully offset.
@@ -43,34 +34,7 @@ export async function getAgingBuckets(patientId: string): Promise<AgingBuckets> 
     .equals(patientId)
     .toArray()
 
-  const now = Date.now()
-  const DAY_MS = 86_400_000
-
-  const buckets: AgingBuckets = {
-    current: 0,
-    thirtyDay: 0,
-    sixtyDay: 0,
-    ninetyPlus: 0,
-  }
-
-  for (const entry of entries) {
-    if (entry.amount <= 0) continue
-
-    const ageMs = now - new Date(entry.timestamp).getTime()
-    const ageDays = Math.floor(ageMs / DAY_MS)
-
-    if (ageDays <= 30) {
-      buckets.current += entry.amount
-    } else if (ageDays <= 60) {
-      buckets.thirtyDay += entry.amount
-    } else if (ageDays <= 90) {
-      buckets.sixtyDay += entry.amount
-    } else {
-      buckets.ninetyPlus += entry.amount
-    }
-  }
-
-  return buckets
+  return computeAging(entries)
 }
 
 export interface TotalAging {

@@ -28,6 +28,7 @@ export interface CatalogItem {
   category: string
   controlledSchedule?: ControlledSchedule
   defaultSellingPrice: number
+  wholesalePrice?: number
   reorderPoint: number
   minStock?: number
   maxStock?: number
@@ -65,6 +66,7 @@ export type StockMovementType =
   | 'disposed'
   | 'returned'
   | 'void_reversal'
+  | 'sold'
 
 export type StockMovementRefType =
   | 'dispense'
@@ -73,6 +75,7 @@ export type StockMovementRefType =
   | 'count'
   | 'goods_receipt'
   | 'void'
+  | 'sales_order'
 
 export interface StockMovement {
   id: string
@@ -115,6 +118,7 @@ export interface PharmacyInventorySettings {
   enableZones: boolean
   enablePatientCredit: boolean
   enableTransfers: boolean
+  enableWholesale: boolean
   requirePaymentOnDispense: boolean
   expiryAlertDays: number
   lowStockAlertEnabled: boolean
@@ -123,6 +127,7 @@ export interface PharmacyInventorySettings {
   currencyMinorUnits: number
   taxRate: number
   invoicePrefix: string
+  salesOrderPrefix: string
   locationId: string
   locationName: string
   organizationId?: string
@@ -133,6 +138,7 @@ export const DEFAULT_PHARMACY_SETTINGS: PharmacyInventorySettings = {
   enableZones: false,
   enablePatientCredit: false,
   enableTransfers: false,
+  enableWholesale: false,
   requirePaymentOnDispense: false,
   expiryAlertDays: 90,
   lowStockAlertEnabled: true,
@@ -141,6 +147,7 @@ export const DEFAULT_PHARMACY_SETTINGS: PharmacyInventorySettings = {
   currencyMinorUnits: 2,
   taxRate: 0,
   invoicePrefix: 'INV-',
+  salesOrderPrefix: 'SO-',
   locationId: '',
   locationName: '',
 }

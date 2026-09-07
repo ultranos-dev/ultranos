@@ -14,6 +14,7 @@ import type { StockTransfer } from './transfers/types'
 import type { DataUsageCategory } from '@ultranos/sync-engine'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
 import type { DrugBrand, DrugBrandPresentation } from '@ultranos/shared-types'
+import type { WholesaleCustomer, SalesOrder, CustomerAccount, CustomerLedgerEntry } from '@/lib/wholesale/types'
 export type { DataUsageCategory }  // re-export for consumers
 
 export interface DispenseAuditEntry {
@@ -147,6 +148,10 @@ class PharmacyLiteDatabase extends Dexie {
   drugBrandsMirror!: EntityTable<DrugBrand, 'id'>
   drugBrandPresentationsMirror!: EntityTable<DrugBrandPresentation, 'id'>
   drugCatalogSyncMeta!: EntityTable<CatalogSyncMetaEntry, 'key'>
+  wholesaleCustomers!: EntityTable<WholesaleCustomer, 'id'>
+  salesOrders!: EntityTable<SalesOrder, 'id'>
+  customerAccounts!: EntityTable<CustomerAccount, 'id'>
+  customerLedgerEntries!: EntityTable<CustomerLedgerEntry, 'id'>
 
   constructor() {
     super('pharmacy-lite')
@@ -235,6 +240,15 @@ class PharmacyLiteDatabase extends Dexie {
       drugBrandsMirror: '&id, genericAtcCode',
       drugBrandPresentationsMirror: '&id, brandId',
       drugCatalogSyncMeta: '&key',
+    })
+
+    // v14: Wholesale / B2B sales — customers, orders, AR accounts, ledger entries.
+    // Non-PHI operational data; not added to PHI_TABLE_CONFIGS.
+    this.version(14).stores({
+      wholesaleCustomers: 'id, name, isActive',
+      salesOrders: 'id, customerId, status, createdAt, orderNumber',
+      customerAccounts: 'id, customerId',
+      customerLedgerEntries: 'id, customerId, salesOrderId, timestamp',
     })
   }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { DirectionalIcon } from '@ultranos/ui-kit'
@@ -8,6 +8,8 @@ import { ChevronRight } from '@ultranos/ui-kit/icons'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useDataBudgetStore } from '@/stores/data-budget-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { db } from '@/lib/db'
+import { DEFAULT_PHARMACY_SETTINGS } from '@/lib/inventory/types'
 
 function formatRole(role: string): string {
   if (!role) return 'Pharmacist'
@@ -264,6 +266,57 @@ function DataBudgetCard() {
   )
 }
 
+// --- Wholesale Mode Card ---
+function WholesaleModeCard() {
+  const t = useTranslations('settings')
+  const [enabled, setEnabled] = useState<boolean>(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    async function load() {
+      try {
+        const rows = await db.pharmacySettings.toArray()
+        if (active) {
+          setEnabled(rows[0]?.enableWholesale ?? DEFAULT_PHARMACY_SETTINGS.enableWholesale)
+        }
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+    void load()
+    return () => { active = false }
+  }, [])
+
+  const handleToggle = useCallback(async () => {
+    const rows = await db.pharmacySettings.toArray()
+    const current = rows[0] ?? { ...DEFAULT_PHARMACY_SETTINGS }
+    const next = !current.enableWholesale
+    await db.pharmacySettings.put({ ...current, enableWholesale: next })
+    setEnabled(next)
+  }, [])
+
+  return (
+    <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50" aria-labelledby="wholesale-heading">
+      <h2 id="wholesale-heading" className="mb-4 text-sm font-semibold text-foreground">{t('wholesaleMode')}</h2>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{t('wholesaleModeDesc')}</p>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={enabled}
+          disabled={loading}
+          data-testid="toggle-wholesale"
+          onClick={handleToggle}
+          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 ${enabled ? 'bg-primary' : 'bg-input'}`}
+        >
+          <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0'}`} />
+        </button>
+      </div>
+    </section>
+  )
+}
+
 // --- Main Settings View ---
 export function PharmacySettingsView() {
   const t = useTranslations('settings')
@@ -274,6 +327,7 @@ export function PharmacySettingsView() {
       <PharmacyInfoCard />
       <SessionInfoCard />
       <MfaStatusCard />
+      <WholesaleModeCard />
       <DataBudgetCard />
     </div>
   )

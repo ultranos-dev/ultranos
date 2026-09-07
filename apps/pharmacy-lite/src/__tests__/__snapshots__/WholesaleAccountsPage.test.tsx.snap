@@ -1,0 +1,173 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AccountsPage > LTR snapshot 1`] = `
+<div
+  dir="ltr"
+>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <h1
+      class="text-2xl font-semibold text-foreground"
+    >
+      accountsTitle
+    </h1>
+    <div
+      class="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
+    >
+      <table
+        class="w-full text-sm"
+      >
+        <thead
+          class="bg-muted"
+        >
+          <tr>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnCustomer
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnBalance
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnLastActivity
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnActions
+            </th>
+          </tr>
+        </thead>
+        <tbody
+          class="divide-y divide-border"
+        >
+          <tr
+            class="hover:bg-muted/50"
+          >
+            <td
+              class="px-4 py-3 font-medium text-foreground"
+            >
+              Kabul Pharma
+            </td>
+            <td
+              class="px-4 py-3 tabular-nums text-warning font-semibold"
+            >
+              AFN 30.00
+            </td>
+            <td
+              class="px-4 py-3 text-muted-foreground"
+            >
+              —
+            </td>
+            <td
+              class="px-4 py-3"
+            >
+              <button
+                class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-8 gap-1 px-3 [@media(pointer:coarse)]:min-h-11"
+                data-size="sm"
+                data-slot="button"
+                data-testid="record-payment-c1"
+                data-variant="outline"
+              >
+                recordPayment
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`AccountsPage > RTL snapshot 1`] = `
+<div
+  dir="rtl"
+>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <h1
+      class="text-2xl font-semibold text-foreground"
+    >
+      accountsTitle
+    </h1>
+    <div
+      class="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
+    >
+      <table
+        class="w-full text-sm"
+      >
+        <thead
+          class="bg-muted"
+        >
+          <tr>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnCustomer
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnBalance
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnLastActivity
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnActions
+            </th>
+          </tr>
+        </thead>
+        <tbody
+          class="divide-y divide-border"
+        >
+          <tr
+            class="hover:bg-muted/50"
+          >
+            <td
+              class="px-4 py-3 font-medium text-foreground"
+            >
+              Kabul Pharma
+            </td>
+            <td
+              class="px-4 py-3 tabular-nums text-warning font-semibold"
+            >
+              AFN 30.00
+            </td>
+            <td
+              class="px-4 py-3 text-muted-foreground"
+            >
+              —
+            </td>
+            <td
+              class="px-4 py-3"
+            >
+              <button
+                class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-8 gap-1 px-3 [@media(pointer:coarse)]:min-h-11"
+                data-size="sm"
+                data-slot="button"
+                data-testid="record-payment-c1"
+                data-variant="outline"
+              >
+                recordPayment
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+`;

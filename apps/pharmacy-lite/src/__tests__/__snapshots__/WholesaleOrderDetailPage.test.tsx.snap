@@ -1,0 +1,499 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OrderDetailPage > LTR snapshot 1`] = `
+<div
+  dir="ltr"
+>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <button
+      class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground h-8 gap-1 [@media(pointer:coarse)]:min-h-11 w-fit px-0"
+      data-size="sm"
+      data-slot="button"
+      data-testid="back-button"
+      data-variant="ghost"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-chevron-left me-1"
+        fill="none"
+        height="16"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="16"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m15 18-6-6 6-6"
+        />
+      </svg>
+      backToOrders
+    </button>
+    <h1
+      class="text-2xl font-semibold text-foreground"
+    >
+      SO-1
+       
+      <span
+        class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+      >
+        orderStatus_confirmed
+      </span>
+    </h1>
+    <div
+      class="flex flex-wrap items-center gap-3"
+    >
+      <button
+        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+        data-size="default"
+        data-slot="button"
+        data-testid="pick-btn"
+        data-variant="default"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-package me-2"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"
+          />
+          <path
+            d="M12 22V12"
+          />
+          <polyline
+            points="3.29 7 12 12 20.71 7"
+          />
+          <path
+            d="m7.5 4.27 9 5.15"
+          />
+        </svg>
+        orderDetailPickBtn
+      </button>
+      <button
+        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-background [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+        data-size="default"
+        data-slot="button"
+        data-testid="cancel-btn"
+        data-variant="outline"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x me-2"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
+        orderDetailCancelBtn
+      </button>
+    </div>
+    <div
+      class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50"
+    >
+      <h2
+        class="text-base font-semibold text-foreground mb-4"
+      >
+        orderDetailLinesTitle
+      </h2>
+      <table
+        class="w-full text-sm"
+      >
+        <thead
+          class="bg-muted"
+        >
+          <tr>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              newOrderColDescription
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              newOrderColUnit
+            </th>
+            <th
+              class="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide tabular-nums"
+            >
+              newOrderColQty
+            </th>
+            <th
+              class="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide tabular-nums"
+            >
+              newOrderColUnitPrice
+            </th>
+            <th
+              class="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide tabular-nums"
+            >
+              newOrderColLineTotal
+            </th>
+          </tr>
+        </thead>
+        <tbody
+          class="divide-y divide-border"
+        >
+          <tr
+            class="hover:bg-muted/50"
+          >
+            <td
+              class="px-4 py-3 text-foreground"
+            >
+              <div>
+                Amox
+              </div>
+            </td>
+            <td
+              class="px-4 py-3 text-muted-foreground capitalize"
+            >
+              each
+            </td>
+            <td
+              class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+            >
+              30
+            </td>
+            <td
+              class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+            >
+              AFN 0.10
+            </td>
+            <td
+              class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+            >
+              AFN 3.00
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div
+      class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50"
+    >
+      <h2
+        class="text-base font-semibold text-foreground mb-4"
+      >
+        newOrderSectionTotals
+      </h2>
+      <div
+        class="space-y-1 text-sm"
+      >
+        <div
+          class="flex justify-between text-muted-foreground"
+        >
+          <span>
+            newOrderSubtotal
+          </span>
+          <span
+            class="tabular-nums"
+          >
+            AFN 3.00
+          </span>
+        </div>
+        <div
+          class="flex justify-between text-muted-foreground"
+        >
+          <span>
+            newOrderTax {"rate":"0.0"}
+          </span>
+          <span
+            class="tabular-nums"
+          >
+            AFN 0.00
+          </span>
+        </div>
+        <div
+          class="flex justify-between font-semibold text-foreground border-t border-border pt-2 mt-2"
+        >
+          <span>
+            newOrderTotal
+          </span>
+          <span
+            class="tabular-nums"
+          >
+            AFN 3.00
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`OrderDetailPage > RTL snapshot 1`] = `
+<div
+  dir="rtl"
+>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <button
+      class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground h-8 gap-1 [@media(pointer:coarse)]:min-h-11 w-fit px-0"
+      data-size="sm"
+      data-slot="button"
+      data-testid="back-button"
+      data-variant="ghost"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-chevron-left me-1"
+        fill="none"
+        height="16"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="16"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m15 18-6-6 6-6"
+        />
+      </svg>
+      backToOrders
+    </button>
+    <h1
+      class="text-2xl font-semibold text-foreground"
+    >
+      SO-1
+       
+      <span
+        class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+      >
+        orderStatus_confirmed
+      </span>
+    </h1>
+    <div
+      class="flex flex-wrap items-center gap-3"
+    >
+      <button
+        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+        data-size="default"
+        data-slot="button"
+        data-testid="pick-btn"
+        data-variant="default"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-package me-2"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"
+          />
+          <path
+            d="M12 22V12"
+          />
+          <polyline
+            points="3.29 7 12 12 20.71 7"
+          />
+          <path
+            d="m7.5 4.27 9 5.15"
+          />
+        </svg>
+        orderDetailPickBtn
+      </button>
+      <button
+        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-background [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+        data-size="default"
+        data-slot="button"
+        data-testid="cancel-btn"
+        data-variant="outline"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x me-2"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
+        orderDetailCancelBtn
+      </button>
+    </div>
+    <div
+      class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50"
+    >
+      <h2
+        class="text-base font-semibold text-foreground mb-4"
+      >
+        orderDetailLinesTitle
+      </h2>
+      <table
+        class="w-full text-sm"
+      >
+        <thead
+          class="bg-muted"
+        >
+          <tr>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              newOrderColDescription
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              newOrderColUnit
+            </th>
+            <th
+              class="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide tabular-nums"
+            >
+              newOrderColQty
+            </th>
+            <th
+              class="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide tabular-nums"
+            >
+              newOrderColUnitPrice
+            </th>
+            <th
+              class="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide tabular-nums"
+            >
+              newOrderColLineTotal
+            </th>
+          </tr>
+        </thead>
+        <tbody
+          class="divide-y divide-border"
+        >
+          <tr
+            class="hover:bg-muted/50"
+          >
+            <td
+              class="px-4 py-3 text-foreground"
+            >
+              <div>
+                Amox
+              </div>
+            </td>
+            <td
+              class="px-4 py-3 text-muted-foreground capitalize"
+            >
+              each
+            </td>
+            <td
+              class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+            >
+              30
+            </td>
+            <td
+              class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+            >
+              AFN 0.10
+            </td>
+            <td
+              class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+            >
+              AFN 3.00
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div
+      class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50"
+    >
+      <h2
+        class="text-base font-semibold text-foreground mb-4"
+      >
+        newOrderSectionTotals
+      </h2>
+      <div
+        class="space-y-1 text-sm"
+      >
+        <div
+          class="flex justify-between text-muted-foreground"
+        >
+          <span>
+            newOrderSubtotal
+          </span>
+          <span
+            class="tabular-nums"
+          >
+            AFN 3.00
+          </span>
+        </div>
+        <div
+          class="flex justify-between text-muted-foreground"
+        >
+          <span>
+            newOrderTax {"rate":"0.0"}
+          </span>
+          <span
+            class="tabular-nums"
+          >
+            AFN 0.00
+          </span>
+        </div>
+        <div
+          class="flex justify-between font-semibold text-foreground border-t border-border pt-2 mt-2"
+        >
+          <span>
+            newOrderTotal
+          </span>
+          <span
+            class="tabular-nums"
+          >
+            AFN 3.00
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

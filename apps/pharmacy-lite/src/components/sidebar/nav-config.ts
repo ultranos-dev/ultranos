@@ -12,6 +12,9 @@ import {
   BarChart3,
   RefreshCw,
   Settings,
+  Building2,
+  ClipboardList,
+  Wallet,
 } from '@ultranos/ui-kit/icons'
 
 export interface NavItem {
@@ -94,4 +97,19 @@ export const navGroups: NavGroup[] = [
       { titleKey: 'settings',  url: '/settings', icon: Settings },
     ],
   },
+  {
+    title: 'Wholesale',
+    items: [
+      { titleKey: 'wholesaleCustomers', url: '/wholesale/customers', icon: Building2 },
+      { titleKey: 'salesOrders',        url: '/wholesale/orders',    icon: ClipboardList },
+      { titleKey: 'customerAccounts',   url: '/wholesale/accounts',  icon: Wallet },
+    ],
+  },
 ]
+
+export function filterNavGroups(
+  groups: NavGroup[],
+  opts: { enableWholesale: boolean },
+): NavGroup[] {
+  return groups.filter((g) => g.title !== 'Wholesale' || opts.enableWholesale)
+}

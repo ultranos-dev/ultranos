@@ -1,0 +1,437 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OrdersPage > LTR snapshot 1`] = `
+<div
+  dir="ltr"
+>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <h1
+      class="text-2xl font-semibold text-foreground"
+    >
+      ordersTitle
+    </h1>
+    <div
+      class="flex flex-wrap items-center gap-3"
+    >
+      <div
+        class="rounded-full border border-border bg-card p-1 w-fit flex items-center"
+      >
+        <button
+          aria-pressed="true"
+          class="rounded-full px-4 py-1.5 text-sm font-medium bg-primary text-primary-foreground"
+          type="button"
+        >
+          ordersTabAll
+        </button>
+        <button
+          aria-pressed="false"
+          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          ordersTabDraft
+        </button>
+        <button
+          aria-pressed="false"
+          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          ordersTabConfirmed
+        </button>
+        <button
+          aria-pressed="false"
+          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          ordersTabPicking
+        </button>
+        <button
+          aria-pressed="false"
+          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          ordersTabFulfilled
+        </button>
+        <button
+          aria-pressed="false"
+          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          ordersTabCancelled
+        </button>
+      </div>
+      <div
+        class="relative flex items-center min-w-[200px] flex-1"
+      >
+        <input
+          aria-label="searchOrders"
+          class="flex h-10 rounded-xl border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11"
+          data-slot="input"
+          dir="auto"
+          placeholder="searchOrders"
+          type="search"
+          value=""
+        />
+        <button
+          aria-label="searchOrders"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 size-8 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 absolute end-1.5 top-1/2 -translate-y-1/2"
+          data-size="icon-sm"
+          data-slot="button"
+          data-variant="default"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-search size-4"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m21 21-4.34-4.34"
+            />
+            <circle
+              cx="11"
+              cy="11"
+              r="8"
+            />
+          </svg>
+        </button>
+      </div>
+      <a
+        aria-label="newOrder"
+        class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        href="/wholesale/orders/new"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+        newOrder
+      </a>
+    </div>
+    <div
+      class="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
+    >
+      <table
+        class="w-full text-sm"
+      >
+        <thead
+          class="bg-muted"
+        >
+          <tr>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnOrderNumber
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnCustomer
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnOrderStatus
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnTotal
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnDate
+            </th>
+          </tr>
+        </thead>
+        <tbody
+          class="divide-y divide-border"
+        >
+          <tr
+            class="hover:bg-muted/50"
+          >
+            <td
+              class="px-4 py-3 font-medium text-foreground"
+            >
+              <a
+                class="hover:underline text-primary"
+                href="/wholesale/orders/o1"
+              >
+                SO-1
+              </a>
+            </td>
+            <td
+              class="px-4 py-3 text-muted-foreground"
+            >
+              Kabul Medical Supplies
+            </td>
+            <td
+              class="px-4 py-3"
+            >
+              <span
+                class="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+              >
+                orderStatus_draft
+              </span>
+            </td>
+            <td
+              class="px-4 py-3 text-muted-foreground tabular-nums"
+            >
+              AFN 0.00
+            </td>
+            <td
+              class="px-4 py-3 text-muted-foreground"
+            >
+              9/5/2026
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`OrdersPage > RTL snapshot 1`] = `
+<div
+  dir="rtl"
+>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <h1
+      class="text-2xl font-semibold text-foreground"
+    >
+      ordersTitle
+    </h1>
+    <div
+      class="flex flex-wrap items-center gap-3"
+    >
+      <div
+        class="rounded-full border border-border bg-card p-1 w-fit flex items-center"
+      >
+        <button
+          aria-pressed="true"
+          class="rounded-full px-4 py-1.5 text-sm font-medium bg-primary text-primary-foreground"
+          type="button"
+        >
+          ordersTabAll
+        </button>
+        <button
+          aria-pressed="false"
+          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          ordersTabDraft
+        </button>
+        <button
+          aria-pressed="false"
+          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          ordersTabConfirmed
+        </button>
+        <button
+          aria-pressed="false"
+          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          ordersTabPicking
+        </button>
+        <button
+          aria-pressed="false"
+          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          ordersTabFulfilled
+        </button>
+        <button
+          aria-pressed="false"
+          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          ordersTabCancelled
+        </button>
+      </div>
+      <div
+        class="relative flex items-center min-w-[200px] flex-1"
+      >
+        <input
+          aria-label="searchOrders"
+          class="flex h-10 rounded-xl border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11"
+          data-slot="input"
+          dir="auto"
+          placeholder="searchOrders"
+          type="search"
+          value=""
+        />
+        <button
+          aria-label="searchOrders"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 size-8 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 absolute end-1.5 top-1/2 -translate-y-1/2"
+          data-size="icon-sm"
+          data-slot="button"
+          data-variant="default"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-search size-4"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m21 21-4.34-4.34"
+            />
+            <circle
+              cx="11"
+              cy="11"
+              r="8"
+            />
+          </svg>
+        </button>
+      </div>
+      <a
+        aria-label="newOrder"
+        class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        href="/wholesale/orders/new"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+        newOrder
+      </a>
+    </div>
+    <div
+      class="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
+    >
+      <table
+        class="w-full text-sm"
+      >
+        <thead
+          class="bg-muted"
+        >
+          <tr>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnOrderNumber
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnCustomer
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnOrderStatus
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnTotal
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide"
+            >
+              columnDate
+            </th>
+          </tr>
+        </thead>
+        <tbody
+          class="divide-y divide-border"
+        >
+          <tr
+            class="hover:bg-muted/50"
+          >
+            <td
+              class="px-4 py-3 font-medium text-foreground"
+            >
+              <a
+                class="hover:underline text-primary"
+                href="/wholesale/orders/o1"
+              >
+                SO-1
+              </a>
+            </td>
+            <td
+              class="px-4 py-3 text-muted-foreground"
+            >
+              Kabul Medical Supplies
+            </td>
+            <td
+              class="px-4 py-3"
+            >
+              <span
+                class="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+              >
+                orderStatus_draft
+              </span>
+            </td>
+            <td
+              class="px-4 py-3 text-muted-foreground tabular-nums"
+            >
+              AFN 0.00
+            </td>
+            <td
+              class="px-4 py-3 text-muted-foreground"
+            >
+              9/5/2026
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+`;
