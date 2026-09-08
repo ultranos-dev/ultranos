@@ -200,4 +200,53 @@ describe('syncDispenseToHub', () => {
     expect(result.error).toBe('auth-unavailable')
     expect(fetchMock).not.toHaveBeenCalled()
   })
+
+  it('forwards batchLot to Hub payload when _ultranos.batchLot is set', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        result: {
+          data: {
+            json: { success: true, dispenseId: 'dispense-001', prescriptionStatus: 'completed' },
+          },
+        },
+      }),
+    })
+
+    // makeSampleDispense already includes batchLot: 'LOT-A'
+    const dispense = makeSampleDispense()
+    const result = await syncDispenseToHub(dispense)
+
+    expect(result.synced).toBe(true)
+    const body = JSON.parse(fetchMock.mock.calls[0]![1]?.body as string)
+    expect(body.json.batchLot).toBe('LOT-A')
+  })
+
+  it('omits batchLot key from Hub payload when _ultranos.batchLot is absent (backward compat)', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        result: {
+          data: {
+            json: { success: true, dispenseId: 'dispense-002', prescriptionStatus: 'completed' },
+          },
+        },
+      }),
+    })
+
+    const dispense = makeSampleDispense({
+      id: 'dispense-002',
+      _ultranos: {
+        hlcTimestamp: '000001714400000:00000:node-abc',
+        createdAt: '2026-04-29T12:00:00Z',
+        isOfflineCreated: false,
+        // batchLot intentionally absent
+      },
+    })
+    const result = await syncDispenseToHub(dispense)
+
+    expect(result.synced).toBe(true)
+    const body = JSON.parse(fetchMock.mock.calls[0]![1]?.body as string)
+    expect(body.json.batchLot).toBeUndefined()
+  })
 })

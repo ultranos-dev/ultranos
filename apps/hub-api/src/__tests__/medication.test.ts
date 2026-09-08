@@ -873,4 +873,163 @@ describe('medication.recordDispense', () => {
     expect(result.conflictDetected).toBe(false)
     expect(result.prescriptionStatus).toBe('completed')
   })
+
+  // Task 2: batch/lot traceability — batchLot field
+  it('stores batch_lot in insert row when batchLot is supplied', async () => {
+    let capturedInsertArg: any = null
+
+    const dispenseCallCount = { n: 0 }
+    const rxCallCount = { n: 0 }
+
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return entitlementMock()
+      if (table === 'consents') return consentMock()
+      if (table === 'audit_log') return auditLogMock()
+
+      if (table === 'medication_requests') {
+        rxCallCount.n++
+        if (rxCallCount.n === 1) {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: ACTIVE_RX, error: null }),
+              }),
+            }),
+          }
+        }
+        return {
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({
+                    data: { id: RX_UUID_1, prescription_status: 'DISPENSED', status: 'completed', dispensed_at: '2026-04-29T12:00:00Z' },
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+
+      if (table === 'medication_dispenses') {
+        dispenseCallCount.n++
+        if (dispenseCallCount.n === 1) {
+          // Idempotency check
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+                }),
+              }),
+            }),
+          }
+        }
+        // Insert — capture the argument
+        const insertFn = vi.fn().mockImplementation((row: any) => {
+          capturedInsertArg = row
+          return {
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { id: DISPENSE_UUID }, error: null }),
+            }),
+          }
+        })
+        return { insert: insertFn }
+      }
+
+      return passthrough()
+    })
+
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
+    const caller = createCaller(ctx)
+
+    const result = await caller.medication.recordDispense({
+      ...validInput,
+      batchLot: 'LOT-XYZ-123',
+    })
+
+    expect(result.success).toBe(true)
+    expect(capturedInsertArg).not.toBeNull()
+    expect(capturedInsertArg.batch_lot).toBe('LOT-XYZ-123')
+  })
+
+  it('inserts batch_lot as null when batchLot is omitted (backward compat)', async () => {
+    let capturedInsertArg: any = null
+
+    const dispenseCallCount = { n: 0 }
+    const rxCallCount = { n: 0 }
+
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return entitlementMock()
+      if (table === 'consents') return consentMock()
+      if (table === 'audit_log') return auditLogMock()
+
+      if (table === 'medication_requests') {
+        rxCallCount.n++
+        if (rxCallCount.n === 1) {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: ACTIVE_RX, error: null }),
+              }),
+            }),
+          }
+        }
+        return {
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({
+                    data: { id: RX_UUID_1, prescription_status: 'DISPENSED', status: 'completed', dispensed_at: '2026-04-29T12:00:00Z' },
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+
+      if (table === 'medication_dispenses') {
+        dispenseCallCount.n++
+        if (dispenseCallCount.n === 1) {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+                }),
+              }),
+            }),
+          }
+        }
+        const insertFn = vi.fn().mockImplementation((row: any) => {
+          capturedInsertArg = row
+          return {
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { id: DISPENSE_UUID }, error: null }),
+            }),
+          }
+        })
+        return { insert: insertFn }
+      }
+
+      return passthrough()
+    })
+
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
+    const caller = createCaller(ctx)
+
+    // validInput has NO batchLot
+    const result = await caller.medication.recordDispense(validInput)
+
+    expect(result.success).toBe(true)
+    expect(capturedInsertArg).not.toBeNull()
+    expect(capturedInsertArg.batch_lot).toBeNull()
+  })
 })

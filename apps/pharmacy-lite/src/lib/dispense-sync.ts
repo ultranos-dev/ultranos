@@ -58,6 +58,7 @@ export async function syncDispenseToHub(
     whenHandedOver: dispense.whenHandedOver,
     hlcTimestamp: dispense._ultranos.hlcTimestamp,
     status: dispense.status === 'completed' ? 'completed' : 'in-progress',
+    ...(dispense._ultranos?.batchLot ? { batchLot: dispense._ultranos.batchLot } : {}),
   }
 
   try {

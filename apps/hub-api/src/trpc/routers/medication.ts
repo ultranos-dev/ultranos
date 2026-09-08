@@ -747,6 +747,7 @@ export const medicationRouter = createTRPCRouter({
         whenHandedOver: z.string().datetime(),
         hlcTimestamp: z.string().min(1),
         status: z.enum(['completed', 'in-progress']),
+        batchLot: z.string().min(1).optional(),
       })
     )
     .use(enforceConsentMiddleware('MedicationRequest'))
@@ -862,6 +863,7 @@ export const medicationRouter = createTRPCRouter({
           when_handed_over: input.whenHandedOver,
           hlc_timestamp: input.hlcTimestamp,
           status: input.status,
+          batch_lot: input.batchLot ?? null,
           synced_by: ctx.user.sub,
           synced_at: now,
         })
