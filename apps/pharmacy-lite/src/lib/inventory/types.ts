@@ -34,6 +34,11 @@ export interface CatalogItem {
   maxStock?: number
   isActive: boolean
   lastSyncedAt: string
+  /** True when this row was created or edited locally and must be preserved
+   *  across a Hub catalog pull (dirty-guard). Absent/false = clean Hub copy. */
+  locallyModified?: boolean
+  /** 'local' = pharmacy-created item (never on the Hub); 'hub' or absent = pulled. */
+  source?: 'hub' | 'local'
 }
 
 export type StockBatchStatus = 'active' | 'quarantined' | 'depleted'

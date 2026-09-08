@@ -12,12 +12,21 @@ vi.mock('@/lib/db', () => ({
     catalogItems: {
       toArray: vi.fn().mockResolvedValue([]),
     },
+    pharmacySettings: {
+      toCollection: () => ({ first: vi.fn().mockResolvedValue({ currency: 'AFN', currencyMinorUnits: 2 }) }),
+    },
   },
 }))
 
 vi.mock('@/hooks/useCatalogSync', () => ({ useCatalogSync: vi.fn() }))
+vi.mock('@/hooks/useDrugCatalogSync', () => ({ useDrugCatalogSync: vi.fn() }))
 vi.mock('@/stores/inventory-store', () => ({ useInventoryStore: (fn: (s: { isSyncingCatalog: boolean }) => boolean) => fn({ isSyncingCatalog: false }) }))
 vi.mock('@/lib/inventory/fefo', () => ({ getTotalStockOnHand: vi.fn().mockResolvedValue(0) }))
+vi.mock('@/lib/inventory/catalog-item-service', () => ({
+  createCatalogItem: vi.fn(),
+  updateCatalogItem: vi.fn(),
+  deactivateCatalogItem: vi.fn(),
+}))
 
 const { mockSearchDrugCatalog } = vi.hoisted(() => ({
   mockSearchDrugCatalog: vi.fn(),

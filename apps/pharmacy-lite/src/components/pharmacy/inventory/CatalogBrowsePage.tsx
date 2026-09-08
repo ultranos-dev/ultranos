@@ -1,18 +1,21 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import { useCatalogSync } from '@/hooks/useCatalogSync'
 import { useDrugCatalogSync } from '@/hooks/useDrugCatalogSync'
 import { useInventoryStore } from '@/stores/inventory-store'
 import { getTotalStockOnHand } from '@/lib/inventory/fefo'
+import { deactivateCatalogItem } from '@/lib/inventory/catalog-item-service'
 import { searchDrugCatalog } from '@/lib/trpc'
 import type { CatalogItem } from '@/lib/inventory/types'
 import type { DrugSearchResult } from '@ultranos/shared-types'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { Package, FileSearch } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/button'
+import { Package, FileSearch, Plus } from '@ultranos/ui-kit/icons'
+import { CatalogItemFormDialog } from './CatalogItemFormDialog'
 
 interface CatalogRowData {
   item: CatalogItem
@@ -29,19 +32,24 @@ export function CatalogBrowsePage() {
   const [search, setSearch] = useState('')
   const [hubResults, setHubResults] = useState<DrugSearchResult[]>([])
 
+  // Dialog state
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<CatalogItem | undefined>(undefined)
+
+  const reload = useCallback(async () => {
+    const items = await db.catalogItems.toArray()
+    const withStock = await Promise.all(
+      items.map(async (item) => ({
+        item,
+        stockOnHand: await getTotalStockOnHand(item.id),
+      }))
+    )
+    setRows(withStock)
+  }, [])
+
   useEffect(() => {
-    async function load() {
-      const items = await db.catalogItems.toArray()
-      const withStock = await Promise.all(
-        items.map(async (item) => ({
-          item,
-          stockOnHand: await getTotalStockOnHand(item.id),
-        }))
-      )
-      setRows(withStock)
-    }
-    load()
-  }, [isSyncingCatalog])
+    reload()
+  }, [isSyncingCatalog, reload])
 
   const filtered = useMemo(() => {
     if (!search.trim()) return rows
@@ -82,11 +90,26 @@ export function CatalogBrowsePage() {
     setSearch('')
   }
 
+  function openCreate() {
+    setEditingItem(undefined)
+    setDialogOpen(true)
+  }
+
+  function openEdit(item: CatalogItem) {
+    setEditingItem(item)
+    setDialogOpen(true)
+  }
+
+  async function handleDeactivate(item: CatalogItem) {
+    await deactivateCatalogItem(item.id)
+    await reload()
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold text-foreground">{t('catalog')}</h1>
 
-      {/* Toolbar: search + sync indicator — one row, always visible */}
+      {/* Toolbar: search + sync indicator + Add item — one row, always visible */}
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput
           type="text"
@@ -100,6 +123,10 @@ export function CatalogBrowsePage() {
         {isSyncingCatalog && (
           <span className="text-sm text-muted-foreground">{t('syncing')}</span>
         )}
+        <Button onClick={openCreate} size="sm">
+          <Plus className="me-1.5 h-4 w-4" />
+          {t('addItem')}
+        </Button>
       </div>
 
       {/* Local catalog table */}
@@ -133,44 +160,75 @@ export function CatalogBrowsePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filtered.map((r) => (
-                <tr key={r.item.id} className="transition-colors hover:bg-muted/50">
-                  <td className="px-4 py-3">
-                    <span className="font-medium text-foreground">{r.item.name}</span>
-                    {r.item.controlledSchedule && (
-                      <span className="ms-2 inline-flex items-center rounded bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold text-destructive">
-                        C{r.item.controlledSchedule}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 capitalize text-muted-foreground">{r.item.form}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {r.item.strength} {r.item.strengthUnit}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{r.item.category}</td>
-                  <td
-                    className={`px-4 py-3 font-medium ${
-                      r.stockOnHand <= r.item.reorderPoint
-                        ? 'text-warning'
-                        : 'text-foreground'
-                    }`}
+              {filtered.map((r) => {
+                const isLocal = r.item.source === 'local' || r.item.locallyModified
+                return (
+                  <tr
+                    key={r.item.id}
+                    className={`transition-colors hover:bg-muted/50 ${!r.item.isActive ? 'opacity-50' : ''}`}
                   >
-                    {r.stockOnHand}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{r.item.reorderPoint}</td>
-                  <td className="px-4 py-3">
-                    {r.item.atcCode && (
-                      <a
-                        href={`pharmopedia://drug/${r.item.atcCode}`}
-                        className="text-xs font-medium text-primary-700 underline underline-offset-2"
-                        aria-label="Open in Pharmopedia"
-                      >
-                        Pharmopedia
-                      </a>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    <td className="px-4 py-3">
+                      <span className="font-medium text-foreground">{r.item.name}</span>
+                      {isLocal && (
+                        <span className="ms-2 inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold bg-primary/10 text-primary">
+                          {t('localBadge')}
+                        </span>
+                      )}
+                      {r.item.controlledSchedule && (
+                        <span className="ms-2 inline-flex items-center rounded bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold text-destructive">
+                          C{r.item.controlledSchedule}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 capitalize text-muted-foreground">{r.item.form}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {r.item.strength} {r.item.strengthUnit}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{r.item.category}</td>
+                    <td
+                      className={`px-4 py-3 font-medium ${
+                        r.stockOnHand <= r.item.reorderPoint
+                          ? 'text-warning'
+                          : 'text-foreground'
+                      }`}
+                    >
+                      {r.stockOnHand}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{r.item.reorderPoint}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        {r.item.atcCode && (
+                          <a
+                            href={`pharmopedia://drug/${r.item.atcCode}`}
+                            className="text-xs font-medium text-primary-700 underline underline-offset-2"
+                            aria-label="Open in Pharmopedia"
+                          >
+                            Pharmopedia
+                          </a>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => openEdit(r.item)}
+                        >
+                          {t('editItem')}
+                        </Button>
+                        {r.item.isActive && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                            onClick={() => handleDeactivate(r.item)}
+                          >
+                            {t('deactivate')}
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
           </div>
@@ -229,6 +287,14 @@ export function CatalogBrowsePage() {
           </div>
         </div>
       )}
+
+      {/* Catalog item form dialog */}
+      <CatalogItemFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        item={editingItem}
+        onSaved={reload}
+      />
     </div>
   )
 }

@@ -10,6 +10,30 @@ interface CatalogSyncResult {
   lastSyncedAt: string
 }
 
+/** Newest lastSyncedAt among CLEAN (Hub-authoritative) rows only. A locally
+ *  modified or local-only row must not advance the pull watermark, else the
+ *  next Hub pull would skip server-side changes newer than the local edit. */
+export async function computeCatalogWatermark(): Promise<string> {
+  const rows = await db.catalogItems.orderBy('lastSyncedAt').reverse().toArray()
+  const newestClean = rows.find((r) => !r.locallyModified)
+  return newestClean?.lastSyncedAt ?? '1970-01-01T00:00:00.000Z'
+}
+
+/** Upsert a Hub batch, skipping any id whose local row is locallyModified
+ *  (dirty-guard) so pharmacist edits/deactivations survive the pull.
+ *  Returns the number of rows actually written (dirty-skipped rows excluded). */
+export async function mergeCatalogBatch(items: CatalogItem[], syncTimestamp: string): Promise<number> {
+  if (items.length === 0) return 0
+  const ids = items.map((i) => i.id)
+  const existing = await db.catalogItems.where('id').anyOf(ids).toArray()
+  const dirtyIds = new Set(existing.filter((e) => e.locallyModified).map((e) => e.id))
+  const toPut = items
+    .filter((i) => !dirtyIds.has(i.id))
+    .map((i) => ({ ...i, lastSyncedAt: syncTimestamp, source: 'hub' as const }))
+  if (toPut.length > 0) await db.catalogItems.bulkPut(toPut)
+  return toPut.length
+}
+
 export async function syncCatalogFromHub(
   signal?: AbortSignal,
 ): Promise<CatalogSyncResult> {
@@ -18,11 +42,7 @@ export async function syncCatalogFromHub(
 
   const hubBaseUrl = getHubApiUrl()
 
-  const mostRecent = await db.catalogItems
-    .orderBy('lastSyncedAt')
-    .reverse()
-    .first()
-  const since = mostRecent?.lastSyncedAt ?? '1970-01-01T00:00:00.000Z'
+  const since = await computeCatalogWatermark()
 
   let cursor: string | undefined
   let totalSynced = 0
@@ -52,11 +72,7 @@ export async function syncCatalogFromHub(
     }
     const { items, nextCursor } = body.result.data.json
 
-    if (items.length > 0) {
-      const stamped = items.map((item) => ({ ...item, lastSyncedAt: syncTimestamp }))
-      await db.catalogItems.bulkPut(stamped)
-      totalSynced += items.length
-    }
+    totalSynced += await mergeCatalogBatch(items, syncTimestamp)
 
     if (!nextCursor || items.length < SYNC_PAGE_SIZE) break
     cursor = nextCursor
