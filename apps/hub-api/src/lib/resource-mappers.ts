@@ -491,6 +491,118 @@ function flattenStockMovement(m: any): Record<string, unknown> {
 }
 
 // ---------------------------------------------------------------------------
+// StockTransfer → stock_transfers table
+// ---------------------------------------------------------------------------
+
+function flattenStockTransfer(t: any): Record<string, unknown> {
+  return {
+    id: t.id,
+    fromLocationId: t.fromLocationId,
+    fromLocationName: t.fromLocationName,
+    toLocationId: t.toLocationId,
+    toLocationName: t.toLocationName,
+    status: t.status,
+    items: t.items ?? [],
+    requestedBy: t.requestedBy,
+    requestedAt: t.requestedAt,
+    approvedBy: t.approvedBy,
+    approvedAt: t.approvedAt,
+    shippedAt: t.shippedAt,
+    receivedAt: t.receivedAt,
+    receivedBy: t.receivedBy,
+    cancelledReason: t.cancelledReason,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// StockCount → stock_counts table
+// ---------------------------------------------------------------------------
+
+function flattenStockCount(c: any): Record<string, unknown> {
+  return {
+    id: c.id,
+    type: c.type,
+    status: c.status,
+    countedBy: c.countedBy,
+    items: c.items ?? [],
+    totalVarianceItems: c.totalVarianceItems ?? 0,
+    startedAt: c.startedAt,
+    completedAt: c.completedAt,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Invoice → invoices table (POS, PHI-bearing)
+// ---------------------------------------------------------------------------
+
+function flattenInvoice(p: any): Record<string, unknown> {
+  return {
+    id: p.id,
+    invoiceNumber: p.invoiceNumber,
+    patientId: p.patientId ?? null,
+    dispenseIds: p.dispenseIds ?? [],
+    // Client sends `items` — renamed to `invoiceItems` so db.toRow produces
+    // the `invoice_items` column, which is in randomizedFields (AES-256-GCM encrypted).
+    // Do NOT keep a plain `items` key here — that name collides with non-PHI JSONB
+    // columns on PurchaseOrder/GoodsReceipt/StockTransfer/StockCount and would
+    // cause those rows to be wrongly encrypted if `items` were in randomizedFields.
+    invoiceItems: p.items ?? [],
+    subtotal: p.subtotal ?? 0,
+    taxRate: p.taxRate ?? 0,
+    taxAmount: p.taxAmount ?? 0,
+    total: p.total ?? 0,
+    amountPaid: p.amountPaid ?? 0,
+    amountDue: p.amountDue ?? 0,
+    status: p.status,
+    createdBy: p.createdBy,
+    voidedBy: p.voidedBy ?? null,
+    voidedAt: p.voidedAt ?? null,
+    voidReason: p.voidReason ?? null,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Payment → payments table (POS)
+// ---------------------------------------------------------------------------
+
+function flattenPayment(p: any): Record<string, unknown> {
+  return {
+    id: p.id,
+    invoiceId: p.invoiceId,
+    method: p.method,
+    amount: p.amount,
+    reference: p.reference ?? null,
+    cashDrawerId: p.cashDrawerId ?? null,
+    receivedBy: p.receivedBy,
+    // Client sends `timestamp` — renamed to `paymentTimestamp` to avoid the
+    // SQL reserved word `timestamp` as a column name (same precedent as
+    // StockMovement's movementTimestamp and LedgerEntry's ledgerTimestamp).
+    paymentTimestamp: p.timestamp,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// LedgerEntry → patient_ledger_entries table (POS, PHI-bearing)
+// ---------------------------------------------------------------------------
+
+function flattenLedgerEntry(p: any): Record<string, unknown> {
+  return {
+    id: p.id,
+    patientId: p.patientId,
+    type: p.type,
+    amount: p.amount,
+    invoiceId: p.invoiceId ?? null,
+    // Client sends `note` — renamed to `ledgerNote` so db.toRow produces the
+    // `ledger_note` column, which is in randomizedFields (AES-256-GCM encrypted).
+    ledgerNote: p.note ?? null,
+    createdBy: p.createdBy,
+    // Client sends `timestamp` — renamed to `ledgerTimestamp` (reserved word avoidance,
+    // same pattern as paymentTimestamp / movementTimestamp / entryTimestamp).
+    ledgerTimestamp: p.timestamp,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Dispatcher
 // ---------------------------------------------------------------------------
 
@@ -513,6 +625,12 @@ const mappers: Record<string, (payload: any) => Record<string, unknown>> = {
   GoodsReceipt: flattenGoodsReceipt,
   StockBatch: flattenStockBatch,
   StockMovement: flattenStockMovement,
+  StockTransfer: flattenStockTransfer,
+  StockCount: flattenStockCount,
+  // POS PHI types — first PHI-bearing org-scoped sync
+  Invoice: flattenInvoice,
+  Payment: flattenPayment,
+  LedgerEntry: flattenLedgerEntry,
 }
 
 /**

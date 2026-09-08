@@ -41,6 +41,12 @@ export const ROLE_PERMISSIONS: Record<string, Set<string>> = {
     'GoodsReceipt',
     'StockBatch',
     'StockMovement',
+    'StockTransfer',
+    'StockCount',
+    // POS PHI types — org-scoped with field-level encryption
+    'Invoice',
+    'Payment',
+    'LedgerEntry',
   ]),
   PATIENT: new Set([
     'Patient',

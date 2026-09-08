@@ -913,6 +913,93 @@ describe('sync.push — inventory/procurement ingestion', () => {
   })
 })
 
+describe('sync.push — transfers/stock-count ingestion', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  function mockPushSetup() {
+    const mockFrom = vi.fn()
+    const upsertSpy = vi.fn().mockResolvedValue({ error: null })
+
+    // 1. conflict-detection select (no existing row)
+    mockFrom.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    })
+    // 2. upsert — capture table + row
+    mockFrom.mockReturnValueOnce({ upsert: upsertSpy })
+    // 3. audit log (chain-tail read + insert)
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })
+
+    mockSupabaseClient.from = mockFrom
+    return { mockFrom, upsertSpy }
+  }
+
+  it('lands a StockTransfer in stock_transfers with items preserved + fromLocationId + org_id stamped', async () => {
+    const { mockFrom, upsertSpy } = mockPushSetup()
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const items = [{ stockBatchId: 'sb1', catalogItemId: 'i1', quantity: 20 }]
+    const op = {
+      resourceType: 'StockTransfer',
+      resourceId: 'st1',
+      action: 'create' as const,
+      payload: JSON.stringify({ id: 'st1', fromLocationId: 'loc-a', fromLocationName: 'Main Store', toLocationId: 'loc-b', toLocationName: 'Satellite', status: 'requested', items, requestedBy: 'p1', requestedAt: '2026-09-08T09:00:00Z' }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'st1', success: true })
+
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('stock_transfers')
+
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow.items).toEqual(items)
+    // fromLocationId preserved (camelCase, db.toRow is pass-through in tests)
+    expect(upsertedRow.fromLocationId).toBe('loc-a')
+    expect(upsertedRow.orgId).toBe('org-1')
+  })
+
+  it('lands a StockCount in stock_counts with items preserved + countedBy + org_id stamped', async () => {
+    const { mockFrom, upsertSpy } = mockPushSetup()
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const items = [{ stockBatchId: 'sb1', catalogItemId: 'i1', expectedQty: 48, countedQty: 45, variance: -3 }]
+    const op = {
+      resourceType: 'StockCount',
+      resourceId: 'sc1',
+      action: 'create' as const,
+      payload: JSON.stringify({ id: 'sc1', type: 'full', status: 'completed', countedBy: 'p1', items, totalVarianceItems: 1, startedAt: '2026-09-08T08:00:00Z', completedAt: '2026-09-08T09:00:00Z' }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'sc1', success: true })
+
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('stock_counts')
+
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow.items).toEqual(items)
+    // inner item has expectedQty preserved
+    expect((upsertedRow.items as typeof items)[0]!.expectedQty).toBe(48)
+    expect(upsertedRow.countedBy).toBe('p1')
+    expect(upsertedRow.orgId).toBe('org-1')
+  })
+})
+
 describe('sync.pull — org-scoped wholesale (B2)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -1008,5 +1095,158 @@ describe('sync.pull — org-scoped wholesale (B2)', () => {
     })
 
     expect(res.changes.filter((c) => c.resourceType === 'WholesaleCustomer')).toHaveLength(0)
+  })
+})
+
+describe('sync.push — POS ingestion', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  function mockPushSetup() {
+    const mockFrom = vi.fn()
+    const upsertSpy = vi.fn().mockResolvedValue({ error: null })
+
+    // 1. conflict-detection select (no existing row)
+    mockFrom.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    })
+    // 2. upsert — capture table + row
+    mockFrom.mockReturnValueOnce({ upsert: upsertSpy })
+    // 3. audit log (chain-tail read + insert)
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })
+
+    mockSupabaseClient.from = mockFrom
+    return { mockFrom, upsertSpy }
+  }
+
+  it('lands an Invoice in invoices with invoiceItems (from client items) + patientId + org_id stamped', async () => {
+    const { mockFrom, upsertSpy } = mockPushSetup()
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const items = [{ catalogItemId: 'ci1', stockBatchId: 'sb1', description: 'Amoxicillin 500mg', quantity: 2, unitPrice: 1500, lineTotal: 3000 }]
+    const op = {
+      resourceType: 'Invoice',
+      resourceId: 'inv-1',
+      action: 'create' as const,
+      payload: JSON.stringify({
+        id: 'inv-1',
+        invoiceNumber: 'INV-001',
+        patientId: 'pat-1',
+        dispenseIds: ['disp-1'],
+        items,
+        subtotal: 3000,
+        taxRate: 0,
+        taxAmount: 0,
+        total: 3000,
+        amountPaid: 3000,
+        amountDue: 0,
+        status: 'paid',
+        createdBy: 'pharm-1',
+      }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'inv-1', success: true })
+
+    // Verify upsert targeted 'invoices'
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('invoices')
+
+    // Critical: client `items` → renamed `invoiceItems` (→ invoice_items column, ENCRYPTED)
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow.invoiceItems).toEqual(items)
+    expect(upsertedRow.patientId).toBe('pat-1')
+    expect(upsertedRow.orgId).toBe('org-1')
+    // No plain `items` key — only the renamed `invoiceItems`
+    expect(upsertedRow.items).toBeUndefined()
+  })
+
+  it('lands a Payment in payments with paymentTimestamp (from client timestamp) + amount + org_id stamped', async () => {
+    const { mockFrom, upsertSpy } = mockPushSetup()
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const op = {
+      resourceType: 'Payment',
+      resourceId: 'pay-1',
+      action: 'create' as const,
+      payload: JSON.stringify({
+        id: 'pay-1',
+        invoiceId: 'inv-1',
+        method: 'cash',
+        amount: 3000,
+        reference: null,
+        cashDrawerId: 'drawer-1',
+        receivedBy: 'pharm-1',
+        timestamp: '2026-09-08T10:00:00Z',
+      }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'pay-1', success: true })
+
+    // Verify upsert targeted 'payments'
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('payments')
+
+    // Critical: client `timestamp` → renamed `paymentTimestamp` (→ payment_timestamp column)
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow.paymentTimestamp).toBe('2026-09-08T10:00:00Z')
+    expect(upsertedRow.amount).toBe(3000)
+    expect(upsertedRow.orgId).toBe('org-1')
+    // No plain `timestamp` key
+    expect(upsertedRow.timestamp).toBeUndefined()
+  })
+
+  it('lands a LedgerEntry in patient_ledger_entries with ledgerNote (from client note) + ledgerTimestamp (from client timestamp) + patientId + org_id stamped', async () => {
+    const { mockFrom, upsertSpy } = mockPushSetup()
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const op = {
+      resourceType: 'LedgerEntry',
+      resourceId: 'le-1',
+      action: 'create' as const,
+      payload: JSON.stringify({
+        id: 'le-1',
+        patientId: 'pat-1',
+        type: 'charge',
+        amount: 3000,
+        invoiceId: 'inv-1',
+        note: 'Patient paid in full for Amoxicillin prescription',
+        createdBy: 'pharm-1',
+        timestamp: '2026-09-08T10:05:00Z',
+      }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'le-1', success: true })
+
+    // Verify upsert targeted 'patient_ledger_entries'
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('patient_ledger_entries')
+
+    // Critical renames: `note` → `ledgerNote` (ENCRYPTED), `timestamp` → `ledgerTimestamp`
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow.ledgerNote).toBe('Patient paid in full for Amoxicillin prescription')
+    expect(upsertedRow.ledgerTimestamp).toBe('2026-09-08T10:05:00Z')
+    expect(upsertedRow.patientId).toBe('pat-1')
+    expect(upsertedRow.orgId).toBe('org-1')
+    // No plain `note` or `timestamp` keys
+    expect(upsertedRow.note).toBeUndefined()
+    expect(upsertedRow.timestamp).toBeUndefined()
   })
 })

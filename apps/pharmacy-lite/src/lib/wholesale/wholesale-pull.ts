@@ -13,6 +13,11 @@ const WHOLESALE_TYPES = [
   'GoodsReceipt',
   'StockBatch',
   'StockMovement',
+  'StockTransfer',
+  'StockCount',
+  'Invoice',
+  'Payment',
+  'LedgerEntry',
 ] as const
 
 interface PullChange {
@@ -49,6 +54,11 @@ function tableFor(resourceType: string) {
   if (resourceType === 'GoodsReceipt') return db.goodsReceipts
   if (resourceType === 'StockBatch') return db.stockBatches
   if (resourceType === 'StockMovement') return db.stockMovements
+  if (resourceType === 'StockTransfer') return db.stockTransfers
+  if (resourceType === 'StockCount') return db.stockCounts
+  if (resourceType === 'Invoice') return db.invoices
+  if (resourceType === 'Payment') return db.payments
+  if (resourceType === 'LedgerEntry') return db.ledgerEntries
   return null
 }
 
@@ -71,6 +81,18 @@ function toClientRow(
   if (resourceType === 'StockMovement') {
     const { movementTimestamp, ...rest } = data
     return { ...rest, timestamp: movementTimestamp }
+  }
+  if (resourceType === 'Invoice') {
+    const { invoiceItems, ...rest } = data
+    return { ...rest, items: invoiceItems }
+  }
+  if (resourceType === 'Payment') {
+    const { paymentTimestamp, ...rest } = data
+    return { ...rest, timestamp: paymentTimestamp }
+  }
+  if (resourceType === 'LedgerEntry') {
+    const { ledgerNote, ledgerTimestamp, ...rest } = data
+    return { ...rest, note: ledgerNote, timestamp: ledgerTimestamp }
   }
   // WholesaleCustomer / SalesOrder / Supplier / PurchaseOrder / GoodsReceipt / StockBatch
   // already match the local shape (camelCase, including items[])

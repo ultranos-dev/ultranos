@@ -112,6 +112,9 @@ describe('server-crypto', () => {
       // AllergyIntolerance substance — Tier-1 PHI, must be encrypted at rest.
       expect(config.randomizedFields).toContain('substance_text')
       expect(config.randomizedFields).toContain('substance_free_text')
+      // POS PHI (org-scoped sync) — Invoice line-item med descriptions + ledger note.
+      expect(config.randomizedFields).toContain('invoice_items')
+      expect(config.randomizedFields).toContain('ledger_note')
     })
 
     it('encrypts every patient PHI *_enc column', () => {

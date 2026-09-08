@@ -38,6 +38,12 @@ const RESOURCE_TABLE_MAP: Record<string, string> = {
   GoodsReceipt: 'goods_receipts',
   StockBatch: 'stock_batches',
   StockMovement: 'stock_movements',
+  StockTransfer: 'stock_transfers',
+  StockCount: 'stock_counts',
+  // POS PHI types — first PHI-bearing org-scoped sync
+  Invoice: 'invoices',
+  Payment: 'payments',
+  LedgerEntry: 'patient_ledger_entries',
 }
 
 /**
@@ -46,7 +52,7 @@ const RESOURCE_TABLE_MAP: Record<string, string> = {
  * it. soap_ledger/patients/consent_records/allergy_intolerances have no org_id
  * column, so it must NOT be injected there (would be an unknown-column error).
  */
-const ORG_SCOPED_TABLES = new Set<string>(['encounters', 'observations', 'conditions', 'medication_requests', 'wholesale_customers', 'sales_orders', 'customer_ledger_entries', 'contract_prices', 'pharmacy_suppliers', 'pharmacy_purchase_orders', 'goods_receipts', 'stock_batches', 'stock_movements'])
+const ORG_SCOPED_TABLES = new Set<string>(['encounters', 'observations', 'conditions', 'medication_requests', 'wholesale_customers', 'sales_orders', 'customer_ledger_entries', 'contract_prices', 'pharmacy_suppliers', 'pharmacy_purchase_orders', 'goods_receipts', 'stock_batches', 'stock_movements', 'stock_transfers', 'stock_counts', 'invoices', 'payments', 'patient_ledger_entries'])
 
 /**
  * Tables with no `hlc_timestamp` column. The generic HLC-based pull (and push

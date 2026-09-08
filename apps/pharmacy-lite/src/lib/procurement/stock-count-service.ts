@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { buildEncryptedSyncEntry } from '@/lib/dexie-sync-adapter'
+import { buildEncryptedSyncEntry, enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { enqueueStockBatchSync } from '@/lib/inventory/stock-batch-sync'
 import type { StockCount, StockCountItem, StockCountType } from './types'
 import type { StockMovement } from '@/lib/inventory/types'
@@ -21,6 +21,14 @@ export async function startStockCount(params: {
     hlcTimestamp: now,
   }
   await db.stockCounts.put(count)
+  await enqueuePharmacySyncEntry({
+    resourceType: 'StockCount',
+    resourceId: count.id,
+    action: 'create',
+    payload: count as unknown as Record<string, unknown>,
+    hlcTimestamp: count.hlcTimestamp,
+    createdAt: new Date().toISOString(),
+  })
   return count
 }
 
@@ -82,6 +90,24 @@ export async function completeStockCount(countId: string): Promise<StockCount> {
     ),
   )
 
+  // Build the updated count row + its sync entry BEFORE the transaction —
+  // Web Crypto (buildEncryptedSyncEntry) cannot run inside a Dexie tx zone.
+  const updatedCount = {
+    ...count,
+    status: 'completed' as const,
+    completedAt: now,
+    totalVarianceItems: varianceItems.length,
+    hlcTimestamp: now,
+  }
+  const countSyncEntry = await buildEncryptedSyncEntry({
+    resourceType: 'StockCount',
+    resourceId: countId,
+    action: 'update',
+    payload: updatedCount as unknown as Record<string, unknown>,
+    hlcTimestamp: now,
+    createdAt: now,
+  })
+
   await db.transaction('rw', [db.stockCounts, db.stockMovements, db.stockBatches, db.syncQueue], async () => {
     for (let i = 0; i < varianceItems.length; i++) {
       const item = varianceItems[i]!
@@ -95,6 +121,7 @@ export async function completeStockCount(countId: string): Promise<StockCount> {
       totalVarianceItems: varianceItems.length,
       hlcTimestamp: now,
     })
+    await db.syncQueue.put(countSyncEntry)
   })
 
   // Site #5: after-txn read-back enqueue for each variance batch (async crypto cannot run inside txn)

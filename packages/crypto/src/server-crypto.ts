@@ -130,6 +130,13 @@ export function getEncryptionConfig() {
       'name_father_enc',
       'name_grandfather_enc',
       'name_family_enc',
+      // POS PHI (org-scoped sync). invoice_items holds Invoice line items whose
+      // descriptions are medication names (patient↔drug linkage); ledger_note is a
+      // patient-ledger free-text note. Both must be encrypted at rest on the Hub.
+      // POS-unique column names so encryption stays scoped to POS (the non-PHI
+      // JSONB `items`/`notes` on purchase_orders/goods_receipts/stock_* are NOT here).
+      'invoice_items',
+      'ledger_note',
     ] as const,
   }
 }

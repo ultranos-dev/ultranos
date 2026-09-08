@@ -160,4 +160,77 @@ describe('pullWholesale', () => {
     expect(sm).toMatchObject({ id: 'sm1', type: 'received', timestamp: '2026-09-07T10:00:00Z' })
     expect((sm as unknown as Record<string, unknown>).movementTimestamp).toBeUndefined()
   })
+
+  // ── Task 3: StockTransfer + StockCount pull registration ─────────────────
+
+  it('requests StockTransfer among the pulled resource types', async () => {
+    fetchMock.mockResolvedValue(pullResponse([]))
+    await pullWholesale()
+    const url = decodeURIComponent(fetchMock.mock.calls[0][0] as string)
+    expect(url).toContain('StockTransfer')
+  })
+
+  it('writes pulled StockTransfer to db.stockTransfers with items[0].stockBatchId present', async () => {
+    const items = [{ stockBatchId: 'sb1', catalogItemId: 'ci1', quantity: 20 }]
+    fetchMock.mockResolvedValue(pullResponse([
+      { resourceType: 'StockTransfer', resourceId: 'st1', hlcTimestamp: '15', data: { id: 'st1', fromLocationId: 'loc1', toLocationId: 'loc2', status: 'requested', items, requestedBy: 'p1', requestedAt: '2026-09-08T00:00:00Z', hlcTimestamp: '15' } },
+    ]))
+    await pullWholesale()
+    const st = await db.stockTransfers.get('st1')
+    expect(st).toMatchObject({ id: 'st1', status: 'requested' })
+    expect((st as unknown as { items: { stockBatchId: string }[] }).items[0]?.stockBatchId).toBe('sb1')
+  })
+
+  it('writes pulled StockCount to db.stockCounts with items[0].expectedQty present', async () => {
+    const items = [{ stockBatchId: 'sb1', catalogItemId: 'ci1', expectedQty: 50, actualQty: 48 }]
+    fetchMock.mockResolvedValue(pullResponse([
+      { resourceType: 'StockCount', resourceId: 'sc1', hlcTimestamp: '16', data: { id: 'sc1', type: 'full', status: 'in_progress', items, countedBy: 'p1', startedAt: '2026-09-08T00:00:00Z', hlcTimestamp: '16' } },
+    ]))
+    await pullWholesale()
+    const sc = await db.stockCounts.get('sc1')
+    expect(sc).toMatchObject({ id: 'sc1', status: 'in_progress' })
+    expect((sc as unknown as { items: { expectedQty: number }[] }).items[0]?.expectedQty).toBe(50)
+  })
+
+  // ── Task 4: POS PHI sync — Invoice / Payment / LedgerEntry pull ──────────
+
+  it('requests Invoice among the pulled resource types', async () => {
+    fetchMock.mockResolvedValue(pullResponse([]))
+    await pullWholesale()
+    const url = decodeURIComponent(fetchMock.mock.calls[0][0] as string)
+    expect(url).toContain('Invoice')
+  })
+
+  it('pulled Invoice (Hub invoiceItems) lands in db.invoices with items and no leftover invoiceItems', async () => {
+    const invoiceItems = [{ catalogItemId: 'ci1', description: 'Amoxicillin 500mg', quantity: 2, unitPriceMinor: 1500, totalMinor: 3000 }]
+    fetchMock.mockResolvedValue(pullResponse([
+      { resourceType: 'Invoice', resourceId: 'inv1', hlcTimestamp: '20', data: { id: 'inv1', patientId: 'p1', encounterId: 'e1', invoiceItems, totalMinor: 3000, status: 'draft', createdBy: 'u1', createdAt: '2026-09-08T00:00:00Z', hlcTimestamp: '20' } },
+    ]))
+    await pullWholesale()
+    const inv = await db.invoices.get('inv1')
+    expect(inv).toMatchObject({ id: 'inv1', status: 'draft', totalMinor: 3000 })
+    expect((inv as unknown as { items: { catalogItemId: string }[] }).items[0]?.catalogItemId).toBe('ci1')
+    expect((inv as unknown as Record<string, unknown>).invoiceItems).toBeUndefined()
+  })
+
+  it('pulled Payment (Hub paymentTimestamp) lands in db.payments with timestamp and no leftover paymentTimestamp', async () => {
+    fetchMock.mockResolvedValue(pullResponse([
+      { resourceType: 'Payment', resourceId: 'pay1', hlcTimestamp: '21', data: { id: 'pay1', invoiceId: 'inv1', amountMinor: 3000, method: 'cash', receivedBy: 'u1', paymentTimestamp: '2026-09-08T10:00:00Z', hlcTimestamp: '21' } },
+    ]))
+    await pullWholesale()
+    const pay = await db.payments.get('pay1')
+    expect(pay).toMatchObject({ id: 'pay1', amountMinor: 3000, timestamp: '2026-09-08T10:00:00Z' })
+    expect((pay as unknown as Record<string, unknown>).paymentTimestamp).toBeUndefined()
+  })
+
+  it('pulled LedgerEntry (Hub ledgerNote+ledgerTimestamp) lands in db.ledgerEntries with note+timestamp and no leftover renamed keys', async () => {
+    fetchMock.mockResolvedValue(pullResponse([
+      { resourceType: 'LedgerEntry', resourceId: 'le1', hlcTimestamp: '22', data: { id: 'le1', patientId: 'p1', type: 'charge', amountMinor: 3000, ledgerNote: 'Invoice payment', ledgerTimestamp: '2026-09-08T10:05:00Z', createdBy: 'u1', hlcTimestamp: '22' } },
+    ]))
+    await pullWholesale()
+    const le = await db.ledgerEntries.get('le1')
+    expect(le).toMatchObject({ id: 'le1', type: 'charge', note: 'Invoice payment', timestamp: '2026-09-08T10:05:00Z' })
+    expect((le as unknown as Record<string, unknown>).ledgerNote).toBeUndefined()
+    expect((le as unknown as Record<string, unknown>).ledgerTimestamp).toBeUndefined()
+  })
 })
