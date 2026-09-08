@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { FhirServiceRequestSchema, type LabServiceRequest } from '../service-request.schema'
 
-function validServiceRequest() {
+function validServiceRequest(): LabServiceRequest {
   return {
     id: '550e8400-e29b-41d4-a716-446655440000',
     resourceType: 'ServiceRequest' as const,

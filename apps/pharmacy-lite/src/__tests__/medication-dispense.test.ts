@@ -140,7 +140,7 @@ describe('createMedicationDispense', () => {
 
     expect(dispense.whenHandedOver).toBeTruthy()
     // Should be a valid ISO date string
-    expect(Number.isNaN(Date.parse(dispense.whenHandedOver))).toBe(false)
+    expect(Number.isNaN(Date.parse(dispense.whenHandedOver ?? ''))).toBe(false)
   })
 
   it('generates a unique UUID id', () => {
