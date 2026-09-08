@@ -799,7 +799,13 @@
     "searchAccountsPlaceholder": "جستجوی حساب‌های بیمار...",
     "noResultsTitle": "هیچ نتیجه‌ای مطابقت ندارد",
     "noResultsDescription": "جستجو یا فیلترها را تنظیم کنید.",
-    "clearFilters": "پاک کردن فیلترها"
+    "clearFilters": "پاک کردن فیلترها",
+    "creditLimit": "سقف اعتبار",
+    "noLimit": "بدون سقف",
+    "setCreditLimit": "تنظیم سقف اعتبار",
+    "setLimitBtn": "تنظیم سقف",
+    "creditLimitPlaceholder": "سقف را وارد کنید (مثال: 100.00)",
+    "creditLimitExceeded": "سقف اعتبار تجاوز شده"
   },
   "reports": {
     "title": "گزارش‌ها",

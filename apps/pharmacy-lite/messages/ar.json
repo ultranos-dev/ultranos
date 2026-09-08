@@ -799,7 +799,13 @@
     "searchAccountsPlaceholder": "البحث عن حسابات المرضى...",
     "noResultsTitle": "لا توجد نتائج مطابقة",
     "noResultsDescription": "حاول تعديل البحث أو عوامل التصفية.",
-    "clearFilters": "مسح عوامل التصفية"
+    "clearFilters": "مسح عوامل التصفية",
+    "creditLimit": "حد الائتمان",
+    "noLimit": "بلا حد",
+    "setCreditLimit": "تعيين حد الائتمان",
+    "setLimitBtn": "تعيين الحد",
+    "creditLimitPlaceholder": "أدخل الحد (مثال: 100.00)",
+    "creditLimitExceeded": "تم تجاوز حد الائتمان"
   },
   "reports": {
     "title": "التقارير",

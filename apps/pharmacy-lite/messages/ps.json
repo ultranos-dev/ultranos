@@ -799,7 +799,13 @@
     "searchAccountsPlaceholder": "د ناروغ حسابونو لټون...",
     "noResultsTitle": "هیڅ سمون لرونکې پایله نشته",
     "noResultsDescription": "خپل لټون یا فلټرونه سم کړئ.",
-    "clearFilters": "فلټرونه پاک کړئ"
+    "clearFilters": "فلټرونه پاک کړئ",
+    "creditLimit": "د اعتبار سقف",
+    "noLimit": "بې سقفه",
+    "setCreditLimit": "د اعتبار سقف ټاکل",
+    "setLimitBtn": "سقف ټاکل",
+    "creditLimitPlaceholder": "سقف دننه کړئ (لکه: 100.00)",
+    "creditLimitExceeded": "د اعتبار سقف تیر شو"
   },
   "reports": {
     "title": "راپورونه",

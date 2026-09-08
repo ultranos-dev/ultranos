@@ -799,7 +799,13 @@
     "searchAccountsPlaceholder": "Search patient accounts...",
     "noResultsTitle": "No matching results",
     "noResultsDescription": "Try adjusting your search or filters.",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "creditLimit": "Credit Limit",
+    "noLimit": "No limit",
+    "setCreditLimit": "Set Credit Limit",
+    "setLimitBtn": "Set limit",
+    "creditLimitPlaceholder": "Enter limit (e.g. 100.00)",
+    "creditLimitExceeded": "Credit limit exceeded"
   },
   "reports": {
     "title": "Reports",

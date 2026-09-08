@@ -37,6 +37,32 @@ export async function getAgingBuckets(patientId: string): Promise<AgingBuckets> 
   return computeAging(entries)
 }
 
+/**
+ * Sets (or updates) the credit limit for a patient account.
+ * Creates the account with balance 0 if none exists yet.
+ * All monetary values are integers in minor currency units.
+ */
+export async function setPatientCreditLimit(
+  patientId: string,
+  creditLimit: number,
+): Promise<void> {
+  const now = new Date().toISOString()
+  const existing = await db.patientAccounts.where('patientId').equals(patientId).first()
+
+  if (existing) {
+    await db.patientAccounts.update(existing.id, { creditLimit, lastActivityAt: now })
+  } else {
+    const newAccount: PatientAccount = {
+      id: crypto.randomUUID(),
+      patientId,
+      balance: 0,
+      creditLimit,
+      lastActivityAt: now,
+    }
+    await db.patientAccounts.add(newAccount)
+  }
+}
+
 export interface TotalAging {
   totalOutstanding: number
   accountsCount: number

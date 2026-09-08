@@ -35,11 +35,14 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Paymen
   // Resolve the open cash drawer before the transaction so the encrypted sync
   // payload carries the correct cashDrawerId. Web Crypto cannot run inside a
   // Dexie transaction zone, so the sync entry is built/encrypted up front.
+  // A cash payment with no open drawer is rejected atomically — nothing is
+  // persisted (sync entry is not yet built at this point).
   if (method === 'cash') {
     const openDrawer = await db.cashDrawers.where('status').equals('open').first()
-    if (openDrawer) {
-      payment.cashDrawerId = openDrawer.id
+    if (!openDrawer) {
+      throw new Error('No open cash drawer — open a cash drawer before recording a cash payment')
     }
+    payment.cashDrawerId = openDrawer.id
   }
 
   const syncEntry = await buildEncryptedSyncEntry({
@@ -69,6 +72,18 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Paymen
       }
 
       if (method === 'credit' && patientId) {
+        const existingAccount = await db.patientAccounts
+          .where('patientId')
+          .equals(patientId)
+          .first()
+
+        if (
+          existingAccount?.creditLimit != null &&
+          existingAccount.balance + amount > existingAccount.creditLimit
+        ) {
+          throw new Error('Credit limit exceeded')
+        }
+
         const ledgerEntry: LedgerEntry = {
           id: crypto.randomUUID(),
           patientId,
@@ -79,11 +94,6 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Paymen
           timestamp: new Date().toISOString(),
         }
         await db.ledgerEntries.add(ledgerEntry)
-
-        const existingAccount = await db.patientAccounts
-          .where('patientId')
-          .equals(patientId)
-          .first()
 
         if (existingAccount) {
           await db.patientAccounts.update(existingAccount.id, {

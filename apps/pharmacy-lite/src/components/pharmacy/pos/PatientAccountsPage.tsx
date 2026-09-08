@@ -12,6 +12,7 @@ import {
   getAccountsWithBalance,
   getPatientLedger,
   getAgingBuckets,
+  setPatientCreditLimit,
   type AgingBuckets,
 } from '@/lib/pos/patient-account-service'
 import { recordCreditPayment } from '@/lib/pos/payment-service'
@@ -51,6 +52,9 @@ export function PatientAccountsPage() {
   const [paymentStr, setPaymentStr] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [creditLimitStr, setCreditLimitStr] = useState('')
+  const [settingLimit, setSettingLimit] = useState(false)
+  const [limitError, setLimitError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
@@ -77,6 +81,8 @@ export function PatientAccountsPage() {
     setSelectedPatientId(patientId)
     setError(null)
     setPaymentStr('')
+    setCreditLimitStr('')
+    setLimitError(null)
     const [entries, buckets] = await Promise.all([
       getPatientLedger(patientId),
       getAgingBuckets(patientId),
@@ -114,6 +120,27 @@ export function PatientAccountsPage() {
     }
   }
 
+  const handleSetCreditLimit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLimitError(null)
+    if (!selectedPatientId) return
+    const limitMinor = parseMinor(creditLimitStr)
+    if (isNaN(limitMinor) || limitMinor < 0) {
+      setLimitError(t('enterValidAmount'))
+      return
+    }
+    setSettingLimit(true)
+    try {
+      await setPatientCreditLimit(selectedPatientId, limitMinor)
+      setCreditLimitStr('')
+      await loadAccounts()
+    } catch (err) {
+      setLimitError(err instanceof Error ? err.message : t('paymentFailed'))
+    } finally {
+      setSettingLimit(false)
+    }
+  }
+
   // Patient ledger detail view
   if (selectedPatientId) {
     const account = accounts.find((a) => a.patientId === selectedPatientId)
@@ -129,12 +156,20 @@ export function PatientAccountsPage() {
           </h1>
         </div>
 
-        {/* Balance */}
-        <div className="rounded-xl bg-card p-5 text-center shadow-card ring-[0.65px] ring-border/50">
-          <p className="text-sm text-muted-foreground">{t('outstandingBalance')}</p>
-          <p className="text-2xl font-bold tabular-nums text-warning">
-            {fmt(account?.balance ?? 0)}
-          </p>
+        {/* Balance + Credit Limit */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-xl bg-card p-5 text-center shadow-card ring-[0.65px] ring-border/50">
+            <p className="text-sm text-muted-foreground">{t('outstandingBalance')}</p>
+            <p className="text-2xl font-bold tabular-nums text-warning">
+              {fmt(account?.balance ?? 0)}
+            </p>
+          </div>
+          <div className="rounded-xl bg-card p-5 text-center shadow-card ring-[0.65px] ring-border/50">
+            <p className="text-sm text-muted-foreground">{t('creditLimit')}</p>
+            <p className="text-2xl font-bold tabular-nums text-foreground">
+              {account?.creditLimit != null ? fmt(account.creditLimit) : t('noLimit')}
+            </p>
+          </div>
         </div>
 
         {/* Aging buckets */}
@@ -173,7 +208,7 @@ export function PatientAccountsPage() {
                 min="0"
                 value={paymentStr}
                 onChange={(e) => setPaymentStr(e.target.value)}
-                className="flex-1 rounded-md border border-border px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                className="flex-1 rounded-md border border-border px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 placeholder="0.00"
               />
               <Button type="submit" variant="default" disabled={submitting}>
@@ -182,6 +217,31 @@ export function PatientAccountsPage() {
             </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
+        </form>
+
+        {/* Credit limit setter */}
+        <form onSubmit={handleSetCreditLimit} className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 space-y-3">
+          <div className="space-y-1">
+            <label htmlFor="credit-limit" className="text-sm font-medium text-foreground">
+              {t('setCreditLimit')}
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="credit-limit"
+                type="number"
+                step="any"
+                min="0"
+                value={creditLimitStr}
+                onChange={(e) => setCreditLimitStr(e.target.value)}
+                className="flex-1 rounded-md border border-border px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                placeholder={t('creditLimitPlaceholder')}
+              />
+              <Button type="submit" variant="outline" disabled={settingLimit}>
+                {settingLimit ? t('recording') : t('setLimitBtn')}
+              </Button>
+            </div>
+          </div>
+          {limitError && <p className="text-sm text-destructive">{limitError}</p>}
         </form>
 
         {/* Ledger entries */}
