@@ -23,6 +23,7 @@ import { aiRouter } from './ai'
 import { guardianRouter } from './guardian'
 import { patientRegistrationRouter } from './patient-registration'
 import { duplicateReviewRouter } from './duplicate-review'
+import { dispenseReviewRouter } from './dispense-review'
 import { patientAdminRouter } from './patient-admin'
 import { appointmentRouter } from './appointment'
 import { drugCatalogRouter } from './drug-catalog'
@@ -57,6 +58,7 @@ export const appRouter = createTRPCRouter({
   guardian: guardianRouter,
   patientRegistration: patientRegistrationRouter,
   duplicateReview: duplicateReviewRouter,
+  dispenseReview: dispenseReviewRouter,
   patientAdmin: patientAdminRouter,
   appointment: appointmentRouter,
   drugCatalog: drugCatalogRouter,

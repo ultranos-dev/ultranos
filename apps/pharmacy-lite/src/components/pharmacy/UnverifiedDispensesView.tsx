@@ -36,11 +36,10 @@ function truncateUuid(uuid: string): string {
 }
 
 /**
- * Fetch dispense reviews from Hub API dispense_reviews tRPC endpoint.
+ * Fetch dispense reviews from the Hub API dispenseReview.list tRPC endpoint.
  * Uses the same raw-fetch pattern as prescription-status-client.ts.
- *
- * NOTE: The Hub API tRPC router for dispenseReview may not exist yet.
- * If it returns 404 or errors, we surface the error gracefully.
+ * The endpoint returns the raw snake_case rows as a bare array; any HTTP
+ * error is surfaced to the UI (never silently swallowed).
  */
 async function fetchDispenseReviews(
   statuses: string[],
@@ -76,10 +75,9 @@ async function fetchDispenseReviews(
 }
 
 /**
- * Update a dispense review status (Approve or Flag).
- *
- * TODO: Hub API endpoint dispenseReview.updateStatus does not exist yet.
- * This function is wired but will fail until the endpoint is implemented.
+ * Update a dispense review status (Approve or Flag) via the Hub API
+ * dispenseReview.updateStatus tRPC endpoint. A non-OK response is thrown
+ * so the caller can surface the failure.
  */
 async function updateDispenseReviewStatus(
   reviewId: string,
@@ -156,7 +154,8 @@ export function UnverifiedDispensesView() {
       // Refresh list after action
       await fetchReviews()
     } catch {
-      // TODO: The dispenseReview.updateStatus endpoint likely does not exist yet.
+      // The update request failed (network/auth/server error) — surface it
+      // rather than leaving the row silently unresolved.
       setError(t('reviewNotConnected'))
     } finally {
       setActionInFlight(null)
