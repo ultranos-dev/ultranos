@@ -43,6 +43,20 @@ export async function quarantineExpiredBatches(performedBy: string): Promise<num
     ),
   )
 
+  // Site #4: pre-build StockBatch sync entries (quarantined full row) before the txn
+  const batchSyncEntries = await Promise.all(
+    expiredBatches.map((batch) =>
+      buildEncryptedSyncEntry({
+        resourceType: 'StockBatch',
+        resourceId: batch.id,
+        action: 'update',
+        payload: { ...batch, status: 'quarantined', hlcTimestamp: now } as unknown as Record<string, unknown>,
+        hlcTimestamp: now,
+        createdAt: now,
+      }),
+    ),
+  )
+
   await db.transaction('rw', [db.stockBatches, db.stockMovements, db.syncQueue], async () => {
     for (let i = 0; i < expiredBatches.length; i++) {
       const batch = expiredBatches[i]!
@@ -52,6 +66,7 @@ export async function quarantineExpiredBatches(performedBy: string): Promise<num
         hlcTimestamp: now,
       })
       await db.syncQueue.put(syncEntries[i]!)
+      await db.syncQueue.put(batchSyncEntries[i]!)
     }
   })
 

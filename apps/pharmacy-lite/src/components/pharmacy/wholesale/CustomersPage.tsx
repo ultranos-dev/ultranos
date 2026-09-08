@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Users, UserPlus, FileSearch } from '@ultranos/ui-kit/icons'
+import Link from 'next/link'
 import { getAllCustomers, createCustomer } from '@/lib/wholesale/customer-service'
 import type { WholesaleCustomer } from '@/lib/wholesale/types'
 
@@ -151,7 +152,14 @@ export function CustomersPage() {
             <tbody className="divide-y divide-border">
               {filtered.map((customer) => (
                 <tr key={customer.id} className="hover:bg-muted/50">
-                  <td className="px-4 py-3 font-medium text-foreground">{customer.name}</td>
+                  <td className="px-4 py-3 font-medium text-foreground">
+                    <Link
+                      href={`/wholesale/customers/${customer.id}`}
+                      className="font-medium text-foreground hover:text-primary hover:underline"
+                    >
+                      {customer.name}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{customer.contactName ?? '—'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{customer.phone ?? '—'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{customer.email ?? '—'}</td>

@@ -109,7 +109,8 @@ exports[`NewOrderPage > LTR snapshot 1`] = `
             newOrderNotesLabel
           </label>
           <textarea
-            class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            class="flex min-h-[80px] w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
+            data-slot="textarea"
             id="order-notes"
             placeholder="newOrderNotesPlaceholder"
             rows="2"
@@ -167,11 +168,43 @@ exports[`NewOrderPage > LTR snapshot 1`] = `
         </svg>
         newOrderAddManualLine
       </button>
-      <p
-        class="py-4 text-sm text-muted-foreground text-center"
+      <div
+        class="flex items-center gap-2.5 p-4"
       >
-        newOrderNoLines
-      </p>
+        <div
+          class="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-inbox size-3"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <polyline
+              points="22 12 16 12 14 15 10 15 8 12 2 12"
+            />
+            <path
+              d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"
+            />
+          </svg>
+        </div>
+        <div
+          class="min-w-0 flex-1"
+        >
+          <p
+            class="text-xs font-semibold text-foreground"
+          >
+            newOrderNoLines
+          </p>
+        </div>
+      </div>
     </div>
     <div
       class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50"
@@ -349,7 +382,8 @@ exports[`NewOrderPage > RTL snapshot 1`] = `
             newOrderNotesLabel
           </label>
           <textarea
-            class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            class="flex min-h-[80px] w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
+            data-slot="textarea"
             id="order-notes"
             placeholder="newOrderNotesPlaceholder"
             rows="2"
@@ -407,11 +441,43 @@ exports[`NewOrderPage > RTL snapshot 1`] = `
         </svg>
         newOrderAddManualLine
       </button>
-      <p
-        class="py-4 text-sm text-muted-foreground text-center"
+      <div
+        class="flex items-center gap-2.5 p-4"
       >
-        newOrderNoLines
-      </p>
+        <div
+          class="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-inbox size-3"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <polyline
+              points="22 12 16 12 14 15 10 15 8 12 2 12"
+            />
+            <path
+              d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"
+            />
+          </svg>
+        </div>
+        <div
+          class="min-w-0 flex-1"
+        >
+          <p
+            class="text-xs font-semibold text-foreground"
+          >
+            newOrderNoLines
+          </p>
+        </div>
+      </div>
     </div>
     <div
       class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50"

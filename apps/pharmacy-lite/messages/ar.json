@@ -256,7 +256,9 @@
     "mfaCheckError": "تعذّر التحقق من حالة المصادقة متعددة العوامل",
     "totpStatus": "حالة TOTP",
     "totpEnabled": "TOTP مفعّل",
-    "totpNotConfigured": "غير مُهيّأ"
+    "totpNotConfigured": "غير مُهيّأ",
+    "wholesaleMode": "وضع الجملة",
+    "wholesaleModeDesc": "تفعيل ميزات البيع بالجملة — العملاء وأوامر البيع والحسابات المدينة."
   },
   "history": {
     "title": "سجل الصرف",
@@ -1126,7 +1128,6 @@
     "accountsLoading": "جارٍ تحميل الحسابات…",
     "accountsNoBalances": "لا توجد حسابات مستحقة",
     "accountsNoBalancesDescription": "جميع أرصدة العملاء مسوّاة.",
-    "columnCustomer": "العميل",
     "columnBalance": "الرصيد المستحق",
     "columnLastActivity": "آخر نشاط",
     "columnActions": "الإجراءات",
@@ -1134,6 +1135,26 @@
     "paymentDialogTitle": "تسجيل دفعة",
     "paymentAmountLabel": "المبلغ",
     "paymentRecording": "جارٍ التسجيل…",
-    "confirmPayment": "تأكيد الدفع"
+    "confirmPayment": "تأكيد الدفع",
+    "customerDetailBack": "العودة إلى العملاء",
+    "customerInfoHeading": "معلومات العميل",
+    "contractPricesHeading": "أسعار العقود",
+    "contractPriceColItem": "الصنف",
+    "contractPriceColPrice": "سعر العقد",
+    "addContractPrice": "إضافة سعر عقد",
+    "contractPricePlaceholder": "السعر (وحدات رئيسية)",
+    "removeContractPrice": "حذف سعر العقد",
+    "noContractPrices": "لا توجد أسعار عقود",
+    "noContractPricesDescription": "أضف سعر عقد لهذا العميل لاستبدال سعر الجملة في الكتالوج.",
+    "saveCustomer": "حفظ التغييرات",
+    "saving": "جارٍ الحفظ…",
+    "searchCatalogForPrice": "البحث في الكتالوج…",
+    "customerNotFound": "العميل غير موجود",
+    "customerNotFoundDescription": "هذا العميل غير موجود أو تعذّر تحميله.",
+    "volumeBreaks": "خصومات الحجم",
+    "addVolumeBreak": "إضافة خصم حجم",
+    "minQuantity": "الحد الأدنى للكمية",
+    "breakPrice": "سعر الكسر",
+    "removeBreak": "حذف الخصم"
   }
 }

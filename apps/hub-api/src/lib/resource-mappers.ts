@@ -315,6 +315,182 @@ function flattenMedicationRequest(payload: FhirMedicationRequestPayload): Record
 }
 
 // ---------------------------------------------------------------------------
+// WholesaleCustomer → wholesale_customers table
+// ---------------------------------------------------------------------------
+
+function flattenWholesaleCustomer(p: any): Record<string, unknown> {
+  return {
+    id: p.id,
+    name: p.name,
+    contactName: p.contactName ?? null,
+    phone: p.phone ?? null,
+    email: p.email ?? null,
+    address: p.address ?? null,
+    paymentTermsDays: p.paymentTermsDays ?? null,
+    creditLimit: p.creditLimit ?? null,
+    ultranosOrgId: p.ultranosOrgId ?? null,
+    isActive: p.isActive ?? true,
+    createdAt: p.createdAt ?? new Date().toISOString(),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// SalesOrder → sales_orders table
+// ---------------------------------------------------------------------------
+
+function flattenSalesOrder(p: any): Record<string, unknown> {
+  return {
+    id: p.id,
+    orderNumber: p.orderNumber,
+    customerId: p.customerId,
+    status: p.status,
+    lines: p.lines ?? [],
+    subtotal: p.subtotal ?? 0,
+    taxRate: p.taxRate ?? 0,
+    taxAmount: p.taxAmount ?? 0,
+    total: p.total ?? 0,
+    notes: p.notes ?? null,
+    createdBy: p.createdBy,
+    fulfilledAt: p.fulfilledAt ?? null,
+    cancelledAt: p.cancelledAt ?? null,
+    createdAt: p.createdAt ?? new Date().toISOString(),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// CustomerLedgerEntry → customer_ledger_entries table
+// ---------------------------------------------------------------------------
+
+function flattenCustomerLedgerEntry(p: any): Record<string, unknown> {
+  return {
+    id: p.id,
+    customerId: p.customerId,
+    type: p.type,
+    amount: p.amount,
+    salesOrderId: p.salesOrderId ?? null,
+    note: p.note ?? null,
+    createdBy: p.createdBy,
+    entryTimestamp: p.timestamp,
+    createdAt: p.timestamp ?? new Date().toISOString(),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// ContractPrice → contract_prices table
+// ---------------------------------------------------------------------------
+
+function flattenContractPrice(p: any): Record<string, unknown> {
+  return {
+    id: p.id,
+    customerId: p.customerId,
+    catalogItemId: p.catalogItemId,
+    price: p.priceMinor,
+    tiers: p.tiers ?? [],
+    createdBy: p.createdBy,
+    createdAt: p.createdAt ?? new Date().toISOString(),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Supplier → pharmacy_suppliers table
+// ---------------------------------------------------------------------------
+
+function flattenSupplier(s: any): Record<string, unknown> {
+  return {
+    id: s.id,
+    name: s.name,
+    contactName: s.contactName ?? null,
+    phone: s.phone ?? null,
+    email: s.email ?? null,
+    address: s.address ?? null,
+    leadTimeDays: s.leadTimeDays ?? null,
+    paymentTerms: s.paymentTerms ?? null,
+    isActive: s.isActive ?? true,
+    createdAt: s.createdAt ?? new Date().toISOString(),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// PurchaseOrder → pharmacy_purchase_orders table
+// ---------------------------------------------------------------------------
+
+function flattenPurchaseOrder(p: any): Record<string, unknown> {
+  return {
+    id: p.id,
+    supplierId: p.supplierId,
+    supplierName: p.supplierName ?? null,
+    status: p.status,
+    items: p.items ?? [],
+    totalCost: p.totalCost ?? 0,
+    notes: p.notes ?? null,
+    createdBy: p.createdBy,
+    sentAt: p.sentAt ?? null,
+    closedAt: p.closedAt ?? null,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GoodsReceipt → goods_receipts table
+// ---------------------------------------------------------------------------
+
+function flattenGoodsReceipt(g: any): Record<string, unknown> {
+  return {
+    id: g.id,
+    supplierId: g.supplierId,
+    purchaseOrderId: g.purchaseOrderId ?? null,
+    receivedBy: g.receivedBy,
+    items: g.items ?? [],
+    totalCost: g.totalCost ?? 0,
+    notes: g.notes ?? null,
+    receivedAt: g.receivedAt ?? null,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// StockBatch → stock_batches table
+// ---------------------------------------------------------------------------
+
+function flattenStockBatch(b: any): Record<string, unknown> {
+  return {
+    id: b.id,
+    catalogItemId: b.catalogItemId,
+    batchNumber: b.batchNumber ?? null,
+    lotNumber: b.lotNumber ?? null,
+    expiryDate: b.expiryDate ?? null,
+    quantityOnHand: b.quantityOnHand ?? 0,
+    costPrice: b.costPrice ?? 0,
+    sellingPrice: b.sellingPrice ?? 0,
+    zoneId: b.zoneId ?? null,
+    supplierId: b.supplierId ?? null,
+    goodsReceiptId: b.goodsReceiptId ?? null,
+    receivedAt: b.receivedAt ?? null,
+    status: b.status ?? null,
+    locationId: b.locationId ?? null,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// StockMovement → stock_movements table
+// ---------------------------------------------------------------------------
+
+function flattenStockMovement(m: any): Record<string, unknown> {
+  return {
+    id: m.id,
+    stockBatchId: m.stockBatchId,
+    catalogItemId: m.catalogItemId,
+    type: m.type,
+    quantity: m.quantity,
+    reason: m.reason ?? null,
+    referenceId: m.referenceId ?? null,
+    referenceType: m.referenceType ?? null,
+    performedBy: m.performedBy ?? null,
+    // Client sends `timestamp` — mapped to `movementTimestamp` so db.toRow
+    // yields the `movement_timestamp` column (snake_case conversion).
+    movementTimestamp: m.timestamp,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Dispatcher
 // ---------------------------------------------------------------------------
 
@@ -328,6 +504,15 @@ const mappers: Record<string, (payload: any) => Record<string, unknown>> = {
   Condition: flattenCondition,
   MedicationRequest: flattenMedicationRequest,
   Patient: flattenPatient,
+  WholesaleCustomer: flattenWholesaleCustomer,
+  SalesOrder: flattenSalesOrder,
+  CustomerLedgerEntry: flattenCustomerLedgerEntry,
+  ContractPrice: flattenContractPrice,
+  Supplier: flattenSupplier,
+  PurchaseOrder: flattenPurchaseOrder,
+  GoodsReceipt: flattenGoodsReceipt,
+  StockBatch: flattenStockBatch,
+  StockMovement: flattenStockMovement,
 }
 
 /**

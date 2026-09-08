@@ -256,7 +256,9 @@
     "mfaCheckError": "د MFA حالت نشي کتل کیدی",
     "totpStatus": "د TOTP حالت",
     "totpEnabled": "TOTP فعال دی",
-    "totpNotConfigured": "تنظیم شوی نه دی"
+    "totpNotConfigured": "تنظیم شوی نه دی",
+    "wholesaleMode": "د پرچون حالت",
+    "wholesaleModeDesc": "د پرچون (B2B) ب کارول — پیرودونکي، د پلور فرمایشونه، او د ترلاسه‌کولو حسابونه."
   },
   "history": {
     "title": "د ورکولو تاریخچه",
@@ -1126,7 +1128,6 @@
     "accountsLoading": "حسابونه ډیریږي…",
     "accountsNoBalances": "هیڅ پاتې حسابونه نشته",
     "accountsNoBalancesDescription": "د ټولو پیرودونکو بیلانسونه سم شوي دي.",
-    "columnCustomer": "پیرودونکی",
     "columnBalance": "پاتې بیلانس",
     "columnLastActivity": "وروستی فعالیت",
     "columnActions": "عملونه",
@@ -1134,6 +1135,26 @@
     "paymentDialogTitle": "تادیه ثبت کړئ",
     "paymentAmountLabel": "مقدار",
     "paymentRecording": "ثبتیږي…",
-    "confirmPayment": "تادیه تایید کړئ"
+    "confirmPayment": "تادیه تایید کړئ",
+    "customerDetailBack": "بیرته پیرودونکو ته",
+    "customerInfoHeading": "د پیرودونکي معلومات",
+    "contractPricesHeading": "د قرارداد بیې",
+    "contractPriceColItem": "توکی",
+    "contractPriceColPrice": "د قرارداد بیه",
+    "addContractPrice": "د قرارداد بیه اضافه کړئ",
+    "contractPricePlaceholder": "بیه (لوی واحدونه)",
+    "removeContractPrice": "د قرارداد بیه لرې کړئ",
+    "noContractPrices": "د قرارداد بیې نشته",
+    "noContractPricesDescription": "د دې پیرودونکي لپاره د قرارداد بیه اضافه کړئ ترڅو د کتالوګ ډله‌ييز بیه بدله کړئ.",
+    "saveCustomer": "بدلونونه خوندي کړئ",
+    "saving": "خوندي کیږي…",
+    "searchCatalogForPrice": "د کتالوګ لټون…",
+    "customerNotFound": "پیرودونکی ونه موندل شو",
+    "customerNotFoundDescription": "دا پیرودونکی شتون نلري یا بارول یې ممکن نه دي.",
+    "volumeBreaks": "د حجم تخفیفونه",
+    "addVolumeBreak": "د حجم تخفیف اضافه کړئ",
+    "minQuantity": "لږترلږه مقدار",
+    "breakPrice": "د تخفیف بیه",
+    "removeBreak": "تخفیف لرې کړئ"
   }
 }

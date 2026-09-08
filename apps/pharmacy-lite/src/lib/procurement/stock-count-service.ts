@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { buildEncryptedSyncEntry } from '@/lib/dexie-sync-adapter'
+import { enqueueStockBatchSync } from '@/lib/inventory/stock-batch-sync'
 import type { StockCount, StockCountItem, StockCountType } from './types'
 import type { StockMovement } from '@/lib/inventory/types'
 
@@ -95,6 +96,14 @@ export async function completeStockCount(countId: string): Promise<StockCount> {
       hlcTimestamp: now,
     })
   })
+
+  // Site #5: after-txn read-back enqueue for each variance batch (async crypto cannot run inside txn)
+  for (const item of varianceItems) {
+    const full = await db.stockBatches.get(item.stockBatchId)
+    if (full) {
+      await enqueueStockBatchSync(full)
+    }
+  }
 
   return { ...count, status: 'completed', completedAt: now, totalVarianceItems: varianceItems.length }
 }

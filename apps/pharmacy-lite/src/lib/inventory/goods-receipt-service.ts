@@ -80,6 +80,20 @@ export async function processGoodsReceipt(params: {
     ),
   )
 
+  // Site #3: pre-build StockBatch sync entries before the txn (mirrors movementSyncEntries idiom)
+  const batchSyncEntries = await Promise.all(
+    batches.map((batch) =>
+      buildEncryptedSyncEntry({
+        resourceType: 'StockBatch',
+        resourceId: batch.id,
+        action: 'update',
+        payload: batch as unknown as Record<string, unknown>,
+        hlcTimestamp: batch.hlcTimestamp,
+        createdAt: now,
+      }),
+    ),
+  )
+
   const receiptSyncEntry = await buildEncryptedSyncEntry({
     resourceType: 'GoodsReceipt',
     resourceId: receiptId,
@@ -96,6 +110,7 @@ export async function processGoodsReceipt(params: {
       await db.stockBatches.put(batches[i]!)
       await db.stockMovements.put(movements[i]!)
       await db.syncQueue.put(movementSyncEntries[i]!)
+      await db.syncQueue.put(batchSyncEntries[i]!)
     }
 
     await db.syncQueue.put(receiptSyncEntry)

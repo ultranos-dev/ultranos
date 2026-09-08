@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import '@/lib/key-lifecycle-hooks'
 import { startSyncDrain, stopSyncDrain, triggerDrain } from '@/lib/sync-drain-init'
 import { startKrlSync, stopKrlSync } from '@/lib/krl-sync-worker'
 import { startAuditDrain, stopAuditDrain } from '@/lib/audit'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getHubApiUrl } from '@/lib/trpc'
+import { pullWholesale } from '@/lib/wholesale/wholesale-pull'
 
 /**
  * SyncProvider — centralized sync lifecycle management for Pharmacy Lite.
@@ -26,6 +27,13 @@ import { getHubApiUrl } from '@/lib/trpc'
 export function SyncProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const startedRef = useRef(false)
+  const pullInFlight = useRef(false)
+
+  const runPull = useCallback(async () => {
+    if (pullInFlight.current) return
+    pullInFlight.current = true
+    try { await pullWholesale() } finally { pullInFlight.current = false }
+  }, [])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -58,6 +66,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // Start audit drain worker (syncs client audit events to Hub)
     startAuditDrain(hubBaseUrl)
 
+    // Pull wholesale data on app-open (non-blocking)
+    void runPull()
+
     // NOTE: do not optimistically markSynced() here. The drain worker's
     // onStatusUpdate is the single source of truth — it marks synced only once
     // the queue is genuinely clean (nothing pending AND nothing failed), so the
@@ -71,6 +82,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // Listen for service worker sync trigger
     function handleSyncNow() {
       triggerDrain()
+      void runPull()
     }
     window.addEventListener('ultranos:sync-now', handleSyncNow)
 

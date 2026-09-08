@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { deductStock, addStock } from '@/lib/inventory/stock-service'
+import { enqueueStockBatchSync } from '@/lib/inventory/stock-batch-sync'
 import type { StockTransfer, TransferItem } from './types'
 
 // ---------------------------------------------------------------------------
@@ -125,7 +126,7 @@ export async function receiveTransfer(
     const newBatchId = crypto.randomUUID()
 
     // Create a new StockBatch at the receiving location
-    await db.stockBatches.put({
+    const newBatch = {
       id: newBatchId,
       catalogItemId: item.catalogItemId,
       batchNumber: item.batchNumber,
@@ -137,10 +138,14 @@ export async function receiveTransfer(
       zoneId: sourceBatch?.zoneId,
       supplierId: sourceBatch?.supplierId,
       receivedAt: ts,
-      status: 'active',
+      status: 'active' as const,
       locationId,
       hlcTimestamp: ts,
-    })
+    }
+    await db.stockBatches.put(newBatch)
+
+    // Site #6: enqueue the newly-created batch (qty=0 snapshot); addStock (site #2) fires next for the increment
+    await enqueueStockBatchSync(newBatch)
 
     await addStock({
       stockBatchId: newBatchId,

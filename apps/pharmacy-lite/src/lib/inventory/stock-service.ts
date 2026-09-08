@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
+import { enqueueStockBatchSync } from './stock-batch-sync'
 import type { StockBatch, StockMovement, StockMovementType } from './types'
 
 export async function deductStock(params: {
@@ -56,6 +57,9 @@ export async function deductStock(params: {
     createdAt: now,
   })
 
+  // Site #1: enqueue the full updated StockBatch after the txn (LWW snapshot)
+  await enqueueStockBatchSync({ ...batch, quantityOnHand: newQty, status: newStatus, hlcTimestamp: now })
+
   return { ...batch, quantityOnHand: newQty, status: newStatus }
 }
 
@@ -107,6 +111,12 @@ export async function addStock(params: {
     hlcTimestamp: now,
     createdAt: now,
   })
+
+  // Site #2: enqueue the full updated StockBatch after the txn (read-back for post-txn qty)
+  const updatedBatch = await db.stockBatches.get(stockBatchId)
+  if (updatedBatch) {
+    await enqueueStockBatchSync(updatedBatch)
+  }
 }
 
 export async function getStockAlerts(expiryAlertDays: number): Promise<{

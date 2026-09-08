@@ -361,6 +361,157 @@ describe('sync.push', () => {
   })
 })
 
+describe('sync.push — wholesale ingestion (B1)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('lands a WholesaleCustomer in wholesale_customers with org_id stamped', async () => {
+    const mockFrom = vi.fn()
+    const upsertSpy = vi.fn().mockResolvedValue({ error: null })
+
+    // 1. conflict-detection select (no existing row)
+    mockFrom.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    })
+    // 2. upsert — capture table + row
+    mockFrom.mockReturnValueOnce({ upsert: upsertSpy })
+    // 3. audit log (chain-tail read + insert)
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })
+
+    mockSupabaseClient.from = mockFrom
+
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const op = {
+      resourceType: 'WholesaleCustomer',
+      resourceId: 'c1',
+      action: 'create' as const,
+      payload: JSON.stringify({ id: 'c1', name: 'Herat Depot', isActive: true, createdAt: '2026-09-07T00:00:00Z' }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'c1', success: true })
+
+    // Verify upsert targeted 'wholesale_customers'
+    // mockFrom call[0] = conflict-check select, call[1] = upsert
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('wholesale_customers')
+
+    // Verify the row has orgId stamped from context + hlcTimestamp as-is
+    // (The mock db.toRow is a pass-through — no snake_case conversion in tests)
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow).toMatchObject({ id: 'c1', name: 'Herat Depot', orgId: 'org-1', hlcTimestamp: '100' })
+  })
+
+  it('rejects when the caller has no org_id (MISSING_ORG_CONTEXT)', async () => {
+    const mockFrom = vi.fn()
+    const upsertSpy = vi.fn().mockResolvedValue({ error: null })
+
+    // 1. conflict-detection select
+    mockFrom.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    })
+    // 2. upsert (should NOT be called)
+    mockFrom.mockReturnValueOnce({ upsert: upsertSpy })
+    // fallback audit log
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })
+
+    mockSupabaseClient.from = mockFrom
+
+    // PHARMACIST caller with orgId = null (no org context)
+    const noOrgCtx = {
+      supabase: mockSupabaseClient as never,
+      user: { sub: 'user-2', role: 'PHARMACIST', sessionId: 'session-2', userId: 'user-2', orgId: null },
+      headers: new Headers(),
+    }
+    const callerNoOrg = createCaller(noOrgCtx)
+
+    const op = {
+      resourceType: 'WholesaleCustomer',
+      resourceId: 'c2',
+      action: 'create' as const,
+      payload: JSON.stringify({ id: 'c2', name: 'X', isActive: true, createdAt: '2026-09-07T00:00:00Z' }),
+      hlcTimestamp: '100',
+    }
+    const res = await callerNoOrg.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'c2', success: false, error: 'MISSING_ORG_CONTEXT' })
+    // upsert must NOT have been called
+    expect(upsertSpy).not.toHaveBeenCalled()
+  })
+
+  it('lands a SalesOrder with lines preserved as JSONB', async () => {
+    const mockFrom = vi.fn()
+    const upsertSpy = vi.fn().mockResolvedValue({ error: null })
+
+    // 1. conflict-detection select
+    mockFrom.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    })
+    // 2. upsert
+    mockFrom.mockReturnValueOnce({ upsert: upsertSpy })
+    // 3. audit log
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })
+
+    mockSupabaseClient.from = mockFrom
+
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const lines = [{ catalogItemId: 'i1', unit: 'each', quantity: 10, unitPrice: 2000, lineTotal: 20000, baseUnits: 10, batchAllocations: [{ stockBatchId: 'b1', qty: 10 }] }]
+    const op = {
+      resourceType: 'SalesOrder',
+      resourceId: 'o1',
+      action: 'create' as const,
+      payload: JSON.stringify({ id: 'o1', orderNumber: 'SO-1', customerId: 'c1', status: 'fulfilled', lines, subtotal: 20000, taxRate: 0, taxAmount: 0, total: 20000, createdBy: 'p1', createdAt: '2026-09-07T00:00:00Z' }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'o1', success: true })
+
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('sales_orders')
+
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow.lines).toEqual(lines)
+  })
+})
+
 describe('sync.pull', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -449,5 +600,413 @@ describe('sync.pull', () => {
     })
 
     expect(result.changes).toEqual([])
+  })
+})
+
+describe('sync.push — ContractPrice ingestion', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('lands a ContractPrice in contract_prices with price from priceMinor + org_id stamped', async () => {
+    const mockFrom = vi.fn()
+    const upsertSpy = vi.fn().mockResolvedValue({ error: null })
+
+    // 1. conflict-detection select (no existing row)
+    mockFrom.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    })
+    // 2. upsert — capture table + row
+    mockFrom.mockReturnValueOnce({ upsert: upsertSpy })
+    // 3. audit log (chain-tail read + insert)
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })
+
+    mockSupabaseClient.from = mockFrom
+
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const op = {
+      resourceType: 'ContractPrice',
+      resourceId: 'cp1',
+      action: 'create' as const,
+      payload: JSON.stringify({ id: 'cp1', customerId: 'c1', catalogItemId: 'i1', priceMinor: 1800, createdBy: 'p1', createdAt: '2026-09-08T00:00:00Z' }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'cp1', success: true })
+
+    // Verify upsert targeted 'contract_prices'
+    // mockFrom call[0] = conflict-check select, call[1] = upsert
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('contract_prices')
+
+    // flattener maps priceMinor -> price; org stamped from context
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow).toMatchObject({ id: 'cp1', price: 1800, orgId: 'org-1' })
+  })
+
+  it('passes tiers through to the upserted row (volume price-breaks)', async () => {
+    const mockFrom = vi.fn()
+    const upsertSpy = vi.fn().mockResolvedValue({ error: null })
+
+    // 1. conflict-detection select (no existing row)
+    mockFrom.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    })
+    // 2. upsert — capture table + row
+    mockFrom.mockReturnValueOnce({ upsert: upsertSpy })
+    // 3. audit log (chain-tail read + insert)
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })
+
+    mockSupabaseClient.from = mockFrom
+
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const tiers = [{ minQuantity: 10, priceMinor: 1500 }]
+    const op = {
+      resourceType: 'ContractPrice',
+      resourceId: 'cp2',
+      action: 'create' as const,
+      payload: JSON.stringify({ id: 'cp2', customerId: 'c1', catalogItemId: 'i1', priceMinor: 1800, tiers, createdBy: 'p1', createdAt: '2026-09-08T00:00:00Z' }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'cp2', success: true })
+
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedTiers = upsertedRow.tiers as Array<{ minQuantity: number; priceMinor: number }>
+    expect(upsertedTiers).toHaveLength(1)
+    expect(upsertedTiers[0]!.minQuantity).toBe(10)
+    expect(upsertedTiers[0]!.priceMinor).toBe(1500)
+  })
+})
+
+describe('sync.push — ContractPrice delete', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('stamps deleted_at when action is delete', async () => {
+    const mockFrom = vi.fn()
+    const upsertSpy = vi.fn().mockResolvedValue({ error: null })
+
+    // 1. conflict-detection select (no existing row)
+    mockFrom.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    })
+    // 2. upsert — capture table + row
+    mockFrom.mockReturnValueOnce({ upsert: upsertSpy })
+    // 3. audit log (chain-tail read + insert)
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })
+
+    mockSupabaseClient.from = mockFrom
+
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const del = {
+      resourceType: 'ContractPrice',
+      resourceId: 'cp1',
+      action: 'delete' as const,
+      payload: JSON.stringify({ id: 'cp1', customerId: 'c1', catalogItemId: 'i1', priceMinor: 1800, createdBy: 'p1', createdAt: '2026-09-08T00:00:00Z' }),
+      hlcTimestamp: '200',
+    }
+    const res = await caller.sync.push({ operations: [del] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'cp1', success: true })
+
+    // Verify upsert targeted 'contract_prices'
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('contract_prices')
+
+    // deleted_at must be stamped on the upserted row
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow.deletedAt ?? upsertedRow.deleted_at).toBeTruthy()
+  })
+})
+
+describe('sync.push — inventory/procurement ingestion', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  function mockPushSetup() {
+    const mockFrom = vi.fn()
+    const upsertSpy = vi.fn().mockResolvedValue({ error: null })
+
+    // 1. conflict-detection select (no existing row)
+    mockFrom.mockReturnValueOnce({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    })
+    // 2. upsert — capture table + row
+    mockFrom.mockReturnValueOnce({ upsert: upsertSpy })
+    // 3. audit log (chain-tail read + insert)
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })
+
+    mockSupabaseClient.from = mockFrom
+    return { mockFrom, upsertSpy }
+  }
+
+  it('lands a Supplier in pharmacy_suppliers with name present + org_id stamped', async () => {
+    const { mockFrom, upsertSpy } = mockPushSetup()
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const op = {
+      resourceType: 'Supplier',
+      resourceId: 's1',
+      action: 'create' as const,
+      payload: JSON.stringify({ id: 's1', name: 'Kabul Medical Supplies', contactName: 'Ahmad', phone: '+93700000000', email: 'info@kms.af', address: 'Kabul', leadTimeDays: 7, paymentTerms: 'net30', isActive: true, createdAt: '2026-09-07T00:00:00Z' }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 's1', success: true })
+
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('pharmacy_suppliers')
+
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow).toMatchObject({ id: 's1', name: 'Kabul Medical Supplies', orgId: 'org-1' })
+  })
+
+  it('lands a PurchaseOrder in pharmacy_purchase_orders with items JSONB preserved + totalCost + org_id', async () => {
+    const { mockFrom, upsertSpy } = mockPushSetup()
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const items = [{ catalogItemId: 'i1', quantity: 50, unitCost: 1000, lineTotal: 50000 }]
+    const op = {
+      resourceType: 'PurchaseOrder',
+      resourceId: 'po1',
+      action: 'create' as const,
+      payload: JSON.stringify({ id: 'po1', supplierId: 's1', supplierName: 'Kabul Medical Supplies', status: 'draft', items, totalCost: 50000, notes: null, createdBy: 'p1', sentAt: null, closedAt: null }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'po1', success: true })
+
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('pharmacy_purchase_orders')
+
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow.items).toEqual(items)
+    expect(upsertedRow.totalCost).toBe(50000)
+    expect(upsertedRow.orgId).toBe('org-1')
+  })
+
+  it('lands a GoodsReceipt in goods_receipts with items preserved + receivedBy + org_id', async () => {
+    const { mockFrom, upsertSpy } = mockPushSetup()
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const items = [{ catalogItemId: 'i1', quantityOrdered: 50, quantityReceived: 48, unitCost: 1000, lineTotal: 48000 }]
+    const op = {
+      resourceType: 'GoodsReceipt',
+      resourceId: 'gr1',
+      action: 'create' as const,
+      payload: JSON.stringify({ id: 'gr1', supplierId: 's1', purchaseOrderId: 'po1', receivedBy: 'p1', items, totalCost: 48000, notes: 'Two units damaged', receivedAt: '2026-09-07T08:00:00Z' }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'gr1', success: true })
+
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('goods_receipts')
+
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow.items).toEqual(items)
+    expect(upsertedRow.receivedBy).toBe('p1')
+    expect(upsertedRow.orgId).toBe('org-1')
+  })
+
+  it('lands a StockBatch in stock_batches with quantityOnHand + org_id', async () => {
+    const { mockFrom, upsertSpy } = mockPushSetup()
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const op = {
+      resourceType: 'StockBatch',
+      resourceId: 'sb1',
+      action: 'create' as const,
+      payload: JSON.stringify({ id: 'sb1', catalogItemId: 'i1', batchNumber: 'B001', lotNumber: 'L001', expiryDate: '2027-12-31', quantityOnHand: 48, costPrice: 1000, sellingPrice: 1500, zoneId: 'z1', supplierId: 's1', goodsReceiptId: 'gr1', receivedAt: '2026-09-07T08:00:00Z', status: 'available', locationId: 'loc1' }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'sb1', success: true })
+
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('stock_batches')
+
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    expect(upsertedRow.quantityOnHand).toBe(48)
+    expect(upsertedRow.orgId).toBe('org-1')
+  })
+
+  it('lands a StockMovement in stock_movements with movementTimestamp mapped from client timestamp + quantity + org_id', async () => {
+    const { mockFrom, upsertSpy } = mockPushSetup()
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+
+    const op = {
+      resourceType: 'StockMovement',
+      resourceId: 'sm1',
+      action: 'create' as const,
+      payload: JSON.stringify({ id: 'sm1', stockBatchId: 'sb1', catalogItemId: 'i1', type: 'dispensed', quantity: 5, reason: 'Prescription dispense', referenceId: 'rx1', referenceType: 'MedicationRequest', performedBy: 'p1', timestamp: '2026-09-07T10:00:00Z' }),
+      hlcTimestamp: '100',
+    }
+    const res = await caller.sync.push({ operations: [op] })
+
+    expect(res.results[0]).toMatchObject({ resourceId: 'sm1', success: true })
+
+    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    expect(upsertTableCall).toBe('stock_movements')
+
+    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    // Critical mapping: client `timestamp` → `movementTimestamp` (→ movement_timestamp column)
+    expect(upsertedRow.movementTimestamp).toBe('2026-09-07T10:00:00Z')
+    expect(upsertedRow.quantity).toBe(5)
+    expect(upsertedRow.orgId).toBe('org-1')
+  })
+})
+
+describe('sync.pull — org-scoped wholesale (B2)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  /**
+   * Chainable query builder that also captures which `.eq()` calls were made,
+   * so we can assert the org_id filter was applied.
+   */
+  function chainableQueryWithCapture(data: unknown) {
+    const eqCalls: Array<[string, unknown]> = []
+    const result = { data, error: null }
+    const builder: Record<string, unknown> = {}
+    for (const method of ['select', 'gt', 'order', 'in', 'limit', 'single', 'maybeSingle', 'insert']) {
+      builder[method] = vi.fn().mockReturnValue(builder)
+    }
+    // Override eq to capture the filter column/value
+    builder.eq = vi.fn().mockImplementation((col: string, val: unknown) => {
+      eqCalls.push([col, val])
+      return builder
+    })
+    builder.then = (resolve: (v: unknown) => unknown) => Promise.resolve(result).then(resolve)
+    builder.catch = (reject: (v: unknown) => unknown) => Promise.resolve(result).catch(reject)
+    return { builder, eqCalls }
+  }
+
+  it("returns the org's wholesale customers filtered by org_id + sinceHlc, no patientId needed", async () => {
+    const orgRow = { id: 'c1', name: 'Herat Depot', orgId: 'org-1', hlcTimestamp: '100' }
+    const { builder, eqCalls } = chainableQueryWithCapture([orgRow])
+
+    // Audit log calls need their own mock
+    const auditBuilder: Record<string, unknown> = {}
+    for (const method of ['select', 'gt', 'order', 'eq', 'in', 'limit', 'single', 'maybeSingle']) {
+      auditBuilder[method] = vi.fn().mockReturnValue(auditBuilder)
+    }
+    auditBuilder.insert = vi.fn().mockResolvedValue({ error: null })
+    auditBuilder.then = (resolve: (v: unknown) => unknown) =>
+      Promise.resolve({ data: [], error: null }).then(resolve)
+    auditBuilder.catch = (reject: (v: unknown) => unknown) =>
+      Promise.resolve({ data: [], error: null }).catch(reject)
+
+    // First call: wholesale_customers → return org-1 row
+    // Subsequent calls: audit_log
+    mockSupabaseClient.from = vi.fn().mockImplementation((table: string) => {
+      if (table === 'wholesale_customers') return builder
+      return auditBuilder
+    })
+
+    const caller = createCaller(createAuthContext('PHARMACIST'))
+    const res = await caller.sync.pull({
+      resourceTypes: ['WholesaleCustomer'],
+      sinceHlc: '0',
+      // patientId intentionally omitted — org-scoped resources don't need it
+    })
+
+    expect(res.changes.map((c) => c.resourceType)).toContain('WholesaleCustomer')
+    expect(res.changes[0]).toMatchObject({ resourceType: 'WholesaleCustomer', resourceId: 'c1' })
+
+    // Verify the query was scoped to org_id = 'org-1'
+    const orgFilter = eqCalls.find(([col]) => col === 'org_id')
+    expect(orgFilter).toBeDefined()
+    expect(orgFilter![1]).toBe('org-1')
+  })
+
+  it('returns zero WholesaleCustomer changes when caller has no org_id', async () => {
+    const { builder } = chainableQueryWithCapture([{ id: 'c1', name: 'Herat Depot', orgId: 'org-1', hlcTimestamp: '100' }])
+
+    const auditBuilder: Record<string, unknown> = {}
+    for (const method of ['select', 'gt', 'order', 'eq', 'in', 'limit', 'single', 'maybeSingle']) {
+      auditBuilder[method] = vi.fn().mockReturnValue(auditBuilder)
+    }
+    auditBuilder.insert = vi.fn().mockResolvedValue({ error: null })
+    auditBuilder.then = (resolve: (v: unknown) => unknown) =>
+      Promise.resolve({ data: [], error: null }).then(resolve)
+    auditBuilder.catch = (reject: (v: unknown) => unknown) =>
+      Promise.resolve({ data: [], error: null }).catch(reject)
+
+    mockSupabaseClient.from = vi.fn().mockImplementation((table: string) => {
+      if (table === 'wholesale_customers') return builder
+      return auditBuilder
+    })
+
+    const noOrgCtx = {
+      supabase: mockSupabaseClient as never,
+      user: { sub: 'user-2', role: 'PHARMACIST', sessionId: 'session-2', userId: 'user-2', orgId: null },
+      headers: new Headers(),
+    }
+    const callerNoOrg = createCaller(noOrgCtx)
+
+    const res = await callerNoOrg.sync.pull({
+      resourceTypes: ['WholesaleCustomer'],
+      sinceHlc: '0',
+    })
+
+    expect(res.changes.filter((c) => c.resourceType === 'WholesaleCustomer')).toHaveLength(0)
   })
 })

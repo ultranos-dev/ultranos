@@ -256,7 +256,9 @@
     "mfaCheckError": "بررسی وضعیت MFA ممکن نشد",
     "totpStatus": "وضعیت TOTP",
     "totpEnabled": "TOTP فعال",
-    "totpNotConfigured": "تنظیم نشده"
+    "totpNotConfigured": "تنظیم نشده",
+    "wholesaleMode": "حالت عمده‌فروشی",
+    "wholesaleModeDesc": "فعال‌سازی ویژگی‌های عمده‌فروشی (B2B) — مشتریان، سفارش‌های فروش و حساب‌های دریافتنی."
   },
   "history": {
     "title": "تاریخچه تحویل",
@@ -1126,7 +1128,6 @@
     "accountsLoading": "در حال بارگذاری حساب‌ها…",
     "accountsNoBalances": "هیچ حساب معوقه‌ای وجود ندارد",
     "accountsNoBalancesDescription": "تمام مانده‌های مشتریان تصفیه شده‌اند.",
-    "columnCustomer": "مشتری",
     "columnBalance": "مانده معوقه",
     "columnLastActivity": "آخرین فعالیت",
     "columnActions": "اقدامات",
@@ -1134,6 +1135,26 @@
     "paymentDialogTitle": "ثبت پرداخت",
     "paymentAmountLabel": "مبلغ",
     "paymentRecording": "در حال ثبت…",
-    "confirmPayment": "تأیید پرداخت"
+    "confirmPayment": "تأیید پرداخت",
+    "customerDetailBack": "بازگشت به مشتریان",
+    "customerInfoHeading": "اطلاعات مشتری",
+    "contractPricesHeading": "قیمت‌های قرارداد",
+    "contractPriceColItem": "کالا",
+    "contractPriceColPrice": "قیمت قرارداد",
+    "addContractPrice": "افزودن قیمت قرارداد",
+    "contractPricePlaceholder": "قیمت (واحد اصلی)",
+    "removeContractPrice": "حذف قیمت قرارداد",
+    "noContractPrices": "هیچ قیمت قراردادی وجود ندارد",
+    "noContractPricesDescription": "یک قیمت قرارداد برای این مشتری اضافه کنید تا قیمت عمده کتالوگ را لغو کنید.",
+    "saveCustomer": "ذخیره تغییرات",
+    "saving": "در حال ذخیره…",
+    "searchCatalogForPrice": "جستجو در کتالوگ…",
+    "customerNotFound": "مشتری یافت نشد",
+    "customerNotFoundDescription": "این مشتری وجود ندارد یا بارگذاری آن امکان‌پذیر نیست.",
+    "volumeBreaks": "تخفیف‌های حجمی",
+    "addVolumeBreak": "افزودن تخفیف حجمی",
+    "minQuantity": "حداقل تعداد",
+    "breakPrice": "قیمت تخفیف",
+    "removeBreak": "حذف تخفیف"
   }
 }

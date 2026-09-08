@@ -11,7 +11,7 @@ import { encryptJsonbValue } from '@/lib/field-encryption'
 const SyncOperationSchema = z.object({
   resourceType: z.string().min(1),
   resourceId: z.string().min(1),
-  action: z.enum(['create', 'update']),
+  action: z.enum(['create', 'update', 'delete']),
   payload: z.string().min(1),
   hlcTimestamp: z.string().min(1),
 })
@@ -27,6 +27,17 @@ const RESOURCE_TABLE_MAP: Record<string, string> = {
   MedicationStatement: 'medication_statements',
   Consent: 'consent_records',
   Patient: 'patients',
+  WholesaleCustomer: 'wholesale_customers',
+  SalesOrder: 'sales_orders',
+  CustomerLedgerEntry: 'customer_ledger_entries',
+  ContractPrice: 'contract_prices',
+  // Inventory/procurement types — NOTE: pharmacy_* names avoid the pre-existing
+  // incompatible `suppliers` / `purchase_orders` hub tables (no hlc_timestamp).
+  Supplier: 'pharmacy_suppliers',
+  PurchaseOrder: 'pharmacy_purchase_orders',
+  GoodsReceipt: 'goods_receipts',
+  StockBatch: 'stock_batches',
+  StockMovement: 'stock_movements',
 }
 
 /**
@@ -35,7 +46,7 @@ const RESOURCE_TABLE_MAP: Record<string, string> = {
  * it. soap_ledger/patients/consent_records/allergy_intolerances have no org_id
  * column, so it must NOT be injected there (would be an unknown-column error).
  */
-const ORG_SCOPED_TABLES = new Set<string>(['encounters', 'observations', 'conditions', 'medication_requests'])
+const ORG_SCOPED_TABLES = new Set<string>(['encounters', 'observations', 'conditions', 'medication_requests', 'wholesale_customers', 'sales_orders', 'customer_ledger_entries', 'contract_prices', 'pharmacy_suppliers', 'pharmacy_purchase_orders', 'goods_receipts', 'stock_batches', 'stock_movements'])
 
 /**
  * Tables with no `hlc_timestamp` column. The generic HLC-based pull (and push
@@ -334,6 +345,16 @@ export const syncRouter = createTRPCRouter({
           // then apply snake_case + field-level encryption.
           const flat = flattenForDb(op.resourceType, payload)
 
+          // On a delete action, soft-delete: stamp deleted_at so the tombstone row
+          // (bumped hlc_timestamp) propagates via the existing pull. Generic across resources.
+          // PRECONDITION: the target table must have a `deleted_at` column. Today only
+          // ContractPrice enqueues deletes (contract_prices has the column). When
+          // generalizing to another resource, first ADD `deleted_at` in its migration
+          // (else the upsert fails loudly on an unknown column — fail-safe, not silent).
+          if (op.action === 'delete') {
+            flat.deletedAt = new Date().toISOString()
+          }
+
           // Stamp org_id from the authenticated context for org-scoped tables.
           // These columns are NOT NULL with no default, so a missing org context
           // is a hard error rather than a silent NULL write.
@@ -483,7 +504,7 @@ export const syncRouter = createTRPCRouter({
   pull: protectedProcedure
     .input(
       z.object({
-        patientId: z.string().min(1),
+        patientId: z.string().min(1).optional(),
         sinceHlc: z.string().min(1),
         resourceTypes: z.array(z.string().min(1)).optional(),
       }),
@@ -515,6 +536,29 @@ export const syncRouter = createTRPCRouter({
         // in the generic HLC pull (consent syncs via its dedicated ledger path).
         if (NO_HLC_TABLES.has(table)) continue
 
+        // Org-scoped resources (wholesale tables): scope by org_id, no patient column.
+        // Fail-loud: if the caller has no org context, return nothing for this type
+        // (no cross-org leak). Skip the patient-column branch entirely.
+        if (ORG_SCOPED_TABLES.has(table) && !PATIENT_COLUMN_MAP[table]) {
+          if (!ctx.user.orgId) continue
+          const { data: rows, error } = await ctx.supabase
+            .from(table)
+            .select('*')
+            .eq('org_id', ctx.user.orgId)
+            .gt('hlc_timestamp', input.sinceHlc)
+          if (error) continue
+          const decrypted = db.fromRows(rows ?? []) as Array<Record<string, unknown>>
+          for (const row of decrypted) {
+            changes.push({
+              resourceType: type,
+              resourceId: row.id as string,
+              data: row,
+              hlcTimestamp: row.hlcTimestamp as string,
+            })
+          }
+          continue // skip the patient-column branch
+        }
+
         let query = ctx.supabase
           .from(table)
           .select('*')
@@ -522,6 +566,10 @@ export const syncRouter = createTRPCRouter({
           .order('hlc_timestamp', { ascending: true })
 
         // Patient-scope filter: restrict results to the requested patient.
+        // If no patientId was supplied (org-scoped-only pull), skip all patient-scoped
+        // tables — data-minimization fail-safe (never return un-scoped patient data).
+        if (!input.patientId) continue
+
         const patientCol = PATIENT_COLUMN_MAP[table]
         if (patientCol) {
           query = query.eq(patientCol, input.patientId)
@@ -558,14 +606,15 @@ export const syncRouter = createTRPCRouter({
         }
       }
 
-      // Audit: log PHI read for sync pull
+      // Audit: log PHI read for sync pull (patient-scoped) or org-scoped pull.
+      // resourceId is the patient being read, or 'org-pull' for org-scoped-only requests.
       try {
         await audit.emit({
           actorId: ctx.user.sub,
           actorRole: ctx.user.role as Parameters<typeof audit.emit>[0]['actorRole'],
           action: 'READ' as Parameters<typeof audit.emit>[0]['action'],
           resourceType: 'Patient' as Parameters<typeof audit.emit>[0]['resourceType'],
-          resourceId: input.patientId,
+          resourceId: input.patientId ?? 'org-pull',
           sessionId: ctx.user.sessionId,
           outcome: 'SUCCESS' as const,
           metadata: {

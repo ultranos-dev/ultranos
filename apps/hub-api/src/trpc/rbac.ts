@@ -32,6 +32,15 @@ export const ROLE_PERMISSIONS: Record<string, Set<string>> = {
   PHARMACIST: new Set([
     'MedicationRequest',
     'MedicationDispense',
+    'WholesaleCustomer',
+    'SalesOrder',
+    'CustomerLedgerEntry',
+    'ContractPrice',
+    'Supplier',
+    'PurchaseOrder',
+    'GoodsReceipt',
+    'StockBatch',
+    'StockMovement',
   ]),
   PATIENT: new Set([
     'Patient',

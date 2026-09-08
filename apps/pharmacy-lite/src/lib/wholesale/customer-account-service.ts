@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { computeAging, type AgingBuckets } from '@/lib/pos/aging'
 import type { CustomerAccount, CustomerLedgerEntry } from './types'
 
@@ -27,6 +28,14 @@ export async function postCharge(customerId: string, amount: number, salesOrderI
     await db.customerLedgerEntries.add(entry)
     await upsertBalanceDelta(customerId, Math.abs(amount))
   })
+  await enqueuePharmacySyncEntry({
+    resourceType: 'CustomerLedgerEntry',
+    resourceId: entry.id,
+    action: 'create',
+    payload: entry as unknown as Record<string, unknown>,
+    hlcTimestamp: entry.timestamp,
+    createdAt: entry.timestamp,
+  })
 }
 
 export async function recordPayment(params: { customerId: string; amount: number; receivedBy: string; note?: string }): Promise<void> {
@@ -49,6 +58,14 @@ export async function recordPayment(params: { customerId: string; amount: number
     if (drawer) {
       await db.cashDrawers.update(drawer.id, { cashIn: drawer.cashIn + Math.abs(amount) })
     }
+  })
+  await enqueuePharmacySyncEntry({
+    resourceType: 'CustomerLedgerEntry',
+    resourceId: entry.id,
+    action: 'create',
+    payload: entry as unknown as Record<string, unknown>,
+    hlcTimestamp: entry.timestamp,
+    createdAt: entry.timestamp,
   })
 }
 

@@ -149,7 +149,12 @@ exports[`CustomersPage > LTR snapshot 1`] = `
             <td
               class="px-4 py-3 font-medium text-foreground"
             >
-              Kabul Pharma
+              <a
+                class="font-medium text-foreground hover:text-primary hover:underline"
+                href="/wholesale/customers/c1"
+              >
+                Kabul Pharma
+              </a>
             </td>
             <td
               class="px-4 py-3 text-muted-foreground"
@@ -332,7 +337,12 @@ exports[`CustomersPage > RTL snapshot 1`] = `
             <td
               class="px-4 py-3 font-medium text-foreground"
             >
-              Kabul Pharma
+              <a
+                class="font-medium text-foreground hover:text-primary hover:underline"
+                href="/wholesale/customers/c1"
+              >
+                Kabul Pharma
+              </a>
             </td>
             <td
               class="px-4 py-3 text-muted-foreground"

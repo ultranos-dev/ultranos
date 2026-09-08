@@ -14,7 +14,7 @@ import type { StockTransfer } from './transfers/types'
 import type { DataUsageCategory } from '@ultranos/sync-engine'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
 import type { DrugBrand, DrugBrandPresentation } from '@ultranos/shared-types'
-import type { WholesaleCustomer, SalesOrder, CustomerAccount, CustomerLedgerEntry } from '@/lib/wholesale/types'
+import type { WholesaleCustomer, SalesOrder, CustomerAccount, CustomerLedgerEntry, ContractPrice } from '@/lib/wholesale/types'
 export type { DataUsageCategory }  // re-export for consumers
 
 export interface DispenseAuditEntry {
@@ -152,6 +152,8 @@ class PharmacyLiteDatabase extends Dexie {
   salesOrders!: EntityTable<SalesOrder, 'id'>
   customerAccounts!: EntityTable<CustomerAccount, 'id'>
   customerLedgerEntries!: EntityTable<CustomerLedgerEntry, 'id'>
+  contractPrices!: EntityTable<ContractPrice, 'id'>
+  wholesalePullMeta!: EntityTable<{ key: string; lastPulledHlc: string }, 'key'>
 
   constructor() {
     super('pharmacy-lite')
@@ -249,6 +251,18 @@ class PharmacyLiteDatabase extends Dexie {
       salesOrders: 'id, customerId, status, createdAt, orderNumber',
       customerAccounts: 'id, customerId',
       customerLedgerEntries: 'id, customerId, salesOrderId, timestamp',
+    })
+
+    // v15: Wholesale pull watermark — stores the last HLC timestamp of a successful pull
+    // from the wholesale server. Non-PHI operational metadata; not added to PHI_TABLE_CONFIGS.
+    this.version(15).stores({
+      wholesalePullMeta: 'key',
+    })
+
+    // v16: Contract pricing — per-customer contract prices for catalog items.
+    // Non-PHI operational data; not added to PHI_TABLE_CONFIGS.
+    this.version(16).stores({
+      contractPrices: 'id, customerId, [customerId+catalogItemId]',
     })
   }
 }

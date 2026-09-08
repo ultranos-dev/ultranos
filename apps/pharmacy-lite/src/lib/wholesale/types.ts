@@ -71,3 +71,18 @@ export interface CustomerLedgerEntry {
   createdBy: string
   timestamp: string
 }
+
+export interface PriceBreak {
+  minQuantity: number
+  priceMinor: number
+}
+
+export interface ContractPrice {
+  id: string
+  customerId: string
+  catalogItemId: string
+  priceMinor: number
+  tiers?: PriceBreak[]
+  createdBy: string
+  createdAt: string
+}

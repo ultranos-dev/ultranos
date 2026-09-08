@@ -11,7 +11,7 @@ export interface SyncQueueEntry {
   id: string
   resourceType: string
   resourceId: string
-  action: 'create' | 'update' | 'sync:conflict_resolved' | 'pull-conflict'
+  action: 'create' | 'update' | 'delete' | 'sync:conflict_resolved' | 'pull-conflict'
   payload: string
   status: 'pending' | 'syncing' | 'failed' | 'synced' | 'resolved' | 'awaiting-key'
   hlcTimestamp: string

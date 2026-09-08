@@ -170,3 +170,39 @@ describe('drainSyncFn', () => {
     expect(JSON.parse(opts.body)).toEqual({ json: payload })
   })
 })
+
+describe('drainSyncFn resourceType routing (B1)', () => {
+  it('routes MedicationDispense to /medication.recordDispense (regression)', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ result: { data: { json: { success: true } } } }) })
+    await drainSyncFn({ id: 'd1', resourceType: 'MedicationDispense', resourceId: 'x', action: 'create', payload: JSON.stringify({ dispenseId: 'x' }), status: 'pending', hlcTimestamp: '1', createdAt: '', retryCount: 0 } satisfies SyncQueueEntry)
+    expect(fetchMock.mock.calls[0][0]).toContain('/medication.recordDispense')
+  })
+
+  it('routes WholesaleCustomer to /sync.push with a {json:{operations:[op]}} envelope', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ result: { data: { json: { results: [{ resourceId: 'c1', success: true }] } } } }) })
+    const entry: SyncQueueEntry = { id: 'q1', resourceType: 'WholesaleCustomer', resourceId: 'c1', action: 'create', payload: JSON.stringify({ id: 'c1', name: 'Herat' }), status: 'pending', hlcTimestamp: '5', createdAt: '', retryCount: 0 }
+    const res = await drainSyncFn(entry)
+    const url = fetchMock.mock.calls[0][0] as string
+    expect(url).toContain('/sync.push')
+    expect(url).not.toContain('/medication.recordDispense')
+    const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)
+    // sync.push schema is z.object({ operations: [...] }) — ops MUST be wrapped in { operations }
+    expect(body.json.operations[0]).toMatchObject({ resourceType: 'WholesaleCustomer', resourceId: 'c1', action: 'create', hlcTimestamp: '5' })
+    expect(res.success).toBe(true)
+  })
+
+  it('surfaces a Hub error result as a failure', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ result: { data: { json: { results: [{ resourceId: 'o1', success: false, error: 'MISSING_ORG_CONTEXT' }] } } } }) })
+    const res = await drainSyncFn({ id: 'q2', resourceType: 'SalesOrder', resourceId: 'o1', action: 'create', payload: '{"id":"o1"}', status: 'pending', hlcTimestamp: '5', createdAt: '', retryCount: 0 } satisfies SyncQueueEntry)
+    expect(res.success).toBe(false)
+    expect(res.error).toContain('MISSING_ORG_CONTEXT')
+  })
+
+  it('forwards action:delete to /sync.push (not collapsed to create)', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ result: { data: { json: { results: [{ resourceId: 'cp1', success: true }] } } } }) })
+    const entry: SyncQueueEntry = { id: 'q9', resourceType: 'ContractPrice', resourceId: 'cp1', action: 'delete', payload: JSON.stringify({ id: 'cp1' }), status: 'pending', hlcTimestamp: '7', createdAt: '', retryCount: 0 }
+    await drainSyncFn(entry)
+    const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)
+    expect(body.json.operations[0]).toMatchObject({ resourceType: 'ContractPrice', resourceId: 'cp1', action: 'delete', hlcTimestamp: '7' })
+  })
+})

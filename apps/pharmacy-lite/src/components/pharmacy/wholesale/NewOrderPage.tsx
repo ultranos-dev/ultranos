@@ -6,9 +6,12 @@ import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { ChevronLeft, Plus, Trash2 } from '@ultranos/ui-kit/icons'
 import { getActiveCustomers } from '@/lib/wholesale/customer-service'
 import { createDraft, confirm } from '@/lib/wholesale/sales-order-service'
+import { resolveContractPrice } from '@/lib/wholesale/contract-price-service'
 import { db } from '@/lib/db'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import type { WholesaleCustomer } from '@/lib/wholesale/types'
@@ -50,15 +53,17 @@ interface OrderLineState {
   unitPriceDisplay: string     // major-unit string for input display
   unitPriceMinor: number       // computed/stored minor unit value
   packSize: number
+  priceOverridden: boolean     // true when user manually edited the unit price
 }
 
-function computeUnitPriceMinor(
+async function resolveLineUnitPriceMinor(
+  customerId: string,
+  item: CatalogItem,
   unit: 'each' | 'pack',
-  item: CatalogItem | null,
-): number {
-  if (!item) return 0
-  const wp = item.wholesalePrice ?? 0
-  return unit === 'pack' ? wp * item.packSize : wp
+  quantity = 1,
+): Promise<number> {
+  const base = (customerId ? await resolveContractPrice(customerId, item.id, quantity) : null) ?? item.wholesalePrice ?? 0
+  return unit === 'pack' ? base * item.packSize : base
 }
 
 // ---------------------------------------------------------------------------
@@ -136,8 +141,8 @@ export function NewOrderPage() {
   }, [catalogSearch])
 
   // Add a line from catalog search
-  function addLineFromCatalog(item: CatalogItem) {
-    const unitPriceMinor = computeUnitPriceMinor('each', item)
+  async function addLineFromCatalog(item: CatalogItem) {
+    const unitPriceMinor = await resolveLineUnitPriceMinor(customerId, item, 'each', 1)
     setLines((prev) => [
       ...prev,
       {
@@ -149,6 +154,7 @@ export function NewOrderPage() {
         unitPriceDisplay: minorToMajorDisplay(unitPriceMinor, currencyMinorUnits),
         unitPriceMinor,
         packSize: item.packSize,
+        priceOverridden: false,
       },
     ])
     setCatalogSearch('')
@@ -168,6 +174,7 @@ export function NewOrderPage() {
         unitPriceDisplay: '0',
         unitPriceMinor: 0,
         packSize: 1,
+        priceOverridden: false,
       },
     ])
   }
@@ -185,16 +192,44 @@ export function NewOrderPage() {
     setLines((prev) => prev.filter((l) => l.id !== id))
   }
 
-  // When unit changes, recalculate unitPrice from catalog item's wholesalePrice
+  // Re-resolve all catalog lines when customer changes
+  async function handleCustomerChange(newCustomerId: string) {
+    setCustomerId(newCustomerId)
+    if (!newCustomerId) return
+    const currentLines = lines // capture snapshot at time of change
+    const updatedLines = await Promise.all(
+      currentLines.map(async (line) => {
+        if (!line.catalogItemId) return line // manual lines untouched
+        if (line.priceOverridden) return line // manual price wins
+        try {
+          const item = await db.catalogItems.toArray().then((items) => items.find((i) => i.id === line.catalogItemId))
+          if (!item) return line
+          const qty = parseInt(line.quantity || '1', 10) || 1
+          const unitPriceMinor = await resolveLineUnitPriceMinor(newCustomerId, item, line.unit, qty)
+          return {
+            ...line,
+            unitPriceMinor,
+            unitPriceDisplay: minorToMajorDisplay(unitPriceMinor, currencyMinorUnits),
+          }
+        } catch {
+          return line // keep existing price on error
+        }
+      }),
+    )
+    setLines(updatedLines)
+  }
+
+  // When unit changes, recalculate unitPrice using contract price (if any) then wholesalePrice fallback
   async function handleUnitChange(lineId: string, newUnit: 'each' | 'pack') {
     const line = lines.find((l) => l.id === lineId)
     if (!line) return
     let newUnitPriceMinor = line.unitPriceMinor
-    if (line.catalogItemId) {
+    if (line.catalogItemId && !line.priceOverridden) {
       try {
         const item = await db.catalogItems.toArray().then((items) => items.find((i) => i.id === line.catalogItemId))
         if (item) {
-          newUnitPriceMinor = computeUnitPriceMinor(newUnit, item)
+          const qty = parseInt(line.quantity || '1', 10) || 1
+          newUnitPriceMinor = await resolveLineUnitPriceMinor(customerId, item, newUnit, qty)
         }
       } catch {
         // ignore — keep existing price
@@ -288,7 +323,7 @@ export function NewOrderPage() {
               id="customer-select-input"
               data-testid="customer-select"
               value={customerId}
-              onChange={(e) => setCustomerId(e.target.value)}
+              onChange={(e) => { void handleCustomerChange(e.target.value) }}
               className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               disabled={loadingCustomers}
             >
@@ -317,13 +352,12 @@ export function NewOrderPage() {
 
           <div className="flex flex-col gap-1.5 md:col-span-2">
             <Label htmlFor="order-notes">{t('newOrderNotesLabel')}</Label>
-            <textarea
+            <Textarea
               id="order-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder={t('newOrderNotesPlaceholder')}
-              className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
         </div>
@@ -425,8 +459,26 @@ export function NewOrderPage() {
                       <input
                         type="number"
                         min="1"
+                        data-testid={`line-qty-${line.id}`}
                         value={line.quantity}
-                        onChange={(e) => updateLine(line.id, { quantity: e.target.value })}
+                        onChange={(e) => {
+                          const newQty = e.target.value
+                          updateLine(line.id, { quantity: newQty })
+                          // Re-resolve price from the new quantity if not manually overridden
+                          if (line.catalogItemId && !line.priceOverridden) {
+                            const parsedQty = parseInt(newQty || '1', 10) || 1
+                            void db.catalogItems.toArray().then((items) => {
+                              const item = items.find((i) => i.id === line.catalogItemId)
+                              if (!item) return
+                              return resolveLineUnitPriceMinor(customerId, item, line.unit, parsedQty).then((unitPriceMinor) => {
+                                updateLine(line.id, {
+                                  unitPriceMinor,
+                                  unitPriceDisplay: minorToMajorDisplay(unitPriceMinor, currencyMinorUnits),
+                                })
+                              })
+                            })
+                          }
+                        }}
                         className="w-20 rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       />
                     </td>
@@ -435,6 +487,7 @@ export function NewOrderPage() {
                       <input
                         type="number"
                         min="0"
+                        data-testid={`line-price-${line.id}`}
                         step={Math.pow(10, -currencyMinorUnits).toFixed(currencyMinorUnits)}
                         value={line.unitPriceDisplay}
                         onChange={(e) => {
@@ -442,6 +495,7 @@ export function NewOrderPage() {
                           updateLine(line.id, {
                             unitPriceDisplay: e.target.value,
                             unitPriceMinor: minorVal,
+                            priceOverridden: true,
                           })
                         }}
                         className="w-28 rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -468,7 +522,7 @@ export function NewOrderPage() {
         )}
 
         {lines.length === 0 && (
-          <p className="py-4 text-sm text-muted-foreground text-center">{t('newOrderNoLines')}</p>
+          <EmptyState size="sm" title={t('newOrderNoLines')} />
         )}
       </div>
 
