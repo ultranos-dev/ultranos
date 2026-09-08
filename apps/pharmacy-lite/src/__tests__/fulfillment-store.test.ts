@@ -284,6 +284,99 @@ describe('FulfillmentStore confirmDispense (Story 4.3)', () => {
   })
 })
 
+describe('FulfillmentStore confirmDispense — controlled substance schedule (Task 3)', () => {
+  const rxControlled: VerifiedPrescription[] = [
+    {
+      id: 'rx-ctrl-001',
+      med: 'OXY10',
+      medN: 'Oxycodone',
+      medT: 'Oxycodone 10mg Tablet',
+      dos: { qty: 1, unit: 'tablet', freqN: 1, per: 1, perU: 'd' },
+      dur: 3,
+      req: 'pract-001',
+      pat: 'pat-002',
+      at: '2026-09-08T10:00:00Z',
+    },
+  ]
+
+  const rxNonControlled: VerifiedPrescription[] = [
+    {
+      id: 'rx-plain-001',
+      med: 'AMX500',
+      medN: 'Amoxicillin',
+      medT: 'Amoxicillin 500mg Capsule',
+      dos: { qty: 1, unit: 'capsule', freqN: 3, per: 1, perU: 'd' },
+      dur: 7,
+      req: 'pract-001',
+      pat: 'pat-002',
+      at: '2026-09-08T10:00:00Z',
+    },
+  ]
+
+  it('persisted dispense carries controlledSubstanceSchedule from catalog item (controlled item)', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: { data: { json: { success: true, dispenseId: 'd-ctrl', prescriptionStatus: 'completed' } } },
+      }),
+    })
+
+    // Seed catalog with a Schedule II item matching the prescription by name
+    await db.catalogItems.add({
+      id: 'cat-oxy',
+      name: 'Oxycodone',
+      form: 'tablet',
+      strength: '10',
+      strengthUnit: 'mg',
+      packSize: 1,
+      category: 'opioid',
+      controlledSchedule: 'II',
+      defaultSellingPrice: 500,
+      reorderPoint: 5,
+      isActive: true,
+      lastSyncedAt: '2026-09-08T10:00:00Z',
+    } as CatalogItem)
+
+    useFulfillmentStore.getState().loadPrescriptions(rxControlled)
+    await useFulfillmentStore.getState().confirmDispense()
+
+    const dispenses = await db.dispenses.toArray()
+    expect(dispenses).toHaveLength(1)
+    expect(dispenses[0]!._ultranos.controlledSubstanceSchedule).toBe('II')
+  })
+
+  it('persisted dispense has no controlledSubstanceSchedule for non-controlled item', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: { data: { json: { success: true, dispenseId: 'd-plain', prescriptionStatus: 'completed' } } },
+      }),
+    })
+
+    // Seed catalog with a non-controlled item (no controlledSchedule)
+    await db.catalogItems.add({
+      id: 'cat-amx',
+      name: 'Amoxicillin',
+      form: 'capsule',
+      strength: '500',
+      strengthUnit: 'mg',
+      packSize: 1,
+      category: 'antibiotic',
+      defaultSellingPrice: 200,
+      reorderPoint: 10,
+      isActive: true,
+      lastSyncedAt: '2026-09-08T10:00:00Z',
+    } as CatalogItem)
+
+    useFulfillmentStore.getState().loadPrescriptions(rxNonControlled)
+    await useFulfillmentStore.getState().confirmDispense()
+
+    const dispenses = await db.dispenses.toArray()
+    expect(dispenses).toHaveLength(1)
+    expect(dispenses[0]!._ultranos.controlledSubstanceSchedule).toBeUndefined()
+  })
+})
+
 describe('FulfillmentStore createInvoiceAfterDispense pricing (Story 4.4)', () => {
   function makeCatalogItem(over: Partial<CatalogItem> = {}): CatalogItem {
     return {

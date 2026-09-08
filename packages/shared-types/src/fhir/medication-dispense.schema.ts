@@ -31,6 +31,9 @@ const MedicationDispenseUltranosExtSchema = z.object({
   hlcTimestamp: z.string(),
   brandName: z.string().optional(),
   batchLot: z.string().optional(),
+  // Controlled-substance schedule (II/III/IV/V) captured at dispense time from the
+  // dispensed CatalogItem.controlledSchedule — powers the Controlled Substances register.
+  controlledSubstanceSchedule: z.string().optional(),
   isOfflineCreated: z.boolean(),
   createdAt: z.string().datetime(),
   fulfillmentContext: z.string().optional(),

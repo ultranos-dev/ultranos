@@ -204,6 +204,24 @@ describe('MedicationDispense Dexie persistence', () => {
   })
 })
 
+describe('controlledSubstanceSchedule option', () => {
+  it('sets controlledSubstanceSchedule in _ultranos when provided via options', () => {
+    const items = makeItems()
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001', undefined, {
+      controlledSubstanceSchedule: 'II',
+    })
+
+    expect(dispense._ultranos.controlledSubstanceSchedule).toBe('II')
+  })
+
+  it('omits controlledSubstanceSchedule from _ultranos when 4th arg is not provided (backward compat)', () => {
+    const items = makeItems()
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
+
+    expect(dispense._ultranos.controlledSubstanceSchedule).toBeUndefined()
+  })
+})
+
 describe('MedicationDispense meta fields', () => {
   it('includes versionId in meta', () => {
     const items = makeItems()

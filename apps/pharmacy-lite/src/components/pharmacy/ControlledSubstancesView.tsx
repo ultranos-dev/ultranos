@@ -10,14 +10,6 @@ import { db } from '@/lib/db'
 import type { LocalMedicationDispense } from '@/lib/medication-dispense'
 import { getControlledSubstanceBalances } from '@/lib/procurement/stock-count-service'
 
-/**
- * TODO: Controlled substance filtering requires a `controlledSubstanceSchedule`
- * field (e.g. "Schedule II", "Schedule III") to be added to the
- * MedicationDispenseUltranosExtSchema in packages/shared-types. Until then,
- * this view displays ALL dispenses from the local Dexie store and the
- * Schedule column shows "---".
- */
-
 const PAGE_SIZE = 20
 
 interface DateRangeFilter {
@@ -119,14 +111,17 @@ export function ControlledSubstancesView() {
 
       const all = await query.reverse().toArray()
 
+      // Keep only controlled-substance dispenses (those carrying a schedule)
+      const controlled = all.filter((d) => d._ultranos?.controlledSubstanceSchedule)
+
       const q = search.trim().toLowerCase()
       const matched = q
-        ? all.filter((d) => {
+        ? controlled.filter((d) => {
             const patient = d.subject.reference?.toLowerCase() ?? ''
             const medication = extractMedicationDisplay(d).toLowerCase()
             return patient.includes(q) || medication.includes(q)
           })
-        : all
+        : controlled
 
       setTotalCount(matched.length)
 
@@ -319,8 +314,7 @@ export function ControlledSubstancesView() {
                       {extractMedicationDisplay(d)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
-                      {/* controlledSubstanceSchedule not in schema yet */}
-                      ---
+                      {d._ultranos?.controlledSubstanceSchedule ?? '---'}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
                       {extractPrescriberRef(d)}

@@ -232,10 +232,15 @@ export const useFulfillmentStore = create<FulfillmentState>()(
 
         for (let i = 0; i < selectedItems.length; i++) {
           const item = selectedItems[i]!
-          const dispense = createMedicationDispense(item, pharmacistRef as `Practitioner/${string}`, {
-            fulfilledCount: i + 1,
-            totalCount: selectedItems.length,
-          })
+          const catalogItem = await db.catalogItems
+            .filter((c) => c.name === item.prescription.medN || c.barcode === item.prescription.med)
+            .first()
+          const dispense = createMedicationDispense(
+            item,
+            pharmacistRef as `Practitioner/${string}`,
+            { fulfilledCount: i + 1, totalCount: selectedItems.length },
+            { controlledSubstanceSchedule: catalogItem?.controlledSchedule },
+          )
 
           // Persist locally first (offline-first)
           await db.dispenses.put(dispense)
