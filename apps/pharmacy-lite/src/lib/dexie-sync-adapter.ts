@@ -19,7 +19,7 @@
 
 import { ENCRYPTED_PAYLOAD_PREFIX, type SyncQueueStorage, type SyncQueueEntry } from '@ultranos/sync-engine'
 import { encryptPayload, decryptPayload } from '@ultranos/crypto'
-import { db, type SyncQueueEntry as DexieSyncQueueEntry } from './db'
+import { db, type SyncQueueEntry as DexieSyncQueueEntry, type SyncQueueAction } from './db'
 import { encryptionKeyStore } from './encryption-key-store'
 
 export type PharmacyEncryptFn = (jsonPayload: string) => Promise<string>
@@ -54,6 +54,8 @@ function fromDbStatus(status: string): SyncQueueEntry['status'] {
 function fromDbEntry(entry: DexieSyncQueueEntry): SyncQueueEntry {
   return {
     ...entry,
+    // pharmacy's action set (incl. 'dispense_sync') differs from the engine's;
+    // 'dispense_sync' normalises to a create at drain time. Bridge at the boundary.
     action: entry.action as SyncQueueEntry['action'],
     status: fromDbStatus(entry.status),
   }
@@ -62,6 +64,8 @@ function fromDbEntry(entry: DexieSyncQueueEntry): SyncQueueEntry {
 function toDbEntry(entry: SyncQueueEntry): DexieSyncQueueEntry {
   return {
     ...entry,
+    // engine action set differs from pharmacy's (see SyncQueueAction) — bridge it.
+    action: entry.action as DexieSyncQueueEntry['action'],
     status: toDbStatus(entry.status) as DexieSyncQueueEntry['status'],
   }
 }
@@ -192,7 +196,7 @@ export interface PharmacyEnqueueInput {
   id?: string
   resourceType: string
   resourceId: string
-  action: string
+  action: SyncQueueAction
   /** Already-serialized JSON string, or a value that will be JSON.stringify'd. */
   payload: string | Record<string, unknown>
   hlcTimestamp: string

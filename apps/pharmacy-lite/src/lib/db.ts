@@ -52,11 +52,22 @@ export interface PendingAuditEvent {
   _syncStatus: 'pending' | 'synced' | 'failed'
 }
 
+/**
+ * The mutation kind a queued entry represents — the pharmacy spoke's actual
+ * action set. `dispense_sync` is a pharmacy-internal label (normalised to
+ * `create` at drain time) that the sync-engine union does not carry; the
+ * engine in turn has conflict-resolution actions the pharmacy never enqueues.
+ * The two sets legitimately differ, so the dexie-sync-adapter casts `action`
+ * at the boundary. This union replaces a loose `string` to give enqueue-time
+ * type safety (a typo'd action now fails at compile).
+ */
+export type SyncQueueAction = 'create' | 'update' | 'delete' | 'dispense_sync'
+
 export interface SyncQueueEntry {
   id: string
   resourceType: string
   resourceId: string
-  action: string
+  action: SyncQueueAction
   payload: string
   status: 'pending' | 'in-flight' | 'failed' | 'synced' | 'awaiting-key'
   hlcTimestamp: string
