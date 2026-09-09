@@ -767,7 +767,9 @@
     "controlledScheduleLabel": "Schedule {schedule}",
     "catalogFormDescription": "Create or edit a catalog item.",
     "fieldStrengthPlaceholder": "500",
-    "fieldStrengthUnitPlaceholder": "mg"
+    "fieldStrengthUnitPlaceholder": "mg",
+    "reactivate": "Reactivate",
+    "filterActive": "Active"
   },
   "pos": {
     "cashDrawer": "Cash Drawer",

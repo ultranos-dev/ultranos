@@ -767,7 +767,9 @@
     "controlledScheduleLabel": "الجدول {schedule}",
     "catalogFormDescription": "إنشاء أو تعديل صنف في الفهرس.",
     "fieldStrengthPlaceholder": "500",
-    "fieldStrengthUnitPlaceholder": "mg"
+    "fieldStrengthUnitPlaceholder": "mg",
+    "reactivate": "إعادة تفعيل",
+    "filterActive": "نشط"
   },
   "pos": {
     "cashDrawer": "درج النقود",

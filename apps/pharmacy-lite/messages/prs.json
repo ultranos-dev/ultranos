@@ -767,7 +767,9 @@
     "controlledScheduleLabel": "جدول {schedule}",
     "catalogFormDescription": "ایجاد یا ویرایش مورد فهرست.",
     "fieldStrengthPlaceholder": "500",
-    "fieldStrengthUnitPlaceholder": "mg"
+    "fieldStrengthUnitPlaceholder": "mg",
+    "reactivate": "دوباره فعال کردن",
+    "filterActive": "فعال"
   },
   "pos": {
     "cashDrawer": "کشوی نقدی",

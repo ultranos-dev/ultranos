@@ -7,7 +7,7 @@ import { useCatalogSync } from '@/hooks/useCatalogSync'
 import { useDrugCatalogSync } from '@/hooks/useDrugCatalogSync'
 import { useInventoryStore } from '@/stores/inventory-store'
 import { getTotalStockOnHand } from '@/lib/inventory/fefo'
-import { deactivateCatalogItem } from '@/lib/inventory/catalog-item-service'
+import { deactivateCatalogItem, reactivateCatalogItem } from '@/lib/inventory/catalog-item-service'
 import { searchDrugCatalog } from '@/lib/trpc'
 import type { CatalogItem } from '@/lib/inventory/types'
 import type { DrugSearchResult } from '@ultranos/shared-types'
@@ -30,6 +30,7 @@ export function CatalogBrowsePage() {
 
   const [rows, setRows] = useState<CatalogRowData[]>([])
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'active' | 'all'>('active')
   const [hubResults, setHubResults] = useState<DrugSearchResult[]>([])
 
   // Dialog state
@@ -52,16 +53,17 @@ export function CatalogBrowsePage() {
   }, [isSyncingCatalog, reload])
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return rows
+    const base = statusFilter === 'active' ? rows.filter((r) => r.item.isActive) : rows
+    if (!search.trim()) return base
     const q = search.toLowerCase()
-    return rows.filter((r) => {
+    return base.filter((r) => {
       const name = r.item.name.toLowerCase()
       const nameLocal = r.item.nameLocal?.toLowerCase() ?? ''
       const barcode = r.item.barcode?.toLowerCase() ?? ''
       const category = r.item.category.toLowerCase()
       return name.includes(q) || nameLocal.includes(q) || barcode.includes(q) || category.includes(q)
     })
-  }, [rows, search])
+  }, [rows, search, statusFilter])
 
   // Hub drug catalog fallback: query when local search returns nothing
   useEffect(() => {
@@ -105,12 +107,35 @@ export function CatalogBrowsePage() {
     await reload()
   }
 
+  async function handleReactivate(item: CatalogItem) {
+    await reactivateCatalogItem(item.id)
+    await reload()
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold text-foreground">{t('catalog')}</h1>
 
-      {/* Toolbar: search + sync indicator + Add item — one row, always visible */}
+      {/* Toolbar: status filter + search + sync indicator + Add item — one row, always visible */}
       <div className="flex flex-wrap items-center gap-3">
+        <div role="tablist" className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {(['active', 'all'] as const).map((f) => (
+            <button
+              key={f}
+              type="button"
+              role="tab"
+              aria-selected={statusFilter === f}
+              onClick={() => setStatusFilter(f)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                statusFilter === f
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t(f === 'active' ? 'filterActive' : 'filterAll')}
+            </button>
+          ))}
+        </div>
         <SearchInput
           type="text"
           dir="auto"
@@ -214,7 +239,7 @@ export function CatalogBrowsePage() {
                         >
                           {t('editItem')}
                         </Button>
-                        {r.item.isActive && (
+                        {r.item.isActive ? (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -222,6 +247,15 @@ export function CatalogBrowsePage() {
                             onClick={() => handleDeactivate(r.item)}
                           >
                             {t('deactivate')}
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs text-primary hover:text-primary"
+                            onClick={() => handleReactivate(r.item)}
+                          >
+                            {t('reactivate')}
                           </Button>
                         )}
                       </div>

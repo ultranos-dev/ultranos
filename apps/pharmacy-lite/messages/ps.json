@@ -767,7 +767,9 @@
     "controlledScheduleLabel": "مهال ویش {schedule}",
     "catalogFormDescription": "د فهرست توکی جوړول یا سمول.",
     "fieldStrengthPlaceholder": "500",
-    "fieldStrengthUnitPlaceholder": "mg"
+    "fieldStrengthUnitPlaceholder": "mg",
+    "reactivate": "بیا فعالول",
+    "filterActive": "فعال"
   },
   "pos": {
     "cashDrawer": "د نقدو دراز",
