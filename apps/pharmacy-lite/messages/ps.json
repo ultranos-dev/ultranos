@@ -974,7 +974,13 @@
     "ackText": "تایید کوم چې د ناروغ هویت مې تایید کړی، حساسیتونه او تداخلات مې وکتل، او درملونه سم دي.",
     "dispenseMedication": "درمل ورکول",
     "cancel": "لغوول",
-    "dispensingDays": "{qty} {unit} | {dur} ورځې"
+    "dispensingDays": "{qty} {unit} | {dur} ورځې",
+    "overrideRequiredTitle": "د رد کولو اړتیا — د ډاکتر بیاکتنه پاتې ده",
+    "overrideReviewNotice": "د دې خبرداري سره سره ادامه ورکول به د ډاکتر بیاکتنې لپاره ثبت شي.",
+    "overrideReasonLabel": "د رد کولو دلیل (لږترلږه ۱۰ توري)",
+    "overrideReasonPlaceholder": "د دې خبرداري سره سره د ادامې ورکولو کلیني توجیه بیان کړئ...",
+    "overrideSupervisorLabel": "د ناظر ډاکتر یا دواساز نوم",
+    "overrideSupervisorPlaceholder": "مثال: ډاکتر احمد"
   },
   "patientSearch": {
     "placeholder": "د نوم یا تلیفون له مخې ناروغ ولټوئ...",

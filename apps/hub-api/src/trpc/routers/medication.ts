@@ -748,6 +748,7 @@ export const medicationRouter = createTRPCRouter({
         hlcTimestamp: z.string().min(1),
         status: z.enum(['completed', 'in-progress']),
         batchLot: z.string().min(1).optional(),
+        overrideReason: z.string().min(1).optional(),
       })
     )
     .use(enforceConsentMiddleware('MedicationRequest'))
@@ -1003,6 +1004,41 @@ export const medicationRouter = createTRPCRouter({
         })
       } catch (auditError) {
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PRESCRIPTION', resourceId: input.prescriptionId })
+      }
+
+      // Overridden dispense (pharmacist proceeded past an interaction/allergy
+      // warning): record a PENDING review for physician sign-off. Self-attested —
+      // override_supervisor is the pharmacist's own practitioner id; the typed
+      // supervisor name lives inside override_reason. Best-effort: the dispense is
+      // already committed and must not be rolled back if this insert fails.
+      if (input.overrideReason) {
+        const { error: reviewError } = await ctx.supabase.from('dispense_reviews').insert({
+          dispense_id: input.dispenseId,
+          prescription_id: input.prescriptionId,
+          override_reason: input.overrideReason,
+          override_supervisor: ctx.user.sub,
+          status: 'PENDING',
+        })
+        const reviewAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+        try {
+          await reviewAudit.emit({
+            action: 'PHI_WRITE',
+            resourceType: 'MEDICATION_DISPENSE',
+            resourceId: input.dispenseId,
+            patientId: input.patientRef.replace('Patient/', ''),
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: reviewError ? 'FAILURE' : 'SUCCESS',
+            sessionId: ctx.user.sessionId,
+            metadata: { operation: 'dispense_review_created', dispenseId: input.dispenseId },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceId: input.dispenseId })
+        }
+        if (reviewError) {
+          console.error('[DISPENSE_REVIEW] Create-on-override failed:', { code: reviewError.code })
+          // do NOT throw — the dispense is committed; a missing review is logged + audited
+        }
       }
 
       return {

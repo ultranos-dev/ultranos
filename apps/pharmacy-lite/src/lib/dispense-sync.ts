@@ -10,6 +10,48 @@ export interface DispenseSyncResult {
 }
 
 /**
+ * Pure builder: derives the recordDispense Hub payload from a LocalMedicationDispense.
+ * All fields come from the dispense object itself — no auth store access.
+ * Includes overrideReason when _ultranos.reviewOverride is present.
+ * Note: syncDispenseToHub overrides pharmacistRef with the auth-store value for security.
+ */
+export function buildRecordDispensePayload(dispense: LocalMedicationDispense): {
+  dispenseId: string
+  prescriptionId: string
+  medicationCode: string
+  medicationDisplay: string
+  patientRef: string
+  pharmacistRef: string
+  whenHandedOver: string | undefined
+  hlcTimestamp: string
+  status: 'completed' | 'in-progress'
+  batchLot?: string
+  overrideReason?: string
+} {
+  const prescriptionId = dispense.authorizingPrescription?.[0]?.reference?.replace('MedicationRequest/', '') ?? ''
+  const medicationCode = dispense.medicationCodeableConcept.coding?.[0]?.code ?? ''
+  const medicationDisplay = dispense.medicationCodeableConcept.text ?? ''
+  const pharmacistRef = dispense.performer?.[0]?.actor.reference ?? ''
+  return {
+    dispenseId: dispense.id,
+    prescriptionId,
+    medicationCode,
+    medicationDisplay,
+    patientRef: dispense.subject.reference,
+    pharmacistRef,
+    whenHandedOver: dispense.whenHandedOver,
+    hlcTimestamp: dispense._ultranos.hlcTimestamp,
+    status: dispense.status === 'completed' ? 'completed' : 'in-progress',
+    ...(dispense._ultranos?.batchLot ? { batchLot: dispense._ultranos.batchLot } : {}),
+    ...(dispense._ultranos?.reviewOverride
+      ? {
+          overrideReason: `Dispensed past interaction/allergy warning. Supervisor: ${dispense._ultranos.reviewOverride.supervisorName}. Reason: ${dispense._ultranos.reviewOverride.reason}`,
+        }
+      : {}),
+  }
+}
+
+/**
  * Attempt to sync a MedicationDispense to the Hub API immediately.
  * If the Hub is unreachable (offline or error), queue it in the local sync_queue
  * for later retry. This is a "Sync-Preferred" event per architecture docs.
@@ -48,18 +90,8 @@ export async function syncDispenseToHub(
     return { synced: false, queued: false, error: 'whenHandedOver is required for Hub sync' }
   }
 
-  const mutationPayload = {
-    dispenseId: dispense.id,
-    prescriptionId,
-    medicationCode,
-    medicationDisplay,
-    patientRef: dispense.subject.reference,
-    pharmacistRef,
-    whenHandedOver: dispense.whenHandedOver,
-    hlcTimestamp: dispense._ultranos.hlcTimestamp,
-    status: dispense.status === 'completed' ? 'completed' : 'in-progress',
-    ...(dispense._ultranos?.batchLot ? { batchLot: dispense._ultranos.batchLot } : {}),
-  }
+  // Build payload from dispense, then override pharmacistRef with auth-store value for security.
+  const mutationPayload = { ...buildRecordDispensePayload(dispense), pharmacistRef }
 
   try {
     const url = new URL(getHubApiUrl())

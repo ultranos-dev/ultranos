@@ -62,7 +62,7 @@ interface FulfillmentState {
   startReview: () => void
   assignFefoBatches: () => Promise<void>
   deductStockOnDispense: (practitionerId: string) => Promise<void>
-  confirmDispense: () => Promise<void>
+  confirmDispense: (override?: { reason: string; supervisorName: string }) => Promise<void>
   createInvoiceAfterDispense: (practitionerId: string) => Promise<void>
   reset: () => void
 }
@@ -207,7 +207,7 @@ export const useFulfillmentStore = create<FulfillmentState>()(
       }
     },
 
-    confirmDispense: async () => {
+    confirmDispense: async (override?: { reason: string; supervisorName: string }) => {
       // Guard: prevent double-invocation (e.g. double-tap)
       if (get().phase === 'dispensing') return
 
@@ -239,7 +239,7 @@ export const useFulfillmentStore = create<FulfillmentState>()(
             item,
             pharmacistRef as `Practitioner/${string}`,
             { fulfilledCount: i + 1, totalCount: selectedItems.length },
-            { controlledSubstanceSchedule: catalogItem?.controlledSchedule },
+            { controlledSubstanceSchedule: catalogItem?.controlledSchedule, override },
           )
 
           // Persist locally first (offline-first)

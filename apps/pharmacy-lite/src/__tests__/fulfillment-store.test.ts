@@ -263,8 +263,9 @@ describe('FulfillmentStore confirmDispense (Story 4.3)', () => {
 
     // Verify getPractitionerRef was called (identity from auth store, not client-supplied)
     expect(mockGetPractitionerRef).toHaveBeenCalled()
-    // confirmDispense() accepts no arguments — TypeScript enforces this
-    expect(useFulfillmentStore.getState().confirmDispense.length).toBe(0)
+    // confirmDispense(override?) accepts one optional override arg (Task 3: interaction override)
+    // length is 1 because the override parameter is declared (optional params still count in .length)
+    expect(useFulfillmentStore.getState().confirmDispense.length).toBe(1)
   })
 
   it('throws when auth session is expired (session expired guard)', async () => {

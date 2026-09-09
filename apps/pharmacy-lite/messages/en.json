@@ -974,7 +974,13 @@
     "ackText": "I confirm that I have verified the patient identity, checked for allergies and interactions, and the medications are correct.",
     "dispenseMedication": "Dispense Medication",
     "cancel": "Cancel",
-    "dispensingDays": "{qty} {unit} | {dur} days"
+    "dispensingDays": "{qty} {unit} | {dur} days",
+    "overrideRequiredTitle": "Override Required — Physician Review Pending",
+    "overrideReviewNotice": "Proceeding past this warning will be recorded for physician review.",
+    "overrideReasonLabel": "Reason for Override (min 10 characters)",
+    "overrideReasonPlaceholder": "Describe the clinical justification for proceeding past this warning...",
+    "overrideSupervisorLabel": "Supervising Physician / Pharmacist Name",
+    "overrideSupervisorPlaceholder": "e.g. Dr. Ahmad"
   },
   "patientSearch": {
     "placeholder": "Search patient by name or phone...",

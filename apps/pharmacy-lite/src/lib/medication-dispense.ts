@@ -12,7 +12,7 @@ export function createMedicationDispense(
   item: FulfillmentItem,
   pharmacistRef: `Practitioner/${string}`,
   fulfillmentContext?: { fulfilledCount: number; totalCount: number },
-  options?: { controlledSubstanceSchedule?: string },
+  options?: { controlledSubstanceSchedule?: string; override?: { reason: string; supervisorName: string } },
 ): FhirMedicationDispense {
   const { prescription, brandName, batchLot, brandId, presentationId } = item
   const now = new Date().toISOString()
@@ -57,6 +57,7 @@ export function createMedicationDispense(
       ...(presentationId ? { presentationId } : {}),
       isOfflineCreated: typeof navigator !== 'undefined' ? !navigator.onLine : true,
       ...(options?.controlledSubstanceSchedule ? { controlledSubstanceSchedule: options.controlledSubstanceSchedule } : {}),
+      ...(options?.override ? { reviewOverride: options.override } : {}),
       ...(fulfillmentContext ? {
         fulfilledCount: fulfillmentContext.fulfilledCount,
         totalCount: fulfillmentContext.totalCount,

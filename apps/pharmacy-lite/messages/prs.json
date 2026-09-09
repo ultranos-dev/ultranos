@@ -974,7 +974,13 @@
     "ackText": "تایید می‌کنم که هویت مریض را تایید کرده‌ام، حساسیت‌ها و تداخلات را بررسی کرده‌ام، و داروها درست هستند.",
     "dispenseMedication": "تحویل دوا",
     "cancel": "لغو",
-    "dispensingDays": "{qty} {unit} | {dur} روز"
+    "dispensingDays": "{qty} {unit} | {dur} روز",
+    "overrideRequiredTitle": "نادیده‌گرفتن الزامی است — مرور طبیب در انتظار",
+    "overrideReviewNotice": "ادامه دادن علی‌رغم این هشدار برای مرور طبیب ثبت خواهد شد.",
+    "overrideReasonLabel": "دلیل نادیده‌گرفتن (حداقل ۱۰ حرف)",
+    "overrideReasonPlaceholder": "توجیه بالینی برای ادامه دادن علی‌رغم این هشدار را توضیح دهید...",
+    "overrideSupervisorLabel": "نام طبیب یا دواساز ناظر",
+    "overrideSupervisorPlaceholder": "مثال: داکتر احمد"
   },
   "patientSearch": {
     "placeholder": "جستجوی مریض بر اساس نام یا تلفن...",

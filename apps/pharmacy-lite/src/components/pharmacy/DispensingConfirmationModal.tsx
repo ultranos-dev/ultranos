@@ -16,7 +16,7 @@ interface DispensingConfirmationModalProps {
   items: FulfillmentItem[]
   patientName?: string
   patientAllergies?: string[]
-  onConfirm: () => void
+  onConfirm: (override?: { reason: string; supervisorName: string }) => void
   onCancel: () => void
 }
 
@@ -30,6 +30,8 @@ export function DispensingConfirmationModal({
   const [acknowledged, setAcknowledged] = useState(false)
   const [recalls, setRecalls] = useState<RecallAlert[]>([])
   const [interaction, setInteraction] = useState<InteractionStatus>({ state: 'checking' })
+  const [overrideReason, setOverrideReason] = useState('')
+  const [supervisorName, setSupervisorName] = useState('')
   const t = useTranslations('dispensingConfirmation')
 
   useEffect(() => {
@@ -56,6 +58,13 @@ export function DispensingConfirmationModal({
   // never allow dispense before the interaction check has resolved (safety race).
   const blockedByInteraction = interaction.state === 'contraindicated' || interaction.state === 'checking'
 
+  // Override is required for warning or unavailable states — the pharmacist must
+  // provide a reason and supervisor name before proceeding.
+  const needsOverride = interaction.state === 'warning' || interaction.state === 'unavailable'
+
+  const overrideValid =
+    !needsOverride || (overrideReason.trim().length >= 10 && supervisorName.trim().length > 0)
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50"
@@ -78,6 +87,52 @@ export function DispensingConfirmationModal({
         <div className="mb-4">
           <InteractionCheckBanner status={interaction} />
         </div>
+
+        {/* Override sub-form — rendered only for warning/unavailable states */}
+        {needsOverride && (
+          <div className="mb-4 rounded-xl border border-warning/40 bg-warning/10 p-4 space-y-3">
+            <p className="text-sm font-semibold text-warning">{t('overrideRequiredTitle')}</p>
+            <p className="text-xs text-warning">{t('overrideReviewNotice')}</p>
+
+            <div>
+              <label
+                htmlFor="override-reason-input"
+                className="mb-1 block text-xs font-medium text-warning"
+              >
+                {t('overrideReasonLabel')}
+              </label>
+              <textarea
+                id="override-reason-input"
+                data-testid="override-reason"
+                dir="auto"
+                rows={3}
+                value={overrideReason}
+                onChange={(e) => setOverrideReason(e.target.value)}
+                placeholder={t('overrideReasonPlaceholder')}
+                className="w-full rounded-lg border border-warning/40 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning resize-none"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="override-supervisor-input"
+                className="mb-1 block text-xs font-medium text-warning"
+              >
+                {t('overrideSupervisorLabel')}
+              </label>
+              <input
+                id="override-supervisor-input"
+                data-testid="override-supervisor"
+                dir="auto"
+                type="text"
+                value={supervisorName}
+                onChange={(e) => setSupervisorName(e.target.value)}
+                placeholder={t('overrideSupervisorPlaceholder')}
+                className="w-full rounded-lg border border-warning/40 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
+              />
+            </div>
+          </div>
+        )}
 
         <div className="mb-4">
           <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
@@ -120,8 +175,8 @@ export function DispensingConfirmationModal({
             variant="default"
             type="button"
             className="w-full"
-            disabled={!acknowledged || blockedByInteraction}
-            onClick={onConfirm}
+            disabled={!acknowledged || blockedByInteraction || !overrideValid}
+            onClick={() => onConfirm(needsOverride ? { reason: overrideReason.trim(), supervisorName: supervisorName.trim() } : undefined)}
             data-testid="modal-confirm-dispensing-btn"
           >
             {t('dispenseMedication')}

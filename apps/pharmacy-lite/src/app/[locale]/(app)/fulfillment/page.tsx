@@ -17,7 +17,10 @@ export default function FulfillmentPage() {
 
   // Orchestrate the dispense once the modal's safety gates (allergy /
   // interaction / recall) have been acknowledged and confirmed.
-  const handleConfirm = useCallback(async (_selected: FulfillmentItem[]) => {
+  const handleConfirm = useCallback(async (
+    _selected: FulfillmentItem[],
+    override?: { reason: string; supervisorName: string },
+  ) => {
     const store = useFulfillmentStore.getState()
 
     let practitionerRef: string
@@ -32,7 +35,7 @@ export default function FulfillmentPage() {
     // 1. Pick earliest-expiry (FEFO) batches for the selected items.
     await store.assignFefoBatches()
     // 2. Safety-critical write: persist dispense locally → audit → sync to Hub.
-    await store.confirmDispense()
+    await store.confirmDispense(override)
     // 3. Best-effort stock decrement + invoice creation (both swallow errors).
     await store.deductStockOnDispense(practitionerRef)
     await store.createInvoiceAfterDispense(practitionerRef)

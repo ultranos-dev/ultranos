@@ -34,6 +34,9 @@ const MedicationDispenseUltranosExtSchema = z.object({
   // Controlled-substance schedule (II/III/IV/V) captured at dispense time from the
   // dispensed CatalogItem.controlledSchedule — powers the Controlled Substances register.
   controlledSubstanceSchedule: z.string().optional(),
+  // Override details when a pharmacist dispensed past a surfaced interaction/allergy
+  // warning. Synced to Hub as overrideReason text; supervisor UUID is set server-side.
+  reviewOverride: z.object({ reason: z.string(), supervisorName: z.string() }).optional(),
   isOfflineCreated: z.boolean(),
   createdAt: z.string().datetime(),
   fulfillmentContext: z.string().optional(),

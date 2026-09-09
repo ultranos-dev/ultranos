@@ -13,7 +13,7 @@ import { usePatientStore } from '@/stores/patient-store'
 import { usePosStore } from '@/stores/pos-store'
 
 interface FulfillmentChecklistProps {
-  onConfirm?: (selectedItems: FulfillmentItem[]) => void
+  onConfirm?: (selectedItems: FulfillmentItem[], override?: { reason: string; supervisorName: string }) => void
 }
 
 function formatFrequency(freqN?: number, perU?: string): string {
@@ -187,10 +187,10 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
           items={items.filter((i) => i.selected)}
           patientName={activePatient?.nameGiven ?? patientName ?? undefined}
           patientAllergies={activePatient?.allergies}
-          onConfirm={() => {
+          onConfirm={(override) => {
             setShowConfirmModal(false)
             const selected = items.filter((i) => i.selected)
-            onConfirm?.(selected)
+            onConfirm?.(selected, override)
             setDispensingComplete(true)
           }}
           onCancel={() => setShowConfirmModal(false)}

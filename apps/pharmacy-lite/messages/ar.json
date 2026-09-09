@@ -974,7 +974,13 @@
     "ackText": "أؤكد أنني تحققت من هوية المريض، وفحصت الحساسيات والتفاعلات، وأن الأدوية صحيحة.",
     "dispenseMedication": "صرف الدواء",
     "cancel": "إلغاء",
-    "dispensingDays": "{qty} {unit} | {dur} أيام"
+    "dispensingDays": "{qty} {unit} | {dur} أيام",
+    "overrideRequiredTitle": "مطلوب تجاوز — مراجعة طبية معلّقة",
+    "overrideReviewNotice": "سيُسجَّل المضي قُدُماً رغم هذا التحذير لمراجعة الطبيب.",
+    "overrideReasonLabel": "سبب التجاوز (10 أحرف على الأقل)",
+    "overrideReasonPlaceholder": "صِف المبرر السريري للمضي رغم هذا التحذير...",
+    "overrideSupervisorLabel": "اسم الطبيب أو الصيدلاني المشرف",
+    "overrideSupervisorPlaceholder": "مثال: د. أحمد"
   },
   "patientSearch": {
     "placeholder": "البحث عن مريض بالاسم أو الهاتف...",
