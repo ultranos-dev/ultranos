@@ -77,9 +77,12 @@ export function SyncQueueDashboard() {
   const [retryAllInProgress, setRetryAllInProgress] = useState(false)
   const [retryProgress, setRetryProgress] = useState<string | null>(null)
 
+  const [conflicts, setConflicts] = useState<SyncQueueEntryType[]>([])
+
   const loadEntries = useCallback(async () => {
     const all = await db.syncQueue.toArray()
     setEntries(categorize(all))
+    setConflicts(all.filter((e) => e.conflictFlag === true))
   }, [])
 
   useEffect(() => {
@@ -179,6 +182,10 @@ export function SyncQueueDashboard() {
 
   const isRetrying = retryingIds.size > 0 || retryAllInProgress
 
+  // Flagged entries are shown in the conflicts section; exclude them from
+  // "recently synced" so a conflict isn't double-listed as a routine sync.
+  const syncedClean = entries.synced.filter((e) => !e.conflictFlag)
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold text-foreground">{t('syncQueue')}</h1>
@@ -251,13 +258,29 @@ export function SyncQueueDashboard() {
         </section>
       )}
 
-      {entries.synced.length > 0 && (
+      {conflicts.length > 0 && (
+        <section data-testid="sync-conflicts-section" className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
+          <h2 className="text-sm font-semibold text-warning mb-1">
+            {t('conflictsAutoResolved', { count: conflicts.length })}
+          </h2>
+          <p className="text-xs text-muted-foreground mb-2">
+            {t('conflictsAutoResolvedHint')}
+          </p>
+          <div className="flex flex-col gap-2">
+            {conflicts.map((entry) => (
+              <SyncQueueEntry key={entry.id} entry={entry} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {syncedClean.length > 0 && (
         <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
           <h2 className="text-sm font-semibold text-success mb-2">
-            {t('recentlySynced', { count: entries.synced.length })}
+            {t('recentlySynced', { count: syncedClean.length })}
           </h2>
           <div className="flex flex-col gap-2">
-            {entries.synced.map((entry) => (
+            {syncedClean.map((entry) => (
               <SyncQueueEntry key={entry.id} entry={entry} />
             ))}
           </div>

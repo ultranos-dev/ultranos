@@ -70,8 +70,9 @@ export async function drainSyncFn(entry: SyncQueueEntry): Promise<SyncResult> {
   }
 
   if (res.status === 409) {
-    // Return generic error so entry retries instead of being silently marked synced
-    // (no onConflict handler configured — full conflict handling deferred to Story 26.4)
+    // Genuine HTTP-level 409 (distinct from the application-level conflict path).
+    // Application-level conflicts are signalled as 200 { results:[{success:false,conflict:{…}}] }
+    // and handled via the response body below. A true HTTP 409 is retryable.
     return { success: false, error: 'Hub rejected with 409 Conflict' }
   }
 
@@ -96,7 +97,10 @@ export async function drainSyncFn(entry: SyncQueueEntry): Promise<SyncResult> {
     const json = await res.json()
     const result = json?.result?.data?.json?.results?.[0]
     if (result?.success) return { success: true }
-    if (result?.conflict) return { success: true } // LWW — obsolete local push dropped, Hub version wins
+    // Surface the conflict so the DrainWorker runs the tiered resolveConflict +
+    // onConflict observer (the Hub already applied its resolution; the local
+    // push is obsolete and the worker will markSynced without retrying).
+    if (result?.conflict) return { success: false, conflict: result.conflict }
     return { success: false, error: result?.error ?? 'sync-push-failed' }
   }
 

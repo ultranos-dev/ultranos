@@ -382,7 +382,9 @@
     "unknownRef": "ناپېژندل شوی",
     "retryAllFailedAriaLabel": "ټولو ناکامو بیا هڅه وکړئ",
     "retryNowAriaLabel": "اوس بیا هڅه وکړئ",
-    "staleResetAriaLabel": "زوړ — بیا تنظیم"
+    "staleResetAriaLabel": "زوړ — بیا تنظیم",
+    "conflictsAutoResolved": "{count} ټکر(ونه) اتوماتیک حل شول",
+    "conflictsAutoResolvedHint": "هب نوې نسخه درلوده؛ ستاسو وسیله د هب نسخه وساتله."
   },
   "time": {
     "justNow": "همدا اوس",

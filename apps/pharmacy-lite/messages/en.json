@@ -382,7 +382,9 @@
     "unknownRef": "Unknown",
     "retryAllFailedAriaLabel": "Retry All Failed",
     "retryNowAriaLabel": "Retry Now",
-    "staleResetAriaLabel": "Stale — Reset"
+    "staleResetAriaLabel": "Stale — Reset",
+    "conflictsAutoResolved": "{count} conflict(s) auto-resolved",
+    "conflictsAutoResolvedHint": "The Hub already had a newer version; your device kept the Hub copy."
   },
   "time": {
     "justNow": "Just now",

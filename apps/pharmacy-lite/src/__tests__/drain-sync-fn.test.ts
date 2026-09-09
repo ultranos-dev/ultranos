@@ -95,7 +95,7 @@ describe('drainSyncFn', () => {
     expect(result).toEqual({ success: false, error: 'auth-expired' })
   })
 
-  it('returns generic error on 409 response (conflict handling deferred to 26.4)', async () => {
+  it('returns generic error on HTTP-level 409 response (retryable; distinct from app-level conflict)', async () => {
     fetchMock.mockResolvedValue({
       ok: false,
       status: 409,
@@ -196,6 +196,15 @@ describe('drainSyncFn resourceType routing (B1)', () => {
     const res = await drainSyncFn({ id: 'q2', resourceType: 'SalesOrder', resourceId: 'o1', action: 'create', payload: '{"id":"o1"}', status: 'pending', hlcTimestamp: '5', createdAt: '', retryCount: 0 } satisfies SyncQueueEntry)
     expect(res.success).toBe(false)
     expect(res.error).toContain('MISSING_ORG_CONTEXT')
+  })
+
+  it('returns { success:false, conflict } for an application-level sync.push conflict (200 body with conflict field)', async () => {
+    const remoteVersion = { id: 'inv-1', data: { invoiceId: 'inv-1' }, hlcTimestamp: { wallMs: 1000, counter: 0, nodeId: 'hub' }, version: 'v2' }
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ result: { data: { json: { results: [{ resourceId: 'inv-1', success: false, conflict: { remoteVersion } }] } } } }) })
+    const entry: SyncQueueEntry = { id: 'q3', resourceType: 'Invoice', resourceId: 'inv-1', action: 'update', payload: '{"id":"inv-1"}', status: 'pending', hlcTimestamp: '5', createdAt: '', retryCount: 0 }
+    const res = await drainSyncFn(entry)
+    expect(res.success).toBe(false)
+    expect(res.conflict).toEqual({ remoteVersion })
   })
 
   it('forwards action:delete to /sync.push (not collapsed to create)', async () => {

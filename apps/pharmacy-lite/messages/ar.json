@@ -382,7 +382,9 @@
     "unknownRef": "غير معروف",
     "retryAllFailedAriaLabel": "إعادة محاولة جميع الفاشلة",
     "retryNowAriaLabel": "إعادة المحاولة الآن",
-    "staleResetAriaLabel": "قديمة — إعادة ضبط"
+    "staleResetAriaLabel": "قديمة — إعادة ضبط",
+    "conflictsAutoResolved": "تم حل {count} تعارض(ات) تلقائيًا",
+    "conflictsAutoResolvedHint": "كان المركز يملك نسخة أحدث؛ حافظ جهازك على نسخة المركز."
   },
   "time": {
     "justNow": "الآن",

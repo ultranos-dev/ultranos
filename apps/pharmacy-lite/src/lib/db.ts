@@ -63,6 +63,9 @@ export interface SyncQueueEntry {
   createdAt: string
   retryCount: number
   lastAttemptAt?: string
+  /** Set true when a Hub sync conflict for this entry was auto-resolved
+   *  (Hub version kept). Observability only — no remote PHI is stored. */
+  conflictFlag?: boolean
 }
 
 export interface PractitionerKeyEntry {

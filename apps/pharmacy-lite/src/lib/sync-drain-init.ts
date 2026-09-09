@@ -19,6 +19,7 @@ import {
   decryptPharmacyEntryPayload,
 } from './dexie-sync-adapter'
 import { drainSyncFn } from './drain-sync-fn'
+import { recordSyncConflict } from './sync-conflict-observer'
 import { encryptionKeyStore } from './encryption-key-store'
 import { useSyncStore } from '@/stores/sync-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
@@ -74,6 +75,7 @@ export function startSyncDrain(): void {
         store.setSyncError(null)
       }
     },
+    onConflict: recordSyncConflict,
     onAudit: (entry, outcome) => {
       const session = useAuthSessionStore.getState().session
       if (!session) return

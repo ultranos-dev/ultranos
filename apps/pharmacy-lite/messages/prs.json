@@ -382,7 +382,9 @@
     "unknownRef": "نامعلوم",
     "retryAllFailedAriaLabel": "تلاش مجدد همه ناکام‌ها",
     "retryNowAriaLabel": "تلاش مجدد الان",
-    "staleResetAriaLabel": "قدیمی — بازنشانی"
+    "staleResetAriaLabel": "قدیمی — بازنشانی",
+    "conflictsAutoResolved": "{count} تعارض(ها) خودکار حل شد",
+    "conflictsAutoResolvedHint": "هاب نسخه جدیدتری داشت؛ دستگاه شما نسخه هاب را نگه داشت."
   },
   "time": {
     "justNow": "همین الان",

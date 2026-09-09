@@ -476,6 +476,61 @@ describe('SyncQueueDashboard — auto-cleanup (AC #5)', () => {
 })
 
 // ============================================================
+// Task 2 (Story 26.4): Conflicts auto-resolved section
+// ============================================================
+describe('SyncQueueDashboard — conflicts auto-resolved section (Task 2)', () => {
+  it('shows the conflicts section when an entry has conflictFlag:true', async () => {
+    const flaggedEntry = makeSyncEntry({
+      id: 'conflict-1',
+      status: 'synced',
+      resourceType: 'Invoice',
+      resourceId: 'inv-abc123',
+      conflictFlag: true,
+      lastAttemptAt: new Date().toISOString(),
+    })
+    const normalEntry = makeSyncEntry({
+      id: 'normal-1',
+      status: 'synced',
+      resourceType: 'MedicationDispense',
+      resourceId: 'dispense-xyz',
+      lastAttemptAt: new Date().toISOString(),
+    })
+    await db.syncQueue.bulkPut([flaggedEntry, normalEntry])
+
+    render(<SyncQueueDashboard />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('sync-conflicts-section')).toBeInTheDocument()
+    })
+
+    const section = screen.getByTestId('sync-conflicts-section')
+    // Flagged entry appears in the conflicts section
+    expect(section).toHaveTextContent('Invoice')
+    // Normal entry does NOT appear inside the conflicts section
+    expect(section).not.toHaveTextContent('MedicationDispense')
+  })
+
+  it('does NOT show the conflicts section when no entries have conflictFlag:true', async () => {
+    const normalEntry = makeSyncEntry({
+      id: 'normal-2',
+      status: 'synced',
+      resourceType: 'MedicationDispense',
+      resourceId: 'dispense-no-conflict',
+      lastAttemptAt: new Date().toISOString(),
+    })
+    await db.syncQueue.put(normalEntry)
+
+    render(<SyncQueueDashboard />)
+
+    await waitFor(() => {
+      expect(screen.getByText(/recently synced/i)).toBeInTheDocument()
+    })
+
+    expect(screen.queryByTestId('sync-conflicts-section')).not.toBeInTheDocument()
+  })
+})
+
+// ============================================================
 // Task 2: SyncPulse opens the sync dashboard (AC #1)
 // ============================================================
 // SyncPulse was redesigned from an <a href="/sync"> link into a drawer-toggle
