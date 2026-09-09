@@ -47,6 +47,12 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/',
 }))
 
+// Mock the best-effort Hub pending-review count (its own unit test covers the fetch).
+const { mockFetchPendingCount } = vi.hoisted(() => ({ mockFetchPendingCount: vi.fn().mockResolvedValue(0) }))
+vi.mock('@/lib/dispense-review-client', () => ({
+  fetchPendingDispenseReviewCount: mockFetchPendingCount,
+}))
+
 // Mock Dexie db for controlled dashboard stats
 const mockSyncQueueCount = vi.fn().mockResolvedValue(0)
 const mockSyncQueueToArray = vi.fn().mockResolvedValue([])
@@ -98,6 +104,7 @@ vi.mock('@/lib/db', () => ({
 beforeEach(() => {
   vi.clearAllMocks()
   // Reset default mock implementations after clearAllMocks
+  mockFetchPendingCount.mockResolvedValue(0)
   mockSyncQueueCount.mockResolvedValue(0)
   mockSyncQueueToArray.mockResolvedValue([])
   mockDispensesWhere.mockReturnValue({
@@ -203,6 +210,21 @@ describe('PharmacyDashboard', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('pending-sync-count')).toHaveTextContent('2')
+    })
+  })
+
+  it('renders the unverified-dispenses card', async () => {
+    await renderDashboard()
+    await waitFor(() => {
+      expect(screen.getByTestId('unverified-dispenses-card')).toBeInTheDocument()
+    })
+  })
+
+  it('shows the pending-review count from the Hub (best-effort)', async () => {
+    mockFetchPendingCount.mockResolvedValue(2)
+    await renderDashboard()
+    await waitFor(() => {
+      expect(screen.getByTestId('unverified-dispenses-count')).toHaveTextContent('2')
     })
   })
 

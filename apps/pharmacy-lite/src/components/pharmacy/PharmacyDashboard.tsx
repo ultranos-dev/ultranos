@@ -12,6 +12,8 @@ import {
 import { DashboardActionHub } from './DashboardActionHub'
 import { InventoryAlertCard } from './inventory/InventoryAlertCard'
 import { DrawerStatusCard } from './pos/DrawerStatusCard'
+import { UnverifiedDispensesCard } from './UnverifiedDispensesCard'
+import { fetchPendingDispenseReviewCount } from '@/lib/dispense-review-client'
 
 const AUTO_REFRESH_INTERVAL_MS = 30_000
 
@@ -105,6 +107,7 @@ export function PharmacyDashboard() {
     failedSync: 0,
     recentDispenses: [],
   })
+  const [unverifiedCount, setUnverifiedCount] = useState(0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const refreshStats = useCallback(async () => {
@@ -114,6 +117,9 @@ export function PharmacyDashboard() {
     } catch {
       // Silently handle query errors — dashboard will show stale data
     }
+    // Best-effort Hub count of pending physician reviews. fetchPending… never
+    // throws (degrades to 0 offline/on error) so it can't break local stats.
+    setUnverifiedCount(await fetchPendingDispenseReviewCount())
   }, [])
 
   // Initial load
@@ -167,6 +173,7 @@ export function PharmacyDashboard() {
         />
         <SyncQueueCard pendingCount={stats.pendingSync} />
         <InventoryAlertCard />
+        <UnverifiedDispensesCard count={unverifiedCount} />
       </section>
 
       {/* Operational row */}
