@@ -23,6 +23,7 @@ import { useTheme } from '@/theme/ThemeProvider'
 import { PatientHealthCard } from '@/components/PatientHealthCard'
 import type { FhirAllergyIntolerance } from '@ultranos/shared-types'
 import type { FhirMedicationRequestZod, FhirEncounterZod } from '@ultranos/shared-types'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 interface GuardianHealthViewProps {
   allergies: FhirAllergyIntolerance[]
@@ -131,11 +132,11 @@ export function GuardianHealthView({
                   <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
                     {encounter.type?.[0]?.coding?.[0]?.display ?? t('guardian.clinicalEncounter')}
                   </Text>
-                  <Text style={[styles.captionText, { color: colors.textMuted }]}>
+                  <NumericText style={[styles.captionText, { color: colors.textMuted }]}>
                     {encounter.period?.start
                       ? new Date(encounter.period.start).toLocaleDateString()
                       : '—'}
-                  </Text>
+                  </NumericText>
                 </View>
               </View>
             ))}

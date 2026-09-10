@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next'
 import { usePatientProfile } from '@/hooks/usePatientProfile'
 import { useExportRecords } from '@/hooks/useExportRecords'
 import { getEncryptedDbConnection } from '@/lib/encrypted-db'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 /** Mask a national ID: show first 3 and last 2 chars */
 function maskNationalId(value: string): string {
@@ -73,9 +74,12 @@ interface ProfileFieldProps {
   onToggleMask?: () => void
   testID?: string
   colors: ReturnType<typeof useTheme>['colors']
+  /** Render the value in the monospace numeric face (ages, IDs, etc.) */
+  numeric?: boolean
 }
 
-function ProfileField({ label, value, masked, onToggleMask, testID, colors }: ProfileFieldProps) {
+function ProfileField({ label, value, masked, onToggleMask, testID, colors, numeric }: ProfileFieldProps) {
+  const ValueText = numeric ? NumericText : Text
   return (
     <View style={styles.fieldContainer}>
       <Text
@@ -85,13 +89,13 @@ function ProfileField({ label, value, masked, onToggleMask, testID, colors }: Pr
         {label}
       </Text>
       <View style={styles.fieldValueRow}>
-        <Text
+        <ValueText
           style={[styles.bodyText, { color: colors.textSecondary }]}
           testID={testID}
           accessibilityLabel={`${label}: ${masked ? 'hidden' : (onToggleMask != null ? 'shown on screen' : value)}`}
         >
           {value}
-        </Text>
+        </ValueText>
         {onToggleMask != null && (
           <Pressable
             onPress={onToggleMask}
@@ -189,7 +193,7 @@ export function ProfileScreen() {
         {displayData.localName !== displayData.name && (
           <ProfileField label={t('passport.fieldNameLocal')} value={displayData.localName} testID="patient-name-local" colors={colors} />
         )}
-        <ProfileField label={t('passport.fieldAge')} value={displayData.age} testID="patient-age" colors={colors} />
+        <ProfileField label={t('passport.fieldAge')} value={displayData.age} testID="patient-age" colors={colors} numeric />
         <ProfileField label={t('passport.fieldGender')} value={displayData.gender} testID="patient-gender" colors={colors} />
         {displayData.nationalId && (
           <ProfileField
@@ -199,6 +203,7 @@ export function ProfileScreen() {
             onToggleMask={toggleIdMask}
             testID="patient-national-id"
             colors={colors}
+            numeric
           />
         )}
       </View>

@@ -9,6 +9,12 @@ interface ListRowProps {
   icon?: LucideIcon
   label: string
   value?: string
+  /**
+   * Render `value` in the Space Mono numeric face. Set for numeric values
+   * (age, phone, IDs, dates, counts, prices) — mobile has no automatic
+   * digit-font fallback, so numeric values opt in here. Stays mono in RTL.
+   */
+  valueNumeric?: boolean
   trailing?: ReactNode
   onPress?: () => void
   destructive?: boolean
@@ -21,6 +27,7 @@ export function ListRow({
   icon: Icon,
   label,
   value,
+  valueNumeric,
   trailing,
   onPress,
   destructive,
@@ -44,7 +51,7 @@ export function ListRow({
       >
         {label}
       </Text>
-      {value ? <Text style={[styles.value, { color: colors.textMuted, textAlign: rtl ? 'right' : 'left' }, rtl && styles.arabic]} numberOfLines={1}>{value}</Text> : null}
+      {value ? <Text style={[styles.value, { color: colors.textMuted, textAlign: rtl ? 'right' : 'left' }, valueNumeric ? styles.valueNumeric : rtl && styles.arabic]} numberOfLines={1}>{value}</Text> : null}
       {trailing ?? (onPress ? <ChevronRight size={18} color={colors.textMuted} style={rtl ? styles.chevRtl : undefined} /> : null)}
     </View>
   )
@@ -70,6 +77,7 @@ const styles = StyleSheet.create({
   iconWrap: { width: 32, height: 32, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
   label: { flex: 1, fontFamily: FontFamily.sansMedium, fontSize: FontSize.base },
   value: { fontFamily: FontFamily.sans, fontSize: FontSize.sm },
+  valueNumeric: { fontFamily: FontFamily.mono },
   arabic: { fontFamily: FontFamily.arabic },
   chevRtl: { transform: [{ scaleX: -1 }] },
 })

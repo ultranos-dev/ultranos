@@ -26,6 +26,7 @@ import {
   Banner,
   ListRow,
   useConfirm,
+  NumericText,
 } from '@ultranos/ui-kit/native'
 
 const LANG_OPTIONS: { value: Lang; label: string }[] = [
@@ -211,12 +212,12 @@ export default function ProfileTab() {
     const addressStr = formatAddress(profile.currentAddress)
 
     const accountRows = [
-      profile.phone ? <ListRow key="phone" label={t('profile.phone')} value={profile.phone} /> : null,
+      profile.phone ? <ListRow key="phone" label={t('profile.phone')} value={profile.phone} valueNumeric /> : null,
     ].filter(Boolean)
 
     const patientRows = [
       profile.gender ? <ListRow key="gender" label={t('profile.gender')} value={profile.gender} /> : null,
-      profile.age != null ? <ListRow key="age" label={t('profile.age')} value={String(profile.age)} /> : null,
+      profile.age != null ? <ListRow key="age" label={t('profile.age')} value={String(profile.age)} valueNumeric /> : null,
       profile.bloodGroup ? <ListRow key="blood" label={t('profile.bloodGroup')} value={profile.bloodGroup} /> : null,
       addressStr ? <ListRow key="addr" label={t('profile.currentAddress')} value={addressStr} /> : null,
       profile.preferredLanguage ? <ListRow key="lang" label={t('profile.preferredLanguage')} value={profile.preferredLanguage} /> : null,
@@ -242,12 +243,12 @@ export default function ProfileTab() {
     const rows = [
       profile.role ? <ListRow key="role" label={t('profile.role')} value={profile.role} /> : null,
       profile.email ? <ListRow key="email" label={t('profile.email')} value={profile.email} /> : null,
-      profile.phone ? <ListRow key="phone" label={t('profile.phone')} value={profile.phone} /> : null,
+      profile.phone ? <ListRow key="phone" label={t('profile.phone')} value={profile.phone} valueNumeric /> : null,
       profile.organization ? <ListRow key="org" label={t('profile.organization')} value={profile.organization} /> : null,
       profile.facility ? <ListRow key="fac" label={t('profile.facility')} value={profile.facility} /> : null,
       profile.qualificationDisplay ? <ListRow key="qual" label={t('profile.qualification')} value={profile.qualificationDisplay} /> : null,
-      profile.licenseId ? <ListRow key="lic" label={t('profile.license')} value={profile.licenseId} /> : null,
-      profile.licenseExpiry ? <ListRow key="exp" label={t('profile.licenseExpiry')} value={profile.licenseExpiry} /> : null,
+      profile.licenseId ? <ListRow key="lic" label={t('profile.license')} value={profile.licenseId} valueNumeric /> : null,
+      profile.licenseExpiry ? <ListRow key="exp" label={t('profile.licenseExpiry')} value={profile.licenseExpiry} valueNumeric /> : null,
       profile.status ? <ListRow key="status" label={t('profile.status')} value={profile.status} /> : null,
     ].filter(Boolean)
 
@@ -285,7 +286,7 @@ export default function ProfileTab() {
           <Text style={[styles.label, { color: colors.textSecondary }, align]}>{t('profile.role')}</Text>
           {user?.role && <RoleBadge role={user.role} />}
           {user?.facilityId && (
-            <Text style={[styles.facility, { color: colors.textSecondary }, align]}>{`${t('profile.facility')}: ${user.facilityId}`}</Text>
+            <Text style={[styles.facility, { color: colors.textSecondary }, align]}>{t('profile.facility')}: <NumericText>{user.facilityId}</NumericText></Text>
           )}
         </View>
       )}

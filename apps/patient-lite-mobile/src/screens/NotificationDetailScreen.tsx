@@ -29,6 +29,7 @@ import { useTheme } from '@/theme/ThemeProvider'
 import { GuidanceDisplay } from '@/components/guidance/GuidanceDisplay'
 import { getGuidanceById } from '@/data/guidance-bundle'
 import type { GuidanceContentBundle } from '@/types/guidance'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 function notificationLabel(type: string, t: (key: string) => string): string {
   switch (type) {
@@ -177,7 +178,7 @@ export function NotificationDetailScreen({
         ) : null}
 
         {/* Timestamp */}
-        <Text style={[styles.timestamp, { color: colors.textMuted }]}>{formatDate(notification.createdAt)}</Text>
+        <NumericText style={[styles.timestamp, { color: colors.textMuted }]}>{formatDate(notification.createdAt)}</NumericText>
 
         {/* Type-specific action button */}
         {actionLabel && (

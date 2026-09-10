@@ -17,7 +17,7 @@ import { buildDrugSections } from '@/components/DrugDetail/drug-detail-sections'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { SkeletonCard } from '@/components/SkeletonCard'
 import { FontFamily, FontSize, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
-import { Card, Chip, CollapsibleSection } from '@ultranos/ui-kit/native'
+import { Card, Chip, CollapsibleSection, NumericText } from '@ultranos/ui-kit/native'
 import type { DrugBrandDetail, DrugBrandPresentation, DrugEntryTier1, DrugEntryTier2, DrugEntryTier3 } from '@ultranos/shared-types'
 
 const CLINICAL_ROLES = new Set(['DOCTOR', 'NURSE', 'LAB_TECH', 'PHARMACIST', 'ADMIN'])
@@ -136,9 +136,9 @@ export default function BrandDetailScreen() {
               <View key={p.id} testID={`presentation-${p.id}`} style={[styles.presRow, { borderTopColor: colors.borderSubtle, borderTopWidth: i === 0 ? 0 : StyleSheet.hairlineWidth, flexDirection: isRtl ? 'row-reverse' : 'row' }]}>
                 <Text style={[styles.presText, { color: colors.textPrimary }, align]} numberOfLines={2}>{presentationLine(p)}</Text>
                 {p.referencePrice != null ? (
-                  <Text style={[styles.price, { backgroundColor: colors.primary50, color: colors.primary700 }]}>
+                  <NumericText style={[styles.price, { backgroundColor: colors.primary50, color: colors.primary700 }]}>
                     {`${p.referencePrice}${p.currency ? ` ${p.currency}` : ''}`}
-                  </Text>
+                  </NumericText>
                 ) : null}
               </View>
             ))}

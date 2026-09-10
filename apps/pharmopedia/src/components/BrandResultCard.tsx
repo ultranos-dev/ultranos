@@ -7,7 +7,7 @@ import { useBookmarkStore } from '@/store/bookmark-store'
 import { getDatabase } from '@/db/migrations'
 import { hapticSelection } from '@/lib/haptics'
 import { FontFamily, FontSize, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
-import { Card } from '@ultranos/ui-kit/native'
+import { Card, NumericText } from '@ultranos/ui-kit/native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 
 interface Props {
@@ -69,12 +69,12 @@ export function BrandResultCard({ result, lang, onPress, compact }: Props) {
             ) : null}
             {compact ? <View style={styles.flexSpacer} /> : null}
             {result.referencePrice != null && (
-              <Text
+              <NumericText
                 testID="brand-result-price"
                 style={[styles.price, { backgroundColor: colors.primary50, color: colors.primary700 }]}
               >
                 {`${result.referencePrice}${result.currency ? ` ${result.currency}` : ''}`}
-              </Text>
+              </NumericText>
             )}
             <Pressable
               testID="brand-bookmark-toggle"

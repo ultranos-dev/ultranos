@@ -9,7 +9,7 @@ import { getDatabase } from '@/db/migrations'
 import { hapticSelection } from '@/lib/haptics'
 import { FontFamily, FontSize, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { Card, useReducedMotion } from '@ultranos/ui-kit/native'
+import { Card, useReducedMotion, NumericText } from '@ultranos/ui-kit/native'
 
 interface Props {
   result: DrugSearchResult
@@ -153,12 +153,12 @@ export function DrugCard({ result, lang, onPress, query, compact }: Props) {
                 )
               })}
               {brandOverflow > 0 && (
-                <Text
+                <NumericText
                   testID="drug-brand-chip-more"
                   style={[styles.chip, { backgroundColor: colors.primary50, borderColor: colors.primary100, color: colors.primary700 }]}
                 >
                   {`+${brandOverflow}`}
-                </Text>
+                </NumericText>
               )}
             </View>
           )}
@@ -167,7 +167,7 @@ export function DrugCard({ result, lang, onPress, query, compact }: Props) {
             style={[styles.meta, { color: colors.textMuted, writingDirection: 'ltr', textAlign: isRtl ? 'right' : 'left' }]}
             numberOfLines={1}
           >
-            {result.atcCode} · {result.therapeuticClass}
+            <NumericText>{result.atcCode}</NumericText> · {result.therapeuticClass}
             {result.doseForms.length > 0 ? ` · ${result.doseForms.join(', ')}` : ''}
           </Text>
         </View>

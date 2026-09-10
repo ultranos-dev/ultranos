@@ -179,7 +179,9 @@ exports[`DrugCard — restyle snapshots > LTR snapshot (lang=en, no bookmark) 1`
         }
         testID="drug-meta"
       >
-        J01CA04
+        <Text>
+          J01CA04
+        </Text>
          · 
         Antibacterials
          · Capsule 500mg, Suspension 250mg/5ml
@@ -392,7 +394,9 @@ exports[`DrugCard — restyle snapshots > RTL snapshot (lang=ar, with localName)
         }
         testID="drug-meta"
       >
-        C10AA01
+        <Text>
+          C10AA01
+        </Text>
          · 
         Lipid-modifying agents
          · Tablet 20mg

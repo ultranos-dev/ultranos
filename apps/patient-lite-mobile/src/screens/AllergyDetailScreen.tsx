@@ -6,7 +6,7 @@
  * onset date, recorded date, recording provider, clinical notes.
  * All text translated; clinical terms (substance names) remain in English per Story 11.3.
  */
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, type ReactNode } from 'react'
 import {
   View,
   Text,
@@ -31,6 +31,7 @@ import {
 } from '@/theme/consumer'
 import { useTheme } from '@/theme/ThemeProvider'
 import type { TimelineStackParamList } from '@/navigation/types'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 type AllergyDetailRouteProp = RouteProp<TimelineStackParamList, 'AllergyDetailScreen'>
 
@@ -64,7 +65,7 @@ function DetailRow({
   testID,
 }: {
   label: string
-  value: string
+  value: ReactNode
   testID?: string
 }) {
   const { colors } = useTheme()
@@ -195,12 +196,12 @@ export function AllergyDetailScreen() {
         />
         <DetailRow
           label={t('allergy.onsetDate')}
-          value={onsetDate ?? t('allergy.noOnsetDate')}
+          value={onsetDate ? <NumericText>{onsetDate}</NumericText> : t('allergy.noOnsetDate')}
           testID="allergy-detail-onset"
         />
         <DetailRow
           label={t('allergy.recordedDate')}
-          value={recordedDate ?? t('allergy.noOnsetDate')}
+          value={recordedDate ? <NumericText>{recordedDate}</NumericText> : t('allergy.noOnsetDate')}
           testID="allergy-detail-recorded-date"
         />
         <DetailRow

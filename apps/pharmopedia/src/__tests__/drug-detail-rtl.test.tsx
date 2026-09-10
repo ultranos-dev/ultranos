@@ -150,6 +150,7 @@ vi.mock('@/components/ErrorBoundary', () => ({
 vi.mock('@ultranos/ui-kit/native', () => {
   const R = require('react')
   return {
+    NumericText: ({ children, ...p }: any) => require('react').createElement(require('react-native').Text, p, children),
     CollapsibleSection: ({ children, testID, title }: { children?: React.ReactNode; testID?: string; title?: string }) =>
       R.createElement('View', { testID }, R.createElement('View', null, title), children),
     Chip: ({ label }: { label?: string }) => R.createElement('View', null, label),

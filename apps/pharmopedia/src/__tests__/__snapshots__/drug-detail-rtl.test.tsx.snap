@@ -92,7 +92,10 @@ exports[`DrugDetailScreen — single scroll > LTR snapshot 1`] = `
           }
         >
           amoxicillin
-           · J01CA04
+           · 
+          <Text>
+            J01CA04
+          </Text>
         </Text>
       </View>
       <View
@@ -268,7 +271,10 @@ exports[`DrugDetailScreen — single scroll > RTL snapshot (lang=ar) 1`] = `
           }
         >
           amoxicillin
-           · J01CA04
+           · 
+          <Text>
+            J01CA04
+          </Text>
         </Text>
       </View>
       <View

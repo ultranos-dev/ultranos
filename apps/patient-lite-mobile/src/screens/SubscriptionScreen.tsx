@@ -37,6 +37,7 @@ import {
   type Purchase,
 } from '@/services/iap-service'
 import { getPremiumProductId } from '@/config/iap'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 /** Premium features shown to FREE tier users */
 const PREMIUM_FEATURES = [
@@ -265,9 +266,9 @@ export function SubscriptionScreen() {
 
           {/* Price */}
           <View style={[styles.priceCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
-            <Text style={[styles.priceAmount, { color: colors.textPrimary }]} testID="subscription-price">
+            <NumericText style={[styles.priceAmount, { color: colors.textPrimary }]} testID="subscription-price">
               {priceText}
-            </Text>
+            </NumericText>
             <Text style={[styles.priceLabel, { color: colors.textMuted }]}>
               {t('subscription.perMonth', '/ month')}
             </Text>

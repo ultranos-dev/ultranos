@@ -16,6 +16,7 @@ import type { FeatureId } from '@ultranos/shared-types'
 import { usePatientTierStore } from '@/stores/patient-tier-store'
 import { useTheme } from '@/theme/ThemeProvider'
 import { useTranslation } from 'react-i18next'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 import {
   consumerSpacing,
   consumerBorderRadius,
@@ -74,12 +75,12 @@ export function PremiumGate({
         </Text>
 
         {monthlyPrice && (
-          <Text
+          <NumericText
             style={[styles.price, { color: colors.textPrimary }]}
             testID="premium-monthly-price"
           >
             {monthlyPrice}
-          </Text>
+          </NumericText>
         )}
 
         <Pressable

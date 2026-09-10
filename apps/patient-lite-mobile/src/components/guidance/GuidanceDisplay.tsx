@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/theme/ThemeProvider'
 import { GuidanceStepCard } from './GuidanceStepCard'
 import type { GuidanceContentBundle, GuidanceLocalizedText } from '@/types/guidance'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 // Re-export types so callers that previously imported from here still compile.
 export type { GuidanceLocalizedText, GuidanceStep, GuidanceAuthor, GuidanceContentBundle } from '@/types/guidance'
@@ -232,7 +233,7 @@ export function GuidanceDisplay({
             {content.author.institution}
           </Text>
           <Text style={[styles.versionText, { color: colors.textMuted }]}>
-            {t('guidance.version', 'Version')} {content.version} ·{' '}
+            {t('guidance.version', 'Version')} <NumericText>{content.version}</NumericText> ·{' '}
             {t('guidance.reviewedBy', 'Reviewed by:')} {content.approvedBy}
           </Text>
         </View>

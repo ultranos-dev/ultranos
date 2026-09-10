@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react-native'
 import { ChevronRight, Heart, Pill, Shield, Brain, Bone, Eye, Baby, Droplets, Flame, Activity } from 'lucide-react-native'
 import { useTranslation } from 'react-i18next'
 import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
-import { ListRow, useReducedMotion } from '@ultranos/ui-kit/native'
+import { ListRow, useReducedMotion, NumericText } from '@ultranos/ui-kit/native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 
 const CLASS_ICONS: Record<string, LucideIcon> = {
@@ -51,7 +51,7 @@ export function TherapeuticClassCard({ name, count, onPress, index }: Props) {
       trailing={
         <View style={styles.trailing}>
           <View style={[styles.countBadge, { backgroundColor: colors.primary50 }]}>
-            <Text style={[styles.countText, { color: colors.primary600 }]}>{count}</Text>
+            <NumericText style={[styles.countText, { color: colors.primary600 }]}>{count}</NumericText>
           </View>
           <ChevronRight size={16} color={colors.textMuted} />
         </View>

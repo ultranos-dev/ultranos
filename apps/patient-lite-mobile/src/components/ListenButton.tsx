@@ -16,6 +16,7 @@ import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-nati
 import { useAudioPlayback } from '@/hooks/useAudioPlayback'
 import { generatePrescriptionAudio, logPlaybackCompletion } from '@/lib/tts-api'
 import { getStitchableFragments, FRAGMENT_GAP_MS } from '@/lib/tts-fragment-stitcher'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 import {
   consumerSpacing,
   consumerBorderRadius,
@@ -206,8 +207,8 @@ export function ListenButton({
               />
             </View>
             <View style={styles.timeRow}>
-              <Text style={[styles.timeText, { color: colors.textMuted }]}>{formatTime(state.positionMs)}</Text>
-              <Text style={[styles.timeText, { color: colors.textMuted }]}>{formatTime(state.durationMs)}</Text>
+              <NumericText style={[styles.timeText, { color: colors.textMuted }]}>{formatTime(state.positionMs)}</NumericText>
+              <NumericText style={[styles.timeText, { color: colors.textMuted }]}>{formatTime(state.durationMs)}</NumericText>
             </View>
           </View>
 

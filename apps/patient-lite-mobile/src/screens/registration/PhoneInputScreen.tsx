@@ -28,6 +28,7 @@ import {
 import { useTheme } from '@/theme/ThemeProvider'
 import { requestOtp } from '@/lib/registration-api'
 import { emitAuthAudit } from '@/lib/auth-audit'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 const COUNTRY_CODES = [
   { code: '+93', label: '\u{1F1E6}\u{1F1EB} +93', country: 'Afghanistan' },
@@ -108,9 +109,9 @@ export function PhoneInputScreen({ onOtpSent }: PhoneInputScreenProps) {
             accessibilityRole="button"
             accessibilityLabel="Select country code"
           >
-            <Text style={[styles.countryCodeText, { color: colors.textPrimary }]}>
+            <NumericText style={[styles.countryCodeText, { color: colors.textPrimary }]}>
               {COUNTRY_CODES[selectedCountryIndex].label}
-            </Text>
+            </NumericText>
             <Text style={[styles.chevron, { color: colors.textMuted }]}>{'\u25BC'}</Text>
           </Pressable>
 
@@ -157,7 +158,7 @@ export function PhoneInputScreen({ onOtpSent }: PhoneInputScreenProps) {
                 accessibilityState={{ selected: index === selectedCountryIndex }}
               >
                 <Text style={[styles.countryOptionText, { color: colors.textPrimary }]}>
-                  {cc.label} {cc.country}
+                  <NumericText>{cc.label}</NumericText> {cc.country}
                 </Text>
               </Pressable>
             ))}

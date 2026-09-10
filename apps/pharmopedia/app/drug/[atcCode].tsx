@@ -24,7 +24,7 @@ import { ShareButton } from '@/components/DrugDetail/ShareButton'
 import { SkeletonCard } from '@/components/SkeletonCard'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
-import { Chip, CollapsibleSection, useReducedMotion } from '@ultranos/ui-kit/native'
+import { Chip, CollapsibleSection, useReducedMotion, NumericText } from '@ultranos/ui-kit/native'
 import type { DrugEntryTier1, DrugEntryTier2, DrugEntryTier3, DrugBrandWithPresentations } from '@ultranos/shared-types'
 
 const CLINICAL_ROLES = new Set(['DOCTOR', 'NURSE', 'LAB_TECH', 'PHARMACIST', 'ADMIN'])
@@ -143,7 +143,7 @@ export default function DrugDetailScreen() {
               {localName || entry.innName}
             </Text>
             <Text style={[styles.innLine, { color: colors.textSecondary, writingDirection: 'ltr', textAlign: isRtl ? 'right' : 'left' }]}>
-              {entry.innName}{isClinical ? ` · ${entry.atcCode}` : ''}
+              {entry.innName}{isClinical ? <>{' · '}<NumericText>{entry.atcCode}</NumericText></> : ''}
             </Text>
           </View>
           <View style={[styles.actionRow, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}>

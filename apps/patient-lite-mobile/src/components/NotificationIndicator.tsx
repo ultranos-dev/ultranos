@@ -11,6 +11,7 @@ import { useNavigation } from '@react-navigation/native'
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount'
 import { consumerSpacing } from '@/theme/consumer'
 import { useTheme } from '@/theme/ThemeProvider'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 export function NotificationIndicator() {
   const { t } = useTranslation()
@@ -41,9 +42,9 @@ export function NotificationIndicator() {
       <Text style={styles.bellIcon}>{'\u{1F514}'}</Text>
       {unreadCount > 0 && (
         <View style={[styles.badge, { backgroundColor: colors.error }]}>
-          <Text style={styles.badgeText}>
+          <NumericText style={styles.badgeText}>
             {unreadCount > 99 ? '99+' : unreadCount}
-          </Text>
+          </NumericText>
         </View>
       )}
     </Pressable>

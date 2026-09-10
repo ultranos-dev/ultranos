@@ -1,6 +1,5 @@
 import { Text, StyleSheet, type TextProps, type TextStyle } from 'react-native'
 import { FontFamily } from '../tokens.native'
-import { useThemeColors } from './theme'
 
 interface NumericTextProps extends TextProps {
   /** Value to render. Numbers are coerced to string by React Native's <Text>. */
@@ -17,24 +16,18 @@ interface NumericTextProps extends TextProps {
  * Space Mono — digits AND numeric punctuation ($, %, ., , : etc.). Only wrap
  * actual numeric values (counts, prices, doses, dates, IDs), not prose.
  *
+ * Applies ONLY the font family so it composes cleanly:
+ *  - Standalone: pass color/size via `style` (same as any <Text>).
+ *  - Nested inside another <Text>: color/size/weight are inherited as usual —
+ *    nothing is forced, so it never overrides the surrounding text's color.
+ * Theme-agnostic (no context dependency) — works under any app's provider.
+ *
  * Requires 'SpaceMono' / 'SpaceMono-Bold' to be registered in the app's
  * useFonts() (see @expo-google-fonts/space-mono).
- *
- * Color defaults to the theme's primary text color and can be overridden via
- * `style`. When nested inside another <Text>, color/size are inherited as usual.
  */
 export function NumericText({ children, bold = false, style, ...rest }: NumericTextProps) {
-  const colors = useThemeColors()
   return (
-    <Text
-      {...rest}
-      style={[
-        styles.base,
-        bold && styles.bold,
-        { color: colors.textPrimary },
-        style,
-      ]}
-    >
+    <Text {...rest} style={[bold ? styles.bold : styles.base, style]}>
       {children}
     </Text>
   )

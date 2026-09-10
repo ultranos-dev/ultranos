@@ -36,6 +36,7 @@ import { usePatientProfile } from '@/hooks/usePatientProfile'
 import { initiateGuardianLink, confirmGuardianLink } from '@/data/guardian-api'
 import { emitAuditEvent } from '@/lib/audit'
 import type { GuardianLink } from '@ultranos/shared-types'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 // MENA region country codes — same as LoginScreen
 const COUNTRY_CODES = [
@@ -268,9 +269,9 @@ export function GuardianLinkScreen() {
               accessibilityLabel="Select country code"
               testID="guardian-country-picker-button"
             >
-              <Text style={[styles.countryCodeText, { color: colors.textPrimary }]}>
+              <NumericText style={[styles.countryCodeText, { color: colors.textPrimary }]}>
                 {COUNTRY_CODES[selectedCountryIndex].label}
-              </Text>
+              </NumericText>
               <Text style={[styles.chevron, { color: colors.textMuted }]}>{'\u25BC'}</Text>
             </Pressable>
 
@@ -305,7 +306,7 @@ export function GuardianLinkScreen() {
                   accessibilityState={{ selected: index === selectedCountryIndex }}
                 >
                   <Text style={[styles.countryOptionText, { color: colors.textPrimary }]}>
-                    {cc.label} {cc.country}
+                    <NumericText>{cc.label}</NumericText> {cc.country}
                   </Text>
                 </Pressable>
               ))}

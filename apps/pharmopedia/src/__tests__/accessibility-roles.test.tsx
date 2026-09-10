@@ -94,7 +94,8 @@ vi.mock('@ultranos/ui-kit/native', () => {
       testID, onPress, accessibilityRole: 'button',
       accessibilityLabel: accessibilityLabel ?? label,
     }, React.createElement(Text, null, label))
-  return { useReducedMotion, CollapsibleList, EmptyState, Card, ListRow }
+  return {
+    NumericText: ({ children, ...p }: any) => require('react').createElement(require('react-native').Text, p, children), useReducedMotion, CollapsibleList, EmptyState, Card, ListRow }
 })
 
 describe('Accessibility roles', () => {

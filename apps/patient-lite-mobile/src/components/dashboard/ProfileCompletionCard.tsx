@@ -18,6 +18,7 @@ import {
   consumerBorderRadius,
   consumerTypography,
 } from '@/theme/consumer'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 const DISMISS_COUNT_KEY = 'profile_completion_dismiss_count'
 const MAX_DISMISSALS = 3
@@ -98,7 +99,7 @@ export function ProfileCompletionCard({ patient, onPress }: ProfileCompletionCar
       </View>
 
       <Text style={[styles.progressText, { color: colors.textSecondary }]}>
-        {completed.length} / {total} {t('registration.fieldsCompleted')}
+        <NumericText>{completed.length}</NumericText> / <NumericText>{total}</NumericText> {t('registration.fieldsCompleted')}
       </Text>
 
       {/* Progress bar */}

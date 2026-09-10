@@ -34,6 +34,7 @@ import { useTheme } from '@/theme/ThemeProvider'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth-store'
 import { emitAuthAudit } from '@/lib/auth-audit'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 // MENA region country codes (AC #1)
 const COUNTRY_CODES = [
@@ -376,9 +377,9 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             accessibilityRole="button"
             accessibilityLabel="Select country code"
           >
-            <Text style={[styles.countryCodeText, { color: colors.textPrimary }]}>
+            <NumericText style={[styles.countryCodeText, { color: colors.textPrimary }]}>
               {COUNTRY_CODES[selectedCountryIndex].label}
-            </Text>
+            </NumericText>
             <Text style={[styles.chevron, { color: colors.textMuted }]}>{'▼'}</Text>
           </Pressable>
 
@@ -413,7 +414,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 accessibilityState={{ selected: index === selectedCountryIndex }}
               >
                 <Text style={[styles.countryOptionText, { color: colors.textPrimary }]}>
-                  {cc.label} {cc.country}
+                  <NumericText>{cc.label}</NumericText> {cc.country}
                 </Text>
               </Pressable>
             ))}

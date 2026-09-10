@@ -23,6 +23,7 @@ vi.mock('@/components/SkeletonCard', () => { const { View } = require('react-nat
 vi.mock('@ultranos/ui-kit/native', () => {
   const React = require('react'); const { View, Pressable, Text } = require('react-native')
   return {
+    NumericText: ({ children, ...p }: any) => require('react').createElement(require('react-native').Text, p, children),
     Card: ({ children }: { children: React.ReactNode }) => React.createElement(View, null, children),
     Chip: ({ label, onPress, testID }: { label: string; onPress?: () => void; testID?: string }) =>
       React.createElement(Pressable, { testID, onPress }, React.createElement(Text, null, label)),

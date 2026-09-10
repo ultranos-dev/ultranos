@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { DrugEntryTier3 } from '@ultranos/shared-types'
 import { FontFamily, FontSize, LineHeight, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { NumericText } from '@ultranos/ui-kit/native'
 
 type FormularyStatus = 'on_formulary' | 'off_formulary' | 'restricted'
 
@@ -51,7 +52,7 @@ export function FormularySection({ entry }: { entry: DrugEntryTier3 }) {
         <View style={styles.block}>
           <Text style={[styles.label, { color: colors.textSecondary }]}>{t('formulary.substitutes')}</Text>
           {entry.substitutes.map((atcCode) => (
-            <Text key={atcCode} style={[styles.code, { color: colors.primary500 }]}>{atcCode}</Text>
+            <NumericText key={atcCode} style={[styles.code, { color: colors.primary500 }]}>{atcCode}</NumericText>
           ))}
         </View>
       ) : null}
@@ -62,7 +63,7 @@ export function FormularySection({ entry }: { entry: DrugEntryTier3 }) {
           {entry.recallAlerts.map((alert) => (
             <View key={alert.recallId} style={[styles.recallCard, { backgroundColor: colors.warningLight, borderColor: colors.warning }]}>
               <Text style={[styles.recallDesc, { color: colors.textPrimary }]}>{alert.description}</Text>
-              <Text style={[styles.recallMeta, { color: colors.textSecondary }]}>{alert.status} · {alert.initiationDate}</Text>
+              <Text style={[styles.recallMeta, { color: colors.textSecondary }]}>{alert.status} · <NumericText>{alert.initiationDate}</NumericText></Text>
             </View>
           ))}
         </View>

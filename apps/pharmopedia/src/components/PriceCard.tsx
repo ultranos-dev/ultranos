@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import type { PharmacyPrice } from '@ultranos/shared-types'
 import { FontFamily, FontSize, Spacing, Shadow } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import { useReducedMotion } from '@ultranos/ui-kit/native'
+import { useReducedMotion, NumericText } from '@ultranos/ui-kit/native'
 
 export function PriceCard({ price, index }: { price: PharmacyPrice; index?: number }) {
   const { t } = useTranslation()
@@ -56,7 +56,7 @@ export function PriceCard({ price, index }: { price: PharmacyPrice; index?: numb
         </View>
         {price.doseForm && (
           <Text style={[styles.meta, { color: colors.textSecondary }]}>
-            {price.doseForm}{price.quantity ? ` × ${price.quantity}` : ''}
+            {price.doseForm}{price.quantity ? <>{' × '}<NumericText>{price.quantity}</NumericText></> : ''}
           </Text>
         )}
       </View>

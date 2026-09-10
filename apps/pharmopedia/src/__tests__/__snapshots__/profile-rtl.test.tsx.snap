@@ -361,7 +361,9 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                         "color": "#838e9d",
                         "textAlign": "left",
                       },
-                      false,
+                      {
+                        "fontFamily": "SpaceMono",
+                      },
                     ]
                   }
                 >
@@ -521,7 +523,9 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
                         "color": "#838e9d",
                         "textAlign": "left",
                       },
-                      false,
+                      {
+                        "fontFamily": "SpaceMono",
+                      },
                     ]
                   }
                 >
@@ -742,6 +746,61 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
           </View>
         </View>
       </View>
+      <Pressable
+        accessibilityLabel="interactions.title"
+        accessibilityRole="button"
+        onClick={[Function]}
+        style={
+          [
+            {
+              "borderRadius": 12,
+              "gap": 8,
+              "marginBottom": 16,
+              "padding": 16,
+            },
+            {
+              "alignItems": "center",
+              "backgroundColor": "#fff",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            },
+          ]
+        }
+        testID="open-interaction-check"
+      >
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Bold",
+                "fontSize": 12,
+                "letterSpacing": 0.5,
+                "marginBottom": 4,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "#111",
+                "marginBottom": 0,
+              },
+              {
+                "textAlign": "left",
+              },
+            ]
+          }
+        >
+          interactions.title
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#999",
+              "fontFamily": "Manrope-SemiBold",
+            }
+          }
+        >
+          ›
+        </Text>
+      </Pressable>
       <View
         style={
           [
@@ -2071,7 +2130,9 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                         "color": "#838e9d",
                         "textAlign": "left",
                       },
-                      false,
+                      {
+                        "fontFamily": "SpaceMono",
+                      },
                     ]
                   }
                 >
@@ -2231,7 +2292,9 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
                         "color": "#838e9d",
                         "textAlign": "left",
                       },
-                      false,
+                      {
+                        "fontFamily": "SpaceMono",
+                      },
                     ]
                   }
                 >
@@ -2452,6 +2515,62 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
           </View>
         </View>
       </View>
+      <Pressable
+        accessibilityLabel="interactions.title"
+        accessibilityRole="button"
+        onClick={[Function]}
+        style={
+          [
+            {
+              "borderRadius": 12,
+              "gap": 8,
+              "marginBottom": 16,
+              "padding": 16,
+            },
+            {
+              "alignItems": "center",
+              "backgroundColor": "#fff",
+              "flexDirection": "row-reverse",
+              "justifyContent": "space-between",
+            },
+          ]
+        }
+        testID="open-interaction-check"
+      >
+        <Text
+          style={
+            [
+              {
+                "fontFamily": "Manrope-Bold",
+                "fontSize": 12,
+                "letterSpacing": 0.5,
+                "marginBottom": 4,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "#111",
+                "marginBottom": 0,
+              },
+              {
+                "fontFamily": "NotoKufiArabic",
+                "textAlign": "right",
+              },
+            ]
+          }
+        >
+          interactions.title
+        </Text>
+        <Text
+          style={
+            {
+              "color": "#999",
+              "fontFamily": "Manrope-SemiBold",
+            }
+          }
+        >
+          ‹
+        </Text>
+      </Pressable>
       <View
         style={
           [

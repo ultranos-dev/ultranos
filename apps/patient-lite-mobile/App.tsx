@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { AppState, Platform, SafeAreaView, StatusBar, StyleSheet } from 'react-native'
 import type { AppStateStatus } from 'react-native'
+import { useFonts } from 'expo-font'
+import { SpaceMono_400Regular, SpaceMono_700Bold } from '@expo-google-fonts/space-mono'
 import { ProfileScreen } from '@/screens/ProfileScreen'
 import { wipeMemoryStore } from '@/lib/offline-store'
 import { checkDeviceIntegrity } from '@/lib/device-security'
@@ -93,6 +95,16 @@ function AppContent() {
 }
 
 export function App() {
+  // Load Space Mono so numeric values (wrapped in NumericText) render in the
+  // mono numeric face. RN has no automatic digit-font fallback (unlike the web
+  // PWAs), so the font must be registered here for NumericText to resolve it.
+  const [fontsLoaded] = useFonts({
+    SpaceMono: SpaceMono_400Regular,
+    'SpaceMono-Bold': SpaceMono_700Bold,
+  })
+
+  if (!fontsLoaded) return null
+
   return (
     <ThemeProvider>
       <AppContent />

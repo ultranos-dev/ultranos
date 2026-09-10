@@ -24,6 +24,7 @@ import { useConsentSettings, type ConsentCategoryState } from '@/hooks/useConsen
 import { usePatientProfile } from '@/hooks/usePatientProfile'
 import { useGuardianLink } from '@/hooks/useGuardianLink'
 import type { PrivacyStackParamList } from '@/navigation/types'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
@@ -54,7 +55,7 @@ function ConsentToggleRow({ category, onToggle }: ConsentToggleRowProps) {
             style={{ fontSize: consumerTypography.captionSize, color: colors.textMuted, fontStyle: 'italic' }}
             testID={`consent-updated-${category.scope}`}
           >
-            Last updated: {formatDate(category.lastUpdated)}
+            Last updated: <NumericText>{formatDate(category.lastUpdated)}</NumericText>
           </Text>
         )}
       </View>
@@ -109,9 +110,9 @@ function ConsentHistoryItem({ consent }: ConsentHistoryItemProps) {
             </View>
           )}
         </View>
-        <Text style={{ fontSize: consumerTypography.captionSize, color: colors.textMuted }}>
+        <NumericText style={{ fontSize: consumerTypography.captionSize, color: colors.textMuted }}>
           {formatDate(consent.dateTime)}
-        </Text>
+        </NumericText>
         {consent._ultranos.withdrawalReason && (
           <Text style={{ fontSize: consumerTypography.captionSize, color: colors.textMuted, fontStyle: 'italic' }}>
             Reason: {consent._ultranos.withdrawalReason}
@@ -232,10 +233,10 @@ export function PrivacySettingsScreen() {
             <View style={styles.guardianInfoRow}>
               <Text style={{ fontSize: consumerTypography.bodySize, color: colors.textSecondary, lineHeight: 24 }}>Guardian linked</Text>
               <Text style={{ fontSize: consumerTypography.captionSize, color: colors.textMuted }}>
-                Linked since: {formatDate(guardianLink.linkedAt)}
+                Linked since: <NumericText>{formatDate(guardianLink.linkedAt)}</NumericText>
               </Text>
               <Text style={{ fontSize: consumerTypography.captionSize, color: colors.textMuted }}>
-                Phone: *** {guardianLink.guardianPhoneHint}
+                Phone: <NumericText>{`*** ${guardianLink.guardianPhoneHint}`}</NumericText>
               </Text>
             </View>
             <Pressable

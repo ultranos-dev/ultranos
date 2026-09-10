@@ -36,6 +36,7 @@ import {
   consumerBorderRadius,
   consumerTypography,
 } from '@/theme/consumer'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 // ─── Patient projection type ─────────────────────────────────────────────────
 // This is the minimal data available in the Patient projection from Story 42.6.
@@ -166,9 +167,9 @@ export function LabResultCard({ result, patientId }: LabResultCardProps) {
 
       {/* Date + lab name */}
       <View style={styles.metaRow}>
-        <Text style={[styles.metaText, { color: colors.textMuted }]}>
+        <NumericText style={[styles.metaText, { color: colors.textMuted }]}>
           {formatDate(result.date)}
-        </Text>
+        </NumericText>
         <Text style={[styles.separator, { color: colors.textMuted }]}>·</Text>
         <Text style={[styles.metaText, { color: colors.textMuted }]}>
           {result.labName}

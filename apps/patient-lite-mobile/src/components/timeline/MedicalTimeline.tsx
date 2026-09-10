@@ -23,6 +23,7 @@ import {
   consumerBorderRadius,
   consumerTypography,
 } from '@/theme/consumer'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 interface MedicalTimelineProps {
   events: TimelineEvent[]
@@ -203,7 +204,7 @@ function TimelineItem({
         testID={`timeline-card-${event.id}`}
       >
         {/* Date marker */}
-        <Text style={[styles.dateText, { color: colors.textMuted }]}>{formatDate(event.date)}</Text>
+        <NumericText style={[styles.dateText, { color: colors.textMuted }]}>{formatDate(event.date)}</NumericText>
 
         {/* Label — hide real label for sensitive entries */}
         <Text style={[styles.labelText, { color: colors.textPrimary }]}>
@@ -244,7 +245,7 @@ function TimelineItem({
               </Text>
             )}
             <Text style={[styles.detailText, { color: colors.textPrimary }]}>{event.label}</Text>
-            <Text style={[styles.detailDate, { color: colors.textSecondary }]}>Date: {formatDate(event.date)}</Text>
+            <Text style={[styles.detailDate, { color: colors.textSecondary }]}>Date: <NumericText>{formatDate(event.date)}</NumericText></Text>
           </View>
         )}
       </Pressable>

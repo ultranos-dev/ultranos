@@ -36,6 +36,7 @@
     "./tailwind.preset": "./src/tailwind.preset.ts",
     "./tokens.native": "./src/tokens.native.ts",
     "./native": "./src/native/index.ts",
+    "./native/NumericText": "./src/native/NumericText.tsx",
     "./components/ui/search-input": "./src/components/ui/search-input.tsx"
   },
   "scripts": {

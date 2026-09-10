@@ -31,6 +31,7 @@ import { useMedicalHistory } from '@/hooks/useMedicalHistory'
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount'
 import { NAV_ICONS } from '@/config/icon-vocabulary'
 import type { HomeStackParamList } from '@/navigation/types'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 type HomeDashboardNavProp = NativeStackNavigationProp<HomeStackParamList, 'HomeScreen'>
 
@@ -136,9 +137,9 @@ export function HomeDashboardScreen() {
             >
               <Text style={styles.bellIcon}>{NAV_ICONS.notifications.emoji}</Text>
               <View style={[styles.badge, { backgroundColor: colors.error }]}>
-                <Text style={styles.badgeText}>
+                <NumericText style={styles.badgeText}>
                   {unreadCount > 99 ? '99+' : unreadCount}
-                </Text>
+                </NumericText>
               </View>
             </Pressable>
           )}

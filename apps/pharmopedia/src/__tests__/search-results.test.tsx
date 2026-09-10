@@ -16,6 +16,7 @@ vi.mock('@/components/BrandResultCard', () => {
 vi.mock('@ultranos/ui-kit/native', () => {
   const React = require('react'); const { Pressable, Text, View } = require('react-native')
   return {
+    NumericText: ({ children, ...p }: any) => require('react').createElement(require('react-native').Text, p, children),
     Chip: ({ label, selected, onPress, testID }: { label: string; selected?: boolean; onPress?: () => void; testID?: string }) =>
       React.createElement(Pressable, { testID, onPress, accessibilityState: { selected } }, React.createElement(Text, null, label)),
     EmptyState: ({ title }: { title: string }) => React.createElement(View, { testID: 'empty' }, React.createElement(Text, null, title)),

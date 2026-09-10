@@ -6,6 +6,7 @@ import { SensitiveMedicationItem } from '@/components/SensitiveMedicationItem'
 import type { ListenDialect } from '@/components/ListenButton'
 import type { TimelineEvent } from '@/hooks/useMedicalHistory'
 import type { FhirMedicationRequestZod } from '@ultranos/shared-types'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 /** Extract the first medication code from the FHIR resource for offline fragment lookup */
 function getMedicationCode(med: TimelineEvent): string {
@@ -89,7 +90,7 @@ function ActiveMedCard({ med, patientId, dialect, hasAIConsent, authToken, isOnl
         <View style={[styles.detailSection, { borderTopColor: colors.border }]} testID={`active-med-detail-${med.id}`}>
           <Text style={[styles.detailText, { color: colors.textPrimary }]}>{med.label}</Text>
           <Text style={[styles.detailDate, { color: colors.textMuted }]}>
-            Started: {med.date ? new Date(med.date).toLocaleDateString('en-u-ca-gregory', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown'}
+            Started: {med.date ? <NumericText>{new Date(med.date).toLocaleDateString('en-u-ca-gregory', { year: 'numeric', month: 'short', day: 'numeric' })}</NumericText> : 'Unknown'}
           </Text>
         </View>
       )}

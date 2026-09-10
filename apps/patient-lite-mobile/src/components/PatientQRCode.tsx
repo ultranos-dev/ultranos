@@ -4,6 +4,7 @@ import QRCode from 'react-native-qrcode-svg'
 import { consumerBorderRadius, consumerTypography } from '@/theme/consumer'
 import { useTheme } from '@/theme/ThemeProvider'
 import { QR_COLORS } from '@/theme/colors'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 /**
  * Identity QR payload — per CLAUDE.md:
@@ -98,7 +99,7 @@ export function PatientQRCode({ patientId, signature }: PatientQRCodeProps) {
         </View>
       )}
       <Text style={[styles.hint, { color: colors.textMuted }]} accessibilityRole="text">
-        Valid for {QR_EXPIRY_HOURS} hours
+        Valid for <NumericText>{QR_EXPIRY_HOURS}</NumericText> hours
       </Text>
     </View>
   )

@@ -13,6 +13,7 @@
  */
 import { View, Text, StyleSheet } from 'react-native'
 import { useTheme } from '@/theme/ThemeProvider'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 // Icon symbol mapping — simple emoji characters that render reliably on all
 // Android/iOS versions without external icon libraries. Each maps to a step
@@ -57,7 +58,7 @@ export function GuidanceStepCard({ stepNumber, icon, text, isRTL = false }: Guid
     >
       {/* Step number badge */}
       <View style={[styles.numberBadge, { backgroundColor: colors.primary[600] }]}>
-        <Text style={styles.numberText}>{stepNumber}</Text>
+        <NumericText style={styles.numberText}>{stepNumber}</NumericText>
       </View>
 
       {/* Icon */}

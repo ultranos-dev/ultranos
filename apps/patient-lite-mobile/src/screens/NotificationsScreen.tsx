@@ -31,6 +31,7 @@ import {
 } from '@/theme/consumer'
 import { useTheme } from '@/theme/ThemeProvider'
 import { SAFETY_COLORS } from '@/theme/colors'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 // --- Type-specific configuration ---
 
@@ -164,9 +165,9 @@ function NotificationCard({
           </Text>
         ) : null}
 
-        <Text style={{ fontSize: consumerTypography.captionSize, color: colors.textMuted, marginTop: 4 }}>
+        <NumericText style={{ fontSize: consumerTypography.captionSize, color: colors.textMuted, marginTop: 4 }}>
           {formatTimestamp(item.createdAt, t)}
-        </Text>
+        </NumericText>
       </View>
     </Pressable>
   )

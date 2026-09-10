@@ -34,6 +34,13 @@ describe('NumericText', () => {
     expect(flattenStyle(queryByTestId('val')!.props.style).fontFamily).toBe(FontFamily.monoBold)
   })
 
+  it('forces ONLY the font family (no color) so it inherits/composes', () => {
+    // No forced color: when nested in colored text it must not override color,
+    // and standalone it accepts color via `style`.
+    const { queryByTestId } = render(<NumericText testID="val">7</NumericText>)
+    expect(flattenStyle(queryByTestId('val')!.props.style).color).toBeUndefined()
+  })
+
   it('lets caller style override color/size while keeping the mono family', () => {
     const { queryByTestId } = render(
       <NumericText testID="val" style={{ color: '#ff0000', fontSize: 22 }}>

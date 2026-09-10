@@ -75,6 +75,7 @@ const { mockReducedMotion } = vi.hoisted(() => ({
 vi.mock('@ultranos/ui-kit/native', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@ultranos/ui-kit/native')
   return {
+    NumericText: ({ children, ...p }: any) => require('react').createElement(require('react-native').Text, p, children),
     ...actual,
     useReducedMotion: mockReducedMotion,
   }
