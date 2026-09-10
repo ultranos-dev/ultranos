@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { addStock, deductStock } from './stock-service'
-import type { StockAdjustmentReason, StockDisposalReason, StockMovementType } from './types'
+import type { StockAdjustmentReason, StockDisposalReason, StockMovement, StockMovementType } from './types'
 
 /**
  * Correct a batch's on-hand quantity to `newQuantity`, recording an
@@ -69,4 +69,35 @@ export async function recordDisposal(params: {
     reasonCode,
     performedBy,
   })
+}
+
+export interface MovementQuery {
+  catalogItemId?: string
+  stockBatchId?: string
+  type?: StockMovementType
+  from?: string // ISO instant, inclusive lower bound on timestamp
+  to?: string   // ISO instant, inclusive upper bound on timestamp
+  limit?: number
+}
+
+/** Read stock movements for the ledger + per-item history. Newest-first. */
+export async function queryMovements(q: MovementQuery = {}): Promise<StockMovement[]> {
+  let arr: StockMovement[]
+  if (q.catalogItemId) {
+    arr = await db.stockMovements.where('catalogItemId').equals(q.catalogItemId).toArray()
+  } else if (q.stockBatchId) {
+    arr = await db.stockMovements.where('stockBatchId').equals(q.stockBatchId).toArray()
+  } else if (q.type) {
+    arr = await db.stockMovements.where('type').equals(q.type).toArray()
+  } else {
+    arr = await db.stockMovements.toArray()
+  }
+
+  if (q.type) arr = arr.filter((m) => m.type === q.type)
+  if (q.from) arr = arr.filter((m) => m.timestamp >= q.from!)
+  if (q.to) arr = arr.filter((m) => m.timestamp <= q.to!)
+
+  arr.sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+  if (q.limit != null) arr = arr.slice(0, q.limit)
+  return arr
 }
