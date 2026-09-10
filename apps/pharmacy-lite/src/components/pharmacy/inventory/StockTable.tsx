@@ -7,6 +7,7 @@ import { FileSearch, Package } from '@ultranos/ui-kit/icons'
 import { db } from '@/lib/db'
 import type { StockBatch, CatalogItem, StockBatchStatus } from '@/lib/inventory/types'
 import { AdjustStockDialog } from './AdjustStockDialog'
+import { DisposeStockDialog } from './DisposeStockDialog'
 import { Button } from '@/components/ui/button'
 
 interface StockTableProps {
@@ -36,6 +37,7 @@ export function StockTable({
   const t = useTranslations('inventory')
   const [rows, setRows] = useState<StockRow[]>([])
   const [adjustRow, setAdjustRow] = useState<StockRow | null>(null)
+  const [disposeRow, setDisposeRow] = useState<StockRow | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -166,6 +168,11 @@ export function StockTable({
                   </td>
                   <td className="px-4 py-3 text-end">
                     <Button variant="ghost" size="sm" onClick={() => setAdjustRow(r)}>{t('adjust')}</Button>
+                    {r.batch.quantityOnHand > 0 && (
+                      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDisposeRow(r)}>
+                        {t('dispose')}
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -181,6 +188,15 @@ export function StockTable({
           catalogItem={adjustRow.catalogItem}
           performedBy="local"
           onSaved={() => { setAdjustRow(null); /* reload */ location.reload() }}
+        />
+      )}
+      {disposeRow && (
+        <DisposeStockDialog
+          open={!!disposeRow}
+          onOpenChange={(o) => { if (!o) setDisposeRow(null) }}
+          batch={disposeRow.batch}
+          performedBy="local"
+          onSaved={() => { setDisposeRow(null); location.reload() }}
         />
       )}
     </div>
