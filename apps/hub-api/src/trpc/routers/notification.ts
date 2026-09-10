@@ -152,6 +152,49 @@ export const notificationRouter = createTRPCRouter({
     }),
 
   /**
+   * Acknowledge ALL of the caller's unread notifications in one call.
+   * Scoped to recipient_ref = caller and QUEUED/SENT status — never a
+   * cross-recipient update. Used by the "mark all read" action.
+   */
+  acknowledgeAll: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      const { error } = await ctx.supabase
+        .from('notifications')
+        .update(db.toRowRaw({
+          status: 'ACKNOWLEDGED',
+          acknowledgedAt: new Date().toISOString(),
+        }, 'non-PHI: notifications'))
+        .eq('recipient_ref', ctx.user.sub)
+        .in('status', ['QUEUED', 'SENT'])
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to acknowledge notifications',
+        })
+      }
+
+      // Audit bulk acknowledgement (append-only; recipient-scoped)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'UPDATE',
+          resourceType: 'NOTIFICATION',
+          resourceId: `all:${ctx.user.sub}`,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { notificationAction: 'acknowledged_all', recipientRef: ctx.user.sub },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'NOTIFICATION', resourceId: `all:${ctx.user.sub}` })
+      }
+
+      return { success: true }
+    }),
+
+  /**
    * Get unread notification count for the authenticated user.
    * Used by notification bell indicators in OPD Lite and Patient Lite Mobile.
    */

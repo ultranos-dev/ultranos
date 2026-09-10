@@ -1,6 +1,17 @@
 import type { Translations } from './en'
 
 const ar: Translations = {
+  interactions: {
+    title: 'فحص التداخل',
+    helper: 'أضف الأدوية للتحقق من التداخلات الدوائية.',
+    searchPlaceholder: 'ابحث عن دواء لإضافته',
+    checkButton: 'فحص التداخلات',
+    remove: 'حذف',
+    needTwo: 'أضف دواءين على الأقل للفحص.',
+    unavailable: 'فحص التداخل غير متاح. تحقق يدوياً قبل الوصف.',
+    noInteractions: 'لم يتم العثور على تداخلات بين هذه الأدوية.',
+    resultsTitle: 'التداخلات المكتشفة',
+  },
   tabs: { search: 'بحث', profile: 'الملف الشخصي', browse: 'تصفح', saved: 'المحفوظة', home: 'الرئيسية' },
   home: {
     greetingMorning: 'صباح الخير',

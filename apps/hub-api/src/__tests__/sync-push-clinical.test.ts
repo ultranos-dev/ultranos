@@ -188,10 +188,66 @@ function medicationRequestOp() {
   }
 }
 
+const SR_UUID = 'e1e1e1e1-0000-0000-0000-000000000001'
+
+function serviceRequestOp() {
+  return {
+    resourceType: 'ServiceRequest',
+    resourceId: SR_UUID,
+    action: 'create' as const,
+    hlcTimestamp: 'hlc-sr',
+    payload: JSON.stringify({
+      id: SR_UUID,
+      resourceType: 'ServiceRequest',
+      status: 'active',
+      intent: 'order',
+      priority: 'routine',
+      code: { coding: [{ system: 'http://loinc.org', code: '58410-2', display: 'CBC panel' }], text: 'CBC' },
+      orderDetail: [{ coding: [{ code: 'fasting' }] }],
+      subject: { reference: `Patient/${PATIENT_UUID}` },
+      encounter: { reference: `Encounter/${ENCOUNTER_UUID}` },
+      requester: { reference: `Practitioner/${PRACT_UUID}` },
+      authoredOn: '2026-06-25T10:05:00.000Z',
+      reasonCode: [{ text: 'suspected anemia' }],
+      note: [{ text: 'patient fasting since midnight' }],
+      _ultranos: { isOfflineCreated: true, specialInstructions: 'cold-chain sample', createdAt: '2026-06-25T10:05:00.000Z' },
+      meta: { lastUpdated: '2026-06-25T10:05:00.000Z', versionId: '1' },
+    }),
+  }
+}
+
 describe('sync.push — clinical resources', () => {
   const createCaller = createCallerFactory(appRouter)
 
   beforeEach(() => { vi.clearAllMocks() })
+
+  it('writes a ServiceRequest (lab order) to service_requests with flat columns and clinical PHI in encrypted columns', async () => {
+    const upserts: UpsertCall[] = []
+    const caller = createCaller({ supabase: makeSupabase(upserts), user: TEST_USER, headers: new Headers() })
+
+    const { results } = await caller.sync.push({ operations: [serviceRequestOp()] })
+
+    expect(results[0]!.success).toBe(true)
+    expect(upserts[0]!.table).toBe('service_requests')
+    const row = upserts[0]!.row
+    expect(row.resourceType).toBe('ServiceRequest')   // resource_type is NOT NULL
+    expect(row.status).toBe('active')
+    expect(row.intent).toBe('order')
+    expect(row.priority).toBe('routine')
+    expect(row.codeSystem).toBe('http://loinc.org')
+    expect(row.codeCode).toBe('58410-2')
+    expect(row.codeDisplay).toBe('CBC panel')
+    expect(row.patientId).toBe(PATIENT_UUID)          // stripped from Patient/<uuid>
+    expect(row.encounterId).toBe(ENCOUNTER_UUID)
+    expect(row.requesterId).toBe(PRACT_UUID)
+    // Clinical PHI → uniquely-named columns (encrypted at rest via randomizedFields).
+    expect(row.orderReasonCode).toMatchObject([{ text: 'suspected anemia' }])
+    expect(row.orderNote).toMatchObject([{ text: 'patient fasting since midnight' }])
+    // special_instructions reaches the lab — plaintext by design.
+    expect(row.specialInstructions).toBe('cold-chain sample')
+    expect(row.orgId).toBeUndefined()                 // service_requests has no org_id column
+    expect(row.hlcTimestamp).toBe('hlc-sr')
+  })
 
   it('writes an Encounter into the encounters table with org_id and mapped columns', async () => {
     const upserts: UpsertCall[] = []

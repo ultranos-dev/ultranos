@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl'
 import { formatDateTime, formatTime } from '@ultranos/ui-kit'
 import { useEncounterDetailData, formatVital } from '@/components/patient/useEncounterDetailData'
+import { DispenseStatusBadge } from '@/components/clinical/DispenseStatusBadge'
 
 interface EncounterDetailProps {
   encounterId: string
@@ -190,6 +191,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
                     · {rx.dosageInstruction[0].text}
                   </span>
                 )}
+                <DispenseStatusBadge status={rx._ultranos?.prescriptionStatus} />
               </li>
             ))}
           </ul>

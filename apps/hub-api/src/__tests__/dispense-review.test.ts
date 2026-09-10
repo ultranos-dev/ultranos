@@ -132,22 +132,51 @@ describe('dispenseReview.list', () => {
 describe('dispenseReview.updateStatus', () => {
   beforeEach(() => mockAuditEmit.mockClear())
 
-  // update chain: .from().update({...}).eq('id', reviewId).eq('status', 'PENDING')
-  function updateMockFrom(captureUpdate?: (payload: any) => void) {
+  const RESOLVED_ROW = {
+    id: REVIEW_UUID,
+    prescription_id: '44444444-4444-4444-4444-444444444444',
+    override_supervisor: '33333333-3333-3333-3333-333333333333',
+    status: 'APPROVED',
+  }
+
+  // update chain: .from().update({...}).eq('id', reviewId).eq('status', 'PENDING').select(...)
+  function updateMockFrom(captureUpdate?: (payload: any) => void, notifications?: any[]) {
     return vi.fn().mockImplementation((table: string) => {
+      if (table === 'notifications') {
+        return {
+          insert: vi.fn((rows: any) => {
+            if (notifications) notifications.push(...(Array.isArray(rows) ? rows : [rows]))
+            return { select: vi.fn().mockResolvedValue({ data: [{ id: 'n1' }], error: null }) }
+          }),
+        }
+      }
       if (table !== 'dispense_reviews') return {}
       return {
         update: vi.fn().mockImplementation((payload: any) => {
           captureUpdate?.(payload)
           return {
             eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ error: null }),
+              eq: vi.fn().mockReturnValue({
+                select: vi.fn().mockResolvedValue({ data: [RESOLVED_ROW], error: null }),
+              }),
             }),
           }
         }),
       }
     })
   }
+
+  it('notifies the pharmacist (override_supervisor) when the review is resolved', async () => {
+    const notifications: any[] = []
+    const ctx = createTestContext(updateMockFrom(undefined, notifications))
+    const caller = createCaller(ctx)
+    await caller.dispenseReview.updateStatus({ reviewId: REVIEW_UUID, status: 'APPROVED' })
+
+    const notif = notifications.find((n) => n.type === 'DISPENSE_REVIEW_RESOLVED')
+    expect(notif).toBeDefined()
+    expect(notif.recipientRef ?? notif.recipient_ref).toBe('33333333-3333-3333-3333-333333333333')
+    expect(notif.recipientRole ?? notif.recipient_role).toBe('PHARMACIST')
+  })
 
   it('sets status + reviewed_by + reviewed_at and returns success', async () => {
     let payload: any = null

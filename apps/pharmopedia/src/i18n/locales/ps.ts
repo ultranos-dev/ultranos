@@ -1,6 +1,17 @@
 import type { Translations } from './en'
 
 const ps: Translations = {
+  interactions: {
+    title: 'د تداخل کتنه',
+    helper: 'د دوايي تداخل د کتنې لپاره دواوې اضافه کړئ.',
+    searchPlaceholder: 'د اضافه کولو لپاره دوا ولټوئ',
+    checkButton: 'تداخلونه وګورئ',
+    remove: 'لرې کړئ',
+    needTwo: 'د کتنې لپاره لږ تر لږه دوه دواوې اضافه کړئ.',
+    unavailable: 'د تداخل کتنه شتون نلري. مخکې له تجویز لاسي تایید کړئ.',
+    noInteractions: 'د دې دواوو ترمنځ هیڅ تداخل ونه موندل شو.',
+    resultsTitle: 'موندل شوي تداخلونه',
+  },
   tabs: { search: 'لټون', profile: 'پروفایل', browse: 'ګرځول', saved: 'خوندي شوي', home: 'کور' },
   home: {
     greetingMorning: 'سهار مو پخیر',

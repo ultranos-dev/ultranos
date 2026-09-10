@@ -5,11 +5,14 @@ import { db } from '@/lib/db'
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-// Mock auth store
-vi.mock('@/stores/auth-session-store', () => ({
-  useAuthSessionStore: {
-    getState: () => ({ session: { token: 'test-token' } }),
-  },
+// Mock the Supabase browser client — fetchDiagnosticReportsForPatient reads the
+// access token from the Supabase session (not the auth-session store).
+vi.mock('@/lib/supabase', () => ({
+  getSupabaseBrowserClient: () => ({
+    auth: {
+      getSession: async () => ({ data: { session: { access_token: 'test-token' } } }),
+    },
+  }),
 }))
 
 const { mapHubReportToFhir, fetchDiagnosticReportsForPatient } = await import('@/lib/trpc')
@@ -227,6 +230,23 @@ describe('fetchDiagnosticReportsForPatient', () => {
     const cached = await db.diagnosticReports.get('cached-1')
     expect(cached).toBeDefined()
     expect(cached!.code.coding[0]!.display).toBe('Cached Test')
+  })
+
+  it('calls diagnosticReport.listByPatient with the real Patient/<id> reference', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ result: { data: { json: { reports: [] } } } }),
+    })
+
+    await fetchDiagnosticReportsForPatient('p9')
+
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    const url = mockFetch.mock.calls[0]![0] as string
+    // Must hit the implemented Hub procedure, not the non-existent lab.listReportsForPatient.
+    expect(url).toContain('diagnosticReport.listByPatient')
+    // Consent enforcement resolves on the real id, so the client sends Patient/<id>.
+    const decoded = decodeURIComponent(url.split('input=')[1]!)
+    expect(JSON.parse(decoded)).toEqual({ json: { patientRef: 'Patient/p9' } })
   })
 
   it('deduplicates concurrent calls for the same patient', async () => {

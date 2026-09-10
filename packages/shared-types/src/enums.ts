@@ -91,6 +91,8 @@ export enum AuditResourceType {
   LAB_SAMPLE = 'LAB_SAMPLE',
   // Story 50.2 — donor reports
   DIAGNOSTIC_REPORT = 'DIAGNOSTIC_REPORT',
+  // Lab ordering — FHIR ServiceRequest created by a clinician
+  SERVICE_REQUEST = 'SERVICE_REQUEST',
   // Story 49.1 — Data Budget Mode
   DATA_BUDGET = 'DATA_BUDGET',
   REFERENCE_RANGE = 'REFERENCE_RANGE',

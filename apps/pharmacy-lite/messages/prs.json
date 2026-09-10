@@ -1,4 +1,28 @@
 {
+  "notifications": {
+    "title": "اعلان‌ها",
+    "closeAria": "بستن اعلان‌ها",
+    "loading": "در حال بارگیری",
+    "empty": "هیچ اعلانی نیست",
+    "error": "بارگیری اعلان‌ها ناکام شد",
+    "bellAria": "اعلان‌ها",
+    "bellUnreadAria": "اعلان‌ها ({count} ناخوانده)",
+    "typeDispenseReviewResolved": "مرور توزیع حل شد",
+    "typePrescriptionDispensed": "نسخه توزیع شد",
+    "typeDefault": "اعلان"
+  },
+  "rxLookup": {
+    "title": "جستجوی نسخه",
+    "patientIdLabel": "شناسه مریض",
+    "patientIdPlaceholder": "پاسپورت صحی را اسکن کنید یا شناسه مریض را وارد کنید",
+    "lookup": "جستجو",
+    "searching": "در حال جستجو",
+    "noResults": "هیچ نسخه تحویل‌نشده برای این مریض وجود ندارد",
+    "colMedication": "دوا",
+    "colStatus": "وضعیت",
+    "colOrderedOn": "تاریخ درخواست",
+    "errorLookup": "جستجوی نسخه‌ها ناکام شد. شناسه را بررسی و دوباره تلاش کنید."
+  },
   "app": {
     "name": "دواخانه",
     "loading": "در حال بارگذاری...",
@@ -431,6 +455,7 @@
   "sidebar": {
     "dashboard": "داشبورد",
     "scanRx": "نسخه سکن",
+    "lookupRx": "جستجوی نسخه",
     "paperRx": "نسخه کاغذی",
     "queue": "صف انتظار",
     "history": "تاریخچه تحویل",

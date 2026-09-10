@@ -11,6 +11,18 @@ function snakeToCamel(obj: any): any {
   return result
 }
 
+// diagnosticReport.listByPatient blind-indexes the real patient id server-side
+// (lib/patient-ref → generateBlindIndex + getFieldEncryptionKeys) before querying.
+// Provide deterministic stand-ins so these tests don't require real keys/crypto.
+vi.mock('@ultranos/crypto/server', () => ({
+  generateBlindIndex: vi.fn((value: string) => `hmac_${value}`),
+  encryptField: vi.fn((v: string) => v),
+}))
+
+vi.mock('@/lib/field-encryption', () => ({
+  getFieldEncryptionKeys: vi.fn(() => ({ encryptionKey: 'e'.repeat(64), hmacKey: 'b'.repeat(64) })),
+}))
+
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => mockSupabaseClient),
   db: {
@@ -56,6 +68,10 @@ const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'ses
 const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-4', orgId: 'org-test-001' }
 const REPORT_UUID = '00000000-0000-4000-8000-000000000200'
 const PATIENT_REF = 'Patient/00000000-0000-4000-8000-000000000001'
+// diagnostic_reports.patient_ref is stored as a blind index (mocked as `hmac_<id>`).
+// read() blind-indexes the incoming real ref before comparing, so stored rows must
+// use the blind-indexed value.
+const PATIENT_BLIND_REF = 'hmac_00000000-0000-4000-8000-000000000001'
 const LAB_UUID = '00000000-0000-4000-8000-000000000300'
 const FILE_UUID = '00000000-0000-4000-8000-000000000400'
 
@@ -85,7 +101,7 @@ describe('diagnosticReport.read', () => {
       status: 'final',
       loinc_code: '26436-6',
       loinc_display: 'Laboratory studies',
-      patient_ref: PATIENT_REF,
+      patient_ref: PATIENT_BLIND_REF,
       performer_id: 'perf-001',
       lab_id: LAB_UUID,
       issued: '2026-05-10T10:00:00Z',

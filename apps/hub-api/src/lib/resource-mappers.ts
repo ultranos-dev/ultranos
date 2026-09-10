@@ -315,6 +315,59 @@ function flattenMedicationRequest(payload: FhirMedicationRequestPayload): Record
 }
 
 // ---------------------------------------------------------------------------
+// ServiceRequest (lab order) → service_requests table
+// ---------------------------------------------------------------------------
+
+interface FhirServiceRequestPayload {
+  id: string
+  resourceType?: string
+  status?: string
+  intent?: string
+  priority?: string
+  code?: { coding?: Array<{ system?: string; code?: string; display?: string }>; text?: string }
+  orderDetail?: unknown
+  subject?: { reference?: string }
+  encounter?: { reference?: string }
+  requester?: { reference?: string }
+  authoredOn?: string
+  reasonCode?: unknown
+  note?: unknown
+  _ultranos?: { isOfflineCreated?: boolean; specialInstructions?: string; createdAt?: string; hlcTimestamp?: string }
+  meta?: { lastUpdated?: string; versionId?: string }
+}
+
+function flattenServiceRequest(payload: FhirServiceRequestPayload): Record<string, unknown> {
+  const coding = payload.code?.coding?.[0]
+  return {
+    id: payload.id,
+    resourceType: 'ServiceRequest',                    // resource_type is NOT NULL
+    status: payload.status ?? 'active',
+    intent: payload.intent ?? 'order',
+    priority: payload.priority ?? null,
+    // code → three flat NOT NULL-ish columns (code_display nullable)
+    codeSystem: coding?.system ?? 'http://loinc.org',
+    codeCode: coding?.code ?? '',
+    codeDisplay: coding?.display ?? null,
+    orderDetail: payload.orderDetail ?? null,          // jsonb — standardized test codes, non-PHI
+    // References → bare UUID columns (patient_id is the pull/scope column).
+    patientId: (payload.subject?.reference ?? '').replace(/^Patient\//, '') || null,
+    encounterId: (payload.encounter?.reference ?? '').replace(/^Encounter\//, '') || null,
+    requesterId: (payload.requester?.reference ?? '').replace(/^Practitioner\//, '') || null,
+    authoredOn: payload.authoredOn ?? null,
+    // Clinical PHI → uniquely-named columns (migration 056), AES-256-GCM encrypted
+    // by db.toRow (randomizedFields). Never returned to Lab-Lite (data minimization).
+    orderReasonCode: payload.reasonCode ?? null,
+    orderNote: payload.note ?? null,
+    // special_instructions reaches the lab via pullOrders — operational, plaintext.
+    specialInstructions: payload._ultranos?.specialInstructions ?? null,
+    isOfflineCreated: payload._ultranos?.isOfflineCreated ?? false,
+    metaLastUpdated: payload.meta?.lastUpdated ?? new Date().toISOString(),
+    metaVersionId: payload.meta?.versionId ?? '1',
+    createdAt: payload._ultranos?.createdAt ?? new Date().toISOString(),
+  }
+}
+
+// ---------------------------------------------------------------------------
 // WholesaleCustomer → wholesale_customers table
 // ---------------------------------------------------------------------------
 
@@ -615,6 +668,7 @@ const mappers: Record<string, (payload: any) => Record<string, unknown>> = {
   AllergyIntolerance: flattenAllergyIntolerance,
   Condition: flattenCondition,
   MedicationRequest: flattenMedicationRequest,
+  ServiceRequest: flattenServiceRequest,
   Patient: flattenPatient,
   WholesaleCustomer: flattenWholesaleCustomer,
   SalesOrder: flattenSalesOrder,

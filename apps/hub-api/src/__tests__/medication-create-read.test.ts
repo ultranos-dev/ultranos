@@ -268,6 +268,10 @@ describe('medication.create', () => {
           medicationText: validCreateInput.medicationText,
           status: 'active',
           prescriptionStatus: 'ACTIVE',
+          // subject_reference is stored BARE (no `Patient/` prefix) to match the
+          // sync producer (flattenMedicationRequest) + sync.pull + listForPharmacy.
+          subjectReference: PATIENT_UUID,
+          encounterReference: ENCOUNTER_UUID,
         }),
       )
     } finally {

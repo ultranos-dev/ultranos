@@ -288,7 +288,12 @@ export async function enrichDrug(
 // Diagnostic reports (lab results) — Hub -> FHIR R4 -> local Dexie cache.
 // ---------------------------------------------------------------------------
 
-/** Flat lab-report row as returned by the Hub `lab.listReportsForPatient` procedure. */
+/**
+ * Flat lab-report row as returned by the Hub `diagnosticReport.listByPatient`
+ * procedure. The list projection is data-minimized: `performerDisplay`,
+ * `conclusion`, and `presentedForm` (PHI / file content) are only returned by
+ * `diagnosticReport.read` for a single report, so they are optional here.
+ */
 export interface HubDiagnosticReportItem {
   id: string
   resourceType: 'DiagnosticReport'
@@ -297,14 +302,14 @@ export interface HubDiagnosticReportItem {
   loincDisplay: string | null
   patientRef: string
   performerId: string | null
-  performerDisplay: string | null
+  performerDisplay?: string | null
   labId: string | null
   issued: string | null
   collectionDate: string | null
   virusScanStatus: string
   createdAt: string | null
-  conclusion: string | null
-  presentedForm:
+  conclusion?: string | null
+  presentedForm?:
     | Array<{ contentType?: string; data?: string; title?: string; url?: string }>
     | null
 }
@@ -366,8 +371,9 @@ const inFlightReportFetches = new Map<string, Promise<void>>()
  * is left intact (never cleared). Concurrent calls for the same patient share a
  * single request.
  *
- * NOTE: the Hub-side `lab.listReportsForPatient` procedure is the counterpart
- * this client expects; it must be implemented on hub-api for end-to-end sync.
+ * Calls `diagnosticReport.listByPatient` with the REAL `Patient/<id>` reference:
+ * consent enforcement resolves on the real id, and the Hub blind-indexes it
+ * server-side to match the data-minimized `patient_ref` stored on lab reports.
  */
 export async function fetchDiagnosticReportsForPatient(patientId: string): Promise<void> {
   const existing = inFlightReportFetches.get(patientId)
@@ -375,12 +381,19 @@ export async function fetchDiagnosticReportsForPatient(patientId: string): Promi
 
   const task = (async () => {
     try {
-      const { useAuthSessionStore } = await import('@/stores/auth-session-store')
-      const token = useAuthSessionStore.getState().session?.token
-      const input = encodeURIComponent(JSON.stringify({ json: { patientId } }))
-      const res = await fetch(`${getHubApiUrl()}/lab.listReportsForPatient?input=${input}`, {
+      // Auth token comes from the Supabase session (matches patient.list/search
+      // above) — the auth-session store holds no access token.
+      const headers: Record<string, string> = {}
+      if (typeof window !== 'undefined') {
+        const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+        const { data } = await getSupabaseBrowserClient().auth.getSession()
+        const token = data.session?.access_token
+        if (token) headers['Authorization'] = `Bearer ${token}`
+      }
+      const input = encodeURIComponent(JSON.stringify({ json: { patientRef: `Patient/${patientId}` } }))
+      const res = await fetch(`${getHubApiUrl()}/diagnosticReport.listByPatient?input=${input}`, {
         method: 'GET',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers,
       })
       if (!res.ok) return
       const body = (await res.json()) as {

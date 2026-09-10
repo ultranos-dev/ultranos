@@ -1,4 +1,28 @@
 {
+  "notifications": {
+    "title": "Notifications",
+    "closeAria": "Close notifications",
+    "loading": "Loading",
+    "empty": "No notifications",
+    "error": "Unable to load notifications",
+    "bellAria": "Notifications",
+    "bellUnreadAria": "Notifications ({count} unread)",
+    "typeDispenseReviewResolved": "Dispense review resolved",
+    "typePrescriptionDispensed": "Prescription dispensed",
+    "typeDefault": "Notification"
+  },
+  "rxLookup": {
+    "title": "Prescription lookup",
+    "patientIdLabel": "Patient ID",
+    "patientIdPlaceholder": "Scan Health Passport or enter patient ID",
+    "lookup": "Look up",
+    "searching": "Searching",
+    "noResults": "No un-dispensed prescriptions for this patient",
+    "colMedication": "Medication",
+    "colStatus": "Status",
+    "colOrderedOn": "Ordered on",
+    "errorLookup": "Could not look up prescriptions. Check the ID and try again."
+  },
   "app": {
     "name": "Pharmacy Lite",
     "loading": "Loading...",
@@ -431,6 +455,7 @@
   "sidebar": {
     "dashboard": "Dashboard",
     "scanRx": "Scan Rx",
+    "lookupRx": "Look up Rx",
     "paperRx": "Paper Rx",
     "queue": "Queue",
     "history": "Dispensing History",

@@ -22,6 +22,7 @@ const CLINICIAN_RESOURCES = new Set([
   'MedicationStatement',
   'ClinicalImpression',
   'DiagnosticReport',
+  'ServiceRequest',
   'Consent',
   'AllergyIntolerance',
 ])

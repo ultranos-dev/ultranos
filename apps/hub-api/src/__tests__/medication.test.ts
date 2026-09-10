@@ -784,6 +784,82 @@ describe('medication.recordDispense', () => {
     ).rejects.toThrow('UNAUTHORIZED')
   })
 
+  it('dispatches a PRESCRIPTION_DISPENSED notification to the prescriber on completed dispense', async () => {
+    const notificationInserts: any[] = []
+    const rxWithRequester = { ...ACTIVE_RX, requester_id: 'doctor-xyz' }
+    let rxN = 0
+    let dispN = 0
+    const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return entitlementMock()
+      if (table === 'consents') return consentMock()
+      if (table === 'audit_log') return auditLogMock()
+      if (table === 'medication_requests') {
+        rxN++
+        if (rxN === 1) {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: rxWithRequester, error: null }),
+              }),
+            }),
+          }
+        }
+        return {
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({ data: { id: RX_UUID_1, prescription_status: 'DISPENSED', status: 'completed', dispensed_at: '2026-04-29T12:00:00Z' }, error: null }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+      if (table === 'medication_dispenses') {
+        dispN++
+        if (dispN === 1) {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+                }),
+              }),
+            }),
+          }
+        }
+        return {
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { id: DISPENSE_UUID }, error: null }),
+            }),
+          }),
+        }
+      }
+      if (table === 'notifications') {
+        return {
+          insert: vi.fn((rows: any) => {
+            notificationInserts.push(...(Array.isArray(rows) ? rows : [rows]))
+            return { select: vi.fn().mockResolvedValue({ data: [{ id: 'n1' }], error: null }) }
+          }),
+        }
+      }
+      return passthrough()
+    })
+
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
+    const caller = createCaller(ctx)
+    await caller.medication.recordDispense(validInput)
+
+    const fulfilment = notificationInserts.find((n) => n.type === 'PRESCRIPTION_DISPENSED')
+    expect(fulfilment).toBeDefined()
+    // Addressed to the prescriber (requester_id) so their OPD notification bell shows it.
+    expect(fulfilment.recipientRef ?? fulfilment.recipient_ref).toBe('doctor-xyz')
+    expect(fulfilment.recipientRole ?? fulfilment.recipient_role).toBe('CLINICIAN')
+  })
+
   it('validates dispenseId is a UUID', async () => {
     const ctx = createTestContext({ user: TEST_USER })
     const caller = createCaller(ctx)

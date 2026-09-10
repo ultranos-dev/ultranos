@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod, FhirAllergyIntolerance, FhirMedicationStatementZod, AIModelType } from '@ultranos/shared-types'
+import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod, FhirAllergyIntolerance, FhirMedicationStatementZod, FhirServiceRequest, AIModelType } from '@ultranos/shared-types'
 import type { DrugBrand, DrugBrandPresentation } from '@ultranos/shared-types'
 import type { ClientAuditEvent } from '@ultranos/audit-logger/client'
 import type { DataUsageCategory } from '@ultranos/sync-engine'
@@ -41,6 +41,8 @@ export type LocalObservation = FhirObservation
 export type LocalCondition = FhirCondition
 
 export type LocalMedicationRequest = FhirMedicationRequestZod
+
+export type LocalServiceRequest = FhirServiceRequest
 
 export type LocalAllergyIntolerance = FhirAllergyIntolerance
 
@@ -200,6 +202,7 @@ class OpdLiteDatabase extends Dexie {
   observations!: EntityTable<LocalObservation, 'id'>
   conditions!: EntityTable<LocalCondition, 'id'>
   medications!: EntityTable<LocalMedicationRequest, 'id'>
+  serviceRequests!: EntityTable<LocalServiceRequest, 'id'>
   interactionAuditLog!: EntityTable<InteractionAuditEntry, 'id'>
   practitionerKeys!: EntityTable<PractitionerKeyEntry, 'publicKey'>
   syncQueue!: EntityTable<SyncQueueEntry, 'id'>
@@ -651,6 +654,14 @@ class OpdLiteDatabase extends Dexie {
       drugBrandPresentationsMirror: '&id, brandId',
       drugCatalogSyncMeta: '&key',
     })
+
+    // v25: Lab ordering (Gap #1). ServiceRequest orders created by the clinician.
+    // Encrypted — reasonCode/note carry clinical PHI (see PHI_TABLE_CONFIGS below).
+    // New table with no pre-existing plaintext data, so no encryption backfill needed.
+    this.version(25).stores({
+      serviceRequests:
+        'id, subject.reference, encounter.reference, status, meta.lastUpdated',
+    })
   }
 }
 
@@ -717,6 +728,19 @@ const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
   },
   {
     tableName: 'medications',
+    indexedFields: [
+      'id',
+      'status',
+      'subject.reference',
+      'encounter.reference',
+      '_ultranos.hlcTimestamp',
+      'meta.lastUpdated',
+    ],
+  },
+  {
+    // Lab orders (Gap #1). reasonCode/note are clinical PHI → encrypted into _enc;
+    // only routing/scoping fields stay indexed cleartext.
+    tableName: 'serviceRequests',
     indexedFields: [
       'id',
       'status',

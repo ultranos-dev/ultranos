@@ -1,4 +1,28 @@
 {
+  "notifications": {
+    "title": "الإشعارات",
+    "closeAria": "إغلاق الإشعارات",
+    "loading": "جاري التحميل",
+    "empty": "لا توجد إشعارات",
+    "error": "تعذّر تحميل الإشعارات",
+    "bellAria": "الإشعارات",
+    "bellUnreadAria": "الإشعارات ({count} غير مقروءة)",
+    "typeDispenseReviewResolved": "تمت مراجعة الصرف",
+    "typePrescriptionDispensed": "تم صرف الوصفة",
+    "typeDefault": "إشعار"
+  },
+  "rxLookup": {
+    "title": "البحث عن الوصفات",
+    "patientIdLabel": "معرّف المريض",
+    "patientIdPlaceholder": "امسح جواز الصحة أو أدخل معرّف المريض",
+    "lookup": "بحث",
+    "searching": "جاري البحث",
+    "noResults": "لا توجد وصفات غير مصروفة لهذا المريض",
+    "colMedication": "الدواء",
+    "colStatus": "الحالة",
+    "colOrderedOn": "تاريخ الطلب",
+    "errorLookup": "تعذّر البحث عن الوصفات. تحقق من المعرّف وحاول مرة أخرى."
+  },
   "app": {
     "name": "صيدلية",
     "loading": "جاري التحميل...",
@@ -431,6 +455,7 @@
   "sidebar": {
     "dashboard": "لوحة المعلومات",
     "scanRx": "مسح الوصفة",
+    "lookupRx": "البحث عن وصفة",
     "paperRx": "وصفة ورقية",
     "queue": "قائمة الانتظار",
     "history": "سجل الصرف",

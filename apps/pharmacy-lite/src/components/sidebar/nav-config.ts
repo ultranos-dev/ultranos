@@ -2,6 +2,7 @@ import type { LucideIcon } from '@ultranos/ui-kit/icons'
 import {
   Home,
   Scan,
+  Search,
   FileText,
   List,
   Clock,
@@ -53,8 +54,9 @@ export const navGroups: NavGroup[] = [
   {
     title: 'Dispensing',
     items: [
-      { titleKey: 'scanRx',  url: '/scan',     icon: Scan },
-      { titleKey: 'paperRx', url: '/paper-rx', icon: FileText },
+      { titleKey: 'scanRx',   url: '/scan',     icon: Scan },
+      { titleKey: 'lookupRx', url: '/lookup',   icon: Search },
+      { titleKey: 'paperRx',  url: '/paper-rx', icon: FileText },
       { titleKey: 'queue',   url: '/queue',    icon: List, badgeKey: 'pending' },
       { titleKey: 'history', url: '/history',  icon: Clock },
     ],

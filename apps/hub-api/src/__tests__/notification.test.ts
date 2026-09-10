@@ -186,3 +186,43 @@ describe('notification.acknowledge', () => {
     )
   })
 })
+
+describe('notification.acknowledgeAll', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('marks all of the caller\'s unread notifications acknowledged (scoped to recipient + unread status)', async () => {
+    const inMock = vi.fn().mockResolvedValue({ error: null })
+    const eqMock = vi.fn().mockReturnValue({ in: inMock })
+    const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
+    const localFrom = vi.fn((table: string) =>
+      table === 'notifications' ? { update: updateMock } : {},
+    )
+    const ctx = { supabase: { from: localFrom } as never, user: DOCTOR_USER, headers: new Headers() }
+
+    const router = createTRPCRouter({ notification: notificationRouter })
+    const caller = createCallerFactory(router)(ctx)
+
+    const result = await caller.notification.acknowledgeAll()
+
+    expect(result.success).toBe(true)
+    // Only the caller's own unread notifications — never a cross-recipient wipe.
+    expect(eqMock).toHaveBeenCalledWith('recipient_ref', 'doctor-1')
+    expect(inMock).toHaveBeenCalledWith('status', ['QUEUED', 'SENT'])
+    expect(mockAuditEmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'UPDATE',
+        resourceType: 'NOTIFICATION',
+        outcome: 'SUCCESS',
+        metadata: expect.objectContaining({ notificationAction: 'acknowledged_all' }),
+      }),
+    )
+  })
+
+  it('rejects unauthenticated requests', async () => {
+    const router = createTRPCRouter({ notification: notificationRouter })
+    const caller = createCallerFactory(router)(makeCtx(null))
+    await expect(caller.notification.acknowledgeAll()).rejects.toThrow()
+  })
+})

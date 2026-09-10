@@ -8,6 +8,7 @@ export function notificationLabelKey(type: string): string {
     case 'LAB_RESULT_AVAILABLE': return 'typeLab'
     case 'LAB_RESULT_ESCALATION': return 'typeLabUrgent'
     case 'PRESCRIPTION_READY': return 'typePrescription'
+    case 'PRESCRIPTION_DISPENSED': return 'typePrescriptionDispensed'
     case 'CONSENT_CHANGE': return 'typeConsent'
     case 'SYNC_CONFLICT': return 'typeSyncConflict'
     case 'ALLERGY_UPDATE': return 'typeAllergyUpdate'

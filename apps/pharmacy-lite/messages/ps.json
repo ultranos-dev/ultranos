@@ -1,4 +1,28 @@
 {
+  "notifications": {
+    "title": "خبرتیاوې",
+    "closeAria": "خبرتیاوې وتړئ",
+    "loading": "بارول کیږي",
+    "empty": "هیڅ خبرتیا نشته",
+    "error": "د خبرتیاوو بارول ونشو",
+    "bellAria": "خبرتیاوې",
+    "bellUnreadAria": "خبرتیاوې ({count} نالوستې)",
+    "typeDispenseReviewResolved": "د توزیع کتنه حل شوه",
+    "typePrescriptionDispensed": "نسخه توزیع شوه",
+    "typeDefault": "خبرتیا"
+  },
+  "rxLookup": {
+    "title": "د نسخې لټون",
+    "patientIdLabel": "د ناروغ پیژندنه",
+    "patientIdPlaceholder": "د روغتیا پاسپورټ سکین کړئ یا د ناروغ پیژندنه دننه کړئ",
+    "lookup": "لټون",
+    "searching": "په لټون کې",
+    "noResults": "د دې ناروغ لپاره هیڅ نه تحویل شوې نسخه نشته",
+    "colMedication": "دوا",
+    "colStatus": "حالت",
+    "colOrderedOn": "د غوښتنې نیټه",
+    "errorLookup": "د نسخو لټون ونشو. پیژندنه وګورئ او بیا هڅه وکړئ."
+  },
   "app": {
     "name": "دواخانه",
     "loading": "لوډ کیږي...",
@@ -431,6 +455,7 @@
   "sidebar": {
     "dashboard": "ډشبورډ",
     "scanRx": "نسخه سکن",
+    "lookupRx": "د نسخې لټون",
     "paperRx": "کاغذي نسخه",
     "queue": "د انتظار لیست",
     "history": "د ورکولو تاریخچه",

@@ -229,8 +229,8 @@ export interface NotificationItem {
  */
 export async function getUnreadCount(token: string): Promise<number> {
   try {
-    const input = encodeURIComponent(JSON.stringify({ json: { unreadOnly: true } }))
-    const res = await fetch(`${getHubApiUrl()}/lab.getNotificationCount?input=${input}`, {
+    // Generic notification router (the lab.* notification procedures never existed).
+    const res = await fetch(`${getHubApiUrl()}/notification.unreadCount`, {
       method: 'GET',
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -247,13 +247,14 @@ export async function getUnreadCount(token: string): Promise<number> {
  * Returns newest-first list of NotificationItems.
  */
 export async function listNotifications(token: string): Promise<NotificationItem[]> {
-  const res = await fetch(`${getHubApiUrl()}/lab.listNotifications`, {
+  const res = await fetch(`${getHubApiUrl()}/notification.list`, {
     method: 'GET',
     headers: { Authorization: `Bearer ${token}` },
   })
   if (!res.ok) throw new Error('Failed to fetch notifications')
-  const body = await res.json() as { result: { data: { json: NotificationItem[] } } }
-  return body.result.data.json
+  // notification.list returns { notifications: [...] }, not a bare array.
+  const body = await res.json() as { result: { data: { json: { notifications: NotificationItem[] } } } }
+  return body.result.data.json.notifications
 }
 
 /**
@@ -302,7 +303,7 @@ export async function listLabReports(
  * Mark a single notification as acknowledged.
  */
 export async function acknowledgeNotification(id: string, token: string): Promise<void> {
-  await fetch(`${getHubApiUrl()}/lab.acknowledgeNotification`, {
+  await fetch(`${getHubApiUrl()}/notification.acknowledge`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -316,7 +317,7 @@ export async function acknowledgeNotification(id: string, token: string): Promis
  * Mark all notifications as acknowledged (bulk).
  */
 export async function acknowledgeAllNotifications(token: string): Promise<void> {
-  await fetch(`${getHubApiUrl()}/lab.acknowledgeAllNotifications`, {
+  await fetch(`${getHubApiUrl()}/notification.acknowledgeAll`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

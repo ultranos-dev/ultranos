@@ -115,6 +115,11 @@ export function getEncryptionConfig() {
       // Lab result tables (Story 12.3)
       'report_conclusion',
       'encrypted_content',
+      // ServiceRequest (lab order) clinical PHI. Uniquely-named columns (migration
+      // 056) so encryption does not collide with encounters.reason_code /
+      // customer_ledger_entries.note. Never returned to Lab-Lite (data minimization).
+      'order_reason_code',
+      'order_note',
       // Paper prescription OCR metadata contains prescriber name and prescription date (Story 24.3)
       'ocr_metadata',
       // Patient PHI — encrypted copies for secure read (Story 16.2, Option A).

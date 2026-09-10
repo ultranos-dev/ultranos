@@ -323,8 +323,12 @@ export const medicationRouter = createTRPCRouter({
         medicationCodeableConcept: input.medicationCode,
         medicationDisplay: input.medicationDisplay,
         medicationText: input.medicationText ?? null,
-        subjectReference: `Patient/${input.patientId}`,
-        encounterReference: input.encounterId ? `Encounter/${input.encounterId}` : null,
+        // Stored BARE (no Patient/ or Encounter/ prefix) to match the sync producer
+        // (flattenMedicationRequest), sync.pull, and medication.listForPharmacy.
+        // A prefixed value here would (a) never match sync-path reads and (b) be
+        // double-prefixed by toFhirMedicationRequest on pull-back.
+        subjectReference: input.patientId,
+        encounterReference: input.encounterId ?? null,
         requesterId: ctx.user.sub,
         dosageInstruction: input.dosageInstruction ?? null,
         dispenseRequest: input.dispenseRequest ?? null,
@@ -469,7 +473,7 @@ export const medicationRouter = createTRPCRouter({
         .from('medication_requests')
         .select('id, status, prescription_status, intent, medication_codeable_concept, medication_display, medication_text, subject_reference, encounter_reference, requester_id, dosage_instruction, dispense_request, interaction_check, interaction_override, qr_code_id, authored_on, is_offline_created, hlc_timestamp, meta_last_updated, meta_version_id')
         .eq('id', input.prescriptionId)
-        .eq('subject_reference', `Patient/${input.patientId}`)
+        .eq('subject_reference', input.patientId) // bare — matches the sync storage convention
         .single()
 
       if (error || !data) {
@@ -507,6 +511,65 @@ export const medicationRouter = createTRPCRouter({
       }
 
       return decrypted
+    }),
+
+  /**
+   * Gap #4: List a patient's un-dispensed prescriptions for a pharmacist who has
+   * identified the patient (Health Passport identity QR or national-ID lookup) —
+   * the no-prescription-QR Hub pull path. Data-minimized to dispensing-relevant
+   * fields. Queried by the BARE patient UUID (the format the sync producer,
+   * flattenMedicationRequest, stores in subject_reference — NOT `Patient/<uuid>`).
+   * Consent is not re-checked here, matching the QR/getStatus dispensing flow
+   * (the patient presenting for a fill is operational pharmacy access).
+   */
+  listForPharmacy: roleRestrictedProcedure(['PHARMACIST'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('PHARMACY_LITE'))
+    .use(enforceResourceAccess('MedicationRequest'))
+    .input(z.object({ patientRef: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from('medication_requests')
+        .select('id, prescription_status, medication_display, medication_text, dosage_instruction, authored_on, requester_id')
+        .eq('subject_reference', input.patientRef)
+        .in('prescription_status', ['ACTIVE', 'PARTIALLY_DISPENSED'])
+        .order('authored_on', { ascending: false })
+
+      if (error) {
+        console.error('listForPharmacy error:', { code: error.code })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to retrieve prescriptions' })
+      }
+
+      const rows = db.fromRows(data ?? []) as Array<Record<string, unknown>>
+
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'PRESCRIPTION',
+          resourceId: `patient-prescriptions:${input.patientRef}`,
+          patientId: input.patientRef,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'list_for_pharmacy', resultCount: rows.length },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'PRESCRIPTION' })
+      }
+
+      return {
+        prescriptions: rows.map((r) => ({
+          id: r.id as string,
+          prescriptionStatus: (r.prescriptionStatus as string) ?? null,
+          medicationDisplay: (r.medicationDisplay as string) ?? null,
+          medicationText: (r.medicationText as string) ?? null,
+          dosageInstruction: r.dosageInstruction ?? null,
+          authoredOn: (r.authoredOn as string) ?? null,
+          requesterId: (r.requesterId as string) ?? null,
+        })),
+      }
     }),
 
   /**
@@ -758,7 +821,7 @@ export const medicationRouter = createTRPCRouter({
       // 1. Lookup prescription FIRST — reject early if not found (fixes W9)
       const { data: currentRx, error: fetchError } = await ctx.supabase
         .from('medication_requests')
-        .select('id, prescription_status, status, hlc_timestamp')
+        .select('id, prescription_status, status, hlc_timestamp, requester_id')
         .eq('id', input.prescriptionId)
         .single()
 
@@ -1038,6 +1101,53 @@ export const medicationRouter = createTRPCRouter({
         if (reviewError) {
           console.error('[DISPENSE_REVIEW] Create-on-override failed:', { code: reviewError.code })
           // do NOT throw — the dispense is committed; a missing review is logged + audited
+        }
+      }
+
+      // Gap #9: notify the prescriber that their prescription was dispensed, so
+      // their OPD notification bell surfaces it (complements the on-review status
+      // badge). Recipient is the prescriber's practitioner id — which equals their
+      // JWT `sub` today (no distinct practitioner_id claim is minted yet; see
+      // trpc/init.ts). Payload is data-minimized: opaque prescriptionId + status,
+      // NO medication name (CLAUDE.md: no PHI in notification payloads).
+      // Best-effort — the dispense is committed and must not roll back on failure.
+      if (currentRx.requester_id) {
+        try {
+          const { data: notifRows } = await ctx.supabase
+            .from('notifications')
+            .insert(
+              db.toRowRaw(
+                {
+                  recipientRef: currentRx.requester_id,
+                  recipientRole: 'CLINICIAN',
+                  type: 'PRESCRIPTION_DISPENSED',
+                  payload: JSON.stringify({ prescriptionId: input.prescriptionId, status: newPrescriptionStatus }),
+                  status: 'QUEUED',
+                  nextRetryAt: new Date(Date.now() + 60_000).toISOString(),
+                },
+                'non-PHI: notifications',
+              ),
+            )
+            .select('id')
+          const notifAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+          for (const n of notifRows ?? []) {
+            try {
+              await notifAudit.emit({
+                action: 'CREATE',
+                resourceType: 'NOTIFICATION',
+                resourceId: n.id as string,
+                actorId: ctx.user.sub,
+                actorRole: ctx.user.role,
+                outcome: 'SUCCESS',
+                sessionId: ctx.user.sessionId,
+                metadata: { notificationAction: 'dispatched_on_dispense', prescriptionId: input.prescriptionId },
+              })
+            } catch {
+              console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'NOTIFICATION' })
+            }
+          }
+        } catch {
+          console.warn('[NOTIFY] dispense fulfilment notification failed', { prescriptionId: input.prescriptionId })
         }
       }
 

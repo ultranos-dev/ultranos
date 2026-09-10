@@ -17,11 +17,13 @@
   "dependencies": {
     "@expo-google-fonts/manrope": "^0.3.0",
     "@expo-google-fonts/public-sans": "^0.3.0",
+    "@expo-google-fonts/space-mono": "^0.3.0",
     "@expo/metro-runtime": "~6.1.2",
     "@noble/ciphers": "^2.2.0",
     "@react-native-community/netinfo": "11.4.1",
     "@react-navigation/native": "^7.3.1",
     "@supabase/supabase-js": "^2.49.0",
+    "@ultranos/drug-db": "workspace:*",
     "@ultranos/shared-types": "workspace:*",
     "expo": "~54.0.0",
     "expo-asset": "~12.0.13",

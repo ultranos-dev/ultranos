@@ -290,6 +290,18 @@ export default function ProfileTab() {
         </View>
       )}
 
+      {/* Clinical tools — runtime drug-interaction checker */}
+      <Pressable
+        testID="open-interaction-check"
+        onPress={() => router.push('/check-interactions' as never)}
+        accessibilityRole="button"
+        accessibilityLabel={t('interactions.title')}
+        style={[styles.section, { backgroundColor: colors.surface, flexDirection: rtl ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between' }]}
+      >
+        <Text style={[styles.label, { color: colors.textPrimary, marginBottom: 0 }, align]}>{t('interactions.title')}</Text>
+        <Text style={{ color: colors.textMuted, fontFamily: FontFamily.sansSemibold }}>{rtl ? '‹' : '›'}</Text>
+      </Pressable>
+
       {/* ── PRESERVED: Preferences section ───────────────────────────────── */}
       <View style={[styles.section, { backgroundColor: colors.surface }]}>
         <Text style={[styles.label, { color: colors.textSecondary }, align]}>{t('profile.preferences')}</Text>

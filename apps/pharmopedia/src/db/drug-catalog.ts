@@ -101,6 +101,32 @@ export async function getDrugRowByAtcCode(
   )
 }
 
+/**
+ * Read every cached drug's Tier-2 monograph interactions, for the runtime
+ * interaction checker (Gap #8). Only rows with tier2_json (clinical+ tier) carry
+ * interactions; PATIENT-tier rows have none. Malformed JSON is skipped.
+ */
+export async function getAllInteractionDrugs(
+  db: SQLite.SQLiteDatabase,
+): Promise<Array<{ name: string; interactions: NonNullable<DrugEntryTier2['interactions']> }>> {
+  const rows = await db.getAllAsync<{ inn_name: string; tier2_json: string | null }>(
+    'SELECT inn_name, tier2_json FROM drug_catalog WHERE tier2_json IS NOT NULL'
+  )
+  const out: Array<{ name: string; interactions: NonNullable<DrugEntryTier2['interactions']> }> = []
+  for (const r of rows) {
+    if (!r.tier2_json) continue
+    try {
+      const tier2 = JSON.parse(r.tier2_json) as DrugEntryTier2
+      if (Array.isArray(tier2.interactions) && tier2.interactions.length > 0) {
+        out.push({ name: r.inn_name, interactions: tier2.interactions })
+      }
+    } catch {
+      // Skip malformed tier2 JSON rather than fail the whole check.
+    }
+  }
+  return out
+}
+
 /** Clear all drug_catalog rows, FTS index, and sync_meta. Called on logout. */
 export async function clearCatalog(db: SQLite.SQLiteDatabase): Promise<void> {
   await db.execAsync(`

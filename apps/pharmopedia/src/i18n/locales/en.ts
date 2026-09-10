@@ -1,4 +1,15 @@
 const en = {
+  interactions: {
+    title: 'Interaction check',
+    helper: 'Add medications to check for drug interactions.',
+    searchPlaceholder: 'Search a medication to add',
+    checkButton: 'Check interactions',
+    remove: 'Remove',
+    needTwo: 'Add at least two medications to check.',
+    unavailable: 'Interaction check unavailable. Verify manually before prescribing.',
+    noInteractions: 'No interactions found among these medications.',
+    resultsTitle: 'Interactions found',
+  },
   tabs: {
     search: 'Search',
     profile: 'Profile',

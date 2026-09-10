@@ -18,7 +18,7 @@ import { notificationLabelKey } from '@/lib/notification-label'
 // --- Type grouping for tab filters ---
 
 const LAB_TYPES = ['LAB_RESULT_AVAILABLE', 'LAB_RESULT_ESCALATION'] as const
-const RX_TYPES = ['PRESCRIPTION_READY'] as const
+const RX_TYPES = ['PRESCRIPTION_READY', 'PRESCRIPTION_DISPENSED'] as const
 const SYSTEM_TYPES = ['SYNC_CONFLICT', 'CONSENT_CHANGE', 'ALLERGY_UPDATE'] as const
 
 type TabKey = 'all' | 'lab' | 'rx' | 'system'

@@ -16,6 +16,7 @@ import { CommandPalette } from '@/components/layout/CommandPalette'
 import { useCommandPalette } from '@/hooks/use-command-palette'
 import { usePrescriptionStore } from '@/stores/prescription-store'
 import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
+import { LabOrderEntry } from '@/components/clinical/LabOrderEntry'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
 import { useTranslations, useLocale } from 'next-intl'
 import { formatTime } from '@ultranos/ui-kit'
@@ -85,6 +86,7 @@ function patientNameSegments(ext?: FhirPatient['_ultranos']): string[] {
 export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const tPatient = useTranslations('patient')
   const tPrescription = useTranslations('prescription')
+  const tLabOrder = useTranslations('labOrder')
   const tEncounter = useTranslations('encounter')
   const tNav = useTranslations('nav')
   const tSoap = useTranslations('soap')
@@ -918,7 +920,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                         type="button"
                         onClick={() => handleRemovePrescription(rx.id)}
                         className="!text-destructive"
-                        aria-label={tPrescription('cancelAria', { medication: rx.medicationCodeableConcept.text })}
+                        aria-label={tPrescription('cancelAria', { medication: rx.medicationCodeableConcept.text ?? '' })}
                       >
                         {tPrescription('cancel')}
                       </Button>
@@ -951,6 +953,24 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
               )}
             </div>
           )}
+        </Card>
+      )}
+
+      {/* Lab orders — visible only during active encounter */}
+      {isActive && (
+        <Card
+          as="section"
+          className="encounter-section"
+          style={{ animationDelay: '200ms' }}
+          aria-label={tLabOrder('title')}
+          data-section="lab-orders"
+          tabIndex={-1}
+        >
+          <LabOrderEntry
+            encounterId={activeEncounter.id}
+            patientId={patientId}
+            practitionerRef={practitionerRef}
+          />
         </Card>
       )}
 

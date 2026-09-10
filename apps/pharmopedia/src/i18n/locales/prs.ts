@@ -1,6 +1,17 @@
 import type { Translations } from './en'
 
 const prs: Translations = {
+  interactions: {
+    title: 'بررسی تداخل',
+    helper: 'برای بررسی تداخل دوایی، دواها را اضافه کنید.',
+    searchPlaceholder: 'برای افزودن، دوا را جستجو کنید',
+    checkButton: 'بررسی تداخل‌ها',
+    remove: 'حذف',
+    needTwo: 'برای بررسی حداقل دو دوا اضافه کنید.',
+    unavailable: 'بررسی تداخل در دسترس نیست. قبل از تجویز به‌صورت دستی تایید کنید.',
+    noInteractions: 'هیچ تداخلی میان این دواها یافت نشد.',
+    resultsTitle: 'تداخل‌های یافت‌شده',
+  },
   tabs: { search: 'جستجو', profile: 'پروفایل', browse: 'مرور', saved: 'ذخیره شده', home: 'خانه' },
   home: {
     greetingMorning: 'صبح بخیر',

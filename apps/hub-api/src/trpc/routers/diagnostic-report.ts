@@ -8,6 +8,7 @@ import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
 import { labRestrictedProcedure } from '../rbac'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
+import { patientBlindRef } from '@/lib/patient-ref'
 
 /**
  * DiagnosticReport domain router.
@@ -51,8 +52,10 @@ export const diagnosticReportRouter = createTRPCRouter({
         })
       }
 
-      // Verify consent was checked for the correct patient (match encounter.read pattern)
-      if (data.patient_ref !== input.patientRef) {
+      // Verify consent was checked for the correct patient (match encounter.read
+      // pattern). patient_ref is stored as a blind index, so compare against the
+      // blind index of the real ref the caller passed — not the raw ref.
+      if (data.patient_ref !== patientBlindRef(input.patientRef)) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Diagnostic report not found',
@@ -128,12 +131,17 @@ export const diagnosticReportRouter = createTRPCRouter({
     )
     .use(enforceConsentMiddleware('DiagnosticReport'))
     .query(async ({ ctx, input }) => {
+      // diagnostic_reports.patient_ref is stored as an HMAC blind index (lab write
+      // path). The caller passes the REAL id (so consent enforcement resolves the
+      // patient), so we blind-index it here before filtering. See lib/patient-ref.
+      const patientBlindIndex = patientBlindRef(input.patientRef)
+
       let query = ctx.supabase
         .from('diagnostic_reports')
         .select(
           'id, status, loinc_code, loinc_display, patient_ref, performer_id, lab_id, issued, collection_date, virus_scan_status, _ultranos_created_at'
         )
-        .eq('patient_ref', input.patientRef)
+        .eq('patient_ref', patientBlindIndex)
         .eq('virus_scan_status', 'clean')
         .order('collection_date', { ascending: false })
         .order('id', { ascending: false })

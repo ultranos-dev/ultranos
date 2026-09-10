@@ -16,6 +16,7 @@ export default defineConfig({
       '@/app': path.resolve(__dirname, 'app'),
       '@': path.resolve(__dirname, 'src'),
       '@ultranos/shared-types': path.resolve(__dirname, '../../packages/shared-types/src/index.ts'),
+      '@ultranos/drug-db': path.resolve(__dirname, '../../packages/drug-db/src/index.ts'),
       '@ultranos/ui-kit/components/ui/empty-state': path.resolve(__dirname, '../../packages/ui-kit/src/components/ui/empty-state.native.tsx'),
       '@ultranos/ui-kit/tokens.native': path.resolve(__dirname, '../../packages/ui-kit/src/tokens.native.ts'),
       '@ultranos/ui-kit/native': path.resolve(__dirname, '../../packages/ui-kit/src/native/index.ts'),

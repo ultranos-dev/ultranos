@@ -11,7 +11,7 @@ vi.mock('@/stores/auth-session-store', () => ({
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-const { searchDrugCatalog, setDrugPrice } = await import('@/lib/trpc')
+const { searchDrugCatalog, setDrugPrice, listPrescriptionsForPatient } = await import('@/lib/trpc')
 
 function mockOkJson(json: unknown) {
   mockFetch.mockResolvedValueOnce({
@@ -59,6 +59,40 @@ describe('searchDrugCatalog', () => {
   it('throws on non-ok response', async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 502 })
     await expect(searchDrugCatalog('ome')).rejects.toThrow('502')
+  })
+})
+
+describe('listPrescriptionsForPatient', () => {
+  beforeEach(() => { mockFetch.mockReset(); mockGetAccessToken.mockResolvedValue('pharm-token') })
+
+  it('GETs medication.listForPharmacy with the patient UUID', async () => {
+    mockOkJson({ result: { data: { json: { prescriptions: [] } } } })
+    await listPrescriptionsForPatient('00000000-0000-4000-8000-000000000001')
+    const [calledUrl, opts] = mockFetch.mock.calls[0] as [string, RequestInit]
+    expect(calledUrl).toContain('medication.listForPharmacy')
+    expect(opts.method).toBe('GET')
+    const inputParam = JSON.parse(new URL(calledUrl).searchParams.get('input')!)
+    expect(inputParam.json.patientRef).toBe('00000000-0000-4000-8000-000000000001')
+    expect((opts.headers as Record<string, string>)['Authorization']).toBe('Bearer pharm-token')
+  })
+
+  it('unwraps the prescriptions array', async () => {
+    mockOkJson({ result: { data: { json: { prescriptions: [{ id: 'rx1', medicationDisplay: 'Amoxicillin', prescriptionStatus: 'ACTIVE' }] } } } })
+    const result = await listPrescriptionsForPatient('00000000-0000-4000-8000-000000000001')
+    expect(result).toHaveLength(1)
+    expect(result[0]!.id).toBe('rx1')
+  })
+
+  it('returns [] when there is no access token', async () => {
+    mockGetAccessToken.mockResolvedValueOnce(null)
+    const result = await listPrescriptionsForPatient('00000000-0000-4000-8000-000000000001')
+    expect(result).toEqual([])
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('throws on non-ok response', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 500 })
+    await expect(listPrescriptionsForPatient('00000000-0000-4000-8000-000000000001')).rejects.toThrow('500')
   })
 })
 
