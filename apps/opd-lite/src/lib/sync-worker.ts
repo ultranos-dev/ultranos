@@ -6,15 +6,24 @@
  * Upgrade to Service Worker deferred per Dev Notes.
  */
 
-import { DrainWorker, type SyncResult, type SyncQueueEntry, type ConflictResolution, type SyncRecord } from '@ultranos/sync-engine'
+import { DrainWorker, ConnectivityManager, isImmediateSyncTier, type SyncResult, type SyncQueueEntry, type ConflictResolution, type SyncRecord } from '@ultranos/sync-engine'
 import { createMeterFetch } from '@ultranos/sync-engine'
 import { recordDataUsage } from './db'
-import { syncQueue, decryptEntryPayload } from './sync-queue'
+import { syncQueue, decryptEntryPayload, setOnEnqueuedBridge } from './sync-queue'
 import { encryptionKeyStore } from './encryption-key-store'
 import { auditPhiAccess, AuditAction } from './audit'
 import type { AuditResourceType } from './audit'
 
 let worker: DrainWorker | null = null
+let connectivityListenersAdded = false
+
+const connectivity = new ConnectivityManager()
+export function getConnectivity(): ConnectivityManager { return connectivity }
+
+// Stable references so the same functions can be passed to both
+// addEventListener and removeEventListener across start/stop cycles.
+const handleOnline  = (): void => connectivity.setOnline(true)
+const handleOffline = (): void => connectivity.setOnline(false)
 
 const meteredFetch = createMeterFetch(
   fetch,
@@ -40,6 +49,60 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
   worker = new DrainWorker({
     queue: syncQueue,
     pollIntervalMs: 30_000,
+
+    connectivity,
+    intervals: { healthyMs: 15_000, degradedMs: 60_000 },
+    enqueueDebounceMs: 300,
+
+    syncBatchFn: async (entries) => {
+      const token = config.getAuthToken()
+      const res = await meteredFetch(`${config.hubBaseUrl}/api/trpc/sync.push`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          json: {
+            operations: entries.map((entry) => ({
+              resourceType: entry.resourceType,
+              resourceId: entry.resourceId,
+              action: entry.action,
+              payload: entry.payload,
+              hlcTimestamp: entry.hlcTimestamp,
+            })),
+          },
+        }),
+      })
+      const out = new Map<string, SyncResult>()
+      if (!res.ok) {
+        for (const e of entries) out.set(e.resourceId, { success: false, error: `HTTP ${res.status}` })
+        return out
+      }
+      const data = await res.json() as {
+        result: { data: { json: { results: Array<{
+          resourceId: string; success: boolean
+          conflict?: { remoteVersion: SyncRecord }; error?: string; canonicalId?: string
+        }> } } }
+      }
+      const results = data.result?.data?.json?.results ?? []
+      const byId = new Map(results.map((r) => [r.resourceId, r]))
+      for (const entry of entries) {
+        const r = byId.get(entry.resourceId)
+        if (!r) { out.set(entry.resourceId, { success: false, error: 'Empty response from Hub' }); continue }
+        if (r.conflict) { out.set(entry.resourceId, { success: false, conflict: r.conflict }); continue }
+        // Preserve the DUPLICATE_OPEN_ENCOUNTER reconcile backstop from the single path.
+        if (!r.success && r.error === 'DUPLICATE_OPEN_ENCOUNTER' && entry.resourceType === 'Encounter' && r.canonicalId) {
+          try {
+            const { reconcileDuplicateEncounter } = await import('./reconcile-duplicate-encounter')
+            await reconcileDuplicateEncounter(entry.resourceId, r.canonicalId)
+            out.set(entry.resourceId, { success: true })
+          } catch {
+            out.set(entry.resourceId, { success: false, error: 'DUPLICATE_OPEN_ENCOUNTER_RECONCILE_FAILED' })
+          }
+          continue
+        }
+        out.set(entry.resourceId, r.success ? { success: true } : { success: false, error: r.error ?? 'Unknown error' })
+      }
+      return out
+    },
 
     decryptFn: decryptEntryPayload,
     isKeyAvailable: () => encryptionKeyStore.isReady(),
@@ -132,11 +195,31 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
   })
 
   worker.start()
+
+  // Bridge browser connectivity events into the manager for prompt state flips.
+  // Use stable named refs so listeners can be removed on stop, preventing
+  // listener accumulation across worker restart / dev Fast Refresh cycles.
+  if (typeof window !== 'undefined') {
+    if (!connectivityListenersAdded) {
+      window.addEventListener('online',  handleOnline)
+      window.addEventListener('offline', handleOffline)
+      connectivityListenersAdded = true
+    }
+  }
+
+  // Trigger drain (immediate for Tier-1) whenever a new entry is enqueued.
+  setOnEnqueuedBridge((input) => worker!.requestDrain({ immediate: isImmediateSyncTier(input.resourceType) }))
 }
 
 export function stopSyncWorker(): void {
+  setOnEnqueuedBridge(null)
   worker?.stop()
   worker = null
+  if (typeof window !== 'undefined' && connectivityListenersAdded) {
+    window.removeEventListener('online',  handleOnline)
+    window.removeEventListener('offline', handleOffline)
+    connectivityListenersAdded = false
+  }
 }
 
 /** Trigger an immediate drain cycle. No-op if worker not started. */

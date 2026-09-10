@@ -17,6 +17,7 @@ import {
   type SyncQueueStorage,
   type SyncQueueEntry,
   type SyncQueue,
+  type EnqueueInput,
 } from '@ultranos/sync-engine'
 import { encryptPayload, decryptPayload } from '@ultranos/crypto'
 import { db } from './db'
@@ -61,7 +62,15 @@ const dexieStorage: SyncQueueStorage = {
   },
 }
 
-const rawQueue = createSyncQueue(dexieStorage)
+// Late-bound so sync-worker can attach requestDrain after the worker is constructed.
+let onEnqueuedBridge: ((input: EnqueueInput) => void) | null = null
+export function setOnEnqueuedBridge(fn: typeof onEnqueuedBridge): void {
+  onEnqueuedBridge = fn
+}
+
+const rawQueue = createSyncQueue(dexieStorage, undefined, {
+  onEnqueued: (input) => { try { onEnqueuedBridge?.(input) } catch { /* never block enqueue */ } },
+})
 
 /**
  * Queue proxy that transparently encrypts payloads on enqueue.

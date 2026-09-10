@@ -37,7 +37,7 @@ export type {
 export { createSyncQueue, getBackoffMs, ENCRYPTED_PAYLOAD_PREFIX } from './queue.js'
 export { enqueueSyncAction } from './enqueue.js'
 export type { EnqueueSyncActionInput, EnqueueEncryptFn } from './enqueue.js'
-export { DrainWorker } from './drain-worker.js'
+export { DrainWorker, isImmediateSyncTier } from './drain-worker.js'
 export type { SyncResult, DrainWorkerConfig } from './drain-worker.js'
 export type {
   SyncQueueEntry,
@@ -62,3 +62,10 @@ export {
   isCycleBoundaryCrossed,
 } from './data-budget-calc.js'
 export type { ThresholdLevel } from './data-budget-calc.js'
+
+export { ConnectivityManager } from './connectivity-manager.js'
+export type {
+  ConnectivityState,
+  ConnectivitySample,
+  ConnectivityManagerConfig,
+} from './connectivity-manager.js'

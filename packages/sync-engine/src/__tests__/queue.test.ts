@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import {
   createSyncQueue,
   type SyncQueueEntry,
@@ -291,6 +291,21 @@ describe('sync queue', () => {
       const counts = await queue.getCounts()
       expect(counts.pendingCount).toBe(2)
       expect(counts.failedCount).toBe(0)
+    })
+  })
+
+  describe('onEnqueued hook', () => {
+    it('fires onEnqueued after a new enqueue and after a dedup-replace', async () => {
+      const { createSyncQueue } = await import('../queue.js')
+      const storage = createInMemoryStorage() // reuse the file's existing helper
+      const onEnqueued = vi.fn()
+      const q = createSyncQueue(storage, undefined, { onEnqueued })
+
+      await q.enqueue({ resourceType: 'Observation', resourceId: 'obs-1', action: 'create', payload: '{}', hlcTimestamp: '000001700000000:00000:node-1' })
+      await q.enqueue({ resourceType: 'Observation', resourceId: 'obs-1', action: 'update', payload: '{"v":2}', hlcTimestamp: '000001700000001:00000:node-1' })
+
+      expect(onEnqueued).toHaveBeenCalledTimes(2)
+      expect(onEnqueued).toHaveBeenLastCalledWith(expect.objectContaining({ resourceId: 'obs-1', action: 'update' }))
     })
   })
 

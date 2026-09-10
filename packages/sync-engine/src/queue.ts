@@ -52,7 +52,16 @@ export function getBackoffMs(retryCount: number): number {
   return Math.min(1000 * Math.pow(2, retryCount), 60_000)
 }
 
-export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_MAX_RETRIES) {
+export interface CreateSyncQueueOptions {
+  /** Fired after every successful enqueue (new or dedup-replace). Never throws upstream. */
+  onEnqueued?: (input: EnqueueInput) => void
+}
+
+export function createSyncQueue(
+  storage: SyncQueueStorage,
+  maxRetries = DEFAULT_MAX_RETRIES,
+  options: CreateSyncQueueOptions = {},
+) {
   return {
     /**
      * Enqueue a sync operation. Deduplicates by resourceId:
@@ -69,6 +78,7 @@ export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_
           hlcTimestamp: input.hlcTimestamp,
           createdAt: new Date().toISOString(),
         })
+        try { options.onEnqueued?.(input) } catch { /* hook must never break enqueue */ }
         return
       }
 
@@ -85,6 +95,7 @@ export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_
       }
 
       await storage.put(entry)
+      try { options.onEnqueued?.(input) } catch { /* hook must never break enqueue */ }
     },
 
     /** Get pending entries sorted by sync priority, excluding those in backoff. */
