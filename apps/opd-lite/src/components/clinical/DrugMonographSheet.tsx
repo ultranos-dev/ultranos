@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@ultranos/ui-kit/components/ui/sheet'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@ultranos/ui-kit/components/ui/dialog'
 import { Info } from '@ultranos/ui-kit/icons'
 import { isTier2 } from '@ultranos/drug-catalog-sync'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
@@ -48,16 +48,17 @@ export function DrugMonographSheet({ atcCode, label }: { atcCode: string; label:
   const t2 = entry && isTier2(entry) ? entry : null
 
   return (
-    <Sheet onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
+    <Dialog onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
         <button type="button" data-testid="monograph-trigger" className="text-sm font-medium text-primary underline underline-offset-2">
           <Info size={14} aria-hidden className="inline-block me-1" />{t('drugInfoTrigger')}
         </button>
-      </SheetTrigger>
-      <SheetContent side="right" className="overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>{label}</SheetTitle>
-        </SheetHeader>
+      </DialogTrigger>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{label}</DialogTitle>
+          <DialogDescription className="sr-only">{t('drugInfoTrigger')}</DialogDescription>
+        </DialogHeader>
         <div className="mt-4 space-y-4">
           {!loaded && <p className="text-sm text-muted-foreground">{t('monographLoading')}</p>}
           {loaded && !entry && <p className="text-sm text-muted-foreground">{t('limitedDataAvailable')}</p>}
@@ -132,7 +133,7 @@ export function DrugMonographSheet({ atcCode, label }: { atcCode: string; label:
           )}
           {loaded && entry && !t2 && <p className="text-sm text-muted-foreground">{t('clinicalDetailUnavailable')}</p>}
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }

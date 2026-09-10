@@ -27,6 +27,14 @@ describe('DrugMonographSheet', () => {
     expect(screen.getByText(/Bacterial infections/)).toBeInTheDocument()
   })
 
+  it('renders as a centered modal dialog (not a side drawer)', async () => {
+    await db.drugCatalogMirror.put(entry() as never)
+    render(<DrugMonographSheet atcCode="J01CA04" label="Amoxicillin 500mg" />)
+    fireEvent.click(screen.getByTestId('monograph-trigger'))
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toHaveAttribute('data-slot', 'dialog-content')
+  })
+
   it('shows a limited-data hint when the drug is not in the mirror', async () => {
     render(<DrugMonographSheet atcCode="ZZZ" label="Unknown" />)
     fireEvent.click(screen.getByTestId('monograph-trigger'))
