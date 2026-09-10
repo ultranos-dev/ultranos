@@ -1,18 +1,20 @@
 import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { enqueueStockBatchSync } from './stock-batch-sync'
-import type { StockBatch, StockMovement, StockMovementType } from './types'
+import type { StockBatch, StockMovement, StockMovementType, StockMovementReason } from './types'
 
 export async function deductStock(params: {
   stockBatchId: string
   catalogItemId: string
   quantity: number
   type: StockMovementType
+  reason?: string
+  reasonCode?: StockMovementReason
   referenceId?: string
   referenceType?: StockMovement['referenceType']
   performedBy: string
 }): Promise<StockBatch> {
-  const { stockBatchId, catalogItemId, quantity, type, referenceId, referenceType, performedBy } = params
+  const { stockBatchId, catalogItemId, quantity, type, reason, reasonCode, referenceId, referenceType, performedBy } = params
 
   const batch = await db.stockBatches.get(stockBatchId)
   if (!batch) throw new Error(`StockBatch not found: ${stockBatchId}`)
@@ -29,6 +31,8 @@ export async function deductStock(params: {
     catalogItemId,
     type,
     quantity: -quantity,
+    reason,
+    reasonCode,
     referenceId,
     referenceType,
     performedBy,
@@ -68,11 +72,13 @@ export async function addStock(params: {
   catalogItemId: string
   quantity: number
   type: StockMovementType
+  reason?: string
+  reasonCode?: StockMovementReason
   referenceId?: string
   referenceType?: StockMovement['referenceType']
   performedBy: string
 }): Promise<void> {
-  const { stockBatchId, catalogItemId, quantity, type, referenceId, referenceType, performedBy } = params
+  const { stockBatchId, catalogItemId, quantity, type, reason, reasonCode, referenceId, referenceType, performedBy } = params
 
   const now = new Date().toISOString()
   const movementId = crypto.randomUUID()
@@ -83,6 +89,8 @@ export async function addStock(params: {
     catalogItemId,
     type,
     quantity,
+    reason,
+    reasonCode,
     referenceId,
     referenceType,
     performedBy,

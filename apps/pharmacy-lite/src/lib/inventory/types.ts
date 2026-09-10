@@ -81,6 +81,24 @@ export type StockMovementRefType =
   | 'goods_receipt'
   | 'void'
   | 'sales_order'
+  | 'adjustment'
+  | 'disposal'
+
+export type StockAdjustmentReason =
+  | 'miscount'
+  | 'damage'
+  | 'theft'
+  | 'expiry_correction'
+  | 'system_error'
+
+export type StockDisposalReason =
+  | 'expired'
+  | 'damaged'
+  | 'contaminated'
+  | 'recalled'
+  | 'patient_return_unusable'
+
+export type StockMovementReason = StockAdjustmentReason | StockDisposalReason
 
 export interface StockMovement {
   id: string
@@ -89,6 +107,7 @@ export interface StockMovement {
   type: StockMovementType
   quantity: number
   reason?: string
+  reasonCode?: StockMovementReason
   referenceId?: string
   referenceType?: StockMovementRefType
   performedBy: string
