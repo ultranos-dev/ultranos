@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { addStock, deductStock } from './stock-service'
-import type { StockAdjustmentReason, StockMovementType } from './types'
+import type { StockAdjustmentReason, StockDisposalReason, StockMovementType } from './types'
 
 /**
  * Correct a batch's on-hand quantity to `newQuantity`, recording an
@@ -38,4 +38,35 @@ export async function recordAdjustment(params: {
   } else {
     await deductStock({ ...common, quantity: -delta })
   }
+}
+
+/**
+ * Remove `quantity` units from a batch as disposal/write-off, recording a
+ * `disposed` movement (refType `disposal`). Operates on active AND quarantined
+ * batches — disposal is how quarantined stock leaves the books. deductStock
+ * already flips the batch to `depleted` at zero and enqueues sync.
+ */
+export async function recordDisposal(params: {
+  stockBatchId: string
+  quantity: number
+  reasonCode: StockDisposalReason
+  note?: string
+  performedBy: string
+}): Promise<void> {
+  const { stockBatchId, quantity, reasonCode, note, performedBy } = params
+  if (quantity <= 0) throw new Error('quantity must be > 0')
+
+  const batch = await db.stockBatches.get(stockBatchId)
+  if (!batch) throw new Error(`StockBatch not found: ${stockBatchId}`)
+
+  await deductStock({
+    stockBatchId,
+    catalogItemId: batch.catalogItemId,
+    quantity,
+    type: 'disposed',
+    referenceType: 'disposal',
+    reason: note,
+    reasonCode,
+    performedBy,
+  })
 }
