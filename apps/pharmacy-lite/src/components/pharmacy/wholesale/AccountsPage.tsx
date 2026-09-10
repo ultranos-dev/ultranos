@@ -179,7 +179,7 @@ export function AccountsPage() {
               {accounts.map((account) => (
                 <tr key={account.id} className="hover:bg-muted/50">
                   <td className="px-4 py-3 font-medium text-foreground">{account.customerName}</td>
-                  <td className="px-4 py-3 tabular-nums text-warning font-semibold">
+                  <td className="px-4 py-3 tabular-nums text-warning font-semibold font-numeric">
                     {fmt(account.balance)}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">

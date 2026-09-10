@@ -262,7 +262,7 @@ export function CriticalValueAlert({
           </div>
           <div className="flex justify-between mt-1">
             <span className="font-medium">{t('time')}:</span>
-            <span>{timestamp}</span>
+            <span className="font-numeric">{timestamp}</span>
           </div>
         </div>
 

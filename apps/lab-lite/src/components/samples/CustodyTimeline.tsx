@@ -153,7 +153,7 @@ export function CustodyTimeline({ events, practitionerNames = {} }: CustodyTimel
                 </p>
                 <time
                   dateTime={event.timestamp}
-                  className="shrink-0 text-xs text-muted-foreground"
+                  className="shrink-0 text-xs text-muted-foreground font-numeric"
                 >
                   {formatTimestamp(event.timestamp, locale)}
                 </time>

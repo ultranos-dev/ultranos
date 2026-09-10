@@ -176,7 +176,7 @@ export default function LabsPage() {
                       <td className="px-4 py-3 text-muted-foreground">{lab.licenseReference}</td>
                       <td className="px-4 py-3 text-muted-foreground">{lab.accreditationReference ?? '—'}</td>
                       <td className="px-4 py-3 text-muted-foreground">{lab.technicianName}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{formatDate(lab.registeredAt)}</td>
+                      <td className="px-4 py-3 text-muted-foreground font-numeric">{formatDate(lab.registeredAt)}</td>
                       <td className="px-4 py-3"><StatusBadge status={lab.status} /></td>
                     </tr>
                   ))}

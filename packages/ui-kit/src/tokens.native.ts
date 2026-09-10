@@ -164,6 +164,12 @@ export const FontFamily = {
   heading:      'PublicSans',
   headingBold:  'PublicSans-Bold',
   arabic:       'NotoKufiArabic',
+  // Numeric — Google Space Mono. RN has no unicode-range fallback (the web
+  // digit-only trick), so numeric values are wrapped in <NumericText> which
+  // applies these families to the whole value string. Load via
+  // @expo-google-fonts/space-mono in each app's root _layout useFonts().
+  mono:         'SpaceMono',
+  monoBold:     'SpaceMono-Bold',
 } as const
 
 /** Returns the correct font family for the active locale. */

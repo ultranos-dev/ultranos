@@ -9,15 +9,20 @@
 :root {
   /* ── Typography ── */
   /* --font-manrope / --font-public-sans are injected by Next.js localFont() or next/font/google */
-  --font-family-sans: 'Noto Kufi Arabic', 'Noto Sans Arabic', var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-family-sans: 'Space Mono Numeric', 'Noto Kufi Arabic', 'Noto Sans Arabic', var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-family-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
   /* Tailwind-facing variables consumed by tailwind.preset.ts font-sans / font-heading.
-     Arabic fonts are listed FIRST. Their @font-face unicode-range (U+0600-06FF) means
+     'Space Mono Numeric' is FIRST: its @font-face (fonts-numeric.css) has a unicode-range
+     restricted to digits + currency + % (U+0030-0039, U+0024, U+0025, U+00A2-00A5, U+20AC),
+     so per-glyph fallback renders ONLY numbers in Space Mono while letters fall through to
+     the Arabic/Manrope faces below. Numbers therefore render mono app-wide with no per-site
+     markup — the digit-only trick. See apps/<app>/public/fonts-numeric.css.
+     Arabic fonts are listed next. Their @font-face unicode-range (U+0600-06FF) means
      the browser skips them for Latin — Manrope/PublicSans still render for English.
      For Arabic characters, the browser hits Noto Kufi Arabic before the OS font-linking
      layer can substitute Segoe UI. This fixes Arabic rendering in LTR (EN) locale. */
-  --font-sans: 'Noto Kufi Arabic', 'Noto Sans Arabic', var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-heading: 'Noto Kufi Arabic', 'Noto Sans Arabic', var(--font-public-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Space Mono Numeric', 'Noto Kufi Arabic', 'Noto Sans Arabic', var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: 'Space Mono Numeric', 'Noto Kufi Arabic', 'Noto Sans Arabic', var(--font-public-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Font sizes — modular scale (1.25 ratio) */
   --font-size-xs: 0.75rem;    /* 12px */
@@ -123,8 +128,9 @@
   --transition-normal: 250ms ease;
 
   /* ── Arabic font family stacks ── */
-  --font-family-sans-ar: 'Noto Sans Arabic', Tahoma, 'Segoe UI', sans-serif;
-  --font-family-serif-ar: 'Noto Kufi Arabic', var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* 'Space Mono Numeric' stays first so digits render mono in RTL locales too. */
+  --font-family-sans-ar: 'Space Mono Numeric', 'Noto Sans Arabic', Tahoma, 'Segoe UI', sans-serif;
+  --font-family-serif-ar: 'Space Mono Numeric', 'Noto Kufi Arabic', var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* ── RTL Typography defaults (LTR values) ── */
   --text-size-multiplier: 1;

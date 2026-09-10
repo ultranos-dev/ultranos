@@ -343,7 +343,7 @@ export default function LabStaffPage() {
                           ))}
                         </select>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">
+                      <td className="px-4 py-3 text-muted-foreground font-numeric">
                         {formatDate(member.createdAt)}
                       </td>
                       <td className="px-4 py-3">

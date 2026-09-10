@@ -201,7 +201,7 @@ exports[`OrdersPage > LTR snapshot 1`] = `
               </span>
             </td>
             <td
-              class="px-4 py-3 text-muted-foreground tabular-nums"
+              class="px-4 py-3 text-muted-foreground tabular-nums font-numeric"
             >
               AFN 0.00
             </td>
@@ -419,7 +419,7 @@ exports[`OrdersPage > RTL snapshot 1`] = `
               </span>
             </td>
             <td
-              class="px-4 py-3 text-muted-foreground tabular-nums"
+              class="px-4 py-3 text-muted-foreground tabular-nums font-numeric"
             >
               AFN 0.00
             </td>

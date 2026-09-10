@@ -733,6 +733,9 @@ importers:
       '@expo-google-fonts/public-sans':
         specifier: ^0.3.0
         version: 0.3.0
+      '@expo-google-fonts/space-mono':
+        specifier: ^0.3.0
+        version: 0.3.0
       '@expo/metro-runtime':
         specifier: ~6.1.2
         version: 6.1.2(expo@54.0.35)(react-dom@19.1.0(react@19.1.0))(react-native@0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.86.0(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.1.0))(react@19.1.0)
@@ -748,6 +751,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.49.0
         version: 2.104.1
+      '@ultranos/drug-db':
+        specifier: workspace:*
+        version: link:../../packages/drug-db
       '@ultranos/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
@@ -2230,6 +2236,9 @@ packages:
 
   '@expo-google-fonts/public-sans@0.3.0':
     resolution: {integrity: sha512-tM4YPq8v1J2aPfIuXPO+mr2IqGsuddf5/7c6grXH7USO2tqsr9/wDUV1bmfY12q/IsOehyZIr7jzKMz2eBimaA==}
+
+  '@expo-google-fonts/space-mono@0.3.0':
+    resolution: {integrity: sha512-mXG1c6zwnNyjQLX0yAGRhC1G/v5fUmwSLbF0VkOGmeEV36ICnk9mJD3JhqpkcHVFvW3UGg297z4XVoHg9pdGmw==}
 
   '@expo/bunyan@4.0.1':
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
@@ -11496,6 +11505,8 @@ snapshots:
   '@expo-google-fonts/manrope@0.3.0': {}
 
   '@expo-google-fonts/public-sans@0.3.0': {}
+
+  '@expo-google-fonts/space-mono@0.3.0': {}
 
   '@expo/bunyan@4.0.1':
     dependencies:

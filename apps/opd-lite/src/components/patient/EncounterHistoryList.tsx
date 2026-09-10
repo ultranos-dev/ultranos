@@ -354,7 +354,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
               >
                 {/* Date (bold) · Time · Doctor · [status badge] */}
                 <span className="flex w-full flex-wrap items-center gap-x-1.5 gap-y-1 text-sm" dir="auto">
-                  <span className="font-semibold text-foreground">{dateLabel ?? t('unknownDate')}</span>
+                  <span className="font-semibold text-foreground font-numeric">{dateLabel ?? t('unknownDate')}</span>
                   {timeLabel && (
                     <>
                       <span className="text-muted-foreground" aria-hidden="true">·</span>

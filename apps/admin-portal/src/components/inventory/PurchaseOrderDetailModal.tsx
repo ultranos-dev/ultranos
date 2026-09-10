@@ -57,7 +57,7 @@ export function PurchaseOrderDetailModal({ order, labNames, open, onOpenChange }
           </div>
           <div>
             <dt className="text-muted-foreground">Created</dt>
-            <dd className="text-foreground">{formatDate(order.createdAt)}</dd>
+            <dd className="text-foreground font-numeric">{formatDate(order.createdAt)}</dd>
           </div>
           {order.notes && (
             <div className="col-span-2">

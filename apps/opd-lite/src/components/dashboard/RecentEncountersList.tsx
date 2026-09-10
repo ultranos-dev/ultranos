@@ -163,7 +163,7 @@ export function RecentEncountersList() {
                       ))
                     : enc.patientName}
                 </p>
-                <p className="text-xs font-semibold text-muted-foreground">
+                <p className="text-xs font-semibold text-muted-foreground font-numeric">
                   {formatDate(enc.date)}
                 </p>
               </div>

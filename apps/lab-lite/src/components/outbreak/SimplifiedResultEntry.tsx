@@ -197,7 +197,7 @@ export function SimplifiedResultEntry({ outbreakConfig, onSubmit, onClose }: Pro
         backgroundColor: '#f9fafb', borderRadius: '6px', padding: '0.75rem',
         marginBlockEnd: '1.25rem', fontSize: '0.875rem', color: '#6b7280',
       }}>
-        <div>{t('fastEntryTimestampLabel')} <strong>{new Date().toLocaleTimeString()}</strong> {t('fastEntryTimestampAuto')}</div>
+        <div>{t('fastEntryTimestampLabel')} <strong className="font-numeric">{new Date().toLocaleTimeString()}</strong> {t('fastEntryTimestampAuto')}</div>
         <div>{t('fastEntryTechIdLabel')} <strong>{session?.practitionerId ?? '—'}</strong> {t('fastEntryTechIdSession')}</div>
       </div>
 

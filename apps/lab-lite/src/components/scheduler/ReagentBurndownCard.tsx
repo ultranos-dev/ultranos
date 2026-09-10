@@ -234,7 +234,7 @@ function ReagentRow({
       {/* Depletion date + reason badge */}
       <td className="py-2 px-2 text-sm text-foreground">
         <div className="flex flex-col gap-0.5">
-          <span>{formatDate(item.effectiveDepletionDate.toISOString())}</span>
+          <span className="font-numeric">{formatDate(item.effectiveDepletionDate.toISOString())}</span>
           <span className="text-xs text-muted-foreground">
             {t(`reason.${item.depletionReason}`)}
           </span>
@@ -242,11 +242,11 @@ function ReagentRow({
       </td>
 
       {/* Expiry date */}
-      <td className="py-2 px-2 text-sm text-muted-foreground">{formatDate(item.expiryDate)}</td>
+      <td className="py-2 px-2 text-sm text-muted-foreground font-numeric">{formatDate(item.expiryDate)}</td>
 
       {/* Reorder by */}
       <td className="py-2 px-2 text-sm font-medium text-foreground">
-        {formatDate(item.reorderDate.toISOString())}
+        <span className="font-numeric">{formatDate(item.reorderDate.toISOString())}</span>
         {item.supplierName && (
           <div className="text-xs text-muted-foreground font-normal">{item.supplierName}</div>
         )}

@@ -82,7 +82,7 @@ export function ReceiptView({ payment }: ReceiptViewProps) {
           {receipt.items.map((item, idx) => (
             <div key={idx} className="flex justify-between text-sm py-1">
               <span className="text-foreground">{item.name}</span>
-              <span className="font-medium text-foreground">{formatAFN(item.price)}</span>
+              <span className="font-medium text-foreground font-numeric">{formatAFN(item.price)}</span>
             </div>
           ))}
         </div>
@@ -90,16 +90,16 @@ export function ReceiptView({ payment }: ReceiptViewProps) {
         <div className="mt-3 border-t border-border pt-3 space-y-1">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t('total')}</span>
-            <span className="font-bold text-foreground">{formatAFN(receipt.totalAmount)}</span>
+            <span className="font-bold text-foreground font-numeric">{formatAFN(receipt.totalAmount)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t('paid')}</span>
-            <span className="font-medium text-foreground">{formatAFN(receipt.amountPaid)}</span>
+            <span className="font-medium text-foreground font-numeric">{formatAFN(receipt.amountPaid)}</span>
           </div>
           {receipt.outstandingBalance > 0 && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t('balance')}</span>
-              <span className="font-medium text-amber-600">{formatAFN(receipt.outstandingBalance)}</span>
+              <span className="font-medium text-amber-600 font-numeric">{formatAFN(receipt.outstandingBalance)}</span>
             </div>
           )}
           <div className="flex justify-between text-sm">

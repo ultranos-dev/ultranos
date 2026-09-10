@@ -106,26 +106,26 @@ export function CashDrawerPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-success">{t('drawerOpen')}</h2>
             <span className="text-xs text-muted-foreground">
-              Since {new Date(activeCashDrawer.openedAt).toLocaleTimeString()}
+              Since <span className="font-numeric">{new Date(activeCashDrawer.openedAt).toLocaleTimeString()}</span>
             </span>
           </div>
 
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-xs text-muted-foreground">{t('openingBalance')}</p>
-              <p className="text-sm font-semibold tabular-nums text-foreground">
+              <p className="text-sm font-semibold tabular-nums text-foreground font-numeric">
                 {fmt(activeCashDrawer.openingBalance)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">{t('cashIn')}</p>
-              <p className="text-sm font-semibold tabular-nums text-foreground">
+              <p className="text-sm font-semibold tabular-nums text-foreground font-numeric">
                 {fmt(activeCashDrawer.cashIn)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">{t('expectedBalance')}</p>
-              <p className="text-sm font-semibold tabular-nums text-foreground">
+              <p className="text-sm font-semibold tabular-nums text-foreground font-numeric">
                 {fmt(activeCashDrawer.openingBalance + activeCashDrawer.cashIn - activeCashDrawer.cashOut)}
               </p>
             </div>
@@ -205,15 +205,15 @@ export function CashDrawerPage() {
                     <p className="text-sm text-foreground">
                       {new Date(d.openedAt).toLocaleDateString()}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground font-numeric">
                       {new Date(d.openedAt).toLocaleTimeString()} - {d.closedAt ? new Date(d.closedAt).toLocaleTimeString() : '—'}
                     </p>
                   </div>
                   <div className="text-end">
-                    <p className="text-sm tabular-nums text-foreground">
+                    <p className="text-sm tabular-nums text-foreground font-numeric">
                       {fmt(d.closingBalance ?? 0)}
                     </p>
-                    <p className={`text-xs tabular-nums font-medium ${disc >= 0 ? 'text-success' : 'text-destructive'}`}>
+                    <p className={`text-xs tabular-nums font-medium font-numeric ${disc >= 0 ? 'text-success' : 'text-destructive'}`}>
                       {disc >= 0 ? '+' : ''}{fmt(disc)}
                     </p>
                   </div>

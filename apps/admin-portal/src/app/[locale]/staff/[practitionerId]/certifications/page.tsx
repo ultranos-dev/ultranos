@@ -217,8 +217,8 @@ export default function PractitionerCertificationsPage() {
                           <p className="text-sm font-medium text-foreground">{milestone.title}</p>
                           <p className="text-xs text-muted-foreground">
                             {formatType(milestone.type)} &middot; Required: {milestone.requiredCount}
-                            {milestone.submittedAt && <> &middot; Submitted: {formatDate(milestone.submittedAt)}</>}
-                            {milestone.approvedAt && <> &middot; Approved: {formatDate(milestone.approvedAt)}</>}
+                            {milestone.submittedAt && <> &middot; Submitted: <span className="font-numeric">{formatDate(milestone.submittedAt)}</span></>}
+                            {milestone.approvedAt && <> &middot; Approved: <span className="font-numeric">{formatDate(milestone.approvedAt)}</span></>}
                           </p>
                           {milestone.reviewerNote && (
                             <p className="text-xs text-muted-foreground mt-1 italic">Note: {milestone.reviewerNote}</p>

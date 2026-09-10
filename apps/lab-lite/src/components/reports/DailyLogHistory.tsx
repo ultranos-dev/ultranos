@@ -67,7 +67,7 @@ function LogEntry({ log, onViewImage, onStatusChange }: LogEntryProps) {
         />
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground">{formatDate(log.logDate)}</p>
+        <p className="text-sm font-semibold text-foreground font-numeric">{formatDate(log.logDate)}</p>
         <p className="text-xs text-muted-foreground mt-0.5">
           {totalTests} tests · {log.workflowMetrics.completionRate.toFixed(0)}% complete
           {log.status === 'shared' && (
@@ -149,7 +149,7 @@ function ImageModal({ log, onClose }: ImageModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">
-          <p className="font-semibold text-foreground">{formatDate(log.logDate)}</p>
+          <p className="font-semibold text-foreground font-numeric">{formatDate(log.logDate)}</p>
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-muted-foreground text-lg leading-none"

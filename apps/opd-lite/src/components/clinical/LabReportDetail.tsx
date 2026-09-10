@@ -232,11 +232,11 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
         </div>
         <div>
           <span className="font-medium text-muted-foreground">{t('collectionDate')}</span>
-          <p className="font-semibold text-foreground">{formatDateTime(report.effectiveDateTime)}</p>
+          <p className="font-semibold text-foreground font-numeric">{formatDateTime(report.effectiveDateTime)}</p>
         </div>
         <div>
           <span className="font-medium text-muted-foreground">{t('issued')}</span>
-          <p className="font-semibold text-foreground">{formatDateTime(report.issued)}</p>
+          <p className="font-semibold text-foreground font-numeric">{formatDateTime(report.issued)}</p>
         </div>
         <div>
           <span className="font-medium text-muted-foreground">{t('lab')}</span>

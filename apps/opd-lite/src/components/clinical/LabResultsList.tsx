@@ -215,7 +215,7 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
                       )}
                     </div>
                     <div className="mt-1 flex gap-3 text-xs text-muted-foreground">
-                      <span>{collectionDate}</span>
+                      <span className="font-numeric">{collectionDate}</span>
                       <span>{labName}</span>
                     </div>
                   </div>

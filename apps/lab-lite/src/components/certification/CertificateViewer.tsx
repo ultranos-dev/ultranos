@@ -61,9 +61,9 @@ export function CertificateViewer({ certificate }: CertificateViewerProps) {
           {certificate.milestoneName}
         </p>
         <p className="text-xs text-muted-foreground">
-          {t('issuedOn')}: {new Date(certificate.issuedAt).toLocaleDateString('en-GB', {
+          {t('issuedOn')}: <span className="font-numeric">{new Date(certificate.issuedAt).toLocaleDateString('en-GB', {
             day: 'numeric', month: 'long', year: 'numeric',
-          })}
+          })}</span>
         </p>
       </div>
 

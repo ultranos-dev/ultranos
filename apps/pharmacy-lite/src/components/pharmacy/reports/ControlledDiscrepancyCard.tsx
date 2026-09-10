@@ -64,7 +64,7 @@ export function ControlledDiscrepancyCard() {
               {d.variance > 0 ? '+' : ''}
               {d.variance}
             </span>
-            <span className="ms-auto text-muted-foreground tabular-nums">
+            <span className="ms-auto text-muted-foreground tabular-nums font-numeric">
               {new Date(d.countDate).toLocaleDateString(undefined, {
                 month: 'short',
                 day: 'numeric',

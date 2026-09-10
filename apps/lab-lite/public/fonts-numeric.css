@@ -1,0 +1,34 @@
+/*
+ * Numeric font loading — Google Space Mono (regular weight only).
+ *
+ * Self-hosted (offline-first PWA — numbers appear on every screen, online or not).
+ * Two faces, both mapped to the SAME regular woff2 and declared `font-weight: 100 900`
+ * so numbers ALWAYS render at regular weight with no faux-bold, even inside headings
+ * or semibold text. (A separate 700 face would make digits in bold contexts heavy.)
+ *
+ * 1. 'Space Mono Numeric' — unicode-range restricted to number glyphs. Declared FIRST
+ *    in the shared --font-sans / --font-heading stacks (@ultranos/ui-kit tokens.css),
+ *    so per-glyph fallback renders ONLY numbers in Space Mono app-wide, automatically,
+ *    while letters and prose punctuation fall through to Manrope / Noto.
+ *      U+0030-0039 digits · U+002D-U+002F -/ · U+003A : · U+0024 $ · U+0025 % · U+00A2-00A5 ¢£¤¥ · U+20AC € — covers full numeric dates (20/06/2026) & times (14:30)
+ *
+ * 2. 'Space Mono' — full Latin face (no unicode-range). Opt-in via the `font-numeric`
+ *    Tailwind utility, for rendering a WHOLE value in Space Mono — full dates
+ *    (20/06/2026), times (14:30), and currency incl. the code (120 AFN, USD 1,240)
+ *    — where the letters and separators must match the digits.
+ */
+@font-face {
+  font-family: 'Space Mono Numeric';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/space-mono/SpaceMono-Regular.woff2') format('woff2');
+  unicode-range: U+0030-0039, U+0024, U+0025, U+002D, U+002F, U+003A, U+00A2-00A5, U+20AC;
+}
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/space-mono/SpaceMono-Regular.woff2') format('woff2');
+}

@@ -300,7 +300,7 @@ function EventRow({
         onClick={onToggle}
         className="cursor-pointer transition-colors hover:bg-muted/50"
       >
-        <td className="px-4 py-3 text-muted-foreground">{formatTimestamp(event.timestamp)}</td>
+        <td className="px-4 py-3 text-muted-foreground font-numeric">{formatTimestamp(event.timestamp)}</td>
         <td className="px-4 py-3 font-mono text-xs font-medium text-foreground">{event.action}</td>
         <td className="px-4 py-3">
           <span className="font-medium text-foreground">{event.actorName}</span>

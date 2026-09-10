@@ -334,7 +334,7 @@ export default function LabDetailPage() {
                       {entry.changedByName && (
                         <span className="text-xs font-medium text-foreground">{entry.changedByName}</span>
                       )}
-                      <span className="text-xs text-muted-foreground">{formatDateTime(entry.changedAt)}</span>
+                      <span className="text-xs text-muted-foreground font-numeric">{formatDateTime(entry.changedAt)}</span>
                     </div>
                     {entry.reason && (
                       <p className="mt-1 text-sm text-muted-foreground">{entry.reason}</p>

@@ -349,7 +349,7 @@ export default function AlertDetailPage() {
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Date Range</dt>
-                <dd className="font-medium">{formatDate(alert.dateRangeStart)} – {formatDate(alert.dateRangeEnd)}</dd>
+                <dd className="font-medium font-numeric">{formatDate(alert.dateRangeStart)} – {formatDate(alert.dateRangeEnd)}</dd>
               </div>
             </dl>
           </div>
@@ -406,7 +406,7 @@ export default function AlertDetailPage() {
               {alert.reviewedAt && (
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">Reviewed At</dt>
-                  <dd className="font-medium">{formatDateTime(alert.reviewedAt)}</dd>
+                  <dd className="font-medium font-numeric">{formatDateTime(alert.reviewedAt)}</dd>
                 </div>
               )}
               {alert.reviewReason && (

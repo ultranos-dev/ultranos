@@ -501,7 +501,7 @@ export function NewOrderPage() {
                         className="w-28 rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       />
                     </td>
-                    <td className="px-3 py-2 text-end tabular-nums text-muted-foreground">
+                    <td className="px-3 py-2 text-end tabular-nums text-muted-foreground font-numeric">
                       {formatAmount(lineTotal(line), currency, currencyMinorUnits)}
                     </td>
                     <td className="px-3 py-2">
@@ -534,15 +534,15 @@ export function NewOrderPage() {
         <div className="space-y-1 text-sm">
           <div className="flex justify-between text-muted-foreground">
             <span>{t('newOrderSubtotal')}</span>
-            <span className="tabular-nums">{formatAmount(subtotalMinor, currency, currencyMinorUnits)}</span>
+            <span className="tabular-nums font-numeric">{formatAmount(subtotalMinor, currency, currencyMinorUnits)}</span>
           </div>
           <div className="flex justify-between text-muted-foreground">
             <span>{t('newOrderTax', { rate: taxRate.toFixed(1) })}</span>
-            <span className="tabular-nums">{formatAmount(taxAmountMinor, currency, currencyMinorUnits)}</span>
+            <span className="tabular-nums font-numeric">{formatAmount(taxAmountMinor, currency, currencyMinorUnits)}</span>
           </div>
           <div className="flex justify-between font-semibold text-foreground border-t border-border pt-1">
             <span>{t('newOrderTotal')}</span>
-            <span className="tabular-nums">{formatAmount(totalMinor, currency, currencyMinorUnits)}</span>
+            <span className="tabular-nums font-numeric">{formatAmount(totalMinor, currency, currencyMinorUnits)}</span>
           </div>
         </div>
       </div>

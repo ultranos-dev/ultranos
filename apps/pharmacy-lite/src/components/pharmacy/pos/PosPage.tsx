@@ -207,7 +207,7 @@ export function PosPage() {
                     </p>
                   </div>
                   <div className="text-end">
-                    <p className="text-sm font-semibold tabular-nums text-foreground">
+                    <p className="text-sm font-semibold tabular-nums text-foreground font-numeric">
                       {CURRENCY} {(inv.amountDue / Math.pow(10, CURRENCY_MINOR_UNITS)).toFixed(CURRENCY_MINOR_UNITS)}
                     </p>
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium capitalize ${

@@ -91,7 +91,7 @@ export function OutbreakDashboard({ outbreaks, onResolve: _onResolve, onRefresh 
                       Labs: {ob.affectedLabNames.join(', ')}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Activated: {formatDate(ob.activatedAt)}
+                      Activated: <span className="font-numeric">{formatDate(ob.activatedAt)}</span>
                     </p>
                     {ob.notes && (
                       <p className="text-xs text-muted-foreground mt-1">Notes: {ob.notes}</p>
@@ -167,8 +167,8 @@ export function OutbreakDashboard({ outbreaks, onResolve: _onResolve, onRefresh 
                       <td className="px-4 py-3 text-muted-foreground" title={ob.affectedLabNames.join(', ')}>
                         {ob.affectedLabNames.length} lab{ob.affectedLabNames.length > 1 ? 's' : ''}
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{formatDate(ob.activatedAt)}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{ob.resolvedAt ? formatDate(ob.resolvedAt) : '—'}</td>
+                      <td className="px-4 py-3 text-muted-foreground font-numeric">{formatDate(ob.activatedAt)}</td>
+                      <td className="px-4 py-3 text-muted-foreground font-numeric">{ob.resolvedAt ? formatDate(ob.resolvedAt) : '—'}</td>
                       <td className="px-4 py-3 text-muted-foreground">
                         {ob.resolvedAt ? formatDuration(ob.activatedAt, ob.resolvedAt) : '—'}
                       </td>

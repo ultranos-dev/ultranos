@@ -94,7 +94,7 @@ export function HeatMapGrid({ labs, reagentCategories, cells }: HeatMapGridProps
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-xl bg-popover text-foreground text-xs shadow-card border border-border opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 whitespace-nowrap z-50">
                         <p className="font-medium">{cell.labName}</p>
                         <p className="text-muted-foreground">{cell.reagentCategory}</p>
-                        <p className="text-muted-foreground">Reported: {formatDate(cell.reportedAt)}</p>
+                        <p className="text-muted-foreground">Reported: <span className="font-numeric">{formatDate(cell.reportedAt)}</span></p>
                       </div>
                     </div>
                   </td>

@@ -215,7 +215,7 @@ export function OrdersPage() {
                       {t(`orderStatus_${order.status}`)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground tabular-nums">
+                  <td className="px-4 py-3 text-muted-foreground tabular-nums font-numeric">
                     {formatAmount(order.total, currency, currencyMinorUnits)}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">

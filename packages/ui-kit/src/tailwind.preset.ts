@@ -5,11 +5,19 @@ const preset: Partial<Config> = {
   theme: {
     extend: {
       fontFamily: {
+        // 'Space Mono Numeric' is first: its @font-face (apps/<app>/public/fonts-numeric.css)
+        // has a unicode-range restricted to digits + currency + % so per-glyph fallback
+        // renders ONLY numbers in Space Mono; letters fall through to the faces below.
         // Arabic fonts are listed explicitly so Tailwind bakes them into the
         // generated CSS. unicode-range in fonts-arabic.css ensures the browser
         // only downloads / uses these for Arabic code points (U+0600-06FF).
-        sans:    ['Noto Kufi Arabic', 'Noto Sans Arabic', 'var(--font-sans)', 'system-ui', 'sans-serif'],
-        heading: ['Noto Kufi Arabic', 'Noto Sans Arabic', 'var(--font-heading)', 'system-ui', 'sans-serif'],
+        sans:    ['Space Mono Numeric', 'Noto Kufi Arabic', 'Noto Sans Arabic', 'var(--font-sans)', 'system-ui', 'sans-serif'],
+        heading: ['Space Mono Numeric', 'Noto Kufi Arabic', 'Noto Sans Arabic', 'var(--font-heading)', 'system-ui', 'sans-serif'],
+        // font-numeric — opt-in for rendering a WHOLE value in Space Mono (full face,
+        // not the digit-only range): full dates (20/06/2026), times (14:30), and
+        // currency incl. the code (120 AFN, USD 1,240) where letters + separators must
+        // match the digits. Regular weight only (see fonts-numeric.css).
+        numeric: ['Space Mono', 'Noto Kufi Arabic', 'Noto Sans Arabic', 'var(--font-sans)', 'system-ui', 'sans-serif'],
       },
       colors: {
         background: { DEFAULT: 'oklch(var(--background) / <alpha-value>)' },

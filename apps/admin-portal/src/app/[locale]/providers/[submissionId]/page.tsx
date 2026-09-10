@@ -400,7 +400,7 @@ export default function KycSubmissionDetailPage() {
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">SLA Deadline</dt>
-              <dd className={`font-medium ${detail.slaBreached ? 'text-destructive' : ''}`}>
+              <dd className={`font-medium font-numeric ${detail.slaBreached ? 'text-destructive' : ''}`}>
                 {formatDateTime(detail.slaDeadline)}
               </dd>
             </div>
@@ -413,7 +413,7 @@ export default function KycSubmissionDetailPage() {
             {detail.submission.reviewedAt && (
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Reviewed At</dt>
-                <dd className="font-medium">{formatDateTime(detail.submission.reviewedAt)}</dd>
+                <dd className="font-medium font-numeric">{formatDateTime(detail.submission.reviewedAt)}</dd>
               </div>
             )}
             {detail.submission.rejectionReason && (

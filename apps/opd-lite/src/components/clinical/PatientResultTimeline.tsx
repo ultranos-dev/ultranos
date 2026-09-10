@@ -146,7 +146,7 @@ function GroupCard({
             {statusBadge(group.latestResult.status, t)}
           </div>
           <div className="mt-0.5 flex gap-3 text-xs text-muted-foreground">
-            <span>{formatDate(group.latestResult.effectiveDateTime ?? group.latestResult.issued)}</span>
+            <span className="font-numeric">{formatDate(group.latestResult.effectiveDateTime ?? group.latestResult.issued)}</span>
             <span>{t('resultCount', { count: group.results.length })}</span>
             <span>{group.latestResult.performer?.[0]?.display ?? group.latestResult._ultranos?.labId ?? ''}</span>
           </div>
@@ -215,7 +215,7 @@ function GroupCard({
                       )}
                     </div>
                     <div className="mt-0.5 flex gap-3 text-xs text-muted-foreground">
-                      <span>{formatDate(report.effectiveDateTime ?? report.issued)}</span>
+                      <span className="font-numeric">{formatDate(report.effectiveDateTime ?? report.issued)}</span>
                       <span>{report.performer?.[0]?.display ?? report._ultranos?.labId ?? ''}</span>
                     </div>
                     {report.conclusion && (
@@ -402,7 +402,7 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
                   {report.code.coding?.[0]?.display ?? report.code.coding?.[0]?.code ?? t('unknownTest')}
                 </p>
                 <p className="text-xs text-destructive">
-                  {formatDate(report.effectiveDateTime ?? report.issued)}
+                  <span className="font-numeric">{formatDate(report.effectiveDateTime ?? report.issued)}</span>
                   {' · '}
                   {report.performer?.[0]?.display ?? ''}
                 </p>

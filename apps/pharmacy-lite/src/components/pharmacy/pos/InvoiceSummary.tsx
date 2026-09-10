@@ -55,8 +55,8 @@ export function InvoiceSummary({ invoice, currencyMinorUnits, currency }: Invoic
             <tr key={idx} className="border-b border-border">
               <td className="py-1.5 text-foreground">{item.description}</td>
               <td className="py-1.5 text-end tabular-nums text-muted-foreground">{item.quantity}</td>
-              <td className="py-1.5 text-end tabular-nums text-muted-foreground">{fmt(item.unitPrice)}</td>
-              <td className="py-1.5 text-end tabular-nums text-muted-foreground">{fmt(item.lineTotal)}</td>
+              <td className="py-1.5 text-end tabular-nums text-muted-foreground font-numeric">{fmt(item.unitPrice)}</td>
+              <td className="py-1.5 text-end tabular-nums text-muted-foreground font-numeric">{fmt(item.lineTotal)}</td>
             </tr>
           ))}
         </tbody>
@@ -66,23 +66,23 @@ export function InvoiceSummary({ invoice, currencyMinorUnits, currency }: Invoic
       <div className="space-y-1 border-t border-border pt-3 text-sm">
         <div className="flex justify-between text-muted-foreground">
           <span>{t('subtotal')}</span>
-          <span className="tabular-nums">{fmt(invoice.subtotal)}</span>
+          <span className="tabular-nums font-numeric">{fmt(invoice.subtotal)}</span>
         </div>
         <div className="flex justify-between text-muted-foreground">
           <span>{t('tax', { rate: (invoice.taxRate * 100).toFixed(1) })}</span>
-          <span className="tabular-nums">{fmt(invoice.taxAmount)}</span>
+          <span className="tabular-nums font-numeric">{fmt(invoice.taxAmount)}</span>
         </div>
         <div className="flex justify-between font-semibold text-foreground">
           <span>{t('total')}</span>
-          <span className="tabular-nums">{fmt(invoice.total)}</span>
+          <span className="tabular-nums font-numeric">{fmt(invoice.total)}</span>
         </div>
         <div className="flex justify-between text-muted-foreground">
           <span>{t('paid')}</span>
-          <span className="tabular-nums">{fmt(invoice.amountPaid)}</span>
+          <span className="tabular-nums font-numeric">{fmt(invoice.amountPaid)}</span>
         </div>
         <div className="flex justify-between font-semibold text-foreground">
           <span>{t('amountDue')}</span>
-          <span className="tabular-nums">{fmt(invoice.amountDue)}</span>
+          <span className="tabular-nums font-numeric">{fmt(invoice.amountDue)}</span>
         </div>
       </div>
     </div>

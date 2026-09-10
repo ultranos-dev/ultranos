@@ -118,7 +118,7 @@ export function AchievementBadge({
           </p>
         )}
         <p className="mt-0.5 text-xs opacity-70">{achievement.description}</p>
-        <p className="mt-1 text-xs opacity-60">{dateStr}</p>
+        <p className="mt-1 text-xs opacity-60 font-numeric">{dateStr}</p>
       </div>
     </div>
   )
@@ -152,7 +152,7 @@ export function TeamAchievementBadge({ achievement }: TeamBadgeProps) {
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-sm leading-snug">{config.nameKey}</p>
         <p className="mt-0.5 text-xs opacity-70">{achievement.description}</p>
-        <p className="mt-1 text-xs opacity-60">{dateStr}</p>
+        <p className="mt-1 text-xs opacity-60 font-numeric">{dateStr}</p>
       </div>
     </div>
   )

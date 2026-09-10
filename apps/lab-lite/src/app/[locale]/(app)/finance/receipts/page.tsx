@@ -58,7 +58,7 @@ export default function ReceiptsPage() {
                   {new Date(p.createdAt).toLocaleDateString()}
                 </span>
               </div>
-              <span className="text-sm font-semibold text-foreground">
+              <span className="text-sm font-semibold text-foreground font-numeric">
                 {new Intl.NumberFormat('fa-AF', { style: 'currency', currency: 'AFN' }).format(p.amount)}
               </span>
             </button>

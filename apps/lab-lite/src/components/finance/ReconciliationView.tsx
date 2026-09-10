@@ -102,19 +102,19 @@ export function ReconciliationView() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <span className="text-xs text-muted-foreground">{t('expectedTotal')}</span>
-                <p className="text-lg font-bold text-foreground">{formatAFN(stats.expectedTotal)}</p>
+                <p className="text-lg font-bold text-foreground font-numeric">{formatAFN(stats.expectedTotal)}</p>
               </div>
               <div>
                 <span className="text-xs text-muted-foreground">{t('collectedTotal')}</span>
-                <p className="text-lg font-bold text-foreground">{formatAFN(stats.collectedTotal)}</p>
+                <p className="text-lg font-bold text-foreground font-numeric">{formatAFN(stats.collectedTotal)}</p>
               </div>
               <div>
                 <span className="text-xs text-muted-foreground">{t('outstanding')}</span>
-                <p className="text-lg font-bold text-amber-600">{formatAFN(stats.outstanding)}</p>
+                <p className="text-lg font-bold text-amber-600 font-numeric">{formatAFN(stats.outstanding)}</p>
               </div>
               <div>
                 <span className="text-xs text-muted-foreground">{t('variance')}</span>
-                <p className={`text-lg font-bold ${stats.variance < 0 ? 'text-red-600' : 'text-foreground'}`}>
+                <p className={`text-lg font-bold font-numeric ${stats.variance < 0 ? 'text-red-600' : 'text-foreground'}`}>
                   {formatAFN(stats.variance)}
                 </p>
               </div>
@@ -146,7 +146,7 @@ export function ReconciliationView() {
                     <span className="text-foreground">
                       {method} ({t('methodCount', { count: String(v.count) })})
                     </span>
-                    <span className="font-medium text-foreground">{formatAFN(v.total)}</span>
+                    <span className="font-medium text-foreground font-numeric">{formatAFN(v.total)}</span>
                   </div>
                 ))}
             </div>
@@ -162,7 +162,7 @@ export function ReconciliationView() {
                     <span className="text-sm font-mono text-foreground">{p.receiptNumber}</span>
                     <span className="ms-2 text-xs text-muted-foreground">{p.paymentMethod}</span>
                   </div>
-                  <span className="text-sm font-semibold text-foreground">{formatAFN(p.amount)}</span>
+                  <span className="text-sm font-semibold text-foreground font-numeric">{formatAFN(p.amount)}</span>
                 </div>
               ))}
             </div>

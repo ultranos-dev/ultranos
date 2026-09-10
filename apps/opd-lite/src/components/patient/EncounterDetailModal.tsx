@@ -167,7 +167,7 @@ export function EncounterDetailModal({
             </div>
             <div className="min-w-0 flex-1">
               <DialogTitle className="flex flex-wrap items-baseline gap-x-1.5 text-base" dir="auto">
-                <span className="font-bold text-foreground">{dateLabel}</span>
+                <span className="font-bold text-foreground font-numeric">{dateLabel}</span>
                 {timeLabel && (
                   <>
                     <span className="text-muted-foreground" aria-hidden="true">·</span>

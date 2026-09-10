@@ -221,10 +221,10 @@ function ClinicalSafetySection() {
                     onClick={() => viewReport(r.month, r.year)}
                     className="cursor-pointer hover:bg-muted/50 transition-colors"
                   >
-                    <td className="px-4 py-3 font-medium">
+                    <td className="px-4 py-3 font-medium font-numeric">
                       {new Date(r.year, r.month - 1).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{formatDate(r.generatedAt)}</td>
+                    <td className="px-4 py-3 text-muted-foreground font-numeric">{formatDate(r.generatedAt)}</td>
                   </tr>
                 ))}
               </tbody>

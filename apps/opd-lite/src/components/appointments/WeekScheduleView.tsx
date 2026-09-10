@@ -226,7 +226,7 @@ export function WeekScheduleView() {
               <ChevronLeft className="h-5 w-5" />
             </DirectionalIcon>
           </Button>
-          <h2 className="text-base font-bold text-foreground">
+          <h2 className="text-base font-bold text-foreground font-numeric">
             {formatWeekRange(weekStart, weekEnd)}
           </h2>
           <Button
@@ -259,7 +259,7 @@ export function WeekScheduleView() {
             variant={isSameDay(currentDay, today) ? 'primary' : 'secondary'}
             type="button"
             onClick={() => handleDayClick(currentDay)}
-            className="px-4 py-2 text-sm"
+            className="px-4 py-2 text-sm font-numeric"
           >
             {currentDay.toLocaleDateString(undefined, {
               weekday: 'long',
@@ -361,7 +361,7 @@ export function WeekScheduleView() {
           </DirectionalIcon>
         </Button>
 
-        <h2 className="text-lg font-bold text-foreground">
+        <h2 className="text-lg font-bold text-foreground font-numeric">
           {formatWeekRange(weekStart, weekEnd)}
         </h2>
 
@@ -418,7 +418,7 @@ export function WeekScheduleView() {
                       variant="ghost"
                       type="button"
                       onClick={() => handleDayClick(day)}
-                      className="hover:underline"
+                      className="hover:underline font-numeric"
                     >
                       {formatShortDate(day)}
                     </Button>

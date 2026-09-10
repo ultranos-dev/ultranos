@@ -248,7 +248,7 @@ export default function ProviderProfilePage() {
 
             <div className="flex flex-col items-start gap-2 sm:items-end">
               <div className="text-sm text-muted-foreground">
-                {t('profileLicenseExpiry')}: <span className="font-medium text-foreground">{formatDate(practitioner.licenseExpiry)}</span>
+                {t('profileLicenseExpiry')}: <span className="font-medium text-foreground font-numeric">{formatDate(practitioner.licenseExpiry)}</span>
               </div>
               <LicenseUrgencyBadge daysRemaining={practitioner.daysRemaining} />
             </div>
@@ -312,7 +312,7 @@ export default function ProviderProfilePage() {
 
           <div className="mt-4 flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-semibold text-foreground">{formatDate(practitioner.licenseExpiry)}</span>
+              <span className="text-2xl font-semibold text-foreground font-numeric">{formatDate(practitioner.licenseExpiry)}</span>
               <LicenseUrgencyBadge daysRemaining={practitioner.daysRemaining} />
             </div>
 

@@ -140,7 +140,7 @@ function SessionInfoCard() {
       <div className="space-y-3">
         <div>
           <p className="text-xs font-medium text-muted-foreground">{t('loginTime')}</p>
-          <p className="text-sm text-foreground" data-testid="login-time">{loginTime}</p>
+          <p className="text-sm text-foreground font-numeric" data-testid="login-time">{loginTime}</p>
         </div>
         <div>
           <p className="text-xs font-medium text-muted-foreground">{t('sessionExpiry')}</p>

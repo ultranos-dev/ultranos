@@ -65,7 +65,7 @@ export function WasteSummaryView() {
           >
             &larr;
           </button>
-          <span className="text-sm font-medium min-w-[100px] text-center">
+          <span className="text-sm font-medium min-w-[100px] text-center font-numeric">
             {new Date(year, month - 1).toLocaleDateString(undefined, {
               year: 'numeric',
               month: 'long',

@@ -217,7 +217,7 @@ export default function KycQueuePage() {
                           {sub.providerName}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{formatDate(sub.submittedAt)}</td>
+                      <td className="px-4 py-3 text-muted-foreground font-numeric">{formatDate(sub.submittedAt)}</td>
                       <td className="px-4 py-3 text-muted-foreground">
                         {sub.licenseDocumentKey ? (
                           <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">

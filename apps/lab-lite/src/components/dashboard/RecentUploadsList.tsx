@@ -132,7 +132,7 @@ export function RecentUploadsList({ items, onItemCancelled }: RecentUploadsListP
                     <p className="truncate text-sm font-medium text-foreground">
                       {displayLabel}
                     </p>
-                    <p className="text-xs text-muted-foreground">{formatTimestamp(item.timestamp, locale)}</p>
+                    <p className="text-xs text-muted-foreground font-numeric">{formatTimestamp(item.timestamp, locale)}</p>
                   </div>
                   <div className="ms-2 flex shrink-0 items-center gap-2">
                     <span

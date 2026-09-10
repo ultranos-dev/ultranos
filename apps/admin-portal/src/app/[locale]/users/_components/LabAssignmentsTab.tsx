@@ -306,7 +306,7 @@ export default function LabAssignmentsTab() {
                     </td>
                     <td className="ps-4 pe-4 py-3"><RoleBadge role={row.labRole} /></td>
                     <td className="ps-4 pe-4 py-3 text-muted-foreground">{formatRelativeTime(row.lastActiveAt)}</td>
-                    <td className="ps-4 pe-4 py-3 text-muted-foreground">{formatDate(row.createdAt)}</td>
+                    <td className="ps-4 pe-4 py-3 text-muted-foreground font-numeric">{formatDate(row.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>

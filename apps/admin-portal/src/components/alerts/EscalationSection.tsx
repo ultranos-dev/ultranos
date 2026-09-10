@@ -156,7 +156,7 @@ export function EscalationSection({
         {escalatedAt && (
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Escalated at</dt>
-            <dd className="font-medium">{formatDateTime(escalatedAt)}</dd>
+            <dd className="font-medium font-numeric">{formatDateTime(escalatedAt)}</dd>
           </div>
         )}
       </dl>
@@ -179,7 +179,7 @@ export function EscalationSection({
           {resolvedAt && (
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Resolved at</dt>
-              <dd className="font-medium">{formatDateTime(resolvedAt)}</dd>
+              <dd className="font-medium font-numeric">{formatDateTime(resolvedAt)}</dd>
             </div>
           )}
         </dl>

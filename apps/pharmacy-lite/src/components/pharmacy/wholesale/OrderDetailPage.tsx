@@ -303,8 +303,8 @@ export function OrderDetailPage() {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground capitalize">{line.unit}</td>
                   <td className="px-4 py-3 text-end tabular-nums text-muted-foreground">{line.quantity}</td>
-                  <td className="px-4 py-3 text-end tabular-nums text-muted-foreground">{fmt(line.unitPrice)}</td>
-                  <td className="px-4 py-3 text-end tabular-nums text-muted-foreground">{fmt(line.lineTotal)}</td>
+                  <td className="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric">{fmt(line.unitPrice)}</td>
+                  <td className="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric">{fmt(line.lineTotal)}</td>
                 </tr>
               ))}
             </tbody>
@@ -318,15 +318,15 @@ export function OrderDetailPage() {
         <div className="space-y-1 text-sm">
           <div className="flex justify-between text-muted-foreground">
             <span>{t('newOrderSubtotal')}</span>
-            <span className="tabular-nums">{fmt(order.subtotal)}</span>
+            <span className="tabular-nums font-numeric">{fmt(order.subtotal)}</span>
           </div>
           <div className="flex justify-between text-muted-foreground">
             <span>{t('newOrderTax', { rate: order.taxRate.toFixed(1) })}</span>
-            <span className="tabular-nums">{fmt(order.taxAmount)}</span>
+            <span className="tabular-nums font-numeric">{fmt(order.taxAmount)}</span>
           </div>
           <div className="flex justify-between font-semibold text-foreground border-t border-border pt-2 mt-2">
             <span>{t('newOrderTotal')}</span>
-            <span className="tabular-nums">{fmt(order.total)}</span>
+            <span className="tabular-nums font-numeric">{fmt(order.total)}</span>
           </div>
         </div>
       </div>

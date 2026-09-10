@@ -136,7 +136,7 @@ export function SurveillanceAlertHistory() {
               <tbody className="divide-y divide-border">
                 {alerts.map((alert) => (
                   <tr key={alert.id} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-4 py-3 text-muted-foreground">{formatDateTime(alert.triggeredAt)}</td>
+                    <td className="px-4 py-3 text-muted-foreground font-numeric">{formatDateTime(alert.triggeredAt)}</td>
                     <td className="px-4 py-3 font-medium">{alert.labName}</td>
                     <td className="px-4 py-3 text-muted-foreground">{alert.testCategory}</td>
                     <td className="px-4 py-3">

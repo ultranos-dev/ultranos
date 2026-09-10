@@ -261,13 +261,13 @@ export default function UserDetailPage() {
               {/* Last Login */}
               <div>
                 <dt className="text-sm font-medium text-muted-foreground">{t('detailLastLogin')}</dt>
-                <dd className="mt-1 text-sm text-foreground">{formatDateTime(user.lastLoginAt, t('detailNever'))}</dd>
+                <dd className="mt-1 text-sm text-foreground font-numeric">{formatDateTime(user.lastLoginAt, t('detailNever'))}</dd>
               </div>
 
               {/* Created */}
               <div>
                 <dt className="text-sm font-medium text-muted-foreground">{t('detailCreatedAt')}</dt>
-                <dd className="mt-1 text-sm text-foreground">{formatDateTime(user.createdAt, t('detailNever'))}</dd>
+                <dd className="mt-1 text-sm text-foreground font-numeric">{formatDateTime(user.createdAt, t('detailNever'))}</dd>
               </div>
 
               {/* Save button */}

@@ -84,7 +84,7 @@ export function MilestoneReviewModal({ milestone, open, onOpenChange, onReviewed
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Submitted</span>
-            <span className="text-foreground">{formatDate(milestone.submittedAt)}</span>
+            <span className="text-foreground font-numeric">{formatDate(milestone.submittedAt)}</span>
           </div>
         </div>
 

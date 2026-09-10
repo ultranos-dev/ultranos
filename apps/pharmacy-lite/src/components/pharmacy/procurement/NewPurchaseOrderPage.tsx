@@ -404,7 +404,7 @@ export function NewPurchaseOrderPage() {
                       />
                     </td>
                     {/* Line total */}
-                    <td className="px-3 py-2 text-end tabular-nums text-muted-foreground">
+                    <td className="px-3 py-2 text-end tabular-nums text-muted-foreground font-numeric">
                       {formatAmount(lineTotal(line), currency, currencyMinorUnits)}
                     </td>
                     {/* Remove */}
@@ -436,7 +436,7 @@ export function NewPurchaseOrderPage() {
         <div className="space-y-1 text-sm">
           <div className="flex justify-between font-semibold text-foreground">
             <span>{t('newPoTotal')}</span>
-            <span className="tabular-nums">{formatAmount(totalMinor, currency, currencyMinorUnits)}</span>
+            <span className="tabular-nums font-numeric">{formatAmount(totalMinor, currency, currencyMinorUnits)}</span>
           </div>
         </div>
       </div>

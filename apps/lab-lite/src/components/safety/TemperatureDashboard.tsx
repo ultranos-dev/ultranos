@@ -177,7 +177,7 @@ export function TemperatureDashboard() {
                   <>
                     <div className="flex justify-between">
                       <dt>{t('lastReading')}</dt>
-                      <dd>{new Date(card.latestReading.timestamp).toLocaleTimeString()}</dd>
+                      <dd className="font-numeric">{new Date(card.latestReading.timestamp).toLocaleTimeString()}</dd>
                     </div>
                     <div className="flex justify-between">
                       <dt>{t('source')}</dt>

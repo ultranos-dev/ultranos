@@ -89,7 +89,7 @@ function ActiveRequestCard({ request, onClick }: RequestCardProps) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className="truncate font-medium text-sm">{reagentSummary}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{formatDate(request.requestedAt)}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 font-numeric">{formatDate(request.requestedAt)}</p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
           <span className={`rounded px-2 py-0.5 text-xs font-medium capitalize ${URGENCY_BADGE[request.urgency]}`}>
@@ -131,7 +131,7 @@ function HistoryRequestCard({ request, onClick }: RequestCardProps) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className="truncate font-medium text-sm">{reagentSummary}</p>
-          {delivered && <p className="text-xs text-muted-foreground mt-0.5">Delivered {formatDate(delivered)}</p>}
+          {delivered && <p className="text-xs text-muted-foreground mt-0.5">Delivered <span className="font-numeric">{formatDate(delivered)}</span></p>}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
           <StatusBadge status={request.status} />

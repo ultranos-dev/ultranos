@@ -169,13 +169,13 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
 
                 <div className="flex gap-2">
                   <span className="font-medium w-28 shrink-0">{t('initiated')}</span>
-                  <span className="text-muted-foreground">{formatTimestamp(amendment.initiatedAt)}</span>
+                  <span className="text-muted-foreground font-numeric">{formatTimestamp(amendment.initiatedAt)}</span>
                 </div>
 
                 {amendment.authorizedAt && (
                   <div className="flex gap-2">
                     <span className="font-medium w-28 shrink-0">{t('authorized')}</span>
-                    <span className="text-muted-foreground">{formatTimestamp(amendment.authorizedAt)}</span>
+                    <span className="text-muted-foreground font-numeric">{formatTimestamp(amendment.authorizedAt)}</span>
                   </div>
                 )}
 

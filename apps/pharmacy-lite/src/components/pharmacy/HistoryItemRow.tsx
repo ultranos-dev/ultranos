@@ -40,7 +40,7 @@ export function HistoryItemRow({ item }: HistoryItemRowProps) {
         </div>
         <div className="text-xs text-muted-foreground truncate">
           {item.patientFirstName} &middot; {item.pharmacistDisplay} &middot;{' '}
-          {formatTimestamp(item.whenHandedOver)}
+          <span className="font-numeric">{formatTimestamp(item.whenHandedOver)}</span>
         </div>
       </div>
       <Badge

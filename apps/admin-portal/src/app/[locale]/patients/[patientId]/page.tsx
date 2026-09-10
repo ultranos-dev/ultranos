@@ -146,7 +146,7 @@ export default function PatientDetailPage() {
                 <dt className="text-sm font-medium text-muted-foreground">{t('detailStatus')}</dt>
                 <dd className="mt-1"><StatusBadge active={patient.is_active} /></dd>
               </div>
-              <DetailRow label={t('detailCreatedAt')} value={formatDateTime(patient.created_at)} />
+              <DetailRow label={t('detailCreatedAt')} value={<span className="font-numeric">{formatDateTime(patient.created_at)}</span>} />
             </div>
 
             {/* Actions */}

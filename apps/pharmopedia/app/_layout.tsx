@@ -21,6 +21,10 @@ import {
   PublicSans_400Regular,
   PublicSans_700Bold,
 } from '@expo-google-fonts/public-sans'
+import {
+  SpaceMono_400Regular,
+  SpaceMono_700Bold,
+} from '@expo-google-fonts/space-mono'
 import { openDatabase, getDatabase } from '@/db/migrations'
 import { useAuthStore } from '@/store/auth-store'
 import { useDeviceSecurityStore } from '@/stores/device-security-store'
@@ -59,6 +63,8 @@ export default function RootLayout() {
     'Manrope-Bold':     Manrope_700Bold,
     'PublicSans':       PublicSans_400Regular,
     'PublicSans-Bold':  PublicSans_700Bold,
+    'SpaceMono':        SpaceMono_400Regular,
+    'SpaceMono-Bold':   SpaceMono_700Bold,
     NotoKufiArabic: require('../assets/fonts/NotoKufiArabic-Regular.ttf'),
   })
 

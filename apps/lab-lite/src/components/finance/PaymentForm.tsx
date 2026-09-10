@@ -175,7 +175,7 @@ export function PaymentForm() {
                   />
                   <span className="text-sm text-foreground">{test.testName}</span>
                 </div>
-                <span className="text-sm font-medium text-foreground">
+                <span className="text-sm font-medium text-foreground font-numeric">
                   {formatAFN(test.price)}
                 </span>
               </label>
@@ -184,7 +184,7 @@ export function PaymentForm() {
           {selectedTests.length > 0 && (
             <div className="mt-3 flex justify-between border-t border-border pt-3">
               <span className="text-sm font-semibold text-foreground">{t('totalDue')}</span>
-              <span className="text-sm font-bold text-foreground">{formatAFN(totalDue)}</span>
+              <span className="text-sm font-bold text-foreground font-numeric">{formatAFN(totalDue)}</span>
             </div>
           )}
         </div>
@@ -204,7 +204,7 @@ export function PaymentForm() {
           />
           {amountNum > 0 && amountNum < totalDue && (
             <p className="mt-2 text-sm text-amber-600">
-              {t('partialPaymentNote')} — {t('outstandingBalance')}: {formatAFN(outstandingBalance)}
+              {t('partialPaymentNote')} — {t('outstandingBalance')}: <span className="font-numeric">{formatAFN(outstandingBalance)}</span>
             </p>
           )}
         </div>

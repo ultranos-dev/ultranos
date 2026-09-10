@@ -290,10 +290,10 @@ export function CostSettingsForm() {
         ) : (
           <div className="flex gap-6 text-sm text-muted-foreground">
             <span>
-              {t('laborCostPerTestLabel')}: <strong>AFN {formatAFN(overheadCalc.laborCostPerTest)}</strong>
+              {t('laborCostPerTestLabel')}: <strong className="font-numeric">AFN {formatAFN(overheadCalc.laborCostPerTest)}</strong>
             </span>
             <span>
-              {t('overheadPerTestLabel')}: <strong>AFN {formatAFN(overheadCalc.overheadPerTest)}</strong>
+              {t('overheadPerTestLabel')}: <strong className="font-numeric">AFN {formatAFN(overheadCalc.overheadPerTest)}</strong>
             </span>
           </div>
         )}

@@ -5,7 +5,7 @@ exports[`TemperatureDashboard > RTL snapshot — renders location cards correctl
   dir="rtl"
 >
   <div
-    class="mx-auto max-w-4xl px-4 py-6"
+    class="flex flex-col gap-4"
   >
     <h1
       class="text-2xl font-bold text-foreground mb-6"
@@ -54,7 +54,9 @@ exports[`TemperatureDashboard > RTL snapshot — renders location cards correctl
             <dt>
               lastReading
             </dt>
-            <dd>
+            <dd
+              class="font-numeric"
+            >
               10:00:00 AM
             </dd>
           </div>
@@ -86,7 +88,7 @@ exports[`TemperatureDashboard > RTL snapshot — renders location cards correctl
           class="flex gap-2"
         >
           <button
-            class="group/button inline-flex items-center justify-center rounded-full border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 flex-1 text-xs"
+            class="group/button inline-flex items-center justify-center rounded-full border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 flex-1 text-xs"
             data-size="default"
             data-slot="button"
             data-variant="outline"
@@ -94,7 +96,7 @@ exports[`TemperatureDashboard > RTL snapshot — renders location cards correctl
             logReading
           </button>
           <button
-            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground h-9 gap-1.5 px-4 text-xs"
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 text-xs"
             data-size="default"
             data-slot="button"
             data-variant="ghost"

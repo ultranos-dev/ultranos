@@ -160,13 +160,13 @@ export function PatientAccountsPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-xl bg-card p-5 text-center shadow-card ring-[0.65px] ring-border/50">
             <p className="text-sm text-muted-foreground">{t('outstandingBalance')}</p>
-            <p className="text-2xl font-bold tabular-nums text-warning">
+            <p className="text-2xl font-bold tabular-nums text-warning font-numeric">
               {fmt(account?.balance ?? 0)}
             </p>
           </div>
           <div className="rounded-xl bg-card p-5 text-center shadow-card ring-[0.65px] ring-border/50">
             <p className="text-sm text-muted-foreground">{t('creditLimit')}</p>
-            <p className="text-2xl font-bold tabular-nums text-foreground">
+            <p className="text-2xl font-bold tabular-nums text-foreground font-numeric">
               {account?.creditLimit != null ? fmt(account.creditLimit) : t('noLimit')}
             </p>
           </div>
@@ -338,7 +338,7 @@ export function PatientAccountsPage() {
                       {t('lastActivity', { date: new Date(account.lastActivityAt).toLocaleDateString() })}
                     </p>
                   </div>
-                  <p className="text-sm font-semibold tabular-nums text-warning">
+                  <p className="text-sm font-semibold tabular-nums text-warning font-numeric">
                     {fmt(account.balance)}
                   </p>
                 </button>

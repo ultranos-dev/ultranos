@@ -92,7 +92,7 @@ function StatusHistoryEntry({ entry }: { entry: StatusUpdate }) {
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium capitalize">{entry.status}</span>
-          <span className="text-xs text-muted-foreground">{formatDate(entry.updatedAt)}</span>
+          <span className="text-xs text-muted-foreground font-numeric">{formatDate(entry.updatedAt)}</span>
         </div>
         {entry.note && <p className="text-xs text-muted-foreground">{entry.note}</p>}
         <p className="text-xs text-muted-foreground">by {entry.updatedBy}</p>

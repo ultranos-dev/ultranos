@@ -51,7 +51,7 @@ export function DrawerStatusCard() {
         </div>
         <div className="text-end">
           <p className="text-xs text-muted-foreground">{t('todaysRevenue')}</p>
-          <p className="text-sm font-semibold tabular-nums text-foreground">{fmt(revenue)}</p>
+          <p className="text-sm font-semibold tabular-nums text-foreground font-numeric">{fmt(revenue)}</p>
         </div>
       </div>
     </Link>

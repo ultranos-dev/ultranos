@@ -77,7 +77,7 @@ export default function ReagentDetailPage() {
             <dt className="text-muted-foreground">{t('detail.testsPerformed')}</dt>
             <dd>{reagent.testsPerformed}</dd>
             <dt className="text-muted-foreground">{t('detail.costPerUnit')}</dt>
-            <dd>{reagent.costPerUnit} AFN</dd>
+            <dd className="font-numeric">{reagent.costPerUnit} AFN</dd>
           </dl>
 
           {isActive && (

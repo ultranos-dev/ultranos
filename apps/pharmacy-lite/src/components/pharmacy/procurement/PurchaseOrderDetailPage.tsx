@@ -328,7 +328,7 @@ export function PurchaseOrderDetailPage() {
           </div>
           <div>
             <span className="text-muted-foreground">{t('detailTotal')}: </span>
-            <span className="tabular-nums text-foreground">{fmt(po.totalCost)}</span>
+            <span className="tabular-nums text-foreground font-numeric">{fmt(po.totalCost)}</span>
           </div>
           <div>
             <span className="text-muted-foreground">{t('detailCreatedAt')}: </span>
@@ -413,12 +413,12 @@ export function PurchaseOrderDetailPage() {
                         {item.quantityReceived}
                       </td>
                       <td
-                        className="px-4 py-3 text-end tabular-nums text-muted-foreground"
+                        className="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric"
                         data-testid={`item-unitcost-${item.catalogItemId}`}
                       >
                         {fmt(item.unitCost)}
                       </td>
-                      <td className="px-4 py-3 text-end tabular-nums text-muted-foreground">
+                      <td className="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric">
                         {fmt(lineTotal)}
                       </td>
                       {/* Per-item receipt qty input */}

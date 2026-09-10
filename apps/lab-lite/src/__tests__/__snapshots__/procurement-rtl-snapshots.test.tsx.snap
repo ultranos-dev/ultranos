@@ -201,7 +201,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
                 approved
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 3, 2026
               </span>
@@ -232,7 +232,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
                 received
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 2, 2026
               </span>
@@ -263,7 +263,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
                 submitted
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 1, 2026
               </span>
@@ -487,7 +487,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
                 cancelled
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 4, 2026
               </span>
@@ -523,7 +523,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
                 approved
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 3, 2026
               </span>
@@ -554,7 +554,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
                 received
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 2, 2026
               </span>
@@ -585,7 +585,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
                 submitted
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 1, 2026
               </span>
@@ -800,7 +800,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
                 delivered
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 15, 2026
               </span>
@@ -831,7 +831,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
                 shipped
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 5, 2026
               </span>
@@ -862,7 +862,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
                 ordered
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 4, 2026
               </span>
@@ -893,7 +893,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
                 approved
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 3, 2026
               </span>
@@ -924,7 +924,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
                 received
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 2, 2026
               </span>
@@ -955,7 +955,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
                 submitted
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 1, 2026
               </span>
@@ -1160,7 +1160,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders submitted status in LTR 
                 submitted
               </span>
               <span
-                class="text-xs text-muted-foreground"
+                class="text-xs text-muted-foreground font-numeric"
               >
                 May 1, 2026
               </span>
@@ -1387,7 +1387,7 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
                   shipped
                 </span>
                 <span
-                  class="text-xs text-muted-foreground"
+                  class="text-xs text-muted-foreground font-numeric"
                 >
                   May 5, 2026
                 </span>
@@ -1418,7 +1418,7 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
                   ordered
                 </span>
                 <span
-                  class="text-xs text-muted-foreground"
+                  class="text-xs text-muted-foreground font-numeric"
                 >
                   May 4, 2026
                 </span>
@@ -1449,7 +1449,7 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
                   approved
                 </span>
                 <span
-                  class="text-xs text-muted-foreground"
+                  class="text-xs text-muted-foreground font-numeric"
                 >
                   May 3, 2026
                 </span>
@@ -1480,7 +1480,7 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
                   received
                 </span>
                 <span
-                  class="text-xs text-muted-foreground"
+                  class="text-xs text-muted-foreground font-numeric"
                 >
                   May 2, 2026
                 </span>
@@ -1511,7 +1511,7 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
                   submitted
                 </span>
                 <span
-                  class="text-xs text-muted-foreground"
+                  class="text-xs text-muted-foreground font-numeric"
                 >
                   May 1, 2026
                 </span>
@@ -1726,7 +1726,7 @@ exports[`OrderStatusPipeline — RTL snapshot > renders in RTL direction (dir=au
                   submitted
                 </span>
                 <span
-                  class="text-xs text-muted-foreground"
+                  class="text-xs text-muted-foreground font-numeric"
                 >
                   May 1, 2026
                 </span>

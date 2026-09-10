@@ -401,7 +401,7 @@ export function CustomerDetailPage() {
                   <React.Fragment key={price.id}>
                     <tr className="hover:bg-muted/50">
                       <td className="px-4 py-3 text-foreground">{itemName(price.catalogItemId)}</td>
-                      <td className="px-4 py-3 text-end tabular-nums text-muted-foreground">
+                      <td className="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric">
                         {formatAmount(price.priceMinor, currency, currencyMinorUnits)}
                       </td>
                       <td className="px-4 py-3 text-end">
@@ -426,7 +426,7 @@ export function CustomerDetailPage() {
                               <div key={idx} className="flex items-center gap-3 text-xs">
                                 <span className="text-foreground tabular-nums">{tier.minQuantity}</span>
                                 <span className="text-muted-foreground">·</span>
-                                <span className="text-foreground tabular-nums">
+                                <span className="text-foreground tabular-nums font-numeric">
                                   {formatAmount(tier.priceMinor, currency, currencyMinorUnits)}
                                 </span>
                                 <Button

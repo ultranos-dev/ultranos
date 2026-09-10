@@ -149,8 +149,8 @@ export default function SubscriptionsPage() {
                       <td className="px-4 py-3">
                         <StatusBadge status={sub.status} />
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{formatDate(sub.startedAt)}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{formatDate(sub.expiresAt)}</td>
+                      <td className="px-4 py-3 text-muted-foreground font-numeric">{formatDate(sub.startedAt)}</td>
+                      <td className="px-4 py-3 text-muted-foreground font-numeric">{formatDate(sub.expiresAt)}</td>
                       <td className="px-4 py-3 text-end text-muted-foreground">${sub.monthlyCostUsd.toFixed(2)}</td>
                       <td className="px-4 py-3 text-end">
                         {(sub.status === 'ACTIVE' || sub.status === 'TRIAL') && (

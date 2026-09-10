@@ -76,7 +76,7 @@ export function TransferCard({
       <p className="mb-1 text-sm text-muted-foreground">{itemsSummary}</p>
 
       {/* Date */}
-      <p className="mb-3 text-xs tabular-nums text-muted-foreground">
+      <p className="mb-3 text-xs tabular-nums text-muted-foreground font-numeric">
         {new Date(displayDate).toLocaleDateString(undefined, {
           year: 'numeric',
           month: 'short',

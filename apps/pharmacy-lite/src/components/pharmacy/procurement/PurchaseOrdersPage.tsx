@@ -230,7 +230,7 @@ export function PurchaseOrdersPage() {
                       {statusLabel(po.status)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground tabular-nums">
+                  <td className="px-4 py-3 text-muted-foreground tabular-nums font-numeric">
                     {formatAmount(po.totalCost, currency, currencyMinorUnits)}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">

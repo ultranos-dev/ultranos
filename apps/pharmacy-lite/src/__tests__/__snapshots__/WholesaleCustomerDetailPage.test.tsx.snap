@@ -242,7 +242,7 @@ exports[`CustomerDetailPage > LTR snapshot 1`] = `
                 Amoxicillin 500mg
               </td>
               <td
-                class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+                class="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric"
               >
                 AFN 50.00
               </td>
@@ -648,7 +648,7 @@ exports[`CustomerDetailPage > LTR snapshot with tiers 1`] = `
                 Amoxicillin 500mg
               </td>
               <td
-                class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+                class="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric"
               >
                 AFN 50.00
               </td>
@@ -723,7 +723,7 @@ exports[`CustomerDetailPage > LTR snapshot with tiers 1`] = `
                       ·
                     </span>
                     <span
-                      class="text-foreground tabular-nums"
+                      class="text-foreground tabular-nums font-numeric"
                     >
                       AFN 15.00
                     </span>
@@ -1114,7 +1114,7 @@ exports[`CustomerDetailPage > RTL snapshot 1`] = `
                 Amoxicillin 500mg
               </td>
               <td
-                class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+                class="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric"
               >
                 AFN 50.00
               </td>
@@ -1520,7 +1520,7 @@ exports[`CustomerDetailPage > RTL snapshot with tiers 1`] = `
                 Amoxicillin 500mg
               </td>
               <td
-                class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+                class="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric"
               >
                 AFN 50.00
               </td>
@@ -1595,7 +1595,7 @@ exports[`CustomerDetailPage > RTL snapshot with tiers 1`] = `
                       ·
                     </span>
                     <span
-                      class="text-foreground tabular-nums"
+                      class="text-foreground tabular-nums font-numeric"
                     >
                       AFN 15.00
                     </span>

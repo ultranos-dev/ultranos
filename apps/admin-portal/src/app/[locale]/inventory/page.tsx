@@ -273,7 +273,7 @@ export default function InventoryPage() {
                             <td className="px-4 py-3">
                               <OrderStatusPipeline currentStatus={order.status} />
                             </td>
-                            <td className="px-4 py-3 text-muted-foreground">{formatDate(order.createdAt)}</td>
+                            <td className="px-4 py-3 text-muted-foreground font-numeric">{formatDate(order.createdAt)}</td>
                             <td className="px-4 py-3 text-center">
                               <Button
                                 variant="outline"

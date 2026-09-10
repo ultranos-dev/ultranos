@@ -122,7 +122,7 @@ export function UploadHistoryList({
                         {item.testCategory}
                       </p>
                     )}
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="mt-0.5 text-xs text-muted-foreground font-numeric">
                       {formatTimestamp(item.uploadDate)}
                     </p>
                     {item.status === 'failed' && item.failureReason && (

@@ -695,7 +695,7 @@ export default function MentorshipPage() {
                           <p className="text-xs text-muted-foreground">{truncateEmail(p.menteeEmail)}</p>
                         </td>
                         <td className="px-4 py-3 text-foreground">{p.labName}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{formatDate(p.startDate)}</td>
+                        <td className="px-4 py-3 text-muted-foreground font-numeric">{formatDate(p.startDate)}</td>
                         <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
                         <td className="px-4 py-3">
                           {p.status === 'ACTIVE' && (

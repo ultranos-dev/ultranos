@@ -56,7 +56,7 @@ exports[`AccountsPage > LTR snapshot 1`] = `
               Kabul Pharma
             </td>
             <td
-              class="px-4 py-3 tabular-nums text-warning font-semibold"
+              class="px-4 py-3 tabular-nums text-warning font-semibold font-numeric"
             >
               AFN 30.00
             </td>
@@ -142,7 +142,7 @@ exports[`AccountsPage > RTL snapshot 1`] = `
               Kabul Pharma
             </td>
             <td
-              class="px-4 py-3 tabular-nums text-warning font-semibold"
+              class="px-4 py-3 tabular-nums text-warning font-semibold font-numeric"
             >
               AFN 30.00
             </td>

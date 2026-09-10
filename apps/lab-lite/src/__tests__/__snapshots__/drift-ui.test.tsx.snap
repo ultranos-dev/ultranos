@@ -163,7 +163,7 @@ exports[`WestgardHistoryView > RTL snapshots > DriftAlertBanner renders correctl
 exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders correctly in LTR 1`] = `
 <div>
   <div
-    class="space-y-6"
+    class="space-y-4"
   >
     <div
       class="overflow-x-auto rounded-lg border border-border bg-card"
@@ -229,7 +229,7 @@ exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders corre
             <td
               class="px-3 py-2.5 text-foreground"
             >
-              6/5/2026
+              9/9/2026
             </td>
             <td
               class="px-3 py-2.5 text-muted-foreground"
@@ -278,7 +278,7 @@ exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders corre
 exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders correctly in RTL 1`] = `
 <div>
   <div
-    class="space-y-6"
+    class="space-y-4"
   >
     <div
       class="overflow-x-auto rounded-lg border border-border bg-card"
@@ -344,7 +344,7 @@ exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders corre
             <td
               class="px-3 py-2.5 text-foreground"
             >
-              6/5/2026
+              9/9/2026
             </td>
             <td
               class="px-3 py-2.5 text-muted-foreground"

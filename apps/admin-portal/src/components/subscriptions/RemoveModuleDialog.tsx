@@ -84,7 +84,7 @@ export function RemoveModuleDialog({ subscription, isLastActive, open, onOpenCha
 
         <p className="mt-4 text-sm text-muted-foreground">
           Are you sure you want to cancel <span className="font-semibold text-foreground">{subscription.moduleName}</span>?
-          Access continues until the end of the current billing period ({formatDate(subscription.expiresAt)}).
+          Access continues until the end of the current billing period (<span className="font-numeric">{formatDate(subscription.expiresAt)}</span>).
         </p>
 
         {isLastActive && (

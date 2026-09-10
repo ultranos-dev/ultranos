@@ -175,7 +175,7 @@ export default function AIModelsPage() {
                       <td className="px-4 py-3 text-sm"><ModelTypeBadge type={model.modelType} /></td>
                       <td className="px-4 py-3 text-sm text-foreground font-mono">{model.currentVersion}</td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">{formatBytes(model.fileSize)}</td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(model.releasedAt)}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground font-numeric">{formatDate(model.releasedAt)}</td>
                       <td className="px-4 py-3 text-sm text-muted-foreground font-mono">{model.deltaFromVersion ?? '—'}</td>
                     </tr>
                   ))

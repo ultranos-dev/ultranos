@@ -233,13 +233,13 @@ export function CostAnalysisView() {
                 className={a.isProfitable ? undefined : 'bg-red-50'}
               >
                 <td className="px-4 py-2 font-medium text-foreground whitespace-nowrap">{a.testName}</td>
-                <td className="px-4 py-2 text-muted-foreground">{formatAFN(a.reagentCostPerTest)}</td>
-                <td className="px-4 py-2 text-muted-foreground">{formatAFN(a.consumableCost)}</td>
-                <td className="px-4 py-2 text-muted-foreground">{formatAFN(a.laborAllocation)}</td>
-                <td className="px-4 py-2 text-muted-foreground">{formatAFN(a.overheadAllocation)}</td>
-                <td className="px-4 py-2 font-medium text-foreground">{formatAFN(a.totalCost)}</td>
-                <td className="px-4 py-2 text-muted-foreground">{formatAFN(a.currentPrice)}</td>
-                <td className={`px-4 py-2 font-medium ${a.margin >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                <td className="px-4 py-2 text-muted-foreground font-numeric">{formatAFN(a.reagentCostPerTest)}</td>
+                <td className="px-4 py-2 text-muted-foreground font-numeric">{formatAFN(a.consumableCost)}</td>
+                <td className="px-4 py-2 text-muted-foreground font-numeric">{formatAFN(a.laborAllocation)}</td>
+                <td className="px-4 py-2 text-muted-foreground font-numeric">{formatAFN(a.overheadAllocation)}</td>
+                <td className="px-4 py-2 font-medium text-foreground font-numeric">{formatAFN(a.totalCost)}</td>
+                <td className="px-4 py-2 text-muted-foreground font-numeric">{formatAFN(a.currentPrice)}</td>
+                <td className={`px-4 py-2 font-medium font-numeric ${a.margin >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                   {formatAFN(a.margin)}
                 </td>
                 <td className={`px-4 py-2 ${a.marginPercent === null ? 'text-muted-foreground' : a.marginPercent >= 0 ? 'text-green-700' : 'text-red-700'}`}>

@@ -204,7 +204,7 @@ export default function AuditChainPage() {
                   {status?.lastVerifiedAt ? timeAgo(status.lastVerifiedAt) : 'Never'}
                 </p>
                 {status?.lastVerifiedAt && (
-                  <p className="text-xs text-muted-foreground">{formatDate(status.lastVerifiedAt)}</p>
+                  <p className="text-xs text-muted-foreground font-numeric">{formatDate(status.lastVerifiedAt)}</p>
                 )}
               </div>
 
@@ -287,7 +287,7 @@ export default function AuditChainPage() {
                   <tbody className="divide-y divide-border">
                     {verifications.map((v) => (
                       <tr key={v.id} className="hover:bg-muted/50 transition-colors">
-                        <td className="px-4 py-3">{formatDate(v.verifiedAt)}</td>
+                        <td className="px-4 py-3 font-numeric">{formatDate(v.verifiedAt)}</td>
                         <td className="px-4 py-3"><ResultIcon valid={v.valid} /></td>
                         <td className="px-4 py-3 text-muted-foreground">{v.checkedCount.toLocaleString()}</td>
                         <td className="px-4 py-3 text-muted-foreground">{v.jobDurationMs}ms</td>

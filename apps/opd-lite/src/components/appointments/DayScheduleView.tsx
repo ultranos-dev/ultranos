@@ -115,7 +115,7 @@ export function DayScheduleView() {
         </Button>
 
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-foreground">
+          <h2 className="text-lg font-bold text-foreground font-numeric">
             {formatDisplayDate(selectedDate)}
           </h2>
           <input

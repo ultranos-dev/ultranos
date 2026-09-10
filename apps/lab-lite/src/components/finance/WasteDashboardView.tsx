@@ -351,7 +351,7 @@ export function WasteDashboardView() {
                       </td>
                       <td className="py-2 pe-3 text-foreground">{entry.disposalReason ?? '—'}</td>
                       <td
-                        className={`py-2 font-medium ${
+                        className={`py-2 font-medium font-numeric ${
                           Number(loss) > 0 ? 'text-red-700' : 'text-foreground'
                         }`}
                       >
@@ -381,7 +381,7 @@ function SummaryCard({
   return (
     <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${colorClass}`}>{value}</p>
+      <p className={`text-2xl font-bold font-numeric ${colorClass}`}>{value}</p>
     </div>
   )
 }

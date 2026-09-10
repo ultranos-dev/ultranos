@@ -156,8 +156,8 @@ export default function InvoicesPage() {
                 <tbody className="divide-y divide-border">
                   {invoices.map((invoice) => (
                     <tr key={invoice.invoiceId} className="transition-colors hover:bg-muted/50">
-                      <td className="px-4 py-3 text-foreground">{formatDate(invoice.createdAt)}</td>
-                      <td className="px-4 py-3 text-foreground font-medium">{formatAmount(invoice.amount, invoice.currency)}</td>
+                      <td className="px-4 py-3 text-foreground font-numeric">{formatDate(invoice.createdAt)}</td>
+                      <td className="px-4 py-3 text-foreground font-medium font-numeric">{formatAmount(invoice.amount, invoice.currency)}</td>
                       <td className="px-4 py-3"><InvoiceStatusBadge status={invoice.status} /></td>
                       <td className="px-4 py-3">
                         {invoice.pdfUrl ? (

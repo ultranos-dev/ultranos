@@ -183,12 +183,12 @@ exports[`OrderDetailPage > LTR snapshot 1`] = `
               30
             </td>
             <td
-              class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+              class="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric"
             >
               AFN 0.10
             </td>
             <td
-              class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+              class="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric"
             >
               AFN 3.00
             </td>
@@ -214,7 +214,7 @@ exports[`OrderDetailPage > LTR snapshot 1`] = `
             newOrderSubtotal
           </span>
           <span
-            class="tabular-nums"
+            class="tabular-nums font-numeric"
           >
             AFN 3.00
           </span>
@@ -226,7 +226,7 @@ exports[`OrderDetailPage > LTR snapshot 1`] = `
             newOrderTax {"rate":"0.0"}
           </span>
           <span
-            class="tabular-nums"
+            class="tabular-nums font-numeric"
           >
             AFN 0.00
           </span>
@@ -238,7 +238,7 @@ exports[`OrderDetailPage > LTR snapshot 1`] = `
             newOrderTotal
           </span>
           <span
-            class="tabular-nums"
+            class="tabular-nums font-numeric"
           >
             AFN 3.00
           </span>
@@ -432,12 +432,12 @@ exports[`OrderDetailPage > RTL snapshot 1`] = `
               30
             </td>
             <td
-              class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+              class="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric"
             >
               AFN 0.10
             </td>
             <td
-              class="px-4 py-3 text-end tabular-nums text-muted-foreground"
+              class="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric"
             >
               AFN 3.00
             </td>
@@ -463,7 +463,7 @@ exports[`OrderDetailPage > RTL snapshot 1`] = `
             newOrderSubtotal
           </span>
           <span
-            class="tabular-nums"
+            class="tabular-nums font-numeric"
           >
             AFN 3.00
           </span>
@@ -475,7 +475,7 @@ exports[`OrderDetailPage > RTL snapshot 1`] = `
             newOrderTax {"rate":"0.0"}
           </span>
           <span
-            class="tabular-nums"
+            class="tabular-nums font-numeric"
           >
             AFN 0.00
           </span>
@@ -487,7 +487,7 @@ exports[`OrderDetailPage > RTL snapshot 1`] = `
             newOrderTotal
           </span>
           <span
-            class="tabular-nums"
+            class="tabular-nums font-numeric"
           >
             AFN 3.00
           </span>
