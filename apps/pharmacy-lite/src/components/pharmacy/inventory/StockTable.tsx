@@ -6,6 +6,8 @@ import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { FileSearch, Package } from '@ultranos/ui-kit/icons'
 import { db } from '@/lib/db'
 import type { StockBatch, CatalogItem, StockBatchStatus } from '@/lib/inventory/types'
+import { AdjustStockDialog } from './AdjustStockDialog'
+import { Button } from '@/components/ui/button'
 
 interface StockTableProps {
   filterStatus: 'all' | 'active' | 'quarantined' | 'depleted'
@@ -33,6 +35,7 @@ export function StockTable({
 }: StockTableProps) {
   const t = useTranslations('inventory')
   const [rows, setRows] = useState<StockRow[]>([])
+  const [adjustRow, setAdjustRow] = useState<StockRow | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -129,6 +132,9 @@ export function StockTable({
                 <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
                   {t('statusCol')}
                 </th>
+                <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  {t('actionsCol')}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -158,11 +164,24 @@ export function StockTable({
                   <td className="px-4 py-3">
                     <StatusBadge status={r.batch.status} tActive={t('active')} tDepleted={t('depleted')} tQuarantined={t('quarantined')} />
                   </td>
+                  <td className="px-4 py-3 text-end">
+                    <Button variant="ghost" size="sm" onClick={() => setAdjustRow(r)}>{t('adjust')}</Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+      {adjustRow && (
+        <AdjustStockDialog
+          open={!!adjustRow}
+          onOpenChange={(o) => { if (!o) setAdjustRow(null) }}
+          batch={adjustRow.batch}
+          catalogItem={adjustRow.catalogItem}
+          performedBy="local"
+          onSaved={() => { setAdjustRow(null); /* reload */ location.reload() }}
+        />
       )}
     </div>
   )
