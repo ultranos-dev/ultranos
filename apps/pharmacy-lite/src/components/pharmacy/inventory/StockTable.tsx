@@ -8,6 +8,7 @@ import { db } from '@/lib/db'
 import type { StockBatch, CatalogItem, StockBatchStatus } from '@/lib/inventory/types'
 import { AdjustStockDialog } from './AdjustStockDialog'
 import { DisposeStockDialog } from './DisposeStockDialog'
+import { StockHistorySheet } from './StockHistorySheet'
 import { Button } from '@/components/ui/button'
 
 interface StockTableProps {
@@ -38,6 +39,7 @@ export function StockTable({
   const [rows, setRows] = useState<StockRow[]>([])
   const [adjustRow, setAdjustRow] = useState<StockRow | null>(null)
   const [disposeRow, setDisposeRow] = useState<StockRow | null>(null)
+  const [historyRow, setHistoryRow] = useState<StockRow | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -173,6 +175,7 @@ export function StockTable({
                         {t('dispose')}
                       </Button>
                     )}
+                    <Button variant="ghost" size="sm" onClick={() => setHistoryRow(r)}>{t('viewHistory')}</Button>
                   </td>
                 </tr>
               ))}
@@ -197,6 +200,14 @@ export function StockTable({
           batch={disposeRow.batch}
           performedBy="local"
           onSaved={() => { setDisposeRow(null); location.reload() }}
+        />
+      )}
+      {historyRow && (
+        <StockHistorySheet
+          open={!!historyRow}
+          onOpenChange={(o) => { if (!o) setHistoryRow(null) }}
+          catalogItemId={historyRow.batch.catalogItemId}
+          productName={historyRow.catalogItem?.name ?? ''}
         />
       )}
     </div>
