@@ -626,9 +626,17 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
           }
+          /* Base state is visible (opacity: 1) with 'backwards' fill — NOT 'forwards'.
+             With 'forwards', the section retains the final keyframe transform, which
+             computes to matrix(1,0,0,1,0,0) (a non-'none' transform) and therefore
+             keeps a stacking context alive on every card. That traps descendant
+             z-index — e.g. the medication autocomplete dropdown's z-20 — inside the
+             card, so a later sibling card paints over any dropdown that overflows the
+             card bounds. 'backwards' only borrows the 'from' frame before the run and
+             reverts to transform: none afterwards, releasing the stacking context. */
           .encounter-section {
-            animation: sectionFadeIn 250ms ease-out forwards;
-            opacity: 0;
+            animation: sectionFadeIn 250ms ease-out backwards;
+            opacity: 1;
           }
         `}</style>
       )}
