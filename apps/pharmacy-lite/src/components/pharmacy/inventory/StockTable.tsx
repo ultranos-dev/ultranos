@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { FileSearch, Package } from '@ultranos/ui-kit/icons'
@@ -10,6 +10,7 @@ import { AdjustStockDialog } from './AdjustStockDialog'
 import { DisposeStockDialog } from './DisposeStockDialog'
 import { StockHistorySheet } from './StockHistorySheet'
 import { Button } from '@/components/ui/button'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 interface StockTableProps {
   filterStatus: 'all' | 'active' | 'quarantined' | 'depleted'
@@ -36,22 +37,25 @@ export function StockTable({
   expiryAlertDays = 90,
 }: StockTableProps) {
   const t = useTranslations('inventory')
+  const session = useAuthSessionStore((s) => s.session)
+  const performedBy = session?.practitionerId ?? session?.userId ?? 'unknown'
   const [rows, setRows] = useState<StockRow[]>([])
   const [adjustRow, setAdjustRow] = useState<StockRow | null>(null)
   const [disposeRow, setDisposeRow] = useState<StockRow | null>(null)
   const [historyRow, setHistoryRow] = useState<StockRow | null>(null)
 
-  useEffect(() => {
-    async function load() {
-      const [batches, items] = await Promise.all([
-        db.stockBatches.toArray(),
-        db.catalogItems.toArray(),
-      ])
-      const map = new Map(items.map((item) => [item.id, item]))
-      setRows(batches.map((batch) => ({ batch, catalogItem: map.get(batch.catalogItemId) })))
-    }
-    load()
+  const load = useCallback(async () => {
+    const [batches, items] = await Promise.all([
+      db.stockBatches.toArray(),
+      db.catalogItems.toArray(),
+    ])
+    const map = new Map(items.map((item) => [item.id, item]))
+    setRows(batches.map((batch) => ({ batch, catalogItem: map.get(batch.catalogItemId) })))
   }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
 
   const expiryThreshold = useMemo(() => {
     const d = new Date()
@@ -189,8 +193,8 @@ export function StockTable({
           onOpenChange={(o) => { if (!o) setAdjustRow(null) }}
           batch={adjustRow.batch}
           catalogItem={adjustRow.catalogItem}
-          performedBy="local"
-          onSaved={() => { setAdjustRow(null); /* reload */ location.reload() }}
+          performedBy={performedBy}
+          onSaved={() => { setAdjustRow(null); void load() }}
         />
       )}
       {disposeRow && (
@@ -198,8 +202,8 @@ export function StockTable({
           open={!!disposeRow}
           onOpenChange={(o) => { if (!o) setDisposeRow(null) }}
           batch={disposeRow.batch}
-          performedBy="local"
-          onSaved={() => { setDisposeRow(null); location.reload() }}
+          performedBy={performedBy}
+          onSaved={() => { setDisposeRow(null); void load() }}
         />
       )}
       {historyRow && (
