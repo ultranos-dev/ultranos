@@ -822,6 +822,7 @@
     "reason_recalled": "Recalled",
     "reason_patient_return_unusable": "د ناروغ بیرته ورکول (نه کارول کیدونکی)",
     "selectReason": "دلیل غوره کړئ",
+    "saveFailed": "خوندي کول ناکام شو. بیا هڅه وکړئ.",
     "ledgerTitle": "د ذخیرې دفتر",
     "ledgerSearchPlaceholder": "محصول یا لوټ ولټوئ",
     "ledgerTypeAll": "ټولې حرکتونه",

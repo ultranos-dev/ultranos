@@ -822,6 +822,7 @@
     "reason_recalled": "Recalled",
     "reason_patient_return_unusable": "Patient return (unusable)",
     "selectReason": "Select a reason",
+    "saveFailed": "Save failed. Please try again.",
     "ledgerTitle": "Stock ledger",
     "ledgerSearchPlaceholder": "Search product or batch",
     "ledgerTypeAll": "All movements",

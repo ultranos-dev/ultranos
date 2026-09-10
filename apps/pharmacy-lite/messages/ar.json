@@ -822,6 +822,7 @@
     "reason_recalled": "مسحوب من السوق",
     "reason_patient_return_unusable": "إرجاع من مريض (غير صالح للاستخدام)",
     "selectReason": "اختر سبباً",
+    "saveFailed": "فشل الحفظ. يرجى المحاولة مرة أخرى.",
     "ledgerTitle": "سجل المخزون",
     "ledgerSearchPlaceholder": "ابحث عن منتج أو دفعة",
     "ledgerTypeAll": "جميع الحركات",

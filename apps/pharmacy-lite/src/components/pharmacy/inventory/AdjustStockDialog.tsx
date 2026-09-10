@@ -52,7 +52,7 @@ export function AdjustStockDialog({ open, onOpenChange, batch, catalogItem, perf
       onSaved()
       onOpenChange(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('adjustNewQty'))
+      setError(err instanceof Error ? err.message : t('saveFailed'))
     } finally {
       setSaving(false)
     }

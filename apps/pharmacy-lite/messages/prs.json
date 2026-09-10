@@ -822,6 +822,7 @@
     "reason_recalled": "فراخوانده شده",
     "reason_patient_return_unusable": "برگشتی از مریض (غیرقابل استفاده)",
     "selectReason": "یک دلیل انتخاب کنید",
+    "saveFailed": "ذخیره ناموفق. لطفاً دوباره تلاش کنید.",
     "ledgerTitle": "دفتر موجودی",
     "ledgerSearchPlaceholder": "محصول یا دسته را جستجو کنید",
     "ledgerTypeAll": "همه حرکات",
