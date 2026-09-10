@@ -47,8 +47,14 @@ function createInMemoryStorage(): SyncQueueStorage & { entries: SyncQueueEntry[]
 }
 
 describe('ENCRYPTED_PAYLOAD_PREFIX', () => {
-  it('has the expected value', () => {
-    expect(ENCRYPTED_PAYLOAD_PREFIX).toBe('enc:v1:')
+  it('is the version-agnostic prefix', () => {
+    // Deliberately 'enc:' (not 'enc:v1:'): the crypto version is embedded
+    // inside the payload (enc:v1:…, enc:v2:… after key rotation), so the
+    // prefix stays version-agnostic. drain-worker uses
+    // payload.startsWith(ENCRYPTED_PAYLOAD_PREFIX) to detect encryption —
+    // a versioned prefix here would miss enc:v2: payloads and forward them
+    // as plaintext.
+    expect(ENCRYPTED_PAYLOAD_PREFIX).toBe('enc:')
   })
 })
 
@@ -168,7 +174,7 @@ describe('awaiting-key status', () => {
 
     await queue.recoverStale(60_000)
 
-    // Must still be awaiting-key � not reverted to pending by recoverStale
+    // Must still be awaiting-key � not reverted to pending by recoverStale
     const awaitingKey = await storage.getByStatus('awaiting-key')
     expect(awaitingKey).toHaveLength(1)
     const pending = await storage.getByStatus('pending')
