@@ -17,13 +17,14 @@ beforeEach(async () => {
     mv('m1', { catalogItemId: 'cat-1', type: 'received', timestamp: '2026-01-01T00:00:00.000Z' }),
     mv('m2', { catalogItemId: 'cat-1', type: 'disposed', timestamp: '2026-03-01T00:00:00.000Z' }),
     mv('m3', { catalogItemId: 'cat-2', type: 'adjusted', timestamp: '2026-02-01T00:00:00.000Z' }),
+    mv('m4', { stockBatchId: 'b2', catalogItemId: 'cat-3', type: 'received', timestamp: '2026-01-15T00:00:00.000Z' }),
   ])
 })
 
 describe('queryMovements', () => {
   it('returns all movements newest-first when no filter', async () => {
     const r = await queryMovements()
-    expect(r.map((m) => m.id)).toEqual(['m2', 'm3', 'm1'])
+    expect(r.map((m) => m.id)).toEqual(['m2', 'm3', 'm4', 'm1'])
   })
   it('filters by catalogItemId', async () => {
     const r = await queryMovements({ catalogItemId: 'cat-1' })
@@ -40,5 +41,13 @@ describe('queryMovements', () => {
   it('applies limit after sorting', async () => {
     const r = await queryMovements({ limit: 1 })
     expect(r.map((m) => m.id)).toEqual(['m2'])
+  })
+  it('filters by stockBatchId', async () => {
+    const r = await queryMovements({ stockBatchId: 'b2' })
+    expect(r.map((m) => m.id)).toEqual(['m4'])
+  })
+  it('applies compound filter (catalogItemId + type)', async () => {
+    const r = await queryMovements({ catalogItemId: 'cat-1', type: 'received' })
+    expect(r.map((m) => m.id)).toEqual(['m1'])
   })
 })
