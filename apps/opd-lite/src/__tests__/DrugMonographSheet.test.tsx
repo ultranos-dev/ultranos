@@ -32,4 +32,27 @@ describe('DrugMonographSheet', () => {
     fireEvent.click(screen.getByTestId('monograph-trigger'))
     await waitFor(() => expect(screen.getByText('limitedDataAvailable')).toBeInTheDocument())
   })
+
+  it('shows brand presentations and storage instructions in the drawer', async () => {
+    await db.drugBrandsMirror.clear()
+    await db.drugBrandPresentationsMirror.clear()
+    await db.drugCatalogMirror.put({
+      atcCode: 'J01CA04', innName: 'Amoxicillin', brandNames: ['Amoxil'], doseForms: ['Capsule'],
+      therapeuticClass: '', mechanismOfAction: 'x', contraindications: [], adverseEvents: [], interactions: [],
+      adultDosing: [], pediatricDosing: [], indicationsClinical: [], pregnancyClinical: {}, administrationNotes: {},
+      pharmacokinetics: { halfLife: '1 hour' }, storageInstructions: { en: 'Store below 25°C' },
+    } as never)
+    await db.drugBrandsMirror.bulkPut([
+      { id: 'b1', genericAtcCode: 'J01CA04', brandName: 'Amoxil', manufacturer: 'GSK' },
+    ] as never[])
+    await db.drugBrandPresentationsMirror.bulkPut([
+      { id: 'p1', brandId: 'b1', strength: '500 mg', doseForm: 'Capsule', packSize: 14, packUnit: 'capsules' },
+    ] as never[])
+
+    render(<DrugMonographSheet atcCode="J01CA04" label="Amoxicillin" />)
+    fireEvent.click(screen.getByTestId('monograph-trigger'))
+    await waitFor(() => expect(screen.getByText(/Amoxil/)).toBeInTheDocument())
+    expect(screen.getByText(/500 mg/)).toBeInTheDocument()
+    expect(screen.getByText(/Store below 25/)).toBeInTheDocument()
+  })
 })

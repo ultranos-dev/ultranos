@@ -170,4 +170,35 @@ describe('mapFormToMedicationRequest', () => {
       mapFormToMedicationRequest({ ...baseForm, medicationCode: '' }, context),
     ).toThrow('medicationCode is required')
   })
+
+  it('sets dosageInstruction route as a SNOMED CT CodeableConcept when route is provided', () => {
+    const result = mapFormToMedicationRequest({ ...baseForm, route: 'PO' }, context)
+    const route = result.dosageInstruction?.[0]?.route
+    expect(route?.coding?.[0]?.system).toBe('http://snomed.info/sct')
+    expect(route?.coding?.[0]?.code).toBe('26643006')
+    expect(route?.coding?.[0]?.display).toBe('Oral')
+  })
+
+  it('omits route when the form has no route', () => {
+    const { route: _omit, ...noRoute } = baseForm
+    const result = mapFormToMedicationRequest(noRoute, context)
+    expect(result.dosageInstruction?.[0]?.route).toBeUndefined()
+  })
+
+  it('omits strength from text without a doubled space when strength is empty', () => {
+    const result = mapFormToMedicationRequest({ ...baseForm, medicationStrength: '' }, context)
+    expect(result.medicationCodeableConcept.text).toBe('Amoxicillin (Capsule)')
+  })
+
+  it('carries brand and manufacturer coding when present', () => {
+    const result = mapFormToMedicationRequest(
+      { ...baseForm, brandHint: 'Amoxil', medicationManufacturer: 'GSK' },
+      context,
+    )
+    const codings = result.medicationCodeableConcept.coding!
+    const brand = codings.find((c) => c.system === 'urn:ultranos:brand')
+    expect(brand?.code).toBe('Amoxil')
+    const mfr = codings.find((c) => c.system === 'urn:ultranos:manufacturer')
+    expect(mfr?.display).toBe('GSK')
+  })
 })

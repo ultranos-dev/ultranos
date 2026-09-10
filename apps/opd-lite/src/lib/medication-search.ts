@@ -3,13 +3,49 @@ import { db } from './db'
 import type { VocabMedicationEntry } from './db'
 import { searchDrugCatalog } from './trpc'
 import type { DrugSearchResult } from '@ultranos/shared-types'
-import type { DrugEntry } from '@ultranos/drug-catalog-sync'
 
 export interface MedicationItem {
   code: string
   display: string
   form: string
   strength: string
+  /** Present on brand-presentation rows; absent on the generic fallback row. */
+  brandName?: string
+  manufacturer?: string
+  route?: string
+  presentationId?: string
+}
+
+/** Max brand-presentation rows surfaced per generic, to keep the list scannable. */
+const MAX_PRESENTATIONS_PER_GENERIC = 6
+/** Overall cap on rows returned to the dropdown. */
+const MAX_ROWS = 25
+
+/** A matched generic drug, before expansion into presentation rows. */
+interface GenericMatch {
+  code: string
+  display: string
+  doseForms: string[]
+  matches?: readonly FuseResultMatch[] | undefined
+}
+
+/** Searchable generic entry — brand names are a search key, not separate rows. */
+interface SearchableGeneric {
+  code: string
+  display: string
+  doseForms: string[]
+  brandNames: string[]
+}
+
+const genericFuseOptions: IFuseOptions<SearchableGeneric> = {
+  keys: [
+    { name: 'display', weight: 0.5 },
+    { name: 'brandNames', weight: 0.3 },
+    { name: 'code', weight: 0.2 },
+  ],
+  threshold: 0.4,
+  includeMatches: true,
+  minMatchCharLength: 2,
 }
 
 const fuseOptions: IFuseOptions<MedicationItem> = {
@@ -22,6 +58,12 @@ const fuseOptions: IFuseOptions<MedicationItem> = {
   threshold: 0.4,
   includeMatches: true,
   minMatchCharLength: 2,
+}
+
+/** Leading numeric magnitude of a strength string ("500 mg" → 500); NaN sorts last. */
+function strengthMagnitude(strength: string): number {
+  const n = parseFloat(strength)
+  return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY
 }
 
 export interface MedicationSearchResult {
@@ -38,26 +80,61 @@ function toMedicationItem(entry: VocabMedicationEntry): MedicationItem {
   }
 }
 
-function drugResultToMedicationItem(r: DrugSearchResult): MedicationItem {
+function drugResultToGenericMatch(r: DrugSearchResult): GenericMatch {
   return {
     code: r.atcCode,
     display: r.localName ?? r.innName,
-    form: r.doseForms[0] ?? '',
-    strength: '',
+    doseForms: r.doseForms ?? [],
+    matches: undefined,
   }
 }
 
-function mirrorEntryToItems(e: DrugEntry): MedicationItem[] {
-  const form = e.doseForms[0] ?? ''
-  const generic: MedicationItem = { code: e.atcCode, display: e.innName, form, strength: '' }
-  // One item per brand name so a brand query surfaces (and labels) the generic.
-  const brands: MedicationItem[] = (e.brandNames ?? []).map((b) => ({
-    code: e.atcCode,
-    display: `${e.innName} (${b})`,
-    form,
-    strength: '',
-  }))
-  return [generic, ...brands]
+/**
+ * Expand matched generics into dropdown rows by joining the on-device brand +
+ * presentation mirror. Each generic yields one generic fallback row plus one row
+ * per distinct presentation (strength · form · brand · manufacturer · route),
+ * deduped and capped. Runs for both the online and offline search paths, since
+ * the presentation mirror is on-device regardless of connectivity.
+ */
+async function enrichWithPresentations(generics: GenericMatch[]): Promise<MedicationSearchResult[]> {
+  const out: MedicationSearchResult[] = []
+  for (const g of generics) {
+    // Generic fallback row (always exactly one per ATC) — carries the fuzzy-match
+    // highlight indices; presentation rows are not highlighted.
+    out.push({
+      item: { code: g.code, display: g.display, form: g.doseForms[0] ?? '', strength: '' },
+      matches: g.matches,
+    })
+
+    const brands = await db.drugBrandsMirror.where('genericAtcCode').equals(g.code).toArray()
+    const seen = new Set<string>()
+    const presRows: MedicationItem[] = []
+    for (const b of brands) {
+      const presentations = await db.drugBrandPresentationsMirror.where('brandId').equals(b.id).toArray()
+      for (const p of presentations) {
+        const strength = p.strength ?? ''
+        const form = p.doseForm ?? g.doseForms[0] ?? ''
+        const key = `${b.brandName}|${strength}|${form}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        presRows.push({
+          code: g.code,
+          display: g.display,
+          form,
+          strength,
+          brandName: b.brandName,
+          manufacturer: b.manufacturer ?? undefined,
+          route: p.route ?? undefined,
+          presentationId: p.id,
+        })
+      }
+    }
+    presRows.sort((a, z) => strengthMagnitude(a.strength) - strengthMagnitude(z.strength))
+    for (const item of presRows.slice(0, MAX_PRESENTATIONS_PER_GENERIC)) {
+      out.push({ item, matches: undefined })
+    }
+  }
+  return out.slice(0, MAX_ROWS)
 }
 
 async function searchMirror(trimmed: string): Promise<MedicationSearchResult[] | null> {
@@ -80,16 +157,25 @@ async function searchMirror(trimmed: string): Promise<MedicationSearchResult[] |
   if (candidates.length < 10) {
     candidates = await db.drugCatalogMirror.limit(1000).toArray()
   }
-  // De-dupe entries by atcCode before expanding to items.
+  // De-dupe entries by atcCode; one searchable generic each (brand names are a
+  // search key, not separate rows).
   const seen = new Set<string>()
-  const items: MedicationItem[] = []
+  const searchable: SearchableGeneric[] = []
   for (const e of candidates) {
     if (seen.has(e.atcCode)) continue
     seen.add(e.atcCode)
-    items.push(...mirrorEntryToItems(e))
+    searchable.push({
+      code: e.atcCode,
+      display: e.innName,
+      doseForms: e.doseForms ?? [],
+      brandNames: e.brandNames ?? [],
+    })
   }
-  const fuse = new Fuse(items, fuseOptions)
-  return fuse.search(lower, { limit: 20 }).map((r) => ({ item: r.item, matches: r.matches }))
+  const fuse = new Fuse(searchable, genericFuseOptions)
+  const generics: GenericMatch[] = fuse
+    .search(lower, { limit: 20 })
+    .map((r) => ({ code: r.item.code, display: r.item.display, doseForms: r.item.doseForms, matches: r.matches }))
+  return enrichWithPresentations(generics)
 }
 
 async function searchLocal(trimmed: string): Promise<MedicationSearchResult[]> {
@@ -130,7 +216,8 @@ export async function searchMedications(
   if (typeof window !== 'undefined' && navigator.onLine) {
     try {
       const results = await searchDrugCatalog(trimmed, 'en', signal)
-      return results.map((r) => ({ item: drugResultToMedicationItem(r), matches: undefined }))
+      // Enrich the Hub's generic identity matches with on-device brand presentations.
+      return enrichWithPresentations(results.map(drugResultToGenericMatch))
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') throw err
       // Network failure or Hub unavailable — fall through to local search

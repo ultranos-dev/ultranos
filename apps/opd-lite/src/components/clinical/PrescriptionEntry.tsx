@@ -10,6 +10,8 @@ import {
 } from '@/lib/medication-search'
 import {
   FREQUENCY_OPTIONS,
+  ROUTE_OPTIONS,
+  formToRouteDefault,
   EMPTY_PRESCRIPTION_FORM,
   type PrescriptionFormData,
 } from '@/lib/prescription-config'
@@ -124,6 +126,10 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
       medicationDisplay: item.display,
       medicationForm: item.form,
       medicationStrength: item.strength,
+      // Prefer the presentation's own route; otherwise infer from the dose form.
+      route: item.route ?? formToRouteDefault(item.form),
+      brandHint: item.brandName ?? prev.brandHint,
+      medicationManufacturer: item.manufacturer,
       dosageUnit: (() => {
         const f = item.form.toLowerCase()
         // P4: Check solid forms first to avoid misclassifying compound forms
@@ -136,7 +142,8 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
         return 'dose'
       })(),
     }))
-    setQuery(`${item.display} ${item.strength} (${item.form})`)
+    // Query echoes the chosen product; skip an empty strength to avoid a double space.
+    setQuery([item.display, item.strength, item.form ? `(${item.form})` : ''].filter(Boolean).join(' '))
     setResults([])
     setIsOpen(false)
     setActiveIndex(-1)
@@ -313,7 +320,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
           >
             {results.map((result, idx) => (
               <li
-                key={result.item.code}
+                key={`${result.item.code}|${result.item.display}|${result.item.form}|${result.item.strength}|${idx}`}
                 id={`medication-option-${idx}`}
                 role="option"
                 aria-selected={idx === activeIndex}
@@ -327,15 +334,28 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
                   (idx === activeIndex ? 'bg-primary-50' : 'hover:bg-muted')
                 }
               >
-                <div className="flex items-baseline justify-between">
+                <div className="flex items-baseline justify-between gap-2">
                   <span className="font-semibold text-foreground">
                     {highlightMatches(result.item.display, getDisplayIndices(result))}
                   </span>
-                  <span className="text-sm font-semibold text-primary">
-                    {result.item.strength}
-                  </span>
+                  {result.item.strength && (
+                    <span className="shrink-0 text-sm font-semibold text-primary">
+                      {result.item.strength}
+                    </span>
+                  )}
                 </div>
-                <span className="text-xs text-muted-foreground">{result.item.form}</span>
+                <span className="text-xs text-muted-foreground">
+                  {[
+                    result.item.form,
+                    result.item.brandName
+                      ? result.item.manufacturer
+                        ? `${result.item.brandName} (${result.item.manufacturer})`
+                        : result.item.brandName
+                      : t('genericLabel'),
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
               </li>
             ))}
           </ul>
@@ -356,7 +376,17 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
       )}
 
       {hasMedication && (
-        <DrugSafetyPanel atcCode={form.medicationCode} patientSex={patientSex} patientAge={patientAge} />
+        <DrugSafetyPanel
+          atcCode={form.medicationCode}
+          patientSex={patientSex}
+          patientAge={patientAge}
+          display={form.medicationDisplay}
+          strength={form.medicationStrength}
+          form={form.medicationForm}
+          route={form.route}
+          brandName={form.brandHint}
+          manufacturer={form.medicationManufacturer}
+        />
       )}
 
       {hasMedication && brandOptions.length > 0 && (
@@ -421,6 +451,24 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
       {hasMedication && (
         <form onSubmit={handleSubmit} className="space-y-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4">
           <div className="grid grid-cols-3 gap-4">
+            {/* Strength — prefilled from the selected presentation, editable when the
+                mirror is sparse or the clinician needs to adjust it. */}
+            <div>
+              <label htmlFor="med-strength" className="mb-1 block text-sm font-semibold text-foreground">
+                {t('strength')}
+              </label>
+              <input
+                id="med-strength"
+                type="text"
+                value={form.medicationStrength}
+                onChange={(e) => setForm((prev) => ({ ...prev, medicationStrength: e.target.value }))}
+                placeholder={t('strengthPlaceholder')}
+                disabled={disabled}
+                className={inputClasses}
+                aria-label={t('strength')}
+              />
+            </div>
+
             {/* Dosage quantity */}
             <div>
               <label htmlFor="dosage-quantity" className="mb-1 block text-sm font-semibold text-foreground">
@@ -483,6 +531,28 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
                 className={inputClasses}
                 aria-label={t('durationAria')}
               />
+            </div>
+
+            {/* Route of administration — default inferred from the dose form,
+                overridable by the clinician. */}
+            <div>
+              <label htmlFor="route" className="mb-1 block text-sm font-semibold text-foreground">
+                {t('route')}
+              </label>
+              <select
+                id="route"
+                value={form.route ?? 'PO'}
+                onChange={(e) => setForm((prev) => ({ ...prev, route: e.target.value }))}
+                disabled={disabled}
+                className={inputClasses}
+                aria-label={t('route')}
+              >
+                {ROUTE_OPTIONS.map((opt) => (
+                  <option key={opt.code} value={opt.code}>
+                    {opt.display}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

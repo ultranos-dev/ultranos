@@ -23,6 +23,47 @@ export const FREQUENCY_OPTIONS: FrequencyOption[] = [
   { code: 'PRN', display: 'As needed (PRN)', frequency: 0, period: 0, periodUnit: 'd', asNeeded: true },
 ]
 
+/**
+ * Route of administration options, keyed by a short internal code and carrying
+ * the SNOMED CT route-of-administration concept for FHIR CodeableConcept output.
+ */
+export interface RouteOption {
+  code: string        // internal short code (e.g. 'PO')
+  display: string     // human label (e.g. 'Oral')
+  snomedCode: string  // SNOMED CT route-of-administration code
+}
+
+export const ROUTE_OPTIONS: RouteOption[] = [
+  { code: 'PO', display: 'Oral', snomedCode: '26643006' },
+  { code: 'IV', display: 'Intravenous', snomedCode: '47625008' },
+  { code: 'IM', display: 'Intramuscular', snomedCode: '78421000' },
+  { code: 'SC', display: 'Subcutaneous', snomedCode: '34206005' },
+  { code: 'TOP', display: 'Topical', snomedCode: '6064005' },
+  { code: 'INHALED', display: 'Inhaled', snomedCode: '18679011' },
+  { code: 'OPHTH', display: 'Ophthalmic', snomedCode: '54485002' },
+  { code: 'PR', display: 'Rectal', snomedCode: '37161004' },
+  { code: 'NASAL', display: 'Nasal', snomedCode: '46713006' },
+]
+
+/**
+ * Best-effort route inference from a dose-form string. Conservative: only maps
+ * forms with an unambiguous route, otherwise falls back to oral (the most common
+ * outpatient route). The clinician can always override via the Route select.
+ */
+export function formToRouteDefault(form: string): string {
+  const f = form.toLowerCase()
+  // Order matters: check the more specific non-oral forms before the oral catch-all.
+  if (f.includes('inhal') || f.includes('puff') || f.includes('nebul')) return 'INHALED'
+  if (f.includes('patch') || f.includes('transdermal') || f.includes('cream') ||
+      f.includes('ointment') || f.includes('gel') || f.includes('lotion') || f.includes('topical')) return 'TOP'
+  if (f.includes('suppository') || f.includes('rectal') || f.includes('enema')) return 'PR'
+  if (f.includes('eye') || f.includes('ophthalmic')) return 'OPHTH'
+  if (f.includes('nasal')) return 'NASAL'
+  if (f.includes('inject') || f.includes('vial') || f.includes('ampoule') || f.includes('infusion')) return 'IV'
+  // Oral catch-all: tablets, capsules, oral liquids, and anything unrecognised.
+  return 'PO'
+}
+
 export interface PrescriptionFormData {
   medicationCode: string
   medicationDisplay: string
@@ -33,7 +74,9 @@ export interface PrescriptionFormData {
   frequencyCode: string
   durationDays: string
   notes: string
+  route?: string
   brandHint?: string
+  medicationManufacturer?: string
 }
 
 export const EMPTY_PRESCRIPTION_FORM: Readonly<PrescriptionFormData> = Object.freeze({
@@ -46,4 +89,5 @@ export const EMPTY_PRESCRIPTION_FORM: Readonly<PrescriptionFormData> = Object.fr
   frequencyCode: 'BID',
   durationDays: '7',
   notes: '',
+  route: 'PO',
 })

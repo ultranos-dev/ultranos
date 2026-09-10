@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { db } from '@/lib/db'
-import { getMirrorDrugEntry, getBrandNamesForAtc } from '@/lib/drug-entry'
+import { getMirrorDrugEntry, getBrandNamesForAtc, getBrandsWithPresentationsForAtc } from '@/lib/drug-entry'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
 
 const entry = (atcCode: string): DrugEntry =>
@@ -31,5 +31,34 @@ describe('getBrandNamesForAtc', () => {
     ] as never[])
     expect(await getBrandNamesForAtc('J01CA04')).toEqual(['Amoxil', 'Moxil'])
     expect(await getBrandNamesForAtc('')).toEqual([])
+  })
+})
+
+describe('getBrandsWithPresentationsForAtc', () => {
+  beforeEach(async () => {
+    await db.drugBrandsMirror.clear()
+    await db.drugBrandPresentationsMirror.clear()
+  })
+
+  it('joins each brand to its presentations for an ATC', async () => {
+    await db.drugBrandsMirror.bulkPut([
+      { id: 'b1', genericAtcCode: 'J01CA04', brandName: 'Amoxil', manufacturer: 'GSK' },
+    ] as never[])
+    await db.drugBrandPresentationsMirror.bulkPut([
+      { id: 'p1', brandId: 'b1', strength: '500 mg', doseForm: 'Capsule' },
+      { id: 'p2', brandId: 'b1', strength: '250 mg', doseForm: 'Capsule' },
+    ] as never[])
+
+    const res = await getBrandsWithPresentationsForAtc('J01CA04')
+    expect(res).toHaveLength(1)
+    expect(res[0]!.brandName).toBe('Amoxil')
+    expect(res[0]!.manufacturer).toBe('GSK')
+    expect(res[0]!.presentations).toHaveLength(2)
+    expect(res[0]!.presentations.map((p) => p.strength).sort()).toEqual(['250 mg', '500 mg'])
+  })
+
+  it('returns an empty array for an unknown ATC or empty input', async () => {
+    expect(await getBrandsWithPresentationsForAtc('NOPE')).toEqual([])
+    expect(await getBrandsWithPresentationsForAtc('')).toEqual([])
   })
 })

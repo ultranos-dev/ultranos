@@ -48,4 +48,39 @@ describe('DrugSafetyPanel', () => {
     const { container } = render(<DrugSafetyPanel atcCode="ZZZ" patientSex="male" patientAge={40} />)
     await waitFor(() => expect(container.querySelector('[data-testid="drug-safety-panel"]')).toBeNull())
   })
+
+  it('renders the selected product identity (brand, manufacturer, strength, form, route) from props', async () => {
+    await db.drugCatalogMirror.put(entry() as never)
+    render(
+      <DrugSafetyPanel
+        atcCode="J01CA04"
+        patientSex="male"
+        patientAge={40}
+        display="Amoxicillin"
+        strength="500 mg"
+        form="Capsule"
+        route="PO"
+        brandName="Amoxil"
+        manufacturer="GSK"
+      />,
+    )
+    const id = await screen.findByTestId('drug-identity')
+    expect(id).toHaveTextContent('Amoxil')
+    expect(id).toHaveTextContent('GSK')
+    expect(id).toHaveTextContent('500 mg')
+    expect(id).toHaveTextContent('Capsule')
+    expect(id).toHaveTextContent('Oral') // 'PO' resolves to the human label
+  })
+
+  it('renders clinical highlights (indications and dosing) from the tier-2 mirror', async () => {
+    await db.drugCatalogMirror.put(
+      entry({
+        indicationsClinical: ['Acute bacterial sinusitis'],
+        adultDosing: [{ indication: 'Otitis media', adultDose: '500 mg TID', frequency: 'TID' }],
+      }) as never,
+    )
+    render(<DrugSafetyPanel atcCode="J01CA04" patientSex="male" patientAge={40} display="Amoxicillin" />)
+    await waitFor(() => expect(screen.getByText(/Acute bacterial sinusitis/)).toBeInTheDocument())
+    expect(screen.getByText(/500 mg TID/)).toBeInTheDocument()
+  })
 })

@@ -1,7 +1,7 @@
 import type { FhirMedicationRequestZod } from '@ultranos/shared-types'
 import { PrescriptionStatus } from '@ultranos/shared-types'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
-import { FREQUENCY_OPTIONS } from '@/lib/prescription-config'
+import { FREQUENCY_OPTIONS, ROUTE_OPTIONS } from '@/lib/prescription-config'
 import { hlc, serializeHlc } from '@/lib/hlc'
 
 interface MappingContext {
@@ -44,6 +44,13 @@ export function mapFormToMedicationRequest(
     throw new Error('durationDays must be between 1 and 365')
   }
 
+  const routeOption = form.route ? ROUTE_OPTIONS.find((r) => r.code === form.route) : undefined
+  // Build the display text from present parts only — skip an empty strength so it
+  // never renders as "Amoxicillin  (Capsule)" with a doubled space.
+  const medText = [form.medicationDisplay, form.medicationStrength.trim(), form.medicationForm ? `(${form.medicationForm})` : '']
+    .filter((p) => p !== '')
+    .join(' ')
+
   return {
     id: crypto.randomUUID(),
     resourceType: 'MedicationRequest',
@@ -59,8 +66,11 @@ export function mapFormToMedicationRequest(
         ...(form.brandHint
           ? [{ system: 'urn:ultranos:brand', code: form.brandHint, display: form.brandHint }]
           : []),
+        ...(form.medicationManufacturer
+          ? [{ system: 'urn:ultranos:manufacturer', code: form.medicationManufacturer, display: form.medicationManufacturer }]
+          : []),
       ],
-      text: `${form.medicationDisplay} ${form.medicationStrength} (${form.medicationForm})`,
+      text: medText,
     },
     subject: {
       reference: `Patient/${context.patientId}`,
@@ -97,6 +107,17 @@ export function mapFormToMedicationRequest(
             }
           : undefined,
         asNeededBoolean: freqOption?.asNeeded === true ? true : undefined,
+        route: routeOption
+          ? {
+              coding: [
+                {
+                  system: 'http://snomed.info/sct',
+                  code: routeOption.snomedCode,
+                  display: routeOption.display,
+                },
+              ],
+            }
+          : undefined,
         doseAndRate: [
           {
             doseQuantity: {
