@@ -16,9 +16,8 @@ import {
   type PrescriptionFormData,
 } from '@/lib/prescription-config'
 import { enrichDrug } from '@/lib/trpc'
-import { DrugSafetyPanel } from '@/components/clinical/DrugSafetyPanel'
+import { DrugSafetyPanel, type PresentationChoice } from '@/components/clinical/DrugSafetyPanel'
 import { DrugMonographSheet } from '@/components/clinical/DrugMonographSheet'
-import { getBrandNamesForAtc } from '@/lib/drug-entry'
 
 interface PrescriptionEntryProps {
   onSubmit: (form: PrescriptionFormData) => void | Promise<void>
@@ -90,7 +89,6 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
   const [isEnriching, setIsEnriching] = useState(false)
   const [enrichSuccess, setEnrichSuccess] = useState(false)
   const [enrichError, setEnrichError] = useState<string | null>(null)
-  const [brandOptions, setBrandOptions] = useState<string[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -147,6 +145,23 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
     setResults([])
     setIsOpen(false)
     setActiveIndex(-1)
+  }, [])
+
+  // Narrow a selected generic to a specific branded product (or clear back to
+  // generic with null), from the brand picker inside the inline detail card.
+  const handleSelectPresentation = useCallback((choice: PresentationChoice | null) => {
+    if (!choice) {
+      setForm((prev) => ({ ...prev, brandHint: undefined, medicationManufacturer: undefined }))
+      return
+    }
+    setForm((prev) => ({
+      ...prev,
+      brandHint: choice.brandName,
+      medicationManufacturer: choice.manufacturer,
+      medicationStrength: choice.strength || prev.medicationStrength,
+      medicationForm: choice.form || prev.medicationForm,
+      route: choice.route ?? (choice.form ? formToRouteDefault(choice.form) : prev.route),
+    }))
   }, [])
 
   const handleKeyDown = useCallback(
@@ -235,13 +250,6 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
       if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
     }
   }, [])
-
-  useEffect(() => {
-    let cancelled = false
-    if (!form.medicationCode) { setBrandOptions([]); return }
-    void getBrandNamesForAtc(form.medicationCode).then((b) => { if (!cancelled) setBrandOptions(b) })
-    return () => { cancelled = true }
-  }, [form.medicationCode])
 
   useEffect(() => {
     if (activeIndex >= 0 && listRef.current) {
@@ -386,27 +394,8 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
           route={form.route}
           brandName={form.brandHint}
           manufacturer={form.medicationManufacturer}
+          onSelectPresentation={handleSelectPresentation}
         />
-      )}
-
-      {hasMedication && brandOptions.length > 0 && (
-        <div>
-          <label htmlFor="brand-hint" className="mb-1 block text-sm font-semibold text-foreground">
-            {t('preferredBrand')}
-          </label>
-          <select
-            id="brand-hint"
-            data-testid="brand-hint-select"
-            value={form.brandHint ?? ''}
-            onChange={(e) => setForm((prev) => ({ ...prev, brandHint: e.target.value || undefined }))}
-            disabled={disabled}
-            className={inputClasses}
-            aria-label={t('preferredBrand')}
-          >
-            <option value="">{t('anyBrand')}</option>
-            {brandOptions.map((b) => <option key={b} value={b}>{b}</option>)}
-          </select>
-        </div>
       )}
 
       {hasMedication && canEnrich && (

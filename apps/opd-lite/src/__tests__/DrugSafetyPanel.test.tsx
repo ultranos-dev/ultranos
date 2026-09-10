@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { db } from '@/lib/db'
 import { DrugSafetyPanel } from '@/components/clinical/DrugSafetyPanel'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
@@ -82,5 +82,35 @@ describe('DrugSafetyPanel', () => {
     render(<DrugSafetyPanel atcCode="J01CA04" patientSex="male" patientAge={40} display="Amoxicillin" />)
     await waitFor(() => expect(screen.getByText(/Acute bacterial sinusitis/)).toBeInTheDocument())
     expect(screen.getByText(/500 mg TID/)).toBeInTheDocument()
+  })
+
+  it('offers a brand/product dropdown of the selected generic\'s branded presentations', async () => {
+    await db.drugBrandsMirror.clear()
+    await db.drugBrandPresentationsMirror.clear()
+    await db.drugCatalogMirror.put(entry() as never)
+    await db.drugBrandsMirror.put({ id: 'b1', genericAtcCode: 'J01CA04', brandName: 'Amoxil', manufacturer: 'GSK' } as never)
+    await db.drugBrandPresentationsMirror.put({ id: 'p1', brandId: 'b1', strength: '500 mg', doseForm: 'Capsule' } as never)
+
+    render(<DrugSafetyPanel atcCode="J01CA04" patientSex="male" patientAge={40} display="Amoxicillin" onSelectPresentation={vi.fn()} />)
+    const select = await screen.findByTestId('brand-hint-select')
+    expect(select).toHaveTextContent(/Amoxil/)
+    expect(select).toHaveTextContent(/500 mg/)
+  })
+
+  it('calls onSelectPresentation with the chosen presentation details', async () => {
+    await db.drugBrandsMirror.clear()
+    await db.drugBrandPresentationsMirror.clear()
+    await db.drugCatalogMirror.put(entry() as never)
+    await db.drugBrandsMirror.put({ id: 'b1', genericAtcCode: 'J01CA04', brandName: 'Amoxil', manufacturer: 'GSK' } as never)
+    await db.drugBrandPresentationsMirror.put({ id: 'p1', brandId: 'b1', strength: '500 mg', doseForm: 'Capsule', route: 'PO' } as never)
+    const onSelect = vi.fn()
+
+    render(<DrugSafetyPanel atcCode="J01CA04" patientSex="male" patientAge={40} display="Amoxicillin" onSelectPresentation={onSelect} />)
+    const select = await screen.findByTestId('brand-hint-select')
+    fireEvent.change(select, { target: { value: 'p1' } })
+
+    expect(onSelect).toHaveBeenCalledWith(
+      expect.objectContaining({ brandName: 'Amoxil', manufacturer: 'GSK', strength: '500 mg', form: 'Capsule', route: 'PO' }),
+    )
   })
 })
