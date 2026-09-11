@@ -66,7 +66,8 @@ export async function findDuplicateInvoice(supplierId: string, invoiceNumber: st
 
 export async function getSupplierInvoices(statusFilter?: SupplierInvoiceStatus): Promise<SupplierInvoice[]> {
   if (statusFilter) return db.supplierInvoices.where('status').equals(statusFilter).reverse().sortBy('createdAt')
-  return db.supplierInvoices.orderBy('createdAt').reverse().toArray()
+  const all = await db.supplierInvoices.toArray()
+  return all.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 
 export async function getSupplierInvoiceById(id: string): Promise<SupplierInvoice | undefined> {
