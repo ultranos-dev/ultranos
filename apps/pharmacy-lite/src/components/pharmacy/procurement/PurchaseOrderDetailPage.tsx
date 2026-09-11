@@ -244,9 +244,9 @@ export function PurchaseOrderDetailPage() {
       {/* Back button */}
       {backButton}
 
-      {/* Page heading — PO short id + supplier name */}
+      {/* Page heading — PO number (or short id fallback) + supplier name */}
       <h1 className="text-2xl font-semibold text-foreground">
-        {shortId} · {po.supplierName}{' '}
+        {po.poNumber ?? shortId} · {po.supplierName}{' '}
         <span className={statusBadgeClass(po.status)}>
           {t(statusKey(po.status))}
         </span>
@@ -314,10 +314,31 @@ export function PurchaseOrderDetailPage() {
             <span className="text-muted-foreground">{t('detailSupplier')}: </span>
             <span className="text-foreground">{po.supplierName}</span>
           </div>
-          <div>
-            <span className="text-muted-foreground">{t('detailTotal')}: </span>
-            <span className="tabular-nums text-foreground font-numeric">{fmt(po.totalCost)}</span>
-          </div>
+          {po.subtotal == null ? (
+            <div>
+              <span className="text-muted-foreground">{t('detailTotal')}: </span>
+              <span className="tabular-nums text-foreground font-numeric">{fmt(po.totalCost)}</span>
+            </div>
+          ) : (
+            <>
+              <div>
+                <span className="text-muted-foreground">{t('detailSubtotal')}: </span>
+                <span className="tabular-nums text-foreground font-numeric">{fmt(po.subtotal)}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">{t('detailTax')}: </span>
+                <span className="tabular-nums text-foreground font-numeric">{fmt(po.taxAmount ?? 0)}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">{t('detailFreight')}: </span>
+                <span className="tabular-nums text-foreground font-numeric">{fmt(po.freight ?? 0)}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">{t('detailGrandTotal')}: </span>
+                <span className="tabular-nums text-foreground font-numeric">{fmt(po.totalCost)}</span>
+              </div>
+            </>
+          )}
           <div>
             <span className="text-muted-foreground">{t('detailCreatedAt')}: </span>
             <span className="text-foreground">{new Date(po.createdAt).toLocaleDateString()}</span>

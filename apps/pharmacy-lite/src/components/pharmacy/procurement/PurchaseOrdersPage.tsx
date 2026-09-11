@@ -88,7 +88,7 @@ export function PurchaseOrdersPage() {
   const filtered = orders.filter((po) => {
     const matchesTab = activeTab === 'all' || po.status === activeTab
     const matchesSearch = query
-      ? po.supplierName.toLowerCase().includes(query) || po.id.toLowerCase().includes(query)
+      ? po.supplierName.toLowerCase().includes(query) || po.id.toLowerCase().includes(query) || (po.poNumber?.toLowerCase().includes(query) ?? false)
       : true
     return matchesTab && matchesSearch
   })
@@ -221,7 +221,7 @@ export function PurchaseOrdersPage() {
                       href={`/inventory/orders/${po.id}`}
                       className="hover:underline text-primary"
                     >
-                      {shortId(po.id)}
+                      {po.poNumber ?? shortId(po.id)}
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{po.supplierName}</td>
