@@ -11,6 +11,7 @@ import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { ChevronLeft, Plus, Trash2 } from '@ultranos/ui-kit/icons'
 import { getActiveSuppliers } from '@/lib/procurement/supplier-service'
 import { createPurchaseOrder } from '@/lib/procurement/purchase-order-service'
+import { computePoTotals } from '@/lib/procurement/po-totals'
 import { db } from '@/lib/db'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import type { Supplier } from '@/lib/procurement/types'
@@ -50,6 +51,8 @@ interface POLineState {
   quantityOrdered: string // string for controlled input
   unitCostDisplay: string // major-unit string for input display
   unitCostMinor: number   // stored minor unit value
+  discountType: '' | 'percent' | 'amount'
+  discountDisplay: string // raw input — percent (0-100) or major-unit amount
 }
 
 // ---------------------------------------------------------------------------
@@ -69,6 +72,8 @@ export function NewPurchaseOrderPage() {
   const [catalogResults, setCatalogResults] = useState<CatalogItem[]>([])
   const [currency, setCurrency] = useState('AFN')
   const [currencyMinorUnits, setCurrencyMinorUnits] = useState(2)
+  const [taxRateInput, setTaxRateInput] = useState('0')
+  const [freightDisplay, setFreightDisplay] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadingSuppliers, setLoadingSuppliers] = useState(true)
@@ -89,6 +94,7 @@ export function NewPurchaseOrderPage() {
       if (settings) {
         setCurrency(settings.currency)
         setCurrencyMinorUnits(settings.currencyMinorUnits)
+        setTaxRateInput(String(settings.taxRate ?? 0))
       }
     } catch (err) {
       console.error('[NewPurchaseOrderPage] loadInitialData failed:', err instanceof Error ? err.message : 'unknown')
@@ -140,6 +146,8 @@ export function NewPurchaseOrderPage() {
         quantityOrdered: '1',
         unitCostDisplay: '0.00',
         unitCostMinor: 0,
+        discountType: '',
+        discountDisplay: '',
       },
     ])
     setCatalogSearch('')
@@ -157,6 +165,8 @@ export function NewPurchaseOrderPage() {
         quantityOrdered: '1',
         unitCostDisplay: minorToMajorDisplay(0, currencyMinorUnits),
         unitCostMinor: 0,
+        discountType: '',
+        discountDisplay: '',
       },
     ])
   }
@@ -186,7 +196,24 @@ export function NewPurchaseOrderPage() {
     return qty * line.unitCostMinor
   }
 
-  const totalMinor = lines.reduce((s, l) => s + lineTotal(l), 0)
+  // Live totals derived from computePoTotals
+  const liveTotals = computePoTotals(
+    lines.map((l) => ({
+      catalogItemId: l.catalogItemId || `manual-${l.id}`,
+      catalogItemName: l.catalogItemName || '',
+      quantityOrdered: parseInt(l.quantityOrdered || '0', 10) || 0,
+      unitCost: l.unitCostMinor,
+      discountType: l.discountType || undefined,
+      discountValue:
+        l.discountType === 'percent'
+          ? parseFloat(l.discountDisplay || '0') || 0
+          : l.discountType === 'amount'
+            ? parseMajorToMinor(l.discountDisplay, currencyMinorUnits)
+            : undefined,
+    })),
+    Number(taxRateInput) || 0,
+    parseMajorToMinor(freightDisplay, currencyMinorUnits),
+  )
 
   // Submit handler
   async function handleSubmit() {
@@ -209,11 +236,20 @@ export function NewPurchaseOrderPage() {
         catalogItemName: l.catalogItemName || t('newPoManualItem'),
         quantityOrdered: parseInt(l.quantityOrdered || '0', 10) || 0,
         unitCost: l.unitCostMinor,
+        discountType: l.discountType || undefined,
+        discountValue:
+          l.discountType === 'amount'
+            ? parseMajorToMinor(l.discountDisplay, currencyMinorUnits)
+            : l.discountType === 'percent'
+              ? parseFloat(l.discountDisplay || '0') || 0
+              : undefined,
       }))
       const po = await createPurchaseOrder({
         supplierId,
         supplierName,
         items: poItems,
+        taxRate: Number(taxRateInput) || 0,
+        freight: parseMajorToMinor(freightDisplay, currencyMinorUnits),
         notes: notes.trim() || undefined,
         createdBy: practitionerRef,
       })
@@ -352,6 +388,9 @@ export function NewPurchaseOrderPage() {
                   <th className="px-3 py-2 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
                     {t('newPoColUnitCost')}
                   </th>
+                  <th className="px-3 py-2 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                    {t('newPoLineDiscount')}
+                  </th>
                   <th className="px-3 py-2 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">
                     {t('newPoColLineTotal')}
                   </th>
@@ -402,6 +441,39 @@ export function NewPurchaseOrderPage() {
                         className="w-28 rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       />
                     </td>
+                    {/* Line discount */}
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-1">
+                        <select
+                          data-testid={`line-disc-type-${line.id}`}
+                          value={line.discountType}
+                          onChange={(e) =>
+                            updateLine(line.id, {
+                              discountType: e.target.value as '' | 'percent' | 'amount',
+                              discountDisplay: '',
+                            })
+                          }
+                          className="rounded-md border border-border bg-background text-foreground px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          <option value="">—</option>
+                          <option value="percent">{t('newPoDiscountPercent')}</option>
+                          <option value="amount">{t('newPoDiscountAmount')}</option>
+                        </select>
+                        {line.discountType !== '' && (
+                          <input
+                            type="number"
+                            min="0"
+                            data-testid={`line-disc-val-${line.id}`}
+                            value={line.discountDisplay}
+                            onChange={(e) =>
+                              updateLine(line.id, { discountDisplay: e.target.value })
+                            }
+                            placeholder="0"
+                            className="w-20 rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          />
+                        )}
+                      </div>
+                    </td>
                     {/* Line total */}
                     <td className="px-3 py-2 text-end tabular-nums text-muted-foreground font-numeric">
                       {formatAmount(lineTotal(line), currency, currencyMinorUnits)}
@@ -428,14 +500,70 @@ export function NewPurchaseOrderPage() {
       </div>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Section 3: Running total summary                                    */}
+      {/* Section 3: Document charges (tax rate + freight)                    */}
       {/* ------------------------------------------------------------------ */}
       <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
         <h2 className="mb-4 text-base font-semibold text-foreground">{t('newPoSectionTotals')}</h2>
-        <div className="space-y-1 text-sm">
-          <div className="flex justify-between font-semibold text-foreground">
-            <span>{t('newPoTotal')}</span>
-            <span className="tabular-nums font-numeric">{formatAmount(totalMinor, currency, currencyMinorUnits)}</span>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="po-tax-rate-input">{t('newPoTaxRate')}</Label>
+            <input
+              id="po-tax-rate-input"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              data-testid="po-tax-rate"
+              value={taxRateInput}
+              onChange={(e) => setTaxRateInput(e.target.value)}
+              className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="po-freight-input">{t('newPoFreight')}</Label>
+            <input
+              id="po-freight-input"
+              type="number"
+              min="0"
+              step={Math.pow(10, -currencyMinorUnits).toFixed(currencyMinorUnits)}
+              data-testid="po-freight"
+              value={freightDisplay}
+              onChange={(e) => setFreightDisplay(e.target.value)}
+              placeholder={minorToMajorDisplay(0, currencyMinorUnits)}
+              className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
+        </div>
+
+        {/* Live totals breakdown */}
+        <div className="mt-4 space-y-1 text-sm">
+          <div className="flex justify-between text-muted-foreground" data-testid="po-totals-subtotal">
+            <span>{t('newPoSubtotal')}</span>
+            <span className="tabular-nums font-numeric">{formatAmount(liveTotals.subtotal, currency, currencyMinorUnits)}</span>
+          </div>
+          {liveTotals.discountTotal > 0 && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>{t('newPoDiscountTotal')}</span>
+              <span className="tabular-nums font-numeric text-destructive">
+                -{formatAmount(liveTotals.discountTotal, currency, currencyMinorUnits)}
+              </span>
+            </div>
+          )}
+          {liveTotals.taxAmount > 0 && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>{t('newPoTax')}</span>
+              <span className="tabular-nums font-numeric">{formatAmount(liveTotals.taxAmount, currency, currencyMinorUnits)}</span>
+            </div>
+          )}
+          {liveTotals.freight > 0 && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>{t('newPoFreight')}</span>
+              <span className="tabular-nums font-numeric">{formatAmount(liveTotals.freight, currency, currencyMinorUnits)}</span>
+            </div>
+          )}
+          <div className="flex justify-between border-t border-border pt-2 font-semibold text-foreground" data-testid="po-totals-grandtotal">
+            <span>{t('newPoGrandTotal')}</span>
+            <span className="tabular-nums font-numeric">{formatAmount(liveTotals.grandTotal, currency, currencyMinorUnits)}</span>
           </div>
         </div>
       </div>

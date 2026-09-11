@@ -194,13 +194,73 @@ exports[`NewPurchaseOrderPage > LTR snapshot 1`] = `
         newPoSectionTotals
       </h2>
       <div
-        class="space-y-1 text-sm"
+        class="grid gap-4 md:grid-cols-2"
       >
         <div
-          class="flex justify-between font-semibold text-foreground"
+          class="flex flex-col gap-1.5"
+        >
+          <label
+            class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+            data-slot="label"
+            for="po-tax-rate-input"
+          >
+            newPoTaxRate
+          </label>
+          <input
+            class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            data-testid="po-tax-rate"
+            id="po-tax-rate-input"
+            max="100"
+            min="0"
+            step="0.01"
+            type="number"
+            value="0"
+          />
+        </div>
+        <div
+          class="flex flex-col gap-1.5"
+        >
+          <label
+            class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+            data-slot="label"
+            for="po-freight-input"
+          >
+            newPoFreight
+          </label>
+          <input
+            class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            data-testid="po-freight"
+            id="po-freight-input"
+            min="0"
+            placeholder="0.00"
+            step="0.01"
+            type="number"
+            value=""
+          />
+        </div>
+      </div>
+      <div
+        class="mt-4 space-y-1 text-sm"
+      >
+        <div
+          class="flex justify-between text-muted-foreground"
+          data-testid="po-totals-subtotal"
         >
           <span>
-            newPoTotal
+            newPoSubtotal
+          </span>
+          <span
+            class="tabular-nums font-numeric"
+          >
+            AFN 0.00
+          </span>
+        </div>
+        <div
+          class="flex justify-between border-t border-border pt-2 font-semibold text-foreground"
+          data-testid="po-totals-grandtotal"
+        >
+          <span>
+            newPoGrandTotal
           </span>
           <span
             class="tabular-nums font-numeric"
@@ -422,13 +482,73 @@ exports[`NewPurchaseOrderPage > RTL snapshot 1`] = `
         newPoSectionTotals
       </h2>
       <div
-        class="space-y-1 text-sm"
+        class="grid gap-4 md:grid-cols-2"
       >
         <div
-          class="flex justify-between font-semibold text-foreground"
+          class="flex flex-col gap-1.5"
+        >
+          <label
+            class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+            data-slot="label"
+            for="po-tax-rate-input"
+          >
+            newPoTaxRate
+          </label>
+          <input
+            class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            data-testid="po-tax-rate"
+            id="po-tax-rate-input"
+            max="100"
+            min="0"
+            step="0.01"
+            type="number"
+            value="0"
+          />
+        </div>
+        <div
+          class="flex flex-col gap-1.5"
+        >
+          <label
+            class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+            data-slot="label"
+            for="po-freight-input"
+          >
+            newPoFreight
+          </label>
+          <input
+            class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            data-testid="po-freight"
+            id="po-freight-input"
+            min="0"
+            placeholder="0.00"
+            step="0.01"
+            type="number"
+            value=""
+          />
+        </div>
+      </div>
+      <div
+        class="mt-4 space-y-1 text-sm"
+      >
+        <div
+          class="flex justify-between text-muted-foreground"
+          data-testid="po-totals-subtotal"
         >
           <span>
-            newPoTotal
+            newPoSubtotal
+          </span>
+          <span
+            class="tabular-nums font-numeric"
+          >
+            AFN 0.00
+          </span>
+        </div>
+        <div
+          class="flex justify-between border-t border-border pt-2 font-semibold text-foreground"
+          data-testid="po-totals-grandtotal"
+        >
+          <span>
+            newPoGrandTotal
           </span>
           <span
             class="tabular-nums font-numeric"
