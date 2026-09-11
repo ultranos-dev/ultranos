@@ -100,6 +100,15 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const practitionerRef = useAuthSessionStore((s) =>
     s.session?.practitionerId ? `Practitioner/${s.session.practitionerId}` : '',
   )
+  // Identity alias: encounters created before the custom-access-token-hook (migration
+  // 056) carry `Practitioner/<auth_user_id>` (the auth `sub`) instead of practitioners.id.
+  // Pass it so the dashboard adopts those pre-hook encounters instead of stranding their
+  // notes/vitals and starting an empty duplicate. Empty when it equals the canonical ref.
+  const altPractitionerRef = useAuthSessionStore((s) =>
+    s.session?.userId && s.session.userId !== s.session.practitionerId
+      ? `Practitioner/${s.session.userId}`
+      : '',
+  )
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const router = useRouter()
   const { open: paletteOpen, setOpen: setPaletteOpen } = useCommandPalette()
@@ -232,8 +241,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
 
   // Load any active encounter for this patient + practitioner from Dexie.
   useEffect(() => {
-    loadActiveEncounter(patientId, practitionerRef || undefined)
-  }, [patientId, practitionerRef, loadActiveEncounter])
+    loadActiveEncounter(patientId, practitionerRef || undefined, altPractitionerRef ? [altPractitionerRef] : undefined)
+  }, [patientId, practitionerRef, altPractitionerRef, loadActiveEncounter])
 
   // Re-check after a sync pull completes: login/chart hydration may bring a
   // still-open encounter (started in another session/device) into the local
@@ -242,10 +251,10 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const prevSyncingRef = useRef(false)
   useEffect(() => {
     if (prevSyncingRef.current && !isSyncing) {
-      loadActiveEncounter(patientId, practitionerRef || undefined)
+      loadActiveEncounter(patientId, practitionerRef || undefined, altPractitionerRef ? [altPractitionerRef] : undefined)
     }
     prevSyncingRef.current = isSyncing
-  }, [isSyncing, patientId, practitionerRef, loadActiveEncounter])
+  }, [isSyncing, patientId, practitionerRef, altPractitionerRef, loadActiveEncounter])
 
   // Initialize SOAP note and vitals when encounter becomes active
   useEffect(() => {
@@ -518,8 +527,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
 
   const handleStartEncounter = useCallback(async () => {
     if (!practitionerRef) return
-    await startEncounter(patientId, practitionerRef)
-  }, [patientId, practitionerRef, startEncounter])
+    await startEncounter(patientId, practitionerRef, altPractitionerRef ? [altPractitionerRef] : undefined)
+  }, [patientId, practitionerRef, altPractitionerRef, startEncounter])
 
   const handleEndEncounter = useCallback(async () => {
     flushAutosave()

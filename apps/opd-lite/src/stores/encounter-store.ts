@@ -25,15 +25,44 @@ function encounterPractitionerRef(e: FhirEncounterZod): string | undefined {
   return e.participant?.[0]?.individual?.reference
 }
 
+/**
+ * Does the encounter belong to any of the accepted practitioner identities?
+ *
+ * The custom-access-token-hook (migration 056) switched the session's practitioner
+ * identity from the auth `sub` (auth_user_id) to practitioners.id. Encounters created
+ * under the OLD identity carry `Practitioner/<auth_user_id>`. Passing the old ref as an
+ * alias lets a session on the NEW identity still recognize its own pre-hook encounters
+ * instead of stranding them and starting an empty duplicate.
+ */
+function matchesAnyRef(e: FhirEncounterZod, acceptedRefs: string[]): boolean {
+  const ref = encounterPractitionerRef(e)
+  return ref != null && acceptedRefs.includes(ref)
+}
+
+/**
+ * Pick the earliest-started open encounter (by period.start, HLC fallback).
+ * Under the one-open-encounter-per-(patient, practitioner) invariant there is
+ * normally at most one match; more than one only arises from the identity split
+ * above, where the earliest is the original visit that holds the clinical data.
+ */
+function earliestByStart(list: FhirEncounterZod[]): FhirEncounterZod | null {
+  if (list.length === 0) return null
+  return list.reduce((earliest, e) => {
+    const a = earliest.period?.start ?? earliest._ultranos?.hlcTimestamp ?? ''
+    const b = e.period?.start ?? e._ultranos?.hlcTimestamp ?? ''
+    return b < a ? e : earliest
+  })
+}
+
 interface EncounterState {
   activeEncounter: FhirEncounterZod | null
   isStarting: boolean
   medicationHistoryAvailable: boolean
   activeMedicationStatements: FhirMedicationStatementZod[]
 
-  startEncounter: (patientId: string, practitionerRef: string) => Promise<void>
+  startEncounter: (patientId: string, practitionerRef: string, altPractitionerRefs?: string[]) => Promise<void>
   endEncounter: () => Promise<void>
-  loadActiveEncounter: (patientId: string, practitionerRef?: string) => Promise<void>
+  loadActiveEncounter: (patientId: string, practitionerRef?: string, altPractitionerRefs?: string[]) => Promise<void>
   loadMedicationHistory: (patientId: string) => Promise<void>
   clearPhiState: () => void
 }
@@ -45,7 +74,7 @@ export const useEncounterStore = create<EncounterState>()(
     medicationHistoryAvailable: false,
     activeMedicationStatements: [],
 
-    startEncounter: async (patientId: string, practitionerRef: string) => {
+    startEncounter: async (patientId: string, practitionerRef: string, altPractitionerRefs?: string[]) => {
       // P2: Guard against concurrent/duplicate encounters (in-memory, patient-scoped).
       const existing = get().activeEncounter
       if (
@@ -77,8 +106,12 @@ export const useEncounterStore = create<EncounterState>()(
           .equals(`Patient/${patientId}`)
           .filter((e) => e.status === 'in-progress')
           .toArray()
-        const localOpen = openForPatient.find(
-          (e) => encounterPractitionerRef(e) === practitionerRef,
+        // Accept the canonical ref plus any identity aliases (e.g. the pre-hook
+        // auth_user_id ref) so a pre-existing encounter under an old identity is
+        // adopted rather than duplicated. Earliest = the original visit.
+        const acceptedRefs = [practitionerRef, ...(altPractitionerRefs ?? [])]
+        const localOpen = earliestByStart(
+          openForPatient.filter((e) => matchesAnyRef(e, acceptedRefs)),
         )
 
         if (localOpen) {
@@ -210,7 +243,7 @@ export const useEncounterStore = create<EncounterState>()(
       }
     },
 
-    loadActiveEncounter: async (patientId: string, practitionerRef?: string) => {
+    loadActiveEncounter: async (patientId: string, practitionerRef?: string, altPractitionerRefs?: string[]) => {
       // P5: Skip load if a start is in progress to avoid race condition
       if (get().isStarting) return
 
@@ -224,9 +257,14 @@ export const useEncounterStore = create<EncounterState>()(
         .equals(`Patient/${patientId}`)
         .filter((e) => e.status === 'in-progress')
         .toArray()
+      // Accept the canonical ref plus identity aliases (pre-hook auth_user_id ref),
+      // then prefer the earliest — the original visit that holds the clinical data,
+      // not a later empty duplicate started under the new identity.
       const active = practitionerRef
-        ? (openForPatient.find((e) => encounterPractitionerRef(e) === practitionerRef) ?? null)
-        : (openForPatient[0] ?? null)
+        ? earliestByStart(
+            openForPatient.filter((e) => matchesAnyRef(e, [practitionerRef, ...(altPractitionerRefs ?? [])])),
+          )
+        : earliestByStart(openForPatient)
 
       // P5: Re-check after async — don't overwrite a freshly started encounter for this patient
       const current = get().activeEncounter

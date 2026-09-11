@@ -290,6 +290,69 @@ describe('encounter store', () => {
     })
   })
 
+  // Regression: custom-access-token-hook (migration 056) changed the session's
+  // practitioner identity from the auth `sub` (auth_user_id) to practitioners.id.
+  // Encounters created under the OLD identity carry `Practitioner/<auth_user_id>`
+  // in participant, so exact-string matching against the NEW canonical ref misses
+  // them — the clinician sees no active encounter and starts an empty duplicate.
+  // The store must accept identity ALIASES so the pre-existing encounter is found.
+  describe('practitioner identity aliasing (custom access token hook)', () => {
+    const CANON_REF = 'Practitioner/07d634d7'   // practitioners.id (new/correct)
+    const ALT_REF = 'Practitioner/8586f2d7'     // auth_user_id (old identity)
+
+    function seedOpen(id: string, ref: string, startIso: string) {
+      return db.encounters.put({
+        id,
+        resourceType: 'Encounter',
+        status: 'in-progress',
+        class: { system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode', code: 'AMB', display: 'ambulatory' },
+        subject: { reference: `Patient/${TEST_PATIENT_ID}` },
+        participant: [{ individual: { reference: ref } }],
+        period: { start: startIso },
+        _ultranos: { isOfflineCreated: true, hlcTimestamp: '001700000000000:00000:seed', createdAt: startIso },
+        meta: { lastUpdated: startIso, versionId: '1' },
+      } as unknown as Parameters<typeof db.encounters.put>[0])
+    }
+
+    it('loadActiveEncounter finds an encounter stamped with an ALT (old-identity) ref', async () => {
+      await seedOpen('old-identity-open', ALT_REF, '2026-09-10T16:18:00.000Z')
+      resetStore()
+
+      await useEncounterStore.getState().loadActiveEncounter(TEST_PATIENT_ID, CANON_REF, [ALT_REF])
+      expect(useEncounterStore.getState().activeEncounter?.id).toBe('old-identity-open')
+    })
+
+    it('startEncounter adopts the ALT-ref encounter instead of creating a duplicate', async () => {
+      await seedOpen('old-identity-open', ALT_REF, '2026-09-10T16:18:00.000Z')
+      resetStore()
+
+      await useEncounterStore.getState().startEncounter(TEST_PATIENT_ID, CANON_REF, [ALT_REF])
+
+      expect(useEncounterStore.getState().activeEncounter?.id).toBe('old-identity-open')
+      const all = await db.encounters.toArray()
+      expect(all.length).toBe(1) // adopted, not duplicated
+    })
+
+    it('with a data-bearing ALT encounter AND an empty CANON duplicate, loads the earliest (the real visit)', async () => {
+      // Exactly the incident: old-identity visit at 16:18 holds the data; a later
+      // empty duplicate at 18:31 was started under the new identity.
+      await seedOpen('data-visit', ALT_REF, '2026-09-10T16:18:00.000Z')
+      await seedOpen('empty-dup', CANON_REF, '2026-09-10T18:31:00.000Z')
+      resetStore()
+
+      await useEncounterStore.getState().loadActiveEncounter(TEST_PATIENT_ID, CANON_REF, [ALT_REF])
+      expect(useEncounterStore.getState().activeEncounter?.id).toBe('data-visit')
+    })
+
+    it('without aliases, still ignores an encounter under a different identity (no regression)', async () => {
+      await seedOpen('old-identity-open', ALT_REF, '2026-09-10T16:18:00.000Z')
+      resetStore()
+
+      await useEncounterStore.getState().loadActiveEncounter(TEST_PATIENT_ID, CANON_REF)
+      expect(useEncounterStore.getState().activeEncounter).toBeNull()
+    })
+  })
+
   describe('loadActiveEncounter stale state', () => {
     it('should clear activeEncounter when no in-progress encounter exists for patient', async () => {
       // Set a stale encounter in state
