@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mapFormToMedicationRequest } from '@/lib/medication-request-mapper'
+import { mapFormToMedicationRequest, readBrandFromCoding, readPerformerFromDispenseRequest } from '@/lib/medication-request-mapper'
 import { FhirMedicationRequestSchema } from '@ultranos/shared-types'
 import { PrescriptionStatus } from '@ultranos/shared-types'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
@@ -200,5 +200,45 @@ describe('mapFormToMedicationRequest', () => {
     expect(brand?.code).toBe('Amoxil')
     const mfr = codings.find((c) => c.system === 'urn:ultranos:manufacturer')
     expect(mfr?.display).toBe('GSK')
+  })
+})
+
+describe('readBrandFromCoding', () => {
+  it('extracts brand and manufacturer written by the mapper', () => {
+    const result = mapFormToMedicationRequest(
+      { ...baseForm, brandHint: 'Amoxil', medicationManufacturer: 'GSK' },
+      context,
+    )
+    expect(readBrandFromCoding(result.medicationCodeableConcept.coding)).toEqual({
+      brand: 'Amoxil',
+      manufacturer: 'GSK',
+    })
+  })
+
+  it('returns undefined fields for a generic prescription with no brand', () => {
+    const result = mapFormToMedicationRequest(baseForm, context)
+    expect(readBrandFromCoding(result.medicationCodeableConcept.coding)).toEqual({
+      brand: undefined,
+      manufacturer: undefined,
+    })
+  })
+
+  it('is safe on undefined coding', () => {
+    expect(readBrandFromCoding(undefined)).toEqual({ brand: undefined, manufacturer: undefined })
+  })
+})
+
+describe('performer (pharmacy) mapping', () => {
+  it('writes dispenseRequest.performer when a pharmacy is chosen', () => {
+    const result = mapFormToMedicationRequest({ ...baseForm, pharmacyId: 'ph1', pharmacyName: 'Kabul City Pharmacy' }, context)
+    expect(result.dispenseRequest?.performer).toEqual({ reference: 'Organization/ph1', display: 'Kabul City Pharmacy' })
+  })
+  it('omits performer when no pharmacy is chosen', () => {
+    const result = mapFormToMedicationRequest(baseForm, context)
+    expect(result.dispenseRequest?.performer).toBeUndefined()
+  })
+  it('readPerformerFromDispenseRequest returns the pharmacy id and name', () => {
+    const result = mapFormToMedicationRequest({ ...baseForm, pharmacyId: 'ph1', pharmacyName: 'Kabul City Pharmacy' }, context)
+    expect(readPerformerFromDispenseRequest(result)).toEqual({ pharmacyId: 'ph1', pharmacyName: 'Kabul City Pharmacy' })
   })
 })

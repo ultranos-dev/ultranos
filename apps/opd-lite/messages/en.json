@@ -366,7 +366,12 @@
     "storage": "Storage",
     "productImages": "Product images",
     "noDataOnFile": "No data on file.",
-    "clinicalDetailUnavailable": "Clinical detail not available at your access level."
+    "clinicalDetailUnavailable": "Clinical detail not available at your access level.",
+    "pharmacyOptional": "Pharmacy (optional)",
+    "sendTo": "→ {pharmacy}",
+    "pharmacySearchPlaceholder": "Search pharmacy by name or region…",
+    "clearPharmacy": "Clear pharmacy",
+    "pharmacyAria": "Search pharmacies"
   },
   "interactionModal": {
     "contraindicationDetected": "Contraindication Detected",

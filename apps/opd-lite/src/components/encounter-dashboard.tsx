@@ -18,6 +18,7 @@ import { usePrescriptionStore } from '@/stores/prescription-store'
 import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
 import { LabOrderEntry } from '@/components/clinical/LabOrderEntry'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
+import { readBrandFromCoding, readPerformerFromDispenseRequest } from '@/lib/medication-request-mapper'
 import { useTranslations, useLocale } from 'next-intl'
 import { formatTime } from '@ultranos/ui-kit'
 import { checkInteractions, type InteractionCheckSummary, type InteractionResult } from '@/services/interactionService'
@@ -885,7 +886,13 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                 {tPrescription('pendingTitle', { count: pendingPrescriptions.length })}
               </h4>
               <ul className="divide-y divide-border" aria-label={tPrescription('pendingTitle', { count: pendingPrescriptions.length })}>
-                {pendingPrescriptions.map((rx) => (
+                {pendingPrescriptions.map((rx) => {
+                  const { brand, manufacturer } = readBrandFromCoding(rx.medicationCodeableConcept.coding)
+                  const brandLabel = brand
+                    ? manufacturer ? `${brand} (${manufacturer})` : brand
+                    : undefined
+                  const { pharmacyName } = readPerformerFromDispenseRequest(rx)
+                  return (
                   <li
                     key={rx.id}
                     className="flex items-center justify-between gap-3 py-3"
@@ -894,10 +901,20 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                       <span className="font-semibold text-foreground">
                         {rx.medicationCodeableConcept.text}
                       </span>
+                      {brandLabel && (
+                        <span className="ms-2 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          {brandLabel}
+                        </span>
+                      )}
                       <span className="mx-2 text-muted-foreground" aria-hidden="true">&middot;</span>
                       <span className="text-sm text-muted-foreground">
                         {rx.dosageInstruction?.[0]?.text}
                       </span>
+                      {pharmacyName && (
+                        <span className="ms-2 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          {tPrescription('sendTo', { pharmacy: pharmacyName })}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       {rx._ultranos.interactionCheckResult === 'WARNING' && (
@@ -934,7 +951,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                       </Button>
                     </div>
                   </li>
-                ))}
+                  )
+                })}
               </ul>
 
               {/* QR Code Generation — available when prescriptions exist and key is loaded */}

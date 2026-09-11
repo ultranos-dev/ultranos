@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import '@/lib/key-lifecycle-hooks' // registers re-auth listener for awaiting-key queue restoration
 import { startSyncWorker, stopSyncWorker, triggerDrain } from '@/lib/sync-worker'
 import { syncDrugCatalog } from '@/lib/drug-catalog-sync'
+import { syncPharmacyDirectory } from '@/lib/pharmacy-sync'
 import { pullPatientChanges, pullPractitionerEncounters } from '@/lib/sync-pull'
 import { syncAllPatientsToDb } from '@/lib/use-patient-list-sync'
 import { useSyncStore } from '@/stores/sync-store'
@@ -19,6 +20,7 @@ const HUB_BASE_URL = getHubBaseUrl()
 export async function triggerCatalogSyncOnAuth(isAuthenticated: boolean): Promise<void> {
   if (!isAuthenticated) return
   await syncDrugCatalog()
+  void syncPharmacyDirectory()
 }
 
 /** Background pull interval — 2 minutes */

@@ -366,7 +366,12 @@
     "storage": "التخزين",
     "productImages": "صور المنتج",
     "noDataOnFile": "لا توجد بيانات.",
-    "clinicalDetailUnavailable": "التفاصيل السريرية غير متاحة على مستوى وصولك."
+    "clinicalDetailUnavailable": "التفاصيل السريرية غير متاحة على مستوى وصولك.",
+    "pharmacyOptional": "Pharmacy (optional)",
+    "sendTo": "→ {pharmacy}",
+    "pharmacySearchPlaceholder": "Search pharmacy by name or region…",
+    "clearPharmacy": "Clear pharmacy",
+    "pharmacyAria": "Search pharmacies"
   },
   "interactionModal": {
     "contraindicationDetected": "تم اكتشاف موانع استعمال",

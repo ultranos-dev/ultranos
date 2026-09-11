@@ -12,12 +12,14 @@ import {
   FREQUENCY_OPTIONS,
   ROUTE_OPTIONS,
   formToRouteDefault,
+  formToDosageUnit,
   EMPTY_PRESCRIPTION_FORM,
   type PrescriptionFormData,
 } from '@/lib/prescription-config'
 import { enrichDrug } from '@/lib/trpc'
 import { DrugSafetyPanel, type PresentationChoice } from '@/components/clinical/DrugSafetyPanel'
 import { DrugMonographSheet } from '@/components/clinical/DrugMonographSheet'
+import { PharmacyPicker } from '@/components/clinical/PharmacyPicker'
 
 interface PrescriptionEntryProps {
   onSubmit: (form: PrescriptionFormData) => void | Promise<void>
@@ -128,17 +130,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
       route: item.route ?? formToRouteDefault(item.form),
       brandHint: item.brandName ?? prev.brandHint,
       medicationManufacturer: item.manufacturer,
-      dosageUnit: (() => {
-        const f = item.form.toLowerCase()
-        // P4: Check solid forms first to avoid misclassifying compound forms
-        // like "Tablet for Oral Solution"
-        if (f.includes('tablet') || f.includes('capsule') || f.includes('lozenge')) return 'tablet'
-        if (f.includes('ml') || f.includes('suspension') || f.includes('solution') || f.includes('syrup')) return 'mL'
-        if (f.includes('drop')) return 'drop'
-        if (f.includes('patch')) return 'patch'
-        if (f.includes('puff') || f.includes('inhal')) return 'puff'
-        return 'dose'
-      })(),
+      dosageUnit: formToDosageUnit(item.form),
     }))
     // Query echoes the chosen product; skip an empty strength to avoid a double space.
     setQuery([item.display, item.strength, item.form ? `(${item.form})` : ''].filter(Boolean).join(' '))
@@ -161,6 +153,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
       medicationStrength: choice.strength || prev.medicationStrength,
       medicationForm: choice.form || prev.medicationForm,
       route: choice.route ?? (choice.form ? formToRouteDefault(choice.form) : prev.route),
+      dosageUnit: choice.form ? formToDosageUnit(choice.form) : prev.dosageUnit,
     }))
   }, [])
 
@@ -560,6 +553,17 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
               disabled={disabled}
               className={inputClasses}
               aria-label={t('notesAria')}
+            />
+          </div>
+
+          {/* Optional pharmacy picker */}
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-foreground">{t('pharmacyOptional')}</label>
+            <PharmacyPicker
+              value={form.pharmacyId}
+              name={form.pharmacyName}
+              onSelect={(id, name) => setForm((prev) => ({ ...prev, pharmacyId: id, pharmacyName: name }))}
+              onClear={() => setForm((prev) => ({ ...prev, pharmacyId: undefined, pharmacyName: undefined }))}
             />
           </div>
 

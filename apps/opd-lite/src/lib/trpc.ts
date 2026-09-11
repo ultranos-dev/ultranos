@@ -1,6 +1,7 @@
-import type { DrugSearchResult, FhirPatient } from '@ultranos/shared-types'
+import type { DrugSearchResult, FhirPatient, FhirAllergyIntolerance, PharmacyDirectoryEntry } from '@ultranos/shared-types'
 import { getHubTrpcUrl } from '@/lib/hub-url'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
+import { toFhirAllergyIntolerance } from '@/lib/sync-pull'
 
 export interface PatientSearchResult {
   patients: FhirPatient[]
@@ -93,6 +94,43 @@ export async function fetchPractitionerAppointments(
     return json?.result?.data?.json?.appointments ?? []
   } catch {
     return []
+  }
+}
+
+/**
+ * Fetch a patient's ACTIVE allergies authoritatively from the Hub (allergy.list),
+ * reshaped from the Hub's flat row into nested FHIR (via toFhirAllergyIntolerance).
+ *
+ * Returns `null` when the Hub cannot be reached / there is no auth session — the
+ * caller then falls back to the local cache (offline-first). An empty array is a
+ * definitive "the Hub knows of no active allergies for this patient" (≠ null).
+ * Allergies are Tier-1 safety-critical, so their display must not depend solely on
+ * best-effort background sync (which can lag or be blocked by a stale watermark).
+ */
+export async function fetchPatientAllergiesFromHub(
+  patientId: string,
+): Promise<FhirAllergyIntolerance[] | null> {
+  const hubUrl = getHubApiUrl()
+  try {
+    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+    const { data: { session } } = await getSupabaseBrowserClient().auth.getSession()
+    if (!session?.access_token) return null
+
+    const input = encodeURIComponent(JSON.stringify({ json: { patientId } }))
+    const res = await fetch(`${hubUrl}/allergy.list?input=${input}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+    if (!res.ok) return null
+
+    const json = await res.json()
+    const rows = json?.result?.data?.json?.allergies
+    if (!Array.isArray(rows)) return null
+    return rows.map(
+      (r) => toFhirAllergyIntolerance(r as Record<string, unknown>) as unknown as FhirAllergyIntolerance,
+    )
+  } catch {
+    return null
   }
 }
 
@@ -413,4 +451,32 @@ export async function fetchDiagnosticReportsForPatient(patientId: string): Promi
   } finally {
     inFlightReportFetches.delete(patientId)
   }
+}
+
+/**
+ * Search the Hub pharmacy directory by name, address, province, or district.
+ * Mirrors the searchDrugCatalog pattern exactly: GET pharmacy.search with
+ * { q, limit } in the tRPC input envelope, Supabase auth header, unwrap body.result.data.json.
+ */
+export async function searchPharmaciesHub(
+  q: string,
+  signal?: AbortSignal,
+): Promise<PharmacyDirectoryEntry[]> {
+  const url = new URL(getHubApiUrl())
+  url.pathname = url.pathname.replace(/\/$/, '') + '/pharmacy.search'
+  url.searchParams.set('input', JSON.stringify({ json: { q, limit: 20 } }))
+
+  const headers: Record<string, string> = {}
+  if (typeof window !== 'undefined') {
+    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+    const { data } = await getSupabaseBrowserClient().auth.getSession()
+    if (data.session?.access_token) {
+      headers['Authorization'] = `Bearer ${data.session.access_token}`
+    }
+  }
+
+  const res = await fetch(url.toString(), { method: 'GET', headers, signal })
+  if (!res.ok) throw new Error(`Pharmacy search failed: ${res.status}`)
+  const body = await res.json() as { result: { data: { json: PharmacyDirectoryEntry[] } } }
+  return body.result.data.json
 }

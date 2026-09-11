@@ -52,6 +52,7 @@ export const PRESERVE_TABLES = [
   'drugBrandsMirror',
   'drugBrandPresentationsMirror',
   'drugCatalogSyncMeta',
+  'pharmaciesMirror', // pharmacy directory — non-PHI reference data
 ] as const
 
 // Compile-time safety: ensure syncQueue is never in the PHI list

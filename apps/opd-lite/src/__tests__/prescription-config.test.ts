@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ROUTE_OPTIONS, formToRouteDefault, EMPTY_PRESCRIPTION_FORM } from '@/lib/prescription-config'
+import { ROUTE_OPTIONS, formToRouteDefault, formToDosageUnit, EMPTY_PRESCRIPTION_FORM } from '@/lib/prescription-config'
 
 describe('ROUTE_OPTIONS', () => {
   it('exposes the oral route with its SNOMED CT code', () => {
@@ -59,6 +59,37 @@ describe('formToRouteDefault', () => {
     for (const form of ['Capsule', 'Inhaler', 'Cream', 'Suppository', 'Eye drops', 'Solution for injection', '']) {
       expect(codes.has(formToRouteDefault(form))).toBe(true)
     }
+  })
+})
+
+describe('formToDosageUnit', () => {
+  it('uses "capsule" for capsules (not "tablet")', () => {
+    expect(formToDosageUnit('Capsule')).toBe('capsule')
+    expect(formToDosageUnit('Hard capsule')).toBe('capsule')
+  })
+
+  it('uses "tablet" for tablets', () => {
+    expect(formToDosageUnit('Film-coated tablet')).toBe('tablet')
+  })
+
+  it('treats a compound "Tablet for Oral Solution" as a tablet, not mL', () => {
+    expect(formToDosageUnit('Tablet for Oral Solution')).toBe('tablet')
+  })
+
+  it('uses mL for oral liquids', () => {
+    expect(formToDosageUnit('Oral Suspension')).toBe('mL')
+    expect(formToDosageUnit('Syrup')).toBe('mL')
+  })
+
+  it('uses form-specific units for drops, patches, and inhalers', () => {
+    expect(formToDosageUnit('Eye drops')).toBe('drop')
+    expect(formToDosageUnit('Transdermal patch')).toBe('patch')
+    expect(formToDosageUnit('Inhaler')).toBe('puff')
+  })
+
+  it('falls back to "dose" for unknown forms', () => {
+    expect(formToDosageUnit('')).toBe('dose')
+    expect(formToDosageUnit('Something novel')).toBe('dose')
   })
 })
 

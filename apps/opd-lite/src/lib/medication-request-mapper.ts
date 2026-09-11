@@ -15,6 +15,35 @@ export interface InteractionContext {
   interactionOverrideReason?: string
 }
 
+/**
+ * Read the brand/manufacturer this mapper writes into medicationCodeableConcept.coding.
+ * Lets display surfaces (e.g. the pending-prescription list) enrich a row with brand
+ * details without re-deriving them. Safe on undefined coding.
+ */
+export function readBrandFromCoding(
+  coding: ReadonlyArray<{ system?: string; code?: string; display?: string }> | undefined,
+): { brand?: string; manufacturer?: string } {
+  return {
+    brand: coding?.find((c) => c.system === 'urn:ultranos:brand')?.display,
+    manufacturer: coding?.find((c) => c.system === 'urn:ultranos:manufacturer')?.display,
+  }
+}
+
+/**
+ * Read the pharmacy performer this mapper writes into dispenseRequest.performer.
+ * Lets display surfaces enrich a prescription row with the dispensing pharmacy
+ * without re-deriving the reference. Safe on undefined dispenseRequest/performer.
+ */
+export function readPerformerFromDispenseRequest(
+  rx: { dispenseRequest?: { performer?: { reference?: string; display?: string } } },
+): { pharmacyId?: string; pharmacyName?: string } {
+  const ref = rx.dispenseRequest?.performer?.reference
+  return {
+    pharmacyId: ref?.startsWith('Organization/') ? ref.slice('Organization/'.length) : undefined,
+    pharmacyName: rx.dispenseRequest?.performer?.display,
+  }
+}
+
 export function mapFormToMedicationRequest(
   form: PrescriptionFormData,
   context: MappingContext,
@@ -133,6 +162,7 @@ export function mapFormToMedicationRequest(
         value: durationDays,
         unit: 'd',
       },
+      performer: form.pharmacyId ? { reference: 'Organization/' + form.pharmacyId, display: form.pharmacyName } : undefined,
     },
     note: form.notes
       ? [{ text: form.notes, time: nowIso }]

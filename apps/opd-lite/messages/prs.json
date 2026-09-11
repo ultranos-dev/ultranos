@@ -366,7 +366,12 @@
     "storage": "نگهداری",
     "productImages": "تصاویر محصول",
     "noDataOnFile": "هیچ داده‌ای در پرونده وجود ندارد.",
-    "clinicalDetailUnavailable": "جزئیات بالینی در سطح دسترسی شما موجود نیست."
+    "clinicalDetailUnavailable": "جزئیات بالینی در سطح دسترسی شما موجود نیست.",
+    "pharmacyOptional": "Pharmacy (optional)",
+    "sendTo": "→ {pharmacy}",
+    "pharmacySearchPlaceholder": "Search pharmacy by name or region…",
+    "clearPharmacy": "Clear pharmacy",
+    "pharmacyAria": "Search pharmacies"
   },
   "interactionModal": {
     "contraindicationDetected": "موانع استفاده کشف شد",

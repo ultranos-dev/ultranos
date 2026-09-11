@@ -366,7 +366,12 @@
     "storage": "ساتنه",
     "productImages": "د محصول انځورونه",
     "noDataOnFile": "پرونده کې معلومات نشته.",
-    "clinicalDetailUnavailable": "کلینیکي تفصیلات ستاسو د لاسرسي کچه کې موجود نه دي."
+    "clinicalDetailUnavailable": "کلینیکي تفصیلات ستاسو د لاسرسي کچه کې موجود نه دي.",
+    "pharmacyOptional": "Pharmacy (optional)",
+    "sendTo": "→ {pharmacy}",
+    "pharmacySearchPlaceholder": "Search pharmacy by name or region…",
+    "clearPharmacy": "Clear pharmacy",
+    "pharmacyAria": "Search pharmacies"
   },
   "interactionModal": {
     "contraindicationDetected": "د کارولو منع موندل شوه",

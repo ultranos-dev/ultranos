@@ -64,6 +64,24 @@ export function formToRouteDefault(form: string): string {
   return 'PO'
 }
 
+/**
+ * Dose-unit label inferred from a dose-form string, used for the dosage quantity
+ * (e.g. "1 capsule"). Solid oral forms are checked first so a compound like
+ * "Tablet for Oral Solution" reads as a tablet, not mL. Capsules and lozenges
+ * keep their own unit rather than collapsing into "tablet".
+ */
+export function formToDosageUnit(form: string): string {
+  const f = form.toLowerCase()
+  if (f.includes('capsule')) return 'capsule'
+  if (f.includes('lozenge')) return 'lozenge'
+  if (f.includes('tablet')) return 'tablet'
+  if (f.includes('ml') || f.includes('suspension') || f.includes('solution') || f.includes('syrup')) return 'mL'
+  if (f.includes('drop')) return 'drop'
+  if (f.includes('patch')) return 'patch'
+  if (f.includes('puff') || f.includes('inhal')) return 'puff'
+  return 'dose'
+}
+
 export interface PrescriptionFormData {
   medicationCode: string
   medicationDisplay: string
@@ -77,6 +95,8 @@ export interface PrescriptionFormData {
   route?: string
   brandHint?: string
   medicationManufacturer?: string
+  pharmacyId?: string
+  pharmacyName?: string
 }
 
 export const EMPTY_PRESCRIPTION_FORM: Readonly<PrescriptionFormData> = Object.freeze({

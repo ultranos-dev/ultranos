@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod, FhirAllergyIntolerance, FhirMedicationStatementZod, FhirServiceRequest, AIModelType } from '@ultranos/shared-types'
-import type { DrugBrand, DrugBrandPresentation } from '@ultranos/shared-types'
+import type { DrugBrand, DrugBrandPresentation, PharmacyDirectoryEntry } from '@ultranos/shared-types'
 import type { ClientAuditEvent } from '@ultranos/audit-logger/client'
 import type { DataUsageCategory } from '@ultranos/sync-engine'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
@@ -225,6 +225,7 @@ class OpdLiteDatabase extends Dexie {
   drugBrandsMirror!: EntityTable<DrugBrand, 'id'>
   drugBrandPresentationsMirror!: EntityTable<DrugBrandPresentation, 'id'>
   drugCatalogSyncMeta!: EntityTable<CatalogSyncMetaEntry, 'key'>
+  pharmaciesMirror!: EntityTable<PharmacyDirectoryEntry, 'id'>
 
   constructor() {
     super('opd-lite')
@@ -661,6 +662,12 @@ class OpdLiteDatabase extends Dexie {
     this.version(25).stores({
       serviceRequests:
         'id, subject.reference, encounter.reference, status, meta.lastUpdated',
+    })
+
+    // v26: Pharmacy directory mirror (non-PHI reference data).
+    // Synced from Hub; used offline for pharmacy lookup during prescription dispatch.
+    this.version(26).stores({
+      pharmaciesMirror: '&id, name, province',
     })
   }
 }
