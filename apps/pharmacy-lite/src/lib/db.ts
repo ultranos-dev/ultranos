@@ -9,7 +9,7 @@ import type { CatalogItem, StockBatch, StockMovement, GoodsReceipt, PharmacyInve
 import { INVENTORY_STORES } from './inventory-db'
 import type { Invoice, Payment, LedgerEntry, PatientAccount, CashDrawer } from './pos/types'
 import { POS_STORES } from './pos-db'
-import type { Supplier, PurchaseOrder, StockCount } from './procurement/types'
+import type { Supplier, PurchaseOrder, StockCount, SupplierInvoice } from './procurement/types'
 import type { StockTransfer } from './transfers/types'
 import type { DataUsageCategory } from '@ultranos/sync-engine'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
@@ -154,6 +154,7 @@ class PharmacyLiteDatabase extends Dexie {
   cashDrawers!: EntityTable<CashDrawer, 'id'>
   suppliers!: EntityTable<Supplier, 'id'>
   purchaseOrders!: EntityTable<PurchaseOrder, 'id'>
+  supplierInvoices!: EntityTable<SupplierInvoice, 'id'>
   stockCounts!: EntityTable<StockCount, 'id'>
   stockTransfers!: EntityTable<StockTransfer, 'id'>
   dataBudgetConfig!: Dexie.Table<DataBudgetConfig, string>
@@ -283,6 +284,12 @@ class PharmacyLiteDatabase extends Dexie {
     // receipt history is queryable. Non-PHI operational data.
     this.version(17).stores({
       goodsReceipts: 'id, receivedAt, supplierId, purchaseOrderId',
+    })
+
+    // v18: Procurement Phase 2b-i — supplier invoices for 3-way match.
+    // Non-PHI operational data; not encrypted.
+    this.version(18).stores({
+      supplierInvoices: 'id, purchaseOrderId, supplierId, status, invoiceNumber, [supplierId+invoiceNumber]',
     })
   }
 }

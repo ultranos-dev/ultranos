@@ -75,3 +75,35 @@ export interface StockCount {
   completedAt?: string
   hlcTimestamp: string
 }
+
+export type SupplierInvoiceStatus = 'pending' | 'approved' | 'disputed'
+
+export interface SupplierInvoiceItem {
+  catalogItemId: string
+  catalogItemName: string
+  billedQty: number
+  unitPrice: number
+}
+
+export interface SupplierInvoice {
+  id: string
+  invoiceNumber: string
+  purchaseOrderId: string
+  supplierId: string
+  supplierName: string
+  items: SupplierInvoiceItem[]
+  subtotal: number
+  taxRate: number
+  taxAmount: number
+  freight: number
+  total: number
+  status: SupplierInvoiceStatus
+  approvedBy?: string
+  approvedReason?: string
+  disputedBy?: string
+  disputeReason?: string
+  notes?: string
+  createdBy: string
+  createdAt: string
+  hlcTimestamp: string
+}

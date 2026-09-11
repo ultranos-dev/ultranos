@@ -161,6 +161,7 @@ export interface PharmacyInventorySettings {
   poNumberPrefix: string
   pharmacyCode: string
   poSequenceNext: number
+  invoiceMatchTolerancePercent: number
   locationId: string
   locationName: string
   organizationId?: string
@@ -185,6 +186,7 @@ export const DEFAULT_PHARMACY_SETTINGS: PharmacyInventorySettings = {
   poNumberPrefix: 'PO-',
   pharmacyCode: '',
   poSequenceNext: 1,
+  invoiceMatchTolerancePercent: 0,
   locationId: '',
   locationName: '',
 }
