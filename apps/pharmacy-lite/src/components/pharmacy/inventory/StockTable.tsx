@@ -6,6 +6,7 @@ import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { FileSearch, Package } from '@ultranos/ui-kit/icons'
 import { db } from '@/lib/db'
 import type { StockBatch, CatalogItem, StockBatchStatus } from '@/lib/inventory/types'
+import { getWac } from '@/lib/inventory/valuation'
 import { AdjustStockDialog } from './AdjustStockDialog'
 import { DisposeStockDialog } from './DisposeStockDialog'
 import { StockHistorySheet } from './StockHistorySheet'
@@ -27,6 +28,11 @@ interface StockRow {
   catalogItem: CatalogItem | undefined
 }
 
+function formatAmount(amount: number, currency: string, minorUnits: number): string {
+  const divisor = Math.pow(10, minorUnits)
+  return `${currency} ${(amount / divisor).toFixed(minorUnits)}`
+}
+
 export function StockTable({
   filterStatus,
   filterLowStock,
@@ -40,17 +46,33 @@ export function StockTable({
   const session = useAuthSessionStore((s) => s.session)
   const performedBy = session?.practitionerId ?? session?.userId ?? 'unknown'
   const [rows, setRows] = useState<StockRow[]>([])
+  const [wacMap, setWacMap] = useState<Map<string, number | null>>(new Map())
+  const [currency, setCurrency] = useState('AFN')
+  const [currencyMinorUnits, setCurrencyMinorUnits] = useState(2)
   const [adjustRow, setAdjustRow] = useState<StockRow | null>(null)
   const [disposeRow, setDisposeRow] = useState<StockRow | null>(null)
   const [historyRow, setHistoryRow] = useState<StockRow | null>(null)
 
   const load = useCallback(async () => {
-    const [batches, items] = await Promise.all([
+    const [batches, items, settings] = await Promise.all([
       db.stockBatches.toArray(),
       db.catalogItems.toArray(),
+      db.pharmacySettings.toCollection().first(),
     ])
-    const map = new Map(items.map((item) => [item.id, item]))
-    setRows(batches.map((batch) => ({ batch, catalogItem: map.get(batch.catalogItemId) })))
+    const itemMap = new Map(items.map((item) => [item.id, item]))
+    const newRows = batches.map((batch) => ({ batch, catalogItem: itemMap.get(batch.catalogItemId) }))
+    setRows(newRows)
+    if (settings) {
+      setCurrency(settings.currency)
+      setCurrencyMinorUnits(settings.currencyMinorUnits)
+    }
+
+    // Compute WAC per distinct catalogItemId (deduplicated calls)
+    const distinctIds = Array.from(new Set(batches.map((b) => b.catalogItemId)))
+    const wacResults = await Promise.all(distinctIds.map((id) => getWac(id)))
+    const newWacMap = new Map<string, number | null>()
+    distinctIds.forEach((id, i) => newWacMap.set(id, wacResults[i] ?? null))
+    setWacMap(newWacMap)
   }, [])
 
   useEffect(() => {
@@ -141,6 +163,9 @@ export function StockTable({
                   {t('statusCol')}
                 </th>
                 <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  {t('wacColumn')}
+                </th>
+                <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">
                   {t('actionsCol')}
                 </th>
               </tr>
@@ -171,6 +196,14 @@ export function StockTable({
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={r.batch.status} tActive={t('active')} tDepleted={t('depleted')} tQuarantined={t('quarantined')} />
+                  </td>
+                  <td className="px-4 py-3 text-end text-muted-foreground">
+                    {(() => {
+                      const wac = wacMap.get(r.batch.catalogItemId)
+                      return wac != null
+                        ? formatAmount(wac, currency, currencyMinorUnits)
+                        : t('wacUnavailable')
+                    })()}
                   </td>
                   <td className="px-4 py-3 text-end">
                     <Button variant="ghost" size="sm" onClick={() => setAdjustRow(r)}>{t('adjust')}</Button>
