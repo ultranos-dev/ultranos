@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { computePoTotals } from './po-totals'
 import { getPurchaseOrderById } from './purchase-order-service'
+import { computeInvoiceMatch } from './invoice-match'
 import type { SupplierInvoice, SupplierInvoiceItem, SupplierInvoiceStatus } from './types'
 
 export async function createSupplierInvoice(params: {
@@ -74,4 +75,46 @@ export async function getSupplierInvoiceById(id: string): Promise<SupplierInvoic
 
 export async function getInvoicesForPO(purchaseOrderId: string): Promise<SupplierInvoice[]> {
   return db.supplierInvoices.where('purchaseOrderId').equals(purchaseOrderId).toArray()
+}
+
+export class InvoiceVarianceUnresolvedError extends Error {
+  constructor() {
+    super('This invoice has a variance and needs an override reason to approve')
+    this.name = 'InvoiceVarianceUnresolvedError'
+  }
+}
+
+async function enqueueInvoiceUpdate(invoiceId: string, now: string): Promise<void> {
+  const inv = await db.supplierInvoices.get(invoiceId)
+  if (!inv) return
+  await enqueuePharmacySyncEntry({
+    resourceType: 'SupplierInvoice', resourceId: invoiceId, action: 'update',
+    payload: inv as unknown as Record<string, unknown>, hlcTimestamp: now, createdAt: now,
+  })
+}
+
+export async function approveSupplierInvoice(invoiceId: string, approvedBy: string, overrideReason?: string): Promise<void> {
+  const inv = await db.supplierInvoices.get(invoiceId)
+  if (!inv) throw new Error('Supplier invoice not found')
+  const po = await getPurchaseOrderById(inv.purchaseOrderId)
+  if (!po) throw new Error('Purchase order not found')
+  const settings = await db.pharmacySettings.toCollection().first()
+  const tolerance = settings?.invoiceMatchTolerancePercent ?? 0
+  const match = computeInvoiceMatch(inv, po, tolerance)
+  if (match.status === 'variance' && !overrideReason?.trim()) throw new InvoiceVarianceUnresolvedError()
+  const now = new Date().toISOString()
+  await db.supplierInvoices.update(invoiceId, {
+    status: 'approved', approvedBy, approvedReason: overrideReason?.trim() || undefined, hlcTimestamp: now,
+  })
+  await enqueueInvoiceUpdate(invoiceId, now)
+}
+
+export async function disputeSupplierInvoice(invoiceId: string, disputedBy: string, reason: string): Promise<void> {
+  const inv = await db.supplierInvoices.get(invoiceId)
+  if (!inv) throw new Error('Supplier invoice not found')
+  const now = new Date().toISOString()
+  await db.supplierInvoices.update(invoiceId, {
+    status: 'disputed', disputedBy, disputeReason: reason.trim() || undefined, hlcTimestamp: now,
+  })
+  await enqueueInvoiceUpdate(invoiceId, now)
 }
