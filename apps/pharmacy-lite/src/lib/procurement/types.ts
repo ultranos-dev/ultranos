@@ -7,6 +7,8 @@ export interface Supplier {
   address?: string
   leadTimeDays?: number
   paymentTerms?: string
+  /** Net payment-terms days for AP due-date defaulting (Phase 2b-ii). */
+  paymentTermsDays?: number
   isActive: boolean
   createdAt: string
 }
@@ -103,7 +105,42 @@ export interface SupplierInvoice {
   disputedBy?: string
   disputeReason?: string
   notes?: string
+  /** ISO date the invoice is due (Phase 2b-ii). Absent on legacy invoices → defaults to createdAt on read. */
+  dueDate?: string
+  /** Total minor units paid so far (Phase 2b-ii). Absent on legacy → treated as 0. */
+  amountPaid?: number
+  /** Settlement state (Phase 2b-ii). Absent on legacy → derived from amountPaid. */
+  settlementStatus?: SettlementStatus
   createdBy: string
   createdAt: string
+  hlcTimestamp: string
+}
+
+export type SettlementStatus = 'unpaid' | 'partial' | 'paid'
+
+export type SupplierPaymentMethod = 'cash' | 'bank_transfer' | 'cheque' | 'other'
+export type SupplierPaymentStatus = 'active' | 'void'
+
+export interface SupplierPaymentAllocation {
+  supplierInvoiceId: string
+  invoiceNumber: string   // denormalized for display
+  amount: number          // minor units applied to this invoice
+}
+
+export interface SupplierPayment {
+  id: string
+  supplierId: string
+  supplierName: string          // denormalized for display
+  amount: number                // total minor units == Σ allocations[].amount
+  method: SupplierPaymentMethod
+  reference?: string
+  allocations: SupplierPaymentAllocation[]
+  status: SupplierPaymentStatus // 'active' → 'void'
+  notes?: string
+  paidBy: string
+  paidAt: string
+  voidedBy?: string
+  voidReason?: string
+  voidedAt?: string
   hlcTimestamp: string
 }
