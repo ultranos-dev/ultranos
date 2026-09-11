@@ -845,7 +845,13 @@
     "movement_disposed": "متلف",
     "movement_returned": "مُرجَع",
     "movement_void_reversal": "إلغاء عملية",
-    "movement_sold": "مباع"
+    "movement_sold": "مباع",
+    "receivingAgainstPo": "استلام مقابل أمر الشراء {po}",
+    "overReceiptReason": "سبب استلام أكثر مما طُلب",
+    "overReceiptBlocked": "{item}: لا يمكن استلام {attempted} — لم يتبقَّ سوى {allowed}.",
+    "overReceiptControlledBlocked": "{item} مادة خاضعة للرقابة — لا يمكن استلام أكثر من {allowed} المطلوبة.",
+    "poNotReceivable": "لا يمكن استلام هذا الأمر بعد الآن.",
+    "poLineRemaining": "{remaining} متبقية"
   },
   "pos": {
     "cashDrawer": "درج النقود",
@@ -1190,7 +1196,17 @@
     "detailCancel": "إلغاء الطلب",
     "detailCancelProgress": "جاري الإلغاء…",
     "detailCancelError": "فشل إلغاء الطلب. يرجى المحاولة مرة أخرى.",
-    "receiptTrackingNote": "تسجيل الاستلام يُحدّث تتبع أمر الشراء فقط. يتم استيعاب المخزون الفعلي عبر إيصال البضائع."
+    "receiptTrackingNote": "تسجيل الاستلام يُحدّث تتبع أمر الشراء فقط. يتم استيعاب المخزون الفعلي عبر إيصال البضائع.",
+    "receiveAgainstPo": "استلام مقابل أمر الشراء",
+    "receiptHistory": "سجل الاستلام",
+    "receiptHistoryEmpty": "لم يُسجَّل أي استلام حتى الآن.",
+    "receiptReceivedBy": "استلمه {who}",
+    "reverseReceipt": "عكس",
+    "reverseReceiptConfirm": "هل تريد عكس هذا الاستلام؟ سيتم إزالة المخزون الناتج عنه وإعادة أعداد أمر الشراء.",
+    "reverseReceiptBlocked": "لا يمكن عكس هذا الاستلام لأن جزءًا من مخزونه قد استُخدم بالفعل. استخدم تعديل المخزون بدلاً من ذلك.",
+    "reverseReceiptError": "تعذّر عكس الاستلام.",
+    "receiptReversed": "تم العكس",
+    "cancelReasonPrompt": "سبب الإلغاء (اختياري)"
   },
   "login": {
     "appName": "صيدلية",

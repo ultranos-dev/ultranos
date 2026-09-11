@@ -845,7 +845,13 @@
     "movement_disposed": "دور انداخته شده",
     "movement_returned": "برگشتی",
     "movement_void_reversal": "برگشت ابطال",
-    "movement_sold": "فروخته شده"
+    "movement_sold": "فروخته شده",
+    "receivingAgainstPo": "دریافت در برابر سفارش خرید {po}",
+    "overReceiptReason": "دلیل دریافت بیشتر از مقدار سفارش داده شده",
+    "overReceiptBlocked": "{item}: دریافت {attempted} ممکن نیست — فقط {allowed} باقی مانده است.",
+    "overReceiptControlledBlocked": "{item} یک ماده کنترول‌شده است — نمی‌توانید بیشتر از {allowed} سفارش داده شده دریافت کنید.",
+    "poNotReceivable": "این سفارش خرید دیگر قابل دریافت نیست.",
+    "poLineRemaining": "{remaining} باقی مانده"
   },
   "pos": {
     "cashDrawer": "کشوی نقدی",
@@ -1190,7 +1196,17 @@
     "detailCancel": "لغو سفارش",
     "detailCancelProgress": "در حال لغو…",
     "detailCancelError": "لغو سفارش ناموفق بود. لطفاً دوباره تلاش کنید.",
-    "receiptTrackingNote": "ثبت دریافت فقط ردیابی سفارش خرید را به‌روز می‌کند. ورود واقعی موجودی از طریق رسید کالا انجام می‌شود."
+    "receiptTrackingNote": "ثبت دریافت فقط ردیابی سفارش خرید را به‌روز می‌کند. ورود واقعی موجودی از طریق رسید کالا انجام می‌شود.",
+    "receiveAgainstPo": "دریافت در برابر سفارش خرید",
+    "receiptHistory": "تاریخچه دریافت",
+    "receiptHistoryEmpty": "هنوز هیچ دریافتی ثبت نشده است.",
+    "receiptReceivedBy": "دریافت شده توسط {who}",
+    "reverseReceipt": "برگشت",
+    "reverseReceiptConfirm": "آیا می‌خواهید این دریافت را برگشت دهید؟ موجودی آن حذف و شمارش سفارش خرید به حالت قبل برمی‌گردد.",
+    "reverseReceiptBlocked": "این دریافت قابل برگشت نیست زیرا بخشی از موجودی آن استفاده شده است. به جای آن از تعدیل موجودی استفاده کنید.",
+    "reverseReceiptError": "برگشت دریافت ناموفق بود.",
+    "receiptReversed": "برگشت داده شد",
+    "cancelReasonPrompt": "دلیل لغو (اختیاری)"
   },
   "login": {
     "appName": "دواخانه",

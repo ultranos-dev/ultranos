@@ -845,7 +845,13 @@
     "movement_disposed": "لرې شوی",
     "movement_returned": "بیرته راغلی",
     "movement_void_reversal": "د باطلولو بیرته راګرځول",
-    "movement_sold": "خرڅ شوی"
+    "movement_sold": "خرڅ شوی",
+    "receivingAgainstPo": "د پیرودلو امر {po} پر وړاندې ترلاسه کول",
+    "overReceiptReason": "د امر شوي مقدار څخه د زیات ترلاسه کولو دلیل",
+    "overReceiptBlocked": "{item}: {attempted} نشي ترلاسه کیدی — یوازې {allowed} پاتې دي.",
+    "overReceiptControlledBlocked": "{item} یو کنترول شوی مادہ دی — تاسې د امر شوو {allowed} څخه زیات نشئ ترلاسه کولی.",
+    "poNotReceivable": "دا د پیرودلو امر نور نشي ترلاسه کیدی.",
+    "poLineRemaining": "{remaining} پاتې"
   },
   "pos": {
     "cashDrawer": "د نقدو دراز",
@@ -1190,7 +1196,17 @@
     "detailCancel": "امر لغو کړئ",
     "detailCancelProgress": "لغویږي…",
     "detailCancelError": "امر لغو کول ناکام شول. بیا هڅه وکړئ.",
-    "receiptTrackingNote": "ترلاسه کول ثبت کول یوازې د پیرودلو امر تعقیب تازه کوي. اصلي موجودي د توکو رسید له لارې ثبتیږي."
+    "receiptTrackingNote": "ترلاسه کول ثبت کول یوازې د پیرودلو امر تعقیب تازه کوي. اصلي موجودي د توکو رسید له لارې ثبتیږي.",
+    "receiveAgainstPo": "د پیرودلو امر پر وړاندې ترلاسه کول",
+    "receiptHistory": "د ترلاسه کولو تاریخچه",
+    "receiptHistoryEmpty": "لا هیڅ ترلاسه کول ثبت شوي نه دي.",
+    "receiptReceivedBy": "{who} ترلاسه کړل",
+    "reverseReceipt": "بیرته کول",
+    "reverseReceiptConfirm": "ایا غواړئ دا ترلاسه کول بیرته کړئ؟ د هغه موجودي به لرې شي او د پیرودلو امر شمیرې به بیرته شي.",
+    "reverseReceiptBlocked": "دا ترلاسه کول بیرته نشي کیدی ځکه چې د هغه ځینې موجودي مصرف شوې ده. پر ځای یې د موجودۍ تعدیل وکاروئ.",
+    "reverseReceiptError": "د ترلاسه کولو بیرته کول ناکام شول.",
+    "receiptReversed": "بیرته شو",
+    "cancelReasonPrompt": "د لغوه کولو دلیل (اختیاري)"
   },
   "login": {
     "appName": "دواخانه",

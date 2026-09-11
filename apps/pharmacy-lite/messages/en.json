@@ -845,7 +845,13 @@
     "movement_disposed": "Disposed",
     "movement_returned": "Returned",
     "movement_void_reversal": "Void reversal",
-    "movement_sold": "Sold"
+    "movement_sold": "Sold",
+    "receivingAgainstPo": "Receiving against PO {po}",
+    "overReceiptReason": "Reason for receiving more than ordered",
+    "overReceiptBlocked": "{item}: cannot receive {attempted} — only {allowed} remaining.",
+    "overReceiptControlledBlocked": "{item} is a controlled substance — you cannot receive more than the {allowed} ordered.",
+    "poNotReceivable": "This purchase order can no longer be received.",
+    "poLineRemaining": "{remaining} remaining"
   },
   "pos": {
     "cashDrawer": "Cash Drawer",
@@ -1190,7 +1196,17 @@
     "detailCancel": "Cancel order",
     "detailCancelProgress": "Cancelling…",
     "detailCancelError": "Failed to cancel order. Please try again.",
-    "receiptTrackingNote": "Recording a receipt updates PO tracking only. Actual stock-in is completed via a Goods Receipt."
+    "receiptTrackingNote": "Recording a receipt updates PO tracking only. Actual stock-in is completed via a Goods Receipt.",
+    "receiveAgainstPo": "Receive against PO",
+    "receiptHistory": "Receipt history",
+    "receiptHistoryEmpty": "No receipts recorded yet.",
+    "receiptReceivedBy": "Received by {who}",
+    "reverseReceipt": "Reverse",
+    "reverseReceiptConfirm": "Reverse this receipt? Stock from it will be removed and the PO counts rolled back.",
+    "reverseReceiptBlocked": "This receipt can't be reversed because some of its stock has already been used. Use a stock adjustment instead.",
+    "reverseReceiptError": "Could not reverse the receipt.",
+    "receiptReversed": "Reversed",
+    "cancelReasonPrompt": "Reason for cancelling (optional)"
   },
   "login": {
     "appName": "Pharmacy Lite",
