@@ -21,7 +21,6 @@ vi.mock('@/lib/procurement/purchase-order-service', () => ({
   createPurchaseOrder: (...a: unknown[]) => mockCreatePurchaseOrder(...a),
   // re-export other functions so existing tests importing this module still work
   markPurchaseOrderSent: vi.fn(),
-  recordReceiptAgainstPO: vi.fn(),
   cancelPurchaseOrder: vi.fn(),
   getPurchaseOrders: vi.fn().mockResolvedValue([]),
   getPurchaseOrderById: vi.fn().mockResolvedValue(undefined),

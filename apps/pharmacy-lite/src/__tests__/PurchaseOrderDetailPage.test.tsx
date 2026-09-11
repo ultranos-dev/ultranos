@@ -14,21 +14,23 @@ vi.mock('next/navigation', () => ({
 
 const mockGetPurchaseOrderById = vi.fn()
 const mockMarkPurchaseOrderSent = vi.fn()
-const mockRecordReceiptAgainstPO = vi.fn()
 const mockCancelPurchaseOrder = vi.fn()
 
 vi.mock('@/lib/procurement/purchase-order-service', () => ({
   getPurchaseOrderById: (...a: unknown[]) => mockGetPurchaseOrderById(...a),
   markPurchaseOrderSent: (...a: unknown[]) => mockMarkPurchaseOrderSent(...a),
-  recordReceiptAgainstPO: (...a: unknown[]) => mockRecordReceiptAgainstPO(...a),
   cancelPurchaseOrder: (...a: unknown[]) => mockCancelPurchaseOrder(...a),
 }))
 
 const mockPharmacySettingsFirst = vi.fn()
+const mockGoodReceiptsWhere = vi.fn().mockReturnValue({ equals: () => ({ toArray: () => Promise.resolve([]) }) })
 vi.mock('@/lib/db', () => ({
   db: {
     pharmacySettings: {
       toCollection: () => ({ first: () => mockPharmacySettingsFirst() }),
+    },
+    goodsReceipts: {
+      where: (...a: unknown[]) => mockGoodReceiptsWhere(...a),
     },
   },
 }))
@@ -105,7 +107,6 @@ beforeEach(() => {
   mockPharmacySettingsFirst.mockResolvedValue({ currency: 'AFN', currencyMinorUnits: 2 })
   mockGetPurchaseOrderById.mockResolvedValue(DRAFT_PO)
   mockMarkPurchaseOrderSent.mockResolvedValue(undefined)
-  mockRecordReceiptAgainstPO.mockResolvedValue(undefined)
   mockCancelPurchaseOrder.mockResolvedValue(undefined)
 })
 
@@ -180,8 +181,8 @@ describe('PurchaseOrderDetailPage', () => {
     render(<PurchaseOrderDetailPage />)
     await waitFor(() => expect(screen.getByTestId('mark-sent-btn')).toBeInTheDocument())
     expect(screen.getByTestId('cancel-btn')).toBeInTheDocument()
-    // No receipt form for draft
-    expect(screen.queryByTestId('record-receipt-btn')).not.toBeInTheDocument()
+    // No receive link for draft
+    expect(screen.queryByTestId('receive-against-po-link')).not.toBeInTheDocument()
   })
 
   it('calls markPurchaseOrderSent(id) when Mark sent is clicked and reloads', async () => {
@@ -216,42 +217,19 @@ describe('PurchaseOrderDetailPage', () => {
   // Status-driven actions — sent
   // -------------------------------------------------------------------------
 
-  it('shows receipt form and Cancel for sent PO', async () => {
+  it('shows receive-against-PO link and Cancel for sent PO', async () => {
     mockGetPurchaseOrderById.mockResolvedValue(SENT_PO)
     render(<PurchaseOrderDetailPage />)
-    await waitFor(() => expect(screen.getByTestId('record-receipt-btn')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByTestId('receive-against-po-link')).toBeInTheDocument())
     expect(screen.getByTestId('cancel-btn')).toBeInTheDocument()
     // No mark-sent button
     expect(screen.queryByTestId('mark-sent-btn')).not.toBeInTheDocument()
   })
 
-  it('calls recordReceiptAgainstPO(id, items) when receipt is submitted', async () => {
-    mockGetPurchaseOrderById.mockResolvedValue(SENT_PO)
-    const partialPO = { ...SENT_PO, status: 'partially_received' as const }
-    mockGetPurchaseOrderById.mockResolvedValueOnce(SENT_PO).mockResolvedValueOnce(partialPO)
-    mockRecordReceiptAgainstPO.mockResolvedValue(undefined)
-
-    const user = userEvent.setup()
-    render(<PurchaseOrderDetailPage />)
-
-    // Enter a quantityReceived for item cat-1
-    const receiptInput = await screen.findByTestId('receipt-qty-cat-1')
-    await user.clear(receiptInput)
-    await user.type(receiptInput, '5')
-
-    await user.click(screen.getByTestId('record-receipt-btn'))
-
-    await waitFor(() => {
-      expect(mockRecordReceiptAgainstPO).toHaveBeenCalledWith('po-detail-001', [
-        { catalogItemId: 'cat-1', quantityReceived: 5 },
-      ])
-    })
-  })
-
-  it('shows receipt form for partially_received PO', async () => {
+  it('shows receive-against-PO link for partially_received PO', async () => {
     mockGetPurchaseOrderById.mockResolvedValue(PARTIALLY_RECEIVED_PO)
     render(<PurchaseOrderDetailPage />)
-    await waitFor(() => expect(screen.getByTestId('record-receipt-btn')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByTestId('receive-against-po-link')).toBeInTheDocument())
   })
 
   // -------------------------------------------------------------------------
@@ -263,7 +241,7 @@ describe('PurchaseOrderDetailPage', () => {
     render(<PurchaseOrderDetailPage />)
     await waitFor(() => expect(screen.getByText('statusClosed')).toBeInTheDocument())
     expect(screen.queryByTestId('mark-sent-btn')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('record-receipt-btn')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('receive-against-po-link')).not.toBeInTheDocument()
     expect(screen.queryByTestId('cancel-btn')).not.toBeInTheDocument()
   })
 
@@ -272,7 +250,7 @@ describe('PurchaseOrderDetailPage', () => {
     render(<PurchaseOrderDetailPage />)
     await waitFor(() => expect(screen.getByText('statusCancelled')).toBeInTheDocument())
     expect(screen.queryByTestId('mark-sent-btn')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('record-receipt-btn')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('receive-against-po-link')).not.toBeInTheDocument()
     expect(screen.queryByTestId('cancel-btn')).not.toBeInTheDocument()
   })
 

@@ -44,31 +44,6 @@ export async function markPurchaseOrderSent(poId: string, sentBy?: string): Prom
   await enqueuePOUpdate(poId, now)
 }
 
-export async function recordReceiptAgainstPO(
-  poId: string,
-  receivedItems: { catalogItemId: string; quantityReceived: number }[],
-): Promise<void> {
-  const po = await db.purchaseOrders.get(poId)
-  if (!po) throw new Error('Purchase order not found')
-  const now = new Date().toISOString()
-  const updatedItems = po.items.map((item) => {
-    const received = receivedItems.find((r) => r.catalogItemId === item.catalogItemId)
-    if (received) return { ...item, quantityReceived: item.quantityReceived + received.quantityReceived }
-    return item
-  })
-  const allFullyReceived = updatedItems.every((item) => item.quantityReceived >= item.quantityOrdered)
-  const anyReceived = updatedItems.some((item) => item.quantityReceived > 0)
-  let status: PurchaseOrderStatus = po.status
-  if (allFullyReceived) status = 'closed'
-  else if (anyReceived) status = 'partially_received'
-  await db.purchaseOrders.update(poId, {
-    items: updatedItems,
-    status,
-    closedAt: status === 'closed' ? now : undefined,
-    hlcTimestamp: now,
-  })
-}
-
 export async function cancelPurchaseOrder(poId: string, cancelledBy?: string, reason?: string): Promise<void> {
   const now = new Date().toISOString()
   await db.purchaseOrders.update(poId, {

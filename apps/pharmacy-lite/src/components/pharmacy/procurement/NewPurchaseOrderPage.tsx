@@ -204,8 +204,7 @@ export function NewPurchaseOrderPage() {
       const practitionerRef = useAuthSessionStore.getState().getPractitionerRef()
       const poItems = lines.map((l) => ({
         // Manual (non-catalog) lines have no catalogItemId — use the line's unique
-        // local id so multiple manual lines don't collide (recordReceiptAgainstPO
-        // matches by catalogItemId, and the detail table keys on it).
+        // local id so multiple manual lines don't collide (detail table keys on catalogItemId).
         catalogItemId: l.catalogItemId || `manual-${l.id}`,
         catalogItemName: l.catalogItemName || t('newPoManualItem'),
         quantityOrdered: parseInt(l.quantityOrdered || '0', 10) || 0,

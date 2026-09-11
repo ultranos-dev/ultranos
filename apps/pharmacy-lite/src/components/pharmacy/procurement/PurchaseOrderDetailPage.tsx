@@ -12,8 +12,10 @@ import {
   markPurchaseOrderSent,
   cancelPurchaseOrder,
 } from '@/lib/procurement/purchase-order-service'
+import { reverseGoodsReceipt, ReceiptNotReversibleError } from '@/lib/inventory/goods-receipt-reversal'
 import { db } from '@/lib/db'
 import type { PurchaseOrder, PurchaseOrderStatus } from '@/lib/procurement/types'
+import type { GoodsReceipt } from '@/lib/inventory/types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 // ---------------------------------------------------------------------------
@@ -80,6 +82,9 @@ export function PurchaseOrderDetailPage() {
   const [currency, setCurrency] = useState('AFN')
   const [currencyMinorUnits, setCurrencyMinorUnits] = useState(2)
 
+  const [receipts, setReceipts] = useState<GoodsReceipt[]>([])
+  const [reversing, setReversing] = useState<string | null>(null)
+
   const [sending, setSending] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -104,6 +109,8 @@ export function PurchaseOrderDetailPage() {
         setCurrency(settings.currency)
         setCurrencyMinorUnits(settings.currencyMinorUnits)
       }
+      const rs = await db.goodsReceipts.where('purchaseOrderId').equals(id).toArray()
+      setReceipts(rs.sort((a, b) => b.receivedAt.localeCompare(a.receivedAt)))
     } catch (err) {
       console.error('[PurchaseOrderDetailPage] load failed:', err instanceof Error ? err.message : 'unknown')
       setNotFound(true)
@@ -149,6 +156,22 @@ export function PurchaseOrderDetailPage() {
       console.error('[PurchaseOrderDetailPage] cancelPurchaseOrder failed:', err instanceof Error ? err.message : 'unknown')
     } finally {
       setCancelling(false)
+    }
+  }
+
+  const handleReverse = async (receiptId: string) => {
+    if (!window.confirm(t('reverseReceiptConfirm'))) return
+    setReversing(receiptId)
+    setActionError(null)
+    try {
+      await reverseGoodsReceipt(receiptId, performedBy)
+      setLoading(true)
+      await load()
+    } catch (err) {
+      setActionError(err instanceof ReceiptNotReversibleError ? t('reverseReceiptBlocked') : t('reverseReceiptError'))
+      console.error('[PurchaseOrderDetailPage] reverse failed:', err instanceof Error ? err.message : 'unknown')
+    } finally {
+      setReversing(null)
     }
   }
 
@@ -399,6 +422,38 @@ export function PurchaseOrderDetailPage() {
           {t('receiptTrackingNote')}
         </p>
       )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Receipt history card                                                  */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50" data-testid="receipt-history">
+        <div className="p-5 pb-0"><h2 className="mb-4 text-base font-semibold text-foreground">{t('receiptHistory')}</h2></div>
+        {receipts.length === 0 ? (
+          <div className="p-5 pt-0 text-sm text-muted-foreground">{t('receiptHistoryEmpty')}</div>
+        ) : (
+          <ul className="divide-y divide-border">
+            {receipts.map((r) => {
+              const isReversal = !!r.reversalOf
+              const reversed = !!r.reversedByReceiptId
+              const totalQty = r.items.reduce((s, it) => s + it.quantity, 0)
+              return (
+                <li key={r.id} className="flex items-center justify-between px-5 py-3 text-sm">
+                  <div>
+                    <span className="text-foreground">{new Date(r.receivedAt).toLocaleDateString()} · {totalQty > 0 ? '+' : ''}{totalQty}</span>
+                    <span className="ms-2 text-xs text-muted-foreground">{t('receiptReceivedBy', { who: r.receivedBy })}</span>
+                    {reversed && <span className="ms-2 text-xs text-destructive">{t('receiptReversed')}</span>}
+                  </div>
+                  {!isReversal && !reversed && (
+                    <Button variant="ghost" size="sm" className="text-destructive" data-testid={`reverse-receipt-${r.id}`} disabled={reversing === r.id} onClick={() => handleReverse(r.id)}>
+                      {t('reverseReceipt')}
+                    </Button>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }
