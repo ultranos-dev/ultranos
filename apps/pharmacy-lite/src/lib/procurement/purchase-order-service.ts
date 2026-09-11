@@ -38,9 +38,10 @@ export async function createPurchaseOrder(params: {
   return po
 }
 
-export async function markPurchaseOrderSent(poId: string): Promise<void> {
+export async function markPurchaseOrderSent(poId: string, sentBy?: string): Promise<void> {
   const now = new Date().toISOString()
-  await db.purchaseOrders.update(poId, { status: 'sent' as PurchaseOrderStatus, sentAt: now, hlcTimestamp: now })
+  await db.purchaseOrders.update(poId, { status: 'sent' as PurchaseOrderStatus, sentAt: now, sentBy, hlcTimestamp: now })
+  await enqueuePOUpdate(poId, now)
 }
 
 export async function recordReceiptAgainstPO(
@@ -68,9 +69,28 @@ export async function recordReceiptAgainstPO(
   })
 }
 
-export async function cancelPurchaseOrder(poId: string): Promise<void> {
+export async function cancelPurchaseOrder(poId: string, cancelledBy?: string, reason?: string): Promise<void> {
   const now = new Date().toISOString()
-  await db.purchaseOrders.update(poId, { status: 'cancelled' as PurchaseOrderStatus, hlcTimestamp: now })
+  await db.purchaseOrders.update(poId, {
+    status: 'cancelled' as PurchaseOrderStatus,
+    cancelledBy,
+    cancelledReason: reason?.trim() || undefined,
+    hlcTimestamp: now,
+  })
+  await enqueuePOUpdate(poId, now)
+}
+
+async function enqueuePOUpdate(poId: string, now: string): Promise<void> {
+  const po = await db.purchaseOrders.get(poId)
+  if (!po) return
+  await enqueuePharmacySyncEntry({
+    resourceType: 'PurchaseOrder',
+    resourceId: poId,
+    action: 'update',
+    payload: po as unknown as Record<string, unknown>,
+    hlcTimestamp: now,
+    createdAt: now,
+  })
 }
 
 export async function getPurchaseOrders(statusFilter?: PurchaseOrderStatus): Promise<PurchaseOrder[]> {
