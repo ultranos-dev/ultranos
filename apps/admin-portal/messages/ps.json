@@ -760,6 +760,23 @@
     "errorLoad": "معلوماتو راوړل ناکام شو",
     "loading": "بارول کیږي…"
   },
+  "pharmacies": {
+    "title": "Pharmacies",
+    "add": "Add pharmacy",
+    "name": "Name",
+    "province": "Province",
+    "district": "District",
+    "address": "Address",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "active": "Active",
+    "inactive": "Inactive",
+    "searchPlaceholder": "Search pharmacies…",
+    "empty": "No pharmacies found",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveError": "Could not save. Please try again."
+  },
   "register": {
     "pageTitle": "خپله اداره ثبت کړئ",
     "subtitle": "د ۳۰ ورځو وړیا آزمایشي موده سره پیل کړئ",
