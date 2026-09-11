@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
@@ -8,23 +8,57 @@ import { Package } from '@ultranos/ui-kit/icons'
 import { CatalogSearchInput } from './CatalogSearchInput'
 import { ReceiveStockItemRow, type ReceiveLineItem } from './ReceiveStockItemRow'
 import { processGoodsReceipt } from '@/lib/inventory/goods-receipt-service'
+import { getPurchaseOrderById } from '@/lib/procurement/purchase-order-service'
+import { OverReceiptError } from '@/lib/procurement/po-receipt'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { setDrugPrice } from '@/lib/trpc'
+import { db } from '@/lib/db'
 import type { CatalogItem } from '@/lib/inventory/types'
 
 interface ReceiveStockFormProps {
   locationId: string
   currencyMinorUnits: number
+  purchaseOrderId?: string
   onComplete: () => void
 }
 
-export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }: ReceiveStockFormProps) {
+export function ReceiveStockForm({ locationId, currencyMinorUnits, purchaseOrderId, onComplete }: ReceiveStockFormProps) {
   const t = useTranslations('inventory')
   const [items, setItems] = useState<ReceiveLineItem[]>([])
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [overReceiptReason, setOverReceiptReason] = useState('')
+  const [poSupplierId, setPoSupplierId] = useState<string | undefined>(undefined)
   const session = useAuthSessionStore((s) => s.session)
+
+  useEffect(() => {
+    if (!purchaseOrderId) return
+    let cancelled = false
+    ;(async () => {
+      const po = await getPurchaseOrderById(purchaseOrderId)
+      if (!po || cancelled) return
+      setPoSupplierId(po.supplierId)
+      const lines: ReceiveLineItem[] = []
+      for (const poItem of po.items) {
+        const remaining = poItem.quantityOrdered - poItem.quantityReceived
+        if (remaining <= 0) continue
+        const catalogItem = await db.catalogItems.get(poItem.catalogItemId)
+        if (!catalogItem) continue
+        lines.push({
+          catalogItem,
+          batchNumber: '',
+          lotNumber: '',
+          expiryDate: '',
+          quantity: remaining,
+          costPrice: poItem.unitCost,
+          sellingPrice: catalogItem.defaultSellingPrice,
+        })
+      }
+      if (!cancelled) setItems(lines)
+    })()
+    return () => { cancelled = true }
+  }, [purchaseOrderId])
 
   const handleAddItem = useCallback((catalogItem: CatalogItem) => {
     setItems((prev) => [...prev, {
@@ -67,6 +101,9 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }:
         })),
         receivedBy: session.practitionerId ?? session.userId,
         locationId,
+        purchaseOrderId,
+        supplierId: poSupplierId,
+        overReceiptReason: overReceiptReason.trim() || undefined,
         notes: notes.trim() || undefined,
       })
       onComplete()
@@ -86,8 +123,15 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }:
           })
         }
       }
-    } catch {
-      setError(t('failedProcessReceipt'))
+    } catch (err) {
+      if (err instanceof OverReceiptError) {
+        const v = err.violations[0]
+        setError(v?.controlled
+          ? t('overReceiptControlledBlocked', { item: v.catalogItemName, allowed: v.allowed })
+          : t('overReceiptBlocked', { item: v?.catalogItemName ?? '', attempted: v?.attempted ?? 0, allowed: v?.allowed ?? 0 }))
+      } else {
+        setError(t('failedProcessReceipt'))
+      }
     } finally {
       setSaving(false)
     }
@@ -95,7 +139,7 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }:
 
   return (
     <div className="space-y-4" data-testid="receive-stock-form">
-      <CatalogSearchInput onSelect={handleAddItem} />
+      {!purchaseOrderId && <CatalogSearchInput onSelect={handleAddItem} />}
       {error && (
         <div role="alert" className="rounded-md bg-destructive/5 border border-destructive/20 px-4 py-2 text-sm text-destructive">{error}</div>
       )}
@@ -117,6 +161,12 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }:
             <label htmlFor="receipt-notes" className="mb-1 block text-xs font-medium text-muted-foreground">{t('notesOptional')}</label>
             <input id="receipt-notes" type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t('notesPlaceholder')} className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500" />
           </div>
+          {purchaseOrderId && (
+            <div>
+              <label htmlFor="over-receipt-reason" className="mb-1 block text-xs font-medium text-muted-foreground">{t('overReceiptReason')}</label>
+              <input id="over-receipt-reason" type="text" value={overReceiptReason} onChange={(e) => setOverReceiptReason(e.target.value)} className="w-full rounded-md border border-border px-3 py-2 text-sm" />
+            </div>
+          )}
           <Button variant="default" className="w-full" type="button" disabled={!isValid || saving} onClick={handleSubmit} data-testid="confirm-receipt-btn">
             {saving ? t('processingReceipt') : t('confirmReceipt', { count: items.length })}
           </Button>

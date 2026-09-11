@@ -5,17 +5,21 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ReceiveStockForm } from './ReceiveStockForm'
 
-export function ReceiveStockPage() {
+export function ReceiveStockPage({ purchaseOrderId }: { purchaseOrderId?: string }) {
   const t = useTranslations('inventory')
   const router = useRouter()
   const [showSuccess, setShowSuccess] = useState(false)
   const locationId = 'default'
   const currencyMinorUnits = 2
 
+  const heading = purchaseOrderId
+    ? t('receivingAgainstPo', { po: purchaseOrderId.slice(0, 6) })
+    : t('receiveStock')
+
   if (showSuccess) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold text-foreground">{t('receiveStock')}</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{heading}</h1>
         <div className="rounded-xl bg-card p-5 text-center shadow-card ring-[0.65px] ring-success/40" data-testid="receipt-success">
           <p className="text-lg font-bold text-success">{t('stockReceivedSuccess')}</p>
           <p className="mt-1 text-sm text-success">{t('itemsAddedToInventory')}</p>
@@ -30,11 +34,11 @@ export function ReceiveStockPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold text-foreground">{t('receiveStock')}</h1>
+      <h1 className="text-2xl font-semibold text-foreground">{heading}</h1>
       <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
         <p className="text-sm text-muted-foreground">{t('searchOrScanProduct')}</p>
         <div className="mt-4">
-          <ReceiveStockForm locationId={locationId} currencyMinorUnits={currencyMinorUnits} onComplete={() => setShowSuccess(true)} />
+          <ReceiveStockForm locationId={locationId} currencyMinorUnits={currencyMinorUnits} purchaseOrderId={purchaseOrderId} onComplete={() => setShowSuccess(true)} />
         </div>
       </div>
     </div>

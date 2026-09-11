@@ -37,7 +37,7 @@ export function CatalogSearchInput({ onSelect, placeholder }: CatalogSearchInput
   }
 
   return (
-    <div className="relative">
+    <div className="relative" data-testid="catalog-search-input">
       <SearchInput
         type="text"
         value={query}
@@ -45,7 +45,6 @@ export function CatalogSearchInput({ onSelect, placeholder }: CatalogSearchInput
         onSearch={() => handleSearch(query)}
         placeholder={placeholder ?? 'Search by name or scan barcode...'}
         className="w-full"
-        data-testid="catalog-search-input"
       />
       {isOpen && (
         <ul className="absolute z-10 mt-1 w-full divide-y divide-border rounded-lg border border-border bg-card shadow-card overflow-hidden max-h-60 overflow-y-auto">
