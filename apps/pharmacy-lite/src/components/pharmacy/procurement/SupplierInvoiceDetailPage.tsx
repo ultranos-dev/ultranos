@@ -428,7 +428,7 @@ export function SupplierInvoiceDetailPage() {
               <thead className="bg-muted">
                 <tr>
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
-                    {t('colInvoiceNo')}
+                    {t('colItem')}
                   </th>
                   <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">
                     {t('colOrdered')}

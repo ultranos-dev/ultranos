@@ -1415,6 +1415,7 @@
     "tabApproved": "تایید شوي",
     "tabDisputed": "شخړه لرونکي",
     "colInvoiceNo": "د بیل #",
+    "colItem": "محصول",
     "colSupplier": "تامینوونکی",
     "colPo": "د پیرودلو امر",
     "colTotal": "ټولټال",
@@ -1468,6 +1469,7 @@
     "disputedBy": "له {who} لخوا شخړه شوی",
     "recordedBy": "له {who} لخوا ثبت شوی",
     "totalVariance": "ټول توپیر",
-    "loading": "په حال کی بارولونه…"
+    "loading": "په حال کی بارولونه…",
+    "totalsSection": "الرسوم والإجمالي"
   }
 }

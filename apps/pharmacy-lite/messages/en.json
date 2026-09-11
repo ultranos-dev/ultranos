@@ -1415,6 +1415,7 @@
     "tabApproved": "Approved",
     "tabDisputed": "Disputed",
     "colInvoiceNo": "Invoice #",
+    "colItem": "Item",
     "colSupplier": "Supplier",
     "colPo": "PO",
     "colTotal": "Total",
@@ -1468,6 +1469,7 @@
     "disputedBy": "Disputed by {who}",
     "recordedBy": "Recorded by {who}",
     "totalVariance": "Total variance",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "totalsSection": "Charges & total"
   }
 }

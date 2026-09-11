@@ -1415,6 +1415,7 @@
     "tabApproved": "معتمدة",
     "tabDisputed": "متنازع عليها",
     "colInvoiceNo": "رقم الفاتورة",
+    "colItem": "المنتج",
     "colSupplier": "المورد",
     "colPo": "أمر الشراء",
     "colTotal": "الإجمالي",
@@ -1468,6 +1469,7 @@
     "disputedBy": "معترض عليها من {who}",
     "recordedBy": "مسجّلة من {who}",
     "totalVariance": "إجمالي الفرق",
-    "loading": "جاري التحميل…"
+    "loading": "جاري التحميل…",
+    "totalsSection": "الرسوم والإجمالي"
   }
 }

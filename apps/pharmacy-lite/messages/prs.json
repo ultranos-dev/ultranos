@@ -1415,6 +1415,7 @@
     "tabApproved": "تایید شده",
     "tabDisputed": "مورد اختلاف",
     "colInvoiceNo": "شماره فاکتور",
+    "colItem": "محصول",
     "colSupplier": "تأمین کننده",
     "colPo": "سفارش خرید",
     "colTotal": "جمع کل",
@@ -1468,6 +1469,7 @@
     "disputedBy": "مورد اعتراض از {who}",
     "recordedBy": "ثبت شده توسط {who}",
     "totalVariance": "جمع اختلافات",
-    "loading": "بارگذاری درحال انجام است…"
+    "loading": "بارگذاری درحال انجام است…",
+    "totalsSection": "هزینه‌ها و جمع کل"
   }
 }

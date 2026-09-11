@@ -357,7 +357,7 @@ export function NewSupplierInvoicePage() {
               <thead className="bg-muted">
                 <tr>
                   <th className="px-3 py-2 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
-                    {t('colInvoiceNo')}
+                    {t('colItem')}
                   </th>
                   <th className="px-3 py-2 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
                     {t('colBilledQty')}
@@ -429,7 +429,7 @@ export function NewSupplierInvoicePage() {
       {/* Section 3: Document charges (tax + freight) + live total            */}
       {/* ------------------------------------------------------------------ */}
       <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
-        <h2 className="mb-4 text-base font-semibold text-foreground">{t('grandTotal')}</h2>
+        <h2 className="mb-4 text-base font-semibold text-foreground">{t('totalsSection')}</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="inv-tax-rate-input">{t('fieldTaxRate')}</Label>
