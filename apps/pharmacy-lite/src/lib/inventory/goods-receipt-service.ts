@@ -138,13 +138,12 @@ export async function processGoodsReceipt(params: {
 
     if (purchaseOrderId) {
       const current = await db.purchaseOrders.get(purchaseOrderId)
-      if (current) {
-        const received = items.map((i) => ({ catalogItemId: i.catalogItemId, quantity: i.quantity }))
-        const applied = applyReceiptToPO(current, received, now)
-        await db.purchaseOrders.update(purchaseOrderId, {
-          items: applied.items, status: applied.status, closedAt: applied.closedAt, hlcTimestamp: now,
-        })
-      }
+      if (!current) throw new Error('Purchase order not found')
+      const received = items.map((i) => ({ catalogItemId: i.catalogItemId, quantity: i.quantity }))
+      const applied = applyReceiptToPO(current, received, now)
+      await db.purchaseOrders.update(purchaseOrderId, {
+        items: applied.items, status: applied.status, closedAt: applied.closedAt, hlcTimestamp: now,
+      })
     }
   })
 
