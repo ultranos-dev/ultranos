@@ -70,6 +70,7 @@ function statusKey(status: PurchaseOrderStatus): string {
 
 export function PurchaseOrderDetailPage() {
   const t = useTranslations('purchaseOrders')
+  const tInvoice = useTranslations('supplierInvoices')
   const router = useRouter()
   const params = useParams()
   const id = params?.id as string
@@ -236,6 +237,7 @@ export function PurchaseOrderDetailPage() {
 
   const isReceiptable = po.status === 'sent' || po.status === 'partially_received'
   const isCancellable = po.status === 'draft' || po.status === 'sent' || po.status === 'partially_received'
+  const isInvoiceable = po.status === 'sent' || po.status === 'partially_received' || po.status === 'closed'
   // Short ID for display: first 6 chars after 'po-' prefix if present, otherwise first 6 chars
   const shortId = po.id.startsWith('po-') ? po.id.slice(3, 9) : po.id.slice(0, 6)
 
@@ -262,7 +264,7 @@ export function PurchaseOrderDetailPage() {
       {/* ------------------------------------------------------------------ */}
       {/* Action buttons — status-driven                                       */}
       {/* ------------------------------------------------------------------ */}
-      {(po.status === 'draft' || isReceiptable || isCancellable) && (
+      {(po.status === 'draft' || isReceiptable || isCancellable || isInvoiceable) && (
         <div className="flex flex-wrap items-center gap-3">
           {/* draft → Mark sent */}
           {po.status === 'draft' && (
@@ -285,6 +287,17 @@ export function PurchaseOrderDetailPage() {
             >
               <ClipboardCheck size={16} className="me-2" />
               {t('receiveAgainstPo')}
+            </Link>
+          )}
+
+          {/* sent / partially_received / closed → Record invoice */}
+          {isInvoiceable && (
+            <Link
+              href={`/inventory/invoices/new?poId=${po.id}`}
+              data-testid="record-invoice-link"
+              className="inline-flex items-center rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/50"
+            >
+              {tInvoice('newInvoice')}
             </Link>
           )}
 
