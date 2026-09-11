@@ -340,7 +340,6 @@ export function NewSupplierInvoicePage() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              placeholder=""
             />
           </div>
         </div>
@@ -351,7 +350,7 @@ export function NewSupplierInvoicePage() {
       {/* ------------------------------------------------------------------ */}
       {po && lines.length > 0 && (
         <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
-          <h2 className="mb-4 text-base font-semibold text-foreground">{t('colBilledQty')}</h2>
+          <h2 className="mb-4 text-base font-semibold text-foreground">{t('linesSection')}</h2>
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

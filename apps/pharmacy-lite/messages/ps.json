@@ -1435,6 +1435,7 @@
     "fieldNotes": "یادداشتونه",
     "duplicateWarning": "د دې شمیرې سره بیل دمخه د دې تامینوونکي لپاره شتون لري.",
     "colBilledQty": "بیل شوی",
+    "linesSection": "د بیل بنسټونه",
     "colUnitPrice": "د واحد بیه",
     "subtotal": "فرعي ټولټال",
     "tax": "مالیه",

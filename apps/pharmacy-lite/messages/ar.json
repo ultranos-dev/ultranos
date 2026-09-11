@@ -1435,6 +1435,7 @@
     "fieldNotes": "ملاحظات",
     "duplicateWarning": "توجد فاتورة بهذا الرقم بالفعل لهذا المورد.",
     "colBilledQty": "الكمية المفوترة",
+    "linesSection": "بنود الفاتورة",
     "colUnitPrice": "سعر الوحدة",
     "subtotal": "المجموع الجزئي",
     "tax": "الضريبة",

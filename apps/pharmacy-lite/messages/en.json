@@ -1435,6 +1435,7 @@
     "fieldNotes": "Notes",
     "duplicateWarning": "An invoice with this number already exists for this supplier.",
     "colBilledQty": "Billed",
+    "linesSection": "Invoice lines",
     "colUnitPrice": "Unit price",
     "subtotal": "Subtotal",
     "tax": "Tax",
