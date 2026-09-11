@@ -3,17 +3,18 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { ChevronLeft, Package, Send, ClipboardCheck, CircleX, FileSearch } from '@ultranos/ui-kit/icons'
 import {
   getPurchaseOrderById,
   markPurchaseOrderSent,
-  recordReceiptAgainstPO,
   cancelPurchaseOrder,
 } from '@/lib/procurement/purchase-order-service'
 import { db } from '@/lib/db'
 import type { PurchaseOrder, PurchaseOrderStatus } from '@/lib/procurement/types'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 // ---------------------------------------------------------------------------
 // Money helpers (same pattern as NewPurchaseOrderPage / OrderDetailPage)
@@ -70,6 +71,8 @@ export function PurchaseOrderDetailPage() {
   const router = useRouter()
   const params = useParams()
   const id = params?.id as string
+  const session = useAuthSessionStore((s) => s.session)
+  const performedBy = session?.practitionerId ?? session?.userId ?? 'unknown'
 
   const [po, setPo] = useState<PurchaseOrder | null>(null)
   const [loading, setLoading] = useState(true)
@@ -77,11 +80,7 @@ export function PurchaseOrderDetailPage() {
   const [currency, setCurrency] = useState('AFN')
   const [currencyMinorUnits, setCurrencyMinorUnits] = useState(2)
 
-  // Per-item receipt qty inputs: map catalogItemId → string
-  const [receiptQtys, setReceiptQtys] = useState<Record<string, string>>({})
-
   const [sending, setSending] = useState(false)
-  const [recording, setRecording] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
@@ -100,12 +99,6 @@ export function PurchaseOrderDetailPage() {
         setNotFound(true)
       } else {
         setPo(data)
-        // Reset receipt qty inputs when PO reloads
-        const initQtys: Record<string, string> = {}
-        for (const item of data.items) {
-          initQtys[item.catalogItemId] = ''
-        }
-        setReceiptQtys(initQtys)
       }
       if (settings) {
         setCurrency(settings.currency)
@@ -132,7 +125,7 @@ export function PurchaseOrderDetailPage() {
     setSending(true)
     setActionError(null)
     try {
-      await markPurchaseOrderSent(po.id)
+      await markPurchaseOrderSent(po.id, performedBy)
       setLoading(true)
       await load()
     } catch (err) {
@@ -143,40 +136,12 @@ export function PurchaseOrderDetailPage() {
     }
   }
 
-  const handleRecordReceipt = async () => {
-    if (!po) return
-    setRecording(true)
-    setActionError(null)
-    try {
-      const items = po.items
-        .map((item) => ({
-          catalogItemId: item.catalogItemId,
-          quantityReceived: parseInt(receiptQtys[item.catalogItemId] || '0', 10) || 0,
-        }))
-        .filter((item) => item.quantityReceived > 0)
-
-      if (items.length === 0) {
-        setActionError(t('detailReceiptNoQty'))
-        return
-      }
-
-      await recordReceiptAgainstPO(po.id, items)
-      setLoading(true)
-      await load()
-    } catch (err) {
-      setActionError(t('detailRecordReceiptError'))
-      console.error('[PurchaseOrderDetailPage] recordReceiptAgainstPO failed:', err instanceof Error ? err.message : 'unknown')
-    } finally {
-      setRecording(false)
-    }
-  }
-
   const handleCancel = async () => {
     if (!po) return
     setCancelling(true)
     setActionError(null)
     try {
-      await cancelPurchaseOrder(po.id)
+      await cancelPurchaseOrder(po.id, performedBy)
       setLoading(true)
       await load()
     } catch (err) {
@@ -288,16 +253,16 @@ export function PurchaseOrderDetailPage() {
             </Button>
           )}
 
-          {/* sent / partially_received → Record receipt */}
+          {/* sent / partially_received → Receive against PO (navigates to shared receive form) */}
           {isReceiptable && (
-            <Button
-              data-testid="record-receipt-btn"
-              onClick={handleRecordReceipt}
-              disabled={recording}
+            <Link
+              href={`/inventory/receive?poId=${po.id}`}
+              data-testid="receive-against-po-link"
+              className="inline-flex items-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
               <ClipboardCheck size={16} className="me-2" />
-              {recording ? t('detailRecordReceiptProgress') : t('detailRecordReceipt')}
-            </Button>
+              {t('receiveAgainstPo')}
+            </Link>
           )}
 
           {/* draft / sent / partially_received → Cancel */}
@@ -386,12 +351,6 @@ export function PurchaseOrderDetailPage() {
                   <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide tabular-nums">
                     {t('detailColLineTotal')}
                   </th>
-                  {/* Receipt qty input column — only shown for actionable statuses */}
-                  {isReceiptable && (
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
-                      {t('detailColQtyToReceive')}
-                    </th>
-                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -421,25 +380,6 @@ export function PurchaseOrderDetailPage() {
                       <td className="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric">
                         {fmt(lineTotal)}
                       </td>
-                      {/* Per-item receipt qty input */}
-                      {isReceiptable && (
-                        <td className="px-4 py-3">
-                          <input
-                            type="number"
-                            min="0"
-                            data-testid={`receipt-qty-${item.catalogItemId}`}
-                            value={receiptQtys[item.catalogItemId] ?? ''}
-                            onChange={(e) =>
-                              setReceiptQtys((prev) => ({
-                                ...prev,
-                                [item.catalogItemId]: e.target.value,
-                              }))
-                            }
-                            placeholder="0"
-                            className="w-20 rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                          />
-                        </td>
-                      )}
                     </tr>
                   )
                 })}
