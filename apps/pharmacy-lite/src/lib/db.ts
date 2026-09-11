@@ -278,6 +278,12 @@ class PharmacyLiteDatabase extends Dexie {
     this.version(16).stores({
       contractPrices: 'id, customerId, [customerId+catalogItemId]',
     })
+
+    // v17: Procurement Phase 1 — index goodsReceipts by purchaseOrderId so a PO's
+    // receipt history is queryable. Non-PHI operational data.
+    this.version(17).stores({
+      goodsReceipts: 'id, receivedAt, supplierId, purchaseOrderId',
+    })
   }
 }
 

@@ -33,6 +33,9 @@ export interface PurchaseOrder {
   createdAt: string
   sentAt?: string
   closedAt?: string
+  sentBy?: string
+  cancelledBy?: string
+  cancelledReason?: string
   hlcTimestamp: string
 }
 

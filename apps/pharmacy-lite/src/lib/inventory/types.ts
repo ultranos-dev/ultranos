@@ -133,6 +133,11 @@ export interface GoodsReceipt {
   items: GoodsReceiptItem[]
   totalCost: number
   notes?: string
+  overReceiptReason?: string
+  /** Set on a reversing receipt: the id of the receipt it reverses. */
+  reversalOf?: string
+  /** Set on an original receipt once reversed: the id of the reversing receipt. */
+  reversedByReceiptId?: string
   receivedAt: string
   hlcTimestamp: string
 }
@@ -152,6 +157,7 @@ export interface PharmacyInventorySettings {
   taxRate: number
   invoicePrefix: string
   salesOrderPrefix: string
+  overReceiptTolerancePercent: number
   locationId: string
   locationName: string
   organizationId?: string
@@ -172,6 +178,7 @@ export const DEFAULT_PHARMACY_SETTINGS: PharmacyInventorySettings = {
   taxRate: 0,
   invoicePrefix: 'INV-',
   salesOrderPrefix: 'SO-',
+  overReceiptTolerancePercent: 0,
   locationId: '',
   locationName: '',
 }
