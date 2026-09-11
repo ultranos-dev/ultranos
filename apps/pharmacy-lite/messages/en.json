@@ -1463,6 +1463,7 @@
     "approvedBy": "Approved by {who}",
     "disputedBy": "Disputed by {who}",
     "recordedBy": "Recorded by {who}",
-    "totalVariance": "Total variance"
+    "totalVariance": "Total variance",
+    "loading": "Loading…"
   }
 }

@@ -175,7 +175,7 @@ export function SupplierInvoicesPage() {
       <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
         {loading ? (
           <div className="flex min-h-[16rem] items-center justify-center">
-            <EmptyState icon={FileText} title={t('statusPending')} />
+            <EmptyState icon={FileText} title={t('loading')} />
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex min-h-[16rem] items-center justify-center">
@@ -234,10 +234,10 @@ export function SupplierInvoicesPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{inv.supplierName}</td>
-                  <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
+                  <td className="px-4 py-3 text-muted-foreground font-numeric text-xs">
                     {inv.purchaseOrderId.slice(0, 8)}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground tabular-nums font-numeric">
+                  <td className="px-4 py-3 text-muted-foreground font-numeric">
                     {formatAmount(inv.total, currency, currencyMinorUnits)}
                   </td>
                   <td className="px-4 py-3">

@@ -1463,6 +1463,7 @@
     "approvedBy": "له {who} لخوا تایید شوی",
     "disputedBy": "له {who} لخوا شخړه شوی",
     "recordedBy": "له {who} لخوا ثبت شوی",
-    "totalVariance": "ټول توپیر"
+    "totalVariance": "ټول توپیر",
+    "loading": "په حال کی بارولونه…"
   }
 }

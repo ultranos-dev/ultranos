@@ -1463,6 +1463,7 @@
     "approvedBy": "تایید شده توسط {who}",
     "disputedBy": "مورد اعتراض از {who}",
     "recordedBy": "ثبت شده توسط {who}",
-    "totalVariance": "جمع اختلافات"
+    "totalVariance": "جمع اختلافات",
+    "loading": "بارگذاری درحال انجام است…"
   }
 }

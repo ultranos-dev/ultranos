@@ -1463,6 +1463,7 @@
     "approvedBy": "معتمدة من {who}",
     "disputedBy": "معترض عليها من {who}",
     "recordedBy": "مسجّلة من {who}",
-    "totalVariance": "إجمالي الفرق"
+    "totalVariance": "إجمالي الفرق",
+    "loading": "جاري التحميل…"
   }
 }
