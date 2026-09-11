@@ -6,6 +6,14 @@ import { useAllergyStore } from '@/stores/allergy-store'
 
 interface AllergyBannerProps {
   patientId: string
+  /**
+   * Hub-derived hint (from the patient list summary) that this patient HAS allergies.
+   * The banner reads the local cache, which may not yet hold them on this device.
+   * When true but the local list is empty, the banner shows an unavailable warning
+   * instead of a false "No known allergies" (CLAUDE.md Rule #3/#4 — never assert
+   * "none" for a safety-critical field we can't confirm).
+   */
+  hubHasAllergies?: boolean
 }
 
 /**
@@ -20,7 +28,7 @@ interface AllergyBannerProps {
  * DOM position: renders first in the banner stack, never collapsed.
  * Accessibility: role="alert", aria-live="assertive" (warning/active states), "polite" (loading/NKA), contrast >= 4.5:1.
  */
-export function AllergyBanner({ patientId }: AllergyBannerProps) {
+export function AllergyBanner({ patientId, hubHasAllergies }: AllergyBannerProps) {
   const t = useTranslations('allergy')
   const allergies = useAllergyStore((s) => s.allergies)
   const isLoading = useAllergyStore((s) => s.isLoading)
@@ -79,6 +87,23 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
         <span aria-label={t('bannerActiveAria', { count: allergies.length })}>
           {t('bannerActive', { substances: substanceList })}
         </span>
+      </div>
+    )
+  }
+
+  // Unsynced state: the Hub says this patient has allergies but the local cache
+  // is empty (not yet pulled on this device). Never show a false "No known
+  // allergies" for a safety-critical field — surface an unavailable warning instead.
+  if (hubHasAllergies) {
+    return (
+      <div
+        className="mb-4 rounded-xl bg-warning/10 px-4 py-3 shadow-card ring-[0.65px] ring-warning/40 text-center text-sm font-bold text-foreground transition-colors duration-200"
+        role="alert"
+        aria-live="assertive"
+        data-testid="allergy-banner"
+        data-banner-state="unsynced"
+      >
+        {t('bannerUnavailable')}
       </div>
     )
   }

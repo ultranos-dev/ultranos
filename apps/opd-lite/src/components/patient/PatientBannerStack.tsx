@@ -41,8 +41,13 @@ export function PatientBannerStack({
 
   return (
     <div data-testid="patient-banner-stack">
-      {/* 1. Allergies — ALWAYS first, never collapsed (CLAUDE.md Rule #4) */}
-      <AllergyBanner patientId={patientId} />
+      {/* 1. Allergies — ALWAYS first, never collapsed (CLAUDE.md Rule #4).
+             Pass the Hub-derived hasAllergies hint so an un-synced local cache shows
+             "unavailable" rather than a false "No known allergies". */}
+      <AllergyBanner
+        patientId={patientId}
+        hubHasAllergies={patient._ultranos?.hasAllergies ?? false}
+      />
 
       {/* 2. Sync conflicts — always rendered, self-hides when empty */}
       <ConflictBanner patientId={patientId} />

@@ -6,6 +6,7 @@ import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { enqueueSyncAction } from '@ultranos/sync-engine'
 import { syncQueue } from '@/lib/sync-queue'
 import { hlc, serializeHlc } from '@/lib/hlc'
+import { fetchPatientAllergiesFromHub } from '@/lib/trpc'
 
 interface AllergyState {
   allergies: FhirAllergyIntolerance[]
@@ -46,18 +47,10 @@ export const useAllergyStore = create<AllergyState>()(
         state.loadError = null
       })
 
-      try {
-        const records = await db.allergyIntolerances
-          .where('patient.reference')
-          .equals(`Patient/${patientId}`)
-          .toArray()
-
-        // P1 — Staleness guard: abort if epoch changed while fetching
-        if (storeEpoch !== epochAtStart) return
-
-        // Filter to active allergies for display (all records kept in DB for append-only)
-        const active = records.filter((a) => {
-          // P26 — Warn on empty coding array instead of silently excluding
+      // Keep only clinically-active records for display (all versions stay in the DB
+      // for append-only history). P26 — warn on empty coding rather than silently drop.
+      const activeOnly = (records: FhirAllergyIntolerance[]) =>
+        records.filter((a) => {
           if (a.clinicalStatus.coding.length === 0) {
             console.warn('[allergy-store] clinicalStatus.coding is empty — record excluded from active list', {
               resourceType: a.resourceType,
@@ -68,30 +61,73 @@ export const useAllergyStore = create<AllergyState>()(
           return a.clinicalStatus.coding[0]?.code === 'active'
         })
 
-        // P5 — Audit regardless of result count (CLAUDE.md Rule #6: every PHI access
-        // must be audited, no exceptions — zero-record reads included)
-        try {
-          auditPhiAccess(
-            AuditAction.READ,
-            AuditResourceType.ALLERGY,
-            patientId,
-            patientId,
-            { phiAccess: 'allergy_view', allergyCount: active.length },
-          )
-        } catch {
-          /* auditPhiAccess is documented non-throwing; defensive belt-and-suspenders */
-        }
+      // 1. Local-first: render the cached allergies immediately (offline-safe, instant).
+      let localReadOk = false
+      let localActive: FhirAllergyIntolerance[] = []
+      try {
+        const records = await db.allergyIntolerances
+          .where('patient.reference')
+          .equals(`Patient/${patientId}`)
+          .toArray()
+        localReadOk = true
+        localActive = activeOnly(records)
+        if (storeEpoch !== epochAtStart) return
+        set((state) => {
+          state.allergies = localActive
+        })
+      } catch {
+        /* local read failed — the Hub reconcile below is the fallback */
+      }
 
+      // 2. Hub-authoritative reconcile. Allergies are Tier-1 safety-critical, so their
+      //    display must not depend solely on best-effort background sync (which can lag
+      //    or be blocked by a stale/poisoned watermark). When online, the Hub is the
+      //    source of truth; cache the result locally for the next offline view.
+      let hubAllergies: FhirAllergyIntolerance[] | null = null
+      try {
+        hubAllergies = await fetchPatientAllergiesFromHub(patientId)
+      } catch {
+        hubAllergies = null
+      }
+      if (storeEpoch !== epochAtStart) return
+
+      if (hubAllergies !== null) {
+        try {
+          for (const a of hubAllergies) await db.allergyIntolerances.put(a)
+        } catch {
+          /* caching is best-effort — the in-memory list below is still authoritative */
+        }
+        if (storeEpoch !== epochAtStart) return
+        const active = activeOnly(hubAllergies)
+        try {
+          auditPhiAccess(AuditAction.READ, AuditResourceType.ALLERGY, patientId, patientId, {
+            phiAccess: 'allergy_view',
+            allergyCount: active.length,
+            source: 'hub',
+          })
+        } catch { /* auditPhiAccess is documented non-throwing */ }
         set((state) => {
           state.allergies = active
           state.isLoading = false
         })
-      } catch {
-        set((state) => {
-          state.loadError = 'Failed to load allergy data'
-          state.isLoading = false
-        })
+        return
       }
+
+      // 3. Hub unreachable (offline / no session) — keep the local cache.
+      try {
+        auditPhiAccess(AuditAction.READ, AuditResourceType.ALLERGY, patientId, patientId, {
+          phiAccess: 'allergy_view',
+          allergyCount: localActive.length,
+          source: 'local',
+        })
+      } catch { /* auditPhiAccess is documented non-throwing */ }
+      set((state) => {
+        state.allergies = localActive
+        state.isLoading = false
+        // CLAUDE.md Rule #3: if we could neither read local nor reach the Hub, never
+        // imply "no known allergies" — surface the unavailable state instead.
+        if (!localReadOk) state.loadError = 'Failed to load allergy data'
+      })
     },
 
     addAllergy: async (allergy) => {

@@ -450,6 +450,19 @@ export interface PullResult {
 }
 
 /**
+ * A serialized HLC is `<15-digit wallMs>:<5-digit counter>:<nodeId>` (see
+ * sync-engine serializeHlc). deserializeHlc is too lenient to use as a guard here:
+ * an ISO string like "2026-09-10T18:47:00.702+00" splits on ':' and parseInt's to
+ * a non-NaN wallMs (2026), so it passes. Such a value sorts lexicographically ABOVE
+ * every real HLC ("0017…") and, used as a pull watermark, permanently hides genuine
+ * records (e.g. allergies) behind `hlc_timestamp > sinceHlc`. Require the exact shape.
+ */
+const HLC_PATTERN = /^\d{15}:\d{5}:.+/
+export function isValidHlc(value: string | undefined | null): boolean {
+  return typeof value === 'string' && HLC_PATTERN.test(value)
+}
+
+/**
  * Pull all changes for a patient from the Hub since the last known HLC.
  * Applies changes to the appropriate Dexie tables with tier-based conflict resolution.
  */
@@ -459,9 +472,12 @@ export async function pullPatientChanges(
 ): Promise<PullResult> {
   const result: PullResult = { changesApplied: 0, conflictsDetected: 0, errors: [] }
 
-  // 1. Look up the last-known HLC watermark for this patient
+  // 1. Look up the last-known HLC watermark for this patient.
+  //    Sanitize it: a poisoned (non-HLC) watermark would exclude real records from
+  //    the incremental pull forever (see isValidHlc). Falling back to '0' triggers a
+  //    one-time full re-pull that self-heals the watermark on the write below.
   const meta = await db.syncMeta.get(patientId)
-  const sinceHlc = meta?.lastPulledHlc ?? '0'
+  const sinceHlc = isValidHlc(meta?.lastPulledHlc) ? meta!.lastPulledHlc : '0'
 
   // 2. Call sync.pull via tRPC
   const token = getAuthToken()
@@ -612,8 +628,9 @@ export async function pullPatientChanges(
       // Update HLC clock with remote timestamp for causal ordering
       hlc.receive(deserializeHlc(change.hlcTimestamp || ZERO_HLC))
 
-      // Track highest HLC for watermark update
-      if (change.hlcTimestamp > highestHlc) {
+      // Track highest HLC for watermark update. Only advance on a well-formed HLC —
+      // a stray ISO/non-HLC timestamp must never re-poison the watermark.
+      if (isValidHlc(change.hlcTimestamp) && change.hlcTimestamp > highestHlc) {
         highestHlc = change.hlcTimestamp
       }
 

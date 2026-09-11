@@ -120,6 +120,39 @@ describe('AllergyBanner', () => {
     })
   })
 
+  // Safety (CLAUDE.md Rule #3/#4): the local cache may not yet hold a patient's
+  // allergies (e.g. not pulled on this device). If the Hub summary says the patient
+  // HAS allergies but the local list is empty, the banner must NOT claim "No known
+  // allergies" — that is a dangerous false negative. It shows an unavailable warning.
+  it('shows unavailable (not false NKA) when local is empty but the Hub flags allergies', async () => {
+    resetAllergyStore({ allergies: [] })
+
+    const { container } = render(
+      <AllergyBanner patientId="patient-001" hubHasAllergies />,
+    )
+    const banner = container.querySelector('[data-testid="allergy-banner"]')
+
+    await waitFor(() => {
+      expect(banner?.getAttribute('data-banner-state')).toBe('unsynced')
+      expect(banner?.getAttribute('data-banner-state')).not.toBe('nka')
+      expect(banner?.getAttribute('aria-live')).toBe('assertive')
+      expect(banner?.className).toContain('bg-warning/10')
+    })
+  })
+
+  it('still shows NKA when local is empty and the Hub does not flag allergies', async () => {
+    resetAllergyStore({ allergies: [] })
+
+    const { container } = render(
+      <AllergyBanner patientId="patient-001" hubHasAllergies={false} />,
+    )
+    const banner = container.querySelector('[data-testid="allergy-banner"]')
+
+    await waitFor(() => {
+      expect(banner?.getAttribute('data-banner-state')).toBe('nka')
+    })
+  })
+
   it('renders warning state when load error occurs', async () => {
     resetAllergyStore({ loadError: 'Failed to load allergy data' })
 
