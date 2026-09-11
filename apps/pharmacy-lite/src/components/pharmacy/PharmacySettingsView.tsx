@@ -317,6 +317,80 @@ function WholesaleModeCard() {
   )
 }
 
+// --- Procurement Settings Card ---
+function ProcurementSettingsCard() {
+  const t = useTranslations('settings')
+  const [pharmacyCode, setPharmacyCode] = useState<string>('')
+  const [poNumberPrefix, setPoNumberPrefix] = useState<string>('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    async function load() {
+      try {
+        const rows = await db.pharmacySettings.toArray()
+        if (active) {
+          setPharmacyCode(rows[0]?.pharmacyCode ?? DEFAULT_PHARMACY_SETTINGS.pharmacyCode)
+          setPoNumberPrefix(rows[0]?.poNumberPrefix ?? DEFAULT_PHARMACY_SETTINGS.poNumberPrefix)
+        }
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+    void load()
+    return () => { active = false }
+  }, [])
+
+  const handleBlur = useCallback(
+    async (field: 'pharmacyCode' | 'poNumberPrefix', value: string) => {
+      const rows = await db.pharmacySettings.toArray()
+      const current = rows[0] ?? { ...DEFAULT_PHARMACY_SETTINGS }
+      await db.pharmacySettings.put({ ...current, [field]: value })
+    },
+    [],
+  )
+
+  return (
+    <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50" aria-labelledby="procurement-heading">
+      <h2 id="procurement-heading" className="mb-4 text-sm font-semibold text-foreground">{t('procurementSettings')}</h2>
+      <div className="space-y-4">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="setting-pharmacy-code" className="text-xs font-medium text-muted-foreground">
+            {t('pharmacyCodeLabel')}
+          </label>
+          <input
+            id="setting-pharmacy-code"
+            data-testid="setting-pharmacy-code"
+            type="text"
+            value={pharmacyCode}
+            disabled={loading}
+            onChange={(e) => setPharmacyCode(e.target.value)}
+            onBlur={(e) => { void handleBlur('pharmacyCode', e.target.value) }}
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+            placeholder="e.g. KBL01"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="setting-po-prefix" className="text-xs font-medium text-muted-foreground">
+            {t('poNumberPrefixLabel')}
+          </label>
+          <input
+            id="setting-po-prefix"
+            data-testid="setting-po-prefix"
+            type="text"
+            value={poNumberPrefix}
+            disabled={loading}
+            onChange={(e) => setPoNumberPrefix(e.target.value)}
+            onBlur={(e) => { void handleBlur('poNumberPrefix', e.target.value) }}
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+            placeholder="e.g. PO-"
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // --- Main Settings View ---
 export function PharmacySettingsView() {
   const t = useTranslations('settings')
@@ -328,6 +402,7 @@ export function PharmacySettingsView() {
       <SessionInfoCard />
       <MfaStatusCard />
       <WholesaleModeCard />
+      <ProcurementSettingsCard />
       <DataBudgetCard />
     </div>
   )

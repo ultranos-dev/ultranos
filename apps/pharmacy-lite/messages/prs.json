@@ -284,7 +284,8 @@
     "wholesaleMode": "حالت عمده‌فروشی",
     "wholesaleModeDesc": "فعال‌سازی ویژگی‌های عمده‌فروشی (B2B) — مشتریان، سفارش‌های فروش و حساب‌های دریافتنی.",
     "pharmacyCodeLabel": "کد دواخانه (پیشوند سفارش خرید)",
-    "poNumberPrefixLabel": "پیشوند شماره سفارش خرید"
+    "poNumberPrefixLabel": "پیشوند شماره سفارش خرید",
+    "procurementSettings": "تنظیمات تدارکات"
   },
   "history": {
     "title": "تاریخچه تحویل",

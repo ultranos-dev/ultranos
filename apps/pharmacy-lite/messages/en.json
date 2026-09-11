@@ -284,7 +284,8 @@
     "wholesaleMode": "Wholesale Mode",
     "wholesaleModeDesc": "Enable B2B wholesale features — customers, sales orders, and accounts receivable.",
     "pharmacyCodeLabel": "Pharmacy code (PO prefix)",
-    "poNumberPrefixLabel": "PO number prefix"
+    "poNumberPrefixLabel": "PO number prefix",
+    "procurementSettings": "Procurement Settings"
   },
   "history": {
     "title": "Dispensing History",

@@ -284,7 +284,8 @@
     "wholesaleMode": "وضع الجملة",
     "wholesaleModeDesc": "تفعيل ميزات البيع بالجملة — العملاء وأوامر البيع والحسابات المدينة.",
     "pharmacyCodeLabel": "رمز الصيدلية (بادئة أمر الشراء)",
-    "poNumberPrefixLabel": "بادئة رقم أمر الشراء"
+    "poNumberPrefixLabel": "بادئة رقم أمر الشراء",
+    "procurementSettings": "إعدادات المشتريات"
   },
   "history": {
     "title": "سجل الصرف",

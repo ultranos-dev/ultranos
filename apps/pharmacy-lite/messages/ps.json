@@ -284,7 +284,8 @@
     "wholesaleMode": "د پرچون حالت",
     "wholesaleModeDesc": "د پرچون (B2B) ب کارول — پیرودونکي، د پلور فرمایشونه، او د ترلاسه‌کولو حسابونه.",
     "pharmacyCodeLabel": "د دواخانې کوډ (د پیرودلو امر پیشوند)",
-    "poNumberPrefixLabel": "د پیرودلو امر شمیرې پیشوند"
+    "poNumberPrefixLabel": "د پیرودلو امر شمیرې پیشوند",
+    "procurementSettings": "د تدارکاتو ترتیبات"
   },
   "history": {
     "title": "د ورکولو تاریخچه",
