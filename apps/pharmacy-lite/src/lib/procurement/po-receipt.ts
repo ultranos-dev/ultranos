@@ -79,7 +79,7 @@ export function applyReceiptToPO(
     return r ? { ...item, quantityReceived: item.quantityReceived + r.quantity } : item
   })
   const status = recomputeStatus(items, po.status)
-  return { items, status, closedAt: status === 'closed' ? now : po.closedAt }
+  return { items, status, closedAt: status === 'closed' ? now : undefined }
 }
 
 /** Reverse received quantities off a PO (downward). Reopens closed POs; clears closedAt. */

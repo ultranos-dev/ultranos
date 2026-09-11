@@ -41,6 +41,7 @@ describe('applyReceiptToPO', () => {
     const r = applyReceiptToPO(po(), [{ catalogItemId: 'a', quantity: 4 }], now)
     expect(r.status).toBe('partially_received')
     expect(r.items.find((i) => i.catalogItemId === 'a')!.quantityReceived).toBe(4)
+    expect(r.items.find((i) => i.catalogItemId === 'b')!.quantityReceived).toBe(0)
     expect(r.closedAt).toBeUndefined()
   })
   it('full receipt of all lines → closed with closedAt', () => {
