@@ -322,6 +322,9 @@ function ProcurementSettingsCard() {
   const t = useTranslations('settings')
   const [pharmacyCode, setPharmacyCode] = useState<string>('')
   const [poNumberPrefix, setPoNumberPrefix] = useState<string>('')
+  const [invoiceTolerance, setInvoiceTolerance] = useState<number>(
+    DEFAULT_PHARMACY_SETTINGS.invoiceMatchTolerancePercent,
+  )
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -332,6 +335,9 @@ function ProcurementSettingsCard() {
         if (active) {
           setPharmacyCode(rows[0]?.pharmacyCode ?? DEFAULT_PHARMACY_SETTINGS.pharmacyCode)
           setPoNumberPrefix(rows[0]?.poNumberPrefix ?? DEFAULT_PHARMACY_SETTINGS.poNumberPrefix)
+          setInvoiceTolerance(
+            rows[0]?.invoiceMatchTolerancePercent ?? DEFAULT_PHARMACY_SETTINGS.invoiceMatchTolerancePercent,
+          )
         }
       } finally {
         if (active) setLoading(false)
@@ -349,6 +355,12 @@ function ProcurementSettingsCard() {
     },
     [],
   )
+
+  const handleToleranceBlur = useCallback(async (value: string) => {
+    const rows = await db.pharmacySettings.toArray()
+    const current = rows[0] ?? { ...DEFAULT_PHARMACY_SETTINGS }
+    await db.pharmacySettings.put({ ...current, invoiceMatchTolerancePercent: Number(value) || 0 })
+  }, [])
 
   return (
     <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50" aria-labelledby="procurement-heading">
@@ -384,6 +396,22 @@ function ProcurementSettingsCard() {
             onBlur={(e) => { void handleBlur('poNumberPrefix', e.target.value) }}
             className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
             placeholder="e.g. PO-"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="setting-invoice-tolerance" className="text-xs font-medium text-muted-foreground">
+            {t('invoiceMatchToleranceLabel')}
+          </label>
+          <input
+            id="setting-invoice-tolerance"
+            data-testid="setting-invoice-tolerance"
+            type="number"
+            value={invoiceTolerance}
+            disabled={loading}
+            onChange={(e) => setInvoiceTolerance(Number(e.target.value) || 0)}
+            onBlur={(e) => { void handleToleranceBlur(e.target.value) }}
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+            min={0}
           />
         </div>
       </div>
