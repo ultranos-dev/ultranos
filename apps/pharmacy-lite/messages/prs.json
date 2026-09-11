@@ -1460,6 +1460,8 @@
     "overrideReasonLabel": "دلیل تایید علی‌رغم اختلاف",
     "overrideRequired": "برای تایید فاکتور دارای اختلاف، ذکر دلیل الزامی است.",
     "disputeReasonLabel": "دلیل اعتراض",
+    "disputeReasonRequired": "باید دلیل اعتراض را ذکر کنید.",
+    "cancel": "لغو",
     "approveError": "تایید فاکتور ممکن نشد.",
     "disputeError": "اعتراض به فاکتور ممکن نشد.",
     "approvedBy": "تایید شده توسط {who}",

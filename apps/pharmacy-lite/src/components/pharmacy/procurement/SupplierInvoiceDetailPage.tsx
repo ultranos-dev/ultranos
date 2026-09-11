@@ -177,7 +177,7 @@ export function SupplierInvoiceDetailPage() {
   const handleDisputeConfirm = async () => {
     if (!invoice) return
     if (!disputeReason.trim()) {
-      setDisputeError(t('disputeReasonLabel'))
+      setDisputeError(t('disputeReasonRequired'))
       return
     }
     setDisputing(true)
@@ -296,7 +296,7 @@ export function SupplierInvoiceDetailPage() {
             </Button>
             {!showDisputeInput && (
               <Button
-                data-testid="dispute-invoice"
+                data-testid="dispute-toggle"
                 variant="outline"
                 onClick={handleDisputeToggle}
                 className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
@@ -347,7 +347,7 @@ export function SupplierInvoiceDetailPage() {
                   size="sm"
                   onClick={() => { setShowDisputeInput(false); setDisputeReason('') }}
                 >
-                  Cancel
+                  {t('cancel')}
                 </Button>
               </div>
             </div>
@@ -459,13 +459,13 @@ export function SupplierInvoiceDetailPage() {
                   return (
                     <tr key={line.catalogItemId} className="hover:bg-muted/50">
                       <td className="px-4 py-3 text-foreground">{line.catalogItemName}</td>
-                      <td className={`px-4 py-3 text-end tabular-nums ${colorClass}`}>
+                      <td className={`px-4 py-3 text-end font-numeric ${colorClass}`}>
                         {line.orderedQty}
                       </td>
-                      <td className={`px-4 py-3 text-end tabular-nums ${colorClass}`}>
+                      <td className={`px-4 py-3 text-end font-numeric ${colorClass}`}>
                         {line.receivedQty}
                       </td>
-                      <td className={`px-4 py-3 text-end tabular-nums ${colorClass}`}>
+                      <td className={`px-4 py-3 text-end font-numeric ${colorClass}`}>
                         {line.billedQty}
                       </td>
                       <td className={`px-4 py-3 text-end tabular-nums font-numeric ${colorClass}`}>
@@ -474,7 +474,7 @@ export function SupplierInvoiceDetailPage() {
                       <td className={`px-4 py-3 text-end tabular-nums font-numeric ${colorClass}`}>
                         {fmt(line.unitPrice)}
                       </td>
-                      <td className={`px-4 py-3 text-end tabular-nums ${colorClass}`}>
+                      <td className={`px-4 py-3 text-end font-numeric ${colorClass}`}>
                         {line.qtyVariance > 0 ? `+${line.qtyVariance}` : line.qtyVariance}
                       </td>
                       <td className={`px-4 py-3 text-end tabular-nums font-numeric ${colorClass}`}>

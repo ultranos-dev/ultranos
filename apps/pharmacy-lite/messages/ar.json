@@ -1460,6 +1460,8 @@
     "overrideReasonLabel": "سبب الاعتماد رغم الفرق",
     "overrideRequired": "يجب ذكر سبب لاعتماد فاتورة بها فرق.",
     "disputeReasonLabel": "سبب الاعتراض",
+    "disputeReasonRequired": "يجب ذكر سبب الاعتراض.",
+    "cancel": "إلغاء",
     "approveError": "تعذّر اعتماد الفاتورة.",
     "disputeError": "تعذّر الاعتراض على الفاتورة.",
     "approvedBy": "معتمدة من {who}",

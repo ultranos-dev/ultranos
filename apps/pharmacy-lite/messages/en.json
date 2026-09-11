@@ -1460,6 +1460,8 @@
     "overrideReasonLabel": "Reason to approve despite the variance",
     "overrideRequired": "A reason is required to approve an invoice with a variance.",
     "disputeReasonLabel": "Reason for dispute",
+    "disputeReasonRequired": "A dispute reason is required.",
+    "cancel": "Cancel",
     "approveError": "Could not approve the invoice.",
     "disputeError": "Could not dispute the invoice.",
     "approvedBy": "Approved by {who}",

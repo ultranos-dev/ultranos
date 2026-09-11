@@ -1460,6 +1460,8 @@
     "overrideReasonLabel": "د توپیر سره سره د تایید دلیل",
     "overrideRequired": "د توپیر لرونکي بیل د تایید لپاره دلیل اړین دی.",
     "disputeReasonLabel": "د شخړې دلیل",
+    "disputeReasonRequired": "د شخړې دلیل اړین دی.",
+    "cancel": "لغو کړئ",
     "approveError": "بیل نشو تایید کیدی.",
     "disputeError": "بیل نشو شخړه کیدی.",
     "approvedBy": "له {who} لخوا تایید شوی",
