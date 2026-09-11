@@ -125,4 +125,14 @@ describe('FhirMedicationRequestSchema', () => {
     })
     expect(result.success).toBe(false)
   })
+
+  it('accepts an optional dispenseRequest.performer', () => {
+    const base = validMedRequest
+    const withPerformer = {
+      ...base,
+      dispenseRequest: { ...(base.dispenseRequest ?? {}), performer: { reference: 'Organization/p1', display: 'Kabul City Pharmacy' } },
+    }
+    const parsed = FhirMedicationRequestSchema.parse(withPerformer)
+    expect(parsed.dispenseRequest?.performer?.reference).toBe('Organization/p1')
+  })
 })

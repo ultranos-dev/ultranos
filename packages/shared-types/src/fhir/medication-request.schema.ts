@@ -66,6 +66,7 @@ const DispenseRequestSchema = z.object({
     value: z.number(),
     unit: z.string(),
   }).optional(),
+  performer: ReferenceSchema.optional(),
 })
 
 const InteractionCheckResultSchema = z.enum(['CLEAR', 'WARNING', 'BLOCKED', 'UNAVAILABLE'])

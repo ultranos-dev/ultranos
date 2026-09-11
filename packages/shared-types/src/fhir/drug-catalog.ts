@@ -140,6 +140,21 @@ export interface PharmacyFacility {
   latitude: number
   longitude: number
   address?: string
+  province?: string
+  district?: string
+  facilityType?: 'pharmacy' | 'clinic' | 'hospital'
+  isActive?: boolean
+}
+
+/** Lightweight directory row for search results and the OPD offline mirror. */
+export interface PharmacyDirectoryEntry {
+  id: string
+  name: string
+  address?: string
+  province?: string
+  district?: string
+  facilityType: 'pharmacy' | 'clinic' | 'hospital'
+  updatedAt?: string
 }
 
 // ── Branded medications ─────────────────────────────────────────────────────────
