@@ -456,20 +456,11 @@ export function SupplierInvoiceDetailPage() {
               <tbody className="divide-y divide-border">
                 {match.lines.map((line) => {
                   const colorClass = lineColorClass(line.overBilled, line.offPo, line.priceOverTolerance)
-                  // Find the ordered qty from the invoice items — we use the match line's receivedQty
-                  // and look up orderedQty from the invoice items context (not available in InvoiceMatchLine)
-                  // Per the brief: columns Ordered / Received / Billed / PO cost / Invoiced / Qty var / Price var
-                  // "Ordered" maps to the PO's ordered qty — not in InvoiceMatchLine, use billedQty as proxy
-                  // Actually: we have receivedQty and billedQty; ordered isn't in InvoiceMatchLine.
-                  // For the column we show receivedQty as "Received", billedQty as "Billed".
-                  // "Ordered" column: not directly in InvoiceMatchLine. We'll show a dash or derive it.
-                  // Looking at InvoiceMatchLine: it has receivedQty (=quantityReceived from PO item),
-                  // but NOT quantityOrdered. We'll mark it as "—" since we don't have it.
                   return (
                     <tr key={line.catalogItemId} className="hover:bg-muted/50">
                       <td className="px-4 py-3 text-foreground">{line.catalogItemName}</td>
                       <td className={`px-4 py-3 text-end tabular-nums ${colorClass}`}>
-                        {line.receivedQty}
+                        {line.orderedQty}
                       </td>
                       <td className={`px-4 py-3 text-end tabular-nums ${colorClass}`}>
                         {line.receivedQty}

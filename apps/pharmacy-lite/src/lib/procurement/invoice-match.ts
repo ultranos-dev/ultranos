@@ -4,6 +4,7 @@ import type { PurchaseOrder, SupplierInvoice } from './types'
 export interface InvoiceMatchLine {
   catalogItemId: string
   catalogItemName: string
+  orderedQty: number
   billedQty: number
   receivedQty: number
   unitPrice: number
@@ -46,7 +47,7 @@ export function computeInvoiceMatch(
     po.freight ?? 0,
   )
   const poByItem = new Map(
-    po.items.map((p, idx) => [p.catalogItemId, { received: p.quantityReceived, net: poTotals.items[idx]!.netUnitCost }]),
+    po.items.map((p, idx) => [p.catalogItemId, { ordered: p.quantityOrdered, received: p.quantityReceived, net: poTotals.items[idx]!.netUnitCost }]),
   )
 
   const lines: InvoiceMatchLine[] = invoice.items.map((it) => {
@@ -62,6 +63,7 @@ export function computeInvoiceMatch(
     return {
       catalogItemId: it.catalogItemId,
       catalogItemName: it.catalogItemName,
+      orderedQty: poEntry?.ordered ?? 0,
       billedQty: it.billedQty,
       receivedQty,
       unitPrice: it.unitPrice,

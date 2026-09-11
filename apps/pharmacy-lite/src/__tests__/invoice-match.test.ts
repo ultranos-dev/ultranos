@@ -23,6 +23,7 @@ describe('computeInvoiceMatch', () => {
     const r = computeInvoiceMatch(inv([{ catalogItemId: 'a', catalogItemName: 'A', billedQty: 8, unitPrice: 100 }], { total: 800 }), po(), 0)
     expect(r.status).toBe('matched')
     expect(r.lines[0]!.matched).toBe(true)
+    expect(r.lines[0]!.orderedQty).toBe(10)
     expect(r.lines[0]!.receivedQty).toBe(8)
     expect(r.lines[0]!.poNetUnitCost).toBe(100)
   })
