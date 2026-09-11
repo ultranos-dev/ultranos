@@ -19,6 +19,8 @@ export interface PurchaseOrderItem {
   quantityOrdered: number
   quantityReceived: number
   unitCost: number
+  discountType?: 'percent' | 'amount'
+  discountValue?: number
 }
 
 export interface PurchaseOrder {
@@ -28,6 +30,16 @@ export interface PurchaseOrder {
   status: PurchaseOrderStatus
   items: PurchaseOrderItem[]
   totalCost: number
+  /** Human-readable PO number (assigned at creation). Absent on legacy POs. */
+  poNumber?: string
+  /** Sum of line nets (minor units). Absent on legacy POs. */
+  subtotal?: number
+  /** Document tax rate (percent). Absent on legacy POs. */
+  taxRate?: number
+  /** round(subtotal * taxRate/100). Absent on legacy POs. */
+  taxAmount?: number
+  /** Freight/other charge (minor units). Absent on legacy POs. */
+  freight?: number
   notes?: string
   createdBy: string
   createdAt: string

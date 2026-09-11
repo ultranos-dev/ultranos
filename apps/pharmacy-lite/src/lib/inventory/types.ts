@@ -158,6 +158,9 @@ export interface PharmacyInventorySettings {
   invoicePrefix: string
   salesOrderPrefix: string
   overReceiptTolerancePercent: number
+  poNumberPrefix: string
+  pharmacyCode: string
+  poSequenceNext: number
   locationId: string
   locationName: string
   organizationId?: string
@@ -179,6 +182,9 @@ export const DEFAULT_PHARMACY_SETTINGS: PharmacyInventorySettings = {
   invoicePrefix: 'INV-',
   salesOrderPrefix: 'SO-',
   overReceiptTolerancePercent: 0,
+  poNumberPrefix: 'PO-',
+  pharmacyCode: '',
+  poSequenceNext: 1,
   locationId: '',
   locationName: '',
 }
