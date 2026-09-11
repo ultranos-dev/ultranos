@@ -474,9 +474,13 @@ export function NewPurchaseOrderPage() {
                         )}
                       </div>
                     </td>
-                    {/* Line total */}
+                    {/* Line total — show net (after discount) */}
                     <td className="px-3 py-2 text-end tabular-nums text-muted-foreground font-numeric">
-                      {formatAmount(lineTotal(line), currency, currencyMinorUnits)}
+                      {formatAmount(
+                        liveTotals.items[lines.indexOf(line)]?.lineNet ?? 0,
+                        currency,
+                        currencyMinorUnits,
+                      )}
                     </td>
                     {/* Remove */}
                     <td className="px-3 py-2">
