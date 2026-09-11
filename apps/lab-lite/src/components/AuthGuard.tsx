@@ -57,15 +57,20 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
         if (!useAuthSessionStore.getState().isAuthenticated) {
           const user = data.session.user
-          // Extract session_id from JWT for audit trail continuity
+          // Extract session_id + the internal practitioners.id from the JWT for audit
+          // trail continuity and correct practitioner-FK stamping. `practitioner_id` is
+          // the top-level claim injected by the custom access token hook; fall back to
+          // `sub` (never '') so writes always carry a valid practitioner reference.
           let sessionId = ''
+          let practitionerId = user.id
           try {
             const jwt = data.session.access_token
             const base64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
             const payload = JSON.parse(atob(base64))
             sessionId = payload.session_id ?? ''
+            practitionerId = payload.practitioner_id ?? payload.sub ?? user.id
           } catch {
-            // Malformed JWT — use empty sessionId rather than blocking auth
+            // Malformed JWT — use empty sessionId / sub-derived id rather than blocking auth
           }
           // Fetch lab role from Hub API (Story 42.1 AC 3, 6)
           let labRole: LabRole | null = null
@@ -85,7 +90,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
           useAuthSessionStore.getState().setSession({
             userId: user.id,
-            practitionerId: user.user_metadata?.practitioner_id ?? user.id,
+            practitionerId,
             role: 'LAB_TECH',
             sessionId,
             email: user.email ?? '',

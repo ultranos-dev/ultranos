@@ -75,16 +75,26 @@ export default function LoginPage() {
   async function populateSessionAndRedirect() {
     const { data: sessionData } = await supabase.auth.getSession()
     const user = sessionData.session?.user
-    if (!user?.email) {
+    const jwt = sessionData.session?.access_token
+    if (!user?.email || !jwt) {
       setError(t('sessionUnavailable'))
       setLoading(false)
       return
     }
+
+    // Read the internal practitioners.id from the top-level `practitioner_id` JWT claim
+    // (injected by the custom access token hook). Falling back to `sub` matches the
+    // other spokes; NEVER default to '' — an empty ref breaks the practitioner FK on
+    // any resource this tech writes. `user_metadata` does NOT carry the hook claim, so
+    // the token must be decoded here (as OPD-Lite / Pharmacy-Lite do).
+    const base64 = jwt.split('.')[1]!.replace(/-/g, '+').replace(/_/g, '/')
+    const payload = JSON.parse(atob(base64))
+
     useAuthSessionStore.getState().setSession({
       userId: user.id,
-      practitionerId: user.user_metadata?.practitioner_id ?? '',
+      practitionerId: payload.practitioner_id ?? payload.sub,
       role: 'LAB_TECH',
-      sessionId: crypto.randomUUID(),
+      sessionId: payload.session_id ?? crypto.randomUUID(),
       email: user.email,
       name: (() => {
         const m = user.user_metadata
