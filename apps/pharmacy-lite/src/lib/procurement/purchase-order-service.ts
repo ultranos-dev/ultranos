@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { DEFAULT_PHARMACY_SETTINGS } from '@/lib/inventory/types'
+import { computePoTotals } from './po-totals'
 import type { PurchaseOrder, PurchaseOrderItem, PurchaseOrderStatus } from './types'
 
 /**
@@ -26,21 +27,47 @@ export async function createPurchaseOrder(params: {
   supplierId: string
   supplierName: string
   items: Omit<PurchaseOrderItem, 'quantityReceived'>[]
+  taxRate?: number
+  freight?: number
   notes?: string
   createdBy: string
 }): Promise<PurchaseOrder> {
   const id = crypto.randomUUID()
   const now = new Date().toISOString()
+  const year = new Date().getFullYear()
+
+  const settings = await db.pharmacySettings.toCollection().first()
+  const taxRate = params.taxRate ?? settings?.taxRate ?? 0
+  const freight = params.freight ?? 0
+
+  const totals = computePoTotals(
+    params.items.map((i) => ({
+      catalogItemId: i.catalogItemId,
+      catalogItemName: i.catalogItemName,
+      quantityOrdered: i.quantityOrdered,
+      unitCost: i.unitCost,
+      discountType: i.discountType,
+      discountValue: i.discountValue,
+    })),
+    taxRate,
+    freight,
+  )
+
   const items: PurchaseOrderItem[] = params.items.map((item) => ({ ...item, quantityReceived: 0 }))
-  const totalCost = items.reduce((sum, item) => sum + item.unitCost * item.quantityOrdered, 0)
+  const poNumber = await generatePoNumber(year)
 
   const po: PurchaseOrder = {
     id,
+    poNumber,
     supplierId: params.supplierId,
     supplierName: params.supplierName,
     status: 'draft',
     items,
-    totalCost,
+    subtotal: totals.subtotal,
+    taxRate,
+    taxAmount: totals.taxAmount,
+    freight,
+    totalCost: totals.grandTotal,
     notes: params.notes?.trim() || undefined,
     createdBy: params.createdBy,
     createdAt: now,
