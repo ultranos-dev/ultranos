@@ -9,6 +9,7 @@ import { CatalogSearchInput } from './CatalogSearchInput'
 import { ReceiveStockItemRow, type ReceiveLineItem } from './ReceiveStockItemRow'
 import { processGoodsReceipt } from '@/lib/inventory/goods-receipt-service'
 import { getPurchaseOrderById } from '@/lib/procurement/purchase-order-service'
+import { computePoTotals } from '@/lib/procurement/po-totals'
 import { OverReceiptError } from '@/lib/procurement/po-receipt'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { setDrugPrice } from '@/lib/trpc'
@@ -39,6 +40,19 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, purchaseOrder
       const po = await getPurchaseOrderById(purchaseOrderId)
       if (!po || cancelled) return
       setPoSupplierId(po.supplierId)
+      const totals = computePoTotals(
+        po.items.map((i) => ({
+          catalogItemId: i.catalogItemId,
+          catalogItemName: i.catalogItemName,
+          quantityOrdered: i.quantityOrdered,
+          unitCost: i.unitCost,
+          discountType: i.discountType,
+          discountValue: i.discountValue,
+        })),
+        po.taxRate ?? 0,
+        po.freight ?? 0,
+      )
+      const netByItem = new Map(totals.items.map((c) => [c.catalogItemId, c.netUnitCost]))
       const lines: ReceiveLineItem[] = []
       for (const poItem of po.items) {
         const remaining = poItem.quantityOrdered - poItem.quantityReceived
@@ -51,7 +65,7 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, purchaseOrder
           lotNumber: '',
           expiryDate: '',
           quantity: remaining,
-          costPrice: poItem.unitCost,
+          costPrice: netByItem.get(poItem.catalogItemId) ?? poItem.unitCost,
           sellingPrice: catalogItem.defaultSellingPrice,
         })
       }
