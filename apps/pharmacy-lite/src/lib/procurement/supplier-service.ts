@@ -39,14 +39,36 @@ export async function createSupplier(params: {
 
 export async function updateSupplier(id: string, updates: Partial<Omit<Supplier, 'id' | 'createdAt'>>): Promise<void> {
   await db.suppliers.update(id, updates)
+  const supplier = await db.suppliers.get(id)
+  if (supplier) {
+    await enqueuePharmacySyncEntry({
+      resourceType: 'Supplier',
+      resourceId: id,
+      action: 'update',
+      payload: supplier as unknown as Record<string, unknown>,
+      hlcTimestamp: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    })
+  }
 }
 
 export async function deactivateSupplier(id: string): Promise<void> {
   await db.suppliers.update(id, { isActive: false })
+  const supplier = await db.suppliers.get(id)
+  if (supplier) {
+    await enqueuePharmacySyncEntry({
+      resourceType: 'Supplier',
+      resourceId: id,
+      action: 'update',
+      payload: supplier as unknown as Record<string, unknown>,
+      hlcTimestamp: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    })
+  }
 }
 
 export async function getActiveSuppliers(): Promise<Supplier[]> {
-  return db.suppliers.where('isActive').equals(1).toArray()
+  return db.suppliers.filter((s) => s.isActive).toArray()
 }
 
 export async function getAllSuppliers(): Promise<Supplier[]> {
