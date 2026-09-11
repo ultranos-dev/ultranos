@@ -27,7 +27,11 @@ const { createCallerFactory } = await import('../trpc/init')
 
 const PATIENT_UUID = '55555555-5555-5555-5555-555555555555'
 const ENCOUNTER_UUID = '66666666-6666-6666-6666-666666666666'
+// PRACT_UUID is the clinician's AUTH user id — the ref spokes actually send.
 const PRACT_UUID = '77777777-7777-7777-7777-777777777777'
+// The internal practitioners.id (PK) that PRACT_UUID resolves to. FK columns must
+// end up holding THIS, not the auth id (that mismatch is the sync-failure bug).
+const RESOLVED_PRACT_PK = '70000000-0000-0000-0000-000000000007'
 const ORG_UUID = '269c2a80-c6ee-4c69-90ad-434afc77f027'
 
 const TEST_USER = {
@@ -41,18 +45,43 @@ const TEST_USER = {
 
 interface UpsertCall { table: string; row: Record<string, unknown> }
 
-/** Supabase mock: conflict-detection SELECT returns no existing row; upsert is captured. */
-function makeSupabase(upserts: UpsertCall[]) {
+/**
+ * Supabase mock. For resource tables: conflict-detection SELECT returns no existing
+ * row; upsert is captured. For `practitioners`: resolves auth_user_id PRACT_UUID ->
+ * RESOLVED_PRACT_PK (and passes an already-internal PK through), mirroring the real
+ * FK-resolution lookup. Set `practitionerMissing` to simulate an unregistered clinician.
+ */
+function makeSupabase(upserts: UpsertCall[], opts: { practitionerMissing?: boolean } = {}) {
   return {
-    from: (table: string) => ({
-      select: () => ({
-        eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }),
-      }),
-      upsert: (row: Record<string, unknown>) => {
-        upserts.push({ table, row })
-        return Promise.resolve({ error: null })
-      },
-    }),
+    from: (table: string) => {
+      if (table === 'practitioners') {
+        return {
+          select: () => ({
+            eq: (col: string, val: string) => ({
+              maybeSingle: async () => {
+                if (opts.practitionerMissing) return { data: null, error: null }
+                if (col === 'auth_user_id' && val === PRACT_UUID) {
+                  return { data: { id: RESOLVED_PRACT_PK }, error: null }
+                }
+                if (col === 'id' && val === RESOLVED_PRACT_PK) {
+                  return { data: { id: RESOLVED_PRACT_PK }, error: null }
+                }
+                return { data: null, error: null }
+              },
+            }),
+          }),
+        }
+      }
+      return {
+        select: () => ({
+          eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }),
+        }),
+        upsert: (row: Record<string, unknown>) => {
+          upserts.push({ table, row })
+          return Promise.resolve({ error: null })
+        },
+      }
+    },
     rpc: vi.fn().mockResolvedValue({ data: [{ chain_hash: 'h' }], error: null }),
   } as never
 }
@@ -239,7 +268,7 @@ describe('sync.push — clinical resources', () => {
     expect(row.codeDisplay).toBe('CBC panel')
     expect(row.patientId).toBe(PATIENT_UUID)          // stripped from Patient/<uuid>
     expect(row.encounterId).toBe(ENCOUNTER_UUID)
-    expect(row.requesterId).toBe(PRACT_UUID)
+    expect(row.requesterId).toBe(RESOLVED_PRACT_PK)   // auth id resolved to practitioners.id (FK)
     // Clinical PHI → uniquely-named columns (encrypted at rest via randomizedFields).
     expect(row.orderReasonCode).toMatchObject([{ text: 'suspected anemia' }])
     expect(row.orderNote).toMatchObject([{ text: 'patient fasting since midnight' }])
@@ -277,8 +306,29 @@ describe('sync.push — clinical resources', () => {
     // Regression guard: note text must NOT be null (the original field-name bug)
     expect(row.soapSubjective).toBe('productive cough x3 days')
     expect(row.soapPlan).toBe('amoxicillin 500mg TID')
-    expect(row.practitionerId).toBe(PRACT_UUID)   // stripped from `Practitioner/<uuid>`
+    // Regression guard for the sync-failure bug: the assessorRef auth id must be
+    // resolved to the internal practitioners.id, or the FK (soap_ledger.practitioner_id
+    // -> practitioners.id) rejects the write and the note never syncs.
+    expect(row.practitionerId).toBe(RESOLVED_PRACT_PK)
     expect(row.orgId).toBeUndefined()             // soap_ledger has no org_id column
+  })
+
+  it('rejects a SOAP note whose practitioner is not registered (no invalid-FK write)', async () => {
+    const upserts: UpsertCall[] = []
+    const caller = createCaller({
+      supabase: makeSupabase(upserts, { practitionerMissing: true }),
+      user: TEST_USER,
+      headers: new Headers(),
+    })
+
+    const { results } = await caller.sync.push({ operations: [soapOp()] })
+
+    expect(results[0]).toEqual({
+      resourceId: '88888888-8888-8888-8888-888888888888',
+      success: false,
+      error: 'UNKNOWN_PRACTITIONER',
+    })
+    expect(upserts).toHaveLength(0)   // never attempted the FK-violating write
   })
 
   it('writes an Observation (vitals) mapping the FHIR shape to observations columns', async () => {
@@ -325,6 +375,7 @@ describe('sync.push — clinical resources', () => {
     expect(row.encounterId).toBe(ENCOUNTER_UUID)
     expect(row.code).toMatchObject({ text: 'Pneumonia' })  // jsonb passthrough
     expect(row.diagnosisRank).toBe('primary')
+    expect(row.recorderId).toBe(RESOLVED_PRACT_PK)         // auth id resolved to practitioners.id (FK)
     expect(row.orgId).toBe(ORG_UUID)
   })
 
@@ -343,7 +394,7 @@ describe('sync.push — clinical resources', () => {
     expect(row.medicationDisplay).toBe('Amoxicillin')
     expect(row.medicationText).toBe('Amoxicillin 500mg')
     expect(row.subjectReference).toBe(PATIENT_UUID)
-    expect(row.requesterId).toBe(PRACT_UUID)
+    expect(row.requesterId).toBe(RESOLVED_PRACT_PK)   // auth id resolved to practitioners.id (FK)
     expect(row.interactionCheck).toBe('CLEAR')
     expect(row.orgId).toBe(ORG_UUID)
   })

@@ -7,6 +7,7 @@ import { db } from '@/lib/supabase'
 import { compareHlc, deserializeHlc, resolveConflict } from '@ultranos/sync-engine'
 import { flattenForDb } from '@/lib/resource-mappers'
 import { encryptJsonbValue } from '@/lib/field-encryption'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 const SyncOperationSchema = z.object({
   resourceType: z.string().min(1),
@@ -61,6 +62,55 @@ const ORG_SCOPED_TABLES = new Set<string>(['encounters', 'observations', 'condit
  * append-only consent ledger path, not the generic HLC engine.
  */
 const NO_HLC_TABLES = new Set<string>(['consent_records'])
+
+/**
+ * Practitioner-reference columns (post-flatten camelCase keys) whose values arrive
+ * from spokes as the clinician's AUTH user id — the spoke derives the reference as
+ * `payload.practitioner_id ?? sub` (see init.ts), and with no `practitioner_id`
+ * claim today that is the Supabase `sub`. But every one of these DB columns FKs to
+ * `practitioners.id` (the internal PK), which is a DIFFERENT uuid. Each ref must be
+ * resolved auth_user_id -> practitioners.id before the upsert or the write fails a
+ * foreign-key violation (23503) and the resource never reaches the Hub. This is why
+ * SOAP notes, prescriptions, lab orders, and diagnoses all silently failed to sync:
+ * they are the only pushed resources with a hard practitioner FK (encounters/vitals
+ * carry the practitioner in an FK-less JSONB field, so they synced fine).
+ */
+const PRACTITIONER_REF_COLUMNS: Record<string, readonly string[]> = {
+  soap_ledger: ['practitionerId'],
+  conditions: ['recorderId'],
+  medication_requests: ['requesterId'],
+  service_requests: ['requesterId'],
+}
+
+/**
+ * Resolve a practitioner reference to the internal `practitioners.id`. Accepts either
+ * an `auth_user_id` (current spokes) or an already-internal `practitioners.id`
+ * (forward-compatible with a future `practitioner_id` token claim). Returns null when
+ * no practitioner matches. Uses two scoped `.eq` lookups — never `.or()` with the
+ * untrusted ref — to avoid PostgREST filter injection. A non-uuid ref simply yields a
+ * null match (supabase-js returns an error object, not a throw) and is rejected upstream.
+ */
+async function resolvePractitionerId(
+  supabase: SupabaseClient,
+  ref: string,
+  cache: Map<string, string | null>,
+): Promise<string | null> {
+  if (cache.has(ref)) return cache.get(ref) ?? null
+
+  const byPk = await supabase.from('practitioners').select('id').eq('id', ref).maybeSingle()
+  let resolved = (byPk.data?.id as string | undefined) ?? null
+  if (!resolved) {
+    const byAuth = await supabase
+      .from('practitioners')
+      .select('id')
+      .eq('auth_user_id', ref)
+      .maybeSingle()
+    resolved = (byAuth.data?.id as string | undefined) ?? null
+  }
+
+  cache.set(ref, resolved)
+  return resolved
+}
 
 /**
  * Concurrency window for Tier-1 conflict detection, in milliseconds.
@@ -145,6 +195,9 @@ export const syncRouter = createTRPCRouter({
          */
         canonicalId?: string
       }> = []
+
+      // Per-request cache so a batch of same-practitioner writes resolves once.
+      const practitionerCache = new Map<string, string | null>()
 
       for (const op of input.operations) {
         try {
@@ -386,6 +439,34 @@ export const syncRouter = createTRPCRouter({
           if (tableName === 'allergy_intolerances') {
             flat.syncedBy = ctx.user.sub
             flat.syncedAt = new Date().toISOString()
+          }
+
+          // Resolve practitioner references (sent as the clinician's auth user id) to
+          // the internal practitioners.id the FK expects. Reject the op if a referenced
+          // practitioner is unknown rather than attempting a write that would fail the
+          // FK (or, on a nullable column, silently drop the prescriber/recorder).
+          const practRefCols = PRACTITIONER_REF_COLUMNS[tableName]
+          if (practRefCols) {
+            let unresolvedRef: string | null = null
+            for (const col of practRefCols) {
+              const ref = flat[col]
+              if (typeof ref === 'string' && ref.length > 0) {
+                const resolved = await resolvePractitionerId(ctx.supabase, ref, practitionerCache)
+                if (!resolved) {
+                  unresolvedRef = ref
+                  break
+                }
+                flat[col] = resolved
+              }
+            }
+            if (unresolvedRef) {
+              results.push({
+                resourceId: op.resourceId,
+                success: false,
+                error: 'UNKNOWN_PRACTITIONER',
+              })
+              continue
+            }
           }
 
           const row = db.toRow({
