@@ -291,7 +291,7 @@ export function NewSupplierInvoicePage() {
       {/* Section 1: Invoice details                                          */}
       {/* ------------------------------------------------------------------ */}
       <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
-        <h2 className="mb-4 text-base font-semibold text-foreground">{t('newTitle')}</h2>
+        <h2 className="mb-4 text-base font-semibold text-foreground">{t('detailsSection')}</h2>
 
         <div className="grid gap-4 md:grid-cols-2">
           {/* PO select (only when no poId query param) */}

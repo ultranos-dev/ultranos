@@ -1435,6 +1435,7 @@
     "fieldNotes": "یادداشت‌ها",
     "duplicateWarning": "فاکتوری با این شماره قبلاً برای این تأمین کننده وجود دارد.",
     "colBilledQty": "تعداد صورتحساب شده",
+    "detailsSection": "جزئیات فاکتور",
     "linesSection": "بنود فاکتور",
     "colUnitPrice": "قیمت واحد",
     "subtotal": "جمع جزئی",
