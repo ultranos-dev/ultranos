@@ -3,6 +3,7 @@ import { buildEncryptedSyncEntry, enqueuePharmacySyncEntry } from '@/lib/dexie-s
 import { reverseReceiptFromPO } from '@/lib/procurement/po-receipt'
 import type { GoodsReceipt, StockBatch, StockMovement } from './types'
 
+
 export class ReceiptNotReversibleError extends Error {
   reason: 'already_reversed' | 'is_reversal' | 'stock_not_intact'
   drawnDownBatchIds?: string[]

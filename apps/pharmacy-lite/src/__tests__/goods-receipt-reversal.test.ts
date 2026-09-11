@@ -62,4 +62,18 @@ describe('reverseGoodsReceipt', () => {
     await reverseGoodsReceipt(receipt.id, 'u2')
     await expect(reverseGoodsReceipt(receipt.id, 'u2')).rejects.toBeInstanceOf(ReceiptNotReversibleError)
   })
+
+  it('blocks reversing a reversal receipt (is_reversal guard)', async () => {
+    const { receipt } = await receiveAgainstFreshPO(5)
+    const reversal = await reverseGoodsReceipt(receipt.id, 'u2')
+    expect(reversal.reversalOf).toBe(receipt.id)
+    // Attempt to reverse the reversal itself should reject with is_reversal reason
+    try {
+      await reverseGoodsReceipt(reversal.id, 'u3')
+      expect.fail('Should have thrown ReceiptNotReversibleError')
+    } catch (error) {
+      expect(error).toBeInstanceOf(ReceiptNotReversibleError)
+      expect((error as ReceiptNotReversibleError).reason).toBe('is_reversal')
+    }
+  })
 })
