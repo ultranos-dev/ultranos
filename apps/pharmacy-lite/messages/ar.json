@@ -282,7 +282,9 @@
     "totpEnabled": "TOTP مفعّل",
     "totpNotConfigured": "غير مُهيّأ",
     "wholesaleMode": "وضع الجملة",
-    "wholesaleModeDesc": "تفعيل ميزات البيع بالجملة — العملاء وأوامر البيع والحسابات المدينة."
+    "wholesaleModeDesc": "تفعيل ميزات البيع بالجملة — العملاء وأوامر البيع والحسابات المدينة.",
+    "pharmacyCodeLabel": "رمز الصيدلية (بادئة أمر الشراء)",
+    "poNumberPrefixLabel": "بادئة رقم أمر الشراء"
   },
   "history": {
     "title": "سجل الصرف",
@@ -851,7 +853,10 @@
     "overReceiptBlocked": "{item}: لا يمكن استلام {attempted} — لم يتبقَّ سوى {allowed}.",
     "overReceiptControlledBlocked": "{item} مادة خاضعة للرقابة — لا يمكن استلام أكثر من {allowed} المطلوبة.",
     "poNotReceivable": "لا يمكن استلام هذا الأمر بعد الآن.",
-    "poLineRemaining": "{remaining} متبقية"
+    "poLineRemaining": "{remaining} متبقية",
+    "wacColumn": "متوسط التكلفة",
+    "inventoryValuation": "قيمة المخزون",
+    "wacUnavailable": "—"
   },
   "pos": {
     "cashDrawer": "درج النقود",
@@ -1206,7 +1211,22 @@
     "reverseReceiptBlocked": "لا يمكن عكس هذا الاستلام لأن جزءًا من مخزونه قد استُخدم بالفعل. استخدم تعديل المخزون بدلاً من ذلك.",
     "reverseReceiptError": "تعذّر عكس الاستلام.",
     "receiptReversed": "تم العكس",
-    "cancelReasonPrompt": "سبب الإلغاء (اختياري)"
+    "cancelReasonPrompt": "سبب الإلغاء (اختياري)",
+    "newPoLineDiscount": "خصم",
+    "newPoDiscountPercent": "%",
+    "newPoDiscountAmount": "مبلغ",
+    "newPoTaxRate": "نسبة الضريبة (%)",
+    "newPoFreight": "شحن",
+    "newPoSubtotal": "المجموع الجزئي",
+    "newPoDiscountTotal": "الخصم",
+    "newPoTax": "الضريبة",
+    "newPoGrandTotal": "الإجمالي الكلي",
+    "detailPoNumber": "رقم أمر الشراء",
+    "detailSubtotal": "المجموع الجزئي",
+    "detailDiscount": "الخصم",
+    "detailTax": "الضريبة",
+    "detailFreight": "الشحن",
+    "detailGrandTotal": "الإجمالي الكلي"
   },
   "login": {
     "appName": "صيدلية",

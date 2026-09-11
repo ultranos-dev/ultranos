@@ -282,7 +282,9 @@
     "totpEnabled": "TOTP فعال دی",
     "totpNotConfigured": "تنظیم شوی نه دی",
     "wholesaleMode": "د پرچون حالت",
-    "wholesaleModeDesc": "د پرچون (B2B) ب کارول — پیرودونکي، د پلور فرمایشونه، او د ترلاسه‌کولو حسابونه."
+    "wholesaleModeDesc": "د پرچون (B2B) ب کارول — پیرودونکي، د پلور فرمایشونه، او د ترلاسه‌کولو حسابونه.",
+    "pharmacyCodeLabel": "د دواخانې کوډ (د پیرودلو امر پیشوند)",
+    "poNumberPrefixLabel": "د پیرودلو امر شمیرې پیشوند"
   },
   "history": {
     "title": "د ورکولو تاریخچه",
@@ -851,7 +853,10 @@
     "overReceiptBlocked": "{item}: {attempted} نشي ترلاسه کیدی — یوازې {allowed} پاتې دي.",
     "overReceiptControlledBlocked": "{item} یو کنترول شوی مادہ دی — تاسې د امر شوو {allowed} څخه زیات نشئ ترلاسه کولی.",
     "poNotReceivable": "دا د پیرودلو امر نور نشي ترلاسه کیدی.",
-    "poLineRemaining": "{remaining} پاتې"
+    "poLineRemaining": "{remaining} پاتې",
+    "wacColumn": "اوسط لګښت",
+    "inventoryValuation": "د ذخیرې ارزښت",
+    "wacUnavailable": "—"
   },
   "pos": {
     "cashDrawer": "د نقدو دراز",
@@ -1206,7 +1211,22 @@
     "reverseReceiptBlocked": "دا ترلاسه کول بیرته نشي کیدی ځکه چې د هغه ځینې موجودي مصرف شوې ده. پر ځای یې د موجودۍ تعدیل وکاروئ.",
     "reverseReceiptError": "د ترلاسه کولو بیرته کول ناکام شول.",
     "receiptReversed": "بیرته شو",
-    "cancelReasonPrompt": "د لغوه کولو دلیل (اختیاري)"
+    "cancelReasonPrompt": "د لغوه کولو دلیل (اختیاري)",
+    "newPoLineDiscount": "تخفیف",
+    "newPoDiscountPercent": "%",
+    "newPoDiscountAmount": "مقدار",
+    "newPoTaxRate": "د مالیې نرخ (%)",
+    "newPoFreight": "د لیږد لګښت",
+    "newPoSubtotal": "فرعي ټول",
+    "newPoDiscountTotal": "تخفیف",
+    "newPoTax": "مالیه",
+    "newPoGrandTotal": "لوی ټول",
+    "detailPoNumber": "د پیرودلو امر شمیره",
+    "detailSubtotal": "فرعي ټول",
+    "detailDiscount": "تخفیف",
+    "detailTax": "مالیه",
+    "detailFreight": "د لیږد لګښت",
+    "detailGrandTotal": "لوی ټول"
   },
   "login": {
     "appName": "دواخانه",

@@ -282,7 +282,9 @@
     "totpEnabled": "TOTP فعال",
     "totpNotConfigured": "تنظیم نشده",
     "wholesaleMode": "حالت عمده‌فروشی",
-    "wholesaleModeDesc": "فعال‌سازی ویژگی‌های عمده‌فروشی (B2B) — مشتریان، سفارش‌های فروش و حساب‌های دریافتنی."
+    "wholesaleModeDesc": "فعال‌سازی ویژگی‌های عمده‌فروشی (B2B) — مشتریان، سفارش‌های فروش و حساب‌های دریافتنی.",
+    "pharmacyCodeLabel": "کد دواخانه (پیشوند سفارش خرید)",
+    "poNumberPrefixLabel": "پیشوند شماره سفارش خرید"
   },
   "history": {
     "title": "تاریخچه تحویل",
@@ -851,7 +853,10 @@
     "overReceiptBlocked": "{item}: دریافت {attempted} ممکن نیست — فقط {allowed} باقی مانده است.",
     "overReceiptControlledBlocked": "{item} یک ماده کنترول‌شده است — نمی‌توانید بیشتر از {allowed} سفارش داده شده دریافت کنید.",
     "poNotReceivable": "این سفارش خرید دیگر قابل دریافت نیست.",
-    "poLineRemaining": "{remaining} باقی مانده"
+    "poLineRemaining": "{remaining} باقی مانده",
+    "wacColumn": "میانگین هزینه",
+    "inventoryValuation": "ارزش موجودی",
+    "wacUnavailable": "—"
   },
   "pos": {
     "cashDrawer": "کشوی نقدی",
@@ -1206,7 +1211,22 @@
     "reverseReceiptBlocked": "این دریافت قابل برگشت نیست زیرا بخشی از موجودی آن استفاده شده است. به جای آن از تعدیل موجودی استفاده کنید.",
     "reverseReceiptError": "برگشت دریافت ناموفق بود.",
     "receiptReversed": "برگشت داده شد",
-    "cancelReasonPrompt": "دلیل لغو (اختیاری)"
+    "cancelReasonPrompt": "دلیل لغو (اختیاری)",
+    "newPoLineDiscount": "تخفیف",
+    "newPoDiscountPercent": "%",
+    "newPoDiscountAmount": "مبلغ",
+    "newPoTaxRate": "نرخ مالیات (%)",
+    "newPoFreight": "حمل‌ونقل",
+    "newPoSubtotal": "جمع جزئی",
+    "newPoDiscountTotal": "تخفیف",
+    "newPoTax": "مالیات",
+    "newPoGrandTotal": "جمع کل",
+    "detailPoNumber": "شماره سفارش خرید",
+    "detailSubtotal": "جمع جزئی",
+    "detailDiscount": "تخفیف",
+    "detailTax": "مالیات",
+    "detailFreight": "حمل‌ونقل",
+    "detailGrandTotal": "جمع کل"
   },
   "login": {
     "appName": "دواخانه",

@@ -282,7 +282,9 @@
     "totpEnabled": "TOTP Enabled",
     "totpNotConfigured": "Not Configured",
     "wholesaleMode": "Wholesale Mode",
-    "wholesaleModeDesc": "Enable B2B wholesale features — customers, sales orders, and accounts receivable."
+    "wholesaleModeDesc": "Enable B2B wholesale features — customers, sales orders, and accounts receivable.",
+    "pharmacyCodeLabel": "Pharmacy code (PO prefix)",
+    "poNumberPrefixLabel": "PO number prefix"
   },
   "history": {
     "title": "Dispensing History",
@@ -851,7 +853,10 @@
     "overReceiptBlocked": "{item}: cannot receive {attempted} — only {allowed} remaining.",
     "overReceiptControlledBlocked": "{item} is a controlled substance — you cannot receive more than the {allowed} ordered.",
     "poNotReceivable": "This purchase order can no longer be received.",
-    "poLineRemaining": "{remaining} remaining"
+    "poLineRemaining": "{remaining} remaining",
+    "wacColumn": "Avg cost",
+    "inventoryValuation": "Inventory value",
+    "wacUnavailable": "—"
   },
   "pos": {
     "cashDrawer": "Cash Drawer",
@@ -1206,7 +1211,22 @@
     "reverseReceiptBlocked": "This receipt can't be reversed because some of its stock has already been used. Use a stock adjustment instead.",
     "reverseReceiptError": "Could not reverse the receipt.",
     "receiptReversed": "Reversed",
-    "cancelReasonPrompt": "Reason for cancelling (optional)"
+    "cancelReasonPrompt": "Reason for cancelling (optional)",
+    "newPoLineDiscount": "Discount",
+    "newPoDiscountPercent": "%",
+    "newPoDiscountAmount": "Amount",
+    "newPoTaxRate": "Tax rate (%)",
+    "newPoFreight": "Freight",
+    "newPoSubtotal": "Subtotal",
+    "newPoDiscountTotal": "Discount",
+    "newPoTax": "Tax",
+    "newPoGrandTotal": "Grand total",
+    "detailPoNumber": "PO number",
+    "detailSubtotal": "Subtotal",
+    "detailDiscount": "Discount",
+    "detailTax": "Tax",
+    "detailFreight": "Freight",
+    "detailGrandTotal": "Grand total"
   },
   "login": {
     "appName": "Pharmacy Lite",
