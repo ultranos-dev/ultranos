@@ -127,7 +127,7 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, purchaseOrder
       if (err instanceof OverReceiptError) {
         const v = err.violations[0]
         setError(v?.controlled
-          ? t('overReceiptControlledBlocked', { item: v.catalogItemName, allowed: v.allowed })
+          ? t('overReceiptControlledBlocked', { item: v?.catalogItemName ?? '', allowed: v?.allowed ?? 0 })
           : t('overReceiptBlocked', { item: v?.catalogItemName ?? '', attempted: v?.attempted ?? 0, allowed: v?.allowed ?? 0 }))
       } else {
         setError(t('failedProcessReceipt'))

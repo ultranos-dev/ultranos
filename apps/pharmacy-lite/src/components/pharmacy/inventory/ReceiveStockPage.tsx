@@ -36,7 +36,7 @@ export function ReceiveStockPage({ purchaseOrderId }: { purchaseOrderId?: string
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold text-foreground">{heading}</h1>
       <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
-        <p className="text-sm text-muted-foreground">{t('searchOrScanProduct')}</p>
+        {!purchaseOrderId && <p className="text-sm text-muted-foreground">{t('searchOrScanProduct')}</p>}
         <div className="mt-4">
           <ReceiveStockForm locationId={locationId} currencyMinorUnits={currencyMinorUnits} purchaseOrderId={purchaseOrderId} onComplete={() => setShowSuccess(true)} />
         </div>
