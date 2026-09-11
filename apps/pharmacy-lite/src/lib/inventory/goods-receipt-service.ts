@@ -1,6 +1,9 @@
 import { db } from '@/lib/db'
-import { buildEncryptedSyncEntry } from '@/lib/dexie-sync-adapter'
+import { buildEncryptedSyncEntry, enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
+import { getPurchaseOrderById } from '@/lib/procurement/purchase-order-service'
+import { validateReceiptAgainstPO, applyReceiptToPO } from '@/lib/procurement/po-receipt'
 import type { GoodsReceipt, GoodsReceiptItem, StockBatch, StockMovement } from './types'
+import { DEFAULT_PHARMACY_SETTINGS } from './types'
 
 export async function processGoodsReceipt(params: {
   items: GoodsReceiptItem[]
@@ -9,12 +12,29 @@ export async function processGoodsReceipt(params: {
   receivedBy: string
   locationId: string
   notes?: string
+  overReceiptReason?: string
 }): Promise<GoodsReceipt> {
-  const { items, supplierId, purchaseOrderId, receivedBy, locationId, notes } = params
+  const { items, supplierId, purchaseOrderId, receivedBy, locationId, notes, overReceiptReason } = params
 
   const now = new Date().toISOString()
   const receiptId = crypto.randomUUID()
   const totalCost = items.reduce((sum, item) => sum + item.costPrice * item.quantity, 0)
+
+  // PO reconciliation guard (only when receiving against a PO)
+  let po = purchaseOrderId ? await getPurchaseOrderById(purchaseOrderId) : undefined
+  if (purchaseOrderId && !po) throw new Error('Purchase order not found')
+  if (po && po.status !== 'sent' && po.status !== 'partially_received') {
+    throw new Error(`Purchase order is not receivable (status: ${po.status})`)
+  }
+  if (po) {
+    const received = items.map((i) => ({ catalogItemId: i.catalogItemId, quantity: i.quantity }))
+    const catalogIds = [...new Set(received.map((r) => r.catalogItemId))]
+    const catalogItems = await db.catalogItems.where('id').anyOf(catalogIds).toArray()
+    const controlledIds = new Set(catalogItems.filter((c) => c.controlledSchedule).map((c) => c.id))
+    const settings = await db.pharmacySettings.toCollection().first()
+    const tolerancePercent = settings?.overReceiptTolerancePercent ?? DEFAULT_PHARMACY_SETTINGS.overReceiptTolerancePercent
+    validateReceiptAgainstPO({ po, received, controlledIds, tolerancePercent, overrideReason: overReceiptReason })
+  }
 
   const receipt: GoodsReceipt = {
     id: receiptId,
@@ -24,6 +44,7 @@ export async function processGoodsReceipt(params: {
     items,
     totalCost,
     notes,
+    overReceiptReason,
     receivedAt: now,
     hlcTimestamp: now,
   }
@@ -103,7 +124,7 @@ export async function processGoodsReceipt(params: {
     createdAt: now,
   })
 
-  await db.transaction('rw', [db.goodsReceipts, db.stockBatches, db.stockMovements, db.syncQueue], async () => {
+  await db.transaction('rw', [db.goodsReceipts, db.stockBatches, db.stockMovements, db.syncQueue, db.purchaseOrders], async () => {
     await db.goodsReceipts.put(receipt)
 
     for (let i = 0; i < movements.length; i++) {
@@ -114,7 +135,28 @@ export async function processGoodsReceipt(params: {
     }
 
     await db.syncQueue.put(receiptSyncEntry)
+
+    if (purchaseOrderId) {
+      const current = await db.purchaseOrders.get(purchaseOrderId)
+      if (current) {
+        const received = items.map((i) => ({ catalogItemId: i.catalogItemId, quantity: i.quantity }))
+        const applied = applyReceiptToPO(current, received, now)
+        await db.purchaseOrders.update(purchaseOrderId, {
+          items: applied.items, status: applied.status, closedAt: applied.closedAt, hlcTimestamp: now,
+        })
+      }
+    }
   })
+
+  if (purchaseOrderId) {
+    const updatedPO = await db.purchaseOrders.get(purchaseOrderId)
+    if (updatedPO) {
+      await enqueuePharmacySyncEntry({
+        resourceType: 'PurchaseOrder', resourceId: purchaseOrderId, action: 'update',
+        payload: updatedPO as unknown as Record<string, unknown>, hlcTimestamp: now, createdAt: now,
+      })
+    }
+  }
 
   return receipt
 }
