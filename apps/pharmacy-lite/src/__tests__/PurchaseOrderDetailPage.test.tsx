@@ -194,7 +194,7 @@ describe('PurchaseOrderDetailPage', () => {
     const btn = await screen.findByTestId('mark-sent-btn')
     await user.click(btn)
     await waitFor(() => {
-      expect(mockMarkPurchaseOrderSent).toHaveBeenCalledWith('po-detail-001')
+      expect(mockMarkPurchaseOrderSent).toHaveBeenCalledWith('po-detail-001', 'unknown')
     })
     // After reload the status badge should update to sent
     await waitFor(() => expect(screen.getByText('statusSent')).toBeInTheDocument())
@@ -208,7 +208,7 @@ describe('PurchaseOrderDetailPage', () => {
     const btn = await screen.findByTestId('cancel-btn')
     await user.click(btn)
     await waitFor(() => {
-      expect(mockCancelPurchaseOrder).toHaveBeenCalledWith('po-detail-001')
+      expect(mockCancelPurchaseOrder).toHaveBeenCalledWith('po-detail-001', 'unknown')
     })
     await waitFor(() => expect(screen.getByText('statusCancelled')).toBeInTheDocument())
   })
