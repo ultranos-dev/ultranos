@@ -5,6 +5,14 @@ import { computePoTotals } from './po-totals'
 import type { PurchaseOrder, PurchaseOrderItem, PurchaseOrderStatus } from './types'
 import { auditProcurementEvent } from './audit'
 import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
+import { requiresApproval } from './po-approval'
+
+export class SelfApprovalError extends Error {
+  constructor() { super('You cannot approve or reject your own purchase order'); this.name = 'SelfApprovalError' }
+}
+export class ApprovalRequiredError extends Error {
+  constructor() { super('This purchase order requires approval before it can be sent'); this.name = 'ApprovalRequiredError' }
+}
 
 /**
  * Allocate the next human-readable PO number from a local monotonic counter.
@@ -91,6 +99,11 @@ export async function createPurchaseOrder(params: {
 }
 
 export async function markPurchaseOrderSent(poId: string, sentBy?: string): Promise<void> {
+  const existing = await db.purchaseOrders.get(poId)
+  const settings = await db.pharmacySettings.toCollection().first()
+  if (existing && requiresApproval(existing.totalCost, settings?.poApprovalThreshold ?? 0)) {
+    throw new ApprovalRequiredError()
+  }
   const now = new Date().toISOString()
   await db.purchaseOrders.update(poId, { status: 'sent' as PurchaseOrderStatus, sentAt: now, sentBy, hlcTimestamp: now })
   await enqueuePOUpdate(poId, now)
@@ -112,6 +125,48 @@ export async function cancelPurchaseOrder(poId: string, cancelledBy?: string, re
   const po = await db.purchaseOrders.get(poId)
   auditProcurementEvent(cancelledBy ?? 'unknown', AuditAction.PO_CANCELLED, AuditResourceType.PURCHASE_ORDER, poId, {
     poNumber: po?.poNumber, reason: reason?.trim() || undefined,
+  })
+}
+
+export async function submitPurchaseOrderForApproval(poId: string, submittedBy: string): Promise<void> {
+  const po = await db.purchaseOrders.get(poId)
+  if (!po) throw new Error('Purchase order not found')
+  if (po.status !== 'draft') throw new Error('Only a draft can be submitted for approval')
+  const now = new Date().toISOString()
+  await db.purchaseOrders.update(poId, { status: 'pending_approval' as PurchaseOrderStatus, submittedBy, submittedAt: now, hlcTimestamp: now })
+  await enqueuePOUpdate(poId, now)
+  auditProcurementEvent(submittedBy, AuditAction.PO_SUBMITTED_FOR_APPROVAL, AuditResourceType.PURCHASE_ORDER, poId, {
+    poNumber: po.poNumber, totalCost: po.totalCost,
+  })
+}
+
+export async function approvePurchaseOrder(poId: string, approvedBy: string): Promise<void> {
+  const po = await db.purchaseOrders.get(poId)
+  if (!po) throw new Error('Purchase order not found')
+  if (po.status !== 'pending_approval') throw new Error('Only a pending purchase order can be approved')
+  if (approvedBy === po.createdBy) throw new SelfApprovalError()
+  const now = new Date().toISOString()
+  await db.purchaseOrders.update(poId, {
+    status: 'sent' as PurchaseOrderStatus, approvedBy, approvedAt: now, sentBy: approvedBy, sentAt: now, hlcTimestamp: now,
+  })
+  await enqueuePOUpdate(poId, now)
+  auditProcurementEvent(approvedBy, AuditAction.PO_APPROVED, AuditResourceType.PURCHASE_ORDER, poId, {
+    poNumber: po.poNumber, totalCost: po.totalCost,
+  })
+}
+
+export async function rejectPurchaseOrder(poId: string, rejectedBy: string, reason: string): Promise<void> {
+  const po = await db.purchaseOrders.get(poId)
+  if (!po) throw new Error('Purchase order not found')
+  if (po.status !== 'pending_approval') throw new Error('Only a pending purchase order can be rejected')
+  if (rejectedBy === po.createdBy) throw new SelfApprovalError()
+  const now = new Date().toISOString()
+  await db.purchaseOrders.update(poId, {
+    status: 'draft' as PurchaseOrderStatus, rejectedBy, rejectedReason: reason.trim() || undefined, rejectedAt: now, hlcTimestamp: now,
+  })
+  await enqueuePOUpdate(poId, now)
+  auditProcurementEvent(rejectedBy, AuditAction.PO_REJECTED, AuditResourceType.PURCHASE_ORDER, poId, {
+    poNumber: po.poNumber, reason: reason.trim() || undefined,
   })
 }
 
