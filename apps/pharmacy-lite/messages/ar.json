@@ -879,6 +879,7 @@
     "quarantineColExpiry": "تاريخ الانتهاء",
     "quarantineColReason": "السبب",
     "quarantineColReceived": "تاريخ الاستلام",
+    "quarantineColActions": "الإجراءات",
     "quarantineSourceHeld": "معلّق عند الاستلام",
     "quarantineSourceExpiry": "منتهي الصلاحية",
     "quarantineRelease": "الإصدار",
@@ -891,7 +892,8 @@
     "disposalReasonDamaged": "تالف",
     "disposalReasonContaminated": "ملوث",
     "disposalReasonRecalled": "مسحوب من السوق",
-    "quarantineConfirmDispose": "تأكيد الإتلاف"
+    "quarantineConfirmDispose": "تأكيد الإتلاف",
+    "quarantineCancel": "إلغاء"
   },
   "pos": {
     "cashDrawer": "درج النقود",

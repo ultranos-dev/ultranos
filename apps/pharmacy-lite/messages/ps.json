@@ -879,6 +879,7 @@
     "quarantineColExpiry": "د پای نیټه",
     "quarantineColReason": "دلیل",
     "quarantineColReceived": "د ترلاسه کولو نیټه",
+    "quarantineColActions": "کړنې",
     "quarantineSourceHeld": "د ترلاسه کیدو پر مهال ودرول شوی",
     "quarantineSourceExpiry": "تاریخ تیر شوی",
     "quarantineRelease": "رهاکول",
@@ -891,7 +892,8 @@
     "disposalReasonDamaged": "زیانمن",
     "disposalReasonContaminated": "ککړ شوی",
     "disposalReasonRecalled": "واپس غوښتل شوی",
-    "quarantineConfirmDispose": "د لرې کولو تایید"
+    "quarantineConfirmDispose": "د لرې کولو تایید",
+    "quarantineCancel": "لغوه کول"
   },
   "pos": {
     "cashDrawer": "د نقدو دراز",

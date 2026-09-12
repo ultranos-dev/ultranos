@@ -879,6 +879,7 @@
     "quarantineColExpiry": "Expiry",
     "quarantineColReason": "Reason",
     "quarantineColReceived": "Received",
+    "quarantineColActions": "Actions",
     "quarantineSourceHeld": "Held at receipt",
     "quarantineSourceExpiry": "Expired",
     "quarantineRelease": "Release",
@@ -891,7 +892,8 @@
     "disposalReasonDamaged": "Damaged",
     "disposalReasonContaminated": "Contaminated",
     "disposalReasonRecalled": "Recalled",
-    "quarantineConfirmDispose": "Confirm disposal"
+    "quarantineConfirmDispose": "Confirm disposal",
+    "quarantineCancel": "Cancel"
   },
   "pos": {
     "cashDrawer": "Cash Drawer",

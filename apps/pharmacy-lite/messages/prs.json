@@ -879,6 +879,7 @@
     "quarantineColExpiry": "تاریخ انقضا",
     "quarantineColReason": "دلیل",
     "quarantineColReceived": "تاریخ دریافت",
+    "quarantineColActions": "عملیات",
     "quarantineSourceHeld": "توقف‌شده هنگام دریافت",
     "quarantineSourceExpiry": "منقضی شده",
     "quarantineRelease": "رهاسازی",
@@ -891,7 +892,8 @@
     "disposalReasonDamaged": "آسیب‌دیده",
     "disposalReasonContaminated": "آلوده",
     "disposalReasonRecalled": "فراخوانده‌شده",
-    "quarantineConfirmDispose": "تأیید دور انداختن"
+    "quarantineConfirmDispose": "تأیید دور انداختن",
+    "quarantineCancel": "لغو"
   },
   "pos": {
     "cashDrawer": "کشوی نقدی",
