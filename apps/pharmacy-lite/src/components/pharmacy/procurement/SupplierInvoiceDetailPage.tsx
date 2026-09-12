@@ -115,6 +115,7 @@ function lineColorClass(overBilled: boolean, offPo: boolean, priceOverTolerance:
 
 export function SupplierInvoiceDetailPage() {
   const t = useTranslations('supplierInvoices')
+  const tp = useTranslations('supplierPayments')
   const router = useRouter()
   const params = useParams()
   const id = params?.id as string
@@ -554,6 +555,9 @@ export function SupplierInvoiceDetailPage() {
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
                     {t('paymentMethodLabel')}
                   </th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                    {tp('colStatus')}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -577,6 +581,9 @@ export function SupplierInvoiceDetailPage() {
                         {fmt(paidAmount)}
                       </td>
                       <td className="px-4 py-3 text-foreground">{t(methodKey)}</td>
+                      <td className={`px-4 py-3 ${p.status === 'void' ? 'text-muted-foreground' : 'text-foreground'}`}>
+                        {tp(p.status === 'void' ? 'statusVoid' : 'statusActive')}
+                      </td>
                     </tr>
                   )
                 })}
@@ -618,9 +625,9 @@ export function SupplierInvoiceDetailPage() {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="invoice-payment-method" className="text-sm font-medium text-foreground">
+              <Label htmlFor="invoice-payment-method">
                 {t('paymentMethodLabel')}
-              </label>
+              </Label>
               <select
                 id="invoice-payment-method"
                 value={paymentMethod}
