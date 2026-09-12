@@ -13,7 +13,13 @@ export interface Supplier {
   createdAt: string
 }
 
-export type PurchaseOrderStatus = 'draft' | 'sent' | 'partially_received' | 'closed' | 'cancelled'
+export type PurchaseOrderStatus =
+  | 'draft'
+  | 'pending_approval'
+  | 'sent'
+  | 'partially_received'
+  | 'closed'
+  | 'cancelled'
 
 export interface PurchaseOrderItem {
   catalogItemId: string
@@ -43,6 +49,16 @@ export interface PurchaseOrder {
   /** Freight/other charge (minor units). Absent on legacy POs. */
   freight?: number
   notes?: string
+  /** Submitted for approval (Phase 3b). */
+  submittedBy?: string
+  submittedAt?: string
+  /** Approval decision (Phase 3b). */
+  approvedBy?: string
+  approvedAt?: string
+  /** Rejection decision (Phase 3b) — PO returns to draft. */
+  rejectedBy?: string
+  rejectedReason?: string
+  rejectedAt?: string
   createdBy: string
   createdAt: string
   sentAt?: string

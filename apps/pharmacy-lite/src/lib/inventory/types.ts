@@ -162,6 +162,7 @@ export interface PharmacyInventorySettings {
   pharmacyCode: string
   poSequenceNext: number
   invoiceMatchTolerancePercent: number
+  poApprovalThreshold: number
   locationId: string
   locationName: string
   organizationId?: string
@@ -187,6 +188,7 @@ export const DEFAULT_PHARMACY_SETTINGS: PharmacyInventorySettings = {
   pharmacyCode: '',
   poSequenceNext: 1,
   invoiceMatchTolerancePercent: 0,
+  poApprovalThreshold: 0,
   locationId: '',
   locationName: '',
 }
