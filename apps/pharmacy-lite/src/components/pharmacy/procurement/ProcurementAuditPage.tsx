@@ -102,7 +102,7 @@ export function ProcurementAuditPage() {
         >
           <option value="">{t('filterAllResources')}</option>
           {PROCUREMENT_RESOURCE_TYPES.map((rt) => (
-            <option key={rt} value={rt} label={t(resourceLabel(rt))} />
+            <option key={rt} value={rt}>{t(resourceLabel(rt))}</option>
           ))}
         </select>
 
@@ -118,7 +118,7 @@ export function ProcurementAuditPage() {
         >
           <option value="">{t('filterAllActions')}</option>
           {PROCUREMENT_ACTIONS.map((a) => (
-            <option key={a} value={a} label={t(actionLabel(a))} />
+            <option key={a} value={a}>{t(actionLabel(a))}</option>
           ))}
         </select>
 

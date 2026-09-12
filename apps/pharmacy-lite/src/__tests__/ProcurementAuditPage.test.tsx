@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
 import { ProcurementAuditPage } from '@/components/pharmacy/procurement/ProcurementAuditPage'
 
@@ -19,7 +19,8 @@ describe('ProcurementAuditPage', () => {
     ])
     render(<ProcurementAuditPage />)
     expect(await screen.findByText('PO-2026-0001')).toBeInTheDocument()
-    expect(screen.getByText('actionPoCreated')).toBeInTheDocument()
+    const tbody = document.querySelector('tbody')!
+    expect(within(tbody).getByText('actionPoCreated')).toBeInTheDocument()
   })
   it('shows the empty state when there are no events', async () => {
     getProcurementAuditEvents.mockResolvedValue([])
