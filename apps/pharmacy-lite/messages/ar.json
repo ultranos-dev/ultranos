@@ -286,7 +286,8 @@
     "pharmacyCodeLabel": "رمز الصيدلية (بادئة أمر الشراء)",
     "poNumberPrefixLabel": "بادئة رقم أمر الشراء",
     "procurementSettings": "إعدادات المشتريات",
-    "invoiceMatchToleranceLabel": "نسبة تحمّل مطابقة سعر الفاتورة (%)"
+    "invoiceMatchToleranceLabel": "نسبة تحمّل مطابقة سعر الفاتورة (%)",
+    "poApprovalThresholdLabel": "حد موافقة أمر الشراء (وحدات صغيرة، 0 = معطّل)"
   },
   "history": {
     "title": "سجل الصرف",
@@ -1232,7 +1233,26 @@
     "detailDiscount": "الخصم",
     "detailTax": "الضريبة",
     "detailFreight": "الشحن",
-    "detailGrandTotal": "الإجمالي الكلي"
+    "detailGrandTotal": "الإجمالي الكلي",
+    "statusPendingApproval": "في انتظار الموافقة",
+    "tabPendingApproval": "في انتظار الموافقة",
+    "detailSubmitForApproval": "إرسال للموافقة",
+    "detailSubmitProgress": "جاري الإرسال…",
+    "detailSubmitError": "تعذّر إرسال الطلب للموافقة.",
+    "detailApprove": "موافقة",
+    "detailApproveProgress": "جاري الموافقة…",
+    "detailApproveError": "تعذّرت الموافقة.",
+    "detailReject": "رفض",
+    "detailRejectProgress": "جاري الرفض…",
+    "detailRejectError": "تعذّر الرفض.",
+    "detailRejectReasonLabel": "سبب الرفض",
+    "detailRejectReasonRequired": "يجب ذكر سبب لرفض الطلب.",
+    "detailSelfApprovalBlocked": "لا يمكنك الموافقة على أمر الشراء الخاص بك.",
+    "detailApprovalRequired": "يتطلب أمر الشراء هذا الموافقة قبل إرساله.",
+    "detailSubmittedBy": "أُرسل بواسطة {who}",
+    "detailApprovedBy": "وافق عليه {who}",
+    "detailRejectedBy": "رفضه {who}",
+    "detailRejectedReason": "سبب الرفض: {reason}"
   },
   "login": {
     "appName": "صيدلية",

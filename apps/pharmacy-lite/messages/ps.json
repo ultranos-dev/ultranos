@@ -286,7 +286,8 @@
     "pharmacyCodeLabel": "د دواخانې کوډ (د پیرودلو امر پیشوند)",
     "poNumberPrefixLabel": "د پیرودلو امر شمیرې پیشوند",
     "procurementSettings": "د تدارکاتو ترتیبات",
-    "invoiceMatchToleranceLabel": "د بیل د بیې د سمون زغم سلنه (%)"
+    "invoiceMatchToleranceLabel": "د بیل د بیې د سمون زغم سلنه (%)",
+    "poApprovalThresholdLabel": "د پیرودلو امر د تایید حد (کوچني واحدونه، 0 = غیرفعال)"
   },
   "history": {
     "title": "د ورکولو تاریخچه",
@@ -1232,7 +1233,26 @@
     "detailDiscount": "تخفیف",
     "detailTax": "مالیه",
     "detailFreight": "د لیږد لګښت",
-    "detailGrandTotal": "لوی ټول"
+    "detailGrandTotal": "لوی ټول",
+    "statusPendingApproval": "د تایید په تمه",
+    "tabPendingApproval": "د تایید په تمه",
+    "detailSubmitForApproval": "د تایید لپاره سپارل",
+    "detailSubmitProgress": "سپارل کیږي…",
+    "detailSubmitError": "د تایید لپاره سپارل ناکام شول.",
+    "detailApprove": "تایید",
+    "detailApproveProgress": "تایید کیږي…",
+    "detailApproveError": "تایید ناکام شو.",
+    "detailReject": "رد کول",
+    "detailRejectProgress": "رد کیږي…",
+    "detailRejectError": "رد کول ناکام شول.",
+    "detailRejectReasonLabel": "د رد کولو دلیل",
+    "detailRejectReasonRequired": "د رد کولو لپاره دلیل اړین دی.",
+    "detailSelfApprovalBlocked": "تاسو نشئ کولی خپل د پیرودلو امر تایید کړئ.",
+    "detailApprovalRequired": "دا د پیرودلو امر د لیږلو دمخه تایید ته اړتیا لري.",
+    "detailSubmittedBy": "{who} لخوا سپارل شوی",
+    "detailApprovedBy": "{who} لخوا تایید شوی",
+    "detailRejectedBy": "{who} لخوا رد شوی",
+    "detailRejectedReason": "د رد کولو دلیل: {reason}"
   },
   "login": {
     "appName": "دواخانه",

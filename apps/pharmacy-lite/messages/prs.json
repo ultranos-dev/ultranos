@@ -286,7 +286,8 @@
     "pharmacyCodeLabel": "کد دواخانه (پیشوند سفارش خرید)",
     "poNumberPrefixLabel": "پیشوند شماره سفارش خرید",
     "procurementSettings": "تنظیمات تدارکات",
-    "invoiceMatchToleranceLabel": "درصد تحمل مطابقت قیمت فاکتور (%)"
+    "invoiceMatchToleranceLabel": "درصد تحمل مطابقت قیمت فاکتور (%)",
+    "poApprovalThresholdLabel": "حد آستانه تأیید سفارش خرید (واحدهای کوچک، 0 = غیرفعال)"
   },
   "history": {
     "title": "تاریخچه تحویل",
@@ -1232,7 +1233,26 @@
     "detailDiscount": "تخفیف",
     "detailTax": "مالیات",
     "detailFreight": "حمل‌ونقل",
-    "detailGrandTotal": "جمع کل"
+    "detailGrandTotal": "جمع کل",
+    "statusPendingApproval": "در انتظار تأیید",
+    "tabPendingApproval": "در انتظار تأیید",
+    "detailSubmitForApproval": "ارسال برای تأیید",
+    "detailSubmitProgress": "در حال ارسال…",
+    "detailSubmitError": "ارسال برای تأیید ناموفق بود.",
+    "detailApprove": "تأیید",
+    "detailApproveProgress": "در حال تأیید…",
+    "detailApproveError": "تأیید ناموفق بود.",
+    "detailReject": "رد کردن",
+    "detailRejectProgress": "در حال رد کردن…",
+    "detailRejectError": "رد کردن ناموفق بود.",
+    "detailRejectReasonLabel": "دلیل رد",
+    "detailRejectReasonRequired": "برای رد کردن باید دلیل ذکر شود.",
+    "detailSelfApprovalBlocked": "شما نمی‌توانید سفارش خرید خود را تأیید کنید.",
+    "detailApprovalRequired": "این سفارش خرید قبل از ارسال نیاز به تأیید دارد.",
+    "detailSubmittedBy": "ارسال شده توسط {who}",
+    "detailApprovedBy": "تأیید شده توسط {who}",
+    "detailRejectedBy": "رد شده توسط {who}",
+    "detailRejectedReason": "دلیل رد: {reason}"
   },
   "login": {
     "appName": "دواخانه",

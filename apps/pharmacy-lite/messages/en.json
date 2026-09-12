@@ -286,7 +286,8 @@
     "pharmacyCodeLabel": "Pharmacy code (PO prefix)",
     "poNumberPrefixLabel": "PO number prefix",
     "procurementSettings": "Procurement Settings",
-    "invoiceMatchToleranceLabel": "Invoice price-match tolerance (%)"
+    "invoiceMatchToleranceLabel": "Invoice price-match tolerance (%)",
+    "poApprovalThresholdLabel": "PO approval threshold (minor units, 0 = off)"
   },
   "history": {
     "title": "Dispensing History",
@@ -1232,7 +1233,26 @@
     "detailDiscount": "Discount",
     "detailTax": "Tax",
     "detailFreight": "Freight",
-    "detailGrandTotal": "Grand total"
+    "detailGrandTotal": "Grand total",
+    "statusPendingApproval": "Pending approval",
+    "tabPendingApproval": "Pending approval",
+    "detailSubmitForApproval": "Submit for approval",
+    "detailSubmitProgress": "Submitting…",
+    "detailSubmitError": "Could not submit for approval.",
+    "detailApprove": "Approve",
+    "detailApproveProgress": "Approving…",
+    "detailApproveError": "Could not approve.",
+    "detailReject": "Reject",
+    "detailRejectProgress": "Rejecting…",
+    "detailRejectError": "Could not reject.",
+    "detailRejectReasonLabel": "Reason for rejection",
+    "detailRejectReasonRequired": "A reason is required to reject.",
+    "detailSelfApprovalBlocked": "You cannot approve your own purchase order.",
+    "detailApprovalRequired": "This purchase order needs approval before it can be sent.",
+    "detailSubmittedBy": "Submitted by {who}",
+    "detailApprovedBy": "Approved by {who}",
+    "detailRejectedBy": "Rejected by {who}",
+    "detailRejectedReason": "Rejection reason: {reason}"
   },
   "login": {
     "appName": "Pharmacy Lite",
