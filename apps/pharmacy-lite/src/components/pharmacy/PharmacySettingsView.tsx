@@ -325,6 +325,9 @@ function ProcurementSettingsCard() {
   const [invoiceTolerance, setInvoiceTolerance] = useState<number>(
     DEFAULT_PHARMACY_SETTINGS.invoiceMatchTolerancePercent,
   )
+  const [poApprovalThreshold, setPoApprovalThreshold] = useState<number>(
+    DEFAULT_PHARMACY_SETTINGS.poApprovalThreshold,
+  )
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -337,6 +340,9 @@ function ProcurementSettingsCard() {
           setPoNumberPrefix(rows[0]?.poNumberPrefix ?? DEFAULT_PHARMACY_SETTINGS.poNumberPrefix)
           setInvoiceTolerance(
             rows[0]?.invoiceMatchTolerancePercent ?? DEFAULT_PHARMACY_SETTINGS.invoiceMatchTolerancePercent,
+          )
+          setPoApprovalThreshold(
+            rows[0]?.poApprovalThreshold ?? DEFAULT_PHARMACY_SETTINGS.poApprovalThreshold,
           )
         }
       } finally {
@@ -360,6 +366,12 @@ function ProcurementSettingsCard() {
     const rows = await db.pharmacySettings.toArray()
     const current = rows[0] ?? { ...DEFAULT_PHARMACY_SETTINGS }
     await db.pharmacySettings.put({ ...current, invoiceMatchTolerancePercent: Number(value) || 0 })
+  }, [])
+
+  const handleApprovalThresholdBlur = useCallback(async (value: string) => {
+    const rows = await db.pharmacySettings.toArray()
+    const current = rows[0] ?? { ...DEFAULT_PHARMACY_SETTINGS }
+    await db.pharmacySettings.put({ ...current, poApprovalThreshold: Number(value) || 0 })
   }, [])
 
   return (
@@ -410,6 +422,22 @@ function ProcurementSettingsCard() {
             disabled={loading}
             onChange={(e) => setInvoiceTolerance(Number(e.target.value) || 0)}
             onBlur={(e) => { void handleToleranceBlur(e.target.value) }}
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+            min={0}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="setting-po-approval-threshold" className="text-xs font-medium text-muted-foreground">
+            {t('poApprovalThresholdLabel')}
+          </label>
+          <input
+            id="setting-po-approval-threshold"
+            data-testid="setting-po-approval-threshold"
+            type="number"
+            value={poApprovalThreshold}
+            disabled={loading}
+            onChange={(e) => setPoApprovalThreshold(Number(e.target.value) || 0)}
+            onBlur={(e) => { void handleApprovalThresholdBlur(e.target.value) }}
             className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
             min={0}
           />

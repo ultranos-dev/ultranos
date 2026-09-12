@@ -15,6 +15,7 @@ type TabValue = 'all' | PurchaseOrderStatus
 const TABS: TabValue[] = [
   'all',
   'draft',
+  'pending_approval',
   'sent',
   'partially_received',
   'closed',
@@ -38,6 +39,8 @@ function statusBadgeClass(status: PurchaseOrderStatus): string {
       return 'inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground'
     case 'sent':
       return 'inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary'
+    case 'pending_approval':
+      return 'inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning'
     case 'partially_received':
       return 'inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning'
     case 'closed':
@@ -96,6 +99,7 @@ export function PurchaseOrdersPage() {
   function tabLabel(tab: TabValue): string {
     if (tab === 'all') return t('tabAll')
     if (tab === 'draft') return t('tabDraft')
+    if (tab === 'pending_approval') return t('tabPendingApproval')
     if (tab === 'sent') return t('tabSent')
     if (tab === 'partially_received') return t('tabPartiallyReceived')
     if (tab === 'closed') return t('tabClosed')
@@ -104,6 +108,7 @@ export function PurchaseOrdersPage() {
 
   function statusLabel(status: PurchaseOrderStatus): string {
     if (status === 'draft') return t('statusDraft')
+    if (status === 'pending_approval') return t('statusPendingApproval')
     if (status === 'sent') return t('statusSent')
     if (status === 'partially_received') return t('statusPartiallyReceived')
     if (status === 'closed') return t('statusClosed')
