@@ -10,6 +10,7 @@ export async function createSupplier(params: {
   address?: string
   leadTimeDays?: number
   paymentTerms?: string
+  paymentTermsDays?: number
 }): Promise<Supplier> {
   const id = crypto.randomUUID()
   const now = new Date().toISOString()
@@ -22,6 +23,7 @@ export async function createSupplier(params: {
     address: params.address?.trim() || undefined,
     leadTimeDays: params.leadTimeDays,
     paymentTerms: params.paymentTerms?.trim() || undefined,
+    paymentTermsDays: params.paymentTermsDays,
     isActive: true,
     createdAt: now,
   }

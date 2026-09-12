@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { computePoTotals } from './po-totals'
 import { getPurchaseOrderById } from './purchase-order-service'
+import { getSupplierById } from './supplier-service'
 import { computeInvoiceMatch } from './invoice-match'
 import type { SupplierInvoice, SupplierInvoiceItem, SupplierInvoiceStatus } from './types'
 
@@ -12,6 +13,7 @@ export async function createSupplierInvoice(params: {
   taxRate?: number
   freight?: number
   notes?: string
+  dueDate?: string
   createdBy: string
 }): Promise<SupplierInvoice> {
   const po = await getPurchaseOrderById(params.purchaseOrderId)
@@ -34,6 +36,10 @@ export async function createSupplierInvoice(params: {
   )
 
   const now = new Date().toISOString()
+  const supplier = await getSupplierById(po.supplierId)
+  const termsDays = supplier?.paymentTermsDays ?? 0
+  const dueDate = params.dueDate ?? new Date(new Date(now).getTime() + termsDays * 86_400_000).toISOString()
+
   const invoice: SupplierInvoice = {
     id: crypto.randomUUID(),
     invoiceNumber: params.invoiceNumber.trim(),
@@ -47,6 +53,9 @@ export async function createSupplierInvoice(params: {
     freight,
     total: totals.grandTotal,
     status: 'pending',
+    dueDate,
+    amountPaid: 0,
+    settlementStatus: 'unpaid',
     notes: params.notes?.trim() || undefined,
     createdBy: params.createdBy,
     createdAt: now,
