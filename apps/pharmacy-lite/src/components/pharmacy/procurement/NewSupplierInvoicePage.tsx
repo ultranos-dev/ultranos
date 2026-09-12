@@ -203,13 +203,21 @@ export function NewSupplierInvoicePage() {
         const termsDays = supplier?.paymentTermsDays ?? 0
         const base = new Date()
         base.setDate(base.getDate() + termsDays)
-        setDueDate(base.toISOString().slice(0, 10))
+        const yyyy = base.getFullYear()
+        const mm = String(base.getMonth() + 1).padStart(2, '0')
+        const dd = String(base.getDate()).padStart(2, '0')
+        setDueDate(`${yyyy}-${mm}-${dd}`)
       } catch (err) {
         console.error('[NewSupplierInvoicePage] dueDate default failed:', err instanceof Error ? err.message : 'unknown')
-        setDueDate(new Date().toISOString().slice(0, 10))
+        const today = new Date()
+        const yyyy = today.getFullYear()
+        const mm = String(today.getMonth() + 1).padStart(2, '0')
+        const dd = String(today.getDate()).padStart(2, '0')
+        setDueDate(`${yyyy}-${mm}-${dd}`)
       }
     }
     computeDefault()
+    // getSupplierById is a stable module import; deps are intentionally [po, dueDateUserEdited]
   }, [po, dueDateUserEdited]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Invoice-number blur → duplicate check
@@ -357,13 +365,12 @@ export function NewSupplierInvoicePage() {
           {/* Due date */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="invoice-due-date">{t('fieldDueDate')}</Label>
-            <input
+            <Input
               id="invoice-due-date"
               type="date"
               data-testid="invoice-due-date"
               value={dueDate}
               onChange={(e) => { setDueDate(e.target.value); setDueDateUserEdited(true) }}
-              className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
 
