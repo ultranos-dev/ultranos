@@ -77,6 +77,9 @@ export enum AuditAction {
   PO_SUBMITTED_FOR_APPROVAL = 'PO_SUBMITTED_FOR_APPROVAL',
   PO_APPROVED = 'PO_APPROVED',
   PO_REJECTED = 'PO_REJECTED',
+  // Procurement Phase 3c — QC / receiving inspection
+  BATCH_QC_HELD = 'BATCH_QC_HELD',
+  BATCH_QC_RELEASED = 'BATCH_QC_RELEASED',
 }
 
 export enum AuditResourceType {
@@ -124,6 +127,8 @@ export enum AuditResourceType {
   SUPPLIER_INVOICE = 'SUPPLIER_INVOICE',
   SUPPLIER_PAYMENT = 'SUPPLIER_PAYMENT',
   GOODS_RECEIPT = 'GOODS_RECEIPT',
+  // Procurement Phase 3c — QC / receiving inspection
+  STOCK_BATCH = 'STOCK_BATCH',
 }
 
 export enum AuditOutcome {
