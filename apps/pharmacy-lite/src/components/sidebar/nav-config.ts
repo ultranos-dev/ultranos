@@ -75,6 +75,7 @@ export const navGroups: NavGroup[] = [
       { titleKey: 'transfers',     url: '/inventory/transfers' },
       { titleKey: 'purchaseOrders', url: '/inventory/orders' },
       { titleKey: 'invoices',      url: '/inventory/invoices' },
+      { titleKey: 'payables',      url: '/inventory/payables' },
     ],
   },
   {
