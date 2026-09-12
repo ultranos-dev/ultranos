@@ -1448,6 +1448,7 @@
     "colAmount": "Amount",
     "colMethod": "Method",
     "colStatus": "Status",
+    "colActions": "Actions",
     "statusActive": "Active",
     "statusVoid": "Void",
     "void": "Void",

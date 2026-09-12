@@ -1530,6 +1530,7 @@
     "colAmount": "مقدار",
     "colMethod": "طریقه",
     "colStatus": "حالت",
+    "colActions": "کړنې",
     "statusActive": "فعال",
     "statusVoid": "لغو شوی",
     "void": "لغو",

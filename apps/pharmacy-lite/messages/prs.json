@@ -1530,6 +1530,7 @@
     "colAmount": "مبلغ",
     "colMethod": "روش",
     "colStatus": "وضعیت",
+    "colActions": "عملیات",
     "statusActive": "فعال",
     "statusVoid": "ابطال‌شده",
     "void": "ابطال",

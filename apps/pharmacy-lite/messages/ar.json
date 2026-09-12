@@ -1530,6 +1530,7 @@
     "colAmount": "المبلغ",
     "colMethod": "الطريقة",
     "colStatus": "الحالة",
+    "colActions": "الإجراءات",
     "statusActive": "نشط",
     "statusVoid": "ملغى",
     "void": "إلغاء",
