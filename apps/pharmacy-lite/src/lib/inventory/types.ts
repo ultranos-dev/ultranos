@@ -57,6 +57,12 @@ export interface StockBatch {
   goodsReceiptId?: string
   receivedAt: string
   status: StockBatchStatus
+  /** QC inspection attribution (Phase 3c). */
+  inspectedBy?: string
+  inspectedAt?: string
+  heldReason?: string
+  releasedBy?: string
+  releasedAt?: string
   locationId: string
   hlcTimestamp: string
 }
@@ -68,6 +74,7 @@ export type StockMovementType =
   | 'transferred_out'
   | 'transferred_in'
   | 'quarantined'
+  | 'released'
   | 'disposed'
   | 'returned'
   | 'void_reversal'
@@ -123,6 +130,10 @@ export interface GoodsReceiptItem {
   quantity: number
   costPrice: number
   sellingPrice: number
+  /** QC decision at receipt (Phase 3c). Absent → 'accept'. */
+  qcDecision?: 'accept' | 'hold'
+  /** Required when qcDecision === 'hold'. */
+  heldReason?: string
 }
 
 export interface GoodsReceipt {
