@@ -1,9 +1,11 @@
 import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
+import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
 import { computePoTotals } from './po-totals'
 import { getPurchaseOrderById } from './purchase-order-service'
 import { getSupplierById } from './supplier-service'
 import { computeInvoiceMatch } from './invoice-match'
+import { auditProcurementEvent } from './audit'
 import type { SupplierInvoice, SupplierInvoiceItem, SupplierInvoiceStatus } from './types'
 
 export async function createSupplierInvoice(params: {
@@ -66,6 +68,9 @@ export async function createSupplierInvoice(params: {
     resourceType: 'SupplierInvoice', resourceId: invoice.id, action: 'create',
     payload: invoice as unknown as Record<string, unknown>, hlcTimestamp: now, createdAt: now,
   })
+  auditProcurementEvent(invoice.createdBy, AuditAction.SUPPLIER_INVOICE_CREATED, AuditResourceType.SUPPLIER_INVOICE, invoice.id, {
+    invoiceNumber: invoice.invoiceNumber, supplierId: invoice.supplierId, purchaseOrderId: invoice.purchaseOrderId, total: invoice.total,
+  })
   return invoice
 }
 
@@ -117,6 +122,9 @@ export async function approveSupplierInvoice(invoiceId: string, approvedBy: stri
     status: 'approved', approvedBy, approvedReason: overrideReason?.trim() || undefined, hlcTimestamp: now,
   })
   await enqueueInvoiceUpdate(invoiceId, now)
+  auditProcurementEvent(approvedBy, AuditAction.SUPPLIER_INVOICE_APPROVED, AuditResourceType.SUPPLIER_INVOICE, invoiceId, {
+    invoiceNumber: inv.invoiceNumber, overrideReason: overrideReason?.trim() || undefined,
+  })
 }
 
 export async function disputeSupplierInvoice(invoiceId: string, disputedBy: string, reason: string): Promise<void> {
@@ -127,4 +135,7 @@ export async function disputeSupplierInvoice(invoiceId: string, disputedBy: stri
     status: 'disputed', disputedBy, disputeReason: reason.trim() || undefined, hlcTimestamp: now,
   })
   await enqueueInvoiceUpdate(invoiceId, now)
+  auditProcurementEvent(disputedBy, AuditAction.SUPPLIER_INVOICE_DISPUTED, AuditResourceType.SUPPLIER_INVOICE, invoiceId, {
+    invoiceNumber: inv.invoiceNumber, reason: reason.trim() || undefined,
+  })
 }

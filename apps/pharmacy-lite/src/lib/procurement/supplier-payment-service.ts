@@ -1,7 +1,9 @@
 import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
+import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
 import { computeAmountDue, computeSettlementStatus } from './ap-invoice'
 import { getSupplierById } from './supplier-service'
+import { auditProcurementEvent } from './audit'
 import type { SupplierPayment, SupplierPaymentAllocation, SupplierPaymentMethod } from './types'
 
 export class InvoiceNotApprovedError extends Error {
@@ -80,6 +82,9 @@ export async function recordSupplierPayment(params: {
       })
     }
   }
+  auditProcurementEvent(payment.paidBy, AuditAction.SUPPLIER_PAYMENT_RECORDED, AuditResourceType.SUPPLIER_PAYMENT, payment.id, {
+    supplierId: payment.supplierId, amount: payment.amount, method: payment.method, allocationCount: payment.allocations.length,
+  })
   return payment
 }
 
@@ -122,6 +127,9 @@ export async function voidSupplierPayment(
       })
     }
   }
+  auditProcurementEvent(voidedBy, AuditAction.SUPPLIER_PAYMENT_VOIDED, AuditResourceType.SUPPLIER_PAYMENT, paymentId, {
+    supplierId: payment.supplierId, reason: reason.trim() || undefined,
+  })
 }
 
 export async function getSupplierPayments(supplierId?: string): Promise<SupplierPayment[]> {
