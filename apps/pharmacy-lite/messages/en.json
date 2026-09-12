@@ -483,7 +483,8 @@
     "purchaseOrders": "Purchase Orders",
     "ledger": "Stock Ledger",
     "invoices": "Invoices",
-    "payables": "Payables"
+    "payables": "Payables",
+    "audit": "Audit"
   },
   "controlled": {
     "title": "Controlled Substances Log",
@@ -1407,6 +1408,34 @@
     "minQuantity": "Min qty",
     "breakPrice": "Break price",
     "removeBreak": "Remove break"
+  },
+  "audit": {
+    "title": "Procurement audit",
+    "loading": "Loading…",
+    "empty": "No audit events",
+    "emptyDescription": "Procurement actions (orders, receipts, invoices, payments) will appear here.",
+    "searchPlaceholder": "Search reference or id…",
+    "filterAllResources": "All resources",
+    "filterAllActions": "All actions",
+    "colWhen": "When",
+    "colAction": "Action",
+    "colResource": "Resource",
+    "colReference": "Reference",
+    "colActor": "Actor",
+    "resourcePurchaseOrder": "Purchase order",
+    "resourceSupplierInvoice": "Supplier invoice",
+    "resourceSupplierPayment": "Supplier payment",
+    "resourceGoodsReceipt": "Goods receipt",
+    "actionPoCreated": "PO created",
+    "actionPoSent": "PO sent",
+    "actionPoCancelled": "PO cancelled",
+    "actionGoodsReceived": "Goods received",
+    "actionGoodsReceiptReversed": "Receipt reversed",
+    "actionInvoiceCreated": "Invoice recorded",
+    "actionInvoiceApproved": "Invoice approved",
+    "actionInvoiceDisputed": "Invoice disputed",
+    "actionPaymentRecorded": "Payment recorded",
+    "actionPaymentVoided": "Payment voided"
   },
   "supplierPayments": {
     "title": "Payables",

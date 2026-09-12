@@ -483,7 +483,8 @@
     "purchaseOrders": "د پیرودلو امرونه",
     "ledger": "د ذخیرې دفتر",
     "invoices": "بیلونه",
-    "payables": "د تادیاتو حسابونه"
+    "payables": "د تادیاتو حسابونه",
+    "audit": "پلټنه"
   },
   "controlled": {
     "title": "د کنترول شویو موادو ریکارد",
@@ -1489,6 +1490,34 @@
     "confirmPayment": "تادیه تایید کړئ",
     "paymentsHistory": "تادیات",
     "fieldDueDate": "د تادیې نیټه"
+  },
+  "audit": {
+    "title": "د تدارکاتو پلټنه",
+    "loading": "بارول کیږي…",
+    "empty": "هیڅ د پلټنې پیښه نشته",
+    "emptyDescription": "د تدارکاتو کړنې (امرونه، ترلاسه کول، فاکتورونه، تادیات) به دلته ښکاره شي.",
+    "searchPlaceholder": "د مرجع یا پیژندنې له مخې لټون…",
+    "filterAllResources": "ټول سرچینې",
+    "filterAllActions": "ټولې کړنې",
+    "colWhen": "کله",
+    "colAction": "کړنه",
+    "colResource": "سرچینه",
+    "colReference": "مرجع",
+    "colActor": "اجراکوونکی",
+    "resourcePurchaseOrder": "د پیرودلو امر",
+    "resourceSupplierInvoice": "د تامینوونکي فاکتور",
+    "resourceSupplierPayment": "د تامینوونکي تادیه",
+    "resourceGoodsReceipt": "د توکو رسید",
+    "actionPoCreated": "د پیرودلو امر جوړ شو",
+    "actionPoSent": "د پیرودلو امر واستول شو",
+    "actionPoCancelled": "د پیرودلو امر لغوه شو",
+    "actionGoodsReceived": "توکي ترلاسه شول",
+    "actionGoodsReceiptReversed": "رسید بیرته راګرځول شو",
+    "actionInvoiceCreated": "فاکتور ثبت شو",
+    "actionInvoiceApproved": "فاکتور تایید شو",
+    "actionInvoiceDisputed": "فاکتور باندې اعتراض وشو",
+    "actionPaymentRecorded": "تادیه ثبت شوه",
+    "actionPaymentVoided": "تادیه باطله شوه"
   },
   "supplierPayments": {
     "title": "د تادیاتو حسابونه",

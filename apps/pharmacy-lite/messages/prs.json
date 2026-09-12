@@ -483,7 +483,8 @@
     "purchaseOrders": "سفارشات خرید",
     "ledger": "دفتر موجودی",
     "invoices": "فاکتورها",
-    "payables": "حساب‌های پرداختنی"
+    "payables": "حساب‌های پرداختنی",
+    "audit": "ممیزی"
   },
   "controlled": {
     "title": "سوابق مواد کنترول شده",
@@ -1489,6 +1490,34 @@
     "confirmPayment": "تأیید پرداخت",
     "paymentsHistory": "پرداخت‌ها",
     "fieldDueDate": "تاریخ سررسید"
+  },
+  "audit": {
+    "title": "ممیزی تدارکات",
+    "loading": "در حال بارگذاری…",
+    "empty": "هیچ رویداد ممیزی وجود ندارد",
+    "emptyDescription": "اقدامات تدارکاتی (سفارشات، دریافت‌ها، فاکتورها، پرداخت‌ها) اینجا نمایش داده می‌شوند.",
+    "searchPlaceholder": "جستجو بر اساس مرجع یا شناسه…",
+    "filterAllResources": "همه منابع",
+    "filterAllActions": "همه اقدامات",
+    "colWhen": "زمان",
+    "colAction": "اقدام",
+    "colResource": "منبع",
+    "colReference": "مرجع",
+    "colActor": "انجام‌دهنده",
+    "resourcePurchaseOrder": "سفارش خرید",
+    "resourceSupplierInvoice": "فاکتور تامین‌کننده",
+    "resourceSupplierPayment": "پرداخت به تامین‌کننده",
+    "resourceGoodsReceipt": "رسید کالا",
+    "actionPoCreated": "سفارش خرید ایجاد شد",
+    "actionPoSent": "سفارش خرید ارسال شد",
+    "actionPoCancelled": "سفارش خرید لغو شد",
+    "actionGoodsReceived": "کالا دریافت شد",
+    "actionGoodsReceiptReversed": "رسید برگشت داده شد",
+    "actionInvoiceCreated": "فاکتور ثبت شد",
+    "actionInvoiceApproved": "فاکتور تایید شد",
+    "actionInvoiceDisputed": "فاکتور مورد اعتراض قرار گرفت",
+    "actionPaymentRecorded": "پرداخت ثبت شد",
+    "actionPaymentVoided": "پرداخت باطل شد"
   },
   "supplierPayments": {
     "title": "حساب‌های پرداختنی",

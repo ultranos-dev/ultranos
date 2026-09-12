@@ -483,7 +483,8 @@
     "purchaseOrders": "أوامر الشراء",
     "ledger": "سجل المخزون",
     "invoices": "الفواتير",
-    "payables": "الحسابات المستحقة"
+    "payables": "الحسابات المستحقة",
+    "audit": "التدقيق"
   },
   "controlled": {
     "title": "سجل المواد الخاضعة للرقابة",
@@ -1489,6 +1490,34 @@
     "confirmPayment": "تأكيد الدفعة",
     "paymentsHistory": "الدفعات",
     "fieldDueDate": "تاريخ الاستحقاق"
+  },
+  "audit": {
+    "title": "تدقيق المشتريات",
+    "loading": "جاري التحميل…",
+    "empty": "لا توجد أحداث تدقيق",
+    "emptyDescription": "ستظهر هنا إجراءات المشتريات (الأوامر، الاستلام، الفواتير، المدفوعات).",
+    "searchPlaceholder": "البحث بالمرجع أو المعرّف…",
+    "filterAllResources": "جميع الموارد",
+    "filterAllActions": "جميع الإجراءات",
+    "colWhen": "الوقت",
+    "colAction": "الإجراء",
+    "colResource": "المورد",
+    "colReference": "المرجع",
+    "colActor": "المنفّذ",
+    "resourcePurchaseOrder": "أمر الشراء",
+    "resourceSupplierInvoice": "فاتورة المورّد",
+    "resourceSupplierPayment": "دفعة المورّد",
+    "resourceGoodsReceipt": "إيصال البضائع",
+    "actionPoCreated": "تم إنشاء أمر الشراء",
+    "actionPoSent": "تم إرسال أمر الشراء",
+    "actionPoCancelled": "تم إلغاء أمر الشراء",
+    "actionGoodsReceived": "تم استلام البضائع",
+    "actionGoodsReceiptReversed": "تم عكس الاستلام",
+    "actionInvoiceCreated": "تم تسجيل الفاتورة",
+    "actionInvoiceApproved": "تم اعتماد الفاتورة",
+    "actionInvoiceDisputed": "تم الاعتراض على الفاتورة",
+    "actionPaymentRecorded": "تم تسجيل الدفعة",
+    "actionPaymentVoided": "تم إلغاء الدفعة"
   },
   "supplierPayments": {
     "title": "الحسابات المستحقة",
