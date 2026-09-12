@@ -21,6 +21,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
   const [leadTimeDays, setLeadTimeDays] = useState(supplier?.leadTimeDays?.toString() ?? '')
   const [address, setAddress] = useState(supplier?.address ?? '')
   const [paymentTerms, setPaymentTerms] = useState(supplier?.paymentTerms ?? '')
+  const [paymentTermsDays, setPaymentTermsDays] = useState(supplier?.paymentTermsDays?.toString() ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -44,6 +45,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
         address: address.trim() || undefined,
         leadTimeDays: leadTimeDays ? parseInt(leadTimeDays, 10) : undefined,
         paymentTerms: paymentTerms.trim() || undefined,
+        paymentTermsDays: paymentTermsDays ? parseInt(paymentTermsDays, 10) : undefined,
       }
 
       if (isEdit) {
@@ -154,6 +156,17 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
               value={paymentTerms}
               onChange={(e) => setPaymentTerms(e.target.value)}
               placeholder="e.g. Net 30"
+              className={inputClasses}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-foreground">{t('paymentTermsDays')}</label>
+            <input
+              type="number"
+              value={paymentTermsDays}
+              onChange={(e) => setPaymentTermsDays(e.target.value)}
+              placeholder="e.g. 30"
+              min={0}
               className={inputClasses}
             />
           </div>

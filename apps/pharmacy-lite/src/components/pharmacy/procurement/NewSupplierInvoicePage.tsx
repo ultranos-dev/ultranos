@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ChevronLeft } from '@ultranos/ui-kit/icons'
 import { getPurchaseOrderById, getPurchaseOrders } from '@/lib/procurement/purchase-order-service'
 import { createSupplierInvoice, findDuplicateInvoice } from '@/lib/procurement/supplier-invoice-service'
+import { getSupplierById } from '@/lib/procurement/supplier-service'
 import { computePoTotals } from '@/lib/procurement/po-totals'
 import { db } from '@/lib/db'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -72,6 +73,8 @@ export function NewSupplierInvoicePage() {
   const [taxRateInput, setTaxRateInput] = useState('0')
   const [freightDisplay, setFreightDisplay] = useState('')
   const [notes, setNotes] = useState('')
+  const [dueDate, setDueDate] = useState('')
+  const [dueDateUserEdited, setDueDateUserEdited] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -191,6 +194,24 @@ export function NewSupplierInvoicePage() {
     }
   }
 
+  // Default dueDate from supplier paymentTermsDays whenever PO changes (only if user hasn't edited)
+  useEffect(() => {
+    if (!po || dueDateUserEdited) return
+    const computeDefault = async () => {
+      try {
+        const supplier = await getSupplierById(po.supplierId)
+        const termsDays = supplier?.paymentTermsDays ?? 0
+        const base = new Date()
+        base.setDate(base.getDate() + termsDays)
+        setDueDate(base.toISOString().slice(0, 10))
+      } catch (err) {
+        console.error('[NewSupplierInvoicePage] dueDate default failed:', err instanceof Error ? err.message : 'unknown')
+        setDueDate(new Date().toISOString().slice(0, 10))
+      }
+    }
+    computeDefault()
+  }, [po, dueDateUserEdited]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Invoice-number blur → duplicate check
   async function handleInvoiceNumberBlur() {
     if (!po || !invoiceNumber.trim()) { setDuplicateWarning(false); return }
@@ -253,6 +274,7 @@ export function NewSupplierInvoicePage() {
         taxRate: Number(taxRateInput) || 0,
         freight: parseMajorToMinor(freightDisplay, currencyMinorUnits),
         notes: notes.trim() || undefined,
+        dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
         createdBy,
       })
       router.push(`/inventory/invoices/${invoice.id}`)
@@ -330,6 +352,19 @@ export function NewSupplierInvoicePage() {
             {duplicateWarning && (
               <p className="text-sm text-warning">{t('duplicateWarning')}</p>
             )}
+          </div>
+
+          {/* Due date */}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="invoice-due-date">{t('fieldDueDate')}</Label>
+            <input
+              id="invoice-due-date"
+              type="date"
+              data-testid="invoice-due-date"
+              value={dueDate}
+              onChange={(e) => { setDueDate(e.target.value); setDueDateUserEdited(true) }}
+              className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
           </div>
 
           {/* Notes */}

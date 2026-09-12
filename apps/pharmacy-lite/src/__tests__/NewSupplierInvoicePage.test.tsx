@@ -34,4 +34,9 @@ describe('NewSupplierInvoicePage', () => {
     await waitFor(() => expect(push).toHaveBeenCalled())
     expect((await db.supplierInvoices.toArray())[0]!.invoiceNumber).toBe('SUP-501')
   })
+
+  it('renders the due-date field', async () => {
+    render(<NextIntlClientProvider locale="en" messages={en}><NewSupplierInvoicePage /></NextIntlClientProvider>)
+    await waitFor(() => expect(screen.getByTestId('invoice-due-date')).toBeInTheDocument())
+  })
 })
