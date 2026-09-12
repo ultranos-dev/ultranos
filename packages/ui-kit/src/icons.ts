@@ -141,6 +141,7 @@ export {
   FileCheck,
   FileX,
   FileSearch,
+  ScrollText,
   ClipboardList,
   ClipboardCheck,
   ClipboardPen,
