@@ -2,6 +2,8 @@ import { db } from '@/lib/db'
 import { buildEncryptedSyncEntry, enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { reverseReceiptFromPO } from '@/lib/procurement/po-receipt'
 import type { GoodsReceipt, StockBatch, StockMovement } from './types'
+import { auditProcurementEvent } from '@/lib/procurement/audit'
+import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
 
 
 export class ReceiptNotReversibleError extends Error {
@@ -112,5 +114,8 @@ export async function reverseGoodsReceipt(receiptId: string, performedBy: string
     }
   }
 
+  auditProcurementEvent(performedBy, AuditAction.GOODS_RECEIPT_REVERSED, AuditResourceType.GOODS_RECEIPT, reversalReceipt.id, {
+    reversalOf: receiptId, purchaseOrderId: reversalReceipt.purchaseOrderId,
+  })
   return reversalReceipt
 }

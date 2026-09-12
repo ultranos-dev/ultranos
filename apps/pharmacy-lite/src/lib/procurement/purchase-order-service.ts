@@ -3,6 +3,8 @@ import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { DEFAULT_PHARMACY_SETTINGS } from '@/lib/inventory/types'
 import { computePoTotals } from './po-totals'
 import type { PurchaseOrder, PurchaseOrderItem, PurchaseOrderStatus } from './types'
+import { auditProcurementEvent } from './audit'
+import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
 
 /**
  * Allocate the next human-readable PO number from a local monotonic counter.
@@ -82,6 +84,9 @@ export async function createPurchaseOrder(params: {
     hlcTimestamp: now,
     createdAt: now,
   })
+  auditProcurementEvent(po.createdBy, AuditAction.PO_CREATED, AuditResourceType.PURCHASE_ORDER, po.id, {
+    poNumber: po.poNumber, supplierId: po.supplierId, totalCost: po.totalCost, lineCount: items.length,
+  })
   return po
 }
 
@@ -89,6 +94,10 @@ export async function markPurchaseOrderSent(poId: string, sentBy?: string): Prom
   const now = new Date().toISOString()
   await db.purchaseOrders.update(poId, { status: 'sent' as PurchaseOrderStatus, sentAt: now, sentBy, hlcTimestamp: now })
   await enqueuePOUpdate(poId, now)
+  const po = await db.purchaseOrders.get(poId)
+  auditProcurementEvent(sentBy ?? 'unknown', AuditAction.PO_SENT, AuditResourceType.PURCHASE_ORDER, poId, {
+    poNumber: po?.poNumber, supplierId: po?.supplierId,
+  })
 }
 
 export async function cancelPurchaseOrder(poId: string, cancelledBy?: string, reason?: string): Promise<void> {
@@ -100,6 +109,10 @@ export async function cancelPurchaseOrder(poId: string, cancelledBy?: string, re
     hlcTimestamp: now,
   })
   await enqueuePOUpdate(poId, now)
+  const po = await db.purchaseOrders.get(poId)
+  auditProcurementEvent(cancelledBy ?? 'unknown', AuditAction.PO_CANCELLED, AuditResourceType.PURCHASE_ORDER, poId, {
+    poNumber: po?.poNumber, reason: reason?.trim() || undefined,
+  })
 }
 
 async function enqueuePOUpdate(poId: string, now: string): Promise<void> {

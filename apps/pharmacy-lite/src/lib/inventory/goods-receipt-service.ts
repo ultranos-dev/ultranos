@@ -4,6 +4,8 @@ import { getPurchaseOrderById } from '@/lib/procurement/purchase-order-service'
 import { validateReceiptAgainstPO, applyReceiptToPO } from '@/lib/procurement/po-receipt'
 import type { GoodsReceipt, GoodsReceiptItem, StockBatch, StockMovement } from './types'
 import { DEFAULT_PHARMACY_SETTINGS } from './types'
+import { auditProcurementEvent } from '@/lib/procurement/audit'
+import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
 
 export async function processGoodsReceipt(params: {
   items: GoodsReceiptItem[]
@@ -157,5 +159,8 @@ export async function processGoodsReceipt(params: {
     }
   }
 
+  auditProcurementEvent(receipt.receivedBy, AuditAction.GOODS_RECEIVED, AuditResourceType.GOODS_RECEIPT, receipt.id, {
+    purchaseOrderId: receipt.purchaseOrderId, supplierId: receipt.supplierId, totalCost: receipt.totalCost, lineCount: receipt.items.length,
+  })
   return receipt
 }
