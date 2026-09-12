@@ -67,6 +67,7 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, purchaseOrder
           quantity: remaining,
           costPrice: netByItem.get(poItem.catalogItemId) ?? poItem.unitCost,
           sellingPrice: catalogItem.defaultSellingPrice,
+          qcDecision: 'accept',
         })
       }
       if (!cancelled) setItems(lines)
@@ -83,6 +84,7 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, purchaseOrder
       quantity: 0,
       costPrice: 0,
       sellingPrice: catalogItem.defaultSellingPrice,
+      qcDecision: 'accept',
     }])
   }, [])
 
@@ -95,7 +97,13 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, purchaseOrder
   }, [])
 
   const isValid = items.length > 0 && items.every(
-    (item) => item.batchNumber.trim() && item.expiryDate && item.quantity > 0 && item.costPrice > 0 && item.sellingPrice > 0
+    (item) =>
+      item.batchNumber.trim() &&
+      item.expiryDate &&
+      item.quantity > 0 &&
+      item.costPrice > 0 &&
+      item.sellingPrice > 0 &&
+      (item.qcDecision !== 'hold' || !!item.heldReason?.trim())
   )
 
   const handleSubmit = async () => {
@@ -112,6 +120,8 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, purchaseOrder
           quantity: item.quantity,
           costPrice: item.costPrice,
           sellingPrice: item.sellingPrice,
+          qcDecision: item.qcDecision ?? 'accept',
+          heldReason: item.qcDecision === 'hold' ? (item.heldReason?.trim() || undefined) : undefined,
         })),
         receivedBy: session.practitionerId ?? session.userId,
         locationId,

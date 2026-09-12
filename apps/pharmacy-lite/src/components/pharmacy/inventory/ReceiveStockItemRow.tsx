@@ -13,6 +13,8 @@ export interface ReceiveLineItem {
   quantity: number
   costPrice: number
   sellingPrice: number
+  qcDecision?: 'accept' | 'hold'
+  heldReason?: string
 }
 
 interface ReceiveStockItemRowProps {
@@ -67,6 +69,34 @@ export function ReceiveStockItemRow({ item, index, currencyMinorUnits, onUpdate,
           <label htmlFor={`lot-${index}`} className="mb-1 block text-xs font-medium text-muted-foreground">{t('lotNo')}</label>
           <input id={`lot-${index}`} type="text" value={item.lotNumber} onChange={(e) => onUpdate(index, { lotNumber: e.target.value })} className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500" />
         </div>
+        <div>
+          <label htmlFor={`qc-decision-select-${index}`} className="mb-1 block text-xs font-medium text-muted-foreground">{t('qcDecisionLabel')}</label>
+          <select
+            id={`qc-decision-select-${index}`}
+            data-testid={`qc-decision-${index}`}
+            value={item.qcDecision ?? 'accept'}
+            onChange={(e) => onUpdate(index, { qcDecision: e.target.value as 'accept' | 'hold' })}
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
+          >
+            <option value="accept">{t('qcAccept')}</option>
+            <option value="hold">{t('qcHold')}</option>
+          </select>
+        </div>
+        {item.qcDecision === 'hold' && (
+          <div className="sm:col-span-2">
+            <label htmlFor={`qc-held-reason-input-${index}`} className="mb-1 block text-xs font-medium text-muted-foreground">{t('qcHeldReasonLabel')}</label>
+            <input
+              id={`qc-held-reason-input-${index}`}
+              data-testid={`qc-held-reason-${index}`}
+              type="text"
+              value={item.heldReason ?? ''}
+              onChange={(e) => onUpdate(index, { heldReason: e.target.value })}
+              className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
+              required
+            />
+            <p className="mt-1 text-xs text-warning">{t('qcHeldReasonRequired')}</p>
+          </div>
+        )}
       </div>
     </div>
   )
