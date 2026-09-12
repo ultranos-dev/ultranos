@@ -11,8 +11,14 @@ import {
   getPurchaseOrderById,
   markPurchaseOrderSent,
   cancelPurchaseOrder,
+  submitPurchaseOrderForApproval,
+  approvePurchaseOrder,
+  rejectPurchaseOrder,
+  SelfApprovalError,
+  ApprovalRequiredError,
 } from '@/lib/procurement/purchase-order-service'
 import { reverseGoodsReceipt, ReceiptNotReversibleError } from '@/lib/inventory/goods-receipt-reversal'
+import { requiresApproval } from '@/lib/procurement/po-approval'
 import { db } from '@/lib/db'
 import type { PurchaseOrder, PurchaseOrderStatus } from '@/lib/procurement/types'
 import type { GoodsReceipt } from '@/lib/inventory/types'
@@ -36,6 +42,8 @@ function statusBadgeClass(status: PurchaseOrderStatus): string {
   switch (status) {
     case 'draft':
       return 'inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground'
+    case 'pending_approval':
+      return 'inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning'
     case 'sent':
       return 'inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary'
     case 'partially_received':
@@ -56,6 +64,7 @@ function statusBadgeClass(status: PurchaseOrderStatus): string {
 function statusKey(status: PurchaseOrderStatus): string {
   switch (status) {
     case 'draft': return 'statusDraft'
+    case 'pending_approval': return 'statusPendingApproval'
     case 'sent': return 'statusSent'
     case 'partially_received': return 'statusPartiallyReceived'
     case 'closed': return 'statusClosed'
@@ -82,12 +91,18 @@ export function PurchaseOrderDetailPage() {
   const [notFound, setNotFound] = useState(false)
   const [currency, setCurrency] = useState('AFN')
   const [currencyMinorUnits, setCurrencyMinorUnits] = useState(2)
+  const [poApprovalThreshold, setPoApprovalThreshold] = useState(0)
 
   const [receipts, setReceipts] = useState<GoodsReceipt[]>([])
   const [reversing, setReversing] = useState<string | null>(null)
 
   const [sending, setSending] = useState(false)
   const [cancelling, setCancelling] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [approving, setApproving] = useState(false)
+  const [rejecting, setRejecting] = useState(false)
+  const [showRejectInput, setShowRejectInput] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
   const [actionError, setActionError] = useState<string | null>(null)
 
   const fmt = useCallback(
@@ -109,6 +124,7 @@ export function PurchaseOrderDetailPage() {
       if (settings) {
         setCurrency(settings.currency)
         setCurrencyMinorUnits(settings.currencyMinorUnits)
+        setPoApprovalThreshold(settings.poApprovalThreshold ?? 0)
       }
       const rs = await db.goodsReceipts.where('purchaseOrderId').equals(id).toArray()
       setReceipts(rs.sort((a, b) => b.receivedAt.localeCompare(a.receivedAt)))
@@ -176,6 +192,70 @@ export function PurchaseOrderDetailPage() {
     }
   }
 
+  const handleSubmitForApproval = async () => {
+    if (!po) return
+    setSubmitting(true)
+    setActionError(null)
+    try {
+      await submitPurchaseOrderForApproval(po.id, performedBy)
+      setLoading(true)
+      await load()
+    } catch (err) {
+      setActionError(t('detailSubmitError'))
+      console.error('[PurchaseOrderDetailPage] submitPurchaseOrderForApproval failed:', err instanceof Error ? err.message : 'unknown')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleApprove = async () => {
+    if (!po) return
+    setApproving(true)
+    setActionError(null)
+    try {
+      await approvePurchaseOrder(po.id, performedBy)
+      setLoading(true)
+      await load()
+    } catch (err) {
+      if (err instanceof SelfApprovalError) {
+        setActionError(t('detailSelfApprovalBlocked'))
+      } else if (err instanceof ApprovalRequiredError) {
+        setActionError(t('detailApprovalRequired'))
+      } else {
+        setActionError(t('detailApproveError'))
+        console.error('[PurchaseOrderDetailPage] approvePurchaseOrder failed:', err instanceof Error ? err.message : 'unknown')
+      }
+    } finally {
+      setApproving(false)
+    }
+  }
+
+  const handleRejectConfirm = async () => {
+    if (!po) return
+    if (!rejectReason.trim()) {
+      setActionError(t('detailRejectReasonRequired'))
+      return
+    }
+    setRejecting(true)
+    setActionError(null)
+    try {
+      await rejectPurchaseOrder(po.id, performedBy, rejectReason)
+      setLoading(true)
+      setShowRejectInput(false)
+      setRejectReason('')
+      await load()
+    } catch (err) {
+      if (err instanceof SelfApprovalError) {
+        setActionError(t('detailSelfApprovalBlocked'))
+      } else {
+        setActionError(t('detailRejectError'))
+        console.error('[PurchaseOrderDetailPage] rejectPurchaseOrder failed:', err instanceof Error ? err.message : 'unknown')
+      }
+    } finally {
+      setRejecting(false)
+    }
+  }
+
   // -------------------------------------------------------------------------
   // Back button (shared across states)
   // -------------------------------------------------------------------------
@@ -236,8 +316,10 @@ export function PurchaseOrderDetailPage() {
   // -------------------------------------------------------------------------
 
   const isReceiptable = po.status === 'sent' || po.status === 'partially_received'
-  const isCancellable = po.status === 'draft' || po.status === 'sent' || po.status === 'partially_received'
+  const isCancellable = po.status === 'draft' || po.status === 'pending_approval' || po.status === 'sent' || po.status === 'partially_received'
   const isInvoiceable = po.status === 'sent' || po.status === 'partially_received' || po.status === 'closed'
+  const needsApproval = requiresApproval(po.totalCost, poApprovalThreshold)
+  const isSelf = performedBy === po.createdBy
   // Short ID for display: first 6 chars after 'po-' prefix if present, otherwise first 6 chars
   const shortId = po.id.startsWith('po-') ? po.id.slice(3, 9) : po.id.slice(0, 6)
 
@@ -264,55 +346,128 @@ export function PurchaseOrderDetailPage() {
       {/* ------------------------------------------------------------------ */}
       {/* Action buttons — status-driven                                       */}
       {/* ------------------------------------------------------------------ */}
-      {(po.status === 'draft' || isReceiptable || isCancellable || isInvoiceable) && (
-        <div className="flex flex-wrap items-center gap-3">
-          {/* draft → Mark sent */}
-          {po.status === 'draft' && (
-            <Button
-              data-testid="mark-sent-btn"
-              onClick={handleMarkSent}
-              disabled={sending}
-            >
-              <Send size={16} className="me-2" />
-              {sending ? t('detailMarkSentProgress') : t('detailMarkSent')}
-            </Button>
-          )}
+      {(po.status === 'draft' || po.status === 'pending_approval' || isReceiptable || isCancellable || isInvoiceable) && (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* draft + needs approval → Submit for approval */}
+            {po.status === 'draft' && needsApproval && (
+              <Button
+                data-testid="submit-approval-btn"
+                onClick={handleSubmitForApproval}
+                disabled={submitting}
+              >
+                <Send size={16} className="me-2" />
+                {submitting ? t('detailSubmitProgress') : t('detailSubmitForApproval')}
+              </Button>
+            )}
 
-          {/* sent / partially_received → Receive against PO (navigates to shared receive form) */}
-          {isReceiptable && (
-            <Link
-              href={`/inventory/receive?poId=${po.id}`}
-              data-testid="receive-against-po-link"
-              className="inline-flex items-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              <ClipboardCheck size={16} className="me-2" />
-              {t('receiveAgainstPo')}
-            </Link>
-          )}
+            {/* draft + no approval needed → Mark sent */}
+            {po.status === 'draft' && !needsApproval && (
+              <Button
+                data-testid="mark-sent-btn"
+                onClick={handleMarkSent}
+                disabled={sending}
+              >
+                <Send size={16} className="me-2" />
+                {sending ? t('detailMarkSentProgress') : t('detailMarkSent')}
+              </Button>
+            )}
 
-          {/* sent / partially_received / closed → Record invoice */}
-          {isInvoiceable && (
-            <Link
-              href={`/inventory/invoices/new?poId=${po.id}`}
-              data-testid="record-invoice-link"
-              className="inline-flex items-center rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/50"
-            >
-              {tInvoice('newInvoice')}
-            </Link>
-          )}
+            {/* pending_approval → Approve + Reject (SoD gated) */}
+            {po.status === 'pending_approval' && (
+              <>
+                <Button
+                  data-testid="approve-po-btn"
+                  onClick={handleApprove}
+                  disabled={approving || isSelf}
+                >
+                  {approving ? t('detailApproveProgress') : t('detailApprove')}
+                </Button>
+                {!showRejectInput && (
+                  <Button
+                    data-testid="reject-po-btn"
+                    variant="outline"
+                    className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setShowRejectInput(true)}
+                    disabled={rejecting || isSelf}
+                  >
+                    {t('detailReject')}
+                  </Button>
+                )}
+                {isSelf && (
+                  <span className="text-xs text-muted-foreground">{t('detailSelfApprovalBlocked')}</span>
+                )}
+              </>
+            )}
 
-          {/* draft / sent / partially_received → Cancel */}
-          {isCancellable && (
-            <Button
-              data-testid="cancel-btn"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={cancelling}
-              className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
-            >
-              <CircleX size={16} className="me-2" />
-              {cancelling ? t('detailCancelProgress') : t('detailCancel')}
-            </Button>
+            {/* sent / partially_received → Receive against PO (navigates to shared receive form) */}
+            {isReceiptable && (
+              <Link
+                href={`/inventory/receive?poId=${po.id}`}
+                data-testid="receive-against-po-link"
+                className="inline-flex items-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                <ClipboardCheck size={16} className="me-2" />
+                {t('receiveAgainstPo')}
+              </Link>
+            )}
+
+            {/* sent / partially_received / closed → Record invoice */}
+            {isInvoiceable && (
+              <Link
+                href={`/inventory/invoices/new?poId=${po.id}`}
+                data-testid="record-invoice-link"
+                className="inline-flex items-center rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/50"
+              >
+                {tInvoice('newInvoice')}
+              </Link>
+            )}
+
+            {/* draft / pending_approval / sent / partially_received → Cancel */}
+            {isCancellable && (
+              <Button
+                data-testid="cancel-btn"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+              >
+                <CircleX size={16} className="me-2" />
+                {cancelling ? t('detailCancelProgress') : t('detailCancel')}
+              </Button>
+            )}
+          </div>
+
+          {/* Reject reason input — revealed on Reject click */}
+          {showRejectInput && (
+            <div className="flex flex-col gap-2">
+              <input
+                data-testid="reject-reason-input"
+                type="text"
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder={t('detailRejectReasonLabel')}
+                className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+              <div className="flex gap-2">
+                <Button
+                  data-testid="reject-confirm-btn"
+                  variant="outline"
+                  onClick={handleRejectConfirm}
+                  disabled={rejecting || !rejectReason.trim()}
+                  className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+                >
+                  {rejecting ? t('detailRejectProgress') : t('detailReject')}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setShowRejectInput(false); setRejectReason('') }}
+                >
+                  {t('detailCancel')}
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -372,6 +527,26 @@ export function PurchaseOrderDetailPage() {
             <div className="md:col-span-2">
               <span className="text-muted-foreground">{t('detailNotes')}: </span>
               <span className="text-foreground">{po.notes}</span>
+            </div>
+          )}
+          {po.submittedBy && (
+            <div>
+              <span className="text-muted-foreground">{t('detailSubmittedBy', { who: po.submittedBy })}</span>
+            </div>
+          )}
+          {po.approvedBy && (
+            <div>
+              <span className="text-muted-foreground">{t('detailApprovedBy', { who: po.approvedBy })}</span>
+            </div>
+          )}
+          {po.rejectedBy && (
+            <div>
+              <span className="text-muted-foreground">{t('detailRejectedBy', { who: po.rejectedBy })}</span>
+            </div>
+          )}
+          {po.rejectedReason && (
+            <div className="md:col-span-2">
+              <span className="text-muted-foreground">{t('detailRejectedReason', { reason: po.rejectedReason })}</span>
             </div>
           )}
         </div>

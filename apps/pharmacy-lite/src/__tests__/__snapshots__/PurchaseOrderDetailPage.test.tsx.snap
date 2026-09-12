@@ -47,71 +47,75 @@ exports[`PurchaseOrderDetailPage > LTR snapshot 1`] = `
       </span>
     </h1>
     <div
-      class="flex flex-wrap items-center gap-3"
+      class="flex flex-col gap-3"
     >
-      <button
-        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
-        data-size="default"
-        data-slot="button"
-        data-testid="mark-sent-btn"
-        data-variant="default"
+      <div
+        class="flex flex-wrap items-center gap-3"
       >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-send me-2"
-          fill="none"
-          height="16"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+          data-size="default"
+          data-slot="button"
+          data-testid="mark-sent-btn"
+          data-variant="default"
         >
-          <path
-            d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"
-          />
-          <path
-            d="m21.854 2.147-10.94 10.939"
-          />
-        </svg>
-        detailMarkSent
-      </button>
-      <button
-        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-background [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
-        data-size="default"
-        data-slot="button"
-        data-testid="cancel-btn"
-        data-variant="outline"
-      >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-circle-x me-2"
-          fill="none"
-          height="16"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-send me-2"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"
+            />
+            <path
+              d="m21.854 2.147-10.94 10.939"
+            />
+          </svg>
+          detailMarkSent
+        </button>
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-background [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+          data-size="default"
+          data-slot="button"
+          data-testid="cancel-btn"
+          data-variant="outline"
         >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-          />
-          <path
-            d="m15 9-6 6"
-          />
-          <path
-            d="m9 9 6 6"
-          />
-        </svg>
-        detailCancel
-      </button>
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-circle-x me-2"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+            />
+            <path
+              d="m15 9-6 6"
+            />
+            <path
+              d="m9 9 6 6"
+            />
+          </svg>
+          detailCancel
+        </button>
+      </div>
     </div>
     <div
       class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50"
@@ -323,71 +327,75 @@ exports[`PurchaseOrderDetailPage > RTL snapshot 1`] = `
       </span>
     </h1>
     <div
-      class="flex flex-wrap items-center gap-3"
+      class="flex flex-col gap-3"
     >
-      <button
-        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
-        data-size="default"
-        data-slot="button"
-        data-testid="mark-sent-btn"
-        data-variant="default"
+      <div
+        class="flex flex-wrap items-center gap-3"
       >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-send me-2"
-          fill="none"
-          height="16"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+          data-size="default"
+          data-slot="button"
+          data-testid="mark-sent-btn"
+          data-variant="default"
         >
-          <path
-            d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"
-          />
-          <path
-            d="m21.854 2.147-10.94 10.939"
-          />
-        </svg>
-        detailMarkSent
-      </button>
-      <button
-        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-background [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
-        data-size="default"
-        data-slot="button"
-        data-testid="cancel-btn"
-        data-variant="outline"
-      >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-circle-x me-2"
-          fill="none"
-          height="16"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="16"
-          xmlns="http://www.w3.org/2000/svg"
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-send me-2"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"
+            />
+            <path
+              d="m21.854 2.147-10.94 10.939"
+            />
+          </svg>
+          detailMarkSent
+        </button>
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-background [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+          data-size="default"
+          data-slot="button"
+          data-testid="cancel-btn"
+          data-variant="outline"
         >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-          />
-          <path
-            d="m15 9-6 6"
-          />
-          <path
-            d="m9 9 6 6"
-          />
-        </svg>
-        detailCancel
-      </button>
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-circle-x me-2"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+            />
+            <path
+              d="m15 9-6 6"
+            />
+            <path
+              d="m9 9 6 6"
+            />
+          </svg>
+          detailCancel
+        </button>
+      </div>
     </div>
     <div
       class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50"
