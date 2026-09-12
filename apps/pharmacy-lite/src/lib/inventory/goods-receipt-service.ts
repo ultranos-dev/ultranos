@@ -59,6 +59,7 @@ export async function processGoodsReceipt(params: {
     const batchId = crypto.randomUUID()
     const movementId = crypto.randomUUID()
 
+    const held = item.qcDecision === 'hold'
     batches.push({
       id: batchId,
       catalogItemId: item.catalogItemId,
@@ -71,7 +72,10 @@ export async function processGoodsReceipt(params: {
       supplierId,
       goodsReceiptId: receiptId,
       receivedAt: now,
-      status: 'active',
+      status: held ? 'quarantined' : 'active',
+      inspectedBy: receivedBy,
+      inspectedAt: now,
+      heldReason: held ? (item.heldReason?.trim() || undefined) : undefined,
       locationId,
       hlcTimestamp: now,
     })
@@ -162,5 +166,14 @@ export async function processGoodsReceipt(params: {
   auditProcurementEvent(receipt.receivedBy, AuditAction.GOODS_RECEIVED, AuditResourceType.GOODS_RECEIPT, receipt.id, {
     purchaseOrderId: receipt.purchaseOrderId, supplierId: receipt.supplierId, totalCost: receipt.totalCost, lineCount: receipt.items.length,
   })
+
+  for (let i = 0; i < items.length; i++) {
+    if (items[i]!.qcDecision === 'hold') {
+      auditProcurementEvent(receivedBy, AuditAction.BATCH_QC_HELD, AuditResourceType.STOCK_BATCH, batches[i]!.id, {
+        batchNumber: batches[i]!.batchNumber, catalogItemId: batches[i]!.catalogItemId, heldReason: batches[i]!.heldReason,
+      })
+    }
+  }
+
   return receipt
 }
