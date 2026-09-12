@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { SupplierAccountDetailPage } from '@/components/pharmacy/procurement/SupplierAccountDetailPage'
 
 vi.mock('next-intl', () => ({ useTranslations: () => (k: string, v?: Record<string, unknown>) => (v ? `${k}:${JSON.stringify(v)}` : k) }))
@@ -31,8 +31,9 @@ describe('SupplierAccountDetailPage', () => {
     expect(await screen.findByText('Acme')).toBeInTheDocument()
     fireEvent.click(screen.getByTestId('open-record-payment'))
     fireEvent.change(screen.getByTestId('payment-amount'), { target: { value: '500' } })
-    // 50000 minor units allocated to S1 → preview shows the invoice number
-    expect(await screen.findByText(/S1/)).toBeInTheDocument()
+    // 50000 minor units allocated to S1 → preview shows the invoice number inside the dialog
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByText(/S1/)).toBeInTheDocument()
     fireEvent.click(screen.getByTestId('confirm-payment'))
     await waitFor(() => expect(recordSupplierPayment).toHaveBeenCalled())
   })

@@ -260,7 +260,7 @@ export function SupplierAccountDetailPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-sm text-muted-foreground">{t('outstanding')}</p>
-            <p className="mt-1 text-2xl font-semibold font-numeric text-foreground">
+            <p className="mt-1 text-2xl font-numeric font-semibold text-foreground">
               {fmt(account.outstanding)}
             </p>
           </div>
@@ -312,64 +312,60 @@ export function SupplierAccountDetailPage() {
 
       {/* ------------------------------------------------------------------ */}
       {/* Unpaid-invoices table                                                */}
-      {/* Unmounted while the record-payment dialog is open so that invoice   */}
-      {/* number text nodes don't conflict with the FIFO allocation preview.  */}
       {/* ------------------------------------------------------------------ */}
-      {!dialogOpen && (
-        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
-          <div className="p-5 pb-0">
-            <h2 className="mb-4 text-base font-semibold text-foreground">{t('unpaidInvoices')}</h2>
-          </div>
-          {account.invoices.length === 0 ? (
-            <div className="flex min-h-[10rem] items-center justify-center">
-              <EmptyState icon={Wallet} title={t('noBalances')} />
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
-                      {t('colInvoiceNo')}
-                    </th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
-                      {t('colDue')}
-                    </th>
-                    <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">
-                      {t('colAmountDue')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {account.invoices.map((inv) => {
-                    const dueDate = inv.dueDate ?? inv.createdAt
-                    const isOverdue = new Date(dueDate) < new Date()
-                    const amountDue = computeAmountDue(inv)
-                    return (
-                      <tr key={inv.id} className="hover:bg-muted/50">
-                        <td className="px-4 py-3 font-medium text-foreground">
-                          {inv.invoiceNumber}
-                          {isOverdue && (
-                            <span className="ms-2 text-xs font-medium text-destructive">
-                              {t('overdue')}
-                            </span>
-                          )}
-                        </td>
-                        <td className={`px-4 py-3 ${isOverdue ? 'text-destructive' : 'text-muted-foreground'}`}>
-                          {new Date(dueDate).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3 text-end font-numeric tabular-nums text-foreground">
-                          {fmt(amountDue)}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        <div className="p-5 pb-0">
+          <h2 className="mb-4 text-base font-semibold text-foreground">{t('unpaidInvoices')}</h2>
         </div>
-      )}
+        {account.invoices.length === 0 ? (
+          <div className="flex min-h-[10rem] items-center justify-center">
+            <EmptyState icon={Wallet} title={t('noBalances')} />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                    {t('colInvoiceNo')}
+                  </th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                    {t('colDue')}
+                  </th>
+                  <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                    {t('colAmountDue')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {account.invoices.map((inv) => {
+                  const dueDate = inv.dueDate ?? inv.createdAt
+                  const isOverdue = new Date(dueDate) < new Date()
+                  const amountDue = computeAmountDue(inv)
+                  return (
+                    <tr key={inv.id} className="hover:bg-muted/50">
+                      <td className="px-4 py-3 font-medium text-foreground">
+                        {inv.invoiceNumber}
+                        {isOverdue && (
+                          <span className="ms-2 text-xs font-medium text-destructive">
+                            {t('overdue')}
+                          </span>
+                        )}
+                      </td>
+                      <td className={`px-4 py-3 ${isOverdue ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        {new Date(dueDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-end font-numeric tabular-nums text-foreground">
+                        {fmt(amountDue)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* ------------------------------------------------------------------ */}
       {/* Payments table                                                        */}
@@ -595,10 +591,10 @@ function PaymentRow({ payment: p, fmt, t, onVoid }: PaymentRowProps) {
       <td className={`px-4 py-3 text-end font-numeric tabular-nums ${isVoid ? 'line-through' : ''}`}>
         {fmt(p.amount)}
       </td>
-      <td className="px-4 py-3">
+      <td className={`px-4 py-3 ${isVoid ? 'line-through' : ''}`}>
         {methodLabel[p.method] ?? p.method}
       </td>
-      <td className="px-4 py-3">
+      <td className={`px-4 py-3 ${isVoid ? 'line-through' : ''}`}>
         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
           isVoid
             ? 'bg-muted text-muted-foreground'
