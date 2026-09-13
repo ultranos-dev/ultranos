@@ -24,6 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { SupplierItemsManager } from '@/components/pharmacy/inventory/SupplierItemsManager'
 
 const MEDICATION_FORMS: MedicationForm[] = [
   'tablet',
@@ -49,6 +51,9 @@ export function CatalogItemFormDialog({ open, onOpenChange, item, onSaved }: Pro
   const t = useTranslations('inventory')
   const isEdit = !!item
 
+  const session = useAuthSessionStore((s) => s.session)
+  const performedBy = session?.practitionerId ?? session?.userId ?? 'unknown'
+
   const [minorUnits, setMinorUnits] = useState(2)
 
   // Form fields
@@ -64,6 +69,7 @@ export function CatalogItemFormDialog({ open, onOpenChange, item, onSaved }: Pro
   const [sellingPrice, setSellingPrice] = useState('')
   const [wholesalePrice, setWholesalePrice] = useState('')
   const [reorderPoint, setReorderPoint] = useState('0')
+  const [reorderQuantity, setReorderQuantity] = useState('')
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -102,6 +108,7 @@ export function CatalogItemFormDialog({ open, onOpenChange, item, onSaved }: Pro
           : '',
       )
       setReorderPoint(String(item.reorderPoint))
+      setReorderQuantity(item.reorderQuantity != null ? String(item.reorderQuantity) : '')
     } else {
       setName('')
       setNameLocal('')
@@ -115,6 +122,7 @@ export function CatalogItemFormDialog({ open, onOpenChange, item, onSaved }: Pro
       setSellingPrice('')
       setWholesalePrice('')
       setReorderPoint('0')
+      setReorderQuantity('')
     }
   }, [open, item, minorUnits])
 
@@ -143,6 +151,7 @@ export function CatalogItemFormDialog({ open, onOpenChange, item, onSaved }: Pro
       defaultSellingPrice: toMinor(sellingPrice),
       wholesalePrice: wholesalePrice ? toMinor(wholesalePrice) : undefined,
       reorderPoint: parseInt(reorderPoint, 10) || 0,
+      reorderQuantity: reorderQuantity ? parseInt(reorderQuantity, 10) : undefined,
     }
 
     setSaving(true)
@@ -245,8 +254,8 @@ export function CatalogItemFormDialog({ open, onOpenChange, item, onSaved }: Pro
               </div>
             </div>
 
-            {/* Pack Size + Reorder Point */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Pack Size + Reorder Point + Reorder Quantity */}
+            <div className="grid grid-cols-3 gap-3">
               <div className="grid gap-1">
                 <Label htmlFor="catalog-form-pack-size">{t('fieldPackSize')}</Label>
                 <Input
@@ -265,6 +274,17 @@ export function CatalogItemFormDialog({ open, onOpenChange, item, onSaved }: Pro
                   min={0}
                   value={reorderPoint}
                   onChange={(e) => setReorderPoint(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label htmlFor="catalog-form-reorder-quantity">{t('fieldReorderQuantity')}</Label>
+                <Input
+                  id="catalog-form-reorder-quantity"
+                  data-testid="catalog-form-reorder-quantity"
+                  type="number"
+                  min={0}
+                  value={reorderQuantity}
+                  onChange={(e) => setReorderQuantity(e.target.value)}
                 />
               </div>
             </div>
@@ -363,6 +383,12 @@ export function CatalogItemFormDialog({ open, onOpenChange, item, onSaved }: Pro
             </Button>
           </DialogFooter>
         </form>
+
+        {isEdit && item && (
+          <div className="mt-4 border-t border-border pt-4">
+            <SupplierItemsManager catalogItemId={item.id} performedBy={performedBy} />
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )
