@@ -29,6 +29,7 @@ import { appointmentRouter } from './appointment'
 import { drugCatalogRouter } from './drug-catalog'
 import { usersRouter } from './users'
 import { pharmacyRouter } from './pharmacy'
+import { facilityLocationsRouter } from './facility-locations'
 import { serviceRequestRouter } from './service-request'
 
 /**
@@ -66,6 +67,7 @@ export const appRouter = createTRPCRouter({
   drugCatalog: drugCatalogRouter,
   users: usersRouter,
   pharmacy: pharmacyRouter,
+  facilityLocations: facilityLocationsRouter,
   serviceRequest: serviceRequestRouter,
 })
 
