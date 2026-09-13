@@ -157,6 +157,25 @@ export interface PharmacyDirectoryEntry {
   updatedAt?: string
 }
 
+/**
+ * A named sub-location inside one pharmacy facility (main store, dispensary,
+ * cold-chain fridge, ward cabinet). FHIR-R4-Location-inspired: partOf = the
+ * facility, physicalType ≈ kind, status ≈ isActive. Exactly one isPrimary=true
+ * per facility. `createdAt` is an Ultranos extension (not FHIR meta).
+ */
+export type FacilityLocationKind = 'store' | 'room' | 'fridge' | 'cabinet' | 'other'
+
+export interface FacilityLocation {
+  id: string
+  facilityId: string          // → pharmacy_facilities.id
+  name: string
+  kind: FacilityLocationKind
+  isPrimary: boolean
+  isActive: boolean
+  createdAt?: string          // ISO 8601
+  updatedAt?: string          // ISO 8601
+}
+
 // ── Branded medications ─────────────────────────────────────────────────────────
 // A trade-name product (DrugBrand) linked to a generic drug_catalog entry by ATC,
 // fanning out into specific marketed products/packs (DrugBrandPresentation).
