@@ -9,7 +9,7 @@ import type { CatalogItem, StockBatch, StockMovement, GoodsReceipt, PharmacyInve
 import { INVENTORY_STORES } from './inventory-db'
 import type { Invoice, Payment, LedgerEntry, PatientAccount, CashDrawer } from './pos/types'
 import { POS_STORES } from './pos-db'
-import type { Supplier, PurchaseOrder, StockCount, SupplierInvoice, SupplierPayment } from './procurement/types'
+import type { Supplier, PurchaseOrder, StockCount, SupplierInvoice, SupplierPayment, SupplierItem } from './procurement/types'
 import type { StockTransfer } from './transfers/types'
 import type { DataUsageCategory } from '@ultranos/sync-engine'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
@@ -156,6 +156,7 @@ class PharmacyLiteDatabase extends Dexie {
   purchaseOrders!: EntityTable<PurchaseOrder, 'id'>
   supplierInvoices!: EntityTable<SupplierInvoice, 'id'>
   supplierPayments!: EntityTable<SupplierPayment, 'id'>
+  supplierItems!: EntityTable<SupplierItem, 'id'>
   stockCounts!: EntityTable<StockCount, 'id'>
   stockTransfers!: EntityTable<StockTransfer, 'id'>
   dataBudgetConfig!: Dexie.Table<DataBudgetConfig, string>
@@ -308,6 +309,12 @@ class PharmacyLiteDatabase extends Dexie {
           if (inv['dueDate'] === undefined) inv['dueDate'] = inv['createdAt']
         })
       })
+
+    // v20: Procurement Phase 4a — supplier↔item catalog (junction).
+    // Non-PHI operational data; not encrypted.
+    this.version(20).stores({
+      supplierItems: 'id, supplierId, catalogItemId, [supplierId+catalogItemId], [catalogItemId+isPreferred]',
+    })
   }
 }
 

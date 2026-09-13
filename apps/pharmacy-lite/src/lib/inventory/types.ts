@@ -32,6 +32,7 @@ export interface CatalogItem {
   reorderPoint: number
   minStock?: number
   maxStock?: number
+  reorderQuantity?: number  // Phase 4a — per-item reorder policy (pharmacy-local)
   isActive: boolean
   lastSyncedAt: string
   /** True when this row was created or edited locally and must be preserved

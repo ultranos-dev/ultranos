@@ -9,6 +9,11 @@ export interface Supplier {
   paymentTerms?: string
   /** Net payment-terms days for AP due-date defaulting (Phase 2b-ii). */
   paymentTermsDays?: number
+  supplierCode?: string
+  taxId?: string
+  minOrderValue?: number   // minor units
+  rating?: number
+  notes?: string
   isActive: boolean
   createdAt: string
 }
@@ -158,5 +163,19 @@ export interface SupplierPayment {
   voidedBy?: string
   voidReason?: string
   voidedAt?: string
+  hlcTimestamp: string
+}
+
+export interface SupplierItem {
+  id: string
+  supplierId: string
+  catalogItemId: string
+  supplierSku?: string
+  unitPrice?: number       // minor units
+  minOrderQty?: number
+  leadTimeDays?: number
+  isPreferred?: boolean
+  createdBy: string
+  createdAt: string
   hlcTimestamp: string
 }
