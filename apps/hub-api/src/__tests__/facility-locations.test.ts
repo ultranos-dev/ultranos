@@ -51,3 +51,64 @@ describe('facilityLocations.listForAdmin', () => {
     expect(res[0]!.name).toBe('Main')
   })
 })
+
+// Test UUIDs
+const F1 = 'f1000000-0000-0000-0000-000000000001'
+const L0 = 'b0000000-0000-0000-0000-000000000000'
+const L1 = 'b1000000-0000-0000-0000-000000000001'
+
+describe('facilityLocations.create', () => {
+  it('forces the first sub-location of a facility to be primary', async () => {
+    const existing = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ data: [], error: null }) }
+    let inserted: Record<string, unknown> | undefined
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const insertChain: any = {
+      insert: vi.fn((row: Record<string, unknown>) => { inserted = row; return insertChain }),
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { id: L1, facility_id: F1, name: 'Main', kind: 'store', is_primary: true, is_active: true }, error: null }),
+    }
+    const from = vi.fn().mockReturnValueOnce(existing).mockReturnValueOnce(insertChain)
+    const c = { supabase: { from }, user: { role: 'ADMIN' } } as never
+    const res = await facilityLocationsRouter.createCaller(c).create({ facilityId: F1, name: 'Main' })
+    expect(inserted).toMatchObject({ facility_id: F1, name: 'Main', kind: 'store', is_primary: true })
+    expect(res.isPrimary).toBe(true)
+  })
+
+  it('clears the existing primary when a later create is marked primary', async () => {
+    const existing = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ data: [{ id: L0, is_primary: true }], error: null }) }
+    const clear = { update: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), is: vi.fn().mockResolvedValue({ error: null }) }
+    const insertChain = { insert: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), single: vi.fn().mockResolvedValue({ data: { id: L1, facility_id: F1, name: 'B', kind: 'room', is_primary: true, is_active: true }, error: null }) }
+    const from = vi.fn().mockReturnValueOnce(existing).mockReturnValueOnce(clear).mockReturnValueOnce(insertChain)
+    const c = { supabase: { from }, user: { role: 'ADMIN' } } as never
+    const res = await facilityLocationsRouter.createCaller(c).create({ facilityId: F1, name: 'B', kind: 'room', isPrimary: true })
+    expect(clear.update).toHaveBeenCalledWith({ is_primary: false })
+    expect(res.isPrimary).toBe(true)
+  })
+
+  it('maps a FK violation to NOT_FOUND (unknown facility)', async () => {
+    const UNKNOWN_F = 'ffffffff-ffff-ffff-ffff-ffffffffffff'
+    const existing = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ data: [], error: null }) }
+    const insertChain = { insert: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), single: vi.fn().mockResolvedValue({ data: null, error: { code: '23503' } }) }
+    const from = vi.fn().mockReturnValueOnce(existing).mockReturnValueOnce(insertChain)
+    const c = { supabase: { from }, user: { role: 'ADMIN' } } as never
+    await expect(facilityLocationsRouter.createCaller(c).create({ facilityId: UNKNOWN_F, name: 'X' }))
+      .rejects.toMatchObject({ code: 'NOT_FOUND' })
+  })
+})
+
+describe('facilityLocations.update', () => {
+  it('rejects isPrimary:false (cannot un-primary in isolation)', async () => {
+    const c = { supabase: { from: vi.fn() }, user: { role: 'ADMIN' } } as never
+    await expect(facilityLocationsRouter.createCaller(c).update({ id: L1, isPrimary: false }))
+      .rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  })
+})
+
+describe('facilityLocations.setActive', () => {
+  it('rejects deactivating the primary', async () => {
+    const lookup = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single: vi.fn().mockResolvedValue({ data: { is_primary: true }, error: null }) }
+    const c = { supabase: { from: vi.fn(() => lookup) }, user: { role: 'ADMIN' } } as never
+    await expect(facilityLocationsRouter.createCaller(c).setActive({ id: L1, isActive: false }))
+      .rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  })
+})
