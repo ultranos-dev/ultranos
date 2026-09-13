@@ -486,7 +486,8 @@
     "invoices": "الفواتير",
     "payables": "الحسابات المستحقة",
     "audit": "التدقيق",
-    "quarantine": "الحجر الصحي"
+    "quarantine": "الحجر الصحي",
+    "reorder": "إعادة الطلب"
   },
   "controlled": {
     "title": "سجل المواد الخاضعة للرقابة",
@@ -907,6 +908,26 @@
     "supplierItemAdd": "إضافة مورد",
     "supplierItemRemove": "إزالة",
     "supplierItemSaveError": "تعذّر حفظ ارتباط المورد."
+  },
+  "reorder": {
+    "title": "إعادة الطلب",
+    "loading": "جاري التحميل…",
+    "empty": "لا توجد أصناف تحتاج إلى إعادة طلب",
+    "emptyDescription": "ستظهر هنا الأصناف التي وصلت إلى نقطة إعادة الطلب أو دونها.",
+    "colItem": "الصنف",
+    "colOnHand": "الكمية المتوفرة",
+    "colReorderPoint": "نقطة إعادة الطلب",
+    "colQty": "كمية الطلب",
+    "colSupplier": "المورد",
+    "colUnitCost": "تكلفة الوحدة",
+    "colLineTotal": "إجمالي السطر",
+    "supplierPlaceholder": "اختر موردًا…",
+    "noSupplierHint": "حدد موردًا للتضمين",
+    "generate": "إنشاء أمر/أوامر شراء مسودة",
+    "generating": "جاري الإنشاء…",
+    "generateError": "تعذّر إنشاء أوامر الشراء.",
+    "generatedSummary": "تم إنشاء {count} مسودة أمر/أوامر شراء",
+    "viewOrders": "عرض الأوامر"
   },
   "pos": {
     "cashDrawer": "درج النقود",

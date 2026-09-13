@@ -486,7 +486,8 @@
     "invoices": "فاکتورها",
     "payables": "حساب‌های پرداختنی",
     "audit": "ممیزی",
-    "quarantine": "قرنطینه"
+    "quarantine": "قرنطینه",
+    "reorder": "سفارش مجدد"
   },
   "controlled": {
     "title": "سوابق مواد کنترول شده",
@@ -907,6 +908,26 @@
     "supplierItemAdd": "تامین‌کننده اضافه کنید",
     "supplierItemRemove": "حذف",
     "supplierItemSaveError": "لینک تامین‌کننده ذخیره نشد."
+  },
+  "reorder": {
+    "title": "سفارش مجدد",
+    "loading": "در حال بارگذاری…",
+    "empty": "هیچ موردی نیاز به سفارش مجدد ندارد",
+    "emptyDescription": "اقلامی که به نقطه سفارش مجدد رسیده یا پایین‌تر هستند اینجا نمایش داده می‌شوند.",
+    "colItem": "قلم",
+    "colOnHand": "موجودی فعلی",
+    "colReorderPoint": "نقطه سفارش مجدد",
+    "colQty": "مقدار سفارش",
+    "colSupplier": "تامین‌کننده",
+    "colUnitCost": "قیمت واحد",
+    "colLineTotal": "جمع ردیف",
+    "supplierPlaceholder": "تامین‌کننده را انتخاب کنید…",
+    "noSupplierHint": "برای درج، تامین‌کننده تعیین کنید",
+    "generate": "ایجاد پیش‌نویس سفارش(های) خرید",
+    "generating": "در حال ایجاد…",
+    "generateError": "سفارش‌های خرید ایجاد نشد.",
+    "generatedSummary": "{count} پیش‌نویس سفارش خرید ایجاد شد",
+    "viewOrders": "مشاهده سفارش‌ها"
   },
   "pos": {
     "cashDrawer": "کشوی نقدی",

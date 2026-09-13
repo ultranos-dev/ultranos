@@ -486,7 +486,8 @@
     "invoices": "Invoices",
     "payables": "Payables",
     "audit": "Audit",
-    "quarantine": "Quarantine"
+    "quarantine": "Quarantine",
+    "reorder": "Reorder"
   },
   "controlled": {
     "title": "Controlled Substances Log",
@@ -907,6 +908,26 @@
     "supplierItemAdd": "Add supplier",
     "supplierItemRemove": "Remove",
     "supplierItemSaveError": "Could not save the supplier link."
+  },
+  "reorder": {
+    "title": "Reorder",
+    "loading": "Loading…",
+    "empty": "Nothing needs reordering",
+    "emptyDescription": "Items at or below their reorder point will appear here.",
+    "colItem": "Item",
+    "colOnHand": "On hand",
+    "colReorderPoint": "Reorder point",
+    "colQty": "Order qty",
+    "colSupplier": "Supplier",
+    "colUnitCost": "Unit cost",
+    "colLineTotal": "Line total",
+    "supplierPlaceholder": "Choose supplier…",
+    "noSupplierHint": "Set a supplier to include",
+    "generate": "Generate draft PO(s)",
+    "generating": "Generating…",
+    "generateError": "Could not generate purchase orders.",
+    "generatedSummary": "{count} draft purchase order(s) created",
+    "viewOrders": "View orders"
   },
   "pos": {
     "cashDrawer": "Cash Drawer",

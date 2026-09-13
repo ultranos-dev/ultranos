@@ -486,7 +486,8 @@
     "invoices": "بیلونه",
     "payables": "د تادیاتو حسابونه",
     "audit": "پلټنه",
-    "quarantine": "قرنطین"
+    "quarantine": "قرنطین",
+    "reorder": "بیا امر کول"
   },
   "controlled": {
     "title": "د کنترول شویو موادو ریکارد",
@@ -907,6 +908,26 @@
     "supplierItemAdd": "عرضه کوونکی اضافه کړئ",
     "supplierItemRemove": "لرې کول",
     "supplierItemSaveError": "د عرضه کوونکي لینک خوندي کول ناکام شو."
+  },
+  "reorder": {
+    "title": "بیا امر کول",
+    "loading": "لوډ کیږي…",
+    "empty": "هیڅ توکی بیا امر ته اړتیا نلري",
+    "emptyDescription": "هغه توکي چې د بیا امر نقطې ته رسیدلي یا ښکته دي دلته ښکاره کیږي.",
+    "colItem": "توکی",
+    "colOnHand": "لاس کې موجود",
+    "colReorderPoint": "د بیا امر نقطه",
+    "colQty": "د امر مقدار",
+    "colSupplier": "عرضه کوونکی",
+    "colUnitCost": "د واحد لګښت",
+    "colLineTotal": "د قطار ټول",
+    "supplierPlaceholder": "عرضه کوونکی غوره کړئ…",
+    "noSupplierHint": "د شاملولو لپاره عرضه کوونکی وټاکئ",
+    "generate": "د پیرودلو پیش‌مسوده امر(ونه) جوړول",
+    "generating": "جوړیږي…",
+    "generateError": "د پیرودلو امرونه جوړ نشول.",
+    "generatedSummary": "{count} پیش‌مسوده د پیرودلو امر(ونه) جوړ شول",
+    "viewOrders": "امرونه وګورئ"
   },
   "pos": {
     "cashDrawer": "د نقدو دراز",
