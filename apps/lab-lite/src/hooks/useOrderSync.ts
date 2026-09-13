@@ -108,6 +108,7 @@ export function useOrderSync(): OrderSyncState {
         authoredOn: o.authoredOn,
         receivedAt: now,
         syncedAt: now,
+        assignedToLab: o.assignedToLab,
       }))
 
       if (entries.length > 0) {

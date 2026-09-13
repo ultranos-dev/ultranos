@@ -312,6 +312,7 @@ export interface LabOrderEntry {
   authoredOn: string // ISO datetime — when physician ordered
   receivedAt: string // ISO datetime — when lab acknowledged
   syncedAt: string // ISO datetime — when pulled from Hub
+  assignedToLab?: boolean // true = claimed by this lab; false = unassigned/available
 }
 
 // ---------------------------------------------------------------------------
@@ -2109,6 +2110,20 @@ export async function getSamplesByStatus(status: string): Promise<FhirSpecimen[]
   return db.samples.where('_ultranos.pipelineStatus').equals(status).toArray()
 }
 
+/**
+ * Find a (non-rejected) specimen accessioned for a given order, if one exists.
+ * Lets the order worklist mark an order as "sample received" and route it to the
+ * processing worklist instead of re-receiving. Matches on the FHIR request
+ * reference `ServiceRequest/<orderId>`.
+ */
+export async function getReceivedSampleForOrder(orderId: string): Promise<FhirSpecimen | undefined> {
+  const db = getDb()
+  const ref = `ServiceRequest/${orderId}`
+  return db.samples
+    .filter((s) => s.request?.[0]?.reference === ref && s._ultranos?.pipelineStatus !== 'rejected')
+    .first()
+}
+
 // ---------------------------------------------------------------------------
 // Custody event helpers (v5) — append-only: no update/delete helpers provided
 // ---------------------------------------------------------------------------
@@ -2298,10 +2313,11 @@ export async function putLabResult(result: LabResult): Promise<void> {
  */
 export async function getDraftResultForSample(sampleId: string): Promise<LabResult | null> {
   const db = getDb()
+  // NOTE: lab_results has no `sampleId` index (indexes: enteredAt, enteredBy,
+  // loincCode, patientRef, status), so a `.where('sampleId')` query throws a
+  // DexieError. Filter over the table instead — local result volume is small.
   const drafts = await db.lab_results
-    .where('sampleId')
-    .equals(sampleId)
-    .filter((r) => r.status === 'draft')
+    .filter((r) => r.sampleId === sampleId && r.status === 'draft')
     .toArray()
   if (drafts.length === 0) return null
   // Return most recently entered draft (descending enteredAt)

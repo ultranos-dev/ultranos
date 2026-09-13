@@ -264,6 +264,10 @@
     "rangeWarning": "د تمه وړ سیمې بهر"
   },
   "labOrder": {
+    "labOptional": "Send lab tests to (optional)",
+    "labSearchPlaceholder": "Search labs by name…",
+    "labAria": "Search labs",
+    "clearLab": "Clear lab",
     "title": "د لابراتوار د معاینې غوښتنه",
     "test": "معاینه",
     "selectTest": "یوه معاینه وټاکئ",
@@ -279,6 +283,12 @@
     "addOrder": "د معاینې غوښتنه",
     "saving": "د غوښتنې په حال کې",
     "cancel": "لغوه",
+    "edit": "Edit",
+    "editAria": "Edit lab order",
+    "updateOrder": "Update order",
+    "cancelEdit": "Cancel edit",
+    "statusInProgress": "In progress at lab",
+    "lockedHint": "This order can't be edited — a lab has started working on it.",
     "errorTestRequired": "د غوښتنې لپاره یوه معاینه وټاکئ",
     "errorSave": "د لابراتوار غوښتنه خوندي نشوه. بیا هڅه وکړئ."
   },

@@ -105,6 +105,12 @@ export const FhirMedicationRequestSchema = z.object({
   authoredOn: z.string().datetime(),
   dosageInstruction: z.array(DosageSchema).optional(),
   dispenseRequest: DispenseRequestSchema.optional(),
+  // FHIR R4 MedicationRequest.priorPrescription — a reference to the order this
+  // one replaces. Ultranos uses it to link an append-only cancellation record
+  // back to the active prescription it cancels (Tier-1 safety: the original is
+  // never mutated; a new cancelled record points at it). Ref:
+  // https://hl7.org/fhir/R4/medicationrequest-definitions.html#MedicationRequest.priorPrescription
+  priorPrescription: ReferenceSchema.optional(),
   reasonCode: z.array(CodeableConceptSchema).optional(),
   note: z.array(z.object({
     text: z.string(),

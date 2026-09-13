@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { usePrescriptionStore } from '@/stores/prescription-store'
 import { db } from '@/lib/db'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
@@ -20,6 +20,26 @@ const encounterId = 'enc-test-001'
 const patientId = 'pat-test-001'
 const practitionerRef = 'Practitioner/doc-test-001'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+// Smallest epoch-ms we accept as a "real" HLC wall clock (2020-01-01). An ISO
+// date string like "2026-09-11T..." parses to 2026 via parseInt — far below this —
+// so this threshold distinguishes a serialized HLC from a leaked ISO timestamp.
+const MIN_REAL_WALL_MS = 1_577_836_800_000
+
+async function waitForQueuedUpdate(resourceId?: string) {
+  return vi.waitFor(async () => {
+    const all = await db.syncQueue.toArray()
+    const e = all.find(
+      (x) =>
+        x.resourceType === 'MedicationRequest' &&
+        x.action === 'update' &&
+        (resourceId ? x.resourceId === resourceId : true),
+    )
+    if (!e) throw new Error('update not enqueued yet')
+    return e
+  })
+}
+
 describe('usePrescriptionStore', () => {
   beforeEach(async () => {
     usePrescriptionStore.setState({
@@ -27,6 +47,7 @@ describe('usePrescriptionStore', () => {
       isSaving: false,
     })
     await db.medications.clear()
+    await db.syncQueue.clear()
   })
 
   describe('addPrescription', () => {
@@ -125,11 +146,40 @@ describe('usePrescriptionStore', () => {
       const original = await db.medications.get(result.id)
       expect(original).toBeDefined()
       expect(original!.status).toBe('active')
-      // New cancelled record created with suffixed ID
+      // A separate cancelled record is created
       const allMeds = await db.medications.toArray()
-      const cancelled = allMeds.find((m) => m.id.startsWith(result.id) && m.status === 'cancelled')
+      const cancelled = allMeds.find((m) => m.status === 'cancelled')
       expect(cancelled).toBeDefined()
       expect(cancelled!.status).toBe('cancelled')
+    })
+
+    it('gives the cancellation a valid UUID id so it fits the uuid id column at the Hub', async () => {
+      const store = usePrescriptionStore.getState()
+      const result = await store.addPrescription(baseForm, encounterId, patientId, practitionerRef)
+      await usePrescriptionStore.getState().removePrescription(result.id)
+      const cancelled = (await db.medications.toArray()).find((m) => m.status === 'cancelled')
+      expect(cancelled).toBeDefined()
+      expect(cancelled!.id).toMatch(UUID_RE)
+      expect(cancelled!.id).not.toBe(result.id)
+    })
+
+    it('links the cancellation back to the original via priorPrescription', async () => {
+      const store = usePrescriptionStore.getState()
+      const result = await store.addPrescription(baseForm, encounterId, patientId, practitionerRef)
+      await usePrescriptionStore.getState().removePrescription(result.id)
+      const cancelled = (await db.medications.toArray()).find((m) => m.status === 'cancelled')
+      expect(cancelled!.priorPrescription?.reference).toBe(`MedicationRequest/${result.id}`)
+    })
+
+    it('enqueues the cancellation with a serialized HLC timestamp and a uuid resourceId', async () => {
+      const store = usePrescriptionStore.getState()
+      const result = await store.addPrescription(baseForm, encounterId, patientId, practitionerRef)
+      await usePrescriptionStore.getState().removePrescription(result.id)
+
+      const entry = await waitForQueuedUpdate()
+      const wallMs = parseInt(entry.hlcTimestamp.split(':')[0]!, 10)
+      expect(wallMs).toBeGreaterThan(MIN_REAL_WALL_MS)
+      expect(entry.resourceId).toMatch(UUID_RE)
     })
 
     it('does nothing if prescription not found', async () => {
@@ -165,6 +215,52 @@ describe('usePrescriptionStore', () => {
     it('returns empty array for encounter with no prescriptions', async () => {
       await usePrescriptionStore.getState().loadPrescriptions('unknown-encounter')
       expect(usePrescriptionStore.getState().pendingPrescriptions).toHaveLength(0)
+    })
+  })
+
+  describe('applyPharmacyToPending', () => {
+    it('stamps the pharmacy performer on every pending prescription and bumps version', async () => {
+      const store = usePrescriptionStore.getState()
+      await store.addPrescription(baseForm, encounterId, patientId, practitionerRef)
+      await usePrescriptionStore.getState().addPrescription(
+        { ...baseForm, medicationCode: 'RX002', medicationDisplay: 'Paracetamol' },
+        encounterId, patientId, practitionerRef,
+      )
+
+      await usePrescriptionStore.getState().applyPharmacyToPending({ id: 'ph1', name: 'Kabul City Pharmacy' })
+
+      const state = usePrescriptionStore.getState()
+      expect(state.pendingPrescriptions).toHaveLength(2)
+      for (const rx of state.pendingPrescriptions) {
+        expect(rx.dispenseRequest?.performer).toEqual({ reference: 'Organization/ph1', display: 'Kabul City Pharmacy' })
+        expect(rx.meta.versionId).toBe('2')
+        const saved = await db.medications.get(rx.id)
+        expect(saved!.dispenseRequest?.performer?.reference).toBe('Organization/ph1')
+      }
+    })
+
+    it('clears the performer on all pending prescriptions when passed null', async () => {
+      const store = usePrescriptionStore.getState()
+      await store.addPrescription(baseForm, encounterId, patientId, practitionerRef)
+      await usePrescriptionStore.getState().applyPharmacyToPending({ id: 'ph1', name: 'X' })
+      await usePrescriptionStore.getState().applyPharmacyToPending(null)
+      const rx = usePrescriptionStore.getState().pendingPrescriptions[0]
+      expect(rx!.dispenseRequest?.performer).toBeUndefined()
+    })
+
+    it('is a no-op when there are no pending prescriptions', async () => {
+      await usePrescriptionStore.getState().applyPharmacyToPending({ id: 'ph1', name: 'X' })
+      expect(usePrescriptionStore.getState().pendingPrescriptions).toHaveLength(0)
+    })
+
+    it('enqueues the pharmacy update with a serialized HLC timestamp (not an ISO date)', async () => {
+      const store = usePrescriptionStore.getState()
+      const result = await store.addPrescription(baseForm, encounterId, patientId, practitionerRef)
+      await usePrescriptionStore.getState().applyPharmacyToPending({ id: 'ph1', name: 'X' })
+
+      const entry = await waitForQueuedUpdate(result.id)
+      const wallMs = parseInt(entry.hlcTimestamp.split(':')[0]!, 10)
+      expect(wallMs).toBeGreaterThan(MIN_REAL_WALL_MS)
     })
   })
 

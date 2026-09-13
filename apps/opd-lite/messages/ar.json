@@ -264,6 +264,10 @@
     "rangeWarning": "خارج النطاق المتوقع"
   },
   "labOrder": {
+    "labOptional": "Send lab tests to (optional)",
+    "labSearchPlaceholder": "Search labs by name…",
+    "labAria": "Search labs",
+    "clearLab": "Clear lab",
     "title": "طلب فحص مخبري",
     "test": "الفحص",
     "selectTest": "اختر فحصاً",
@@ -279,6 +283,12 @@
     "addOrder": "طلب الفحص",
     "saving": "جارٍ الطلب",
     "cancel": "إلغاء",
+    "edit": "Edit",
+    "editAria": "Edit lab order",
+    "updateOrder": "Update order",
+    "cancelEdit": "Cancel edit",
+    "statusInProgress": "In progress at lab",
+    "lockedHint": "This order can't be edited — a lab has started working on it.",
     "errorTestRequired": "اختر فحصاً للطلب",
     "errorSave": "تعذّر حفظ طلب الفحص. حاول مرة أخرى."
   },

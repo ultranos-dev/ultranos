@@ -5,14 +5,17 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import type { FhirPatient } from '@ultranos/shared-types'
+import { highlightNativeName } from '@ultranos/ui-kit/highlight-native'
 import { formatAge, getIdentifierDisplay } from '../lib/patient-display'
 
 interface PatientResultListProps {
   results: FhirPatient[]
   onSelectPatient: (id: string) => void
+  /** Current search query — matched characters in the name are highlighted. */
+  query?: string
 }
 
-export function PatientResultList({ results, onSelectPatient }: PatientResultListProps) {
+export function PatientResultList({ results, onSelectPatient, query }: PatientResultListProps) {
   if (results.length === 0) {
     return null
   }
@@ -22,7 +25,7 @@ export function PatientResultList({ results, onSelectPatient }: PatientResultLis
       data={results}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
-        <PatientResultItem patient={item} onSelect={() => onSelectPatient(item.id)} />
+        <PatientResultItem patient={item} onSelect={() => onSelectPatient(item.id)} query={query} />
       )}
       contentContainerStyle={styles.list}
     />
@@ -32,9 +35,11 @@ export function PatientResultList({ results, onSelectPatient }: PatientResultLis
 function PatientResultItem({
   patient,
   onSelect,
+  query,
 }: {
   patient: FhirPatient
   onSelect: () => void
+  query?: string
 }) {
   const displayName = patient._ultranos?.nameLocal || patient.name?.[0]?.text || 'Unknown'
   const age = formatAge(patient.birthDate, patient.birthYearOnly)
@@ -44,7 +49,7 @@ function PatientResultItem({
   return (
     <View style={styles.item}>
       <View style={styles.info}>
-        <Text style={styles.name}>{displayName}</Text>
+        <Text style={styles.name}>{highlightNativeName(displayName, query ?? '')}</Text>
         <Text style={styles.details}>
           {age && `${age} · `}{gender}{nationalId && ` · ${nationalId}`}
         </Text>

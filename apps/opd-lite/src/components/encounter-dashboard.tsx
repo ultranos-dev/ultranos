@@ -16,6 +16,7 @@ import { CommandPalette } from '@/components/layout/CommandPalette'
 import { useCommandPalette } from '@/hooks/use-command-palette'
 import { usePrescriptionStore } from '@/stores/prescription-store'
 import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
+import { PharmacyPicker } from '@/components/clinical/PharmacyPicker'
 import { LabOrderEntry } from '@/components/clinical/LabOrderEntry'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
 import { readBrandFromCoding, readPerformerFromDispenseRequest } from '@/lib/medication-request-mapper'
@@ -187,7 +188,10 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const addPrescription = usePrescriptionStore((s) => s.addPrescription)
   const removePrescription = usePrescriptionStore((s) => s.removePrescription)
   const loadPrescriptions = usePrescriptionStore((s) => s.loadPrescriptions)
+  const applyPharmacyToPending = usePrescriptionStore((s) => s.applyPharmacyToPending)
   const [prescriptionError, setPrescriptionError] = useState<string | null>(null)
+  // One preferred pharmacy for the whole prescription (not per medication).
+  const [prescriptionPharmacy, setPrescriptionPharmacy] = useState<{ id: string; name?: string } | undefined>(undefined)
   const [signingKey, setSigningKey] = useState<Uint8Array | null>(null)
   const [signingPublicKey, setSigningPublicKey] = useState<Uint8Array | null>(null)
 
@@ -326,7 +330,33 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
 
   const prescriptionCheckInFlight = useRef(false)
 
+  // Initialise the section pharmacy from persisted prescriptions ONCE on (re)load.
+  // The ref guards against re-running after a user select/clear (which would
+  // otherwise revert a clear from stale pending state before the update lands).
+  const pharmacyInitRef = useRef(false)
+  useEffect(() => {
+    if (pharmacyInitRef.current || pendingPrescriptions.length === 0) return
+    pharmacyInitRef.current = true
+    const { pharmacyId, pharmacyName } = readPerformerFromDispenseRequest(pendingPrescriptions[0]!)
+    if (pharmacyId) setPrescriptionPharmacy({ id: pharmacyId, name: pharmacyName })
+  }, [pendingPrescriptions])
+
+  const handleSelectPharmacy = useCallback((id: string, name: string) => {
+    pharmacyInitRef.current = true
+    setPrescriptionPharmacy({ id, name })
+    void applyPharmacyToPending({ id, name })
+  }, [applyPharmacyToPending])
+
+  const handleClearPharmacy = useCallback(() => {
+    pharmacyInitRef.current = true
+    setPrescriptionPharmacy(undefined)
+    void applyPharmacyToPending(null)
+  }, [applyPharmacyToPending])
+
   const handleAddPrescription = useCallback(async (form: PrescriptionFormData) => {
+    // The pharmacy is selected once for the whole prescription; stamp it onto
+    // each medication as it is added.
+    form = { ...form, pharmacyId: prescriptionPharmacy?.id, pharmacyName: prescriptionPharmacy?.name }
     if (!activeEncounter || !practitionerRef) return
     // Tier-1 safety gate (defense-in-depth): the form is disabled while blocked,
     // but a command-palette / keyboard path could still reach here. Never generate
@@ -475,11 +505,11 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     } finally {
       prescriptionCheckInFlight.current = false
     }
-  }, [activeEncounter, addPrescription, patientId, practitionerRef, pendingPrescriptions, activeAllergies, activeMedicationStatements, prescriptionCheckInFlight, prescriptionBlocked, tPrescription])
+  }, [activeEncounter, addPrescription, patientId, practitionerRef, pendingPrescriptions, activeAllergies, activeMedicationStatements, prescriptionCheckInFlight, prescriptionBlocked, tPrescription, prescriptionPharmacy])
 
   const handleInteractionOverride = useCallback(async (justification: string) => {
     if (!activeEncounter || !interactionModal.pendingForm) return
-    const form = interactionModal.pendingForm
+    const form = { ...interactionModal.pendingForm, pharmacyId: prescriptionPharmacy?.id, pharmacyName: prescriptionPharmacy?.name }
     const interactionCount = interactionModal.interactions.length
     setInteractionModal({ open: false, interactions: [], pendingForm: null, checkResult: null })
     try {
@@ -510,7 +540,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     } catch (err) {
       setPrescriptionError(err instanceof Error ? err.message : tPrescription('errorSaveFailed'))
     }
-  }, [activeEncounter, addPrescription, patientId, practitionerRef, interactionModal.pendingForm, interactionModal.interactions.length])
+  }, [activeEncounter, addPrescription, patientId, practitionerRef, interactionModal.pendingForm, interactionModal.interactions.length, prescriptionPharmacy])
 
   const handleInteractionCancel = useCallback(() => {
     setInteractionModal({ open: false, interactions: [], pendingForm: null, checkResult: null })
@@ -875,6 +905,17 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             </Alert>
           )}
 
+          {/* One preferred pharmacy for the entire prescription (optional). */}
+          <div className="mb-4">
+            <label className="mb-1 block text-sm font-semibold text-foreground">{tPrescription('pharmacyOptional')}</label>
+            <PharmacyPicker
+              value={prescriptionPharmacy?.id}
+              name={prescriptionPharmacy?.name}
+              onSelect={handleSelectPharmacy}
+              onClear={handleClearPharmacy}
+            />
+          </div>
+
           <PrescriptionEntry
             onSubmit={handleAddPrescription}
             disabled={prescriptionBlocked}
@@ -900,7 +941,6 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                   const brandLabel = brand
                     ? manufacturer ? `${brand} (${manufacturer})` : brand
                     : undefined
-                  const { pharmacyName } = readPerformerFromDispenseRequest(rx)
                   return (
                   <li
                     key={rx.id}
@@ -919,11 +959,6 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                       <span className="text-sm text-muted-foreground">
                         {rx.dosageInstruction?.[0]?.text}
                       </span>
-                      {pharmacyName && (
-                        <span className="ms-2 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                          {tPrescription('sendTo', { pharmacy: pharmacyName })}
-                        </span>
-                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       {rx._ultranos.interactionCheckResult === 'WARNING' && (

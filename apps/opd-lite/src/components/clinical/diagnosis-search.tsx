@@ -4,72 +4,11 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { searchVocab, type VocabSearchResult, type Icd10Item } from '@/lib/vocab-search'
 import type { DiagnosisRank } from '@/lib/condition-mapper'
+import { highlightMatches, getMatchIndices } from '@/lib/highlight-matches'
 
 interface DiagnosisSearchProps {
   onSelect: (item: Icd10Item, rank: DiagnosisRank) => void
   disabled?: boolean
-}
-
-function mergeIndices(
-  indices: readonly [number, number][],
-): [number, number][] {
-  const sorted = [...indices].sort((a, b) => a[0] - b[0])
-  const merged: [number, number][] = []
-  for (const [start, end] of sorted) {
-    const last = merged[merged.length - 1]
-    if (last && start <= last[1] + 1) {
-      last[1] = Math.max(last[1], end)
-    } else {
-      merged.push([start, end])
-    }
-  }
-  return merged
-}
-
-function highlightMatches(
-  text: string,
-  indices: readonly [number, number][] | undefined,
-): React.ReactNode {
-  if (!indices || indices.length === 0) return text
-
-  const safe = mergeIndices(indices)
-  const parts: React.ReactNode[] = []
-  let lastIndex = 0
-
-  for (const [start, end] of safe) {
-    const clampedStart = Math.max(start, lastIndex)
-    if (clampedStart > lastIndex) {
-      parts.push(text.slice(lastIndex, clampedStart))
-    }
-    parts.push(
-      <mark key={start} className="bg-warning/30 text-foreground rounded-sm px-0.5">
-        {text.slice(clampedStart, end + 1)}
-      </mark>,
-    )
-    lastIndex = end + 1
-  }
-
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex))
-  }
-
-  return <>{parts}</>
-}
-
-function getDisplayIndices(
-  result: VocabSearchResult,
-): readonly [number, number][] | undefined {
-  if (!result.matches) return undefined
-  const displayMatch = result.matches.find((m) => m.key === 'display')
-  return displayMatch?.indices
-}
-
-function getCodeIndices(
-  result: VocabSearchResult,
-): readonly [number, number][] | undefined {
-  if (!result.matches) return undefined
-  const codeMatch = result.matches.find((m) => m.key === 'code')
-  return codeMatch?.indices
 }
 
 export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
@@ -246,13 +185,13 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
                 }
               >
                 <span className="font-mono text-sm font-semibold text-primary">
-                  {highlightMatches(result.item.code, getCodeIndices(result))}
+                  {highlightMatches(result.item.code, getMatchIndices(result.matches, 'code'))}
                 </span>
                 <span className="mx-2 text-border">|</span>
                 <span className="text-sm text-foreground">
                   {highlightMatches(
                     result.item.display,
-                    getDisplayIndices(result),
+                    getMatchIndices(result.matches, 'display'),
                   )}
                 </span>
               </li>

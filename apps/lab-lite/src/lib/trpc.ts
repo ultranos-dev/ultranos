@@ -484,6 +484,8 @@ export interface LabOrderResponse {
   specialInstructions: string | null
   status: string
   authoredOn: string
+  /** True = claimed by this lab; false = unassigned/available. */
+  assignedToLab: boolean
 }
 
 export interface PullOrdersResult {
@@ -521,6 +523,45 @@ export async function pullOrders(
     orders: json.orders ?? [],
     syncTimestamp: json.syncTimestamp ?? null,
     nextCursor: json.nextCursor ?? null,
+  }
+}
+
+/**
+ * Detail-view PHI for the patient behind an order (CLAUDE.md Rule #7 detail-view
+ * scope): full name + blood group + latest basic vitals. Order-scoped — the Hub
+ * resolves orderId → patient_id server-side. NEVER carries National ID or the raw
+ * patient UUID. Returns null on any failure (offline / unauthorized).
+ */
+export interface LabOrderPatientDetails {
+  fullName: { given: string | null; father: string | null; grandfather: string | null }
+  bloodGroup: string | null
+  vitals: {
+    weightKg: number | null
+    heightCm: number | null
+    bmi: number | null
+    temperatureC: number | null
+    bpSystolic: number | null
+    bpDiastolic: number | null
+    recordedAt: string | null
+  }
+}
+
+export async function fetchOrderPatientDetails(
+  orderId: string,
+  token: string,
+): Promise<LabOrderPatientDetails | null> {
+  try {
+    const input = encodeURIComponent(JSON.stringify({ json: { orderId } }))
+    const res = await fetch(`${getHubApiUrl()}/lab.getOrderPatientDetails?input=${input}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(15_000),
+    })
+    if (!res.ok) return null
+    const body = (await res.json()) as { result?: { data?: { json?: LabOrderPatientDetails } } }
+    return body.result?.data?.json ?? null
+  } catch {
+    return null
   }
 }
 

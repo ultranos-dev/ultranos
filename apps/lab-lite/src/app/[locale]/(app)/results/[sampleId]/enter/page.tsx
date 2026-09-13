@@ -25,7 +25,6 @@ import {
   getObservationsForResult,
   putLabResult,
   putLabObservations,
-  seedTemplates,
   enqueueSyncEvent,
 } from '@/lib/db'
 import type { LabResult, LabObservation } from '@/lib/db'
@@ -52,6 +51,7 @@ export default function ResultEntryPage({ params }: PageProps) {
   const session = useAuthSessionStore((s) => s.session)
 
   const [sample, setSample] = useState<FhirSpecimen | null>(null)
+  const [orderedLoincCode, setOrderedLoincCode] = useState<string>('custom')
   const [patientFirstName, setPatientFirstName] = useState('')
   const [patientAge, setPatientAge] = useState(0)
   const [patientGender, setPatientGender] = useState('unknown')
@@ -66,9 +66,6 @@ export default function ResultEntryPage({ params }: PageProps) {
   useEffect(() => {
     async function load() {
       try {
-        // Ensure templates are seeded before loading the form
-        await seedTemplates()
-
         const s = await getSampleById(sampleId)
         if (!s) {
           setError(t('sampleNotFound'))
@@ -80,17 +77,45 @@ export default function ResultEntryPage({ params }: PageProps) {
         // (already minimized: first name + age only — CLAUDE.md Rule #7)
         const { getDb } = await import('@/lib/db')
         const db = getDb()
+
+        // Resolve the linked order — used for BOTH the correct result template
+        // (LOINC) and a patient name/age fallback. Best-effort: a lookup failure
+        // must never block result entry.
+        let order: { testsRequested?: Array<{ loincCode?: string }>; patientFirstName?: string; patientAge?: number | null } | undefined
+        try {
+          const linkedOrderId = (s.request?.[0]?.reference ?? '').replace('ServiceRequest/', '')
+          if (linkedOrderId) {
+            order = await db.table('orders').where('orderId').equals(linkedOrderId).first()
+            const loinc = order?.testsRequested?.[0]?.loincCode
+            if (loinc) setOrderedLoincCode(loinc)
+          }
+        } catch {
+          // Orders table unavailable/cleared — fall back to the generic template.
+        }
         const patientRef = s.subject?.reference ?? ''
         const patientId = patientRef.replace('Patient/', '')
         const cached = patientId ? await db.verified_patients.get(patientId) : undefined
-        setPatientFirstName(cached?.firstName ?? t('unknownPatient'))
-        setPatientAge(cached?.age ?? 0)
+        // Prefer the verified-patient cache; fall back to the order (name + age only).
+        setPatientFirstName(cached?.firstName ?? order?.patientFirstName ?? t('unknownPatient'))
+        setPatientAge(cached?.age ?? order?.patientAge ?? 0)
 
         // Resolve gender from the full patient record (used for reference ranges only)
         const fullPatient = patientId
           ? await db.table('patients').get(patientId)
           : undefined
         setPatientGender(fullPatient?.gender ?? 'unknown')
+
+        // Mark the sample in-processing when the tech opens the entry form
+        // (received → in-processing). Guarded + non-fatal — a blocked transition
+        // (already in-processing/completed) is fine.
+        if (s._ultranos.pipelineStatus === 'received') {
+          try {
+            const { transitionSampleStatus } = await import('@/lib/sample-service')
+            await transitionSampleStatus(sampleId, 'in-processing', session?.practitionerId ?? 'unknown')
+          } catch {
+            // Non-fatal — the form still loads.
+          }
+        }
 
         // Load existing draft if present
         const draft = await getDraftResultForSample(sampleId)
@@ -142,11 +167,14 @@ export default function ResultEntryPage({ params }: PageProps) {
     )
   }
 
-  // Resolve template from the first ordered test's LOINC code
+  // Template resolved from the linked order's LOINC (set during load); falls back
+  // to any LOINC stamped on the specimen, else the generic 'custom' template.
   const loincCode: string =
-    (sample._ultranos as any)?.orderedLoincCode ??
-    (sample._ultranos as any)?.orderedTests?.[0]?.loincCode ??
-    'custom'
+    orderedLoincCode !== 'custom'
+      ? orderedLoincCode
+      : ((sample._ultranos as any)?.orderedLoincCode ??
+        (sample._ultranos as any)?.orderedTests?.[0]?.loincCode ??
+        'custom')
   const template = resolveTemplate(loincCode)
 
   async function handleSaveDraft(
@@ -217,10 +245,21 @@ export default function ResultEntryPage({ params }: PageProps) {
       hlcTimestamp: new Date().toISOString(),
     })
 
-    // Transition sample status to 'completed'
+    // Advance the sample to 'completed'. The pipeline only allows
+    // received → in-processing → completed, so step through it based on the
+    // current status (and pass the actorId the transition requires). Non-fatal —
+    // the result is already saved; a failed transition can be retried.
     try {
       const { transitionSampleStatus } = await import('@/lib/sample-service')
-      await transitionSampleStatus(sampleId, 'completed')
+      const { getSampleById } = await import('@/lib/db')
+      const actorId = session?.practitionerId ?? 'unknown'
+      const current = (await getSampleById(sampleId))?._ultranos.pipelineStatus
+      if (current === 'received') {
+        await transitionSampleStatus(sampleId, 'in-processing', actorId)
+        await transitionSampleStatus(sampleId, 'completed', actorId)
+      } else if (current === 'in-processing') {
+        await transitionSampleStatus(sampleId, 'completed', actorId)
+      }
     } catch {
       // Non-fatal — result is saved; status transition may be retried
     }
@@ -251,7 +290,7 @@ export default function ResultEntryPage({ params }: PageProps) {
       setAnomalyFlags(detectedFlags)
       // Don't navigate — let physician review the flags first
     } else {
-      router.push(`../${sampleId}`)
+      router.push('/worklist')
     }
   }
 
@@ -324,12 +363,12 @@ export default function ResultEntryPage({ params }: PageProps) {
       <div className="flex flex-col gap-4 p-4">
         <AnomalyFlagDisplay
           flags={anomalyFlags}
-          onAcknowledge={() => router.push(`../${sampleId}`)}
-          onEscalate={() => router.push(`../${sampleId}`)}
+          onAcknowledge={() => router.push('/worklist')}
+          onEscalate={() => router.push('/worklist')}
         />
         <button
           type="button"
-          onClick={() => router.push(`../${sampleId}`)}
+          onClick={() => router.push('/worklist')}
           className="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
         >
           {t('continueToDashboard')}

@@ -243,3 +243,32 @@ describe('recordHandoff', () => {
     expect(custodySync).toBeDefined()
   })
 })
+
+describe('getReceivedSampleForOrder', () => {
+  beforeEach(async () => {
+    const db = getDb()
+    await db.samples.clear()
+    await db.custody_events.clear()
+    await db.syncQueue.clear()
+    vi.clearAllMocks()
+  })
+
+  it('finds a non-rejected specimen accessioned for the order', async () => {
+    const { getReceivedSampleForOrder } = await import('../lib/db')
+    const specimen = await accessionSample({ ...BASE_INPUT, orderId: 'order-xyz' })
+    const found = await getReceivedSampleForOrder('order-xyz')
+    expect(found?.id).toBe(specimen.id)
+  })
+
+  it('returns undefined for an order with no accessioned sample', async () => {
+    const { getReceivedSampleForOrder } = await import('../lib/db')
+    expect(await getReceivedSampleForOrder('no-such-order')).toBeUndefined()
+  })
+
+  it('excludes a rejected specimen (order remains re-receivable)', async () => {
+    const { getReceivedSampleForOrder } = await import('../lib/db')
+    const specimen = await accessionSample({ ...BASE_INPUT, orderId: 'order-rej' })
+    await rejectSample(specimen.id, 'Hemolysis detected', 'tech-001')
+    expect(await getReceivedSampleForOrder('order-rej')).toBeUndefined()
+  })
+})

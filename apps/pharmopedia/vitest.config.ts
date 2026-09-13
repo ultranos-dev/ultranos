@@ -19,6 +19,7 @@ export default defineConfig({
       '@ultranos/drug-db': path.resolve(__dirname, '../../packages/drug-db/src/index.ts'),
       '@ultranos/ui-kit/components/ui/empty-state': path.resolve(__dirname, '../../packages/ui-kit/src/components/ui/empty-state.native.tsx'),
       '@ultranos/ui-kit/tokens.native': path.resolve(__dirname, '../../packages/ui-kit/src/tokens.native.ts'),
+      '@ultranos/ui-kit/highlight-native': path.resolve(__dirname, '../../packages/ui-kit/src/native/highlight-native.tsx'),
       '@ultranos/ui-kit/native': path.resolve(__dirname, '../../packages/ui-kit/src/native/index.ts'),
       // Alias react-native to a node-compatible mock so vitest can load it.
       // The actual Flow-typed react-native/index.js uses `import typeof` syntax

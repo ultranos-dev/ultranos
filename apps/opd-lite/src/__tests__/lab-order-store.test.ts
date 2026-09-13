@@ -114,4 +114,115 @@ describe('useLabOrderStore', () => {
       expect(useLabOrderStore.getState().isSaving).toBe(false)
     })
   })
+
+  describe('applyLabToPending', () => {
+    it('stamps the lab performer on every pending order and bumps version', async () => {
+      await useLabOrderStore.getState().addLabOrder(baseInput, encounterId, patientId, practitionerRef)
+      await useLabOrderStore.getState().addLabOrder(
+        { ...baseInput, testCode: '2093-3', testDisplay: 'Lipid panel' },
+        encounterId, patientId, practitionerRef,
+      )
+
+      await useLabOrderStore.getState().applyLabToPending({ id: 'lab1', name: 'Central Lab' })
+
+      const state = useLabOrderStore.getState()
+      expect(state.pendingOrders).toHaveLength(2)
+      for (const o of state.pendingOrders) {
+        expect(o.performer).toEqual({ reference: 'Organization/lab1', display: 'Central Lab' })
+        expect(o.meta.versionId).toBe('2')
+        const saved = await db.serviceRequests.get(o.id)
+        expect(saved!.performer?.reference).toBe('Organization/lab1')
+      }
+    })
+
+    it('clears the performer on all pending orders when passed null', async () => {
+      await useLabOrderStore.getState().addLabOrder(baseInput, encounterId, patientId, practitionerRef)
+      await useLabOrderStore.getState().applyLabToPending({ id: 'lab1', name: 'X' })
+      await useLabOrderStore.getState().applyLabToPending(null)
+      expect(useLabOrderStore.getState().pendingOrders[0]!.performer).toBeUndefined()
+    })
+
+    it('is a no-op when there are no pending orders', async () => {
+      await useLabOrderStore.getState().applyLabToPending({ id: 'lab1', name: 'X' })
+      expect(useLabOrderStore.getState().pendingOrders).toHaveLength(0)
+    })
+
+    it('does not rewrite the performer on a lab-started (on-hold) order', async () => {
+      const a = await useLabOrderStore.getState().addLabOrder(baseInput, encounterId, patientId, practitionerRef)
+      const b = await useLabOrderStore.getState().addLabOrder(
+        { ...baseInput, testCode: '2093-3', testDisplay: 'Cholesterol' },
+        encounterId, patientId, practitionerRef,
+      )
+      const startedA = { ...a, status: 'on-hold' as const }
+      await db.serviceRequests.put(startedA)
+      useLabOrderStore.setState({ pendingOrders: [startedA, b] })
+
+      await useLabOrderStore.getState().applyLabToPending({ id: 'lab1', name: 'Central Lab' })
+
+      const state = useLabOrderStore.getState()
+      const outA = state.pendingOrders.find((o) => o.id === a.id)!
+      const outB = state.pendingOrders.find((o) => o.id === b.id)!
+      expect(outA.performer).toBeUndefined()
+      expect(outB.performer).toEqual({ reference: 'Organization/lab1', display: 'Central Lab' })
+    })
+  })
+
+  describe('updateLabOrder', () => {
+    it('replaces editable fields, bumps version, and persists', async () => {
+      const created = await useLabOrderStore.getState().addLabOrder(baseInput, encounterId, patientId, practitionerRef)
+      await useLabOrderStore.getState().updateLabOrder(created.id, {
+        testCode: '2345-7', testDisplay: 'Glucose', priority: 'stat',
+      })
+      const o = useLabOrderStore.getState().pendingOrders[0]!
+      expect(o.id).toBe(created.id)
+      expect(o.code.coding![0]!.code).toBe('2345-7')
+      expect(o.priority).toBe('stat')
+      expect(Number(o.meta.versionId)).toBe(2)
+      const saved = await db.serviceRequests.get(created.id)
+      expect(saved!.code.text).toBe('Glucose')
+    })
+
+    it('throws and does not modify a locked (lab-started) order', async () => {
+      const created = await useLabOrderStore.getState().addLabOrder(baseInput, encounterId, patientId, practitionerRef)
+      const started = { ...created, status: 'on-hold' as const }
+      await db.serviceRequests.put(started)
+      useLabOrderStore.setState({ pendingOrders: [started] })
+
+      await expect(
+        useLabOrderStore.getState().updateLabOrder(created.id, { testCode: '2345-7', testDisplay: 'Glucose' }),
+      ).rejects.toThrow()
+      const saved = await db.serviceRequests.get(created.id)
+      expect(saved!.code.text).toBe('CBC panel')
+    })
+  })
+
+  describe('loadOrders (started orders)', () => {
+    it('keeps on-hold orders so they stay visible but locked', async () => {
+      const created = await useLabOrderStore.getState().addLabOrder(baseInput, encounterId, patientId, practitionerRef)
+      await db.serviceRequests.put({ ...created, status: 'on-hold' })
+      useLabOrderStore.setState({ pendingOrders: [] })
+      await useLabOrderStore.getState().loadOrders(encounterId)
+      const orders = useLabOrderStore.getState().pendingOrders
+      expect(orders).toHaveLength(1)
+      expect(orders[0]!.status).toBe('on-hold')
+    })
+  })
+})
+
+describe('lab-order-mapper performer', () => {
+  it('writes performer when labId is provided and reads it back', async () => {
+    const { mapInputToServiceRequest, readLabFromServiceRequest } = await import('@/lib/lab-order-mapper')
+    const sr = mapInputToServiceRequest(
+      { ...baseInput, labId: 'lab1', labName: 'Central Lab' },
+      { encounterId, patientId, practitionerRef },
+    )
+    expect(sr.performer).toEqual({ reference: 'Organization/lab1', display: 'Central Lab' })
+    expect(readLabFromServiceRequest(sr)).toEqual({ labId: 'lab1', labName: 'Central Lab' })
+  })
+
+  it('omits performer when no labId', async () => {
+    const { mapInputToServiceRequest } = await import('@/lib/lab-order-mapper')
+    const sr = mapInputToServiceRequest(baseInput, { encounterId, patientId, practitionerRef })
+    expect(sr.performer).toBeUndefined()
+  })
 })

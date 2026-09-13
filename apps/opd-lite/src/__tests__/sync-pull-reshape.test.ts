@@ -146,6 +146,25 @@ describe('toFhirMedicationRequest (Hub flat → FHIR)', () => {
     }) as Record<string, any>
     expect(fhir.medicationCodeableConcept.text).toBe('Amoxicillin 500mg')
   })
+
+  it('reconstructs priorPrescription from priorPrescriptionId (cancellation link survives pull-back)', () => {
+    const fhir = toFhirMedicationRequest({
+      id: 'rx-cancel',
+      subjectReference: PATIENT_ID,
+      status: 'cancelled',
+      priorPrescriptionId: 'rx-original',
+    }) as Record<string, any>
+    expect(fhir.priorPrescription.reference).toBe('MedicationRequest/rx-original')
+  })
+
+  it('omits priorPrescription when there is no prior link', () => {
+    const fhir = toFhirMedicationRequest({
+      id: 'rx-3',
+      subjectReference: PATIENT_ID,
+      medicationText: 'Amoxicillin 500mg',
+    }) as Record<string, any>
+    expect(fhir.priorPrescription).toBeUndefined()
+  })
 })
 
 describe('toSoapLedgerEntry (Hub flat → local ledger)', () => {

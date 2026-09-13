@@ -90,7 +90,7 @@ const PRACTITIONER_REF_COLUMNS: Record<string, readonly string[]> = {
  * untrusted ref — to avoid PostgREST filter injection. A non-uuid ref simply yields a
  * null match (supabase-js returns an error object, not a throw) and is rejected upstream.
  */
-async function resolvePractitionerId(
+export async function resolvePractitionerId(
   supabase: SupabaseClient,
   ref: string,
   cache: Map<string, string | null>,

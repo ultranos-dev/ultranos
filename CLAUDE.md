@@ -72,7 +72,11 @@ This is a healthcare system handling Protected Health Information (PHI). These r
 
 6. **Audit every PHI access.** Every read, write, or access to patient data must emit a structured audit event via `@ultranos/audit-logger`. No exceptions. The audit log is append-only with SHA-256 hash chaining — never update or delete audit records.
 
-7. **The Lab Portal can only see patient name + age.** The Lab Portal API endpoints must return ONLY first name and age for patient verification. If you're writing or modifying a Lab Portal endpoint and it returns any other patient data, that's a data minimization violation. This is enforced at the API layer, not the UI.
+7. **The Lab Portal is data-minimized — tiered.** Enforced at the API layer, not the UI.
+   - **List / order-pull surfaces** (`lab.pullOrders`, `lab.verifyPatient`) return ONLY **first name + age** for the patient. Adding any other patient field to these endpoints is a data-minimization violation.
+   - **Explicit detail view** (`lab.getOrderPatientDetails`, order-scoped): on a deliberate per-order action (Patient Details modal / verification step) the lab MAY additionally see the patient's **full name (given/father/grandfather), blood group, and basic vitals** (weight, height, BMI, blood pressure, temperature) — the minimum needed for sample handling and identity verification.
+   - **NEVER exposed to the lab, anywhere:** the raw **National ID** (only a one-way hash is stored) and the **real patient UUID** (the lab only ever receives an opaque HMAC blind-index ref, so it cannot correlate patients). Never add these to a lab-facing endpoint.
+   - Every lab-facing PHI read still emits an audit event (Rule #6).
 
 ## Architecture Decisions
 

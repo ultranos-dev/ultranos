@@ -58,6 +58,9 @@ export const FhirServiceRequestSchema = z.object({
   subject: ReferenceSchema,
   encounter: ReferenceSchema.optional(),
   requester: ReferenceSchema,
+  // Optional preferred/assigned lab (Organization reference). Non-binding routing
+  // hint, mirroring MedicationRequest.dispenseRequest.performer for pharmacies.
+  performer: ReferenceSchema.optional(),
   authoredOn: z.string().datetime(),
   reasonCode: z.array(CodeableConceptSchema).optional(),
   supportingInfo: z.array(ReferenceSchema).optional(),
@@ -96,3 +99,31 @@ export interface LabServiceRequest {
 }
 
 export { ServiceRequestPrioritySchema, ServiceRequestStatusSchema }
+
+/**
+ * Lightweight lab-directory row for the lab picker's search results and the
+ * OPD-Lite offline mirror — the lab analogue of PharmacyDirectoryEntry. Sourced
+ * from the `labs` table (active labs only).
+ */
+export interface LabDirectoryEntry {
+  id: string
+  name: string
+  accreditationRef?: string
+  status: string
+  updatedAt?: string
+}
+
+/**
+ * Lab-order processing status, as the Hub reports it back to OPD-Lite via
+ * `serviceRequest.getOrderStatus`. Operational status metadata only — NO clinical
+ * fields — so it can flow to the ordering clinician without a data-minimization
+ * concern. Powers the "lock once the lab has started" behaviour on the encounter
+ * page: `receivedAt` (set by `lab.acknowledgeOrder`) or any non-`active` status
+ * means the order is no longer editable.
+ */
+export interface LabOrderStatus {
+  id: string
+  status: string
+  receivedAt?: string
+  receivedByLabId?: string
+}

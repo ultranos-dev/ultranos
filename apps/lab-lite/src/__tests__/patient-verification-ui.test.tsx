@@ -22,6 +22,11 @@ vi.mock('@/stores/auth-session-store', () => ({
   useAuthSessionStore: { getState: () => ({ session: null }) },
 }))
 
+// The identity banner fetches detail-view PHI on demand — stub it out here.
+vi.mock('@/hooks/useOrderPatientDetails', () => ({
+  useOrderPatientDetails: () => ({ details: null, loading: false }),
+}))
+
 // Minimal i18n mock — returns the key as the translation
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,

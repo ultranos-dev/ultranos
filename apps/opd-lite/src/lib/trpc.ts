@@ -1,4 +1,4 @@
-import type { DrugSearchResult, FhirPatient, FhirAllergyIntolerance, PharmacyDirectoryEntry } from '@ultranos/shared-types'
+import type { DrugSearchResult, FhirPatient, FhirAllergyIntolerance, PharmacyDirectoryEntry, LabDirectoryEntry, LabOrderStatus } from '@ultranos/shared-types'
 import { getHubTrpcUrl } from '@/lib/hub-url'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
 import { toFhirAllergyIntolerance } from '@/lib/sync-pull'
@@ -479,4 +479,64 @@ export async function searchPharmaciesHub(
   if (!res.ok) throw new Error(`Pharmacy search failed: ${res.status}`)
   const body = await res.json() as { result: { data: { json: PharmacyDirectoryEntry[] } } }
   return body.result.data.json
+}
+
+/**
+ * Search the Hub lab directory by name or accreditation reference.
+ * Mirrors the searchPharmaciesHub pattern exactly: GET lab.searchDirectory with
+ * { q, limit } in the tRPC input envelope, Supabase auth header, unwrap body.result.data.json.
+ */
+export async function searchLabsHub(
+  q: string,
+  signal?: AbortSignal,
+): Promise<LabDirectoryEntry[]> {
+  const url = new URL(getHubApiUrl())
+  url.pathname = url.pathname.replace(/\/$/, '') + '/lab.searchDirectory'
+  url.searchParams.set('input', JSON.stringify({ json: { q, limit: 20 } }))
+
+  const headers: Record<string, string> = {}
+  if (typeof window !== 'undefined') {
+    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+    const { data } = await getSupabaseBrowserClient().auth.getSession()
+    if (data.session?.access_token) {
+      headers['Authorization'] = `Bearer ${data.session.access_token}`
+    }
+  }
+
+  const res = await fetch(url.toString(), { method: 'GET', headers, signal })
+  if (!res.ok) throw new Error(`Lab directory search failed: ${res.status}`)
+  const body = await res.json() as { result: { data: { json: LabDirectoryEntry[] } } }
+  return body.result.data.json
+}
+
+/**
+ * Fetch the current processing status of the caller's lab orders from the Hub
+ * (serviceRequest.getOrderStatus). Returns operational status only — used to lock
+ * rows once a lab has started an order. Offline-first: returns [] on any failure
+ * (no auth session, network error, non-200) so the UI falls back to last-known
+ * local status and never blocks. Empty input short-circuits without a request.
+ */
+export async function fetchLabOrderStatuses(ids: string[]): Promise<LabOrderStatus[]> {
+  if (!ids.length) return []
+  try {
+    const url = new URL(getHubApiUrl())
+    url.pathname = url.pathname.replace(/\/$/, '') + '/serviceRequest.getOrderStatus'
+    url.searchParams.set('input', JSON.stringify({ json: { ids } }))
+
+    const headers: Record<string, string> = {}
+    if (typeof window !== 'undefined') {
+      const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+      const { data } = await getSupabaseBrowserClient().auth.getSession()
+      if (data.session?.access_token) {
+        headers['Authorization'] = `Bearer ${data.session.access_token}`
+      }
+    }
+
+    const res = await fetch(url.toString(), { method: 'GET', headers })
+    if (!res.ok) return []
+    const body = (await res.json()) as { result?: { data?: { json?: LabOrderStatus[] } } }
+    return body.result?.data?.json ?? []
+  } catch {
+    return []
+  }
 }

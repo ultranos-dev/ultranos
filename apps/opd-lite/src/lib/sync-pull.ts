@@ -257,6 +257,9 @@ export function toFhirMedicationRequest(row: Record<string, unknown>): Record<st
     subject: { reference: subjectRef ? `Patient/${subjectRef}` : '' },
     ...(encounterRef ? { encounter: { reference: `Encounter/${encounterRef}` } } : {}),
     ...(requesterId ? { requester: { reference: `Practitioner/${requesterId}` } } : {}),
+    ...(row.priorPrescriptionId
+      ? { priorPrescription: { reference: `MedicationRequest/${row.priorPrescriptionId as string}` } }
+      : {}),
     ...(row.authoredOn ? { authoredOn: row.authoredOn as string } : {}),
     ...(row.dosageInstruction ? { dosageInstruction: row.dosageInstruction } : {}),
     ...(row.dispenseRequest ? { dispenseRequest: row.dispenseRequest } : {}),

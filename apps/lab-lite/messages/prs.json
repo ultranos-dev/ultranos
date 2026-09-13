@@ -136,7 +136,55 @@
     "searchPatients": "جستجوی مریضان",
     "searchPatientsPlaceholder": "جستجو با نام...",
     "searching": "در حال جستجو...",
-    "noSearchResults": "مریضی یافت نشد"
+    "noSearchResults": "مریضی یافت نشد",
+    "title": "Verify patient identity",
+    "patient": "Patient",
+    "complete": "Verified",
+    "incomplete": "Incomplete",
+    "qrImported": "Patient details imported from the scanned QR code",
+    "proceed": "Confirm & receive sample",
+    "proceeding": "Confirming…",
+    "methods": {
+      "legend": "Patient verification methods"
+    },
+    "method": {
+      "nationalId": {
+        "label": "National ID card",
+        "desc": "Match the patient against their national ID card",
+        "detail": "National ID (last 4 digits)",
+        "placeholder": "Last 4 digits"
+      },
+      "verbal": {
+        "label": "Verbal confirmation",
+        "desc": "Confirm the patient's name and age verbally"
+      },
+      "qrCode": {
+        "label": "Health Passport QR",
+        "desc": "Scan the patient's Health Passport QR code"
+      },
+      "other": {
+        "label": "Other identifier",
+        "detail": "Identifier used",
+        "placeholder": "e.g. clinic card number"
+      }
+    },
+    "warning": {
+      "singleIdentifier": {
+        "title": "Only one identifier provided",
+        "detail": "The WHO standard requires two identifiers. Add another, or record an override reason below."
+      }
+    },
+    "override": {
+      "label": "Proceed with a single identifier (override)",
+      "reasonLabel": "Reason for override",
+      "reasonPlaceholder": "Explain why only one identifier is available",
+      "reasonTooShort": "Please provide at least 10 characters"
+    },
+    "supervisor": {
+      "incompleteCount": "{count} incomplete verifications",
+      "expand": "Show details",
+      "collapse": "Hide details"
+    }
   },
   "metadata": {
     "testCategory": "دسته‌بندی تست",
@@ -429,7 +477,36 @@
       "orderedBy": "درخواست‌دهنده",
       "testsRequested": "آزمایش‌ها",
       "specialInstructions": "دستورات خاص",
-      "orderedAt": "تاریخ درخواست"
+      "orderedAt": "تاریخ درخواست",
+      "ageYears": "{age}y",
+      "orderId": "Order",
+      "assignedToYou": "Assigned to you",
+      "available": "Available",
+      "receiveSampleFor": "Receive sample for {name}",
+      "patientDetails": "Patient Details",
+      "sampleReceived": "Sample received",
+      "viewInWorklist": "View {name} in worklist"
+    },
+    "details": {
+      "title": "Patient Details",
+      "patientSection": "Patient",
+      "orderSection": "Order",
+      "age": "Age",
+      "fullName": "Full name",
+      "bloodGroup": "Blood group",
+      "weight": "Weight",
+      "height": "Height",
+      "bmi": "BMI",
+      "bloodPressure": "Blood pressure",
+      "temperature": "Temperature",
+      "tests": "Tests",
+      "urgency": "Urgency",
+      "culturalFlags": "Cultural care preferences",
+      "noCulturalFlags": "None recorded",
+      "loading": "Loading patient details…",
+      "unavailable": "Patient details unavailable",
+      "dataMinNote": "The lab may see the patient's name, age, blood group, and basic vitals. National ID and internal patient ID are never shown.",
+      "close": "Close"
     },
     "badge": "در انتظار",
     "searchPlaceholder": "جستجو با شناسه سفارش…",
@@ -1507,6 +1584,8 @@
   },
   "samples": {
     "modal": {
+      "patientVerification": "Patient Verification",
+      "goToWorklist": "Go to Worklist",
       "receiveTitle": "دریافت نمونه",
       "close": "بستن",
       "sampleReceived": "نمونه دریافت شد",

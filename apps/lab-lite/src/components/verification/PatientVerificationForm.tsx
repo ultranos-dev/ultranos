@@ -13,6 +13,8 @@ import {
 } from '@/lib/verification-service'
 import { saveVerificationRecord } from '@/lib/db'
 import { reportVerificationEvent } from '@/lib/audit-client'
+import { PatientEnrichedDetails } from '@/components/orders/PatientEnrichedDetails'
+import { useOrderPatientDetails } from '@/hooks/useOrderPatientDetails'
 
 // ---------------------------------------------------------------------------
 // Props
@@ -22,6 +24,10 @@ export interface PatientVerificationFormProps {
   sampleId: string
   /** Opaque Patient/<uuid> — never a patient name (CLAUDE.md Rule #7) */
   patientRef: string
+  /** Patient first name + age (the two identity fields the lab may see) — shown so
+   *  the tech can verify against the person/ID quickly. */
+  patientFirstName?: string
+  patientAge?: number | null
   /** Practitioner UUID of the technician performing verification */
   verifiedBy: string
   /** Called when verification is complete and user clicks Proceed */
@@ -52,7 +58,7 @@ interface MethodConfig {
 const VERIFICATION_METHODS: MethodConfig[] = [
   {
     method: PatientVerificationMethod.NATIONAL_ID_SCANNED,
-    labelKey: 'verification.method.nationalId',
+    labelKey: 'verification.method.nationalId.label',
     descriptionKey: 'verification.method.nationalId.desc',
     requiresDetail: true,
     detailLabelKey: 'verification.method.nationalId.detail',
@@ -60,17 +66,17 @@ const VERIFICATION_METHODS: MethodConfig[] = [
   },
   {
     method: PatientVerificationMethod.VERBAL_CONFIRMATION,
-    labelKey: 'verification.method.verbal',
+    labelKey: 'verification.method.verbal.label',
     descriptionKey: 'verification.method.verbal.desc',
   },
   {
     method: PatientVerificationMethod.QR_CODE,
-    labelKey: 'verification.method.qrCode',
+    labelKey: 'verification.method.qrCode.label',
     descriptionKey: 'verification.method.qrCode.desc',
   },
   {
     method: PatientVerificationMethod.OTHER,
-    labelKey: 'verification.method.other',
+    labelKey: 'verification.method.other.label',
     requiresDetail: true,
     detailLabelKey: 'verification.method.other.detail',
     detailPlaceholderKey: 'verification.method.other.placeholder',
@@ -97,12 +103,17 @@ const VERIFICATION_METHODS: MethodConfig[] = [
 export function PatientVerificationForm({
   sampleId,
   patientRef,
+  patientFirstName,
+  patientAge,
   verifiedBy,
   onComplete,
   defaultMethods = [],
   verificationSource,
 }: PatientVerificationFormProps) {
   const t = useTranslations()
+  // sampleId IS the order id in the receive-sample flow; fetch the detail-view PHI
+  // (full name + blood group + vitals) so the tech can verify against the person.
+  const { details: patientDetails, loading: detailsLoading } = useOrderPatientDetails(sampleId)
 
   // Selected verification methods
   const [selectedMethods, setSelectedMethods] = useState<Set<PatientVerificationMethod>>(
@@ -217,6 +228,21 @@ export function PatientVerificationForm({
         {completenessIndicator}
       </div>
 
+      {/* Patient identity + clinical detail — verify against the person / ID in
+          front of you (full name · blood group · vitals fetched on demand). */}
+      <div className="space-y-1.5 rounded-lg bg-muted/50 px-3 py-2" data-testid="verify-patient-identity">
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <span className="text-xs font-medium text-muted-foreground">{t('verification.patient')}</span>
+          {patientFirstName && <bdi className="text-sm font-semibold text-foreground">{patientFirstName}</bdi>}
+          {patientAge != null && (
+            <span className="font-numeric text-sm text-muted-foreground">
+              · {t('verification.yearsOld', { age: patientAge })}
+            </span>
+          )}
+        </div>
+        <PatientEnrichedDetails details={patientDetails} loading={detailsLoading} variant="compact" />
+      </div>
+
       {/* QR auto-import notice */}
       {verificationSource === 'qr' && defaultMethods.includes(PatientVerificationMethod.QR_CODE) && (
         <p className="text-xs text-primary bg-primary/10 px-3 py-2 rounded" data-testid="qr-import-notice">
@@ -283,7 +309,7 @@ export function PatientVerificationForm({
           className="rounded border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800 space-y-2"
           data-testid="single-id-warning"
         >
-          <p className="font-medium">{t('verification.warning.singleIdentifier')}</p>
+          <p className="font-medium">{t('verification.warning.singleIdentifier.title')}</p>
           <p className="text-xs">{t('verification.warning.singleIdentifier.detail')}</p>
 
           <label className="flex items-center gap-2 mt-2 cursor-pointer">

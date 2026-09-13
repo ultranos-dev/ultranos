@@ -138,7 +138,116 @@ function checkRateLimit(key: string): boolean {
  * because the registering user becomes a LAB_TECH upon approval.
  * Lab-scoped upload endpoints (Story 12.3+) use labRestrictedProcedure instead.
  */
+function toLabDirectoryEntry(row: Record<string, unknown>): import('@ultranos/shared-types').LabDirectoryEntry {
+  return {
+    id: row.id as string,
+    name: row.lab_name as string,
+    accreditationRef: (row.accreditation_ref as string) ?? undefined,
+    status: row.status as string,
+    updatedAt: (row.updated_at as string) ?? undefined,
+  }
+}
+
+/**
+ * Patient age for the data-minimized lab display. Prefers an exact DOB, then
+ * falls back to the birth YEAR — year-only registration is the common case in
+ * this context (many patients don't know an exact birth date), so requiring
+ * birth_date would wrongly reject most real patients. Never exposes the DOB
+ * itself. Returns null only when neither is known.
+ */
+function computeAge(
+  birthDate: string | null | undefined,
+  birthYear: number | null | undefined,
+): number | null {
+  if (birthDate) {
+    const bd = new Date(birthDate)
+    const today = new Date()
+    let age = today.getFullYear() - bd.getFullYear()
+    const m = today.getMonth() - bd.getMonth()
+    if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--
+    return age
+  }
+  if (birthYear != null) {
+    return new Date().getFullYear() - birthYear
+  }
+  return null
+}
+
+/** Minimal Observation row shape used for latest-per-code vital extraction. */
+type ObsRow = {
+  code?: { coding?: Array<{ code?: string }> } | null
+  value_quantity?: { value?: number } | null
+  component?: Array<{
+    code?: { coding?: Array<{ code?: string }> }
+    value_quantity?: { value?: number }
+  }> | null
+  effective_date_time?: string | null
+}
+
+/**
+ * Extract the latest basic vitals from a patient's Observation rows (passed
+ * newest-first). LOINC: 29463-7 weight, 8302-2 height, 39156-5 BMI, 8310-5 temp,
+ * 85354-9 BP (systolic 8480-6 / diastolic 8462-4 components). Returns nulls for
+ * any vital not on record.
+ */
+function extractLatestVitals(rows: ObsRow[]) {
+  const latest = (loinc: string) => rows.find((r) => r.code?.coding?.[0]?.code === loinc)
+  const bp = latest('85354-9')
+  const bpComp = (loinc: string) =>
+    bp?.component?.find((c) => c.code?.coding?.[0]?.code === loinc)?.value_quantity?.value ?? null
+  return {
+    weightKg: latest('29463-7')?.value_quantity?.value ?? null,
+    heightCm: latest('8302-2')?.value_quantity?.value ?? null,
+    bmi: latest('39156-5')?.value_quantity?.value ?? null,
+    temperatureC: latest('8310-5')?.value_quantity?.value ?? null,
+    bpSystolic: bpComp('8480-6'),
+    bpDiastolic: bpComp('8462-4'),
+    recordedAt: rows[0]?.effective_date_time ?? null,
+  }
+}
+
 export const labRouter = createTRPCRouter({
+  /**
+   * Lab directory search for the OPD lab-order picker. Name-substring match over
+   * ACTIVE labs only. Returns identity fields (no clinical data). Mirrors
+   * pharmacy.search. Input `q` is sanitised before the ILIKE filter.
+   */
+  searchDirectory: protectedProcedure
+    .input(z.object({ q: z.string().min(1).max(100), limit: z.number().int().min(1).max(50).default(20) }))
+    .query(async ({ ctx, input }) => {
+      const safeQ = input.q.replace(/[,()"]/g, ' ').trim().toLowerCase()
+      if (!safeQ) return []
+      const { data, error } = await ctx.supabase
+        .from('labs')
+        .select('id, lab_name, accreditation_ref, status, updated_at')
+        .eq('status', 'ACTIVE')
+        .ilike('lab_name', `%${safeQ}%`)
+        .limit(input.limit)
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      return (data ?? []).map(toLabDirectoryEntry)
+    }),
+
+  /**
+   * Incremental sync of the ACTIVE-lab directory for the OPD-Lite offline mirror.
+   * Keyed on updated_at; returns the latest watermark. Mirrors pharmacy.sync.
+   */
+  syncDirectory: protectedProcedure
+    .input(z.object({ since: z.string().optional(), limit: z.number().int().min(1).max(1000).default(500) }))
+    .query(async ({ ctx, input }) => {
+      let query = ctx.supabase
+        .from('labs')
+        .select('id, lab_name, accreditation_ref, status, updated_at')
+        .eq('status', 'ACTIVE')
+        .order('updated_at', { ascending: true })
+        .limit(input.limit)
+      if (input.since) query = query.gt('updated_at', input.since)
+      const { data, error } = await query
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      const labs = (data ?? []).map(toLabDirectoryEntry)
+      const latestUpdatedAt = labs.length ? labs[labs.length - 1]!.updatedAt ?? null : null
+      return { labs, latestUpdatedAt }
+    }),
+
   /**
    * AC 4, 5: Lab registration endpoint.
    * Accepts lab details and responsible technician credentials.
@@ -317,7 +426,7 @@ export const labRouter = createTRPCRouter({
    * Data-minimized patient lookup — returns ONLY firstName, age, and opaque patientRef.
    *
    * Defense in depth:
-   * 1. SQL: SELECT only id, given_name, birth_date
+   * 1. SQL: SELECT only id, name_given, birth_date, birth_year
    * 2. Zod output schema: rejects any extra fields
    * 3. RBAC: LAB_TECH only (via labRestrictedProcedure)
    * 4. Lab status: must be ACTIVE (via enforceLabActive)
@@ -361,7 +470,7 @@ export const labRouter = createTRPCRouter({
         const idHash = generateBlindIndex(input.query, hmacKey)
         patientQuery = ctx.supabase
           .from('patients')
-          .select('id, given_name, birth_date')
+          .select('id, name_given, birth_date, birth_year')
           .eq('ultranos_national_id_hash', idHash)
           .single()
       } else {
@@ -375,7 +484,7 @@ export const labRouter = createTRPCRouter({
         }
         patientQuery = ctx.supabase
           .from('patients')
-          .select('id, given_name, birth_date')
+          .select('id, name_given, birth_date, birth_year')
           .eq('id', input.query)
           .single()
       }
@@ -405,8 +514,11 @@ export const labRouter = createTRPCRouter({
         })
       }
 
-      // Validate required fields before processing
-      if (!patient.given_name || !patient.birth_date) {
+      // Validate required fields before processing. DOB may be a year only
+      // (common where an exact date is unknown), so accept either birth_date or
+      // birth_year — requiring an exact date would reject most real patients.
+      const age = computeAge(patient.birth_date, patient.birth_year)
+      if (!patient.name_given || age == null) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Patient record incomplete — unable to verify',
@@ -415,15 +527,6 @@ export const labRouter = createTRPCRouter({
 
       // Generate opaque patientRef via HMAC-SHA256 (never expose raw patient ID)
       const patientRef = generateBlindIndex(patient.id, hmacKey)
-
-      // Calculate age from birth_date
-      const birthDate = new Date(patient.birth_date)
-      const today = new Date()
-      let age = today.getFullYear() - birthDate.getFullYear()
-      const monthDiff = today.getMonth() - birthDate.getMonth()
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--
-      }
 
       // Audit successful verification — no PHI
       try {
@@ -442,9 +545,105 @@ export const labRouter = createTRPCRouter({
       }
 
       return {
-        firstName: patient.given_name,
+        firstName: patient.name_given,
         age,
         patientRef,
+      }
+    }),
+
+  /**
+   * Lab detail view — full name + blood group + latest basic vitals for the patient
+   * behind a given order. ORDER-SCOPED: the lab passes an orderId it already holds,
+   * and the Hub resolves order → patient_id server-side (the lab only ever holds the
+   * opaque blind-index ref, so it cannot query patient data directly). Restricted to
+   * orders the caller's lab may see.
+   *
+   * PHI scope (CLAUDE.md Rule #7, detail-view exception): returns full name
+   * (given/father/grandfather), blood group, and basic vitals ONLY — shown on an
+   * explicit detail view for sample handling + identity verification. NEVER returns
+   * the National ID (hash-only) or the raw patient UUID (blind-indexed by design).
+   */
+  getOrderPatientDetails: labRestrictedProcedure
+    .use(enforceLabActive())
+    .input(z.object({ orderId: z.string().uuid() }))
+    .output(
+      z.object({
+        fullName: z.object({
+          given: z.string().nullable(),
+          father: z.string().nullable(),
+          grandfather: z.string().nullable(),
+        }),
+        bloodGroup: z.string().nullable(),
+        vitals: z.object({
+          weightKg: z.number().nullable(),
+          heightCm: z.number().nullable(),
+          bmi: z.number().nullable(),
+          temperatureC: z.number().nullable(),
+          bpSystolic: z.number().nullable(),
+          bpDiastolic: z.number().nullable(),
+          recordedAt: z.string().nullable(),
+        }),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      const labId = ctx.lab?.labId
+      const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
+
+      // Resolve the order → patient_id, restricted to orders this lab may see
+      // (assigned to it, or unassigned) — mirrors the pullOrders visibility scope.
+      const { data: order, error: orderErr } = await ctx.supabase
+        .from('service_requests')
+        .select('id, patient_id, received_by_lab_id')
+        .eq('id', input.orderId)
+        .maybeSingle()
+      if (orderErr) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to load order' })
+      }
+      if (!order || (labId && order.received_by_lab_id && order.received_by_lab_id !== labId)) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' })
+      }
+      const patientId = order.patient_id as string
+
+      const { data: patient } = await ctx.supabase
+        .from('patients')
+        .select('name_given, name_father, name_grandfather, blood_group')
+        .eq('id', patientId)
+        .maybeSingle()
+
+      const { data: obs } = await ctx.supabase
+        .from('observations')
+        .select('code, value_quantity, component, effective_date_time')
+        .eq('subject_id', patientId)
+        .order('effective_date_time', { ascending: false })
+        .limit(50)
+
+      const vitals = extractLatestVitals((obs ?? []) as ObsRow[])
+
+      // Audit the PHI read (Rule #6). Metadata carries no PHI (opaque order id only).
+      try {
+        await audit.emit({
+          action: 'READ',
+          resourceType: 'PATIENT',
+          resourceId: input.orderId,
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { verificationAction: 'order_patient_details' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'PATIENT', resourceId: input.orderId })
+      }
+
+      return {
+        fullName: {
+          given: (patient?.name_given as string) ?? null,
+          father: (patient?.name_father as string) ?? null,
+          grandfather: (patient?.name_grandfather as string) ?? null,
+        },
+        bloodGroup: (patient?.blood_group as string) ?? null,
+        vitals,
       }
     }),
 
@@ -990,7 +1189,10 @@ export const labRouter = createTRPCRouter({
     .use(enforceLabActive())
     .input(
       z.object({
-        since: z.string().datetime().optional(),
+        // `offset: true` accepts the +00:00-style timestamps Postgres returns for
+        // meta_last_updated (the client feeds them straight back as the watermark).
+        // Plain .datetime() is Z-only and 400s on them, breaking incremental sync.
+        since: z.string().datetime({ offset: true }).optional(),
         cursor: z.string().optional(),
         limit: z.number().int().min(1).max(200).default(100),
       }),
@@ -1013,6 +1215,9 @@ export const labRouter = createTRPCRouter({
             specialInstructions: z.string().nullable(),
             status: z.string(),
             authoredOn: z.string().nullable(),
+            // True when this order is claimed by the caller's lab (received_by_lab_id
+            // === labId); false = unassigned/available. Operational routing flag, no PHI.
+            assignedToLab: z.boolean(),
           }),
         ),
         syncTimestamp: z.string().nullable(),
@@ -1038,7 +1243,8 @@ export const labRouter = createTRPCRouter({
           authored_on,
           special_instructions,
           meta_last_updated,
-          patients!inner(id, given_name, birth_date),
+          received_by_lab_id,
+          patients!inner(id, name_given, birth_date, birth_year),
           practitioners!service_requests_requester_id_fkey(id, given_name, family_name)
         `)
         .in('status', ['active', 'on-hold'])
@@ -1102,23 +1308,20 @@ export const labRouter = createTRPCRouter({
         const patient = order.patients
         const practitioner = order.practitioners
 
-        // P8: Compute age from birth_date — never expose DOB. Null if missing.
-        let patientAge: number | null = null
-        if (patient?.birth_date) {
-          const birthDate = new Date(patient.birth_date)
-          const today = new Date()
-          patientAge = today.getFullYear() - birthDate.getFullYear()
-          const monthDiff = today.getMonth() - birthDate.getMonth()
-          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            patientAge--
-          }
-        }
+        // P8: Age from DOB, falling back to birth year — never expose the DOB.
+        const patientAge = computeAge(patient?.birth_date, patient?.birth_year)
 
         return {
           orderId: order.id,
-          patientFirstName: patient?.given_name ?? '',
+          patientFirstName: patient?.name_given ?? '',
           patientAge,
-          patientRef: patient?.id ? `Patient/${generateBlindIndex(patient.id, hmacKey)}` : '',
+          // Matching key: the blind index is derived from the order's own
+          // patient_id (a NOT NULL FK), NOT the demographics join — so the
+          // order↔patient linkage never depends on the join succeeding, and the
+          // ref stays consistent with diagnostic_reports.patient_ref.
+          patientRef: order.patient_id
+            ? `Patient/${generateBlindIndex(order.patient_id, hmacKey)}`
+            : '',
           testsRequested: [{
             loincCode: order.code_code,
             loincDisplay: order.code_display ?? order.code_code,
@@ -1130,6 +1333,9 @@ export const labRouter = createTRPCRouter({
           specialInstructions: order.special_instructions ?? null,
           status: order.status,
           authoredOn: order.authored_on,
+          // Claimed by this lab vs. unassigned/available (the pull scope already
+          // limits rows to received_by_lab_id === labId OR null).
+          assignedToLab: order.received_by_lab_id != null && order.received_by_lab_id === labId,
         }
       })
 

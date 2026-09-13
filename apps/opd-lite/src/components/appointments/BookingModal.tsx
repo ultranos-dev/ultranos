@@ -13,6 +13,7 @@ import { useAppointmentStore } from '@/stores/appointment-store'
 import { useAppointments } from '@/hooks/useAppointments'
 import { db } from '@/lib/db'
 import { searchPatientsOnHub } from '@/lib/trpc'
+import { highlightQuery } from '@/lib/highlight-matches'
 import { hashNationalId } from '@/lib/hash-national-id'
 import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import type { AppointmentServiceType, FhirPatient } from '@ultranos/shared-types'
@@ -350,7 +351,7 @@ export function BookingModal({
                     >
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-medium text-foreground">
-                          {patient._ultranos?.nameLocal || patient.name?.[0]?.text || 'Unknown'}
+                          {highlightQuery(patient._ultranos?.nameLocal || patient.name?.[0]?.text || 'Unknown', patientQuery)}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {patient.gender ?? ''} &middot; {patient.birthDate ? `${new Date().getFullYear() - new Date(patient.birthDate).getFullYear()}y` : ''}

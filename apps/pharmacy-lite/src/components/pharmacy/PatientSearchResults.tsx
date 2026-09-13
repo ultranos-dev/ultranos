@@ -1,6 +1,7 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
+import { highlightQuery } from '@ultranos/ui-kit/lib/highlight'
 import type { LocalPatient } from '@/lib/db'
 
 interface PatientSearchResultsProps {
@@ -63,7 +64,7 @@ export function PatientSearchResults({
                       aria-hidden="true"
                     />
                   )}
-                  {seg}
+                  {highlightQuery(seg ?? '', query)}
                 </span>
               ))}
             </p>

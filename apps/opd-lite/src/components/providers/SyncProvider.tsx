@@ -5,6 +5,7 @@ import '@/lib/key-lifecycle-hooks' // registers re-auth listener for awaiting-ke
 import { startSyncWorker, stopSyncWorker, triggerDrain } from '@/lib/sync-worker'
 import { syncDrugCatalog } from '@/lib/drug-catalog-sync'
 import { syncPharmacyDirectory } from '@/lib/pharmacy-sync'
+import { syncLabDirectory } from '@/lib/lab-sync'
 import { pullPatientChanges, pullPractitionerEncounters } from '@/lib/sync-pull'
 import { syncAllPatientsToDb } from '@/lib/use-patient-list-sync'
 import { useSyncStore } from '@/stores/sync-store'
@@ -21,6 +22,7 @@ export async function triggerCatalogSyncOnAuth(isAuthenticated: boolean): Promis
   if (!isAuthenticated) return
   await syncDrugCatalog()
   void syncPharmacyDirectory()
+  void syncLabDirectory()
 }
 
 /** Background pull interval — 2 minutes */

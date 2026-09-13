@@ -35,9 +35,11 @@
     "./components/ui/alert": "./src/components/ui/alert.tsx",
     "./tailwind.preset": "./src/tailwind.preset.ts",
     "./tokens.native": "./src/tokens.native.ts",
+    "./highlight-native": "./src/native/highlight-native.tsx",
     "./native": "./src/native/index.ts",
     "./native/NumericText": "./src/native/NumericText.tsx",
-    "./components/ui/search-input": "./src/components/ui/search-input.tsx"
+    "./components/ui/search-input": "./src/components/ui/search-input.tsx",
+    "./lib/highlight": "./src/lib/highlight.tsx"
   },
   "scripts": {
     "build": "tsc",

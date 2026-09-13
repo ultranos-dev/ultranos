@@ -60,7 +60,8 @@ const mockFrom = vi.fn((table: string) => {
       authored_on: '2026-05-30T10:00:00.000Z',
       special_instructions: null,
       meta_last_updated: '2026-05-30T10:00:00.000Z',
-      patients: { id: 'patient-1', given_name: 'Ahmad', birth_date: '1981-01-01' },
+      received_by_lab_id: 'lab-1',
+      patients: { id: 'patient-1', name_given: 'Ahmad', birth_date: null, birth_year: 1991 },
       practitioners: { id: 'doctor-1', given_name: 'Dr.', family_name: 'Karimi' },
     })
   }
@@ -154,6 +155,49 @@ describe('lab.pullOrders audit events', () => {
     expect(mockAuditEmit).toHaveBeenCalledWith(
       expect.objectContaining(expectedAuditEvent),
     )
+  })
+
+  it('projects a patient_id-derived patientRef and a birth_year age', async () => {
+    const { labRouter } = await import('../trpc/routers/lab')
+    const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)({
+      supabase: { from: mockFrom } as never,
+      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' },
+      headers: new Headers(),
+    } as never)
+
+    const res = await caller.lab.pullOrders({ limit: 100 })
+
+    expect(res.orders).toHaveLength(1)
+    const o = res.orders[0]!
+    // Matching key derives from the order's OWN patient_id (blind index mocked as
+    // hmac-<id>) — not the demographics join. This is the order↔patient link.
+    expect(o.patientRef).toBe('Patient/hmac-patient-1')
+    // Age falls back to birth_year when birth_date is null (year-only patients).
+    expect(o.patientAge).toBe(new Date().getFullYear() - 1991)
+    expect(o.patientFirstName).toBe('Ahmad')
+    // Order is claimed by this tech's lab (received_by_lab_id === labId).
+    expect(o.assignedToLab).toBe(true)
+  })
+
+  it('accepts a `since` watermark that carries a timezone offset (not just Z)', async () => {
+    const { labRouter } = await import('../trpc/routers/lab')
+    const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)({
+      supabase: { from: mockFrom } as never,
+      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' },
+      headers: new Headers(),
+    } as never)
+
+    // Postgres/PostgREST returns meta_last_updated with a +00:00 offset, which the
+    // client feeds straight back as `since`. z.string().datetime() (Z-only) 400s on it.
+    await expect(
+      caller.lab.pullOrders({ since: '2026-09-12T21:29:23.211+00:00', limit: 100 }),
+    ).resolves.toBeDefined()
   })
 })
 

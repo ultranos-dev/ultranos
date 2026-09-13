@@ -10,6 +10,7 @@ import { hapticSelection } from '@/lib/haptics'
 import { FontFamily, FontSize, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { Card, useReducedMotion, NumericText } from '@ultranos/ui-kit/native'
+import { highlightNativeName } from '@ultranos/ui-kit/highlight-native'
 
 interface Props {
   result: DrugSearchResult
@@ -97,7 +98,7 @@ export function DrugCard({ result, lang, onPress, query, compact }: Props) {
               ]}
               numberOfLines={1}
             >
-              {primaryName}
+              {highlightNativeName(primaryName, query ?? '')}
             </Text>
             {compact ? (
               <View testID="kind-generic" style={[styles.kindRow, isRtl && styles.kindRowRtl]}>

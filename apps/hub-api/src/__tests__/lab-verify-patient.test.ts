@@ -119,8 +119,22 @@ function setupPatientFound() {
   mockSelectSingle.mockResolvedValue({
     data: {
       id: 'patient-uuid-1',
-      given_name: 'Amir',
+      name_given: 'Amir',
       birth_date: '1990-05-15',
+      birth_year: 1990,
+    },
+    error: null,
+  })
+}
+
+// Real-world case: many patients register with a birth YEAR only (no exact DOB).
+function setupPatientYearOnly() {
+  mockSelectSingle.mockResolvedValue({
+    data: {
+      id: 'patient-uuid-1',
+      name_given: 'Amir',
+      birth_date: null,
+      birth_year: 1991,
     },
     error: null,
   })
@@ -270,17 +284,35 @@ describe('lab.verifyPatient', () => {
     // Verify patients table was queried
     expect(mockFrom).toHaveBeenCalledWith('patients')
 
-    // Verify the select call includes ONLY id, given_name, birth_date
+    // Verify the select uses the REAL patient name column (Afghan naming:
+    // name_given, NOT given_name) plus the DOB fields for age.
     const selectArg = mockSelectChain.mock.calls[0]?.[0] as string
-    expect(selectArg).toContain('given_name')
+    expect(selectArg).toContain('name_given')
+    expect(selectArg).not.toContain('given_name')
     expect(selectArg).toContain('birth_date')
+    expect(selectArg).toContain('birth_year')
     // Must NOT select other clinical columns
     expect(selectArg).not.toContain('diagnosis')
     expect(selectArg).not.toContain('medication')
     expect(selectArg).not.toContain('allergy')
     expect(selectArg).not.toContain('encounter')
-    // Verify we only select the 3 needed columns (id for patientRef, given_name, birth_date)
-    expect(selectArg).toBe('id, given_name, birth_date')
+    // Only the identity/age columns needed for a data-minimized verification.
+    expect(selectArg).toBe('id, name_given, birth_date, birth_year')
+  })
+
+  // ── Year-only DOB (the common real-world case) still verifies ──
+  it('returns a numeric age for a patient registered with birth year only', async () => {
+    setupLabAffiliation()
+    setupPatientYearOnly()
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
+    )
+
+    const result = await caller.lab.verifyPatient({ query: 'NID-12345', method: 'NATIONAL_ID' })
+    expect(result.firstName).toBe('Amir')
+    expect(result.age).toBe(new Date().getFullYear() - 1991)
   })
 
   // ── AC 7: patientRef is opaque (HMAC-SHA256) ────────────────

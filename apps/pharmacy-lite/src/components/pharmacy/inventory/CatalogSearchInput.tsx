@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
+import { highlightQuery } from '@ultranos/ui-kit/lib/highlight'
 import { searchCatalog } from '@/lib/inventory/catalog-sync'
 import type { CatalogItem } from '@/lib/inventory/types'
 
@@ -57,7 +58,7 @@ export function CatalogSearchInput({ onSelect, placeholder }: CatalogSearchInput
               tabIndex={0}
             >
               <div>
-                <span className="font-medium text-foreground">{item.name}</span>
+                <span className="font-medium text-foreground">{highlightQuery(item.name, query)}</span>
                 <span className="text-muted-foreground ms-2">{item.strength} {item.form}</span>
               </div>
               {item.barcode && (

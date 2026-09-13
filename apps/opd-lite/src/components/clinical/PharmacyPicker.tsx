@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { X } from '@ultranos/ui-kit/icons'
-import { searchPharmacies } from '@/lib/pharmacy-search'
+import { searchPharmacies, type PharmacySearchResult } from '@/lib/pharmacy-search'
+import { highlightMatches, getMatchIndices } from '@/lib/highlight-matches'
 import type { PharmacyDirectoryEntry } from '@ultranos/shared-types'
 
 interface PharmacyPickerProps {
@@ -23,7 +24,7 @@ const inputClasses =
 export function PharmacyPicker({ value, name, onSelect, onClear }: PharmacyPickerProps) {
   const t = useTranslations('prescription')
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<PharmacyDirectoryEntry[]>([])
+  const [results, setResults] = useState<PharmacySearchResult[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
 
@@ -81,7 +82,7 @@ export function PharmacyPicker({ value, name, onSelect, onClear }: PharmacyPicke
       } else if (e.key === 'Enter') {
         e.preventDefault()
         if (activeIndex >= 0 && activeIndex < results.length) {
-          handleSelect(results[activeIndex]!)
+          handleSelect(results[activeIndex]!.item)
         }
       } else if (e.key === 'Escape') {
         e.preventDefault()
@@ -145,7 +146,8 @@ export function PharmacyPicker({ value, name, onSelect, onClear }: PharmacyPicke
             'ring-[0.65px] ring-border/50 bg-background shadow-lg'
           }
         >
-          {results.map((pharmacy, idx) => {
+          {results.map((result, idx) => {
+            const pharmacy = result.item
             const subtitle = [
               pharmacy.address,
               [pharmacy.province, pharmacy.district].filter(Boolean).join('/'),
@@ -169,7 +171,9 @@ export function PharmacyPicker({ value, name, onSelect, onClear }: PharmacyPicke
                   (idx === activeIndex ? 'bg-muted' : 'hover:bg-muted')
                 }
               >
-                <div className="font-semibold text-foreground">{pharmacy.name}</div>
+                <div className="font-semibold text-foreground">
+                  {highlightMatches(pharmacy.name, getMatchIndices(result.matches, 'name'))}
+                </div>
                 {subtitle && (
                   <div className="text-xs text-muted-foreground">{subtitle}</div>
                 )}

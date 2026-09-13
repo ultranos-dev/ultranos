@@ -7,6 +7,7 @@ import { db } from '@/lib/db'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { enqueueSyncAction } from '@ultranos/sync-engine'
 import { syncQueue } from '@/lib/sync-queue'
+import { hlc, serializeHlc } from '@/lib/hlc'
 
 interface PrescriptionState {
   pendingPrescriptions: FhirMedicationRequestZod[]
@@ -21,6 +22,14 @@ interface PrescriptionState {
   ) => Promise<FhirMedicationRequestZod>
 
   removePrescription: (medicationRequestId: string) => Promise<void>
+
+  /**
+   * Set (or clear, with null) the preferred pharmacy on EVERY pending
+   * prescription for the current encounter. The pharmacy is chosen once for the
+   * whole prescription, so this rewrites dispenseRequest.performer on each
+   * MedicationRequest, bumps its version, persists, and queues an update sync.
+   */
+  applyPharmacyToPending: (pharmacy: { id: string; name?: string } | null) => Promise<void>
 
   loadPrescriptions: (encounterId: string) => Promise<void>
 
@@ -104,12 +113,22 @@ export const usePrescriptionStore = create<PrescriptionState>()(
       const nowIso = new Date().toISOString()
 
       // Soft-cancel: append a new cancelled record (Tier 1 safety-critical — append-only).
-      // The original active record is preserved; the cancelled version gets a new ID.
-      const cancelledId = `${prescription.id}:cancelled:${nextVersion(prescription.meta.versionId)}`
+      // The original active record is preserved; the cancellation is a distinct
+      // record with its OWN uuid (the `medication_requests.id` column is uuid — a
+      // suffixed `<id>:cancelled:N` value is rejected on sync), linked back to the
+      // original via FHIR `priorPrescription`. It is stamped with a freshly
+      // serialized HLC (NOT `meta.lastUpdated`, an ISO string that the Hub's
+      // deserializeHlc would mis-parse into a near-epoch clock and mis-order).
+      const cancelledTs = serializeHlc(hlc.now())
       const cancelled: FhirMedicationRequestZod = {
         ...prescription,
-        id: cancelledId,
+        id: crypto.randomUUID(),
         status: 'cancelled',
+        priorPrescription: { reference: `MedicationRequest/${prescription.id}` },
+        _ultranos: {
+          ...prescription._ultranos,
+          hlcTimestamp: cancelledTs,
+        },
         meta: {
           ...prescription.meta,
           lastUpdated: nowIso,
@@ -125,7 +144,7 @@ export const usePrescriptionStore = create<PrescriptionState>()(
           resourceId: cancelled.id,
           action: 'update',
           payload: cancelled as unknown as Record<string, unknown>,
-          hlcTimestamp: cancelled.meta.lastUpdated,
+          hlcTimestamp: cancelledTs,
         })
 
         const patientRef = prescription.subject.reference.replace('Patient/', '')
@@ -143,6 +162,54 @@ export const usePrescriptionStore = create<PrescriptionState>()(
       }
     },
 
+    applyPharmacyToPending: async (pharmacy) => {
+      const pending = get().pendingPrescriptions
+      if (pending.length === 0) return
+
+      const nowIso = new Date().toISOString()
+      const performer = pharmacy
+        ? { reference: `Organization/${pharmacy.id}`, display: pharmacy.name }
+        : undefined
+
+      // Each rewrite gets a freshly serialized HLC (NOT meta.lastUpdated, an ISO
+      // string the Hub would mis-parse into a near-epoch clock). hlc.now() advances
+      // monotonically, so the per-record timestamps are distinct and causally ordered.
+      const updated: FhirMedicationRequestZod[] = pending.map((rx) => ({
+        ...rx,
+        dispenseRequest: { ...(rx.dispenseRequest ?? {}), performer },
+        _ultranos: {
+          ...rx._ultranos,
+          hlcTimestamp: serializeHlc(hlc.now()),
+        },
+        meta: {
+          ...rx.meta,
+          lastUpdated: nowIso,
+          versionId: nextVersion(rx.meta.versionId),
+        },
+      }))
+
+      for (const rx of updated) {
+        await db.medications.put(rx)
+
+        void enqueueSyncAction(syncQueue, {
+          resourceType: 'MedicationRequest',
+          resourceId: rx.id,
+          action: 'update',
+          payload: rx as unknown as Record<string, unknown>,
+          hlcTimestamp: rx._ultranos.hlcTimestamp,
+        })
+
+        const patientRef = rx.subject.reference.replace('Patient/', '')
+        auditPhiAccess(AuditAction.UPDATE, AuditResourceType.PRESCRIPTION, rx.id, patientRef, {
+          phiAccess: 'prescription_pharmacy_update',
+        })
+      }
+
+      set((state) => {
+        state.pendingPrescriptions = updated
+      })
+    },
+
     loadPrescriptions: async (encounterId) => {
       try {
         const medications = await db.medications
@@ -150,12 +217,18 @@ export const usePrescriptionStore = create<PrescriptionState>()(
           .equals(`Encounter/${encounterId}`)
           .toArray()
 
-        // D1: Query-time dedup — collect base IDs from cancelled records,
-        // then exclude originals that have been superseded (append-only safe)
+        // D1: Query-time dedup — collect the original IDs that cancelled records
+        // point at (via FHIR priorPrescription), then exclude those originals
+        // (append-only safe). Falls back to the legacy `<id>:cancelled:N` suffix
+        // for any pre-existing records created before the uuid/priorPrescription fix.
         const cancelledBaseIds = new Set(
           medications
             .filter((m) => m.status === 'cancelled')
-            .map((m) => m.id.split(':cancelled:')[0]),
+            .map(
+              (m) =>
+                m.priorPrescription?.reference?.replace(/^MedicationRequest\//, '') ??
+                m.id.split(':cancelled:')[0],
+            ),
         )
         const active = medications.filter(
           (m) => m.status === 'active' && !cancelledBaseIds.has(m.id),

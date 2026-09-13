@@ -25,6 +25,35 @@ const ordersMessages: Record<string, any> = {
     testsRequested: 'Tests',
     specialInstructions: 'Special Instructions',
     orderedAt: 'Ordered',
+    ageYears: '{age}y',
+    orderId: 'Order',
+    assignedToYou: 'Assigned to you',
+    available: 'Available',
+    receiveSampleFor: 'Receive sample for {name}',
+    patientDetails: 'Patient Details',
+    sampleReceived: 'Sample received',
+    viewInWorklist: 'View {name} in worklist',
+  },
+  details: {
+    title: 'Patient Details',
+    patientSection: 'Patient',
+    orderSection: 'Order',
+    age: 'Age',
+    fullName: 'Full name',
+    bloodGroup: 'Blood group',
+    weight: 'Weight',
+    height: 'Height',
+    bmi: 'BMI',
+    bloodPressure: 'Blood pressure',
+    temperature: 'Temperature',
+    tests: 'Tests',
+    urgency: 'Urgency',
+    culturalFlags: 'Cultural care preferences',
+    noCulturalFlags: 'None recorded',
+    loading: 'Loading…',
+    unavailable: 'Unavailable',
+    dataMinNote: 'The lab may see name, age, blood group, and basic vitals.',
+    close: 'Close',
   },
   badge: 'pending',
 }
@@ -38,12 +67,34 @@ function resolveKey(key: string): string {
   return typeof result === 'string' ? result : key
 }
 
+function interpolate(s: string, opts?: Record<string, unknown>): string {
+  if (!opts) return s
+  return s.replace(/\{(\w+)\}/g, (_, k) => (k in opts ? String(opts[k]) : `{${k}}`))
+}
+
 vi.mock('next-intl', () => ({
   useTranslations: (namespace?: string) => {
-    const t = (key: string, _opts?: any) => resolveKey(key)
+    const t = (key: string, opts?: Record<string, unknown>) => interpolate(resolveKey(key), opts)
     return t
   },
   useLocale: () => 'en',
+}))
+
+// OrderCard uses next/navigation's useRouter to route to the worklist once received.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}))
+
+// Stub the on-demand detail-view fetch so PatientDetailsModal renders deterministically.
+vi.mock('@/hooks/useOrderPatientDetails', () => ({
+  useOrderPatientDetails: () => ({
+    details: {
+      fullName: { given: 'Ahmad', father: 'Marjan', grandfather: 'Qamar' },
+      bloodGroup: 'A+',
+      vitals: { weightKg: 77, heightCm: 170, bmi: 26.6, temperatureC: 37, bpSystolic: 101, bpDiastolic: 77, recordedAt: null },
+    },
+    loading: false,
+  }),
 }))
 
 // Fixed dates for deterministic snapshots
@@ -76,14 +127,50 @@ const { OrderCard } = await import('../components/orders/OrderCard')
 const { OrdersWorklist } = await import('../components/orders/OrdersWorklist')
 
 describe('OrderCard', () => {
-  it('renders patient first name + age', () => {
+  it('renders patient first name + age (bidi-isolated as separate fields)', () => {
     render(<OrderCard order={makeOrder()} />)
-    expect(screen.getByText(/Ahmad, 45y/)).toBeDefined()
+    // Name and age are now separate elements (a <bdi> + a span) so an RTL name
+    // doesn't jumble with the LTR age — assert each independently.
+    expect(screen.getByText('Ahmad')).toBeDefined()
+    expect(screen.getByText('45y')).toBeDefined()
   })
 
-  it('renders test names', () => {
+  it('renders test names with LOINC codes', () => {
     render(<OrderCard order={makeOrder()} />)
-    expect(screen.getByText(/CBC, Cholesterol/)).toBeDefined()
+    expect(screen.getByText(/CBC \(58410-2\), Cholesterol \(2093-3\)/)).toBeDefined()
+  })
+
+  it('is actionable — clicking opens the Receive Sample flow', () => {
+    render(<OrderCard order={makeOrder()} />)
+    const card = screen.getByRole('button', { name: /Receive sample for Ahmad/ })
+    expect(card).toBeDefined()
+  })
+
+  it('shows the assigned-lab indicator', () => {
+    render(<OrderCard order={makeOrder({ assignedToLab: true })} />)
+    expect(screen.getByText('Assigned to you')).toBeDefined()
+  })
+
+  it('Patient Details button opens the details modal without triggering Receive Sample', async () => {
+    const user = userEvent.setup()
+    render(<OrderCard order={makeOrder()} />)
+    await user.click(screen.getByRole('button', { name: 'Patient Details' }))
+    // Details modal is shown...
+    expect(screen.getByTestId('patient-details-modal')).toBeDefined()
+    // ...and the click did NOT bubble to open the Receive Sample verification step.
+    expect(screen.queryByTestId('patient-verification-form')).toBeNull()
+  })
+
+  it('Patient Details modal shows the permitted fields (full name, blood group, vitals, tests)', async () => {
+    const user = userEvent.setup()
+    render(<OrderCard order={makeOrder()} />)
+    await user.click(screen.getByRole('button', { name: 'Patient Details' }))
+    const modal = screen.getByTestId('patient-details-modal')
+    expect(modal.textContent).toContain('Ahmad · Marjan · Qamar') // full name
+    expect(modal.textContent).toContain('A+') // blood group
+    expect(modal.textContent).toContain('77 kg') // weight
+    expect(modal.textContent).toContain('45y') // age (from order)
+    expect(modal.textContent).toContain('CBC (58410-2)') // order test
   })
 
   it('renders ordering physician', () => {

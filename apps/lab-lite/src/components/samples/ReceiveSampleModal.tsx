@@ -31,8 +31,13 @@ export interface ReceiveSampleModalProps {
   orderId: string
   /** Opaque Patient/<uuid> reference — never raw name */
   patientRef: string
+  /** Patient first name + age (data-minimized, Rule #7) — shown in the verify step. */
+  patientFirstName?: string
+  patientAge?: number | null
   onClose: () => void
   onSuccess: (labSampleId: string) => void
+  /** Optional hand-off — renders a "Go to Worklist" action on the confirmation step. */
+  onViewWorklist?: () => void
   /** Active orders for this patient — used to run trip optimizer after collection */
   orders?: LabOrderEntry[]
   /** Queue entry ID — used to persist trip result (optional) */
@@ -48,8 +53,11 @@ export interface ReceiveSampleModalProps {
 export function ReceiveSampleModal({
   orderId,
   patientRef,
+  patientFirstName,
+  patientAge,
   onClose,
   onSuccess,
+  onViewWorklist,
   orders,
   queueEntryId,
   patientToken,
@@ -188,6 +196,8 @@ export function ReceiveSampleModal({
             <PatientVerificationForm
               sampleId={orderId}
               patientRef={patientRef}
+              patientFirstName={patientFirstName}
+              patientAge={patientAge}
               verifiedBy={techId}
               onComplete={handleVerificationComplete}
               defaultMethods={defaultMethods}
@@ -226,15 +236,25 @@ export function ReceiveSampleModal({
                 patientToken={patientToken}
               />
             )}
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end gap-3 pt-2">
               <button
                 type="button"
                 data-testid="confirmation-done-button"
                 onClick={() => onSuccess(confirmedSampleId)}
-                className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className="rounded-lg border border-border px-5 py-2 text-sm font-medium text-foreground hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 {t('modal.done')}
               </button>
+              {onViewWorklist && (
+                <button
+                  type="button"
+                  data-testid="confirmation-worklist-button"
+                  onClick={onViewWorklist}
+                  className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                  {t('modal.goToWorklist')}
+                </button>
+              )}
             </div>
           </div>
         </div>

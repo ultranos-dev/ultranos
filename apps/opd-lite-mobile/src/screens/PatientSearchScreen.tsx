@@ -89,7 +89,7 @@ export function PatientSearchScreen({ navigation }: PatientSearchScreenProps) {
           <Text style={styles.emptyText}>No patients found</Text>
         </View>
       )}
-      <PatientResultList results={results} onSelectPatient={handleSelectPatient} />
+      <PatientResultList results={results} onSelectPatient={handleSelectPatient} query={inputValue} />
     </SafeAreaView>
   )
 }

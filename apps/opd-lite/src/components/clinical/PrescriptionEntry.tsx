@@ -19,7 +19,7 @@ import {
 import { enrichDrug } from '@/lib/trpc'
 import { DrugSafetyPanel, type PresentationChoice } from '@/components/clinical/DrugSafetyPanel'
 import { DrugMonographSheet } from '@/components/clinical/DrugMonographSheet'
-import { PharmacyPicker } from '@/components/clinical/PharmacyPicker'
+import { highlightMatches, getMatchIndices } from '@/lib/highlight-matches'
 
 interface PrescriptionEntryProps {
   onSubmit: (form: PrescriptionFormData) => void | Promise<void>
@@ -27,54 +27,6 @@ interface PrescriptionEntryProps {
   canEnrich?: boolean
   patientSex?: string
   patientAge?: number
-}
-
-function getDisplayIndices(
-  result: MedicationSearchResult,
-): readonly [number, number][] | undefined {
-  return result.matches?.find((m) => m.key === 'display')?.indices
-}
-
-function mergeIndices(
-  indices: readonly [number, number][],
-): [number, number][] {
-  const sorted = [...indices].sort((a, b) => a[0] - b[0])
-  const merged: [number, number][] = []
-  for (const [start, end] of sorted) {
-    const last = merged[merged.length - 1]
-    if (last && start <= last[1] + 1) {
-      last[1] = Math.max(last[1], end)
-    } else {
-      merged.push([start, end])
-    }
-  }
-  return merged
-}
-
-function highlightMatches(
-  text: string,
-  indices: readonly [number, number][] | undefined,
-): React.ReactNode {
-  if (!indices || indices.length === 0) return text
-  const safe = mergeIndices(indices)
-  const parts: React.ReactNode[] = []
-  let lastIndex = 0
-  for (const [start, end] of safe) {
-    const clampedStart = Math.max(start, lastIndex)
-    if (clampedStart > lastIndex) {
-      parts.push(text.slice(lastIndex, clampedStart))
-    }
-    parts.push(
-      <mark key={start} className="bg-warning/30 text-foreground rounded-sm ps-0.5 pe-0.5">
-        {text.slice(clampedStart, end + 1)}
-      </mark>,
-    )
-    lastIndex = end + 1
-  }
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex))
-  }
-  return <>{parts}</>
 }
 
 export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patientSex, patientAge }: PrescriptionEntryProps) {
@@ -337,7 +289,7 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
               >
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="font-semibold text-foreground">
-                    {highlightMatches(result.item.display, getDisplayIndices(result))}
+                    {highlightMatches(result.item.display, getMatchIndices(result.matches, 'display'))}
                   </span>
                   {result.item.strength && (
                     <span className="shrink-0 text-sm font-semibold text-primary">
@@ -553,17 +505,6 @@ export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false, patie
               disabled={disabled}
               className={inputClasses}
               aria-label={t('notesAria')}
-            />
-          </div>
-
-          {/* Optional pharmacy picker */}
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-foreground">{t('pharmacyOptional')}</label>
-            <PharmacyPicker
-              value={form.pharmacyId}
-              name={form.pharmacyName}
-              onSelect={(id, name) => setForm((prev) => ({ ...prev, pharmacyId: id, pharmacyName: name }))}
-              onClear={() => setForm((prev) => ({ ...prev, pharmacyId: undefined, pharmacyName: undefined }))}
             />
           </div>
 

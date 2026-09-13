@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 import { flattenForDb } from '@/lib/resource-mappers'
 
 /**
@@ -75,5 +78,47 @@ describe('flattenServiceRequest → service_requests column alignment', () => {
     expect(f.codeCode).toBe('58410-2')
     expect(f.patientId).toBe('p1')
     expect(f.specialInstructions).toBe('cold-chain')
+  })
+})
+
+/**
+ * Reader-drift guard for the OTHER half of lab.pullOrders: the embedded joins to
+ * patients and practitioners. A unit test with a mocked Supabase can't catch an
+ * embed that selects a non-existent column (the mock returns whatever fields it's
+ * given), so this parses lab.ts and asserts every embedded column is a REAL column
+ * on the joined table. Regression guard for the "ordered test not showing in
+ * lab-lite" bug: patients uses Afghan naming (`name_given`), NOT `given_name` —
+ * the wrong name made PostgREST error and pullOrders returned nothing.
+ */
+// Identity/demographic columns that lab.ts embeds may legitimately select.
+const PATIENTS_COLUMNS = new Set([
+  'id', 'name_given', 'name_father', 'name_grandfather', 'name_family',
+  'birth_date', 'birth_year', 'gender',
+])
+const PRACTITIONERS_COLUMNS = new Set(['id', 'given_name', 'family_name'])
+
+function embeddedColumns(src: string, resource: string): string[] {
+  const re = new RegExp(resource + '![^(]*\\(([^)]*)\\)', 'g')
+  const cols: string[] = []
+  for (const m of src.matchAll(re)) {
+    cols.push(...m[1].split(',').map((c) => c.trim()).filter(Boolean))
+  }
+  return cols
+}
+
+describe('lab.ts embedded-join columns exist on the joined tables', () => {
+  const here = dirname(fileURLToPath(import.meta.url))
+  const src = readFileSync(join(here, '../trpc/routers/lab.ts'), 'utf8')
+
+  it('every patients embed selects only real patients columns (name_given, not given_name)', () => {
+    const cols = embeddedColumns(src, 'patients')
+    expect(cols.length).toBeGreaterThan(0)
+    expect(cols.filter((c) => !PATIENTS_COLUMNS.has(c))).toEqual([])
+  })
+
+  it('every practitioners embed selects only real practitioners columns', () => {
+    const cols = embeddedColumns(src, 'practitioners')
+    expect(cols.length).toBeGreaterThan(0)
+    expect(cols.filter((c) => !PRACTITIONERS_COLUMNS.has(c))).toEqual([])
   })
 })

@@ -272,6 +272,7 @@ interface FhirMedicationRequestPayload {
   subject?: { reference?: string }
   encounter?: { reference?: string }
   requester?: { reference?: string }
+  priorPrescription?: { reference?: string }
   authoredOn?: string
   dosageInstruction?: unknown
   dispenseRequest?: unknown
@@ -302,6 +303,9 @@ function flattenMedicationRequest(payload: FhirMedicationRequestPayload): Record
     subjectReference: (payload.subject?.reference ?? '').replace(/^Patient\//, '') || null,
     encounterReference: (payload.encounter?.reference ?? '').replace(/^Encounter\//, '') || null,
     requesterId: (payload.requester?.reference ?? '').replace(/^Practitioner\//, '') || null,
+    // Cancellation link (FHIR priorPrescription) → bare uuid. Kept so an append-only
+    // cancellation record still points at the prescription it cancels after a pull.
+    priorPrescriptionId: (payload.priorPrescription?.reference ?? '').replace(/^MedicationRequest\//, '') || null,
     authoredOn: payload.authoredOn ?? null,
     dosageInstruction: payload.dosageInstruction ?? null,  // jsonb — encrypted by db.toRow (randomizedFields)
     dispenseRequest: payload.dispenseRequest ?? null,      // jsonb

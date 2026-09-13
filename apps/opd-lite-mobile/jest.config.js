@@ -9,6 +9,7 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@ultranos/shared-types$': '<rootDir>/../../packages/shared-types/src/index.ts',
     '^@ultranos/ui-kit$': '<rootDir>/../../packages/ui-kit/src/index.ts',
+    '^@ultranos/ui-kit/highlight-native$': '<rootDir>/../../packages/ui-kit/src/native/highlight-native.tsx',
     '^@ultranos/sync-engine$': '<rootDir>/../../packages/sync-engine/src/index.ts',
     '^@ultranos/audit-logger$': '<rootDir>/../../packages/audit-logger/src/index.ts',
   },

@@ -204,6 +204,30 @@ describe('flattenForDb', () => {
     })
   })
 
+  describe('MedicationRequest', () => {
+    const baseRx = {
+      id: 'rx-cancel',
+      resourceType: 'MedicationRequest',
+      status: 'cancelled',
+      medicationCodeableConcept: { text: 'Amoxicillin', coding: [{ display: 'Amoxicillin' }] },
+      subject: { reference: 'Patient/pat-1' },
+      requester: { reference: 'Practitioner/doc-1' },
+    }
+
+    it('flattens priorPrescription to a bare priorPrescriptionId (cancellation link persists at the Hub)', () => {
+      const result = flattenForDb('MedicationRequest', {
+        ...baseRx,
+        priorPrescription: { reference: 'MedicationRequest/rx-original' },
+      })
+      expect(result.priorPrescriptionId).toBe('rx-original')
+    })
+
+    it('sets priorPrescriptionId to null when there is no prior link', () => {
+      const result = flattenForDb('MedicationRequest', baseRx)
+      expect(result.priorPrescriptionId).toBeNull()
+    })
+  })
+
   describe('unmapped resource type', () => {
     it('strips resourceType and passes through for unknown types', () => {
       const unknown = {
