@@ -69,6 +69,7 @@ export const navGroups: NavGroup[] = [
       // Sub-items: no icon, URLs start with /inventory/
       { titleKey: 'receiveStock',  url: '/inventory/receive' },
       { titleKey: 'catalog',       url: '/inventory/catalog' },
+      { titleKey: 'reorder',       url: '/inventory/reorder' },
       { titleKey: 'suppliers',     url: '/inventory/suppliers' },
       { titleKey: 'stockCount',    url: '/inventory/count' },
       { titleKey: 'ledger',        url: '/inventory/ledger' },
