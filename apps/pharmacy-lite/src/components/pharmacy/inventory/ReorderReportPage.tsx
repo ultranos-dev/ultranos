@@ -20,10 +20,10 @@ interface RowState {
   unitCostMajor: string
 }
 
-function computeLineTotal(qty: number, unitCostMajor: string): string {
+function computeLineTotal(qty: number, unitCostMajor: string, minorUnits: number): string {
   const cost = parseFloat(unitCostMajor)
   if (isNaN(cost) || isNaN(qty)) return '—'
-  return (qty * cost).toFixed(2)
+  return (qty * cost).toFixed(minorUnits)
 }
 
 export function ReorderReportPage() {
@@ -136,13 +136,13 @@ export function ReorderReportPage() {
       {generatedCount !== null && (
         <div className="flex items-center gap-3 rounded-xl bg-card px-4 py-3 ring-[0.65px] ring-border/50 shadow-card text-sm text-foreground">
           <span>{t('generatedSummary', { count: generatedCount })}</span>
-          <button
-            type="button"
-            className="text-primary underline underline-offset-2 hover:no-underline"
+          <Button
+            variant="link"
+            className="h-auto p-0 text-sm"
             onClick={() => router.push('/inventory/orders')}
           >
             {t('viewOrders')}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -213,7 +213,7 @@ export function ReorderReportPage() {
                 const state = rowStates.get(line.catalogItemId)
                 if (!state) return null
                 const hasEffectiveSupplier = !!state.supplierId
-                const lineTotal = computeLineTotal(state.qty, state.unitCostMajor)
+                const lineTotal = computeLineTotal(state.qty, state.unitCostMajor, minorUnits)
 
                 return (
                   <tr key={line.catalogItemId} className="hover:bg-muted/50">
