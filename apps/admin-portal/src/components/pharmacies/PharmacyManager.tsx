@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { SearchInput } from '@/components/ui/search-input'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,7 @@ interface PharmacyEntry {
 
 export function PharmacyManager() {
   const t = useTranslations('pharmacies')
+  const router = useRouter()
 
   const [pharmacies, setPharmacies] = useState<PharmacyEntry[]>([])
   const [search, setSearch] = useState('')
@@ -175,13 +177,22 @@ export function PharmacyManager() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleToggleActive(pharmacy)}
-                      >
-                        {pharmacy.isActive ? t('inactive') : t('active')}
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => router.push(`/pharmacies/${pharmacy.id}/locations`)}
+                        >
+                          {t('manageLocations')}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleToggleActive(pharmacy)}
+                        >
+                          {pharmacy.isActive ? t('inactive') : t('active')}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

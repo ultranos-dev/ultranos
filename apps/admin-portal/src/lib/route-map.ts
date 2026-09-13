@@ -26,6 +26,7 @@ const ROUTE_LABELS: Record<string, string> = {
   '/subscriptions/billing': 'Billing',
   '/subscriptions/invoices': 'Invoices',
   '/settings': 'Settings',
+  '/pharmacies': 'Pharmacies',
 }
 
 export function buildBreadcrumbs(pathname: string): BreadcrumbSegment[] {
@@ -64,6 +65,7 @@ export function buildBreadcrumbs(pathname: string): BreadcrumbSegment[] {
         merge: 'Merge',
         billing: 'Billing',
         invoices: 'Invoices',
+        locations: 'Locations',
       }
       const seg = segments[i]; if (seg && subPageLabels[seg]) {
         crumbs.push({ label: subPageLabels[seg] as string, href: pathname })

@@ -775,7 +775,8 @@
     "empty": "No pharmacies found",
     "save": "Save",
     "cancel": "Cancel",
-    "saveError": "Could not save. Please try again."
+    "saveError": "Could not save. Please try again.",
+    "manageLocations": "المواقع"
   },
   "facilityLocations": {
     "title": "المواقع الفرعية",
