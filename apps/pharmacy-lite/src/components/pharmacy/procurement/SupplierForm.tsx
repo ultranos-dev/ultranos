@@ -22,6 +22,11 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
   const [address, setAddress] = useState(supplier?.address ?? '')
   const [paymentTerms, setPaymentTerms] = useState(supplier?.paymentTerms ?? '')
   const [paymentTermsDays, setPaymentTermsDays] = useState(supplier?.paymentTermsDays?.toString() ?? '')
+  const [supplierCode, setSupplierCode] = useState(supplier?.supplierCode ?? '')
+  const [taxId, setTaxId] = useState(supplier?.taxId ?? '')
+  const [minOrderValue, setMinOrderValue] = useState(supplier?.minOrderValue?.toString() ?? '')
+  const [rating, setRating] = useState(supplier?.rating?.toString() ?? '')
+  const [notes, setNotes] = useState(supplier?.notes ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -46,6 +51,11 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
         leadTimeDays: leadTimeDays ? parseInt(leadTimeDays, 10) : undefined,
         paymentTerms: paymentTerms.trim() || undefined,
         paymentTermsDays: paymentTermsDays ? parseInt(paymentTermsDays, 10) : undefined,
+        supplierCode: supplierCode.trim() || undefined,
+        taxId: taxId.trim() || undefined,
+        minOrderValue: minOrderValue ? parseInt(minOrderValue, 10) : undefined,
+        rating: rating ? parseInt(rating, 10) : undefined,
+        notes: notes.trim() || undefined,
       }
 
       if (isEdit) {
@@ -170,6 +180,63 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
               className={inputClasses}
             />
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-foreground">{t('supplierCode')}</label>
+            <input
+              type="text"
+              value={supplierCode}
+              onChange={(e) => setSupplierCode(e.target.value)}
+              placeholder={t('supplierCode')}
+              className={inputClasses}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-foreground">{t('taxId')}</label>
+            <input
+              type="text"
+              value={taxId}
+              onChange={(e) => setTaxId(e.target.value)}
+              placeholder={t('taxId')}
+              className={inputClasses}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-foreground">{t('minOrderValue')}</label>
+            <input
+              type="number"
+              value={minOrderValue}
+              onChange={(e) => setMinOrderValue(e.target.value)}
+              placeholder="e.g. 10000"
+              min={0}
+              className={inputClasses}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-foreground">{t('rating')}</label>
+            <input
+              type="number"
+              value={rating}
+              onChange={(e) => setRating(e.target.value)}
+              placeholder="1–5"
+              min={1}
+              max={5}
+              className={inputClasses}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-foreground">{t('notes')}</label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder={t('notes')}
+            rows={2}
+            className={inputClasses}
+          />
         </div>
       </div>
 
