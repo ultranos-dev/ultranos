@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { segmentsByIndices, segmentsByQuery, type HighlightSegment } from './highlight-core'
+import { segmentsByIndices, segmentsByQuery, type HighlightSegment } from './highlight-core.js'
 
 /**
  * Web (<mark>) character-level match highlighting for search-as-you-type dropdowns.
@@ -11,7 +11,7 @@ import { segmentsByIndices, segmentsByQuery, type HighlightSegment } from './hig
  *    every case-insensitive occurrence of the typed query.
  */
 
-export { getMatchIndices } from './highlight-core'
+export { getMatchIndices } from './highlight-core.js'
 
 const MARK_CLASS = 'bg-warning/30 text-foreground rounded-sm ps-0.5 pe-0.5'
 

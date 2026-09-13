@@ -172,6 +172,14 @@ export interface UploadQueueMetadata {
   loincCode: string
   loincDisplay: string
   collectionDate: string
+  /** Routing key — 'result' (default when absent) or 'specimen'. */
+  kind?: 'result' | 'specimen'
+  /** Present when kind='result': links the upload to an existing DiagnosticReport. */
+  diagnosticReportId?: string
+  /** Present when kind='specimen': the specimen this file is attached to. */
+  specimenId?: string
+  /** Present when kind='specimen': whether this is a receipt or rejection photo. */
+  attachmentContext?: 'receipt' | 'rejection'
 }
 
 export type UploadQueueStatus = 'pending' | 'uploading' | 'expired' | 'failed'

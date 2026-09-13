@@ -8,9 +8,10 @@ const ACCEPTED_TYPES = new Set([
   'application/pdf',
   'image/jpeg',
   'image/png',
+  'image/webp',
 ])
 
-const ACCEPTED_EXTENSIONS = '.pdf,.jpg,.jpeg,.png'
+const ACCEPTED_EXTENSIONS = '.pdf,.jpg,.jpeg,.png,.webp'
 const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20 MB
 
 interface ResultUploadProps {
@@ -37,7 +38,7 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
       setError(null)
 
       if (!ACCEPTED_TYPES.has(file.type)) {
-        setError('Only PDF, JPEG, and PNG files are accepted.')
+        setError('Only PDF, JPEG, PNG, and WebP files are accepted.')
         return
       }
 
@@ -146,7 +147,7 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
           Drag and drop your lab result file here, or{' '}
           <span className="font-semibold text-primary-600">browse files</span>
         </p>
-        <p className="text-xs text-muted-foreground">PDF, JPEG, or PNG (max 20 MB)</p>
+        <p className="text-xs text-muted-foreground">PDF, JPEG, PNG, or WebP (max 20 MB)</p>
         <input
           ref={inputRef}
           type="file"

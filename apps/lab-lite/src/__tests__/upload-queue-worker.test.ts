@@ -26,6 +26,7 @@ function makeEntry(overrides: Partial<UploadQueueEntry> = {}): Omit<UploadQueueE
 function makeDeps(overrides: Partial<DrainDependencies> = {}): DrainDependencies {
   return {
     uploadFn: vi.fn().mockResolvedValue({ success: true, reportId: 'rpt-1', status: 'accepted', virusScanStatus: 'clean' }),
+    uploadSpecimenFn: vi.fn().mockResolvedValue({ fileId: 'f1' }),
     getToken: vi.fn().mockResolvedValue('test-token'),
     onAuditEvent: vi.fn(),
     sleep: vi.fn().mockResolvedValue(undefined),
@@ -182,6 +183,91 @@ describe('Upload Queue Worker — drainQueue', () => {
         fileName: 'test.pdf',
         fileType: 'application/pdf',
       }),
+      'test-token',
+    )
+  })
+
+  it('routes specimen-kind entries to uploadSpecimenFn with linkage', async () => {
+    await addToQueue(makeEntry({
+      file: new Blob([new Uint8Array(3)]),
+      fileName: 'x.webp',
+      fileType: 'image/webp',
+      patientRef: 'Patient/abc',
+      metadata: {
+        kind: 'specimen',
+        specimenId: 'LAB-1',
+        attachmentContext: 'rejection',
+        loincCode: '',
+        loincDisplay: '',
+        collectionDate: '2026-09-01',
+      },
+    }))
+
+    const uploadSpecimenFn = vi.fn().mockResolvedValue({ fileId: 'f1' })
+    const uploadFn = vi.fn().mockResolvedValue({ success: true, reportId: 'rpt-1', status: 'accepted', virusScanStatus: 'clean' })
+    const deps = makeDeps({ uploadFn, uploadSpecimenFn })
+
+    await drainQueue(deps)
+
+    expect(uploadSpecimenFn).toHaveBeenCalledWith(
+      expect.objectContaining({ specimenId: 'LAB-1', attachmentContext: 'rejection', fileType: 'image/webp' }),
+      'test-token',
+    )
+    expect(uploadFn).not.toHaveBeenCalled()
+  })
+
+  it('fails gracefully (retry/fail path) when specimen entry has no uploadSpecimenFn', async () => {
+    await addToQueue(makeEntry({
+      file: new Blob([new Uint8Array(3)]),
+      fileName: 'x.webp',
+      fileType: 'image/webp',
+      patientRef: 'Patient/abc',
+      metadata: {
+        kind: 'specimen',
+        specimenId: 'LAB-2',
+        attachmentContext: 'receipt',
+        loincCode: '',
+        loincDisplay: '',
+        collectionDate: '2026-09-01',
+      },
+    }))
+
+    // Explicitly omit uploadSpecimenFn to simulate SyncProvider not providing it
+    const deps = makeDeps({ uploadSpecimenFn: undefined })
+
+    // Should NOT throw — item enters the retry/fail path
+    await expect(drainQueue(deps)).resolves.toBeUndefined()
+
+    const items = await getQueueItems()
+    expect(items).toHaveLength(1)
+    expect(items[0]!.status).toBe('failed')
+    expect(items[0]!.retryCount).toBe(3)
+    // uploadFn must NOT have been called (it's a specimen, not a result)
+    expect(deps.uploadFn).not.toHaveBeenCalled()
+  })
+
+  it('passes diagnosticReportId for result-kind entries', async () => {
+    await addToQueue(makeEntry({
+      file: new Blob([new Uint8Array(3)]),
+      fileName: 'x.webp',
+      fileType: 'image/webp',
+      patientRef: 'Patient/abc',
+      metadata: {
+        kind: 'result',
+        diagnosticReportId: 'rep-uuid',
+        loincCode: '58410-2',
+        loincDisplay: 'CBC',
+        collectionDate: '2026-09-01',
+      },
+    }))
+
+    const uploadFn = vi.fn().mockResolvedValue({ success: true, reportId: 'rpt-1', status: 'accepted', virusScanStatus: 'clean' })
+    const deps = makeDeps({ uploadFn })
+
+    await drainQueue(deps)
+
+    expect(uploadFn).toHaveBeenCalledWith(
+      expect.objectContaining({ diagnosticReportId: 'rep-uuid' }),
       'test-token',
     )
   })

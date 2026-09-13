@@ -144,13 +144,27 @@ export async function analyzeUpload(
 export interface UploadResultInput {
   fileBase64: string
   fileName: string
-  fileType: 'application/pdf' | 'image/jpeg' | 'image/png'
+  fileType: 'application/pdf' | 'image/jpeg' | 'image/png' | 'image/webp'
   patientRef: string
   loincCode: string
   loincDisplay: string
   collectionDate: string
   ocrMetadataVerified?: boolean
   ocrSuggestions?: OcrSuggestion[]
+  diagnosticReportId?: string
+}
+
+export interface UploadSpecimenFileInput {
+  fileBase64: string
+  fileName: string
+  fileType: 'application/pdf' | 'image/jpeg' | 'image/png' | 'image/webp'
+  specimenId: string
+  patientRef: string
+  attachmentContext: 'receipt' | 'rejection'
+}
+
+export interface UploadSpecimenFileResponse {
+  fileId: string
 }
 
 export interface UploadResultResponse {
@@ -201,6 +215,48 @@ export async function uploadResult(
   }
 
   const body = await res.json() as { result: { data: { json: UploadResultResponse } } }
+  return body.result.data.json
+}
+
+/**
+ * Upload a specimen attachment (receipt or rejection photo) to the Hub API.
+ * Routes to the `lab.uploadSpecimenFile` tRPC endpoint.
+ * Requires valid LAB_TECH JWT.
+ */
+export async function uploadSpecimenFile(
+  input: UploadSpecimenFileInput,
+  token: string,
+): Promise<UploadSpecimenFileResponse> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 120_000) // 2 min timeout
+
+  let res: Response
+  try {
+    res = await fetch(`${getHubApiUrl()}/lab.uploadSpecimenFile`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ json: input }),
+      signal: controller.signal,
+    })
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error('Upload timed out — please check your connection and try again')
+    }
+    throw err
+  } finally {
+    clearTimeout(timeout)
+  }
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    const message = (body as Record<string, any>)?.error?.json?.message ?? 'Specimen upload failed'
+    throw new Error(message)
+  }
+
+  const body = await res.json() as { result: { data: { json: UploadSpecimenFileResponse } } }
   return body.result.data.json
 }
 

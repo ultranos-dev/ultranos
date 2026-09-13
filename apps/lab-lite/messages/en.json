@@ -1680,7 +1680,8 @@
       "normal": "Normal",
       "abnormal": "Abnormal",
       "critical": "Critical"
-    }
+    },
+    "attachmentsPatientRefMissing": "Patient reference missing — attachments could not be queued."
   },
   "samples": {
     "modal": {
@@ -1712,7 +1713,9 @@
       "cancel": "Cancel",
       "processing": "Processing...",
       "confirmRejection": "Confirm Rejection",
-      "receiveSample": "Receive Sample"
+      "receiveSample": "Receive Sample",
+      "photos": "Photos / Documents",
+      "attachmentsQueueFailed": "Sample saved. Photos could not be queued — please retry the upload from the queue."
     },
     "sampleTypes": {
       "blood": "Blood",
@@ -3703,5 +3706,19 @@
     "authStatus": "Status",
     "loadMore": "Load more",
     "clearFilters": "Clear filters"
+  },
+  "attachments": {
+    "dropZoneLabel": "Attach files — images or PDFs",
+    "dropZoneHint": "JPEG, PNG, WebP or PDF · max 10 MB per PDF",
+    "browseButton": "Browse files",
+    "processing": "Processing…",
+    "removeAriaLabel": "Remove {name}",
+    "attachedFilesLabel": "Attached files",
+    "errorUnsupported": "Unsupported file type. Use JPEG, PNG, WebP, or PDF.",
+    "errorTooLarge": "Image could not be compressed to the required size.",
+    "errorPdfSize": "PDF exceeds the 10 MB limit.",
+    "errorPdfType": "Only PDF files are accepted for documents.",
+    "errorGeneric": "An error occurred while processing the file. Please try again.",
+    "maxReached": "Maximum of {max} attachments reached."
   }
 }

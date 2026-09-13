@@ -26,11 +26,11 @@ describe('ResultUpload', () => {
     expect(screen.getByText(/browse files/i)).toBeDefined()
   })
 
-  it('renders an accessible file input accepting PDF, JPEG, PNG', () => {
+  it('renders an accessible file input accepting PDF, JPEG, PNG, WebP', () => {
     render(<ResultUpload {...defaultProps} />)
     const input = document.querySelector('input[type="file"]') as HTMLInputElement
     expect(input).toBeDefined()
-    expect(input.accept).toBe('.pdf,.jpg,.jpeg,.png')
+    expect(input.accept).toBe('.pdf,.jpg,.jpeg,.png,.webp')
   })
 
   it('accepts a valid PDF file via file picker', async () => {
@@ -91,7 +91,7 @@ describe('ResultUpload', () => {
     fireEvent.change(input, { target: { files: [file] } })
 
     await waitFor(() => {
-      expect(screen.getByText(/only pdf, jpeg, and png/i)).toBeDefined()
+      expect(screen.getByText(/only pdf, jpeg, png, and webp/i)).toBeDefined()
     })
     expect(defaultProps.onFileSelected).not.toHaveBeenCalled()
   })

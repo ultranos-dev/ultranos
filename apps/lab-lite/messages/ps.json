@@ -1612,7 +1612,9 @@
       "cancel": "لغوه کول",
       "processing": "پروسس کیږي...",
       "confirmRejection": "د رد تأیید",
-      "receiveSample": "نمونه ترلاسه کول"
+      "receiveSample": "نمونه ترلاسه کول",
+      "photos": "عکسونه / سندونه",
+      "attachmentsQueueFailed": "نمونه خوندي شوه. عکسونه نه شول ثبت کیدل — مهرباني وکړئ د اپلوډ قطار نه بیا هڅه وکړئ."
     },
     "sampleTypes": {
       "blood": "وینه",
@@ -1784,7 +1786,8 @@
       "normal": "[TODO:translate] Normal",
       "abnormal": "[TODO:translate] Abnormal",
       "critical": "[TODO:translate] Critical"
-    }
+    },
+    "attachmentsPatientRefMissing": "د ناروغ مرجع ورکه ده — ضمیمې نشوای د لیست کې اضافه کول."
   },
   "authorization": {
     "queueTitle": "د تصویب انتظار",
@@ -3703,5 +3706,19 @@
     "authStatus": "حالت",
     "loadMore": "نور بار کړئ",
     "clearFilters": "فلټرونه پاک کړئ"
+  },
+  "attachments": {
+    "dropZoneLabel": "فایلونه ضمیمه کړئ — انځورونه یا PDF اسناد",
+    "dropZoneHint": "JPEG، PNG، WebP یا PDF · د هر PDF لپاره اعظمي ۱۰ مېګابایټ",
+    "browseButton": "فایلونه وګورئ",
+    "processing": "پروسس کیږي…",
+    "removeAriaLabel": "{name} لرې کړئ",
+    "attachedFilesLabel": "ضمیمه شوي فایلونه",
+    "errorUnsupported": "د فایل ډول ملاتړ نه کیږي. JPEG، PNG، WebP یا PDF وکاروئ.",
+    "errorTooLarge": "انځور نه شو د اړین اندازې ته کمول.",
+    "errorPdfSize": "PDF فایل د ۱۰ مېګابایټ حد څخه زیات دی.",
+    "errorPdfType": "د اسناد لپاره یوازې PDF فایلونه منل کیږي.",
+    "errorGeneric": "د فایل د پروسس کولو پر مهال ستونزه رامنځته شوه. بیا هڅه وکړئ.",
+    "maxReached": "د {max} ضمیمو اعظمي حد ته ورسیدل."
   }
 }

@@ -39,7 +39,8 @@
     "./native": "./src/native/index.ts",
     "./native/NumericText": "./src/native/NumericText.tsx",
     "./components/ui/search-input": "./src/components/ui/search-input.tsx",
-    "./lib/highlight": "./src/lib/highlight.tsx"
+    "./lib/highlight": "./src/lib/highlight.tsx",
+    "./components/ui/image-viewer": "./src/components/ui/image-viewer.tsx"
   },
   "scripts": {
     "build": "tsc",

@@ -15,6 +15,10 @@ import type { TripAnalysis } from '@/lib/trip-optimizer'
 import { PatientVerificationForm } from '@/components/verification/PatientVerificationForm'
 import { getDefaultMethodsForSource } from '@/lib/verification-service'
 import type { PatientLookupSource } from '@/lib/verification-service'
+import { AttachmentPicker } from '@/components/attachments/AttachmentPicker'
+import type { PreparedAttachment } from '@/components/attachments/AttachmentPicker'
+import { enqueueSpecimenAttachments } from '@/lib/attachment-enqueue'
+import { reportLabLifecycleEvent } from '@/lib/audit-client'
 
 // Condition → standard rejection reasons mapping
 const REJECTION_REASONS: Record<Exclude<SampleCondition, 'acceptable'>, string[]> = {
@@ -79,6 +83,9 @@ export function ReceiveSampleModal({
   /** Populated after successful accessioning — triggers confirmation step */
   const [confirmedSampleId, setConfirmedSampleId] = useState<string | null>(null)
   const [tripAnalysis, setTripAnalysis] = useState<TripAnalysis | null>(null)
+  const [attachments, setAttachments] = useState<PreparedAttachment[]>([])
+  /** Non-fatal: set when attachment enqueue fails AFTER sample was already saved. */
+  const [attachmentWarning, setAttachmentWarning] = useState<string | null>(null)
 
   const techId = verifiedBy ?? session?.practitionerId ?? 'unknown'
   const isNonAcceptable = condition !== 'acceptable'
@@ -121,18 +128,30 @@ export function ReceiveSampleModal({
             })
           }
         }
+        // Sample is committed — advance to confirmation regardless of enqueue outcome
         setConfirmedSampleId(specimen._ultranos.labSampleId)
 
-        // INTEGRATION: Story 43.1 — emit SAMPLE_RECEIVED audit event.
-        // Call reportLabLifecycleEvent() here once wired up.
-        // Example (import reportLabLifecycleEvent from '@/lib/audit-client'):
-        // reportLabLifecycleEvent({
-        //   event: 'SAMPLE_RECEIVED',
-        //   sampleId: specimen.id,
-        //   orderId,
-        //   custodyFrom: receivedFrom || undefined,
-        //   custodyTo: session?.practitionerId,
-        // })
+        // Enqueue any specimen photos/documents as receipt attachments (non-fatal)
+        try {
+          await enqueueSpecimenAttachments(attachments, {
+            specimenId: specimen._ultranos.labSampleId,
+            patientRef,
+            attachmentContext: 'receipt',
+            patientFirstName,
+          })
+        } catch {
+          setAttachmentWarning(t('form.attachmentsQueueFailed'))
+        }
+        setAttachments([])
+
+        // Story 43.1 — emit SAMPLE_RECEIVED audit event (fire-and-forget, never throws)
+        reportLabLifecycleEvent({
+          event: 'SAMPLE_RECEIVED',
+          sampleId: specimen.id,
+          orderId,
+          custodyFrom: receivedFrom || undefined,
+          custodyTo: session?.practitionerId ?? undefined,
+        })
       } else {
         if (!rejectionReason) {
           setError(t('validation.rejectionReasonRequired'))
@@ -158,10 +177,33 @@ export function ReceiveSampleModal({
           rejectionReason,
           session?.practitionerId ?? 'unknown',
         )
+        // Sample is committed — advance to confirmation regardless of enqueue outcome
         setConfirmedSampleId(specimen._ultranos.labSampleId)
+
+        // Enqueue any specimen photos/documents as rejection attachments (non-fatal)
+        try {
+          await enqueueSpecimenAttachments(attachments, {
+            specimenId: specimen._ultranos.labSampleId,
+            patientRef,
+            attachmentContext: 'rejection',
+            patientFirstName,
+          })
+        } catch {
+          setAttachmentWarning(t('form.attachmentsQueueFailed'))
+        }
+        setAttachments([])
+
+        // Story 43.1 — sample was physically received even if rejected; emit audit (fire-and-forget)
+        reportLabLifecycleEvent({
+          event: 'SAMPLE_RECEIVED',
+          sampleId: specimen.id,
+          orderId,
+          custodyFrom: receivedFrom || undefined,
+          custodyTo: session?.practitionerId ?? undefined,
+        })
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.accessionFailed'))
+    } catch {
+      setError(t('errors.accessionFailed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -230,6 +272,11 @@ export function ReceiveSampleModal({
             <p className="text-sm text-muted-foreground">
               {t('modal.sampleId')}: <span className="font-mono font-bold">{confirmedSampleId}</span>
             </p>
+            {attachmentWarning && (
+              <p role="alert" className="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2" data-testid="attachment-warning">
+                {attachmentWarning}
+              </p>
+            )}
             {tripAnalysis && (
               <TripRecommendation
                 analysis={tripAnalysis}
@@ -392,6 +439,14 @@ export function ReceiveSampleModal({
               className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring resize-none"
               data-testid="notes-input"
             />
+          </div>
+
+          {/* Attachments */}
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              {t('form.photos')}
+            </p>
+            <AttachmentPicker value={attachments} onChange={setAttachments} />
           </div>
 
           {/* Error */}

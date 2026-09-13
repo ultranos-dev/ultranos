@@ -6,7 +6,7 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useSyncStore } from '@/stores/sync-store'
 import { startUploadDrain, stopUploadDrain, triggerUploadDrain } from '@/lib/upload-drain-init'
 import { startAuditDrain, stopAuditDrain } from '@/lib/audit-client'
-import { uploadResult } from '@/lib/trpc'
+import { uploadResult, uploadSpecimenFile } from '@/lib/trpc'
 import { reportQueueAuditEvent } from '@/lib/queue-audit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 
@@ -48,6 +48,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // Start upload queue drain
     startUploadDrain({
       uploadFn: uploadResult,
+      uploadSpecimenFn: uploadSpecimenFile,
       getToken,
       onSyncError: (reason) => {
         useSyncStore.getState().setSyncError(reason)

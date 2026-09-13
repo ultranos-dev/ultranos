@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Check } from '@ultranos/ui-kit/icons'
+import { ImageViewer } from '@ultranos/ui-kit/components/ui/image-viewer'
 import { Button } from '@/components/ui/Button'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
 import {
@@ -53,7 +54,12 @@ function statusLabel(status: string, t: (key: string) => string): string {
   }
 }
 
-function renderAttachment(attachment: { contentType?: string; data?: string; url?: string; title?: string }, index: number, t: (key: string, values?: Record<string, unknown>) => string) {
+function renderAttachment(
+  attachment: { contentType?: string; data?: string; url?: string; title?: string },
+  index: number,
+  t: (key: string, values?: Record<string, unknown>) => string,
+  onImageOpen: (src: string, alt: string) => void,
+) {
   const contentType = attachment.contentType ?? ''
 
   // Validate URL protocol if url is provided (no data)
@@ -74,16 +80,24 @@ function renderAttachment(attachment: { contentType?: string; data?: string; url
 
   // Only render known-safe content types inline
   if (SAFE_IMAGE_PREFIXES.some(p => contentType === p)) {
+    const altText = attachment.title ?? t('attachmentFallback', { n: index + 1 })
     return (
       <div key={index} className="mt-3">
         {attachment.title && (
           <p className="mb-1 text-sm font-medium text-foreground">{attachment.title}</p>
         )}
-        <img
-          src={dataUri}
-          alt={attachment.title ?? t('attachmentFallback', { n: index + 1 })}
-          className="max-w-full rounded-xl ring-[0.65px] ring-border/50"
-        />
+        <button
+          type="button"
+          className="cursor-zoom-in border-0 bg-transparent p-0"
+          aria-label={t('viewImageAriaLabel', { title: altText })}
+          onClick={() => onImageOpen(dataUri, altText)}
+        >
+          <img
+            src={dataUri}
+            alt={altText}
+            className="max-w-full rounded-xl ring-[0.65px] ring-border/50"
+          />
+        </button>
       </div>
     )
   }
@@ -129,6 +143,7 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
     notificationProp?.status === 'ACKNOWLEDGED' || !!report.acknowledgedAt,
   )
   const [acknowledging, setAcknowledging] = useState(false)
+  const [viewerState, setViewerState] = useState<{ src: string; alt: string } | null>(null)
 
   // AC #3: Self-lookup notification if not passed as prop
   useEffect(() => {
@@ -179,6 +194,18 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
       setAcknowledging(false)
     }
   }, [notification, acknowledged, acknowledging, report.id])
+
+  const handleImageOpen = useCallback((src: string, alt: string) => {
+    const patientId = report.subject.reference?.replace('Patient/', '') ?? ''
+    auditPhiAccess(
+      AuditAction.PHI_READ,
+      AuditResourceType.LAB_RESULT,
+      report.id,
+      patientId,
+      { phiAccess: 'lab_result_attachment_view' },
+    )
+    setViewerState({ src, alt })
+  }, [report.id, report.subject.reference])
 
   const loincDisplay =
     report.code.coding?.[0]?.display ?? report.code.coding?.[0]?.code ?? t('unknownTest')
@@ -254,7 +281,7 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
       {report.presentedForm && report.presentedForm.length > 0 && (
         <div className="mt-4">
           <h4 className="text-sm font-bold text-foreground">{t('attachedFiles')}</h4>
-          {report.presentedForm.map((attachment, i) => renderAttachment(attachment, i, t as (key: string, values?: Record<string, unknown>) => string))}
+          {report.presentedForm.map((attachment, i) => renderAttachment(attachment, i, t as (key: string, values?: Record<string, unknown>) => string, handleImageOpen))}
         </div>
       )}
 
@@ -285,6 +312,13 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
           {t('acknowledged')}
         </div>
       )}
+
+      <ImageViewer
+        open={viewerState !== null}
+        src={viewerState?.src ?? ''}
+        alt={viewerState?.alt}
+        onOpenChange={(o) => { if (!o) setViewerState(null) }}
+      />
     </div>
   )
 }

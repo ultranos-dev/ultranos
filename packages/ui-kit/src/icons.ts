@@ -238,6 +238,7 @@ export {
   MicOff,
   Camera,
   Video,
+  Image,
 } from 'lucide-react'
 
 // ─── Data & Charts ──────────────────────────────────────────────────

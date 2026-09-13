@@ -28,6 +28,8 @@ import {
   enqueueSyncEvent,
 } from '@/lib/db'
 import type { LabResult, LabObservation } from '@/lib/db'
+import type { PreparedAttachment } from '@/components/attachments/AttachmentPicker'
+import { enqueueResultAttachments, EmptyPatientRefError } from '@/lib/attachment-enqueue'
 import { resolveTemplate } from '@/lib/result-templates'
 import type { RangeResolutionContext } from '@/lib/result-templates'
 import { ResultEntryForm } from '@/components/ResultEntryForm'
@@ -62,6 +64,7 @@ export default function ResultEntryPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [anomalyFlags, setAnomalyFlags] = useState<AnomalyFlag[]>([])
+  const [attachments, setAttachments] = useState<PreparedAttachment[]>([])
 
   useEffect(() => {
     async function load() {
@@ -284,6 +287,40 @@ export default function ResultEntryPage({ params }: PageProps) {
       resultId,
     })
 
+    // Enqueue photo / document attachments for upload (Task 8).
+    // All attachments for one submit share a single diagnosticReportId so the
+    // hub can upsert them into one DiagnosticReport.
+    if (attachments.length > 0) {
+      const patientRef = sample?.subject?.reference ?? ''
+      // Guard: empty patientRef means the specimen has no subject — the hub
+      // would silently reject any upload tied to an empty ref.
+      if (!patientRef) {
+        console.warn('[ResultEntryPage] attachments skipped: specimen has no subject reference')
+        setError(t('attachmentsPatientRefMissing'))
+        return
+      }
+      // collectionDate must be YYYY-MM-DD (hub contract). Use receivedTime if
+      // available; fall back to today. Both are sliced to date-only.
+      const collectionDate = (sample?.receivedTime ?? new Date().toISOString()).slice(0, 10)
+      try {
+        await enqueueResultAttachments(attachments, {
+          patientRef,
+          patientFirstName,
+          loincCode: template.loincCode,
+          loincDisplay: template.loincDisplay,
+          collectionDate,
+        })
+        setAttachments([])
+      } catch (err) {
+        if (err instanceof EmptyPatientRefError) {
+          console.warn('[ResultEntryPage] attachments skipped: empty patientRef')
+          setError(t('attachmentsPatientRefMissing'))
+          return
+        }
+        throw err
+      }
+    }
+
     // AI Anomaly Detection (Story 53.3) — runs after result is persisted, PHI-free
     const detectedFlags = await runAnomalyDetection(fullObs, loincCode, sample)
     if (detectedFlags.length > 0) {
@@ -400,6 +437,8 @@ export default function ResultEntryPage({ params }: PageProps) {
         enteredBy={session?.practitionerId ?? 'unknown'}
         existingDraft={existingDraft}
         rangeContext={rangeContext}
+        attachments={attachments}
+        onAttachmentsChange={setAttachments}
       />
     </div>
   )

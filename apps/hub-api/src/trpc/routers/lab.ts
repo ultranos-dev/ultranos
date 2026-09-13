@@ -662,17 +662,15 @@ export const labRouter = createTRPCRouter({
       z.object({
         fileBase64: z.string().min(1),
         fileName: z.string().min(1).max(255),
-        fileType: z.enum(['application/pdf', 'image/jpeg', 'image/png']),
+        fileType: z.enum(['application/pdf', 'image/jpeg', 'image/png', 'image/webp']),
         patientRef: z.string().min(1),
-        loincCode: z.enum([
-          '58410-2', '57698-3', '4548-4', '51990-0',
-          '24325-3', '3016-3', '24356-8', '1558-6',
-        ]),
+        loincCode: z.string().min(1),
         loincDisplay: z.string().min(1),
         collectionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(
           (date) => new Date(date) <= new Date(),
           { message: 'Collection date cannot be in the future' },
         ),
+        diagnosticReportId: z.string().uuid().optional(),
         // Story 12.6: OCR metadata audit fields
         ocrMetadataVerified: z.boolean().optional(),
         ocrSuggestions: z
@@ -827,24 +825,80 @@ export const labRouter = createTRPCRouter({
         reportInsert.ocr_suggestions = input.ocrSuggestions
       }
 
-      const { data: report, error: reportError } = await ctx.supabase
-        .from('diagnostic_reports')
-        .insert(reportInsert)
-        .select('id')
-        .single()
+      // Upsert-or-attach: if caller supplies a diagnosticReportId, reuse an existing
+      // report (or create it with that id on first call); otherwise create a new one.
+      let reportId: string
+      let reportCreatedThisCall = false
+      if (input.diagnosticReportId) {
+        const { data: existing, error: lookupError } = await ctx.supabase
+          .from('diagnostic_reports')
+          .select('id, lab_id')
+          .eq('id', input.diagnosticReportId)
+          .maybeSingle()
+        if (lookupError) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to look up diagnostic report',
+          })
+        }
+        if (existing) {
+          // SECURITY: enforce ownership — reject cross-lab access attempts
+          if (existing.lab_id !== labId) {
+            await audit.emit({
+              action: 'CREATE',
+              resourceType: 'LAB_RESULT',
+              resourceId: 'rejected',
+              actorId: technicianId,
+              actorRole: ctx.user.role,
+              outcome: 'DENIED',
+              sessionId: ctx.user.sessionId,
+              metadata: {
+                uploadAction: 'result_upload_rejected',
+                reason: 'cross_lab_report_access',
+                loincCode: input.loincCode,
+              },
+            })
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'Report belongs to another lab',
+            })
+          }
+          // Same lab — reuse existing report (reportCreatedThisCall stays false)
+        } else {
+          const { error } = await ctx.supabase
+            .from('diagnostic_reports')
+            .insert({ ...reportInsert, id: input.diagnosticReportId })
+          if (error) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to create diagnostic report',
+            })
+          }
+          reportCreatedThisCall = true
+        }
+        reportId = input.diagnosticReportId
+      } else {
+        const { data: report, error: reportError } = await ctx.supabase
+          .from('diagnostic_reports')
+          .insert(reportInsert)
+          .select('id')
+          .single()
 
-      if (reportError || !report) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to create diagnostic report',
-        })
+        if (reportError || !report) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to create diagnostic report',
+          })
+        }
+        reportId = report.id
+        reportCreatedThisCall = true
       }
 
       // Store encrypted file
       const { error: fileError } = await ctx.supabase
         .from('lab_result_files')
         .insert({
-          diagnostic_report_id: report.id,
+          diagnostic_report_id: reportId,
           file_name: input.fileName,
           file_type: input.fileType,
           file_size: fileBuffer.length,
@@ -853,11 +907,11 @@ export const labRouter = createTRPCRouter({
         })
 
       if (fileError) {
-        // Compensating delete: remove orphaned diagnostic report
-        const { error: deleteError } = await ctx.supabase
-          .from('diagnostic_reports')
-          .delete()
-          .eq('id', report.id)
+        // Compensating delete: only remove the diagnostic report if WE created it this call.
+        // Do not delete a shared/pre-existing report on a later file failure.
+        const { error: deleteError } = reportCreatedThisCall
+          ? await ctx.supabase.from('diagnostic_reports').delete().eq('id', reportId)
+          : { error: null }
 
         if (deleteError) {
           // Orphaned report — emit audit event for ops visibility
@@ -865,18 +919,18 @@ export const labRouter = createTRPCRouter({
             await audit.emit({
               action: 'CREATE',
               resourceType: 'LAB_RESULT',
-              resourceId: report.id,
+              resourceId: reportId,
               actorId: technicianId,
               actorRole: ctx.user.role,
               outcome: 'FAILURE',
               sessionId: ctx.user.sessionId,
               metadata: {
                 uploadAction: 'compensating_delete_failed',
-                orphanedReportId: report.id,
+                orphanedReportId: reportId,
               },
             })
           } catch {
-            console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'LAB_RESULT', resourceId: report.id })
+            console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'LAB_RESULT', resourceId: reportId })
           }
         }
 
@@ -891,7 +945,7 @@ export const labRouter = createTRPCRouter({
         await audit.emit({
           action: 'CREATE',
           resourceType: 'LAB_RESULT',
-          resourceId: report.id,
+          resourceId: reportId,
           actorId: technicianId,
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
@@ -926,7 +980,7 @@ export const labRouter = createTRPCRouter({
         testCategory: input.loincDisplay,
         labName,
         uploadTimestamp: new Date().toISOString(),
-        diagnosticReportId: report.id,
+        diagnosticReportId: reportId,
         loincCode: input.loincCode,
       }
 
@@ -944,10 +998,190 @@ export const labRouter = createTRPCRouter({
 
       return {
         success: true,
-        reportId: report.id,
+        reportId,
         status: 'preliminary',
         virusScanStatus,
       }
+    }),
+
+  /**
+   * Story lab-attachments: Upload a specimen photo or document attachment.
+   * Mirrors uploadResult guards: virus scan → encrypt → insert into specimen_files.
+   * Emits PHI_WRITE audit with resourceType 'SPECIMEN'.
+   */
+  uploadSpecimenFile: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
+    .use(enforceLabActive())
+    .input(
+      z.object({
+        fileBase64: z.string().min(1),
+        fileName: z.string().min(1).max(255),
+        fileType: z.enum(['application/pdf', 'image/jpeg', 'image/png', 'image/webp']),
+        specimenId: z.string().min(1),
+        patientRef: z.string().min(1),
+        attachmentContext: z.enum(['receipt', 'rejection']),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
+      const labId = ctx.lab?.labId
+      if (!labId) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Lab affiliation required for upload',
+        })
+      }
+
+      // Validate base64 and decode file
+      const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
+      if (!base64Regex.test(input.fileBase64)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Invalid base64 file content',
+        })
+      }
+      const fileBuffer = Buffer.from(input.fileBase64, 'base64')
+      if (fileBuffer.length === 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'File content is empty',
+        })
+      }
+
+      const MAX_FILE_SIZE = 20 * 1024 * 1024
+      if (fileBuffer.length > MAX_FILE_SIZE) {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'SPECIMEN',
+          resourceId: 'rejected',
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'FAILURE',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            operation: 'specimen_file_upload',
+            reason: 'file_too_large',
+            specimenId: input.specimenId,
+          },
+        })
+
+        throw new TRPCError({
+          code: 'PAYLOAD_TOO_LARGE',
+          message: 'File exceeds the 20 MB size limit',
+        })
+      }
+
+      // Virus scan before any persistence
+      const scanResult = await scanFile(fileBuffer)
+
+      if (scanResult.status === 'infected') {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'SPECIMEN',
+          resourceId: 'rejected',
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'FAILURE',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            operation: 'specimen_file_upload',
+            reason: 'malware_detected',
+            fileHash: scanResult.hash,
+            specimenId: input.specimenId,
+          },
+        })
+
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'File rejected: malware detected',
+        })
+      }
+
+      if (scanResult.status === 'error') {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'SPECIMEN',
+          resourceId: 'rejected',
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'FAILURE',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            operation: 'specimen_file_upload',
+            reason: 'scan_error',
+            fileHash: scanResult.hash,
+            specimenId: input.specimenId,
+          },
+        })
+
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Virus scan failed — upload rejected',
+        })
+      }
+
+      const virusScanStatus = scanResult.status === 'clean' ? 'clean' : 'pending'
+
+      // Get encryption key
+      let encryptionKey: string
+      try {
+        encryptionKey = getFieldEncryptionKeys().encryptionKey
+      } catch {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Encryption configuration unavailable',
+        })
+      }
+
+      const encryptedContent = encryptField(input.fileBase64, encryptionKey)
+
+      // Store encrypted specimen file
+      const { data, error } = await ctx.supabase
+        .from('specimen_files')
+        .insert({
+          specimen_id: input.specimenId,
+          patient_ref: input.patientRef,
+          lab_id: labId,
+          file_name: input.fileName,
+          file_type: input.fileType,
+          file_size: fileBuffer.length,
+          encrypted_content: encryptedContent,
+          file_hash: scanResult.hash,
+          virus_scan_status: virusScanStatus,
+          attachment_context: input.attachmentContext,
+        })
+        .select('id')
+        .single()
+
+      if (error || !data) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to store specimen file',
+        })
+      }
+
+      // Audit successful upload (best-effort — data is already persisted)
+      try {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'SPECIMEN',
+          resourceId: data.id,
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            operation: 'specimen_file_upload',
+            specimenId: input.specimenId,
+          },
+        })
+      } catch {
+        // Audit failure must not block a successful upload
+      }
+
+      return { fileId: data.id }
     }),
 
   /**

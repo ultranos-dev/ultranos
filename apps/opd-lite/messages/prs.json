@@ -692,7 +692,8 @@
     "print": "چاپ",
     "resultCount": "{count} نتیجه",
     "attachmentFallback": "پیوست {n}",
-    "pdfFallback": "PDF {n}"
+    "pdfFallback": "PDF {n}",
+    "viewImageAriaLabel": "مشاهده تصویر: {title}"
   },
   "conflicts": {
     "title": "حل تعارض",

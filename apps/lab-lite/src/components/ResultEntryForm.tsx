@@ -25,6 +25,8 @@ import { KnowledgeCardPanel } from '@/components/KnowledgeCardPanel'
 import { evaluateKnowledgeCardTriggers, getMatchingRuleIds } from '@/lib/trigger-engine'
 import { reportKnowledgeCardView } from '@/lib/audit-client'
 import type { KnowledgeCard } from '@/lib/knowledge-cards'
+import { AttachmentPicker } from '@/components/attachments/AttachmentPicker'
+import type { PreparedAttachment } from '@/components/attachments/AttachmentPicker'
 
 export interface ResultEntryFormProps {
   sampleId: string
@@ -41,6 +43,10 @@ export interface ResultEntryFormProps {
   }
   /** Localized range resolution context (Story 43.8 AC #2). */
   rangeContext?: RangeResolutionContext
+  /** Attachment list lifted to page state (Task 8). */
+  attachments: PreparedAttachment[]
+  /** Setter for attachment list lifted to page state (Task 8). */
+  onAttachmentsChange: (next: PreparedAttachment[]) => void
 }
 
 type FieldValues = Record<string, string | number | null>
@@ -87,9 +93,12 @@ export function ResultEntryForm({
   enteredBy,
   existingDraft,
   rangeContext,
+  attachments,
+  onAttachmentsChange,
 }: ResultEntryFormProps) {
   const t = useTranslations('resultEntry')
   const tAtlas = useTranslations('visualAtlas')
+  const tAtt = useTranslations('attachments')
   const formId = useId()
 
   // ---------------------------------------------------------------------------
@@ -537,6 +546,14 @@ export function ResultEntryForm({
           placeholder={t('reportCommentPlaceholder')}
           className="mt-1 w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring dark:border-border dark:bg-card dark:text-foreground"
         />
+      </div>
+
+      {/* ---- Attachments section (photos / PDFs) ---- */}
+      <div className="border-t border-border px-4 py-4 dark:border-border">
+        <p className="mb-3 text-sm font-medium text-foreground">
+          {tAtt('attachedFilesLabel')}
+        </p>
+        <AttachmentPicker value={attachments} onChange={onAttachmentsChange} />
       </div>
 
       {/* ---- Sticky action bar ---- */}

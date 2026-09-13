@@ -692,7 +692,8 @@
     "print": "Print",
     "resultCount": "{count, plural, one {{count} result} other {{count} results}}",
     "attachmentFallback": "Attachment {n}",
-    "pdfFallback": "PDF {n}"
+    "pdfFallback": "PDF {n}",
+    "viewImageAriaLabel": "View image: {title}"
   },
   "conflicts": {
     "title": "Conflict Resolution",
