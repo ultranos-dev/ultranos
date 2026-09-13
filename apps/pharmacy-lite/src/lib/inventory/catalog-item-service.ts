@@ -14,6 +14,7 @@ export interface CatalogItemInput {
   defaultSellingPrice: number // minor units
   wholesalePrice?: number     // minor units
   reorderPoint: number
+  reorderQuantity?: number
 }
 
 function validate(input: Partial<CatalogItemInput>): void {
@@ -22,6 +23,7 @@ function validate(input: Partial<CatalogItemInput>): void {
   if (input.reorderPoint !== undefined && (!Number.isFinite(input.reorderPoint) || input.reorderPoint < 0)) throw new Error('Reorder point must be zero or more')
   if (input.defaultSellingPrice !== undefined && (!Number.isFinite(input.defaultSellingPrice) || input.defaultSellingPrice < 0)) throw new Error('Price must be zero or more')
   if (input.wholesalePrice !== undefined && (!Number.isFinite(input.wholesalePrice) || input.wholesalePrice < 0)) throw new Error('Wholesale price must be zero or more')
+  if (input.reorderQuantity !== undefined && (!Number.isFinite(input.reorderQuantity) || input.reorderQuantity < 0)) throw new Error('Reorder quantity must be zero or more')
 }
 
 export async function createCatalogItem(input: CatalogItemInput): Promise<CatalogItem> {
@@ -41,6 +43,7 @@ export async function createCatalogItem(input: CatalogItemInput): Promise<Catalo
     defaultSellingPrice: input.defaultSellingPrice,
     wholesalePrice: input.wholesalePrice,
     reorderPoint: input.reorderPoint,
+    reorderQuantity: input.reorderQuantity,
     isActive: true,
     lastSyncedAt: now,
     locallyModified: true,
