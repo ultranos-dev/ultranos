@@ -720,6 +720,44 @@ describe('lab.uploadResult', () => {
     expect(fileInsertCount).toBe(1)
   })
 
+  it('trims whitespace from loincCode before writing to diagnostic_reports', async () => {
+    let insertedData: Record<string, unknown> | null = null
+    mockInsertSingle.mockResolvedValueOnce({
+      data: { id: 'report-trim-loinc' },
+      error: null,
+    })
+    // Capture the first insert call (diagnostic_reports)
+    mockInsert.mockImplementationOnce((...args: unknown[]) => {
+      insertedData = args[0] as Record<string, unknown>
+      return { select: mockInsertSelect }
+    }).mockReturnValueOnce({ error: null })
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+
+    await caller.lab.uploadResult({ ...validInput, loincCode: '  4548-4  ' })
+
+    // Zod .trim() must have normalized the value before it reaches the insert
+    expect(insertedData).not.toBeNull()
+    expect((insertedData as unknown as Record<string, unknown>).loinc_code).toBe('4548-4')
+  })
+
+  it('accepts the literal "custom" sentinel as a valid loincCode', async () => {
+    mockInsertSingle.mockResolvedValueOnce({
+      data: { id: 'report-custom' },
+      error: null,
+    })
+    mockInsert.mockReturnValueOnce({ select: mockInsertSelect })
+      .mockReturnValueOnce({ error: null })
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+
+    // 'custom' must not be rejected — it is a valid sentinel for structured-entry codes
+    const result = await caller.lab.uploadResult({ ...validInput, loincCode: 'custom', loincDisplay: 'Custom test' })
+    expect(result.success).toBe(true)
+  })
+
   it('DB error on diagnosticReportId lookup throws INTERNAL_SERVER_ERROR and skips report + file inserts', async () => {
     const targetReportId = '55555555-5555-5555-5555-555555555555'
     let reportInsertCalled = false

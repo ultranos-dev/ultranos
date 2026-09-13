@@ -72,7 +72,7 @@ export async function checkEscalations(
       const payload = typeof notification.payload === 'string'
         ? (() => { try { return JSON.parse(notification.payload) } catch { return {} } })()
         : notification.payload ?? {}
-      const loincCode = payload.loincCode as string | undefined
+      const loincCode = (payload.loincCode as string | undefined)?.trim()
       if (loincCode && !CRITICAL_LOINC_CODES.has(loincCode)) {
         continue // Not a critical result — skip escalation
       }

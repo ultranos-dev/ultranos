@@ -664,7 +664,7 @@ export const labRouter = createTRPCRouter({
         fileName: z.string().min(1).max(255),
         fileType: z.enum(['application/pdf', 'image/jpeg', 'image/png', 'image/webp']),
         patientRef: z.string().min(1),
-        loincCode: z.string().min(1),
+        loincCode: z.string().trim().min(1),
         loincDisplay: z.string().min(1),
         collectionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(
           (date) => new Date(date) <= new Date(),
