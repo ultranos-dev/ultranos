@@ -893,7 +893,20 @@
     "disposalReasonContaminated": "آلوده",
     "disposalReasonRecalled": "فراخوانده‌شده",
     "quarantineConfirmDispose": "تأیید دور انداختن",
-    "quarantineCancel": "لغو"
+    "quarantineCancel": "لغو",
+    "fieldReorderQuantity": "مقدار سفارش مجدد",
+    "suppliersForItem": "تامین‌کنندگان این قلم",
+    "supplierItemsEmpty": "هنوز هیچ تامین‌کننده‌ای لینک نشده",
+    "supplierItemAddSupplier": "تامین‌کننده",
+    "supplierItemPrice": "قیمت واحد",
+    "supplierItemMoq": "حداقل مقدار سفارش",
+    "supplierItemLeadTime": "مدت تحویل (روز)",
+    "supplierItemSku": "کد SKU تامین‌کننده",
+    "supplierItemPreferred": "ترجیحی",
+    "supplierItemSetPreferred": "تنظیم به عنوان ترجیحی",
+    "supplierItemAdd": "تامین‌کننده اضافه کنید",
+    "supplierItemRemove": "حذف",
+    "supplierItemSaveError": "لینک تامین‌کننده ذخیره نشد."
   },
   "pos": {
     "cashDrawer": "کشوی نقدی",
@@ -1065,7 +1078,12 @@
     "clearFilters": "پاک کردن فیلترها",
     "noRecentCountsTitle": "شمارش اخیری وجود ندارد",
     "noRecentCountsDescription": "شمارش‌های موجودی تکمیل‌شده اینجا نمایش داده می‌شوند.",
-    "paymentTermsDays": "شرایط پرداخت (روز)"
+    "paymentTermsDays": "شرایط پرداخت (روز)",
+    "supplierCode": "کد تامین‌کننده",
+    "taxId": "شماره مالیاتی",
+    "minOrderValue": "حداقل ارزش سفارش",
+    "rating": "امتیاز (1–5)",
+    "notes": "یادداشت‌ها"
   },
   "offlineGrace": {
     "supervisorName": "نام سرپرست",

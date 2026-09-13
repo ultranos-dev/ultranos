@@ -893,7 +893,20 @@
     "disposalReasonContaminated": "ملوث",
     "disposalReasonRecalled": "مسحوب من السوق",
     "quarantineConfirmDispose": "تأكيد الإتلاف",
-    "quarantineCancel": "إلغاء"
+    "quarantineCancel": "إلغاء",
+    "fieldReorderQuantity": "كمية إعادة الطلب",
+    "suppliersForItem": "موردو هذا الصنف",
+    "supplierItemsEmpty": "لا يوجد موردون مرتبطون بعد",
+    "supplierItemAddSupplier": "المورد",
+    "supplierItemPrice": "سعر الوحدة",
+    "supplierItemMoq": "الحد الأدنى للطلب",
+    "supplierItemLeadTime": "مدة التسليم (أيام)",
+    "supplierItemSku": "رمز SKU للمورد",
+    "supplierItemPreferred": "مفضل",
+    "supplierItemSetPreferred": "تعيين كمفضل",
+    "supplierItemAdd": "إضافة مورد",
+    "supplierItemRemove": "إزالة",
+    "supplierItemSaveError": "تعذّر حفظ ارتباط المورد."
   },
   "pos": {
     "cashDrawer": "درج النقود",
@@ -1065,7 +1078,12 @@
     "clearFilters": "مسح عوامل التصفية",
     "noRecentCountsTitle": "لا توجد عمليات جرد حديثة",
     "noRecentCountsDescription": "ستظهر عمليات الجرد المكتملة هنا.",
-    "paymentTermsDays": "شروط الدفع (بالأيام)"
+    "paymentTermsDays": "شروط الدفع (بالأيام)",
+    "supplierCode": "رمز المورد",
+    "taxId": "الرقم الضريبي",
+    "minOrderValue": "الحد الأدنى لقيمة الطلب",
+    "rating": "التقييم (1–5)",
+    "notes": "ملاحظات"
   },
   "offlineGrace": {
     "supervisorName": "اسم المشرف",

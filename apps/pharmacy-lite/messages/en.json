@@ -893,7 +893,20 @@
     "disposalReasonContaminated": "Contaminated",
     "disposalReasonRecalled": "Recalled",
     "quarantineConfirmDispose": "Confirm disposal",
-    "quarantineCancel": "Cancel"
+    "quarantineCancel": "Cancel",
+    "fieldReorderQuantity": "Reorder quantity",
+    "suppliersForItem": "Suppliers for this item",
+    "supplierItemsEmpty": "No suppliers linked yet",
+    "supplierItemAddSupplier": "Supplier",
+    "supplierItemPrice": "Unit price",
+    "supplierItemMoq": "Min order qty",
+    "supplierItemLeadTime": "Lead time (days)",
+    "supplierItemSku": "Supplier SKU",
+    "supplierItemPreferred": "Preferred",
+    "supplierItemSetPreferred": "Set preferred",
+    "supplierItemAdd": "Add supplier",
+    "supplierItemRemove": "Remove",
+    "supplierItemSaveError": "Could not save the supplier link."
   },
   "pos": {
     "cashDrawer": "Cash Drawer",
@@ -1065,7 +1078,12 @@
     "clearFilters": "Clear filters",
     "noRecentCountsTitle": "No recent counts",
     "noRecentCountsDescription": "Completed stock counts will appear here.",
-    "paymentTermsDays": "Payment terms (days)"
+    "paymentTermsDays": "Payment terms (days)",
+    "supplierCode": "Supplier code",
+    "taxId": "Tax ID",
+    "minOrderValue": "Minimum order value",
+    "rating": "Rating (1–5)",
+    "notes": "Notes"
   },
   "offlineGrace": {
     "supervisorName": "Supervisor Name",

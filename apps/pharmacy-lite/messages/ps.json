@@ -893,7 +893,20 @@
     "disposalReasonContaminated": "ککړ شوی",
     "disposalReasonRecalled": "واپس غوښتل شوی",
     "quarantineConfirmDispose": "د لرې کولو تایید",
-    "quarantineCancel": "لغوه کول"
+    "quarantineCancel": "لغوه کول",
+    "fieldReorderQuantity": "د بیا امر مقدار",
+    "suppliersForItem": "د دې توکي عرضه کوونکي",
+    "supplierItemsEmpty": "لا هیڅ عرضه کوونکی تړلی نه دی",
+    "supplierItemAddSupplier": "عرضه کوونکی",
+    "supplierItemPrice": "د واحد بیه",
+    "supplierItemMoq": "د امر لږترلږه مقدار",
+    "supplierItemLeadTime": "د تحویل مودا (ورځې)",
+    "supplierItemSku": "د عرضه کوونکي SKU",
+    "supplierItemPreferred": "غوره",
+    "supplierItemSetPreferred": "غوره ټاکل",
+    "supplierItemAdd": "عرضه کوونکی اضافه کړئ",
+    "supplierItemRemove": "لرې کول",
+    "supplierItemSaveError": "د عرضه کوونکي لینک خوندي کول ناکام شو."
   },
   "pos": {
     "cashDrawer": "د نقدو دراز",
@@ -1065,7 +1078,12 @@
     "clearFilters": "فلټرونه پاک کړئ",
     "noRecentCountsTitle": "وروستي شمیرنې نشته",
     "noRecentCountsDescription": "بشپړ شوي ذخیره شمیرنې به دلته ښکاره شي.",
-    "paymentTermsDays": "د تادیې شرطونه (ورځې)"
+    "paymentTermsDays": "د تادیې شرطونه (ورځې)",
+    "supplierCode": "د عرضه کوونکي کوډ",
+    "taxId": "د مالیې شمیره",
+    "minOrderValue": "د امر لږترلږه ارزښت",
+    "rating": "درجه بندي (1–5)",
+    "notes": "یادداشتونه"
   },
   "offlineGrace": {
     "supervisorName": "د سرپرست نوم",
