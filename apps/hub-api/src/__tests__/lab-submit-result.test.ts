@@ -24,9 +24,9 @@ const droInsert = vi.fn(() => ({ error: null }))
 // labs: name lookup
 const labsSingle = vi.fn().mockResolvedValue({ data: { name: 'Central Lab' }, error: null })
 const labsSelect = vi.fn(() => ({ eq: vi.fn(() => ({ single: labsSingle })) }))
-// encounters: ordering doctor lookup
-const encSingle = vi.fn().mockResolvedValue({ data: { practitioner_id: 'doc-1' }, error: null })
-const encSelect = vi.fn(() => ({ eq: vi.fn(() => ({ order: vi.fn(() => ({ limit: vi.fn(() => ({ single: encSingle })) })) })) }))
+// service_requests: ordering doctor lookup (replaces the broken encounters lookup)
+const svcReqMaybeSingle = vi.fn().mockResolvedValue({ data: { requester_id: 'doc-1', code_display: 'CBC' }, error: null })
+const svcReqSelect = vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: svcReqMaybeSingle })) }))
 // notifications: insert().select('id')
 const notifInsert = vi.fn(() => ({ select: vi.fn().mockResolvedValue({ data: [{ id: 'n1' }], error: null }) }))
 
@@ -35,7 +35,7 @@ const mockFrom = vi.fn((table: string) => {
   if (table === 'diagnostic_reports') return { select: drSelect, upsert: drUpsert }
   if (table === 'diagnostic_report_observations') return { delete: vi.fn(() => ({ eq: droDeleteEq })), insert: droInsert }
   if (table === 'labs') return { select: labsSelect }
-  if (table === 'encounters') return { select: encSelect }
+  if (table === 'service_requests') return { select: svcReqSelect }
   if (table === 'notifications') return { insert: notifInsert }
   // enforceVerifiedOrg + enforceEntitlement middleware tables
   if (table === 'organizations') return {
@@ -108,7 +108,11 @@ function makeBundle() {
 }
 
 describe('lab.submitResult', () => {
-  beforeEach(() => { vi.clearAllMocks(); drMaybeSingle.mockResolvedValue({ data: null, error: null }) })
+  beforeEach(() => {
+    vi.clearAllMocks()
+    drMaybeSingle.mockResolvedValue({ data: null, error: null })
+    svcReqMaybeSingle.mockResolvedValue({ data: { requester_id: 'doc-1', code_display: 'CBC' }, error: null })
+  })
 
   it('writes the report with status preliminary and patient_ref as the BARE blind index (R1)', async () => {
     setupLab()
@@ -137,13 +141,35 @@ describe('lab.submitResult', () => {
     })
   })
 
-  it('dispatches a LAB_RESULT_AVAILABLE notification to the ordering doctor', async () => {
+  it('dispatches a LAB_RESULT_AVAILABLE notification to the ordering doctor when orderId is provided', async () => {
     setupLab()
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
-    await caller.lab.submitResult(makeBundle())
+    await caller.lab.submitResult({
+      ...makeBundle(),
+      orderId: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+    })
     await new Promise((r) => setTimeout(r, 0)) // notification is fire-and-forget
     const inserted = notifInsert.mock.calls[0]![0]
     expect(inserted.some((n: any) => n.recipientRole === 'CLINICIAN' && n.type === 'LAB_RESULT_AVAILABLE')).toBe(true)
+    // requester_id from service_requests must be used (not encounters)
+    const clinicianNotif = inserted.find((n: any) => n.recipientRole === 'CLINICIAN')
+    expect(clinicianNotif.recipientRef).toBe('doc-1')
+  })
+
+  it('sends only patient notification when no orderId is provided', async () => {
+    setupLab()
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    await caller.lab.submitResult(makeBundle()) // no orderId
+    await new Promise((r) => setTimeout(r, 0))
+    // service_requests must NOT be queried
+    const fromCalls = (mockFrom as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0])
+    expect(fromCalls).not.toContain('service_requests')
+    expect(fromCalls).not.toContain('encounters')
+    // Only patient notification (or no notifications call at all — both valid)
+    if (notifInsert.mock.calls.length > 0) {
+      const inserted = notifInsert.mock.calls[0]![0]
+      expect(inserted.every((n: any) => n.recipientRole !== 'CLINICIAN')).toBe(true)
+    }
   })
 
   it('emits a PHI write audit event (Rule #6)', async () => {

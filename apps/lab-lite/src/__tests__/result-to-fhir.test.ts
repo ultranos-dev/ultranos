@@ -117,4 +117,34 @@ describe('mapResultToFhirBundle', () => {
       expect(obs.status).toBe('registered')
     }
   })
+
+  // orderId extraction from specimen.request
+  it('orderId is stripped of ServiceRequest/ prefix when present', () => {
+    const sampleWithPrefixedRef = {
+      ...MOCK_SAMPLE,
+      request: [{ reference: 'ServiceRequest/order-123' }],
+    }
+    const bundle = mapResultToFhirBundle(MOCK_RESULT, MOCK_OBSERVATIONS, CBC, sampleWithPrefixedRef as any)
+    expect(bundle.orderId).toBe('order-123')
+  })
+
+  it('orderId is used as-is when reference has no ServiceRequest/ prefix', () => {
+    const sampleWithBareRef = {
+      ...MOCK_SAMPLE,
+      request: [{ reference: 'order-456' }],
+    }
+    const bundle = mapResultToFhirBundle(MOCK_RESULT, MOCK_OBSERVATIONS, CBC, sampleWithBareRef as any)
+    expect(bundle.orderId).toBe('order-456')
+  })
+
+  it('orderId is omitted when sample has no request array', () => {
+    const sampleNoRequest = { ...MOCK_SAMPLE }
+    delete (sampleNoRequest as any).request
+    const bundle = mapResultToFhirBundle(MOCK_RESULT, MOCK_OBSERVATIONS, CBC, sampleNoRequest as any)
+    expect(bundle.orderId).toBeUndefined()
+    expect('orderId' in bundle).toBe(false)
+    // diagnosticReport and observations still produced correctly
+    expect(bundle.diagnosticReport).toBeDefined()
+    expect(bundle.observations).toHaveLength(MOCK_OBSERVATIONS.length)
+  })
 })

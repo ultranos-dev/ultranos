@@ -19,6 +19,9 @@ import { compareHlc, deserializeHlc } from '@ultranos/sync-engine'
  * Dispatch lab result notifications to the ordering doctor and patient.
  * Best-effort: notification failures never block the upload response.
  * AC: 1, 2 — dispatches to both doctor (CLINICIAN) and patient (PATIENT).
+ *
+ * Doctor lookup: resolved from service_requests.requester_id via orderId.
+ * If orderId is absent or the lookup fails, the doctor notification is silently skipped.
  */
 async function dispatchResultNotifications(
   supabase: import('@supabase/supabase-js').SupabaseClient,
@@ -28,18 +31,28 @@ async function dispatchResultNotifications(
     actorId: string
     actorRole: string
     sessionId: string
+    orderId?: string
   },
 ) {
   const { patientRef, payload } = opts
 
-  // Find the ordering doctor from the most recent encounter for this patient
-  const { data: encounter } = await supabase
-    .from('encounters')
-    .select('practitioner_id')
-    .eq('patient_ref', patientRef)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
+  // Resolve the ordering doctor from the service_requests row.
+  // Defensively skips if orderId is absent, or the query errors, or no requester_id found.
+  let requesterId: string | null = null
+  if (opts.orderId) {
+    try {
+      const { data: order } = await supabase
+        .from('service_requests')
+        .select('requester_id, code_display')
+        .eq('id', opts.orderId)
+        .maybeSingle()
+      if (order?.requester_id) {
+        requesterId = order.requester_id as string
+      }
+    } catch {
+      // Best-effort — skip doctor notification if lookup fails
+    }
+  }
 
   const notifications: Array<{
     recipientRef: string
@@ -53,9 +66,9 @@ async function dispatchResultNotifications(
   const nextRetryAt = new Date(Date.now() + 60_000).toISOString() // 60s initial retry window
 
   // Doctor notification (AC: 1)
-  if (encounter?.practitioner_id) {
+  if (requesterId) {
     notifications.push(db.toRowRaw({
-      recipientRef: encounter.practitioner_id,
+      recipientRef: requesterId,
       recipientRole: 'CLINICIAN',
       type: 'LAB_RESULT_AVAILABLE',
       payload: JSON.stringify(payload),
@@ -725,6 +738,7 @@ export const labRouter = createTRPCRouter({
           { message: 'Collection date cannot be in the future' },
         ),
         diagnosticReportId: z.string().uuid().optional(),
+        orderId: z.string().uuid().optional(),
         // Story 12.6: OCR metadata audit fields
         ocrMetadataVerified: z.boolean().optional(),
         ocrSuggestions: z
@@ -1047,13 +1061,17 @@ export const labRouter = createTRPCRouter({
       }
 
       // Dispatch notification to ordering doctor (best-effort, non-blocking).
-      // Resolve doctor from most recent encounter for this patient.
+      // Dedup: when diagnosticReportId is present the file attaches to a report owned by
+      // submitResult — that call is responsible for the doctor notification, so we pass
+      // orderId: undefined here to avoid a duplicate. When diagnosticReportId is absent
+      // this is a standalone upload that owns its own report, so we pass orderId through.
       dispatchResultNotifications(ctx.supabase, {
         patientRef: input.patientRef,
         payload: notificationPayload,
         actorId: technicianId,
         actorRole: ctx.user.role,
         sessionId: ctx.user.sessionId,
+        orderId: input.diagnosticReportId ? undefined : input.orderId,
       }).catch(() => {
         // Notification failures must not block a successful upload
       })
@@ -1073,6 +1091,7 @@ export const labRouter = createTRPCRouter({
     .input(z.object({
       diagnosticReport: submitDiagnosticReportSchema,
       observations: z.array(submitObservationSchema),
+      orderId: z.string().uuid().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
@@ -1171,6 +1190,7 @@ export const labRouter = createTRPCRouter({
         patientRef,
         payload: { testCategory: loincDisplay, labName, uploadTimestamp: new Date().toISOString(), diagnosticReportId: reportId },
         actorId: technicianId, actorRole: ctx.user.role, sessionId: ctx.user.sessionId,
+        orderId: input.orderId,
       }).catch(() => { /* notification failure must not block */ })
 
       return { diagnosticReportId: reportId, observationCount: analyteRows.length }

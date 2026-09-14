@@ -892,6 +892,213 @@ describe('lab.uploadResult', () => {
     expect(result.success).toBe(true)
   })
 
+  // ── Doctor notification tests ────────────────────────────────
+
+  /**
+   * Build a scoped supabase mock that tracks service_requests and notifications.
+   * service_requests.select().eq().maybeSingle() returns requester data.
+   * notifications.insert() captures inserted rows.
+   */
+  function makeNotifScopedCtx(opts: {
+    reportId: string
+    serviceRequestRow: { requester_id: string | null } | null
+    serviceRequestError?: boolean
+  }) {
+    const notifInsertedRows: unknown[] = []
+
+    function makeScopedFrom(table: string) {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }),
+                  limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+      if (table === 'lab_technicians') return { select: mockRbacSelect }
+      if (table === 'diagnostic_reports') {
+        return {
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { id: opts.reportId }, error: null }),
+            }),
+          }),
+          delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+        }
+      }
+      if (table === 'lab_result_files') {
+        return { insert: vi.fn().mockReturnValue({ error: null }) }
+      }
+      if (table === 'labs') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { name: 'Test Lab' }, error: null }),
+            }),
+          }),
+        }
+      }
+      if (table === 'service_requests') {
+        if (opts.serviceRequestError) {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockRejectedValue(new Error('db error')),
+              }),
+            }),
+          }
+        }
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: opts.serviceRequestRow, error: null }),
+            }),
+          }),
+        }
+      }
+      if (table === 'notifications') {
+        return {
+          insert: vi.fn().mockImplementation((rows: unknown[]) => {
+            notifInsertedRows.push(...rows)
+            return { select: vi.fn().mockResolvedValue({ data: rows.map((_, i) => ({ id: `n${i}` })), error: null }) }
+          }),
+        }
+      }
+      return { insert: mockInsert, select: vi.fn(), delete: mockDelete }
+    }
+
+    const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
+    const scopedCtx = {
+      supabase: scopedSupabase as never,
+      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      lab: { technicianId: 'tech-1', labId: 'lab-1' },
+      headers: new Headers(),
+    }
+    return { scopedCtx, notifInsertedRows }
+  }
+
+  it('notif: standalone upload with orderId sends CLINICIAN notification to requester', async () => {
+    const reportId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+    const { scopedCtx, notifInsertedRows } = makeNotifScopedCtx({
+      reportId,
+      serviceRequestRow: { requester_id: 'doc-requester-1' },
+    })
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(scopedCtx)
+
+    await caller.lab.uploadResult({
+      ...validInput,
+      orderId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+      // no diagnosticReportId — standalone upload
+    })
+
+    // flush fire-and-forget
+    await new Promise((r) => setTimeout(r, 0))
+
+    const doctorNotif = (notifInsertedRows as any[]).find(
+      (n) => n.recipientRole === 'CLINICIAN' && n.type === 'LAB_RESULT_AVAILABLE',
+    )
+    expect(doctorNotif).toBeDefined()
+    expect(doctorNotif.recipientRef).toBe('doc-requester-1')
+  })
+
+  it('notif: no orderId → no CLINICIAN notification, no service_requests query', async () => {
+    const reportId = 'cccccccc-cccc-cccc-cccc-cccccccccccc'
+    const { scopedCtx, notifInsertedRows } = makeNotifScopedCtx({
+      reportId,
+      serviceRequestRow: { requester_id: 'doc-requester-2' },
+    })
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(scopedCtx)
+
+    await caller.lab.uploadResult({ ...validInput })
+    await new Promise((r) => setTimeout(r, 0))
+
+    const doctorNotif = (notifInsertedRows as any[]).find((n) => n.recipientRole === 'CLINICIAN')
+    expect(doctorNotif).toBeUndefined()
+    // service_requests must NOT be queried when orderId is absent (no encounters table either)
+    const fromCalled = (scopedCtx.supabase.from as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0])
+    expect(fromCalled).not.toContain('encounters')
+    expect(fromCalled).not.toContain('service_requests')
+  })
+
+  it('notif: uploadResult with diagnosticReportId present skips doctor notification (dedup)', async () => {
+    const reportId = 'dddddddd-dddd-dddd-dddd-dddddddddddd'
+    const { scopedCtx, notifInsertedRows } = makeNotifScopedCtx({
+      reportId,
+      serviceRequestRow: { requester_id: 'doc-requester-3' },
+    })
+
+    // Add ownership-check support for diagnostic_reports.select().eq().maybeSingle()
+    const origFrom = scopedCtx.supabase.from as ReturnType<typeof vi.fn>
+    const origImpl = origFrom.getMockImplementation()
+    origFrom.mockImplementation((table: string) => {
+      if (table === 'diagnostic_reports') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: { id: reportId, lab_id: 'lab-1' }, error: null }),
+            }),
+          }),
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { id: reportId }, error: null }),
+            }),
+          }),
+          delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+        }
+      }
+      return origImpl!(table)
+    })
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(scopedCtx)
+
+    await caller.lab.uploadResult({
+      ...validInput,
+      diagnosticReportId: reportId,   // attaching to an existing report
+      orderId: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+    })
+    await new Promise((r) => setTimeout(r, 0))
+
+    // Doctor notification must NOT fire — dedup rule: submitResult owns it
+    const doctorNotif = (notifInsertedRows as any[]).find((n) => n.recipientRole === 'CLINICIAN')
+    expect(doctorNotif).toBeUndefined()
+  })
+
+  it('notif: uploadResult without diagnosticReportId + orderId fires doctor notification', async () => {
+    const reportId = 'ffffffff-ffff-ffff-ffff-ffffffffffff'
+    const { scopedCtx, notifInsertedRows } = makeNotifScopedCtx({
+      reportId,
+      serviceRequestRow: { requester_id: 'doc-requester-4' },
+    })
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(scopedCtx)
+
+    await caller.lab.uploadResult({
+      ...validInput,
+      orderId: '11111111-2222-3333-4444-555555555555',
+      // no diagnosticReportId → standalone
+    })
+    await new Promise((r) => setTimeout(r, 0))
+
+    const doctorNotif = (notifInsertedRows as any[]).find(
+      (n) => n.recipientRole === 'CLINICIAN' && n.type === 'LAB_RESULT_AVAILABLE',
+    )
+    expect(doctorNotif).toBeDefined()
+    expect(doctorNotif.recipientRef).toBe('doc-requester-4')
+  })
+
   it('DB error on diagnosticReportId lookup throws INTERNAL_SERVER_ERROR and skips report + file inserts', async () => {
     const targetReportId = '55555555-5555-5555-5555-555555555555'
     let reportInsertCalled = false

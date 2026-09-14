@@ -78,6 +78,7 @@ export interface LabFhirDiagnosticReport {
 export interface LabFhirBundle {
   diagnosticReport: LabFhirDiagnosticReport
   observations: LabFhirObservation[]
+  orderId?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -253,5 +254,16 @@ export function mapResultToFhirBundle(
     },
   }
 
-  return { diagnosticReport, observations: fhirObservations }
+  // Derive orderId from the specimen's first ServiceRequest reference, if present.
+  // Strips a leading 'ServiceRequest/' prefix so the hub receives a bare UUID.
+  const rawRef = sample.request?.[0]?.reference
+  const orderId = rawRef
+    ? rawRef.replace(/^ServiceRequest\//, '')
+    : undefined
+
+  return {
+    diagnosticReport,
+    observations: fhirObservations,
+    ...(orderId !== undefined ? { orderId } : {}),
+  }
 }
