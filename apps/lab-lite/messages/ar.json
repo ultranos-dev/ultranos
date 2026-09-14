@@ -1612,7 +1612,9 @@
       "cancel": "إلغاء",
       "processing": "جاري المعالجة...",
       "confirmRejection": "تأكيد الرفض",
-      "receiveSample": "استلام العينة"
+      "receiveSample": "استلام العينة",
+      "photos": "الصور / المستندات",
+      "attachmentsQueueFailed": "تم حفظ العينة. تعذّر وضع الصور في قائمة الانتظار — يرجى إعادة المحاولة من قائمة الانتظار."
     },
     "sampleTypes": {
       "blood": "دم",
@@ -1784,7 +1786,8 @@
       "normal": "[TODO:translate] Normal",
       "abnormal": "[TODO:translate] Abnormal",
       "critical": "[TODO:translate] Critical"
-    }
+    },
+    "attachmentsPatientRefMissing": "مرجع المريض مفقود — تعذّر وضع المرفقات في قائمة الانتظار."
   },
   "authorization": {
     "queueTitle": "الاعتماد المعلق",
@@ -3703,5 +3706,19 @@
     "authStatus": "الحالة",
     "loadMore": "تحميل المزيد",
     "clearFilters": "مسح عوامل التصفية"
+  },
+  "attachments": {
+    "dropZoneLabel": "إرفاق ملفات — صور أو مستندات PDF",
+    "dropZoneHint": "JPEG أو PNG أو WebP أو PDF · الحد الأقصى 10 ميغابايت لكل PDF",
+    "browseButton": "استعراض الملفات",
+    "processing": "جارٍ المعالجة…",
+    "removeAriaLabel": "إزالة {name}",
+    "attachedFilesLabel": "الملفات المرفقة",
+    "errorUnsupported": "نوع الملف غير مدعوم. استخدم JPEG أو PNG أو WebP أو PDF.",
+    "errorTooLarge": "تعذّر ضغط الصورة إلى الحجم المطلوب.",
+    "errorPdfSize": "يتجاوز ملف PDF الحد المسموح به وهو 10 ميغابايت.",
+    "errorPdfType": "يُقبل فقط ملفات PDF للمستندات.",
+    "errorGeneric": "حدث خطأ أثناء معالجة الملف. يرجى المحاولة مرة أخرى.",
+    "maxReached": "تم بلوغ الحد الأقصى البالغ {max} مرفق."
   }
 }

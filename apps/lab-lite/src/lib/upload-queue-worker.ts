@@ -10,7 +10,7 @@ import {
 } from './db'
 import { createMeterFetch } from '@ultranos/sync-engine'
 import { compressBody, isCompressionAvailable } from '@/lib/compress'
-import type { UploadResultInput, UploadResultResponse } from './trpc'
+import type { UploadResultInput, UploadResultResponse, UploadSpecimenFileInput, UploadSpecimenFileResponse } from './trpc'
 import type { CHWSampleCollection, CourierHandoff } from '@/types/chw-mode'
 
 export interface QueueAuditEvent {
@@ -23,6 +23,7 @@ export interface QueueAuditEvent {
 
 export interface DrainDependencies {
   uploadFn: (input: UploadResultInput, token: string) => Promise<UploadResultResponse>
+  uploadSpecimenFn?: (input: UploadSpecimenFileInput, token: string) => Promise<UploadSpecimenFileResponse>
   getToken: () => Promise<string>
   onAuditEvent: (event: QueueAuditEvent) => void
   /** Override for testing — defaults to real setTimeout-based sleep */
@@ -101,17 +102,32 @@ async function drainItem(item: UploadQueueEntry, deps: DrainDependencies): Promi
       const convertFn = deps.blobToBase64Fn ?? blobToBase64
       const fileBase64 = await convertFn(item.file)
 
-      const input: UploadResultInput = {
-        fileBase64,
-        fileName: item.fileName,
-        fileType: item.fileType as UploadResultInput['fileType'],
-        patientRef: item.patientRef,
-        loincCode: item.metadata.loincCode,
-        loincDisplay: item.metadata.loincDisplay,
-        collectionDate: item.metadata.collectionDate,
+      if (item.metadata.kind === 'specimen') {
+        if (!deps.uploadSpecimenFn) {
+          throw new Error('uploadSpecimenFn not provided')
+        }
+        const specimenInput: UploadSpecimenFileInput = {
+          fileBase64,
+          fileName: item.fileName,
+          fileType: item.fileType as UploadSpecimenFileInput['fileType'],
+          specimenId: item.metadata.specimenId!,
+          patientRef: item.patientRef,
+          attachmentContext: item.metadata.attachmentContext!,
+        }
+        await deps.uploadSpecimenFn(specimenInput, token)
+      } else {
+        const input: UploadResultInput = {
+          fileBase64,
+          fileName: item.fileName,
+          fileType: item.fileType as UploadResultInput['fileType'],
+          patientRef: item.patientRef,
+          loincCode: item.metadata.loincCode,
+          loincDisplay: item.metadata.loincDisplay,
+          collectionDate: item.metadata.collectionDate,
+          diagnosticReportId: item.metadata.diagnosticReportId,
+        }
+        await deps.uploadFn(input, token)
       }
-
-      await deps.uploadFn(input, token)
 
       // Success — remove from queue, clear any surfaced error, emit audit
       await removeQueueItem(id)
@@ -119,7 +135,9 @@ async function drainItem(item: UploadQueueEntry, deps: DrainDependencies): Promi
       deps.onAuditEvent({
         action: 'QUEUE_DRAIN_SUCCESS',
         queueEntryId: id,
-        testCategory: item.metadata.loincDisplay,
+        testCategory: item.metadata.kind === 'specimen'
+          ? (item.metadata.attachmentContext ?? 'specimen')
+          : item.metadata.loincDisplay,
         patientRef: item.patientRef,
         timestamp: new Date().toISOString(),
       })

@@ -439,4 +439,475 @@ describe('lab.uploadResult', () => {
     const insertCall = mockInsert.mock.calls[0]![0]
     expect(insertCall.status).toBe('preliminary')
   })
+
+  it('accepts image/webp and attaches to an existing diagnosticReportId (upsert once)', async () => {
+    const reportId = '11111111-1111-1111-1111-111111111111'
+
+    // Per-call state for the scoped supabase mock
+    let reportExists = false
+    let diagnosticReportsInsertCount = 0
+    let fileInsertCount = 0
+
+    // Build a scoped supabase mock that handles the upsert-or-attach path
+    function makeScopedFrom(table: string) {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }),
+                  limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+      if (table === 'lab_technicians') {
+        return { select: mockRbacSelect }
+      }
+      if (table === 'diagnostic_reports') {
+        return {
+          // select chain for maybeSingle (upsert check)
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockImplementation(async () => {
+                // First call: not found; second call onwards: found
+                const data = reportExists ? { id: reportId, lab_id: 'lab-1' } : null
+                reportExists = true // mark exists after first check
+                return { data, error: null }
+              }),
+            }),
+          }),
+          // insert chain (no .select().single() needed for the id-based insert path)
+          insert: vi.fn().mockImplementation(() => {
+            diagnosticReportsInsertCount++
+            // Also support .select('id').single() for the non-id path (not used here, but defensive)
+            return {
+              error: null,
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: { id: reportId }, error: null }),
+              }),
+            }
+          }),
+          delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+        }
+      }
+      if (table === 'lab_result_files') {
+        return {
+          insert: vi.fn().mockImplementation(() => {
+            fileInsertCount++
+            return { error: null }
+          }),
+        }
+      }
+      if (table === 'labs') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { name: 'Test Lab' }, error: null }),
+            }),
+          }),
+        }
+      }
+      // fallback
+      return { insert: mockInsert, select: vi.fn(), delete: mockDelete }
+    }
+
+    const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
+
+    const scopedCtx = {
+      supabase: scopedSupabase as never,
+      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      lab: { technicianId: 'tech-1', labId: 'lab-1' },
+      headers: new Headers(),
+    }
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(scopedCtx as never)
+
+    const webpInput = {
+      fileBase64: Buffer.from('webpbytes').toString('base64'),
+      fileName: 'cell.webp',
+      fileType: 'image/webp' as const,
+      patientRef: 'Patient/abc',
+      loincCode: '58410-2',
+      loincDisplay: 'CBC',
+      collectionDate: '2026-09-01',
+      diagnosticReportId: reportId,
+    }
+
+    // First webp upload: creates the report + file
+    const result1 = await caller.lab.uploadResult(webpInput)
+    expect(result1.reportId).toBe(reportId)
+
+    // Second webp upload: attaches to the SAME report (no duplicate report row)
+    const result2 = await caller.lab.uploadResult({
+      ...webpInput,
+      fileBase64: Buffer.from('webpbytes2').toString('base64'),
+      fileName: 'cell2.webp',
+    })
+    expect(result2.reportId).toBe(reportId)
+
+    // ONE report created, TWO files stored
+    expect(diagnosticReportsInsertCount).toBe(1)
+    expect(fileInsertCount).toBe(2)
+  })
+
+  // ── IDOR security tests ──────────────────────────────────────
+
+  it('IDOR: rejects with FORBIDDEN when diagnosticReportId belongs to a different lab', async () => {
+    const foreignReportId = '22222222-2222-2222-2222-222222222222'
+    let fileInsertCalled = false
+
+    function makeScopedFrom(table: string) {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }),
+                  limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+      if (table === 'lab_technicians') return { select: mockRbacSelect }
+      if (table === 'diagnostic_reports') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              // Report exists but owned by a different lab
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { id: foreignReportId, lab_id: 'lab-OTHER' },
+                error: null,
+              }),
+            }),
+          }),
+          insert: vi.fn(),
+          delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+        }
+      }
+      if (table === 'lab_result_files') {
+        return {
+          insert: vi.fn().mockImplementation(() => {
+            fileInsertCalled = true
+            return { error: null }
+          }),
+        }
+      }
+      return { insert: mockInsert, select: vi.fn(), delete: mockDelete }
+    }
+
+    const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
+    const scopedCtx = {
+      supabase: scopedSupabase as never,
+      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      lab: { technicianId: 'tech-1', labId: 'lab-1' },
+      headers: new Headers(),
+    }
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(scopedCtx as never)
+
+    await expect(
+      caller.lab.uploadResult({
+        ...validInput,
+        diagnosticReportId: foreignReportId,
+      }),
+    ).rejects.toMatchObject({
+      code: 'FORBIDDEN',
+      message: 'Report belongs to another lab',
+    })
+
+    // File insert MUST NOT have been called
+    expect(fileInsertCalled).toBe(false)
+
+    // Audit event must have been emitted with DENIED outcome
+    expect(mockAuditEmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome: 'DENIED',
+        metadata: expect.objectContaining({
+          uploadAction: 'result_upload_rejected',
+          reason: 'cross_lab_report_access',
+        }),
+      }),
+    )
+  })
+
+  it('IDOR: reuses existing report when diagnosticReportId belongs to the same lab (no new report insert)', async () => {
+    const ownReportId = '33333333-3333-3333-3333-333333333333'
+    let diagnosticReportsInsertCount = 0
+    let fileInsertCount = 0
+
+    function makeScopedFrom(table: string) {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }),
+                  limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+      if (table === 'lab_technicians') return { select: mockRbacSelect }
+      if (table === 'diagnostic_reports') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              // Report exists and is owned by same lab
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { id: ownReportId, lab_id: 'lab-1' },
+                error: null,
+              }),
+            }),
+          }),
+          insert: vi.fn().mockImplementation(() => {
+            diagnosticReportsInsertCount++
+            return {
+              error: null,
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: { id: ownReportId }, error: null }),
+              }),
+            }
+          }),
+          delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+        }
+      }
+      if (table === 'lab_result_files') {
+        return {
+          insert: vi.fn().mockImplementation(() => {
+            fileInsertCount++
+            return { error: null }
+          }),
+        }
+      }
+      return { insert: mockInsert, select: vi.fn(), delete: mockDelete }
+    }
+
+    const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
+    const scopedCtx = {
+      supabase: scopedSupabase as never,
+      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      lab: { technicianId: 'tech-1', labId: 'lab-1' },
+      headers: new Headers(),
+    }
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(scopedCtx as never)
+
+    const result = await caller.lab.uploadResult({
+      ...validInput,
+      diagnosticReportId: ownReportId,
+    })
+
+    expect(result.reportId).toBe(ownReportId)
+    // No new report row created — reused the existing one
+    expect(diagnosticReportsInsertCount).toBe(0)
+    // File was attached
+    expect(fileInsertCount).toBe(1)
+  })
+
+  it('trims whitespace from loincCode before writing to diagnostic_reports', async () => {
+    let insertedData: Record<string, unknown> | null = null
+    mockInsertSingle.mockResolvedValueOnce({
+      data: { id: 'report-trim-loinc' },
+      error: null,
+    })
+    // Capture the first insert call (diagnostic_reports)
+    mockInsert.mockImplementationOnce((...args: unknown[]) => {
+      insertedData = args[0] as Record<string, unknown>
+      return { select: mockInsertSelect }
+    }).mockReturnValueOnce({ error: null })
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+
+    await caller.lab.uploadResult({ ...validInput, loincCode: '  4548-4  ' })
+
+    // Zod .trim() must have normalized the value before it reaches the insert
+    expect(insertedData).not.toBeNull()
+    expect((insertedData as unknown as Record<string, unknown>).loinc_code).toBe('4548-4')
+  })
+
+  it('accepts the literal "custom" sentinel as a valid loincCode', async () => {
+    mockInsertSingle.mockResolvedValueOnce({
+      data: { id: 'report-custom' },
+      error: null,
+    })
+    mockInsert.mockReturnValueOnce({ select: mockInsertSelect })
+      .mockReturnValueOnce({ error: null })
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+
+    // 'custom' must not be rejected — it is a valid sentinel for structured-entry codes
+    const result = await caller.lab.uploadResult({ ...validInput, loincCode: 'custom', loincDisplay: 'Custom test' })
+    expect(result.success).toBe(true)
+  })
+
+  it('DB error on diagnosticReportId lookup throws INTERNAL_SERVER_ERROR and skips report + file inserts', async () => {
+    const targetReportId = '55555555-5555-5555-5555-555555555555'
+    let reportInsertCalled = false
+    let fileInsertCalled = false
+
+    function makeScopedFrom(table: string) {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }),
+                  limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+      if (table === 'lab_technicians') return { select: mockRbacSelect }
+      if (table === 'diagnostic_reports') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              // Simulate transient DB error on the ownership lookup
+              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'db down' } }),
+            }),
+          }),
+          insert: vi.fn().mockImplementation(() => {
+            reportInsertCalled = true
+            return { error: null, select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: targetReportId }, error: null }) }) }
+          }),
+          delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+        }
+      }
+      if (table === 'lab_result_files') {
+        return {
+          insert: vi.fn().mockImplementation(() => {
+            fileInsertCalled = true
+            return { error: null }
+          }),
+        }
+      }
+      return { insert: mockInsert, select: vi.fn(), delete: mockDelete }
+    }
+
+    const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
+    const scopedCtx = {
+      supabase: scopedSupabase as never,
+      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      lab: { technicianId: 'tech-1', labId: 'lab-1' },
+      headers: new Headers(),
+    }
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(scopedCtx as never)
+
+    await expect(
+      caller.lab.uploadResult({ ...validInput, diagnosticReportId: targetReportId }),
+    ).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Failed to look up diagnostic report',
+    })
+
+    // Neither report nor file inserts may occur when the lookup itself fails
+    expect(reportInsertCalled).toBe(false)
+    expect(fileInsertCalled).toBe(false)
+  })
+
+  it('IDOR: creates report scoped to caller lab_id when diagnosticReportId does not exist', async () => {
+    const newReportId = '44444444-4444-4444-4444-444444444444'
+    let insertedReportData: Record<string, unknown> | null = null
+    let fileInsertCount = 0
+
+    function makeScopedFrom(table: string) {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }),
+                  limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+      if (table === 'lab_technicians') return { select: mockRbacSelect }
+      if (table === 'diagnostic_reports') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              // Report does not exist
+              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+          insert: vi.fn().mockImplementation((data: Record<string, unknown>) => {
+            insertedReportData = data
+            return {
+              error: null,
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: { id: newReportId }, error: null }),
+              }),
+            }
+          }),
+          delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+        }
+      }
+      if (table === 'lab_result_files') {
+        return {
+          insert: vi.fn().mockImplementation(() => {
+            fileInsertCount++
+            return { error: null }
+          }),
+        }
+      }
+      return { insert: mockInsert, select: vi.fn(), delete: mockDelete }
+    }
+
+    const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
+    const scopedCtx = {
+      supabase: scopedSupabase as never,
+      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      lab: { technicianId: 'tech-1', labId: 'lab-1' },
+      headers: new Headers(),
+    }
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(scopedCtx as never)
+
+    const result = await caller.lab.uploadResult({
+      ...validInput,
+      diagnosticReportId: newReportId,
+    })
+
+    expect(result.reportId).toBe(newReportId)
+    // Report was created with caller's lab_id
+    expect(insertedReportData).not.toBeNull()
+    expect(insertedReportData).toEqual(
+      expect.objectContaining({
+        id: newReportId,
+        lab_id: 'lab-1',
+      }),
+    )
+    // File was attached
+    expect(fileInsertCount).toBe(1)
+  })
 })

@@ -6,7 +6,7 @@ import type { FhirSpecimen, PatientVerificationRecord } from '@ultranos/shared-t
 import type { CustodyEvent } from '@/types/custody-event'
 import { transitionSampleStatus } from '@/lib/sample-service'
 import { getCustodyEventsForSample, getVerificationBySampleId, getActiveLock } from '@/lib/db'
-import { reportTransportAuditEvent } from '@/lib/audit-client'
+import { reportTransportAuditEvent, reportLabLifecycleEvent } from '@/lib/audit-client'
 import type { SampleLock } from '@/lib/db'
 import { acquireLock, releaseLock } from '@/lib/sample-lock-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -118,6 +118,8 @@ export function SampleDetailView({
       const lock = await getActiveLock(specimen.id)
       setActiveLock(lock ?? null)
       onStatusChange?.({ ...specimen, _ultranos: { ...specimen._ultranos, pipelineStatus: 'in-processing' } })
+      // Story 43.1 — emit lifecycle audit event on received→in-processing transition (fire-and-forget)
+      reportLabLifecycleEvent({ event: 'SAMPLE_PROCESSED', sampleId: specimen.id })
     } catch (err) {
       setTransitionError(err instanceof Error ? err.message : t('errors.transitionFailed'))
     } finally {
@@ -147,22 +149,6 @@ export function SampleDetailView({
       await transitionSampleStatus(specimen.id, newStatus, actorId)
       await loadEvents()
       onStatusChange?.({ ...specimen, _ultranos: { ...specimen._ultranos, pipelineStatus: newStatus } })
-
-      // INTEGRATION: Story 43.1 — emit lab lifecycle audit events on status transitions.
-      // Call reportLabLifecycleEvent() here once Story 42.3 pipeline is fully wired.
-      // Transition map:
-      //   'in-processing' → SAMPLE_PROCESSED
-      //   'completed'     → RESULT_ENTERED  (result data saved to template)
-      //   'reported'      → RESULT_RELEASED  (result released to ordering physician)
-      //
-      // Example (uncomment and import reportLabLifecycleEvent from '@/lib/audit-client'):
-      // if (newStatus === 'in-processing') {
-      //   reportLabLifecycleEvent({ event: 'SAMPLE_PROCESSED', sampleId: specimen.id })
-      // } else if (newStatus === 'completed') {
-      //   reportLabLifecycleEvent({ event: 'RESULT_ENTERED', sampleId: specimen.id })
-      // } else if (newStatus === 'reported') {
-      //   reportLabLifecycleEvent({ event: 'RESULT_RELEASED', sampleId: specimen.id })
-      // }
     } catch (err) {
       setTransitionError(err instanceof Error ? err.message : t('errors.transitionFailed'))
     } finally {

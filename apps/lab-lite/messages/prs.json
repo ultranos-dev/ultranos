@@ -1612,7 +1612,9 @@
       "cancel": "لغو",
       "processing": "در حال پردازش...",
       "confirmRejection": "تایید رد",
-      "receiveSample": "دریافت نمونه"
+      "receiveSample": "دریافت نمونه",
+      "photos": "عکس‌ها / اسناد",
+      "attachmentsQueueFailed": "نمونه ذخیره شد. عکس‌ها در صف قرار نگرفتند — لطفاً از صف آپلود دوباره امتحان کنید."
     },
     "sampleTypes": {
       "blood": "خون",
@@ -1784,7 +1786,8 @@
       "normal": "[TODO:translate] Normal",
       "abnormal": "[TODO:translate] Abnormal",
       "critical": "[TODO:translate] Critical"
-    }
+    },
+    "attachmentsPatientRefMissing": "مرجع بیمار یافت نشد — پیوست‌ها نتوانستند در صف قرار گیرند."
   },
   "authorization": {
     "queueTitle": "تأیید در انتظار",
@@ -3703,5 +3706,19 @@
     "authStatus": "وضعیت",
     "loadMore": "بارگیری بیشتر",
     "clearFilters": "پاک کردن فیلترها"
+  },
+  "attachments": {
+    "dropZoneLabel": "پیوست فایل‌ها — تصاویر یا اسناد PDF",
+    "dropZoneHint": "JPEG یا PNG یا WebP یا PDF · حداکثر ۱۰ مگابایت برای هر PDF",
+    "browseButton": "مرور فایل‌ها",
+    "processing": "در حال پردازش…",
+    "removeAriaLabel": "حذف {name}",
+    "attachedFilesLabel": "فایل‌های پیوست‌شده",
+    "errorUnsupported": "نوع فایل پشتیبانی نمی‌شود. از JPEG، PNG، WebP یا PDF استفاده کنید.",
+    "errorTooLarge": "فشرده‌سازی تصویر به اندازه موردنظر امکان‌پذیر نیست.",
+    "errorPdfSize": "فایل PDF از حد مجاز ۱۰ مگابایت بیشتر است.",
+    "errorPdfType": "تنها فایل‌های PDF برای اسناد پذیرفته می‌شوند.",
+    "errorGeneric": "خطایی هنگام پردازش فایل رخ داد. لطفاً دوباره امتحان کنید.",
+    "maxReached": "حداکثر {max} پیوست مجاز است."
   }
 }
