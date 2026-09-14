@@ -24,6 +24,8 @@ function actionLabel(a: AuditAction): string {
     case AuditAction.SUPPLIER_INVOICE_DISPUTED: return 'actionInvoiceDisputed'
     case AuditAction.SUPPLIER_PAYMENT_RECORDED: return 'actionPaymentRecorded'
     case AuditAction.SUPPLIER_PAYMENT_VOIDED:   return 'actionPaymentVoided'
+    case AuditAction.BATCH_QC_HELD:             return 'actionBatchQcHeld'
+    case AuditAction.BATCH_QC_RELEASED:         return 'actionBatchQcReleased'
     default:                                     return a
   }
 }
@@ -34,6 +36,7 @@ function resourceLabel(rt: AuditResourceType): string {
     case AuditResourceType.SUPPLIER_INVOICE: return 'resourceSupplierInvoice'
     case AuditResourceType.SUPPLIER_PAYMENT: return 'resourceSupplierPayment'
     case AuditResourceType.GOODS_RECEIPT:    return 'resourceGoodsReceipt'
+    case AuditResourceType.STOCK_BATCH:      return 'resourceStockBatch'
     default:                                  return rt
   }
 }
@@ -49,6 +52,8 @@ const PROCUREMENT_ACTIONS: AuditAction[] = [
   AuditAction.SUPPLIER_INVOICE_DISPUTED,
   AuditAction.SUPPLIER_PAYMENT_RECORDED,
   AuditAction.SUPPLIER_PAYMENT_VOIDED,
+  AuditAction.BATCH_QC_HELD,
+  AuditAction.BATCH_QC_RELEASED,
 ]
 
 interface Filter {
@@ -180,6 +185,7 @@ export function ProcurementAuditPage() {
                   <td className="px-4 py-3 text-foreground font-numeric text-xs">
                     {(e.metadata as Record<string, unknown> | undefined)?.poNumber as string | undefined
                       ?? (e.metadata as Record<string, unknown> | undefined)?.invoiceNumber as string | undefined
+                      ?? (e.metadata as Record<string, unknown> | undefined)?.batchNumber as string | undefined
                       ?? e.resourceId}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">

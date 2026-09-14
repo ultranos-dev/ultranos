@@ -8,6 +8,7 @@ export const PROCUREMENT_RESOURCE_TYPES: readonly AuditResourceType[] = [
   AuditResourceType.SUPPLIER_INVOICE,
   AuditResourceType.SUPPLIER_PAYMENT,
   AuditResourceType.GOODS_RECEIPT,
+  AuditResourceType.STOCK_BATCH, // QC hold/release events (BATCH_QC_HELD / BATCH_QC_RELEASED)
 ]
 
 /**
@@ -36,7 +37,7 @@ export function auditProcurementEvent(
 
 function referenceOf(e: ClientAuditEvent): string {
   const m = (e.metadata ?? {}) as Record<string, unknown>
-  return String(m.poNumber ?? m.invoiceNumber ?? e.resourceId ?? '')
+  return String(m.poNumber ?? m.invoiceNumber ?? m.batchNumber ?? e.resourceId ?? '')
 }
 
 export async function getProcurementAuditEvents(filter?: {

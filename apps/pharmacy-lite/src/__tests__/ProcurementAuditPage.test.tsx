@@ -22,6 +22,16 @@ describe('ProcurementAuditPage', () => {
     const tbody = document.querySelector('tbody')!
     expect(within(tbody).getByText('actionPoCreated')).toBeInTheDocument()
   })
+  it('renders a QC hold event with its batch number + QC action label', async () => {
+    getProcurementAuditEvents.mockResolvedValue([
+      { id: '1', actorId: 'u1', action: AuditAction.BATCH_QC_HELD, resourceType: AuditResourceType.STOCK_BATCH, resourceId: 'batch1', hlcTimestamp: '2026-01-01T00:00:00.000Z', metadata: { batchNumber: 'B-2026-777' }, queuedAt: '', status: 'synced' },
+    ])
+    render(<ProcurementAuditPage />)
+    expect(await screen.findByText('B-2026-777')).toBeInTheDocument()
+    const tbody = document.querySelector('tbody')!
+    expect(within(tbody).getByText('actionBatchQcHeld')).toBeInTheDocument()
+    expect(within(tbody).getByText('resourceStockBatch')).toBeInTheDocument()
+  })
   it('shows the empty state when there are no events', async () => {
     getProcurementAuditEvents.mockResolvedValue([])
     render(<ProcurementAuditPage />)
