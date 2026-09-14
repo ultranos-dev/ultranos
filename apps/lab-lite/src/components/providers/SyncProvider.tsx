@@ -6,9 +6,10 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useSyncStore } from '@/stores/sync-store'
 import { startUploadDrain, stopUploadDrain, triggerUploadDrain } from '@/lib/upload-drain-init'
 import { startAuditDrain, stopAuditDrain } from '@/lib/audit-client'
-import { uploadResult } from '@/lib/trpc'
+import { uploadResult, uploadSpecimenFile } from '@/lib/trpc'
 import { reportQueueAuditEvent } from '@/lib/queue-audit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { drainResultSyncQueue } from '@/lib/result-sync'
 
 /**
  * SyncProvider — centralized sync lifecycle management for Lab Lite.
@@ -48,6 +49,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // Start upload queue drain
     startUploadDrain({
       uploadFn: uploadResult,
+      uploadSpecimenFn: uploadSpecimenFile,
       getToken,
       onSyncError: (reason) => {
         useSyncStore.getState().setSyncError(reason)
@@ -71,6 +73,13 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // Start audit drain (AuditDrainInit component was never mounted, absorb it here)
     startAuditDrain()
 
+    // Drain structured lab results (syncQueue resourceType='DiagnosticReport') to
+    // the Hub via lab.submitResult. Reuses the same triggers as the upload drain.
+    const runResultDrain = () => {
+      void drainResultSyncQueue(getToken)
+    }
+    if (typeof navigator !== 'undefined' && navigator.onLine) runResultDrain()
+
     // Mark synced on initial startup when online
     if (typeof navigator !== 'undefined' && navigator.onLine) {
       const state = useSyncStore.getState()
@@ -91,12 +100,14 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     const drainInterval = setInterval(() => {
       if (typeof navigator !== 'undefined' && navigator.onLine) {
         triggerUploadDrain()
+        runResultDrain()
       }
     }, 30_000)
 
     // On reconnect: trigger immediate drain
     function handleOnline() {
       triggerUploadDrain()
+      runResultDrain()
     }
     window.addEventListener('online', handleOnline)
 
