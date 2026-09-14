@@ -11,7 +11,7 @@ beforeEach(async () => {
 
 describe('supplierItems schema (v20)', () => {
   it('opens at version 20 with the supplierItems store', async () => {
-    expect(db.verno).toBe(20)
+    expect(db.verno).toBe(21)
     await db.supplierItems.put({ id: 's1', supplierId: 'sup1', catalogItemId: 'cat1', unitPrice: 500, isPreferred: true, createdBy: 'u1', createdAt: 'h', hlcTimestamp: 'h' })
     expect((await db.supplierItems.get('s1'))?.unitPrice).toBe(500)
   })

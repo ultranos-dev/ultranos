@@ -5,7 +5,7 @@ import {
   applyEncryptionMiddleware,
   type EncryptionTableConfig,
 } from './dexie-encryption-middleware'
-import type { CatalogItem, StockBatch, StockMovement, GoodsReceipt, PharmacyInventorySettings } from './inventory/types'
+import type { CatalogItem, StockBatch, StockMovement, GoodsReceipt, PharmacyInventorySettings, StockLocation } from './inventory/types'
 import { INVENTORY_STORES } from './inventory-db'
 import type { Invoice, Payment, LedgerEntry, PatientAccount, CashDrawer } from './pos/types'
 import { POS_STORES } from './pos-db'
@@ -171,6 +171,7 @@ class PharmacyLiteDatabase extends Dexie {
   customerLedgerEntries!: EntityTable<CustomerLedgerEntry, 'id'>
   contractPrices!: EntityTable<ContractPrice, 'id'>
   wholesalePullMeta!: EntityTable<{ key: string; lastPulledHlc: string }, 'key'>
+  stockLocations!: EntityTable<StockLocation, 'id'>
 
   constructor() {
     super('pharmacy-lite')
@@ -314,6 +315,12 @@ class PharmacyLiteDatabase extends Dexie {
     // Non-PHI operational data; not encrypted.
     this.version(20).stores({
       supplierItems: 'id, supplierId, catalogItemId, [supplierId+catalogItemId], [catalogItemId+isPreferred]',
+    })
+
+    // v21: Multi-location SP1b — read-only cache of facility sub-locations.
+    // Non-PHI operational data; not encrypted.
+    this.version(21).stores({
+      stockLocations: 'id, isPrimary, isActive',
     })
   }
 }

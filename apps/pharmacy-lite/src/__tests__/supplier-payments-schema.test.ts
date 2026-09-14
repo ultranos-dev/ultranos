@@ -14,7 +14,7 @@ beforeEach(async () => {
 
 describe('supplierPayments schema (v20 latest)', () => {
   it('opens at version 20 with the supplierPayments store', async () => {
-    expect(db.verno).toBe(20)
+    expect(db.verno).toBe(21)
     // A round-trip put/get proves the store + primary key work.
     await db.supplierPayments.put({
       id: 'p1', supplierId: 's1', supplierName: 'Acme', amount: 500, method: 'cash',

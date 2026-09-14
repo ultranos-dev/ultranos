@@ -3,6 +3,17 @@
  * e.g. 350 = 3.50 AFN (when currencyMinorUnits = 2)
  */
 
+import type { FacilityLocation } from '@ultranos/shared-types'
+
+export interface StockLocation extends FacilityLocation {
+  lastSyncedAt: string   // ISO 8601 — when this row was last pulled from the Hub
+}
+
+/** Sentinel for the roll-up view state (never persisted on a batch). */
+export const ALL_LOCATIONS = 'ALL' as const
+/** Fallback id used before any sub-location is cached (matches legacy batches). */
+export const DEFAULT_LOCATION_ID = 'default' as const
+
 export type MedicationForm =
   | 'tablet'
   | 'capsule'
