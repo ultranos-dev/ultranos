@@ -291,7 +291,7 @@ describe('lab.uploadSpecimenFile', () => {
     })
   })
 
-  it('stores specimenId, patientRef, labId, and attachmentContext on the row', async () => {
+  it('stores specimenId, patientRef (bare), labId, and attachmentContext on the row', async () => {
     mockInsertSingle.mockResolvedValueOnce({
       data: { id: 'specimen-file-uuid-4' },
       error: null,
@@ -300,19 +300,50 @@ describe('lab.uploadSpecimenFile', () => {
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
+    // validInput.patientRef = 'Patient/abc' — prefix must be stripped before storage
     await caller.lab.uploadSpecimenFile(validInput)
 
     const insertedRow = mockInsert.mock.calls[0]![0]
     expect(insertedRow).toEqual(
       expect.objectContaining({
         specimen_id: validInput.specimenId,
-        patient_ref: validInput.patientRef,
+        patient_ref: 'abc',           // bare — 'Patient/' prefix stripped
         lab_id: 'lab-1',
         attachment_context: 'rejection',
         file_name: 'damaged.webp',
         file_type: 'image/webp',
       }),
     )
+  })
+
+  it('stores bare patient_ref when patientRef has Patient/ prefix', async () => {
+    mockInsertSingle.mockResolvedValueOnce({
+      data: { id: 'specimen-file-bare-1' },
+      error: null,
+    })
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+
+    await caller.lab.uploadSpecimenFile({ ...validInput, patientRef: 'Patient/abc123' })
+
+    const insertedRow = mockInsert.mock.calls[0]![0]
+    expect(insertedRow.patient_ref).toBe('abc123')
+  })
+
+  it('stores bare patient_ref unchanged when patientRef is already bare', async () => {
+    mockInsertSingle.mockResolvedValueOnce({
+      data: { id: 'specimen-file-bare-2' },
+      error: null,
+    })
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+
+    await caller.lab.uploadSpecimenFile({ ...validInput, patientRef: 'abc123' })
+
+    const insertedRow = mockInsert.mock.calls[0]![0]
+    expect(insertedRow.patient_ref).toBe('abc123')
   })
 
   it('allows deferred scan — stores with pending virus_scan_status', async () => {

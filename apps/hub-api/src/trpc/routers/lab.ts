@@ -43,7 +43,7 @@ async function dispatchResultNotifications(
     try {
       const { data: order } = await supabase
         .from('service_requests')
-        .select('requester_id, code_display')
+        .select('requester_id')
         .eq('id', opts.orderId)
         .maybeSingle()
       if (order?.requester_id) {
@@ -1423,12 +1423,15 @@ export const labRouter = createTRPCRouter({
 
       const encryptedContent = encryptField(input.fileBase64, encryptionKey)
 
+      // Strip any FHIR Patient/ prefix — store bare ref for consistency with diagnostic_reports.patient_ref
+      const specimenPatientRef = input.patientRef.replace(/^Patient\//, '')
+
       // Store encrypted specimen file
       const { data, error } = await ctx.supabase
         .from('specimen_files')
         .insert({
           specimen_id: input.specimenId,
-          patient_ref: input.patientRef,
+          patient_ref: specimenPatientRef,
           lab_id: labId,
           file_name: input.fileName,
           file_type: input.fileType,
