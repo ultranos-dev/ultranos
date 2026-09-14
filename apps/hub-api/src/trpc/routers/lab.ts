@@ -13,6 +13,7 @@ import { generateBlindIndex, encryptField } from '@ultranos/crypto/server'
 import { getFieldEncryptionKeys } from '@/lib/field-encryption'
 import { scanFile } from '@/lib/virus-scanner'
 import { analyzeFile } from '@/services/ocr'
+import { compareHlc, deserializeHlc } from '@ultranos/sync-engine'
 
 /**
  * Dispatch lab result notifications to the ordering doctor and patient.
@@ -242,6 +243,22 @@ const submitDiagnosticReportSchema = z.object({
   _ultranos: z.object({}).passthrough(),
   meta: z.object({ lastUpdated: z.string(), versionId: z.string() }),
 })
+
+const submitSpecimenSchema = z.object({
+  id: z.string().uuid(),
+  labSampleId: z.string().min(1).max(64),
+  pipelineStatus: z.enum(['received', 'in-processing', 'completed', 'reported', 'rejected']),
+  fhirStatus: z.string().min(1).max(32),
+  specimenType: z.string().max(64).optional(),
+  subjectReference: z.string().min(1),          // Patient/<blindIndex>
+  serviceRequestRef: z.string().optional(),     // ServiceRequest/<orderId>
+  receivedFrom: z.string().max(128).optional(),
+  receivedTime: z.string().optional(),
+  condition: z.string().max(32).optional(),
+  rejectionReason: z.string().max(256).optional(),
+  note: z.string().max(2000).optional(),
+  hlcTimestamp: z.string().min(1),
+}).strict()   // .strict() = data-minimization: reject unknown fields (Rule #7)
 
 export const labRouter = createTRPCRouter({
   /**
@@ -1157,6 +1174,90 @@ export const labRouter = createTRPCRouter({
       }).catch(() => { /* notification failure must not block */ })
 
       return { diagnosticReportId: reportId, observationCount: analyteRows.length }
+    }),
+
+  /**
+   * Ingests a collected specimen record from Lab-Lite into the specimens table.
+   * Data-minimized: patient_ref stored as BARE blind index (no Patient/ prefix, no real UUID).
+   * lab_id and performer_id are SERVER-STAMPED from ctx.lab — never trusted from client.
+   * Newer-wins: skips the write when stored hlc_timestamp >= incoming (idempotent no-op).
+   * Emits SPECIMEN audit event (Rule #6). note field encrypted at rest.
+   */
+  submitSpecimen: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
+    .use(enforceLabActive())
+    .input(submitSpecimenSchema)
+    .mutation(async ({ ctx, input }) => {
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      // performer_id uses the auth user sub (practitioner identity) — ctx.user.sub is the JWT sub.
+      // ctx.lab.technicianId is the lab_technicians row PK, not the practitioner identifier.
+      const technicianId = ctx.user.sub
+      const labId = ctx.lab?.labId
+      if (!labId) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Lab affiliation required' })
+      }
+
+      // Ownership + newer-wins lookup.
+      const { data: existing, error: lookupError } = await ctx.supabase
+        .from('specimens')
+        .select('id, lab_id, hlc_timestamp')
+        .eq('id', input.id)
+        .maybeSingle()
+      if (lookupError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to look up specimen' })
+      }
+      if (existing && existing.lab_id !== labId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Specimen belongs to another lab' })
+      }
+      if (existing?.hlc_timestamp) {
+        const cmp = compareHlc(deserializeHlc(input.hlcTimestamp), deserializeHlc(existing.hlc_timestamp as string))
+        if (cmp <= 0) {
+          // Stored state is newer-or-equal — idempotent no-op (prevents stale retries clobbering).
+          return { specimenId: input.id, pipelineStatus: input.pipelineStatus }
+        }
+      }
+
+      const patientRefStored = input.subjectReference.replace(/^Patient\//, '')
+      const serviceRequestId = input.serviceRequestRef?.replace(/^ServiceRequest\//, '') ?? null
+
+      const specimenRow: Record<string, unknown> = {
+        id: input.id,
+        lab_sample_id: input.labSampleId,
+        pipeline_status: input.pipelineStatus,
+        fhir_status: input.fhirStatus,
+        specimen_type: input.specimenType ?? null,
+        patient_ref: patientRefStored,
+        service_request_id: serviceRequestId,
+        received_from: input.receivedFrom ?? null,
+        received_time: input.receivedTime ?? null,
+        condition: input.condition ?? null,
+        rejection_reason: input.rejectionReason ?? null,
+        note: input.note ? encryptField(input.note, getFieldEncryptionKeys().encryptionKey) : null,
+        performer_id: technicianId,
+        lab_id: labId,
+        hlc_timestamp: input.hlcTimestamp,
+        updated_at: new Date().toISOString(),
+      }
+
+      const { error: upsertError } = await ctx.supabase
+        .from('specimens')
+        .upsert(specimenRow, { onConflict: 'id' })
+      if (upsertError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to write specimen' })
+      }
+
+      try {
+        await audit.emit({
+          action: 'CREATE', resourceType: 'SPECIMEN', resourceId: input.id,
+          actorId: technicianId, actorRole: ctx.user.role, outcome: 'SUCCESS', sessionId: ctx.user.sessionId,
+          metadata: { submitAction: 'specimen_synced', pipelineStatus: input.pipelineStatus, labId },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'SPECIMEN', resourceId: input.id })
+      }
+
+      return { specimenId: input.id, pipelineStatus: input.pipelineStatus }
     }),
 
   /**
