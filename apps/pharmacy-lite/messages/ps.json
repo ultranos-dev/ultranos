@@ -909,6 +909,12 @@
     "supplierItemRemove": "لرې کول",
     "supplierItemSaveError": "د عرضه کوونکي لینک خوندي کول ناکام شو."
   },
+  "locations": {
+    "selectorLabel": "فرعي ځای",
+    "allLocations": "ټول فرعي ځایونه",
+    "defaultLocation": "ډیفالټ",
+    "writeFieldLabel": "فرعي ځای ته ترلاسه کړئ"
+  },
   "reorder": {
     "title": "بیا امر کول",
     "loading": "لوډ کیږي…",
@@ -1598,6 +1604,7 @@
     "resourceSupplierInvoice": "د تامینوونکي فاکتور",
     "resourceSupplierPayment": "د تامینوونکي تادیه",
     "resourceGoodsReceipt": "د توکو رسید",
+    "resourceStockBatch": "د ذخیرې ډله",
     "actionPoCreated": "د پیرودلو امر جوړ شو",
     "actionPoSent": "د پیرودلو امر واستول شو",
     "actionPoCancelled": "د پیرودلو امر لغوه شو",
@@ -1607,7 +1614,9 @@
     "actionInvoiceApproved": "فاکتور تایید شو",
     "actionInvoiceDisputed": "فاکتور باندې اعتراض وشو",
     "actionPaymentRecorded": "تادیه ثبت شوه",
-    "actionPaymentVoided": "تادیه باطله شوه"
+    "actionPaymentVoided": "تادیه باطله شوه",
+    "actionBatchQcHeld": "ډله ونیول شوه (د کیفیت کنټرول)",
+    "actionBatchQcReleased": "ډله خوشې شوه (د کیفیت کنټرول)"
   },
   "supplierPayments": {
     "title": "د تادیاتو حسابونه",

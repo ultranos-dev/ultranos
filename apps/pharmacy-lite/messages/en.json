@@ -909,6 +909,12 @@
     "supplierItemRemove": "Remove",
     "supplierItemSaveError": "Could not save the supplier link."
   },
+  "locations": {
+    "selectorLabel": "Sub-location",
+    "allLocations": "All sub-locations",
+    "defaultLocation": "Default",
+    "writeFieldLabel": "Receive into sub-location"
+  },
   "reorder": {
     "title": "Reorder",
     "loading": "Loading…",
@@ -1516,6 +1522,7 @@
     "resourceSupplierInvoice": "Supplier invoice",
     "resourceSupplierPayment": "Supplier payment",
     "resourceGoodsReceipt": "Goods receipt",
+    "resourceStockBatch": "Stock batch",
     "actionPoCreated": "PO created",
     "actionPoSent": "PO sent",
     "actionPoCancelled": "PO cancelled",
@@ -1525,7 +1532,9 @@
     "actionInvoiceApproved": "Invoice approved",
     "actionInvoiceDisputed": "Invoice disputed",
     "actionPaymentRecorded": "Payment recorded",
-    "actionPaymentVoided": "Payment voided"
+    "actionPaymentVoided": "Payment voided",
+    "actionBatchQcHeld": "Batch held (QC)",
+    "actionBatchQcReleased": "Batch released (QC)"
   },
   "supplierPayments": {
     "title": "Payables",

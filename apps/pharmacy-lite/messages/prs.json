@@ -909,6 +909,12 @@
     "supplierItemRemove": "حذف",
     "supplierItemSaveError": "لینک تامین‌کننده ذخیره نشد."
   },
+  "locations": {
+    "selectorLabel": "موقعیت فرعی",
+    "allLocations": "همه موقعیت‌های فرعی",
+    "defaultLocation": "پیش‌فرض",
+    "writeFieldLabel": "دریافت به موقعیت فرعی"
+  },
   "reorder": {
     "title": "سفارش مجدد",
     "loading": "در حال بارگذاری…",
@@ -1598,6 +1604,7 @@
     "resourceSupplierInvoice": "فاکتور تامین‌کننده",
     "resourceSupplierPayment": "پرداخت به تامین‌کننده",
     "resourceGoodsReceipt": "رسید کالا",
+    "resourceStockBatch": "دسته موجودی",
     "actionPoCreated": "سفارش خرید ایجاد شد",
     "actionPoSent": "سفارش خرید ارسال شد",
     "actionPoCancelled": "سفارش خرید لغو شد",
@@ -1607,7 +1614,9 @@
     "actionInvoiceApproved": "فاکتور تایید شد",
     "actionInvoiceDisputed": "فاکتور مورد اعتراض قرار گرفت",
     "actionPaymentRecorded": "پرداخت ثبت شد",
-    "actionPaymentVoided": "پرداخت باطل شد"
+    "actionPaymentVoided": "پرداخت باطل شد",
+    "actionBatchQcHeld": "دسته نگه داشته شد (کنترل کیفیت)",
+    "actionBatchQcReleased": "دسته آزاد شد (کنترل کیفیت)"
   },
   "supplierPayments": {
     "title": "حساب‌های پرداختنی",

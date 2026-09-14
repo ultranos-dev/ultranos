@@ -909,6 +909,12 @@
     "supplierItemRemove": "إزالة",
     "supplierItemSaveError": "تعذّر حفظ ارتباط المورد."
   },
+  "locations": {
+    "selectorLabel": "الموقع الفرعي",
+    "allLocations": "جميع المواقع الفرعية",
+    "defaultLocation": "افتراضي",
+    "writeFieldLabel": "استلام في الموقع الفرعي"
+  },
   "reorder": {
     "title": "إعادة الطلب",
     "loading": "جاري التحميل…",
@@ -1598,6 +1604,7 @@
     "resourceSupplierInvoice": "فاتورة المورّد",
     "resourceSupplierPayment": "دفعة المورّد",
     "resourceGoodsReceipt": "إيصال البضائع",
+    "resourceStockBatch": "دفعة المخزون",
     "actionPoCreated": "تم إنشاء أمر الشراء",
     "actionPoSent": "تم إرسال أمر الشراء",
     "actionPoCancelled": "تم إلغاء أمر الشراء",
@@ -1607,7 +1614,9 @@
     "actionInvoiceApproved": "تم اعتماد الفاتورة",
     "actionInvoiceDisputed": "تم الاعتراض على الفاتورة",
     "actionPaymentRecorded": "تم تسجيل الدفعة",
-    "actionPaymentVoided": "تم إلغاء الدفعة"
+    "actionPaymentVoided": "تم إلغاء الدفعة",
+    "actionBatchQcHeld": "تم حجز الدفعة (مراقبة الجودة)",
+    "actionBatchQcReleased": "تم الإفراج عن الدفعة (مراقبة الجودة)"
   },
   "supplierPayments": {
     "title": "الحسابات المستحقة",
