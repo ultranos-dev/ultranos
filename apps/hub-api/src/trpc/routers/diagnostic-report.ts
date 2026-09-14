@@ -71,6 +71,12 @@ export const diagnosticReportRouter = createTRPCRouter({
         .select('id, file_name, file_type, file_size, _ultranos_created_at')
         .eq('diagnostic_report_id', input.id)
 
+      // Structured analytes (Task 3)
+      const { data: analytes } = await ctx.supabase
+        .from('diagnostic_report_observations')
+        .select('id, observation_id, loinc_code, loinc_display, value_quantity, value_string, interpretation, reference_range, note, effective_date_time')
+        .eq('diagnostic_report_id', input.id)
+
       // Audit PHI access (CLAUDE.md Rule #6)
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
@@ -109,6 +115,18 @@ export const diagnosticReportRouter = createTRPCRouter({
           fileType: f.file_type,
           fileSize: f.file_size,
           downloadUrl: `/api/lab-files/${f.id}`,
+        })),
+        observations: (analytes ?? []).map((a) => ({
+          id: a.id as string,
+          observationId: a.observation_id as string,
+          loincCode: a.loinc_code as string,
+          loincDisplay: (a.loinc_display as string | null) ?? null,
+          valueQuantity: a.value_quantity as { value: number; unit?: string } | null,
+          valueString: (a.value_string as string | null) ?? null,
+          interpretation: a.interpretation as unknown[] | null,
+          referenceRange: a.reference_range as { low?: number; high?: number; text?: string } | null,
+          note: a.note as Array<{ text: string }> | null,
+          effectiveDateTime: (a.effective_date_time as string | null) ?? null,
         })),
       }
     }),
