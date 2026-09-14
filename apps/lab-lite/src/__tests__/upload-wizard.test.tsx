@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, cleanup, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { NextIntlClientProvider } from 'next-intl'
+import messages from '../../messages/en.json'
 import 'fake-indexeddb/auto'
 import { getDb } from '../lib/db'
 import { useAuthSessionStore } from '../stores/auth-session-store'
@@ -39,6 +41,7 @@ vi.mock('@/lib/trpc', async (importOriginal) => {
     ...actual,
     verifyPatient: (...args: unknown[]) => mockVerifyPatient(...args),
     analyzeUpload: (...args: unknown[]) => mockAnalyzeUpload(...args),
+    searchPatients: vi.fn().mockResolvedValue([]),
   }
 })
 
@@ -63,14 +66,46 @@ function setAuthSession() {
     role: 'LAB_TECH',
     sessionId: 'sess-1',
     email: 'tech@lab.com',
-    labName: 'Central Diagnostics Lab',
-    technicianName: 'Dr. Ahmad',
-  })
+    labRole: null,
+    // labName / technicianName are not on AuthSession — preserved from original test
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any)
 }
 
+/**
+ * Renders the UploadPage inside NextIntlClientProvider with real English messages,
+ * then advances past the SELECT_ORDER step (Dexie is empty so no orders exist) by
+ * clicking "Upload without an order", and switches the verify mode to "Manual ID"
+ * so the National ID input is accessible for the remaining test assertions.
+ */
 async function renderUploadWizard() {
-  const { default: UploadPage } = await import('../app/upload/page')
-  return render(<UploadPage />)
+  const { default: UploadPage } = await import('../app/[locale]/(app)/upload/page')
+  const user = userEvent.setup()
+
+  const result = render(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      <UploadPage />
+    </NextIntlClientProvider>,
+  )
+
+  // Wait for OrderPickerStep to finish loading orders (empty — Dexie has none)
+  // then click "Upload without an order" to advance to VERIFY_PATIENT.
+  // OrderPickerStep renders the label twice (EmptyState action + standalone button below),
+  // so we use getAllByRole and click the first match.
+  await waitFor(() => {
+    const btns = screen.getAllByRole('button', { name: messages.orderPicker.uploadWithoutOrder })
+    expect(btns.length).toBeGreaterThan(0)
+  })
+  const skipBtns = screen.getAllByRole('button', { name: messages.orderPicker.uploadWithoutOrder })
+  await user.click(skipBtns[0]!)
+
+  // Now on VERIFY_PATIENT — switch to Manual ID mode so the National ID input is visible
+  await waitFor(() => {
+    expect(screen.getByText(messages.upload.manualId)).toBeDefined()
+  })
+  await user.click(screen.getByText(messages.upload.manualId))
+
+  return result
 }
 
 function createTestFile(name = 'result.pdf', type = 'application/pdf', sizeKB = 100): File {
@@ -106,10 +141,11 @@ describe('Upload Wizard (Story 17.2)', () => {
   it('renders a multi-step wizard with 4-step progress indicator', async () => {
     await renderUploadWizard()
 
-    expect(screen.getByText('Verify Patient')).toBeDefined()
-    expect(screen.getByText('Upload File')).toBeDefined()
-    expect(screen.getByText('Tag Metadata')).toBeDefined()
-    expect(screen.getByText('Review & Submit')).toBeDefined()
+    // Step labels come from steps.* i18n keys rendered by StepIndicator
+    expect(screen.getByText(messages.steps.verifyPatient)).toBeDefined()
+    expect(screen.getByText(messages.steps.uploadFile)).toBeDefined()
+    expect(screen.getByText(messages.steps.tagMetadata)).toBeDefined()
+    expect(screen.getByText(messages.steps.reviewSubmit)).toBeDefined()
 
     // Step 1 should be active
     const stepIndicator = screen.getByTestId('step-indicator')
@@ -120,15 +156,16 @@ describe('Upload Wizard (Story 17.2)', () => {
   it('renders Step 1 with Manual ID and QR Scan toggle', async () => {
     await renderUploadWizard()
 
-    expect(screen.getByText('Manual ID')).toBeDefined()
-    expect(screen.getByText('QR Scan')).toBeDefined()
+    // renderUploadWizard already clicked Manual ID — both tab buttons are in the DOM
+    expect(screen.getByText(messages.upload.manualId)).toBeDefined()
+    expect(screen.getByText(messages.upload.qrScan)).toBeDefined()
   })
 
   // AC #6: Cannot skip steps — Next disabled until step complete
   it('cannot skip steps — no Next button before verification', async () => {
     await renderUploadWizard()
 
-    // On step 1, there should be no enabled forward button
+    // On VERIFY_PATIENT, there is no "Next" button (navigation buttons are hidden for this step)
     const nextButton = screen.queryByRole('button', { name: /next/i })
     expect(nextButton).toBeNull()
   })
@@ -146,19 +183,19 @@ describe('Upload Wizard (Story 17.2)', () => {
     await renderUploadWizard()
 
     // Enter national ID
-    const idInput = screen.getByPlaceholderText('Enter patient National ID')
+    const idInput = screen.getByPlaceholderText(messages.verification.nationalIdPlaceholder)
     await user.type(idInput, '1234567890')
-    await user.click(screen.getByText('Look Up Patient'))
+    await user.click(screen.getByText(messages.verification.lookUpPatient))
 
     // Wait for verification result card
     await waitFor(() => {
-      expect(screen.getByText('Patient Verified')).toBeDefined()
+      expect(screen.getByText(messages.verification.patientVerified)).toBeDefined()
     })
 
     // Confirm patient
-    await user.click(screen.getByText('Confirm Patient'))
+    await user.click(screen.getByText(messages.verification.confirmPatient))
 
-    // Should advance to Step 2
+    // Should advance to Step 2 — upload zone appears
     await waitFor(() => {
       expect(screen.getByText(/drag and drop/i)).toBeDefined()
     })
@@ -177,15 +214,15 @@ describe('Upload Wizard (Story 17.2)', () => {
     await renderUploadWizard()
 
     // Step 1: verify patient
-    const idInput = screen.getByPlaceholderText('Enter patient National ID')
+    const idInput = screen.getByPlaceholderText(messages.verification.nationalIdPlaceholder)
     await user.type(idInput, '1234567890')
-    await user.click(screen.getByText('Look Up Patient'))
-    await waitFor(() => expect(screen.getByText('Patient Verified')).toBeDefined())
-    await user.click(screen.getByText('Confirm Patient'))
+    await user.click(screen.getByText(messages.verification.lookUpPatient))
+    await waitFor(() => expect(screen.getByText(messages.verification.patientVerified)).toBeDefined())
+    await user.click(screen.getByText(messages.verification.confirmPatient))
 
-    // Step 2 should show upload zone
+    // Step 2 should show upload zone (aria-label from ResultUpload)
     await waitFor(() => {
-      expect(screen.getByLabelText('Upload lab result file')).toBeDefined()
+      expect(screen.getByLabelText(messages.upload.uploadAreaAriaLabel)).toBeDefined()
     })
   })
 
@@ -202,24 +239,26 @@ describe('Upload Wizard (Story 17.2)', () => {
     await renderUploadWizard()
 
     // Complete Step 1
-    const idInput = screen.getByPlaceholderText('Enter patient National ID')
+    const idInput = screen.getByPlaceholderText(messages.verification.nationalIdPlaceholder)
     await user.type(idInput, '1234567890')
-    await user.click(screen.getByText('Look Up Patient'))
-    await waitFor(() => expect(screen.getByText('Patient Verified')).toBeDefined())
-    await user.click(screen.getByText('Confirm Patient'))
+    await user.click(screen.getByText(messages.verification.lookUpPatient))
+    await waitFor(() => expect(screen.getByText(messages.verification.patientVerified)).toBeDefined())
+    await user.click(screen.getByText(messages.verification.confirmPatient))
 
     // Wait for Step 2
     await waitFor(() => {
-      expect(screen.getByLabelText('Upload lab result file')).toBeDefined()
+      expect(screen.getByLabelText(messages.upload.uploadAreaAriaLabel)).toBeDefined()
     })
 
-    // Go back
-    await user.click(screen.getByRole('button', { name: /back/i }))
+    // Go back (aria-label from upload.backAriaLabel)
+    await user.click(screen.getByRole('button', { name: messages.upload.backAriaLabel }))
 
-    // Should show Step 1 with preserved patient info
+    // Should show VERIFY_PATIENT step with preserved patient info (patientVerified card shown)
     await waitFor(() => {
-      expect(screen.getByText('Ahmad')).toBeDefined()
+      expect(screen.getByText(messages.verification.patientVerified)).toBeDefined()
     })
+    // First name should be visible in the verified-patient card
+    expect(screen.getByText('Ahmad')).toBeDefined()
   })
 
   // AC #5: Review step shows all collected data
@@ -235,34 +274,37 @@ describe('Upload Wizard (Story 17.2)', () => {
     await renderUploadWizard()
 
     // Step 1: verify patient
-    await user.type(screen.getByPlaceholderText('Enter patient National ID'), '1234567890')
-    await user.click(screen.getByText('Look Up Patient'))
-    await waitFor(() => expect(screen.getByText('Patient Verified')).toBeDefined())
-    await user.click(screen.getByText('Confirm Patient'))
+    await user.type(screen.getByPlaceholderText(messages.verification.nationalIdPlaceholder), '1234567890')
+    await user.click(screen.getByText(messages.verification.lookUpPatient))
+    await waitFor(() => expect(screen.getByText(messages.verification.patientVerified)).toBeDefined())
+    await user.click(screen.getByText(messages.verification.confirmPatient))
 
     // Step 2: upload file
-    await waitFor(() => expect(screen.getByLabelText('Upload lab result file')).toBeDefined())
+    await waitFor(() => expect(screen.getByLabelText(messages.upload.uploadAreaAriaLabel)).toBeDefined())
     const file = createTestFile()
-    const dropZone = screen.getByLabelText('Upload lab result file')
+    const dropZone = screen.getByLabelText(messages.upload.uploadAreaAriaLabel)
     const input = dropZone.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(input, file)
 
     // Wait for file to be selected, then click Next
     await waitFor(() => expect(screen.getByText('result.pdf')).toBeDefined())
-    await user.click(screen.getByRole('button', { name: /next/i }))
+    await user.click(screen.getByRole('button', { name: messages.upload.nextAriaLabel }))
 
-    // Step 3: metadata
-    await waitFor(() => expect(screen.getByLabelText('Test Category')).toBeDefined())
-    await user.selectOptions(screen.getByLabelText('Test Category'), '58410-2')
-    await user.type(screen.getByLabelText('Sample Collection Date'), '2026-05-10')
-    await user.click(screen.getByText('Submit Results'))
+    // Step 3: metadata — labels from metadata.* i18n keys
+    await waitFor(() => expect(screen.getByLabelText(messages.metadata.testCategory)).toBeDefined())
+    await user.selectOptions(screen.getByLabelText(messages.metadata.testCategory), '58410-2')
+    await user.type(screen.getByLabelText(messages.metadata.collectionDate), '2026-05-10')
+    // "Submit Results" button in MetadataForm uses metadata.submitResults
+    await user.click(screen.getByText(messages.metadata.submitResults))
 
-    // Step 4: review
+    // Step 4: review — heading from results.reviewTitle
     await waitFor(() => {
-      expect(screen.getByText('Review & Confirm')).toBeDefined()
+      expect(screen.getByText(messages.results.reviewTitle)).toBeDefined()
     })
+    // Patient value from results.patientValue = "{firstName}, {age} years"
     expect(screen.getByText('Ahmad, 34 years')).toBeDefined()
     expect(screen.getByText(/result\.pdf/)).toBeDefined()
+    // LOINC 58410-2 label is "Blood Work — CBC"
     expect(screen.getByText(/blood work/i)).toBeDefined()
   })
 
@@ -279,39 +321,40 @@ describe('Upload Wizard (Story 17.2)', () => {
     await renderUploadWizard()
 
     // Step 1: verify
-    await user.type(screen.getByPlaceholderText('Enter patient National ID'), '1234567890')
-    await user.click(screen.getByText('Look Up Patient'))
-    await waitFor(() => expect(screen.getByText('Patient Verified')).toBeDefined())
-    await user.click(screen.getByText('Confirm Patient'))
+    await user.type(screen.getByPlaceholderText(messages.verification.nationalIdPlaceholder), '1234567890')
+    await user.click(screen.getByText(messages.verification.lookUpPatient))
+    await waitFor(() => expect(screen.getByText(messages.verification.patientVerified)).toBeDefined())
+    await user.click(screen.getByText(messages.verification.confirmPatient))
 
     // Step 2: upload
-    await waitFor(() => expect(screen.getByLabelText('Upload lab result file')).toBeDefined())
+    await waitFor(() => expect(screen.getByLabelText(messages.upload.uploadAreaAriaLabel)).toBeDefined())
     const file = createTestFile()
-    const dropZone = screen.getByLabelText('Upload lab result file')
+    const dropZone = screen.getByLabelText(messages.upload.uploadAreaAriaLabel)
     const input = dropZone.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(input, file)
     await waitFor(() => expect(screen.getByText('result.pdf')).toBeDefined())
-    await user.click(screen.getByRole('button', { name: /next/i }))
+    await user.click(screen.getByRole('button', { name: messages.upload.nextAriaLabel }))
 
     // Step 3: metadata
-    await waitFor(() => expect(screen.getByLabelText('Test Category')).toBeDefined())
-    await user.selectOptions(screen.getByLabelText('Test Category'), '58410-2')
-    await user.type(screen.getByLabelText('Sample Collection Date'), '2026-05-10')
-    await user.click(screen.getByText('Submit Results'))
+    await waitFor(() => expect(screen.getByLabelText(messages.metadata.testCategory)).toBeDefined())
+    await user.selectOptions(screen.getByLabelText(messages.metadata.testCategory), '58410-2')
+    await user.type(screen.getByLabelText(messages.metadata.collectionDate), '2026-05-10')
+    await user.click(screen.getByText(messages.metadata.submitResults))
 
-    // Step 4: review & submit
-    await waitFor(() => expect(screen.getByText('Review & Confirm')).toBeDefined())
-    await user.click(screen.getByText('Confirm & Submit'))
+    // Step 4: review & submit — button text from results.confirmSubmit
+    await waitFor(() => expect(screen.getByText(messages.results.reviewTitle)).toBeDefined())
+    await user.click(screen.getByText(messages.results.confirmSubmit))
 
     // Verify queue entry created in Dexie
     await waitFor(async () => {
       const db = getDb()
       const items = await db.uploadQueue.toArray()
       expect(items.length).toBe(1)
-      expect(items[0].patientRef).toBe('pat-opaque-ref')
-      expect(items[0].patientFirstName).toBe('Ahmad')
-      expect(items[0].status).toBe('pending')
-      expect(items[0].metadata.loincCode).toBe('58410-2')
+      const item = items[0]!
+      expect(item.patientRef).toBe('pat-opaque-ref')
+      expect(item.patientFirstName).toBe('Ahmad')
+      expect(item.status).toBe('pending')
+      expect(item.metadata.loincCode).toBe('58410-2')
     })
 
     // Verify redirect to dashboard
@@ -342,13 +385,13 @@ describe('Upload Wizard (Story 17.2)', () => {
     await renderUploadWizard()
 
     // Complete Step 1
-    await user.type(screen.getByPlaceholderText('Enter patient National ID'), '1234567890')
-    await user.click(screen.getByText('Look Up Patient'))
-    await waitFor(() => expect(screen.getByText('Patient Verified')).toBeDefined())
-    await user.click(screen.getByText('Confirm Patient'))
+    await user.type(screen.getByPlaceholderText(messages.verification.nationalIdPlaceholder), '1234567890')
+    await user.click(screen.getByText(messages.verification.lookUpPatient))
+    await waitFor(() => expect(screen.getByText(messages.verification.patientVerified)).toBeDefined())
+    await user.click(screen.getByText(messages.verification.confirmPatient))
 
     // Should be on Step 2 — no metadata form visible
-    await waitFor(() => expect(screen.getByLabelText('Upload lab result file')).toBeDefined())
-    expect(screen.queryByLabelText('Test Category')).toBeNull()
+    await waitFor(() => expect(screen.getByLabelText(messages.upload.uploadAreaAriaLabel)).toBeDefined())
+    expect(screen.queryByLabelText(messages.metadata.testCategory)).toBeNull()
   })
 })
