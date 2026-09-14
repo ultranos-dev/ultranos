@@ -454,6 +454,43 @@ export async function fetchDiagnosticReportsForPatient(patientId: string): Promi
 }
 
 /**
+ * Fetch a single report's detail (incl. structured analytes) via
+ * diagnosticReport.read and cache the analytes in the local store.
+ * Offline-first: on any failure the existing cache is left intact.
+ */
+export async function fetchDiagnosticReportDetail(reportId: string, patientId: string): Promise<void> {
+  try {
+    const headers: Record<string, string> = {}
+    if (typeof window !== 'undefined') {
+      const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+      const { data } = await getSupabaseBrowserClient().auth.getSession()
+      const token = data.session?.access_token
+      if (token) headers['Authorization'] = `Bearer ${token}`
+    }
+    const input = encodeURIComponent(JSON.stringify({ json: { id: reportId, patientRef: `Patient/${patientId}` } }))
+    const res = await fetch(`${getHubApiUrl()}/diagnosticReport.read?input=${input}`, { method: 'GET', headers })
+    if (!res.ok) return
+    const body = (await res.json()) as { result?: { data?: { json?: { observations?: Array<Record<string, unknown>> } } } }
+    const observations = body?.result?.data?.json?.observations ?? []
+    const rows = observations.map((o) => ({
+      id: o.id as string,
+      diagnosticReportId: reportId,
+      loincCode: o.loincCode as string,
+      loincDisplay: (o.loincDisplay as string | null) ?? null,
+      valueQuantity: (o.valueQuantity as { value: number; unit?: string } | null) ?? null,
+      valueString: (o.valueString as string | null) ?? null,
+      interpretation: (o.interpretation as unknown[] | null) ?? null,
+      referenceRange: (o.referenceRange as { low?: number; high?: number; text?: string } | null) ?? null,
+      note: (o.note as Array<{ text: string }> | null) ?? null,
+      effectiveDateTime: (o.effectiveDateTime as string | null) ?? null,
+    }))
+    if (rows.length > 0) await db.diagnosticReportObservations.bulkPut(rows as never)
+  } catch {
+    // Network/parse failure — keep the existing cache (offline-first).
+  }
+}
+
+/**
  * Search the Hub pharmacy directory by name, address, province, or district.
  * Mirrors the searchDrugCatalog pattern exactly: GET pharmacy.search with
  * { q, limit } in the tRPC input envelope, Supabase auth header, unwrap body.result.data.json.
