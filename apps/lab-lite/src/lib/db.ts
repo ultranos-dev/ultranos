@@ -180,6 +180,10 @@ export interface UploadQueueMetadata {
   specimenId?: string
   /** Present when kind='specimen': whether this is a receipt or rejection photo. */
   attachmentContext?: 'receipt' | 'rejection'
+  /** Optional: when set, the Hub notifies the ordering physician on upload success. */
+  orderId?: string
+  /** Story 12.6: whether the tech verified the OCR-suggested metadata before upload. */
+  ocrMetadataVerified?: boolean
 }
 
 export type UploadQueueStatus = 'pending' | 'uploading' | 'expired' | 'failed'

@@ -125,6 +125,8 @@ async function drainItem(item: UploadQueueEntry, deps: DrainDependencies): Promi
           loincDisplay: item.metadata.loincDisplay,
           collectionDate: item.metadata.collectionDate,
           diagnosticReportId: item.metadata.diagnosticReportId,
+          orderId: item.metadata.orderId,
+          ocrMetadataVerified: item.metadata.ocrMetadataVerified,
         }
         await deps.uploadFn(input, token)
       }

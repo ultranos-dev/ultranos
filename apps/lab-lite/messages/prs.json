@@ -292,6 +292,18 @@
     "statusExpired": "منقضی شده",
     "statusFailed": "ناکام"
   },
+  "orderPicker": {
+    "title": "پیوند به امر آزمایش",
+    "description": "امر آزمایشی را که این نتیجه به آن تعلق دارد انتخاب کنید، یا بدون امر بارگذاری کنید.",
+    "loading": "در حال بارگذاری امرها…",
+    "emptyTitle": "هیچ امر باز وجود ندارد",
+    "emptyDescription": "هیچ امر دریافت‌شده یا در حال انجامی برای پیوند وجود ندارد.",
+    "uploadWithoutOrder": "بارگذاری بدون امر",
+    "orderedBy": "امر داده‌شده توسط {name}",
+    "ageYears": "{age} ساله",
+    "ordersListAriaLabel": "امرهای آزمایش باز",
+    "selectOrderAriaLabel": "انتخاب امر برای {name}، {age} ساله"
+  },
   "common": {
     "back": "بازگشت",
     "next": "بعدی",

@@ -292,6 +292,18 @@
     "statusExpired": "پای ته رسیدلی",
     "statusFailed": "ناکام"
   },
+  "orderPicker": {
+    "title": "د ازمایش امر سره تړل",
+    "description": "هغه ازمایش امر وټاکئ چې دا پایله ورپورې اړه لري، یا پرته له امره پورته کړئ.",
+    "loading": "امرونه لوډیږي…",
+    "emptyTitle": "هیڅ خلاص امر نشته",
+    "emptyDescription": "د تړلو لپاره هیڅ ترلاسه شوی یا روان امر نشته.",
+    "uploadWithoutOrder": "پرته له امره پورته کول",
+    "orderedBy": "د {name} لخوا امر شوی",
+    "ageYears": "{age} کلن",
+    "ordersListAriaLabel": "خلاص ازمایش امرونه",
+    "selectOrderAriaLabel": "د {name} لپاره امر وټاکئ، چې {age} کلن دی"
+  },
   "common": {
     "back": "شاته",
     "next": "راتلونکی",

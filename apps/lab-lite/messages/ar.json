@@ -292,6 +292,18 @@
     "statusExpired": "منتهي الصلاحية",
     "statusFailed": "فشل"
   },
+  "orderPicker": {
+    "title": "ربط بطلب فحص",
+    "description": "اختر طلب الفحص الذي تنتمي إليه هذه النتيجة، أو ارفع بدون طلب.",
+    "loading": "جاري تحميل الطلبات…",
+    "emptyTitle": "لا توجد طلبات مفتوحة",
+    "emptyDescription": "لا توجد طلبات مستلمة أو قيد التنفيذ للربط بها.",
+    "uploadWithoutOrder": "رفع بدون طلب",
+    "orderedBy": "بأمر من {name}",
+    "ageYears": "{age} سنة",
+    "ordersListAriaLabel": "طلبات الفحص المفتوحة",
+    "selectOrderAriaLabel": "اختيار طلب لـ {name}، عمره {age} سنة"
+  },
   "common": {
     "back": "رجوع",
     "next": "التالي",

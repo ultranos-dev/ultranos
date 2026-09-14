@@ -284,4 +284,49 @@ describe('Upload Queue Worker — drainQueue', () => {
       'test-token',
     )
   })
+
+  it('passes orderId to uploadFn when set on a result-kind entry', async () => {
+    await addToQueue(makeEntry({
+      file: new Blob([new Uint8Array(3)]),
+      fileName: 'result.pdf',
+      fileType: 'application/pdf',
+      patientRef: 'Patient/xyz',
+      metadata: {
+        kind: 'result',
+        orderId: 'order-42',
+        loincCode: '58410-2',
+        loincDisplay: 'CBC',
+        collectionDate: '2026-09-13',
+      },
+    }))
+
+    const uploadFn = vi.fn().mockResolvedValue({ success: true, reportId: 'rpt-2', status: 'accepted', virusScanStatus: 'clean' })
+    const deps = makeDeps({ uploadFn })
+
+    await drainQueue(deps)
+
+    expect(uploadFn).toHaveBeenCalledWith(
+      expect.objectContaining({ orderId: 'order-42' }),
+      'test-token',
+    )
+  })
+
+  it('does not pass orderId when metadata.orderId is absent (standalone upload)', async () => {
+    await addToQueue(makeEntry({
+      metadata: {
+        loincCode: '58410-2',
+        loincDisplay: 'CBC',
+        collectionDate: '2026-09-13',
+      },
+    }))
+
+    const uploadFn = vi.fn().mockResolvedValue({ success: true, reportId: 'rpt-3', status: 'accepted', virusScanStatus: 'clean' })
+    const deps = makeDeps({ uploadFn })
+
+    await drainQueue(deps)
+
+    // orderId should be undefined (not present) in the call args
+    const calledInput = uploadFn.mock.calls[0]![0] as Record<string, unknown>
+    expect(calledInput['orderId']).toBeUndefined()
+  })
 })

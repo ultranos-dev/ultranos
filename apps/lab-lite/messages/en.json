@@ -292,6 +292,18 @@
     "statusExpired": "Expired",
     "statusFailed": "Failed"
   },
+  "orderPicker": {
+    "title": "Link to a Test Order",
+    "description": "Select the test order this result belongs to, or upload without an order.",
+    "loading": "Loading orders…",
+    "emptyTitle": "No open orders",
+    "emptyDescription": "There are no received or in-progress orders to link to.",
+    "uploadWithoutOrder": "Upload without an order",
+    "orderedBy": "Ordered by {name}",
+    "ageYears": "{age}y",
+    "ordersListAriaLabel": "Open test orders",
+    "selectOrderAriaLabel": "Select order for {name}, {age} years old"
+  },
   "common": {
     "back": "Back",
     "next": "Next",

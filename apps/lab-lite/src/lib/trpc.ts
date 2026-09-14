@@ -152,6 +152,8 @@ export interface UploadResultInput {
   ocrMetadataVerified?: boolean
   ocrSuggestions?: OcrSuggestion[]
   diagnosticReportId?: string
+  /** When set, the Hub notifies the ordering physician on success. */
+  orderId?: string
 }
 
 export interface UploadSpecimenFileInput {

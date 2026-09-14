@@ -3,7 +3,8 @@
 import { useReducer, useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { StepIndicator, type WizardStep } from '@/components/upload/StepIndicator'
+import { StepIndicator, type WizardStep as _BaseWizardStep } from '@/components/upload/StepIndicator'
+import { OrderPickerStep } from '@/components/upload/OrderPickerStep'
 import { PatientVerifyForm } from '@/components/PatientVerifyForm'
 import { PatientVerifyScanner } from '@/components/PatientVerifyScanner'
 import { RecentPatientsList } from '@/components/upload/RecentPatientsList'
@@ -20,11 +21,16 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useRecentPatients } from '@/hooks/useRecentPatients'
 import type { PatientSearchItem } from '@/hooks/usePatientSearch'
 
+/** Extended wizard step — SELECT_ORDER is the branch entry point before VERIFY_PATIENT. */
+export type WizardStep = _BaseWizardStep | 'SELECT_ORDER'
+
 // ── Wizard State ────────────────────────────────────────
 
 interface WizardState {
   step: WizardStep
   patient: { patientRef: string; patientFirstName: string; patientAge: number } | null
+  /** Set when the upload is tied to an existing lab order (notifies ordering physician). */
+  orderId: string | null
   file: { file: File; fileName: string; fileType: string } | null
   ocrResult: OcrAnalysisResult | null
   ocrLoading: boolean
@@ -33,6 +39,7 @@ interface WizardState {
 
 type WizardAction =
   | { type: 'SET_PATIENT'; payload: { patientRef: string; patientFirstName: string; patientAge: number } }
+  | { type: 'SET_ORDER'; payload: { patient: { patientRef: string; patientFirstName: string; patientAge: number }; orderId: string } }
   | { type: 'SET_FILE'; payload: { file: File; fileName: string; fileType: string } }
   | { type: 'SET_OCR_LOADING'; payload: boolean }
   | { type: 'SET_OCR_RESULT'; payload: OcrAnalysisResult }
@@ -41,12 +48,17 @@ type WizardAction =
   | { type: 'NEXT_STEP' }
   | { type: 'PREV_STEP' }
 
-const STEP_ORDER: WizardStep[] = ['VERIFY_PATIENT', 'UPLOAD_FILE', 'TAG_METADATA', 'REVIEW_SUBMIT']
+/** Linear step chain for NEXT/PREV navigation — SELECT_ORDER is the branch entry point, not part of this chain. */
+const STEP_ORDER: _BaseWizardStep[] = ['VERIFY_PATIENT', 'UPLOAD_FILE', 'TAG_METADATA', 'REVIEW_SUBMIT']
 
-function wizardReducer(state: WizardState, action: WizardAction): WizardState {
+export function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   switch (action.type) {
     case 'SET_PATIENT':
-      return { ...state, patient: action.payload, step: 'UPLOAD_FILE', file: null, ocrResult: null, ocrLoading: false, metadata: null }
+      // Free-form path: always clears any stale orderId
+      return { ...state, patient: action.payload, orderId: null, step: 'UPLOAD_FILE', file: null, ocrResult: null, ocrLoading: false, metadata: null }
+    case 'SET_ORDER':
+      // Order-linked path: sets patient + orderId, resets file/ocr/metadata
+      return { ...state, patient: action.payload.patient, orderId: action.payload.orderId, step: 'UPLOAD_FILE', file: null, ocrResult: null, ocrLoading: false, metadata: null }
     case 'SET_FILE':
       return { ...state, file: action.payload }
     case 'SET_OCR_LOADING':
@@ -58,12 +70,12 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
     case 'GO_TO_STEP':
       return { ...state, step: action.payload }
     case 'NEXT_STEP': {
-      const idx = STEP_ORDER.indexOf(state.step)
-      if (idx < STEP_ORDER.length - 1) return { ...state, step: STEP_ORDER[idx + 1] }
+      const idx = STEP_ORDER.indexOf(state.step as _BaseWizardStep)
+      if (idx >= 0 && idx < STEP_ORDER.length - 1) return { ...state, step: STEP_ORDER[idx + 1] }
       return state
     }
     case 'PREV_STEP': {
-      const idx = STEP_ORDER.indexOf(state.step)
+      const idx = STEP_ORDER.indexOf(state.step as _BaseWizardStep)
       if (idx > 0) return { ...state, step: STEP_ORDER[idx - 1] }
       return state
     }
@@ -72,9 +84,10 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   }
 }
 
-const initialState: WizardState = {
-  step: 'VERIFY_PATIENT',
+export const initialState: WizardState = {
+  step: 'SELECT_ORDER',
   patient: null,
+  orderId: null,
   file: null,
   ocrResult: null,
   ocrLoading: false,
@@ -116,7 +129,7 @@ export default function UploadPage() {
       const tag = (e.target as HTMLElement)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
 
-      if (e.key === 'Escape' && state.step !== 'VERIFY_PATIENT') {
+      if (e.key === 'Escape' && state.step !== 'SELECT_ORDER' && state.step !== 'VERIFY_PATIENT') {
         e.preventDefault()
         dispatch({ type: 'PREV_STEP' })
       }
@@ -142,6 +155,17 @@ export default function UploadPage() {
   }, [state.patient, state.file, state.metadata])
 
   // ── Handlers ────────────────────────────────────────
+
+  const handleOrderSelected = useCallback(
+    (selection: { patient: { patientRef: string; patientFirstName: string; patientAge: number }; orderId: string }) => {
+      dispatch({ type: 'SET_ORDER', payload: selection })
+    },
+    [],
+  )
+
+  const handleOrderSkip = useCallback(() => {
+    dispatch({ type: 'GO_TO_STEP', payload: 'VERIFY_PATIENT' })
+  }, [])
 
   const handlePatientVerified = useCallback((result: VerifyPatientResult) => {
     dispatch({
@@ -239,6 +263,7 @@ export default function UploadPage() {
             loincDisplay: state.metadata.loincDisplay,
             collectionDate: state.metadata.collectionDate,
             ocrMetadataVerified: state.metadata.ocrMetadataVerified,
+            ...(state.orderId != null ? { orderId: state.orderId } : {}),
           },
           patientRef: state.patient.patientRef,
           patientFirstName: state.patient.patientFirstName,
@@ -289,7 +314,15 @@ export default function UploadPage() {
         <h1 className="text-xl font-bold text-foreground">{t('upload.title')}</h1>
       </div>
 
-      <StepIndicator currentStep={state.step} />
+      <StepIndicator currentStep={state.step as _BaseWizardStep} />
+
+      {/* Step 0: Select Order (optional branch entry — not part of linear chain) */}
+      {state.step === 'SELECT_ORDER' && (
+        <OrderPickerStep
+          onOrderSelected={handleOrderSelected}
+          onSkip={handleOrderSkip}
+        />
+      )}
 
       {/* Step 1: Verify Patient */}
       {state.step === 'VERIFY_PATIENT' && (
@@ -410,8 +443,8 @@ export default function UploadPage() {
         />
       )}
 
-      {/* Navigation buttons */}
-      {state.step !== 'VERIFY_PATIENT' && state.step !== 'REVIEW_SUBMIT' && (
+      {/* Navigation buttons — shown only for the linear chain steps, not SELECT_ORDER/VERIFY_PATIENT/REVIEW_SUBMIT */}
+      {state.step !== 'SELECT_ORDER' && state.step !== 'VERIFY_PATIENT' && state.step !== 'REVIEW_SUBMIT' && (
         <div className="flex justify-between">
           <Button
             variant="outline"
