@@ -1844,11 +1844,35 @@ export interface SyncQueueEntry {
   retryCount: number
 }
 
-/** Enqueue a resource change for sync to the Hub. */
-export async function enqueueSyncEvent(entry: Omit<SyncQueueEntry, 'id'>): Promise<void> {
+/** Enqueue a resource change for sync to the Hub. Stamps queue-management
+ * metadata (status/createdAt/retryCount/lastAttemptAt) when the caller omits
+ * them so drains that filter on status:'pending' see the entry. */
+export async function enqueueSyncEvent(
+  entry: {
+    resourceType: string
+    resourceId: string
+    payload: unknown
+    status?: SyncQueueEntry['status']
+    createdAt?: string
+    lastAttemptAt?: string | null
+    retryCount?: number
+    hlcTimestamp?: string
+  },
+): Promise<void> {
   const db = getDb()
+  const now = new Date().toISOString()
   const id = `${entry.resourceType}-${entry.resourceId}-${Date.now()}`
-  await db.table('syncQueue').put({ id, ...entry })
+  await db.table('syncQueue').put({
+    id,
+    resourceType: entry.resourceType,
+    resourceId: entry.resourceId,
+    payload: entry.payload,
+    status: entry.status ?? 'pending',
+    createdAt: entry.createdAt ?? now,
+    lastAttemptAt: entry.lastAttemptAt ?? null,
+    retryCount: entry.retryCount ?? 0,
+    ...(entry.hlcTimestamp ? { hlcTimestamp: entry.hlcTimestamp } : {}),
+  })
 }
 
 // ---------------------------------------------------------------------------
