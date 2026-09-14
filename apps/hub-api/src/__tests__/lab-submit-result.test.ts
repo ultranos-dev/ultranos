@@ -110,7 +110,7 @@ function makeBundle() {
 describe('lab.submitResult', () => {
   beforeEach(() => { vi.clearAllMocks(); drMaybeSingle.mockResolvedValue({ data: null, error: null }) })
 
-  it('writes the report with status preliminary and patient_ref stored verbatim (R1)', async () => {
+  it('writes the report with status preliminary and patient_ref as the BARE blind index (R1)', async () => {
     setupLab()
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
@@ -118,7 +118,10 @@ describe('lab.submitResult', () => {
 
     expect(res).toEqual({ diagnosticReportId: REPORT_ID, observationCount: 1 })
     const upserted = drUpsert.mock.calls[0]![0]
-    expect(upserted).toMatchObject({ id: REPORT_ID, status: 'preliminary', patient_ref: PATIENT_REF, loinc_code: '58410-2', lab_id: 'lab-1' })
+    // R1: subject.reference is `Patient/<blindIndex>`; the stored patient_ref must be the
+    // BARE blindIndex (prefix stripped) to match OPD's patientBlindRef(realUuid) read path.
+    expect(PATIENT_REF).toBe('Patient/hmac-abc123')
+    expect(upserted).toMatchObject({ id: REPORT_ID, status: 'preliminary', patient_ref: 'hmac-abc123', loinc_code: '58410-2', lab_id: 'lab-1' })
   })
 
   it('fans analytes into diagnostic_report_observations (replace-then-insert)', async () => {

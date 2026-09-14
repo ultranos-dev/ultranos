@@ -1059,7 +1059,13 @@ export const labRouter = createTRPCRouter({
 
       const dr = input.diagnosticReport
       const reportId = dr.id
-      const patientRef = dr.subject.reference            // R1: store VERBATIM (proven join key)
+      // R1 (join-key correctness): OPD reads diagnostic_reports by the BARE blind
+      // index generateBlindIndex(realUuid) — patientBlindRef() strips the Patient/
+      // prefix. pullOrders hands the lab `Patient/<blindIndex>`, so the stored
+      // patient_ref must have the prefix stripped to match the OPD read path.
+      // The prefixed ref is kept for the notification dispatch (mirrors uploadResult).
+      const patientRef = dr.subject.reference
+      const patientRefStored = patientRef.replace(/^Patient\//, '')
       const loincCode = dr.code.coding?.[0]?.code ?? dr.code.text ?? 'UNKNOWN'
       const loincDisplay = dr.code.coding?.[0]?.display ?? dr.code.text ?? loincCode
       const collectionDate = dr.issued.slice(0, 10)      // date-only (NOT NULL); result date as collection default
@@ -1083,7 +1089,7 @@ export const labRouter = createTRPCRouter({
         status: 'preliminary',
         loinc_code: loincCode,
         loinc_display: loincDisplay,
-        patient_ref: patientRef,
+        patient_ref: patientRefStored,
         performer_id: technicianId,
         lab_id: labId,
         issued: dr.issued,
