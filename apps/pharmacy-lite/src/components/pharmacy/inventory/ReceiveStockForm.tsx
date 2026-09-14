@@ -15,6 +15,8 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { setDrugPrice } from '@/lib/trpc'
 import { db } from '@/lib/db'
 import type { CatalogItem } from '@/lib/inventory/types'
+import { useLocationStore } from '@/stores/location-store'
+import { resolveWriteLocation } from '@/lib/inventory/resolve-write-location'
 
 interface ReceiveStockFormProps {
   locationId: string
@@ -25,6 +27,7 @@ interface ReceiveStockFormProps {
 
 export function ReceiveStockForm({ locationId, currencyMinorUnits, purchaseOrderId, onComplete }: ReceiveStockFormProps) {
   const t = useTranslations('inventory')
+  const tLoc = useTranslations('locations')
   const [items, setItems] = useState<ReceiveLineItem[]>([])
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
@@ -32,6 +35,14 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, purchaseOrder
   const [overReceiptReason, setOverReceiptReason] = useState('')
   const [poSupplierId, setPoSupplierId] = useState<string | undefined>(undefined)
   const session = useAuthSessionStore((s) => s.session)
+  const locations = useLocationStore((s) => s.locations)
+  const currentLocationId = useLocationStore((s) => s.currentLocationId)
+  const defaultSubLocation = resolveWriteLocation(currentLocationId, locations)
+  const [subLocationId, setSubLocationId] = useState(defaultSubLocation)
+
+  useEffect(() => {
+    setSubLocationId(defaultSubLocation)
+  }, [defaultSubLocation])
 
   useEffect(() => {
     if (!purchaseOrderId) return
@@ -124,7 +135,7 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, purchaseOrder
           heldReason: item.qcDecision === 'hold' ? (item.heldReason?.trim() || undefined) : undefined,
         })),
         receivedBy: session.practitionerId ?? session.userId,
-        locationId,
+        locationId: locations.length > 0 ? subLocationId : resolveWriteLocation(currentLocationId, locations),
         purchaseOrderId,
         supplierId: poSupplierId,
         overReceiptReason: overReceiptReason.trim() || undefined,
@@ -164,6 +175,24 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, purchaseOrder
   return (
     <div className="space-y-4" data-testid="receive-stock-form">
       {!purchaseOrderId && <CatalogSearchInput onSelect={handleAddItem} />}
+      {locations.length > 0 && (
+        <div>
+          <label htmlFor="sub-location-select" className="mb-1 block text-xs font-medium text-muted-foreground">
+            {tLoc('writeFieldLabel')}
+          </label>
+          <select
+            id="sub-location-select"
+            value={subLocationId}
+            onChange={(e) => setSubLocationId(e.target.value)}
+            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+            data-testid="sub-location-select"
+          >
+            {locations.filter((l) => l.isActive).map((l) => (
+              <option key={l.id} value={l.id}>{l.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
       {error && (
         <div role="alert" className="rounded-md bg-destructive/5 border border-destructive/20 px-4 py-2 text-sm text-destructive">{error}</div>
       )}

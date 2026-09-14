@@ -15,6 +15,8 @@ import {
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import type { StockTransfer } from '@/lib/transfers/types'
 import { TransferCard } from './TransferCard'
+import { useLocationStore } from '@/stores/location-store'
+import { resolveWriteLocation } from '@/lib/inventory/resolve-write-location'
 
 const CURRENT_LOCATION_ID = 'default'
 
@@ -23,6 +25,8 @@ type TabKey = 'all' | 'active' | 'completed'
 export function TransfersPage() {
   const t = useTranslations('transfers')
   const session = useAuthSessionStore((s) => s.session)
+  const locations = useLocationStore((s) => s.locations)
+  const currentLocationId = useLocationStore((s) => s.currentLocationId)
   const [transfers, setTransfers] = useState<StockTransfer[]>([])
   const [loading, setLoading] = useState(true)
   const [actionInProgress, setActionInProgress] = useState(false)
@@ -72,7 +76,7 @@ export function TransfersPage() {
     async (id: string) => {
       setActionInProgress(true)
       try {
-        await receiveTransfer(id, session?.userId ?? '', CURRENT_LOCATION_ID)
+        await receiveTransfer(id, session?.userId ?? '', resolveWriteLocation(currentLocationId, locations))
         await loadTransfers()
       } finally {
         setActionInProgress(false)
