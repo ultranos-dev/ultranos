@@ -62,6 +62,25 @@ const dexieStorage: SyncQueueStorage = {
   },
 }
 
+/**
+ * A serialized HLC is "<15-digit wallMs>:<5-digit counter>:<nodeId>" (see
+ * serializeHlc in @ultranos/sync-engine). Every opd-lite write stamps one via
+ * hlc.now(); an ISO date, a stale reuse, or an empty value here causes the Hub
+ * to mis-parse the clock and silently drop the write. Reject it at the source.
+ */
+const SERIALIZED_HLC_RE = /^\d{15}:\d{5}:.+/
+
+function assertSerializedHlc(hlcTimestamp: string): void {
+  if (SERIALIZED_HLC_RE.test(hlcTimestamp)) return
+  const msg =
+    '[sync-queue] hlcTimestamp is not a serialized HLC ("<15d>:<5d>:<node>"). ' +
+    'Use serializeHlc(hlc.now()); an ISO date or empty value causes silent Hub sync failures.'
+  // Fail loud in dev/test so CI catches the regression; in production, warn
+  // (no PHI) but never block a durable clinical write on a format check.
+  if (process.env.NODE_ENV !== 'production') throw new Error(msg)
+  console.warn(msg)
+}
+
 // Late-bound so sync-worker can attach requestDrain after the worker is constructed.
 let onEnqueuedBridge: ((input: EnqueueInput) => void) | null = null
 export function setOnEnqueuedBridge(fn: typeof onEnqueuedBridge): void {
@@ -79,6 +98,7 @@ const rawQueue = createSyncQueue(dexieStorage, undefined, {
 export const syncQueue: SyncQueue = {
   ...rawQueue,
   async enqueue(input) {
+    assertSerializedHlc(input.hlcTimestamp)
     const key = encryptionKeyStore.getKey()
     if (key && !input.payload.startsWith(ENCRYPTED_PAYLOAD_PREFIX)) {
       try {
