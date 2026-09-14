@@ -9,6 +9,7 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { enqueueSyncAction } from '@ultranos/sync-engine'
 import { syncQueue } from '@/lib/sync-queue'
+import { hlc, serializeHlc } from '@/lib/hlc'
 
 interface DiagnosisState {
   conditions: FhirCondition[]
@@ -103,7 +104,11 @@ export const useDiagnosisStore = create<DiagnosisState>()(
 
       const nowIso = new Date().toISOString()
 
-      // Soft-delete: transition clinicalStatus to inactive (Tier 1 append-only)
+      // Soft-delete: transition clinicalStatus to inactive (Tier 1 append-only).
+      // A fresh serialized HLC is minted so the Hub sees this write as causally
+      // AFTER the create — reusing the create's HLC compares equal and the
+      // deactivation would be rejected as a stale write and never applied.
+      const deactivatedTs = serializeHlc(hlc.now())
       const deactivated: FhirCondition = {
         ...condition,
         clinicalStatus: {
@@ -113,6 +118,10 @@ export const useDiagnosisStore = create<DiagnosisState>()(
               code: 'inactive',
             },
           ],
+        },
+        _ultranos: {
+          ...condition._ultranos,
+          hlcTimestamp: deactivatedTs,
         },
         meta: {
           ...condition.meta,
@@ -129,7 +138,7 @@ export const useDiagnosisStore = create<DiagnosisState>()(
           resourceId: deactivated.id,
           action: 'update',
           payload: deactivated as unknown as Record<string, unknown>,
-          hlcTimestamp: deactivated._ultranos.hlcTimestamp,
+          hlcTimestamp: deactivatedTs,
         })
 
         const patientRef = condition.subject.reference.replace('Patient/', '')
@@ -152,12 +161,15 @@ export const useDiagnosisStore = create<DiagnosisState>()(
       if (!condition) return
 
       const nowIso = new Date().toISOString()
+      // Fresh serialized HLC so the rank change is ordered AFTER the create.
+      const updatedTs = serializeHlc(hlc.now())
 
       const updated: FhirCondition = {
         ...condition,
         _ultranos: {
           ...condition._ultranos,
           diagnosisRank: rank,
+          hlcTimestamp: updatedTs,
         },
         meta: {
           ...condition.meta,
@@ -174,7 +186,7 @@ export const useDiagnosisStore = create<DiagnosisState>()(
           resourceId: updated.id,
           action: 'update',
           payload: updated as unknown as Record<string, unknown>,
-          hlcTimestamp: updated._ultranos.hlcTimestamp,
+          hlcTimestamp: updatedTs,
         })
 
         set((state) => {

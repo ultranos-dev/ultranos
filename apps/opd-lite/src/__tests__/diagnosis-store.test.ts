@@ -1,6 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { compareHlc, deserializeHlc } from '@ultranos/sync-engine'
 import { useDiagnosisStore } from '@/stores/diagnosis-store'
 import { db } from '@/lib/db'
+
+/** The queue entry for a resource with the given action (default 'update'). */
+async function pendingEntry(resourceId: string, action: 'create' | 'update' = 'update') {
+  return vi.waitFor(async () => {
+    const all = await db.syncQueue.toArray()
+    const e = all.find((x) => x.resourceId === resourceId && x.action === action)
+    if (!e) throw new Error(`${action} not enqueued yet`)
+    return e
+  })
+}
 
 vi.mock('@/stores/auth-session-store', () => ({
   useAuthSessionStore: {
@@ -21,6 +32,7 @@ describe('useDiagnosisStore', () => {
   beforeEach(async () => {
     useDiagnosisStore.getState().clearPhiState()
     await db.conditions.clear()
+    await db.syncQueue.clear()
   })
 
   it('starts with empty conditions', () => {
@@ -141,6 +153,32 @@ describe('useDiagnosisStore', () => {
 
     const updated = useDiagnosisStore.getState().conditions[0]
     expect(updated.meta.versionId).toBe('2')
+  })
+
+  it('enqueues removeDiagnosis with a fresh HLC strictly newer than the create (syncs the deactivation)', async () => {
+    const condition = await useDiagnosisStore
+      .getState()
+      .addDiagnosis(testItem, encounterId, patientId, 'primary')
+    const createHlc = condition._ultranos.hlcTimestamp
+
+    await useDiagnosisStore.getState().removeDiagnosis(condition.id)
+
+    const entry = await pendingEntry(condition.id)
+    expect(entry.action).toBe('update')
+    expect(compareHlc(deserializeHlc(entry.hlcTimestamp), deserializeHlc(createHlc))).toBeGreaterThan(0)
+  })
+
+  it('enqueues updateRank with a fresh HLC strictly newer than the create', async () => {
+    const condition = await useDiagnosisStore
+      .getState()
+      .addDiagnosis(testItem, encounterId, patientId, 'primary')
+    const createHlc = condition._ultranos.hlcTimestamp
+
+    await useDiagnosisStore.getState().updateRank(condition.id, 'secondary')
+
+    const entry = await pendingEntry(condition.id)
+    expect(entry.action).toBe('update')
+    expect(compareHlc(deserializeHlc(entry.hlcTimestamp), deserializeHlc(createHlc))).toBeGreaterThan(0)
   })
 
   it('throws when no auth session exists', async () => {

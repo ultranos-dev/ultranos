@@ -1,7 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { compareHlc, deserializeHlc } from '@ultranos/sync-engine'
 import { useLabOrderStore } from '@/stores/lab-order-store'
 import { db } from '@/lib/db'
 import type { LabOrderInput } from '@/lib/lab-order-mapper'
+
+/** The queue entry for a resource with the given action (default 'update'). */
+async function pendingEntry(resourceId: string, action: 'create' | 'update' = 'update') {
+  return vi.waitFor(async () => {
+    const all = await db.syncQueue.toArray()
+    const e = all.find((x) => x.resourceId === resourceId && x.action === action)
+    if (!e) throw new Error(`${action} not enqueued yet`)
+    return e
+  })
+}
 
 const baseInput: LabOrderInput = {
   testCode: '58410-2',
@@ -19,6 +30,7 @@ describe('useLabOrderStore', () => {
   beforeEach(async () => {
     useLabOrderStore.setState({ pendingOrders: [], isSaving: false })
     await db.serviceRequests.clear()
+    await db.syncQueue.clear()
   })
 
   describe('addLabOrder', () => {
@@ -81,6 +93,17 @@ describe('useLabOrderStore', () => {
     it('does nothing if the order is not found', async () => {
       await useLabOrderStore.getState().cancelLabOrder('nonexistent-id')
       expect(useLabOrderStore.getState().pendingOrders).toHaveLength(0)
+    })
+
+    it('enqueues the revoke with a fresh HLC strictly newer than the create (so the cancellation syncs)', async () => {
+      const result = await useLabOrderStore.getState().addLabOrder(baseInput, encounterId, patientId, practitionerRef)
+      const createHlc = result._ultranos.hlcTimestamp
+
+      await useLabOrderStore.getState().cancelLabOrder(result.id)
+
+      const entry = await pendingEntry(result.id)
+      expect(entry.action).toBe('update')
+      expect(compareHlc(deserializeHlc(entry.hlcTimestamp), deserializeHlc(createHlc))).toBeGreaterThan(0)
     })
   })
 

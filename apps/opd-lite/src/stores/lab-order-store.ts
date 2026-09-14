@@ -126,11 +126,20 @@ export const useLabOrderStore = create<LabOrderState>()(
       if (!order) return
 
       const nowIso = new Date().toISOString()
+      // Fresh serialized HLC so the revoke is ordered AFTER the create. Using
+      // meta.lastUpdated (an ISO string) here made the Hub mis-parse it into a
+      // near-epoch clock; the Tier-2 timestamp-wins merge then favored the stored
+      // (non-revoked) version and the cancellation was silently dropped.
+      const revokedTs = serializeHlc(hlc.now())
 
       // ServiceRequest is Tier 2 (timestamp-wins), not append-only: revoke in place.
       const revoked: FhirServiceRequest = {
         ...order,
         status: 'revoked',
+        _ultranos: {
+          ...order._ultranos,
+          hlcTimestamp: revokedTs,
+        },
         meta: {
           ...order.meta,
           lastUpdated: nowIso,
@@ -146,7 +155,7 @@ export const useLabOrderStore = create<LabOrderState>()(
           resourceId: revoked.id,
           action: 'update',
           payload: revoked as unknown as Record<string, unknown>,
-          hlcTimestamp: revoked.meta.lastUpdated,
+          hlcTimestamp: revokedTs,
         })
 
         const patientRef = order.subject.reference.replace('Patient/', '')
