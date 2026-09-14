@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@ultranos/ui-kit/components/ui/dialog'
+import { classifySyncFailure, type SyncFailureCategory } from '@ultranos/sync-engine'
 import { useSyncStore } from '@/stores/sync-store'
 import { db, type SyncQueueEntry } from '@/lib/db'
 import { triggerDrain } from '@/lib/sync-worker'
@@ -45,15 +46,34 @@ function safeDescription(entry: SyncQueueEntry): string {
   return `${label} · ID ${shortId}`
 }
 
-/** Generic failure reason — never expose server internals or PHI (AC: 9). */
-function safeFailureReason(entry: SyncQueueEntry): string {
-  const raw = entry.failureReason ?? ''
-  if (raw.includes('HTTP 4')) return 'Server rejected'
-  if (raw.includes('HTTP 5')) return 'Server error'
-  if (raw.toLowerCase().includes('conflict') || entry.conflictFlag) return 'Conflict detected'
-  if (raw.includes('network') || raw.includes('fetch')) return 'Network error'
-  if (raw) return 'Sync failed'
-  return 'Unknown error'
+/**
+ * English label per failure category. opd-lite's Sync dashboard is English-only
+ * (unlike the pharmacy/lab spokes which localize the same categories via i18n).
+ * Classification + PHI-safety live in the shared @ultranos/sync-engine classifier.
+ */
+const FAILURE_LABELS: Record<SyncFailureCategory, string> = {
+  conflict: 'Conflict detected',
+  networkError: 'Network error',
+  encryptionKey: 'Encryption key unavailable',
+  notPermitted: 'Not permitted',
+  prescriberUnknown: 'Prescriber not recognized',
+  clinicNotSetUp: 'Clinic not set up',
+  unsupportedType: 'Unsupported record type',
+  duplicateVisit: 'Duplicate visit',
+  serverRejected: 'Server rejected',
+  noResponse: 'No response from server',
+  serverError: 'Server error',
+  syncFailed: 'Sync failed',
+  unknown: 'Unknown error',
+}
+
+/**
+ * Map a failed entry to a stable, actionable label. The raw reason (possibly a
+ * Postgres message embedding PHI) is classified into a fixed category by the
+ * shared classifier and never rendered directly (rule 1 + AC: 9).
+ */
+export function safeFailureReason(entry: SyncQueueEntry): string {
+  return FAILURE_LABELS[classifySyncFailure(entry.failureReason, entry.conflictFlag)]
 }
 
 function formatTimeAgo(iso: string, locale: 'en' | 'ar' | 'prs' | 'ps'): string {

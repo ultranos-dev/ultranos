@@ -3529,7 +3529,22 @@
     "statusPending": "معلّق",
     "statusFailed": "فاشل",
     "statusUploading": "جارٍ الرفع",
-    "statusExpired": "منتهي الصلاحية"
+    "statusExpired": "منتهي الصلاحية",
+    "failure": {
+      "conflict": "تم اكتشاف تعارض — يحتاج إلى مراجعة",
+      "networkError": "خطأ في الشبكة — تحقق من الاتصال",
+      "encryptionKey": "مفتاح التشفير غير متوفر — سجّل الدخول مرة أخرى",
+      "notPermitted": "غير مسموح",
+      "prescriberUnknown": "الطبيب الموصِف غير معروف",
+      "clinicNotSetUp": "لم يتم إعداد المختبر",
+      "unsupportedType": "نوع سجل غير مدعوم",
+      "duplicateVisit": "إدخال مكرر",
+      "serverRejected": "رفض الخادم عملية الرفع",
+      "noResponse": "لا استجابة من الخادم — ستتم إعادة المحاولة",
+      "serverError": "خطأ في الخادم — ستتم إعادة المحاولة",
+      "syncFailed": "فشل الرفع — ستتم إعادة المحاولة",
+      "unknown": "خطأ غير معروف"
+    }
   },
   "knowledgeCards": {
     "panelTitle": "مرجع سريري",

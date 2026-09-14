@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { classifySyncFailure } from '@ultranos/sync-engine'
 import type { SyncQueueEntry as SyncQueueEntryType } from '@/lib/db'
 import { Button } from '@/components/ui/button'
 
@@ -49,9 +50,10 @@ export function SyncQueueEntry({ entry, onRetry, onReset, retrying }: SyncQueueE
 
   function getGenericErrorMessage(e: SyncQueueEntryType): string {
     if (e.status !== 'failed') return ''
-    if (e.retryCount >= 5) return t('serverError')
-    if (e.retryCount >= 2) return t('networkError')
-    return t('syncFailed')
+    // Categorize the actual persisted failure reason (opaque, PHI-safe) via the
+    // shared classifier, then localize. The category key === the i18n key under
+    // the 'sync' namespace; every category has a translation (see messages/*.json).
+    return t(classifySyncFailure(e.failureReason, e.conflictFlag))
   }
 
   const patientRef = extractPatientRef(entry.payload)

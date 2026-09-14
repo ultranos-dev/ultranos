@@ -58,6 +58,19 @@ describe('Upload Queue Worker — drainQueue', () => {
     expect(deps.uploadFn).toHaveBeenCalledTimes(1)
   })
 
+  it('persists the failure reason on a failed upload (for categorized display)', async () => {
+    await addToQueue(makeEntry())
+    const deps = makeDeps({
+      uploadFn: vi.fn().mockRejectedValue(new Error('Hub sync failed: 500')),
+    })
+
+    await drainQueue(deps)
+
+    const [entry] = await getQueueItems()
+    expect(entry!.status).toBe('failed')
+    expect(entry!.failureReason).toBe('Hub sync failed: 500')
+  })
+
   it('drains items in FIFO order', async () => {
     await addToQueue(makeEntry({ patientFirstName: 'First', queuedAt: '2026-04-28T10:00:00Z' }))
     await addToQueue(makeEntry({ patientFirstName: 'Second', queuedAt: '2026-04-29T10:00:00Z' }))

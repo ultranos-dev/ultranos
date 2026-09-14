@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, fireEvent, within } from '@testing-library/react'
-import { SyncDashboard } from '../components/SyncDashboard'
+import { SyncDashboard, safeFailureReason } from '../components/SyncDashboard'
 
 // next-intl context isn't provided in unit tests; components only need the locale.
 vi.mock('next-intl', () => ({
@@ -373,6 +373,73 @@ describe('SyncDashboard', () => {
     await waitFor(() => {
       expect(screen.getByText(/Last sync/)).toBeInTheDocument()
     })
+  })
+})
+
+describe('safeFailureReason', () => {
+  const fr = (failureReason?: string, conflictFlag?: boolean) =>
+    safeFailureReason(makeSyncEntry({ status: 'failed', failureReason, conflictFlag }))
+
+  it('maps HTTP 4xx to "Server rejected"', () => {
+    expect(fr('HTTP 403')).toBe('Server rejected')
+  })
+
+  it('maps HTTP 5xx to "Server error"', () => {
+    expect(fr('HTTP 500')).toBe('Server error')
+  })
+
+  it('maps a conflict flag to "Conflict detected"', () => {
+    expect(fr(undefined, true)).toBe('Conflict detected')
+  })
+
+  it('maps network/fetch failures to "Network error"', () => {
+    expect(fr('Failed to fetch')).toBe('Network error')
+  })
+
+  it('maps FORBIDDEN to "Not permitted"', () => {
+    expect(fr('FORBIDDEN')).toBe('Not permitted')
+  })
+
+  it('maps UNKNOWN_PRACTITIONER to "Prescriber not recognized"', () => {
+    expect(fr('UNKNOWN_PRACTITIONER')).toBe('Prescriber not recognized')
+  })
+
+  it('maps MISSING_ORG_CONTEXT to "Clinic not set up"', () => {
+    expect(fr('MISSING_ORG_CONTEXT')).toBe('Clinic not set up')
+  })
+
+  it('maps an invalid-uuid rejection (the cancel-sync bug) to "Server rejected"', () => {
+    expect(fr('invalid input syntax for type uuid: "abc:cancelled:2"')).toBe('Server rejected')
+  })
+
+  it('maps a not-null / constraint violation to "Server rejected"', () => {
+    expect(fr('null value in column "org_id" violates not-null constraint')).toBe('Server rejected')
+  })
+
+  it('maps decrypt failures to "Encryption key unavailable"', () => {
+    expect(fr('Decrypt error')).toBe('Encryption key unavailable')
+  })
+
+  it('maps an empty Hub response to "No response from server"', () => {
+    expect(fr('Empty response from Hub')).toBe('No response from server')
+  })
+
+  it('maps an internal error to "Server error"', () => {
+    expect(fr('Internal error')).toBe('Server error')
+  })
+
+  it('falls back to "Sync failed" for an unrecognized non-empty reason', () => {
+    expect(fr('something unexpected happened')).toBe('Sync failed')
+  })
+
+  it('returns "Unknown error" when there is no reason', () => {
+    expect(fr('')).toBe('Unknown error')
+  })
+
+  it('never echoes a value embedded in a database error (PHI safety)', () => {
+    const out = fr('duplicate key value violates unique constraint "u"; Key (medication_text)=(Insulin) already exists')
+    expect(out).toBe('Server rejected')
+    expect(out).not.toContain('Insulin')
   })
 })
 

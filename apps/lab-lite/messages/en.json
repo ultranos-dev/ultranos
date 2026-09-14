@@ -3529,7 +3529,22 @@
     "statusPending": "Pending",
     "statusFailed": "Failed",
     "statusUploading": "Uploading",
-    "statusExpired": "Expired"
+    "statusExpired": "Expired",
+    "failure": {
+      "conflict": "Conflict detected — needs review",
+      "networkError": "Network error — check connectivity",
+      "encryptionKey": "Encryption key unavailable — sign in again",
+      "notPermitted": "Not permitted",
+      "prescriberUnknown": "Prescriber not recognized",
+      "clinicNotSetUp": "Lab not set up",
+      "unsupportedType": "Unsupported record type",
+      "duplicateVisit": "Duplicate entry",
+      "serverRejected": "Server rejected the upload",
+      "noResponse": "No response from server — will retry",
+      "serverError": "Server error — will retry",
+      "syncFailed": "Upload failed — will retry",
+      "unknown": "Unknown error"
+    }
   },
   "knowledgeCards": {
     "panelTitle": "Clinical Reference",

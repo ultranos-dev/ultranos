@@ -131,8 +131,11 @@ describe('SyncQueueDashboard — categorized entries (AC #1)', () => {
 
     render(<SyncQueueDashboard />)
 
+    // Target the section heading specifically — the entry's categorized error
+    // message ("Sync failed …") also contains "failed", so a bare text match
+    // would be ambiguous.
     await waitFor(() => {
-      expect(screen.getByText(/failed/i)).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /failed/i })).toBeInTheDocument()
     })
   })
 
@@ -252,9 +255,9 @@ describe('SyncQueueEntry — entry card (AC #1)', () => {
       />,
     )
 
-    // Should show a generic error, not raw server details
+    // Should show a generic categorized message, not raw server details.
     expect(
-      screen.getByText(/network error|server error|sync failed/i),
+      screen.getByText(/network error|server error|sync failed|unknown error/i),
     ).toBeInTheDocument()
   })
 })

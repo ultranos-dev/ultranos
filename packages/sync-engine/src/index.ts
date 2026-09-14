@@ -27,6 +27,9 @@ export type { KRLEntry, KRLStorage } from './krl-sync.js'
 export { getConflictTier } from './conflict-tiers.js'
 export type { ConflictTier } from './conflict-tiers.js'
 
+export { classifySyncFailure, SYNC_FAILURE_CATEGORIES } from './failure-classifier.js'
+export type { SyncFailureCategory } from './failure-classifier.js'
+
 export { resolveConflict } from './conflict-resolver.js'
 export type {
   SyncRecord,

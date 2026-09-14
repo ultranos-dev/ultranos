@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { classifySyncFailure } from '@ultranos/sync-engine'
 import { X, RefreshCw, CircleX } from '@ultranos/ui-kit/icons'
 import { Button } from '@ultranos/ui-kit/components/ui/button'
 import { useSyncStore } from '@/stores/sync-store'
@@ -58,6 +59,7 @@ function StatusBadge({ status }: { status: UploadQueueEntry['status'] }) {
 export function SyncDashboard() {
   const { isDashboardOpen, setDashboardOpen, lastSyncedAt } = useSyncStore()
   const t = useTranslations('syncDashboard')
+  const tf = useTranslations('syncDashboard.failure')
   const [entries, setEntries] = useState<UploadQueueEntry[]>([])
   const [discardingId, setDiscardingId] = useState<number | null>(null)
   const [isDraining, setIsDraining] = useState(false)
@@ -283,6 +285,12 @@ export function SyncDashboard() {
                       </span>
                     )}
                   </div>
+                  {/* Categorized failure reason — never the raw server text (PHI-safe). */}
+                  {entry.status === 'failed' && (
+                    <p className="mt-1 text-xs text-destructive" data-testid="failure-reason">
+                      {tf(classifySyncFailure(entry.failureReason))}
+                    </p>
+                  )}
                 </div>
                 <div className="flex shrink-0 gap-1">
                   {entry.status === 'failed' && entry.id !== undefined && (

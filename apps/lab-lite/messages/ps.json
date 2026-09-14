@@ -3529,7 +3529,22 @@
     "statusPending": "انتظار",
     "statusFailed": "ناکام",
     "statusUploading": "اپلوډ کیږي",
-    "statusExpired": "پای ته رسیدلی"
+    "statusExpired": "پای ته رسیدلی",
+    "failure": {
+      "conflict": "شخړه وموندل شوه — بیاکتنې ته اړتیا لري",
+      "networkError": "د شبکې تېروتنه — اتصال وګورئ",
+      "encryptionKey": "د کوډ کولو کیلي شتون نلري — بیا ننوځئ",
+      "notPermitted": "اجازه نشته",
+      "prescriberUnknown": "تجویزوونکی ونه پېژندل شو",
+      "clinicNotSetUp": "لابراتوار نه دی چمتو شوی",
+      "unsupportedType": "د ریکارډ ډول ملاتړ نه کیږي",
+      "duplicateVisit": "تکراري ثبت",
+      "serverRejected": "سرور اپلوډ رد کړ",
+      "noResponse": "له سرور څخه ځواب ونه رسید — بیا هڅه به وشي",
+      "serverError": "د سرور تېروتنه — بیا هڅه به وشي",
+      "syncFailed": "اپلوډ ناکام شو — بیا هڅه به وشي",
+      "unknown": "نامعلومه تېروتنه"
+    }
   },
   "knowledgeCards": {
     "panelTitle": "کلینیکي مرجع",

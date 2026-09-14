@@ -3529,7 +3529,22 @@
     "statusPending": "در انتظار",
     "statusFailed": "ناموفق",
     "statusUploading": "در حال بارگذاری",
-    "statusExpired": "منقضی شده"
+    "statusExpired": "منقضی شده",
+    "failure": {
+      "conflict": "تعارض شناسایی شد — نیاز به بررسی دارد",
+      "networkError": "خطای شبکه — اتصال را بررسی کنید",
+      "encryptionKey": "کلید رمزنگاری در دسترس نیست — دوباره وارد شوید",
+      "notPermitted": "مجاز نیست",
+      "prescriberUnknown": "طبیب تجویزکننده شناخته نشد",
+      "clinicNotSetUp": "آزمایشگاه راه‌اندازی نشده است",
+      "unsupportedType": "نوع رکورد پشتیبانی نمی‌شود",
+      "duplicateVisit": "ورودی تکراری",
+      "serverRejected": "سرور بارگذاری را رد کرد",
+      "noResponse": "پاسخی از سرور دریافت نشد — دوباره تلاش خواهد شد",
+      "serverError": "خطای سرور — دوباره تلاش خواهد شد",
+      "syncFailed": "بارگذاری ناکام شد — دوباره تلاش خواهد شد",
+      "unknown": "خطای نامعلوم"
+    }
   },
   "knowledgeCards": {
     "panelTitle": "مرجع بالینی",

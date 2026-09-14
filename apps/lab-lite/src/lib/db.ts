@@ -196,6 +196,9 @@ export interface UploadQueueEntry {
   status: UploadQueueStatus
   retryCount: number
   lastAttemptAt: string | null
+  /** Last failure reason from the upload drain (opaque server/network text —
+   *  categorized for display via classifySyncFailure, never rendered raw). */
+  failureReason?: string
   /** Originating location — set when entry is created from a satellite lab. */
   locationId?: string
 }
@@ -1787,7 +1790,7 @@ export async function getQueueCount(): Promise<number> {
 export async function updateQueueItemStatus(
   id: number,
   status: UploadQueueStatus,
-  updates?: { retryCount?: number; lastAttemptAt?: string | null },
+  updates?: { retryCount?: number; lastAttemptAt?: string | null; failureReason?: string },
 ): Promise<void> {
   const db = getDb()
   await db.uploadQueue.update(id, { status, ...updates })

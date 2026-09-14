@@ -145,15 +145,20 @@ async function drainItem(item: UploadQueueEntry, deps: DrainDependencies): Promi
     } catch (err) {
       currentRetry++
       const now = new Date().toISOString()
+      const reason = err instanceof Error ? err.message : 'Upload failed'
+      // Persist the reason on the entry (opaque — categorized in the dashboard via
+      // classifySyncFailure, never rendered raw) so a failed row can show WHY, not
+      // just a retry count.
       await updateQueueItemStatus(id, currentRetry >= MAX_RETRIES ? 'failed' : 'pending', {
         retryCount: currentRetry,
         lastAttemptAt: now,
+        failureReason: reason,
       })
 
       // Surface WHY the upload failed (e.g. KYC_REQUIRED, SUBSCRIPTION_REQUIRED)
       // instead of swallowing it — the pulse/banner otherwise shows only "N failed"
       // with no actionable reason. A later successful upload clears it.
-      deps.onSyncError?.(err instanceof Error ? err.message : 'Upload failed')
+      deps.onSyncError?.(reason)
 
       if (currentRetry < MAX_RETRIES) {
         const sleepFn = deps.sleep ?? sleep
