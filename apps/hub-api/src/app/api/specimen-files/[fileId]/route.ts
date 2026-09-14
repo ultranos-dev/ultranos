@@ -77,10 +77,10 @@ export async function GET(
     return NextResponse.json({ error: 'File not available' }, { status: 403 })
   }
 
-  // Consent check — extract patient ID from patient_ref
-  const patientId = file.patient_ref?.replace('Patient/', '')
-  if (!patientId || patientId === file.patient_ref) {
-    // patient_ref is missing or malformed (no 'Patient/' prefix) — deny access
+  // Consent check — extract patient ID from patient_ref.
+  // patient_ref is the bare blind index (matches OPD read path); tolerate a legacy 'Patient/' prefix.
+  const patientId = file.patient_ref?.replace(/^Patient\//, '')
+  if (!patientId) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

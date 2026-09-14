@@ -206,6 +206,36 @@ describe('GET /api/specimen-files/[fileId]', () => {
     )
   })
 
+  it('bare patient_ref (no Patient/ prefix) does NOT 403 — proceeds to consent and returns 200', async () => {
+    // Regression: patient_ref is now stored as the bare blind index (e.g. 'abc123' not
+    // 'Patient/abc123'). The old guard denied access on bare refs.
+    const BARE_REF = 'abc123bareblindindex'
+    setupFileMocks({
+      file: {
+        id: SPECIMEN_FILE_UUID,
+        specimen_id: 'LAB-20260901-0001',
+        patient_ref: BARE_REF,
+        file_name: 'damaged.webp',
+        file_type: 'image/webp',
+        file_size: 512,
+        encrypted_content: 'v1:encrypted-data',
+        virus_scan_status: 'clean',
+      },
+    })
+    mockCheckConsent.mockResolvedValue(true)
+
+    const req = createMockRequest(SPECIMEN_FILE_UUID)
+    const response = await GET(req, { params: Promise.resolve({ fileId: SPECIMEN_FILE_UUID }) })
+
+    // Must NOT 403 at the consent-guard step — bare ref is canonical
+    expect(response.status).toBe(200)
+    // Consent was checked with the bare ref unchanged
+    expect(mockCheckConsent).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ patientId: BARE_REF, resourceType: 'DiagnosticReport' })
+    )
+  })
+
   it('blocks access when patient_ref is missing', async () => {
     setupFileMocks({
       file: {

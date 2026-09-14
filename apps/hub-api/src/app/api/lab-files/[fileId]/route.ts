@@ -85,10 +85,10 @@ export async function GET(
     return NextResponse.json({ error: 'File not available' }, { status: 403 })
   }
 
-  // Consent check — extract patient ID from patient_ref
-  const patientId = report.patient_ref?.replace('Patient/', '')
-  if (!patientId || patientId === report.patient_ref) {
-    // patient_ref is missing or malformed (no 'Patient/' prefix) — deny access
+  // Consent check — extract patient ID from patient_ref.
+  // patient_ref is the bare blind index (matches OPD read path); tolerate a legacy 'Patient/' prefix.
+  const patientId = report.patient_ref?.replace(/^Patient\//, '')
+  if (!patientId) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -113,8 +113,8 @@ export async function GET(
     // Decrypted content is base64-encoded binary
     fileBuffer = Buffer.from(decrypted, 'base64')
   } else if (file.encrypted_content) {
-    // Legacy unencrypted content (base64)
-    fileBuffer = Buffer.from(file.encrypted_content, 'base64')
+    // Non-'v1:' content is not decryptable — never serve it as cleartext.
+    return NextResponse.json({ error: 'File decryption failed' }, { status: 500 })
   } else {
     return NextResponse.json({ error: 'No file content' }, { status: 404 })
   }

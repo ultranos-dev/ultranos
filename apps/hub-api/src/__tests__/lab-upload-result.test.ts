@@ -742,6 +742,140 @@ describe('lab.uploadResult', () => {
     expect((insertedData as unknown as Record<string, unknown>).loinc_code).toBe('4548-4')
   })
 
+  // ── patient_ref prefix-strip tests (Fix 1 / R1 correctness) ────────────────
+
+  it('stores patient_ref as BARE blind index (strips Patient/ prefix)', async () => {
+    let insertedReportData: Record<string, unknown> | null = null
+
+    function makeScopedFrom(table: string) {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }),
+                  limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+      if (table === 'lab_technicians') return { select: mockRbacSelect }
+      if (table === 'diagnostic_reports') {
+        return {
+          insert: vi.fn().mockImplementation((data: Record<string, unknown>) => {
+            insertedReportData = data
+            return {
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: { id: 'report-ref-strip' }, error: null }),
+              }),
+            }
+          }),
+          delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+        }
+      }
+      if (table === 'lab_result_files') {
+        return { insert: vi.fn().mockReturnValue({ error: null }) }
+      }
+      if (table === 'labs') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { name: 'Test Lab' }, error: null }),
+            }),
+          }),
+        }
+      }
+      return { insert: mockInsert, select: vi.fn(), delete: mockDelete }
+    }
+
+    const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
+    const scopedCtx = {
+      supabase: scopedSupabase as never,
+      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      lab: { technicianId: 'tech-1', labId: 'lab-1' },
+      headers: new Headers(),
+    }
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(scopedCtx as never)
+
+    // Prefixed input: 'Patient/abc123' → stored as 'abc123'
+    await caller.lab.uploadResult({ ...validInput, patientRef: 'Patient/abc123' })
+
+    expect(insertedReportData).not.toBeNull()
+    expect((insertedReportData as Record<string, unknown>).patient_ref).toBe('abc123')
+  })
+
+  it('stores patient_ref unchanged when already bare (idempotent strip)', async () => {
+    let insertedReportData: Record<string, unknown> | null = null
+
+    function makeScopedFrom(table: string) {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }),
+                  limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+      if (table === 'lab_technicians') return { select: mockRbacSelect }
+      if (table === 'diagnostic_reports') {
+        return {
+          insert: vi.fn().mockImplementation((data: Record<string, unknown>) => {
+            insertedReportData = data
+            return {
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: { id: 'report-ref-idempotent' }, error: null }),
+              }),
+            }
+          }),
+          delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+        }
+      }
+      if (table === 'lab_result_files') {
+        return { insert: vi.fn().mockReturnValue({ error: null }) }
+      }
+      if (table === 'labs') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { name: 'Test Lab' }, error: null }),
+            }),
+          }),
+        }
+      }
+      return { insert: mockInsert, select: vi.fn(), delete: mockDelete }
+    }
+
+    const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
+    const scopedCtx = {
+      supabase: scopedSupabase as never,
+      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      lab: { technicianId: 'tech-1', labId: 'lab-1' },
+      headers: new Headers(),
+    }
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(scopedCtx as never)
+
+    // Already-bare input: 'abc123' → stored as 'abc123' (no change)
+    await caller.lab.uploadResult({ ...validInput, patientRef: 'abc123' })
+
+    expect(insertedReportData).not.toBeNull()
+    expect((insertedReportData as Record<string, unknown>).patient_ref).toBe('abc123')
+  })
+
   it('accepts the literal "custom" sentinel as a valid loincCode', async () => {
     mockInsertSingle.mockResolvedValueOnce({
       data: { id: 'report-custom' },

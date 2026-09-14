@@ -170,6 +170,27 @@ describe('GET /api/lab-files/[fileId]', () => {
     )
   })
 
+  it('bare patient_ref (no Patient/ prefix) does NOT 403 — proceeds to consent and returns 200', async () => {
+    // Regression: diagnostic_reports.patient_ref is now stored as the bare blind index
+    // (e.g. 'abc123' not 'Patient/abc123'). The old guard denied access on bare refs.
+    const BARE_REF = 'abc123bareblindindex'
+    setupFileMocks({
+      report: { id: REPORT_UUID, patient_ref: BARE_REF, virus_scan_status: 'clean' },
+    })
+    mockCheckConsent.mockResolvedValue(true)
+
+    const req = createMockRequest(FILE_UUID)
+    const response = await GET(req, { params: Promise.resolve({ fileId: FILE_UUID }) })
+
+    // Must NOT 403 at the consent-guard step — bare ref is canonical
+    expect(response.status).toBe(200)
+    // Consent was checked with the bare ref unchanged
+    expect(mockCheckConsent).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ patientId: BARE_REF, resourceType: 'DiagnosticReport' })
+    )
+  })
+
   it('blocks access when patient_ref is missing', async () => {
     setupFileMocks({
       report: { id: REPORT_UUID, patient_ref: null, virus_scan_status: 'clean' },
@@ -190,5 +211,30 @@ describe('GET /api/lab-files/[fileId]', () => {
     const response = await GET(req, { params: Promise.resolve({ fileId: FILE_UUID }) })
 
     expect(response.status).toBe(403)
+  })
+
+  it('returns 500 for non-v1: encrypted_content — never serves cleartext (Fix 2)', async () => {
+    // File with encrypted_content that does NOT start with 'v1:' (legacy unencrypted path)
+    setupFileMocks({
+      file: {
+        id: FILE_UUID,
+        diagnostic_report_id: REPORT_UUID,
+        file_name: 'legacy.pdf',
+        file_type: 'application/pdf',
+        file_size: 512,
+        encrypted_content: 'SGVsbG8gV29ybGQ=', // base64, no 'v1:' prefix
+      },
+    })
+
+    const req = createMockRequest(FILE_UUID)
+    const response = await GET(req, { params: Promise.resolve({ fileId: FILE_UUID }) })
+
+    // Must reject — never serve non-v1: content as cleartext
+    expect(response.status).toBe(500)
+    const body = await response.json()
+    expect(body.error).toBe('File decryption failed')
+
+    // decryptField must NOT have been called on this content
+    expect(mockDecryptField).not.toHaveBeenCalled()
   })
 })

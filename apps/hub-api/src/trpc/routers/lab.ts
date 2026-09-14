@@ -841,13 +841,21 @@ export const labRouter = createTRPCRouter({
       // Decryption yields base64 which must be decoded to recover the original binary.
       const encryptedContent = encryptField(input.fileBase64, encryptionKey)
 
+      // R1 (join-key correctness): OPD reads diagnostic_reports by the BARE blind
+      // index generateBlindIndex(realUuid) — patientBlindRef() strips the Patient/
+      // prefix. pullOrders hands the lab `Patient/<blindIndex>`, so the stored
+      // patient_ref must have the prefix stripped to match the OPD read path.
+      // The prefixed ref is kept for the notification dispatch (mirrors submitResult).
+      // .replace is idempotent — safe whether caller passes 'Patient/<idx>' or bare ref.
+      const patientRefStored = input.patientRef.replace(/^Patient\//, '')
+
       // Create DiagnosticReport record
       // Story 12.6: Include OCR metadata for audit (AC 6)
       const reportInsert: Record<string, unknown> = {
         status: 'preliminary',
         loinc_code: input.loincCode,
         loinc_display: input.loincDisplay,
-        patient_ref: input.patientRef,
+        patient_ref: patientRefStored,
         performer_id: technicianId,
         lab_id: labId,
         issued: new Date().toISOString(),
@@ -1149,186 +1157,6 @@ export const labRouter = createTRPCRouter({
       }).catch(() => { /* notification failure must not block */ })
 
       return { diagnosticReportId: reportId, observationCount: analyteRows.length }
-    }),
-
-  /**
-   * Story lab-attachments: Upload a specimen photo or document attachment.
-   * Mirrors uploadResult guards: virus scan → encrypt → insert into specimen_files.
-   * Emits PHI_WRITE audit with resourceType 'SPECIMEN'.
-   */
-  uploadSpecimenFile: labRestrictedProcedure
-    .use(enforceVerifiedOrg())
-    .use(enforceEntitlement('LAB_LITE'))
-    .use(enforceLabActive())
-    .input(
-      z.object({
-        fileBase64: z.string().min(1),
-        fileName: z.string().min(1).max(255),
-        fileType: z.enum(['application/pdf', 'image/jpeg', 'image/png', 'image/webp']),
-        specimenId: z.string().min(1),
-        patientRef: z.string().min(1),
-        attachmentContext: z.enum(['receipt', 'rejection']),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
-      const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
-      const labId = ctx.lab?.labId
-      if (!labId) {
-        throw new TRPCError({
-          code: 'PRECONDITION_FAILED',
-          message: 'Lab affiliation required for upload',
-        })
-      }
-
-      // Validate base64 and decode file
-      const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
-      if (!base64Regex.test(input.fileBase64)) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Invalid base64 file content',
-        })
-      }
-      const fileBuffer = Buffer.from(input.fileBase64, 'base64')
-      if (fileBuffer.length === 0) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'File content is empty',
-        })
-      }
-
-      const MAX_FILE_SIZE = 20 * 1024 * 1024
-      if (fileBuffer.length > MAX_FILE_SIZE) {
-        await audit.emit({
-          action: 'PHI_WRITE',
-          resourceType: 'SPECIMEN',
-          resourceId: 'rejected',
-          actorId: technicianId,
-          actorRole: ctx.user.role,
-          outcome: 'FAILURE',
-          sessionId: ctx.user.sessionId,
-          metadata: {
-            operation: 'specimen_file_upload',
-            reason: 'file_too_large',
-            specimenId: input.specimenId,
-          },
-        })
-
-        throw new TRPCError({
-          code: 'PAYLOAD_TOO_LARGE',
-          message: 'File exceeds the 20 MB size limit',
-        })
-      }
-
-      // Virus scan before any persistence
-      const scanResult = await scanFile(fileBuffer)
-
-      if (scanResult.status === 'infected') {
-        await audit.emit({
-          action: 'PHI_WRITE',
-          resourceType: 'SPECIMEN',
-          resourceId: 'rejected',
-          actorId: technicianId,
-          actorRole: ctx.user.role,
-          outcome: 'FAILURE',
-          sessionId: ctx.user.sessionId,
-          metadata: {
-            operation: 'specimen_file_upload',
-            reason: 'malware_detected',
-            fileHash: scanResult.hash,
-            specimenId: input.specimenId,
-          },
-        })
-
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'File rejected: malware detected',
-        })
-      }
-
-      if (scanResult.status === 'error') {
-        await audit.emit({
-          action: 'PHI_WRITE',
-          resourceType: 'SPECIMEN',
-          resourceId: 'rejected',
-          actorId: technicianId,
-          actorRole: ctx.user.role,
-          outcome: 'FAILURE',
-          sessionId: ctx.user.sessionId,
-          metadata: {
-            operation: 'specimen_file_upload',
-            reason: 'scan_error',
-            fileHash: scanResult.hash,
-            specimenId: input.specimenId,
-          },
-        })
-
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Virus scan failed — upload rejected',
-        })
-      }
-
-      const virusScanStatus = scanResult.status === 'clean' ? 'clean' : 'pending'
-
-      // Get encryption key
-      let encryptionKey: string
-      try {
-        encryptionKey = getFieldEncryptionKeys().encryptionKey
-      } catch {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Encryption configuration unavailable',
-        })
-      }
-
-      const encryptedContent = encryptField(input.fileBase64, encryptionKey)
-
-      // Store encrypted specimen file
-      const { data, error } = await ctx.supabase
-        .from('specimen_files')
-        .insert({
-          specimen_id: input.specimenId,
-          patient_ref: input.patientRef,
-          lab_id: labId,
-          file_name: input.fileName,
-          file_type: input.fileType,
-          file_size: fileBuffer.length,
-          encrypted_content: encryptedContent,
-          file_hash: scanResult.hash,
-          virus_scan_status: virusScanStatus,
-          attachment_context: input.attachmentContext,
-        })
-        .select('id')
-        .single()
-
-      if (error || !data) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to store specimen file',
-        })
-      }
-
-      // Audit successful upload (best-effort — data is already persisted)
-      try {
-        await audit.emit({
-          action: 'PHI_WRITE',
-          resourceType: 'SPECIMEN',
-          resourceId: data.id,
-          actorId: technicianId,
-          actorRole: ctx.user.role,
-          outcome: 'SUCCESS',
-          sessionId: ctx.user.sessionId,
-          metadata: {
-            operation: 'specimen_file_upload',
-            specimenId: input.specimenId,
-          },
-        })
-      } catch {
-        // Audit failure must not block a successful upload
-      }
-
-      return { fileId: data.id }
     }),
 
   /**
