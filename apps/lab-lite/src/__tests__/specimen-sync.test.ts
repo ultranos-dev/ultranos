@@ -7,7 +7,7 @@ const entries = [
     resourceId: 'spec-1',
     status: 'pending',
     payload: {
-      id: 'spec-1', resourceType: 'Specimen', status: 'available',
+      id: 'a1b2c3d4-e5f6-4890-abcd-ef1234567890', resourceType: 'Specimen', status: 'available',
       type: { coding: [{ code: 'blood', display: 'blood' }] },
       subject: { reference: 'Patient/hmac-abc123' },
       request: [{ reference: 'ServiceRequest/order-abc' }],
@@ -41,10 +41,11 @@ describe('drainSpecimenSyncQueue', () => {
     expect(global.fetch).toHaveBeenCalledWith('http://hub/lab.submitSpecimen', expect.objectContaining({ method: 'POST' }))
     const body = JSON.parse((global.fetch as any).mock.calls[0][1].body)
     expect(body.json).toMatchObject({
-      id: 'spec-1', labSampleId: 'LAB-20260914-0001', pipelineStatus: 'received',
+      id: 'a1b2c3d4-e5f6-4890-abcd-ef1234567890', labSampleId: 'LAB-20260914-0001', pipelineStatus: 'received',
       fhirStatus: 'available', specimenType: 'blood', subjectReference: 'Patient/hmac-abc123',
       serviceRequestRef: 'ServiceRequest/order-abc', receivedFrom: 'Practitioner/courier-1',
       condition: 'acceptable', note: 'left arm draw', hlcTimestamp: 'hlc-1',
+      receivedTime: '2026-09-14T09:00:00.000Z',
     })
     expect(update).toHaveBeenCalledWith('Specimen-spec-1-1', { status: 'synced' })
     expect(res).toEqual({ synced: 1, failed: 0 })
