@@ -1,5 +1,5 @@
 import type { DrugSearchResult, FhirPatient, FhirAllergyIntolerance, PharmacyDirectoryEntry, LabDirectoryEntry, LabOrderStatus } from '@ultranos/shared-types'
-import { getHubTrpcUrl } from '@/lib/hub-url'
+import { getHubTrpcUrl, getHubBaseUrl } from '@/lib/hub-url'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
 import { toFhirAllergyIntolerance } from '@/lib/sync-pull'
 
@@ -453,24 +453,45 @@ export async function fetchDiagnosticReportsForPatient(patientId: string): Promi
   }
 }
 
+/** Hub file descriptor returned by diagnosticReport.read */
+interface HubLabFile {
+  id: string
+  fileName: string
+  fileType: string
+  fileSize: number
+  downloadUrl: string
+}
+
 /**
- * Fetch a single report's detail (incl. structured analytes) via
- * diagnosticReport.read and cache the analytes in the local store.
+ * Fetch a single report's detail (incl. structured analytes and attachment photos)
+ * via diagnosticReport.read, then fetch each file's bytes (Bearer-authed) and
+ * cache everything in the local Dexie store.
  * Offline-first: on any failure the existing cache is left intact.
+ * File-level failures (403 virus-scan hold, 404) are skipped gracefully.
  */
 export async function fetchDiagnosticReportDetail(reportId: string, patientId: string): Promise<void> {
   try {
     const headers: Record<string, string> = {}
+    let token: string | undefined
     if (typeof window !== 'undefined') {
       const { getSupabaseBrowserClient } = await import('@/lib/supabase')
       const { data } = await getSupabaseBrowserClient().auth.getSession()
-      const token = data.session?.access_token
+      token = data.session?.access_token ?? undefined
       if (token) headers['Authorization'] = `Bearer ${token}`
     }
     const input = encodeURIComponent(JSON.stringify({ json: { id: reportId, patientRef: `Patient/${patientId}` } }))
     const res = await fetch(`${getHubApiUrl()}/diagnosticReport.read?input=${input}`, { method: 'GET', headers })
     if (!res.ok) return
-    const body = (await res.json()) as { result?: { data?: { json?: { observations?: Array<Record<string, unknown>> } } } }
+    const body = (await res.json()) as {
+      result?: {
+        data?: {
+          json?: {
+            observations?: Array<Record<string, unknown>>
+            files?: HubLabFile[]
+          }
+        }
+      }
+    }
     const observations = body?.result?.data?.json?.observations ?? []
     const rows = observations.map((o) => ({
       id: o.id as string,
@@ -485,6 +506,64 @@ export async function fetchDiagnosticReportDetail(reportId: string, patientId: s
       effectiveDateTime: (o.effectiveDateTime as string | null) ?? null,
     }))
     if (rows.length > 0) await db.diagnosticReportObservations.bulkPut(rows as never)
+
+    // Fetch attachment photo bytes and cache them in presentedForm.
+    // Each file is fetched independently; non-OK responses (e.g. 403 virus-scan
+    // hold, 404) are skipped so they never block the others.
+    const files: HubLabFile[] = body?.result?.data?.json?.files ?? []
+    if (files.length > 0 && token) {
+      const hubOrigin = getHubBaseUrl()
+      const fileAuthHeaders = { Authorization: `Bearer ${token}` }
+
+      const presentedForm: LocalDiagnosticReport['presentedForm'] = (
+        await Promise.all(
+          files.map(async (file) => {
+            try {
+              const fileRes = await fetch(`${hubOrigin}${file.downloadUrl}`, {
+                method: 'GET',
+                headers: fileAuthHeaders,
+              })
+              if (!fileRes.ok) return null
+              const buffer = await fileRes.arrayBuffer()
+              // Convert raw bytes to base64 without using Node-specific Buffer
+              const bytes = new Uint8Array(buffer)
+              let binary = ''
+              for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]!)
+              }
+              const data = btoa(binary)
+              return {
+                contentType: file.fileType,
+                data,
+                title: file.fileName,
+              } satisfies NonNullable<LocalDiagnosticReport['presentedForm']>[number]
+            } catch {
+              // Per-file network/parse failure — skip this attachment (offline-first).
+              return null
+            }
+          }),
+        )
+      ).filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+
+      // Merge presentedForm into the cached DiagnosticReport record.
+      // The list-fetch (fetchDiagnosticReportsForPatient) creates the base record;
+      // if it already exists we patch presentedForm onto it. If not yet cached we
+      // skip (a subsequent list-fetch + detail call will populate it); creating a
+      // stub here would risk overwriting richer fields set by the list mapper.
+      //
+      // UNION strategy (offline-first): on a partial-failure re-fetch, previously
+      // cached entries for files that failed THIS call must be preserved. We keep
+      // the freshly-fetched version when a title appears in both sets, and retain
+      // prior entries for titles that are absent from this fetch (e.g. file that
+      // returned 403/404/network error this time but was successfully cached before).
+      const existing = await db.diagnosticReports.get(reportId)
+      if (existing) {
+        const prior = existing.presentedForm ?? []
+        const freshTitles = new Set(presentedForm.map((p) => p.title))
+        const merged = [...presentedForm, ...prior.filter((p) => !freshTitles.has(p.title))]
+        await db.diagnosticReports.put({ ...existing, presentedForm: merged })
+      }
+    }
   } catch {
     // Network/parse failure — keep the existing cache (offline-first).
   }
