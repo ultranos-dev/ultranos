@@ -195,6 +195,22 @@ export interface ModelDownloadProgress {
   startedAt: string       // ISO 8601
 }
 
+// Structured per-analyte observation linked to a DiagnosticReport (Task 5 — lab result transport loop).
+// FHIR R4 DiagnosticReport.result → Observation, stored locally for offline access.
+// Encrypted at rest: contains clinical values (PHI).
+export interface LocalReportObservation {
+  id: string
+  diagnosticReportId: string
+  loincCode: string
+  loincDisplay: string | null
+  valueQuantity: { value: number; unit?: string } | null
+  valueString: string | null
+  interpretation: unknown[] | null
+  referenceRange: { low?: number; high?: number; text?: string } | null
+  note: Array<{ text: string }> | null
+  effectiveDateTime: string | null
+}
+
 class OpdLiteDatabase extends Dexie {
   patients!: EntityTable<LocalPatient, 'id'>
   encounters!: EntityTable<LocalEncounter, 'id'>
@@ -217,6 +233,7 @@ class OpdLiteDatabase extends Dexie {
   appointments!: EntityTable<Record<string, unknown>, 'id'>
   slots!: EntityTable<Record<string, unknown>, 'id'>
   diagnosticReports!: EntityTable<LocalDiagnosticReport, 'id'>
+  diagnosticReportObservations!: EntityTable<LocalReportObservation, 'id'>
   syncMeta!: EntityTable<SyncMetaEntry, 'patientId'>
   dataBudgetConfig!: Dexie.Table<DataBudgetConfig, string>
   dataUsage!: Dexie.Table<DataUsageRecord & { id?: number }, number>
@@ -676,6 +693,13 @@ class OpdLiteDatabase extends Dexie {
     this.version(27).stores({
       labsMirror: '&id, name',
     })
+
+    // v28: Structured per-analyte observations linked to DiagnosticReport rows.
+    // Encrypted — contains clinical values (LOINC results, reference ranges — PHI).
+    // Indexed by diagnosticReportId for efficient per-report queries.
+    this.version(28).stores({
+      diagnosticReportObservations: 'id, diagnosticReportId',
+    })
   }
 }
 
@@ -811,6 +835,13 @@ const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
   {
     tableName: 'diagnosticReports',
     indexedFields: ['id', 'status', 'subject.reference', 'meta.lastUpdated'],
+  },
+  // Task 5 (lab result transport loop): structured analyte values are PHI
+  // (LOINC results, reference ranges, interpretation flags). Only the
+  // routing/join fields (id, diagnosticReportId) remain indexed cleartext.
+  {
+    tableName: 'diagnosticReportObservations',
+    indexedFields: ['id', 'diagnosticReportId'],
   },
 ]
 
