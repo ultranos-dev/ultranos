@@ -673,6 +673,8 @@
     "flagCritical": "بحرانی",
     "flagAbnormal": "غیرطبیعی",
     "flagNormal": "طبیعی",
+    "analyteTest": "آزمایش",
+    "analyteRange": "محدوده مرجع",
     "recentCritical": "نتایج بحرانی اخیر (۷ روز گذشته)",
     "trendLabel": "روند",
     "historyLabel": "سابقه",
@@ -692,7 +694,8 @@
     "print": "چاپ",
     "resultCount": "{count} نتیجه",
     "attachmentFallback": "پیوست {n}",
-    "pdfFallback": "PDF {n}"
+    "pdfFallback": "PDF {n}",
+    "viewImageAriaLabel": "مشاهده تصویر: {title}"
   },
   "conflicts": {
     "title": "حل تعارض",

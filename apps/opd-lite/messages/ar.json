@@ -673,6 +673,8 @@
     "flagCritical": "حرج",
     "flagAbnormal": "غير طبيعي",
     "flagNormal": "طبيعي",
+    "analyteTest": "الفحص",
+    "analyteRange": "النطاق المرجعي",
     "recentCritical": "النتائج الحرجة الأخيرة (آخر 7 أيام)",
     "trendLabel": "الاتجاه",
     "historyLabel": "السجل",
@@ -692,7 +694,8 @@
     "print": "طباعة",
     "resultCount": "{count} نتيجة",
     "attachmentFallback": "مرفق {n}",
-    "pdfFallback": "PDF {n}"
+    "pdfFallback": "PDF {n}",
+    "viewImageAriaLabel": "عرض الصورة: {title}"
   },
   "conflicts": {
     "title": "حلّ التعارضات",

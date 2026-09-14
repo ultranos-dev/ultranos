@@ -673,6 +673,8 @@
     "flagCritical": "بحراني",
     "flagAbnormal": "غیر نورمال",
     "flagNormal": "نورمال",
+    "analyteTest": "معاینه",
+    "analyteRange": "د حوالې حد",
     "recentCritical": "وروستي بحراني پایلې (وروستي ۷ ورځې)",
     "trendLabel": "رجحان",
     "historyLabel": "تاریخچه",
@@ -692,7 +694,8 @@
     "print": "چاپ",
     "resultCount": "{count} پایله",
     "attachmentFallback": "ضمیمه {n}",
-    "pdfFallback": "PDF {n}"
+    "pdfFallback": "PDF {n}",
+    "viewImageAriaLabel": "انځور وګورئ: {title}"
   },
   "conflicts": {
     "title": "د تضاد حل",

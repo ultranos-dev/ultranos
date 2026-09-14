@@ -23,7 +23,9 @@ import { useEffect, useCallback, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
 import { Check, Printer } from '@ultranos/ui-kit/icons'
-import { db, type LocalDiagnosticReport } from '@/lib/db'
+import { ImageViewer } from '@ultranos/ui-kit/components/ui/image-viewer'
+import { db, type LocalDiagnosticReport, type LocalReportObservation } from '@/lib/db'
+import { fetchDiagnosticReportDetail } from '@/lib/trpc'
 import { acknowledgeNotification, fetchNotifications, type NotificationItem } from '@/lib/notification-api'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 
@@ -70,10 +72,28 @@ function flagBadge(flag: string | undefined, t: (key: string) => string) {
   }
 }
 
+function formatRange(r: { low?: number; high?: number; text?: string } | null): string {
+  if (!r) return ''
+  if (r.text) return r.text
+  if (r.low != null && r.high != null) return `${r.low}–${r.high}`
+  if (r.low != null) return `≥ ${r.low}`
+  if (r.high != null) return `≤ ${r.high}`
+  return ''
+}
+
+function analyteFlagLevel(interpretation: unknown[] | null): 'critical' | 'abnormal' | 'normal' {
+  if (!Array.isArray(interpretation) || interpretation.length === 0) return 'normal'
+  const code = ((interpretation[0] as { coding?: Array<{ code?: string }> })?.coding?.[0]?.code ?? '').toUpperCase()
+  if (code === 'HH' || code === 'LL' || code === 'AA' || code.includes('CRIT')) return 'critical'
+  if (code && code !== 'N' && code !== 'NORMAL') return 'abnormal'
+  return 'normal'
+}
+
 function renderAttachment(
   attachment: { contentType?: string; data?: string; url?: string; title?: string },
   index: number,
   t: (key: string, values?: Record<string, unknown>) => string,
+  onImageOpen: (src: string, alt: string) => void,
 ) {
   const contentType = attachment.contentType ?? ''
   if (attachment.url && !attachment.data) {
@@ -90,16 +110,24 @@ function renderAttachment(
   if (!dataUri) return null
 
   if (SAFE_IMAGE_PREFIXES.some((p) => contentType === p)) {
+    const altText = attachment.title ?? t('attachmentFallback', { n: index + 1 })
     return (
       <div key={index} className="mt-3">
         {attachment.title && (
           <p className="mb-1 text-sm font-medium text-foreground">{attachment.title}</p>
         )}
-        <img
-          src={dataUri}
-          alt={attachment.title ?? t('attachmentFallback', { n: index + 1 })}
-          className="max-w-full rounded-xl ring-[0.65px] ring-border/50"
-        />
+        <button
+          type="button"
+          className="cursor-zoom-in border-0 bg-transparent p-0"
+          aria-label={t('viewImageAriaLabel', { title: altText })}
+          onClick={() => onImageOpen(dataUri, altText)}
+        >
+          <img
+            src={dataUri}
+            alt={altText}
+            className="max-w-full rounded-xl ring-[0.65px] ring-border/50"
+          />
+        </button>
       </div>
     )
   }
@@ -143,6 +171,8 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
     notificationProp?.status === 'ACKNOWLEDGED' || !!report.acknowledgedAt,
   )
   const [acknowledging, setAcknowledging] = useState(false)
+  const [viewerState, setViewerState] = useState<{ src: string; alt: string } | null>(null)
+  const [analytes, setAnalytes] = useState<LocalReportObservation[]>([])
 
   // Self-lookup notification if not passed
   useEffect(() => {
@@ -173,6 +203,30 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
     )
   }, [report.id, report.subject.reference])
 
+  // Load structured analytes: cache-first from the local store, then best-effort
+  // refresh from the Hub via diagnosticReport.read. Offline-safe (never throws).
+  useEffect(() => {
+    // Defensive: some environments/tests provide a db without this store — no-op there.
+    if (!db.diagnosticReportObservations) return
+    let cancelled = false
+    const patientId = report.subject.reference?.replace('Patient/', '') ?? ''
+    async function load() {
+      try {
+        const cached = await db.diagnosticReportObservations.where('diagnosticReportId').equals(report.id).toArray()
+        if (!cancelled) setAnalytes(cached)
+      } catch { /* best-effort */ }
+      if (patientId) {
+        await fetchDiagnosticReportDetail(report.id, patientId)
+        try {
+          const fresh = await db.diagnosticReportObservations.where('diagnosticReportId').equals(report.id).toArray()
+          if (!cancelled) setAnalytes(fresh)
+        } catch { /* best-effort */ }
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [report.id, report.subject.reference])
+
   const handleAcknowledge = useCallback(async () => {
     if (!notification || acknowledged || acknowledging) return
     setAcknowledging(true)
@@ -188,6 +242,18 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
   const handlePrint = useCallback(() => {
     window.print()
   }, [])
+
+  const handleImageOpen = useCallback((src: string, alt: string) => {
+    const patientId = report.subject.reference?.replace('Patient/', '') ?? ''
+    auditPhiAccess(
+      AuditAction.PHI_READ,
+      AuditResourceType.LAB_RESULT,
+      report.id,
+      patientId,
+      { phiAccess: 'lab_result_attachment_view' },
+    )
+    setViewerState({ src, alt })
+  }, [report.id, report.subject.reference])
 
   const loincDisplay =
     report.code.coding?.[0]?.display ?? report.code.coding?.[0]?.code ?? t('unknownTest')
@@ -256,6 +322,37 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
         )}
       </div>
 
+      {/* Structured analytes (value · unit · reference range · flag) */}
+      {analytes.length > 0 && (
+        <div className="mt-4 overflow-hidden rounded-xl ring-[0.65px] ring-border/50">
+          <table className="w-full text-sm">
+            <thead className="bg-muted">
+              <tr>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('analyteTest')}</th>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('resultHeader')}</th>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('analyteRange')}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {analytes.map((a) => {
+                const flag = analyteFlagLevel(a.interpretation)
+                const abnormal = flag === 'critical' || flag === 'abnormal'
+                const value = a.valueQuantity
+                  ? `${a.valueQuantity.value}${a.valueQuantity.unit ? ` ${a.valueQuantity.unit}` : ''}`
+                  : (a.valueString ?? '')
+                return (
+                  <tr key={a.id} className="hover:bg-muted/50">
+                    <td className="px-4 py-3 text-foreground">{a.loincDisplay ?? a.loincCode}</td>
+                    <td className={`px-4 py-3 font-numeric font-semibold ${abnormal ? 'text-destructive' : 'text-foreground'}`}>{value}</td>
+                    <td className="px-4 py-3 text-muted-foreground font-numeric">{formatRange(a.referenceRange)}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {/* Performers */}
       {performers.length > 1 && (
         <div className="mt-4">
@@ -292,7 +389,7 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
       {report.presentedForm && report.presentedForm.length > 0 && (
         <div className="mt-4">
           <h4 className="text-sm font-bold text-foreground">{t('attachedFiles')}</h4>
-          {report.presentedForm.map((attachment, i) => renderAttachment(attachment, i, t as (key: string, values?: Record<string, unknown>) => string))}
+          {report.presentedForm.map((attachment, i) => renderAttachment(attachment, i, t as (key: string, values?: Record<string, unknown>) => string, handleImageOpen))}
         </div>
       )}
 
@@ -323,6 +420,13 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
           {t('acknowledged')}
         </div>
       )}
+
+      <ImageViewer
+        open={viewerState !== null}
+        src={viewerState?.src ?? ''}
+        alt={viewerState?.alt}
+        onOpenChange={(o) => { if (!o) setViewerState(null) }}
+      />
     </div>
   )
 }
