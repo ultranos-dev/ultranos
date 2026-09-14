@@ -17,6 +17,7 @@ import {
 import { useSyncStore } from '@/stores/sync-store'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useCatalogSync } from '@/hooks/useCatalogSync'
+import { useLocationSync } from '@/hooks/useLocationSync'
 import { useExpiryWatchdog } from '@/hooks/useExpiryWatchdog'
 import { db } from '@/lib/db'
 
@@ -43,6 +44,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
   useKeyboardShortcuts()
   useCatalogSync()
+  useLocationSync()
   useExpiryWatchdog()
 
   const visibleGroups = filterNavGroups(navGroups, { enableWholesale })
