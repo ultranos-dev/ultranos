@@ -10,6 +10,7 @@ import { uploadResult, uploadSpecimenFile } from '@/lib/trpc'
 import { reportQueueAuditEvent } from '@/lib/queue-audit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { drainResultSyncQueue } from '@/lib/result-sync'
+import { drainSpecimenSyncQueue } from '@/lib/specimen-sync'
 
 /**
  * SyncProvider — centralized sync lifecycle management for Lab Lite.
@@ -73,10 +74,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // Start audit drain (AuditDrainInit component was never mounted, absorb it here)
     startAuditDrain()
 
-    // Drain structured lab results (syncQueue resourceType='DiagnosticReport') to
-    // the Hub via lab.submitResult. Reuses the same triggers as the upload drain.
+    // Drain structured lab results (DiagnosticReport) AND collected specimens
+    // (Specimen) to the Hub. Reuses the same triggers as the upload drain.
     const runResultDrain = () => {
       void drainResultSyncQueue(getToken)
+      void drainSpecimenSyncQueue(getToken)
     }
     if (typeof navigator !== 'undefined' && navigator.onLine) runResultDrain()
 
