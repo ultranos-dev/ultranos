@@ -5,7 +5,7 @@
  * trend data for numeric results.
  */
 
-import type { LocalDiagnosticReport } from '@/lib/db'
+import type { LocalDiagnosticReport, LocalReportObservation } from '@/lib/db'
 
 // ─── LOINC Category Mapping ──────────────────────────────────────────────────
 // Duplicated from apps/lab-lite/src/lib/loinc-categories.ts — kept in sync
@@ -120,23 +120,46 @@ function categoryLabel(report: LocalDiagnosticReport): string {
  * Extract trend data points for a list of reports sharing the same LOINC code.
  * Returns null if no numeric data is available across the set.
  *
+ * When analytesByReportId is provided, structured analyte values are preferred
+ * over the legacy regex-from-conclusion extraction. Falls back to the regex
+ * path for file-only reports that have no structured analytes.
+ *
  * AC: 3 (Story 52.4)
  */
-function buildTrendData(reports: LocalDiagnosticReport[]): TrendDataPoint[] | null {
+function buildTrendData(
+  reports: LocalDiagnosticReport[],
+  loincCode: string,
+  analytesByReportId?: Map<string, LocalReportObservation[]>,
+): TrendDataPoint[] | null {
   const points: TrendDataPoint[] = []
 
   for (const report of reports) {
     const date = report.effectiveDateTime ?? report.issued
     if (!date) continue
 
-    // Best-effort numeric extraction from conclusion text
-    const numeric = report.conclusion ? extractNumericFromConclusion(report.conclusion) : null
-    if (!numeric) continue
+    // Prefer a structured analyte value (matching this group's LOINC, or the sole analyte).
+    let value: number | undefined
+    let unit = ''
+    const analytes = analytesByReportId?.get(report.id)
+    if (analytes && analytes.length > 0) {
+      const match = analytes.find((a) => a.loincCode === loincCode) ?? (analytes.length === 1 ? analytes[0] : undefined)
+      if (match?.valueQuantity && typeof match.valueQuantity.value === 'number') {
+        value = match.valueQuantity.value
+        unit = match.valueQuantity.unit ?? ''
+      }
+    }
+    // Fallback: legacy file-only reports — regex-extract from conclusion.
+    if (value === undefined) {
+      const numeric = report.conclusion ? extractNumericFromConclusion(report.conclusion) : null
+      if (!numeric) continue
+      value = numeric.value
+      unit = numeric.unit
+    }
 
     points.push({
       date,
-      value: numeric.value,
-      unit: numeric.unit,
+      value,
+      unit,
       flagLevel: report._ultranos?.flagLevel ?? 'normal',
       labName: report.performer?.[0]?.display ?? report._ultranos?.labId ?? 'Unknown Lab',
     })
@@ -152,10 +175,14 @@ function buildTrendData(reports: LocalDiagnosticReport[]): TrendDataPoint[] | nu
  * Output: array of GroupedResults, sorted so critical/abnormal groups come first,
  * then alphabetically by category name.
  *
+ * When analytesByReportId is provided, structured analyte values are preferred
+ * over the legacy regex-from-conclusion extraction for trend data.
+ *
  * AC: 2, 3, 4 (Story 52.4)
  */
 export function groupReportsByLoinc(
   reports: LocalDiagnosticReport[],
+  analytesByReportId?: Map<string, LocalReportObservation[]>,
 ): GroupedResults[] {
   const groupMap = new Map<string, LocalDiagnosticReport[]>()
 
@@ -189,7 +216,7 @@ export function groupReportsByLoinc(
       latestResult,
       hasAbnormal,
       hasCritical,
-      trendData: buildTrendData(groupReports),
+      trendData: buildTrendData(groupReports, loincCode, analytesByReportId),
     })
   }
 
