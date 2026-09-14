@@ -1190,13 +1190,23 @@ export const labRouter = createTRPCRouter({
     .input(submitSpecimenSchema)
     .mutation(async ({ ctx, input }) => {
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
-      // performer_id uses the auth user sub (practitioner identity) — ctx.user.sub is the JWT sub.
-      // ctx.lab.technicianId is the lab_technicians row PK, not the practitioner identifier.
-      const technicianId = ctx.user.sub
       const labId = ctx.lab?.labId
       if (!labId) {
         throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Lab affiliation required' })
       }
+
+      // Resolve practitioner_id from lab_technicians row — this is practitioners.id (FK target),
+      // NOT ctx.user.sub (auth JWT sub) or ctx.lab.technicianId (lab_technicians row PK).
+      // specimens.performer_id is NOT NULL REFERENCES practitioners(id), so we must use this value.
+      const { data: techRow, error: techErr } = await ctx.supabase
+        .from('lab_technicians')
+        .select('practitioner_id')
+        .eq('id', ctx.lab!.technicianId)
+        .single()
+      if (techErr || !techRow?.practitioner_id) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Technician practitioner mapping not found' })
+      }
+      const performerId = techRow.practitioner_id as string
 
       // Ownership + newer-wins lookup.
       const { data: existing, error: lookupError } = await ctx.supabase
@@ -1234,7 +1244,7 @@ export const labRouter = createTRPCRouter({
         condition: input.condition ?? null,
         rejection_reason: input.rejectionReason ?? null,
         note: input.note ? encryptField(input.note, getFieldEncryptionKeys().encryptionKey) : null,
-        performer_id: technicianId,
+        performer_id: performerId,
         lab_id: labId,
         hlc_timestamp: input.hlcTimestamp,
         updated_at: new Date().toISOString(),
@@ -1250,7 +1260,7 @@ export const labRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'CREATE', resourceType: 'SPECIMEN', resourceId: input.id,
-          actorId: technicianId, actorRole: ctx.user.role, outcome: 'SUCCESS', sessionId: ctx.user.sessionId,
+          actorId: performerId, actorRole: ctx.user.role, outcome: 'SUCCESS', sessionId: ctx.user.sessionId,
           metadata: { submitAction: 'specimen_synced', pipelineStatus: input.pipelineStatus, labId },
         })
       } catch {

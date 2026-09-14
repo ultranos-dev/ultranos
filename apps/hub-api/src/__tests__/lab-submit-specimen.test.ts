@@ -18,6 +18,12 @@ vi.mock('@/lib/field-encryption', () => ({
 const SPEC_ID = '55555555-5555-5555-5555-555555555555'
 const PATIENT_REF = 'Patient/hmac-abc123'
 
+// Real HLC format: "{wallMs:15digits}:{counter:5digits}:{nodeId}"
+// These are distinct wall-clock values so compareHlc distinguishes on wallMs, not nodeId tiebreak.
+const HLC_BASE   = '000000000010000:00000:nodeA'  // "stored baseline" and default input
+const HLC_OLDER  = '000000000009000:00000:nodeA'  // older than HLC_BASE → should be skipped
+const HLC_NEWER  = '000000000011000:00000:nodeA'  // newer than HLC_BASE → should write through
+
 const mockTechSingle = vi.fn()
 const mockTechSelect = vi.fn(() => ({ eq: vi.fn(() => ({ single: mockTechSingle })) }))
 // specimens: ownership/hlc lookup (.select().eq().maybeSingle()) + upsert()
@@ -49,10 +55,16 @@ vi.mock('@/lib/supabase', () => ({
 const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRouter } = await import('../trpc/routers/lab')
 
+// sub is 'authuser-1' (auth JWT sub) — DISTINCT from practitioner_id 'tech-1' returned by
+// mockTechSingle. This distinction is intentional: Finding 1 fix ensures performer_id resolves
+// to practitioner_id ('tech-1'), NOT ctx.user.sub ('authuser-1').
 function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string } | null) {
   return { supabase: { from: mockFrom } as never, user, headers: new Headers() }
 }
 function setupLab(status = 'ACTIVE') {
+  // mockTechSingle is shared by rbac middleware AND the new performer_id lookup (both call
+  // lab_technicians → select → eq → single). The fixture includes both `id` (for rbac) and
+  // `practitioner_id` (for the performer_id lookup) so both callers get what they need.
   mockTechSingle.mockResolvedValue({
     data: { id: 'tech-rec', lab_id: 'lab-1', practitioner_id: 'tech-1', labs: { id: 'lab-1', status } },
     error: null,
@@ -64,7 +76,7 @@ function makeInput(over: Record<string, unknown> = {}) {
     fhirStatus: 'available', specimenType: 'blood', subjectReference: PATIENT_REF,
     serviceRequestRef: 'ServiceRequest/order-abc', receivedFrom: 'courier-1',
     receivedTime: '2026-09-14T09:00:00.000Z', condition: 'acceptable',
-    note: 'left arm draw', hlcTimestamp: '2026-09-14T09:00:00.000Z-0000-node',
+    note: 'left arm draw', hlcTimestamp: HLC_BASE,
     ...over,
   }
 }
@@ -74,41 +86,57 @@ describe('lab.submitSpecimen', () => {
 
   it('upserts a specimen with BARE blind-index patient_ref and server-stamped lab/performer', async () => {
     setupLab()
+    // sub='authuser-1' is the JWT auth sub; performer_id must resolve to 'tech-1' (practitioner_id)
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
     const res = await caller.lab.submitSpecimen(makeInput())
     expect(res).toEqual({ specimenId: SPEC_ID, pipelineStatus: 'received' })
     const row = specUpsert.mock.calls[0]![0]
     expect(row).toMatchObject({
       id: SPEC_ID, patient_ref: 'hmac-abc123', service_request_id: 'order-abc',
-      lab_id: 'lab-1', performer_id: 'tech-1', pipeline_status: 'received',
+      lab_id: 'lab-1',
+      performer_id: 'tech-1',  // practitioner_id from lab_technicians row, NOT ctx.user.sub ('authuser-1')
+      pipeline_status: 'received',
       note: 'enc-left arm draw',
     })
   })
 
   it('rejects a specimen owned by another lab', async () => {
     setupLab()
-    specMaybeSingle.mockResolvedValue({ data: { id: SPEC_ID, lab_id: 'other-lab', hlc_timestamp: 'x' }, error: null })
+    specMaybeSingle.mockResolvedValue({ data: { id: SPEC_ID, lab_id: 'other-lab', hlc_timestamp: HLC_BASE }, error: null })
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
     await expect(caller.lab.submitSpecimen(makeInput())).rejects.toMatchObject({ code: 'FORBIDDEN' })
   })
 
   it('skips the write when the stored hlc is newer (newer-wins, idempotent success)', async () => {
     setupLab()
+    // stored=HLC_BASE (wallMs=10000), incoming=HLC_OLDER (wallMs=9000) → incoming is older → skip
     specMaybeSingle.mockResolvedValue({
-      data: { id: SPEC_ID, lab_id: 'lab-1', hlc_timestamp: '2026-09-14T10:00:00.000Z-0000-node' }, error: null })
+      data: { id: SPEC_ID, lab_id: 'lab-1', hlc_timestamp: HLC_BASE }, error: null })
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
-    const res = await caller.lab.submitSpecimen(makeInput()) // incoming 09:00 < stored 10:00
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    const res = await caller.lab.submitSpecimen(makeInput({ hlcTimestamp: HLC_OLDER }))
     expect(res).toEqual({ specimenId: SPEC_ID, pipelineStatus: 'received' })
     expect(specUpsert).not.toHaveBeenCalled()
+  })
+
+  it('writes through when the incoming hlc is newer than stored', async () => {
+    setupLab()
+    // stored=HLC_BASE (wallMs=10000), incoming=HLC_NEWER (wallMs=11000) → incoming is newer → write
+    specMaybeSingle.mockResolvedValue({
+      data: { id: SPEC_ID, lab_id: 'lab-1', hlc_timestamp: HLC_BASE }, error: null })
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    const res = await caller.lab.submitSpecimen(makeInput({ hlcTimestamp: HLC_NEWER }))
+    expect(res).toEqual({ specimenId: SPEC_ID, pipelineStatus: 'received' })
+    expect(specUpsert).toHaveBeenCalledOnce()
   })
 
   it('emits a SPECIMEN audit event (Rule #6)', async () => {
     setupLab()
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
     await caller.lab.submitSpecimen(makeInput())
     expect(mockAuditEmit).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'CREATE', resourceType: 'SPECIMEN', resourceId: SPEC_ID }))
@@ -117,7 +145,7 @@ describe('lab.submitSpecimen', () => {
   it('rejects unknown DTO fields (data minimization)', async () => {
     setupLab()
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
     await expect(
       caller.lab.submitSpecimen(makeInput({ nationalId: '123' }) as never),
     ).rejects.toBeDefined()
