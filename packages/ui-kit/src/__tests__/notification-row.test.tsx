@@ -48,9 +48,9 @@ describe('NotificationRow', () => {
       timeAgo="14h ago" unread />)
     expect(screen.getByText('Lab Lite')).toHaveClass('font-bold')
     expect(screen.getByText('Lab order received')).toHaveClass('font-bold')
-    expect(screen.getByText('14h ago')).toHaveClass('font-bold')
-    // Unread time is foreground (dark) so the bold reads clearly, not muted gray
-    expect(screen.getByText('14h ago')).toHaveClass('text-foreground')
+    // The time/date is NEVER bold — it stays regular-weight regardless of status
+    expect(screen.getByText('14h ago')).toHaveClass('font-normal')
+    expect(screen.getByText('14h ago')).not.toHaveClass('font-bold')
   })
 
   it('renders app name, subject and time in NORMAL weight when read', () => {
