@@ -188,6 +188,17 @@ export async function deleteNotification(notificationId: string): Promise<void> 
   })
 }
 
+/** Mark a single notification as unread (reverses acknowledge). */
+export async function markUnreadNotification(notificationId: string): Promise<void> {
+  const token = await useAuthSessionStore.getState().getAccessToken()
+  if (!token) return
+  await fetch(`${getHubApiUrl()}/notification.markUnread`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ json: { notificationId } }),
+  })
+}
+
 export interface SetDrugPriceInput {
   atcCode: string
   facilityId: string

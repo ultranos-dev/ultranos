@@ -6,6 +6,10 @@
  *  - source-app name (via sourceAppNameKey resolver)
  *  - clicking a row opens the detail dialog
  *
+ * C4 — Toggle read/unread wiring:
+ *  - unread notification → toggle → calls acknowledgeNotification
+ *  - read (ACKNOWLEDGED) notification → toggle → calls markUnreadNotification
+ *
  * TDD: write first, implement after.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -31,6 +35,7 @@ vi.mock('next-intl', () => ({
       'notifications.field.status': 'Status',
       'notifications.field.received': 'Received',
       'notifications.markRead': 'Mark as read',
+      'notifications.markUnread': 'Mark as unread',
       'notifications.delete': 'Delete notification',
       'time.justNow': 'Just now',
       'time.minutesAgo': `${params?.minutes ?? '{minutes}'}m ago`,
@@ -66,22 +71,25 @@ vi.mock('@ultranos/ui-kit', () => ({
 }))
 
 // ui-kit sub-paths used by NotificationPanel / NotificationBell
+// Updated mock to support onToggleRead + markUnreadLabel (replaces old onMarkRead)
 vi.mock('@ultranos/ui-kit/components/ui/notification-row', () => ({
   NotificationRow: ({
     appName,
     subject,
     onClick,
-    onMarkRead,
+    onToggleRead,
     onDelete,
     markReadLabel,
+    markUnreadLabel,
     deleteLabel,
   }: {
     appName: string
     subject: string
     onClick: () => void
-    onMarkRead?: () => void
+    onToggleRead?: () => void
     onDelete?: () => void
     markReadLabel?: string
+    markUnreadLabel?: string
     deleteLabel?: string
   }) => (
     <div data-testid="notif-row">
@@ -89,9 +97,10 @@ vi.mock('@ultranos/ui-kit/components/ui/notification-row', () => ({
         <span data-testid="notif-app-name">{appName}</span>
         <span data-testid="notif-subject">{subject}</span>
       </button>
-      {onMarkRead && (
-        <button type="button" data-testid="notif-mark-read" onClick={onMarkRead}>
-          {markReadLabel ?? 'mark-read'}
+      {onToggleRead && (
+        <button type="button" data-testid="notif-toggle-read" onClick={onToggleRead}>
+          {/* Show which label is active so tests can assert the right label */}
+          {markReadLabel ?? markUnreadLabel ?? 'toggle-read'}
         </button>
       )}
       {onDelete && (
@@ -150,12 +159,14 @@ vi.mock('@ultranos/ui-kit/components/ui/empty-state', () => ({
 // Stub trpc functions — listNotifications returns a descriptor-bearing item
 const mockListNotifications = vi.fn()
 const mockAcknowledgeNotification = vi.fn().mockResolvedValue(undefined)
+const mockMarkUnreadNotification = vi.fn().mockResolvedValue(undefined)
 const mockDeleteNotification = vi.fn().mockResolvedValue(undefined)
 const mockGetUnreadNotificationCount = vi.fn().mockResolvedValue(0)
 
 vi.mock('@/lib/trpc', () => ({
   listNotifications: (...args: unknown[]) => mockListNotifications(...args),
   acknowledgeNotification: (...args: unknown[]) => mockAcknowledgeNotification(...args),
+  markUnreadNotification: (...args: unknown[]) => mockMarkUnreadNotification(...args),
   deleteNotification: (...args: unknown[]) => mockDeleteNotification(...args),
   getUnreadNotificationCount: (...args: unknown[]) => mockGetUnreadNotificationCount(...args),
 }))
@@ -199,11 +210,19 @@ const DISPENSED_NOTIFICATION = {
   notesKey: null,
 }
 
+const ACKNOWLEDGED_NOTIFICATION = {
+  ...DISPENSED_NOTIFICATION,
+  id: 'n3',
+  status: 'ACKNOWLEDGED',
+  acknowledgedAt: new Date(Date.now() - 2 * 60_000).toISOString(),
+}
+
 describe('NotificationPanel — descriptor-field rendering', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockListNotifications.mockResolvedValue([DISPENSED_NOTIFICATION])
     mockAcknowledgeNotification.mockResolvedValue(undefined)
+    mockMarkUnreadNotification.mockResolvedValue(undefined)
     mockDeleteNotification.mockResolvedValue(undefined)
     mockGetUnreadNotificationCount.mockResolvedValue(1)
   })
@@ -256,18 +275,28 @@ describe('NotificationPanel — descriptor-field rendering', () => {
     })
   })
 
-  it('clicking mark-read calls acknowledgeNotification (pure acknowledge — no side effects)', async () => {
+  it('toggle button is present for an unread notification', async () => {
+    const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
+    render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('notif-toggle-read')).toBeInTheDocument()
+    })
+  })
+
+  it('clicking toggle on an UNREAD notification calls acknowledgeNotification (not markUnread)', async () => {
     const user = userEvent.setup()
     const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
     render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
 
     await waitFor(() => {
-      expect(screen.getByTestId('notif-mark-read')).toBeInTheDocument()
+      expect(screen.getByTestId('notif-toggle-read')).toBeInTheDocument()
     })
 
-    await user.click(screen.getByTestId('notif-mark-read'))
+    await user.click(screen.getByTestId('notif-toggle-read'))
 
     expect(mockAcknowledgeNotification).toHaveBeenCalledWith(DISPENSED_NOTIFICATION.id)
+    expect(mockMarkUnreadNotification).not.toHaveBeenCalled()
     expect(mockDeleteNotification).not.toHaveBeenCalled()
   })
 
@@ -292,11 +321,48 @@ describe('NotificationPanel — descriptor-field rendering', () => {
   })
 })
 
+describe('NotificationPanel — toggle: ACKNOWLEDGED notification → markUnread', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockListNotifications.mockResolvedValue([ACKNOWLEDGED_NOTIFICATION])
+    mockAcknowledgeNotification.mockResolvedValue(undefined)
+    mockMarkUnreadNotification.mockResolvedValue(undefined)
+    mockDeleteNotification.mockResolvedValue(undefined)
+    mockGetUnreadNotificationCount.mockResolvedValue(0)
+  })
+
+  it('toggle button is present for an ACKNOWLEDGED notification', async () => {
+    const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
+    render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('notif-toggle-read')).toBeInTheDocument()
+    })
+  })
+
+  it('clicking toggle on an ACKNOWLEDGED notification calls markUnreadNotification (not acknowledge)', async () => {
+    const user = userEvent.setup()
+    const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
+    render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('notif-toggle-read')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByTestId('notif-toggle-read'))
+
+    expect(mockMarkUnreadNotification).toHaveBeenCalledWith(ACKNOWLEDGED_NOTIFICATION.id)
+    expect(mockAcknowledgeNotification).not.toHaveBeenCalled()
+    expect(mockDeleteNotification).not.toHaveBeenCalled()
+  })
+})
+
 describe('NotificationPanel — DISPENSE_REVIEW_RESOLVED detail rows', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockListNotifications.mockResolvedValue([REVIEW_RESOLVED_NOTIFICATION])
     mockAcknowledgeNotification.mockResolvedValue(undefined)
+    mockMarkUnreadNotification.mockResolvedValue(undefined)
     mockDeleteNotification.mockResolvedValue(undefined)
     mockGetUnreadNotificationCount.mockResolvedValue(1)
   })

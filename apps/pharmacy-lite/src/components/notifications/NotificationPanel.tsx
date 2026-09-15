@@ -10,7 +10,7 @@ import type { NotificationDetailField } from '@ultranos/ui-kit/components/ui/not
 import { sourceAppIcon, sourceAppNameKey, deriveSourceApp } from '@ultranos/ui-kit/notification-presentation'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
-import { deleteNotification } from '@/lib/trpc'
+import { deleteNotification, markUnreadNotification } from '@/lib/trpc'
 import type { PharmacyNotification } from '@/lib/trpc'
 
 function formatTimestamp(
@@ -44,19 +44,53 @@ export function NotificationPanel({
 
   // Local list so delete can remove rows immediately without waiting for next poll.
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
+  // Local status overrides: maps notificationId → partial override (for mark-unread flip).
+  const [statusOverrides, setStatusOverrides] = useState<Map<string, Partial<PharmacyNotification>>>(new Map())
+
   const notifications = useMemo(
-    () => polledNotifications.filter(n => !deletedIds.has(n.id)),
-    [polledNotifications, deletedIds],
+    () => polledNotifications
+      .filter(n => !deletedIds.has(n.id))
+      .map(n => {
+        const override = statusOverrides.get(n.id)
+        return override ? { ...n, ...override } : n
+      }),
+    [polledNotifications, deletedIds, statusOverrides],
   )
 
   const handleAcknowledge = useCallback(async (id: string) => {
+    // Clear any unread override so the acknowledged state from the poll takes precedence.
+    setStatusOverrides(prev => {
+      const next = new Map(prev)
+      next.delete(id)
+      return next
+    })
     await acknowledge(id)
     onChange()
   }, [acknowledge, onChange])
 
+  const handleMarkUnread = useCallback(async (id: string) => {
+    // Optimistic: flip the item back to unread immediately.
+    setStatusOverrides(prev => {
+      const next = new Map(prev)
+      next.set(id, { status: 'SENT', acknowledgedAt: null })
+      return next
+    })
+    onChange()
+    try {
+      await markUnreadNotification(id)
+    } catch {
+      // Best-effort mark-unread — optimistic update stays
+    }
+  }, [onChange])
+
   const handleDelete = useCallback(async (id: string) => {
     // Optimistic removal
     setDeletedIds(prev => new Set([...prev, id]))
+    setStatusOverrides(prev => {
+      const next = new Map(prev)
+      next.delete(id)
+      return next
+    })
     onChange()
     try {
       await deleteNotification(id)
@@ -100,6 +134,7 @@ export function NotificationPanel({
                 openId={openId}
                 setOpenId={setOpenId}
                 onAcknowledge={handleAcknowledge}
+                onMarkUnread={handleMarkUnread}
                 onDelete={handleDelete}
                 onNavigate={(path) => { router.push(path); onClose() }}
                 tNotif={tNotif}
@@ -117,6 +152,7 @@ function PanelNotificationRow({
   openId,
   setOpenId,
   onAcknowledge,
+  onMarkUnread,
   onDelete,
   onNavigate,
   tNotif,
@@ -125,6 +161,7 @@ function PanelNotificationRow({
   openId: string | null
   setOpenId: (id: string | null) => void
   onAcknowledge: (id: string) => void
+  onMarkUnread: (id: string) => void
   onDelete: (id: string) => void
   onNavigate: (path: string) => void
   tNotif: ReturnType<typeof useTranslations<'notifications'>>
@@ -206,9 +243,12 @@ function PanelNotificationRow({
           setOpenId(n.id)
           onAcknowledge(n.id)
         }}
-        onMarkRead={n.status !== 'ACKNOWLEDGED' ? () => onAcknowledge(n.id) : undefined}
+        onToggleRead={() => {
+          n.status !== 'ACKNOWLEDGED' ? onAcknowledge(n.id) : onMarkUnread(n.id)
+        }}
         onDelete={() => onDelete(n.id)}
         markReadLabel={tNotif('markRead' as Parameters<typeof tNotif>[0])}
+        markUnreadLabel={tNotif('markUnread' as Parameters<typeof tNotif>[0])}
         deleteLabel={tNotif('delete' as Parameters<typeof tNotif>[0])}
       />
       <NotificationDetailModal

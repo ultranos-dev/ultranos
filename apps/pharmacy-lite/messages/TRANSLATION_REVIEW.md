@@ -306,3 +306,13 @@ Total keys to review: **48** (each across ar / prs / ps).
 - **prs:** "تاریخ دریافت"
 - **ps:** "د ترلاسه کولو نیټه"
 
+
+---
+
+## 2026-09-15 additions — `notifications.markUnread` (C4 toggle)
+
+### `notifications.markUnread`
+- **en:** "Mark as unread" *(definitive — matches OPD-Lite en.json)*
+- **ar:** "تعيين كغير مقروء" *(reused from OPD-Lite ar.json — TRANSLATION_REVIEW)*
+- **prs:** "علامت‌گذاری به‌عنوان خوانده نشده" *(reused from OPD-Lite prs.json — TRANSLATION_REVIEW)*
+- **ps:** "نه لوستل شوی علامه کول" *(reused from OPD-Lite ps.json — TRANSLATION_REVIEW)*
