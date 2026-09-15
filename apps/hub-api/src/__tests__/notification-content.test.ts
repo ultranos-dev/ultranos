@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildNotificationContent } from '@/lib/notification-content'
-
-const NON_PHI_ALLOWED = ['testCategory','labName','status','orderId','prescriptionId','diagnosticReportId','reviewId','count']
+import { buildNotificationContent, NON_PHI_PARAM_KEYS } from '@/lib/notification-content'
 
 describe('buildNotificationContent', () => {
   it('maps ORDER_RECEIVED to Lab Lite with test category param', () => {
@@ -33,6 +31,24 @@ describe('buildNotificationContent', () => {
     expect(keys).not.toContain('diagnosis')
     expect(keys).not.toContain('resultValue')
     expect(keys).not.toContain('nationalId')
-    expect(keys.every(k => NON_PHI_ALLOWED.includes(k))).toBe(true)
+    expect(keys.every(k => NON_PHI_PARAM_KEYS.includes(k as any))).toBe(true)
+  })
+
+  it('includes pathogen in bodyParams for outbreak type', () => {
+    const c = buildNotificationContent('OUTBREAK_MODE_ACTIVATED', {
+      pathogen: 'salmonella',
+      patientName: 'John Smith',
+      diagnosis: 'Confirmed case',
+    })
+    expect(c.bodyParams.pathogen).toBe('salmonella')
+    expect(c.bodyParams).not.toHaveProperty('patientName')
+    expect(c.bodyParams).not.toHaveProperty('diagnosis')
+    const keys = Object.keys(c.bodyParams)
+    expect(keys.every(k => NON_PHI_PARAM_KEYS.includes(k as any))).toBe(true)
+  })
+
+  it('returns defaultBody for unknown type', () => {
+    const c = buildNotificationContent('TOTALLY_NEW_TYPE', {})
+    expect(c.bodyKey).toBe('defaultBody')
   })
 })

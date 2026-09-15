@@ -9,7 +9,7 @@ export interface NotificationContent {
 }
 
 /** Non-PHI payload keys allowed into bodyParams. Extend only with non-PHI fields. */
-const NON_PHI_PARAM_KEYS = [
+export const NON_PHI_PARAM_KEYS = [
   'testCategory', 'labName', 'status', 'orderId', 'prescriptionId',
   'diagnosticReportId', 'reviewId', 'count', 'pathogen',
 ] as const
