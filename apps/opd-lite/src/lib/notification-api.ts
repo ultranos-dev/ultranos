@@ -20,6 +20,12 @@ export interface NotificationItem {
   createdAt: string
   deliveredAt: string | null
   acknowledgedAt: string | null
+  /** Descriptor fields from Hub (Task 4 — notification presentation enrichment) */
+  sourceApp?: string | null
+  subjectKey?: string | null
+  bodyKey?: string | null
+  bodyParams?: Record<string, string | number>
+  notesKey?: string | null
 }
 
 async function trpcQuery<T>(path: string, input?: object): Promise<T> {

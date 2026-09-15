@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatDate } from '@ultranos/ui-kit'
-import { Beaker, Check, Settings } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
@@ -13,13 +12,22 @@ import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import type { NotificationItem } from '@/lib/notification-api'
 import { db } from '@/lib/db'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
-import { notificationLabelKey } from '@/lib/notification-label'
+import { NotificationRow } from '@ultranos/ui-kit/components/ui/notification-row'
+import { NotificationDetailModal } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
+import { sourceAppIcon, sourceAppNameKey, deriveSourceApp } from '@ultranos/ui-kit/notification-presentation'
 
 // --- Type grouping for tab filters ---
 
-const LAB_TYPES = ['LAB_RESULT_AVAILABLE', 'LAB_RESULT_ESCALATION'] as const
-const RX_TYPES = ['PRESCRIPTION_READY', 'PRESCRIPTION_DISPENSED'] as const
-const SYSTEM_TYPES = ['SYNC_CONFLICT', 'CONSENT_CHANGE', 'ALLERGY_UPDATE'] as const
+const LAB_TYPES = ['LAB_RESULT_AVAILABLE', 'LAB_RESULT_ESCALATION', 'ORDER_RECEIVED'] as const
+const RX_TYPES = ['PRESCRIPTION_READY', 'PRESCRIPTION_DISPENSED', 'DISPENSE_REVIEW_RESOLVED'] as const
+const SYSTEM_TYPES = [
+  'SYNC_CONFLICT', 'CONSENT_CHANGE', 'ALLERGY_UPDATE',
+  'GUARDIAN_LINKED', 'GUARDIAN_UNLINKED',
+  'LICENSE_EXPIRED', 'LICENSE_EXPIRY_WARNING', 'PROVIDER_SUSPENDED',
+  'LAB_APPROVED', 'LAB_SUSPENDED', 'LAB_REACTIVATED',
+  'KYC_APPROVED', 'KYC_REJECTED', 'KYC_MORE_INFO_REQUESTED',
+  'OUTBREAK_MODE_ACTIVATED', 'OUTBREAK_MODE_DEACTIVATED',
+] as const
 
 type TabKey = 'all' | 'lab' | 'rx' | 'system'
 
@@ -39,10 +47,6 @@ function filterByTab(notifications: NotificationItem[], tab: TabKey): Notificati
   return notifications.filter(n => (SYSTEM_TYPES as readonly string[]).includes(n.type))
 }
 
-// --- Notification type display helpers ---
-
-// notificationLabelKey is imported from @/lib/notification-label (shared with NotificationPanel)
-
 function formatTimestamp(iso: string, locale: 'en' | 'ar' | 'prs' | 'ps'): string {
   const d = new Date(iso)
   const now = new Date()
@@ -55,12 +59,6 @@ function formatTimestamp(iso: string, locale: 'en' | 'ar' | 'prs' | 'ps'): strin
   return formatDate(d, locale)
 }
 
-function getIconCategory(type: string): 'lab' | 'rx' | 'system' {
-  if ((LAB_TYPES as readonly string[]).includes(type)) return 'lab'
-  if ((RX_TYPES as readonly string[]).includes(type)) return 'rx'
-  return 'system'
-}
-
 // --- Deep link route mapping ---
 
 function getDeepLink(notification: NotificationItem): string | null {
@@ -68,30 +66,16 @@ function getDeepLink(notification: NotificationItem): string | null {
   switch (type) {
     case 'LAB_RESULT_AVAILABLE':
     case 'LAB_RESULT_ESCALATION':
-      // Navigate to patient lab results if we have a diagnosticReportId
       return payload.diagnosticReportId ? `/patient/${payload.diagnosticReportId}#lab-results` : null
-    case 'PRESCRIPTION_READY':
-      return null // No patientId in current payload schema
     case 'SYNC_CONFLICT':
       return '/conflicts'
     case 'CONSENT_CHANGE':
     case 'ALLERGY_UPDATE':
-      return null // No patientId in current payload schema
+      return null
     default:
       return null
   }
 }
-
-// --- Type Icons ---
-
-function TypeIcon({ type, id }: { type: string; id: string }) {
-  const category = getIconCategory(type)
-  if (category === 'lab') return <Beaker data-testid={`icon-lab-${id}`} className="h-5 w-5 text-primary" />
-  if (category === 'rx') return <Check data-testid={`icon-rx-${id}`} className="h-5 w-5 text-success" />
-  return <Settings data-testid={`icon-system-${id}`} className="h-5 w-5 text-muted-foreground" />
-}
-
-// --- Main Component ---
 
 type StatusKey = 'all' | 'unread' | 'read'
 
@@ -113,8 +97,10 @@ export function NotificationCenter() {
   const [activeTab, setActiveTab] = useState<TabKey>('all')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusKey>('all')
+  const [openId, setOpenId] = useState<string | null>(null)
   const router = useRouter()
   const t = useTranslations('notificationCenter')
+  const tNotif = useTranslations('notifications')
 
   const {
     notifications,
@@ -134,12 +120,10 @@ export function NotificationCenter() {
   })
 
   const handleNotificationClick = useCallback(async (notification: NotificationItem) => {
-    // Acknowledge on click
     if (notification.status !== 'ACKNOWLEDGED') {
       await acknowledge(notification.id)
     }
 
-    // Audit PHI access for lab result navigation
     const deepLink = getDeepLink(notification)
     if (deepLink && notification.payload.diagnosticReportId) {
       try {
@@ -157,16 +141,11 @@ export function NotificationCenter() {
         // Audit failure logged internally
       }
     }
-
-    // Navigate to deep link if available
-    if (deepLink) {
-      router.push(deepLink)
-    }
-  }, [acknowledge, router])
+  }, [acknowledge])
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Toolbar: tab-bar + search + status filter + Mark All Read (matches Patients directory) */}
+      {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <div role="tablist" className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {TABS.map(tab => (
@@ -223,7 +202,7 @@ export function NotificationCenter() {
         <Alert variant="warning" role="alert">{t('offlineError')}</Alert>
       )}
 
-      {/* Content panel: loading / empty / list */}
+      {/* Content panel */}
       {!error && (
         <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
           {loading ? (
@@ -239,10 +218,14 @@ export function NotificationCenter() {
           ) : (
             <div className="divide-y divide-border">
               {filtered.map(n => (
-                <NotificationRow
+                <NotificationRowWrapper
                   key={n.id}
                   notification={n}
-                  onClick={handleNotificationClick}
+                  openId={openId}
+                  setOpenId={setOpenId}
+                  onNotificationClick={handleNotificationClick}
+                  onNavigate={(path) => router.push(path)}
+                  tNotif={tNotif}
                 />
               ))}
             </div>
@@ -253,66 +236,77 @@ export function NotificationCenter() {
   )
 }
 
-// --- Notification Row ---
+// --- Notification Row Wrapper (resolves descriptor → ui-kit NotificationRow + modal) ---
 
-function NotificationRow({
-  notification,
-  onClick,
+function NotificationRowWrapper({
+  notification: n,
+  openId,
+  setOpenId,
+  onNotificationClick,
+  onNavigate,
+  tNotif,
 }: {
   notification: NotificationItem
-  onClick: (n: NotificationItem) => void
+  openId: string | null
+  setOpenId: (id: string | null) => void
+  onNotificationClick: (n: NotificationItem) => Promise<void>
+  onNavigate: (path: string) => void
+  tNotif: ReturnType<typeof useTranslations<'notifications'>>
 }) {
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
-  const tNotif = useTranslations('notifications')
-  const isUnread = notification.status !== 'ACKNOWLEDGED'
-  const isEscalation = notification.type === 'LAB_RESULT_ESCALATION'
-  const deepLink = getDeepLink(notification)
+  const app = n.sourceApp ?? deriveSourceApp(n.type)
+  const appName = tNotif(sourceAppNameKey(app) as Parameters<typeof tNotif>[0])
+  const subject = tNotif(
+    (`subject.${n.subjectKey ?? n.type}`) as Parameters<typeof tNotif>[0],
+  )
+  const body = n.bodyKey
+    ? tNotif(
+        (`body.${n.bodyKey}`) as Parameters<typeof tNotif>[0],
+        n.bodyParams ?? {},
+      )
+    : undefined
+  const notes = n.notesKey
+    ? tNotif((`notes.${n.notesKey}`) as Parameters<typeof tNotif>[0])
+    : undefined
+  const Icon = sourceAppIcon(app)
+  const timeAgo = formatTimestamp(n.createdAt, locale)
+  const deepLink = getDeepLink(n)
+  const isOpen = openId === n.id
 
   return (
-    <div
-      data-testid={`notification-${notification.id}`}
-      role="button"
-      tabIndex={0}
-      onClick={() => onClick(notification)}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onClick(notification) }}
-      className={`flex items-start gap-3 px-4 py-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
-        deepLink ? 'cursor-pointer hover:bg-muted' : ''
-      } ${isUnread ? 'bg-primary/10' : ''} ${isEscalation ? 'ring-1 ring-inset ring-destructive/40' : ''}`}
-    >
-      {/* Type icon */}
-      <div className="mt-0.5 shrink-0">
-        <TypeIcon type={notification.type} id={notification.id} />
-      </div>
-
-      {/* Content */}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className={`text-sm font-medium ${isEscalation ? 'text-destructive' : 'text-foreground'}`}>
-            {tNotif(notificationLabelKey(notification.type))}
-          </p>
-          {isUnread && (
-            <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />
-          )}
-        </div>
-
-        {/* Source info */}
-        {notification.payload.testCategory && (
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {notification.payload.testCategory}
-            {notification.payload.labName && ` · ${notification.payload.labName}`}
-          </p>
-        )}
-        {notification.payload.message && !notification.payload.testCategory && (
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {notification.payload.message}
-          </p>
-        )}
-
-        {/* Timestamp */}
-        <p className="mt-1 text-xs text-muted-foreground">
-          {formatTimestamp(notification.createdAt, locale)}
-        </p>
-      </div>
+    <div data-testid={`notification-${n.id}`}>
+      <NotificationRow
+        icon={Icon}
+        appName={appName}
+        subject={subject}
+        body={body}
+        notes={notes}
+        timeAgo={timeAgo}
+        unread={n.status !== 'ACKNOWLEDGED'}
+        urgent={n.type === 'LAB_RESULT_ESCALATION'}
+        unreadLabel={tNotif('unread' as Parameters<typeof tNotif>[0])}
+        onClick={() => {
+          setOpenId(n.id)
+          void onNotificationClick(n)
+        }}
+      />
+      <NotificationDetailModal
+        open={isOpen}
+        onOpenChange={(o) => { if (!o) setOpenId(null) }}
+        icon={Icon}
+        appName={appName}
+        subject={subject}
+        body={body}
+        notes={notes}
+        exactTimestamp={n.createdAt}
+        action={deepLink
+          ? {
+              label: tNotif('viewDetails' as Parameters<typeof tNotif>[0]),
+              onClick: () => onNavigate(deepLink),
+            }
+          : undefined
+        }
+      />
     </div>
   )
 }

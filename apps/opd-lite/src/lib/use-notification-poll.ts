@@ -11,6 +11,7 @@ const POLL_INTERVAL_MS = 30_000 // 30s polling for <60s SLA
 
 export interface UseNotificationPollResult {
   notifications: NotificationItem[]
+  newNotifications: NotificationItem[]
   unreadCount: number
   loading: boolean
   error: string | null
@@ -24,14 +25,21 @@ export interface UseNotificationPollResult {
  * Shared polling hook for notification system.
  * Used by both NotificationBell (dropdown) and NotificationCenter (full page).
  * Polls notification.list every intervalMs (default 30s).
+ *
+ * newNotifications: items present in this poll cycle that were absent from the
+ * seenIds set. seenIds is SEEDED on the first successful load so the initial
+ * backlog does NOT produce toasts — only genuinely new arrivals do.
  */
 export function useNotificationPoll(intervalMs = POLL_INTERVAL_MS): UseNotificationPollResult {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [newNotifications, setNewNotifications] = useState<NotificationItem[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const activeRef = useRef(true)
   const notificationsRef = useRef<NotificationItem[]>([])
+  /** Tracks IDs seen since first load. Seeded on first successful fetch. */
+  const seenIdsRef = useRef<Set<string> | null>(null)
 
   const computeUnread = useCallback((items: NotificationItem[]) => {
     return items.filter(n => n.status !== 'ACKNOWLEDGED').length
@@ -41,6 +49,18 @@ export function useNotificationPoll(intervalMs = POLL_INTERVAL_MS): UseNotificat
     try {
       const { notifications: items } = await fetchNotifications()
       if (activeRef.current) {
+        if (seenIdsRef.current === null) {
+          // First successful load — seed seenIds with all current IDs so the
+          // initial backlog does NOT generate toasts.
+          seenIdsRef.current = new Set(items.map(n => n.id))
+          setNewNotifications([])
+        } else {
+          // Subsequent polls — surface only IDs that weren't seen before.
+          const novel = items.filter(n => !seenIdsRef.current!.has(n.id))
+          novel.forEach(n => seenIdsRef.current!.add(n.id))
+          setNewNotifications(novel)
+        }
+
         setNotifications(items)
         notificationsRef.current = items
         setUnreadCount(computeUnread(items))
@@ -112,6 +132,7 @@ export function useNotificationPoll(intervalMs = POLL_INTERVAL_MS): UseNotificat
 
   return {
     notifications,
+    newNotifications,
     unreadCount,
     loading,
     error,

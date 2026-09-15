@@ -4,6 +4,7 @@ import { SyncDashboard } from '@/components/SyncDashboard'
 import { InstallPrompt } from '@/components/InstallPrompt'
 import { SwUpdateNotification } from '@/components/SwUpdateNotification'
 import { SyncAwareStaleDataBanner } from '@/components/SyncAwareStaleDataBanner'
+import { NotificationToaster } from '@/components/NotificationToaster'
 import {
   SidebarInset,
   SidebarProvider,
@@ -30,6 +31,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarInset>
       </SidebarProvider>
       <SyncDashboard />
+      {/* Global toast container + new-notification toasting (client component) */}
+      <NotificationToaster />
     </TooltipProvider>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatDate } from '@ultranos/ui-kit'
 import { Bell, X } from '@ultranos/ui-kit/icons'
@@ -12,7 +13,9 @@ import {
   type NotificationItem,
 } from '@/lib/notification-api'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { notificationLabelKey } from '@/lib/notification-label'
+import { NotificationRow } from '@ultranos/ui-kit/components/ui/notification-row'
+import { NotificationDetailModal } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
+import { sourceAppIcon, sourceAppNameKey, deriveSourceApp } from '@ultranos/ui-kit/notification-presentation'
 
 const POLL_INTERVAL_MS = 30_000 // 30s polling for <60s SLA (AC: 3)
 
@@ -31,8 +34,6 @@ function formatTimestamp(
   if (diffHrs < 24) return tTime('hoursAgo', { hours: diffHrs })
   return formatDate(d, locale)
 }
-
-// notificationLabel is now provided via the shared notificationLabelKey helper + useTranslations('notifications')
 
 /**
  * Notification bell icon with unread count badge.
@@ -97,8 +98,7 @@ export function NotificationBell() {
 
 /**
  * Notification dropdown panel.
- * Displays notifications with "View Report" action.
- * Marks as acknowledged on view (AC: 3).
+ * Rows use the shared ui-kit NotificationRow with descriptor-field resolver.
  */
 function NotificationDropdown({
   onClose,
@@ -110,6 +110,8 @@ function NotificationDropdown({
   const tNotif = useTranslations('notifications')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [openId, setOpenId] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     let active = true
@@ -129,7 +131,7 @@ function NotificationDropdown({
     }
     load()
     return () => { active = false }
-  }, [])
+  }, [onCountChange])
 
   const handleAcknowledge = useCallback(async (id: string) => {
     try {
@@ -172,10 +174,14 @@ function NotificationDropdown({
         )}
 
         {!loading && notifications.map(n => (
-          <NotificationRow
+          <PanelNotificationRow
             key={n.id}
             notification={n}
+            openId={openId}
+            setOpenId={setOpenId}
             onAcknowledge={handleAcknowledge}
+            onNavigate={(path) => { router.push(path); onClose() }}
+            tNotif={tNotif}
           />
         ))}
       </div>
@@ -183,50 +189,82 @@ function NotificationDropdown({
   )
 }
 
-function NotificationRow({
-  notification,
+function PanelNotificationRow({
+  notification: n,
+  openId,
+  setOpenId,
   onAcknowledge,
+  onNavigate,
+  tNotif,
 }: {
   notification: NotificationItem
+  openId: string | null
+  setOpenId: (id: string | null) => void
   onAcknowledge: (id: string) => void
+  onNavigate: (path: string) => void
+  tNotif: ReturnType<typeof useTranslations<'notifications'>>
 }) {
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
-  const tNotif = useTranslations('notifications')
   const tTime = useTranslations('time')
-  const isUnread = notification.status !== 'ACKNOWLEDGED'
-  const isEscalation = notification.type === 'LAB_RESULT_ESCALATION'
+  const app = n.sourceApp ?? deriveSourceApp(n.type)
+  const appName = tNotif(sourceAppNameKey(app) as Parameters<typeof tNotif>[0])
+  const subject = tNotif(
+    (`subject.${n.subjectKey ?? n.type}`) as Parameters<typeof tNotif>[0],
+  )
+  const body = n.bodyKey
+    ? tNotif(
+        (`body.${n.bodyKey}`) as Parameters<typeof tNotif>[0],
+        n.bodyParams ?? {},
+      )
+    : undefined
+  const notes = n.notesKey
+    ? tNotif((`notes.${n.notesKey}`) as Parameters<typeof tNotif>[0])
+    : undefined
+  const Icon = sourceAppIcon(app)
+  const timeAgo = formatTimestamp(n.createdAt, locale, tTime)
+  const isOpen = openId === n.id
+
+  // Deep link for panel: only a few types have deep routes
+  const deepLink = n.payload?.diagnosticReportId
+    ? `/patient/${n.payload.diagnosticReportId}#lab-results`
+    : n.type === 'SYNC_CONFLICT'
+    ? '/conflicts'
+    : null
 
   return (
-    <div
-      className={`border-b border-border px-4 py-3 ${isUnread ? 'bg-primary/10' : ''} ${isEscalation ? 'ring-1 ring-inset ring-destructive/40' : ''}`}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <p className={`text-sm font-medium ${isEscalation ? 'text-destructive' : 'text-foreground'}`}>
-            {tNotif(notificationLabelKey(notification.type))}
-          </p>
-          {notification.payload.testCategory && (
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {notification.payload.testCategory}
-              {notification.payload.labName && ` · ${notification.payload.labName}`}
-            </p>
-          )}
-          <p className="mt-1 text-xs text-muted-foreground">
-            {formatTimestamp(notification.createdAt, locale, tTime)}
-          </p>
-        </div>
-
-        {isUnread && notification.payload.diagnosticReportId && (
-          <Button
-            variant="primary"
-            className="shrink-0"
-            type="button"
-            onClick={() => onAcknowledge(notification.id)}
-          >
-            {tNotif('viewReport')}
-          </Button>
-        )}
-      </div>
-    </div>
+    <>
+      <NotificationRow
+        icon={Icon}
+        appName={appName}
+        subject={subject}
+        body={body}
+        notes={notes}
+        timeAgo={timeAgo}
+        unread={n.status !== 'ACKNOWLEDGED'}
+        urgent={n.type === 'LAB_RESULT_ESCALATION'}
+        unreadLabel={tNotif('unread' as Parameters<typeof tNotif>[0])}
+        onClick={() => {
+          setOpenId(n.id)
+          onAcknowledge(n.id)
+        }}
+      />
+      <NotificationDetailModal
+        open={isOpen}
+        onOpenChange={(o) => { if (!o) setOpenId(null) }}
+        icon={Icon}
+        appName={appName}
+        subject={subject}
+        body={body}
+        notes={notes}
+        exactTimestamp={n.createdAt}
+        action={deepLink
+          ? {
+              label: tNotif('viewDetails' as Parameters<typeof tNotif>[0]),
+              onClick: () => onNavigate(deepLink),
+            }
+          : undefined
+        }
+      />
+    </>
   )
 }

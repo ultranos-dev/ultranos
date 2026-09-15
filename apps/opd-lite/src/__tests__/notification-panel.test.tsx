@@ -8,6 +8,11 @@ vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }))
 
+// Mock next/navigation
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}))
+
 // Mock the notification API
 vi.mock('../lib/notification-api', () => ({
   fetchUnreadCount: vi.fn().mockResolvedValue({ count: 3 }),
@@ -16,6 +21,11 @@ vi.mock('../lib/notification-api', () => ({
       {
         id: 'n1',
         type: 'LAB_RESULT_AVAILABLE',
+        sourceApp: 'LAB_LITE',
+        subjectKey: 'LAB_RESULT_AVAILABLE',
+        bodyKey: 'labResultBody',
+        bodyParams: { testCategory: 'CBC', labName: 'Lab Alpha' },
+        notesKey: 'labResultNotes',
         payload: {
           testCategory: 'CBC',
           labName: 'Lab Alpha',
@@ -30,6 +40,10 @@ vi.mock('../lib/notification-api', () => ({
       {
         id: 'n2',
         type: 'LAB_RESULT_ESCALATION',
+        sourceApp: 'LAB_LITE',
+        subjectKey: 'LAB_RESULT_ESCALATION',
+        bodyKey: 'labResultBody',
+        bodyParams: { testCategory: 'Blood Glucose', labName: 'Lab Beta' },
         payload: {
           testCategory: 'Blood Glucose',
           labName: 'Lab Beta',
@@ -75,45 +89,54 @@ describe('NotificationBell', () => {
     })
   })
 
-  it('displays lab result notifications with correct labels', async () => {
+  it('displays source app name in notification rows', async () => {
     render(<NotificationBell />)
 
     const bell = await screen.findByLabelText('bellUnreadAria')
     fireEvent.click(bell)
 
     await waitFor(() => {
-      // Labels are now resolved via useTranslations('notifications'); the mock returns the i18n key
-      expect(screen.getByText('typeLab')).toBeInTheDocument()
-      expect(screen.getByText('typeLabUrgent')).toBeInTheDocument()
+      // Rows now show sourceApp key — both n1 and n2 have sourceApp: 'LAB_LITE'
+      // tNotif('sourceApp.LAB_LITE') returns 'sourceApp.LAB_LITE' via mock
+      expect(screen.getAllByText('sourceApp.LAB_LITE').length).toBeGreaterThanOrEqual(1)
     })
   })
 
-  it('shows test category and lab name in notification', async () => {
+  it('shows subject keys in notification rows', async () => {
     render(<NotificationBell />)
 
     const bell = await screen.findByLabelText('bellUnreadAria')
     fireEvent.click(bell)
 
     await waitFor(() => {
-      expect(screen.getByText(/CBC/)).toBeInTheDocument()
-      expect(screen.getByText(/Lab Alpha/)).toBeInTheDocument()
+      // subject.LAB_RESULT_AVAILABLE and subject.LAB_RESULT_ESCALATION keys
+      expect(screen.getByText('subject.LAB_RESULT_AVAILABLE')).toBeInTheDocument()
+      expect(screen.getByText('subject.LAB_RESULT_ESCALATION')).toBeInTheDocument()
     })
   })
 
-  it('renders View Report button for unread notifications with diagnosticReportId', async () => {
+  it('opens modal when a notification row is clicked', async () => {
     render(<NotificationBell />)
 
     const bell = await screen.findByLabelText('bellUnreadAria')
     fireEvent.click(bell)
 
     await waitFor(() => {
-      // t('viewReport') returns key 'viewReport' via mock
-      const viewButtons = screen.getAllByText('viewReport')
-      expect(viewButtons.length).toBeGreaterThan(0)
+      expect(screen.getAllByText('sourceApp.LAB_LITE').length).toBeGreaterThanOrEqual(1)
+    })
+
+    // Click the first notification row
+    const rows = screen.getAllByRole('button').filter(b => !b.getAttribute('aria-label'))
+    const firstRow = rows[0]
+    if (!firstRow) throw new Error('No notification row button found')
+    fireEvent.click(firstRow)
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
     })
   })
 
-  it('calls acknowledgeNotification on View Report click', async () => {
+  it('calls acknowledgeNotification when a notification row is clicked', async () => {
     const { acknowledgeNotification } = await import('../lib/notification-api')
 
     render(<NotificationBell />)
@@ -122,12 +145,14 @@ describe('NotificationBell', () => {
     fireEvent.click(bell)
 
     await waitFor(() => {
-      // t('viewReport') returns key 'viewReport' via mock
-      expect(screen.getAllByText('viewReport').length).toBeGreaterThan(0)
+      expect(screen.getAllByText('sourceApp.LAB_LITE').length).toBeGreaterThanOrEqual(1)
     })
 
-    const viewBtn = screen.getAllByText('viewReport')[0]
-    fireEvent.click(viewBtn)
+    // Click the first notification row button
+    const rows = screen.getAllByRole('button').filter(b => !b.getAttribute('aria-label'))
+    const firstRow = rows[0]
+    if (!firstRow) throw new Error('No notification row button found')
+    fireEvent.click(firstRow)
 
     await waitFor(() => {
       expect(acknowledgeNotification).toHaveBeenCalledWith('n1')
