@@ -11,7 +11,7 @@ import { sourceAppIcon, sourceAppNameKey, deriveSourceApp } from '@ultranos/ui-k
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { X } from '@ultranos/ui-kit/icons'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
-import { deleteNotification } from '@/lib/trpc'
+import { deleteNotification, markUnreadNotification } from '@/lib/trpc'
 import type { NotificationItem } from '@/lib/trpc'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 
@@ -53,9 +53,17 @@ export function NotificationPanel({
 
   // Local deleted-IDs set so rows vanish immediately without waiting for next poll.
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
+  // Local status overrides: maps notificationId → partial override (for mark-unread flip).
+  const [statusOverrides, setStatusOverrides] = useState<Map<string, Partial<NotificationItem>>>(new Map())
+
   const notifications = useMemo(
-    () => polledNotifications.filter(n => !deletedIds.has(n.id)),
-    [polledNotifications, deletedIds],
+    () => polledNotifications
+      .filter(n => !deletedIds.has(n.id))
+      .map(n => {
+        const override = statusOverrides.get(n.id)
+        return override ? { ...n, ...override } : n
+      }),
+    [polledNotifications, deletedIds, statusOverrides],
   )
 
   // Recompute unread from the filtered list and keep parent badge in sync.
@@ -78,12 +86,39 @@ export function NotificationPanel({
   }, [])
 
   const handleAcknowledge = useCallback(async (id: string) => {
+    // Clear any unread override so the acknowledged state from the poll takes precedence.
+    setStatusOverrides(prev => {
+      const next = new Map(prev)
+      next.delete(id)
+      return next
+    })
     await acknowledge(id)
   }, [acknowledge])
+
+  const handleMarkUnread = useCallback(async (id: string) => {
+    // Optimistic: flip the item back to unread immediately.
+    setStatusOverrides(prev => {
+      const next = new Map(prev)
+      next.set(id, { status: 'SENT', acknowledgedAt: null })
+      return next
+    })
+    try {
+      const token = await getToken()
+      if (!token) return
+      await markUnreadNotification(id, token)
+    } catch {
+      // Best-effort mark-unread — optimistic update stays
+    }
+  }, [getToken])
 
   const handleDelete = useCallback(async (id: string) => {
     // Optimistic removal — row disappears immediately.
     setDeletedIds(prev => new Set([...prev, id]))
+    setStatusOverrides(prev => {
+      const next = new Map(prev)
+      next.delete(id)
+      return next
+    })
     try {
       const token = await getToken()
       if (!token) return
@@ -172,6 +207,7 @@ export function NotificationPanel({
                   openId={openId}
                   setOpenId={setOpenId}
                   onAcknowledge={handleAcknowledge}
+                  onMarkUnread={handleMarkUnread}
                   onDelete={handleDelete}
                   onNavigate={(path) => { router.push(path); onClose() }}
                   tNotif={tNotif}
@@ -190,6 +226,7 @@ function PanelNotificationRow({
   openId,
   setOpenId,
   onAcknowledge,
+  onMarkUnread,
   onDelete,
   onNavigate,
   tNotif,
@@ -198,6 +235,7 @@ function PanelNotificationRow({
   openId: string | null
   setOpenId: (id: string | null) => void
   onAcknowledge: (id: string) => void
+  onMarkUnread: (id: string) => void
   onDelete: (id: string) => void
   onNavigate: (path: string) => void
   tNotif: ReturnType<typeof useTranslations<'notifications'>>
@@ -279,9 +317,12 @@ function PanelNotificationRow({
           setOpenId(n.id)
           onAcknowledge(n.id)
         }}
-        onMarkRead={n.status !== 'ACKNOWLEDGED' ? () => onAcknowledge(n.id) : undefined}
+        onToggleRead={() => {
+          n.status !== 'ACKNOWLEDGED' ? onAcknowledge(n.id) : onMarkUnread(n.id)
+        }}
         onDelete={() => onDelete(n.id)}
         markReadLabel={tNotif('markRead' as Parameters<typeof tNotif>[0])}
+        markUnreadLabel={tNotif('markUnread' as Parameters<typeof tNotif>[0])}
         deleteLabel={tNotif('delete' as Parameters<typeof tNotif>[0])}
       />
       <NotificationDetailModal

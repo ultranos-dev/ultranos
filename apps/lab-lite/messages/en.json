@@ -273,6 +273,7 @@
     "unknownTest": "Unknown test",
     "markAllRead": "Mark All Read",
     "markRead": "Mark as read",
+    "markUnread": "Mark as unread",
     "delete": "Delete notification",
     "closeAria": "Close notifications",
     "error": "Unable to load notifications",

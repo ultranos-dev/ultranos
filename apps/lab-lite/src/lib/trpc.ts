@@ -367,6 +367,21 @@ export async function listLabReports(
 }
 
 /**
+ * Mark a single notification as unread (reverses acknowledge).
+ * Hub `notification.markUnread`.
+ */
+export async function markUnreadNotification(id: string, token: string): Promise<void> {
+  await fetch(`${getHubApiUrl()}/notification.markUnread`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ json: { notificationId: id } }),
+  })
+}
+
+/**
  * Delete a single notification (Hub `notification.delete`).
  */
 export async function deleteNotification(id: string, token: string): Promise<void> {

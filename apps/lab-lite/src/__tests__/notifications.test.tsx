@@ -32,6 +32,7 @@ vi.mock('next-intl', () => ({
       'notifications.anomalyFlagMessage': `Anomaly flag — ${params?.ruleId ?? '{ruleId}'}`,
       'notifications.unread': 'Unread',
       'notifications.markRead': 'Mark as read',
+      'notifications.markUnread': 'Mark as unread',
       'notifications.delete': 'Delete notification',
       'notifications.viewDetails': 'View Details',
       'notifications.sourceApp.LAB_LITE': 'Lab Lite',
@@ -90,18 +91,22 @@ vi.mock('@ultranos/ui-kit/components/ui/notification-row', () => ({
   NotificationRow: ({
     appName,
     subject,
+    unread,
     onClick,
-    onMarkRead,
+    onToggleRead,
     onDelete,
     markReadLabel,
+    markUnreadLabel,
     deleteLabel,
   }: {
     appName: string
     subject: string
+    unread?: boolean
     onClick: () => void
-    onMarkRead?: () => void
+    onToggleRead?: () => void
     onDelete?: () => void
     markReadLabel?: string
+    markUnreadLabel?: string
     deleteLabel?: string
   }) => (
     <div data-testid="notif-row">
@@ -109,9 +114,14 @@ vi.mock('@ultranos/ui-kit/components/ui/notification-row', () => ({
         <span>{appName}</span>
         <span>{subject}</span>
       </button>
-      {onMarkRead && (
-        <button type="button" data-testid="notif-mark-read" aria-label={markReadLabel} onClick={onMarkRead}>
-          {markReadLabel}
+      {onToggleRead && (
+        <button
+          type="button"
+          data-testid="notif-toggle-read"
+          aria-label={unread ? markReadLabel : markUnreadLabel}
+          onClick={onToggleRead}
+        >
+          {unread ? markReadLabel : markUnreadLabel}
         </button>
       )}
       {onDelete && (
@@ -175,6 +185,7 @@ const mockGetUnreadCount = vi.fn()
 const mockListNotifications = vi.fn()
 const mockAcknowledgeNotification = vi.fn()
 const mockDeleteNotification = vi.fn()
+const mockMarkUnreadNotification = vi.fn()
 
 vi.mock('@/lib/trpc', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/trpc')>()
@@ -184,6 +195,7 @@ vi.mock('@/lib/trpc', async (importOriginal) => {
     listNotifications: (...args: unknown[]) => mockListNotifications(...args),
     acknowledgeNotification: (...args: unknown[]) => mockAcknowledgeNotification(...args),
     deleteNotification: (...args: unknown[]) => mockDeleteNotification(...args),
+    markUnreadNotification: (...args: unknown[]) => mockMarkUnreadNotification(...args),
   }
 })
 
@@ -220,6 +232,7 @@ beforeEach(() => {
   mockListNotifications.mockResolvedValue([])
   mockAcknowledgeNotification.mockResolvedValue(true)
   mockDeleteNotification.mockResolvedValue(undefined)
+  mockMarkUnreadNotification.mockResolvedValue(undefined)
 })
 
 afterEach(() => {
@@ -400,7 +413,7 @@ describe('NotificationPanel', () => {
     })
   })
 
-  it('mark-read button calls acknowledgeNotification (T5)', async () => {
+  it('toggle-read button calls acknowledgeNotification when unread (C5)', async () => {
     const notif = makeNotification({ id: 'ack-1', status: 'SENT', sourceApp: 'LAB_LITE', subjectKey: 'LAB_RESULT_AVAILABLE' })
     mockListNotifications.mockResolvedValue([notif])
 
@@ -410,19 +423,46 @@ describe('NotificationPanel', () => {
       expect(screen.getAllByTestId('notif-row')).toHaveLength(1)
     })
 
-    // Mark-read button is visible for unread notifications
-    expect(screen.getByTestId('notif-mark-read')).toBeInTheDocument()
-    expect(screen.getByTestId('notif-mark-read')).toHaveAccessibleName('Mark as read')
+    // Toggle button is always visible; shows markReadLabel when unread
+    expect(screen.getByTestId('notif-toggle-read')).toBeInTheDocument()
+    expect(screen.getByTestId('notif-toggle-read')).toHaveAccessibleName('Mark as read')
 
-    fireEvent.click(screen.getByTestId('notif-mark-read'))
+    fireEvent.click(screen.getByTestId('notif-toggle-read'))
 
     await waitFor(() => {
       expect(mockAcknowledgeNotification).toHaveBeenCalledWith('ack-1', expect.any(String))
     })
   })
 
-  it('mark-read button is absent for already-acknowledged notifications (T5)', async () => {
-    const notif = makeNotification({ id: 'read-1', status: 'ACKNOWLEDGED' })
+  it('toggle-read button calls markUnreadNotification and flips row to unread (C5)', async () => {
+    const notif = makeNotification({ id: 'unread-flip-1', status: 'ACKNOWLEDGED', sourceApp: 'LAB_LITE', subjectKey: 'LAB_RESULT_AVAILABLE' })
+    mockListNotifications.mockResolvedValue([notif])
+    mockMarkUnreadNotification.mockResolvedValue(undefined)
+
+    render(<NotificationPanel onClose={vi.fn()} onCountChange={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('notif-row')).toHaveLength(1)
+    })
+
+    // Toggle button shows markUnreadLabel when acknowledged
+    expect(screen.getByTestId('notif-toggle-read')).toBeInTheDocument()
+    expect(screen.getByTestId('notif-toggle-read')).toHaveAccessibleName('Mark as unread')
+
+    fireEvent.click(screen.getByTestId('notif-toggle-read'))
+
+    // After optimistic flip the button should now show markReadLabel (row is unread)
+    await waitFor(() => {
+      expect(screen.getByTestId('notif-toggle-read')).toHaveAccessibleName('Mark as read')
+    })
+
+    await waitFor(() => {
+      expect(mockMarkUnreadNotification).toHaveBeenCalledWith('unread-flip-1', expect.any(String))
+    })
+  })
+
+  it('toggle-read button is always present (no conditional hide) (C5)', async () => {
+    const notif = makeNotification({ id: 'always-visible-1', status: 'ACKNOWLEDGED' })
     mockListNotifications.mockResolvedValue([notif])
 
     render(<NotificationPanel onClose={vi.fn()} onCountChange={vi.fn()} />)
@@ -431,8 +471,9 @@ describe('NotificationPanel', () => {
       expect(screen.getAllByTestId('notif-row')).toHaveLength(1)
     })
 
-    expect(screen.queryByTestId('notif-mark-read')).not.toBeInTheDocument()
-    // Delete button still present for acknowledged notifications
+    // Toggle button still present for acknowledged notifications
+    expect(screen.getByTestId('notif-toggle-read')).toBeInTheDocument()
+    // Delete button still present too
     expect(screen.getByTestId('notif-delete')).toBeInTheDocument()
   })
 })
