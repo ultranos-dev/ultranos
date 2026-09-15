@@ -491,3 +491,31 @@ Total keys to review: **79** (each across ar / prs / ps).
 - **ar:** "البحث حسب اسم المنفِّذ..."
 - **prs:** "جستجو بر اساس نام کاربر..."
 - **ps:** "د فاعل د نوم لټون..."
+
+---
+
+## Additions — 2026-09-15 (Task 5: Admin notification surface)
+
+All ar/prs/ps values in the `notifications.*` and `time.*` namespaces added to this file were carried from **pharmacy-lite** (where identical keys exist and are already flagged for review) or machine-generated. Require native-speaker review before production.
+
+### `time.*` (4 keys × 3 locales = 12 values)
+- ar: carried from pharmacy-lite ar.json (already under review there)
+- prs: carried from pharmacy-lite prs.json (already under review there)
+- ps: carried from pharmacy-lite ps.json (already under review there)
+
+### `notifications.sourceApp.*` (5 keys × 3 locales = 15 values)
+- Same keys exist in pharmacy-lite; carried verbatim.
+
+### `notifications.subject.*` (10 keys × 3 locales = 30 values)
+- Keys `KYC_APPROVED`, `KYC_REJECTED`, `KYC_MORE_INFO_REQUESTED`, `LAB_APPROVED`, `LAB_SUSPENDED`, `LAB_REACTIVATED`, `PROVIDER_SUSPENDED`, `OUTBREAK_MODE_ACTIVATED`, `OUTBREAK_MODE_DEACTIVATED`, `default` — all carried from pharmacy-lite where present. Require linguistic review.
+
+### `notifications.body.*` (5 keys × 3 locales = 15 values)
+- `kycStatusBody`, `labStatusBody`, `providerSuspendedBody`, `outbreakBody`, `defaultBody` — carried from pharmacy-lite where present. Require linguistic review.
+
+### `notifications.notes.*` (3 keys × 3 locales = 9 values)
+- `providerSuspendedNotes`, `kycMoreInfoNotes`, `kycRejectedNotes` — carried from pharmacy-lite. Require linguistic review.
+
+### `notifications.field.*` (4 keys × 3 locales = 12 values)
+- `referenceId`, `status`, `received`, `pathogen` — `status` and `received` carried from pharmacy-lite. `referenceId` and `pathogen` machine-generated. Flag for review.
+
+Total new items flagged: **93** values (ar + prs + ps combined)

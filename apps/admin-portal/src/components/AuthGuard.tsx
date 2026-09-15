@@ -9,6 +9,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppSidebar } from '@/components/sidebar/app-sidebar'
 import { BreadcrumbHeader } from '@/components/BreadcrumbHeader'
+import { NotificationToaster } from '@/components/NotificationToaster'
 import { Button } from '@/components/ui/button'
 
 type GuardState = 'loading' | 'authenticated' | 'unauthenticated' | 'access-denied' | 'public'
@@ -216,6 +217,8 @@ function AuthenticatedShell({ children }: { children: ReactNode }) {
           </main>
         </SidebarInset>
       </SidebarProvider>
+      {/* NotificationToaster mounts once per authenticated session — outside sidebar */}
+      <NotificationToaster />
     </TooltipProvider>
   )
 }

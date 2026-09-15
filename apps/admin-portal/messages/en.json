@@ -1,4 +1,58 @@
 {
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{minutes}m ago",
+    "hoursAgo": "{hours}h ago",
+    "daysAgo": "{days}d ago"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "closeAria": "Close notifications",
+    "loading": "Loading",
+    "empty": "No notifications",
+    "error": "Unable to load notifications",
+    "bellAria": "Notifications",
+    "bellUnreadAria": "Notifications ({count} unread)",
+    "viewDetails": "View Details",
+    "unread": "Unread",
+    "sourceApp": {
+      "LAB_LITE": "Lab Lite",
+      "PHARMACY_LITE": "Pharmacy Lite",
+      "OPD_LITE": "OPD Lite",
+      "ADMIN": "Admin",
+      "SYSTEM": "System"
+    },
+    "subject": {
+      "KYC_APPROVED": "KYC approved",
+      "KYC_REJECTED": "KYC rejected",
+      "KYC_MORE_INFO_REQUESTED": "KYC: more information needed",
+      "LAB_APPROVED": "Lab approved",
+      "LAB_SUSPENDED": "Lab suspended",
+      "LAB_REACTIVATED": "Lab reactivated",
+      "PROVIDER_SUSPENDED": "Provider suspended",
+      "OUTBREAK_MODE_ACTIVATED": "Outbreak mode activated",
+      "OUTBREAK_MODE_DEACTIVATED": "Outbreak mode deactivated",
+      "default": "New notification"
+    },
+    "body": {
+      "kycStatusBody": "KYC verification status has been updated",
+      "labStatusBody": "Lab account status has changed",
+      "providerSuspendedBody": "A provider account has been suspended",
+      "outbreakBody": "Outbreak mode status has changed",
+      "defaultBody": "You have a new notification"
+    },
+    "notes": {
+      "providerSuspendedNotes": "The provider cannot access clinical data until the suspension is lifted.",
+      "kycMoreInfoNotes": "Please submit the additional documents requested for KYC verification.",
+      "kycRejectedNotes": "Please contact administration for details about the KYC rejection."
+    },
+    "field": {
+      "referenceId": "Reference ID",
+      "status": "Status",
+      "received": "Received",
+      "pathogen": "Pathogen"
+    }
+  },
   "language": {
     "label": "Language",
     "en": "English",

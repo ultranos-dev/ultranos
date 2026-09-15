@@ -1,4 +1,58 @@
 {
+  "time": {
+    "justNow": "همین الان",
+    "minutesAgo": "{minutes} دقیقه پیش",
+    "hoursAgo": "{hours} ساعت پیش",
+    "daysAgo": "{days} روز پیش"
+  },
+  "notifications": {
+    "title": "اعلان‌ها",
+    "closeAria": "بستن اعلان‌ها",
+    "loading": "در حال بارگیری",
+    "empty": "هیچ اعلانی نیست",
+    "error": "بارگیری اعلان‌ها ناکام شد",
+    "bellAria": "اعلان‌ها",
+    "bellUnreadAria": "اعلان‌ها ({count} ناخوانده)",
+    "viewDetails": "مشاهده جزئیات",
+    "unread": "ناخوانده",
+    "sourceApp": {
+      "LAB_LITE": "آزمایشگاه",
+      "PHARMACY_LITE": "داروخانه",
+      "OPD_LITE": "کلینیک سرپایی",
+      "ADMIN": "ادمین",
+      "SYSTEM": "سیستم"
+    },
+    "subject": {
+      "KYC_APPROVED": "KYC تأیید شد",
+      "KYC_REJECTED": "KYC رد شد",
+      "KYC_MORE_INFO_REQUESTED": "KYC: اطلاعات بیشتر لازم است",
+      "LAB_APPROVED": "آزمایشگاه تأیید شد",
+      "LAB_SUSPENDED": "آزمایشگاه معلق شد",
+      "LAB_REACTIVATED": "آزمایشگاه مجدداً فعال شد",
+      "PROVIDER_SUSPENDED": "ارائه‌دهنده معلق شد",
+      "OUTBREAK_MODE_ACTIVATED": "حالت اپیدمی فعال شد",
+      "OUTBREAK_MODE_DEACTIVATED": "حالت اپیدمی غیرفعال شد",
+      "default": "اعلان جدید"
+    },
+    "body": {
+      "kycStatusBody": "وضعیت تأیید KYC به‌روز شد",
+      "labStatusBody": "وضعیت حساب آزمایشگاه تغییر کرد",
+      "providerSuspendedBody": "حساب ارائه‌دهنده معلق شد",
+      "outbreakBody": "وضعیت حالت اپیدمی تغییر کرد",
+      "defaultBody": "یک اعلان جدید دارید"
+    },
+    "notes": {
+      "providerSuspendedNotes": "ارائه‌دهنده تا رفع تعلیق به داده‌های بالینی دسترسی ندارد.",
+      "kycMoreInfoNotes": "لطفاً مدارک اضافی درخواست‌شده برای تأیید KYC را ارسال کنید.",
+      "kycRejectedNotes": "لطفاً برای اطلاع از جزئیات رد درخواست KYC با مدیریت تماس بگیرید."
+    },
+    "field": {
+      "referenceId": "شناسه مرجع",
+      "status": "وضعیت",
+      "received": "تاریخ دریافت",
+      "pathogen": "عامل بیماری‌زا"
+    }
+  },
   "language": {
     "label": "زبان",
     "en": "English",

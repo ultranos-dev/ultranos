@@ -1,4 +1,58 @@
 {
+  "time": {
+    "justNow": "الآن",
+    "minutesAgo": "قبل {minutes} دقيقة",
+    "hoursAgo": "قبل {hours} ساعة",
+    "daysAgo": "قبل {days} يوم"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "closeAria": "إغلاق الإشعارات",
+    "loading": "جاري التحميل",
+    "empty": "لا توجد إشعارات",
+    "error": "تعذّر تحميل الإشعارات",
+    "bellAria": "الإشعارات",
+    "bellUnreadAria": "الإشعارات ({count} غير مقروءة)",
+    "viewDetails": "عرض التفاصيل",
+    "unread": "غير مقروء",
+    "sourceApp": {
+      "LAB_LITE": "المختبر",
+      "PHARMACY_LITE": "الصيدلية",
+      "OPD_LITE": "العيادة الخارجية",
+      "ADMIN": "الإدارة",
+      "SYSTEM": "النظام"
+    },
+    "subject": {
+      "KYC_APPROVED": "تمت الموافقة على KYC",
+      "KYC_REJECTED": "تم رفض KYC",
+      "KYC_MORE_INFO_REQUESTED": "KYC: مطلوب مزيد من المعلومات",
+      "LAB_APPROVED": "تمت الموافقة على المختبر",
+      "LAB_SUSPENDED": "تم تعليق المختبر",
+      "LAB_REACTIVATED": "تم إعادة تفعيل المختبر",
+      "PROVIDER_SUSPENDED": "تم تعليق مقدم الخدمة",
+      "OUTBREAK_MODE_ACTIVATED": "تم تفعيل وضع تفشي الأمراض",
+      "OUTBREAK_MODE_DEACTIVATED": "تم إلغاء تفعيل وضع تفشي الأمراض",
+      "default": "إشعار جديد"
+    },
+    "body": {
+      "kycStatusBody": "تم تحديث حالة التحقق من الهوية KYC",
+      "labStatusBody": "تغيّرت حالة حساب المختبر",
+      "providerSuspendedBody": "تم تعليق حساب مقدم الخدمة",
+      "outbreakBody": "تغيّرت حالة وضع تفشي الأمراض",
+      "defaultBody": "لديك إشعار جديد"
+    },
+    "notes": {
+      "providerSuspendedNotes": "لا يستطيع مقدم الخدمة الوصول إلى البيانات السريرية حتى يتم رفع التعليق.",
+      "kycMoreInfoNotes": "يرجى تقديم الوثائق الإضافية المطلوبة للتحقق من الهوية KYC.",
+      "kycRejectedNotes": "يرجى التواصل مع الإدارة للاستفسار عن سبب رفض التحقق من الهوية."
+    },
+    "field": {
+      "referenceId": "رقم المرجع",
+      "status": "الحالة",
+      "received": "تاريخ الاستلام",
+      "pathogen": "العامل الممرض"
+    }
+  },
   "language": {
     "label": "اللغة",
     "en": "English",

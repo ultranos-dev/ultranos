@@ -16,6 +16,7 @@ import React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { useLocationStore, ALL_LOCATIONS } from '@/stores/location-store'
 import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
+import { NotificationBell } from '@/components/notifications/NotificationBell'
 
 export function BreadcrumbHeader() {
   const pathname = usePathname()
@@ -49,6 +50,7 @@ export function BreadcrumbHeader() {
             {selected.name}
           </Badge>
         )}
+        <NotificationBell />
         <LanguageSelectorClient />
       </div>
     </header>

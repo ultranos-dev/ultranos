@@ -1,4 +1,58 @@
 {
+  "time": {
+    "justNow": "همدا اوس",
+    "minutesAgo": "{minutes} دقیقې وړاندې",
+    "hoursAgo": "{hours} ساعته وړاندې",
+    "daysAgo": "{days} ورځې وړاندې"
+  },
+  "notifications": {
+    "title": "خبرتیاوې",
+    "closeAria": "خبرتیاوې وتړئ",
+    "loading": "بارول کیږي",
+    "empty": "هیڅ خبرتیا نشته",
+    "error": "د خبرتیاوو بارول ونشو",
+    "bellAria": "خبرتیاوې",
+    "bellUnreadAria": "خبرتیاوې ({count} نالوستې)",
+    "viewDetails": "توضیحات وګورئ",
+    "unread": "نالوستې",
+    "sourceApp": {
+      "LAB_LITE": "لابراتوار",
+      "PHARMACY_LITE": "درملتون",
+      "OPD_LITE": "بهرني کلینیک",
+      "ADMIN": "ادمین",
+      "SYSTEM": "سیستم"
+    },
+    "subject": {
+      "KYC_APPROVED": "KYC تایید شو",
+      "KYC_REJECTED": "KYC رد شو",
+      "KYC_MORE_INFO_REQUESTED": "KYC: نور معلومات لازم دي",
+      "LAB_APPROVED": "لابراتوار تایید شو",
+      "LAB_SUSPENDED": "لابراتوار معطل شو",
+      "LAB_REACTIVATED": "لابراتوار بیا فعال شو",
+      "PROVIDER_SUSPENDED": "چمتو کوونکی معطل شو",
+      "OUTBREAK_MODE_ACTIVATED": "د وبا حالت فعال شو",
+      "OUTBREAK_MODE_DEACTIVATED": "د وبا حالت غیر فعال شو",
+      "default": "نوې خبرتیا"
+    },
+    "body": {
+      "kycStatusBody": "د KYC تایید حالت تازه شو",
+      "labStatusBody": "د لابراتوار حساب حالت بدل شو",
+      "providerSuspendedBody": "د چمتو کوونکي حساب معطل شو",
+      "outbreakBody": "د وبا حالت بدل شو",
+      "defaultBody": "تاسو نوې خبرتیا لرئ"
+    },
+    "notes": {
+      "providerSuspendedNotes": "چمتو کوونکی تر هغه چې تعلیق لغوه نشي کلیني معلوماتو ته لاسرسی نه لري.",
+      "kycMoreInfoNotes": "مهرباني وکړئ د KYC تایید لپاره غوښتل شوي اضافي اسناد واستوئ.",
+      "kycRejectedNotes": "د KYC رد کیدو د توضیحاتو لپاره له مدیریت سره اړیکه ونیسئ."
+    },
+    "field": {
+      "referenceId": "د مرجع پیژندنه",
+      "status": "حالت",
+      "received": "د ترلاسه کولو نیټه",
+      "pathogen": "د ناروغۍ لامل"
+    }
+  },
   "language": {
     "label": "ژبه",
     "en": "English",
