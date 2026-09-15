@@ -2011,6 +2011,27 @@ export const labRouter = createTRPCRouter({
     }),
 
   /**
+   * Task 6: Pull medication→lab monitoring mappings for offline override refresh.
+   * Non-PHI reference data, standard RBAC guard (labRestrictedProcedure + enforceLabActive).
+   * Supports incremental sync via optional sinceVersion parameter.
+   * Returns snake_case DB columns mapped to camelCase DTO.
+   */
+  pullMonitoringMappings: labRestrictedProcedure
+    .use(enforceLabActive())
+    .input(z.object({ sinceVersion: z.number().int().nonnegative().optional() }))
+    .output(z.object({ mappings: z.array(z.object({
+      atcCode: z.string(), medicationDisplay: z.string(), version: z.number(),
+      requiredTests: z.array(z.object({ loincCode: z.string(), testDisplay: z.string(), frequencyDays: z.number(), initialDelayDays: z.number(), priority: z.enum(['routine', 'urgent']) })),
+    })) }))
+    .query(async ({ ctx, input }) => {
+      let q = ctx.supabase.from('medication_lab_mappings').select('atc_code, medication_display, required_tests, version')
+      if (input.sinceVersion != null) q = q.gt('version', input.sinceVersion)
+      const { data, error } = await q
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch monitoring mappings' })
+      return { mappings: (data ?? []).map((m: any) => ({ atcCode: m.atc_code, medicationDisplay: m.medication_display, version: m.version, requiredTests: m.required_tests })) }
+    }),
+
+  /**
    * Story 42.2 AC 2, 3: Acknowledge an order as RECEIVED by this lab.
    * Updates the ServiceRequest status and dispatches a notification
    * to the ordering physician so the status change is visible in OPD-Lite.
