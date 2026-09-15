@@ -8,6 +8,30 @@ import { Button } from '@ultranos/ui-kit/components/ui/button'
 import { useSyncStore } from '@/stores/sync-store'
 import { getDb, type UploadQueueEntry } from '@/lib/db'
 import { triggerUploadDrain } from '@/lib/upload-drain-init'
+import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { drainResultSyncQueue } from '@/lib/result-sync'
+import { drainSpecimenSyncQueue } from '@/lib/specimen-sync'
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Minimal shape of a db.syncQueue row for display purposes.
+ * IMPORTANT: payload is intentionally omitted — it contains PHI-adjacent FHIR
+ * bundles. We only use the safe operational fields listed below.
+ */
+export interface SyncQueueDisplayEntry {
+  id: string
+  resourceType: 'Specimen' | 'DiagnosticReport'
+  status: 'pending' | 'failed'
+  createdAt: string
+  retryCount: number
+  failureReason?: string
+}
+
+/** The two resourceTypes that have active drain workers. */
+const DRAINED_RESOURCE_TYPES = ['Specimen', 'DiagnosticReport'] as const
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatTimeAgo(iso: string): string {
   const d = new Date(iso)
@@ -20,7 +44,41 @@ function formatTimeAgo(iso: string): string {
   return d.toLocaleDateString()
 }
 
-function StatusBadge({ status }: { status: UploadQueueEntry['status'] }) {
+/**
+ * Load failed/pending syncQueue rows for the two resourceTypes that have
+ * active drainers. Excludes 'synced'/'syncing' (those are done or in-flight)
+ * and any other resourceTypes (no drainer → would show as perpetual-pending noise).
+ * Exported so this pure query logic can be unit-tested without rendering.
+ */
+export async function loadSyncQueueRecords(): Promise<SyncQueueDisplayEntry[]> {
+  const db = getDb()
+  const rows = await db.syncQueue
+    .where('resourceType')
+    .anyOf(DRAINED_RESOURCE_TYPES)
+    .filter((e: { status: string }) => e.status === 'pending' || e.status === 'failed')
+    .toArray()
+
+  // Map to the minimal safe shape — DO NOT include payload
+  return rows.map((r: {
+    id: string
+    resourceType: 'Specimen' | 'DiagnosticReport'
+    status: 'pending' | 'failed'
+    createdAt: string
+    retryCount?: number
+    failureReason?: string
+  }) => ({
+    id: r.id,
+    resourceType: r.resourceType,
+    status: r.status,
+    createdAt: r.createdAt,
+    retryCount: r.retryCount ?? 0,
+    failureReason: r.failureReason,
+  }))
+}
+
+// ── Status badge — shared between uploadQueue and syncQueue rows ─────────────
+
+function StatusBadge({ status }: { status: UploadQueueEntry['status'] | 'pending' | 'failed' }) {
   const t = useTranslations('syncDashboard')
   switch (status) {
     case 'pending':
@@ -56,12 +114,21 @@ function StatusBadge({ status }: { status: UploadQueueEntry['status'] }) {
   }
 }
 
+// ── Main component ────────────────────────────────────────────────────────────
+
 export function SyncDashboard() {
   const { isDashboardOpen, setDashboardOpen, lastSyncedAt } = useSyncStore()
   const t = useTranslations('syncDashboard')
   const tf = useTranslations('syncDashboard.failure')
+
+  // uploadQueue entries (file uploads)
   const [entries, setEntries] = useState<UploadQueueEntry[]>([])
   const [discardingId, setDiscardingId] = useState<number | null>(null)
+
+  // syncQueue entries (structured Specimen/DiagnosticReport records)
+  const [syncRecords, setSyncRecords] = useState<SyncQueueDisplayEntry[]>([])
+  const [discardingSyncId, setDiscardingSyncId] = useState<string | null>(null)
+
   const [isDraining, setIsDraining] = useState(false)
   const [phase, setPhase] = useState<'idle' | 'syncing' | 'complete' | 'error'>('idle')
 
@@ -69,11 +136,14 @@ export function SyncDashboard() {
     const db = getDb()
     const all = await db.uploadQueue.orderBy('queuedAt').reverse().toArray()
     setEntries(all)
+    const records = await loadSyncQueueRecords()
+    setSyncRecords(records)
   }, [])
 
   useEffect(() => {
     if (!isDashboardOpen) {
       setDiscardingId(null)
+      setDiscardingSyncId(null)
       return
     }
     void loadEntries()
@@ -82,11 +152,19 @@ export function SyncDashboard() {
   }, [isDashboardOpen, loadEntries])
 
   const summary = useMemo(() => {
-    const totalPending = entries.filter((e) => e.status === 'pending' || e.status === 'uploading').length
-    const totalFailed = entries.filter((e) => e.status === 'failed').length
+    const uploadPending = entries.filter((e) => e.status === 'pending' || e.status === 'uploading').length
+    const uploadFailed = entries.filter((e) => e.status === 'failed').length
     const totalExpired = entries.filter((e) => e.status === 'expired').length
-    return { totalPending, totalFailed, totalExpired }
-  }, [entries])
+    const syncPending = syncRecords.filter((r) => r.status === 'pending').length
+    const syncFailed = syncRecords.filter((r) => r.status === 'failed').length
+    return {
+      totalPending: uploadPending + syncPending,
+      totalFailed: uploadFailed + syncFailed,
+      totalExpired,
+    }
+  }, [entries, syncRecords])
+
+  // ── uploadQueue handlers ──────────────────────────────────────────────────
 
   const handleRetry = useCallback(
     async (entry: UploadQueueEntry) => {
@@ -103,13 +181,23 @@ export function SyncDashboard() {
 
   const handleRetryAllFailed = useCallback(async () => {
     const db = getDb()
-    const failed = entries.filter((e) => e.status === 'failed' && e.id !== undefined)
+    const failedUploads = entries.filter((e) => e.status === 'failed' && e.id !== undefined)
     await Promise.all(
-      failed.map((e) => db.uploadQueue.update(e.id!, { status: 'pending', lastAttemptAt: null })),
+      failedUploads.map((e) => db.uploadQueue.update(e.id!, { status: 'pending', lastAttemptAt: null })),
     )
+
+    // Also retry all failed syncQueue records
+    const failedRecords = syncRecords.filter((r) => r.status === 'failed')
+    await Promise.all(
+      failedRecords.map((r) =>
+        db.syncQueue.update(r.id, { status: 'pending', failureReason: undefined, lastAttemptAt: null }),
+      ),
+    )
+
     void loadEntries()
     triggerUploadDrain()
-  }, [entries, loadEntries])
+    void triggerSyncQueueDrains()
+  }, [entries, syncRecords, loadEntries])
 
   const handleDiscard = useCallback(
     async (id: number) => {
@@ -121,12 +209,54 @@ export function SyncDashboard() {
     [loadEntries],
   )
 
+  // ── syncQueue handlers ────────────────────────────────────────────────────
+
+  /**
+   * Build a getToken function from the Supabase browser client and trigger
+   * both drain workers. Called after resetting a syncQueue entry to 'pending'.
+   */
+  const triggerSyncQueueDrains = useCallback(async () => {
+    const getToken = async (): Promise<string> => {
+      const { data } = await getSupabaseBrowserClient().auth.getSession()
+      return data.session?.access_token ?? ''
+    }
+    await Promise.all([drainResultSyncQueue(getToken), drainSpecimenSyncQueue(getToken)])
+    void loadEntries()
+  }, [loadEntries])
+
+  const handleRetrySyncRecord = useCallback(
+    async (record: SyncQueueDisplayEntry) => {
+      const db = getDb()
+      await db.syncQueue.update(record.id, {
+        status: 'pending',
+        failureReason: undefined,
+        lastAttemptAt: null,
+      })
+      void loadEntries()
+      void triggerSyncQueueDrains()
+    },
+    [loadEntries, triggerSyncQueueDrains],
+  )
+
+  const handleDiscardSyncRecord = useCallback(
+    async (id: string) => {
+      const db = getDb()
+      await db.syncQueue.delete(id)
+      setDiscardingSyncId(null)
+      void loadEntries()
+    },
+    [loadEntries],
+  )
+
+  // ── Sync Now ──────────────────────────────────────────────────────────────
+
   const handleSyncNow = useCallback(async () => {
     if (!navigator.onLine || isDraining) return
     setIsDraining(true)
     setPhase('syncing')
     try {
       triggerUploadDrain()
+      void triggerSyncQueueDrains()
       await new Promise((r) => setTimeout(r, 800))
       setPhase('complete')
       const state = useSyncStore.getState()
@@ -145,13 +275,33 @@ export function SyncDashboard() {
       setIsDraining(false)
       void loadEntries()
     }
-  }, [isDraining, loadEntries])
+  }, [isDraining, loadEntries, triggerSyncQueueDrains])
+
+  // ── Resource type label (PHI-safe: never show payload content) ────────────
+
+  const getResourceTypeLabel = useCallback(
+    (resourceType: 'Specimen' | 'DiagnosticReport'): string => {
+      if (resourceType === 'Specimen') return t('resourceTypeSpecimen')
+      return t('resourceTypeDiagnosticReport')
+    },
+    [t],
+  )
 
   if (!isDashboardOpen) return null
 
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
   const activeEntries = entries.filter((e) => e.status !== 'expired')
-  const phaseLabel = phase === 'syncing' ? t('syncingPhase') : phase === 'complete' ? t('syncComplete') : phase === 'error' ? t('syncFailedRetry') : null
+  const phaseLabel =
+    phase === 'syncing'
+      ? t('syncingPhase')
+      : phase === 'complete'
+        ? t('syncComplete')
+        : phase === 'error'
+          ? t('syncFailedRetry')
+          : null
+
+  const hasAnySyncFailed = syncRecords.some((r) => r.status === 'failed')
+  const hasAnyUploadFailed = entries.some((e) => e.status === 'failed')
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16" data-testid="sync-dashboard">
@@ -244,7 +394,7 @@ export function SyncDashboard() {
               )}
               {isDraining ? t('syncing') : t('syncNow')}
             </Button>
-            {summary.totalFailed >= 2 && (
+            {(summary.totalFailed >= 2 || (hasAnyUploadFailed && hasAnySyncFailed)) && (
               <Button
                 size="sm"
                 variant="outline"
@@ -260,86 +410,188 @@ export function SyncDashboard() {
 
         {/* Queue items */}
         <div className="max-h-[60vh] overflow-y-auto" data-testid="sync-item-list">
-          {activeEntries.length === 0 ? (
+          {activeEntries.length === 0 && syncRecords.length === 0 ? (
             <div className="px-5 py-12 text-center text-sm text-muted-foreground">
               {t('allSynced')}
             </div>
           ) : (
-            activeEntries.map((entry) => (
-              <div
-                key={entry.id}
-                className="flex items-start gap-3 border-b border-border px-5 py-3 last:border-b-0"
-                data-testid="sync-item"
-              >
-                <div className="min-w-0 flex-1">
-                  {/* Show LOINC display + patient first name — data minimization compliant (lab sees name + age only) */}
-                  <p className="text-sm text-foreground">
-                    {entry.metadata.loincDisplay} — {entry.patientFirstName}
-                  </p>
-                  <div className="mt-1 flex flex-wrap items-center gap-2">
-                    <StatusBadge status={entry.status} />
-                    <span className="text-xs text-muted-foreground">{formatTimeAgo(entry.queuedAt)}</span>
-                    {entry.retryCount > 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        {entry.retryCount} retr{entry.retryCount === 1 ? 'y' : 'ies'}
-                      </span>
-                    )}
+            <>
+              {/* ── Records section (syncQueue: Specimen + DiagnosticReport) ── */}
+              {syncRecords.length > 0 && (
+                <div>
+                  <div className="border-b border-border bg-muted/30 px-5 py-1.5">
+                    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {t('recordsSectionLabel')}
+                    </span>
                   </div>
-                  {/* Categorized failure reason — never the raw server text (PHI-safe). */}
-                  {entry.status === 'failed' && (
-                    <p className="mt-1 text-xs text-destructive" data-testid="failure-reason">
-                      {tf(classifySyncFailure(entry.failureReason))}
-                    </p>
-                  )}
+                  {syncRecords.map((record) => (
+                    <div
+                      key={`sync-${record.id}`}
+                      className="flex items-start gap-3 border-b border-border px-5 py-3 last:border-b-0"
+                      data-testid="sync-record-item"
+                    >
+                      <div className="min-w-0 flex-1">
+                        {/*
+                         * PHI-safe: show only a generic i18n label derived from resourceType.
+                         * NEVER render payload contents, resourceId, or any patient data.
+                         */}
+                        <p className="text-sm text-foreground" data-testid="sync-record-label">
+                          {getResourceTypeLabel(record.resourceType)}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <StatusBadge status={record.status} />
+                          <span className="text-xs text-muted-foreground">{formatTimeAgo(record.createdAt)}</span>
+                          {record.retryCount > 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              {record.retryCount} retr{record.retryCount === 1 ? 'y' : 'ies'}
+                            </span>
+                          )}
+                        </div>
+                        {record.status === 'failed' && (
+                          <p className="mt-1 text-xs text-destructive" data-testid="sync-record-failure-reason">
+                            {tf(classifySyncFailure(record.failureReason))}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 gap-1">
+                        {record.status === 'failed' && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              type="button"
+                              onClick={() => handleRetrySyncRecord(record)}
+                              data-testid="sync-record-retry-btn"
+                            >
+                              {t('retry')}
+                            </Button>
+                            {discardingSyncId === record.id ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  type="button"
+                                  onClick={() => handleDiscardSyncRecord(record.id)}
+                                  data-testid="sync-record-confirm-discard-btn"
+                                >
+                                  {t('confirm')}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  type="button"
+                                  onClick={() => setDiscardingSyncId(null)}
+                                >
+                                  {t('cancel')}
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                type="button"
+                                onClick={() => setDiscardingSyncId(record.id)}
+                                data-testid="sync-record-discard-btn"
+                              >
+                                {t('discard')}
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex shrink-0 gap-1">
-                  {entry.status === 'failed' && entry.id !== undefined && (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        type="button"
-                        onClick={() => handleRetry(entry)}
-                        data-testid="retry-btn"
-                      >
-                        {t('retry')}
-                      </Button>
-                      {discardingId === entry.id ? (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            type="button"
-                            onClick={() => handleDiscard(entry.id!)}
-                            data-testid="confirm-discard-btn"
-                          >
-                            {t('confirm')}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            type="button"
-                            onClick={() => setDiscardingId(null)}
-                          >
-                            {t('cancel')}
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          type="button"
-                          onClick={() => setDiscardingId(entry.id!)}
-                          data-testid="discard-btn"
-                        >
-                          {t('discard')}
-                        </Button>
-                      )}
-                    </>
+              )}
+
+              {/* ── Files section (uploadQueue: file blobs) ── */}
+              {activeEntries.length > 0 && (
+                <div>
+                  {syncRecords.length > 0 && (
+                    <div className="border-b border-border bg-muted/30 px-5 py-1.5">
+                      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {t('filesSectionLabel')}
+                      </span>
+                    </div>
                   )}
+                  {activeEntries.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="flex items-start gap-3 border-b border-border px-5 py-3 last:border-b-0"
+                      data-testid="sync-item"
+                    >
+                      <div className="min-w-0 flex-1">
+                        {/* Show LOINC display + patient first name — data minimization compliant (lab sees name + age only) */}
+                        <p className="text-sm text-foreground">
+                          {entry.metadata.loincDisplay} — {entry.patientFirstName}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <StatusBadge status={entry.status} />
+                          <span className="text-xs text-muted-foreground">{formatTimeAgo(entry.queuedAt)}</span>
+                          {entry.retryCount > 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              {entry.retryCount} retr{entry.retryCount === 1 ? 'y' : 'ies'}
+                            </span>
+                          )}
+                        </div>
+                        {/* Categorized failure reason — never the raw server text (PHI-safe). */}
+                        {entry.status === 'failed' && (
+                          <p className="mt-1 text-xs text-destructive" data-testid="failure-reason">
+                            {tf(classifySyncFailure(entry.failureReason))}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 gap-1">
+                        {entry.status === 'failed' && entry.id !== undefined && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              type="button"
+                              onClick={() => handleRetry(entry)}
+                              data-testid="retry-btn"
+                            >
+                              {t('retry')}
+                            </Button>
+                            {discardingId === entry.id ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  type="button"
+                                  onClick={() => handleDiscard(entry.id!)}
+                                  data-testid="confirm-discard-btn"
+                                >
+                                  {t('confirm')}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  type="button"
+                                  onClick={() => setDiscardingId(null)}
+                                >
+                                  {t('cancel')}
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                type="button"
+                                onClick={() => setDiscardingId(entry.id!)}
+                                data-testid="discard-btn"
+                              >
+                                {t('discard')}
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))
+              )}
+            </>
           )}
         </div>
       </div>

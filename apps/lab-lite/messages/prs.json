@@ -3542,6 +3542,10 @@
     "statusFailed": "ناموفق",
     "statusUploading": "در حال بارگذاری",
     "statusExpired": "منقضی شده",
+    "recordsSectionLabel": "ریکاردها",
+    "filesSectionLabel": "فایل‌ها",
+    "resourceTypeSpecimen": "ریکارد نمونه",
+    "resourceTypeDiagnosticReport": "نتیجه آزمایشگاه",
     "failure": {
       "conflict": "تعارض شناسایی شد — نیاز به بررسی دارد",
       "networkError": "خطای شبکه — اتصال را بررسی کنید",

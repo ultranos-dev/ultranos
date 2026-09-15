@@ -3542,6 +3542,10 @@
     "statusFailed": "ناکام",
     "statusUploading": "اپلوډ کیږي",
     "statusExpired": "پای ته رسیدلی",
+    "recordsSectionLabel": "ریکارډونه",
+    "filesSectionLabel": "فایلونه",
+    "resourceTypeSpecimen": "د نمونې ریکارډ",
+    "resourceTypeDiagnosticReport": "د لابراتوار نتیجه",
     "failure": {
       "conflict": "شخړه وموندل شوه — بیاکتنې ته اړتیا لري",
       "networkError": "د شبکې تېروتنه — اتصال وګورئ",

@@ -3542,6 +3542,10 @@
     "statusFailed": "فاشل",
     "statusUploading": "جارٍ الرفع",
     "statusExpired": "منتهي الصلاحية",
+    "recordsSectionLabel": "السجلات",
+    "filesSectionLabel": "الملفات",
+    "resourceTypeSpecimen": "سجل عيّنة",
+    "resourceTypeDiagnosticReport": "نتيجة مختبرية",
     "failure": {
       "conflict": "تم اكتشاف تعارض — يحتاج إلى مراجعة",
       "networkError": "خطأ في الشبكة — تحقق من الاتصال",

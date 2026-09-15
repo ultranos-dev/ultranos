@@ -72,7 +72,14 @@ function useQueueBadge(): number | null {
     async function check() {
       try {
         const db = getDb()
-        const c = await db.uploadQueue.where('status').anyOf(['pending', 'failed']).count()
+        const uploadCount = await db.uploadQueue.where('status').anyOf(['pending', 'failed']).count()
+        // Also count syncQueue entries for the two drainable resourceTypes
+        const syncCount = await db.syncQueue
+          .where('resourceType')
+          .anyOf(['Specimen', 'DiagnosticReport'])
+          .filter((e: { status: string }) => e.status === 'pending' || e.status === 'failed')
+          .count()
+        const c = uploadCount + syncCount
         if (active) setCount(c > 0 ? c : null)
       } catch { /* Dexie unavailable — no badge */ }
     }

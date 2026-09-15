@@ -34,12 +34,28 @@ export function SyncPulse() {
   }, [])
 
   // Refresh counts from Dexie on mount and every 10s.
+  // Counts include both uploadQueue (file uploads) and syncQueue (Specimen/DiagnosticReport records).
   // When the queue transitions from non-zero to zero, mark lastSyncedAt.
   useEffect(() => {
     const refresh = async () => {
       const db = getDb()
-      const pending = await db.uploadQueue.where('status').anyOf(['pending', 'uploading']).count()
-      const failed = await db.uploadQueue.where('status').equals('failed').count()
+      const uploadPending = await db.uploadQueue.where('status').anyOf(['pending', 'uploading']).count()
+      const uploadFailed = await db.uploadQueue.where('status').equals('failed').count()
+
+      // syncQueue: only the two resourceTypes that have active drainers
+      const syncPending = await db.syncQueue
+        .where('resourceType')
+        .anyOf(['Specimen', 'DiagnosticReport'])
+        .filter((e: { status: string }) => e.status === 'pending')
+        .count()
+      const syncFailed = await db.syncQueue
+        .where('resourceType')
+        .anyOf(['Specimen', 'DiagnosticReport'])
+        .filter((e: { status: string }) => e.status === 'failed')
+        .count()
+
+      const pending = uploadPending + syncPending
+      const failed = uploadFailed + syncFailed
       const total = pending + failed
 
       const prevTotal = prevTotalRef.current

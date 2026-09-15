@@ -3542,6 +3542,10 @@
     "statusFailed": "Failed",
     "statusUploading": "Uploading",
     "statusExpired": "Expired",
+    "recordsSectionLabel": "Records",
+    "filesSectionLabel": "Files",
+    "resourceTypeSpecimen": "Sample record",
+    "resourceTypeDiagnosticReport": "Lab result",
     "failure": {
       "conflict": "Conflict detected — needs review",
       "networkError": "Network error — check connectivity",
