@@ -167,9 +167,10 @@ export function useNotificationPatient(
     return () => {
       cancelled = true
     }
-    // n.id and config.refId together uniquely identify the lookup.
+    // Derive the refId from the notification payload to include in dependencies.
+    // If n.id stays the same but refId changes, the effect re-runs and re-resolves.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [n?.id, n?.type])
+  }, [n?.id, n?.type, n?.payload?.orderId, n?.payload?.diagnosticReportId, n?.payload?.prescriptionId])
 
   return { name, loading }
 }

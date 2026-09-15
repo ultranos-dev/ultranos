@@ -553,6 +553,21 @@ describe('NotificationCenter', () => {
       const orderId = '00000000-0000-4000-8000-000000000099'
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
 
+      // Mock the db lookup and patient load for the audit hook
+      const { db } = await import('../lib/db')
+      const { loadPatientResilient } = await import('../lib/patient-loader')
+      const { auditPhiAccess } = await import('../lib/audit')
+
+      ;(db.serviceRequests.get as any).mockResolvedValue({
+        subject: { reference: 'Patient/patient-uuid-123' },
+      })
+      ;(loadPatientResilient as any).mockResolvedValue({
+        patient: {
+          _ultranos: { nameLatin: 'John Doe' },
+        },
+        needsReauth: false,
+      })
+
       mockFetchNotifications.mockResolvedValue({
         notifications: [
           {
@@ -585,6 +600,11 @@ describe('NotificationCenter', () => {
 
       // Short form: last 6 chars of orderId uppercased = '000099'
       expect(screen.getByRole('dialog')).toHaveTextContent('000099')
+
+      // Assert the audit mock was called (PHI_READ action) when modal detail rows were rendered
+      await waitFor(() => {
+        expect(auditPhiAccess).toHaveBeenCalled()
+      })
     })
 
     it('shows Received date-time row in the modal', async () => {
