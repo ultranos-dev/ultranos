@@ -29,6 +29,13 @@ const fakeQueue = {
 }
 vi.mock('@/lib/db', () => ({ getDb: () => ({ syncQueue: fakeQueue }) }))
 vi.mock('@/lib/trpc', () => ({ getHubApiUrl: () => 'http://hub' }))
+vi.mock('@ultranos/sync-engine', () => ({
+  classifySyncFailure: (raw: string) => {
+    if (raw && raw.includes('HTTP 4')) return 'serverRejected'
+    if (raw && raw.includes('HTTP 5')) return 'serverError'
+    return 'unknown'
+  },
+}))
 
 const { drainSpecimenSyncQueue } = await import('../lib/specimen-sync')
 
@@ -51,10 +58,31 @@ describe('drainSpecimenSyncQueue', () => {
     expect(res).toEqual({ synced: 1, failed: 0 })
   })
 
-  it('increments retryCount and leaves pending on failure', async () => {
+  it('5xx → retryCount incremented, status NOT set to failed (transient)', async () => {
     ;(global.fetch as any).mockResolvedValue({ ok: false, status: 500 })
     const res = await drainSpecimenSyncQueue(async () => 'tok')
     expect(update).toHaveBeenCalledWith('Specimen-spec-1-1', expect.objectContaining({ retryCount: 1 }))
+    const updateArg = update.mock.calls[0][1]
+    expect(updateArg.status).toBeUndefined()
+    expect(res).toEqual({ synced: 0, failed: 1 })
+  })
+
+  it('4xx (422) → entry dead-lettered: status:failed + failureReason set', async () => {
+    ;(global.fetch as any).mockResolvedValue({ ok: false, status: 422 })
+    const res = await drainSpecimenSyncQueue(async () => 'tok')
+    expect(update).toHaveBeenCalledWith(
+      'Specimen-spec-1-1',
+      expect.objectContaining({ status: 'failed', failureReason: expect.any(String) }),
+    )
+    expect(res).toEqual({ synced: 0, failed: 1 })
+  })
+
+  it('429 → still pending (transient), retryCount incremented', async () => {
+    ;(global.fetch as any).mockResolvedValue({ ok: false, status: 429 })
+    const res = await drainSpecimenSyncQueue(async () => 'tok')
+    expect(update).toHaveBeenCalledWith('Specimen-spec-1-1', expect.objectContaining({ retryCount: 1 }))
+    const updateArg = update.mock.calls[0][1]
+    expect(updateArg.status).toBeUndefined()
     expect(res).toEqual({ synced: 0, failed: 1 })
   })
 })

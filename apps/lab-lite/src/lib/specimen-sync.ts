@@ -6,6 +6,7 @@
  * each pending entry to the lab.submitSpecimen DTO, POSTs it, and marks synced.
  * Never throws — sync must not block clinical work. PHI-safe logging (shape only).
  */
+import { classifySyncFailure } from '@ultranos/sync-engine'
 import { getDb } from './db'
 import { getHubApiUrl } from './trpc'
 
@@ -25,6 +26,15 @@ interface FhirSpecimenLike {
     rejectionReason?: string
     hlcTimestamp?: string
   }
+}
+
+/**
+ * Returns true for permanent 4xx rejections that will never succeed with
+ * the same payload (schema-invalid, entity-not-found, etc.).
+ * 408 (Request Timeout) and 429 (Too Many Requests) are transient — excluded.
+ */
+function isPermanentFailure(status: number): boolean {
+  return status >= 400 && status < 500 && status !== 408 && status !== 429
 }
 
 function toDto(s: FhirSpecimenLike) {
@@ -74,7 +84,18 @@ export async function drainSpecimenSyncQueue(
         if (res.ok) {
           await db.syncQueue.update(entry.id, { status: 'synced' })
           result.synced++
+        } else if (isPermanentFailure(res.status)) {
+          // Permanent (4xx, not 408/429): dead-letter this entry so it stops
+          // re-consuming each drain cycle. The payload will never succeed.
+          await db.syncQueue.update(entry.id, {
+            status: 'failed',
+            failureReason: classifySyncFailure(`HTTP ${res.status}`),
+            retryCount: (entry.retryCount ?? 0) + 1,
+            lastAttemptAt: new Date().toISOString(),
+          })
+          result.failed++
         } else {
+          // Transient (5xx, 408, 429): leave pending for next cycle.
           await db.syncQueue.update(entry.id, {
             retryCount: (entry.retryCount ?? 0) + 1,
             lastAttemptAt: new Date().toISOString(),
@@ -82,6 +103,7 @@ export async function drainSpecimenSyncQueue(
           result.failed++
         }
       } catch {
+        // Network / timeout error — transient; leave pending.
         await db.syncQueue.update(entry.id, {
           retryCount: (entry.retryCount ?? 0) + 1,
           lastAttemptAt: new Date().toISOString(),

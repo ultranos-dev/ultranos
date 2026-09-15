@@ -1849,6 +1849,9 @@ export interface SyncQueueEntry {
   createdAt: string
   lastAttemptAt: string | null
   retryCount: number
+  /** Set when a drain gives up on a permanent (4xx) failure. Categorized via
+   *  classifySyncFailure — never raw server text (PHI-safe). */
+  failureReason?: string
 }
 
 /** Enqueue a resource change for sync to the Hub. Stamps queue-management
