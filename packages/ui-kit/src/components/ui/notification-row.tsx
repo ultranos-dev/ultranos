@@ -28,7 +28,7 @@ export function NotificationRow({ icon: Icon, appName, subject, timeAgo, unread,
       </div>
       <div className="flex items-center gap-1.5 shrink-0 ms-auto">
         {unread && <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-primary" aria-label={unreadLabel} aria-hidden={!unreadLabel} />}
-        <span data-slot="notification-time" className={`shrink-0 text-xs text-muted-foreground ${unread ? 'font-bold' : 'font-normal'}`}>{timeAgo}</span>
+        <span data-slot="notification-time" className={`shrink-0 text-xs ${unread ? 'font-bold text-foreground' : 'font-normal text-muted-foreground'}`}>{timeAgo}</span>
         {onToggleRead && (
           <button
             type="button"

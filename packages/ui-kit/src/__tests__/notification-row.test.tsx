@@ -49,6 +49,8 @@ describe('NotificationRow', () => {
     expect(screen.getByText('Lab Lite')).toHaveClass('font-bold')
     expect(screen.getByText('Lab order received')).toHaveClass('font-bold')
     expect(screen.getByText('14h ago')).toHaveClass('font-bold')
+    // Unread time is foreground (dark) so the bold reads clearly, not muted gray
+    expect(screen.getByText('14h ago')).toHaveClass('text-foreground')
   })
 
   it('renders app name, subject and time in NORMAL weight when read', () => {
@@ -57,6 +59,7 @@ describe('NotificationRow', () => {
     expect(screen.getByText('Lab Lite')).toHaveClass('font-normal')
     expect(screen.getByText('Lab order received')).toHaveClass('font-normal')
     expect(screen.getByText('14h ago')).toHaveClass('font-normal')
+    expect(screen.getByText('14h ago')).toHaveClass('text-muted-foreground')
     expect(screen.getByText('Lab Lite')).not.toHaveClass('font-bold')
   })
 

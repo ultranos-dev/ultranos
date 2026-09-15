@@ -74,7 +74,7 @@ exports[`NotificationRow — RTL/LTR safety > LTR rendering > snapshot — LTR 1
       class="flex items-center gap-1.5 shrink-0 ms-auto"
     >
       <span
-        class="shrink-0 text-xs text-muted-foreground font-normal"
+        class="shrink-0 text-xs font-normal text-muted-foreground"
         data-slot="notification-time"
       >
         5m ago
@@ -146,7 +146,7 @@ exports[`NotificationRow — RTL/LTR safety > RTL rendering > snapshot — RTL 1
       class="flex items-center gap-1.5 shrink-0 ms-auto"
     >
       <span
-        class="shrink-0 text-xs text-muted-foreground font-normal"
+        class="shrink-0 text-xs font-normal text-muted-foreground"
         data-slot="notification-time"
       >
         5m ago
