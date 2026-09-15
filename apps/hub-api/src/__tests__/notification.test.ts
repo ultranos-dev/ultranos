@@ -109,6 +109,11 @@ describe('notification.list', () => {
         payload: { testCategory: 'CBC', labName: 'Lab A', uploadTimestamp: '2026-04-30T00:00:00.000Z' },
         status: 'QUEUED',
         created_at: '2026-04-30T00:00:00.000Z',
+        source_app: 'LAB_LITE',
+        subject_key: 'ORDER_RECEIVED',
+        body_key: 'orderReceivedBody',
+        body_params: { testCategory: 'CBC' },
+        notes_key: 'orderReceivedNotes',
       },
     ]
 
@@ -130,6 +135,11 @@ describe('notification.list', () => {
 
     expect(result.notifications).toHaveLength(1)
     expect(result.notifications[0].type).toBe('LAB_RESULT_AVAILABLE')
+    expect(result.notifications[0].sourceApp).toBe('LAB_LITE')
+    expect(result.notifications[0].subjectKey).toBe('ORDER_RECEIVED')
+    expect(result.notifications[0].bodyKey).toBe('orderReceivedBody')
+    expect(result.notifications[0].bodyParams).toEqual({ testCategory: 'CBC' })
+    expect(result.notifications[0].notesKey).toBe('orderReceivedNotes')
   })
 
   it('rejects unauthenticated list requests', async () => {

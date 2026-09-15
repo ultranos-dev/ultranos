@@ -57,7 +57,7 @@ export const notificationRouter = createTRPCRouter({
       const recipientRefs = await recipientRefsForUser(ctx)
       const { data: notifications, error } = await ctx.supabase
         .from('notifications')
-        .select('id, type, payload, status, created_at, delivered_at, acknowledged_at')
+        .select('id, type, payload, status, created_at, delivered_at, acknowledged_at, source_app, subject_key, body_key, body_params, notes_key')
         .in('recipient_ref', recipientRefs)
         .order('created_at', { ascending: false })
         .limit(50)
@@ -109,6 +109,11 @@ export const notificationRouter = createTRPCRouter({
           created_at: string
           delivered_at: string | null
           acknowledged_at: string | null
+          source_app: string | null
+          subject_key: string | null
+          body_key: string | null
+          body_params: object | null
+          notes_key: string | null
         }) => ({
           id: n.id,
           type: n.type,
@@ -117,6 +122,11 @@ export const notificationRouter = createTRPCRouter({
           createdAt: n.created_at,
           deliveredAt: n.delivered_at,
           acknowledgedAt: n.acknowledged_at,
+          sourceApp: n.source_app ?? null,
+          subjectKey: n.subject_key ?? null,
+          bodyKey: n.body_key ?? null,
+          bodyParams: n.body_params ?? {},
+          notesKey: n.notes_key ?? null,
         })),
       }
     }),
