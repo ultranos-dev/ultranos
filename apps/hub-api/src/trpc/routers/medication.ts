@@ -821,7 +821,7 @@ export const medicationRouter = createTRPCRouter({
       // 1. Lookup prescription FIRST — reject early if not found (fixes W9)
       const { data: currentRx, error: fetchError } = await ctx.supabase
         .from('medication_requests')
-        .select('id, prescription_status, status, hlc_timestamp, requester_id')
+        .select('id, prescription_status, status, hlc_timestamp, requester_id, interaction_check')
         .eq('id', input.prescriptionId)
         .single()
 
@@ -911,6 +911,55 @@ export const medicationRouter = createTRPCRouter({
           })
         } catch {
           // Audit failure must not block the dispense
+        }
+      }
+
+      // CLAUDE.md Rule #3: mirror the `complete` gate — do not let the pharmacy dispense
+      // path bypass the interaction check the prescriber recorded. The legitimate
+      // override flow (supervisor reason captured client-side) is preserved via
+      // input.overrideReason, which already creates a PENDING dispense_reviews row below.
+      if (!input.overrideReason) {
+        if (currentRx.interaction_check === 'BLOCKED') {
+          const blockedAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+          try {
+            await blockedAudit.emit({
+              action: 'DISPENSE_BLOCKED_INTERACTION',
+              resourceType: 'PRESCRIPTION',
+              resourceId: input.prescriptionId,
+              actorId: ctx.user.sub,
+              actorRole: ctx.user.role,
+              outcome: 'DENIED',
+              sessionId: ctx.user.sessionId,
+              metadata: { reason: 'interaction_check_blocked' },
+            })
+          } catch {
+            console.warn('[AUDIT_FAILURE]', { action: 'DISPENSE_BLOCKED_INTERACTION', resourceId: input.prescriptionId })
+          }
+          throw new TRPCError({
+            code: 'PRECONDITION_FAILED',
+            message: 'Prescription has a blocked drug interaction — dispense requires a supervisor override.',
+          })
+        }
+        if (currentRx.interaction_check === 'UNAVAILABLE') {
+          const unavailAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+          try {
+            await unavailAudit.emit({
+              action: 'DISPENSE_BLOCKED_INTERACTION',
+              resourceType: 'PRESCRIPTION',
+              resourceId: input.prescriptionId,
+              actorId: ctx.user.sub,
+              actorRole: ctx.user.role,
+              outcome: 'DENIED',
+              sessionId: ctx.user.sessionId,
+              metadata: { reason: 'interaction_check_unavailable' },
+            })
+          } catch {
+            console.warn('[AUDIT_FAILURE]', { action: 'DISPENSE_BLOCKED_INTERACTION', resourceId: input.prescriptionId })
+          }
+          throw new TRPCError({
+            code: 'PRECONDITION_FAILED',
+            message: 'Drug interaction check was unavailable — dispense requires a supervisor override.',
+          })
         }
       }
 
