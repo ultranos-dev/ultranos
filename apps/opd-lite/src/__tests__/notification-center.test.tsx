@@ -32,11 +32,13 @@ vi.mock('next/navigation', () => ({
 const mockFetchNotifications = vi.fn()
 const mockFetchUnreadCount = vi.fn()
 const mockAcknowledgeNotification = vi.fn()
+const mockDeleteNotification = vi.fn()
 
 vi.mock('../lib/notification-api', () => ({
   fetchNotifications: (...args: unknown[]) => mockFetchNotifications(...args),
   fetchUnreadCount: (...args: unknown[]) => mockFetchUnreadCount(...args),
   acknowledgeNotification: (...args: unknown[]) => mockAcknowledgeNotification(...args),
+  deleteNotification: (...args: unknown[]) => mockDeleteNotification(...args),
 }))
 
 // Mock AuthGuard to pass through
@@ -152,6 +154,7 @@ describe('NotificationCenter', () => {
     mockFetchNotifications.mockResolvedValue({ notifications: SAMPLE_NOTIFICATIONS })
     mockFetchUnreadCount.mockResolvedValue({ count: 6 })
     mockAcknowledgeNotification.mockResolvedValue({ success: true })
+    mockDeleteNotification.mockResolvedValue({ success: true })
   })
 
   // --- Task 1: Route page renders ---
@@ -743,6 +746,76 @@ describe('NotificationCenter', () => {
       await waitFor(() => {
         // PRESCRIPTION_READY → PHARMACY_LITE via deriveSourceApp → resolved to 'Pharmacy Lite'
         expect(screen.getByText('Pharmacy Lite')).toBeInTheDocument()
+      })
+    })
+  })
+
+  // --- Task T3: Mark-read + delete action icons ---
+  describe('T3: Mark-read and delete action icons (NotificationCenter)', () => {
+    beforeEach(() => {
+      vi.clearAllMocks()
+      mockFetchNotifications.mockResolvedValue({ notifications: SAMPLE_NOTIFICATIONS })
+      mockFetchUnreadCount.mockResolvedValue({ count: 6 })
+      mockAcknowledgeNotification.mockResolvedValue({ success: true })
+      mockDeleteNotification.mockResolvedValue({ success: true })
+    })
+
+    it('clicking delete calls deleteNotification with the notification id', async () => {
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('notification-n1')).toBeInTheDocument()
+      })
+
+      // Find the delete button within n1's wrapper — its aria-label is 'delete' (mock returns key)
+      const n1Wrapper = screen.getByTestId('notification-n1')
+      const deleteBtn = within(n1Wrapper).getByRole('button', { name: /delete/i })
+      await act(async () => {
+        fireEvent.click(deleteBtn)
+      })
+
+      await waitFor(() => {
+        expect(mockDeleteNotification).toHaveBeenCalledWith('n1')
+      })
+    })
+
+    it('deleting a notification removes it from the list', async () => {
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('notification-n1')).toBeInTheDocument()
+      })
+
+      const n1Wrapper = screen.getByTestId('notification-n1')
+      const deleteBtn = within(n1Wrapper).getByRole('button', { name: /delete/i })
+      await act(async () => {
+        fireEvent.click(deleteBtn)
+      })
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('notification-n1')).not.toBeInTheDocument()
+      })
+    })
+
+    it('clicking mark-read calls acknowledgeNotification with the notification id', async () => {
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('notification-n1')).toBeInTheDocument()
+      })
+
+      // n1 is unread, so onMarkRead is provided — button label is 'markRead' via mock
+      const n1Wrapper = screen.getByTestId('notification-n1')
+      const markReadBtn = within(n1Wrapper).getByRole('button', { name: /markRead/i })
+      await act(async () => {
+        fireEvent.click(markReadBtn)
+      })
+
+      await waitFor(() => {
+        expect(mockAcknowledgeNotification).toHaveBeenCalledWith('n1')
       })
     })
   })

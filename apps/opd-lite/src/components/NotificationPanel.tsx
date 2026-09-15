@@ -10,6 +10,7 @@ import {
   fetchNotifications,
   fetchUnreadCount,
   acknowledgeNotification,
+  deleteNotification,
   type NotificationItem,
 } from '@/lib/notification-api'
 import type { NotificationDetailField } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
@@ -148,6 +149,21 @@ function NotificationDropdown({
     }
   }, [onCountChange])
 
+  const handleDelete = useCallback(async (id: string) => {
+    // Optimistic removal
+    setNotifications(prev => {
+      const updated = prev.filter(n => n.id !== id)
+      onCountChange(updated.filter(n => n.status !== 'ACKNOWLEDGED').length)
+      return updated
+    })
+
+    try {
+      await deleteNotification(id)
+    } catch {
+      // Best-effort delete
+    }
+  }, [onCountChange])
+
   return (
     <div className="absolute end-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl bg-background ring-[0.65px] ring-border/50 shadow-lg">
       {/* Header */}
@@ -182,6 +198,7 @@ function NotificationDropdown({
             openId={openId}
             setOpenId={setOpenId}
             onAcknowledge={handleAcknowledge}
+            onDelete={handleDelete}
             onNavigate={(path) => { router.push(path); onClose() }}
             tNotif={tNotif}
           />
@@ -196,6 +213,7 @@ function PanelNotificationRow({
   openId,
   setOpenId,
   onAcknowledge,
+  onDelete,
   onNavigate,
   tNotif,
 }: {
@@ -203,6 +221,7 @@ function PanelNotificationRow({
   openId: string | null
   setOpenId: (id: string | null) => void
   onAcknowledge: (id: string) => void
+  onDelete: (id: string) => void
   onNavigate: (path: string) => void
   tNotif: ReturnType<typeof useTranslations<'notifications'>>
 }) {
@@ -314,6 +333,10 @@ function PanelNotificationRow({
           setOpenId(n.id)
           onAcknowledge(n.id)
         }}
+        onMarkRead={n.status !== 'ACKNOWLEDGED' ? () => onAcknowledge(n.id) : undefined}
+        onDelete={() => onDelete(n.id)}
+        markReadLabel={tNotif('markRead' as Parameters<typeof tNotif>[0])}
+        deleteLabel={tNotif('delete' as Parameters<typeof tNotif>[0])}
       />
       <NotificationDetailModal
         open={isOpen}

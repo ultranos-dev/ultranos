@@ -528,6 +528,18 @@ Total keys to review: **231** (each across ar / prs / ps). Includes a 24-key add
 - **prs:** "نتیجه لابراتوار · عاجل"
 - **ps:** "لابراتوار پایله · عاجل"
 
+### `notifications.markRead`
+- **en:** "Mark as read"
+- **ar:** "تعيين كمقروء" ⚠ MACHINE-GENERATED
+- **prs:** "علامت‌گذاری به‌عنوان خوانده شده" ⚠ MACHINE-GENERATED
+- **ps:** "لوستل شوی علامه کول" ⚠ MACHINE-GENERATED
+
+### `notifications.delete`
+- **en:** "Delete notification"
+- **ar:** "حذف الإشعار" ⚠ MACHINE-GENERATED
+- **prs:** "حذف اطلاعیه" ⚠ MACHINE-GENERATED
+- **ps:** "خبرتیا ړنګول" ⚠ MACHINE-GENERATED
+
 ### `patient.activeMedications`
 - **en:** "Active Medications"
 - **ar:** "الأدوية النشطة"

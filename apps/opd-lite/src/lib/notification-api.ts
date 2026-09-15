@@ -82,3 +82,7 @@ export async function fetchUnreadCount(): Promise<{ count: number }> {
 export async function acknowledgeNotification(notificationId: string): Promise<{ success: boolean }> {
   return trpcMutation<{ success: boolean }>('notification.acknowledge', { notificationId })
 }
+
+export async function deleteNotification(notificationId: string): Promise<{ success: boolean }> {
+  return trpcMutation<{ success: boolean }>('notification.delete', { notificationId })
+}

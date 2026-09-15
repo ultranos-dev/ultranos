@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   fetchNotifications,
   acknowledgeNotification,
+  deleteNotification,
   type NotificationItem,
 } from '@/lib/notification-api'
 
@@ -18,6 +19,7 @@ export interface UseNotificationPollResult {
   refetch: () => Promise<void>
   acknowledge: (id: string) => Promise<void>
   acknowledgeAll: () => Promise<void>
+  remove: (id: string) => Promise<void>
   setNotifications: React.Dispatch<React.SetStateAction<NotificationItem[]>>
 }
 
@@ -107,6 +109,21 @@ export function useNotificationPoll(intervalMs = POLL_INTERVAL_MS): UseNotificat
     }
   }, [])
 
+  const remove = useCallback(async (id: string) => {
+    // Optimistic update — remove from local state immediately
+    setNotifications(prev => {
+      const updated = prev.filter(n => n.id !== id)
+      setUnreadCount(updated.filter(n => n.status !== 'ACKNOWLEDGED').length)
+      return updated
+    })
+
+    try {
+      await deleteNotification(id)
+    } catch {
+      // Best-effort — optimistic removal stays
+    }
+  }, [])
+
   const acknowledgeAllFn = useCallback(async () => {
     const unread = notificationsRef.current.filter(n => n.status !== 'ACKNOWLEDGED')
     if (unread.length === 0) return
@@ -139,6 +156,7 @@ export function useNotificationPoll(intervalMs = POLL_INTERVAL_MS): UseNotificat
     refetch: fetchAll,
     acknowledge,
     acknowledgeAll: acknowledgeAllFn,
+    remove,
     setNotifications,
   }
 }

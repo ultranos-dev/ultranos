@@ -115,6 +115,7 @@ export function NotificationCenter() {
     error,
     acknowledge,
     acknowledgeAll,
+    remove,
   } = useNotificationPoll()
 
   const query = search.trim().toLowerCase()
@@ -231,6 +232,7 @@ export function NotificationCenter() {
                   setOpenId={setOpenId}
                   onNotificationClick={handleNotificationClick}
                   onNavigate={(path) => router.push(path)}
+                  onRemove={remove}
                   tNotif={tNotif}
                 />
               ))}
@@ -250,6 +252,7 @@ function NotificationRowWrapper({
   setOpenId,
   onNotificationClick,
   onNavigate,
+  onRemove,
   tNotif,
 }: {
   notification: NotificationItem
@@ -257,6 +260,7 @@ function NotificationRowWrapper({
   setOpenId: (id: string | null) => void
   onNotificationClick: (n: NotificationItem) => Promise<void>
   onNavigate: (path: string) => void
+  onRemove: (id: string) => Promise<void>
   tNotif: ReturnType<typeof useTranslations<'notifications'>>
 }) {
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
@@ -367,6 +371,10 @@ function NotificationRowWrapper({
           setOpenId(n.id)
           void onNotificationClick(n)
         }}
+        onMarkRead={n.status !== 'ACKNOWLEDGED' ? () => { void onNotificationClick(n) } : undefined}
+        onDelete={() => { void onRemove(n.id) }}
+        markReadLabel={tNotif('markRead' as Parameters<typeof tNotif>[0])}
+        deleteLabel={tNotif('delete' as Parameters<typeof tNotif>[0])}
       />
       <NotificationDetailModal
         open={isOpen}

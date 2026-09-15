@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 import { NotificationBell } from '../components/NotificationPanel'
 
 // next-intl context isn't provided in unit tests; components only need the locale.
@@ -14,6 +14,9 @@ vi.mock('next/navigation', () => ({
 }))
 
 // Mock the notification API
+const mockDeleteNotificationPanel = vi.fn().mockResolvedValue({ success: true })
+const mockAcknowledgeNotificationPanel = vi.fn().mockResolvedValue({ success: true })
+
 vi.mock('../lib/notification-api', () => ({
   fetchUnreadCount: vi.fn().mockResolvedValue({ count: 3 }),
   fetchNotifications: vi.fn().mockResolvedValue({
@@ -57,12 +60,15 @@ vi.mock('../lib/notification-api', () => ({
       },
     ],
   }),
-  acknowledgeNotification: vi.fn().mockResolvedValue({ success: true }),
+  acknowledgeNotification: (...args: unknown[]) => mockAcknowledgeNotificationPanel(...args),
+  deleteNotification: (...args: unknown[]) => mockDeleteNotificationPanel(...args),
 }))
 
 describe('NotificationBell', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockDeleteNotificationPanel.mockResolvedValue({ success: true })
+    mockAcknowledgeNotificationPanel.mockResolvedValue({ success: true })
   })
 
   it('renders bell icon with unread count badge', async () => {
@@ -137,8 +143,6 @@ describe('NotificationBell', () => {
   })
 
   it('calls acknowledgeNotification when a notification row is clicked', async () => {
-    const { acknowledgeNotification } = await import('../lib/notification-api')
-
     render(<NotificationBell />)
 
     const bell = await screen.findByLabelText('bellUnreadAria')
@@ -155,7 +159,75 @@ describe('NotificationBell', () => {
     fireEvent.click(firstRow)
 
     await waitFor(() => {
-      expect(acknowledgeNotification).toHaveBeenCalledWith('n1')
+      expect(mockAcknowledgeNotificationPanel).toHaveBeenCalledWith('n1')
+    })
+  })
+
+  // --- T3: Mark-read + delete action icons (NotificationPanel) ---
+  it('T3: delete button in panel calls deleteNotification with the id', async () => {
+    render(<NotificationBell />)
+
+    const bell = await screen.findByLabelText('bellUnreadAria')
+    fireEvent.click(bell)
+
+    await waitFor(() => {
+      expect(screen.getAllByText('sourceApp.LAB_LITE').length).toBeGreaterThanOrEqual(1)
+    })
+
+    // The delete button has aria-label 'delete' (mock returns key as-is)
+    const [deleteBtn0] = screen.getAllByRole('button', { name: /delete/i })
+    if (!deleteBtn0) throw new Error('No delete button found')
+    await act(async () => {
+      fireEvent.click(deleteBtn0)
+    })
+
+    await waitFor(() => {
+      expect(mockDeleteNotificationPanel).toHaveBeenCalledWith('n1')
+    })
+  })
+
+  it('T3: delete removes the row from the panel list', async () => {
+    render(<NotificationBell />)
+
+    const bell = await screen.findByLabelText('bellUnreadAria')
+    fireEvent.click(bell)
+
+    // Both n1 and n2 rows visible — each shows 'sourceApp.LAB_LITE'
+    await waitFor(() => {
+      expect(screen.getAllByText('sourceApp.LAB_LITE').length).toBeGreaterThanOrEqual(2)
+    })
+
+    const [deleteFirst] = screen.getAllByRole('button', { name: /delete/i })
+    if (!deleteFirst) throw new Error('No delete button found')
+    await act(async () => {
+      fireEvent.click(deleteFirst)
+    })
+
+    // After delete of n1, only n2 remains — count drops to 1
+    await waitFor(() => {
+      expect(screen.getAllByText('sourceApp.LAB_LITE').length).toBeLessThan(2)
+    })
+  })
+
+  it('T3: mark-read button in panel calls acknowledgeNotification', async () => {
+    render(<NotificationBell />)
+
+    const bell = await screen.findByLabelText('bellUnreadAria')
+    fireEvent.click(bell)
+
+    await waitFor(() => {
+      expect(screen.getAllByText('sourceApp.LAB_LITE').length).toBeGreaterThanOrEqual(1)
+    })
+
+    // The mark-read button has aria-label 'markRead' (mock returns key as-is)
+    const [markReadBtn0] = screen.getAllByRole('button', { name: /markRead/i })
+    if (!markReadBtn0) throw new Error('No mark-read button found')
+    await act(async () => {
+      fireEvent.click(markReadBtn0)
+    })
+
+    await waitFor(() => {
+      expect(mockAcknowledgeNotificationPanel).toHaveBeenCalledWith('n1')
     })
   })
 })

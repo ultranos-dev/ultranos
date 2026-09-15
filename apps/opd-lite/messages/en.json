@@ -513,7 +513,9 @@
       "lab": "Lab",
       "status": "Status",
       "received": "Received"
-    }
+    },
+    "markRead": "Mark as read",
+    "delete": "Delete notification"
   },
   "sync": {
     "dashboardTitle": "Sync Status",
