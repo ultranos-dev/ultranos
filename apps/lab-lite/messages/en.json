@@ -547,7 +547,8 @@
     "manualModeInfo": "Manual mode: drag to reorder. Auto-refresh paused. Stability badges still active.",
     "emptyTitle": "No samples in queue",
     "emptyHint": "Received samples will appear here automatically.",
-    "enterResult": "Enter Result"
+    "enterResult": "Enter Result",
+    "recollect": "Re-collect"
   },
   "orders": {
     "title": "Test Orders",

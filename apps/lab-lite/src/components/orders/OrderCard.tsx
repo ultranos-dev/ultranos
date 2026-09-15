@@ -79,8 +79,11 @@ export function OrderCard({ order }: { order: LabOrderEntry }) {
 
   // Once a sample is received the order is no longer re-receivable — activating the
   // card takes the tech to the processing worklist instead of re-opening receive.
-  const handleCardActivate = () => {
-    if (sampleReceived) router.push('/worklist')
+  // The async re-check is a race guard: if the effect hasn't resolved yet but a
+  // specimen already exists in the DB, we still route correctly.
+  const handleCardActivate = async () => {
+    const existing = await getReceivedSampleForOrder(order.orderId)
+    if (existing || sampleReceived) router.push('/worklist')
     else setShowReceive(true)
   }
 

@@ -159,11 +159,12 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
 
           for (const specimen of activeSamples) {
             const orderId = extractOrderId(specimen.request?.[0]?.reference ?? '')
-            if (!orderId) continue
-            const order = orderMap.get(orderId)
+            const order = orderId ? orderMap.get(orderId) : undefined
 
             // If no matching order row, fall back to verified_patients for patient info.
             // Never silently drop a collected sample — it must always appear in the worklist.
+            // When orderId is null (malformed request reference), use empty string — the
+            // specimen is still shown (orphan path) so the tech can act on it.
             let verifiedPatient: VerifiedPatientCache | undefined
             if (!order) {
               const patientId = extractOrderId(specimen.subject?.reference ?? '')
@@ -172,33 +173,16 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
               }
             }
 
-            sampleInputs.push(buildSampleInput(specimen, orderId, order, verifiedPatient))
+            sampleInputs.push(buildSampleInput(specimen, orderId ?? '', order, verifiedPatient))
           }
         }
       } catch {
-        // samples table unavailable — fall through to orders fallback
+        // samples table unavailable — no fallback; worklist shows empty
       }
-
-      // Fallback: if samples table empty/unavailable, use orders directly.
-      // Orders with RECEIVED or IN_PROGRESS status are treated as samples.
-      if (sampleInputs.length === 0) {
-        const activeOrders = await db.orders
-          .filter((o) => o.status === 'RECEIVED' || o.status === 'IN_PROGRESS')
-          .toArray()
-
-        sampleInputs = activeOrders.map((order) => ({
-          sampleId: order.orderId,
-          orderId: order.orderId,
-          patientRef: {
-            firstName: order.patientFirstName,
-            age: order.patientAge ?? 0,
-          },
-          loincCode: order.testsRequested[0]?.loincCode ?? '',
-          loincDisplay: order.testsRequested[0]?.loincDisplay ?? '',
-          urgency: mapUrgency(order.urgency),
-          receivedAt: order.receivedAt,
-        }))
-      }
+      // NOTE: The orders-fallback (mapping un-accessioned orders to sampleId=orderId) has
+      // been intentionally removed. The worklist lists ONLY real FhirSpecimen rows so that
+      // every "Enter Results" link resolves to /results/<specimenId>/enter. Un-accessioned
+      // orders belong on the Test Orders page, not here.
 
       // 2. Prioritize (pure computation, no network)
       const prioritized = prioritizeSamples(sampleInputs)

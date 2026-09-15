@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, type MockInstance } from 'vitest'
 import 'fake-indexeddb/auto'
 
 vi.mock('../lib/audit-client', () => ({
@@ -27,7 +27,7 @@ import {
   recordHandoff,
 } from '../lib/sample-service'
 import { reportSampleAuditEvent } from '../lib/audit-client'
-import { getCustodyEventsForSample, putOrders, getOrders, type LabOrderEntry } from '../lib/db'
+import { getCustodyEventsForSample, getReceivedSampleForOrder, putOrders, getOrders, type LabOrderEntry } from '../lib/db'
 
 const BASE_INPUT = {
   orderId: 'order-abc',
@@ -132,6 +132,164 @@ describe('accessionSample', () => {
 
     // Must not throw even though there is no cached order to advance
     await expect(accessionSample(BASE_INPUT)).resolves.not.toThrow()
+  })
+
+  it('first-time accession produces exactly one "received" specimen and rejects nothing', async () => {
+    const db = getDb()
+    const specimen = await accessionSample(BASE_INPUT)
+
+    const allSamples = await db.samples.toArray()
+    expect(allSamples).toHaveLength(1)
+    expect(allSamples[0]!._ultranos.pipelineStatus).toBe('received')
+    expect(allSamples[0]!.id).toBe(specimen.id)
+  })
+})
+
+describe('accessionSample — re-collection supersede (Fix #5)', () => {
+  beforeEach(async () => {
+    const db = getDb()
+    await db.samples.clear()
+    await db.custody_events.clear()
+    await db.syncQueue.clear()
+    await db.orders.clear()
+    vi.clearAllMocks()
+  })
+
+  it('second accession for same order supersedes first: first specimen ends up rejected', async () => {
+    const first = await accessionSample(BASE_INPUT)
+    expect(first._ultranos.pipelineStatus).toBe('received')
+
+    // Re-accession the same orderId
+    await accessionSample(BASE_INPUT)
+
+    const db = getDb()
+    const firstStored = await db.samples.get(first.id)
+    expect(firstStored!._ultranos.pipelineStatus).toBe('rejected')
+    expect(firstStored!._ultranos.rejectionReason).toBe('superseded-by-recollection')
+    expect(firstStored!.status).toBe('unsatisfactory')
+  })
+
+  it('second accession for same order: second specimen is "received"', async () => {
+    await accessionSample(BASE_INPUT)
+    const second = await accessionSample(BASE_INPUT)
+
+    expect(second._ultranos.pipelineStatus).toBe('received')
+    expect(second.status).toBe('available')
+  })
+
+  it('getReceivedSampleForOrder returns the SECOND (active) specimen after re-collection', async () => {
+    const first = await accessionSample(BASE_INPUT)
+    const second = await accessionSample(BASE_INPUT)
+
+    const active = await getReceivedSampleForOrder(BASE_INPUT.orderId)
+    expect(active).toBeDefined()
+    expect(active!.id).toBe(second.id)
+    expect(active!.id).not.toBe(first.id)
+  })
+
+  it('worklist samples-path yields exactly ONE active item for the order after re-collection', async () => {
+    await accessionSample(BASE_INPUT)
+    await accessionSample(BASE_INPUT)
+
+    const db = getDb()
+    const ACTIVE_STATUSES = new Set(['received', 'in-processing'])
+    const activeSamples = await db.samples
+      .filter((s: any) => ACTIVE_STATUSES.has(s._ultranos?.pipelineStatus))
+      .toArray()
+
+    // Only the second (replacement) specimen is active; the first is rejected
+    expect(activeSamples).toHaveLength(1)
+  })
+
+  it('superseded specimen has a rejection custody event', async () => {
+    const first = await accessionSample(BASE_INPUT)
+    await accessionSample(BASE_INPUT)
+
+    const events = await getCustodyEventsForSample(first.id)
+    const rejectionEvent = events.find((e) => e.eventType === 'rejection')
+    expect(rejectionEvent).toBeDefined()
+    expect(rejectionEvent!.notes).toBe('superseded-by-recollection')
+  })
+
+  it('append-only: rejected (superseded) specimen is still in the db, not deleted', async () => {
+    const first = await accessionSample(BASE_INPUT)
+    await accessionSample(BASE_INPUT)
+
+    const db = getDb()
+    const firstStored = await db.samples.get(first.id)
+    // Must still exist — append-only history
+    expect(firstStored).toBeDefined()
+  })
+})
+
+describe('accessionSample — supersede putSample failure aborts new specimen creation', () => {
+  // This suite verifies the critical invariant: if the putSample that marks the
+  // prior specimen as rejected/superseded throws, accessionSample must throw too
+  // and must NOT create a new specimen — the system must never be left with two
+  // active rows for the same order.
+
+  let putSampleSpy: MockInstance
+
+  beforeEach(async () => {
+    const db = getDb()
+    await db.samples.clear()
+    await db.custody_events.clear()
+    await db.syncQueue.clear()
+    await db.orders.clear()
+    vi.clearAllMocks()
+    // Restore any spy installed by a previous test so the real db is in effect.
+    putSampleSpy?.mockRestore()
+  })
+
+  it('accessionSample throws when the supersede putSample write fails', async () => {
+    // Seed a prior 'received' specimen so the supersede path is taken.
+    const first = await accessionSample(BASE_INPUT)
+    expect(first._ultranos.pipelineStatus).toBe('received')
+
+    // Capture the real implementation BEFORE installing the spy.
+    const dbModule = await import('../lib/db')
+    const realPutSample = dbModule.putSample.bind(dbModule)
+    let callCount = 0
+    putSampleSpy = vi.spyOn(dbModule, 'putSample').mockImplementation(async (...args) => {
+      callCount++
+      if (callCount === 1) {
+        // First call in accessionSample = supersede status-write → simulate failure.
+        throw new Error('DB write failure — supersede putSample')
+      }
+      return realPutSample(...args)
+    })
+
+    await expect(accessionSample(BASE_INPUT)).rejects.toThrow()
+  })
+
+  it('no new specimen is created when the supersede putSample write fails', async () => {
+    // Seed a prior 'received' specimen so the supersede path is taken.
+    await accessionSample(BASE_INPUT)
+
+    const dbModule = await import('../lib/db')
+    const realPutSample = dbModule.putSample.bind(dbModule)
+    let callCount = 0
+    putSampleSpy = vi.spyOn(dbModule, 'putSample').mockImplementation(async (...args) => {
+      callCount++
+      if (callCount === 1) {
+        // First call = supersede status-write → fail so new specimen is NOT created.
+        throw new Error('DB write failure — supersede putSample')
+      }
+      return realPutSample(...args)
+    })
+
+    // accessionSample must throw — swallow the error; we assert the side-effect below.
+    await accessionSample(BASE_INPUT).catch(() => { /* expected */ })
+
+    // Restore the spy before reading the DB so helper reads go through real impl.
+    putSampleSpy.mockRestore()
+
+    const db = getDb()
+    const allSamples = await db.samples.toArray()
+
+    // Still exactly ONE specimen (the original), still 'received' — NOT two active rows.
+    expect(allSamples).toHaveLength(1)
+    expect(allSamples[0]!._ultranos.pipelineStatus).toBe('received')
   })
 })
 

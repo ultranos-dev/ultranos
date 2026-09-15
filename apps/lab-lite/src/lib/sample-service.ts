@@ -20,6 +20,7 @@ import {
   enqueueSyncEvent,
   updateOrderStatus,
   getDb,
+  getReceivedSampleForOrder,
 } from './db'
 import { generateSampleId } from './sample-id'
 import { hlc, serializeHlc } from './hlc'
@@ -119,6 +120,73 @@ export async function accessionSample(input: AccessionInput): Promise<FhirSpecim
       pipelineStatus: 'received',
       sampleCondition: input.condition,
     },
+  }
+
+  // Supersede any existing non-rejected specimen for this order so the worklist
+  // never shows two active rows after a re-collection.
+  // First-time accession (no prior specimen) → lookup returns undefined → no-op.
+  //
+  // CRITICAL INVARIANT: if the status-write (putSample) for the prior specimen
+  // fails, we MUST NOT create the new specimen — that would leave two active rows
+  // for the same order.  Let any error from putSample propagate so the caller
+  // (ReceiveSampleModal) surfaces it.  Side-effects (custody event, audit, sync)
+  // run only after the status-write succeeds and are individually best-effort.
+  const priorSpecimen = await getReceivedSampleForOrder(input.orderId)
+  if (priorSpecimen) {
+    const supersedeNow = new Date().toISOString()
+    const supersedeHlcTs = serializeHlc(hlc.now())
+    const superseded: FhirSpecimen = {
+      ...priorSpecimen,
+      status: 'unsatisfactory',
+      meta: {
+        ...priorSpecimen.meta,
+        lastUpdated: supersedeNow,
+        versionId: String(parseInt(priorSpecimen.meta.versionId ?? '1') + 1),
+      },
+      _ultranos: {
+        ...priorSpecimen._ultranos,
+        pipelineStatus: 'rejected',
+        rejectionReason: 'superseded-by-recollection',
+        hlcTimestamp: supersedeHlcTs,
+      },
+    }
+
+    // CRITICAL: propagates on failure — new specimen must NOT be created if this throws.
+    await putSample(superseded)
+
+    // Side-effects — best-effort; a failure here must not block the workflow.
+    try {
+      const supersedeCustodyEvent: CustodyEvent = {
+        id: crypto.randomUUID(),
+        sampleId: priorSpecimen.id,
+        eventType: 'rejection',
+        fromActorId: actorId,
+        toActorId: actorId,
+        timestamp: supersedeHlcTs,
+        notes: 'superseded-by-recollection',
+        fromStatus: priorSpecimen._ultranos.pipelineStatus,
+        toStatus: 'rejected',
+      }
+      await addCustodyEvent(supersedeCustodyEvent)
+
+      reportSampleAuditEvent({
+        action: 'SAMPLE_REJECTED',
+        sampleId: priorSpecimen.id,
+        labSampleId: priorSpecimen._ultranos.labSampleId,
+        actorId,
+        patientRef: priorSpecimen.subject.reference,
+      })
+
+      await enqueueSyncEvent({
+        resourceType: 'Specimen',
+        resourceId: priorSpecimen.id,
+        payload: superseded,
+        hlcTimestamp: supersedeHlcTs,
+      })
+    } catch {
+      // Non-fatal: custody event / audit / sync failure must not block creation
+      // of the new specimen now that the prior specimen is already marked rejected.
+    }
   }
 
   await putSample(specimen)
