@@ -272,6 +272,8 @@
     "systemNotification": "إشعار نظام",
     "unknownTest": "فحص غير معروف",
     "markAllRead": "تعيين الكل كمقروء",
+    "markRead": "تعيين كمقروء",
+    "delete": "حذف الإشعار",
     "closeAria": "إغلاق الإشعارات",
     "error": "تعذّر تحميل الإشعارات",
     "viewDetails": "عرض التفاصيل",

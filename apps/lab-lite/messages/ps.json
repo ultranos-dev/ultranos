@@ -272,6 +272,8 @@
     "systemNotification": "د سیسټم خبرتیا",
     "unknownTest": "نامعلومه ازموینه",
     "markAllRead": "ټول لوستل شوي",
+    "markRead": "لوستل شوی علامه کول",
+    "delete": "خبرتیا ړنګول",
     "closeAria": "خبرتیاوې بندول",
     "error": "د خبرتیاوو بارول ونشو",
     "viewDetails": "توضیحات وګورئ",

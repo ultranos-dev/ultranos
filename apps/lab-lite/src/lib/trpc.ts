@@ -367,6 +367,20 @@ export async function listLabReports(
 }
 
 /**
+ * Delete a single notification (Hub `notification.delete`).
+ */
+export async function deleteNotification(id: string, token: string): Promise<void> {
+  await fetch(`${getHubApiUrl()}/notification.delete`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ json: { notificationId: id } }),
+  })
+}
+
+/**
  * Mark a single notification as acknowledged.
  */
 export async function acknowledgeNotification(id: string, token: string): Promise<void> {

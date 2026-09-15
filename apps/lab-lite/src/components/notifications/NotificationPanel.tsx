@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatDate, formatDateTime } from '@ultranos/ui-kit'
@@ -11,7 +11,9 @@ import { sourceAppIcon, sourceAppNameKey, deriveSourceApp } from '@ultranos/ui-k
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { X } from '@ultranos/ui-kit/icons'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
+import { deleteNotification } from '@/lib/trpc'
 import type { NotificationItem } from '@/lib/trpc'
+import { getSupabaseBrowserClient } from '@/lib/supabase'
 
 function formatTimestamp(
   iso: string,
@@ -47,16 +49,49 @@ export function NotificationPanel({
   const panelRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
-  const { notifications, loading, error, acknowledge, unreadCount } = useNotificationPoll()
+  const { notifications: polledNotifications, loading, error, acknowledge } = useNotificationPoll()
 
-  // Keep parent badge in sync with the poll hook's unread count
+  // Local deleted-IDs set so rows vanish immediately without waiting for next poll.
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
+  const notifications = useMemo(
+    () => polledNotifications.filter(n => !deletedIds.has(n.id)),
+    [polledNotifications, deletedIds],
+  )
+
+  // Recompute unread from the filtered list and keep parent badge in sync.
+  const filteredUnread = useMemo(
+    () => notifications.filter(n => n.status !== 'ACKNOWLEDGED').length,
+    [notifications],
+  )
   useEffect(() => {
-    onCountChange(unreadCount)
-  }, [unreadCount, onCountChange])
+    onCountChange(filteredUnread)
+  }, [filteredUnread, onCountChange])
+
+  const getToken = useCallback(async (): Promise<string | null> => {
+    try {
+      const supabase = getSupabaseBrowserClient()
+      const { data } = await supabase.auth.getSession()
+      return data.session?.access_token ?? null
+    } catch {
+      return null
+    }
+  }, [])
 
   const handleAcknowledge = useCallback(async (id: string) => {
     await acknowledge(id)
   }, [acknowledge])
+
+  const handleDelete = useCallback(async (id: string) => {
+    // Optimistic removal — row disappears immediately.
+    setDeletedIds(prev => new Set([...prev, id]))
+    try {
+      const token = await getToken()
+      if (!token) return
+      await deleteNotification(id, token)
+    } catch {
+      // Best-effort delete — row stays removed from local list regardless.
+    }
+  }, [getToken])
 
   // Close on click outside
   useEffect(() => {
@@ -137,6 +172,7 @@ export function NotificationPanel({
                   openId={openId}
                   setOpenId={setOpenId}
                   onAcknowledge={handleAcknowledge}
+                  onDelete={handleDelete}
                   onNavigate={(path) => { router.push(path); onClose() }}
                   tNotif={tNotif}
                 />
@@ -154,6 +190,7 @@ function PanelNotificationRow({
   openId,
   setOpenId,
   onAcknowledge,
+  onDelete,
   onNavigate,
   tNotif,
 }: {
@@ -161,6 +198,7 @@ function PanelNotificationRow({
   openId: string | null
   setOpenId: (id: string | null) => void
   onAcknowledge: (id: string) => void
+  onDelete: (id: string) => void
   onNavigate: (path: string) => void
   tNotif: ReturnType<typeof useTranslations<'notifications'>>
 }) {
@@ -241,6 +279,10 @@ function PanelNotificationRow({
           setOpenId(n.id)
           onAcknowledge(n.id)
         }}
+        onMarkRead={n.status !== 'ACKNOWLEDGED' ? () => onAcknowledge(n.id) : undefined}
+        onDelete={() => onDelete(n.id)}
+        markReadLabel={tNotif('markRead' as Parameters<typeof tNotif>[0])}
+        deleteLabel={tNotif('delete' as Parameters<typeof tNotif>[0])}
       />
       <NotificationDetailModal
         open={isOpen}

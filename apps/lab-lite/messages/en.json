@@ -272,6 +272,8 @@
     "systemNotification": "System notification",
     "unknownTest": "Unknown test",
     "markAllRead": "Mark All Read",
+    "markRead": "Mark as read",
+    "delete": "Delete notification",
     "closeAria": "Close notifications",
     "error": "Unable to load notifications",
     "viewDetails": "View Details",

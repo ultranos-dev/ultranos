@@ -31,6 +31,8 @@ vi.mock('next-intl', () => ({
       'notifications.unknownTest': 'Unknown test',
       'notifications.anomalyFlagMessage': `Anomaly flag — ${params?.ruleId ?? '{ruleId}'}`,
       'notifications.unread': 'Unread',
+      'notifications.markRead': 'Mark as read',
+      'notifications.delete': 'Delete notification',
       'notifications.viewDetails': 'View Details',
       'notifications.sourceApp.LAB_LITE': 'Lab Lite',
       'notifications.sourceApp.PHARMACY_LITE': 'Pharmacy Lite',
@@ -89,15 +91,35 @@ vi.mock('@ultranos/ui-kit/components/ui/notification-row', () => ({
     appName,
     subject,
     onClick,
+    onMarkRead,
+    onDelete,
+    markReadLabel,
+    deleteLabel,
   }: {
     appName: string
     subject: string
     onClick: () => void
+    onMarkRead?: () => void
+    onDelete?: () => void
+    markReadLabel?: string
+    deleteLabel?: string
   }) => (
-    <button type="button" data-testid="notif-row" onClick={onClick}>
-      <span>{appName}</span>
-      <span>{subject}</span>
-    </button>
+    <div data-testid="notif-row">
+      <button type="button" data-testid="notif-row-click" onClick={onClick}>
+        <span>{appName}</span>
+        <span>{subject}</span>
+      </button>
+      {onMarkRead && (
+        <button type="button" data-testid="notif-mark-read" aria-label={markReadLabel} onClick={onMarkRead}>
+          {markReadLabel}
+        </button>
+      )}
+      {onDelete && (
+        <button type="button" data-testid="notif-delete" aria-label={deleteLabel} onClick={onDelete}>
+          {deleteLabel}
+        </button>
+      )}
+    </div>
   ),
 }))
 
@@ -152,6 +174,7 @@ vi.mock('@ultranos/ui-kit', () => ({
 const mockGetUnreadCount = vi.fn()
 const mockListNotifications = vi.fn()
 const mockAcknowledgeNotification = vi.fn()
+const mockDeleteNotification = vi.fn()
 
 vi.mock('@/lib/trpc', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/trpc')>()
@@ -160,6 +183,7 @@ vi.mock('@/lib/trpc', async (importOriginal) => {
     getUnreadCount: (...args: unknown[]) => mockGetUnreadCount(...args),
     listNotifications: (...args: unknown[]) => mockListNotifications(...args),
     acknowledgeNotification: (...args: unknown[]) => mockAcknowledgeNotification(...args),
+    deleteNotification: (...args: unknown[]) => mockDeleteNotification(...args),
   }
 })
 
@@ -195,6 +219,7 @@ beforeEach(() => {
   mockGetUnreadCount.mockResolvedValue(0)
   mockListNotifications.mockResolvedValue([])
   mockAcknowledgeNotification.mockResolvedValue(true)
+  mockDeleteNotification.mockResolvedValue(undefined)
 })
 
 afterEach(() => {
@@ -350,6 +375,66 @@ describe('NotificationPanel', () => {
     fireEvent.mouseDown(container.querySelector('[data-testid="outside-element"]')!)
     expect(onClose).toHaveBeenCalledTimes(1)
   })
+
+  it('delete button calls deleteNotification and removes the row (T5)', async () => {
+    const notif = makeNotification({ id: 'del-1', status: 'SENT', sourceApp: 'LAB_LITE', subjectKey: 'LAB_RESULT_AVAILABLE' })
+    mockListNotifications.mockResolvedValue([notif])
+    mockDeleteNotification.mockResolvedValue(undefined)
+
+    render(<NotificationPanel onClose={vi.fn()} onCountChange={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('notif-row')).toHaveLength(1)
+    })
+
+    fireEvent.click(screen.getByTestId('notif-delete'))
+
+    // Row removed optimistically
+    await waitFor(() => {
+      expect(screen.queryByTestId('notif-row')).not.toBeInTheDocument()
+    })
+
+    // deleteNotification called with the notification id
+    await waitFor(() => {
+      expect(mockDeleteNotification).toHaveBeenCalledWith('del-1', expect.any(String))
+    })
+  })
+
+  it('mark-read button calls acknowledgeNotification (T5)', async () => {
+    const notif = makeNotification({ id: 'ack-1', status: 'SENT', sourceApp: 'LAB_LITE', subjectKey: 'LAB_RESULT_AVAILABLE' })
+    mockListNotifications.mockResolvedValue([notif])
+
+    render(<NotificationPanel onClose={vi.fn()} onCountChange={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('notif-row')).toHaveLength(1)
+    })
+
+    // Mark-read button is visible for unread notifications
+    expect(screen.getByTestId('notif-mark-read')).toBeInTheDocument()
+    expect(screen.getByTestId('notif-mark-read')).toHaveAccessibleName('Mark as read')
+
+    fireEvent.click(screen.getByTestId('notif-mark-read'))
+
+    await waitFor(() => {
+      expect(mockAcknowledgeNotification).toHaveBeenCalledWith('ack-1', expect.any(String))
+    })
+  })
+
+  it('mark-read button is absent for already-acknowledged notifications (T5)', async () => {
+    const notif = makeNotification({ id: 'read-1', status: 'ACKNOWLEDGED' })
+    mockListNotifications.mockResolvedValue([notif])
+
+    render(<NotificationPanel onClose={vi.fn()} onCountChange={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('notif-row')).toHaveLength(1)
+    })
+
+    expect(screen.queryByTestId('notif-mark-read')).not.toBeInTheDocument()
+    // Delete button still present for acknowledged notifications
+    expect(screen.getByTestId('notif-delete')).toBeInTheDocument()
+  })
 })
 
 describe('NotificationItemRow', () => {
@@ -451,7 +536,7 @@ describe('NotificationPanel — modal detail rows', () => {
     })
 
     // Open the modal by clicking the notification row
-    fireEvent.click(screen.getByTestId('notif-row'))
+    fireEvent.click(screen.getByTestId('notif-row-click'))
 
     await waitFor(() => {
       expect(screen.getByTestId('notif-modal')).toBeInTheDocument()
@@ -496,7 +581,7 @@ describe('NotificationPanel — modal detail rows', () => {
       expect(screen.getAllByTestId('notif-row')).toHaveLength(1)
     })
 
-    fireEvent.click(screen.getByTestId('notif-row'))
+    fireEvent.click(screen.getByTestId('notif-row-click'))
 
     await waitFor(() => {
       expect(screen.getByTestId('notif-modal')).toBeInTheDocument()
