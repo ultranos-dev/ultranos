@@ -88,6 +88,16 @@ describe('formatDateTime', () => {
     expect(result).toContain('15/03/2026')
     expect(result).toContain('14:30')
   })
+
+  it('output contains both a date component and a time component (digit:digit) for a fixed instant + en locale', () => {
+    // 2026-09-15T08:05:00 local — the exact hour depends on TZ, but the pattern must hold
+    const fixed = new Date(2026, 8, 15, 8, 5) // Sep 15 2026, 08:05 local
+    const result = formatDateTime(fixed, 'en')
+    // Must contain a year
+    expect(result).toContain('2026')
+    // Must contain a time separator (e.g. "08:05" — digit:digit pattern)
+    expect(result).toMatch(/\d{1,2}:\d{2}/)
+  })
 })
 
 describe('formatTime', () => {

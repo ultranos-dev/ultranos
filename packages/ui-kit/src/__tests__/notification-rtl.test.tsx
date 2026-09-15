@@ -126,5 +126,24 @@ describe('NotificationDetailModal — RTL/LTR safety', () => {
       const { container } = renderInDir('rtl', <NotificationDetailModal {...baseProps} />)
       expect(container.firstChild).toMatchSnapshot()
     })
+
+    it('renders details list inside dir="rtl" wrapper without crash (logical layout)', () => {
+      renderInDir(
+        'rtl',
+        <NotificationDetailModal
+          {...baseProps}
+          details={[
+            { label: 'Order ID', value: '5A4741' },
+            { label: 'Status', value: 'Pending', emphasis: true },
+          ]}
+          patient={{ label: 'Patient', value: 'Ahmad K.' }}
+        />,
+      )
+      expect(screen.getByText('Order ID')).toBeInTheDocument()
+      expect(screen.getByText('5A4741')).toBeInTheDocument()
+      expect(screen.getByText('Status')).toBeInTheDocument()
+      expect(screen.getByText('Pending')).toBeInTheDocument()
+      expect(screen.getByText('Ahmad K.')).toBeInTheDocument()
+    })
   })
 })

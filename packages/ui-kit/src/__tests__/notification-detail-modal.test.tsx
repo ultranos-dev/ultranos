@@ -28,4 +28,61 @@ describe('NotificationDetailModal', () => {
     // No action button when not provided
     expect(screen.queryByRole('button', { name: /view/i })).not.toBeInTheDocument()
   })
+
+  it('renders details list and patient line when provided', () => {
+    render(
+      <NotificationDetailModal
+        open
+        onOpenChange={vi.fn()}
+        icon={FlaskConical}
+        appName="Lab Lite"
+        subject="Lab order received"
+        exactTimestamp="15 Sep 2026, 06:45"
+        details={[
+          { label: 'Order ID', value: '5A4741' },
+          { label: 'Received', value: '15 Sep 2026, 06:45' },
+        ]}
+        patient={{ label: 'Patient', value: 'Ahmad K.' }}
+      />
+    )
+    expect(screen.getByText('Order ID')).toBeInTheDocument()
+    expect(screen.getByText('5A4741')).toBeInTheDocument()
+    expect(screen.getByText('Received')).toBeInTheDocument()
+    // "15 Sep 2026, 06:45" appears in both exactTimestamp and details — just check presence
+    expect(screen.getAllByText('15 Sep 2026, 06:45').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('Patient')).toBeInTheDocument()
+    expect(screen.getByText('Ahmad K.')).toBeInTheDocument()
+  })
+
+  it('renders a loading placeholder when patientLoading=true and hides patient value', () => {
+    render(
+      <NotificationDetailModal
+        open
+        onOpenChange={vi.fn()}
+        icon={FlaskConical}
+        appName="Lab Lite"
+        subject="Lab order received"
+        exactTimestamp="15 Sep 2026, 06:45"
+        patientLoading
+      />
+    )
+    // A placeholder element should be present while loading
+    expect(screen.getByTestId('patient-loading')).toBeInTheDocument()
+    // The patient value should not appear
+    expect(screen.queryByText('Ahmad K.')).not.toBeInTheDocument()
+  })
+
+  it('renders subject without crash when neither details nor patient are provided', () => {
+    render(
+      <NotificationDetailModal
+        open
+        onOpenChange={vi.fn()}
+        icon={FlaskConical}
+        appName="Lab Lite"
+        subject="Simple notification"
+        exactTimestamp="15 Sep 2026, 06:45"
+      />
+    )
+    expect(screen.getAllByText('Simple notification')).toHaveLength(2)
+  })
 })
