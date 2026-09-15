@@ -302,6 +302,72 @@ export const notificationRouter = createTRPCRouter({
     }),
 
   /**
+   * Mark a notification as unread (reverse of acknowledge).
+   * Resets status to 'SENT' and clears acknowledged_at.
+   * Ownership-checked: only the recipient can mark their own notification unread.
+   */
+  markUnread: protectedProcedure
+    .input(
+      z.object({
+        notificationId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify ownership: notification must belong to the requesting user.
+      const recipientRefs = await recipientRefsForUser(ctx)
+      const { data: existing, error: fetchError } = await ctx.supabase
+        .from('notifications')
+        .select('id, recipient_ref, status')
+        .eq('id', input.notificationId)
+        .in('recipient_ref', recipientRefs)
+        .single()
+
+      if (fetchError || !existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Notification not found',
+        })
+      }
+
+      const { error: updateError } = await ctx.supabase
+        .from('notifications')
+        .update(db.toRowRaw({
+          status: 'SENT',
+          acknowledgedAt: null,
+        }, 'non-PHI: notifications'))
+        .eq('id', input.notificationId)
+
+      if (updateError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to mark notification as unread',
+        })
+      }
+
+      // Audit mark-unread (best-effort like acknowledge)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'UPDATE',
+          resourceType: 'NOTIFICATION',
+          resourceId: input.notificationId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            notificationAction: 'marked_unread',
+            recipientRef: ctx.user.sub,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'NOTIFICATION', resourceId: input.notificationId })
+      }
+
+      return { success: true }
+    }),
+
+  /**
    * Get unread notification count for the authenticated user.
    * Used by notification bell indicators in OPD Lite and Patient Lite Mobile.
    */

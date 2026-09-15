@@ -257,6 +257,112 @@ describe('notification.acknowledgeAll', () => {
   })
 })
 
+describe('notification.markUnread', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('marks an owned notification as unread (status SENT, acknowledgedAt null)', async () => {
+    // Ownership check: select returns the row
+    const mockUpdateEq = vi.fn().mockResolvedValue({ error: null })
+    const mockUpdateFn = vi.fn().mockReturnValue({ eq: mockUpdateEq })
+
+    mockSelect.mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        in: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { id: '00000000-0000-4000-8000-000000000010', recipient_ref: 'doctor-1', status: 'ACKNOWLEDGED' },
+            error: null,
+          }),
+        }),
+      }),
+    })
+
+    const localFrom = vi.fn((table: string) => {
+      if (table === 'practitioners') return makePractitionersChain()
+      if (table === 'notifications') {
+        return {
+          select: mockSelect,
+          update: mockUpdateFn,
+        }
+      }
+      return { select: vi.fn(), update: vi.fn() }
+    })
+
+    const router = createTRPCRouter({ notification: notificationRouter })
+    const ctx = { supabase: { from: localFrom } as never, user: DOCTOR_USER as never, headers: new Headers() }
+    const caller = createCallerFactory(router)(ctx)
+
+    const result = await caller.notification.markUnread({
+      notificationId: '00000000-0000-4000-8000-000000000010',
+    })
+
+    expect(result.success).toBe(true)
+    // Update must be called with status 'SENT' and acknowledgedAt null
+    expect(mockUpdateFn).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'SENT', acknowledgedAt: null }),
+    )
+    expect(mockUpdateEq).toHaveBeenCalledWith('id', '00000000-0000-4000-8000-000000000010')
+    // Audit must be emitted with notificationAction 'marked_unread'
+    expect(mockAuditEmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'UPDATE',
+        resourceType: 'NOTIFICATION',
+        outcome: 'SUCCESS',
+        metadata: expect.objectContaining({
+          notificationAction: 'marked_unread',
+        }),
+      }),
+    )
+  })
+
+  it('rejects marking-unread a notification the caller does not own (NOT_FOUND)', async () => {
+    // Ownership check: select returns null (not owner)
+    mockSelect.mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        in: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: null,
+            error: { code: 'PGRST116', message: 'No rows found' },
+          }),
+        }),
+      }),
+    })
+
+    const mockUpdateFn = vi.fn()
+    const localFrom = vi.fn((table: string) => {
+      if (table === 'practitioners') return makePractitionersChain()
+      if (table === 'notifications') {
+        return { select: mockSelect, update: mockUpdateFn }
+      }
+      return { select: vi.fn(), update: vi.fn() }
+    })
+
+    const router = createTRPCRouter({ notification: notificationRouter })
+    const ctx = { supabase: { from: localFrom } as never, user: DOCTOR_USER as never, headers: new Headers() }
+    const caller = createCallerFactory(router)(ctx)
+
+    await expect(
+      caller.notification.markUnread({
+        notificationId: '00000000-0000-4000-8000-000000000099',
+      }),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' })
+
+    // Update must NOT be called when ownership check fails
+    expect(mockUpdateFn).not.toHaveBeenCalled()
+  })
+
+  it('rejects unauthenticated requests', async () => {
+    const router = createTRPCRouter({ notification: notificationRouter })
+    const caller = createCallerFactory(router)(makeCtx(null))
+    await expect(
+      caller.notification.markUnread({
+        notificationId: '00000000-0000-4000-8000-000000000010',
+      }),
+    ).rejects.toThrow()
+  })
+})
+
 describe('notification.delete', () => {
   beforeEach(() => {
     vi.clearAllMocks()
