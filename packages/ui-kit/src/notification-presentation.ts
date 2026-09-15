@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { FlaskConical, Pill, Stethoscope, Shield, Bell } from './icons'
+import { FlaskConical, Pill, Stethoscope, Shield, Bell } from './icons.js'
 
 export type SourceApp = 'LAB_LITE' | 'PHARMACY_LITE' | 'OPD_LITE' | 'ADMIN' | 'SYSTEM'
 

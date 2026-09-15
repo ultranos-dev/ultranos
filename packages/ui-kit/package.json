@@ -40,7 +40,8 @@
     "./native/NumericText": "./src/native/NumericText.tsx",
     "./components/ui/search-input": "./src/components/ui/search-input.tsx",
     "./lib/highlight": "./src/lib/highlight.tsx",
-    "./components/ui/image-viewer": "./src/components/ui/image-viewer.tsx"
+    "./components/ui/image-viewer": "./src/components/ui/image-viewer.tsx",
+    "./components/ui/app-toaster": "./src/components/ui/app-toaster.tsx"
   },
   "scripts": {
     "build": "tsc",
@@ -86,6 +87,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^1.17.0",
     "radix-ui": "^1.4.3",
+    "sonner": "^2.0.8",
     "tailwind-merge": "^3.6.0"
   }
 }
