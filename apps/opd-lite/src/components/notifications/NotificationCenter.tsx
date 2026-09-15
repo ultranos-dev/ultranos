@@ -47,15 +47,19 @@ function filterByTab(notifications: NotificationItem[], tab: TabKey): Notificati
   return notifications.filter(n => (SYSTEM_TYPES as readonly string[]).includes(n.type))
 }
 
-function formatTimestamp(iso: string, locale: 'en' | 'ar' | 'prs' | 'ps'): string {
+function formatTimestamp(
+  iso: string,
+  locale: 'en' | 'ar' | 'prs' | 'ps',
+  tTime: ReturnType<typeof useTranslations<'time'>>,
+): string {
   const d = new Date(iso)
   const now = new Date()
   const diffMs = now.getTime() - d.getTime()
   const diffMin = Math.floor(diffMs / 60_000)
-  if (diffMin < 1) return 'Just now'
-  if (diffMin < 60) return `${diffMin}m ago`
+  if (diffMin < 1) return tTime('justNow')
+  if (diffMin < 60) return tTime('minutesAgo', { minutes: diffMin })
   const diffHrs = Math.floor(diffMin / 60)
-  if (diffHrs < 24) return `${diffHrs}h ago`
+  if (diffHrs < 24) return tTime('hoursAgo', { hours: diffHrs })
   return formatDate(d, locale)
 }
 
@@ -254,6 +258,7 @@ function NotificationRowWrapper({
   tNotif: ReturnType<typeof useTranslations<'notifications'>>
 }) {
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
+  const tTime = useTranslations('time')
   const app = n.sourceApp ?? deriveSourceApp(n.type)
   const appName = tNotif(sourceAppNameKey(app) as Parameters<typeof tNotif>[0])
   const subject = tNotif(
@@ -269,7 +274,7 @@ function NotificationRowWrapper({
     ? tNotif((`notes.${n.notesKey}`) as Parameters<typeof tNotif>[0])
     : undefined
   const Icon = sourceAppIcon(app)
-  const timeAgo = formatTimestamp(n.createdAt, locale)
+  const timeAgo = formatTimestamp(n.createdAt, locale, tTime)
   const deepLink = getDeepLink(n)
   const isOpen = openId === n.id
 

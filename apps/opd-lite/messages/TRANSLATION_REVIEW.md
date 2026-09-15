@@ -1404,3 +1404,71 @@ Total keys to review: **231** (each across ar / prs / ps). Includes a 24-key add
 - **ar:** "لا توجد موافقات تطابق الفلاتر"
 - **prs:** "هیچ رضایتی با فیلترهای شما مطابقت ندارد"
 - **ps:** "ستاسو فلترونو سره هیڅ رضایت سمون نه خوري"
+
+---
+
+## Addendum — 2026-09-15: Task 9 notification descriptor keys (prs/ps)
+
+> Added during the cross-spoke integration remediation (Task 9 — notification presentation
+> enrichment). All prs/ps values below were MACHINE-GENERATED. The `notes.*` keys are
+> clinically worded instructions; the `body.*` / `subject.*` keys contain clinical category
+> and result labels. **All require native Dari (prs) and Pashto (ps) speaker review before
+> production.** Linguistic accuracy is unverified — only structural/ICU correctness was checked.
+
+### `notifications.notes.orderReceivedNotes`
+- **en:** "The lab has received the order and is processing the sample."
+- **prs:** "لابراتوار سفارش را دریافت کرده و نمونه را پردازش می‌کند." — needs native review
+- **ps:** "لابراتوار امر ترلاسه کړی او نمونه پروسس کوي." — needs native review
+
+### `notifications.notes.labResultNotes`
+- **en:** "Review the result in the patient chart."
+- **prs:** "نتیجه را در پرونده بیمار بررسی کنید." — needs native review
+- **ps:** "د ناروغ پرونه کې پایله وګورئ." — needs native review
+
+### `notifications.notes.labResultUrgentNotes`
+- **en:** "This result requires urgent clinical attention."
+- **prs:** "این نتیجه نیاز به توجه فوری بالینی دارد." — needs native review
+- **ps:** "دا پایله د فوري طبي پاملرنې ته اړتیا لري." — needs native review
+
+### `notifications.notes.allergyUpdateNotes`
+- **en:** "Verify the allergy record and update the patient plan if needed."
+- **prs:** "سابقه حساسیت را بررسی کنید و در صورت لزوم برنامه درمانی بیمار را به‌روز کنید." — needs native review
+- **ps:** "د حساسیت ریکارډ وګورئ او که اړین وي د ناروغ پلان تازه کړئ." — needs native review
+
+### `notifications.notes.licenseExpiredNotes`
+- **en:** "Contact administration to renew the license immediately."
+- **prs:** machine-generated — needs native review
+- **ps:** "د جواز د تمدید لپاره فوري له اداری سره اړیکه ونیسئ." — needs native review
+
+### `notifications.notes.licenseExpiryWarningNotes`
+- **en:** "Renew your facility license before the expiry date to avoid service disruption."
+- **prs:** machine-generated — needs native review
+- **ps:** "د خدمت د قطع مخنیوي لپاره د پای نیټې دمخه خپل د مرکز جواز تمدید کړئ." — needs native review
+
+### `notifications.notes.providerSuspendedNotes`
+- **en:** "The provider cannot access clinical data until the suspension is lifted."
+- **prs:** machine-generated — needs native review
+- **ps:** "تر معلق کیدو پورې وړاندې کوونکی نشي کولای طبي ډاټا ته لاسرسی ولري." — needs native review
+
+### `notifications.notes.kycMoreInfoNotes`
+- **en:** "Please submit the additional documents requested for KYC verification."
+- **prs:** machine-generated — needs native review
+- **ps:** "مهرباني وکړئ د هویت تصدیق لپاره غوښتل شوي اضافي اسناد وسپارئ." — needs native review
+
+### `notifications.subject.*` (all non-English values)
+All subject keys (LAB_RESULT_AVAILABLE, LAB_RESULT_ESCALATION, ORDER_RECEIVED, PRESCRIPTION_READY,
+PRESCRIPTION_DISPENSED, DISPENSE_REVIEW_RESOLVED, SYNC_CONFLICT, CONSENT_CHANGE, ALLERGY_UPDATE,
+GUARDIAN_LINKED, GUARDIAN_UNLINKED, LICENSE_EXPIRED, LICENSE_EXPIRY_WARNING, PROVIDER_SUSPENDED,
+LAB_APPROVED, LAB_SUSPENDED, LAB_REACTIVATED, KYC_APPROVED, KYC_REJECTED, KYC_MORE_INFO_REQUESTED,
+OUTBREAK_MODE_ACTIVATED, OUTBREAK_MODE_DEACTIVATED, default) — prs and ps values are
+**machine-generated** and require native speaker review. They appear as the notification title in
+the detail modal and row, so mistranslation will be prominently visible.
+
+### `notifications.body.*` (all non-English values)
+All body keys (orderReceivedBody, labResultBody, prescriptionReadyBody, prescriptionDispensedBody,
+dispenseReviewBody, guardianLinkedBody, guardianUnlinkedBody, consentChangeBody, allergyUpdateBody,
+syncConflictBody, licenseExpiredBody, licenseExpiryWarningBody, providerSuspendedBody,
+labStatusBody, kycStatusBody, outbreakBody, defaultBody) — prs and ps values are
+**machine-generated** and require native speaker review. Note: some body keys contain interpolated
+clinical terms (e.g., `{testCategory}`, `{labName}`) — verify the surrounding sentence structure
+reads naturally in context, not just word-by-word.

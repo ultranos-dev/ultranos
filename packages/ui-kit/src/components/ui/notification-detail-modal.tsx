@@ -19,7 +19,7 @@ export function NotificationDetailModal({ open, onOpenChange, icon: Icon, appNam
             <span className="text-xs font-medium text-muted-foreground">{appName}</span>
           </div>
           <DialogTitle>{subject}</DialogTitle>
-          {body && <DialogDescription>{body}</DialogDescription>}
+          {body ? <DialogDescription>{body}</DialogDescription> : <DialogDescription className="sr-only">{subject}</DialogDescription>}
         </DialogHeader>
         {notes && <p className="text-sm text-muted-foreground">{notes}</p>}
         <p className="text-xs text-muted-foreground">{exactTimestamp}</p>

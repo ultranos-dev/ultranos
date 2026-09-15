@@ -1,10 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent, act, within } from '@testing-library/react'
 
-// next-intl context isn't provided in unit tests; components only need the locale.
+// next-intl context isn't provided in unit tests.
+// The mock resolves the sourceApp.* and time.* keys to real English values so
+// tests assert on actual rendered output rather than raw translation keys.
+// All other keys fall back to the bare key string (preserving existing assertions).
 vi.mock('next-intl', () => ({
   useLocale: () => 'en',
-  useTranslations: () => (key: string) => key,
+  useTranslations: (namespace: string) => (key: string, params?: Record<string, unknown>) => {
+    const fullKey = `${namespace}.${key}`
+    const MAP: Record<string, string> = {
+      'notifications.sourceApp.LAB_LITE': 'Lab Lite',
+      'notifications.sourceApp.PHARMACY_LITE': 'Pharmacy Lite',
+      'notifications.sourceApp.OPD_LITE': 'OPD Lite',
+      'notifications.sourceApp.SYSTEM': 'System',
+      'time.justNow': 'Just now',
+      'time.minutesAgo': `${params?.minutes ?? '{minutes}'}m ago`,
+      'time.hoursAgo': `${params?.hours ?? '{hours}'}h ago`,
+    }
+    return MAP[fullKey] ?? key
+  },
 }))
 
 // Mock next/navigation
@@ -179,10 +194,10 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        // Rows now show sourceApp keys — LAB_RESULT_AVAILABLE → LAB_LITE, PRESCRIPTION_READY → PHARMACY_LITE, SYNC_CONFLICT → SYSTEM
-        expect(screen.getAllByText('sourceApp.LAB_LITE').length).toBeGreaterThanOrEqual(1)
-        expect(screen.getByText('sourceApp.PHARMACY_LITE')).toBeInTheDocument()
-        expect(screen.getAllByText('sourceApp.SYSTEM').length).toBeGreaterThanOrEqual(1)
+        // Rows show resolved source-app names — LAB_RESULT_AVAILABLE → 'Lab Lite', PRESCRIPTION_READY → 'Pharmacy Lite', SYNC_CONFLICT → 'System'
+        expect(screen.getAllByText('Lab Lite').length).toBeGreaterThanOrEqual(1)
+        expect(screen.getByText('Pharmacy Lite')).toBeInTheDocument()
+        expect(screen.getAllByText('System').length).toBeGreaterThanOrEqual(1)
       })
     })
 
@@ -191,15 +206,15 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        expect(screen.getAllByText('sourceApp.LAB_LITE').length).toBeGreaterThanOrEqual(1)
+        expect(screen.getAllByText('Lab Lite').length).toBeGreaterThanOrEqual(1)
       })
 
       fireEvent.click(screen.getByRole('tab', { name: /tabLabResults/ }))
 
       // Lab Results tab shows LAB_RESULT_AVAILABLE (n1, n7) and LAB_RESULT_ESCALATION (n2)
-      // all three map to LAB_LITE
-      expect(screen.getAllByText('sourceApp.LAB_LITE').length).toBeGreaterThanOrEqual(1)
-      expect(screen.queryByText('sourceApp.PHARMACY_LITE')).not.toBeInTheDocument()
+      // all three map to LAB_LITE → resolved to 'Lab Lite'
+      expect(screen.getAllByText('Lab Lite').length).toBeGreaterThanOrEqual(1)
+      expect(screen.queryByText('Pharmacy Lite')).not.toBeInTheDocument()
     })
 
     it('filters to prescription notifications when Prescriptions tab is selected', async () => {
@@ -207,13 +222,13 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        expect(screen.getByText('sourceApp.PHARMACY_LITE')).toBeInTheDocument()
+        expect(screen.getByText('Pharmacy Lite')).toBeInTheDocument()
       })
 
       fireEvent.click(screen.getByRole('tab', { name: /tabPrescriptions/ }))
 
-      expect(screen.getByText('sourceApp.PHARMACY_LITE')).toBeInTheDocument()
-      expect(screen.queryAllByText('sourceApp.LAB_LITE')).toHaveLength(0)
+      expect(screen.getByText('Pharmacy Lite')).toBeInTheDocument()
+      expect(screen.queryAllByText('Lab Lite')).toHaveLength(0)
     })
 
     it('filters to system notifications when System tab is selected', async () => {
@@ -221,16 +236,16 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        expect(screen.getAllByText('sourceApp.SYSTEM').length).toBeGreaterThanOrEqual(1)
+        expect(screen.getAllByText('System').length).toBeGreaterThanOrEqual(1)
       })
 
       fireEvent.click(screen.getByRole('tab', { name: /tabSystem/ }))
 
       // SYNC_CONFLICT, CONSENT_CHANGE, ALLERGY_UPDATE all → OPD_LITE or SYSTEM
-      // SYNC_CONFLICT → SYSTEM, CONSENT_CHANGE → OPD_LITE, ALLERGY_UPDATE → OPD_LITE
-      expect(screen.getByText('sourceApp.SYSTEM')).toBeInTheDocument()
-      expect(screen.getAllByText('sourceApp.OPD_LITE').length).toBeGreaterThanOrEqual(1)
-      expect(screen.queryAllByText('sourceApp.LAB_LITE')).toHaveLength(0)
+      // SYNC_CONFLICT → 'System', CONSENT_CHANGE → 'OPD Lite', ALLERGY_UPDATE → 'OPD Lite'
+      expect(screen.getByText('System')).toBeInTheDocument()
+      expect(screen.getAllByText('OPD Lite').length).toBeGreaterThanOrEqual(1)
+      expect(screen.queryAllByText('Lab Lite')).toHaveLength(0)
     })
   })
 
@@ -241,10 +256,10 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        // LAB_RESULT_AVAILABLE → LAB_LITE; the tNotif mock returns the key
-        expect(screen.getAllByText('sourceApp.LAB_LITE').length).toBeGreaterThanOrEqual(1)
-        // PRESCRIPTION_READY → PHARMACY_LITE
-        expect(screen.getByText('sourceApp.PHARMACY_LITE')).toBeInTheDocument()
+        // LAB_RESULT_AVAILABLE → LAB_LITE → resolved to 'Lab Lite'
+        expect(screen.getAllByText('Lab Lite').length).toBeGreaterThanOrEqual(1)
+        // PRESCRIPTION_READY → PHARMACY_LITE → resolved to 'Pharmacy Lite'
+        expect(screen.getByText('Pharmacy Lite')).toBeInTheDocument()
       })
     })
 
@@ -281,10 +296,13 @@ describe('NotificationCenter', () => {
         expect(screen.getByTestId('notification-n1')).toBeInTheDocument()
       })
 
-      fireEvent.click(screen.getByTestId('notification-n1').querySelector('[role="button"]')!)
+      // Click the 'Lab Lite' row button for n1 — scoped within its wrapper to avoid ambiguity
+      fireEvent.click(within(screen.getByTestId('notification-n1')).getByRole('button', { name: /Lab Lite/i }))
 
       await waitFor(() => {
         expect(mockAcknowledgeNotification).toHaveBeenCalledWith('n1')
+        // Modal opens
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
       })
     })
 
@@ -296,8 +314,8 @@ describe('NotificationCenter', () => {
         expect(screen.getByTestId('notification-n4')).toBeInTheDocument()
       })
 
-      // Click the notification row button inside the wrapper
-      fireEvent.click(screen.getByTestId('notification-n4').querySelector('[role="button"]')!)
+      // Click the sync-conflict row button — scoped within n4's wrapper to avoid ambiguity
+      fireEvent.click(within(screen.getByTestId('notification-n4')).getByRole('button', { name: /System/i }))
 
       await waitFor(() => {
         // Modal opens — dialog role
@@ -546,14 +564,13 @@ describe('NotificationCenter', () => {
       const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
       render(<NotificationCenter />)
 
-      // useTranslations mock returns the key; sourceAppNameKey('LAB_LITE') => 'sourceApp.LAB_LITE'
-      // so tNotif('sourceApp.LAB_LITE') => 'sourceApp.LAB_LITE'
+      // Mock resolves sourceApp.LAB_LITE → 'Lab Lite' (real English value, not raw key)
       await waitFor(() => {
-        expect(screen.getByText('sourceApp.LAB_LITE')).toBeInTheDocument()
+        expect(screen.getByText('Lab Lite')).toBeInTheDocument()
       })
 
-      // Click the row — should open modal (dialog role)
-      fireEvent.click(screen.getByText('sourceApp.LAB_LITE'))
+      // Click the row button via accessible role — opens the detail modal
+      fireEvent.click(screen.getByRole('button', { name: /Lab Lite/i }))
       expect(await screen.findByRole('dialog')).toBeInTheDocument()
     })
 
@@ -580,8 +597,8 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        // PRESCRIPTION_READY → PHARMACY_LITE via deriveSourceApp
-        expect(screen.getByText('sourceApp.PHARMACY_LITE')).toBeInTheDocument()
+        // PRESCRIPTION_READY → PHARMACY_LITE via deriveSourceApp → resolved to 'Pharmacy Lite'
+        expect(screen.getByText('Pharmacy Lite')).toBeInTheDocument()
       })
     })
   })
