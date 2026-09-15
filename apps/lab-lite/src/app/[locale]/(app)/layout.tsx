@@ -4,6 +4,7 @@ import { LockExpiryCheckerMount } from '@/components/samples/LockExpiryCheckerMo
 import { SyncDashboard } from '@/components/SyncDashboard'
 import { PhiCleanupGuard } from '@/components/PhiCleanupGuard'
 import { MonitoringSyncInit } from '@/components/MonitoringSyncInit'
+import { NotificationToaster } from '@/components/NotificationToaster'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +15,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <AppShell>{children}</AppShell>
       <EmergencyButton />
       <SyncDashboard />
+      <NotificationToaster />
     </>
   )
 }

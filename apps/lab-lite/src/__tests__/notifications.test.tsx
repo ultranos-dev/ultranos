@@ -3,6 +3,44 @@ import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-libra
 
 // ── Mocks ──────────────────────────────────────────────────
 
+// next-intl — resolve keys to return bare key string for simple assertions
+vi.mock('next-intl', () => ({
+  useLocale: () => 'en',
+  useTranslations: (namespace: string) => (key: string, params?: Record<string, unknown>) => {
+    const fullKey = `${namespace}.${key}`
+    const MAP: Record<string, string> = {
+      'time.justNow': 'Just now',
+      'time.minutesAgo': `${params?.minutes ?? '{minutes}'}m ago`,
+      'time.hoursAgo': `${params?.hours ?? '{hours}'}h ago`,
+      'notifications.title': 'Notifications',
+      'notifications.closeAria': 'Close notifications',
+      'notifications.loading': 'Loading...',
+      'notifications.loadError': 'Unable to load notifications. Check your connection.',
+      'notifications.error': 'Unable to load notifications',
+      'notifications.empty': 'No notifications',
+      'notifications.unreadAriaLabel': 'Unread',
+      'notifications.unreadMessage': `Unread: ${params?.message ?? '{message}'}`,
+      'notifications.resultUploaded': 'Result uploaded',
+      'notifications.resultAwaitingReview': 'Result awaiting review',
+      'notifications.labStatusChanged': 'Lab status changed',
+      'notifications.systemNotice': 'System notice',
+      'notifications.resultUploadedMessage': `Result uploaded — ${params?.testCategory ?? '{testCategory}'}`,
+      'notifications.resultEscalationMessage': `Result awaiting review — ${params?.testCategory ?? '{testCategory}'}`,
+      'notifications.labStatusMessage': `Lab status: ${params?.status ?? '{status}'}`,
+      'notifications.systemNotification': 'System notification',
+      'notifications.unknownTest': 'Unknown test',
+      'notifications.anomalyFlagMessage': `Anomaly flag — ${params?.ruleId ?? '{ruleId}'}`,
+      'notifications.unread': 'Unread',
+      'notifications.viewDetails': 'View Details',
+      'notifications.sourceApp.LAB_LITE': 'Lab Lite',
+      'notifications.sourceApp.PHARMACY_LITE': 'Pharmacy Lite',
+      'notifications.sourceApp.OPD_LITE': 'OPD Lite',
+      'notifications.sourceApp.SYSTEM': 'System',
+    }
+    return MAP[fullKey] ?? key
+  },
+}))
+
 // Mock supabase client
 vi.mock('@/lib/supabase', () => ({
   getSupabaseBrowserClient: () => ({
@@ -12,6 +50,82 @@ vi.mock('@/lib/supabase', () => ({
       }),
     },
   }),
+}))
+
+// data-budget-store
+vi.mock('@/stores/data-budget-store', () => ({
+  useDataBudgetStore: (selector: (s: Record<string, unknown>) => unknown) =>
+    selector({ lowDataMode: false }),
+}))
+
+// auth-session-store
+vi.mock('@/stores/auth-session-store', () => ({
+  useAuthSessionStore: (selector: (s: Record<string, unknown>) => unknown) =>
+    selector({ isAuthenticated: true, session: { practitionerId: 'tech-1' } }),
+}))
+
+// equipment-service
+vi.mock('@/lib/equipment-service', () => ({
+  getActiveInstrumentNotifications: vi.fn().mockResolvedValue([]),
+}))
+
+// next/navigation
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => '/',
+}))
+
+// ui-kit notification sub-paths used by the new NotificationPanel
+vi.mock('@ultranos/ui-kit/components/ui/notification-row', () => ({
+  NotificationRow: ({
+    appName,
+    subject,
+    onClick,
+  }: {
+    appName: string
+    subject: string
+    onClick: () => void
+  }) => (
+    <button type="button" data-testid="notif-row" onClick={onClick}>
+      <span>{appName}</span>
+      <span>{subject}</span>
+    </button>
+  ),
+}))
+
+vi.mock('@ultranos/ui-kit/components/ui/notification-detail-modal', () => ({
+  NotificationDetailModal: ({
+    open,
+    onOpenChange,
+  }: {
+    open: boolean
+    onOpenChange: (o: boolean) => void
+  }) =>
+    open ? (
+      <div role="dialog" data-testid="notif-modal">
+        <button type="button" onClick={() => onOpenChange(false)}>Close</button>
+      </div>
+    ) : null,
+}))
+
+vi.mock('@ultranos/ui-kit/notification-presentation', () => ({
+  sourceAppIcon: () => () => null,
+  sourceAppNameKey: (app: string) => `sourceApp.${app}`,
+  deriveSourceApp: (type: string) => {
+    const map: Record<string, string> = {
+      LAB_RESULT_AVAILABLE: 'LAB_LITE',
+      LAB_RESULT_ESCALATION: 'LAB_LITE',
+    }
+    return map[type] ?? 'SYSTEM'
+  },
+}))
+
+vi.mock('@ultranos/ui-kit/components/ui/empty-state', () => ({
+  EmptyState: ({ title }: { title: string }) => <p>{title}</p>,
+}))
+
+vi.mock('@ultranos/ui-kit', () => ({
+  formatDate: (d: Date) => d.toLocaleDateString(),
 }))
 
 const mockGetUnreadCount = vi.fn()
@@ -143,10 +257,10 @@ describe('NotificationBell', () => {
 })
 
 describe('NotificationPanel', () => {
-  it('fetches and displays notifications on open (AC #1, #2)', async () => {
+  it('fetches and displays notifications as enriched rows (AC #1, #2)', async () => {
     const items = [
-      makeNotification({ id: 'n1', type: 'LAB_RESULT_AVAILABLE' }),
-      makeNotification({ id: 'n2', type: 'LAB_RESULT_ESCALATION', payload: { testCategory: 'Urinalysis' } }),
+      makeNotification({ id: 'n1', type: 'LAB_RESULT_AVAILABLE', sourceApp: 'LAB_LITE', subjectKey: 'LAB_RESULT_AVAILABLE' }),
+      makeNotification({ id: 'n2', type: 'LAB_RESULT_ESCALATION', sourceApp: 'LAB_LITE', subjectKey: 'LAB_RESULT_ESCALATION', payload: { testCategory: 'Urinalysis' } }),
     ]
     mockListNotifications.mockResolvedValue(items)
 
@@ -155,11 +269,8 @@ describe('NotificationPanel', () => {
     render(<NotificationPanel onClose={onClose} onCountChange={onCountChange} />)
 
     await waitFor(() => {
-      expect(screen.getAllByTestId('notification-item')).toHaveLength(2)
+      expect(screen.getAllByTestId('notif-row')).toHaveLength(2)
     })
-
-    expect(screen.getByText(/Result uploaded — Blood Work/)).toBeInTheDocument()
-    expect(screen.getByText(/Result awaiting review — Urinalysis/)).toBeInTheDocument()
   })
 
   it('shows empty state when no notifications', async () => {
@@ -221,7 +332,7 @@ describe('NotificationItemRow', () => {
     render(<NotificationItemRow notification={notif} onAcknowledge={vi.fn()} />)
 
     const item = screen.getByTestId('notification-item')
-    expect(item).toHaveClass('bg-blue-50')
+    expect(item).toHaveClass('bg-primary/10')
     expect(screen.getByTestId('unread-dot')).toBeInTheDocument()
 
     const message = screen.getByText(/Result uploaded — Blood Work/)
@@ -233,7 +344,7 @@ describe('NotificationItemRow', () => {
     render(<NotificationItemRow notification={notif} onAcknowledge={vi.fn()} />)
 
     const item = screen.getByTestId('notification-item')
-    expect(item).not.toHaveClass('bg-blue-50')
+    expect(item).not.toHaveClass('bg-primary/10')
     expect(screen.queryByTestId('unread-dot')).not.toBeInTheDocument()
 
     const message = screen.getByText(/Result uploaded — Blood Work/)

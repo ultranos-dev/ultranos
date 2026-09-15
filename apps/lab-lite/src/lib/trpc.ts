@@ -274,11 +274,18 @@ export interface NotificationItem {
     uploadTimestamp?: string
     message?: string
     status?: string
+    ruleId?: string
   }
   status: string
   createdAt: string
   deliveredAt: string | null
   acknowledgedAt: string | null
+  /** Descriptor fields for enriched presentation (Task 11). */
+  sourceApp?: string
+  subjectKey?: string | null
+  bodyKey?: string | null
+  bodyParams?: Record<string, string | number> | null
+  notesKey?: string | null
 }
 
 /**
