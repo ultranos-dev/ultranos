@@ -79,6 +79,9 @@ export type { DetailLayoutProps } from './components/ui/detail-layout.js'
 export { Alert } from './components/ui/alert.js'
 export type { AlertProps } from './components/ui/alert.js'
 
+export { NotificationRow } from './components/ui/notification-row.js'
+export type { NotificationRowProps } from './components/ui/notification-row.js'
+
 export {
   formatNumber,
   formatInteger,
