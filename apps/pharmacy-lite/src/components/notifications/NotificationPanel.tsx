@@ -3,9 +3,10 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { formatDate } from '@ultranos/ui-kit'
+import { formatDate, formatDateTime } from '@ultranos/ui-kit'
 import { NotificationRow } from '@ultranos/ui-kit/components/ui/notification-row'
 import { NotificationDetailModal } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
+import type { NotificationDetailField } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
 import { sourceAppIcon, sourceAppNameKey, deriveSourceApp } from '@ultranos/ui-kit/notification-presentation'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
@@ -129,6 +130,44 @@ function PanelNotificationRow({
   // Deep link: only pharmacy-relevant types have routes
   const deepLink = n.type === 'SYNC_CONFLICT' ? '/sync' : null
 
+  // Build NON-PHI detail rows for the modal (no patient lookup — pharmacy has no
+  // authorized prescription→patient path; that enrichment is deferred).
+  const details: NotificationDetailField[] = []
+
+  const reviewId = n.payload?.reviewId
+  if (reviewId) {
+    const shortId = String(reviewId).slice(-6).toUpperCase()
+    details.push({
+      label: tNotif('field.reviewId' as Parameters<typeof tNotif>[0]),
+      value: shortId,
+    })
+  }
+
+  const prescriptionId = n.payload?.prescriptionId
+  if (prescriptionId) {
+    const shortId = String(prescriptionId).slice(-6).toUpperCase()
+    details.push({
+      label: tNotif('field.prescription' as Parameters<typeof tNotif>[0]),
+      value: shortId,
+    })
+  }
+
+  const statusValue = (n.bodyParams as Record<string, string> | undefined)?.status ?? n.payload?.status
+  if (statusValue) {
+    details.push({
+      label: tNotif('field.status' as Parameters<typeof tNotif>[0]),
+      value: String(statusValue),
+    })
+  }
+
+  const receivedTs = n.payload?.acknowledgedAt ?? n.createdAt
+  if (receivedTs) {
+    details.push({
+      label: tNotif('field.received' as Parameters<typeof tNotif>[0]),
+      value: formatDateTime(new Date(String(receivedTs)), locale),
+    })
+  }
+
   return (
     <>
       <NotificationRow
@@ -155,6 +194,7 @@ function PanelNotificationRow({
         body={body}
         notes={notes}
         exactTimestamp={formatDate(new Date(n.createdAt), locale)}
+        details={details.length > 0 ? details : undefined}
         action={deepLink
           ? {
               label: tNotif('viewDetails' as Parameters<typeof tNotif>[0]),

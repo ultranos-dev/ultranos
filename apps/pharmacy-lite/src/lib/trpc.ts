@@ -110,10 +110,19 @@ export async function listPrescriptionsForPatient(
 
 // ── Notifications (generic notification.* Hub router) ───────────────────────
 
+export interface PharmacyNotificationPayload {
+  /** NON-PHI fields for DISPENSE_REVIEW_RESOLVED */
+  reviewId?: string
+  prescriptionId?: string
+  status?: string
+  acknowledgedAt?: string
+  [key: string]: unknown
+}
+
 export interface PharmacyNotification {
   id: string
   type: string
-  payload: Record<string, unknown>
+  payload: PharmacyNotificationPayload
   status: string
   createdAt: string
   deliveredAt: string | null

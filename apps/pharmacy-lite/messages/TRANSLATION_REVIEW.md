@@ -8,7 +8,9 @@
 >
 > These are pharmacy UI strings (search placeholders, filter/tab labels, empty-state titles/descriptions). None are legal/consent bodies.
 
-Total keys to review: **44** (each across ar / prs / ps).
+Total keys to review: **48** (each across ar / prs / ps).
+
+> **2026-09-15 addition** (Task 3 — notification modal detail enrichment): 4 new `notifications.field.*` keys added below. Machine-generated — requires native-speaker review.
 
 ---
 
@@ -275,4 +277,32 @@ Total keys to review: **44** (each across ar / prs / ps).
 - **ar:** "مسح الوصفة"
 - **prs:** "اسکن نسخه"
 - **ps:** "نسخه سکن کړئ"
+
+---
+
+## 2026-09-15 additions — `notifications.field.*` (Task 3)
+
+### `notifications.field.reviewId`
+- **en:** "Review ID"
+- **ar:** "رقم المراجعة"
+- **prs:** "شناسه مرور"
+- **ps:** "د کتنې پیژندنه"
+
+### `notifications.field.prescription`
+- **en:** "Prescription"
+- **ar:** "الوصفة"
+- **prs:** "نسخه"
+- **ps:** "نسخه"
+
+### `notifications.field.status`
+- **en:** "Status"
+- **ar:** "الحالة"
+- **prs:** "وضعیت"
+- **ps:** "حالت"
+
+### `notifications.field.received`
+- **en:** "Received"
+- **ar:** "تاريخ الاستلام"
+- **prs:** "تاریخ دریافت"
+- **ps:** "د ترلاسه کولو نیټه"
 

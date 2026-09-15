@@ -16,7 +16,7 @@ import userEvent from '@testing-library/user-event'
 
 // next-intl — mock useTranslations to resolve keys to real English values
 // sourceApp.* keys resolve to app names; time.* keys resolve to time strings;
-// subject.*, body.*, notes.*, and other keys fall back to the bare key string.
+// field.* keys resolve to label strings; other keys fall back to the bare key string.
 vi.mock('next-intl', () => ({
   useLocale: () => 'en',
   useTranslations: (namespace: string) => (key: string, params?: Record<string, unknown>) => {
@@ -26,6 +26,10 @@ vi.mock('next-intl', () => ({
       'notifications.sourceApp.LAB_LITE': 'Lab Lite',
       'notifications.sourceApp.OPD_LITE': 'OPD Lite',
       'notifications.sourceApp.SYSTEM': 'System',
+      'notifications.field.reviewId': 'Review ID',
+      'notifications.field.prescription': 'Prescription',
+      'notifications.field.status': 'Status',
+      'notifications.field.received': 'Received',
       'time.justNow': 'Just now',
       'time.minutesAgo': `${params?.minutes ?? '{minutes}'}m ago`,
       'time.hoursAgo': `${params?.hours ?? '{hours}'}h ago`,
@@ -53,6 +57,12 @@ vi.mock('@/stores/auth-session-store', () => ({
   ),
 }))
 
+// ui-kit barrel (formatDate, formatDateTime)
+vi.mock('@ultranos/ui-kit', () => ({
+  formatDate: (_d: Date, _locale: string) => '15 Sep 2026',
+  formatDateTime: (_d: Date, _locale: string) => '15 Sep 2026, 10:30',
+}))
+
 // ui-kit sub-paths used by NotificationPanel / NotificationBell
 vi.mock('@ultranos/ui-kit/components/ui/notification-row', () => ({
   NotificationRow: ({
@@ -76,14 +86,22 @@ vi.mock('@ultranos/ui-kit/components/ui/notification-detail-modal', () => ({
     open,
     onOpenChange,
     appName,
+    details,
   }: {
     open: boolean
     onOpenChange: (o: boolean) => void
     appName: string
+    details?: Array<{ label: string; value: string; emphasis?: boolean }>
   }) =>
     open ? (
       <div role="dialog" aria-label={`detail-${appName}`} data-testid="notif-modal">
         <span data-testid="modal-app-name">{appName}</span>
+        {details?.map((d, i) => (
+          <div key={i} data-testid="modal-detail-row">
+            <span data-testid="modal-detail-label">{d.label}</span>
+            <span data-testid="modal-detail-value">{d.value}</span>
+          </div>
+        ))}
         <button type="button" onClick={() => onOpenChange(false)}>
           Close
         </button>
@@ -117,6 +135,28 @@ vi.mock('@/lib/trpc', () => ({
   acknowledgeNotification: (...args: unknown[]) => mockAcknowledgeNotification(...args),
   getUnreadNotificationCount: (...args: unknown[]) => mockGetUnreadNotificationCount(...args),
 }))
+
+// ── Fixtures ──────────────────────────────────────────────────────────────
+
+const REVIEW_RESOLVED_NOTIFICATION = {
+  id: 'n2',
+  type: 'DISPENSE_REVIEW_RESOLVED',
+  payload: {
+    reviewId: 'review-uuid-abc-123456',
+    prescriptionId: 'rx-uuid-def-789012',
+    status: 'APPROVED',
+    acknowledgedAt: '2026-09-15T10:30:00.000Z',
+  },
+  status: 'SENT',
+  createdAt: '2026-09-15T10:28:00.000Z',
+  deliveredAt: null,
+  acknowledgedAt: null,
+  sourceApp: 'PHARMACY_LITE',
+  subjectKey: 'DISPENSE_REVIEW_RESOLVED',
+  bodyKey: 'dispenseReviewBody',
+  bodyParams: { status: 'APPROVED' },
+  notesKey: null,
+}
 
 // ── Tests ──────────────────────────────────────────────────────────────────
 
@@ -189,5 +229,68 @@ describe('NotificationPanel — descriptor-field rendering', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeInTheDocument()
     })
+  })
+})
+
+describe('NotificationPanel — DISPENSE_REVIEW_RESOLVED detail rows', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockListNotifications.mockResolvedValue([REVIEW_RESOLVED_NOTIFICATION])
+    mockAcknowledgeNotification.mockResolvedValue(undefined)
+    mockGetUnreadNotificationCount.mockResolvedValue(1)
+  })
+
+  it('modal shows Review ID short form (last 6 chars uppercased)', async () => {
+    const user = userEvent.setup()
+    const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
+    render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
+
+    await waitFor(() => expect(screen.getByTestId('notif-row')).toBeInTheDocument())
+    await user.click(screen.getByTestId('notif-row'))
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+
+    // reviewId 'review-uuid-abc-123456' → last 6 → '123456' → '123456'
+    const values = screen.getAllByTestId('modal-detail-value').map(el => el.textContent ?? '')
+    expect(values.some(v => v.includes('123456'))).toBe(true)
+  })
+
+  it('modal shows Status row from bodyParams.status', async () => {
+    const user = userEvent.setup()
+    const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
+    render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
+
+    await waitFor(() => expect(screen.getByTestId('notif-row')).toBeInTheDocument())
+    await user.click(screen.getByTestId('notif-row'))
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+
+    const values = screen.getAllByTestId('modal-detail-value').map(el => el.textContent ?? '')
+    expect(values.some(v => v === 'APPROVED')).toBe(true)
+  })
+
+  it('modal shows Received date-time row', async () => {
+    const user = userEvent.setup()
+    const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
+    render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
+
+    await waitFor(() => expect(screen.getByTestId('notif-row')).toBeInTheDocument())
+    await user.click(screen.getByTestId('notif-row'))
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+
+    // formatDateTime mock returns '15 Sep 2026, 10:30'
+    const values = screen.getAllByTestId('modal-detail-value').map(el => el.textContent ?? '')
+    expect(values.some(v => v === '15 Sep 2026, 10:30')).toBe(true)
+  })
+
+  it('modal does NOT show patient fields (pharmacy has no authorized patient path)', async () => {
+    const user = userEvent.setup()
+    const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
+    render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
+
+    await waitFor(() => expect(screen.getByTestId('notif-row')).toBeInTheDocument())
+    await user.click(screen.getByTestId('notif-row'))
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+
+    const labels = screen.getAllByTestId('modal-detail-label').map(el => el.textContent ?? '')
+    expect(labels.every(l => !l.toLowerCase().includes('patient'))).toBe(true)
   })
 })
