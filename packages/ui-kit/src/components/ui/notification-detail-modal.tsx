@@ -40,31 +40,33 @@ export function NotificationDetailModal({
             {body ? <DialogDescription>{body}</DialogDescription> : <DialogDescription className="sr-only">{subject}</DialogDescription>}
           </DialogHeader>
 
-          {/* Patient line — prominent, emphasized */}
-          {patientLoading ? (
-            <p
-              className="text-sm text-muted-foreground"
-              data-testid="patient-loading"
-              role="status"
-            >
-              …
-            </p>
-          ) : patient ? (
-            <div className="rounded-md bg-muted/50 px-3 py-2">
-              <p className="text-sm font-semibold text-foreground">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide me-2">{patient.label}</span>
-                <span>{patient.value}</span>
-              </p>
-            </div>
-          ) : null}
+          {/* Unified details list — patient row (light-green) always first, then detail rows */}
+          {(patientLoading || patient || (details && details.length > 0)) && (
+            <dl className="grid grid-cols-[auto_1fr] gap-y-1">
+              {/* Patient row — continuous light-green background band */}
+              {patientLoading ? (
+                <React.Fragment>
+                  <dt className="bg-primary/10 rounded-s-md py-2 ps-3 pe-4 text-xs font-medium text-muted-foreground self-center" />
+                  <dd
+                    className="bg-primary/10 rounded-e-md py-2 pe-3 text-sm"
+                    role="status"
+                    data-testid="patient-loading"
+                  >
+                    <span className="inline-block h-4 w-32 animate-pulse rounded bg-primary/20" />
+                  </dd>
+                </React.Fragment>
+              ) : patient ? (
+                <React.Fragment>
+                  <dt className="bg-primary/10 rounded-s-md py-2 ps-3 pe-4 text-xs font-medium text-muted-foreground self-center">{patient.label}</dt>
+                  <dd className="bg-primary/10 rounded-e-md py-2 pe-3 text-sm font-semibold text-foreground">{patient.value}</dd>
+                </React.Fragment>
+              ) : null}
 
-          {/* Details list — aligned grid */}
-          {details && details.length > 0 && (
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
-              {details.map((f) => (
+              {/* Detail rows — matching column alignment via same padding */}
+              {details && details.map((f) => (
                 <React.Fragment key={f.label}>
-                  <dt className="text-xs font-medium text-muted-foreground self-center">{f.label}</dt>
-                  <dd className={`text-sm ${f.emphasis ? 'text-destructive font-medium' : 'text-foreground'}`}>
+                  <dt className="py-1 ps-3 pe-4 text-xs font-medium text-muted-foreground self-center">{f.label}</dt>
+                  <dd className={`py-1 pe-3 text-sm ${f.emphasis ? 'text-destructive font-medium' : 'text-foreground'}`}>
                     {f.value}
                   </dd>
                 </React.Fragment>

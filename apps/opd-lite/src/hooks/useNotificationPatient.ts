@@ -31,16 +31,35 @@ export interface UseNotificationPatientResult {
 
 /**
  * Derive a display name from a resolved FhirPatient.
- * Priority: nameLatin → nameLocal → name[0].text → name[0].given[0].
+ * Priority: patronymic chain (nameGiven+nameFamily · nameFather · nameGrandfather)
+ * → nameLatin → nameLocal → name[0].text → name[0].given[0].
  */
 function deriveDisplayName(patient: {
-  _ultranos?: { nameLatin?: string; nameLocal?: string }
+  _ultranos?: {
+    nameLatin?: string
+    nameLocal?: string
+    nameGiven?: string
+    nameFamily?: string
+    nameFather?: string
+    nameGrandfather?: string
+  }
   name?: Array<{ text?: string; given?: string[] }>
 }): string | null {
-  const latin = patient._ultranos?.nameLatin
+  const ext = patient._ultranos
+  if (ext) {
+    const segments = [
+      [ext.nameGiven, ext.nameFamily].filter(Boolean).join(' '),
+      ext.nameFather,
+      ext.nameGrandfather,
+    ].filter((s): s is string => !!s && s.trim().length > 0)
+
+    if (segments.length > 0) return segments.join(' · ')
+  }
+
+  const latin = ext?.nameLatin
   if (latin && latin.trim()) return latin.trim()
 
-  const local = patient._ultranos?.nameLocal
+  const local = ext?.nameLocal
   if (local && local.trim()) return local.trim()
 
   const nameEntry = patient.name?.[0]

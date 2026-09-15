@@ -516,4 +516,106 @@ describe('useNotificationPatient', () => {
     // Falls back to nameLocal
     expect(result.current.name).toBe('احمد کریمی')
   })
+
+  // --- Patronymic chain (nameGiven · nameFather · nameGrandfather) ---
+
+  it('builds patronymic chain "Ahmad · Mangal · Marjan" when nameGiven+nameFather+nameGrandfather are set', async () => {
+    const patientPatronymic = {
+      id: 'p-pat',
+      resourceType: 'Patient' as const,
+      name: [{ given: ['Ahmad'], text: 'احمد منگل مرجان' }],
+      _ultranos: {
+        nameLatin: 'Ahmad Mangal Marjan',
+        nameLocal: 'احمد منگل مرجان',
+        nameGiven: 'Ahmad',
+        nameFamily: undefined,
+        nameFather: 'Mangal',
+        nameGrandfather: 'Marjan',
+        isActive: true,
+        isNomadic: false,
+        patient_tier: 'FREE' as const,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      meta: { lastUpdated: '2026-01-01T00:00:00.000Z' },
+    }
+
+    mockServiceRequests.get.mockResolvedValue({
+      id: 'o-pat',
+      subject: { reference: 'Patient/p-pat' },
+    })
+    mockLoadPatientResilient.mockResolvedValue({
+      patient: patientPatronymic,
+      needsReauth: false,
+      source: 'dexie',
+    })
+
+    const { useNotificationPatient } = await import('../hooks/useNotificationPatient')
+
+    const { result } = renderHook(() =>
+      useNotificationPatient({
+        id: 'n-pat',
+        type: 'ORDER_RECEIVED',
+        payload: { orderId: 'o-pat' },
+        status: 'SENT',
+        createdAt: '2026-09-15T10:00:00.000Z',
+        deliveredAt: null,
+        acknowledgedAt: null,
+      }),
+    )
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false)
+    })
+
+    // Patronymic chain wins over nameLatin
+    expect(result.current.name).toBe('Ahmad · Mangal · Marjan')
+  })
+
+  it('falls back to nameLocal only when no patronymic fields and no nameLatin', async () => {
+    const patientLocalFallback = {
+      id: 'p-local',
+      resourceType: 'Patient' as const,
+      name: [{ given: ['Ali'], text: 'علی' }],
+      _ultranos: {
+        nameLatin: '',
+        nameLocal: 'احمد کریمی',
+        isActive: true,
+        isNomadic: false,
+        patient_tier: 'FREE' as const,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+      meta: { lastUpdated: '2026-01-01T00:00:00.000Z' },
+    }
+
+    mockServiceRequests.get.mockResolvedValue({
+      id: 'o-local',
+      subject: { reference: 'Patient/p-local' },
+    })
+    mockLoadPatientResilient.mockResolvedValue({
+      patient: patientLocalFallback,
+      needsReauth: false,
+      source: 'dexie',
+    })
+
+    const { useNotificationPatient } = await import('../hooks/useNotificationPatient')
+
+    const { result } = renderHook(() =>
+      useNotificationPatient({
+        id: 'n-local',
+        type: 'ORDER_RECEIVED',
+        payload: { orderId: 'o-local' },
+        status: 'SENT',
+        createdAt: '2026-09-15T10:00:00.000Z',
+        deliveredAt: null,
+        acknowledgedAt: null,
+      }),
+    )
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false)
+    })
+
+    // No patronymic fields, no nameLatin → nameLocal
+    expect(result.current.name).toBe('احمد کریمی')
+  })
 })

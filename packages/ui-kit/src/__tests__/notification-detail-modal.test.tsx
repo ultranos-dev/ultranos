@@ -45,16 +45,25 @@ describe('NotificationDetailModal', () => {
         patient={{ label: 'Patient', value: 'Ahmad K.' }}
       />
     )
-    // details rendered in a <dl> — Dialog renders in portal, use document.querySelector
+    // patient + details share ONE <dl> — Dialog renders in portal, use document.querySelector
     const dl = document.querySelector('dl')
     expect(dl).not.toBeNull()
+    // patient row uses bg-primary/10 (light-green), NOT bg-muted
+    const patientDt = Array.from(dl!.querySelectorAll('dt')).find(el => el.textContent === 'Patient')
+    expect(patientDt).not.toBeNull()
+    expect(patientDt!.className).toContain('bg-primary/10')
+    expect(patientDt!.className).not.toContain('bg-muted')
+    const patientDd = patientDt!.nextElementSibling as HTMLElement
+    expect(patientDd).not.toBeNull()
+    expect(patientDd.className).toContain('bg-primary/10')
+    expect(patientDd.textContent).toBe('Ahmad K.')
     // dt/dd pairs present
     expect(screen.getByText('Order ID')).toBeInTheDocument()
     expect(screen.getByText('5A4741')).toBeInTheDocument()
     expect(screen.getByText('Received')).toBeInTheDocument()
     // "15 Sep 2026, 06:45" appears in both exactTimestamp and details — just check presence
     expect(screen.getAllByText('15 Sep 2026, 06:45').length).toBeGreaterThanOrEqual(1)
-    // patient rendered as a distinct section
+    // patient rendered as dt/dd (not a separate div)
     expect(screen.getByText('Patient')).toBeInTheDocument()
     expect(screen.getByText('Ahmad K.')).toBeInTheDocument()
   })
