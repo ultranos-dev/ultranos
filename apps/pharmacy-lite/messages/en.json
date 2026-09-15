@@ -12,6 +12,8 @@
     "typeDefault": "Notification",
     "viewDetails": "View Details",
     "unread": "Unread",
+    "markRead": "Mark as read",
+    "delete": "Delete notification",
     "sourceApp": {
       "LAB_LITE": "Lab Lite",
       "PHARMACY_LITE": "Pharmacy Lite",

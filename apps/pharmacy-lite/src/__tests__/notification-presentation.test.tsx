@@ -30,6 +30,8 @@ vi.mock('next-intl', () => ({
       'notifications.field.prescription': 'Prescription',
       'notifications.field.status': 'Status',
       'notifications.field.received': 'Received',
+      'notifications.markRead': 'Mark as read',
+      'notifications.delete': 'Delete notification',
       'time.justNow': 'Just now',
       'time.minutesAgo': `${params?.minutes ?? '{minutes}'}m ago`,
       'time.hoursAgo': `${params?.hours ?? '{hours}'}h ago`,
@@ -69,15 +71,35 @@ vi.mock('@ultranos/ui-kit/components/ui/notification-row', () => ({
     appName,
     subject,
     onClick,
+    onMarkRead,
+    onDelete,
+    markReadLabel,
+    deleteLabel,
   }: {
     appName: string
     subject: string
     onClick: () => void
+    onMarkRead?: () => void
+    onDelete?: () => void
+    markReadLabel?: string
+    deleteLabel?: string
   }) => (
-    <button type="button" data-testid="notif-row" onClick={onClick}>
-      <span data-testid="notif-app-name">{appName}</span>
-      <span data-testid="notif-subject">{subject}</span>
-    </button>
+    <div data-testid="notif-row">
+      <button type="button" data-testid="notif-row-click" onClick={onClick}>
+        <span data-testid="notif-app-name">{appName}</span>
+        <span data-testid="notif-subject">{subject}</span>
+      </button>
+      {onMarkRead && (
+        <button type="button" data-testid="notif-mark-read" onClick={onMarkRead}>
+          {markReadLabel ?? 'mark-read'}
+        </button>
+      )}
+      {onDelete && (
+        <button type="button" data-testid="notif-delete" onClick={onDelete}>
+          {deleteLabel ?? 'delete'}
+        </button>
+      )}
+    </div>
   ),
 }))
 
@@ -128,11 +150,13 @@ vi.mock('@ultranos/ui-kit/components/ui/empty-state', () => ({
 // Stub trpc functions — listNotifications returns a descriptor-bearing item
 const mockListNotifications = vi.fn()
 const mockAcknowledgeNotification = vi.fn().mockResolvedValue(undefined)
+const mockDeleteNotification = vi.fn().mockResolvedValue(undefined)
 const mockGetUnreadNotificationCount = vi.fn().mockResolvedValue(0)
 
 vi.mock('@/lib/trpc', () => ({
   listNotifications: (...args: unknown[]) => mockListNotifications(...args),
   acknowledgeNotification: (...args: unknown[]) => mockAcknowledgeNotification(...args),
+  deleteNotification: (...args: unknown[]) => mockDeleteNotification(...args),
   getUnreadNotificationCount: (...args: unknown[]) => mockGetUnreadNotificationCount(...args),
 }))
 
@@ -180,6 +204,7 @@ describe('NotificationPanel — descriptor-field rendering', () => {
     vi.clearAllMocks()
     mockListNotifications.mockResolvedValue([DISPENSED_NOTIFICATION])
     mockAcknowledgeNotification.mockResolvedValue(undefined)
+    mockDeleteNotification.mockResolvedValue(undefined)
     mockGetUnreadNotificationCount.mockResolvedValue(1)
   })
 
@@ -220,14 +245,49 @@ describe('NotificationPanel — descriptor-field rendering', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByTestId('notif-row')).toBeInTheDocument()
+      expect(screen.getByTestId('notif-row-click')).toBeInTheDocument()
     })
 
-    await user.click(screen.getByTestId('notif-row'))
+    await user.click(screen.getByTestId('notif-row-click'))
 
     // The detail modal should now be open
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeInTheDocument()
+    })
+  })
+
+  it('clicking mark-read calls acknowledgeNotification (pure acknowledge — no side effects)', async () => {
+    const user = userEvent.setup()
+    const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
+    render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('notif-mark-read')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByTestId('notif-mark-read'))
+
+    expect(mockAcknowledgeNotification).toHaveBeenCalledWith(DISPENSED_NOTIFICATION.id)
+    expect(mockDeleteNotification).not.toHaveBeenCalled()
+  })
+
+  it('clicking delete calls deleteNotification and removes the row', async () => {
+    const user = userEvent.setup()
+    const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
+    render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('notif-row')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByTestId('notif-delete'))
+
+    // deleteNotification called with correct id
+    expect(mockDeleteNotification).toHaveBeenCalledWith(DISPENSED_NOTIFICATION.id)
+
+    // Row removed from the panel
+    await waitFor(() => {
+      expect(screen.queryByTestId('notif-row')).not.toBeInTheDocument()
     })
   })
 })
@@ -237,6 +297,7 @@ describe('NotificationPanel — DISPENSE_REVIEW_RESOLVED detail rows', () => {
     vi.clearAllMocks()
     mockListNotifications.mockResolvedValue([REVIEW_RESOLVED_NOTIFICATION])
     mockAcknowledgeNotification.mockResolvedValue(undefined)
+    mockDeleteNotification.mockResolvedValue(undefined)
     mockGetUnreadNotificationCount.mockResolvedValue(1)
   })
 
@@ -245,8 +306,8 @@ describe('NotificationPanel — DISPENSE_REVIEW_RESOLVED detail rows', () => {
     const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
     render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
 
-    await waitFor(() => expect(screen.getByTestId('notif-row')).toBeInTheDocument())
-    await user.click(screen.getByTestId('notif-row'))
+    await waitFor(() => expect(screen.getByTestId('notif-row-click')).toBeInTheDocument())
+    await user.click(screen.getByTestId('notif-row-click'))
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
 
     // reviewId 'review-uuid-abc-123456' → last 6 → '123456' → '123456'
@@ -259,8 +320,8 @@ describe('NotificationPanel — DISPENSE_REVIEW_RESOLVED detail rows', () => {
     const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
     render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
 
-    await waitFor(() => expect(screen.getByTestId('notif-row')).toBeInTheDocument())
-    await user.click(screen.getByTestId('notif-row'))
+    await waitFor(() => expect(screen.getByTestId('notif-row-click')).toBeInTheDocument())
+    await user.click(screen.getByTestId('notif-row-click'))
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
 
     const values = screen.getAllByTestId('modal-detail-value').map(el => el.textContent ?? '')
@@ -272,8 +333,8 @@ describe('NotificationPanel — DISPENSE_REVIEW_RESOLVED detail rows', () => {
     const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
     render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
 
-    await waitFor(() => expect(screen.getByTestId('notif-row')).toBeInTheDocument())
-    await user.click(screen.getByTestId('notif-row'))
+    await waitFor(() => expect(screen.getByTestId('notif-row-click')).toBeInTheDocument())
+    await user.click(screen.getByTestId('notif-row-click'))
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
 
     // formatDateTime mock returns '15 Sep 2026, 10:30'
@@ -286,8 +347,8 @@ describe('NotificationPanel — DISPENSE_REVIEW_RESOLVED detail rows', () => {
     const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
     render(<NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />)
 
-    await waitFor(() => expect(screen.getByTestId('notif-row')).toBeInTheDocument())
-    await user.click(screen.getByTestId('notif-row'))
+    await waitFor(() => expect(screen.getByTestId('notif-row-click')).toBeInTheDocument())
+    await user.click(screen.getByTestId('notif-row-click'))
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
 
     const labels = screen.getAllByTestId('modal-detail-label').map(el => el.textContent ?? '')

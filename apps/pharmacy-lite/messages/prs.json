@@ -12,6 +12,8 @@
     "typeDefault": "اعلان",
     "viewDetails": "مشاهده جزئیات",
     "unread": "ناخوانده",
+    "markRead": "علامت‌گذاری به‌عنوان خوانده شده",
+    "delete": "حذف اطلاعیه",
     "sourceApp": {
       "LAB_LITE": "آزمایشگاه",
       "PHARMACY_LITE": "داروخانه",

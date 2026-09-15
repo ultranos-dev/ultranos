@@ -12,6 +12,8 @@
     "typeDefault": "إشعار",
     "viewDetails": "عرض التفاصيل",
     "unread": "غير مقروء",
+    "markRead": "تعيين كمقروء",
+    "delete": "حذف الإشعار",
     "sourceApp": {
       "LAB_LITE": "المختبر",
       "PHARMACY_LITE": "الصيدلية",

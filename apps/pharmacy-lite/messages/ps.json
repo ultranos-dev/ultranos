@@ -12,6 +12,8 @@
     "typeDefault": "خبرتیا",
     "viewDetails": "توضیحات وګورئ",
     "unread": "نالوستې",
+    "markRead": "لوستل شوی علامه کول",
+    "delete": "خبرتیا ړنګول",
     "sourceApp": {
       "LAB_LITE": "لابراتوار",
       "PHARMACY_LITE": "درملتون",

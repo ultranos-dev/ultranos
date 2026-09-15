@@ -177,6 +177,17 @@ export async function acknowledgeNotification(notificationId: string): Promise<v
   })
 }
 
+/** Delete a single notification. */
+export async function deleteNotification(notificationId: string): Promise<void> {
+  const token = await useAuthSessionStore.getState().getAccessToken()
+  if (!token) return
+  await fetch(`${getHubApiUrl()}/notification.delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ json: { notificationId } }),
+  })
+}
+
 export interface SetDrugPriceInput {
   atcCode: string
   facilityId: string
