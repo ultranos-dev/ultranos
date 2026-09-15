@@ -140,36 +140,52 @@ describe('NotificationRow', () => {
     expect(onRowClick).not.toHaveBeenCalled()
   })
 
-  // ─── Mark-read button ───────────────────────────────────────────────────────
+  // ─── Toggle read/unread button ──────────────────────────────────────────────
 
-  it('renders mark-read button when onMarkRead is provided and unread is true', () => {
-    const onMarkRead = vi.fn()
+  it('when unread=true and onToggleRead given: toggle button is present with markReadLabel', () => {
+    const onToggleRead = vi.fn()
     render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
-      timeAgo="1h ago" onMarkRead={onMarkRead} unread={true} markReadLabel="Mark as read" />)
+      timeAgo="1h ago" onToggleRead={onToggleRead} unread={true}
+      markReadLabel="Mark as read" markUnreadLabel="Mark as unread" />)
     expect(screen.getByRole('button', { name: 'Mark as read' })).toBeInTheDocument()
   })
 
-  it('does not render mark-read button when unread is false (even if onMarkRead is provided)', () => {
-    const onMarkRead = vi.fn()
-    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
-      timeAgo="1h ago" onMarkRead={onMarkRead} unread={false} markReadLabel="Mark as read" />)
-    expect(screen.queryByRole('button', { name: 'Mark as read' })).not.toBeInTheDocument()
-  })
-
-  it('does not render mark-read button when onMarkRead is not provided and unread is true', () => {
-    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
-      timeAgo="1h ago" unread={true} markReadLabel="Mark as read" />)
-    expect(screen.queryByRole('button', { name: 'Mark as read' })).not.toBeInTheDocument()
-  })
-
-  it('clicking mark-read button calls onMarkRead and does NOT call row onClick (stopPropagation)', () => {
-    const onMarkRead = vi.fn()
+  it('when unread=true, clicking toggle button calls onToggleRead and NOT row onClick', () => {
+    const onToggleRead = vi.fn()
     const onRowClick = vi.fn()
     render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
-      timeAgo="1h ago" onMarkRead={onMarkRead} unread={true} markReadLabel="Mark as read" onClick={onRowClick} />)
+      timeAgo="1h ago" onToggleRead={onToggleRead} unread={true}
+      markReadLabel="Mark as read" markUnreadLabel="Mark as unread" onClick={onRowClick} />)
     fireEvent.click(screen.getByRole('button', { name: 'Mark as read' }))
-    expect(onMarkRead).toHaveBeenCalledTimes(1)
+    expect(onToggleRead).toHaveBeenCalledTimes(1)
     expect(onRowClick).not.toHaveBeenCalled()
+  })
+
+  it('when unread=false (already read) and onToggleRead given: toggle button is STILL present with markUnreadLabel', () => {
+    const onToggleRead = vi.fn()
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
+      timeAgo="1h ago" onToggleRead={onToggleRead} unread={false}
+      markReadLabel="Mark as read" markUnreadLabel="Mark as unread" />)
+    expect(screen.getByRole('button', { name: 'Mark as unread' })).toBeInTheDocument()
+  })
+
+  it('when unread=false, clicking toggle button calls onToggleRead and NOT row onClick', () => {
+    const onToggleRead = vi.fn()
+    const onRowClick = vi.fn()
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
+      timeAgo="1h ago" onToggleRead={onToggleRead} unread={false}
+      markReadLabel="Mark as read" markUnreadLabel="Mark as unread" onClick={onRowClick} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Mark as unread' }))
+    expect(onToggleRead).toHaveBeenCalledTimes(1)
+    expect(onRowClick).not.toHaveBeenCalled()
+  })
+
+  it('toggle button is absent when onToggleRead is not provided', () => {
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
+      timeAgo="1h ago" unread={true}
+      markReadLabel="Mark as read" markUnreadLabel="Mark as unread" />)
+    expect(screen.queryByRole('button', { name: 'Mark as read' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Mark as unread' })).not.toBeInTheDocument()
   })
 
   // ─── Row body click still fires ─────────────────────────────────────────────
@@ -177,10 +193,10 @@ describe('NotificationRow', () => {
   it('row body click (not an action button) still fires row onClick', () => {
     const onRowClick = vi.fn()
     const onDelete = vi.fn()
-    const onMarkRead = vi.fn()
+    const onToggleRead = vi.fn()
     render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
       timeAgo="1h ago" onClick={onRowClick} onDelete={onDelete} deleteLabel="Delete notification"
-      onMarkRead={onMarkRead} unread={true} markReadLabel="Mark as read" />)
+      onToggleRead={onToggleRead} unread={true} markReadLabel="Mark as read" markUnreadLabel="Mark as unread" />)
     // Click the subject text (part of the row body, not a button)
     fireEvent.click(screen.getByText('Test'))
     expect(onRowClick).toHaveBeenCalledTimes(1)

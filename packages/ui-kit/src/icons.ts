@@ -162,6 +162,7 @@ export {
   Printer,
   RefreshCw,
   RotateCcw,
+  Undo2,
   Send,
   Share2,
   Filter,
