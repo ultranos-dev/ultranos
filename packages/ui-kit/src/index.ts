@@ -82,6 +82,9 @@ export type { AlertProps } from './components/ui/alert.js'
 export { NotificationRow } from './components/ui/notification-row.js'
 export type { NotificationRowProps } from './components/ui/notification-row.js'
 
+export { NotificationDetailModal } from './components/ui/notification-detail-modal.js'
+export type { NotificationDetailModalProps } from './components/ui/notification-detail-modal.js'
+
 export {
   formatNumber,
   formatInteger,

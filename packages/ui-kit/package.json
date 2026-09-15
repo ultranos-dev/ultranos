@@ -43,6 +43,7 @@
     "./components/ui/image-viewer": "./src/components/ui/image-viewer.tsx",
     "./components/ui/app-toaster": "./src/components/ui/app-toaster.tsx",
     "./components/ui/notification-row": "./src/components/ui/notification-row.tsx",
+    "./components/ui/notification-detail-modal": "./src/components/ui/notification-detail-modal.tsx",
     "./notification-presentation": "./src/notification-presentation.ts"
   },
   "scripts": {
