@@ -275,6 +275,8 @@ export interface NotificationItem {
     message?: string
     status?: string
     ruleId?: string
+    /** ISO timestamp when the hub acknowledged/processed the event — non-PHI, used for "Received" detail row. */
+    acknowledgedAt?: string
   }
   status: string
   createdAt: string

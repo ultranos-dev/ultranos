@@ -38,6 +38,12 @@ vi.mock('next-intl', () => ({
       'notifications.sourceApp.SYSTEM': 'System',
       'notifications.subject.LAB_RESULT_AVAILABLE': 'Lab result available',
       'notifications.subject.LAB_RESULT_ESCALATION': 'Urgent lab result',
+      'notifications.subject.OUTBREAK_MODE_ACTIVATED': 'Outbreak mode activated',
+      'notifications.subject.LAB_APPROVED': 'Lab approved',
+      'notifications.field.pathogen': 'Pathogen',
+      'notifications.field.status': 'Status',
+      'notifications.field.referenceId': 'Reference',
+      'notifications.field.received': 'Received',
     }
     return MAP[fullKey] ?? key
   },
@@ -99,13 +105,25 @@ vi.mock('@ultranos/ui-kit/components/ui/notification-detail-modal', () => ({
   NotificationDetailModal: ({
     open,
     onOpenChange,
+    details,
   }: {
     open: boolean
     onOpenChange: (o: boolean) => void
+    details?: Array<{ label: string; value: string; emphasis?: boolean }>
   }) =>
     open ? (
       <div role="dialog" data-testid="notif-modal">
         <button type="button" onClick={() => onOpenChange(false)}>Close</button>
+        {details && details.length > 0 && (
+          <dl data-testid="notif-detail-fields">
+            {details.map((d, i) => (
+              <div key={i} data-testid={`detail-field-${i}`}>
+                <dt data-testid="detail-label">{d.label}</dt>
+                <dd data-testid="detail-value">{d.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
       </div>
     ) : null,
 }))
@@ -128,6 +146,7 @@ vi.mock('@ultranos/ui-kit/components/ui/empty-state', () => ({
 
 vi.mock('@ultranos/ui-kit', () => ({
   formatDate: (d: Date) => d.toLocaleDateString(),
+  formatDateTime: (d: Date) => `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`,
 }))
 
 const mockGetUnreadCount = vi.fn()
@@ -405,5 +424,98 @@ describe('NotificationItemRow', () => {
 
     fireEvent.click(screen.getByTestId('notification-item'))
     expect(onAcknowledge).not.toHaveBeenCalled()
+  })
+})
+
+// ── Task 4 — Modal detail rows ─────────────────────────────────
+
+describe('NotificationPanel — modal detail rows', () => {
+  it('shows Pathogen + Received rows for OUTBREAK_MODE_ACTIVATED notification', async () => {
+    const acknowledgedAt = '2026-09-15T08:30:00.000Z'
+    const outbreakNotif = makeNotification({
+      id: 'outbreak-1',
+      type: 'OUTBREAK_MODE_ACTIVATED',
+      subjectKey: 'OUTBREAK_MODE_ACTIVATED',
+      sourceApp: 'SYSTEM',
+      bodyParams: { pathogen: 'Cholera', outbreakId: 'ob-abc123' },
+      payload: { acknowledgedAt, status: 'active' },
+      status: 'SENT',
+      createdAt: acknowledgedAt,
+    })
+    mockListNotifications.mockResolvedValue([outbreakNotif])
+
+    render(<NotificationPanel onClose={vi.fn()} onCountChange={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('notif-row')).toHaveLength(1)
+    })
+
+    // Open the modal by clicking the notification row
+    fireEvent.click(screen.getByTestId('notif-row'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('notif-modal')).toBeInTheDocument()
+    })
+
+    // Verify detail fields are rendered
+    expect(screen.getByTestId('notif-detail-fields')).toBeInTheDocument()
+
+    // Pathogen row
+    const labels = screen.getAllByTestId('detail-label').map(el => el.textContent)
+    const values = screen.getAllByTestId('detail-value').map(el => el.textContent)
+    expect(labels).toContain('Pathogen')
+    expect(values).toContain('Cholera')
+
+    // Received row — label must be present
+    expect(labels).toContain('Received')
+    // At least one value should be a non-empty date-time string
+    const receivedIdx = labels.indexOf('Received')
+    expect(values[receivedIdx]).toBeTruthy()
+
+    // No patient assertion — lab never sees patient data
+    expect(screen.queryByText(/patient/i)).not.toBeInTheDocument()
+  })
+
+  it('shows Status + Received rows for LAB_APPROVED notification', async () => {
+    const createdAt = '2026-09-15T09:00:00.000Z'
+    const labApprovedNotif = makeNotification({
+      id: 'lab-approved-1',
+      type: 'LAB_APPROVED',
+      subjectKey: 'LAB_APPROVED',
+      sourceApp: 'ADMIN',
+      bodyParams: { status: 'APPROVED' },
+      payload: { status: 'APPROVED' },
+      status: 'SENT',
+      createdAt,
+    })
+    mockListNotifications.mockResolvedValue([labApprovedNotif])
+
+    render(<NotificationPanel onClose={vi.fn()} onCountChange={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('notif-row')).toHaveLength(1)
+    })
+
+    fireEvent.click(screen.getByTestId('notif-row'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('notif-modal')).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('notif-detail-fields')).toBeInTheDocument()
+
+    const labels = screen.getAllByTestId('detail-label').map(el => el.textContent)
+    const values = screen.getAllByTestId('detail-value').map(el => el.textContent)
+
+    // Status row
+    expect(labels).toContain('Status')
+    const statusIdx = labels.indexOf('Status')
+    expect(values[statusIdx]).toBe('APPROVED')
+
+    // Received row
+    expect(labels).toContain('Received')
+
+    // No patient assertion
+    expect(screen.queryByText(/patient/i)).not.toBeInTheDocument()
   })
 })

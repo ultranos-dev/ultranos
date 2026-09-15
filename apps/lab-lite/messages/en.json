@@ -342,6 +342,12 @@
       "providerSuspendedNotes": "The provider cannot access clinical data until the suspension is lifted.",
       "kycMoreInfoNotes": "Please submit the additional documents requested for KYC verification.",
       "kycRejectedNotes": "Please contact administration for details about the KYC rejection."
+    },
+    "field": {
+      "pathogen": "Pathogen",
+      "status": "Status",
+      "referenceId": "Reference",
+      "received": "Received"
     }
   },
   "queue": {

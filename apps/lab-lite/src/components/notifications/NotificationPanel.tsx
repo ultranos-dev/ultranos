@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { formatDate } from '@ultranos/ui-kit'
+import { formatDate, formatDateTime } from '@ultranos/ui-kit'
 import { NotificationRow } from '@ultranos/ui-kit/components/ui/notification-row'
 import { NotificationDetailModal } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
+import type { NotificationDetailField } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
 import { sourceAppIcon, sourceAppNameKey, deriveSourceApp } from '@ultranos/ui-kit/notification-presentation'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { X } from '@ultranos/ui-kit/icons'
@@ -186,6 +187,44 @@ function PanelNotificationRow({
   // Deep link for lab-specific notification types
   const deepLink = n.type === 'SYNC_CONFLICT' ? '/sync' : null
 
+  // Build NON-PHI detail rows for the modal — no patient fields, ever
+  const details: NotificationDetailField[] = []
+  const bp = n.bodyParams as Record<string, string | number> | null | undefined
+
+  // Pathogen — outbreak notifications only
+  const pathogen = bp?.pathogen
+  if (pathogen) {
+    details.push({
+      label: tNotif('field.pathogen' as Parameters<typeof tNotif>[0]),
+      value: String(pathogen),
+    })
+  }
+
+  // Status — operational field (e.g. APPROVED / SUSPENDED)
+  const statusValue = (bp?.status ?? n.payload?.status)
+  if (statusValue) {
+    details.push({
+      label: tNotif('field.status' as Parameters<typeof tNotif>[0]),
+      value: String(statusValue),
+    })
+  }
+
+  // Reference — non-PHI id if present (orderId from bodyParams, or outbreak ref)
+  const referenceId = bp?.orderId ?? bp?.outbreakId
+  if (referenceId) {
+    details.push({
+      label: tNotif('field.referenceId' as Parameters<typeof tNotif>[0]),
+      value: String(referenceId),
+    })
+  }
+
+  // Received — always present: acknowledgedAt if available, else createdAt
+  const receivedTs = n.payload?.acknowledgedAt ?? n.createdAt
+  details.push({
+    label: tNotif('field.received' as Parameters<typeof tNotif>[0]),
+    value: formatDateTime(new Date(receivedTs), locale),
+  })
+
   return (
     <>
       <NotificationRow
@@ -212,6 +251,7 @@ function PanelNotificationRow({
         body={body}
         notes={notes}
         exactTimestamp={formatDate(new Date(n.createdAt), locale)}
+        details={details.length > 0 ? details : undefined}
         action={deepLink
           ? {
               label: tNotif('viewDetails' as Parameters<typeof tNotif>[0]),
