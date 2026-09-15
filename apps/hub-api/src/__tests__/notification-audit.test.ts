@@ -18,14 +18,27 @@ const mockInsert = vi.fn().mockReturnValue({
 
 const mockSelect = vi.fn()
 
-const mockFrom = vi.fn(() => ({
-  insert: mockInsert,
-  select: mockSelect,
-  update: vi.fn().mockReturnValue({
-    in: vi.fn().mockResolvedValue({ error: null }),
-    eq: vi.fn().mockResolvedValue({ error: null }),
-  }),
-}))
+// resolvePractitionerId(ctx.supabase, ...) looks up the practitioners table to map
+// the auth sub → practitioners.id. Return null here so the caller's ref set is [sub].
+function makePractitionersChain() {
+  const chain: any = {}
+  chain.select = vi.fn(() => chain)
+  chain.eq = vi.fn(() => chain)
+  chain.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+  return chain
+}
+
+const mockFrom = vi.fn((table: string) => {
+  if (table === 'practitioners') return makePractitionersChain()
+  return {
+    insert: mockInsert,
+    select: mockSelect,
+    update: vi.fn().mockReturnValue({
+      in: vi.fn().mockReturnValue({ in: vi.fn().mockResolvedValue({ error: null }) }),
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    }),
+  }
+})
 
 vi.mock('@ultranos/audit-logger', () => ({
   AuditLogger: vi.fn().mockImplementation(() => ({
@@ -76,9 +89,9 @@ describe('Notification Audit Events (AC: 10)', () => {
   // Dispatch audit behavior is covered by lab-register tests.
 
   it('emits audit event with action=UPDATE when notification is delivered', async () => {
-    // Mock list returning QUEUED notifications
+    // Mock list returning QUEUED notifications (scoped via .in on the caller's refs)
     mockSelect.mockReturnValue({
-      eq: vi.fn().mockReturnValue({
+      in: vi.fn().mockReturnValue({
         order: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue({
             data: [
@@ -110,7 +123,7 @@ describe('Notification Audit Events (AC: 10)', () => {
     // Mock: find the notification owned by the user
     mockSelect.mockReturnValue({
       eq: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
+        in: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({
             data: { id: 'n-1', recipient_ref: 'doctor-1', status: 'SENT' },
             error: null,
@@ -142,7 +155,7 @@ describe('Notification Audit Events (AC: 10)', () => {
     // Mock: find the notification owned by the user
     mockSelect.mockReturnValue({
       eq: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
+        in: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({
             data: { id: 'n-1', recipient_ref: 'doctor-1', status: 'SENT' },
             error: null,

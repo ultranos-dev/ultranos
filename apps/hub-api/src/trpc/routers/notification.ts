@@ -1,8 +1,37 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createTRPCRouter, protectedProcedure } from '../init'
 import { db } from '@/lib/supabase'
 import { AuditLogger } from '@ultranos/audit-logger'
+import { resolvePractitionerId } from '@/trpc/routers/sync'
+
+/**
+ * The set of `recipient_ref` values that address the authenticated caller.
+ *
+ * Notifications are dispatched keyed by the resolved `practitioners.id`
+ * (lab.acknowledgeOrder, dispatchResultNotifications, medication dispense,
+ * admin actions, etc.), NOT the auth `sub`. Reading by `sub` alone therefore
+ * missed every clinician notification (they piled up QUEUED forever). This
+ * mirrors `serviceRequest.getOrderStatus`: resolve auth sub → practitioners.id.
+ *
+ * Returns every id the caller could be addressed by so a single `.in()` scope
+ * covers all dispatch conventions:
+ *  - clinicians: [sub, jwt practitionerId, resolved practitioners.id]
+ *  - patients / guardians: [sub] (no practitioner row → resolve is null)
+ */
+async function recipientRefsForUser(ctx: {
+  supabase: SupabaseClient
+  user: { sub: string; practitionerId?: string }
+}): Promise<string[]> {
+  const refs = new Set<string>()
+  refs.add(ctx.user.sub)
+  const jwtPractitionerRef = ctx.user.practitionerId ?? ctx.user.sub
+  refs.add(jwtPractitionerRef)
+  const resolved = await resolvePractitionerId(ctx.supabase, jwtPractitionerRef, new Map())
+  if (resolved) refs.add(resolved)
+  return [...refs]
+}
 
 /**
  * Generic ecosystem notification router.
@@ -25,10 +54,11 @@ export const notificationRouter = createTRPCRouter({
    */
   list: protectedProcedure
     .query(async ({ ctx }) => {
+      const recipientRefs = await recipientRefsForUser(ctx)
       const { data: notifications, error } = await ctx.supabase
         .from('notifications')
         .select('id, type, payload, status, created_at, delivered_at, acknowledged_at')
-        .eq('recipient_ref', ctx.user.sub)
+        .in('recipient_ref', recipientRefs)
         .order('created_at', { ascending: false })
         .limit(50)
 
@@ -102,12 +132,15 @@ export const notificationRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Verify ownership: notification must belong to the requesting user
+      // Verify ownership: notification must belong to the requesting user.
+      // recipient_ref is keyed by the resolved practitioners.id, so scope by the
+      // caller's full ref set (sub + resolved practitioner id) — not raw sub.
+      const recipientRefs = await recipientRefsForUser(ctx)
       const { data: existing, error: fetchError } = await ctx.supabase
         .from('notifications')
         .select('id, recipient_ref, status')
         .eq('id', input.notificationId)
-        .eq('recipient_ref', ctx.user.sub)
+        .in('recipient_ref', recipientRefs)
         .single()
 
       if (fetchError || !existing) {
@@ -158,13 +191,14 @@ export const notificationRouter = createTRPCRouter({
    */
   acknowledgeAll: protectedProcedure
     .mutation(async ({ ctx }) => {
+      const recipientRefs = await recipientRefsForUser(ctx)
       const { error } = await ctx.supabase
         .from('notifications')
         .update(db.toRowRaw({
           status: 'ACKNOWLEDGED',
           acknowledgedAt: new Date().toISOString(),
         }, 'non-PHI: notifications'))
-        .eq('recipient_ref', ctx.user.sub)
+        .in('recipient_ref', recipientRefs)
         .in('status', ['QUEUED', 'SENT'])
 
       if (error) {
@@ -200,10 +234,11 @@ export const notificationRouter = createTRPCRouter({
    */
   unreadCount: protectedProcedure
     .query(async ({ ctx }) => {
+      const recipientRefs = await recipientRefsForUser(ctx)
       const { count, error } = await ctx.supabase
         .from('notifications')
         .select('id', { count: 'exact', head: true })
-        .eq('recipient_ref', ctx.user.sub)
+        .in('recipient_ref', recipientRefs)
         .in('status', ['QUEUED', 'SENT'])
 
       if (error) {

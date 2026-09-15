@@ -21,16 +21,29 @@ const mockInsert = vi.fn().mockReturnValue({
 
 const mockSelect = vi.fn()
 
+// acknowledgeAll chains .in('recipient_ref', refs).in('status', [...]); the second
+// .in is the awaited terminal.
 const mockIn = vi.fn().mockResolvedValue({ error: null })
-const mockUpdateChain = vi.fn().mockReturnValue({ in: mockIn })
+const mockUpdateChain = vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ in: mockIn }) })
+
+// resolvePractitionerId(ctx.supabase, ...) maps auth sub → practitioners.id.
+// Return null so the caller's ref set is just [sub] (matches these fixtures).
+function makePractitionersChain() {
+  const chain: any = {}
+  chain.select = vi.fn(() => chain)
+  chain.eq = vi.fn(() => chain)
+  chain.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+  return chain
+}
 
 const mockFrom = vi.fn((table: string) => {
+  if (table === 'practitioners') return makePractitionersChain()
   if (table === 'notifications') {
     return {
       insert: mockInsert,
       select: mockSelect,
       update: vi.fn().mockReturnValue({
-        in: mockIn,
+        in: vi.fn().mockReturnValue({ in: mockIn }),
         eq: vi.fn().mockResolvedValue({ error: null }),
       }),
     }
@@ -100,7 +113,7 @@ describe('notification.list', () => {
     ]
 
     mockSelect.mockReturnValue({
-      eq: vi.fn().mockReturnValue({
+      in: vi.fn().mockReturnValue({
         order: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue({
             data: mockNotifications,
@@ -136,7 +149,7 @@ describe('notification.acknowledge', () => {
     // Mock: verify ownership first
     mockSelect.mockReturnValue({
       eq: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
+        in: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({
             data: { id: 'n1', recipient_ref: 'doctor-1', status: 'SENT' },
             error: null,
@@ -158,7 +171,7 @@ describe('notification.acknowledge', () => {
   it('emits audit event on acknowledge (AC: 10)', async () => {
     mockSelect.mockReturnValue({
       eq: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
+        in: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({
             data: { id: 'n1', recipient_ref: 'doctor-1', status: 'SENT' },
             error: null,
@@ -193,12 +206,14 @@ describe('notification.acknowledgeAll', () => {
   })
 
   it('marks all of the caller\'s unread notifications acknowledged (scoped to recipient + unread status)', async () => {
-    const inMock = vi.fn().mockResolvedValue({ error: null })
-    const eqMock = vi.fn().mockReturnValue({ in: inMock })
-    const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
-    const localFrom = vi.fn((table: string) =>
-      table === 'notifications' ? { update: updateMock } : {},
-    )
+    // Update chain is now .in('recipient_ref', refs).in('status', [...]).
+    const statusInMock = vi.fn().mockResolvedValue({ error: null })
+    const recipientInMock = vi.fn().mockReturnValue({ in: statusInMock })
+    const updateMock = vi.fn().mockReturnValue({ in: recipientInMock })
+    const localFrom = vi.fn((table: string) => {
+      if (table === 'practitioners') return makePractitionersChain()
+      return table === 'notifications' ? { update: updateMock } : {}
+    })
     const ctx = { supabase: { from: localFrom } as never, user: DOCTOR_USER, headers: new Headers() }
 
     const router = createTRPCRouter({ notification: notificationRouter })
@@ -207,9 +222,10 @@ describe('notification.acknowledgeAll', () => {
     const result = await caller.notification.acknowledgeAll()
 
     expect(result.success).toBe(true)
-    // Only the caller's own unread notifications — never a cross-recipient wipe.
-    expect(eqMock).toHaveBeenCalledWith('recipient_ref', 'doctor-1')
-    expect(inMock).toHaveBeenCalledWith('status', ['QUEUED', 'SENT'])
+    // Only the caller's own unread notifications — scoped to the resolved ref set,
+    // never a cross-recipient wipe.
+    expect(recipientInMock).toHaveBeenCalledWith('recipient_ref', ['doctor-1'])
+    expect(statusInMock).toHaveBeenCalledWith('status', ['QUEUED', 'SENT'])
     expect(mockAuditEmit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'UPDATE',
