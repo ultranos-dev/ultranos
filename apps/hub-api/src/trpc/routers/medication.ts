@@ -9,6 +9,7 @@ import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { checkInteractions } from '@ultranos/drug-db'
 import { db } from '@/lib/supabase'
+import { buildNotificationContent } from '@/lib/notification-content'
 import {
   drugInteractionChecksTotal,
   drugInteractionOverridesTotal,
@@ -1165,6 +1166,8 @@ export const medicationRouter = createTRPCRouter({
       // Best-effort — the dispense is committed and must not roll back on failure.
       if (currentRx.requester_id) {
         try {
+          const dispensePayload = { prescriptionId: input.prescriptionId, status: newPrescriptionStatus }
+          const dispenseContent = buildNotificationContent('PRESCRIPTION_DISPENSED', dispensePayload)
           const { data: notifRows } = await ctx.supabase
             .from('notifications')
             .insert(
@@ -1173,9 +1176,14 @@ export const medicationRouter = createTRPCRouter({
                   recipientRef: currentRx.requester_id,
                   recipientRole: 'CLINICIAN',
                   type: 'PRESCRIPTION_DISPENSED',
-                  payload: JSON.stringify({ prescriptionId: input.prescriptionId, status: newPrescriptionStatus }),
+                  payload: JSON.stringify(dispensePayload),
                   status: 'QUEUED',
                   nextRetryAt: new Date(Date.now() + 60_000).toISOString(),
+                  sourceApp: dispenseContent.sourceApp,
+                  subjectKey: dispenseContent.subjectKey,
+                  bodyKey: dispenseContent.bodyKey,
+                  bodyParams: dispenseContent.bodyParams,
+                  notesKey: dispenseContent.notesKey,
                 },
                 'non-PHI: notifications',
               ),

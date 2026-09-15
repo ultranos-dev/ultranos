@@ -330,6 +330,40 @@ describe('guardian.createLink', () => {
     )
   })
 
+  it('GUARDIAN_LINKED notification carries descriptor columns (sourceApp=OPD_LITE)', async () => {
+    mockInsert.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({
+          data: { id: GUARDIAN_LINK_ID },
+          error: null,
+        }),
+      }),
+    })
+
+    const router = createTRPCRouter({ guardian: guardianRouter })
+    const caller = createCallerFactory(router)(makeCtx(PATIENT_USER))
+
+    await caller.guardian.createLink({
+      patientId: PATIENT_ID,
+      guardianUserId: GUARDIAN_USER_ID,
+      guardianPhoneHash: 'sha256hash',
+      guardianPhoneHint: '+966****567',
+      nonce: VALID_NONCE,
+    })
+
+    expect(mockNotificationInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceApp: 'OPD_LITE',
+        subjectKey: 'GUARDIAN_LINKED',
+        bodyKey: 'guardianLinkedBody',
+      }),
+    )
+    // bodyParams must be a real object, not a string
+    const callArg = mockNotificationInsert.mock.calls[0]![0]
+    expect(typeof callArg.bodyParams).toBe('object')
+    expect(callArg.bodyParams).not.toBeNull()
+  })
+
   it('validates nonce from Redis before creating link', async () => {
     mockInsert.mockReturnValue({
       select: vi.fn().mockReturnValue({

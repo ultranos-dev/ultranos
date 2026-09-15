@@ -383,6 +383,69 @@ describe('admin.reviewAnomaly', () => {
     )
   })
 
+  it('SUSPEND_PROVIDER notification carries descriptor columns (source_app=ADMIN)', async () => {
+    const alertRow = { id: '00000000-0000-0000-0000-000000000007', status: 'UNREVIEWED', practitioner_id: 'doc-7' }
+    const practitionerRow = { id: 'doc-7', _ultranos: { kycStatus: 'ACTIVE' } }
+
+    let capturedInsertArg: any = null
+    const notificationInsert = vi.fn().mockImplementation((arg: any) => {
+      capturedInsertArg = arg
+      return Promise.resolve({ data: null, error: null })
+    })
+    const from = vi.fn().mockImplementation((table: string) => {
+      if (table === 'prescribing_anomalies') {
+        const chain = chainMock()
+        chain.single = vi.fn().mockResolvedValue({ data: alertRow, error: null })
+        chain.update = vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            in: vi.fn().mockReturnValue({
+              select: vi.fn().mockResolvedValue({ data: null, error: null, count: 1 }),
+            }),
+          }),
+        })
+        return chain
+      }
+      if (table === 'practitioners') {
+        const chain = chainMock()
+        chain.single = vi.fn().mockResolvedValue({ data: practitionerRow, error: null })
+        chain.update = vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+        })
+        return chain
+      }
+      if (table === 'active_sessions') {
+        const chain = chainMock()
+        chain.delete = vi.fn().mockReturnValue(chain)
+        return chain
+      }
+      if (table === 'notifications') {
+        return { insert: notificationInsert }
+      }
+      return chainMock()
+    })
+
+    const ctx = makeCtx(adminUser, { from })
+    const caller = createCallerFactory(adminRouter)(ctx)
+
+    await caller.reviewAnomaly({
+      alertId: '00000000-0000-0000-0000-000000000007',
+      action: 'SUSPEND_PROVIDER',
+      reason: 'Confirmed abuse',
+    })
+
+    expect(capturedInsertArg).not.toBeNull()
+    // PROVIDER_SUSPENDED uses db.toRowRaw (camelCase in) — result still has camelCase keys after mock pass-through
+    expect(capturedInsertArg).toMatchObject({
+      type: 'PROVIDER_SUSPENDED',
+      sourceApp: 'ADMIN',
+      subjectKey: 'PROVIDER_SUSPENDED',
+      bodyKey: 'providerSuspendedBody',
+    })
+    // bodyParams must be a real object, not a string
+    expect(typeof capturedInsertArg.bodyParams).toBe('object')
+    expect(capturedInsertArg.bodyParams).not.toBeNull()
+  })
+
   it('non-ADMIN callers rejected with FORBIDDEN', async () => {
     const ctx = makeCtx(doctorUser)
     const caller = createCallerFactory(adminRouter)(ctx)

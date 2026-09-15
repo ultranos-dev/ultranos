@@ -15,6 +15,7 @@ import { scanFile } from '@/lib/virus-scanner'
 import { analyzeFile } from '@/services/ocr'
 import { compareHlc, deserializeHlc } from '@ultranos/sync-engine'
 import { monitoringPullEventsTotal } from '@/lib/clinical-safety-metrics'
+import { buildNotificationContent } from '@/lib/notification-content'
 
 /**
  * Dispatch lab result notifications to the ordering doctor and patient.
@@ -66,6 +67,8 @@ async function dispatchResultNotifications(
 
   const nextRetryAt = new Date(Date.now() + 60_000).toISOString() // 60s initial retry window
 
+  const resultContent = buildNotificationContent('LAB_RESULT_AVAILABLE', payload)
+
   // Doctor notification (AC: 1)
   if (requesterId) {
     notifications.push(db.toRowRaw({
@@ -75,6 +78,11 @@ async function dispatchResultNotifications(
       payload: JSON.stringify(payload),
       status: 'QUEUED',
       nextRetryAt,
+      sourceApp: resultContent.sourceApp,
+      subjectKey: resultContent.subjectKey,
+      bodyKey: resultContent.bodyKey,
+      bodyParams: resultContent.bodyParams,
+      notesKey: resultContent.notesKey,
     }, 'non-PHI: notifications'))
   }
 
@@ -86,6 +94,11 @@ async function dispatchResultNotifications(
     payload: JSON.stringify(payload),
     status: 'QUEUED',
     nextRetryAt,
+    sourceApp: resultContent.sourceApp,
+    subjectKey: resultContent.subjectKey,
+    bodyKey: resultContent.bodyKey,
+    bodyParams: resultContent.bodyParams,
+    notesKey: resultContent.notesKey,
   }, 'non-PHI: notifications'))
 
   if (notifications.length > 0) {
@@ -2105,19 +2118,26 @@ export const labRouter = createTRPCRouter({
       if (order.requester_id) {
         const nextRetryAt = new Date(Date.now() + 60_000).toISOString()
         try {
+          const orderPayload = {
+            orderId: input.orderId,
+            testCategory: order.code_display ?? 'Lab Test',
+            acknowledgedAt: now,
+          }
+          const orderContent = buildNotificationContent('ORDER_RECEIVED', orderPayload)
           const { data: inserted } = await ctx.supabase
             .from('notifications')
             .insert({
               recipient_ref: order.requester_id,
               recipient_role: 'CLINICIAN',
               type: 'ORDER_RECEIVED',
-              payload: JSON.stringify({
-                orderId: input.orderId,
-                testCategory: order.code_display ?? 'Lab Test',
-                acknowledgedAt: now,
-              }),
+              payload: JSON.stringify(orderPayload),
               status: 'QUEUED',
               next_retry_at: nextRetryAt,
+              source_app: orderContent.sourceApp,
+              subject_key: orderContent.subjectKey,
+              body_key: orderContent.bodyKey,
+              body_params: orderContent.bodyParams,
+              notes_key: orderContent.notesKey,
             })
             .select('id')
             .single()

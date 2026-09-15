@@ -4,6 +4,7 @@ import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
 import { db } from '@/lib/supabase'
 import { AuditLogger } from '@ultranos/audit-logger'
+import { buildNotificationContent } from '@/lib/notification-content'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { enforcePremiumTier } from '../middleware/enforcePremiumTier'
 import { getRedisClient } from '@/lib/redis'
@@ -197,18 +198,22 @@ export const guardianRouter = createTRPCRouter({
 
       // Dispatch patient notification: "A guardian has been linked to your account"
       try {
+        const linkedPayload = { guardianLinkId: link.id, action: 'linked' }
+        const linkedContent = buildNotificationContent('GUARDIAN_LINKED', linkedPayload)
         await ctx.supabase
           .from('notifications')
           .insert(db.toRowRaw({
             recipientRef: input.patientId,
             recipientRole: 'PATIENT',
             type: 'GUARDIAN_LINKED',
-            payload: JSON.stringify({
-              guardianLinkId: link.id,
-              action: 'linked',
-            }),
+            payload: JSON.stringify(linkedPayload),
             status: 'QUEUED',
             nextRetryAt: new Date(Date.now() + 60_000).toISOString(),
+            sourceApp: linkedContent.sourceApp,
+            subjectKey: linkedContent.subjectKey,
+            bodyKey: linkedContent.bodyKey,
+            bodyParams: linkedContent.bodyParams,
+            notesKey: linkedContent.notesKey,
           }, 'non-PHI: notifications'))
       } catch {
         // Best-effort: notification failure must not block link creation
@@ -285,18 +290,22 @@ export const guardianRouter = createTRPCRouter({
 
       // Send notification to guardian: "You have been unlinked as a guardian"
       try {
+        const unlinkedPayload = { guardianLinkId: input.guardianLinkId, action: 'unlinked' }
+        const unlinkedContent = buildNotificationContent('GUARDIAN_UNLINKED', unlinkedPayload)
         await ctx.supabase
           .from('notifications')
           .insert(db.toRowRaw({
             recipientRef: input.guardianUserId,
             recipientRole: 'GUARDIAN',
             type: 'GUARDIAN_UNLINKED',
-            payload: JSON.stringify({
-              guardianLinkId: input.guardianLinkId,
-              action: 'unlinked',
-            }),
+            payload: JSON.stringify(unlinkedPayload),
             status: 'QUEUED',
             nextRetryAt: new Date(Date.now() + 60_000).toISOString(),
+            sourceApp: unlinkedContent.sourceApp,
+            subjectKey: unlinkedContent.subjectKey,
+            bodyKey: unlinkedContent.bodyKey,
+            bodyParams: unlinkedContent.bodyParams,
+            notesKey: unlinkedContent.notesKey,
           }, 'non-PHI: notifications'))
       } catch {
         // Best-effort: notification failure must not block unlink

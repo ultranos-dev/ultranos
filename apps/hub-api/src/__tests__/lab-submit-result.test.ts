@@ -156,6 +156,26 @@ describe('lab.submitResult', () => {
     expect(clinicianNotif.recipientRef).toBe('doc-1')
   })
 
+  it('LAB_RESULT_AVAILABLE notification carries descriptor columns (sourceApp=LAB_LITE)', async () => {
+    setupLab()
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    await caller.lab.submitResult({
+      ...makeBundle(),
+      orderId: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+    })
+    await new Promise((r) => setTimeout(r, 0))
+    const inserted = notifInsert.mock.calls[0]![0]
+    const clinicianNotif = inserted.find((n: any) => n.recipientRole === 'CLINICIAN')
+    expect(clinicianNotif).toMatchObject({
+      sourceApp: 'LAB_LITE',
+      subjectKey: 'LAB_RESULT_AVAILABLE',
+      bodyKey: 'labResultBody',
+    })
+    // bodyParams must be a real object (not stringified JSON)
+    expect(typeof clinicianNotif.bodyParams).toBe('object')
+    expect(clinicianNotif.bodyParams).not.toBeNull()
+  })
+
   it('sends only patient notification when no orderId is provided', async () => {
     setupLab()
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))

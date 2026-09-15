@@ -1,6 +1,7 @@
 import { AuditLogger } from '@ultranos/audit-logger'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { db } from '@/lib/supabase'
+import { buildNotificationContent } from '@/lib/notification-content'
 
 /**
  * Daily license expiry check job — Story 22.4 Tasks 2 & 3.
@@ -151,14 +152,21 @@ async function suspendExpiredProviders(
 
       // Send notification to expired provider
       try {
+        const expiredPayload = {
+          message: 'Your license has expired. Clinical write access has been suspended.',
+        }
+        const expiredContent = buildNotificationContent('LICENSE_EXPIRED', expiredPayload)
         await supabase.from('notifications').insert(db.toRowRaw({
           recipientRef: id,
           type: 'LICENSE_EXPIRED',
-          payload: JSON.stringify({
-            message: 'Your license has expired. Clinical write access has been suspended.',
-          }),
+          payload: JSON.stringify(expiredPayload),
           status: 'QUEUED',
           createdAt: new Date().toISOString(),
+          sourceApp: expiredContent.sourceApp,
+          subjectKey: expiredContent.subjectKey,
+          bodyKey: expiredContent.bodyKey,
+          bodyParams: expiredContent.bodyParams,
+          notesKey: expiredContent.notesKey,
         }, 'non-PHI: notifications'))
       } catch {
         console.warn('[LICENSE_EXPIRY_JOB] Failed to send suspension notification', { id })
@@ -232,15 +240,22 @@ async function sendExpiryNotifications(
           }
 
           // Queue notification only after tracking update succeeds
+          const warningPayload = {
+            message: NOTIFICATION_MESSAGES[threshold],
+            daysRemaining: threshold,
+          }
+          const warningContent = buildNotificationContent('LICENSE_EXPIRY_WARNING', warningPayload)
           await supabase.from('notifications').insert(db.toRowRaw({
             recipientRef: row.id,
             type: 'LICENSE_EXPIRY_WARNING',
-            payload: JSON.stringify({
-              message: NOTIFICATION_MESSAGES[threshold],
-              daysRemaining: threshold,
-            }),
+            payload: JSON.stringify(warningPayload),
             status: 'QUEUED',
             createdAt: new Date().toISOString(),
+            sourceApp: warningContent.sourceApp,
+            subjectKey: warningContent.subjectKey,
+            bodyKey: warningContent.bodyKey,
+            bodyParams: warningContent.bodyParams,
+            notesKey: warningContent.notesKey,
           }, 'non-PHI: notifications'))
 
           // Audit notification

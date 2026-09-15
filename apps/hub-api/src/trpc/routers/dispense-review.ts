@@ -4,6 +4,7 @@ import { createTRPCRouter, protectedProcedure } from '../init'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
+import { buildNotificationContent } from '@/lib/notification-content'
 
 const REVIEW_COLUMNS =
   'id, dispense_id, prescription_id, override_reason, override_supervisor, status, reviewed_by, reviewed_at, created_at'
@@ -96,6 +97,8 @@ export const dispenseReviewRouter = createTRPCRouter({
       const resolved = updatedRows?.[0] as { override_supervisor?: string; prescription_id?: string | null } | undefined
       if (resolved?.override_supervisor) {
         try {
+          const reviewPayload = { reviewId: input.reviewId, prescriptionId: resolved.prescription_id ?? null, status: input.status }
+          const reviewContent = buildNotificationContent('DISPENSE_REVIEW_RESOLVED', reviewPayload)
           const { data: notifRows } = await ctx.supabase
             .from('notifications')
             .insert(
@@ -104,9 +107,14 @@ export const dispenseReviewRouter = createTRPCRouter({
                   recipientRef: resolved.override_supervisor,
                   recipientRole: 'PHARMACIST',
                   type: 'DISPENSE_REVIEW_RESOLVED',
-                  payload: JSON.stringify({ reviewId: input.reviewId, prescriptionId: resolved.prescription_id ?? null, status: input.status }),
+                  payload: JSON.stringify(reviewPayload),
                   status: 'QUEUED',
                   nextRetryAt: new Date(Date.now() + 60_000).toISOString(),
+                  sourceApp: reviewContent.sourceApp,
+                  subjectKey: reviewContent.subjectKey,
+                  bodyKey: reviewContent.bodyKey,
+                  bodyParams: reviewContent.bodyParams,
+                  notesKey: reviewContent.notesKey,
                 },
                 'non-PHI: notifications',
               ),

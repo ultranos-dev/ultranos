@@ -275,4 +275,42 @@ describe('lab.acknowledgeOrder audit events', () => {
       expect.objectContaining(expectedNotifAudit),
     )
   })
+
+  it('acknowledgeOrder notification insert carries descriptor columns (source_app, body_params.testCategory)', async () => {
+    const { labRouter } = await import('../trpc/routers/lab')
+    const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
+
+    // Track inserts to the notifications table
+    const notifInsertCalls: any[] = []
+    const trackingFrom = (table: string) => {
+      if (table === 'notifications') {
+        return {
+          insert: (row: any) => {
+            notifInsertCalls.push(row)
+            return { select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: 'notif-1' }, error: null }) }) }
+          },
+        }
+      }
+      return mockFrom(table)
+    }
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)({
+      supabase: { from: trackingFrom } as never,
+      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' },
+      headers: new Headers(),
+    } as never)
+
+    await caller.lab.acknowledgeOrder({ orderId: '00000000-0000-4000-8000-000000000001', status: 'RECEIVED' })
+
+    expect(notifInsertCalls.length).toBeGreaterThan(0)
+    const notifRow = notifInsertCalls[0]
+    expect(notifRow).toMatchObject({
+      type: 'ORDER_RECEIVED',
+      source_app: 'LAB_LITE',
+      subject_key: 'ORDER_RECEIVED',
+      body_key: 'orderReceivedBody',
+      body_params: expect.objectContaining({ testCategory: expect.any(String) }),
+    })
+  })
 })

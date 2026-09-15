@@ -9,6 +9,7 @@ import crypto from 'crypto'
 import { encryptField, decryptField, generateBlindIndex } from '@ultranos/crypto/server'
 import { getCachedEncryptionKey, getFieldEncryptionKeys } from '@/lib/field-encryption'
 import { computeScreeningReminders } from '@/lib/screening-reminders'
+import { buildNotificationContent } from '@/lib/notification-content'
 
 /**
  * ADMIN-role-only middleware guard.
@@ -640,20 +641,28 @@ export const adminRouter = createTRPCRouter({
           .single()
 
         if (techRecord) {
+          const labStatusPayload = {
+            labId: input.labId,
+            action: input.action,
+            newStatus: transition.to,
+            ...(input.reason ? { reason: input.reason } : {}),
+          }
+          const labNotifType = notificationTypeMap[input.action]
+          const labStatusContent = buildNotificationContent(labNotifType, labStatusPayload)
           await ctx.supabase
             .from('notifications')
             .insert({
               recipient_ref: techRecord.practitioner_id,
               recipient_role: 'LAB_TECH',
-              type: notificationTypeMap[input.action],
-              payload: JSON.stringify({
-                labId: input.labId,
-                action: input.action,
-                newStatus: transition.to,
-                ...(input.reason ? { reason: input.reason } : {}),
-              }),
+              type: labNotifType,
+              payload: JSON.stringify(labStatusPayload),
               status: 'QUEUED',
               next_retry_at: new Date(Date.now() + 60_000).toISOString(),
+              source_app: labStatusContent.sourceApp,
+              subject_key: labStatusContent.subjectKey,
+              body_key: labStatusContent.bodyKey,
+              body_params: labStatusContent.bodyParams,
+              notes_key: labStatusContent.notesKey,
             })
         }
       } catch {
@@ -1239,20 +1248,28 @@ export const adminRouter = createTRPCRouter({
       }
 
       try {
+        const kycPayload = {
+          submissionId: input.submissionId,
+          action: input.action,
+          newKycStatus: transition.kycStatus,
+          ...(input.reason ? { reason: input.reason } : {}),
+        }
+        const kycNotifType = notificationTypeMap[input.action]
+        const kycContent = buildNotificationContent(kycNotifType, kycPayload)
         await ctx.supabase
           .from('notifications')
           .insert({
             recipient_ref: submission.practitioner_id,
             recipient_role: 'CLINICIAN',
-            type: notificationTypeMap[input.action],
-            payload: JSON.stringify({
-              submissionId: input.submissionId,
-              action: input.action,
-              newKycStatus: transition.kycStatus,
-              ...(input.reason ? { reason: input.reason } : {}),
-            }),
+            type: kycNotifType,
+            payload: JSON.stringify(kycPayload),
             status: 'QUEUED',
             next_retry_at: new Date(Date.now() + 60_000).toISOString(),
+            source_app: kycContent.sourceApp,
+            subject_key: kycContent.subjectKey,
+            body_key: kycContent.bodyKey,
+            body_params: kycContent.bodyParams,
+            notes_key: kycContent.notesKey,
           })
       } catch {
         console.warn('[NOTIFICATION_FAILURE]', { submissionId: input.submissionId, action: input.action })
@@ -1634,17 +1651,24 @@ export const adminRouter = createTRPCRouter({
 
           // Notify provider — ONLY on SUSPEND_PROVIDER (access changes)
           try {
+            const suspendPayload = {
+              message: 'Your clinical access has been suspended pending investigation.',
+              reason: 'Prescribing pattern review',
+            }
+            const suspendContent = buildNotificationContent('PROVIDER_SUSPENDED', suspendPayload)
             await ctx.supabase
               .from('notifications')
               .insert(db.toRowRaw({
                 recipientRef: practitionerId,
                 type: 'PROVIDER_SUSPENDED',
-                payload: JSON.stringify({
-                  message: 'Your clinical access has been suspended pending investigation.',
-                  reason: 'Prescribing pattern review',
-                }),
+                payload: JSON.stringify(suspendPayload),
                 status: 'QUEUED',
                 createdAt: now,
+                sourceApp: suspendContent.sourceApp,
+                subjectKey: suspendContent.subjectKey,
+                bodyKey: suspendContent.bodyKey,
+                bodyParams: suspendContent.bodyParams,
+                notesKey: suspendContent.notesKey,
               }, 'non-PHI: notifications'))
           } catch {
             console.warn('[NOTIFICATION_FAILURE]', { practitionerId, action: 'SUSPEND_PROVIDER' })
@@ -6694,13 +6718,20 @@ export const adminRouter = createTRPCRouter({
           .in('lab_id', deduplicatedLabIds)
 
         if (practitioners && practitioners.length > 0) {
+          const outbreakPayload = { outbreak_id: outbreakId, pathogen: input.pathogen }
+          const outbreakContent = buildNotificationContent('OUTBREAK_MODE_ACTIVATED', outbreakPayload)
           const notifications = (practitioners as Record<string, unknown>[]).map((p) => ({
             recipient_ref: p.practitioner_id as string,
             recipient_role: 'LAB_TECH',
             type: 'OUTBREAK_MODE_ACTIVATED',
-            payload: JSON.stringify({ outbreak_id: outbreakId, pathogen: input.pathogen }),
+            payload: JSON.stringify(outbreakPayload),
             status: 'QUEUED',
             next_retry_at: new Date(Date.now() + 60_000).toISOString(),
+            source_app: outbreakContent.sourceApp,
+            subject_key: outbreakContent.subjectKey,
+            body_key: outbreakContent.bodyKey,
+            body_params: outbreakContent.bodyParams,
+            notes_key: outbreakContent.notesKey,
           }))
           const { error: notifError } = await ctx.supabase.from('notifications').insert(notifications)
           notificationsSent = !notifError
@@ -6789,13 +6820,20 @@ export const adminRouter = createTRPCRouter({
           .in('lab_id', affectedLabIds)
 
         if (practitioners && practitioners.length > 0) {
+          const deactivatePayload = { outbreak_id: input.outbreakId, pathogen: ob.pathogen }
+          const deactivateContent = buildNotificationContent('OUTBREAK_MODE_DEACTIVATED', deactivatePayload)
           const notifications = (practitioners as Record<string, unknown>[]).map((p) => ({
             recipient_ref: p.practitioner_id as string,
             recipient_role: 'LAB_TECH',
             type: 'OUTBREAK_MODE_DEACTIVATED',
-            payload: JSON.stringify({ outbreak_id: input.outbreakId, pathogen: ob.pathogen }),
+            payload: JSON.stringify(deactivatePayload),
             status: 'QUEUED',
             next_retry_at: new Date(Date.now() + 60_000).toISOString(),
+            source_app: deactivateContent.sourceApp,
+            subject_key: deactivateContent.subjectKey,
+            body_key: deactivateContent.bodyKey,
+            body_params: deactivateContent.bodyParams,
+            notes_key: deactivateContent.notesKey,
           }))
           await ctx.supabase.from('notifications').insert(notifications)
         }

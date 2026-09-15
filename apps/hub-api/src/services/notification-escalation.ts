@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { AuditLogger } from '@ultranos/audit-logger'
+import { buildNotificationContent } from '@/lib/notification-content'
 
 /**
  * Notification Escalation Service.
@@ -83,6 +84,10 @@ export async function checkEscalations(
 
       if (ageMs >= FORTY_EIGHT_HOURS_MS && retryCount >= 1) {
         // 48h escalation: alert back-office team (AC: 9)
+        const escalationPayload48 = typeof notification.payload === 'string'
+          ? (() => { try { return JSON.parse(notification.payload) } catch { return {} } })()
+          : notification.payload ?? {}
+        const escalationContent48 = buildNotificationContent('LAB_RESULT_ESCALATION', escalationPayload48)
         const { data: escalationNotification } = await supabase.from('notifications').insert({
           recipient_ref: 'BACKOFFICE',
           recipient_role: 'CLINICIAN',
@@ -90,6 +95,11 @@ export async function checkEscalations(
           payload: notification.payload,
           status: 'QUEUED',
           retry_count: 2, // Prevent re-escalation of this notification
+          source_app: escalationContent48.sourceApp,
+          subject_key: escalationContent48.subjectKey,
+          body_key: escalationContent48.bodyKey,
+          body_params: escalationContent48.bodyParams,
+          notes_key: escalationContent48.notesKey,
         }).select('id').single()
 
         // Mark original as escalated
@@ -115,6 +125,10 @@ export async function checkEscalations(
         result.escalated48h++
       } else if (retryCount === 0) {
         // 24h escalation: re-send to doctor (AC: 8)
+        const escalationPayload24 = typeof notification.payload === 'string'
+          ? (() => { try { return JSON.parse(notification.payload) } catch { return {} } })()
+          : notification.payload ?? {}
+        const escalationContent24 = buildNotificationContent('LAB_RESULT_ESCALATION', escalationPayload24)
         const { data: escalationNotification } = await supabase.from('notifications').insert({
           recipient_ref: notification.recipient_ref,
           recipient_role: notification.recipient_role,
@@ -122,6 +136,11 @@ export async function checkEscalations(
           payload: notification.payload,
           status: 'QUEUED',
           retry_count: 1, // Prevent re-escalation of this notification
+          source_app: escalationContent24.sourceApp,
+          subject_key: escalationContent24.subjectKey,
+          body_key: escalationContent24.bodyKey,
+          body_params: escalationContent24.bodyParams,
+          notes_key: escalationContent24.notesKey,
         }).select('id').single()
 
         // Mark original notification retry count
