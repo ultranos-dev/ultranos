@@ -144,6 +144,12 @@ describe('NotificationDetailModal — RTL/LTR safety', () => {
       expect(screen.getByText('Status')).toBeInTheDocument()
       expect(screen.getByText('Pending')).toBeInTheDocument()
       expect(screen.getByText('Ahmad K.')).toBeInTheDocument()
+      // Assert the emphasis: true field carries text-destructive class
+      const statusLabel = screen.getByText('Status').closest('dt')
+      const statusValue = statusLabel?.nextElementSibling as HTMLElement | null
+      expect(statusValue).not.toBeNull()
+      expect(statusValue?.className).toContain('text-destructive')
+      expect(statusValue).toHaveTextContent('Pending')
     })
   })
 })

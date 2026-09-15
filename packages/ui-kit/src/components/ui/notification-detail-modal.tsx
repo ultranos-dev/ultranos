@@ -42,7 +42,7 @@ export function NotificationDetailModal({
           <p
             className="text-sm text-muted-foreground"
             data-testid="patient-loading"
-            aria-busy="true"
+            role="status"
           >
             …
           </p>
@@ -57,8 +57,8 @@ export function NotificationDetailModal({
         {/* Details list */}
         {details && details.length > 0 && (
           <dl className="flex flex-col gap-1">
-            {details.map((f) => (
-              <div key={f.label} className="flex justify-between gap-4 text-sm">
+            {details.map((f, index) => (
+              <div key={`${f.label}-${index}`} className="flex justify-between gap-4 text-sm">
                 <dt className="text-muted-foreground">{f.label}</dt>
                 <dd className={f.emphasis ? 'text-destructive font-medium' : 'text-foreground'}>
                   {f.value}
