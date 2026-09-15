@@ -5,6 +5,7 @@ import {
   getOrders,
   putOrders,
   updateOrderStatus,
+  getReceivedSampleForOrder,
   type LabOrderEntry,
 } from '@/lib/db'
 import { pullOrders, acknowledgeOrder } from '@/lib/trpc'
@@ -14,6 +15,27 @@ import { useDataBudgetStore } from '@/stores/data-budget-store'
 const POLL_INTERVAL_MS = 60_000
 const LOW_DATA_POLL_INTERVAL_MS = 300_000 // 5 min in low data mode
 const FULL_SYNC_EVERY_N = 10
+
+/**
+ * Tombstone reconciliation: for every locally-cached RECEIVED order that is
+ * absent from the given server ID set, mark it CANCELLED — UNLESS a local
+ * specimen already exists for that order, which means the physical sample has
+ * been collected and we hold it in custody. Cancelling such an order would
+ * silently sever the sample↔order link.
+ *
+ * Exported as a pure async function so it can be unit-tested without invoking
+ * the full React hook lifecycle.
+ */
+export async function tombstoneAbsentOrders(serverIds: Set<string>): Promise<void> {
+  const localOrders = await getOrders()
+  for (const local of localOrders) {
+    if (local.status === 'RECEIVED' && !serverIds.has(local.orderId)) {
+      const hasSpecimen = await getReceivedSampleForOrder(local.orderId)
+      if (hasSpecimen) continue // physical sample in custody — do not cancel
+      await updateOrderStatus(local.orderId, 'CANCELLED')
+    }
+  }
+}
 
 // P6: In-memory sync timestamp — never use localStorage (CLAUDE.md prohibition)
 let lastSyncedAtCache: string | undefined
@@ -126,15 +148,12 @@ export function useOrderSync(): OrderSyncState {
         }
       }
 
-      // P7: On full sync, mark local orders absent from server as CANCELLED
+      // P7: On full sync, mark local orders absent from server as CANCELLED,
+      // but skip any order that has a collected specimen (tombstoneAbsentOrders
+      // guards against severing the sample↔order link).
       if (isFullSync) {
         const serverIds = new Set(fetched.map((o) => o.orderId))
-        const localOrders = await getOrders()
-        for (const local of localOrders) {
-          if (local.status === 'RECEIVED' && !serverIds.has(local.orderId)) {
-            await updateOrderStatus(local.orderId, 'CANCELLED')
-          }
-        }
+        await tombstoneAbsentOrders(serverIds)
       }
 
       // P11: Use server timestamp for accurate incremental sync (no clock skew)

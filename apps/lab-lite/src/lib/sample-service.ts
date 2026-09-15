@@ -18,6 +18,7 @@ import {
   getSampleById,
   addCustodyEvent,
   enqueueSyncEvent,
+  updateOrderStatus,
   getDb,
 } from './db'
 import { generateSampleId } from './sample-id'
@@ -121,6 +122,12 @@ export async function accessionSample(input: AccessionInput): Promise<FhirSpecim
   }
 
   await putSample(specimen)
+
+  // Best-effort: advance the linked order off RECEIVED so the tombstone
+  // reconciliation in useOrderSync cannot cancel an order that now has a
+  // physical sample. Non-fatal — accession succeeds even if the order isn't
+  // cached locally (e.g. order was pulled by a different device).
+  try { await updateOrderStatus(input.orderId, 'IN_PROGRESS') } catch { /* non-fatal */ }
 
   // Initial custody event: received
   const custodyEvent: CustodyEvent = {

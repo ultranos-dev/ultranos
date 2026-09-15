@@ -27,7 +27,7 @@ import {
   recordHandoff,
 } from '../lib/sample-service'
 import { reportSampleAuditEvent } from '../lib/audit-client'
-import { getCustodyEventsForSample } from '../lib/db'
+import { getCustodyEventsForSample, putOrders, getOrders, type LabOrderEntry } from '../lib/db'
 
 const BASE_INPUT = {
   orderId: 'order-abc',
@@ -37,12 +37,31 @@ const BASE_INPUT = {
   patientRef: 'Patient/patient-uuid-001',
 }
 
+function makeLabOrder(overrides: Partial<LabOrderEntry> = {}): LabOrderEntry {
+  return {
+    orderId: 'order-abc',
+    patientFirstName: 'Ahmad',
+    patientAge: 30,
+    patientRef: 'Patient/patient-uuid-001',
+    testsRequested: [{ loincCode: '58410-2', loincDisplay: 'CBC' }],
+    urgency: 'routine',
+    orderingPhysicianName: 'Dr. Yusuf',
+    specialInstructions: null,
+    status: 'RECEIVED',
+    authoredOn: '2026-09-14T08:00:00.000Z',
+    receivedAt: '2026-09-14T08:05:00.000Z',
+    syncedAt: '2026-09-14T08:05:00.000Z',
+    ...overrides,
+  }
+}
+
 describe('accessionSample', () => {
   beforeEach(async () => {
     const db = getDb()
     await db.samples.clear()
     await db.custody_events.clear()
     await db.syncQueue.clear()
+    await db.orders.clear()
     vi.clearAllMocks()
   })
 
@@ -92,6 +111,27 @@ describe('accessionSample', () => {
   it('stores notes in the specimen', async () => {
     const specimen = await accessionSample({ ...BASE_INPUT, notes: 'Tech note' })
     expect(specimen.note?.[0]?.text).toBe('Tech note')
+  })
+
+  it('advances linked order from RECEIVED to IN_PROGRESS after accessioning', async () => {
+    // Seed a local RECEIVED order for the same orderId
+    await putOrders([makeLabOrder({ orderId: BASE_INPUT.orderId, status: 'RECEIVED' })])
+
+    await accessionSample(BASE_INPUT)
+
+    const orders = await getOrders()
+    const linked = orders.find((o) => o.orderId === BASE_INPUT.orderId)
+    expect(linked?.status).toBe('IN_PROGRESS')
+  })
+
+  it('still succeeds when the order is not cached locally (non-fatal path)', async () => {
+    // No order seeded — order table is empty
+    const db = getDb()
+    const count = await db.orders.count()
+    expect(count).toBe(0)
+
+    // Must not throw even though there is no cached order to advance
+    await expect(accessionSample(BASE_INPUT)).resolves.not.toThrow()
   })
 })
 

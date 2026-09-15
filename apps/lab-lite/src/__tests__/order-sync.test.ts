@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import 'fake-indexeddb/auto'
-import { getDb, putOrders, getOrders, updateOrderStatus, type LabOrderEntry } from '../lib/db'
+import { getDb, putOrders, getOrders, updateOrderStatus, putSample, type LabOrderEntry } from '../lib/db'
+import type { FhirSpecimen } from '@ultranos/shared-types'
 
 // Mock supabase
 vi.mock('@/lib/supabase', () => ({
@@ -139,5 +140,90 @@ describe('Order Sync (pullOrders / acknowledgeOrder)', () => {
     const cached = await getOrders()
     expect(cached).toHaveLength(1)
     expect(cached[0].patientFirstName).toBe('Ahmad')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Tombstone reconciliation guard (full-sync specimen protection)
+// ---------------------------------------------------------------------------
+
+describe('tombstoneAbsentOrders — specimen guard', () => {
+  beforeEach(async () => {
+    const db = getDb()
+    await db.orders.clear()
+    await db.samples.clear()
+    vi.clearAllMocks()
+  })
+
+  afterEach(async () => {
+    const db = getDb()
+    await db.orders.clear()
+    await db.samples.clear()
+  })
+
+  function makeSpecimen(orderId: string, pipelineStatus = 'received'): FhirSpecimen {
+    const id = `specimen-${orderId}`
+    return {
+      id,
+      resourceType: 'Specimen',
+      status: 'available',
+      subject: { reference: 'Patient/p-001' },
+      receivedTime: new Date().toISOString(),
+      request: [{ reference: `ServiceRequest/${orderId}` }],
+      meta: { lastUpdated: new Date().toISOString(), versionId: '1' },
+      _ultranos: {
+        labSampleId: `LAB-TEST-${orderId}`,
+        hlcTimestamp: 'mock-hlc',
+        createdAt: new Date().toISOString(),
+        isOfflineCreated: false,
+        pipelineStatus: pipelineStatus as import('@ultranos/shared-types').PipelineStatus,
+        sampleCondition: 'acceptable',
+      },
+    }
+  }
+
+  it('cancels a RECEIVED order absent from the server when no local specimen exists', async () => {
+    const { tombstoneAbsentOrders } = await import('../hooks/useOrderSync')
+    await putOrders([makeOrder({ orderId: 'ord-no-specimen', status: 'RECEIVED' })])
+
+    // Server set does not include this order
+    await tombstoneAbsentOrders(new Set<string>())
+
+    const orders = await getOrders()
+    expect(orders.find((o) => o.orderId === 'ord-no-specimen')?.status).toBe('CANCELLED')
+  })
+
+  it('does NOT cancel a RECEIVED order absent from server when a local specimen exists', async () => {
+    const { tombstoneAbsentOrders } = await import('../hooks/useOrderSync')
+    await putOrders([makeOrder({ orderId: 'ord-with-specimen', status: 'RECEIVED' })])
+    await putSample(makeSpecimen('ord-with-specimen'))
+
+    // Server set does not include this order
+    await tombstoneAbsentOrders(new Set<string>())
+
+    const orders = await getOrders()
+    expect(orders.find((o) => o.orderId === 'ord-with-specimen')?.status).toBe('RECEIVED')
+  })
+
+  it('does NOT cancel orders that are present in the server set', async () => {
+    const { tombstoneAbsentOrders } = await import('../hooks/useOrderSync')
+    await putOrders([makeOrder({ orderId: 'ord-present', status: 'RECEIVED' })])
+
+    // Server set INCLUDES this order
+    await tombstoneAbsentOrders(new Set(['ord-present']))
+
+    const orders = await getOrders()
+    expect(orders.find((o) => o.orderId === 'ord-present')?.status).toBe('RECEIVED')
+  })
+
+  it('does NOT cancel an IN_PROGRESS order even if absent from server', async () => {
+    const { tombstoneAbsentOrders } = await import('../hooks/useOrderSync')
+    await putOrders([makeOrder({ orderId: 'ord-in-progress', status: 'IN_PROGRESS' })])
+
+    await tombstoneAbsentOrders(new Set<string>())
+
+    const orders = await getOrders()
+    // Only RECEIVED orders are subject to tombstone — IN_PROGRESS stays untouched
+    expect(orders.find((o) => o.orderId === 'ord-in-progress')?.status).toBe('IN_PROGRESS')
   })
 })
