@@ -818,6 +818,76 @@ describe('NotificationCenter', () => {
         expect(mockAcknowledgeNotification).toHaveBeenCalledWith('n1')
       })
     })
+
+    it('mark-read icon on LAB_RESULT_AVAILABLE does NOT audit PHI_READ — only acknowledge', async () => {
+      // Verify the fix: mark-read is a pure acknowledge, not a PHI read.
+      // The lab-result audit (PHI_READ) should NOT fire when clicking mark-read.
+      const { auditPhiAccess } = await import('../lib/audit')
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('notification-n1')).toBeInTheDocument()
+      })
+
+      // Clear audit mocks to distinguish between row click and mark-read
+      vi.clearAllMocks()
+
+      // Click mark-read on n1 (LAB_RESULT_AVAILABLE)
+      const n1Wrapper = screen.getByTestId('notification-n1')
+      const markReadBtn = within(n1Wrapper).getByRole('button', { name: /markRead/i })
+      await act(async () => {
+        fireEvent.click(markReadBtn)
+      })
+
+      await waitFor(() => {
+        // acknowledge() should be called
+        expect(mockAcknowledgeNotification).toHaveBeenCalledWith('n1')
+        // auditPhiAccess (lab-result read) should NOT be called — mark-read is not a PHI read
+        expect(auditPhiAccess).not.toHaveBeenCalled()
+      })
+    })
+
+    it('clicking main row DOES audit PHI_READ (deep link opens), but mark-read does not', async () => {
+      // Contrast: clicking the row itself (main onClick, opens modal + deep link) DOES audit;
+      // clicking mark-read icon (pure acknowledge) does NOT audit.
+      const { auditPhiAccess } = await import('../lib/audit')
+      const { db } = await import('../lib/db')
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+
+      // Mock the db.diagnosticReports.get to simulate the audit path in handleNotificationClick
+      ;(db.diagnosticReports.get as any).mockResolvedValue({
+        subject: { reference: 'Patient/patient-uuid-123' },
+      })
+
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('notification-n1')).toBeInTheDocument()
+      })
+
+      vi.clearAllMocks()
+
+      // Click the main row button (which opens modal and calls handleNotificationClick)
+      const n1Wrapper = screen.getByTestId('notification-n1')
+      const rowBtn = within(n1Wrapper).getByRole('button', { name: /Lab Lite/i })
+      await act(async () => {
+        fireEvent.click(rowBtn)
+      })
+
+      await waitFor(() => {
+        // acknowledge() is called during modal open
+        expect(mockAcknowledgeNotification).toHaveBeenCalledWith('n1')
+        // auditPhiAccess should be called (lab-result read via deep link)
+        expect(auditPhiAccess).toHaveBeenCalledWith(
+          'PHI_READ',
+          'LAB_RESULT',
+          expect.any(String),
+          expect.any(String),
+          expect.objectContaining({ phiAccess: 'notification_center_navigate' }),
+        )
+      })
+    })
   })
 })
 

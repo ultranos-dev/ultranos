@@ -231,6 +231,7 @@ export function NotificationCenter() {
                   openId={openId}
                   setOpenId={setOpenId}
                   onNotificationClick={handleNotificationClick}
+                  onMarkRead={acknowledge}
                   onNavigate={(path) => router.push(path)}
                   onRemove={remove}
                   tNotif={tNotif}
@@ -251,6 +252,7 @@ function NotificationRowWrapper({
   openId,
   setOpenId,
   onNotificationClick,
+  onMarkRead,
   onNavigate,
   onRemove,
   tNotif,
@@ -259,6 +261,7 @@ function NotificationRowWrapper({
   openId: string | null
   setOpenId: (id: string | null) => void
   onNotificationClick: (n: NotificationItem) => Promise<void>
+  onMarkRead: (id: string) => Promise<void>
   onNavigate: (path: string) => void
   onRemove: (id: string) => Promise<void>
   tNotif: ReturnType<typeof useTranslations<'notifications'>>
@@ -371,7 +374,7 @@ function NotificationRowWrapper({
           setOpenId(n.id)
           void onNotificationClick(n)
         }}
-        onMarkRead={n.status !== 'ACKNOWLEDGED' ? () => { void onNotificationClick(n) } : undefined}
+        onMarkRead={n.status !== 'ACKNOWLEDGED' ? () => { void onMarkRead(n.id) } : undefined}
         onDelete={() => { void onRemove(n.id) }}
         markReadLabel={tNotif('markRead' as Parameters<typeof tNotif>[0])}
         deleteLabel={tNotif('delete' as Parameters<typeof tNotif>[0])}
