@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { FlaskConical } from '../icons'
 import { NotificationRow } from '../components/ui/notification-row'
@@ -113,5 +113,76 @@ describe('NotificationRow', () => {
     const event = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })
     button.dispatchEvent(event)
     expect(onClick).not.toHaveBeenCalled()
+  })
+
+  // ─── Delete button ──────────────────────────────────────────────────────────
+
+  it('renders delete button when onDelete is provided', () => {
+    const onDelete = vi.fn()
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
+      timeAgo="1h ago" onDelete={onDelete} deleteLabel="Delete notification" />)
+    expect(screen.getByRole('button', { name: 'Delete notification' })).toBeInTheDocument()
+  })
+
+  it('does not render delete button when onDelete is not provided', () => {
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
+      timeAgo="1h ago" deleteLabel="Delete notification" />)
+    expect(screen.queryByRole('button', { name: 'Delete notification' })).not.toBeInTheDocument()
+  })
+
+  it('clicking delete button calls onDelete and does NOT call row onClick (stopPropagation)', () => {
+    const onDelete = vi.fn()
+    const onRowClick = vi.fn()
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
+      timeAgo="1h ago" onDelete={onDelete} deleteLabel="Delete notification" onClick={onRowClick} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Delete notification' }))
+    expect(onDelete).toHaveBeenCalledTimes(1)
+    expect(onRowClick).not.toHaveBeenCalled()
+  })
+
+  // ─── Mark-read button ───────────────────────────────────────────────────────
+
+  it('renders mark-read button when onMarkRead is provided and unread is true', () => {
+    const onMarkRead = vi.fn()
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
+      timeAgo="1h ago" onMarkRead={onMarkRead} unread={true} markReadLabel="Mark as read" />)
+    expect(screen.getByRole('button', { name: 'Mark as read' })).toBeInTheDocument()
+  })
+
+  it('does not render mark-read button when unread is false (even if onMarkRead is provided)', () => {
+    const onMarkRead = vi.fn()
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
+      timeAgo="1h ago" onMarkRead={onMarkRead} unread={false} markReadLabel="Mark as read" />)
+    expect(screen.queryByRole('button', { name: 'Mark as read' })).not.toBeInTheDocument()
+  })
+
+  it('does not render mark-read button when onMarkRead is not provided and unread is true', () => {
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
+      timeAgo="1h ago" unread={true} markReadLabel="Mark as read" />)
+    expect(screen.queryByRole('button', { name: 'Mark as read' })).not.toBeInTheDocument()
+  })
+
+  it('clicking mark-read button calls onMarkRead and does NOT call row onClick (stopPropagation)', () => {
+    const onMarkRead = vi.fn()
+    const onRowClick = vi.fn()
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
+      timeAgo="1h ago" onMarkRead={onMarkRead} unread={true} markReadLabel="Mark as read" onClick={onRowClick} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Mark as read' }))
+    expect(onMarkRead).toHaveBeenCalledTimes(1)
+    expect(onRowClick).not.toHaveBeenCalled()
+  })
+
+  // ─── Row body click still fires ─────────────────────────────────────────────
+
+  it('row body click (not an action button) still fires row onClick', () => {
+    const onRowClick = vi.fn()
+    const onDelete = vi.fn()
+    const onMarkRead = vi.fn()
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Test"
+      timeAgo="1h ago" onClick={onRowClick} onDelete={onDelete} deleteLabel="Delete notification"
+      onMarkRead={onMarkRead} unread={true} markReadLabel="Mark as read" />)
+    // Click the subject text (part of the row body, not a button)
+    fireEvent.click(screen.getByText('Test'))
+    expect(onRowClick).toHaveBeenCalledTimes(1)
   })
 })
