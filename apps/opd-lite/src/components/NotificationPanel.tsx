@@ -11,6 +11,7 @@ import {
   fetchUnreadCount,
   acknowledgeNotification,
   deleteNotification,
+  markUnreadNotification,
   type NotificationItem,
 } from '@/lib/notification-api'
 import type { NotificationDetailField } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
@@ -149,6 +150,23 @@ function NotificationDropdown({
     }
   }, [onCountChange])
 
+  const handleMarkUnread = useCallback(async (id: string) => {
+    // Optimistic update — flip back to unread immediately
+    setNotifications(prev => {
+      const updated = prev.map(n =>
+        n.id === id ? { ...n, status: 'SENT', acknowledgedAt: null } : n,
+      )
+      onCountChange(updated.filter(n => n.status !== 'ACKNOWLEDGED').length)
+      return updated
+    })
+
+    try {
+      await markUnreadNotification(id)
+    } catch {
+      // Best-effort mark-unread
+    }
+  }, [onCountChange])
+
   const handleDelete = useCallback(async (id: string) => {
     // Optimistic removal
     setNotifications(prev => {
@@ -198,6 +216,7 @@ function NotificationDropdown({
             openId={openId}
             setOpenId={setOpenId}
             onAcknowledge={handleAcknowledge}
+            onMarkUnread={handleMarkUnread}
             onDelete={handleDelete}
             onNavigate={(path) => { router.push(path); onClose() }}
             tNotif={tNotif}
@@ -213,6 +232,7 @@ function PanelNotificationRow({
   openId,
   setOpenId,
   onAcknowledge,
+  onMarkUnread,
   onDelete,
   onNavigate,
   tNotif,
@@ -221,6 +241,7 @@ function PanelNotificationRow({
   openId: string | null
   setOpenId: (id: string | null) => void
   onAcknowledge: (id: string) => void
+  onMarkUnread: (id: string) => void
   onDelete: (id: string) => void
   onNavigate: (path: string) => void
   tNotif: ReturnType<typeof useTranslations<'notifications'>>
@@ -333,9 +354,12 @@ function PanelNotificationRow({
           setOpenId(n.id)
           onAcknowledge(n.id)
         }}
-        onMarkRead={n.status !== 'ACKNOWLEDGED' ? () => onAcknowledge(n.id) : undefined}
+        onToggleRead={() => {
+          n.status !== 'ACKNOWLEDGED' ? onAcknowledge(n.id) : onMarkUnread(n.id)
+        }}
         onDelete={() => onDelete(n.id)}
         markReadLabel={tNotif('markRead' as Parameters<typeof tNotif>[0])}
+        markUnreadLabel={tNotif('markUnread' as Parameters<typeof tNotif>[0])}
         deleteLabel={tNotif('delete' as Parameters<typeof tNotif>[0])}
       />
       <NotificationDetailModal

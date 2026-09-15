@@ -16,6 +16,7 @@ vi.mock('next/navigation', () => ({
 // Mock the notification API
 const mockDeleteNotificationPanel = vi.fn().mockResolvedValue({ success: true })
 const mockAcknowledgeNotificationPanel = vi.fn().mockResolvedValue({ success: true })
+const mockMarkUnreadNotificationPanel = vi.fn().mockResolvedValue({ success: true })
 
 vi.mock('../lib/notification-api', () => ({
   fetchUnreadCount: vi.fn().mockResolvedValue({ count: 3 }),
@@ -53,15 +54,16 @@ vi.mock('../lib/notification-api', () => ({
           uploadTimestamp: '2026-04-29T12:00:00.000Z',
           diagnosticReportId: '00000000-0000-4000-8000-000000000002',
         },
-        status: 'SENT',
+        status: 'ACKNOWLEDGED',
         createdAt: new Date(Date.now() - 3_600_000).toISOString(),
         deliveredAt: null,
-        acknowledgedAt: null,
+        acknowledgedAt: new Date(Date.now() - 3_500_000).toISOString(),
       },
     ],
   }),
   acknowledgeNotification: (...args: unknown[]) => mockAcknowledgeNotificationPanel(...args),
   deleteNotification: (...args: unknown[]) => mockDeleteNotificationPanel(...args),
+  markUnreadNotification: (...args: unknown[]) => mockMarkUnreadNotificationPanel(...args),
 }))
 
 describe('NotificationBell', () => {
@@ -69,6 +71,7 @@ describe('NotificationBell', () => {
     vi.clearAllMocks()
     mockDeleteNotificationPanel.mockResolvedValue({ success: true })
     mockAcknowledgeNotificationPanel.mockResolvedValue({ success: true })
+    mockMarkUnreadNotificationPanel.mockResolvedValue({ success: true })
   })
 
   it('renders bell icon with unread count badge', async () => {
@@ -209,7 +212,8 @@ describe('NotificationBell', () => {
     })
   })
 
-  it('T3: mark-read button in panel calls acknowledgeNotification', async () => {
+  it('T3: toggle on UNREAD row (n1) calls acknowledgeNotification, not markUnread', async () => {
+    // n1 is UNREAD → toggle button has aria-label 'markRead' → should call acknowledge
     render(<NotificationBell />)
 
     const bell = await screen.findByLabelText('bellUnreadAria')
@@ -219,15 +223,40 @@ describe('NotificationBell', () => {
       expect(screen.getAllByText('sourceApp.LAB_LITE').length).toBeGreaterThanOrEqual(1)
     })
 
-    // The mark-read button has aria-label 'markRead' (mock returns key as-is)
-    const [markReadBtn0] = screen.getAllByRole('button', { name: /markRead/i })
-    if (!markReadBtn0) throw new Error('No mark-read button found')
+    // Toggle button for unread row uses markReadLabel — 'markRead' via mock
+    const markReadBtn = screen.getByRole('button', { name: 'markRead' })
     await act(async () => {
-      fireEvent.click(markReadBtn0)
+      fireEvent.click(markReadBtn)
     })
 
     await waitFor(() => {
       expect(mockAcknowledgeNotificationPanel).toHaveBeenCalledWith('n1')
+      expect(mockMarkUnreadNotificationPanel).not.toHaveBeenCalled()
+    })
+  })
+
+  it('T3: toggle on ACKNOWLEDGED row (n2) is present and calls markUnreadNotification', async () => {
+    // n2 is ACKNOWLEDGED → toggle button has aria-label 'markUnread' → should call markUnread
+    // AND must not emit PHI_READ audit
+    render(<NotificationBell />)
+
+    const bell = await screen.findByLabelText('bellUnreadAria')
+    fireEvent.click(bell)
+
+    await waitFor(() => {
+      expect(screen.getAllByText('sourceApp.LAB_LITE').length).toBeGreaterThanOrEqual(1)
+    })
+
+    // Toggle for acknowledged row uses markUnreadLabel — 'markUnread' via mock
+    const markUnreadBtn = screen.getByRole('button', { name: 'markUnread' })
+    await act(async () => {
+      fireEvent.click(markUnreadBtn)
+    })
+
+    await waitFor(() => {
+      expect(mockMarkUnreadNotificationPanel).toHaveBeenCalledWith('n2')
+      expect(mockAcknowledgeNotificationPanel).not.toHaveBeenCalledWith('n2')
     })
   })
 })
+

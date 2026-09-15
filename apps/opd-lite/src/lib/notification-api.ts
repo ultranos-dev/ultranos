@@ -86,3 +86,7 @@ export async function acknowledgeNotification(notificationId: string): Promise<{
 export async function deleteNotification(notificationId: string): Promise<{ success: boolean }> {
   return trpcMutation<{ success: boolean }>('notification.delete', { notificationId })
 }
+
+export async function markUnreadNotification(notificationId: string): Promise<{ success: boolean }> {
+  return trpcMutation<{ success: boolean }>('notification.markUnread', { notificationId })
+}

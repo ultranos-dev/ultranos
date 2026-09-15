@@ -5,6 +5,7 @@ import {
   fetchNotifications,
   acknowledgeNotification,
   deleteNotification,
+  markUnreadNotification,
   type NotificationItem,
 } from '@/lib/notification-api'
 
@@ -19,6 +20,7 @@ export interface UseNotificationPollResult {
   refetch: () => Promise<void>
   acknowledge: (id: string) => Promise<void>
   acknowledgeAll: () => Promise<void>
+  markUnread: (id: string) => Promise<void>
   remove: (id: string) => Promise<void>
   setNotifications: React.Dispatch<React.SetStateAction<NotificationItem[]>>
 }
@@ -109,6 +111,25 @@ export function useNotificationPoll(intervalMs = POLL_INTERVAL_MS): UseNotificat
     }
   }, [])
 
+  const markUnread = useCallback(async (id: string) => {
+    // Optimistic update — flip back to unread (SENT) immediately
+    setNotifications(prev => {
+      const updated = prev.map(n =>
+        n.id === id
+          ? { ...n, status: 'SENT', acknowledgedAt: null }
+          : n,
+      )
+      setUnreadCount(updated.filter(n => n.status !== 'ACKNOWLEDGED').length)
+      return updated
+    })
+
+    try {
+      await markUnreadNotification(id)
+    } catch {
+      // Best-effort — optimistic update stays
+    }
+  }, [])
+
   const remove = useCallback(async (id: string) => {
     // Optimistic update — remove from local state immediately
     setNotifications(prev => {
@@ -156,6 +177,7 @@ export function useNotificationPoll(intervalMs = POLL_INTERVAL_MS): UseNotificat
     refetch: fetchAll,
     acknowledge,
     acknowledgeAll: acknowledgeAllFn,
+    markUnread,
     remove,
     setNotifications,
   }

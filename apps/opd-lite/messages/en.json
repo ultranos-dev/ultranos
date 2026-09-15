@@ -515,6 +515,7 @@
       "received": "Received"
     },
     "markRead": "Mark as read",
+    "markUnread": "Mark as unread",
     "delete": "Delete notification"
   },
   "sync": {

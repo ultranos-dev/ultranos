@@ -534,6 +534,12 @@ Total keys to review: **231** (each across ar / prs / ps). Includes a 24-key add
 - **prs:** "علامت‌گذاری به‌عنوان خوانده شده" ⚠ MACHINE-GENERATED
 - **ps:** "لوستل شوی علامه کول" ⚠ MACHINE-GENERATED
 
+### `notifications.markUnread`
+- **en:** "Mark as unread"
+- **ar:** "تعيين كغير مقروء" ⚠ MACHINE-GENERATED
+- **prs:** "علامت‌گذاری به‌عنوان خوانده نشده" ⚠ MACHINE-GENERATED
+- **ps:** "نه لوستل شوی علامه کول" ⚠ MACHINE-GENERATED
+
 ### `notifications.delete`
 - **en:** "Delete notification"
 - **ar:** "حذف الإشعار" ⚠ MACHINE-GENERATED

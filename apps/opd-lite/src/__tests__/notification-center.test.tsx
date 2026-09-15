@@ -33,12 +33,14 @@ const mockFetchNotifications = vi.fn()
 const mockFetchUnreadCount = vi.fn()
 const mockAcknowledgeNotification = vi.fn()
 const mockDeleteNotification = vi.fn()
+const mockMarkUnreadNotification = vi.fn()
 
 vi.mock('../lib/notification-api', () => ({
   fetchNotifications: (...args: unknown[]) => mockFetchNotifications(...args),
   fetchUnreadCount: (...args: unknown[]) => mockFetchUnreadCount(...args),
   acknowledgeNotification: (...args: unknown[]) => mockAcknowledgeNotification(...args),
   deleteNotification: (...args: unknown[]) => mockDeleteNotification(...args),
+  markUnreadNotification: (...args: unknown[]) => mockMarkUnreadNotification(...args),
 }))
 
 // Mock AuthGuard to pass through
@@ -155,6 +157,7 @@ describe('NotificationCenter', () => {
     mockFetchUnreadCount.mockResolvedValue({ count: 6 })
     mockAcknowledgeNotification.mockResolvedValue({ success: true })
     mockDeleteNotification.mockResolvedValue({ success: true })
+    mockMarkUnreadNotification.mockResolvedValue({ success: true })
   })
 
   // --- Task 1: Route page renders ---
@@ -758,6 +761,7 @@ describe('NotificationCenter', () => {
       mockFetchUnreadCount.mockResolvedValue({ count: 6 })
       mockAcknowledgeNotification.mockResolvedValue({ success: true })
       mockDeleteNotification.mockResolvedValue({ success: true })
+      mockMarkUnreadNotification.mockResolvedValue({ success: true })
     })
 
     it('clicking delete calls deleteNotification with the notification id', async () => {
@@ -799,7 +803,8 @@ describe('NotificationCenter', () => {
       })
     })
 
-    it('clicking mark-read calls acknowledgeNotification with the notification id', async () => {
+    it('toggle on UNREAD notification (n1) calls acknowledgeNotification, not markUnread', async () => {
+      // n1 is UNREAD → toggle should call acknowledge (mark read)
       const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
       render(<NotificationCenter />)
 
@@ -807,15 +812,62 @@ describe('NotificationCenter', () => {
         expect(screen.getByTestId('notification-n1')).toBeInTheDocument()
       })
 
-      // n1 is unread, so onMarkRead is provided — button label is 'markRead' via mock
+      // Toggle button is always rendered — aria-label is markReadLabel when unread
       const n1Wrapper = screen.getByTestId('notification-n1')
-      const markReadBtn = within(n1Wrapper).getByRole('button', { name: /markRead/i })
+      const toggleBtn = within(n1Wrapper).getByRole('button', { name: /markRead/i })
       await act(async () => {
-        fireEvent.click(markReadBtn)
+        fireEvent.click(toggleBtn)
       })
 
       await waitFor(() => {
         expect(mockAcknowledgeNotification).toHaveBeenCalledWith('n1')
+        expect(mockMarkUnreadNotification).not.toHaveBeenCalled()
+      })
+    })
+
+    it('toggle on ACKNOWLEDGED notification (n7) calls markUnreadNotification, not acknowledge', async () => {
+      // n7 is ACKNOWLEDGED → toggle should call markUnread (mark unread)
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('notification-n7')).toBeInTheDocument()
+      })
+
+      // n7 is ACKNOWLEDGED — toggle button uses markUnreadLabel ('markUnread' via mock)
+      const n7Wrapper = screen.getByTestId('notification-n7')
+      const toggleBtn = within(n7Wrapper).getByRole('button', { name: /markUnread/i })
+      await act(async () => {
+        fireEvent.click(toggleBtn)
+      })
+
+      await waitFor(() => {
+        expect(mockMarkUnreadNotification).toHaveBeenCalledWith('n7')
+        expect(mockAcknowledgeNotification).not.toHaveBeenCalledWith('n7')
+      })
+    })
+
+    it('toggle on ACKNOWLEDGED notification does NOT emit PHI_READ audit', async () => {
+      // Marking a notification unread is a pure status flip — must not trigger PHI_READ
+      const { auditPhiAccess } = await import('../lib/audit')
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('notification-n7')).toBeInTheDocument()
+      })
+
+      vi.clearAllMocks()
+
+      const n7Wrapper = screen.getByTestId('notification-n7')
+      const toggleBtn = within(n7Wrapper).getByRole('button', { name: /markUnread/i })
+      await act(async () => {
+        fireEvent.click(toggleBtn)
+      })
+
+      await waitFor(() => {
+        expect(mockMarkUnreadNotification).toHaveBeenCalledWith('n7')
+        expect(auditPhiAccess).not.toHaveBeenCalled()
       })
     })
 
