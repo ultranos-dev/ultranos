@@ -78,4 +78,18 @@ export const aiScribeEditRate = new Gauge({
   registers: [register],
 })
 
+// ─── Dispense Monitoring Metrics (Story 52.1) ───
+
+export const dispenseMonitoringEventsTotal = new Counter({
+  name: 'dispense_monitoring_events_total',
+  help: 'Monitoring events emitted on dispense of a monitored medication',
+  registers: [register],
+})
+
+export const dispenseMonitoringUnresolvedCodeTotal = new Counter({
+  name: 'dispense_monitoring_unresolved_code_total',
+  help: 'Dispenses whose medication code could not be resolved to a canonical ATC (Rule #3 observability)',
+  registers: [register],
+})
+
 // No separate registry export needed — metrics are on the shared Story 23.1 registry

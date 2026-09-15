@@ -13,7 +13,10 @@ import {
   drugInteractionChecksTotal,
   drugInteractionOverridesTotal,
   prescriptionsWithoutInteractionCheckTotal,
+  dispenseMonitoringEventsTotal,
+  dispenseMonitoringUnresolvedCodeTotal,
 } from '@/lib/clinical-safety-metrics'
+import { resolveCanonicalAtc } from '@/lib/atc-resolver'
 import { createSupabaseDrugAdapter } from '@/lib/supabase-drug-adapter'
 import { verifyEd25519Signature } from '@/lib/ed25519-verify'
 import { isKeyRevoked } from '@/lib/krl-check'
@@ -1197,6 +1200,43 @@ export const medicationRouter = createTRPCRouter({
           }
         } catch {
           console.warn('[NOTIFY] dispense fulfilment notification failed', { prescriptionId: input.prescriptionId })
+        }
+      }
+
+      // Story 52.1: fan out a data-minimized monitoring event when a MONITORED drug is
+      // dispensed. Best-effort — the dispense is committed and must not roll back here.
+      if (input.status === 'completed') {
+        try {
+          const atc = await resolveCanonicalAtc(ctx.supabase, input.medicationCode)
+          if (!atc) {
+            dispenseMonitoringUnresolvedCodeTotal.inc()
+            const a = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+            try {
+              await a.emit({ action: 'MONITORING_CODE_UNRESOLVED', resourceType: 'MEDICATION_DISPENSE', resourceId: input.dispenseId, actorId: ctx.user.sub, actorRole: ctx.user.role, outcome: 'SUCCESS', sessionId: ctx.user.sessionId, metadata: { reason: 'atc_unresolved' } })
+            } catch { console.warn('[AUDIT_FAILURE]', { action: 'MONITORING_CODE_UNRESOLVED' }) }
+          } else {
+            const { data: mapping } = await ctx.supabase
+              .from('medication_lab_mappings').select('atc_code, medication_display').eq('atc_code', atc).maybeSingle()
+            if (mapping) {
+              const realPatientId = input.patientRef.replace(/^Patient\//, '')
+              await ctx.supabase.from('dispense_monitoring_events').insert({
+                dispensing_event_id: input.dispenseId,
+                patient_id: realPatientId,
+                atc_code: atc,
+                medication_display: mapping.medication_display ?? input.medicationDisplay,
+                dispensed_at: input.whenHandedOver,
+                ordering_practitioner_ref: currentRx.requester_id ?? null,
+                hlc_timestamp: input.hlcTimestamp,
+              })
+              dispenseMonitoringEventsTotal.inc()
+              const a = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+              try {
+                await a.emit({ action: 'CREATE', resourceType: 'DISPENSE_MONITORING_EVENT', resourceId: input.dispenseId, actorId: ctx.user.sub, actorRole: ctx.user.role, outcome: 'SUCCESS', sessionId: ctx.user.sessionId, metadata: { atcCode: atc } })
+              } catch { console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'DISPENSE_MONITORING_EVENT' }) }
+            }
+          }
+        } catch {
+          console.warn('[MONITORING] dispense monitoring emit failed', { dispenseId: input.dispenseId })
         }
       }
 
