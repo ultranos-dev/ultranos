@@ -16,6 +16,7 @@
     "viewDetails": "View Details",
     "unread": "Unread",
     "markRead": "Mark as read",
+    "markUnread": "Mark as unread",
     "delete": "Delete notification",
     "sourceApp": {
       "LAB_LITE": "Lab Lite",

@@ -16,6 +16,7 @@
     "viewDetails": "عرض التفاصيل",
     "unread": "غير مقروء",
     "markRead": "تعيين كمقروء",
+    "markUnread": "تعيين كغير مقروء",
     "delete": "حذف الإشعار",
     "sourceApp": {
       "LAB_LITE": "المختبر",

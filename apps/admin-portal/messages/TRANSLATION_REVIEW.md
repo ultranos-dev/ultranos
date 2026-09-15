@@ -539,3 +539,17 @@ Carried verbatim from pharmacy-lite (where these keys are already flagged for re
 - **ps:** "خبرتیا ړنګول" *(carried from pharmacy-lite ps.json — needs review)*
 
 Total new items flagged: **6** additional values (ar + prs + ps for 2 keys)
+
+---
+
+## Additions — 2026-09-15 (Task C6: Admin notification read/unread toggle)
+
+Carried verbatim from lab-lite (where these keys are already flagged for review).
+
+### `notifications.markUnread`
+- **en:** "Mark as unread"
+- **ar:** "تعيين كغير مقروء" *(carried from lab-lite ar.json — needs review)*
+- **prs:** "علامت‌گذاری به‌عنوان خوانده نشده" *(carried from lab-lite prs.json — needs review)*
+- **ps:** "نه لوستل شوی علامه کول" *(carried from lab-lite ps.json — needs review)*
+
+Total new items flagged: **3** additional values (ar + prs + ps for 1 key)

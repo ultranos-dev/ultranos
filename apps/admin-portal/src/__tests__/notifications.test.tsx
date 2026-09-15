@@ -27,12 +27,14 @@ const mockFetchNotifications = vi.fn()
 const mockFetchUnreadCount = vi.fn()
 const mockAcknowledgeNotification = vi.fn()
 const mockDeleteNotification = vi.fn()
+const mockMarkUnreadNotification = vi.fn()
 
 vi.mock('@/lib/notification-client', () => ({
   fetchNotifications: (...args: any[]) => mockFetchNotifications(...args),
   fetchUnreadCount: (...args: any[]) => mockFetchUnreadCount(...args),
   acknowledgeNotification: (...args: any[]) => mockAcknowledgeNotification(...args),
   deleteNotification: (...args: any[]) => mockDeleteNotification(...args),
+  markUnreadNotification: (...args: any[]) => mockMarkUnreadNotification(...args),
 }))
 
 // ── Sample admin notification (KYC_APPROVED, sourceApp ADMIN) ────────────────
@@ -60,6 +62,7 @@ describe('NotificationBell', () => {
     mockFetchUnreadCount.mockResolvedValue(1)
     mockAcknowledgeNotification.mockResolvedValue(undefined)
     mockDeleteNotification.mockResolvedValue(undefined)
+    mockMarkUnreadNotification.mockResolvedValue(undefined)
   })
 
   it('renders the bell button', async () => {
@@ -182,7 +185,7 @@ describe('NotificationBell', () => {
     })
   })
 
-  it('clicking mark-read calls acknowledgeNotification for an unread notification', async () => {
+  it('toggle button calls acknowledgeNotification for an unread notification', async () => {
     const { NotificationBell } = await import('@/components/notifications/NotificationBell')
     const user = userEvent.setup()
     render(<NotificationBell />)
@@ -193,7 +196,7 @@ describe('NotificationBell', () => {
     // Wait for the notification row to appear (status is DELIVERED → unread)
     await waitFor(() => screen.getByText('KYC approved'))
 
-    // Find and click the mark-read button (aria-label = "Mark as read")
+    // For an unread notification the toggle renders with "Mark as read" label
     const markReadBtn = screen.getByRole('button', { name: /mark as read/i })
     await user.click(markReadBtn)
 
@@ -201,9 +204,9 @@ describe('NotificationBell', () => {
     expect(mockAcknowledgeNotification).toHaveBeenCalledWith('notif-kyc-001')
   })
 
-  it('mark-read button is absent for an already-acknowledged notification', async () => {
+  it('toggle button calls markUnreadNotification for an acknowledged notification', async () => {
     // Seed an already-acknowledged notification
-    const acknowledgedNotif = { ...mockKycNotification, status: 'ACKNOWLEDGED' }
+    const acknowledgedNotif = { ...mockKycNotification, status: 'ACKNOWLEDGED', acknowledgedAt: new Date().toISOString() }
     mockFetchNotifications.mockResolvedValue([acknowledgedNotif])
 
     const { NotificationBell } = await import('@/components/notifications/NotificationBell')
@@ -214,8 +217,12 @@ describe('NotificationBell', () => {
     await user.click(screen.getByRole('button'))
     await waitFor(() => screen.getByText('KYC approved'))
 
-    // Mark-read button must NOT be present for an acknowledged notification
-    expect(screen.queryByRole('button', { name: /mark as read/i })).toBeNull()
+    // For an acknowledged notification the toggle renders with "Mark as unread" label
+    const markUnreadBtn = screen.getByRole('button', { name: /mark as unread/i })
+    await user.click(markUnreadBtn)
+
+    // markUnreadNotification should have been called with the notification id
+    expect(mockMarkUnreadNotification).toHaveBeenCalledWith('notif-kyc-001')
   })
 })
 

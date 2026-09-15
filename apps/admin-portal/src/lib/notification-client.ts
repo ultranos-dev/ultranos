@@ -112,3 +112,17 @@ export async function deleteNotification(notificationId: string): Promise<void> 
     body: JSON.stringify({ json: { notificationId } }),
   })
 }
+
+/** Mark a single notification as unread. Best-effort. */
+export async function markUnreadNotification(notificationId: string): Promise<void> {
+  const token = getAccessToken()
+  if (!token) return
+  await fetch(`${getHubApiUrl()}/notification.markUnread`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ json: { notificationId } }),
+  })
+}
