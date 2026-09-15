@@ -54,7 +54,7 @@ exports[`NotificationRow — RTL/LTR safety > LTR rendering > snapshot — LTR 1
       class="min-w-0 flex-1 flex items-baseline gap-1.5 overflow-hidden"
     >
       <span
-        class="shrink-0 text-xs font-medium text-muted-foreground"
+        class="shrink-0 text-xs text-muted-foreground font-normal"
       >
         OPD Lite
       </span>
@@ -65,7 +65,7 @@ exports[`NotificationRow — RTL/LTR safety > LTR rendering > snapshot — LTR 1
         ·
       </span>
       <span
-        class="truncate text-sm font-medium text-foreground"
+        class="truncate text-sm font-normal text-foreground"
       >
         Patient check-in
       </span>
@@ -74,7 +74,7 @@ exports[`NotificationRow — RTL/LTR safety > LTR rendering > snapshot — LTR 1
       class="flex items-center gap-1.5 shrink-0 ms-auto"
     >
       <span
-        class="shrink-0 text-xs text-muted-foreground"
+        class="shrink-0 text-xs text-muted-foreground font-normal"
         data-slot="notification-time"
       >
         5m ago
@@ -126,7 +126,7 @@ exports[`NotificationRow — RTL/LTR safety > RTL rendering > snapshot — RTL 1
       class="min-w-0 flex-1 flex items-baseline gap-1.5 overflow-hidden"
     >
       <span
-        class="shrink-0 text-xs font-medium text-muted-foreground"
+        class="shrink-0 text-xs text-muted-foreground font-normal"
       >
         OPD Lite
       </span>
@@ -137,7 +137,7 @@ exports[`NotificationRow — RTL/LTR safety > RTL rendering > snapshot — RTL 1
         ·
       </span>
       <span
-        class="truncate text-sm font-medium text-foreground"
+        class="truncate text-sm font-normal text-foreground"
       >
         Patient check-in
       </span>
@@ -146,7 +146,7 @@ exports[`NotificationRow — RTL/LTR safety > RTL rendering > snapshot — RTL 1
       class="flex items-center gap-1.5 shrink-0 ms-auto"
     >
       <span
-        class="shrink-0 text-xs text-muted-foreground"
+        class="shrink-0 text-xs text-muted-foreground font-normal"
         data-slot="notification-time"
       >
         5m ago

@@ -43,6 +43,37 @@ describe('NotificationRow', () => {
     expect(subject).toHaveClass('text-foreground')
   })
 
+  it('renders app name, subject and time in BOLD when unread', () => {
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Lab order received"
+      timeAgo="14h ago" unread />)
+    expect(screen.getByText('Lab Lite')).toHaveClass('font-bold')
+    expect(screen.getByText('Lab order received')).toHaveClass('font-bold')
+    expect(screen.getByText('14h ago')).toHaveClass('font-bold')
+  })
+
+  it('renders app name, subject and time in NORMAL weight when read', () => {
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Lab order received"
+      timeAgo="14h ago" unread={false} />)
+    expect(screen.getByText('Lab Lite')).toHaveClass('font-normal')
+    expect(screen.getByText('Lab order received')).toHaveClass('font-normal')
+    expect(screen.getByText('14h ago')).toHaveClass('font-normal')
+    expect(screen.getByText('Lab Lite')).not.toHaveClass('font-bold')
+  })
+
+  it('toggle shows a FILLED bell when unread', () => {
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="s" timeAgo="1h" unread
+      onToggleRead={vi.fn()} markReadLabel="Mark as read" markUnreadLabel="Mark as unread" />)
+    const svg = screen.getByRole('button', { name: 'Mark as read' }).querySelector('svg')
+    expect(svg).toHaveAttribute('fill', 'currentColor')
+  })
+
+  it('toggle shows an OUTLINE bell (not filled) when read', () => {
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="s" timeAgo="1h" unread={false}
+      onToggleRead={vi.fn()} markReadLabel="Mark as read" markUnreadLabel="Mark as unread" />)
+    const svg = screen.getByRole('button', { name: 'Mark as unread' }).querySelector('svg')
+    expect(svg).not.toHaveAttribute('fill', 'currentColor')
+  })
+
   it('renders unread dot when unread is true with provided unreadLabel', () => {
     render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="New result"
       timeAgo="1h ago" unread={true} unreadLabel="Unread notification" />)

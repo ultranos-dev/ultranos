@@ -1,6 +1,6 @@
 'use client'
 import type { LucideIcon } from 'lucide-react'
-import { Check, Trash2, Undo2 } from '../../icons.js'
+import { Bell, Trash2 } from '../../icons.js'
 import { DirectionalIcon } from '../DirectionalIcon.js'
 
 export interface NotificationRowProps {
@@ -22,13 +22,13 @@ export function NotificationRow({ icon: Icon, appName, subject, timeAgo, unread,
         <DirectionalIcon category="medical"><Icon className={`h-4 w-4 ${urgent ? 'text-destructive' : 'text-primary'}`} aria-hidden /></DirectionalIcon>
       </div>
       <div className="min-w-0 flex-1 flex items-baseline gap-1.5 overflow-hidden">
-        <span className="shrink-0 text-xs font-medium text-muted-foreground">{appName}</span>
+        <span className={`shrink-0 text-xs text-muted-foreground ${unread ? 'font-bold' : 'font-normal'}`}>{appName}</span>
         <span className="text-muted-foreground/60 text-xs select-none" aria-hidden>·</span>
-        <span className={`truncate text-sm font-medium ${urgent ? 'text-destructive' : 'text-foreground'}`}>{subject}</span>
+        <span className={`truncate text-sm ${unread ? 'font-bold' : 'font-normal'} ${urgent ? 'text-destructive' : 'text-foreground'}`}>{subject}</span>
       </div>
       <div className="flex items-center gap-1.5 shrink-0 ms-auto">
         {unread && <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-primary" aria-label={unreadLabel} aria-hidden={!unreadLabel} />}
-        <span data-slot="notification-time" className="shrink-0 text-xs text-muted-foreground">{timeAgo}</span>
+        <span data-slot="notification-time" className={`shrink-0 text-xs text-muted-foreground ${unread ? 'font-bold' : 'font-normal'}`}>{timeAgo}</span>
         {onToggleRead && (
           <button
             type="button"
@@ -37,8 +37,8 @@ export function NotificationRow({ icon: Icon, appName, subject, timeAgo, unread,
             onClick={e => { e.stopPropagation(); onToggleRead() }}
           >
             {unread
-              ? <Check className="h-4 w-4" aria-hidden />
-              : <Undo2 className="h-4 w-4" aria-hidden />}
+              ? <Bell className="h-4 w-4" fill="currentColor" aria-hidden />
+              : <Bell className="h-4 w-4" aria-hidden />}
           </button>
         )}
         {onDelete && (
