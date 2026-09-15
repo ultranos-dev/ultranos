@@ -14,6 +14,14 @@ export interface NotificationItem {
     labName?: string
     uploadTimestamp?: string
     diagnosticReportId?: string
+    /** ORDER_RECEIVED: opaque lab order id → resolves to serviceRequests table */
+    orderId?: string
+    /** PRESCRIPTION_DISPENSED: opaque prescription id → resolves to medications table */
+    prescriptionId?: string
+    /** ISO timestamp of when the notification was acknowledged / received at the lab */
+    acknowledgedAt?: string
+    /** General notification status string (non-PHI) */
+    status?: string
     message?: string
   }
   status: string

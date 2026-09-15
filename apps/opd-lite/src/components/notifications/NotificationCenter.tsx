@@ -3,18 +3,20 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { formatDate } from '@ultranos/ui-kit'
+import { formatDate, formatDateTime } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import type { NotificationItem } from '@/lib/notification-api'
+import type { NotificationDetailField } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
 import { db } from '@/lib/db'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { NotificationRow } from '@ultranos/ui-kit/components/ui/notification-row'
 import { NotificationDetailModal } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
 import { sourceAppIcon, sourceAppNameKey, deriveSourceApp } from '@ultranos/ui-kit/notification-presentation'
+import { useNotificationPatient } from '@/hooks/useNotificationPatient'
 
 // --- Type grouping for tab filters ---
 
@@ -278,6 +280,77 @@ function NotificationRowWrapper({
   const deepLink = getDeepLink(n)
   const isOpen = openId === n.id
 
+  // Patient lookup — only runs when modal is open (hook is always called but
+  // resolves synchronously to null when notification is not patient-bearing)
+  const { name: patientName, loading: patientLoading } = useNotificationPatient(
+    isOpen ? n : null,
+  )
+
+  // Build detail rows from non-PHI notification fields
+  const details: NotificationDetailField[] = []
+
+  // Order / Reference ID
+  const orderId = n.payload?.orderId
+  if (orderId) {
+    const shortId = orderId.slice(-6).toUpperCase()
+    details.push({
+      label: tNotif('field.orderId' as Parameters<typeof tNotif>[0]),
+      value: `${orderId} (${shortId})`,
+    })
+  }
+  const diagnosticReportId = n.payload?.diagnosticReportId
+  if (diagnosticReportId && !orderId) {
+    const shortId = diagnosticReportId.slice(-6).toUpperCase()
+    details.push({
+      label: tNotif('field.referenceId' as Parameters<typeof tNotif>[0]),
+      value: `${diagnosticReportId} (${shortId})`,
+    })
+  }
+  const prescriptionId = n.payload?.prescriptionId
+  if (prescriptionId) {
+    const shortId = prescriptionId.slice(-6).toUpperCase()
+    details.push({
+      label: tNotif('field.referenceId' as Parameters<typeof tNotif>[0]),
+      value: `${prescriptionId} (${shortId})`,
+    })
+  }
+
+  // Test / Category
+  const testCategory = n.payload?.testCategory ?? (n.bodyParams as Record<string, string> | undefined)?.testCategory
+  if (testCategory) {
+    details.push({
+      label: tNotif('field.test' as Parameters<typeof tNotif>[0]),
+      value: String(testCategory),
+    })
+  }
+
+  // Lab name
+  const labName = n.payload?.labName ?? (n.bodyParams as Record<string, string> | undefined)?.labName
+  if (labName) {
+    details.push({
+      label: tNotif('field.lab' as Parameters<typeof tNotif>[0]),
+      value: String(labName),
+    })
+  }
+
+  // Status (non-PHI operational field)
+  const statusValue = n.payload?.status
+  if (statusValue) {
+    details.push({
+      label: tNotif('field.status' as Parameters<typeof tNotif>[0]),
+      value: statusValue,
+    })
+  }
+
+  // Received timestamp
+  const receivedTs = n.payload?.acknowledgedAt ?? n.createdAt
+  if (receivedTs) {
+    details.push({
+      label: tNotif('field.received' as Parameters<typeof tNotif>[0]),
+      value: formatDateTime(new Date(receivedTs), locale),
+    })
+  }
+
   return (
     <div data-testid={`notification-${n.id}`}>
       <NotificationRow
@@ -304,6 +377,12 @@ function NotificationRowWrapper({
         body={body}
         notes={notes}
         exactTimestamp={formatDate(new Date(n.createdAt), locale)}
+        details={details.length > 0 ? details : undefined}
+        patient={patientName
+          ? { label: tNotif('field.patient' as Parameters<typeof tNotif>[0]), value: patientName }
+          : null
+        }
+        patientLoading={patientLoading}
         action={deepLink
           ? {
               label: tNotif('viewDetails' as Parameters<typeof tNotif>[0]),

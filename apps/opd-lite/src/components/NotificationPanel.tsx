@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { formatDate } from '@ultranos/ui-kit'
+import { formatDate, formatDateTime } from '@ultranos/ui-kit'
 import { Bell, X } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import {
@@ -12,10 +12,12 @@ import {
   acknowledgeNotification,
   type NotificationItem,
 } from '@/lib/notification-api'
+import type { NotificationDetailField } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { NotificationRow } from '@ultranos/ui-kit/components/ui/notification-row'
 import { NotificationDetailModal } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
 import { sourceAppIcon, sourceAppNameKey, deriveSourceApp } from '@ultranos/ui-kit/notification-presentation'
+import { useNotificationPatient } from '@/hooks/useNotificationPatient'
 
 const POLL_INTERVAL_MS = 30_000 // 30s polling for <60s SLA (AC: 3)
 
@@ -231,6 +233,71 @@ function PanelNotificationRow({
     ? '/conflicts'
     : null
 
+  // Patient lookup — only resolves when modal is open
+  const { name: patientName, loading: patientLoading } = useNotificationPatient(
+    isOpen ? n : null,
+  )
+
+  // Build detail rows from non-PHI notification fields
+  const details: NotificationDetailField[] = []
+
+  const orderId = n.payload?.orderId
+  if (orderId) {
+    const shortId = orderId.slice(-6).toUpperCase()
+    details.push({
+      label: tNotif('field.orderId' as Parameters<typeof tNotif>[0]),
+      value: `${orderId} (${shortId})`,
+    })
+  }
+  const diagnosticReportId = n.payload?.diagnosticReportId
+  if (diagnosticReportId && !orderId) {
+    const shortId = diagnosticReportId.slice(-6).toUpperCase()
+    details.push({
+      label: tNotif('field.referenceId' as Parameters<typeof tNotif>[0]),
+      value: `${diagnosticReportId} (${shortId})`,
+    })
+  }
+  const prescriptionId = n.payload?.prescriptionId
+  if (prescriptionId) {
+    const shortId = prescriptionId.slice(-6).toUpperCase()
+    details.push({
+      label: tNotif('field.referenceId' as Parameters<typeof tNotif>[0]),
+      value: `${prescriptionId} (${shortId})`,
+    })
+  }
+
+  const testCategory = n.payload?.testCategory ?? (n.bodyParams as Record<string, string> | undefined)?.testCategory
+  if (testCategory) {
+    details.push({
+      label: tNotif('field.test' as Parameters<typeof tNotif>[0]),
+      value: String(testCategory),
+    })
+  }
+
+  const labName = n.payload?.labName ?? (n.bodyParams as Record<string, string> | undefined)?.labName
+  if (labName) {
+    details.push({
+      label: tNotif('field.lab' as Parameters<typeof tNotif>[0]),
+      value: String(labName),
+    })
+  }
+
+  const statusValue = n.payload?.status
+  if (statusValue) {
+    details.push({
+      label: tNotif('field.status' as Parameters<typeof tNotif>[0]),
+      value: statusValue,
+    })
+  }
+
+  const receivedTs = n.payload?.acknowledgedAt ?? n.createdAt
+  if (receivedTs) {
+    details.push({
+      label: tNotif('field.received' as Parameters<typeof tNotif>[0]),
+      value: formatDateTime(new Date(receivedTs), locale),
+    })
+  }
+
   return (
     <>
       <NotificationRow
@@ -257,6 +324,12 @@ function PanelNotificationRow({
         body={body}
         notes={notes}
         exactTimestamp={formatDate(new Date(n.createdAt), locale)}
+        details={details.length > 0 ? details : undefined}
+        patient={patientName
+          ? { label: tNotif('field.patient' as Parameters<typeof tNotif>[0]), value: patientName }
+          : null
+        }
+        patientLoading={patientLoading}
         action={deepLink
           ? {
               label: tNotif('viewDetails' as Parameters<typeof tNotif>[0]),

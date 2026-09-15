@@ -51,13 +51,22 @@ vi.mock('../components/SessionTimeoutWrapper', () => ({
 
 // Mock db and audit modules (used by NotificationCenter for PHI audit)
 vi.mock('../lib/db', () => ({
-  db: { diagnosticReports: { get: vi.fn().mockResolvedValue(null) } },
+  db: {
+    diagnosticReports: { get: vi.fn().mockResolvedValue(null) },
+    serviceRequests: { get: vi.fn().mockResolvedValue(null) },
+    medications: { get: vi.fn().mockResolvedValue(null) },
+  },
 }))
 
 vi.mock('../lib/audit', () => ({
   auditPhiAccess: vi.fn(),
   AuditAction: { PHI_READ: 'PHI_READ' },
-  AuditResourceType: { LAB_RESULT: 'LAB_RESULT' },
+  AuditResourceType: { LAB_RESULT: 'LAB_RESULT', SERVICE_REQUEST: 'SERVICE_REQUEST', PRESCRIPTION: 'PRESCRIPTION' },
+}))
+
+// Mock patient-loader — used by useNotificationPatient hook
+vi.mock('../lib/patient-loader', () => ({
+  loadPatientResilient: vi.fn().mockResolvedValue({ patient: null, needsReauth: false, source: null }),
 }))
 
 const NOW = new Date('2026-05-11T12:00:00.000Z')
@@ -530,6 +539,121 @@ describe('NotificationCenter', () => {
 
       expect(screen.getByText('noResults')).toBeInTheDocument()
       expect(screen.queryByTestId('notification-n1')).not.toBeInTheDocument()
+    })
+  })
+
+  // --- Task 2 (this task): Modal detail enrichment ---
+  describe('Task 2: Modal detail rows (Order ID short form + Received datetime)', () => {
+    beforeEach(() => {
+      vi.clearAllMocks()
+      mockAcknowledgeNotification.mockResolvedValue({ success: true })
+    })
+
+    it('shows Order ID short form in modal details for ORDER_RECEIVED with orderId', async () => {
+      const orderId = '00000000-0000-4000-8000-000000000099'
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+
+      mockFetchNotifications.mockResolvedValue({
+        notifications: [
+          {
+            id: 'n-order',
+            type: 'ORDER_RECEIVED',
+            sourceApp: 'LAB_LITE',
+            subjectKey: 'ORDER_RECEIVED',
+            bodyKey: 'orderReceivedBody',
+            bodyParams: { testCategory: 'Hemoglobin' },
+            notesKey: 'orderReceivedNotes',
+            payload: { orderId },
+            status: 'SENT',
+            createdAt: twoHoursAgo,
+            deliveredAt: null,
+            acknowledgedAt: null,
+          },
+        ],
+      })
+
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Lab Lite')).toBeInTheDocument()
+      })
+
+      // Open the modal
+      fireEvent.click(screen.getByRole('button', { name: /Lab Lite/i }))
+      expect(await screen.findByRole('dialog')).toBeInTheDocument()
+
+      // Short form: last 6 chars of orderId uppercased = '000099'
+      expect(screen.getByRole('dialog')).toHaveTextContent('000099')
+    })
+
+    it('shows Received date-time row in the modal', async () => {
+      const createdAt = new Date('2026-09-15T08:30:00.000Z').toISOString()
+
+      mockFetchNotifications.mockResolvedValue({
+        notifications: [
+          {
+            id: 'n-recv',
+            type: 'ORDER_RECEIVED',
+            sourceApp: 'LAB_LITE',
+            subjectKey: 'ORDER_RECEIVED',
+            bodyKey: 'orderReceivedBody',
+            bodyParams: { testCategory: 'CBC' },
+            payload: { orderId: 'abc-order-1' },
+            status: 'SENT',
+            createdAt,
+            deliveredAt: null,
+            acknowledgedAt: null,
+          },
+        ],
+      })
+
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Lab Lite')).toBeInTheDocument()
+      })
+
+      fireEvent.click(screen.getByRole('button', { name: /Lab Lite/i }))
+      const dialog = await screen.findByRole('dialog')
+
+      // The "field.received" i18n key is returned as "field.received" by the mock
+      // (mock returns key strings for unknown keys)
+      expect(dialog).toHaveTextContent('field.received')
+    })
+
+    it('shows testCategory in modal details when bodyParams has testCategory', async () => {
+      mockFetchNotifications.mockResolvedValue({
+        notifications: [
+          {
+            id: 'n-cat',
+            type: 'ORDER_RECEIVED',
+            sourceApp: 'LAB_LITE',
+            subjectKey: 'ORDER_RECEIVED',
+            bodyKey: 'orderReceivedBody',
+            bodyParams: { testCategory: 'Urinalysis' },
+            payload: { orderId: 'ord-9999' },
+            status: 'SENT',
+            createdAt: new Date().toISOString(),
+            deliveredAt: null,
+            acknowledgedAt: null,
+          },
+        ],
+      })
+
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Lab Lite')).toBeInTheDocument()
+      })
+
+      fireEvent.click(screen.getByRole('button', { name: /Lab Lite/i }))
+      const dialog = await screen.findByRole('dialog')
+
+      // testCategory value appears in the details list
+      expect(dialog).toHaveTextContent('Urinalysis')
     })
   })
 

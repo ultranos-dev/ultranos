@@ -504,6 +504,15 @@
       "providerSuspendedNotes": "The provider cannot access clinical data until the suspension is lifted.",
       "kycMoreInfoNotes": "Please submit the additional documents requested for KYC verification.",
       "kycRejectedNotes": "Please contact administration for details about the KYC rejection."
+    },
+    "field": {
+      "patient": "Patient",
+      "orderId": "Order ID",
+      "referenceId": "Reference ID",
+      "test": "Test / Category",
+      "lab": "Lab",
+      "status": "Status",
+      "received": "Received"
     }
   },
   "sync": {

@@ -1472,3 +1472,52 @@ labStatusBody, kycStatusBody, outbreakBody, defaultBody) — prs and ps values a
 **machine-generated** and require native speaker review. Note: some body keys contain interpolated
 clinical terms (e.g., `{testCategory}`, `{labName}`) — verify the surrounding sentence structure
 reads naturally in context, not just word-by-word.
+
+---
+
+## 2026-09-15 addendum — Task 2: notification modal detail field labels
+
+7 new keys added under `notifications.field.*` in all 4 locales.
+English values are authoritative. ar/prs/ps values are **machine-generated** and require native-speaker review.
+
+### `notifications.field.patient`
+- **en:** "Patient"
+- **ar:** "المريض" — needs native review
+- **prs:** "بیمار" — needs native review
+- **ps:** "ناروغ" — needs native review
+
+### `notifications.field.orderId`
+- **en:** "Order ID"
+- **ar:** "معرّف الطلب" — needs native review
+- **prs:** "شناسه سفارش" — needs native review
+- **ps:** "د امر شناخته" — needs native review
+
+### `notifications.field.referenceId`
+- **en:** "Reference ID"
+- **ar:** "الرقم المرجعي" — needs native review
+- **prs:** "شماره مرجع" — needs native review
+- **ps:** "د مرجع شمیره" — needs native review
+
+### `notifications.field.test`
+- **en:** "Test / Category"
+- **ar:** "الفحص / الفئة" — needs native review
+- **prs:** "آزمایش / دسته" — needs native review
+- **ps:** "ازموینه / کټګوري" — needs native review
+
+### `notifications.field.lab`
+- **en:** "Lab"
+- **ar:** "المختبر" — needs native review
+- **prs:** "لابراتوار" — needs native review
+- **ps:** "لابراتوار" — needs native review
+
+### `notifications.field.status`
+- **en:** "Status"
+- **ar:** "الحالة" — needs native review
+- **prs:** "وضعیت" — needs native review
+- **ps:** "حالت" — needs native review
+
+### `notifications.field.received`
+- **en:** "Received"
+- **ar:** "تاريخ الاستلام" — needs native review
+- **prs:** "تاریخ دریافت" — needs native review
+- **ps:** "د ترلاسه کولو نیټه" — needs native review
