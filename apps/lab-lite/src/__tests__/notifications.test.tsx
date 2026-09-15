@@ -36,6 +36,8 @@ vi.mock('next-intl', () => ({
       'notifications.sourceApp.PHARMACY_LITE': 'Pharmacy Lite',
       'notifications.sourceApp.OPD_LITE': 'OPD Lite',
       'notifications.sourceApp.SYSTEM': 'System',
+      'notifications.subject.LAB_RESULT_AVAILABLE': 'Lab result available',
+      'notifications.subject.LAB_RESULT_ESCALATION': 'Urgent lab result',
     }
     return MAP[fullKey] ?? key
   },
@@ -271,6 +273,11 @@ describe('NotificationPanel', () => {
     await waitFor(() => {
       expect(screen.getAllByTestId('notif-row')).toHaveLength(2)
     })
+
+    // Assert resolved app name and subjects are actually rendered
+    expect(screen.getAllByText('Lab Lite')).toHaveLength(2)
+    expect(screen.getByText('Lab result available')).toBeInTheDocument()
+    expect(screen.getByText('Urgent lab result')).toBeInTheDocument()
   })
 
   it('shows empty state when no notifications', async () => {

@@ -33,7 +33,7 @@ export function NotificationToaster() {
         icon: sourceAppIcon(app),
         appName,
         subject,
-        urgent: false,
+        urgent: n.type === 'LAB_RESULT_ESCALATION',
         onClick: () => router.push('/notifications'),
         actionLabel: tNotif('viewDetails' as Parameters<typeof tNotif>[0]),
       })

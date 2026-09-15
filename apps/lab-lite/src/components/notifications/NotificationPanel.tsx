@@ -99,12 +99,14 @@ export function NotificationPanel({
       <div className="fixed inset-0 z-40 animate-[notifBackdropIn_100ms_ease-out_forwards]" />
       <div
         ref={panelRef}
+        role="dialog"
+        aria-label={tNotif('title')}
         className="absolute end-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl bg-popover shadow-lg ring-[0.65px] ring-border/50 animate-[notifPanelIn_150ms_ease-out_forwards] [transform-origin:top_right]"
         data-testid="notification-panel"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-4 py-2">
-          <span className="text-sm font-semibold text-foreground">{tNotif('title')}</span>
+          <h3 className="text-sm font-semibold text-foreground">{tNotif('title')}</h3>
           <button
             type="button"
             onClick={onClose}

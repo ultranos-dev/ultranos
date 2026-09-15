@@ -24,6 +24,18 @@ vi.mock('next-intl', () => ({
       'notifications.sourceApp.PHARMACY_LITE': 'Pharmacy Lite',
       'notifications.sourceApp.OPD_LITE': 'OPD Lite',
       'notifications.sourceApp.SYSTEM': 'System',
+      'notifications.subject.LAB_RESULT_AVAILABLE': 'Lab result available',
+      'notifications.subject.LAB_RESULT_ESCALATION': 'Urgent lab result',
+      'notifications.body.labResultBody': `${params?.testCategory ?? '{testCategory}'} · ${params?.labName ?? '{labName}'}`,
+      'notifications.notes.labResultNotes': 'Review the result in the patient chart.',
+      'notifications.notes.labResultUrgentNotes': 'This result requires urgent clinical attention.',
+      'notifications.title': 'Notifications',
+      'notifications.closeAria': 'Close notifications',
+      'notifications.loading': 'Loading...',
+      'notifications.error': 'Unable to load notifications',
+      'notifications.empty': 'No notifications',
+      'notifications.unread': 'Unread',
+      'notifications.viewDetails': 'View Details',
       'time.justNow': 'Just now',
       'time.minutesAgo': `${params?.minutes ?? '{minutes}'}m ago`,
       'time.hoursAgo': `${params?.hours ?? '{hours}'}h ago`,
@@ -191,8 +203,8 @@ describe('NotificationPanel — descriptor-field rendering (Lab Lite)', () => {
       expect(screen.getByTestId('notif-subject')).toBeInTheDocument()
     })
 
-    // subject key = 'subject.LAB_RESULT_AVAILABLE' — mock returns the key (no dedicated translation)
-    expect(screen.getByTestId('notif-subject')).toHaveTextContent('subject.LAB_RESULT_AVAILABLE')
+    // subject key 'subject.LAB_RESULT_AVAILABLE' resolves to 'Lab result available'
+    expect(screen.getByTestId('notif-subject')).toHaveTextContent('Lab result available')
   })
 
   it('clicking a row opens the detail dialog (role="dialog" present)', async () => {
@@ -208,9 +220,12 @@ describe('NotificationPanel — descriptor-field rendering (Lab Lite)', () => {
 
     await user.click(screen.getByTestId('notif-row'))
 
-    // The detail modal should now be open
+    // Both the panel (role="dialog") and the detail modal (role="dialog") appear.
+    // Assert the modal specifically; also confirm it carries role="dialog" for a11y.
     await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      const modal = screen.getByTestId('notif-modal')
+      expect(modal).toBeInTheDocument()
+      expect(modal).toHaveAttribute('role', 'dialog')
     })
   })
 })
