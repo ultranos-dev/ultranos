@@ -69,3 +69,6 @@ export type { AfghanDistrict } from './reference/afghanistan-districts.js'
 
 // Drug catalog types
 export * from './fhir/drug-catalog.js'
+
+// Monitoring transport types (pharmacy→lab dispense monitoring)
+export * from './monitoring.js'
