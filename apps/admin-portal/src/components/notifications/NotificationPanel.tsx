@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatDate, formatDateTime } from '@ultranos/ui-kit'
@@ -11,6 +11,7 @@ import type { NotificationDetailField } from '@ultranos/ui-kit/components/ui/not
 import { sourceAppIcon, sourceAppNameKey, deriveSourceApp } from '@ultranos/ui-kit/notification-presentation'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
+import { deleteNotification } from '@/lib/notification-client'
 import type { AdminNotificationItem } from '@/lib/notification-client'
 
 function formatTimestamp(
@@ -40,12 +41,30 @@ export function NotificationPanel({
   const [openId, setOpenId] = useState<string | null>(null)
   const router = useRouter()
 
-  const { notifications, loading, error, acknowledge } = useNotificationPoll()
+  const { notifications: polledNotifications, loading, error, acknowledge } = useNotificationPoll()
+
+  // Local list so delete can remove rows immediately without waiting for next poll.
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
+  const notifications = useMemo(
+    () => polledNotifications.filter(n => !deletedIds.has(n.id)),
+    [polledNotifications, deletedIds],
+  )
 
   const handleAcknowledge = useCallback(async (id: string) => {
     await acknowledge(id)
     onChange()
   }, [acknowledge, onChange])
+
+  const handleDelete = useCallback(async (id: string) => {
+    // Optimistic removal
+    setDeletedIds(prev => new Set([...prev, id]))
+    onChange()
+    try {
+      await deleteNotification(id)
+    } catch {
+      // Best-effort delete — row stays removed from local list regardless
+    }
+  }, [onChange])
 
   return (
     <div
@@ -82,6 +101,7 @@ export function NotificationPanel({
                 openId={openId}
                 setOpenId={setOpenId}
                 onAcknowledge={handleAcknowledge}
+                onDelete={handleDelete}
                 onNavigate={(path) => { router.push(path); onClose() }}
                 tNotif={tNotif}
               />
@@ -98,6 +118,7 @@ function PanelNotificationRow({
   openId,
   setOpenId,
   onAcknowledge,
+  onDelete,
   onNavigate,
   tNotif,
 }: {
@@ -105,6 +126,7 @@ function PanelNotificationRow({
   openId: string | null
   setOpenId: (id: string | null) => void
   onAcknowledge: (id: string) => void
+  onDelete: (id: string) => void
   onNavigate: (path: string) => void
   tNotif: ReturnType<typeof useTranslations<'notifications'>>
 }) {
@@ -185,6 +207,10 @@ function PanelNotificationRow({
           setOpenId(n.id)
           onAcknowledge(n.id)
         }}
+        onMarkRead={n.status !== 'ACKNOWLEDGED' ? () => onAcknowledge(n.id) : undefined}
+        onDelete={() => onDelete(n.id)}
+        markReadLabel={tNotif('markRead' as Parameters<typeof tNotif>[0])}
+        deleteLabel={tNotif('delete' as Parameters<typeof tNotif>[0])}
       />
       <NotificationDetailModal
         open={isOpen}

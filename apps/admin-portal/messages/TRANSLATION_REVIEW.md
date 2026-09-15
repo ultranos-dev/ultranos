@@ -519,3 +519,23 @@ All ar/prs/ps values in the `notifications.*` and `time.*` namespaces added to t
 - `referenceId`, `status`, `received`, `pathogen` — `status` and `received` carried from pharmacy-lite. `referenceId` and `pathogen` machine-generated. Flag for review.
 
 Total new items flagged: **93** values (ar + prs + ps combined)
+
+---
+
+## Additions — 2026-09-15 (Task 6: Admin notification mark-read + delete wiring)
+
+Carried verbatim from pharmacy-lite (where these keys are already flagged for review).
+
+### `notifications.markRead`
+- **en:** "Mark as read"
+- **ar:** "تعيين كمقروء" *(carried from pharmacy-lite ar.json — needs review)*
+- **prs:** "علامت‌گذاری به‌عنوان خوانده شده" *(carried from pharmacy-lite prs.json — needs review)*
+- **ps:** "لوستل شوی علامه کول" *(carried from pharmacy-lite ps.json — needs review)*
+
+### `notifications.delete`
+- **en:** "Delete notification"
+- **ar:** "حذف الإشعار" *(carried from pharmacy-lite ar.json — needs review)*
+- **prs:** "حذف اطلاعیه" *(carried from pharmacy-lite prs.json — needs review)*
+- **ps:** "خبرتیا ړنګول" *(carried from pharmacy-lite ps.json — needs review)*
+
+Total new items flagged: **6** additional values (ar + prs + ps for 2 keys)

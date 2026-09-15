@@ -98,3 +98,17 @@ export async function acknowledgeNotification(notificationId: string): Promise<v
     body: JSON.stringify({ json: { notificationId } }),
   })
 }
+
+/** Delete a single notification. Best-effort. */
+export async function deleteNotification(notificationId: string): Promise<void> {
+  const token = getAccessToken()
+  if (!token) return
+  await fetch(`${getHubApiUrl()}/notification.delete`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ json: { notificationId } }),
+  })
+}

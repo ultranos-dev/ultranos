@@ -26,11 +26,13 @@ vi.mock('@ultranos/ui-kit/components/ui/app-toaster', () => ({
 const mockFetchNotifications = vi.fn()
 const mockFetchUnreadCount = vi.fn()
 const mockAcknowledgeNotification = vi.fn()
+const mockDeleteNotification = vi.fn()
 
 vi.mock('@/lib/notification-client', () => ({
   fetchNotifications: (...args: any[]) => mockFetchNotifications(...args),
   fetchUnreadCount: (...args: any[]) => mockFetchUnreadCount(...args),
   acknowledgeNotification: (...args: any[]) => mockAcknowledgeNotification(...args),
+  deleteNotification: (...args: any[]) => mockDeleteNotification(...args),
 }))
 
 // ── Sample admin notification (KYC_APPROVED, sourceApp ADMIN) ────────────────
@@ -57,6 +59,7 @@ describe('NotificationBell', () => {
     mockFetchNotifications.mockResolvedValue([mockKycNotification])
     mockFetchUnreadCount.mockResolvedValue(1)
     mockAcknowledgeNotification.mockResolvedValue(undefined)
+    mockDeleteNotification.mockResolvedValue(undefined)
   })
 
   it('renders the bell button', async () => {
@@ -154,6 +157,66 @@ describe('NotificationBell', () => {
     expect(screen.queryByTestId('patient-loading')).toBeNull()
     expect(screen.queryByText('Patient')).toBeNull()
   })
+
+  it('clicking delete calls deleteNotification and removes the row', async () => {
+    const { NotificationBell } = await import('@/components/notifications/NotificationBell')
+    const user = userEvent.setup()
+    render(<NotificationBell />)
+
+    // Open the panel
+    await user.click(screen.getByRole('button'))
+
+    // Wait for the notification row to appear
+    await waitFor(() => screen.getByText('KYC approved'))
+
+    // Find and click the delete button (aria-label = "Delete notification")
+    const deleteBtn = screen.getByRole('button', { name: /delete notification/i })
+    await user.click(deleteBtn)
+
+    // deleteNotification should have been called with the notification id
+    expect(mockDeleteNotification).toHaveBeenCalledWith('notif-kyc-001')
+
+    // The row should be removed from the panel (optimistic removal)
+    await waitFor(() => {
+      expect(screen.queryByText('KYC approved')).toBeNull()
+    })
+  })
+
+  it('clicking mark-read calls acknowledgeNotification for an unread notification', async () => {
+    const { NotificationBell } = await import('@/components/notifications/NotificationBell')
+    const user = userEvent.setup()
+    render(<NotificationBell />)
+
+    // Open the panel
+    await user.click(screen.getByRole('button'))
+
+    // Wait for the notification row to appear (status is DELIVERED → unread)
+    await waitFor(() => screen.getByText('KYC approved'))
+
+    // Find and click the mark-read button (aria-label = "Mark as read")
+    const markReadBtn = screen.getByRole('button', { name: /mark as read/i })
+    await user.click(markReadBtn)
+
+    // acknowledgeNotification should have been called with the notification id
+    expect(mockAcknowledgeNotification).toHaveBeenCalledWith('notif-kyc-001')
+  })
+
+  it('mark-read button is absent for an already-acknowledged notification', async () => {
+    // Seed an already-acknowledged notification
+    const acknowledgedNotif = { ...mockKycNotification, status: 'ACKNOWLEDGED' }
+    mockFetchNotifications.mockResolvedValue([acknowledgedNotif])
+
+    const { NotificationBell } = await import('@/components/notifications/NotificationBell')
+    const user = userEvent.setup()
+    render(<NotificationBell />)
+
+    // Open the panel
+    await user.click(screen.getByRole('button'))
+    await waitFor(() => screen.getByText('KYC approved'))
+
+    // Mark-read button must NOT be present for an acknowledged notification
+    expect(screen.queryByRole('button', { name: /mark as read/i })).toBeNull()
+  })
 })
 
 // ── NotificationToaster tests ────────────────────────────────────────────────
@@ -162,6 +225,7 @@ describe('NotificationToaster', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockAcknowledgeNotification.mockResolvedValue(undefined)
+    mockDeleteNotification.mockResolvedValue(undefined)
     mockNotify.mockClear()
   })
 
