@@ -13,7 +13,7 @@ export interface NotificationDetailModalProps {
   open: boolean; onOpenChange: (o: boolean) => void
   icon: LucideIcon; appName: string; subject: string; body?: string; notes?: string
   exactTimestamp: string; action?: { label: string; onClick: () => void }
-  /** Labelled detail rows rendered as a <dl> below the body/patient line. */
+  /** Labelled detail rows rendered as a <dl> below the patient line. */
   details?: NotificationDetailField[]
   /** Resolved patient label+value to display prominently below the subject. Pass null to hide. */
   patient?: { label: string; value: string } | null
@@ -28,48 +28,58 @@ export function NotificationDetailModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            <Icon className="h-5 w-5 text-primary" aria-hidden />
-            <span className="text-xs font-medium text-muted-foreground">{appName}</span>
-          </div>
-          <DialogTitle>{subject}</DialogTitle>
-          {body ? <DialogDescription>{body}</DialogDescription> : <DialogDescription className="sr-only">{subject}</DialogDescription>}
-        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          {/* Header: icon + appName micro-label */}
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <Icon className="h-4 w-4 text-primary" aria-hidden />
+              <span className="text-xs font-medium text-muted-foreground">{appName}</span>
+            </div>
+            <DialogTitle className="text-base font-semibold text-foreground">{subject}</DialogTitle>
+            {body ? <DialogDescription>{body}</DialogDescription> : <DialogDescription className="sr-only">{subject}</DialogDescription>}
+          </DialogHeader>
 
-        {/* Patient line — below subject/body, above details */}
-        {patientLoading ? (
-          <p
-            className="text-sm text-muted-foreground"
-            data-testid="patient-loading"
-            role="status"
-          >
-            …
-          </p>
-        ) : patient ? (
-          <p className="text-sm font-medium text-foreground">
-            <span className="text-muted-foreground">{patient.label}</span>
-            {': '}
-            <span>{patient.value}</span>
-          </p>
-        ) : null}
+          {/* Patient line — prominent, emphasized */}
+          {patientLoading ? (
+            <p
+              className="text-sm text-muted-foreground"
+              data-testid="patient-loading"
+              role="status"
+            >
+              …
+            </p>
+          ) : patient ? (
+            <div className="rounded-md bg-muted/50 px-3 py-2">
+              <p className="text-sm font-semibold text-foreground">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide me-2">{patient.label}</span>
+                <span>{patient.value}</span>
+              </p>
+            </div>
+          ) : null}
 
-        {/* Details list */}
-        {details && details.length > 0 && (
-          <dl className="flex flex-col gap-1">
-            {details.map((f, index) => (
-              <div key={`${f.label}-${index}`} className="flex justify-between gap-4 text-sm">
-                <dt className="text-muted-foreground">{f.label}</dt>
-                <dd className={f.emphasis ? 'text-destructive font-medium' : 'text-foreground'}>
-                  {f.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        )}
+          {/* Details list — aligned grid */}
+          {details && details.length > 0 && (
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
+              {details.map((f, index) => (
+                <div key={`${f.label}-${index}`} className="contents">
+                  <dt className="text-xs font-medium text-muted-foreground self-center">{f.label}</dt>
+                  <dd className={`text-sm ${f.emphasis ? 'text-destructive font-medium' : 'text-foreground'}`}>
+                    {f.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
 
-        {notes && <p className="text-sm text-muted-foreground">{notes}</p>}
-        <p className="text-xs text-muted-foreground">{exactTimestamp}</p>
+          {/* Notes — distinct block with separator */}
+          {notes && (
+            <p className="border-t border-border pt-3 text-sm text-muted-foreground">{notes}</p>
+          )}
+
+          {/* Timestamp */}
+          <p className="text-xs text-muted-foreground">{exactTimestamp}</p>
+        </div>
+
         {action && (
           <DialogFooter>
             <Button onClick={action.onClick}>{action.label}</Button>

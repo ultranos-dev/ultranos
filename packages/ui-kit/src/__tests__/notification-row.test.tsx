@@ -4,15 +4,40 @@ import { FlaskConical } from '../icons'
 import { NotificationRow } from '../components/ui/notification-row'
 
 describe('NotificationRow', () => {
-  it('shows app name as title, subject, body, notes and time in the top-right', () => {
+  it('shows app name (muted micro-label) and subject on one line, plus timestamp data-slot', () => {
     render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Lab order received"
       body="Hemoglobin · Central Lab" notes="Sample is being processed." timeAgo="2h ago" />)
     expect(screen.getByText('Lab Lite')).toBeInTheDocument()
     expect(screen.getByText('Lab order received')).toBeInTheDocument()
-    expect(screen.getByText('Hemoglobin · Central Lab')).toBeInTheDocument()
-    expect(screen.getByText('Sample is being processed.')).toBeInTheDocument()
     const time = screen.getByText('2h ago')
     expect(time).toHaveAttribute('data-slot', 'notification-time')
+  })
+
+  it('does NOT render body text even when body prop is passed', () => {
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Lab order received"
+      body="Hemoglobin · Central Lab" notes="Sample is being processed." timeAgo="2h ago" />)
+    expect(screen.queryByText('Hemoglobin · Central Lab')).not.toBeInTheDocument()
+  })
+
+  it('does NOT render notes text even when notes prop is passed', () => {
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Lab order received"
+      body="Hemoglobin · Central Lab" notes="Sample is being processed." timeAgo="2h ago" />)
+    expect(screen.queryByText('Sample is being processed.')).not.toBeInTheDocument()
+  })
+
+  it('renders app name with muted, small, medium-weight styling', () => {
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="New result"
+      timeAgo="1h ago" />)
+    const appName = screen.getByText('Lab Lite')
+    expect(appName).toHaveClass('text-muted-foreground')
+    expect(appName).toHaveClass('text-xs')
+  })
+
+  it('renders subject with foreground styling (normal state)', () => {
+    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="New result"
+      timeAgo="1h ago" />)
+    const subject = screen.getByText('New result')
+    expect(subject).toHaveClass('text-foreground')
   })
 
   it('renders unread dot when unread is true with provided unreadLabel', () => {
@@ -36,13 +61,6 @@ describe('NotificationRow', () => {
       timeAgo="1h ago" unread={false} />)
     const unreadDot = container.querySelector('.bg-primary')
     expect(unreadDot).not.toBeInTheDocument()
-  })
-
-  it('applies destructive styling to appName when urgent is true', () => {
-    render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Critical result"
-      timeAgo="1h ago" urgent={true} />)
-    const appName = screen.getByText('Lab Lite')
-    expect(appName).toHaveClass('text-destructive')
   })
 
   it('applies destructive styling to subject when urgent is true', () => {

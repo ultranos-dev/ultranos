@@ -17,12 +17,12 @@ exports[`NotificationRow — RTL/LTR safety > LTR rendering > snapshot — LTR 1
   dir="ltr"
 >
   <div
-    class="flex items-start gap-3 px-4 py-3 outline-none transition-colors cursor-pointer hover:bg-muted focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring  "
+    class="flex items-center gap-3 px-4 py-2.5 outline-none transition-colors cursor-pointer hover:bg-muted focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring  "
     role="button"
     tabindex="0"
   >
     <div
-      class="mt-0.5 shrink-0"
+      class="shrink-0"
     >
       <span
         aria-hidden="true"
@@ -30,7 +30,7 @@ exports[`NotificationRow — RTL/LTR safety > LTR rendering > snapshot — LTR 1
       >
         <svg
           aria-hidden="true"
-          class="lucide lucide-bell h-5 w-5 text-primary"
+          class="lucide lucide-bell h-4 w-4 text-primary"
           fill="none"
           height="24"
           stroke="currentColor"
@@ -51,28 +51,34 @@ exports[`NotificationRow — RTL/LTR safety > LTR rendering > snapshot — LTR 1
       </span>
     </div>
     <div
-      class="min-w-0 flex-1"
+      class="min-w-0 flex-1 flex items-baseline gap-1.5 overflow-hidden"
     >
-      <div
-        class="flex items-start gap-2"
+      <span
+        class="shrink-0 text-xs font-medium text-muted-foreground"
       >
-        <p
-          class="text-sm font-medium text-foreground"
-        >
-          OPD Lite
-        </p>
-        <span
-          class="ms-auto shrink-0 text-xs text-muted-foreground"
-          data-slot="notification-time"
-        >
-          5m ago
-        </span>
-      </div>
-      <p
-        class="mt-0.5 text-sm text-foreground"
+        OPD Lite
+      </span>
+      <span
+        aria-hidden="true"
+        class="text-muted-foreground/60 text-xs select-none"
+      >
+        ·
+      </span>
+      <span
+        class="truncate text-sm font-medium text-foreground"
       >
         Patient check-in
-      </p>
+      </span>
+    </div>
+    <div
+      class="flex items-center gap-1.5 shrink-0"
+    >
+      <span
+        class="ms-auto shrink-0 text-xs text-muted-foreground"
+        data-slot="notification-time"
+      >
+        5m ago
+      </span>
     </div>
   </div>
 </div>
@@ -83,12 +89,12 @@ exports[`NotificationRow — RTL/LTR safety > RTL rendering > snapshot — RTL 1
   dir="rtl"
 >
   <div
-    class="flex items-start gap-3 px-4 py-3 outline-none transition-colors cursor-pointer hover:bg-muted focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring  "
+    class="flex items-center gap-3 px-4 py-2.5 outline-none transition-colors cursor-pointer hover:bg-muted focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring  "
     role="button"
     tabindex="0"
   >
     <div
-      class="mt-0.5 shrink-0"
+      class="shrink-0"
     >
       <span
         aria-hidden="true"
@@ -96,7 +102,7 @@ exports[`NotificationRow — RTL/LTR safety > RTL rendering > snapshot — RTL 1
       >
         <svg
           aria-hidden="true"
-          class="lucide lucide-bell h-5 w-5 text-primary"
+          class="lucide lucide-bell h-4 w-4 text-primary"
           fill="none"
           height="24"
           stroke="currentColor"
@@ -117,28 +123,34 @@ exports[`NotificationRow — RTL/LTR safety > RTL rendering > snapshot — RTL 1
       </span>
     </div>
     <div
-      class="min-w-0 flex-1"
+      class="min-w-0 flex-1 flex items-baseline gap-1.5 overflow-hidden"
     >
-      <div
-        class="flex items-start gap-2"
+      <span
+        class="shrink-0 text-xs font-medium text-muted-foreground"
       >
-        <p
-          class="text-sm font-medium text-foreground"
-        >
-          OPD Lite
-        </p>
-        <span
-          class="ms-auto shrink-0 text-xs text-muted-foreground"
-          data-slot="notification-time"
-        >
-          5m ago
-        </span>
-      </div>
-      <p
-        class="mt-0.5 text-sm text-foreground"
+        OPD Lite
+      </span>
+      <span
+        aria-hidden="true"
+        class="text-muted-foreground/60 text-xs select-none"
+      >
+        ·
+      </span>
+      <span
+        class="truncate text-sm font-medium text-foreground"
       >
         Patient check-in
-      </p>
+      </span>
+    </div>
+    <div
+      class="flex items-center gap-1.5 shrink-0"
+    >
+      <span
+        class="ms-auto shrink-0 text-xs text-muted-foreground"
+        data-slot="notification-time"
+      >
+        5m ago
+      </span>
     </div>
   </div>
 </div>
