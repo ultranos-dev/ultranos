@@ -585,6 +585,67 @@ export async function pullOrders(
 }
 
 /**
+ * Pull dispense-triggered monitoring events from the Hub API.
+ * Returns data-minimized monitoring events (Rule #7).
+ * Supports incremental sync via `since` and cursor pagination via `cursor`.
+ */
+export async function pullDispenseMonitoringEvents(
+  token: string,
+  since?: string,
+  cursor?: number,
+): Promise<{ events: import('@ultranos/shared-types').DispenseMonitoringEventDTO[]; nextCursor: number | null }> {
+  const input = encodeURIComponent(
+    JSON.stringify({ json: { ...(since ? { since } : {}), ...(cursor != null ? { cursor } : {}) } }),
+  )
+  const res = await fetch(`${getHubApiUrl()}/lab.pullDispenseMonitoringEvents?input=${input}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(15_000),
+  })
+  if (!res.ok) throw new Error(`Pull monitoring events failed: ${res.status}`)
+  const body = (await res.json()) as {
+    result: {
+      data: {
+        json: {
+          events: import('@ultranos/shared-types').DispenseMonitoringEventDTO[]
+          nextCursor: number | null
+        }
+      }
+    }
+  }
+  return {
+    events: body.result.data.json.events ?? [],
+    nextCursor: body.result.data.json.nextCursor ?? null,
+  }
+}
+
+/**
+ * Pull medication-to-lab monitoring mappings from the Hub API.
+ * Returns the current version and required monitoring test specs per ATC code.
+ * Supports incremental sync via `sinceVersion`.
+ */
+export async function pullMonitoringMappings(
+  token: string,
+  sinceVersion?: number,
+): Promise<{ mappings: import('@ultranos/shared-types').MedicationLabMapping[] }> {
+  const input = encodeURIComponent(
+    JSON.stringify({ json: { ...(sinceVersion != null ? { sinceVersion } : {}) } }),
+  )
+  const res = await fetch(`${getHubApiUrl()}/lab.pullMonitoringMappings?input=${input}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(15_000),
+  })
+  if (!res.ok) throw new Error(`Pull monitoring mappings failed: ${res.status}`)
+  const body = (await res.json()) as {
+    result: { data: { json: { mappings: import('@ultranos/shared-types').MedicationLabMapping[] } } }
+  }
+  return {
+    mappings: body.result.data.json.mappings ?? [],
+  }
+}
+
+/**
  * Detail-view PHI for the patient behind an order (CLAUDE.md Rule #7 detail-view
  * scope): full name + blood group + latest basic vitals. Order-scoped — the Hub
  * resolves orderId → patient_id server-side. NEVER carries National ID or the raw
