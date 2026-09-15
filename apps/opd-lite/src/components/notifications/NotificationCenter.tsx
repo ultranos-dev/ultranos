@@ -303,7 +303,7 @@ function NotificationRowWrapper({
         subject={subject}
         body={body}
         notes={notes}
-        exactTimestamp={n.createdAt}
+        exactTimestamp={formatDate(new Date(n.createdAt), locale)}
         action={deepLink
           ? {
               label: tNotif('viewDetails' as Parameters<typeof tNotif>[0]),
