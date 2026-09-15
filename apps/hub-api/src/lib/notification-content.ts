@@ -36,6 +36,7 @@ const TYPE_CONTENT: Record<string, Entry> = {
   LAB_REACTIVATED:          { sourceApp: 'ADMIN',         subjectKey: 'LAB_REACTIVATED',        bodyKey: 'labStatusBody',        notesKey: null },
   KYC_APPROVED:             { sourceApp: 'ADMIN',         subjectKey: 'KYC_APPROVED',           bodyKey: 'kycStatusBody',        notesKey: null },
   KYC_REJECTED:             { sourceApp: 'ADMIN',         subjectKey: 'KYC_REJECTED',           bodyKey: 'kycStatusBody',        notesKey: 'kycRejectedNotes' },
+  KYC_MORE_INFO_REQUESTED:  { sourceApp: 'ADMIN',         subjectKey: 'KYC_MORE_INFO_REQUESTED', bodyKey: 'kycStatusBody',       notesKey: 'kycMoreInfoNotes' },
   OUTBREAK_MODE_ACTIVATED:  { sourceApp: 'ADMIN',         subjectKey: 'OUTBREAK_MODE_ACTIVATED',   bodyKey: 'outbreakBody',     notesKey: null },
   OUTBREAK_MODE_DEACTIVATED:{ sourceApp: 'ADMIN',         subjectKey: 'OUTBREAK_MODE_DEACTIVATED', bodyKey: 'outbreakBody',     notesKey: null },
 }

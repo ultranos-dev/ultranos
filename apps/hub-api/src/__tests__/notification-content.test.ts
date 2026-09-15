@@ -51,4 +51,10 @@ describe('buildNotificationContent', () => {
     const c = buildNotificationContent('TOTALLY_NEW_TYPE', {})
     expect(c.bodyKey).toBe('defaultBody')
   })
+
+  it('maps KYC_MORE_INFO_REQUESTED to Admin', () => {
+    const c = buildNotificationContent('KYC_MORE_INFO_REQUESTED', {})
+    expect(c.sourceApp).toBe('ADMIN')
+    expect(c.subjectKey).toBe('KYC_MORE_INFO_REQUESTED')
+  })
 })
