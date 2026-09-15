@@ -44,6 +44,7 @@ import type { ConsultationRequest, ConsultationResponse } from '@/lib/consultati
 import type { ConsultationRecipient } from '@/lib/consultation-recipients'
 import type { KnowledgeCard, TriggerRule } from '@/lib/knowledge-cards'
 import type { GuidanceContent, GuidanceTrigger } from '@/lib/public-health-guidance'
+import type { MedicationLabMapping } from '@ultranos/shared-types'
 
 // ---------------------------------------------------------------------------
 // Achievement types (v17) — Story 51.7: Gamified Team Quality Engagement
@@ -632,6 +633,37 @@ export interface EscalationContact {
   updatedAt: string          // ISO 8601
 }
 
+// ---------------------------------------------------------------------------
+// Medication Lab Monitoring types (v47) — Story 52.1
+// PHI note: patientRef is an opaque blind-index ref (never the real UUID).
+// patientFirstName + patientAge only — CLAUDE.md Rule #7.
+// ---------------------------------------------------------------------------
+
+export type MonitoringFlagStatus = 'upcoming' | 'due' | 'overdue' | 'completed'
+
+export interface MonitoringFlag {
+  id?: number
+  patientRef: string               // opaque HMAC blind-index ref
+  patientFirstName: string         // first name only — CLAUDE.md Rule #7
+  patientAge: number               // computed age, NOT DOB — CLAUDE.md Rule #7
+  medicationCode: string           // canonical ATC code
+  medicationDisplay: string
+  dispensedAt: string              // YYYY-MM-DD
+  dispensingEventId: string
+  testRequired: string             // LOINC code
+  testDisplay: string
+  frequencyDays: number
+  dueDate: string                  // YYYY-MM-DD
+  status: MonitoringFlagStatus
+  lastCompletedAt: string | null
+  reminderSentAt: string | null
+  orderingPractitionerRef: string  // opaque practitioner ref
+  hlcTimestamp: string
+  syncedFromHub: boolean
+  createdAt: string                // ISO 8601
+  updatedAt: string                // ISO 8601
+}
+
 class LabLiteDatabase extends Dexie {
   uploadQueue!: Dexie.Table<UploadQueueEntry, number>
   practitioner_keys!: Dexie.Table<PractitionerKeyCache, string>
@@ -813,6 +845,10 @@ class LabLiteDatabase extends Dexie {
   // v46 — Spill & Decontamination Protocol (Story 47.5)
   // No PHI — techId is an opaque practitioner ID; no patient data in any field.
   spill_incidents!: Dexie.Table<SpillIncident, string>
+  // v47 — Medication Lab Monitoring (Story 52.1)
+  // PHI note: patientRef is opaque blind-index ref; only first name + age stored per Rule #7.
+  monitoringFlags!: Dexie.Table<MonitoringFlag, number>
+  medicationLabMappings!: Dexie.Table<{ atcCode: string; medicationDisplay: string; version: number; requiredTests: unknown[] }, string>
 
   constructor() {
     super('lab-lite-db')
@@ -1730,6 +1766,13 @@ class LabLiteDatabase extends Dexie {
     //   history filtering and sync sweeps. No PHI — techId is an opaque practitioner ID.
     this.version(46).stores({
       spill_incidents: '&id, occurredAt, spillType, syncStatus, completedAt',
+    })
+    // v47 — Medication Lab Monitoring (Story 52.1)
+    // monitoringFlags: dedup index on [patientRef+medicationCode+testRequired] prevents duplicate flags.
+    // PHI: patientRef is an opaque HMAC blind-index ref — the real patient UUID is never stored here.
+    this.version(47).stores({
+      monitoringFlags: '++id, [patientRef+medicationCode+testRequired], status, dueDate, patientRef',
+      medicationLabMappings: '&atcCode, version',
     })
   }
 }
@@ -4316,4 +4359,35 @@ export async function seedGuidance(): Promise<void> {
     }
     await db.guidance_triggers.bulkPut(GUIDANCE_TRIGGER_RULES)
   })
+}
+
+// ---------------------------------------------------------------------------
+// Medication Lab Monitoring accessors (v47) — Story 52.1
+// ---------------------------------------------------------------------------
+
+/** Return all monitoring flags. */
+export async function getMonitoringFlags(): Promise<MonitoringFlag[]> {
+  const db = getDb()
+  return db.monitoringFlags.toArray()
+}
+
+/** Return monitoring flags with status due, overdue, or upcoming. */
+export async function getDueMonitoringFlags(): Promise<MonitoringFlag[]> {
+  const db = getDb()
+  return db.monitoringFlags.where('status').anyOf('due', 'overdue', 'upcoming').toArray()
+}
+
+/** Bulk-upsert medication-lab mapping rows synced from Hub. */
+export async function putMedicationLabMappings(
+  mappings: Array<{ atcCode: string; medicationDisplay: string; version: number; requiredTests: unknown[] }>,
+): Promise<void> {
+  const db = getDb()
+  await db.medicationLabMappings.bulkPut(mappings)
+}
+
+/** Return all medication-lab mappings as a Map keyed by atcCode. */
+export async function getMedicationLabMappingsMap(): Promise<Map<string, MedicationLabMapping>> {
+  const db = getDb()
+  const rows = await db.medicationLabMappings.toArray()
+  return new Map(rows.map((r) => [r.atcCode, r as unknown as MedicationLabMapping]))
 }
