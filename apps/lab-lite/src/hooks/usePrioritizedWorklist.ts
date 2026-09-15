@@ -21,7 +21,8 @@ import {
   type PriorityOverride,
   type SampleUrgency,
 } from '@/lib/prioritization-engine'
-import type { LabOrderEntry } from '@/lib/db'
+import type { LabOrderEntry, VerifiedPatientCache } from '@/lib/db'
+import type { FhirSpecimen } from '@ultranos/shared-types'
 
 const REFRESH_INTERVAL_MS = 60_000
 
@@ -59,6 +60,61 @@ function mapUrgency(raw: LabOrderEntry['urgency']): SampleUrgency {
   if (raw === 'stat') return 'stat'
   if (raw === 'urgent' || raw === 'asap') return 'urgent'
   return 'routine'
+}
+
+/**
+ * Build a SampleInput from a specimen, with an optional matching order row.
+ *
+ * When `order` is provided, all enriched fields come from the order (the normal path).
+ * When `order` is absent (orphan specimen), best-effort fallbacks are used:
+ *   - patientRef: from `verifiedPatient` if available, else empty/zero.
+ *   - loincCode/loincDisplay: from specimen._ultranos extension fields if stamped.
+ *   - urgency: 'routine'.
+ *   - orderId: extracted from the specimen's first request reference (kept even if row absent).
+ */
+function buildSampleInput(
+  specimen: FhirSpecimen,
+  orderId: string,
+  order?: LabOrderEntry,
+  verifiedPatient?: VerifiedPatientCache,
+): SampleInput {
+  if (order) {
+    return {
+      sampleId: specimen.id,
+      orderId: order.orderId,
+      patientRef: {
+        firstName: order.patientFirstName,
+        age: order.patientAge ?? 0,
+      },
+      loincCode: order.testsRequested[0]?.loincCode ?? '',
+      loincDisplay: order.testsRequested[0]?.loincDisplay ?? '',
+      urgency: mapUrgency(order.urgency),
+      receivedAt: specimen.receivedTime,
+    }
+  }
+
+  // Orphan path: order row is missing — use best-effort fallbacks.
+  const ext = (specimen._ultranos as any)
+  const loincCode: string =
+    ext?.orderedLoincCode ??
+    ext?.orderedTests?.[0]?.loincCode ??
+    ''
+  const loincDisplay: string =
+    ext?.orderedTests?.[0]?.loincDisplay ??
+    ''
+
+  return {
+    sampleId: specimen.id,
+    orderId,
+    patientRef: {
+      firstName: verifiedPatient?.firstName ?? '',
+      age: verifiedPatient?.age ?? 0,
+    },
+    loincCode,
+    loincDisplay,
+    urgency: 'routine',
+    receivedAt: specimen.receivedTime,
+  }
 }
 
 export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
@@ -105,23 +161,18 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
             const orderId = extractOrderId(specimen.request?.[0]?.reference ?? '')
             if (!orderId) continue
             const order = orderMap.get(orderId)
-            if (!order) continue
 
-            const loincCode = order.testsRequested[0]?.loincCode ?? ''
-            const loincDisplay = order.testsRequested[0]?.loincDisplay ?? ''
+            // If no matching order row, fall back to verified_patients for patient info.
+            // Never silently drop a collected sample — it must always appear in the worklist.
+            let verifiedPatient: VerifiedPatientCache | undefined
+            if (!order) {
+              const patientId = extractOrderId(specimen.subject?.reference ?? '')
+              if (patientId) {
+                verifiedPatient = await db.verified_patients.get(patientId)
+              }
+            }
 
-            sampleInputs.push({
-              sampleId: specimen.id,
-              orderId: order.orderId,
-              patientRef: {
-                firstName: order.patientFirstName,
-                age: order.patientAge ?? 0,
-              },
-              loincCode,
-              loincDisplay,
-              urgency: mapUrgency(order.urgency),
-              receivedAt: specimen.receivedTime,
-            })
+            sampleInputs.push(buildSampleInput(specimen, orderId, order, verifiedPatient))
           }
         }
       } catch {
