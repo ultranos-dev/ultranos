@@ -125,7 +125,9 @@ function makeSyncQueueEntry(overrides: Record<string, unknown> = {}): Record<str
     },
     createdAt: new Date().toISOString(),
     retryCount: 1,
-    failureReason: 'HTTP 422',
+    // Drains store the classified category (e.g. classifySyncFailure(`HTTP ${res.status}`)),
+    // never the raw HTTP status string. Use the actual stored value here.
+    failureReason: 'serverRejected',
     ...overrides,
   }
 }
@@ -240,12 +242,18 @@ describe('SyncDashboard — syncQueue integration', () => {
   })
 
   it('shows categorized failure reason for a failed entry', async () => {
-    await insertSyncEntry({ resourceType: 'Specimen', status: 'failed', failureReason: 'HTTP 422' })
+    // Drains store the classified category, not the raw HTTP status. Seed 'serverRejected'
+    // (what result-sync.ts and specimen-sync.ts actually write) and assert the specific
+    // i18n label. With the old double-classification bug, this would render the generic
+    // "Upload failed — will retry" (syncFailed) instead of "Server rejected the upload".
+    await insertSyncEntry({ resourceType: 'Specimen', status: 'failed', failureReason: 'serverRejected' })
     await renderDashboard()
 
     await waitFor(() => {
-      // classifySyncFailure('HTTP 422') → 'serverRejected' → 'Server rejected the upload'
-      expect(screen.getByTestId('sync-record-failure-reason')).toBeDefined()
+      const el = screen.getByTestId('sync-record-failure-reason')
+      expect(el).toBeDefined()
+      // Must show the specific reason — NOT the generic 'syncFailed' fallback
+      expect(el.textContent).toBe('Server rejected the upload')
     })
   })
 

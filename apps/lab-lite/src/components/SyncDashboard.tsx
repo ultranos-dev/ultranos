@@ -449,7 +449,13 @@ export function SyncDashboard() {
                         </div>
                         {record.status === 'failed' && (
                           <p className="mt-1 text-xs text-destructive" data-testid="sync-record-failure-reason">
-                            {tf(classifySyncFailure(record.failureReason))}
+                            {/*
+                             * syncQueue drains store an already-classified category in failureReason
+                             * (e.g. 'serverRejected'), unlike uploadQueue which stores the raw error
+                             * message. Do NOT re-run classifySyncFailure() here — that would match
+                             * no token and fall through to the generic 'syncFailed' label.
+                             */}
+                            {tf(record.failureReason ?? 'unknown')}
                           </p>
                         )}
                       </div>
