@@ -15,6 +15,13 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/dashboard',
 }))
 
+// ── Mock app-toaster notify ────────────────────────────────────────────────────
+const mockNotify = vi.fn()
+vi.mock('@ultranos/ui-kit/components/ui/app-toaster', () => ({
+  AppToaster: () => <div data-testid="app-toaster" />,
+  notify: (...args: any[]) => mockNotify(...args),
+}))
+
 // ── Mock the admin notification client ───────────────────────────────────────
 const mockFetchNotifications = vi.fn()
 const mockFetchUnreadCount = vi.fn()
@@ -155,6 +162,7 @@ describe('NotificationToaster', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockAcknowledgeNotification.mockResolvedValue(undefined)
+    mockNotify.mockClear()
   })
 
   it('mounts AppToaster without crashing', async () => {
@@ -206,18 +214,27 @@ describe('NotificationToaster', () => {
     const { NotificationToaster } = await import('@/components/NotificationToaster')
     render(<NotificationToaster />)
 
-    // Wait for first poll
+    // Wait for first poll to complete
     await waitFor(() => expect(mockFetchNotifications).toHaveBeenCalledTimes(1))
+
+    // On first poll, notify should NOT be called (backlog is seeded, not toasted)
+    expect(mockNotify).not.toHaveBeenCalled()
 
     // Advance timer to trigger second poll (30s)
     await vi.advanceTimersByTimeAsync(31_000)
 
     await waitFor(() => expect(mockFetchNotifications).toHaveBeenCalledTimes(2))
 
-    // After second poll the hook's seenIds will have notif-new-002 as novel.
-    // The test verifies the poll mechanism worked — the toast call itself is
-    // covered by the hook's seenIds logic which is well-tested via the hook.
-    expect(mockFetchNotifications).toHaveBeenCalledTimes(2)
+    // After second poll, notify SHOULD be called exactly once for the new notification (notif-new-002)
+    await waitFor(() => expect(mockNotify).toHaveBeenCalledTimes(1))
+
+    // Verify the toast was called with the new notification's details
+    expect(mockNotify).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subject: 'Lab approved', // Translated key from useTranslations mock
+        appName: 'Admin',
+      }),
+    )
 
     vi.useRealTimers()
   }, 15_000)

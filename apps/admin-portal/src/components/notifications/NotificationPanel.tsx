@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatDate, formatDateTime } from '@ultranos/ui-kit'
+import { X } from '@ultranos/ui-kit/icons'
 import { NotificationRow } from '@ultranos/ui-kit/components/ui/notification-row'
 import { NotificationDetailModal } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
 import type { NotificationDetailField } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
@@ -57,9 +58,9 @@ export function NotificationPanel({
           type="button"
           onClick={onClose}
           aria-label={tNotif('closeAria')}
-          className="text-lg leading-none text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground"
         >
-          ×
+          <X className="h-4 w-4" aria-hidden />
         </button>
       </div>
 
