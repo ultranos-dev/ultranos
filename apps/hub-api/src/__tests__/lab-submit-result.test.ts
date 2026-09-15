@@ -190,4 +190,15 @@ describe('lab.submitResult', () => {
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1', orgId: 'org-1' }))
     await expect(caller.lab.submitResult(makeBundle())).rejects.toBeDefined()
   })
+
+  // ── Rule #6 audit-failure guarantee test ────────────────────
+
+  it('throws INTERNAL_SERVER_ERROR when audit.emit rejects on the write path (Rule #6 guarantee)', async () => {
+    setupLab()
+    mockAuditEmit.mockRejectedValueOnce(new Error('audit down'))
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    await expect(caller.lab.submitResult(makeBundle())).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    })
+  })
 })

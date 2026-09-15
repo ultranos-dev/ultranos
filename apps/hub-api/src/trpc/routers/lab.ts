@@ -1189,7 +1189,8 @@ export const labRouter = createTRPCRouter({
         }
       }
 
-      // Audit the PHI write (Rule #6). Best-effort — data is already persisted.
+      // Audit the PHI write (Rule #6). Throw on failure — write is idempotent (upsert),
+      // so the client can retry the whole op; re-upsert is a no-op and audit is re-attempted.
       try {
         await audit.emit({
           action: 'CREATE', resourceType: 'LAB_RESULT', resourceId: reportId,
@@ -1198,6 +1199,7 @@ export const labRouter = createTRPCRouter({
         })
       } catch {
         console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'LAB_RESULT', resourceId: reportId })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Audit write failed' })
       }
 
       // Resolve lab name + dispatch notifications (reuses uploadResult's helper). Fire-and-forget.
@@ -1250,10 +1252,32 @@ export const labRouter = createTRPCRouter({
       if (existing && existing.lab_id !== labId) {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Specimen belongs to another lab' })
       }
+      // Rule #6: audit must fire (and throw on failure) on EVERY success path — including
+      // the newer-wins skip path. If a first call writes the row but audit fails and throws,
+      // the client retries with the same hlc; the retry hits cmp<=0 and takes the skip path.
+      // Without auditing the skip path, that audit would never land. The helper is scoped
+      // inside the mutation so it closes over the resolved performerId (available here,
+      // before the newer-wins check).
+      const emitAuditOrThrow = async () => {
+        try {
+          await audit.emit({
+            action: 'CREATE', resourceType: 'SPECIMEN', resourceId: input.id,
+            actorId: performerId, actorRole: ctx.user.role, outcome: 'SUCCESS', sessionId: ctx.user.sessionId,
+            metadata: { submitAction: 'specimen_synced', pipelineStatus: input.pipelineStatus, labId },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'SPECIMEN', resourceId: input.id })
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Audit write failed' })
+        }
+      }
+
       if (existing?.hlc_timestamp) {
         const cmp = compareHlc(deserializeHlc(input.hlcTimestamp), deserializeHlc(existing.hlc_timestamp as string))
         if (cmp <= 0) {
           // Stored state is newer-or-equal — idempotent no-op (prevents stale retries clobbering).
+          // Audit must still fire so that if a prior call wrote the row but audit failed, the
+          // retry (same hlc → skip path) lands the audit record.
+          await emitAuditOrThrow()
           return { specimenId: input.id, pipelineStatus: input.pipelineStatus }
         }
       }
@@ -1287,15 +1311,7 @@ export const labRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to write specimen' })
       }
 
-      try {
-        await audit.emit({
-          action: 'CREATE', resourceType: 'SPECIMEN', resourceId: input.id,
-          actorId: performerId, actorRole: ctx.user.role, outcome: 'SUCCESS', sessionId: ctx.user.sessionId,
-          metadata: { submitAction: 'specimen_synced', pipelineStatus: input.pipelineStatus, labId },
-        })
-      } catch {
-        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'SPECIMEN', resourceId: input.id })
-      }
+      await emitAuditOrThrow()
 
       return { specimenId: input.id, pipelineStatus: input.pipelineStatus }
     }),

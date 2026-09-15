@@ -156,4 +156,33 @@ describe('lab.submitSpecimen', () => {
       makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1', orgId: 'org-1' }))
     await expect(caller.lab.submitSpecimen(makeInput())).rejects.toBeDefined()
   })
+
+  // ── Rule #6 audit-failure guarantee tests ────────────────────
+
+  it('throws INTERNAL_SERVER_ERROR when audit.emit rejects on the write path (Rule #6 guarantee)', async () => {
+    setupLab()
+    mockAuditEmit.mockRejectedValueOnce(new Error('audit down'))
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    await expect(caller.lab.submitSpecimen(makeInput())).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    })
+  })
+
+  it('throws INTERNAL_SERVER_ERROR when audit.emit rejects on the newer-wins skip path (Rule #6 guarantee)', async () => {
+    setupLab()
+    // Seed stored row with HLC_BASE so incoming HLC_OLDER triggers cmp <= 0 → skip path
+    specMaybeSingle.mockResolvedValue({
+      data: { id: SPEC_ID, lab_id: 'lab-1', hlc_timestamp: HLC_BASE }, error: null,
+    })
+    mockAuditEmit.mockRejectedValueOnce(new Error('audit down'))
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    // Incoming is older → cmp <= 0 → skip path; but audit must still fire and throw
+    await expect(caller.lab.submitSpecimen(makeInput({ hlcTimestamp: HLC_OLDER }))).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    })
+    // Upsert must NOT have been called (skip path)
+    expect(specUpsert).not.toHaveBeenCalled()
+  })
 })
