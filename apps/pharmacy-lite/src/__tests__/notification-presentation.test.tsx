@@ -14,6 +14,26 @@ import userEvent from '@testing-library/user-event'
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
 
+// next-intl — mock useTranslations to resolve keys to real English values
+// sourceApp.* keys resolve to app names; time.* keys resolve to time strings;
+// subject.*, body.*, notes.*, and other keys fall back to the bare key string.
+vi.mock('next-intl', () => ({
+  useLocale: () => 'en',
+  useTranslations: (namespace: string) => (key: string, params?: Record<string, unknown>) => {
+    const fullKey = `${namespace}.${key}`
+    const MAP: Record<string, string> = {
+      'notifications.sourceApp.PHARMACY_LITE': 'Pharmacy Lite',
+      'notifications.sourceApp.LAB_LITE': 'Lab Lite',
+      'notifications.sourceApp.OPD_LITE': 'OPD Lite',
+      'notifications.sourceApp.SYSTEM': 'System',
+      'time.justNow': 'Just now',
+      'time.minutesAgo': `${params?.minutes ?? '{minutes}'}m ago`,
+      'time.hoursAgo': `${params?.hours ?? '{hours}'}h ago`,
+    }
+    return MAP[fullKey] ?? key
+  },
+}))
+
 // next/navigation
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -123,7 +143,7 @@ describe('NotificationPanel — descriptor-field rendering', () => {
     mockGetUnreadNotificationCount.mockResolvedValue(1)
   })
 
-  it('renders the resolved app name "sourceApp.PHARMACY_LITE" in the notification row', async () => {
+  it('renders the resolved app name "Pharmacy Lite" in the notification row', async () => {
     const { NotificationPanel } = await import('@/components/notifications/NotificationPanel')
     render(
       <NotificationPanel onClose={vi.fn()} onChange={vi.fn()} />,
@@ -134,9 +154,8 @@ describe('NotificationPanel — descriptor-field rendering', () => {
       expect(screen.getByTestId('notif-row')).toBeInTheDocument()
     })
 
-    // The useTranslations mock returns the key string, so sourceAppNameKey('PHARMACY_LITE')
-    // = 'sourceApp.PHARMACY_LITE' and tNotif('sourceApp.PHARMACY_LITE') = 'sourceApp.PHARMACY_LITE'
-    expect(screen.getByTestId('notif-app-name')).toHaveTextContent('sourceApp.PHARMACY_LITE')
+    // The useTranslations mock resolves sourceApp.PHARMACY_LITE → 'Pharmacy Lite'
+    expect(screen.getByTestId('notif-app-name')).toHaveTextContent('Pharmacy Lite')
   })
 
   it('renders the resolved subject key in the notification row', async () => {
@@ -149,7 +168,7 @@ describe('NotificationPanel — descriptor-field rendering', () => {
       expect(screen.getByTestId('notif-subject')).toBeInTheDocument()
     })
 
-    // subject key = 'subject.PRESCRIPTION_DISPENSED'
+    // subject key = 'subject.PRESCRIPTION_DISPENSED' — mock returns the key (no dedicated translation)
     expect(screen.getByTestId('notif-subject')).toHaveTextContent('subject.PRESCRIPTION_DISPENSED')
   })
 
