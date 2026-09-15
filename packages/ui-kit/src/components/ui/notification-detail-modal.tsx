@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './dialog.js'
 import { Button } from './button.js'
@@ -60,13 +61,13 @@ export function NotificationDetailModal({
           {/* Details list — aligned grid */}
           {details && details.length > 0 && (
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
-              {details.map((f, index) => (
-                <div key={`${f.label}-${index}`} className="contents">
+              {details.map((f) => (
+                <React.Fragment key={f.label}>
                   <dt className="text-xs font-medium text-muted-foreground self-center">{f.label}</dt>
                   <dd className={`text-sm ${f.emphasis ? 'text-destructive font-medium' : 'text-foreground'}`}>
                     {f.value}
                   </dd>
-                </div>
+                </React.Fragment>
               ))}
             </dl>
           )}

@@ -37,11 +37,13 @@ describe('NotificationRow — RTL/LTR safety', () => {
       expect(container.firstChild).toMatchSnapshot()
     })
 
-    it('timestamp uses ms-auto (logical inline-end) in LTR', () => {
+    it('right container (dot + timestamp) uses ms-auto (logical inline-end) in LTR', () => {
       const { container } = renderInDir('ltr', <NotificationRow {...baseProps} />)
       const timeEl = container.querySelector('[data-slot="notification-time"]')
       expect(timeEl).not.toBeNull()
-      expect(timeEl!.className).toContain('ms-auto')
+      const rightContainer = timeEl!.parentElement
+      expect(rightContainer).not.toBeNull()
+      expect(rightContainer!.className).toContain('ms-auto')
     })
 
     it('icon wrapper (DirectionalIcon medical) has NO transform style in LTR', () => {
@@ -67,11 +69,13 @@ describe('NotificationRow — RTL/LTR safety', () => {
       expect(container.firstChild).toMatchSnapshot()
     })
 
-    it('timestamp uses ms-auto (logical inline-end) in RTL', () => {
+    it('right container (dot + timestamp) uses ms-auto (logical inline-end) in RTL', () => {
       const { container } = renderInDir('rtl', <NotificationRow {...baseProps} />)
       const timeEl = container.querySelector('[data-slot="notification-time"]')
       expect(timeEl).not.toBeNull()
-      expect(timeEl!.className).toContain('ms-auto')
+      const rightContainer = timeEl!.parentElement
+      expect(rightContainer).not.toBeNull()
+      expect(rightContainer!.className).toContain('ms-auto')
     })
 
     it('icon wrapper (DirectionalIcon medical) has NO transform style in RTL — never mirrors', () => {

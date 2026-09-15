@@ -59,7 +59,7 @@ describe('NotificationDetailModal', () => {
     expect(screen.getByText('Ahmad K.')).toBeInTheDocument()
   })
 
-  it('details dl rows use dt for label (muted) and dd for value', () => {
+  it('details dl rows use dt for label (muted) and dd for value, direct children of dl (no wrapper)', () => {
     render(
       <NotificationDetailModal
         open
@@ -72,12 +72,15 @@ describe('NotificationDetailModal', () => {
       />
     )
     // Dialog renders in a portal — use document.querySelector
-    const dt = document.querySelector('dt')
+    const dl = document.querySelector('dl')
+    expect(dl).not.toBeNull()
+    // dt and dd are direct children of dl (no contents wrapper)
+    const dt = dl!.querySelector('dt')
     expect(dt).not.toBeNull()
     expect(dt!.textContent).toBe('Order ID')
     expect(dt!.className).toContain('text-muted-foreground')
 
-    const dd = document.querySelector('dd')
+    const dd = dl!.querySelector('dd')
     expect(dd).not.toBeNull()
     expect(dd!.textContent).toBe('5A4741')
   })

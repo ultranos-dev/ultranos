@@ -20,9 +20,9 @@ export function NotificationRow({ icon: Icon, appName, subject, timeAgo, unread,
         <span className="text-muted-foreground/60 text-xs select-none" aria-hidden>·</span>
         <span className={`truncate text-sm font-medium ${urgent ? 'text-destructive' : 'text-foreground'}`}>{subject}</span>
       </div>
-      <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0 ms-auto">
         {unread && <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-primary" aria-label={unreadLabel} aria-hidden={!unreadLabel} />}
-        <span data-slot="notification-time" className="ms-auto shrink-0 text-xs text-muted-foreground">{timeAgo}</span>
+        <span data-slot="notification-time" className="shrink-0 text-xs text-muted-foreground">{timeAgo}</span>
       </div>
     </div>
   )

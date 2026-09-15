@@ -4,13 +4,16 @@ import { FlaskConical } from '../icons'
 import { NotificationRow } from '../components/ui/notification-row'
 
 describe('NotificationRow', () => {
-  it('shows app name (muted micro-label) and subject on one line, plus timestamp data-slot', () => {
+  it('shows app name (muted micro-label) and subject on one line, plus timestamp data-slot; right container pinned inline-end via ms-auto', () => {
     render(<NotificationRow icon={FlaskConical} appName="Lab Lite" subject="Lab order received"
       body="Hemoglobin · Central Lab" notes="Sample is being processed." timeAgo="2h ago" />)
     expect(screen.getByText('Lab Lite')).toBeInTheDocument()
     expect(screen.getByText('Lab order received')).toBeInTheDocument()
     const time = screen.getByText('2h ago')
     expect(time).toHaveAttribute('data-slot', 'notification-time')
+    // Right container (dot + timestamp) is pinned to inline-end
+    const rightContainer = time.parentElement
+    expect(rightContainer).toHaveClass('ms-auto')
   })
 
   it('does NOT render body text even when body prop is passed', () => {
