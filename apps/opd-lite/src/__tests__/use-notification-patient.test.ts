@@ -28,6 +28,12 @@ vi.mock('../lib/db', () => ({
   },
 }))
 
+const mockFetchOrderPatientRef = vi.fn()
+
+vi.mock('../lib/trpc', () => ({
+  fetchOrderPatientRef: (...args: unknown[]) => mockFetchOrderPatientRef(...args),
+}))
+
 const mockLoadPatientResilient = vi.fn()
 
 vi.mock('../lib/patient-loader', () => ({
@@ -148,6 +154,8 @@ describe('useNotificationPatient', () => {
 
   it('returns {name: null} (no throw) when serviceRequest is not found', async () => {
     mockServiceRequests.get.mockResolvedValue(undefined)
+    // Ensure Hub fallback also returns null so we verify the pure "not found" path.
+    mockFetchOrderPatientRef.mockResolvedValue(null)
 
     const { useNotificationPatient } = await import('../hooks/useNotificationPatient')
 
@@ -169,6 +177,52 @@ describe('useNotificationPatient', () => {
 
     expect(result.current.name).toBeNull()
     expect(mockAuditPhiAccess).not.toHaveBeenCalled()
+  })
+
+  it('resolves patient name via Hub fallback when local serviceRequest is missing', async () => {
+    // Local Dexie store has no record for this order.
+    mockServiceRequests.get.mockResolvedValue(undefined)
+    // Hub fallback returns the bare patient UUID.
+    mockFetchOrderPatientRef.mockResolvedValue('p1')
+    mockLoadPatientResilient.mockResolvedValue({
+      patient: PATIENT,
+      needsReauth: false,
+      source: 'hub',
+    })
+
+    const { useNotificationPatient } = await import('../hooks/useNotificationPatient')
+
+    const { result } = renderHook(() =>
+      useNotificationPatient({
+        id: 'n-hub-fallback',
+        type: 'ORDER_RECEIVED',
+        payload: { orderId: 'o-offline' },
+        status: 'SENT',
+        createdAt: '2026-09-15T10:00:00.000Z',
+        deliveredAt: null,
+        acknowledgedAt: null,
+      }),
+    )
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false)
+    })
+
+    // Name resolved via Hub patientRef → loadPatientResilient
+    expect(result.current.name).toBe('Ahmad Karimi')
+
+    // Audit still fires once with the resolved patientId
+    expect(mockAuditPhiAccess).toHaveBeenCalledTimes(1)
+    expect(mockAuditPhiAccess).toHaveBeenCalledWith(
+      'PHI_READ',
+      'SERVICE_REQUEST',
+      'o-offline',
+      'p1',
+      { phiAccess: 'notification_modal' },
+    )
+
+    // Hub fallback was called with the correct orderId
+    expect(mockFetchOrderPatientRef).toHaveBeenCalledWith('o-offline')
   })
 
   it('returns {name: null} (no throw) when patient is not found', async () => {

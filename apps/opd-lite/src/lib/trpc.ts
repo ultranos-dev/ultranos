@@ -626,6 +626,39 @@ export async function searchLabsHub(
 }
 
 /**
+ * Fetch the patient reference (bare UUID) for a single order from the Hub
+ * (serviceRequest.getOrderPatientRef). Used by the notification modal when the
+ * order is not present in the local Dexie store.
+ *
+ * Only returns the ref if the caller is the order's author — the Hub scopes it.
+ * Returns null on any failure (no session, network error, non-200) so callers
+ * can fail soft.
+ */
+export async function fetchOrderPatientRef(orderId: string): Promise<string | null> {
+  try {
+    const url = new URL(getHubApiUrl())
+    url.pathname = url.pathname.replace(/\/$/, '') + '/serviceRequest.getOrderPatientRef'
+    url.searchParams.set('input', JSON.stringify({ json: { orderId } }))
+
+    const headers: Record<string, string> = {}
+    if (typeof window !== 'undefined') {
+      const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+      const { data } = await getSupabaseBrowserClient().auth.getSession()
+      if (data.session?.access_token) {
+        headers['Authorization'] = `Bearer ${data.session.access_token}`
+      }
+    }
+
+    const res = await fetch(url.toString(), { method: 'GET', headers })
+    if (!res.ok) return null
+    const body = (await res.json()) as { result?: { data?: { json?: { patientRef: string | null } } } }
+    return body.result?.data?.json?.patientRef ?? null
+  } catch {
+    return null
+  }
+}
+
+/**
  * Fetch the current processing status of the caller's lab orders from the Hub
  * (serviceRequest.getOrderStatus). Returns operational status only — used to lock
  * rows once a lab has started an order. Offline-first: returns [] on any failure

@@ -21,6 +21,7 @@ import { useState, useEffect, useRef } from 'react'
 import { db } from '@/lib/db'
 import { loadPatientResilient } from '@/lib/patient-loader'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { fetchOrderPatientRef } from '@/lib/trpc'
 import type { NotificationItem } from '@/lib/notification-api'
 
 export interface UseNotificationPatientResult {
@@ -117,19 +118,33 @@ export function useNotificationPatient(
       setName(null)
 
       try {
-        // 1. Look up the source record to get the patient reference
+        // 1. Look up the source record to get the patient reference.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const sourceRecord = await (db[config.table] as any).get(config.refId) as
           | { subject?: { reference?: string } }
           | undefined
 
-        if (!sourceRecord?.subject?.reference) {
+        let patientRef: string | null = sourceRecord?.subject?.reference ?? null
+
+        // ORDER_RECEIVED fallback: if the order isn't in the local Dexie store (or
+        // has no subject.reference), ask the Hub — the Hub has the patient_id chain
+        // and scopes the response to the ordering doctor only.
+        if (!patientRef && n?.type === 'ORDER_RECEIVED') {
+          const hubRef = await fetchOrderPatientRef(config.refId)
+          if (hubRef) {
+            // Hub returns a bare UUID; normalise to "Patient/<uuid>" to match the
+            // existing code path below that strips the prefix.
+            patientRef = hubRef.startsWith('Patient/') ? hubRef : `Patient/${hubRef}`
+          }
+        }
+
+        if (!patientRef) {
           if (!cancelled) { setName(null); setLoading(false) }
           return
         }
 
         // Extract patient id from "Patient/<uuid>"
-        const patientId = sourceRecord.subject.reference.replace(/^Patient\//, '')
+        const patientId = patientRef.replace(/^Patient\//, '')
         if (!patientId) {
           if (!cancelled) { setName(null); setLoading(false) }
           return

@@ -11,6 +11,7 @@ const O1 = '11111111-1111-1111-1111-111111111111'
 const O2 = '22222222-2222-2222-2222-222222222222'
 const LAB1 = '33333333-3333-3333-3333-333333333333'
 const PRAC = '44444444-4444-4444-4444-444444444444'
+const PAT1 = '55555555-5555-5555-5555-555555555555'
 
 function makeCtx({ practitionerId = PRAC as string | null, rows = [] as unknown[] } = {}) {
   const sr = {
@@ -31,6 +32,78 @@ function makeCtx({ practitionerId = PRAC as string | null, rows = [] as unknown[
   }
   return { ctx, sr, prac }
 }
+
+/**
+ * Context factory for getOrderPatientRef.
+ * The service_requests query chain is: select → eq(id) → eq(requester_id) → maybeSingle().
+ */
+function makePatientRefCtx({
+  practitionerId = PRAC as string | null,
+  srRow = null as { id: string; patient_id: string } | null,
+} = {}) {
+  const maybeSingleMock = vi.fn().mockResolvedValue({ data: srRow, error: null })
+  const sr = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    maybeSingle: maybeSingleMock,
+  }
+  const prac = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn().mockResolvedValue({ data: practitionerId ? { id: practitionerId } : null }),
+  }
+  const supabase = { from: vi.fn((t: string) => (t === 'practitioners' ? prac : sr)) }
+  const ctx = {
+    supabase,
+    user: { sub: 'auth-1', practitionerId: 'auth-1', role: 'DOCTOR', orgId: 'org-1', sessionId: 's1', facilityId: null, status: null },
+    headers: new Headers(),
+  }
+  return { ctx, sr, prac, maybeSingleMock }
+}
+
+describe('serviceRequest.getOrderPatientRef', () => {
+  beforeEach(() => emitMock.mockClear())
+
+  it('returns the patient_id for an order the caller authored', async () => {
+    const { ctx } = makePatientRefCtx({ srRow: { id: O1, patient_id: PAT1 } })
+    const res = await serviceRequestRouter.createCaller(ctx as never).getOrderPatientRef({ orderId: O1 })
+    expect(res).toEqual({ patientRef: PAT1 })
+  })
+
+  it('returns { patientRef: null } when the order belongs to another requester (or does not exist)', async () => {
+    // maybeSingle returns null row → not found / not scoped to this caller
+    const { ctx } = makePatientRefCtx({ srRow: null })
+    const res = await serviceRequestRouter.createCaller(ctx as never).getOrderPatientRef({ orderId: O1 })
+    expect(res).toEqual({ patientRef: null })
+  })
+
+  it('returns { patientRef: null } when the caller resolves to no practitioner', async () => {
+    const { ctx } = makePatientRefCtx({ practitionerId: null, srRow: { id: O1, patient_id: PAT1 } })
+    const res = await serviceRequestRouter.createCaller(ctx as never).getOrderPatientRef({ orderId: O1 })
+    expect(res).toEqual({ patientRef: null })
+  })
+
+  it('emits a PHI_READ audit with patientId on success', async () => {
+    const { ctx } = makePatientRefCtx({ srRow: { id: O1, patient_id: PAT1 } })
+    await serviceRequestRouter.createCaller(ctx as never).getOrderPatientRef({ orderId: O1 })
+    expect(emitMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'PHI_READ',
+        resourceType: 'SERVICE_REQUEST',
+        resourceId: O1,
+        patientId: PAT1,
+        metadata: { endpoint: 'serviceRequest.getOrderPatientRef' },
+      }),
+    )
+  })
+
+  it('still returns patientRef even when audit emit throws (audit never blocks the response)', async () => {
+    emitMock.mockRejectedValueOnce(new Error('audit failure'))
+    const { ctx } = makePatientRefCtx({ srRow: { id: O1, patient_id: PAT1 } })
+    const res = await serviceRequestRouter.createCaller(ctx as never).getOrderPatientRef({ orderId: O1 })
+    expect(res).toEqual({ patientRef: PAT1 })
+  })
+})
 
 describe('serviceRequest.getOrderStatus', () => {
   beforeEach(() => emitMock.mockClear())
