@@ -1,33 +1,49 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useTranslations } from 'next-intl'
-import { listNotifications, acknowledgeNotification, type PharmacyNotification } from '@/lib/trpc'
+import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
+import { formatDate } from '@ultranos/ui-kit'
+import { NotificationRow } from '@ultranos/ui-kit/components/ui/notification-row'
+import { NotificationDetailModal } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
+import { sourceAppIcon, sourceAppNameKey, deriveSourceApp } from '@ultranos/ui-kit/notification-presentation'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { useNotificationPoll } from '@/lib/use-notification-poll'
+import type { PharmacyNotification } from '@/lib/trpc'
 
-/** Notification type → i18n label key (falls back to a generic label). */
-const LABEL_KEY: Record<string, string> = {
-  DISPENSE_REVIEW_RESOLVED: 'typeDispenseReviewResolved',
-  PRESCRIPTION_DISPENSED: 'typePrescriptionDispensed',
+function formatTimestamp(
+  iso: string,
+  locale: 'en' | 'ar' | 'prs' | 'ps',
+  tTime: ReturnType<typeof useTranslations<'time'>>,
+): string {
+  const d = new Date(iso)
+  const now = new Date()
+  const diffMs = now.getTime() - d.getTime()
+  const diffMin = Math.floor(diffMs / 60_000)
+  if (diffMin < 1) return tTime('justNow')
+  if (diffMin < 60) return tTime('minutesAgo', { minutes: diffMin })
+  const diffHrs = Math.floor(diffMin / 60)
+  if (diffHrs < 24) return tTime('hoursAgo', { hours: diffHrs })
+  return formatDate(d, locale)
 }
 
-export function NotificationPanel({ onClose, onChange }: { onClose: () => void; onChange: () => void }) {
-  const t = useTranslations('notifications')
-  const [items, setItems] = useState<PharmacyNotification[] | null>(null)
-  const [error, setError] = useState(false)
+export function NotificationPanel({
+  onClose,
+  onChange,
+}: {
+  onClose: () => void
+  onChange: () => void
+}) {
+  const tNotif = useTranslations('notifications')
+  const [openId, setOpenId] = useState<string | null>(null)
+  const router = useRouter()
 
-  useEffect(() => {
-    let active = true
-    listNotifications()
-      .then((n) => { if (active) setItems(n) })
-      .catch(() => { if (active) setError(true) })
-    return () => { active = false }
-  }, [])
+  const { notifications, loading, error, acknowledge } = useNotificationPoll()
 
-  const ack = useCallback(async (id: string) => {
-    await acknowledgeNotification(id)
-    setItems((prev) => prev?.map((n) => (n.id === id ? { ...n, status: 'ACKNOWLEDGED' } : n)) ?? null)
+  const handleAcknowledge = useCallback(async (id: string) => {
+    await acknowledge(id)
     onChange()
-  }, [onChange])
+  }, [acknowledge, onChange])
 
   return (
     <div
@@ -35,38 +51,118 @@ export function NotificationPanel({ onClose, onChange }: { onClose: () => void; 
       className="absolute end-0 top-11 z-50 w-80 overflow-hidden rounded-xl bg-popover shadow-lg ring-[0.65px] ring-border/50"
     >
       <div className="flex items-center justify-between border-b border-border px-4 py-2">
-        <span className="text-sm font-semibold text-foreground">{t('title')}</span>
-        <button type="button" onClick={onClose} aria-label={t('closeAria')} className="text-lg leading-none text-muted-foreground hover:text-foreground">×</button>
+        <span className="text-sm font-semibold text-foreground">{tNotif('title')}</span>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={tNotif('closeAria')}
+          className="text-lg leading-none text-muted-foreground hover:text-foreground"
+        >
+          ×
+        </button>
       </div>
+
       <div className="max-h-96 overflow-y-auto">
         {error ? (
-          <p data-testid="notification-error" className="px-4 py-6 text-center text-sm text-destructive">{t('error')}</p>
-        ) : items === null ? (
-          <p className="px-4 py-6 text-center text-sm text-muted-foreground">{t('loading')}</p>
-        ) : items.length === 0 ? (
-          <p className="px-4 py-6 text-center text-sm text-muted-foreground">{t('empty')}</p>
+          <p data-testid="notification-error" className="px-4 py-6 text-center text-sm text-destructive">
+            {tNotif('error')}
+          </p>
+        ) : loading ? (
+          <p className="px-4 py-6 text-center text-sm text-muted-foreground">{tNotif('loading')}</p>
+        ) : notifications.length === 0 ? (
+          <EmptyState title={tNotif('empty')} size="sm" />
         ) : (
-          <ul className="divide-y divide-border">
-            {items.map((n) => {
-              const unread = n.status !== 'ACKNOWLEDGED'
-              const labelKey = LABEL_KEY[n.type] ?? 'typeDefault'
-              return (
-                <li key={n.id}>
-                  <button
-                    type="button"
-                    data-testid="notification-item"
-                    onClick={() => { if (unread) void ack(n.id) }}
-                    className={`flex w-full items-start gap-2 px-4 py-3 text-start ${unread ? 'bg-primary/5' : ''}`}
-                  >
-                    {unread && <span data-testid="unread-dot" className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />}
-                    <span className={`text-sm ${unread ? 'font-semibold text-foreground' : 'font-normal text-muted-foreground'}`}>{t(labelKey)}</span>
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
+          <div className="divide-y divide-border">
+            {notifications.map(n => (
+              <PanelNotificationRow
+                key={n.id}
+                notification={n}
+                openId={openId}
+                setOpenId={setOpenId}
+                onAcknowledge={handleAcknowledge}
+                onNavigate={(path) => { router.push(path); onClose() }}
+                tNotif={tNotif}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>
+  )
+}
+
+function PanelNotificationRow({
+  notification: n,
+  openId,
+  setOpenId,
+  onAcknowledge,
+  onNavigate,
+  tNotif,
+}: {
+  notification: PharmacyNotification
+  openId: string | null
+  setOpenId: (id: string | null) => void
+  onAcknowledge: (id: string) => void
+  onNavigate: (path: string) => void
+  tNotif: ReturnType<typeof useTranslations<'notifications'>>
+}) {
+  const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
+  const tTime = useTranslations('time')
+  const app = n.sourceApp ?? deriveSourceApp(n.type)
+  const appName = tNotif(sourceAppNameKey(app) as Parameters<typeof tNotif>[0])
+  const subject = tNotif(
+    (`subject.${n.subjectKey ?? n.type}`) as Parameters<typeof tNotif>[0],
+  )
+  const body = n.bodyKey
+    ? tNotif(
+        (`body.${n.bodyKey}`) as Parameters<typeof tNotif>[0],
+        n.bodyParams ?? {},
+      )
+    : undefined
+  const notes = n.notesKey
+    ? tNotif((`notes.${n.notesKey}`) as Parameters<typeof tNotif>[0])
+    : undefined
+  const Icon = sourceAppIcon(app)
+  const timeAgo = formatTimestamp(n.createdAt, locale, tTime)
+  const isOpen = openId === n.id
+
+  // Deep link: only pharmacy-relevant types have routes
+  const deepLink = n.type === 'SYNC_CONFLICT' ? '/sync' : null
+
+  return (
+    <>
+      <NotificationRow
+        icon={Icon}
+        appName={appName}
+        subject={subject}
+        body={body}
+        notes={notes}
+        timeAgo={timeAgo}
+        unread={n.status !== 'ACKNOWLEDGED'}
+        urgent={false}
+        unreadLabel={tNotif('unread' as Parameters<typeof tNotif>[0])}
+        onClick={() => {
+          setOpenId(n.id)
+          onAcknowledge(n.id)
+        }}
+      />
+      <NotificationDetailModal
+        open={isOpen}
+        onOpenChange={(o) => { if (!o) setOpenId(null) }}
+        icon={Icon}
+        appName={appName}
+        subject={subject}
+        body={body}
+        notes={notes}
+        exactTimestamp={n.createdAt}
+        action={deepLink
+          ? {
+              label: tNotif('viewDetails' as Parameters<typeof tNotif>[0]),
+              onClick: () => onNavigate(deepLink),
+            }
+          : undefined
+        }
+      />
+    </>
   )
 }

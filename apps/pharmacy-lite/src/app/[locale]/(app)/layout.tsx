@@ -10,6 +10,7 @@ import { SwUpdateNotification } from '@/components/SwUpdateNotification'
 import { InstallPrompt } from '@/components/InstallPrompt'
 import { SyncAwareStaleDataBanner } from '@/components/SyncAwareStaleDataBanner'
 import { PhiCleanupGuard } from '@/components/PhiCleanupGuard'
+import { NotificationToaster } from '@/components/NotificationToaster'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -31,6 +32,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarInset>
       </SidebarProvider>
       <SyncDashboard />
+      <NotificationToaster />
       <SwUpdateNotification />
     </TooltipProvider>
   )

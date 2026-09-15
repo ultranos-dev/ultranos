@@ -118,6 +118,12 @@ export interface PharmacyNotification {
   createdAt: string
   deliveredAt: string | null
   acknowledgedAt: string | null
+  /** Descriptor fields from Hub (Task 10 — notification presentation enrichment) */
+  sourceApp?: string | null
+  subjectKey?: string | null
+  bodyKey?: string | null
+  bodyParams?: Record<string, string | number>
+  notesKey?: string | null
 }
 
 /** Unread notification count for the pharmacist (badge). Best-effort → 0 on failure. */
