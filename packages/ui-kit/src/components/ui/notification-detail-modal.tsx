@@ -46,9 +46,9 @@ export function NotificationDetailModal({
               {/* Patient row — continuous light-green background band */}
               {patientLoading ? (
                 <React.Fragment>
-                  <dt className="bg-primary/10 rounded-s-md py-2 ps-3 pe-4 text-xs font-medium text-muted-foreground self-center" />
+                  <dt className="bg-primary/10 rounded-s-md flex items-center py-2 ps-3 pe-4 text-xs font-medium text-muted-foreground" />
                   <dd
-                    className="bg-primary/10 rounded-e-md py-2 pe-3 text-sm"
+                    className="bg-primary/10 rounded-e-md flex items-center py-2 pe-3 text-sm"
                     role="status"
                     data-testid="patient-loading"
                   >
@@ -57,8 +57,8 @@ export function NotificationDetailModal({
                 </React.Fragment>
               ) : patient ? (
                 <React.Fragment>
-                  <dt className="bg-primary/10 rounded-s-md py-2 ps-3 pe-4 text-xs font-medium text-muted-foreground self-center">{patient.label}</dt>
-                  <dd className="bg-primary/10 rounded-e-md py-2 pe-3 text-sm font-semibold text-foreground">{patient.value}</dd>
+                  <dt className="bg-primary/10 rounded-s-md flex items-center py-2 ps-3 pe-4 text-xs font-medium text-muted-foreground">{patient.label}</dt>
+                  <dd className="bg-primary/10 rounded-e-md flex items-center py-2 pe-3 text-sm font-semibold text-foreground">{patient.value}</dd>
                 </React.Fragment>
               ) : null}
 
