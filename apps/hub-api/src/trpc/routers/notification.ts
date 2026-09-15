@@ -239,6 +239,69 @@ export const notificationRouter = createTRPCRouter({
     }),
 
   /**
+   * Delete a notification owned by the authenticated user.
+   * Hard deletes the row after verifying caller ownership via recipient_ref.
+   * The audit_log is the permanent record of the deletion.
+   */
+  delete: protectedProcedure
+    .input(
+      z.object({
+        notificationId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify ownership: notification must belong to the requesting user.
+      const recipientRefs = await recipientRefsForUser(ctx)
+      const { data: existing, error: fetchError } = await ctx.supabase
+        .from('notifications')
+        .select('id, recipient_ref')
+        .eq('id', input.notificationId)
+        .in('recipient_ref', recipientRefs)
+        .single()
+
+      if (fetchError || !existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Notification not found',
+        })
+      }
+
+      const { error: deleteError } = await ctx.supabase
+        .from('notifications')
+        .delete()
+        .eq('id', input.notificationId)
+
+      if (deleteError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to delete notification',
+        })
+      }
+
+      // Audit deletion (best-effort — consistent with acknowledge pattern)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'DELETE',
+          resourceType: 'NOTIFICATION',
+          resourceId: input.notificationId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            notificationAction: 'deleted',
+            recipientRef: ctx.user.sub,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'DELETE', resourceType: 'NOTIFICATION', resourceId: input.notificationId })
+      }
+
+      return { success: true }
+    }),
+
+  /**
    * Get unread notification count for the authenticated user.
    * Used by notification bell indicators in OPD Lite and Patient Lite Mobile.
    */

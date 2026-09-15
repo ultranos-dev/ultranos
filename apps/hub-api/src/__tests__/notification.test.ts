@@ -36,6 +36,8 @@ function makePractitionersChain() {
   return chain
 }
 
+const mockDelete = vi.fn()
+
 const mockFrom = vi.fn((table: string) => {
   if (table === 'practitioners') return makePractitionersChain()
   if (table === 'notifications') {
@@ -46,12 +48,14 @@ const mockFrom = vi.fn((table: string) => {
         in: vi.fn().mockReturnValue({ in: mockIn }),
         eq: vi.fn().mockResolvedValue({ error: null }),
       }),
+      delete: mockDelete,
     }
   }
   return {
     insert: vi.fn(),
     select: vi.fn(),
     update: vi.fn(),
+    delete: vi.fn(),
   }
 })
 
@@ -250,5 +254,85 @@ describe('notification.acknowledgeAll', () => {
     const router = createTRPCRouter({ notification: notificationRouter })
     const caller = createCallerFactory(router)(makeCtx(null))
     await expect(caller.notification.acknowledgeAll()).rejects.toThrow()
+  })
+})
+
+describe('notification.delete', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('deletes a notification owned by the caller', async () => {
+    // Ownership check: select returns the row
+    mockSelect.mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        in: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { id: '00000000-0000-4000-8000-000000000010', recipient_ref: 'doctor-1' },
+            error: null,
+          }),
+        }),
+      }),
+    })
+    // Delete chain: .delete().eq(...) → { error: null }
+    mockDelete.mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    })
+
+    const router = createTRPCRouter({ notification: notificationRouter })
+    const caller = createCallerFactory(router)(makeCtx(DOCTOR_USER))
+
+    const result = await caller.notification.delete({
+      notificationId: '00000000-0000-4000-8000-000000000010',
+    })
+
+    expect(result.success).toBe(true)
+    expect(mockDelete).toHaveBeenCalled()
+    expect(mockAuditEmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'DELETE',
+        resourceType: 'NOTIFICATION',
+        outcome: 'SUCCESS',
+        metadata: expect.objectContaining({
+          notificationAction: 'deleted',
+        }),
+      }),
+    )
+  })
+
+  it('rejects deleting a notification the caller does not own (NOT_FOUND)', async () => {
+    // Ownership check: select returns null (not owner)
+    mockSelect.mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        in: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: null,
+            error: { code: 'PGRST116', message: 'No rows found' },
+          }),
+        }),
+      }),
+    })
+
+    const router = createTRPCRouter({ notification: notificationRouter })
+    const caller = createCallerFactory(router)(makeCtx(DOCTOR_USER))
+
+    await expect(
+      caller.notification.delete({
+        notificationId: '00000000-0000-4000-8000-000000000099',
+      }),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' })
+
+    // Delete must NOT be called when ownership check fails
+    expect(mockDelete).not.toHaveBeenCalled()
+  })
+
+  it('rejects unauthenticated requests', async () => {
+    const router = createTRPCRouter({ notification: notificationRouter })
+    const caller = createCallerFactory(router)(makeCtx(null))
+    await expect(
+      caller.notification.delete({
+        notificationId: '00000000-0000-4000-8000-000000000010',
+      }),
+    ).rejects.toThrow()
   })
 })
