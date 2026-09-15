@@ -1223,7 +1223,7 @@ export const medicationRouter = createTRPCRouter({
                 dispensing_event_id: input.dispenseId,
                 patient_id: realPatientId,
                 atc_code: atc,
-                medication_display: mapping.medication_display ?? input.medicationDisplay,
+                medication_display: mapping.medication_display,
                 dispensed_at: input.whenHandedOver,
                 ordering_practitioner_ref: currentRx.requester_id ?? null,
                 hlc_timestamp: input.hlcTimestamp,
