@@ -121,12 +121,14 @@ describe('lab.uploadResult', () => {
     fromCalls = []
     mockScanFile.mockResolvedValue({ status: 'clean', hash: 'abc123hash' })
 
-    // Default: RBAC resolves valid LAB_TECH with ACTIVE lab
+    // Default: RBAC resolves valid LAB_TECH with ACTIVE lab.
+    // practitioner_id is included so resolvePerformerId (performers.id FK fix) succeeds.
     mockRbacSingle.mockResolvedValue({
       data: {
         id: 'tech-1',
         lab_id: 'lab-1',
         labs: { id: 'lab-1', status: 'ACTIVE' },
+        practitioner_id: 'practitioner-1',
       },
       error: null,
     })
@@ -272,11 +274,13 @@ describe('lab.uploadResult', () => {
 
     await caller.lab.uploadResult(validInput)
 
-    // Verify diagnostic_reports insert includes performer_id and lab_id
+    // Verify diagnostic_reports insert includes performer_id (practitioners.id FK, not technician row PK)
+    // and lab_id. practitioner_id comes from resolvePerformerId which looks up lab_technicians.practitioner_id.
+    // The mockRbacSingle fixture returns practitioner_id='practitioner-1', so that's what gets stored.
     const insertCall = mockInsert.mock.calls[0]![0]
     expect(insertCall).toEqual(
       expect.objectContaining({
-        performer_id: 'tech-1',
+        performer_id: 'practitioner-1',
         lab_id: 'lab-1',
         status: 'preliminary',
         loinc_code: '58410-2',

@@ -220,6 +220,24 @@ function extractLatestVitals(rows: ObsRow[]) {
   }
 }
 
+/** Resolve the caller's practitioners.id (FK target for performer_id) from their
+ *  lab_technicians row PK. ctx.lab.technicianId is the row PK, NOT practitioners.id;
+ *  ctx.user.sub is the auth user id. Only practitioner_id is a valid practitioners FK. */
+async function resolvePerformerId(
+  supabase: { from: (t: string) => any },
+  technicianRowId: string,
+): Promise<string> {
+  const { data, error } = await supabase
+    .from('lab_technicians')
+    .select('practitioner_id')
+    .eq('id', technicianRowId)
+    .single()
+  if (error || !data?.practitioner_id) {
+    throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Technician practitioner mapping not found' })
+  }
+  return data.practitioner_id as string
+}
+
 const submitCodeSchema = z.object({
   coding: z.array(z.object({ system: z.string().optional(), code: z.string(), display: z.string().optional() })).optional(),
   text: z.string().optional(),
@@ -762,6 +780,7 @@ export const labRouter = createTRPCRouter({
           message: 'Lab affiliation required for upload',
         })
       }
+      const performerId = await resolvePerformerId(ctx.supabase, ctx.lab!.technicianId)
 
       // Validate base64 and decode file
       const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
@@ -887,7 +906,7 @@ export const labRouter = createTRPCRouter({
         loinc_code: input.loincCode,
         loinc_display: input.loincDisplay,
         patient_ref: patientRefStored,
-        performer_id: technicianId,
+        performer_id: performerId,
         lab_id: labId,
         issued: new Date().toISOString(),
         collection_date: input.collectionDate,
@@ -1100,6 +1119,7 @@ export const labRouter = createTRPCRouter({
       if (!labId) {
         throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Lab affiliation required' })
       }
+      const performerId = await resolvePerformerId(ctx.supabase, ctx.lab!.technicianId)
 
       const dr = input.diagnosticReport
       const reportId = dr.id
@@ -1134,7 +1154,7 @@ export const labRouter = createTRPCRouter({
         loinc_code: loincCode,
         loinc_display: loincDisplay,
         patient_ref: patientRefStored,
-        performer_id: technicianId,
+        performer_id: performerId,
         lab_id: labId,
         issued: dr.issued,
         collection_date: collectionDate,
@@ -1215,18 +1235,8 @@ export const labRouter = createTRPCRouter({
         throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Lab affiliation required' })
       }
 
-      // Resolve practitioner_id from lab_technicians row — this is practitioners.id (FK target),
-      // NOT ctx.user.sub (auth JWT sub) or ctx.lab.technicianId (lab_technicians row PK).
-      // specimens.performer_id is NOT NULL REFERENCES practitioners(id), so we must use this value.
-      const { data: techRow, error: techErr } = await ctx.supabase
-        .from('lab_technicians')
-        .select('practitioner_id')
-        .eq('id', ctx.lab!.technicianId)
-        .single()
-      if (techErr || !techRow?.practitioner_id) {
-        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Technician practitioner mapping not found' })
-      }
-      const performerId = techRow.practitioner_id as string
+      // Resolve practitioner_id — shared helper ensures performers.id FK is satisfied.
+      const performerId = await resolvePerformerId(ctx.supabase, ctx.lab!.technicianId)
 
       // Ownership + newer-wins lookup.
       const { data: existing, error: lookupError } = await ctx.supabase
