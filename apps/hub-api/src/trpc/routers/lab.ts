@@ -14,6 +14,7 @@ import { getFieldEncryptionKeys } from '@/lib/field-encryption'
 import { scanFile } from '@/lib/virus-scanner'
 import { analyzeFile } from '@/services/ocr'
 import { compareHlc, deserializeHlc } from '@ultranos/sync-engine'
+import { monitoringPullEventsTotal } from '@/lib/clinical-safety-metrics'
 
 /**
  * Dispatch lab result notifications to the ordering doctor and patient.
@@ -1901,6 +1902,112 @@ export const labRouter = createTRPCRouter({
         rows.length === input.limit ? (rows[rows.length - 1] as any).meta_last_updated as string : null
 
       return { orders: mapped, syncTimestamp: maxServerTs || null, nextCursor }
+    }),
+
+  /**
+   * Task 5: Pull data-minimized dispense-monitoring events for Therapeutic Drug
+   * Monitoring (TDM). Serves ONLY: first name + age + opaque blind ref + ATC +
+   * drug display + timestamps. Raw patient UUID is never returned (Rule #7 + data-min).
+   *
+   * Keyset cursor on `seq` (ascending bigint identity column) for stable pagination.
+   * Audit emitted best-effort (Rule #6). No PHI in audit metadata (Rule #1).
+   */
+  pullDispenseMonitoringEvents: labRestrictedProcedure
+    .use(enforceLabActive())
+    .input(
+      z.object({
+        since: z.string().datetime({ offset: true }).optional(),
+        cursor: z.number().int().nonnegative().optional(),
+        limit: z.number().int().min(1).max(200).default(100),
+      }),
+    )
+    .output(
+      z.object({
+        events: z.array(
+          z.object({
+            dispensingEventId: z.string(),
+            patientRef: z.string(),
+            patientFirstName: z.string(),
+            patientAge: z.number().nullable(),
+            atcCode: z.string(),
+            medicationDisplay: z.string(),
+            dispensedAt: z.string(),
+            orderingPractitionerRef: z.string(),
+            hlcTimestamp: z.string(),
+          }),
+        ),
+        nextCursor: z.number().nullable(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      const labId = ctx.lab?.labId
+      const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
+
+      let query = ctx.supabase
+        .from('dispense_monitoring_events')
+        .select(
+          'id, seq, dispensing_event_id, patient_id, atc_code, medication_display, dispensed_at, ordering_practitioner_ref, hlc_timestamp, created_at, patients!inner(name_given, birth_date, birth_year)',
+        )
+        .order('seq', { ascending: true })
+        .limit(input.limit)
+
+      if (input.since) query = query.gte('created_at', input.since)
+      if (input.cursor != null) query = query.gt('seq', input.cursor)
+
+      const { data: rows, error } = await query
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch monitoring events',
+        })
+      }
+
+      // Audit PHI access — best-effort, never block the response (Rule #6).
+      // Metadata contains no PHI — only counts and opaque IDs (Rule #1).
+      try {
+        await audit.emit({
+          action: 'READ',
+          resourceType: 'DISPENSE_MONITORING_EVENT',
+          resourceId: 'monitoring-pull',
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            eventCount: (rows ?? []).length,
+            labId: labId ?? 'admin',
+            since: input.since ?? null,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'DISPENSE_MONITORING_EVENT' })
+      }
+
+      // Data-minimized projection — never include patient_id / raw uuid (Rule #7).
+      // patientRef is an opaque blind index: "Patient/<HMAC(patient_id, hmacKey)>".
+      const { hmacKey } = await getFieldEncryptionKeys()
+
+      const events = (rows ?? []).map((r: any) => ({
+        dispensingEventId: r.dispensing_event_id,
+        patientRef: `Patient/${generateBlindIndex(r.patient_id, hmacKey)}`,
+        patientFirstName: r.patients?.name_given ?? '',
+        patientAge: computeAge(r.patients?.birth_date, r.patients?.birth_year),
+        atcCode: r.atc_code,
+        medicationDisplay: r.medication_display,
+        dispensedAt: r.dispensed_at,
+        orderingPractitionerRef: r.ordering_practitioner_ref ?? '',
+        hlcTimestamp: r.hlc_timestamp,
+      }))
+
+      monitoringPullEventsTotal.inc((rows ?? []).length)
+
+      const last = (rows ?? [])[(rows ?? []).length - 1] as any
+      const nextCursor: number | null =
+        (rows ?? []).length === input.limit && last ? (last.seq as number) : null
+
+      return { events, nextCursor }
     }),
 
   /**

@@ -92,4 +92,12 @@ export const dispenseMonitoringUnresolvedCodeTotal = new Counter({
   registers: [register],
 })
 
+// ─── Lab Dispense Monitoring Pull Metrics (Task 5) ───
+
+export const monitoringPullEventsTotal = new Counter({
+  name: 'monitoring_pull_events_total',
+  help: 'Dispense monitoring events served to labs via pullDispenseMonitoringEvents',
+  registers: [register],
+})
+
 // No separate registry export needed — metrics are on the shared Story 23.1 registry
