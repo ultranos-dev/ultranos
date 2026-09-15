@@ -634,7 +634,7 @@ export async function searchLabsHub(
  * Returns null on any failure (no session, network error, non-200) so callers
  * can fail soft.
  */
-export async function fetchOrderPatientRef(orderId: string): Promise<string | null> {
+export async function fetchOrderPatientRef(orderId: string, signal?: AbortSignal): Promise<string | null> {
   try {
     const url = new URL(getHubApiUrl())
     url.pathname = url.pathname.replace(/\/$/, '') + '/serviceRequest.getOrderPatientRef'
@@ -649,7 +649,7 @@ export async function fetchOrderPatientRef(orderId: string): Promise<string | nu
       }
     }
 
-    const res = await fetch(url.toString(), { method: 'GET', headers })
+    const res = await fetch(url.toString(), { method: 'GET', headers, signal })
     if (!res.ok) return null
     const body = (await res.json()) as { result?: { data?: { json?: { patientRef: string | null } } } }
     return body.result?.data?.json?.patientRef ?? null

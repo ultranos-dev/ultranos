@@ -221,8 +221,8 @@ describe('useNotificationPatient', () => {
       { phiAccess: 'notification_modal' },
     )
 
-    // Hub fallback was called with the correct orderId
-    expect(mockFetchOrderPatientRef).toHaveBeenCalledWith('o-offline')
+    // Hub fallback was called with the correct orderId and an AbortSignal (Finding #3)
+    expect(mockFetchOrderPatientRef).toHaveBeenCalledWith('o-offline', expect.any(AbortSignal))
   })
 
   it('returns {name: null} (no throw) when patient is not found', async () => {
@@ -264,6 +264,36 @@ describe('useNotificationPatient', () => {
       'p-ghost',
       { phiAccess: 'notification_modal' },
     )
+  })
+
+  // --- Hub fallback is ORDER_RECEIVED-only ---
+
+  it('does NOT call fetchOrderPatientRef for LAB_RESULT_ESCALATION (Hub fallback is ORDER_RECEIVED-only)', async () => {
+    // Local store has no record for this diagnostic report id — simulates offline miss.
+    mockDiagnosticReports.get.mockResolvedValue(undefined)
+
+    const { useNotificationPatient } = await import('../hooks/useNotificationPatient')
+
+    const { result } = renderHook(() =>
+      useNotificationPatient({
+        id: 'n-escalation-no-local',
+        type: 'LAB_RESULT_ESCALATION',
+        payload: { diagnosticReportId: 'dr-missing' },
+        status: 'SENT',
+        createdAt: '2026-09-15T10:00:00.000Z',
+        deliveredAt: null,
+        acknowledgedAt: null,
+      }),
+    )
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false)
+    })
+
+    expect(result.current.name).toBeNull()
+    // The Hub fallback (fetchOrderPatientRef) must NEVER be called for non-ORDER_RECEIVED types.
+    expect(mockFetchOrderPatientRef).not.toHaveBeenCalled()
+    expect(mockAuditPhiAccess).not.toHaveBeenCalled()
   })
 
   // --- LAB_RESULT_AVAILABLE ---

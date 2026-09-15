@@ -56,7 +56,26 @@ export const serviceRequestRouter = createTRPCRouter({
         .eq('id', input.orderId)
         .eq('requester_id', practitionerId)
         .maybeSingle()
-      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      if (error) {
+        // Rule #6: audit the failed PHI_READ attempt before throwing — failed reads
+        // must also be recorded so the audit trail is complete.
+        const failAudit = new AuditLogger(ctx.supabase, ctx.user.orgId ?? undefined)
+        try {
+          await failAudit.emit({
+            action: AuditAction.PHI_READ,
+            resourceType: AuditResourceType.SERVICE_REQUEST,
+            resourceId: input.orderId,
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role as UserRole,
+            outcome: AuditOutcome.FAILURE,
+            sessionId: ctx.user.sessionId,
+            metadata: { endpoint: 'serviceRequest.getOrderPatientRef' },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'SERVICE_REQUEST' })
+        }
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      }
 
       // Rule #6: audit the PHI read (patient_id is PHI). Wrap in try/catch so an
       // audit failure never blocks the primary response.

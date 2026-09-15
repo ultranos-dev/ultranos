@@ -72,9 +72,14 @@ describe('serviceRequest.getOrderPatientRef', () => {
 
   it('returns { patientRef: null } when the order belongs to another requester (or does not exist)', async () => {
     // maybeSingle returns null row → not found / not scoped to this caller
-    const { ctx } = makePatientRefCtx({ srRow: null })
+    const { ctx, sr } = makePatientRefCtx({ srRow: null })
     const res = await serviceRequestRouter.createCaller(ctx as never).getOrderPatientRef({ orderId: O1 })
     expect(res).toEqual({ patientRef: null })
+
+    // Verify the handler actually applied both authorization scope predicates so that
+    // removing either .eq() would make this test fail (guards against accidental removal).
+    expect(sr.eq).toHaveBeenCalledWith('id', O1)
+    expect(sr.eq).toHaveBeenCalledWith('requester_id', PRAC)
   })
 
   it('returns { patientRef: null } when the caller resolves to no practitioner', async () => {
@@ -102,6 +107,42 @@ describe('serviceRequest.getOrderPatientRef', () => {
     const { ctx } = makePatientRefCtx({ srRow: { id: O1, patient_id: PAT1 } })
     const res = await serviceRequestRouter.createCaller(ctx as never).getOrderPatientRef({ orderId: O1 })
     expect(res).toEqual({ patientRef: PAT1 })
+  })
+
+  it('emits a FAILURE audit before throwing when the DB query errors (Rule #6)', async () => {
+    // Simulate a DB error from maybeSingle
+    const maybeSingleMock = vi.fn().mockResolvedValue({ data: null, error: new Error('db error') })
+    const sr = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: maybeSingleMock,
+    }
+    const prac = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { id: PRAC }, error: null }),
+    }
+    const supabase = { from: vi.fn((t: string) => (t === 'practitioners' ? prac : sr)) }
+    const ctx = {
+      supabase,
+      user: { sub: 'auth-1', practitionerId: 'auth-1', role: 'DOCTOR', orgId: 'org-1', sessionId: 's1', facilityId: null, status: null },
+      headers: new Headers(),
+    }
+
+    await expect(
+      serviceRequestRouter.createCaller(ctx as never).getOrderPatientRef({ orderId: O1 }),
+    ).rejects.toThrow()
+
+    // A FAILURE audit must have been emitted before the throw
+    expect(emitMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'PHI_READ',
+        resourceType: 'SERVICE_REQUEST',
+        resourceId: O1,
+        outcome: 'FAILURE',
+        metadata: { endpoint: 'serviceRequest.getOrderPatientRef' },
+      }),
+    )
   })
 })
 

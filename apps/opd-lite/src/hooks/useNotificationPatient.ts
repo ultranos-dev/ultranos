@@ -112,6 +112,7 @@ export function useNotificationPatient(
     if (lastResolvedIdRef.current === cacheKey) return
 
     let cancelled = false
+    const controller = new AbortController()
 
     const resolve = async () => {
       setLoading(true)
@@ -130,7 +131,7 @@ export function useNotificationPatient(
         // has no subject.reference), ask the Hub — the Hub has the patient_id chain
         // and scopes the response to the ordering doctor only.
         if (!patientRef && n?.type === 'ORDER_RECEIVED') {
-          const hubRef = await fetchOrderPatientRef(config.refId)
+          const hubRef = await fetchOrderPatientRef(config.refId, controller.signal)
           if (hubRef) {
             // Hub returns a bare UUID; normalise to "Patient/<uuid>" to match the
             // existing code path below that strips the prefix.
@@ -181,6 +182,7 @@ export function useNotificationPatient(
 
     return () => {
       cancelled = true
+      controller.abort()
     }
     // Derive the refId from the notification payload to include in dependencies.
     // If n.id stays the same but refId changes, the effect re-runs and re-resolves.
