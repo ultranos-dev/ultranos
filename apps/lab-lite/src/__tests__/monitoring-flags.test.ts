@@ -66,17 +66,17 @@ vi.mock('../stores/auth-session-store', () => ({
 describe('medication-lab-map', () => {
   describe('getMedicationMapping', () => {
     it('returns Warfarin mapping with INR test', () => {
-      const mapping = getMedicationMapping('RxNorm:11289')
+      const mapping = getMedicationMapping('B01AA03')  // was RxNorm:11289
       expect(mapping).not.toBeNull()
       expect(mapping!.medicationDisplay).toBe('Warfarin')
       expect(mapping!.requiredTests).toHaveLength(1)
-      expect(mapping!.requiredTests[0].loincCode).toBe('6301-6')
-      expect(mapping!.requiredTests[0].testDisplay).toContain('INR')
-      expect(mapping!.requiredTests[0].priority).toBe('urgent')
+      expect(mapping!.requiredTests[0]!.loincCode).toBe('6301-6')
+      expect(mapping!.requiredTests[0]!.testDisplay).toContain('INR')
+      expect(mapping!.requiredTests[0]!.priority).toBe('urgent')
     })
 
     it('returns Metformin mapping with Creatinine and eGFR tests', () => {
-      const mapping = getMedicationMapping('RxNorm:6809')
+      const mapping = getMedicationMapping('A10BA02')  // was RxNorm:6809
       expect(mapping).not.toBeNull()
       expect(mapping!.medicationDisplay).toBe('Metformin')
       expect(mapping!.requiredTests).toHaveLength(2)
@@ -86,7 +86,7 @@ describe('medication-lab-map', () => {
     })
 
     it('returns Lithium mapping with 3 tests (Lithium level, TSH, Creatinine)', () => {
-      const mapping = getMedicationMapping('RxNorm:6448')
+      const mapping = getMedicationMapping('N05AN01')  // was RxNorm:6448
       expect(mapping).not.toBeNull()
       expect(mapping!.requiredTests).toHaveLength(3)
       const loincs = mapping!.requiredTests.map((t) => t.loincCode)
@@ -95,8 +95,8 @@ describe('medication-lab-map', () => {
       expect(loincs).toContain('2160-0')   // Creatinine
     })
 
-    it('returns Methotrexate mapping with CBC and LFTs', () => {
-      const mapping = getMedicationMapping('RxNorm:7235')
+    it('returns Methotrexate mapping with CBC and LFTs (oncology ATC L01BA01)', () => {
+      const mapping = getMedicationMapping('L01BA01')  // was RxNorm:7235 (oncology)
       expect(mapping).not.toBeNull()
       expect(mapping!.requiredTests).toHaveLength(2)
       const loincs = mapping!.requiredTests.map((t) => t.loincCode)
@@ -105,7 +105,7 @@ describe('medication-lab-map', () => {
     })
 
     it('returns ACE Inhibitor mapping with Potassium and Creatinine', () => {
-      const mapping = getMedicationMapping('RxNorm:3827')
+      const mapping = getMedicationMapping('C09AA02')  // was RxNorm:3827
       expect(mapping).not.toBeNull()
       const loincs = mapping!.requiredTests.map((t) => t.loincCode)
       expect(loincs).toContain('2823-3')   // Potassium
@@ -113,7 +113,7 @@ describe('medication-lab-map', () => {
     })
 
     it('returns Carbamazepine mapping with CBC, LFTs, and drug level', () => {
-      const mapping = getMedicationMapping('RxNorm:2002')
+      const mapping = getMedicationMapping('N03AF01')  // was RxNorm:2002
       expect(mapping).not.toBeNull()
       expect(mapping!.requiredTests).toHaveLength(3)
       const loincs = mapping!.requiredTests.map((t) => t.loincCode)
@@ -123,7 +123,7 @@ describe('medication-lab-map', () => {
     })
 
     it('returns Amiodarone mapping with TSH and LFTs', () => {
-      const mapping = getMedicationMapping('RxNorm:703')
+      const mapping = getMedicationMapping('C01BD01')  // was RxNorm:703
       expect(mapping).not.toBeNull()
       expect(mapping!.requiredTests).toHaveLength(2)
       const loincs = mapping!.requiredTests.map((t) => t.loincCode)
@@ -131,8 +131,8 @@ describe('medication-lab-map', () => {
       expect(loincs).toContain('24325-3')  // LFTs
     })
 
-    it('returns null for an unknown medication code', () => {
-      const mapping = getMedicationMapping('RxNorm:999999')
+    it('returns null for an unknown ATC code', () => {
+      const mapping = getMedicationMapping('Z99ZZ99')
       expect(mapping).toBeNull()
     })
 
@@ -142,7 +142,7 @@ describe('medication-lab-map', () => {
 
     it('Hub overrides take precedence over bundled defaults', () => {
       const override: MedicationLabMapping = {
-        medicationCode: 'RxNorm:11289',
+        atcCode: 'B01AA03',  // was RxNorm:11289
         medicationDisplay: 'Warfarin (updated)',
         version: 2,
         requiredTests: [
@@ -155,22 +155,22 @@ describe('medication-lab-map', () => {
           },
         ],
       }
-      const hubOverrides = new Map([['RxNorm:11289', override]])
-      const mapping = getMedicationMapping('RxNorm:11289', hubOverrides)
+      const hubOverrides = new Map([['B01AA03', override]])
+      const mapping = getMedicationMapping('B01AA03', hubOverrides)
       expect(mapping!.medicationDisplay).toBe('Warfarin (updated)')
-      expect(mapping!.requiredTests[0].frequencyDays).toBe(7)
+      expect(mapping!.requiredTests[0]!.frequencyDays).toBe(7)
     })
   })
 
   describe('requiresMonitoring', () => {
     it('returns true for all bundled medications', () => {
       for (const m of BUNDLED_MEDICATION_MAPPINGS) {
-        expect(requiresMonitoring(m.medicationCode)).toBe(true)
+        expect(requiresMonitoring(m.atcCode)).toBe(true)
       }
     })
 
-    it('returns false for unknown medication', () => {
-      expect(requiresMonitoring('RxNorm:000000')).toBe(false)
+    it('returns false for unknown ATC code', () => {
+      expect(requiresMonitoring('Z99ZZ99')).toBe(false)
     })
   })
 
@@ -189,12 +189,12 @@ describe('medication-lab-map', () => {
     })
 
     it('Warfarin initial delay is 3 days (earliest monitoring for anticoagulation)', () => {
-      const m = getMedicationMapping('RxNorm:11289')
-      expect(m!.requiredTests[0].initialDelayDays).toBe(3)
+      const m = getMedicationMapping('B01AA03')  // was RxNorm:11289
+      expect(m!.requiredTests[0]!.initialDelayDays).toBe(3)
     })
 
     it('Methotrexate initial delay is 14 days', () => {
-      const m = getMedicationMapping('RxNorm:7235')
+      const m = getMedicationMapping('L01BA01')  // was RxNorm:7235 (oncology ATC)
       for (const t of m!.requiredTests) {
         expect(t.initialDelayDays).toBe(14)
       }
@@ -212,7 +212,7 @@ function makeFlag(overrides: Partial<MonitoringFlag> = {}): MonitoringFlag {
     patientRef: 'Patient/opaque-1',
     patientFirstName: 'Ahmad',
     patientAge: 45,
-    medicationCode: 'RxNorm:11289',
+    medicationCode: 'B01AA03',  // ATC for Warfarin (was RxNorm:11289)
     medicationDisplay: 'Warfarin',
     dispensedAt: '2026-04-01T00:00:00Z',
     dispensingEventId: 'dispense-001',

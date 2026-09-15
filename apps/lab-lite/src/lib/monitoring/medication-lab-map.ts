@@ -9,24 +9,20 @@
  *  - Bundled offline as a static TypeScript module (fallback baseline)
  *  - Hub-updateable: overrides stored in Dexie `medication_lab_mappings` table
  *  - Versioned: each entry has a version stamp for tracking updates
+ *  - Keyed by WHO ATC code (re-keyed from RxNorm in Task 8 — see comments)
  *
  * NOT AI-generated — clinical content authored by physician review.
+ *
+ * SYNC NOTE: The bundled TS map and the Hub DB seed (migration
+ * seed_medication_lab_mappings) MUST stay identical. If you update an entry
+ * here, update the seed migration to match and vice versa.
  */
 
-export interface MonitoringTestSpec {
-  loincCode: string
-  testDisplay: string
-  frequencyDays: number
-  initialDelayDays: number
-  priority: 'routine' | 'urgent'
-}
+import type { MedicationLabMapping, MonitoringTestSpec } from '@ultranos/shared-types'
 
-export interface MedicationLabMapping {
-  medicationCode: string          // RxNorm or local formulary code
-  medicationDisplay: string       // human-readable name
-  version: number                 // incremented when mapping is updated
-  requiredTests: MonitoringTestSpec[]
-}
+// Re-export the shared types so existing consumers that import from this module
+// continue to work without changing their import paths.
+export type { MedicationLabMapping, MonitoringTestSpec }
 
 /**
  * Bundled baseline mappings — shipped with the PWA.
@@ -40,10 +36,13 @@ export interface MedicationLabMapping {
  *  - ACE Inhibitors: KDIGO, JNC-8, ESC/ESH hypertension guidelines
  *  - Carbamazepine: ILAE epilepsy treatment guidelines
  *  - Amiodarone: ACC/AHA/HRS arrhythmia management guidelines
+ *
+ * Keys are WHO ATC codes (physician sign-off per task-8-brief.md).
+ * Old RxNorm codes are preserved in trailing comments for cross-reference.
  */
 export const BUNDLED_MEDICATION_MAPPINGS: MedicationLabMapping[] = [
   {
-    medicationCode: 'RxNorm:11289',
+    atcCode: 'B01AA03',              // was RxNorm:11289
     medicationDisplay: 'Warfarin',
     version: 1,
     requiredTests: [
@@ -57,7 +56,7 @@ export const BUNDLED_MEDICATION_MAPPINGS: MedicationLabMapping[] = [
     ],
   },
   {
-    medicationCode: 'RxNorm:6809',
+    atcCode: 'A10BA02',              // was RxNorm:6809
     medicationDisplay: 'Metformin',
     version: 1,
     requiredTests: [
@@ -78,7 +77,7 @@ export const BUNDLED_MEDICATION_MAPPINGS: MedicationLabMapping[] = [
     ],
   },
   {
-    medicationCode: 'RxNorm:6448',
+    atcCode: 'N05AN01',              // was RxNorm:6448
     medicationDisplay: 'Lithium',
     version: 1,
     requiredTests: [
@@ -106,7 +105,30 @@ export const BUNDLED_MEDICATION_MAPPINGS: MedicationLabMapping[] = [
     ],
   },
   {
-    medicationCode: 'RxNorm:7235',
+    // Methotrexate — oncology indication (clinical-coding ambiguity: seed both ATC codes)
+    atcCode: 'L01BA01',              // was RxNorm:7235 (oncology)
+    medicationDisplay: 'Methotrexate',
+    version: 1,
+    requiredTests: [
+      {
+        loincCode: '58410-2',
+        testDisplay: 'CBC (Complete Blood Count)',
+        frequencyDays: 30,
+        initialDelayDays: 14,
+        priority: 'routine',
+      },
+      {
+        loincCode: '24325-3',
+        testDisplay: 'Liver Function Panel (LFTs)',
+        frequencyDays: 30,
+        initialDelayDays: 14,
+        priority: 'routine',
+      },
+    ],
+  },
+  {
+    // Methotrexate — rheumatology/RA indication (same tests; controller ruling: err toward more monitoring)
+    atcCode: 'L04AX03',              // was RxNorm:7235 (rheumatology/RA)
     medicationDisplay: 'Methotrexate',
     version: 1,
     requiredTests: [
@@ -128,7 +150,7 @@ export const BUNDLED_MEDICATION_MAPPINGS: MedicationLabMapping[] = [
   },
   {
     // ACE Inhibitor class (Enalapril as representative code)
-    medicationCode: 'RxNorm:3827',
+    atcCode: 'C09AA02',              // was RxNorm:3827
     medicationDisplay: 'ACE Inhibitor (Enalapril)',
     version: 1,
     requiredTests: [
@@ -149,7 +171,7 @@ export const BUNDLED_MEDICATION_MAPPINGS: MedicationLabMapping[] = [
     ],
   },
   {
-    medicationCode: 'RxNorm:2002',
+    atcCode: 'N03AF01',              // was RxNorm:2002
     medicationDisplay: 'Carbamazepine',
     version: 1,
     requiredTests: [
@@ -177,7 +199,7 @@ export const BUNDLED_MEDICATION_MAPPINGS: MedicationLabMapping[] = [
     ],
   },
   {
-    medicationCode: 'RxNorm:703',
+    atcCode: 'C01BD01',              // was RxNorm:703
     medicationDisplay: 'Amiodarone',
     version: 1,
     requiredTests: [
@@ -199,35 +221,35 @@ export const BUNDLED_MEDICATION_MAPPINGS: MedicationLabMapping[] = [
   },
 ]
 
-/** Index by medicationCode for O(1) lookups. */
+/** Index by atcCode for O(1) lookups. */
 const BUNDLED_INDEX = new Map<string, MedicationLabMapping>(
-  BUNDLED_MEDICATION_MAPPINGS.map((m) => [m.medicationCode, m]),
+  BUNDLED_MEDICATION_MAPPINGS.map((m) => [m.atcCode, m]),
 )
 
 /**
  * Look up the monitoring mapping for a medication.
  * Returns null if no monitoring is required for this medication.
  *
- * @param medicationCode - RxNorm or local formulary code
- * @param hubOverrides   - Optional Hub-pushed overrides (higher priority)
+ * @param atcCode      - WHO ATC code (e.g. 'B01AA03' for Warfarin)
+ * @param hubOverrides - Optional Hub-pushed overrides (higher priority), keyed by ATC code
  */
 export function getMedicationMapping(
-  medicationCode: string,
+  atcCode: string,
   hubOverrides?: Map<string, MedicationLabMapping>,
 ): MedicationLabMapping | null {
   // Hub overrides take precedence over bundled defaults
-  if (hubOverrides?.has(medicationCode)) {
-    return hubOverrides.get(medicationCode)!
+  if (hubOverrides?.has(atcCode)) {
+    return hubOverrides.get(atcCode)!
   }
-  return BUNDLED_INDEX.get(medicationCode) ?? null
+  return BUNDLED_INDEX.get(atcCode) ?? null
 }
 
 /**
- * Check if a medication code requires any lab monitoring.
+ * Check if an ATC code requires any lab monitoring.
  */
 export function requiresMonitoring(
-  medicationCode: string,
+  atcCode: string,
   hubOverrides?: Map<string, MedicationLabMapping>,
 ): boolean {
-  return getMedicationMapping(medicationCode, hubOverrides) !== null
+  return getMedicationMapping(atcCode, hubOverrides) !== null
 }

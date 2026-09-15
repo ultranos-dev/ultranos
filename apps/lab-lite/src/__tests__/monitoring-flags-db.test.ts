@@ -17,7 +17,7 @@ describe('monitoringFlags real Dexie store (finding 1b)', () => {
 
   it('processDispenseEvent persists a flag to the REAL store', async () => {
     const mapping: MedicationLabMapping = {
-      medicationCode: 'B01AA03',
+      atcCode: 'B01AA03',
       medicationDisplay: 'Warfarin',
       version: 1,
       requiredTests: [{
@@ -51,7 +51,7 @@ describe('monitoringFlags real Dexie store (finding 1b)', () => {
 
   it('dedups on [patientRef+medicationCode+testRequired]', async () => {
     const mapping: MedicationLabMapping = {
-      medicationCode: 'B01AA03',
+      atcCode: 'B01AA03',
       medicationDisplay: 'Warfarin',
       version: 1,
       requiredTests: [{

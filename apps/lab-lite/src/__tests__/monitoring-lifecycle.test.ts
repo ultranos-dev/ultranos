@@ -105,7 +105,7 @@ function makeFlag(overrides: Partial<MonitoringFlag> = {}): MonitoringFlag {
     patientRef: 'Patient/opaque-1',
     patientFirstName: 'Ahmad',
     patientAge: 45,
-    medicationCode: 'RxNorm:11289',
+    medicationCode: 'B01AA03',  // ATC for Warfarin (was RxNorm:11289)
     medicationDisplay: 'Warfarin',
     dispensedAt: '2026-04-01T00:00:00Z',
     dispensingEventId: 'dispense-001',
@@ -334,7 +334,7 @@ describe('dispense receiver integration (processDispenseEvent)', () => {
       patientRef: 'Patient/opaque-2',
       patientFirstName: 'Layla',
       patientAge: 32,
-      medicationCode: 'RxNorm:11289',  // Warfarin
+      medicationCode: 'B01AA03',  // ATC for Warfarin (was RxNorm:11289)
       medicationDisplay: 'Warfarin',
       dispensedAt: '2026-06-01T08:00:00Z',
       orderingPractitionerRef: 'Practitioner/opaque-99',
@@ -365,7 +365,7 @@ describe('dispense receiver integration (processDispenseEvent)', () => {
       patientRef: 'Patient/opaque-3',
       patientFirstName: 'Miriam',
       patientAge: 28,
-      medicationCode: 'RxNorm:6448',  // Lithium
+      medicationCode: 'N05AN01',  // ATC for Lithium (was RxNorm:6448)
       medicationDisplay: 'Lithium',
       dispensedAt: '2026-06-01T09:00:00Z',
       orderingPractitionerRef: 'Practitioner/opaque-88',
@@ -383,7 +383,7 @@ describe('dispense receiver integration (processDispenseEvent)', () => {
       patientRef: 'Patient/opaque-4',
       patientFirstName: 'Omar',
       patientAge: 55,
-      medicationCode: 'RxNorm:000000',  // unknown / unmonitored
+      medicationCode: 'Z99ZZ99',  // unknown / unmonitored ATC code
       medicationDisplay: 'Paracetamol',
       dispensedAt: '2026-06-01T10:00:00Z',
       orderingPractitionerRef: 'Practitioner/opaque-77',
@@ -397,7 +397,7 @@ describe('dispense receiver integration (processDispenseEvent)', () => {
   it('deduplicates: does not create duplicate for same patient-medication-test', async () => {
     const existingFlag = makeFlag({
       patientRef: 'Patient/opaque-5',
-      medicationCode: 'RxNorm:11289',
+      medicationCode: 'B01AA03',  // ATC for Warfarin (was RxNorm:11289)
       testRequired: '6301-6',
       status: 'upcoming',
       dispensedAt: '2026-05-01T00:00:00Z',
@@ -422,7 +422,7 @@ describe('dispense receiver integration (processDispenseEvent)', () => {
       patientRef: 'Patient/opaque-5',
       patientFirstName: 'Zahra',
       patientAge: 40,
-      medicationCode: 'RxNorm:11289',
+      medicationCode: 'B01AA03',  // ATC for Warfarin (was RxNorm:11289)
       medicationDisplay: 'Warfarin',
       dispensedAt: '2026-06-01T10:00:00Z',  // newer dispense
       orderingPractitionerRef: 'Practitioner/opaque-66',
@@ -440,7 +440,7 @@ describe('dispense receiver integration (processDispenseEvent)', () => {
       patientRef: 'Patient/opaque-x',
       patientFirstName: 'Ali',
       patientAge: 60,
-      medicationCode: 'RxNorm:11289',
+      medicationCode: 'B01AA03',  // ATC for Warfarin (was RxNorm:11289)
       medicationDisplay: 'Warfarin',
       dispensedAt: '2026-06-01T00:00:00Z',
       orderingPractitionerRef: 'Practitioner/opaque-y',
