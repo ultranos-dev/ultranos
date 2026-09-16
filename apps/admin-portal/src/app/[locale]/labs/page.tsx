@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { ExportButton } from '@/components/ExportButton'
@@ -10,6 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FlaskConical, FileSearch } from '@ultranos/ui-kit/icons'
+import { LabProfileModal } from '@/components/labs/LabProfileModal'
+import { LabFormModal } from '@/components/labs/LabFormModal'
 
 type StatusFilter = 'ALL' | 'PENDING' | 'ACTIVE' | 'SUSPENDED'
 
@@ -21,6 +22,13 @@ interface LabEntry {
   technicianName: string
   registeredAt: string
   status: string
+}
+
+interface LabInitialForEdit {
+  id: string
+  labName?: string | null
+  licenseReference?: string | null
+  accreditationReference?: string | null
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -46,7 +54,6 @@ const PAGE_SIZE = 25
 
 export default function LabsPage() {
   const t = useTranslations('labs')
-  const router = useRouter()
   const [labs, setLabs] = useState<LabEntry[]>([])
   const [total, setTotal] = useState(0)
   const [cursor, setCursor] = useState(0)
@@ -54,6 +61,11 @@ export default function LabsPage() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Modal state
+  const [profileLabId, setProfileLabId] = useState<string | null>(null)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editInitial, setEditInitial] = useState<LabInitialForEdit | undefined>(undefined)
 
   const fetchLabs = useCallback(async () => {
     try {
@@ -90,6 +102,7 @@ export default function LabsPage() {
   const visible = labs.filter((lab) => !q || lab.labName.toLowerCase().includes(q))
 
   return (
+    <>
     <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
 
@@ -120,7 +133,7 @@ export default function LabsPage() {
             className="min-w-[200px] flex-1"
             aria-label={t('searchPlaceholder')}
           />
-          <Button onClick={() => router.push('/labs/create')}>
+          <Button onClick={() => { setEditInitial(undefined); setFormOpen(true) }}>
             {t('createLab')}
           </Button>
           <ExportButton exportFn={() => trpc.admin.exportLabs.query()} filters={{}} />
@@ -140,7 +153,7 @@ export default function LabsPage() {
                 icon={FlaskConical}
                 title={t('noLabs')}
                 description={t('noLabsDescription')}
-                action={{ label: t('createLab'), onClick: () => router.push('/labs/create') }}
+                action={{ label: t('createLab'), onClick: () => { setEditInitial(undefined); setFormOpen(true) } }}
               />
             </div>
           ) : visible.length === 0 ? (
@@ -169,7 +182,7 @@ export default function LabsPage() {
                   {visible.map((lab) => (
                     <tr
                       key={lab.id}
-                      onClick={() => router.push(`/labs/${lab.id}`)}
+                      onClick={() => setProfileLabId(lab.id)}
                       className="cursor-pointer hover:bg-muted/50 transition-colors"
                     >
                       <td className="px-4 py-3 font-medium">{lab.labName}</td>
@@ -214,5 +227,28 @@ export default function LabsPage() {
           </div>
         )}
       </div>
+
+      {/* Lab Profile Modal */}
+      {profileLabId && (
+        <LabProfileModal
+          open={Boolean(profileLabId)}
+          labId={profileLabId}
+          onOpenChange={(open) => { if (!open) setProfileLabId(null) }}
+          onEdit={(lab) => {
+            setEditInitial({ id: lab.id, labName: lab.labName, licenseReference: lab.licenseReference, accreditationReference: lab.accreditationReference })
+            setFormOpen(true)
+          }}
+          onChanged={() => { fetchLabs() }}
+        />
+      )}
+
+      {/* Lab Form Modal (create / edit) */}
+      <LabFormModal
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        initial={editInitial}
+        onSaved={() => { fetchLabs() }}
+      />
+    </>
   )
 }

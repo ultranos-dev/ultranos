@@ -55,7 +55,6 @@ export const navGroups: NavGroup[] = [
     icon: FlaskConical,
     items: [
       { title: 'Labs', url: '/labs', icon: FlaskConical },
-      { title: 'Create Lab', url: '/labs/create' },
       { title: 'Inventory', url: '/inventory', icon: Package },
       { title: 'Suppliers', url: '/inventory/suppliers' },
       { title: 'Network', url: '/network', icon: Globe },

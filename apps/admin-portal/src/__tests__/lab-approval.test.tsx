@@ -22,6 +22,9 @@ vi.mock('@/lib/trpc', () => ({
       listLabs: { query: (...args: any[]) => mockQuery('listLabs', ...args) },
       getLabDetail: { query: (...args: any[]) => mockQuery('getLabDetail', ...args) },
       reviewLab: { mutate: (...args: any[]) => mockMutate('reviewLab', ...args) },
+      archiveLab: { mutate: (...args: any[]) => mockMutate('archiveLab', ...args) },
+      createLab: { mutate: (...args: any[]) => mockMutate('createLab', ...args) },
+      updateLab: { mutate: (...args: any[]) => mockMutate('updateLab', ...args) },
       dashboardStats: { query: (...args: any[]) => mockQuery('dashboardStats', ...args) },
       // The dashboard also renders RecentActivityFeed; stub so it doesn't throw.
       recentActivity: { query: () => Promise.resolve({ activities: [] }) },
@@ -140,8 +143,12 @@ describe('Story 22.3 — Lab Queue & Detail UI', () => {
       expect(screen.getByText('Suspended')).toBeInTheDocument()
     })
 
-    it('navigates to detail page on row click', async () => {
-      mockQuery.mockResolvedValue(mockLabList)
+    it('opens profile modal on row click (no longer navigates)', async () => {
+      mockQuery.mockImplementation((method: string) => {
+        if (method === 'listLabs') return Promise.resolve(mockLabList)
+        if (method === 'getLabDetail') return Promise.resolve(mockLabDetail)
+        return Promise.resolve({})
+      })
 
       const user = userEvent.setup()
       render(<LabsPage />)
@@ -151,7 +158,13 @@ describe('Story 22.3 — Lab Queue & Detail UI', () => {
       })
 
       await user.click(screen.getByText('Alpha Lab'))
-      expect(mockPush).toHaveBeenCalledWith('/labs/lab-1')
+      // Modal opens — router.push is NOT called (modal replaces the navigation)
+      expect(mockPush).not.toHaveBeenCalledWith('/labs/lab-1')
+      // Modal should show the lab name
+      await waitFor(() => {
+        const headings = screen.queryAllByText('Alpha Lab')
+        expect(headings.length).toBeGreaterThanOrEqual(1)
+      })
     })
   })
 
