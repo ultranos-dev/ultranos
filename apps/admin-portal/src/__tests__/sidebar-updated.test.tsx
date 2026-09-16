@@ -66,6 +66,8 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
   Cpu: () => <svg />,
   CreditCard: () => <svg />,
   Wallet: () => <svg />,
+  Building2: () => <svg />,
+  Hospital: () => <svg />,
 }))
 
 vi.mock('@/components/ui/sidebar', () => ({

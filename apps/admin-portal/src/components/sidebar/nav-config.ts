@@ -16,6 +16,7 @@ import {
   CreditCard,
   Wallet,
   Building2,
+  Hospital,
 } from '@ultranos/ui-kit/icons'
 
 export interface NavItem {
@@ -61,6 +62,7 @@ export const navGroups: NavGroup[] = [
       { title: 'Mentorship', url: '/mentorship', icon: Users },
       { title: 'Certifications', url: '/certifications', icon: FileCheck },
       { title: 'Pharmacies', url: '/pharmacies', icon: Building2 },
+      { title: 'Clinics & Hospitals', url: '/clinics', icon: Hospital },
     ],
   },
   {
