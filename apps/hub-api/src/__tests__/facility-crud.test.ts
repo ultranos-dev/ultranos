@@ -67,3 +67,13 @@ describe('buildFacilityCrud.getDetail', () => {
     expect(chain.eq).toHaveBeenCalledWith('org_id', 'org-1')
   })
 })
+
+describe('requireOrg guard', () => {
+  it('rejects create with FORBIDDEN when orgId is null', async () => {
+    const chain = { insert: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), single: vi.fn().mockResolvedValue({ data: null, error: null }) }
+    const c = ctx(chain, 'ADMIN', null as unknown as string)
+    await expect(crud.create(c, { name: 'Test' })).rejects.toMatchObject({ code: 'FORBIDDEN', message: 'No org context' })
+    // Supabase should never be touched — orgId guard fires first
+    expect(chain.insert).not.toHaveBeenCalled()
+  })
+})

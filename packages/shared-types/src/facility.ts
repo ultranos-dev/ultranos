@@ -77,11 +77,11 @@ export interface ClinicalFacilityProfile extends FacilityProfileBase {
 
 /** Full profile for a pharmacy facility. */
 export interface PharmacyProfile extends FacilityProfileBase {
-  facilityType?: string | null
+  facilityType: 'pharmacy'
 
   // Pharmacy-specific
-  hasDelivery?: boolean | null
-  acceptsInsurance?: boolean | null
+  hasDelivery: boolean
+  acceptsInsurance: boolean
 }
 
 /** Full profile for a lab facility. */

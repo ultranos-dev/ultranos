@@ -44,6 +44,12 @@ const SNAKE: Record<string, string> = Object.fromEntries(
   Object.entries(CAMEL).map(([dbCol, tsProp]) => [tsProp, dbCol]),
 )
 
+/** Guard: throws FORBIDDEN when orgId is absent so every operation fails fast with a clear signal. */
+function requireOrg(ctx: Ctx): string {
+  if (!ctx.user.orgId) throw new TRPCError({ code: 'FORBIDDEN', message: 'No org context' })
+  return ctx.user.orgId
+}
+
 export function mapFacilityRow(row: Record<string, unknown>): FacilityProfileBase & Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(row)) out[CAMEL[k] ?? k] = v
@@ -76,8 +82,9 @@ export function buildFacilityCrud(opts: {
 
   return {
     async list(ctx: Ctx, input: { facilityTypes?: string[]; cursor: number; limit: number; q?: string; includeArchived?: boolean }) {
+      const orgId = requireOrg(ctx)
       let query = ctx.supabase.from(table).select('*')
-        .eq('org_id', ctx.user.orgId)
+        .eq('org_id', orgId)
         .in(typeColumn, input.facilityTypes?.length ? input.facilityTypes : typeValues)
       if (!input.includeArchived) query = query.is('archived_at', null)
       if (input.q) {
@@ -93,15 +100,17 @@ export function buildFacilityCrud(opts: {
     },
 
     async getDetail(ctx: Ctx, input: { id: string }) {
+      const orgId = requireOrg(ctx)
       const { data, error } = await ctx.supabase.from(table).select('*')
-        .eq('id', input.id).eq('org_id', ctx.user.orgId).maybeSingle()
+        .eq('id', input.id).eq('org_id', orgId).maybeSingle()
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
       if (!data) throw new TRPCError({ code: 'NOT_FOUND' })
       return mapFacilityRow(data)
     },
 
     async create(ctx: Ctx, input: Record<string, unknown> & { facilityType?: string; name: string }) {
-      const insert = { ...toColumns(input), org_id: ctx.user.orgId, is_active: true }
+      const orgId = requireOrg(ctx)
+      const insert = { ...toColumns(input), org_id: orgId, is_active: true }
       if (opts.typeColumn && input.facilityType) insert[typeColumn] = input.facilityType
       const { data, error } = await ctx.supabase.from(table).insert(insert).select('*').single()
       if (error || !data) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
@@ -110,8 +119,9 @@ export function buildFacilityCrud(opts: {
     },
 
     async update(ctx: Ctx, input: Record<string, unknown> & { id: string }) {
+      const orgId = requireOrg(ctx)
       const { data, error } = await ctx.supabase.from(table)
-        .update(toColumns(input)).eq('id', input.id).eq('org_id', ctx.user.orgId).select('*').maybeSingle()
+        .update(toColumns(input)).eq('id', input.id).eq('org_id', orgId).select('*').maybeSingle()
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
       if (!data) throw new TRPCError({ code: 'NOT_FOUND' })
       await audit(ctx, 'UPDATE', data.id)
@@ -119,8 +129,9 @@ export function buildFacilityCrud(opts: {
     },
 
     async archive(ctx: Ctx, input: { id: string }) {
+      const orgId = requireOrg(ctx)
       const { data, error } = await ctx.supabase.from(table)
-        .update({ archived_at: new Date().toISOString() }).eq('id', input.id).eq('org_id', ctx.user.orgId).select('id').maybeSingle()
+        .update({ archived_at: new Date().toISOString() }).eq('id', input.id).eq('org_id', orgId).select('id').maybeSingle()
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
       if (!data) throw new TRPCError({ code: 'NOT_FOUND' })
       await audit(ctx, 'ARCHIVE', data.id)
@@ -128,8 +139,9 @@ export function buildFacilityCrud(opts: {
     },
 
     async restore(ctx: Ctx, input: { id: string }) {
+      const orgId = requireOrg(ctx)
       const { data, error } = await ctx.supabase.from(table)
-        .update({ archived_at: null }).eq('id', input.id).eq('org_id', ctx.user.orgId).select('id').maybeSingle()
+        .update({ archived_at: null }).eq('id', input.id).eq('org_id', orgId).select('id').maybeSingle()
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
       if (!data) throw new TRPCError({ code: 'NOT_FOUND' })
       await audit(ctx, 'RESTORE', data.id)
