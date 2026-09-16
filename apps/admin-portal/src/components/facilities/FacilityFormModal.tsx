@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   Dialog,
@@ -77,6 +77,11 @@ export function FacilityFormModal({
     buildInitialState(initial, boolFields, arrFields)
   )
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (open) setForm(buildInitialState(initial, boolFields, arrFields))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const val = (key: string): string => (form[key] as string) ?? ''
   const set = (key: string, value: string | boolean) =>

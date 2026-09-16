@@ -13,10 +13,10 @@ export function ProfileSection({ title, children }: { title: string; children: R
 
 export function ProfileField({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="flex justify-between gap-4">
+    <dl className="flex justify-between gap-4">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="text-end font-medium text-foreground">{value ?? '—'}</dd>
-    </div>
+    </dl>
   )
 }
 
@@ -31,17 +31,17 @@ export function StarRating({ rating, reviewCount }: { rating: number | null; rev
   )
 }
 
-export function MapLink({ url, latitude, longitude }: { url: string | null; latitude: number | null; longitude: number | null }) {
+export function MapLink({ url, latitude, longitude, label = 'View on Google Maps' }: { url: string | null; latitude: number | null; longitude: number | null; label?: string }) {
   const href = url ?? (latitude != null && longitude != null ? `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}` : null)
   if (!href) return null
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
-      <MapPin size={16} /> View on Google Maps
+      <MapPin size={16} /> {label}
     </a>
   )
 }
 
-export function HoursTable({ hours, is247 }: { hours: unknown | null; is247: boolean }) {
+export function HoursTable({ hours, is247, closedLabel = 'Closed' }: { hours: unknown | null; is247: boolean; closedLabel?: string }) {
   if (is247) return <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">24 / 7</span>
   if (!hours || typeof hours !== 'object') return <span className="text-muted-foreground">—</span>
   const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
@@ -51,7 +51,7 @@ export function HoursTable({ hours, is247 }: { hours: unknown | null; is247: boo
       {days.map((d) => (
         <div key={d} className="flex justify-between">
           <dt className="uppercase text-muted-foreground">{d}</dt>
-          <dd className="text-foreground">{h[d]?.open ? `${h[d]!.open}–${h[d]!.close}` : 'Closed'}</dd>
+          <dd className="text-foreground">{h[d]?.open ? `${h[d]!.open}–${h[d]!.close ?? ''}` : closedLabel}</dd>
         </div>
       ))}
     </dl>
@@ -72,6 +72,6 @@ export function TagList({ items }: { items: string[] | null | undefined }) {
 export function LogoAvatar({ url, name, size = 48 }: { url: string | null; name: string; size?: number }) {
   const initials = name.split(' ').slice(0, 2).map((w) => w[0] ?? '').join('').toUpperCase()
   return url
-    ? <img src={url} alt="" width={size} height={size} className="rounded-xl object-cover" style={{ width: size, height: size }} />
+    ? <img src={url} alt={name} width={size} height={size} className="rounded-xl object-cover" style={{ width: size, height: size }} />
     : <span className="inline-flex items-center justify-center rounded-xl bg-muted font-semibold text-muted-foreground" style={{ width: size, height: size }}>{initials}</span>
 }
