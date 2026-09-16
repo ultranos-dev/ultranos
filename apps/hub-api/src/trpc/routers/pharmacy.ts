@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
+import { buildFacilityCrud } from './_facility-crud'
 import type { PharmacyDirectoryEntry } from '@ultranos/shared-types'
 
 function toDirectoryEntry(row: Record<string, unknown>): PharmacyDirectoryEntry {
@@ -29,30 +30,49 @@ const adminProcedure = protectedProcedure.use(async (opts) => {
   return opts.next(opts)
 })
 
-const pharmacyInput = z.object({
+const crud = buildFacilityCrud({
+  table: 'pharmacy_facilities',
+  typeColumn: 'facility_type',
+  typeValues: ['pharmacy'],
+  resourceType: 'PHARMACY',
+  extraColumns: ['has_delivery', 'accepts_insurance'],
+})
+
+// Profile fields for pharmacy admin CRUD
+const pharmacyProfileFields = {
   name: z.string().min(1).max(200),
-  latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180),
+  logoUrl: z.string().max(500).optional(),
+  description: z.string().max(2000).optional(),
+  licenseRef: z.string().max(100).optional(),
+  registrationAuthority: z.string().max(200).optional(),
+  establishedYear: z.number().int().min(1800).max(2100).optional(),
+  phone: z.string().max(40).optional(),
+  altPhone: z.string().max(40).optional(),
+  email: z.string().max(200).optional(),
+  website: z.string().max(300).optional(),
+  whatsapp: z.string().max(40).optional(),
   address: z.string().max(300).optional(),
   province: z.string().max(120).optional(),
   district: z.string().max(120).optional(),
-})
-
-function toFacility(row: Record<string, unknown>) {
-  return {
-    id: row.id as string,
-    name: row.name as string,
-    latitude: row.latitude as number,
-    longitude: row.longitude as number,
-    address: (row.address as string) ?? undefined,
-    province: (row.province as string) ?? undefined,
-    district: (row.district as string) ?? undefined,
-    facilityType: (row.facility_type as 'pharmacy' | 'clinic' | 'hospital'),
-    isActive: row.is_active as boolean,
-  }
+  city: z.string().max(120).optional(),
+  postalCode: z.string().max(40).optional(),
+  country: z.string().max(120).optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  contactPersonName: z.string().max(200).optional(),
+  contactPersonRole: z.string().max(120).optional(),
+  contactPersonPhone: z.string().max(40).optional(),
+  openingHours: z.any().optional(),
+  timezone: z.string().max(60).optional(),
+  is247: z.boolean().optional(),
+  hasDelivery: z.boolean().optional(),
+  acceptsInsurance: z.boolean().optional(),
 }
 
 export const pharmacyRouter = createTRPCRouter({
+  // -----------------------------------------------------------------------
+  // Patient/pharmacy directory procedures — UNCHANGED
+  // -----------------------------------------------------------------------
   search: protectedProcedure
     .input(z.object({ q: z.string().min(1).max(100), limit: z.number().int().min(1).max(50).default(20) }))
     .query(async ({ ctx, input }): Promise<PharmacyDirectoryEntry[]> => {
@@ -88,53 +108,79 @@ export const pharmacyRouter = createTRPCRouter({
       return { pharmacies, latestUpdatedAt }
     }),
 
+  // -----------------------------------------------------------------------
+  // Admin CRUD — org-scoped via factory, enterprise fields included
+  // -----------------------------------------------------------------------
   listForAdmin: adminProcedure
-    .input(z.object({ cursor: z.number().int().min(0).default(0), limit: z.number().int().min(1).max(100).default(50), q: z.string().max(100).optional() }))
-    .query(async ({ ctx, input }) => {
-      let query = ctx.supabase
-        .from('pharmacy_facilities')
-        .select('*')
-        .eq('facility_type', 'pharmacy')
-        .order('name', { ascending: true })
-        .range(input.cursor, input.cursor + input.limit - 1)
-      if (input.q) {
-        const safeQ = input.q.replace(/[,()"]/g, ' ').trim().toLowerCase()
-        if (safeQ) query = query.ilike('name', `%${safeQ}%`)
-      }
-      const { data, error } = await query
-      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
-      const pharmacies = (data ?? []).map(toFacility)
-      const nextCursor = pharmacies.length === input.limit ? input.cursor + input.limit : null
-      return { pharmacies, nextCursor }
-    }),
+    .input(z.object({
+      cursor: z.number().int().min(0).default(0),
+      limit: z.number().int().min(1).max(100).default(50),
+      q: z.string().max(100).optional(),
+      includeArchived: z.boolean().optional(),
+    }))
+    .query(({ ctx, input }) => crud.list(ctx as never, input)),
+
+  getDetail: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(({ ctx, input }) => crud.getDetail(ctx as never, input)),
 
   create: adminProcedure
-    .input(pharmacyInput)
-    .mutation(async ({ ctx, input }) => {
-      const { data, error } = await ctx.supabase
-        .from('pharmacy_facilities')
-        .insert({ ...input, facility_type: 'pharmacy', is_active: true })
-        .select('*').single()
-      if (error || !data) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
-      return toFacility(data)
-    }),
+    .input(z.object(pharmacyProfileFields))
+    .mutation(({ ctx, input }) => crud.create(ctx as never, { ...input, facilityType: 'pharmacy' })),
 
   update: adminProcedure
-    .input(pharmacyInput.extend({ id: z.string().uuid() }))
-    .mutation(async ({ ctx, input }) => {
-      const { id, ...fields } = input
-      const { data, error } = await ctx.supabase
-        .from('pharmacy_facilities').update(fields).eq('id', id).select('*').single()
-      if (error || !data) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
-      return toFacility(data)
-    }),
+    .input(z.object({
+      id: z.string().uuid(),
+      name: z.string().min(1).max(200),
+      logoUrl: z.string().max(500).optional(),
+      description: z.string().max(2000).optional(),
+      licenseRef: z.string().max(100).optional(),
+      registrationAuthority: z.string().max(200).optional(),
+      establishedYear: z.number().int().min(1800).max(2100).optional(),
+      phone: z.string().max(40).optional(),
+      altPhone: z.string().max(40).optional(),
+      email: z.string().max(200).optional(),
+      website: z.string().max(300).optional(),
+      whatsapp: z.string().max(40).optional(),
+      address: z.string().max(300).optional(),
+      province: z.string().max(120).optional(),
+      district: z.string().max(120).optional(),
+      city: z.string().max(120).optional(),
+      postalCode: z.string().max(40).optional(),
+      country: z.string().max(120).optional(),
+      latitude: z.number().min(-90).max(90).optional(),
+      longitude: z.number().min(-180).max(180).optional(),
+      contactPersonName: z.string().max(200).optional(),
+      contactPersonRole: z.string().max(120).optional(),
+      contactPersonPhone: z.string().max(40).optional(),
+      openingHours: z.any().optional(),
+      timezone: z.string().max(60).optional(),
+      is247: z.boolean().optional(),
+      hasDelivery: z.boolean().optional(),
+      acceptsInsurance: z.boolean().optional(),
+    }))
+    .mutation(({ ctx, input }) => crud.update(ctx as never, input)),
+
+  archive: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(({ ctx, input }) => crud.archive(ctx as never, input)),
+
+  restore: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(({ ctx, input }) => crud.restore(ctx as never, input)),
 
   setActive: adminProcedure
     .input(z.object({ id: z.string().uuid(), isActive: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase
-        .from('pharmacy_facilities').update({ is_active: input.isActive }).eq('id', input.id).select('*').single()
-      if (error || !data) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
-      return toFacility(data)
+        .from('pharmacy_facilities')
+        .update({ is_active: input.isActive })
+        .eq('id', input.id)
+        .eq('org_id', ctx.user!.orgId)
+        .select('id')
+        .maybeSingle()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      if (!data) throw new TRPCError({ code: 'NOT_FOUND' })
+      return { id: data.id }
     }),
 })

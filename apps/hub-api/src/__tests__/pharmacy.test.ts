@@ -69,18 +69,36 @@ describe('pharmacy.search — input sanitization', () => {
 
 describe('pharmacy admin CRUD', () => {
   it('rejects non-admin create', async () => {
-    const c = { supabase: { from: vi.fn() }, user: { role: 'DOCTOR' } } as never
+    const c = { supabase: { from: vi.fn() }, user: { role: 'DOCTOR', orgId: 'org-1', sub: 'u1', sessionId: 's1' } } as never
     await expect(pharmacyRouter.createCaller(c).create({
       name: 'X', latitude: 34.5, longitude: 69.2,
     })).rejects.toMatchObject({ code: 'FORBIDDEN' })
   })
 
   it('inserts a pharmacy for admin', async () => {
-    const row = { id: 'p9', name: 'New Pharmacy', latitude: 34.5, longitude: 69.2, facility_type: 'pharmacy', is_active: true }
+    const row = { id: 'p9', name: 'New Pharmacy', latitude: 34.5, longitude: 69.2, facility_type: 'pharmacy', is_active: true, org_id: 'org-1', archived_at: null, created_at: 'T', updated_at: 'T' }
     const chain = { insert: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), single: vi.fn().mockResolvedValue({ data: row, error: null }) }
-    const c = { supabase: { from: vi.fn(() => chain) }, user: { role: 'ADMIN' } } as never
+    const c = { supabase: { from: vi.fn(() => chain) }, user: { role: 'ADMIN', orgId: 'org-1', sub: 'u1', sessionId: 's1' } } as never
     const res = await pharmacyRouter.createCaller(c).create({ name: 'New Pharmacy', latitude: 34.5, longitude: 69.2 })
     expect(res.id).toBe('p9')
     expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ facility_type: 'pharmacy', is_active: true }))
+  })
+})
+
+describe('pharmacy.listForAdmin — org scoping', () => {
+  it('filters by caller org and excludes archived', async () => {
+    const chain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), in: vi.fn().mockReturnThis(), is: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), range: vi.fn().mockResolvedValue({ data: [], error: null }) }
+    const c = { supabase: { from: vi.fn(() => chain) }, user: { role: 'ADMIN', orgId: 'org-1', sub: 'u1' } } as never
+    await pharmacyRouter.createCaller(c).listForAdmin({ cursor: 0, limit: 50 })
+    expect(chain.eq).toHaveBeenCalledWith('org_id', 'org-1')
+    expect(chain.is).toHaveBeenCalledWith('archived_at', null)
+  })
+})
+
+describe('pharmacy.getDetail — cross-org', () => {
+  it('returns NOT_FOUND for another org row', async () => {
+    const chain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }) }
+    const c = { supabase: { from: vi.fn(() => chain) }, user: { role: 'ADMIN', orgId: 'org-1', sub: 'u1' } } as never
+    await expect(pharmacyRouter.createCaller(c).getDetail({ id: '00000000-0000-0000-0000-000000000000' })).rejects.toMatchObject({ code: 'NOT_FOUND' })
   })
 })
