@@ -68,6 +68,43 @@ describe('buildFacilityCrud.getDetail', () => {
   })
 })
 
+describe('buildFacilityCrud.update', () => {
+  it('includes updated_at in the update payload', async () => {
+    const row = { id: 'c5', org_id: 'org-1', name: 'Updated', is_active: true, archived_at: null, created_at: 'T', updated_at: 'T', is_24_7: false }
+    const chain = {
+      update: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(), maybeSingle: vi.fn().mockResolvedValue({ data: row, error: null }),
+    }
+    const c = ctx(chain)
+    await crud.update(c, { id: 'c5', name: 'Updated' })
+    expect(chain.update).toHaveBeenCalledWith(expect.objectContaining({ updated_at: expect.any(String) }))
+  })
+})
+
+describe('buildFacilityCrud.archive', () => {
+  it('includes updated_at alongside archived_at in the update payload', async () => {
+    const chain = {
+      update: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(), maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'c6' }, error: null }),
+    }
+    const c = ctx(chain)
+    await crud.archive(c, { id: 'c6' })
+    expect(chain.update).toHaveBeenCalledWith(expect.objectContaining({ archived_at: expect.any(String), updated_at: expect.any(String) }))
+  })
+})
+
+describe('buildFacilityCrud.restore', () => {
+  it('includes updated_at in the update payload', async () => {
+    const chain = {
+      update: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(), maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'c7' }, error: null }),
+    }
+    const c = ctx(chain)
+    await crud.restore(c, { id: 'c7' })
+    expect(chain.update).toHaveBeenCalledWith(expect.objectContaining({ archived_at: null, updated_at: expect.any(String) }))
+  })
+})
+
 describe('requireOrg guard', () => {
   it('rejects create with FORBIDDEN when orgId is null', async () => {
     const chain = { insert: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), single: vi.fn().mockResolvedValue({ data: null, error: null }) }

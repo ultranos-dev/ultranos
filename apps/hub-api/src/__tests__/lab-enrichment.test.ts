@@ -60,17 +60,18 @@ describe('admin.archiveLab', () => {
     vi.clearAllMocks()
   })
 
-  it('sets status ARCHIVED and inserts history row', async () => {
+  it('sets status ARCHIVED (with updated_at) and inserts history row', async () => {
     // updateChain: update().eq().eq().select().maybeSingle()
     const updateChain: Record<string, any> = {}
     updateChain.eq = vi.fn().mockReturnValue(updateChain)
     updateChain.select = vi.fn().mockReturnValue(updateChain)
     updateChain.maybeSingle = vi.fn().mockResolvedValue({ data: { id: 'lab1' }, error: null })
 
+    const updateFn = vi.fn().mockReturnValue(updateChain)
     const insertFn = vi.fn().mockResolvedValue({ error: null })
 
     const from = vi.fn((table: string) => {
-      if (table === 'labs') return { update: vi.fn().mockReturnValue(updateChain) }
+      if (table === 'labs') return { update: updateFn }
       if (table === 'lab_status_history') return { insert: insertFn }
       return {}
     })
@@ -79,11 +80,8 @@ describe('admin.archiveLab', () => {
     const caller = createCallerFactory(adminRouter)(makeAdminCtx(supabase))
     const res = await caller.archiveLab({ labId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' })
 
-    // The update must include status:'ARCHIVED'
-    expect(from).toHaveBeenCalledWith('labs')
-    const labsObj = (from as any).mock.results.find((r: any) => from.mock.calls[from.mock.calls.findIndex((c: any) => c[0] === 'labs')])
-    const updateSpy = labsObj?.value?.update ?? (from as any).mock.results[0].value.update
-    expect(updateSpy).toHaveBeenCalledWith(expect.objectContaining({ status: 'ARCHIVED' }))
+    // The update must include status:'ARCHIVED' and bump updated_at
+    expect(updateFn).toHaveBeenCalledWith(expect.objectContaining({ status: 'ARCHIVED', updated_at: expect.any(String) }))
 
     // history row inserted
     expect(insertFn).toHaveBeenCalledWith(
@@ -170,8 +168,8 @@ describe('admin.updateLab', () => {
       phone: '+971-555-0001',
     })
 
-    // update called with the changed fields
-    expect(updateFn).toHaveBeenCalledWith(expect.objectContaining({ lab_name: 'Updated Lab', phone: '+971-555-0001' }))
+    // update called with the changed fields AND updated_at bump
+    expect(updateFn).toHaveBeenCalledWith(expect.objectContaining({ lab_name: 'Updated Lab', phone: '+971-555-0001', updated_at: expect.any(String) }))
     // org scoping: eq('org_id', 'org-1')
     expect(updateChain.eq).toHaveBeenCalledWith('org_id', 'org-1')
     expect(res).toMatchObject({ id: 'lab-u1' })

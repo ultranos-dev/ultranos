@@ -121,7 +121,7 @@ export function buildFacilityCrud(opts: {
     async update(ctx: Ctx, input: Record<string, unknown> & { id: string }) {
       const orgId = requireOrg(ctx)
       const { data, error } = await ctx.supabase.from(table)
-        .update(toColumns(input)).eq('id', input.id).eq('org_id', orgId).select('*').maybeSingle()
+        .update({ ...toColumns(input), updated_at: new Date().toISOString() }).eq('id', input.id).eq('org_id', orgId).select('*').maybeSingle()
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
       if (!data) throw new TRPCError({ code: 'NOT_FOUND' })
       await audit(ctx, 'UPDATE', data.id)
@@ -131,7 +131,7 @@ export function buildFacilityCrud(opts: {
     async archive(ctx: Ctx, input: { id: string }) {
       const orgId = requireOrg(ctx)
       const { data, error } = await ctx.supabase.from(table)
-        .update({ archived_at: new Date().toISOString() }).eq('id', input.id).eq('org_id', orgId).select('id').maybeSingle()
+        .update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', input.id).eq('org_id', orgId).select('id').maybeSingle()
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
       if (!data) throw new TRPCError({ code: 'NOT_FOUND' })
       await audit(ctx, 'ARCHIVE', data.id)
@@ -141,7 +141,7 @@ export function buildFacilityCrud(opts: {
     async restore(ctx: Ctx, input: { id: string }) {
       const orgId = requireOrg(ctx)
       const { data, error } = await ctx.supabase.from(table)
-        .update({ archived_at: null }).eq('id', input.id).eq('org_id', orgId).select('id').maybeSingle()
+        .update({ archived_at: null, updated_at: new Date().toISOString() }).eq('id', input.id).eq('org_id', orgId).select('id').maybeSingle()
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
       if (!data) throw new TRPCError({ code: 'NOT_FOUND' })
       await audit(ctx, 'RESTORE', data.id)

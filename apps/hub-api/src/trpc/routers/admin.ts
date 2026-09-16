@@ -862,6 +862,8 @@ export const adminRouter = createTRPCRouter({
       if (fields.sampleCollection !== undefined) updates.sample_collection = fields.sampleCollection
       if (fields.capAccredited !== undefined) updates.cap_accredited = fields.capAccredited
 
+      updates.updated_at = new Date().toISOString()
+
       const { data: updated, error } = await ctx.supabase
         .from('labs')
         .update(updates)
@@ -870,10 +872,16 @@ export const adminRouter = createTRPCRouter({
         .select('id')
         .maybeSingle()
 
-      if (error || !updated) {
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update lab',
+        })
+      }
+      if (!updated) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: 'Lab not found or update failed',
+          message: 'Lab not found or access denied',
         })
       }
 
@@ -910,16 +918,22 @@ export const adminRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { data: archived, error } = await ctx.supabase
         .from('labs')
-        .update({ status: 'ARCHIVED' })
+        .update({ status: 'ARCHIVED', updated_at: new Date().toISOString() })
         .eq('id', input.labId)
         .eq('org_id', ctx.user.orgId)
         .select('id')
         .maybeSingle()
 
-      if (error || !archived) {
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to archive lab',
+        })
+      }
+      if (!archived) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: 'Lab not found or archive failed',
+          message: 'Lab not found or access denied',
         })
       }
 
