@@ -174,7 +174,7 @@ export const pharmacyRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase
         .from('pharmacy_facilities')
-        .update({ is_active: input.isActive })
+        .update({ is_active: input.isActive, updated_at: new Date().toISOString() })
         .eq('id', input.id)
         .eq('org_id', ctx.user!.orgId)
         .select('id')

@@ -477,7 +477,9 @@
     "suspendConfirmTitle": "لابراتوار معلق کړئ؟",
     "suspendConfirmDesc": "دا لابراتوار به معلق شي او تر بیا فعالیدو پورې فعالیت نشي کولی.",
     "suspendReason": "لامل (اختیاري)",
-    "confirmSuspend": "معلق کول"
+    "confirmSuspend": "معلق کول",
+    "restore": "بیرته راوستل",
+    "includeArchived": "آرشیف شوي شامل کړئ"
   },
   "mentorship": {
     "pageTitle": "لارښوونه",

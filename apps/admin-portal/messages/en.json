@@ -477,7 +477,9 @@
     "suspendConfirmTitle": "Suspend Lab?",
     "suspendConfirmDesc": "This lab will be suspended and cannot operate until reactivated.",
     "suspendReason": "Reason (optional)",
-    "confirmSuspend": "Suspend"
+    "confirmSuspend": "Suspend",
+    "restore": "Restore",
+    "includeArchived": "Include archived"
   },
   "mentorship": {
     "pageTitle": "Mentorship",

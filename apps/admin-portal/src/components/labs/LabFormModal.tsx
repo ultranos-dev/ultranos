@@ -144,11 +144,11 @@ export function LabFormModal({ open, onOpenChange, initial, onSaved }: LabFormMo
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogDescription className="sr-only">Create or edit lab details</DialogDescription>
         <DialogHeader>
           <DialogTitle>
             {initial ? (t('labs.editLab') ?? 'Edit Lab') : (t('labs.createLab') ?? 'Create Lab')}
           </DialogTitle>
+          <DialogDescription className="sr-only">Create or edit lab details</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">

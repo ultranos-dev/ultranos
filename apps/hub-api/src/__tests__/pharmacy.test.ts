@@ -102,3 +102,21 @@ describe('pharmacy.getDetail — cross-org', () => {
     await expect(pharmacyRouter.createCaller(c).getDetail({ id: '00000000-0000-0000-0000-000000000000' })).rejects.toMatchObject({ code: 'NOT_FOUND' })
   })
 })
+
+describe('pharmacy.setActive — bumps updated_at', () => {
+  it('includes updated_at in the update payload', async () => {
+    const updateFn = vi.fn().mockReturnThis()
+    const chain = {
+      update: updateFn,
+      eq: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'p1' }, error: null }),
+    }
+    chain.update = vi.fn(() => chain)
+    const c = { supabase: { from: vi.fn(() => chain) }, user: { role: 'ADMIN', orgId: 'org-1', sub: 'u1', sessionId: 's1' } } as never
+    await pharmacyRouter.createCaller(c).setActive({ id: '00000000-0000-0000-0000-000000000001', isActive: true })
+    expect(chain.update).toHaveBeenCalledWith(
+      expect.objectContaining({ is_active: true, updated_at: expect.any(String) }),
+    )
+  })
+})

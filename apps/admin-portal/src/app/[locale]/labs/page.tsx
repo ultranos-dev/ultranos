@@ -22,20 +22,35 @@ interface LabEntry {
   technicianName: string
   registeredAt: string
   status: string
-}
-
-interface LabInitialForEdit {
-  id: string
-  labName?: string | null
-  licenseReference?: string | null
-  accreditationReference?: string | null
+  // enterprise fields (populated when available)
+  phone?: string | null
+  altPhone?: string | null
+  email?: string | null
+  website?: string | null
+  whatsapp?: string | null
+  address?: string | null
+  city?: string | null
+  province?: string | null
+  district?: string | null
+  country?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  contactPersonName?: string | null
+  contactPersonRole?: string | null
+  contactPersonPhone?: string | null
+  turnaroundTimeHours?: number | null
+  homeCollection?: boolean | null
+  sampleCollection?: boolean | null
+  capAccredited?: boolean | null
+  specialties?: string[] | null
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const variantMap: Record<string, 'warning' | 'success' | 'destructive'> = {
+  const variantMap: Record<string, 'warning' | 'success' | 'destructive' | 'secondary'> = {
     PENDING: 'warning',
     ACTIVE: 'success',
     SUSPENDED: 'destructive',
+    ARCHIVED: 'secondary',
   }
 
   return (
@@ -59,13 +74,14 @@ export default function LabsPage() {
   const [cursor, setCursor] = useState(0)
   const [filter, setFilter] = useState<StatusFilter>('ALL')
   const [search, setSearch] = useState('')
+  const [includeArchived, setIncludeArchived] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // Modal state
   const [profileLabId, setProfileLabId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
-  const [editInitial, setEditInitial] = useState<LabInitialForEdit | undefined>(undefined)
+  const [editInitial, setEditInitial] = useState<LabEntry | undefined>(undefined)
 
   const fetchLabs = useCallback(async () => {
     try {
@@ -76,6 +92,7 @@ export default function LabsPage() {
         status: filter,
         cursor,
         limit: PAGE_SIZE,
+        includeArchived,
       })
       setLabs(result.labs)
       setTotal(result.total)
@@ -84,7 +101,7 @@ export default function LabsPage() {
     } finally {
       setLoading(false)
     }
-  }, [filter, cursor])
+  }, [filter, cursor, includeArchived])
 
   useEffect(() => {
     fetchLabs()
@@ -133,6 +150,15 @@ export default function LabsPage() {
             className="min-w-[200px] flex-1"
             aria-label={t('searchPlaceholder')}
           />
+          <label className="inline-flex items-center gap-2 text-sm text-muted-foreground select-none cursor-pointer">
+            <input
+              type="checkbox"
+              checked={includeArchived}
+              onChange={(e) => { setIncludeArchived(e.target.checked); setCursor(0) }}
+              className="h-4 w-4 rounded border-border"
+            />
+            {t('includeArchived')}
+          </label>
           <Button onClick={() => { setEditInitial(undefined); setFormOpen(true) }}>
             {t('createLab')}
           </Button>
@@ -235,7 +261,7 @@ export default function LabsPage() {
           labId={profileLabId}
           onOpenChange={(open) => { if (!open) setProfileLabId(null) }}
           onEdit={(lab) => {
-            setEditInitial({ id: lab.id, labName: lab.labName, licenseReference: lab.licenseReference, accreditationReference: lab.accreditationReference })
+            setEditInitial(lab)
             setFormOpen(true)
           }}
           onChanged={() => { fetchLabs() }}

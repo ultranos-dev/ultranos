@@ -972,6 +972,73 @@ export const adminRouter = createTRPCRouter({
     }),
 
   /**
+   * Restore an archived lab (status → ACTIVE) with history row.
+   * Org-scoped. Mirrors archiveLab pattern.
+   */
+  restoreLab: adminProcedure
+    .input(
+      z.object({
+        labId: z.string().uuid(),
+        reason: z.string().max(500).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { data: restored, error } = await ctx.supabase
+        .from('labs')
+        .update({ status: 'ACTIVE', updated_at: new Date().toISOString() })
+        .eq('id', input.labId)
+        .eq('org_id', ctx.user.orgId)
+        .select('id')
+        .maybeSingle()
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to restore lab',
+        })
+      }
+      if (!restored) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Lab not found or access denied',
+        })
+      }
+
+      // Insert status history row (best-effort — do not block on failure)
+      const { error: historyError } = await ctx.supabase
+        .from('lab_status_history')
+        .insert({
+          lab_id: input.labId,
+          status: 'ACTIVE',
+          changed_by: ctx.user.sub,
+          changed_at: new Date().toISOString(),
+          reason: input.reason ?? null,
+        })
+
+      if (historyError) {
+        console.warn('[STATUS_HISTORY_FAILURE]', { labId: input.labId, action: 'RESTORE' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'RESTORE',
+          resourceType: 'LAB',
+          resourceId: (restored as Record<string, unknown>).id as string,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { endpoint: 'admin.restoreLab' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'RESTORE', resourceType: 'LAB' })
+      }
+
+      return { id: (restored as Record<string, unknown>).id as string }
+    }),
+
+  /**
    * List providers approaching license expiry.
    * Story 22.4 AC #6: Returns providers within configurable expiry windows.
    * Sorted by expiry date ascending (most urgent first).

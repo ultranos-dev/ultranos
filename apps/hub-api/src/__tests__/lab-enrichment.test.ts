@@ -200,6 +200,86 @@ describe('admin.updateLab', () => {
 })
 
 // ────────────────────────────────────────────────────────────
+// admin.restoreLab
+// ────────────────────────────────────────────────────────────
+describe('admin.restoreLab', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('sets status ACTIVE (with updated_at) and inserts history row', async () => {
+    const updateChain: Record<string, any> = {}
+    updateChain.eq = vi.fn().mockReturnValue(updateChain)
+    updateChain.select = vi.fn().mockReturnValue(updateChain)
+    updateChain.maybeSingle = vi.fn().mockResolvedValue({ data: { id: 'lab-r1' }, error: null })
+
+    const updateFn = vi.fn().mockReturnValue(updateChain)
+    const insertFn = vi.fn().mockResolvedValue({ error: null })
+
+    const from = vi.fn((table: string) => {
+      if (table === 'labs') return { update: updateFn }
+      if (table === 'lab_status_history') return { insert: insertFn }
+      return {}
+    })
+
+    const supabase = { from } as never
+    const caller = createCallerFactory(adminRouter)(makeAdminCtx(supabase))
+    const res = await caller.restoreLab({ labId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' })
+
+    // The update must set status:'ACTIVE' and bump updated_at
+    expect(updateFn).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'ACTIVE', updated_at: expect.any(String) }),
+    )
+
+    // history row inserted with ACTIVE status
+    expect(insertFn).toHaveBeenCalledWith(
+      expect.objectContaining({ lab_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', status: 'ACTIVE' }),
+    )
+
+    expect(res).toMatchObject({ id: 'lab-r1' })
+  })
+
+  it('throws NOT_FOUND when lab does not exist / cross-org', async () => {
+    const updateChain: Record<string, any> = {}
+    updateChain.eq = vi.fn().mockReturnValue(updateChain)
+    updateChain.select = vi.fn().mockReturnValue(updateChain)
+    updateChain.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+
+    const from = vi.fn(() => ({ update: vi.fn().mockReturnValue(updateChain) }))
+    const supabase = { from } as never
+    const caller = createCallerFactory(adminRouter)(makeAdminCtx(supabase))
+
+    await expect(
+      caller.restoreLab({ labId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' }),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' })
+  })
+
+  it('emits RESTORE/LAB audit event', async () => {
+    const updateChain: Record<string, any> = {}
+    updateChain.eq = vi.fn().mockReturnValue(updateChain)
+    updateChain.select = vi.fn().mockReturnValue(updateChain)
+    updateChain.maybeSingle = vi.fn().mockResolvedValue({ data: { id: 'lab-r3' }, error: null })
+
+    const from = vi.fn((table: string) => {
+      if (table === 'labs') return { update: vi.fn().mockReturnValue(updateChain) }
+      if (table === 'lab_status_history') return { insert: vi.fn().mockResolvedValue({ error: null }) }
+      return {}
+    })
+
+    const supabase = { from } as never
+    const caller = createCallerFactory(adminRouter)(makeAdminCtx(supabase))
+    await caller.restoreLab({ labId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' })
+
+    expect(mockAuditEmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'RESTORE',
+        resourceType: 'LAB',
+      }),
+    )
+  })
+})
+
+// ────────────────────────────────────────────────────────────
 // admin.listLabs — ARCHIVED exclusion
 // ────────────────────────────────────────────────────────────
 describe('admin.listLabs — ARCHIVED exclusion', () => {

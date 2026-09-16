@@ -477,7 +477,9 @@
     "suspendConfirmTitle": "تعلیق آزمایشگاه؟",
     "suspendConfirmDesc": "این آزمایشگاه معلق می‌شود و تا زمان فعال‌سازی مجدد نمی‌تواند فعالیت کند.",
     "suspendReason": "دلیل (اختیاری)",
-    "confirmSuspend": "تعلیق"
+    "confirmSuspend": "تعلیق",
+    "restore": "بازیابی",
+    "includeArchived": "شامل بایگانی‌شده‌ها"
   },
   "mentorship": {
     "pageTitle": "راهنمایی",

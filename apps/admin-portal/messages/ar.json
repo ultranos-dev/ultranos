@@ -477,7 +477,9 @@
     "suspendConfirmTitle": "إيقاف المختبر؟",
     "suspendConfirmDesc": "سيتم إيقاف هذا المختبر ولن يتمكن من العمل حتى يتم إعادة تفعيله.",
     "suspendReason": "السبب (اختياري)",
-    "confirmSuspend": "إيقاف"
+    "confirmSuspend": "إيقاف",
+    "restore": "استعادة",
+    "includeArchived": "تضمين المؤرشفة"
   },
   "mentorship": {
     "pageTitle": "الإرشاد المهني",

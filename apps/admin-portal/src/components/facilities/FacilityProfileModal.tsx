@@ -48,9 +48,8 @@ interface FacilityProfile {
   longitude?: number | null
   googleMapsUrl?: string | null
   // hours
-  operatingHours?: unknown | null
-  // services / specialties
-  services?: string[] | null
+  openingHours?: unknown | null
+  // specialties / departments
   specialties?: string[] | null
   departments?: string[] | null
   // contact person
@@ -128,7 +127,6 @@ export function FacilityProfileModal({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          <DialogDescription className="sr-only">Facility profile and management actions</DialogDescription>
           <DialogHeader>
             <DialogTitle>
               {loading || !profile ? (
@@ -160,6 +158,7 @@ export function FacilityProfileModal({
                 </div>
               )}
             </DialogTitle>
+            <DialogDescription className="sr-only">Facility profile and management actions</DialogDescription>
           </DialogHeader>
 
           {loading && (
@@ -206,21 +205,15 @@ export function FacilityProfileModal({
               {/* Hours */}
               <ProfileSection title={t('facilities.sectionHours') ?? 'Hours'}>
                 <HoursTable
-                  hours={profile.operatingHours ?? null}
+                  hours={profile.openingHours ?? null}
                   is247={Boolean(profile.is247)}
                   closedLabel={t('facilities.closed') ?? 'Closed'}
                 />
               </ProfileSection>
 
-              {/* Services / Specialties / Departments */}
-              {(profile.services?.length || profile.specialties?.length || profile.departments?.length) ? (
+              {/* Specialties / Departments */}
+              {(profile.specialties?.length || profile.departments?.length) ? (
                 <ProfileSection title={t('facilities.sectionServices') ?? 'Services & Specialties'}>
-                  {profile.services?.length ? (
-                    <div>
-                      <span className="mb-1 block text-xs text-muted-foreground">{t('facilities.services') ?? 'Services'}</span>
-                      <TagList items={profile.services} />
-                    </div>
-                  ) : null}
                   {profile.specialties?.length ? (
                     <div>
                       <span className="mb-1 block text-xs text-muted-foreground">{t('facilities.specialties') ?? 'Specialties'}</span>

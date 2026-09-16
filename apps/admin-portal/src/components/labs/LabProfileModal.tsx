@@ -50,7 +50,7 @@ interface LabProfile {
   longitude?: number | null
   googleMapsUrl?: string | null
   // hours
-  operatingHours?: unknown | null
+  openingHours?: unknown | null
   is247?: boolean | null
   // contact person
   contactPersonName?: string | null
@@ -96,6 +96,7 @@ export function LabProfileModal({
 
   useEffect(() => {
     if (!open) return
+    setSuspendReason('')
     let cancelled = false
     setLoading(true)
     setLab(null)
@@ -133,11 +134,23 @@ export function LabProfileModal({
     }
   }
 
+  async function handleRestore() {
+    setActionPending(true)
+    try {
+      await trpc.admin.restoreLab.mutate({ labId })
+      onOpenChange(false)
+      onChanged()
+    } finally {
+      setActionPending(false)
+    }
+  }
+
+  const isArchived = lab?.status === 'ARCHIVED'
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          <DialogDescription className="sr-only">Lab profile and management actions</DialogDescription>
           <DialogHeader>
             <DialogTitle>
               {loading || !lab ? (
@@ -162,6 +175,7 @@ export function LabProfileModal({
                 </div>
               )}
             </DialogTitle>
+            <DialogDescription className="sr-only">Lab profile and management actions</DialogDescription>
           </DialogHeader>
 
           {loading && (
@@ -249,7 +263,7 @@ export function LabProfileModal({
               {/* Hours */}
               <ProfileSection title={t('labs.sectionHours') ?? 'Hours'}>
                 <HoursTable
-                  hours={lab.operatingHours ?? null}
+                  hours={lab.openingHours ?? null}
                   is247={Boolean(lab.is247)}
                   closedLabel={t('labs.closed') ?? 'Closed'}
                 />
@@ -297,8 +311,19 @@ export function LabProfileModal({
                   {t('common.edit') ?? 'Edit'}
                 </Button>
 
-                {/* Status-dependent approval buttons */}
-                {lab.status === 'PENDING' && (
+                {/* Restore (ARCHIVED only) */}
+                {isArchived && (
+                  <Button
+                    variant="outline"
+                    onClick={handleRestore}
+                    disabled={actionPending}
+                  >
+                    {t('labs.restore') ?? 'Restore'}
+                  </Button>
+                )}
+
+                {/* Status-dependent approval buttons — hidden for ARCHIVED */}
+                {!isArchived && lab.status === 'PENDING' && (
                   <Button
                     onClick={() => handleReview('APPROVE')}
                     disabled={actionPending}
@@ -306,7 +331,7 @@ export function LabProfileModal({
                     {t('labs.approve') ?? 'Approve'}
                   </Button>
                 )}
-                {lab.status === 'ACTIVE' && (
+                {!isArchived && lab.status === 'ACTIVE' && (
                   <Button
                     variant="destructive"
                     onClick={() => setSuspendConfirmOpen(true)}
@@ -315,7 +340,7 @@ export function LabProfileModal({
                     {t('labs.suspend') ?? 'Suspend'}
                   </Button>
                 )}
-                {lab.status === 'SUSPENDED' && (
+                {!isArchived && lab.status === 'SUSPENDED' && (
                   <Button
                     onClick={() => handleReview('REACTIVATE')}
                     disabled={actionPending}
@@ -324,14 +349,16 @@ export function LabProfileModal({
                   </Button>
                 )}
 
-                {/* Archive */}
-                <Button
-                  variant="destructive"
-                  onClick={() => setArchiveConfirmOpen(true)}
-                  disabled={actionPending}
-                >
-                  {t('common.archive') ?? 'Archive'}
-                </Button>
+                {/* Archive — hidden for already-archived labs */}
+                {!isArchived && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => setArchiveConfirmOpen(true)}
+                    disabled={actionPending}
+                  >
+                    {t('common.archive') ?? 'Archive'}
+                  </Button>
+                )}
               </>
             )}
           </DialogFooter>
