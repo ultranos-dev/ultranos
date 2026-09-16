@@ -128,6 +128,7 @@ export function FacilityProfileModal({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogDescription className="sr-only">Facility profile and management actions</DialogDescription>
           <DialogHeader>
             <DialogTitle>
               {loading || !profile ? (
