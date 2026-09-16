@@ -1,0 +1,139 @@
+// ============================================================
+// ULTRANOS — SHARED FACILITY CRUD FACTORY
+// Org-scoped list/getDetail/create/update/archive/restore against
+// any of the three facility tables (clinical_facilities,
+// pharmacy_facilities, labs).
+//
+// P-R2 FIX: TS→DB column conversion uses an inverted CAMEL map
+// (SNAKE) — NOT the regex helper from the brief — so `is247`
+// correctly maps to `is_24_7` (no uppercase letter for the regex
+// to catch). Every google/compound field also round-trips correctly.
+// ============================================================
+
+import { TRPCError } from '@trpc/server'
+import { AuditLogger } from '@ultranos/audit-logger'
+import type { FacilityProfileBase } from '@ultranos/shared-types'
+
+type Ctx = { supabase: any; user: { role: string; orgId: string | null; sub: string; sessionId?: string } }
+
+// -------------------------------------------------------------------
+// DB column (snake_case) → TS property (camelCase)
+// -------------------------------------------------------------------
+const CAMEL: Record<string, string> = {
+  org_id: 'orgId', is_active: 'isActive', archived_at: 'archivedAt', created_at: 'createdAt',
+  updated_at: 'updatedAt', logo_url: 'logoUrl', license_ref: 'licenseRef',
+  registration_authority: 'registrationAuthority', established_year: 'establishedYear',
+  alt_phone: 'altPhone', postal_code: 'postalCode', contact_person_name: 'contactPersonName',
+  contact_person_role: 'contactPersonRole', contact_person_phone: 'contactPersonPhone',
+  opening_hours: 'openingHours', is_24_7: 'is247', google_place_id: 'googlePlaceId',
+  google_maps_url: 'googleMapsUrl', google_rating: 'googleRating',
+  google_review_count: 'googleReviewCount', google_hours: 'googleHours',
+  google_last_synced_at: 'googleLastSyncedAt', facility_type: 'facilityType',
+  bed_count: 'bedCount', emergency_services: 'emergencyServices', has_delivery: 'hasDelivery',
+  accepts_insurance: 'acceptsInsurance', turnaround_time_hours: 'turnaroundTimeHours',
+  home_collection: 'homeCollection', sample_collection: 'sampleCollection',
+  cap_accredited: 'capAccredited', accreditation_ref: 'accreditationRef',
+}
+
+// -------------------------------------------------------------------
+// TS property (camelCase) → DB column (snake_case)
+// Built by inverting CAMEL — guarantees is247→is_24_7, googlePlaceId→google_place_id, etc.
+// P-R2: do NOT use a regex here (regex approach is buggy for is247).
+// -------------------------------------------------------------------
+const SNAKE: Record<string, string> = Object.fromEntries(
+  Object.entries(CAMEL).map(([dbCol, tsProp]) => [tsProp, dbCol]),
+)
+
+export function mapFacilityRow(row: Record<string, unknown>): FacilityProfileBase & Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(row)) out[CAMEL[k] ?? k] = v
+  return out as FacilityProfileBase & Record<string, unknown>
+}
+
+export function buildFacilityCrud(opts: {
+  table: string; typeColumn: string; typeValues: string[]; resourceType: string; extraColumns: string[]
+}) {
+  const { table, typeColumn, typeValues, resourceType } = opts
+
+  async function audit(ctx: Ctx, action: string, resourceId: string) {
+    try {
+      await new AuditLogger(ctx.supabase, ctx.user.orgId ?? undefined).emit({
+        action, resourceType, resourceId, actorId: ctx.user.sub, actorRole: ctx.user.role,
+        outcome: 'SUCCESS', sessionId: ctx.user.sessionId, metadata: { endpoint: `${table}.${action}` },
+      })
+    } catch { console.warn('[AUDIT_FAILURE]', { action, resourceType }) }
+  }
+
+  /** Convert camelCase input keys to snake_case DB column names using the inverted CAMEL map. */
+  function toColumns(input: Record<string, unknown>): Record<string, unknown> {
+    const cols: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(input)) {
+      if (k === 'id' || k === 'facilityType') continue
+      if (v !== undefined) cols[SNAKE[k] ?? k] = v
+    }
+    return cols
+  }
+
+  return {
+    async list(ctx: Ctx, input: { facilityTypes?: string[]; cursor: number; limit: number; q?: string; includeArchived?: boolean }) {
+      let query = ctx.supabase.from(table).select('*')
+        .eq('org_id', ctx.user.orgId)
+        .in(typeColumn, input.facilityTypes?.length ? input.facilityTypes : typeValues)
+      if (!input.includeArchived) query = query.is('archived_at', null)
+      if (input.q) {
+        const safe = input.q.replace(/[,()"]/g, ' ').trim()
+        if (safe) query = query.ilike('name', `%${safe}%`)
+      }
+      query = query.order('name', { ascending: true })
+        .range(input.cursor, input.cursor + input.limit - 1)
+      const { data, error } = await query
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      const facilities = (data ?? []).map(mapFacilityRow)
+      return { facilities, nextCursor: facilities.length === input.limit ? input.cursor + input.limit : null }
+    },
+
+    async getDetail(ctx: Ctx, input: { id: string }) {
+      const { data, error } = await ctx.supabase.from(table).select('*')
+        .eq('id', input.id).eq('org_id', ctx.user.orgId).maybeSingle()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      if (!data) throw new TRPCError({ code: 'NOT_FOUND' })
+      return mapFacilityRow(data)
+    },
+
+    async create(ctx: Ctx, input: Record<string, unknown> & { facilityType?: string; name: string }) {
+      const insert = { ...toColumns(input), org_id: ctx.user.orgId, is_active: true }
+      if (opts.typeColumn && input.facilityType) insert[typeColumn] = input.facilityType
+      const { data, error } = await ctx.supabase.from(table).insert(insert).select('*').single()
+      if (error || !data) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      await audit(ctx, 'CREATE', data.id)
+      return mapFacilityRow(data)
+    },
+
+    async update(ctx: Ctx, input: Record<string, unknown> & { id: string }) {
+      const { data, error } = await ctx.supabase.from(table)
+        .update(toColumns(input)).eq('id', input.id).eq('org_id', ctx.user.orgId).select('*').maybeSingle()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      if (!data) throw new TRPCError({ code: 'NOT_FOUND' })
+      await audit(ctx, 'UPDATE', data.id)
+      return mapFacilityRow(data)
+    },
+
+    async archive(ctx: Ctx, input: { id: string }) {
+      const { data, error } = await ctx.supabase.from(table)
+        .update({ archived_at: new Date().toISOString() }).eq('id', input.id).eq('org_id', ctx.user.orgId).select('id').maybeSingle()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      if (!data) throw new TRPCError({ code: 'NOT_FOUND' })
+      await audit(ctx, 'ARCHIVE', data.id)
+      return { id: data.id }
+    },
+
+    async restore(ctx: Ctx, input: { id: string }) {
+      const { data, error } = await ctx.supabase.from(table)
+        .update({ archived_at: null }).eq('id', input.id).eq('org_id', ctx.user.orgId).select('id').maybeSingle()
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      if (!data) throw new TRPCError({ code: 'NOT_FOUND' })
+      await audit(ctx, 'RESTORE', data.id)
+      return { id: data.id }
+    },
+  }
+}
