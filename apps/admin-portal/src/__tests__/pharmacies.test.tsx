@@ -1,22 +1,39 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
-import { PharmacyManager } from '@/components/pharmacies/PharmacyManager'
+import PharmaciesPage from '@/app/[locale]/pharmacies/page'
 
 vi.mock('next-intl', () => ({ useTranslations: () => (k: string) => k, useLocale: () => 'en' }))
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     pharmacy: {
-      listForAdmin: { query: vi.fn().mockResolvedValue({ pharmacies: [
-        { id: 'p1', name: 'Kabul City Pharmacy', province: 'Kabul', district: 'D10', address: 'Shahr-e Naw', facilityType: 'pharmacy', isActive: true, latitude: 34.5, longitude: 69.2 },
-      ], nextCursor: null }) },
-      create: { mutate: vi.fn() }, setActive: { mutate: vi.fn() },
+      listForAdmin: {
+        query: vi.fn().mockResolvedValue({
+          facilities: [
+            {
+              id: 'p1',
+              name: 'Kabul City Pharmacy',
+              province: 'Kabul',
+              city: 'Kabul',
+              facilityType: 'pharmacy',
+              isActive: true,
+              archivedAt: null,
+            },
+          ],
+          nextCursor: null,
+        }),
+      },
+      getDetail: { query: vi.fn() },
+      create: { mutate: vi.fn() },
+      update: { mutate: vi.fn() },
+      archive: { mutate: vi.fn() },
+      restore: { mutate: vi.fn() },
     },
   },
 }))
 
-describe('PharmacyManager', () => {
+describe('PharmaciesPage', () => {
   it('lists pharmacies from the admin endpoint', async () => {
-    render(<PharmacyManager />)
+    render(<PharmaciesPage />)
     await waitFor(() => expect(screen.getByText('Kabul City Pharmacy')).toBeInTheDocument())
   })
 })
