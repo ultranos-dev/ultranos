@@ -72,3 +72,6 @@ export * from './fhir/drug-catalog.js'
 
 // Monitoring transport types (pharmacy→lab dispense monitoring)
 export * from './monitoring.js'
+
+// Enterprise facility profile interfaces (Phase 1: clinical, pharmacy, lab)
+export * from './facility.js'
