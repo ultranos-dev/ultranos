@@ -460,6 +460,8 @@
     "province": "ولایت",
     "district": "ولسوالي",
     "country": "هیواد",
+    "latitude": "د عرض البلد",
+    "longitude": "د طول البلد",
     "viewOnMap": "نقشه کې وګورئ",
     "closed": "بند",
     "contactName": "نوم",

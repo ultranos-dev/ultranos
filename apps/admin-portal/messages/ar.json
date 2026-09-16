@@ -460,6 +460,8 @@
     "province": "المحافظة",
     "district": "المنطقة",
     "country": "الدولة",
+    "latitude": "خط العرض",
+    "longitude": "خط الطول",
     "viewOnMap": "عرض على الخريطة",
     "closed": "مغلق",
     "contactName": "الاسم",

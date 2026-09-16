@@ -460,6 +460,8 @@
     "province": "ولایت",
     "district": "ولسوالی",
     "country": "کشور",
+    "latitude": "عرض جغرافیایی",
+    "longitude": "طول جغرافیایی",
     "viewOnMap": "مشاهده در نقشه",
     "closed": "بسته",
     "contactName": "نام",
