@@ -328,6 +328,7 @@ export const adminRouter = createTRPCRouter({
         status: z.enum(['ALL', 'ACTIVE', 'SUSPENDED', 'PENDING']).default('ALL'),
         cursor: z.number().int().min(0).default(0),
         limit: z.number().int().min(1).max(100).default(25),
+        includeArchived: z.boolean().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -342,7 +343,11 @@ export const adminRouter = createTRPCRouter({
         .range(input.cursor, input.cursor + input.limit - 1)
 
       if (input.status !== 'ALL') {
+        // Explicit status filter takes precedence — no additional ARCHIVED exclusion
         query = query.eq('status', input.status)
+      } else if (!input.includeArchived) {
+        // Default: exclude ARCHIVED rows
+        query = query.neq('status', 'ARCHIVED')
       }
 
       const { data: rows, error, count } = await query
@@ -396,6 +401,12 @@ export const adminRouter = createTRPCRouter({
         .from('labs')
         .select(`
           id, lab_name, license_ref, accreditation_ref, status, created_at,
+          logo_url, description, phone, alt_phone, email, website, whatsapp,
+          address, province, district, city, postal_code, country,
+          contact_person_name, contact_person_role, contact_person_phone,
+          opening_hours, timezone, is_24_7,
+          google_place_id, google_maps_url, google_rating, google_review_count, google_hours, google_last_synced_at,
+          specialties, turnaround_time_hours, home_collection, sample_collection, cap_accredited,
           lab_technicians(id, practitioner_id, credential_ref,
             practitioners(given_name, family_name, telecom_email, qualification_display)
           )
@@ -437,13 +448,45 @@ export const adminRouter = createTRPCRouter({
       }>
       const tech = techs?.[0]
 
+      const labRow = lab as Record<string, unknown>
       return {
-        id: lab.id,
-        labName: (lab as any).lab_name,
-        licenseReference: lab.license_ref,
-        accreditationReference: lab.accreditation_ref ?? null,
-        status: lab.status,
-        registeredAt: lab.created_at,
+        id: labRow.id as string,
+        labName: labRow.lab_name as string,
+        licenseReference: labRow.license_ref as string,
+        accreditationReference: (labRow.accreditation_ref as string | null) ?? null,
+        status: labRow.status as string,
+        registeredAt: labRow.created_at as string,
+        // Enterprise fields
+        logoUrl: (labRow.logo_url as string | null) ?? null,
+        description: (labRow.description as string | null) ?? null,
+        phone: (labRow.phone as string | null) ?? null,
+        altPhone: (labRow.alt_phone as string | null) ?? null,
+        email: (labRow.email as string | null) ?? null,
+        website: (labRow.website as string | null) ?? null,
+        whatsapp: (labRow.whatsapp as string | null) ?? null,
+        address: (labRow.address as string | null) ?? null,
+        province: (labRow.province as string | null) ?? null,
+        district: (labRow.district as string | null) ?? null,
+        city: (labRow.city as string | null) ?? null,
+        postalCode: (labRow.postal_code as string | null) ?? null,
+        country: (labRow.country as string | null) ?? null,
+        contactPersonName: (labRow.contact_person_name as string | null) ?? null,
+        contactPersonRole: (labRow.contact_person_role as string | null) ?? null,
+        contactPersonPhone: (labRow.contact_person_phone as string | null) ?? null,
+        openingHours: (labRow.opening_hours as Record<string, unknown> | null) ?? null,
+        timezone: (labRow.timezone as string | null) ?? null,
+        is247: (labRow.is_24_7 as boolean | null) ?? null,
+        googlePlaceId: (labRow.google_place_id as string | null) ?? null,
+        googleMapsUrl: (labRow.google_maps_url as string | null) ?? null,
+        googleRating: (labRow.google_rating as number | null) ?? null,
+        googleReviewCount: (labRow.google_review_count as number | null) ?? null,
+        googleHours: (labRow.google_hours as Record<string, unknown> | null) ?? null,
+        googleLastSyncedAt: (labRow.google_last_synced_at as string | null) ?? null,
+        specialties: (labRow.specialties as string[] | null) ?? null,
+        turnaroundTimeHours: (labRow.turnaround_time_hours as number | null) ?? null,
+        homeCollection: (labRow.home_collection as boolean | null) ?? null,
+        sampleCollection: (labRow.sample_collection as boolean | null) ?? null,
+        capAccredited: (labRow.cap_accredited as boolean | null) ?? null,
         technician: tech ? {
           id: tech.practitioner_id,
           name: `${tech.practitioners?.given_name ?? ''} ${tech.practitioners?.family_name ?? ''}`.trim(),
@@ -474,6 +517,37 @@ export const adminRouter = createTRPCRouter({
         labName: z.string().min(1).max(200),
         licenseRef: z.string().min(1).max(100),
         accreditationRef: z.string().max(100).optional(),
+        // Enterprise fields (all optional)
+        logoUrl: z.string().url().optional(),
+        description: z.string().max(1000).optional(),
+        phone: z.string().max(30).optional(),
+        altPhone: z.string().max(30).optional(),
+        email: z.string().email().optional(),
+        website: z.string().url().optional(),
+        whatsapp: z.string().max(30).optional(),
+        address: z.string().max(500).optional(),
+        province: z.string().max(100).optional(),
+        district: z.string().max(100).optional(),
+        city: z.string().max(100).optional(),
+        postalCode: z.string().max(20).optional(),
+        country: z.string().max(100).optional(),
+        contactPersonName: z.string().max(200).optional(),
+        contactPersonRole: z.string().max(100).optional(),
+        contactPersonPhone: z.string().max(30).optional(),
+        openingHours: z.record(z.unknown()).optional(),
+        timezone: z.string().max(100).optional(),
+        is247: z.boolean().optional(),
+        googlePlaceId: z.string().max(200).optional(),
+        googleMapsUrl: z.string().url().optional(),
+        googleRating: z.number().min(0).max(5).optional(),
+        googleReviewCount: z.number().int().min(0).optional(),
+        googleHours: z.record(z.unknown()).optional(),
+        googleLastSyncedAt: z.string().optional(),
+        specialties: z.array(z.string()).optional(),
+        turnaroundTimeHours: z.number().int().min(0).optional(),
+        homeCollection: z.boolean().optional(),
+        sampleCollection: z.boolean().optional(),
+        capAccredited: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -485,6 +559,37 @@ export const adminRouter = createTRPCRouter({
           accreditation_ref: input.accreditationRef ?? null,
           org_id: ctx.user.orgId,
           status: 'ACTIVE',
+          // Enterprise fields
+          logo_url: input.logoUrl ?? null,
+          description: input.description ?? null,
+          phone: input.phone ?? null,
+          alt_phone: input.altPhone ?? null,
+          email: input.email ?? null,
+          website: input.website ?? null,
+          whatsapp: input.whatsapp ?? null,
+          address: input.address ?? null,
+          province: input.province ?? null,
+          district: input.district ?? null,
+          city: input.city ?? null,
+          postal_code: input.postalCode ?? null,
+          country: input.country ?? null,
+          contact_person_name: input.contactPersonName ?? null,
+          contact_person_role: input.contactPersonRole ?? null,
+          contact_person_phone: input.contactPersonPhone ?? null,
+          opening_hours: input.openingHours ?? null,
+          timezone: input.timezone ?? null,
+          is_24_7: input.is247 ?? null,
+          google_place_id: input.googlePlaceId ?? null,
+          google_maps_url: input.googleMapsUrl ?? null,
+          google_rating: input.googleRating ?? null,
+          google_review_count: input.googleReviewCount ?? null,
+          google_hours: input.googleHours ?? null,
+          google_last_synced_at: input.googleLastSyncedAt ?? null,
+          specialties: input.specialties ?? null,
+          turnaround_time_hours: input.turnaroundTimeHours ?? null,
+          home_collection: input.homeCollection ?? null,
+          sample_collection: input.sampleCollection ?? null,
+          cap_accredited: input.capAccredited ?? null,
         })
         .select('id')
         .single()
@@ -675,6 +780,181 @@ export const adminRouter = createTRPCRouter({
         previousStatus: transition.from,
         newStatus: transition.to,
       }
+    }),
+
+  /**
+   * Update lab profile enterprise fields (org-scoped).
+   * All fields are optional — only provided fields are written.
+   */
+  updateLab: adminProcedure
+    .input(
+      z.object({
+        labId: z.string().uuid(),
+        labName: z.string().min(1).max(200).optional(),
+        accreditationRef: z.string().max(100).optional(),
+        logoUrl: z.string().url().optional(),
+        description: z.string().max(1000).optional(),
+        phone: z.string().max(30).optional(),
+        altPhone: z.string().max(30).optional(),
+        email: z.string().email().optional(),
+        website: z.string().url().optional(),
+        whatsapp: z.string().max(30).optional(),
+        address: z.string().max(500).optional(),
+        province: z.string().max(100).optional(),
+        district: z.string().max(100).optional(),
+        city: z.string().max(100).optional(),
+        postalCode: z.string().max(20).optional(),
+        country: z.string().max(100).optional(),
+        contactPersonName: z.string().max(200).optional(),
+        contactPersonRole: z.string().max(100).optional(),
+        contactPersonPhone: z.string().max(30).optional(),
+        openingHours: z.record(z.unknown()).optional(),
+        timezone: z.string().max(100).optional(),
+        is247: z.boolean().optional(),
+        googlePlaceId: z.string().max(200).optional(),
+        googleMapsUrl: z.string().url().optional(),
+        googleRating: z.number().min(0).max(5).optional(),
+        googleReviewCount: z.number().int().min(0).optional(),
+        googleHours: z.record(z.unknown()).optional(),
+        googleLastSyncedAt: z.string().optional(),
+        specialties: z.array(z.string()).optional(),
+        turnaroundTimeHours: z.number().int().min(0).optional(),
+        homeCollection: z.boolean().optional(),
+        sampleCollection: z.boolean().optional(),
+        capAccredited: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { labId, ...fields } = input
+
+      // Build only the fields that were explicitly provided (avoid overwriting with undefined)
+      const updates: Record<string, unknown> = {}
+      if (fields.labName !== undefined) updates.lab_name = fields.labName
+      if (fields.accreditationRef !== undefined) updates.accreditation_ref = fields.accreditationRef
+      if (fields.logoUrl !== undefined) updates.logo_url = fields.logoUrl
+      if (fields.description !== undefined) updates.description = fields.description
+      if (fields.phone !== undefined) updates.phone = fields.phone
+      if (fields.altPhone !== undefined) updates.alt_phone = fields.altPhone
+      if (fields.email !== undefined) updates.email = fields.email
+      if (fields.website !== undefined) updates.website = fields.website
+      if (fields.whatsapp !== undefined) updates.whatsapp = fields.whatsapp
+      if (fields.address !== undefined) updates.address = fields.address
+      if (fields.province !== undefined) updates.province = fields.province
+      if (fields.district !== undefined) updates.district = fields.district
+      if (fields.city !== undefined) updates.city = fields.city
+      if (fields.postalCode !== undefined) updates.postal_code = fields.postalCode
+      if (fields.country !== undefined) updates.country = fields.country
+      if (fields.contactPersonName !== undefined) updates.contact_person_name = fields.contactPersonName
+      if (fields.contactPersonRole !== undefined) updates.contact_person_role = fields.contactPersonRole
+      if (fields.contactPersonPhone !== undefined) updates.contact_person_phone = fields.contactPersonPhone
+      if (fields.openingHours !== undefined) updates.opening_hours = fields.openingHours
+      if (fields.timezone !== undefined) updates.timezone = fields.timezone
+      if (fields.is247 !== undefined) updates.is_24_7 = fields.is247
+      if (fields.googlePlaceId !== undefined) updates.google_place_id = fields.googlePlaceId
+      if (fields.googleMapsUrl !== undefined) updates.google_maps_url = fields.googleMapsUrl
+      if (fields.googleRating !== undefined) updates.google_rating = fields.googleRating
+      if (fields.googleReviewCount !== undefined) updates.google_review_count = fields.googleReviewCount
+      if (fields.googleHours !== undefined) updates.google_hours = fields.googleHours
+      if (fields.googleLastSyncedAt !== undefined) updates.google_last_synced_at = fields.googleLastSyncedAt
+      if (fields.specialties !== undefined) updates.specialties = fields.specialties
+      if (fields.turnaroundTimeHours !== undefined) updates.turnaround_time_hours = fields.turnaroundTimeHours
+      if (fields.homeCollection !== undefined) updates.home_collection = fields.homeCollection
+      if (fields.sampleCollection !== undefined) updates.sample_collection = fields.sampleCollection
+      if (fields.capAccredited !== undefined) updates.cap_accredited = fields.capAccredited
+
+      const { data: updated, error } = await ctx.supabase
+        .from('labs')
+        .update(updates)
+        .eq('id', labId)
+        .eq('org_id', ctx.user.orgId)
+        .select('id')
+        .maybeSingle()
+
+      if (error || !updated) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Lab not found or update failed',
+        })
+      }
+
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'UPDATE',
+          resourceType: 'LAB',
+          resourceId: (updated as Record<string, unknown>).id as string,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { endpoint: 'admin.updateLab' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'LAB' })
+      }
+
+      return { id: (updated as Record<string, unknown>).id as string }
+    }),
+
+  /**
+   * Archive a lab (status → ARCHIVED) with history row.
+   * Org-scoped. Inserts a lab_status_history entry.
+   */
+  archiveLab: adminProcedure
+    .input(
+      z.object({
+        labId: z.string().uuid(),
+        reason: z.string().max(500).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { data: archived, error } = await ctx.supabase
+        .from('labs')
+        .update({ status: 'ARCHIVED' })
+        .eq('id', input.labId)
+        .eq('org_id', ctx.user.orgId)
+        .select('id')
+        .maybeSingle()
+
+      if (error || !archived) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Lab not found or archive failed',
+        })
+      }
+
+      // Insert status history row (best-effort — do not block on failure)
+      const { error: historyError } = await ctx.supabase
+        .from('lab_status_history')
+        .insert({
+          lab_id: input.labId,
+          status: 'ARCHIVED',
+          changed_by: ctx.user.sub,
+          changed_at: new Date().toISOString(),
+          reason: input.reason ?? null,
+        })
+
+      if (historyError) {
+        console.warn('[STATUS_HISTORY_FAILURE]', { labId: input.labId, action: 'ARCHIVE' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'ARCHIVE',
+          resourceType: 'LAB',
+          resourceId: (archived as Record<string, unknown>).id as string,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { endpoint: 'admin.archiveLab' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'ARCHIVE', resourceType: 'LAB' })
+      }
+
+      return { id: (archived as Record<string, unknown>).id as string }
     }),
 
   /**

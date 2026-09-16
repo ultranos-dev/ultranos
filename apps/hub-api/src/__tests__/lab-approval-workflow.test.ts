@@ -129,6 +129,7 @@ describe('Story 22.3: Lab Approval & Suspension Workflow', () => {
       // Build a proper chainable mock
       const chainable: Record<string, any> = {}
       chainable.eq = vi.fn().mockReturnValue(chainable)
+      chainable.neq = vi.fn().mockReturnValue(chainable)
       chainable.order = vi.fn().mockReturnValue(chainable)
       chainable.range = vi.fn().mockReturnValue(chainable)
       chainable.then = (resolve: any) => resolve(resolvedResult)
@@ -157,6 +158,7 @@ describe('Story 22.3: Lab Approval & Suspension Workflow', () => {
       const resolvedResult = { data: [], error: null, count: 0 }
       const chainable: Record<string, any> = {}
       chainable.eq = vi.fn().mockReturnValue(chainable)
+      chainable.neq = vi.fn().mockReturnValue(chainable)
       chainable.order = vi.fn().mockReturnValue(chainable)
       chainable.range = vi.fn().mockReturnValue(chainable)
       chainable.then = (resolve: any) => resolve(resolvedResult)
