@@ -30,6 +30,12 @@
       ],
       "@ultranos/ui-kit/native": [
         "../../packages/ui-kit/src/native/index.ts"
+      ],
+      "@ultranos/ui-kit/tokens.native": [
+        "../../packages/ui-kit/src/tokens.native.ts"
+      ],
+      "@ultranos/ui-kit/highlight-native": [
+        "../../packages/ui-kit/src/native/highlight-native.tsx"
       ]
     }
   },
