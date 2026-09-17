@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Users, FileSearch } from '@ultranos/ui-kit/icons'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
 import {
   Dialog,
@@ -35,6 +36,7 @@ interface StaffMember {
   email: string
   labRole: LabRole
   createdAt: string
+  photoUrl?: string | null
 }
 
 function formatDate(iso: string): string {
@@ -324,8 +326,11 @@ export default function LabStaffPage() {
                 <tbody className="divide-y divide-border">
                   {visible.map((member) => (
                     <tr key={member.practitionerId} className="hover:bg-muted/50 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                        {member.practitionerId.slice(0, 8)}...
+                      <td className="px-4 py-3 font-medium text-foreground">
+                        <div className="flex items-center gap-2.5">
+                          <Avatar src={member.photoUrl} name={member.email} size={28} />
+                          <span className="font-mono text-xs text-muted-foreground">{member.practitionerId.slice(0, 8)}...</span>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-foreground">
                         {truncate(member.email, 25)}

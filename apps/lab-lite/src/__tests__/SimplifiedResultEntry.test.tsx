@@ -22,6 +22,20 @@ import type { OutbreakModeConfig } from '../types/outbreak'
 // Mocks
 // ---------------------------------------------------------------------------
 
+// Mock next-intl — component calls useTranslations('outbreak') without a
+// NextIntlClientProvider. Load the real en.json messages so rendered text
+// matches what the tests assert (e.g. "Fast Result Entry", "Sample ID", etc.).
+vi.mock('next-intl', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const messages = require('../../messages/en.json') as Record<string, Record<string, string>>
+  const makeT = (ns: string) => (key: string, params?: Record<string, unknown>) => {
+    let val = messages[ns]?.[key] ?? key
+    if (params) for (const [k, v] of Object.entries(params)) val = val.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
+    return val
+  }
+  return { useTranslations: (ns: string) => makeT(ns), useLocale: () => 'en' }
+})
+
 const mockSession = {
   userId: 'u1',
   role: 'LAB_TECH',

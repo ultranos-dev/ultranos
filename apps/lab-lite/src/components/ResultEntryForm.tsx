@@ -13,6 +13,7 @@ import { useState, useEffect, useCallback, useId, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { MessageSquare } from '@ultranos/ui-kit/icons'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import type { ResultTemplate, TemplateField, RangeResolutionContext } from '@/lib/result-templates'
 import { resolveLocalizedRange } from '@/lib/result-templates'
 import type { LabResult, LabObservation } from '@/lib/db'
@@ -477,16 +478,20 @@ export function ResultEntryForm({
       {/* ---- Sticky patient header ---- */}
       <div className="sticky top-0 z-10 border-b border-border bg-card px-4 py-3 dark:border-border dark:bg-card">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-base font-semibold text-foreground dark:text-foreground">
-              {patientFirstName}
-              <span className="ms-2 text-sm font-normal text-muted-foreground dark:text-muted-foreground">
-                {t('patientAge', { age: patientAge })}
-              </span>
-            </p>
-            <p className="text-xs text-muted-foreground dark:text-muted-foreground">
-              {t('sampleId', { id: sampleId })}
-            </p>
+          <div className="flex items-center gap-2">
+            {/* Initials-only avatar — no photo for result entry header (staff context) */}
+            <Avatar name={patientFirstName} size={24} />
+            <div>
+              <p className="text-base font-semibold text-foreground dark:text-foreground">
+                {patientFirstName}
+                <span className="ms-2 text-sm font-normal text-muted-foreground dark:text-muted-foreground">
+                  {t('patientAge', { age: patientAge })}
+                </span>
+              </p>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground">
+                {t('sampleId', { id: sampleId })}
+              </p>
+            </div>
           </div>
           <span className="rounded bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
             {template.loincDisplay}

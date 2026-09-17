@@ -14,6 +14,7 @@ import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/Card'
 import { X } from '@ultranos/ui-kit/icons'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -470,12 +471,15 @@ export function PatientEditModal({
       <div className="flex w-full max-w-lg max-h-[90vh] flex-col rounded-xl bg-background shadow-xl sm:mx-4">
         {/* ── Sticky header ── */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2
-            id="edit-patient-title"
-            className="text-lg font-bold text-foreground"
-          >
-            {t('editPatientProfile')}
-          </h2>
+          <div className="flex items-center gap-3">
+            <Avatar name={nameGiven || undefined} size={56} />
+            <h2
+              id="edit-patient-title"
+              className="text-lg font-bold text-foreground"
+            >
+              {t('editPatientProfile')}
+            </h2>
+          </div>
           <button
             type="button"
             onClick={onClose}

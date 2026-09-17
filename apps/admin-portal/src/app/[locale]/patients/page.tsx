@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Search, FileSearch } from '@ultranos/ui-kit/icons'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 
 interface Patient {
   id: string
@@ -25,6 +26,7 @@ interface Patient {
   patient_tier: string | null
   is_active: boolean
   created_at: string | null
+  photoUrl?: string | null
 }
 
 function MpiWarnBadge({ warn }: { warn: boolean | null }) {
@@ -196,13 +198,16 @@ export default function PatientsPage() {
                       className="cursor-pointer transition-colors hover:bg-muted/50"
                     >
                       <td className="px-4 py-3 font-medium text-foreground">
-                        <Link
-                          href={`/patients/${patient.id}`}
-                          className="hover:underline"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {formatName(patient)}
-                        </Link>
+                        <div className="flex items-center gap-2.5">
+                          <Avatar src={patient.photoUrl} name={formatName(patient)} size={28} />
+                          <Link
+                            href={`/patients/${patient.id}`}
+                            className="hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {formatName(patient)}
+                          </Link>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{patient.gender ?? '-'}</td>
                       <td className="px-4 py-3 text-muted-foreground">{patient.birth_year ?? '-'}</td>

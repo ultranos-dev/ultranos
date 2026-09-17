@@ -3,6 +3,7 @@
 import type { QueueItem, FulfillmentPhaseBadge, SyncStatus } from '@/lib/queue-data'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 
 interface QueueItemCardProps {
   item: QueueItem
@@ -82,12 +83,15 @@ export function QueueItemCard({
           : undefined
       }
     >
-      <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium text-foreground truncate">
-          {item.patientFirstName}
-        </div>
-        <div className="text-xs text-muted-foreground truncate">
-          {item.medicationCount} meds &middot; {formatTime(item.timestamp)}
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <Avatar src={item.patientPhotoUrl} name={item.patientFirstName} size={24} />
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-medium text-foreground truncate">
+            {item.patientFirstName}
+          </div>
+          <div className="text-xs text-muted-foreground truncate">
+            {item.medicationCount} meds &middot; {formatTime(item.timestamp)}
+          </div>
         </div>
       </div>
 

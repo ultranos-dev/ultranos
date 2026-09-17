@@ -8,6 +8,7 @@ import { trpc } from '@/lib/trpc'
 import { PatientComparisonTable } from '@/components/patients/PatientComparisonTable'
 import { MergePreview } from '@/components/patients/MergePreview'
 import { Check, Users } from '@ultranos/ui-kit/icons'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SearchInput } from '@/components/ui/search-input'
@@ -27,6 +28,7 @@ interface Patient {
   patient_tier: string | null
   is_active: boolean
   created_at: string | null
+  photoUrl?: string | null
 }
 
 const MERGE_FIELDS = [
@@ -40,12 +42,14 @@ const MERGE_FIELDS = [
 ]
 
 function PatientCard({ patient, label }: { patient: Patient; label: string }) {
+  const displayName = [patient.name_given, patient.name_father].filter(Boolean).join(' ') || 'Unknown'
   return (
     <div className="rounded-xl bg-card p-5 border border-border">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-foreground">
-        {[patient.name_given, patient.name_father].filter(Boolean).join(' ') || 'Unknown'}
-      </p>
+      <div className="mt-2 flex items-center gap-3">
+        <Avatar src={patient.photoUrl} name={displayName} size={64} />
+        <p className="text-lg font-semibold text-foreground">{displayName}</p>
+      </div>
       <div className="mt-3 space-y-1 text-sm text-muted-foreground">
         <p>Gender: {patient.gender ?? '-'}</p>
         <p>Birth Year: {patient.birth_year ?? '-'}</p>

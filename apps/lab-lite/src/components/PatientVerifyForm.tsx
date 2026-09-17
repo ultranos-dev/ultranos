@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { verifyPatient, type VerifyPatientResult } from '@/lib/trpc'
 import { cacheVerifiedPatient, getCachedPatient } from '@/lib/offline-verify'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { Button } from '@/components/ui/Button'
 import { OfflineVerificationBadge } from './OfflineVerificationBadge'
 import { OnlineStatusIndicator } from './OnlineStatusIndicator'
@@ -140,12 +141,16 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
             <h3 className="text-sm font-semibold text-green-800">Patient Verified</h3>
             <OfflineVerificationBadge source={verificationSource} />
           </div>
-          <dl className="grid grid-cols-2 gap-2 text-sm">
-            <dt className="font-medium text-muted-foreground">First Name</dt>
-            <dd className="text-foreground">{verifiedResult.firstName}</dd>
-            <dt className="font-medium text-muted-foreground">Age</dt>
-            <dd className="text-foreground">{verifiedResult.age}</dd>
-          </dl>
+          {/* Avatar (photo when a signed URL is available, else initials) beside the minimal fields */}
+          <div className="flex items-start gap-3">
+            <Avatar src={verifiedResult.photoUrl} name={verifiedResult.firstName} size={72} />
+            <dl className="grid flex-1 grid-cols-2 gap-2 text-sm">
+              <dt className="font-medium text-muted-foreground">First Name</dt>
+              <dd className="text-foreground">{verifiedResult.firstName}</dd>
+              <dt className="font-medium text-muted-foreground">Age</dt>
+              <dd className="text-foreground">{verifiedResult.age}</dd>
+            </dl>
+          </div>
           <div className="mt-4 flex gap-3">
             <Button
               variant="primary"

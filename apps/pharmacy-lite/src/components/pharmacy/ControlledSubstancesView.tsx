@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Pill, FileSearch } from '@ultranos/ui-kit/icons'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import type { LocalMedicationDispense } from '@/lib/medication-dispense'
@@ -317,7 +318,10 @@ export function ControlledSubstancesView() {
                       {d._ultranos?.controlledSubstanceSchedule ?? '---'}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
-                      {extractPrescriberRef(d)}
+                      <div className="flex items-center gap-2">
+                        <Avatar size={20} />
+                        <span>{extractPrescriberRef(d)}</span>
+                      </div>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
                       <span

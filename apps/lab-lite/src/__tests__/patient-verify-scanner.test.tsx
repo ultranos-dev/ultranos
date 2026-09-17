@@ -8,6 +8,15 @@ vi.mock('@/lib/trpc', () => ({
   verifyPatient: (...args: unknown[]) => mockVerifyPatient(...args),
 }))
 
+// Mock offline-verify — cacheVerifiedPatient/getCachedPatient use Dexie (IndexedDB)
+// which is unavailable in jsdom without additional setup. The QR flow under test is
+// the online path, so these helpers are no-ops in this context.
+vi.mock('@/lib/offline-verify', () => ({
+  verifyQrOffline: vi.fn().mockResolvedValue({ valid: false, reason: 'test' }),
+  cacheVerifiedPatient: vi.fn().mockResolvedValue(undefined),
+  getCachedPatient: vi.fn().mockResolvedValue(null),
+}))
+
 // Mock html5-qrcode
 const mockStart = vi.fn()
 const mockStop = vi.fn().mockResolvedValue(undefined)
@@ -59,9 +68,10 @@ describe('PatientVerifyScanner', () => {
 
     // Capture the scan success callback
     mockStart.mockImplementation(async (_camera: any, _config: any, onSuccess: (text: string) => void) => {
-      // Simulate QR scan with Health Passport payload
+      // Simulate QR scan with Health Passport payload.
+      // exp must be a future Unix timestamp (seconds); 9999999999 ≈ year 2286.
       setTimeout(() => {
-        onSuccess(JSON.stringify({ pid: 'patient-uuid-qr', iat: 1234, exp: 5678 }))
+        onSuccess(JSON.stringify({ pid: 'patient-uuid-qr', iat: 1700000000, exp: 9999999999 }))
       }, 10)
     })
 
@@ -74,6 +84,14 @@ describe('PatientVerifyScanner', () => {
     await waitFor(() => {
       expect(mockVerifyPatient).toHaveBeenCalledWith('patient-uuid-qr', 'QR_SCAN', 'test-jwt-token')
     })
+
+    // After verifyPatient resolves, the component shows a verification card with a
+    // "Confirm Patient" button. onVerified is only called after explicit confirmation
+    // (two-step UX: verify then confirm). Click the confirm button.
+    await waitFor(() => {
+      expect(screen.getByText('Confirm Patient')).toBeDefined()
+    })
+    fireEvent.click(screen.getByText('Confirm Patient'))
 
     await waitFor(() => {
       expect(defaultProps.onVerified).toHaveBeenCalledWith({

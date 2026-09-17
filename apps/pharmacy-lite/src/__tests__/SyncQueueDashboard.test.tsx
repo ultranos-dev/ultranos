@@ -87,8 +87,16 @@ function makeSyncEntry(overrides: Partial<SyncQueueEntry> = {}): SyncQueueEntry 
 }
 
 beforeEach(async () => {
-  await db.delete()
-  await db.open()
+  // Clear tables rather than deleting/reopening the database. db.delete() closes
+  // the Dexie instance and triggers a DatabaseClosedError on any in-flight async
+  // operations from the previous test's rendered component (which may still be
+  // resolving after cleanup()). Clearing tables keeps the db open, eliminating
+  // the close/reopen race condition.
+  if (!db.isOpen()) {
+    await db.open()
+  }
+  await db.syncQueue.clear()
+  await db.dispenses.clear()
   vi.clearAllMocks()
 })
 

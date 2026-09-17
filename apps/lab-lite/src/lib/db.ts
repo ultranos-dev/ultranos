@@ -320,6 +320,8 @@ export interface LabOrderEntry {
   patientFirstName: string // first name ONLY — CLAUDE.md Rule #7
   patientAge: number | null // computed age, NOT DOB
   patientRef: string // opaque Patient/{uuid}
+  /** Short-lived signed photo URL from hub (server-signed; lab never receives UUID/key). Null = no photo. */
+  patientPhotoUrl?: string | null
   testsRequested: Array<{ loincCode: string; loincDisplay: string }>
   urgency: OrderUrgency
   orderingPhysicianName: string

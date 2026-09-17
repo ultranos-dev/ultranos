@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Wallet, FileSearch } from '@ultranos/ui-kit/icons'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { db } from '@/lib/db'
 import {
@@ -332,11 +333,14 @@ export function PatientAccountsPage() {
                   onClick={() => selectPatient(account.patientId)}
                   className="flex w-full items-center justify-between px-4 py-3 text-start transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500"
                 >
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{account.patientName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('lastActivity', { date: new Date(account.lastActivityAt).toLocaleDateString() })}
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <Avatar name={account.patientName} size={24} />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{account.patientName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t('lastActivity', { date: new Date(account.lastActivityAt).toLocaleDateString() })}
+                      </p>
+                    </div>
                   </div>
                   <p className="text-sm font-semibold tabular-nums text-warning font-numeric">
                     {fmt(account.balance)}

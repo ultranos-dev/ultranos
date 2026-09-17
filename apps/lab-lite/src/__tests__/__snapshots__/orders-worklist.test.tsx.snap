@@ -143,8 +143,20 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
               class="min-w-0 flex-1"
             >
               <p
-                class="flex items-center text-base font-semibold text-foreground"
+                class="flex items-center gap-2 text-base font-semibold text-foreground"
               >
+                <span
+                  aria-hidden="true"
+                  class="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-success/15 text-success"
+                  style="width: 24px; height: 24px;"
+                >
+                  <span
+                    class="font-semibold leading-none"
+                    style="font-size: 10px;"
+                  >
+                    AH
+                  </span>
+                </span>
                 <bdi
                   class="truncate"
                 >
@@ -224,7 +236,7 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
               >
                 Ordered
                  
-                254d
+                258d
               </span>
               <span
                 class="whitespace-nowrap text-[11px] text-muted-foreground"
@@ -383,8 +395,20 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
               class="min-w-0 flex-1"
             >
               <p
-                class="flex items-center text-base font-semibold text-foreground"
+                class="flex items-center gap-2 text-base font-semibold text-foreground"
               >
+                <span
+                  aria-hidden="true"
+                  class="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-success/15 text-success"
+                  style="width: 24px; height: 24px;"
+                >
+                  <span
+                    class="font-semibold leading-none"
+                    style="font-size: 10px;"
+                  >
+                    AH
+                  </span>
+                </span>
                 <bdi
                   class="truncate"
                 >
@@ -464,7 +488,7 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
               >
                 Ordered
                  
-                254d
+                258d
               </span>
               <span
                 class="whitespace-nowrap text-[11px] text-muted-foreground"

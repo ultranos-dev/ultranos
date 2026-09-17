@@ -94,9 +94,27 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
   ChevronDown: ({ className, 'aria-hidden': ariaHidden }: { className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }) => <svg data-testid="icon-chevron-down" className={className} aria-hidden={ariaHidden} />,
 }))
 
+// Mock Avatar from ui-kit
+vi.mock('@ultranos/ui-kit/components/ui/avatar', () => ({
+  Avatar: ({ name }: { name?: string | null; src?: string | null; size?: number }) => (
+    <span data-testid="avatar">{name?.slice(0, 2) ?? ''}</span>
+  ),
+}))
+
 // Mock ui-kit Input so we don't pull in the full ui-kit chain
 vi.mock('@ultranos/ui-kit/components/ui/input', () => ({
   Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
+}))
+
+// Mock Supabase browser client (used by batched photo URL signing)
+vi.mock('@/lib/supabase', () => ({
+  getSupabaseBrowserClient: () => ({
+    storage: {
+      from: () => ({
+        createSignedUrls: vi.fn().mockResolvedValue({ data: [], error: null }),
+      }),
+    },
+  }),
 }))
 
 // Mock app-local Card

@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import type { LabOrderEntry } from '@/lib/db'
 import { getPatientCulturalPreferences, getReceivedSampleForOrder } from '@/lib/db'
 import type { CulturalFlag } from '@/lib/cultural-flags'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { CulturalFlagsBanner } from '@/components/patients/CulturalFlagsBanner'
 import { CulturalFlagsEditor } from '@/components/patients/CulturalFlagsEditor'
 import { ReceiveSampleModal } from '@/components/samples/ReceiveSampleModal'
@@ -108,9 +109,10 @@ export function OrderCard({ order }: { order: LabOrderEntry }) {
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            {/* Patient: first name + age — <bdi> isolates an RTL name from the LTR age
+            {/* Patient: avatar + first name + age — <bdi> isolates an RTL name from the LTR age
                 so the two fields don't visually jumble together. */}
-            <p className="flex items-center text-base font-semibold text-foreground">
+            <p className="flex items-center gap-2 text-base font-semibold text-foreground">
+              <Avatar src={order.patientPhotoUrl} name={order.patientFirstName} size={24} />
               <bdi className="truncate">{order.patientFirstName}</bdi>
               <span className="mx-1.5 text-muted-foreground" aria-hidden="true">·</span>
               <span className="whitespace-nowrap font-numeric font-normal text-muted-foreground">

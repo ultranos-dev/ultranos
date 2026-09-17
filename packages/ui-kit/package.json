@@ -33,6 +33,7 @@
     "./components/ui/empty-state": "./src/components/ui/empty-state.tsx",
     "./components/ui/detail-layout": "./src/components/ui/detail-layout.tsx",
     "./components/ui/alert": "./src/components/ui/alert.tsx",
+    "./components/ui/avatar": "./src/components/ui/avatar.tsx",
     "./tailwind.preset": "./src/tailwind.preset.ts",
     "./tokens.native": "./src/tokens.native.ts",
     "./highlight-native": "./src/native/highlight-native.tsx",
@@ -44,6 +45,10 @@
     "./components/ui/app-toaster": "./src/components/ui/app-toaster.tsx",
     "./components/ui/notification-row": "./src/components/ui/notification-row.tsx",
     "./components/ui/notification-detail-modal": "./src/components/ui/notification-detail-modal.tsx",
+    "./components/photo/photo-upload-modal": "./src/components/photo/photo-upload-modal.tsx",
+    "./components/photo/photo-avatar-field": "./src/components/photo/photo-avatar-field.tsx",
+    "./components/photo/photo-cropper": "./src/components/photo/photo-cropper.tsx",
+    "./components/photo/use-webcam-capture": "./src/components/photo/use-webcam-capture.ts",
     "./notification-presentation": "./src/notification-presentation.ts"
   },
   "scripts": {

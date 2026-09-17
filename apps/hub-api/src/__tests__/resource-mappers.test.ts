@@ -232,10 +232,10 @@ describe('flattenForDb', () => {
     it('strips resourceType and passes through for unknown types', () => {
       const unknown = {
         id: 'x-001',
-        resourceType: 'ServiceRequest',
+        resourceType: 'UnknownFhirResource',
         someField: 'value',
       }
-      const result = flattenForDb('ServiceRequest', unknown)
+      const result = flattenForDb('UnknownFhirResource', unknown)
       expect(result).not.toHaveProperty('resourceType')
       expect(result.someField).toBe('value')
     })

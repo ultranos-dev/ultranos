@@ -9,6 +9,7 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useDataBudgetStore } from '@/stores/data-budget-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportDataBudgetConfigEvent } from '@/lib/audit-client'
+import { uploadStaffPhoto, removeStaffPhoto } from '@/lib/staff-photo-api'
 import { Button } from '@/components/ui/Button'
 import { SecurityAlertFlow } from '@/components/security/SecurityAlertFlow'
 import { ConfidencePrincipleInfo } from '@/components/ai/ConfidencePrincipleInfo'
@@ -21,6 +22,7 @@ import { BadgeShowcase } from '@/components/quality/BadgeShowcase'
 import { SurveillanceConfigCard } from '@/components/settings/SurveillanceConfig'
 import { ProgramRegistration } from '@/components/settings/ProgramRegistration'
 import { SmsGatewayConfig } from '@/components/settings/SmsGatewayConfig'
+import { PhotoAvatarField } from '@ultranos/ui-kit/components/photo/photo-avatar-field'
 
 /** Map LabRole enum to i18n key under settings namespace */
 const ROLE_I18N_KEY: Record<LabRole, string> = {
@@ -39,6 +41,40 @@ export function LabSettingsView() {
   const session = useAuthSessionStore((s) => s.session)
   const [showSecurityAlert, setShowSecurityAlert] = useState(false)
   const isManager = session?.labRole === LabRole.LAB_MANAGER
+
+  /* Photo / practitioner profile state */
+  const [practitionerId, setPractitionerId] = useState<string | null>(null)
+  const [avatarKey, setAvatarKey] = useState<string | null>(null)
+  const [avatarUpdatedAt, setAvatarUpdatedAt] = useState<string>('')
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadProfile() {
+      try {
+        const { data } = await getSupabaseBrowserClient().auth.getSession()
+        const token = data.session?.access_token
+        if (!token) return
+        const trpcUrl = process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+        const input = encodeURIComponent(JSON.stringify({ json: {} }))
+        const res = await fetch(`${trpcUrl}/users.getProfile?input=${input}`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok || cancelled) return
+        const body = await res.json() as { result?: { data?: { json?: { kind?: string; practitionerId?: string; avatarUrl?: string | null; updatedAt?: string | null } } } }
+        const prof = body?.result?.data?.json
+        if (!cancelled && prof) {
+          setPractitionerId(prof.practitionerId ?? null)
+          setAvatarKey(prof.avatarUrl ?? null)
+          setAvatarUpdatedAt(prof.updatedAt ?? '')
+        }
+      } catch {
+        // Non-blocking — falls back to text-only profile card
+      }
+    }
+    loadProfile()
+    return () => { cancelled = true }
+  }, [])
   const {
     planSizeMB,
     billingCycleDay,
@@ -266,6 +302,32 @@ export function LabSettingsView() {
         {/* Profile Card */}
         <div className="rounded-lg border border-border bg-card p-4">
           <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('profile')}</h2>
+          {practitionerId && (
+            <div className="mb-4">
+              <PhotoAvatarField
+                name={session?.email?.split('@')[0] ?? 'User'}
+                photoKey={avatarKey}
+                lastKnownUpdate={avatarUpdatedAt}
+                signUrl={async (key) => {
+                  const { data } = await getSupabaseBrowserClient().storage
+                    .from('staff-photos')
+                    .createSignedUrl(key, 3600)
+                  return data?.signedUrl ?? null
+                }}
+                uploadFn={async (blob, lku) => {
+                  const result = await uploadStaffPhoto(practitionerId, blob, lku)
+                  return { photoKey: result.photoUrl, lastUpdated: result.lastUpdated }
+                }}
+                removeFn={async (lku) => {
+                  return removeStaffPhoto(practitionerId, lku)
+                }}
+                onUpdated={(key, lastUpdated) => {
+                  setAvatarKey(key)
+                  setAvatarUpdatedAt(lastUpdated)
+                }}
+              />
+            </div>
+          )}
           <dl className="space-y-2">
             <div className="flex justify-between">
               <dt className="text-sm text-muted-foreground">{t('email')}</dt>

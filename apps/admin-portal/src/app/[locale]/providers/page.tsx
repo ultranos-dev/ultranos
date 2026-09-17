@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { SearchInput } from '@/components/ui/search-input'
 import { FileText, ClipboardList, FileSearch } from '@ultranos/ui-kit/icons'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { EmptyState } from '@/components/ui/empty-state'
 
 type StatusFilter = 'ALL' | 'PENDING' | 'SLA_BREACHED'
@@ -26,6 +27,7 @@ interface KycQueueEntry {
   slaDeadline: string
   slaBreached: boolean
   slaRemainingHours: number | null
+  photoUrl?: string | null
 }
 
 const kycVariantMap: Record<string, 'warning' | 'success' | 'destructive' | 'secondary'> = {
@@ -209,13 +211,16 @@ export default function KycQueuePage() {
                       }`}
                     >
                       <td className="px-4 py-3 font-medium">
-                        <Link
-                          href={`/providers/profile/${sub.practitionerId}`}
-                          className="font-medium text-start text-foreground hover:text-primary transition-colors"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {sub.providerName}
-                        </Link>
+                        <div className="flex items-center gap-2.5">
+                          <Avatar src={sub.photoUrl} name={sub.providerName} size={28} />
+                          <Link
+                            href={`/providers/profile/${sub.practitionerId}`}
+                            className="font-medium text-start text-foreground hover:text-primary transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {sub.providerName}
+                          </Link>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground font-numeric">{formatDate(sub.submittedAt)}</td>
                       <td className="px-4 py-3 text-muted-foreground">

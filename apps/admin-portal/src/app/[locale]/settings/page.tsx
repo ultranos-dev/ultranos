@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { trpc, reportAdminAuthEvent } from '@/lib/trpc'
+import { uploadStaffPhoto, removeStaffPhoto } from '@/lib/staff-photo-api'
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences'
 import { ThresholdSettings } from '@/components/settings/ThresholdSettings'
 import { ModuleSettingsCard } from '@/components/settings/ModuleSettingsCard'
@@ -13,6 +14,7 @@ import { KeyRound, Package } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/ui/empty-state'
+import { PhotoAvatarField } from '@ultranos/ui-kit/components/photo/photo-avatar-field'
 
 /* ─── Types ─── */
 
@@ -101,6 +103,11 @@ export default function SettingsPage() {
   const [profileSuccess, setProfileSuccess] = useState<string | null>(null)
   const [profileError, setProfileError] = useState<string | null>(null)
 
+  /* Photo / practitioner state */
+  const [practitionerId, setPractitionerId] = useState<string | null>(null)
+  const [avatarKey, setAvatarKey] = useState<string | null>(null)
+  const [avatarUpdatedAt, setAvatarUpdatedAt] = useState<string>('')
+
   /* Password state */
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -154,8 +161,14 @@ export default function SettingsPage() {
   async function loadProfile() {
     try {
       const data = await trpc.admin.getProfile.query()
-      setProfile(data as AdminProfile)
-      setProfileName((data as AdminProfile).name ?? '')
+      const d = data as AdminProfile & { practitionerId?: string | null; photoTargetId?: string | null; avatarUrl?: string | null; updatedAt?: string | null }
+      setProfile(d as AdminProfile)
+      setProfileName(d.name ?? '')
+      // photoTargetId is the practitioner id when the admin has one, else the auth user id
+      // (pure-admin accounts store their avatar in auth metadata via the auth-self path).
+      setPractitionerId(d.photoTargetId ?? d.practitionerId ?? null)
+      setAvatarKey(d.avatarUrl ?? null)
+      setAvatarUpdatedAt(d.updatedAt ?? '')
     } catch {
       // Non-blocking
     }
@@ -462,6 +475,37 @@ export default function SettingsPage() {
               </Button>
             </div>
           </div>
+
+          {/* Profile Photo */}
+          {practitionerId && (
+            <div className={CARD}>
+              <div className="space-y-4">
+                <h2 className={CARD_TITLE}>Profile Photo</h2>
+                <PhotoAvatarField
+                  name={profileName || profile?.name || 'Admin'}
+                  photoKey={avatarKey}
+                  lastKnownUpdate={avatarUpdatedAt}
+                  signUrl={async (key) => {
+                    const { data } = await getSupabaseBrowserClient().storage
+                      .from('staff-photos')
+                      .createSignedUrl(key, 3600)
+                    return data?.signedUrl ?? null
+                  }}
+                  uploadFn={async (blob, lku) => {
+                    const result = await uploadStaffPhoto(practitionerId, blob, lku)
+                    return { photoKey: result.photoUrl, lastUpdated: result.lastUpdated }
+                  }}
+                  removeFn={async (lku) => {
+                    return removeStaffPhoto(practitionerId, lku)
+                  }}
+                  onUpdated={(key, lastUpdated) => {
+                    setAvatarKey(key)
+                    setAvatarUpdatedAt(lastUpdated)
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Change Password */}
           <div className={CARD}>

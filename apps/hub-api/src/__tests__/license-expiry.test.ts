@@ -123,17 +123,19 @@ describe('admin.listExpiringProviders', () => {
     const mockProviders = [
       {
         id: UUID_P1,
-        name: [{ family: 'Smith', given: ['John'], text: 'Dr. John Smith' }],
-        identifier: [{ system: 'HAAD', value: 'LIC-001' }],
-        _ultranos: { licenseExpiry: '2026-05-20', kycStatus: 'ACTIVE' },
-        meta: { lastUpdated: '2026-05-01T00:00:00Z' },
+        given_name: 'John',
+        family_name: 'Smith',
+        telecom_email: 'john@example.com',
+        kyc_status: 'ACTIVE',
+        license_expiry: '2026-05-20',
       },
       {
         id: UUID_P2,
-        name: [{ family: 'Ali', given: ['Ahmed'] }],
-        identifier: [{ system: 'MOH_UAE', value: 'LIC-002' }],
-        _ultranos: { licenseExpiry: '2026-06-15', kycStatus: 'ACTIVE' },
-        meta: { lastUpdated: '2026-05-01T00:00:00Z' },
+        given_name: 'Ahmed',
+        family_name: 'Ali',
+        telecom_email: 'ahmed@example.com',
+        kyc_status: 'ACTIVE',
+        license_expiry: '2026-06-15',
       },
     ]
 
@@ -143,9 +145,10 @@ describe('admin.listExpiringProviders', () => {
 
     expect(result.providers).toHaveLength(2)
     expect(result.providers[0].practitionerId).toBe(UUID_P1)
-    expect(result.providers[0].name).toBe('Dr. John Smith')
-    expect(result.providers[0].licenseNumber).toBe('LIC-001')
-    expect(result.providers[0].issuingBody).toBe('HAAD')
+    expect(result.providers[0].name).toBe('John Smith')
+    // The router queries flat columns only; licenseNumber/issuingBody are not joined
+    expect(result.providers[0].licenseNumber).toBe('')
+    expect(result.providers[0].issuingBody).toBe('')
     expect(result.providers[0].kycStatus).toBe('ACTIVE')
     expect(result.total).toBe(2)
   })

@@ -21,9 +21,9 @@ import {
   Ruler,
   Stethoscope,
   Thermometer,
-  User,
   Weight,
 } from '@ultranos/ui-kit/icons'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import type {
   LocalObservation,
   LocalCondition,
@@ -177,8 +177,8 @@ export function EncounterDetailModal({
               </DialogTitle>
               <DialogDescription className="mt-1 flex flex-wrap items-center gap-2">
                 {doctorName && (
-                  <span className="inline-flex items-center gap-1 text-sm font-medium text-foreground">
-                    <User className="size-3.5 text-muted-foreground" />
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
+                    <Avatar name={doctorName} size={24} />
                     <span dir="auto">{doctorName}</span>
                   </span>
                 )}

@@ -16,6 +16,7 @@ import { analyzeFile } from '@/services/ocr'
 import { compareHlc, deserializeHlc } from '@ultranos/sync-engine'
 import { monitoringPullEventsTotal } from '@/lib/clinical-safety-metrics'
 import { buildNotificationContent } from '@/lib/notification-content'
+import { signPhotoUrl, signPhotoUrls, photoKey } from '@/lib/photo-urls'
 
 /**
  * Dispatch lab result notifications to the ordering doctor and patient.
@@ -545,6 +546,7 @@ export const labRouter = createTRPCRouter({
         firstName: z.string(),
         age: z.number(),
         patientRef: z.string(),
+        photoUrl: z.string().nullable(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -569,7 +571,7 @@ export const labRouter = createTRPCRouter({
         const idHash = generateBlindIndex(input.query, hmacKey)
         patientQuery = ctx.supabase
           .from('patients')
-          .select('id, name_given, birth_date, birth_year')
+          .select('id, name_given, birth_date, birth_year, photo_url')
           .eq('ultranos_national_id_hash', idHash)
           .single()
       } else {
@@ -583,7 +585,7 @@ export const labRouter = createTRPCRouter({
         }
         patientQuery = ctx.supabase
           .from('patients')
-          .select('id, name_given, birth_date, birth_year')
+          .select('id, name_given, birth_date, birth_year, photo_url')
           .eq('id', input.query)
           .single()
       }
@@ -643,10 +645,18 @@ export const labRouter = createTRPCRouter({
         console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'PATIENT', resourceId: 'patient-verify' })
       }
 
+      // Sign the photo URL server-side — never expose the patient UUID or storage key to the lab
+      const photoUrl = await signPhotoUrl(
+        ctx.supabase,
+        'patient-photos',
+        patient.photo_url ? photoKey(patient.id) : null,
+      )
+
       return {
         firstName: patient.name_given,
         age,
         patientRef,
+        photoUrl,
       }
     }),
 
@@ -673,6 +683,7 @@ export const labRouter = createTRPCRouter({
           grandfather: z.string().nullable(),
         }),
         bloodGroup: z.string().nullable(),
+        photoUrl: z.string().nullable(),
         vitals: z.object({
           weightKg: z.number().nullable(),
           heightCm: z.number().nullable(),
@@ -706,7 +717,7 @@ export const labRouter = createTRPCRouter({
 
       const { data: patient } = await ctx.supabase
         .from('patients')
-        .select('name_given, name_father, name_grandfather, blood_group')
+        .select('name_given, name_father, name_grandfather, blood_group, photo_url')
         .eq('id', patientId)
         .maybeSingle()
 
@@ -735,6 +746,13 @@ export const labRouter = createTRPCRouter({
         console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'PATIENT', resourceId: input.orderId })
       }
 
+      // Sign the photo URL server-side — never expose the patient UUID or storage key to the lab
+      const photoUrl = await signPhotoUrl(
+        ctx.supabase,
+        'patient-photos',
+        patient?.photo_url ? photoKey(patientId) : null,
+      )
+
       return {
         fullName: {
           given: (patient?.name_given as string) ?? null,
@@ -742,6 +760,7 @@ export const labRouter = createTRPCRouter({
           grandfather: (patient?.name_grandfather as string) ?? null,
         },
         bloodGroup: (patient?.blood_group as string) ?? null,
+        photoUrl,
         vitals,
       }
     }),
@@ -1772,6 +1791,7 @@ export const labRouter = createTRPCRouter({
             patientFirstName: z.string(),
             patientAge: z.number().nullable(),
             patientRef: z.string(),
+            patientPhotoUrl: z.string().nullable(),
             testsRequested: z.array(z.object({ loincCode: z.string(), loincDisplay: z.string() })),
             urgency: z.string(),
             orderingPhysicianName: z.string(),
@@ -1807,7 +1827,7 @@ export const labRouter = createTRPCRouter({
           special_instructions,
           meta_last_updated,
           received_by_lab_id,
-          patients!inner(id, name_given, birth_date, birth_year),
+          patients!inner(id, name_given, birth_date, birth_year, photo_url),
           practitioners!service_requests_requester_id_fkey(id, given_name, family_name)
         `)
         .in('status', ['active', 'on-hold'])
@@ -1866,7 +1886,14 @@ export const labRouter = createTRPCRouter({
       // P4: Use blind index for patientRef — never expose raw patient UUID
       const { hmacKey } = await getFieldEncryptionKeys()
 
-      // Data minimization projection: return ONLY first name + age
+      // Batch-sign patient photo URLs — one storage round-trip for the whole page.
+      // Key = patient ID (server-side only) — never returned to the lab client.
+      const photoKeys = (orders ?? []).map((order: any) =>
+        order.patients?.photo_url ? photoKey(order.patient_id) : null,
+      )
+      const signedPhotoMap = await signPhotoUrls(ctx.supabase, 'patient-photos', photoKeys)
+
+      // Data minimization projection: return ONLY first name + age + signed photo URL
       const mapped = (orders ?? []).map((order: any) => {
         const patient = order.patients
         const practitioner = order.practitioners
@@ -1874,10 +1901,16 @@ export const labRouter = createTRPCRouter({
         // P8: Age from DOB, falling back to birth year — never expose the DOB.
         const patientAge = computeAge(patient?.birth_date, patient?.birth_year)
 
+        // Resolve the signed photo URL from the batch map (by the storage key, not
+        // the patient UUID — the lab client only ever receives the signed URL).
+        const pKey = patient?.photo_url && order.patient_id ? photoKey(order.patient_id) : null
+        const patientPhotoUrl = pKey ? (signedPhotoMap[pKey] ?? null) : null
+
         return {
           orderId: order.id,
           patientFirstName: patient?.name_given ?? '',
           patientAge,
+          patientPhotoUrl,
           // Matching key: the blind index is derived from the order's own
           // patient_id (a NOT NULL FK), NOT the demographics join — so the
           // order↔patient linkage never depends on the join succeeding, and the

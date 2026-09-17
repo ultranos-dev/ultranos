@@ -302,12 +302,34 @@ export function AppSidebar() {
       ]
 
   const displayName = session?.name || session?.email?.split('@')[0] || 'Technician'
-  const initials = displayName
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => (w[0] ?? '').toUpperCase())
-    .slice(0, 2)
-    .join('')
+
+  // Load the signed-in lab user's own avatar for the sidebar. Falls back to initials.
+  const [avatarSrc, setAvatarSrc] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data: sess } = await getSupabaseBrowserClient().auth.getSession()
+        const token = sess.session?.access_token
+        if (!token) return
+        const trpcUrl = process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+        const input = encodeURIComponent(JSON.stringify({ json: {} }))
+        const res = await fetch(`${trpcUrl}/users.getProfile?input=${input}`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok || cancelled) return
+        const body = (await res.json()) as { result?: { data?: { json?: { avatarUrl?: string | null } } } }
+        const key = body?.result?.data?.json?.avatarUrl
+        if (!key) return
+        const { data } = await getSupabaseBrowserClient().storage.from('staff-photos').createSignedUrl(key, 3600)
+        if (!cancelled && data?.signedUrl) setAvatarSrc(data.signedUrl)
+      } catch {
+        // Non-blocking — falls back to the initials avatar
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   return (
     <Sidebar collapsible="icon" side={side}>
@@ -322,7 +344,7 @@ export function AppSidebar() {
           name={displayName}
           email={session?.email}
           role={session?.labRole ?? session?.role ?? ''}
-          initials={initials}
+          avatarSrc={avatarSrc}
           onSignOut={handleSignOut}
         />
       </SidebarFooter>

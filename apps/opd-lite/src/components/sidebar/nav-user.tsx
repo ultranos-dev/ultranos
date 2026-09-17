@@ -1,7 +1,7 @@
 // apps/opd-lite/src/components/sidebar/nav-user.tsx
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTheme } from '@/components/ThemeProvider'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useEncounterStore } from '@/stores/encounter-store'
@@ -15,6 +15,7 @@ import { clearSigningKeys } from '@/lib/signing-key-store'
 import { clearPhiTables } from '@/lib/phi-cleanup'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { getHubTrpcUrl } from '@/lib/hub-url'
 import {
   ChevronsUpDown,
   LogOut,
@@ -24,6 +25,7 @@ import {
 } from '@ultranos/ui-kit/icons'
 import { useLocale } from 'next-intl'
 import { formatUserRole, getDirection } from '@ultranos/ui-kit'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,15 +42,6 @@ import {
 } from '@/components/ui/sidebar'
 import Link from 'next/link'
 
-function getInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => (w[0] ?? '').toUpperCase())
-    .slice(0, 2)
-    .join('')
-}
-
 export function NavUser() {
   const { isMobile } = useSidebar()
   const { theme, toggleTheme } = useTheme()
@@ -59,7 +52,33 @@ export function NavUser() {
   const email = session?.email ?? ''
   const name = session?.name || email.split('@')[0] || 'Clinician'
   const role = session?.role ?? ''
-  const initials = getInitials(name)
+  const [avatarSrc, setAvatarSrc] = useState<string | null>(null)
+
+  // Load the signed-in clinician's avatar for the sidebar. Falls back to initials.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data: sess } = await getSupabaseBrowserClient().auth.getSession()
+        const token = sess.session?.access_token
+        if (!token) return
+        const input = encodeURIComponent(JSON.stringify({ json: {} }))
+        const res = await fetch(`${getHubTrpcUrl()}/users.getProfile?input=${input}`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok || cancelled) return
+        const body = (await res.json()) as { result?: { data?: { json?: { avatarUrl?: string | null } } } }
+        const key = body?.result?.data?.json?.avatarUrl
+        if (!key) return
+        const { data } = await getSupabaseBrowserClient().storage.from('staff-photos').createSignedUrl(key, 3600)
+        if (!cancelled && data?.signedUrl) setAvatarSrc(data.signedUrl)
+      } catch {
+        // Non-blocking — falls back to the initials avatar
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   const handleSignOut = useCallback(async () => {
     // Clear PHI stores first (order matters — PHI before keys before auth)
@@ -93,9 +112,7 @@ export function NavUser() {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="flex shrink-0 size-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                {initials}
-              </div>
+              <Avatar src={avatarSrc} name={name} size={32} className="shrink-0" />
               <div className="grid flex-1 text-start text-sm leading-tight">
                 <span className="truncate font-semibold">{name}</span>
                 <span className="truncate text-xs text-muted-foreground">{formatUserRole(role)}</span>
@@ -111,9 +128,7 @@ export function NavUser() {
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                <div className="flex shrink-0 size-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                  {initials}
-                </div>
+                <Avatar src={avatarSrc} name={name} size={32} className="shrink-0" />
                 <div className="grid flex-1 text-start text-sm leading-tight">
                   <span className="truncate font-semibold">{name}</span>
                   <span className="truncate text-xs text-muted-foreground">{email}</span>

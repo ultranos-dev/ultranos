@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/Card'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { Users, UserCheck, AlertTriangle, Clock, FileSearch, ChevronUp, ChevronDown } from '@ultranos/ui-kit/icons'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { formatDate, formatRelativeTime } from '@ultranos/ui-kit'
@@ -31,6 +32,7 @@ interface PatientRow {
   hasAllergies: boolean
   hasNationalId: boolean
   lastUpdated: string | null
+  photoKey: string | null
 }
 
 const PAGE_SIZE = 25
@@ -108,6 +110,10 @@ export function PatientDirectory() {
 
   // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  // Signed photo URLs for the current page's patients (key → signed URL).
+  // Built once per page change, falls back gracefully when offline.
+  const [photoUrlMap, setPhotoUrlMap] = useState<Map<string, string>>(new Map())
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -219,6 +225,7 @@ export function PatientDirectory() {
       hasAllergies: allergyPatientIds.has(p.id) || (p._ultranos?.hasAllergies ?? false),
       hasNationalId: !!p._ultranos?.nationalIdHash,
       lastUpdated: (p.meta?.lastUpdated as string) ?? null,
+      photoKey: p._ultranos?.photoUrl ?? null,
     }))
   }, [patients, allergyPatientIds, lastVisitMap])
 
@@ -306,6 +313,36 @@ export function PatientDirectory() {
   // Pagination
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
   const paginated = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  // Batch-sign photo URLs for the current page. One request covers all non-null
+  // keys on the page. Runs client-side only; wraps in try/catch so offline
+  // (network unavailable) degrades silently to initials fallback.
+  useEffect(() => {
+    const keys = paginated.map((r) => r.photoKey).filter((k): k is string => !!k)
+    if (keys.length === 0) {
+      setPhotoUrlMap(new Map())
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+        const { data, error } = await getSupabaseBrowserClient()
+          .storage.from('patient-photos')
+          .createSignedUrls(keys, 3600)
+        if (cancelled || error || !data) return
+        const map = new Map<string, string>()
+        for (const item of data) {
+          if (item.signedUrl && item.path) map.set(item.path, item.signedUrl)
+        }
+        setPhotoUrlMap(map)
+      } catch {
+        // Offline or storage unavailable — avatars show initials.
+      }
+    })()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, paginated.map((r) => r.photoKey).join(',')])
 
   const handleSort = useCallback((field: SortField) => {
     setSortField((prev) => {
@@ -520,6 +557,11 @@ export function PatientDirectory() {
                   >
                     <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground">
                       <span className="flex items-center gap-2">
+                        <Avatar
+                          src={row.photoKey ? (photoUrlMap.get(row.photoKey) ?? null) : null}
+                          name={row.nameSegments.length > 0 ? row.nameSegments.join(' ') : row.name}
+                          size={28}
+                        />
                         <span>
                           {row.nameSegments.length > 0 ? row.nameSegments.join(' ') : row.name}
                         </span>

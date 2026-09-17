@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { X } from '@ultranos/ui-kit/icons'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import type { LabOrderEntry } from '@/lib/db'
 import { getPatientCulturalPreferences } from '@/lib/db'
 import type { CulturalFlag } from '@/lib/cultural-flags'
@@ -91,12 +92,22 @@ export function PatientDetailsModal({
           {/* Patient — identity + clinical (fetched on demand, Rule #7 detail scope) */}
           <section>
             <h3 className="mb-2 text-sm font-semibold text-foreground">{t('details.patientSection')}</h3>
-            <p className="mb-2 text-sm">
-              <span className="font-medium text-muted-foreground">{t('details.age')}: </span>
-              <span className="font-numeric text-foreground">
-                {order.patientAge != null ? t('card.ageYears', { age: order.patientAge }) : '—'}
-              </span>
-            </p>
+            {/* Avatar header — shows photo when available (signed URL from hub), else initials */}
+            <div className="mb-3 flex items-center gap-3">
+              <Avatar
+                src={details?.photoUrl}
+                name={details?.fullName.given ?? order.patientFirstName}
+                size={72}
+              />
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  {order.patientFirstName}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {order.patientAge != null ? t('card.ageYears', { age: order.patientAge }) : '—'}
+                </p>
+              </div>
+            </div>
             <PatientEnrichedDetails details={details} loading={loading} />
           </section>
 

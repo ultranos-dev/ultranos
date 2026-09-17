@@ -2,6 +2,7 @@
 
 import { ChevronsUpDown, LogOut, Moon, Sun } from '@ultranos/ui-kit/icons'
 import { formatUserRole } from '@ultranos/ui-kit'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,11 +23,11 @@ interface NavLabUserProps {
   name: string
   email: string | undefined
   role: string
-  initials: string
+  avatarSrc?: string | null
   onSignOut: () => void
 }
 
-export function NavLabUser({ name, email, role, initials, onSignOut }: NavLabUserProps) {
+export function NavLabUser({ name, email, role, avatarSrc, onSignOut }: NavLabUserProps) {
   const { isMobile } = useSidebar()
   const { theme, toggleTheme } = useTheme()
 
@@ -39,9 +40,7 @@ export function NavLabUser({ name, email, role, initials, onSignOut }: NavLabUse
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                {initials}
-              </div>
+              <Avatar src={avatarSrc} name={name} size={32} className="shrink-0" />
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{name}</span>
                 <span className="truncate text-xs text-muted-foreground">{formatUserRole(role)}</span>
@@ -57,9 +56,7 @@ export function NavLabUser({ name, email, role, initials, onSignOut }: NavLabUse
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                  {initials}
-                </div>
+                <Avatar src={avatarSrc} name={name} size={32} className="shrink-0" />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{name}</span>
                   {email && (

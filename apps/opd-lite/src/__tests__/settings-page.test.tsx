@@ -7,6 +7,17 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }))
 
+// Mock staff-photo-api (ProfileCard now imports this; keep tests independent of network)
+vi.mock('@/lib/staff-photo-api', () => ({
+  uploadStaffPhoto: vi.fn().mockResolvedValue({ photoUrl: 'key.webp', lastUpdated: '2026-01-01' }),
+  removeStaffPhoto: vi.fn().mockResolvedValue({ lastUpdated: '2026-01-01' }),
+}))
+
+// Mock PhotoAvatarField to avoid pulling in Avatar/modal/webcam dependencies
+vi.mock('@ultranos/ui-kit/components/photo/photo-avatar-field', () => ({
+  PhotoAvatarField: () => null,
+}))
+
 // next-intl context isn't provided in unit tests; components only need the key/locale.
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string, params?: Record<string, unknown>) =>

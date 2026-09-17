@@ -8,6 +8,7 @@ import { trpc } from '@/lib/trpc'
 import { ConsentTimeline } from '@/components/patients/ConsentTimeline'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 
 interface PatientDetail {
   id: string
@@ -23,6 +24,7 @@ interface PatientDetail {
   patient_tier: string | null
   is_active: boolean
   created_at: string | null
+  photoUrl?: string | null
 }
 
 function MpiWarnBadge({ warn }: { warn: boolean | null }) {
@@ -104,7 +106,10 @@ export default function PatientDetailPage() {
     <div className="flex flex-col gap-4">
         <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('detailBackToPatients')}</Link>
 
-        <h1 className="text-2xl font-semibold text-foreground">{formatName(patient)}</h1>
+        <div className="flex items-center gap-3">
+          <Avatar src={patient.photoUrl} name={formatName(patient)} size={64} />
+          <h1 className="text-2xl font-semibold text-foreground">{formatName(patient)}</h1>
+        </div>
 
         {error && (
           <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>

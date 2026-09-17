@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { AuditLogger } from '@ultranos/audit-logger'
+import { signPhotoUrls, signPhotoUrl } from '@/lib/photo-urls'
 
 function sanitizeFilterValue(value: string): string {
   return value
@@ -31,7 +32,7 @@ export const patientAdminRouter = createTRPCRouter({
           'id, name_given, name_father, name_grandfather, gender, birth_year, ' +
           'address_district_origin, address_province_origin, ' +
           'mpi_score, mpi_warn, patient_tier, is_active, created_at, created_by, ' +
-          'ultranos_is_active, merged_into'
+          'ultranos_is_active, merged_into, photo_url'
         )
         .eq('id', input.patientId)
         .single()
@@ -39,6 +40,8 @@ export const patientAdminRouter = createTRPCRouter({
       if (error || !data) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Patient not found' })
       }
+
+      const photoUrl = await signPhotoUrl(ctx.supabase, 'patient-photos', (data as any).photo_url ?? null)
 
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
@@ -56,7 +59,7 @@ export const patientAdminRouter = createTRPCRouter({
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceId: input.patientId })
       }
 
-      return { patient: data }
+      return { patient: { ...data, photoUrl } }
     }),
 
   // ── adminSearch ────────────────────────────────────────────
@@ -89,7 +92,7 @@ export const patientAdminRouter = createTRPCRouter({
         .select(
           'id, name_given, name_father, name_grandfather, gender, birth_year, ' +
           'address_district_origin, address_province_origin, ' +
-          'mpi_score, mpi_warn, patient_tier, is_active, created_at, created_by, ultranos_is_active'
+          'mpi_score, mpi_warn, patient_tier, is_active, created_at, created_by, ultranos_is_active, photo_url'
         )
         .or(nameFilter)
         .order('created_at', { ascending: false })
@@ -110,6 +113,17 @@ export const patientAdminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Admin search failed' })
       }
 
+      const patients = data ?? []
+      const patientPhotoMap = await signPhotoUrls(
+        ctx.supabase,
+        'patient-photos',
+        patients.map((p: any) => (p.photo_url as string) ?? null),
+      )
+      const patientsWithPhotos = patients.map((p: any) => ({
+        ...p,
+        photoUrl: p.photo_url ? patientPhotoMap[p.photo_url] ?? null : null,
+      }))
+
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
@@ -120,13 +134,13 @@ export const patientAdminRouter = createTRPCRouter({
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
-          metadata: { operation: 'admin_search', resultCount: (data ?? []).length },
+          metadata: { operation: 'admin_search', resultCount: patientsWithPhotos.length },
         })
       } catch {
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceId: 'admin-search' })
       }
 
-      return { patients: data ?? [] }
+      return { patients: patientsWithPhotos }
     }),
 
   // ── merge ──────────────────────────────────────────────────

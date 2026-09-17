@@ -10,6 +10,9 @@ import { useDataBudgetStore } from '@/stores/data-budget-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { db } from '@/lib/db'
 import { DEFAULT_PHARMACY_SETTINGS } from '@/lib/inventory/types'
+import { uploadStaffPhoto, removeStaffPhoto } from '@/lib/staff-photo-api'
+import { getHubApiUrl } from '@/lib/trpc'
+import { PhotoAvatarField } from '@ultranos/ui-kit/components/photo/photo-avatar-field'
 
 function formatRole(role: string): string {
   if (!role) return 'Pharmacist'
@@ -46,6 +49,40 @@ const MAX_SESSION_MS = 12 * 60 * 60 * 1000 // 12 hours for pharmacist role
 function ProfileCard() {
   const t = useTranslations('settings')
   const session = useAuthSessionStore((s) => s.session)
+  const [practitionerId, setPractitionerId] = useState<string | null>(null)
+  const [avatarKey, setAvatarKey] = useState<string | null>(null)
+  const [avatarUpdatedAt, setAvatarUpdatedAt] = useState<string>('')
+
+  useEffect(() => {
+    if (!session) return
+    let cancelled = false
+    async function loadProfile() {
+      try {
+        const { data } = await getSupabaseBrowserClient().auth.getSession()
+        const token = data.session?.access_token
+        if (!token) return
+        const trpcUrl = getHubApiUrl()
+        const input = encodeURIComponent(JSON.stringify({ json: {} }))
+        const res = await fetch(`${trpcUrl}/users.getProfile?input=${input}`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok || cancelled) return
+        const body = await res.json() as { result?: { data?: { json?: { practitionerId?: string; avatarUrl?: string | null; updatedAt?: string | null } } } }
+        const prof = body?.result?.data?.json
+        if (!cancelled && prof) {
+          setPractitionerId(prof.practitionerId ?? null)
+          setAvatarKey(prof.avatarUrl ?? null)
+          setAvatarUpdatedAt(prof.updatedAt ?? '')
+        }
+      } catch {
+        // Non-blocking
+      }
+    }
+    loadProfile()
+    return () => { cancelled = true }
+  }, [session])
+
   if (!session) return null
 
   const displayName = session.name || session.email?.split('@')[0] || 'Unknown'
@@ -55,9 +92,34 @@ function ProfileCard() {
     <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50" aria-labelledby="profile-heading">
       <h2 id="profile-heading" className="mb-4 text-sm font-semibold text-foreground">{t('profile')}</h2>
       <div className="flex items-start gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
-          {initials}
-        </div>
+        {practitionerId ? (
+          <PhotoAvatarField
+            name={displayName}
+            photoKey={avatarKey}
+            lastKnownUpdate={avatarUpdatedAt}
+            signUrl={async (key) => {
+              const { data } = await getSupabaseBrowserClient().storage
+                .from('staff-photos')
+                .createSignedUrl(key, 3600)
+              return data?.signedUrl ?? null
+            }}
+            uploadFn={async (blob, lku) => {
+              const result = await uploadStaffPhoto(practitionerId, blob, lku)
+              return { photoKey: result.photoUrl, lastUpdated: result.lastUpdated }
+            }}
+            removeFn={async (lku) => {
+              return removeStaffPhoto(practitionerId, lku)
+            }}
+            onUpdated={(key, lastUpdated) => {
+              setAvatarKey(key)
+              setAvatarUpdatedAt(lastUpdated)
+            }}
+          />
+        ) : (
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
+            {initials}
+          </div>
+        )}
         <div className="min-w-0 flex-1 space-y-2">
           <div>
             <p className="text-xs font-medium text-muted-foreground">{t('name')}</p>

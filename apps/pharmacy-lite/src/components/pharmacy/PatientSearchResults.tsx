@@ -1,6 +1,7 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { highlightQuery } from '@ultranos/ui-kit/lib/highlight'
 import type { LocalPatient } from '@/lib/db'
 
@@ -54,24 +55,27 @@ export function PatientSearchResults({
           tabIndex={0}
           data-testid={`patient-result-${patient.id}`}
         >
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-foreground truncate">
-              {[patient.nameGiven, patient.nameFather].filter(Boolean).map((seg, i) => (
-                <span key={i}>
-                  {i > 0 && (
-                    <span
-                      className="mx-2 inline-block h-2 w-2 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
-                      aria-hidden="true"
-                    />
-                  )}
-                  {highlightQuery(seg ?? '', query)}
-                </span>
-              ))}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {patient.gender}{patient.birthYear ? ` | ${new Date().getFullYear() - patient.birthYear} y/o` : ''}
-              {patient.phone ? ` | ${patient.phone}` : ''}
-            </p>
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <Avatar name={patient.nameGiven} size={28} />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground truncate">
+                {[patient.nameGiven, patient.nameFather].filter(Boolean).map((seg, i) => (
+                  <span key={i}>
+                    {i > 0 && (
+                      <span
+                        className="mx-2 inline-block h-2 w-2 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
+                        aria-hidden="true"
+                      />
+                    )}
+                    {highlightQuery(seg ?? '', query)}
+                  </span>
+                ))}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {patient.gender}{patient.birthYear ? ` | ${new Date().getFullYear() - patient.birthYear} y/o` : ''}
+                {patient.phone ? ` | ${patient.phone}` : ''}
+              </p>
+            </div>
           </div>
           {patient.allergies && patient.allergies.length > 0 && (
             <Badge variant="outline" className="ms-2 bg-destructive/10 text-destructive border-destructive/20 font-bold">

@@ -7,6 +7,7 @@ import { db } from '@/lib/db'
 import { useEncounterStore } from '@/stores/encounter-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { Card } from '@/components/Card'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { CalendarClock } from '@ultranos/ui-kit/icons'
 
@@ -147,25 +148,31 @@ export function RecentEncountersList() {
               href={`/encounter/${enc.patientId}`}
               className="flex items-center justify-between gap-3 py-3 transition-colors [@media(hover:hover)and(pointer:fine)]:hover:bg-muted rounded-xl ps-2 pe-2 -ms-2 -me-2"
             >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-foreground">
-                  {enc.nameSegments.length > 0
-                    ? enc.nameSegments.map((seg, i) => (
-                        <span key={i}>
-                          {i > 0 && (
-                            <span
-                              className="mx-2 inline-block h-2 w-2 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
-                              aria-hidden="true"
-                            />
-                          )}
-                          {seg}
-                        </span>
-                      ))
-                    : enc.patientName}
-                </p>
-                <p className="text-xs font-semibold text-muted-foreground font-numeric">
-                  {formatDate(enc.date)}
-                </p>
+              <div className="min-w-0 flex-1 flex items-center gap-2">
+                <Avatar
+                  name={enc.nameSegments.length > 0 ? enc.nameSegments.join(' ') : enc.patientName}
+                  size={24}
+                />
+                <div className="min-w-0 flex flex-col">
+                  <p className="truncate text-sm font-semibold text-foreground">
+                    {enc.nameSegments.length > 0
+                      ? enc.nameSegments.map((seg, i) => (
+                          <span key={i}>
+                            {i > 0 && (
+                              <span
+                                className="mx-2 inline-block h-2 w-2 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
+                                aria-hidden="true"
+                              />
+                            )}
+                            {seg}
+                          </span>
+                        ))
+                      : enc.patientName}
+                  </p>
+                  <p className="text-xs font-semibold text-muted-foreground font-numeric">
+                    {formatDate(enc.date)}
+                  </p>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <span

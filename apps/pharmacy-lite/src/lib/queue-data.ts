@@ -10,6 +10,8 @@ export type FulfillmentPhaseBadge = 'loaded' | 'reviewing' | 'dispensing' | 'com
 export interface QueueItem {
   id: string
   patientFirstName: string
+  /** Server-generated signed URL for the patient photo. Null if no photo or offline. */
+  patientPhotoUrl?: string | null
   medicationCount: number
   phase: FulfillmentPhaseBadge
   timestamp: string

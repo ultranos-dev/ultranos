@@ -8,6 +8,7 @@ import type { LocalEncounter, SoapLedgerEntry } from '@/lib/db'
 import { EncounterDetailModal } from '@/components/patient/EncounterDetailModal'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { StaleDataBanner } from '@ultranos/ui-kit'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { buttonVariants } from '@ultranos/ui-kit/components/ui/button'
@@ -364,7 +365,10 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
                   {doctorName && (
                     <>
                       <span className="text-muted-foreground" aria-hidden="true">·</span>
-                      <span className="font-normal text-foreground">{doctorName}</span>
+                      <span className="inline-flex items-center gap-1.5 font-normal text-foreground">
+                        <Avatar name={doctorName} size={24} />
+                        {doctorName}
+                      </span>
                     </>
                   )}
                   <span

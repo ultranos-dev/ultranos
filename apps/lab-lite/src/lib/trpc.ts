@@ -50,6 +50,7 @@ export interface VerifyPatientResult {
   firstName: string
   age: number
   patientRef: string
+  photoUrl: string | null
 }
 
 /**
@@ -574,6 +575,7 @@ export interface LabOrderResponse {
   patientFirstName: string
   patientAge: number | null
   patientRef: string
+  patientPhotoUrl: string | null
   testsRequested: Array<{ loincCode: string; loincDisplay: string }>
   urgency: 'routine' | 'urgent' | 'asap' | 'stat'
   orderingPhysicianName: string
@@ -692,6 +694,7 @@ export async function pullMonitoringMappings(
 export interface LabOrderPatientDetails {
   fullName: { given: string | null; father: string | null; grandfather: string | null }
   bloodGroup: string | null
+  photoUrl: string | null
   vitals: {
     weightKg: number | null
     heightCm: number | null

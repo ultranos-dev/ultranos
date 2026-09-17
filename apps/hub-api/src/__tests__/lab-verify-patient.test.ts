@@ -171,9 +171,11 @@ describe('lab.verifyPatient', () => {
     expect(result).toHaveProperty('age')
     expect(result).toHaveProperty('patientRef')
 
-    // CRITICAL: Must NOT return any other patient fields
+    // CRITICAL: Only the minimal fields + a signed photo URL (deliberate: patient
+    // photos are shown in the lab). `patientRef` stays an opaque HMAC (no raw UUID),
+    // and `photoUrl` is a short-lived signed URL — the raw storage key is never returned.
     const keys = Object.keys(result)
-    expect(keys).toEqual(['firstName', 'age', 'patientRef'])
+    expect(keys).toEqual(['firstName', 'age', 'patientRef', 'photoUrl'])
 
     expect(result.firstName).toBe('Amir')
     expect(typeof result.age).toBe('number')
@@ -297,7 +299,8 @@ describe('lab.verifyPatient', () => {
     expect(selectArg).not.toContain('allergy')
     expect(selectArg).not.toContain('encounter')
     // Only the identity/age columns needed for a data-minimized verification.
-    expect(selectArg).toBe('id, name_given, birth_date, birth_year')
+    // photo_url is selected server-side ONLY to mint a signed photo URL; it is never returned raw.
+    expect(selectArg).toBe('id, name_given, birth_date, birth_year, photo_url')
   })
 
   // ── Year-only DOB (the common real-world case) still verifies ──

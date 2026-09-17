@@ -9,6 +9,7 @@ import { SearchInput } from '@/components/ui/search-input'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Network, FileSearch } from '@ultranos/ui-kit/icons'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import {
   Dialog,
   DialogContent,
@@ -28,8 +29,10 @@ interface MentorshipPairing {
   id: string
   mentorName: string
   mentorEmail: string
+  mentorPhotoUrl?: string | null
   menteeName: string
   menteeEmail: string
+  menteePhotoUrl?: string | null
   labName: string
   startDate: string
   status: string
@@ -687,12 +690,22 @@ export default function MentorshipPage() {
                         className="cursor-pointer transition-colors hover:bg-muted/50"
                       >
                         <td className="px-4 py-3">
-                          <p className="font-medium text-foreground">{p.mentorName}</p>
-                          <p className="text-xs text-muted-foreground">{truncateEmail(p.mentorEmail)}</p>
+                          <div className="flex items-center gap-2.5">
+                            <Avatar src={p.mentorPhotoUrl} name={p.mentorName} size={28} />
+                            <div>
+                              <p className="font-medium text-foreground">{p.mentorName}</p>
+                              <p className="text-xs text-muted-foreground">{truncateEmail(p.mentorEmail)}</p>
+                            </div>
+                          </div>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="font-medium text-foreground">{p.menteeName}</p>
-                          <p className="text-xs text-muted-foreground">{truncateEmail(p.menteeEmail)}</p>
+                          <div className="flex items-center gap-2.5">
+                            <Avatar src={p.menteePhotoUrl} name={p.menteeName} size={28} />
+                            <div>
+                              <p className="font-medium text-foreground">{p.menteeName}</p>
+                              <p className="text-xs text-muted-foreground">{truncateEmail(p.menteeEmail)}</p>
+                            </div>
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-foreground">{p.labName}</td>
                         <td className="px-4 py-3 text-muted-foreground font-numeric">{formatDate(p.startDate)}</td>
