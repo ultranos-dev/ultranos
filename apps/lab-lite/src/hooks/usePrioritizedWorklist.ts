@@ -137,6 +137,10 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
       // 1. Load active samples from the samples table (Story 42.3 data)
       let sampleInputs: SampleInput[] = []
 
+      // Distinguish a genuine "samples table empty / not-yet-populated" from a
+      // real Dexie read ERROR.  On a real error we must NOT silently fall through
+      // to an empty worklist — that would be a false-negative (Bug 3).
+      let samplesReadError: unknown = null
       try {
         // Attempt to use the samples table (may be empty if 42.3 not yet synced)
         const activeSamples = await db.samples
@@ -176,8 +180,16 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
             sampleInputs.push(buildSampleInput(specimen, orderId ?? '', order, verifiedPatient))
           }
         }
-      } catch {
-        // samples table unavailable — no fallback; worklist shows empty
+        // else: legitimate empty — 42.3 not yet synced; sampleInputs stays []
+      } catch (readErr) {
+        // Real Dexie/DB error — record it so we can propagate as "unavailable"
+        // instead of letting the hook show a false empty worklist.
+        samplesReadError = readErr
+      }
+
+      // If a real read error occurred, re-throw so the outer catch sets error state.
+      if (samplesReadError !== null) {
+        throw samplesReadError
       }
       // NOTE: The orders-fallback (mapping un-accessioned orders to sampleId=orderId) has
       // been intentionally removed. The worklist lists ONLY real FhirSpecimen rows so that

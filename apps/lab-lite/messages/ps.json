@@ -606,7 +606,10 @@
     "loading": "فرمایشونه بارېږي…",
     "noResultsTitle": "سمون لرونکی فرمایش ونه موندل شو",
     "noResultsDescription": "هیڅ فرمایش د اوسنیو فلټرونو سره سمون نه لري.",
-    "clearFilters": "فلټرونه پاک کړئ"
+    "clearFilters": "فلټرونه پاک کړئ",
+    "unavailableTitle": "فرمایشونه نه شي بارېدلی",
+    "unavailableDescription": "سرور موندلی نشو. خپل اتصال وګورئ او بیا هڅه وکړئ.",
+    "retry": "بیا هڅه وکړئ"
   },
   "settings": {
     "title": "ترتیبات",

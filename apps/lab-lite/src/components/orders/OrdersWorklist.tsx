@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
-import { ClipboardList, FileSearch, RefreshCw } from '@ultranos/ui-kit/icons'
+import { ClipboardList, FileSearch, RefreshCw, AlertTriangle } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import type { LabOrderEntry } from '@/lib/db'
 import { OrderCard } from './OrderCard'
@@ -20,10 +20,12 @@ const URGENCY_RANK: Record<string, number> = {
 interface OrdersWorklistProps {
   orders: LabOrderEntry[]
   loading: boolean
+  /** Non-null when the Hub is unreachable AND the local cache is empty. */
+  error?: string | null
   onRefresh?: () => void
 }
 
-export function OrdersWorklist({ orders, loading, onRefresh }: OrdersWorklistProps) {
+export function OrdersWorklist({ orders, loading, error, onRefresh }: OrdersWorklistProps) {
   const t = useTranslations('orders')
   const [filters, setFilters] = useState<OrderFilterValues>({
     status: 'ALL',
@@ -82,13 +84,25 @@ export function OrdersWorklist({ orders, loading, onRefresh }: OrdersWorklistPro
         )}
       </div>
 
-      {/* Content box — single cohesive box (loading / empty / list) */}
+      {/* Content box — single cohesive box (loading / error / empty / list) */}
       <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        {/* State 1: loading */}
         {loading ? (
           <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground" aria-busy="true">
             {t('loading')}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : /* State 2: error with no data to show — never show a false genuine-empty */
+        error && orders.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              icon={AlertTriangle}
+              title={t('unavailableTitle')}
+              description={t('unavailableDescription')}
+              action={onRefresh ? { label: t('retry'), onClick: onRefresh } : undefined}
+            />
+          </div>
+        ) : /* State 3: genuine empty (loaded successfully, zero orders after filters) */
+        filtered.length === 0 ? (
           <div className="flex min-h-[16rem] items-center justify-center">
             <EmptyState
               icon={filtersActive ? FileSearch : ClipboardList}
@@ -98,6 +112,7 @@ export function OrdersWorklist({ orders, loading, onRefresh }: OrdersWorklistPro
             />
           </div>
         ) : (
+          /* State 4: data */
           <div className="flex flex-col gap-3 p-3">
             {filtered.map((order) => (
               <OrderCard key={order.orderId} order={order} />

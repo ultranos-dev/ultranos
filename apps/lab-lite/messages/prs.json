@@ -606,7 +606,10 @@
     "loading": "در حال بارگیری سفارش‌ها…",
     "noResultsTitle": "سفارشی مطابق یافت نشد",
     "noResultsDescription": "هیچ سفارشی با فیلترهای فعلی مطابقت ندارد.",
-    "clearFilters": "پاک کردن فیلترها"
+    "clearFilters": "پاک کردن فیلترها",
+    "unavailableTitle": "بارگیری سفارش‌ها ممکن نیست",
+    "unavailableDescription": "سرور در دسترس نیست. اتصال خود را بررسی کرده و دوباره تلاش کنید.",
+    "retry": "تلاش مجدد"
   },
   "settings": {
     "title": "تنظیمات",

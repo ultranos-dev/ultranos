@@ -71,7 +71,11 @@ export function useOrderSync(): OrderSyncState {
         const cached = await getOrders()
         if (!cancelledRef.current) {
           setOrders(cached)
-          setError('Session expired')
+          // P12: With an expired session we cannot do an authoritative load.
+          // If the cache has orders, surface them (offline-tolerant, user can see
+          // stale data while re-authing). If the cache is empty, flag it as an
+          // error so the UI shows "unavailable" rather than a false genuine-empty.
+          setError(cached.length > 0 ? null : 'Session expired — unable to load orders')
         }
         return
       }
@@ -106,7 +110,10 @@ export function useOrderSync(): OrderSyncState {
         const cached = await getOrders()
         if (!cancelledRef.current) {
           setOrders(cached)
-          setError('Offline — showing cached orders')
+          // P12: If we have cached orders, surface them without an error (offline-tolerant).
+          // If the cache is also empty, the user would see a false "No orders" — instead
+          // set an error so the UI can show "unavailable" rather than genuine-empty.
+          setError(cached.length > 0 ? null : 'Hub unreachable — unable to load orders')
         }
         return
       }
@@ -179,12 +186,16 @@ export function useOrderSync(): OrderSyncState {
   useEffect(() => {
     cancelledRef.current = false
 
+    // P12: Pre-populate from cache OPTIMISTICALLY but keep loading=true.
+    // loading stays true until the first authoritative Hub sync() resolves,
+    // so that an empty cache never flashes a false "No orders" while the
+    // pull is still in-flight.  Only set orders here — never setLoading(false).
     getOrders()
       .then((cached) => {
         if (!cancelledRef.current) {
           setOrders(cached)
           setLastSyncedAtState(lastSyncedAtCache ?? null)
-          setLoading(false)
+          // Do NOT call setLoading(false) here — Hub sync clears loading.
         }
       })
       .catch(() => {})

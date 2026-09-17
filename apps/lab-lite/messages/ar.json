@@ -606,7 +606,10 @@
     "loading": "جارٍ تحميل الطلبات…",
     "noResultsTitle": "لا توجد طلبات مطابقة",
     "noResultsDescription": "لا توجد طلبات تطابق عوامل التصفية الحالية.",
-    "clearFilters": "مسح عوامل التصفية"
+    "clearFilters": "مسح عوامل التصفية",
+    "unavailableTitle": "تعذّر تحميل الطلبات",
+    "unavailableDescription": "الخادم غير متاح. تحقق من اتصالك وحاول مجددًا.",
+    "retry": "إعادة المحاولة"
   },
   "settings": {
     "title": "الإعدادات",

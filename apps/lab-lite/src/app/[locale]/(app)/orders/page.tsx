@@ -14,13 +14,7 @@ export default function OrdersPage() {
         {t('title')}
       </h1>
 
-      {error && (
-        <div className="rounded-2xl bg-warning/10 p-3 text-sm text-warning">
-          {error}
-        </div>
-      )}
-
-      <OrdersWorklist orders={orders} loading={loading} onRefresh={refresh} />
+      <OrdersWorklist orders={orders} loading={loading} error={error} onRefresh={refresh} />
     </div>
   )
 }

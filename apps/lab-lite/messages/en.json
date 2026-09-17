@@ -606,7 +606,10 @@
     "loading": "Loading orders…",
     "noResultsTitle": "No matching orders",
     "noResultsDescription": "No orders match the current filters.",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "unavailableTitle": "Unable to load orders",
+    "unavailableDescription": "The server is unreachable. Check your connection and try again.",
+    "retry": "Retry"
   },
   "settings": {
     "title": "Settings",
