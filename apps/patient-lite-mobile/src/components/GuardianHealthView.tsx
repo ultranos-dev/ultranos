@@ -11,8 +11,11 @@
  *
  * V1 simplification: guardian manages consent from the patient's device.
  * Remote guardian view is a future enhancement (V2).
+ *
+ * 4-state pattern: each section shows loading → error/unavailable →
+ * confirmed-empty → data. Never asserts "none" while loading or on error.
  */
-import { View, Text, ScrollView, StyleSheet } from 'react-native'
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import {
   consumerSpacing,
@@ -29,12 +32,18 @@ interface GuardianHealthViewProps {
   allergies: FhirAllergyIntolerance[]
   medications: FhirMedicationRequestZod[]
   recentEncounters: FhirEncounterZod[]
+  /** True while medical history is still loading — gates each section */
+  isLoading?: boolean
+  /** Non-null when medical history failed to load — sections show "unavailable" */
+  error?: string | null
 }
 
 export function GuardianHealthView({
   allergies,
   medications,
   recentEncounters,
+  isLoading = false,
+  error = null,
 }: GuardianHealthViewProps) {
   const { t } = useTranslation()
   const { colors } = useTheme()
@@ -48,14 +57,15 @@ export function GuardianHealthView({
     >
       {/* Guardian banner (AC #8) */}
       <View style={[styles.guardianBanner, { backgroundColor: colors.primary[50], borderColor: colors.primary[300] }]} testID="guardian-banner">
-        <Text style={styles.bannerIcon}>{'\uD83D\uDEE1\uFE0F'}</Text>
+        <Text style={styles.bannerIcon}>{'🛡️'}</Text>
         <Text style={[styles.bannerText, { color: colors.primary[700] }]}>{t('guardian.viewingAsGuardian')}</Text>
         <Text style={[styles.bannerSubtext, { color: colors.primary[600] }]}>
           {t('guardian.readOnlyNotice')}
         </Text>
       </View>
 
-      {/* Allergies — highest display prominence per CLAUDE.md Rule #4: first, in red, never collapsed */}
+      {/* Allergies — highest display prominence per CLAUDE.md Rule #4: first, in red, never collapsed.
+          Never assert "No allergies" while loading or on error — that is a safety violation. */}
       <View
         style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.error, borderWidth: 2 }]}
         testID="guardian-allergies-section"
@@ -63,7 +73,17 @@ export function GuardianHealthView({
         <Text style={[styles.subheaderText, styles.allergySectionTitle, { color: colors.error }]}>
           {t('guardian.allergies')}
         </Text>
-        {allergies.length === 0 ? (
+        {isLoading ? (
+          <ActivityIndicator
+            size="small"
+            color={colors.error}
+            testID="guardian-allergies-loading"
+          />
+        ) : error ? (
+          <Text style={[styles.captionText, { color: colors.textMuted }]} testID="guardian-allergies-unavailable">
+            {t('guardian.allergiesUnavailable')}
+          </Text>
+        ) : allergies.length === 0 ? (
           <Text style={[styles.captionText, { color: colors.textMuted }]}>{t('guardian.noAllergies')}</Text>
         ) : (
           <View style={styles.cardList}>
@@ -84,7 +104,7 @@ export function GuardianHealthView({
         )}
       </View>
 
-      {/* Active Medications */}
+      {/* Active Medications — never assert "no medications" while loading or on error */}
       <View
         style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
         testID="guardian-medications-section"
@@ -92,7 +112,17 @@ export function GuardianHealthView({
         <Text style={[styles.subheaderText, styles.sectionTitle, { color: colors.textPrimary }]}>
           {t('guardian.activeMedications')}
         </Text>
-        {activeMedications.length === 0 ? (
+        {isLoading ? (
+          <ActivityIndicator
+            size="small"
+            color={colors.primary[500]}
+            testID="guardian-medications-loading"
+          />
+        ) : error ? (
+          <Text style={[styles.captionText, { color: colors.textMuted }]} testID="guardian-medications-unavailable">
+            {t('guardian.medicationsUnavailable')}
+          </Text>
+        ) : activeMedications.length === 0 ? (
           <Text style={[styles.captionText, { color: colors.textMuted }]}>{t('guardian.noMedications')}</Text>
         ) : (
           <View style={styles.cardList}>
@@ -113,7 +143,7 @@ export function GuardianHealthView({
         )}
       </View>
 
-      {/* Recent Activity */}
+      {/* Recent Activity — never assert "no encounters" while loading or on error */}
       <View
         style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
         testID="guardian-activity-section"
@@ -121,7 +151,17 @@ export function GuardianHealthView({
         <Text style={[styles.subheaderText, styles.sectionTitle, { color: colors.textPrimary }]}>
           {t('guardian.recentActivity')}
         </Text>
-        {recentEncounters.length === 0 ? (
+        {isLoading ? (
+          <ActivityIndicator
+            size="small"
+            color={colors.primary[500]}
+            testID="guardian-activity-loading"
+          />
+        ) : error ? (
+          <Text style={[styles.captionText, { color: colors.textMuted }]} testID="guardian-activity-unavailable">
+            {t('guardian.activityUnavailable')}
+          </Text>
+        ) : recentEncounters.length === 0 ? (
           <Text style={[styles.captionText, { color: colors.textMuted }]}>{t('guardian.noEncounters')}</Text>
         ) : (
           <View style={styles.activityList}>

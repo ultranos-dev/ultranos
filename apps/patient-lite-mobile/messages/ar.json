@@ -147,7 +147,9 @@
     "viewPrescription": "عرض الوصفة الطبية",
     "viewPrivacySettings": "عرض إعدادات الخصوصية",
     "detailTitle": "تفاصيل الإشعار",
-    "backAccessibility": "الرجوع"
+    "backAccessibility": "الرجوع",
+    "unavailableTitle": "الإشعارات غير متاحة",
+    "unavailableSubtitle": "تعذّر تحميل الإشعارات. اسحب للأسفل للمحاولة مجدداً."
   },
   "common": {
     "loading": "جاري التحميل...",
@@ -287,5 +289,21 @@
     "activityUnavailable": "النشاط الأخير غير متاح",
     "emptyTitle": "مرحباً",
     "emptySubtitle": "ستظهر معلوماتك الصحية هنا بعد زيارتك الأولى"
+  },
+  "guardian": {
+    "viewingAsGuardian": "العرض كوليّ أمر",
+    "readOnlyNotice": "يمكنك الاطلاع على المعلومات الصحية لهذا الشخص دون إجراء أي تغييرات.",
+    "allergies": "الحساسيات",
+    "activeMedications": "الأدوية النشطة",
+    "recentActivity": "النشاط الأخير",
+    "noAllergies": "لا توجد حساسيات معروفة",
+    "noMedications": "لا توجد أدوية نشطة",
+    "noEncounters": "لا توجد زيارات حديثة",
+    "unknownAllergy": "مسبب حساسية غير معروف",
+    "medication": "دواء",
+    "clinicalEncounter": "زيارة سريرية",
+    "allergiesUnavailable": "حالة الحساسية غير متاحة",
+    "medicationsUnavailable": "قائمة الأدوية غير متاحة",
+    "activityUnavailable": "النشاط غير متاح"
   }
 }
