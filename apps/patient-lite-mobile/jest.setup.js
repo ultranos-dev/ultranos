@@ -72,3 +72,16 @@ jest.mock('expo-sqlite', () => ({
     getAllAsync: jest.fn().mockResolvedValue([]),
   }),
 }))
+
+// Mock @/lib/supabase so tests never require real Supabase env vars.
+// The real supabase.ts calls createClient on module load which requires
+// EXPO_PUBLIC_SUPABASE_URL to be set — this mock intercepts before that.
+jest.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: jest.fn().mockResolvedValue({ data: { session: null } }),
+      signInWithOtp: jest.fn().mockResolvedValue({ data: {}, error: null }),
+      onAuthStateChange: jest.fn().mockReturnValue({ data: { subscription: { unsubscribe: jest.fn() } } }),
+    },
+  },
+}))

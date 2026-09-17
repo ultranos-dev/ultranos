@@ -147,7 +147,9 @@
     "viewPrescription": "مشاهده نسخه",
     "viewPrivacySettings": "مشاهده تنظیمات حریم خصوصی",
     "detailTitle": "جزئیات اطلاعیه",
-    "backAccessibility": "بازگشت"
+    "backAccessibility": "بازگشت",
+    "unavailableTitle": "اطلاعیه‌ها در دسترس نیست",
+    "unavailableSubtitle": "اطلاعیه‌ها بارگذاری نشد. به پایین بکشید تا دوباره تلاش کنید."
   },
   "common": {
     "loading": "در حال بارگذاری...",
@@ -282,6 +284,24 @@
     "lastPrescription": "آخرین نسخه: {{date}}",
     "noRecentActivity": "فعالیت اخیری وجود ندارد",
     "emptyTitle": "خوش آمدید",
-    "emptySubtitle": "اطلاعات صحی شما پس از اولین ویزیت در اینجا نمایش داده می‌شود"
+    "emptySubtitle": "اطلاعات صحی شما پس از اولین ویزیت در اینجا نمایش داده می‌شود",
+    "medicationsUnavailable": "داروها در دسترس نیست",
+    "activityUnavailable": "فعالیت در دسترس نیست"
+  },
+  "guardian": {
+    "viewingAsGuardian": "مشاهده به عنوان سرپرست",
+    "readOnlyNotice": "می‌توانید معلومات صحی این شخص را مشاهده کنید اما نمی‌توانید تغییری ایجاد کنید.",
+    "allergies": "حساسیت‌ها",
+    "activeMedications": "داروهای فعال",
+    "recentActivity": "فعالیت اخیر",
+    "noAllergies": "حساسیت شناخته شده‌ای وجود ندارد",
+    "noMedications": "داروی فعالی وجود ندارد",
+    "noEncounters": "ویزیت اخیری وجود ندارد",
+    "unknownAllergy": "آلرژن ناشناخته",
+    "medication": "دوا",
+    "clinicalEncounter": "ویزیت کلینیکی",
+    "allergiesUnavailable": "وضعیت حساسیت در دسترس نیست",
+    "medicationsUnavailable": "فهرست داروها در دسترس نیست",
+    "activityUnavailable": "فعالیت در دسترس نیست"
   }
 }

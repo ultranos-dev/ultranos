@@ -229,11 +229,16 @@ describe('Story 18.6: Patient Notification Center', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
+    // Re-apply haptics mock after clearAllMocks (clearAllMocks removes mockResolvedValue
+    // implementations set in jest.setup.js — restore them so .catch() doesn't throw)
+    jest.mocked(Haptics.notificationAsync).mockResolvedValue(undefined)
     // Reset store
     useNotificationStore.setState({
       notifications: [],
       unreadCount: 0,
       isLoading: false,
+      hasLoaded: false,
+      fetchError: false,
       lastFetched: null,
     })
     mockFetchNotifications.mockResolvedValue({ notifications: allNotifications })
@@ -379,14 +384,24 @@ describe('Story 18.6: Patient Notification Center', () => {
   })
 
   // AC #7: Polling starts on focus, stops on blur
-  it('starts and stops polling (AC #7)', () => {
+  it('starts and stops polling (AC #7)', async () => {
     const store = useNotificationStore.getState()
 
     store.startPolling()
+    // fetchNotifications is async — flush the microtask queue so the first
+    // call to apiFetchNotifications (= mockFetchNotifications) has been issued
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+    })
     expect(mockFetchNotifications).toHaveBeenCalledTimes(1)
 
     act(() => {
       jest.advanceTimersByTime(30_000)
+    })
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
     })
     expect(mockFetchNotifications).toHaveBeenCalledTimes(2)
 
@@ -394,14 +409,25 @@ describe('Story 18.6: Patient Notification Center', () => {
     act(() => {
       jest.advanceTimersByTime(60_000)
     })
+    await act(async () => {
+      await Promise.resolve()
+    })
     expect(mockFetchNotifications).toHaveBeenCalledTimes(2)
   })
 
   // AC #9: Pull-to-refresh triggers fetch
   it('pull-to-refresh triggers fetchNotifications (AC #9)', async () => {
+    // Prevent the startPolling auto-fetch so we can count only the pull-to-refresh call
+    const startPollingSpy = jest
+      .spyOn(useNotificationStore.getState(), 'startPolling')
+      .mockImplementation(() => {})
+
     useNotificationStore.setState({
       notifications: [labNotification],
       unreadCount: 1,
+      hasLoaded: true,
+      isLoading: false,
+      fetchError: false,
     })
 
     const { getByTestId } = renderScreen()
@@ -413,16 +439,27 @@ describe('Story 18.6: Patient Notification Center', () => {
     const flatList = getByTestId('notification-list')
     fireEvent(flatList, 'refresh')
 
+    // fetchNotifications is async — flush microtasks so apiFetchNotifications
+    // (= mockFetchNotifications) has been called before asserting
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
     expect(mockFetchNotifications).toHaveBeenCalled()
+
+    startPollingSpy.mockRestore()
   })
 
-  // AC #10: Empty state
+  // AC #10: Empty state — only after hasLoaded
   it('shows empty state when no notifications (AC #10)', async () => {
     mockFetchNotifications.mockResolvedValue({ notifications: [] })
     useNotificationStore.setState({
       notifications: [],
       unreadCount: 0,
       isLoading: false,
+      hasLoaded: true,   // confirmed: fetch settled, genuinely empty
+      fetchError: false,
     })
 
     const { getByText } = renderScreen()
@@ -430,6 +467,78 @@ describe('Story 18.6: Patient Notification Center', () => {
     await waitFor(() => {
       expect(getByText('No notifications yet')).toBeTruthy()
     })
+  })
+
+  // 4-state: loading — empty text must NOT appear before first load
+  it('does NOT show "No notifications yet" while still loading initial data (4-state)', () => {
+    useNotificationStore.setState({
+      notifications: [],
+      unreadCount: 0,
+      isLoading: true,
+      hasLoaded: false,  // not yet loaded
+      fetchError: false,
+    })
+
+    const { queryByText, getByTestId } = renderScreen()
+
+    // Must not show the empty text
+    expect(queryByText('No notifications yet')).toBeNull()
+    // Loading indicator must be visible
+    expect(getByTestId('notifications-loading-state')).toBeTruthy()
+  })
+
+  // 4-state: hasLoaded=false + isLoading=false (initial state before first fetch triggers)
+  it('does NOT show "No notifications yet" when hasLoaded is false even if not loading', () => {
+    // Prevent startPolling from auto-fetching and changing hasLoaded during this test.
+    // Also prevent the cache-load useEffect from setting hasLoaded: true (it runs when
+    // notifications=[] && lastFetched=null && !isLoading, and isDatabaseOpen()=false
+    // causes loadFromCache to immediately call set({ hasLoaded: true })).
+    const startPollingSpy = jest
+      .spyOn(useNotificationStore.getState(), 'startPolling')
+      .mockImplementation(() => {})
+    const loadFromCacheSpy = jest
+      .spyOn(useNotificationStore.getState(), 'loadFromCache')
+      .mockImplementation(() => Promise.resolve())
+
+    useNotificationStore.setState({
+      notifications: [],
+      unreadCount: 0,
+      isLoading: false,
+      hasLoaded: false,  // first fetch hasn't resolved yet
+      fetchError: false,
+    })
+
+    const { queryByText } = renderScreen()
+    // hasLoaded=false → emptyComponent shows loading spinner, not "No notifications yet"
+    expect(queryByText('No notifications yet')).toBeNull()
+
+    startPollingSpy.mockRestore()
+    loadFromCacheSpy.mockRestore()
+  })
+
+  // 4-state: error — show "unavailable", NOT empty
+  it('shows "unavailable" on fetch error, not "No notifications yet" (4-state)', () => {
+    // Prevent startPolling (called by useFocusEffect on render) from calling
+    // fetchNotifications() which would set isLoading: true and override the
+    // pre-set error state.
+    const startPollingSpy = jest
+      .spyOn(useNotificationStore.getState(), 'startPolling')
+      .mockImplementation(() => {})
+
+    useNotificationStore.setState({
+      notifications: [],
+      unreadCount: 0,
+      isLoading: false,
+      hasLoaded: true,
+      fetchError: true,
+    })
+
+    const { queryByText, getByTestId } = renderScreen()
+
+    expect(queryByText('No notifications yet')).toBeNull()
+    expect(getByTestId('notifications-error-state')).toBeTruthy()
+
+    startPollingSpy.mockRestore()
   })
 
   // RTL rendering

@@ -8,6 +8,9 @@
  * AC #5: Escalation red border, "Urgent" badge, haptic feedback
  * AC #9: Pull-to-refresh
  * AC #10: Empty state with bell icon and translated message
+ *
+ * 4-state fix: empty state only renders after `hasLoaded` is true.
+ * While loading, shows ActivityIndicator; on fetch error, shows "unavailable".
  */
 import { useCallback, useEffect, useRef } from 'react'
 import {
@@ -17,6 +20,7 @@ import {
   Pressable,
   StyleSheet,
   AppState,
+  ActivityIndicator,
 } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useFocusEffect } from '@react-navigation/native'
@@ -31,6 +35,7 @@ import {
 } from '@/theme/consumer'
 import { useTheme } from '@/theme/ThemeProvider'
 import { SAFETY_COLORS } from '@/theme/colors'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 // --- Type-specific configuration ---
 
@@ -160,13 +165,13 @@ function NotificationCard({
         {item.payload?.testCategory ? (
           <Text style={{ fontSize: consumerTypography.captionSize, color: colors.textSecondary, marginTop: 2 }}>
             {item.payload.testCategory}
-            {item.payload.labName ? ` \u2014 ${item.payload.labName}` : ''}
+            {item.payload.labName ? ` — ${item.payload.labName}` : ''}
           </Text>
         ) : null}
 
-        <Text style={{ fontSize: consumerTypography.captionSize, color: colors.textMuted, marginTop: 4 }}>
+        <NumericText style={{ fontSize: consumerTypography.captionSize, color: colors.textMuted, marginTop: 4 }}>
           {formatTimestamp(item.createdAt, t)}
-        </Text>
+        </NumericText>
       </View>
     </Pressable>
   )
@@ -182,6 +187,8 @@ export function NotificationsScreen({
   const {
     notifications,
     isLoading,
+    hasLoaded,
+    fetchError,
     fetchNotifications,
     startPolling,
     stopPolling,
@@ -216,10 +223,10 @@ export function NotificationsScreen({
     return () => sub.remove()
   }, [startPolling, stopPolling])
 
-  // Load from cache on mount (for offline viewing) — only if store is empty
+  // Load from cache on mount (for offline viewing) — only if store is empty and no fetch has started
   useEffect(() => {
     const state = useNotificationStore.getState()
-    if (state.notifications.length === 0 && state.lastFetched === null) {
+    if (state.notifications.length === 0 && state.lastFetched === null && !state.isLoading) {
       loadFromCache()
     }
   }, [loadFromCache])
@@ -236,17 +243,42 @@ export function NotificationsScreen({
     />
   ), [handlePress])
 
-  // AC #10: Empty state rendered via ListEmptyComponent so pull-to-refresh still works
-  const emptyComponent = useCallback(() => (
-    <View style={styles.emptyState}>
-      {/* TODO: Replace emoji with a proper illustration asset per AC #10 */}
-      <View style={[styles.emptyIllustration, { backgroundColor: colors.primary[50] }]}>
-        <Text style={styles.emptyIcon}>{'\u{1F514}'}</Text>
+  // AC #10: 4-state ListEmptyComponent — never shows empty until hasLoaded is true
+  const emptyComponent = useCallback(() => {
+    // Still loading initial data — show spinner, never "no notifications"
+    if (!hasLoaded || isLoading) {
+      return (
+        <View style={styles.emptyState} testID="notifications-loading-state">
+          <ActivityIndicator size="large" color={colors.primary[500]} />
+        </View>
+      )
+    }
+
+    // Fetch failed — show "unavailable" instead of asserting empty
+    if (fetchError && notifications.length === 0) {
+      return (
+        <View style={styles.emptyState} testID="notifications-error-state">
+          <View style={[styles.emptyIllustration, { backgroundColor: colors.warningBg ?? colors.primary[50] }]}>
+            <Text style={styles.emptyIcon}>{'⚠️'}</Text>
+          </View>
+          <Text style={[styles.emptyText, { color: colors.textPrimary }]}>{t('notifications.unavailableTitle')}</Text>
+          <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>{t('notifications.unavailableSubtitle')}</Text>
+        </View>
+      )
+    }
+
+    // Confirmed empty after successful load
+    return (
+      <View style={styles.emptyState} testID="notifications-empty-state">
+        {/* TODO: Replace emoji with a proper illustration asset per AC #10 */}
+        <View style={[styles.emptyIllustration, { backgroundColor: colors.primary[50] }]}>
+          <Text style={styles.emptyIcon}>{'\u{1F514}'}</Text>
+        </View>
+        <Text style={[styles.emptyText, { color: colors.textPrimary }]}>{t('notifications.emptyTitle')}</Text>
+        <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>{t('notifications.emptySubtitle')}</Text>
       </View>
-      <Text style={[styles.emptyText, { color: colors.textPrimary }]}>{t('notifications.emptyTitle')}</Text>
-      <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>{t('notifications.emptySubtitle')}</Text>
-    </View>
-  ), [t, colors])
+    )
+  }, [t, colors, hasLoaded, isLoading, fetchError, notifications.length])
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]} testID="notifications-screen">
@@ -350,7 +382,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
 
-  // Empty state
+  // Empty / loading / error state
   emptyState: {
     flex: 1,
     alignItems: 'center',

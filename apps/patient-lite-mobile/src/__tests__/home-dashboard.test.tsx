@@ -2,6 +2,33 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native'
 
 // --- Mocks must be declared before imports ---
 
+// Explicit i18next mock so translations resolve in test (real library needs initialisation)
+const mockMessages = require('../../messages/en.json')
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, unknown>) => {
+      const parts = key.split('.')
+      let value: any = mockMessages
+      for (const part of parts) {
+        if (value && typeof value === 'object') value = value[part]
+        else return key
+      }
+      if (typeof value !== 'string') return key
+      if (params) {
+        let text = value
+        for (const [k, v] of Object.entries(params)) {
+          text = text.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v))
+        }
+        return text
+      }
+      return value
+    },
+    i18n: { language: 'en', changeLanguage: jest.fn() },
+  }),
+  Trans: ({ children }: any) => children,
+  initReactI18next: { type: '3rdParty', init: jest.fn() },
+}))
+
 const mockPatient = {
   id: 'patient-uuid-123',
   resourceType: 'Patient',
@@ -61,6 +88,7 @@ const mockEncounterEvent = {
 let mockProfileLoading = false
 let mockPatientData: typeof mockPatient | null = mockPatient
 let mockHistoryLoading = false
+let mockHistoryError: string | null = null
 let mockActiveAllergies: typeof mockActiveAllergy[] = []
 let mockActiveMeds: typeof mockMedicationEvent[] = []
 let mockEvents: (typeof mockEncounterEvent | typeof mockMedicationEvent)[] = []
@@ -89,7 +117,7 @@ jest.mock('@/hooks/useMedicalHistory', () => ({
     activeMedications: mockActiveMeds,
     activeAllergies: mockActiveAllergies,
     isLoading: mockHistoryLoading,
-    error: null,
+    error: mockHistoryError,
     refresh: mockRefreshHistory,
   }),
 }))
@@ -138,6 +166,7 @@ describe('HomeDashboardScreen', () => {
     mockPatientData = mockPatient
     mockProfileLoading = false
     mockHistoryLoading = false
+    mockHistoryError = null
     mockActiveAllergies = []
     mockActiveMeds = []
     mockEvents = []
@@ -153,32 +182,121 @@ describe('HomeDashboardScreen', () => {
     expect(getByTestId('medications-section')).toBeTruthy()
   })
 
+  // --- 4-state: Medications — loading ---
+  it('shows loading indicator for medications while history is loading', () => {
+    mockHistoryLoading = true
+    const { getByTestId, queryByText } = render(<HomeDashboardScreen />)
+
+    expect(getByTestId('medications-loading')).toBeTruthy()
+    expect(queryByText('No Active Medications')).toBeNull()
+  })
+
+  // --- 4-state: Medications — error ---
+  it('shows "unavailable" for medications on history error, never "No Active Medications"', () => {
+    mockHistoryLoading = false
+    mockHistoryError = 'Failed to load medical history'
+    const { getByTestId, queryByText } = render(<HomeDashboardScreen />)
+
+    expect(getByTestId('medications-unavailable')).toBeTruthy()
+    expect(queryByText('No Active Medications')).toBeNull()
+  })
+
+  // --- 4-state: Medications — confirmed empty ---
+  it('shows "No Active Medications" only after history loaded with zero results', () => {
+    mockHistoryLoading = false
+    mockHistoryError = null
+    mockActiveMeds = []
+    const { getByText, queryByTestId } = render(<HomeDashboardScreen />)
+
+    expect(getByText('No Active Medications')).toBeTruthy()
+    expect(queryByTestId('medications-loading')).toBeNull()
+    expect(queryByTestId('medications-unavailable')).toBeNull()
+  })
+
+  // --- 4-state: Recent Activity — loading ---
+  it('shows loading indicator for recent activity while history is loading', () => {
+    mockHistoryLoading = true
+    const { getByTestId, queryByText } = render(<HomeDashboardScreen />)
+
+    expect(getByTestId('recent-activity-loading')).toBeTruthy()
+    expect(queryByText('No recent activity')).toBeNull()
+  })
+
+  // --- 4-state: Recent Activity — error ---
+  it('shows "unavailable" for recent activity on history error, never "No recent activity"', () => {
+    mockHistoryLoading = false
+    mockHistoryError = 'Failed to load medical history'
+    const { getByTestId, queryByText } = render(<HomeDashboardScreen />)
+
+    expect(getByTestId('recent-activity-unavailable')).toBeTruthy()
+    expect(queryByText('No recent activity')).toBeNull()
+  })
+
+  // --- 4-state: Recent Activity — confirmed empty ---
+  it('shows "No recent activity" only after history loaded with zero results', () => {
+    mockHistoryLoading = false
+    mockHistoryError = null
+    mockEvents = []
+    const { getByTestId, getByText } = render(<HomeDashboardScreen />)
+
+    expect(getByTestId('recent-activity-empty')).toBeTruthy()
+    expect(getByText('No recent activity')).toBeTruthy()
+  })
+
+  // --- 4-state: Allergies — loading (via AllergyBanner) ---
+  it('allergy banner shows loading state and not "No Known Allergies" while loading', () => {
+    mockHistoryLoading = true
+    const { getByTestId, queryByText } = render(<HomeDashboardScreen />)
+
+    expect(getByTestId('allergy-banner-loading')).toBeTruthy()
+    expect(queryByText('No Known Allergies')).toBeNull()
+  })
+
+  // --- 4-state: Allergies — error ---
+  it('allergy banner shows error state on history error, not "No Known Allergies"', () => {
+    mockHistoryLoading = false
+    mockHistoryError = 'Failed to load medical history'
+    const { getByTestId, queryByText } = render(<HomeDashboardScreen />)
+
+    expect(getByTestId('allergy-banner-error')).toBeTruthy()
+    expect(queryByText('No Known Allergies')).toBeNull()
+  })
+
   // --- AC #3: Allergy section renders FIRST in DOM ---
   it('renders allergy section before all other content sections', () => {
     mockActiveAllergies = [mockActiveAllergy]
     const { getByTestId, UNSAFE_root } = render(<HomeDashboardScreen />)
 
-    const allergySection = getByTestId('allergy-section')
-    const summaryCard = getByTestId('patient-summary-card')
+    // AllergyBanner renders with testID "allergy-banner" when allergies exist
+    expect(getByTestId('allergy-banner')).toBeTruthy()
+    expect(getByTestId('patient-summary-card')).toBeTruthy()
+    expect(getByTestId('qr-section')).toBeTruthy()
+    expect(getByTestId('medications-section')).toBeTruthy()
 
-    // Both should exist
-    expect(allergySection).toBeTruthy()
-    expect(summaryCard).toBeTruthy()
-
-    // Verify DOM order: allergy section must appear before summary card
-    // Walk the tree and find testID positions
-    const allTestIds: string[] = []
-    function walk(node: any) {
-      if (node?.props?.testID) allTestIds.push(node.props.testID)
-      const children = node?.props?.children
-      if (Array.isArray(children)) children.forEach(walk)
-      else if (children && typeof children === 'object') walk(children)
+    // Verify DOM order by walking the plain element tree (not fibers).
+    // toJSON() from RTL can have circular refs (RefreshControl fiber); instead
+    // use UNSAFE_root.findAll to collect all testID-bearing elements in DFS order.
+    const elements: string[] = []
+    const collected = UNSAFE_root.findAll(
+      (el) => typeof el.props?.testID === 'string',
+      { deep: true },
+    )
+    for (const el of collected) {
+      elements.push(el.props.testID as string)
     }
-    walk(UNSAFE_root)
-    const allergyIndex = allTestIds.indexOf('allergy-section')
-    const summaryIndex = allTestIds.indexOf('patient-summary-card')
-    const qrIndex = allTestIds.indexOf('qr-section')
-    const medsIndex = allTestIds.indexOf('medications-section')
+
+    const allergyIndex = elements.indexOf('allergy-banner')
+    const summaryIndex = elements.indexOf('patient-summary-card')
+    const qrIndex = elements.indexOf('qr-section')
+    const medsIndex = elements.indexOf('medications-section')
+
+    // All must be found (> -1)
+    expect(allergyIndex).toBeGreaterThan(-1)
+    expect(summaryIndex).toBeGreaterThan(-1)
+    expect(qrIndex).toBeGreaterThan(-1)
+    expect(medsIndex).toBeGreaterThan(-1)
+
+    // Allergy banner must appear before all other content sections
     expect(allergyIndex).toBeLessThan(summaryIndex)
     expect(allergyIndex).toBeLessThan(qrIndex)
     expect(allergyIndex).toBeLessThan(medsIndex)
@@ -189,17 +307,21 @@ describe('HomeDashboardScreen', () => {
     mockActiveAllergies = [mockActiveAllergy]
     const { getByTestId, getByText } = render(<HomeDashboardScreen />)
 
-    expect(getByTestId('allergy-section')).toBeTruthy()
-    expect(getByTestId(`allergy-card-${mockActiveAllergy.id}`)).toBeTruthy()
+    // AllergyBanner wraps all items with testID "allergy-banner"
+    expect(getByTestId('allergy-banner')).toBeTruthy()
+    // Individual items use testID "allergy-banner-item-<id>"
+    expect(getByTestId(`allergy-banner-item-${mockActiveAllergy.id}`)).toBeTruthy()
     expect(getByText('Penicillin')).toBeTruthy()
   })
 
-  // --- AC #4: No allergies shows "No Known Allergies" ---
-  it('shows "No Known Allergies" when no active allergies exist', () => {
+  // --- AC #4: No allergies shows "No Known Allergies" ONLY after loaded ---
+  it('shows "No Known Allergies" when no active allergies exist (after load)', () => {
     mockActiveAllergies = []
+    mockHistoryLoading = false
     const { getByTestId, getByText } = render(<HomeDashboardScreen />)
 
-    expect(getByTestId('allergy-section-none')).toBeTruthy()
+    // AllergyBanner uses testID "allergy-banner-none" when no allergies and not loading
+    expect(getByTestId('allergy-banner-none')).toBeTruthy()
     expect(getByText('No Known Allergies')).toBeTruthy()
   })
 
@@ -256,8 +378,9 @@ describe('HomeDashboardScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('TimelineTab')
   })
 
-  it('shows "No Active Medications" when count is zero', () => {
+  it('shows "No Active Medications" when count is zero and history is loaded', () => {
     mockActiveMeds = []
+    mockHistoryLoading = false
     const { getByText, queryByTestId } = render(<HomeDashboardScreen />)
 
     expect(getByText('No Active Medications')).toBeTruthy()
@@ -274,8 +397,9 @@ describe('HomeDashboardScreen', () => {
     expect(getByTestId('last-prescription-date')).toBeTruthy()
   })
 
-  it('shows "No recent activity" when no history exists', () => {
+  it('shows "No recent activity" when no history exists (after load)', () => {
     mockEvents = []
+    mockHistoryLoading = false
     const { getByTestId, getByText } = render(<HomeDashboardScreen />)
 
     expect(getByTestId('recent-activity-empty')).toBeTruthy()
@@ -351,8 +475,9 @@ describe('HomeDashboardScreen', () => {
     mockActiveAllergies = [mockActiveAllergy, secondAllergy]
     const { getByTestId, getByText } = render(<HomeDashboardScreen />)
 
-    expect(getByTestId('allergy-card-allergy-1')).toBeTruthy()
-    expect(getByTestId('allergy-card-allergy-2')).toBeTruthy()
+    // AllergyBanner renders individual items with testID "allergy-banner-item-<id>"
+    expect(getByTestId('allergy-banner-item-allergy-1')).toBeTruthy()
+    expect(getByTestId('allergy-banner-item-allergy-2')).toBeTruthy()
     expect(getByText('Penicillin')).toBeTruthy()
     expect(getByText('Sulfa drugs')).toBeTruthy()
   })

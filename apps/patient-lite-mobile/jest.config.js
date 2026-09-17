@@ -10,6 +10,12 @@ module.exports = {
     // Map workspace packages to their source (handles .js → .ts resolution)
     '^@ultranos/shared-types$': '<rootDir>/../../packages/shared-types/src/index.ts',
     '^@ultranos/ui-kit$': '<rootDir>/../../packages/ui-kit/src/index.ts',
+    // Subpath exports for ui-kit — point to mock stubs for test environment
+    // (the base branch packages/ui-kit/src/ doesn't have native/ or utils/format yet)
+    '^@ultranos/ui-kit/utils/format$': '<rootDir>/__mocks__/@ultranos/ui-kit/format.js',
+    '^@ultranos/ui-kit/native/NumericText$': '<rootDir>/__mocks__/@ultranos/ui-kit/NumericText.js',
+    '^@ultranos/ui-kit/native/(.*)$': '<rootDir>/__mocks__/@ultranos/ui-kit/NumericText.js',
+    '^@ultranos/ui-kit/icons$': '<rootDir>/../../packages/ui-kit/src/index.ts',
     '^@ultranos/sync-engine$': '<rootDir>/../../packages/sync-engine/src/index.ts',
     '^@ultranos/audit-logger$': '<rootDir>/../../packages/audit-logger/src/index.ts',
     '^@react-native-async-storage/async-storage$': '<rootDir>/__mocks__/@react-native-async-storage/async-storage.js',

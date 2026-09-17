@@ -5,6 +5,10 @@
  * AC #6: Unread count for tab badge, real-time updates
  * AC #7: 30-second polling when Notifications tab is active
  * AC #8: Merge API results with SQLCipher cache
+ *
+ * 4-state pattern: `hasLoaded` is set to true only after the first fetch
+ * or cache load completes. This prevents the UI from showing the empty
+ * state during the initial loading window.
  */
 import { create } from 'zustand'
 import {
@@ -36,6 +40,13 @@ export interface NotificationState {
   notifications: NotificationItem[]
   unreadCount: number
   isLoading: boolean
+  /**
+   * True once the first fetch OR cache load has settled.
+   * The UI must NOT show the empty state until hasLoaded is true.
+   */
+  hasLoaded: boolean
+  /** Non-null when the last fetch attempt failed (network error etc.) */
+  fetchError: boolean
   lastFetched: Date | null
 
   fetchNotifications: () => Promise<void>
@@ -84,10 +95,12 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
   unreadCount: 0,
   isLoading: false,
+  hasLoaded: false,
+  fetchError: false,
   lastFetched: null,
 
   fetchNotifications: async () => {
-    set({ isLoading: true })
+    set({ isLoading: true, fetchError: false })
     try {
       const token = await getAuthToken()
       const { notifications: items } = await apiFetchNotifications(token)
@@ -106,10 +119,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       }
 
       const unreadCount = sorted.filter(n => n.status !== 'ACKNOWLEDGED').length
-      set({ notifications: sorted, unreadCount, isLoading: false, lastFetched: new Date() })
+      set({ notifications: sorted, unreadCount, isLoading: false, hasLoaded: true, fetchError: false, lastFetched: new Date() })
     } catch {
       // Network failure — fall back to cache
-      set({ isLoading: false })
+      set({ isLoading: false, fetchError: true })
       if (get().notifications.length === 0) {
         await get().loadFromCache()
       }
@@ -117,15 +130,20 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   loadFromCache: async () => {
-    if (!isDatabaseOpen()) return
+    if (!isDatabaseOpen()) {
+      // No cache available — mark as loaded (empty) so UI doesn't spin forever
+      set({ hasLoaded: true })
+      return
+    }
     try {
       const db = await getEncryptedDbConnection()
       const rows = await getLocalNotifications(db)
       const items = rows.map(fromLocalNotification)
       const unreadCount = items.filter(n => n.status !== 'ACKNOWLEDGED').length
-      set({ notifications: items, unreadCount })
+      set({ notifications: items, unreadCount, hasLoaded: true })
     } catch {
-      // Cache read failure is non-fatal
+      // Cache read failure — mark as loaded so UI doesn't spin forever
+      set({ hasLoaded: true })
     }
   },
 

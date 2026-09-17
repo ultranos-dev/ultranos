@@ -147,7 +147,9 @@
     "viewPrescription": "View Prescription",
     "viewPrivacySettings": "View Privacy Settings",
     "detailTitle": "Notification Details",
-    "backAccessibility": "Go back"
+    "backAccessibility": "Go back",
+    "unavailableTitle": "Notifications unavailable",
+    "unavailableSubtitle": "Could not load notifications. Pull down to retry."
   },
   "common": {
     "loading": "Loading...",
@@ -282,6 +284,24 @@
     "lastPrescription": "Last Prescription: {{date}}",
     "noRecentActivity": "No recent activity",
     "emptyTitle": "Welcome",
-    "emptySubtitle": "Your health information will appear here after your first visit"
+    "emptySubtitle": "Your health information will appear here after your first visit",
+    "medicationsUnavailable": "Medications unavailable",
+    "activityUnavailable": "Activity unavailable"
+  },
+  "guardian": {
+    "viewingAsGuardian": "Viewing as Guardian",
+    "readOnlyNotice": "You can view this person's health information but cannot make changes.",
+    "allergies": "Allergies",
+    "activeMedications": "Active Medications",
+    "recentActivity": "Recent Activity",
+    "noAllergies": "No known allergies",
+    "noMedications": "No active medications",
+    "noEncounters": "No recent visits",
+    "unknownAllergy": "Unknown allergen",
+    "medication": "Medication",
+    "clinicalEncounter": "Clinical visit",
+    "allergiesUnavailable": "Allergy status unavailable",
+    "medicationsUnavailable": "Medication list unavailable",
+    "activityUnavailable": "Activity unavailable"
   }
 }

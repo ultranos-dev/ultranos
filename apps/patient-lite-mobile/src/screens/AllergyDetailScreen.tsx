@@ -82,9 +82,14 @@ export function AllergyDetailScreen() {
   const route = useRoute<AllergyDetailRouteProp>()
   const navigation = useNavigation()
   const { allergyId } = route.params
-  const { patient } = usePatientProfile()
-  const { events, isLoading } = useMedicalHistory(patient?.id)
+  const { patient, isLoading: profileLoading } = usePatientProfile()
+  const { events, isLoading: historyLoading } = useMedicalHistory(patient?.id)
   const auditedRef = useRef<string | null>(null)
+
+  // Combined loading: if the patient profile hasn't loaded yet, treat the whole
+  // screen as loading — don't resolve patient?.id to undefined and immediately
+  // conclude "not found" before we've had a chance to load history.
+  const isLoading = profileLoading || historyLoading
 
   const [allergy, setAllergy] = useState<FhirAllergyIntolerance | null>(null)
 

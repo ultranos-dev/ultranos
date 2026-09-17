@@ -7,6 +7,7 @@ import {
   RefreshControl,
   StyleSheet,
   I18nManager,
+  ActivityIndicator,
 } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useAppLocale } from '@/hooks/useAppLocale'
@@ -31,6 +32,7 @@ import { useMedicalHistory } from '@/hooks/useMedicalHistory'
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount'
 import { NAV_ICONS } from '@/config/icon-vocabulary'
 import type { HomeStackParamList } from '@/navigation/types'
+import { NumericText } from '@ultranos/ui-kit/native/NumericText'
 
 type HomeDashboardNavProp = NativeStackNavigationProp<HomeStackParamList, 'HomeScreen'>
 
@@ -86,7 +88,7 @@ export function HomeDashboardScreen() {
     navigation.navigate('QRFullScreen')
   }, [navigation])
 
-  // Loading state
+  // Loading state — only show skeleton when BOTH patient profile AND history haven't loaded yet
   if (isLoading && !patient) {
     return <DashboardSkeleton />
   }
@@ -136,9 +138,9 @@ export function HomeDashboardScreen() {
             >
               <Text style={styles.bellIcon}>{NAV_ICONS.notifications.emoji}</Text>
               <View style={[styles.badge, { backgroundColor: colors.error }]}>
-                <Text style={styles.badgeText}>
+                <NumericText style={styles.badgeText}>
                   {unreadCount > 99 ? '99+' : unreadCount}
-                </Text>
+                </NumericText>
               </View>
             </Pressable>
           )}
@@ -170,16 +172,21 @@ export function HomeDashboardScreen() {
         </View>
       </Pressable>
 
-      {/* SECTION 4: Medications Summary */}
+      {/* SECTION 4: Medications Summary — pass historyLoading/error so section never asserts
+          "No Active Medications" while data is still loading or on error */}
       <MedicationsSection
         count={activeMedications.length}
+        isLoading={historyLoading}
+        error={historyError}
         onViewAll={navigateToTimeline}
       />
 
-      {/* SECTION 5: Recent Activity */}
+      {/* SECTION 5: Recent Activity — pass historyLoading/error for same reason */}
       <RecentActivitySection
         lastEncounterDate={lastEncounterDate}
         lastPrescriptionDate={lastPrescriptionDate}
+        isLoading={historyLoading}
+        error={historyError}
         locale={locale}
       />
 
@@ -236,12 +243,17 @@ function QRValidityIndicator({
 }
 
 // --- Medications Section ---
+// Safety: never shows "No Active Medications" while historyLoading is true or on error
 
 function MedicationsSection({
   count,
+  isLoading,
+  error,
   onViewAll,
 }: {
   count: number
+  isLoading: boolean
+  error: string | null
   onViewAll: () => void
 }) {
   const { t } = useTranslation()
@@ -252,13 +264,21 @@ function MedicationsSection({
       <View style={styles.sectionRow}>
         <View style={styles.sectionIconRow}>
           <Text style={styles.sectionIcon}>{NAV_ICONS.prescriptions.emoji}</Text>
-          <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
-            {count > 0
-              ? t('dashboard.activeMedications', { count })
-              : t('dashboard.noActiveMedications')}
-          </Text>
+          {isLoading ? (
+            <ActivityIndicator size="small" color={colors.primary[500]} testID="medications-loading" />
+          ) : error ? (
+            <Text style={[styles.bodyText, { color: colors.textMuted }]} testID="medications-unavailable">
+              {t('dashboard.medicationsUnavailable')}
+            </Text>
+          ) : (
+            <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
+              {count > 0
+                ? t('dashboard.activeMedications', { count })
+                : t('dashboard.noActiveMedications')}
+            </Text>
+          )}
         </View>
-        {count > 0 && (
+        {!isLoading && !error && count > 0 && (
           <Pressable
             onPress={onViewAll}
             accessibilityRole="button"
@@ -274,18 +294,47 @@ function MedicationsSection({
 }
 
 // --- Recent Activity Section ---
+// Safety: never shows "No recent activity" while historyLoading is true or on error
 
 function RecentActivitySection({
   lastEncounterDate,
   lastPrescriptionDate,
+  isLoading,
+  error,
   locale,
 }: {
   lastEncounterDate: string | null
   lastPrescriptionDate: string | null
+  isLoading: boolean
+  error: string | null
   locale: string
 }) {
   const { t } = useTranslation()
   const { colors } = useTheme()
+
+  if (isLoading) {
+    return (
+      <View style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} testID="recent-activity-loading">
+        <View style={styles.sectionIconRow}>
+          <Text style={styles.sectionIcon}>📅</Text>
+          <ActivityIndicator size="small" color={colors.primary[500]} testID="activity-loading-indicator" />
+        </View>
+      </View>
+    )
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} testID="recent-activity-unavailable">
+        <View style={styles.sectionIconRow}>
+          <Text style={styles.sectionIcon}>📅</Text>
+          <Text style={[styles.bodyText, { color: colors.textMuted }]} testID="activity-unavailable-text">
+            {t('dashboard.activityUnavailable')}
+          </Text>
+        </View>
+      </View>
+    )
+  }
 
   if (!lastEncounterDate && !lastPrescriptionDate) {
     return (
