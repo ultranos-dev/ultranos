@@ -72,7 +72,7 @@ describe('Signup wizard', () => {
     await press(getByTestId, 'mock-district')
     await press(getByTestId, 'wizard-finish')
     await waitFor(() => expect(h.updateUser).toHaveBeenCalled())
-    const arg = h.updateUser.mock.calls[0][0] as { data: { given_name: string; family_name: string; address: { province: string; district: string } } }
+    const arg = (h.updateUser.mock.calls[0] as unknown as unknown[])[0] as { data: { given_name: string; family_name: string; address: { province: string; district: string } } }
     expect(arg.data.given_name).toBe('Sara')
     expect(arg.data.family_name).toBe('Ahmadi')
     expect(arg.data.address.province).toBe('Kabul')
@@ -122,7 +122,7 @@ describe('Signup wizard', () => {
     await press(getByTestId, 'mock-district')
     await press(getByTestId, 'wizard-finish')
     await waitFor(() => expect(h.uploadProfilePhoto).toHaveBeenCalledWith('file:///test.jpg', 'u1'))
-    const arg = h.updateUser.mock.calls[0][0] as { data: { photo_url?: string } }
+    const arg = (h.updateUser.mock.calls[0] as unknown as unknown[])[0] as { data: { photo_url?: string } }
     // bucket is now private — photo_url stores the object path, not a public URL
     expect(arg.data.photo_url).toBe('u1/avatar.jpg')
     await waitFor(() => expect(mockRegisterFromSession).toHaveBeenCalledWith('tok', expect.objectContaining({

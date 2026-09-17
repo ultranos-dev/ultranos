@@ -12,7 +12,7 @@ import { useDrugSearch } from '@/hooks/useDrugSearch'
 const ROW = { atcCode: 'J01CA04', innName: 'Amoxicillin', brandNames: [], doseForms: [], therapeuticClass: 'X', localName: undefined }
 
 describe('useDrugSearch', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
   it('runs local FTS when catalog is synced', async () => {
     h.fts.mockResolvedValue([ROW])
     const { result } = renderHook(() => useDrugSearch())

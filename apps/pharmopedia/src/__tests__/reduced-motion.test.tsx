@@ -96,7 +96,7 @@ import { SkeletonCard } from '@/components/SkeletonCard'
 
 // ── CoachMark: animated wrapper gating ────────────────────────────────────────
 describe('CoachMark — reduce-motion gating', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('renders hint content when reduce-motion is TRUE (no animation wrapper)', () => {
     mockReducedMotion.mockReturnValue(true)
@@ -128,7 +128,7 @@ describe('CoachMark — reduce-motion gating', () => {
 
 // ── SkeletonCard: static-fill when reduced ───────────────────────────────────
 describe('SkeletonCard — reduce-motion gating', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('renders placeholder content when reduce-motion is TRUE', () => {
     mockReducedMotion.mockReturnValue(true)

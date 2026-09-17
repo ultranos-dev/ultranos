@@ -4,7 +4,7 @@ vi.mock('@/lib/hub-fetch', () => ({ hubFetch: mockHubFetch }))
 import { getProfile } from '@/api/users'
 
 describe('users API client', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
   it('GETs users.getProfile with auth header and unwraps the envelope', async () => {
     const profile = { kind: 'patient', displayName: 'Sara', givenName: 'Sara', tier: 'FREE' }
     mockHubFetch.mockResolvedValue({ ok: true, json: async () => ({ result: { data: { json: profile } } }) })

@@ -26,8 +26,8 @@ type SyncState = {
   setBrandsIncomplete: typeof mockSetBrandsIncomplete
 }
 
-function setAuth(s: AuthState) { vi.mocked(useAuthStore).mockImplementation((sel: (x: AuthState) => unknown) => sel(s)) }
-function setSync(s: SyncState) { vi.mocked(useSyncStore).mockImplementation((sel: (x: SyncState) => unknown) => sel(s)) }
+function setAuth(s: AuthState) { vi.mocked(useAuthStore).mockImplementation(((sel: (x: AuthState) => unknown) => sel(s)) as unknown as typeof useAuthStore) }
+function setSync(s: SyncState) { vi.mocked(useSyncStore).mockImplementation(((sel: (x: SyncState) => unknown) => sel(s)) as unknown as typeof useSyncStore) }
 
 const baseSync: SyncState = {
   lastVersion: 0, status: 'idle', lastSyncAt: null,

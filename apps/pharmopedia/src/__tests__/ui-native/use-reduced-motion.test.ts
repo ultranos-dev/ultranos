@@ -12,7 +12,7 @@ vi.mock('react-native', async (importOriginal) => {
 import { useReducedMotion } from '@ultranos/ui-kit/native'
 
 describe('useReducedMotion', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
   it('returns false by default', async () => {
     h.isReduced.mockResolvedValue(false)
     const { result } = renderHook(() => useReducedMotion())

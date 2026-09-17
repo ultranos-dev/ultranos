@@ -14,8 +14,8 @@ describe('uploadProfilePhoto', () => {
   it('uploads to {userId}/avatar.<ext> (from blob type) and returns the object path', async () => {
     const result = await uploadProfilePhoto('file:///x/photo.jpg', 'u1')
     expect(upload).toHaveBeenCalled()
-    expect(upload.mock.calls[0][0]).toBe('u1/avatar.jpeg')
-    expect((upload.mock.calls[0][2] as { contentType: string }).contentType).toBe('image/jpeg')
+    expect((upload.mock.calls[0] as unknown as unknown[])[0]).toBe('u1/avatar.jpeg')
+    expect(((upload.mock.calls[0] as unknown as unknown[])[2] as { contentType: string }).contentType).toBe('image/jpeg')
     // bucket is now private — must return the storage object path, not a public URL
     expect(result).toBe('u1/avatar.jpeg')
     expect(result).not.toMatch(/^https?:\/\//)

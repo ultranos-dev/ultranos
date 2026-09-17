@@ -25,7 +25,7 @@ describe('ShareButton', () => {
     render(<ShareButton atcCode="J01CA04" drugName="Amoxicillin" />)
     await fireEvent.press(screen.getByTestId('share-button'))
     expect(shareSpy).toHaveBeenCalledOnce()
-    const content = shareSpy.mock.calls[0][0] as { message: string }
+    const content = shareSpy.mock.calls[0]![0] as { message: string }
     expect(content.message).toContain('Amoxicillin')
     expect(content.message).toContain('pharmopedia://drug/J01CA04')
   })
@@ -33,7 +33,7 @@ describe('ShareButton', () => {
   it('encodes ATC codes with special characters safely', async () => {
     render(<ShareButton atcCode="N02AA01" drugName="Morphine" />)
     await fireEvent.press(screen.getByTestId('share-button'))
-    const content = shareSpy.mock.calls[0][0] as { message: string }
+    const content = shareSpy.mock.calls[0]![0] as { message: string }
     expect(content.message).toContain('pharmopedia://drug/N02AA01')
   })
 })

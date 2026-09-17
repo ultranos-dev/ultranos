@@ -15,17 +15,18 @@ vi.mock('expo-haptics', () => ({
 }))
 
 import { hapticImpact, hapticNotification, hapticSelection } from '@/lib/haptics'
+import { ImpactFeedbackStyle, NotificationFeedbackType } from 'expo-haptics'
 
-beforeEach(() => vi.clearAllMocks())
+beforeEach(() => { vi.clearAllMocks() })
 
 describe('haptics', () => {
   it('hapticImpact calls impactAsync with the given style', async () => {
-    await hapticImpact('Light')
+    await hapticImpact(ImpactFeedbackStyle.Light)
     expect(mockImpact).toHaveBeenCalledWith('Light')
   })
 
   it('hapticNotification calls notificationAsync', async () => {
-    await hapticNotification('Success')
+    await hapticNotification(NotificationFeedbackType.Success)
     expect(mockNotification).toHaveBeenCalledWith('Success')
   })
 
@@ -37,6 +38,6 @@ describe('haptics', () => {
   it('swallows errors silently', async () => {
     mockImpact.mockRejectedValueOnce(new Error('Haptics unavailable'))
     // Should not throw
-    await hapticImpact('Light')
+    await hapticImpact(ImpactFeedbackStyle.Light)
   })
 })

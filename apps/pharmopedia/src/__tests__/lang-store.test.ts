@@ -32,7 +32,7 @@ describe('isRtlLang', () => {
 describe('useLangStore.init', () => {
   beforeEach(async () => {
     useLangStore.setState({ lang: 'en', initialized: false })
-    const { getItemAsync } = await import('expo-secure-store') as { getItemAsync: ReturnType<typeof vi.fn> }
+    const { getItemAsync } = await import('expo-secure-store') as unknown as { getItemAsync: ReturnType<typeof vi.fn> }
     getItemAsync.mockResolvedValue(null)
   })
 
@@ -43,7 +43,7 @@ describe('useLangStore.init', () => {
   })
 
   it('restores persisted lang', async () => {
-    const { getItemAsync } = await import('expo-secure-store') as { getItemAsync: ReturnType<typeof vi.fn> }
+    const { getItemAsync } = await import('expo-secure-store') as unknown as { getItemAsync: ReturnType<typeof vi.fn> }
     getItemAsync.mockResolvedValueOnce('ar')
     await useLangStore.getState().init()
     expect(useLangStore.getState().lang).toBe('ar')
@@ -56,13 +56,13 @@ describe('useLangStore.setLang', () => {
   })
 
   it('persists lang to SecureStore', async () => {
-    const { setItemAsync } = await import('expo-secure-store') as { setItemAsync: ReturnType<typeof vi.fn> }
+    const { setItemAsync } = await import('expo-secure-store') as unknown as { setItemAsync: ReturnType<typeof vi.fn> }
     await useLangStore.getState().setLang('prs')
     expect(setItemAsync).toHaveBeenCalledWith('pharmopedia.lang', 'prs')
   })
 
   it('applies the language to i18next so text updates without a reload', async () => {
-    const { i18n } = await import('@/i18n') as { i18n: { changeLanguage: ReturnType<typeof vi.fn> } }
+    const { i18n } = await import('@/i18n') as unknown as { i18n: { changeLanguage: ReturnType<typeof vi.fn> } }
     i18n.changeLanguage.mockClear()
     // prs → ar: both RTL, so reloadAsync does NOT fire — changeLanguage must.
     useLangStore.setState({ lang: 'prs', initialized: true })
@@ -72,7 +72,7 @@ describe('useLangStore.setLang', () => {
 
   it('calls reloadAsync when RTL direction changes', async () => {
     await useLangStore.getState().setLang('en')
-    const { reloadAsync } = await import('expo-updates') as { reloadAsync: ReturnType<typeof vi.fn> }
+    const { reloadAsync } = await import('expo-updates') as unknown as { reloadAsync: ReturnType<typeof vi.fn> }
     reloadAsync.mockClear()
     await useLangStore.getState().setLang('ar')
     expect(reloadAsync).toHaveBeenCalledOnce()
@@ -80,7 +80,7 @@ describe('useLangStore.setLang', () => {
 
   it('does NOT call reloadAsync when RTL direction stays the same', async () => {
     await useLangStore.getState().setLang('prs')
-    const { reloadAsync } = await import('expo-updates') as { reloadAsync: ReturnType<typeof vi.fn> }
+    const { reloadAsync } = await import('expo-updates') as unknown as { reloadAsync: ReturnType<typeof vi.fn> }
     reloadAsync.mockClear()
     await useLangStore.getState().setLang('ar') // prs→ar: both RTL, no change
     expect(reloadAsync).not.toHaveBeenCalled()
