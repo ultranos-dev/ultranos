@@ -37,6 +37,12 @@ jest.mock('expo-secure-store', () => ({
 
 // Mock fetch for Hub API calls
 const mockFetch = jest.fn()
+// ecdsa-key-init calls hubFetch() (wraps pinnedFetch, not global.fetch); route it
+// through mockFetch so the {ok, json} responses below actually apply.
+jest.mock('@/lib/hub-fetch', () => ({
+  hubFetch: (...args: unknown[]) => mockFetch(...args),
+  CompromisedDeviceError: class CompromisedDeviceError extends Error {},
+}))
 
 const PATIENT_ID = '550e8400-e29b-41d4-a716-446655440000'
 const AUTH_TOKEN = 'test-jwt-token'

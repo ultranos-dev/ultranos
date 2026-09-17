@@ -18,6 +18,8 @@ module.exports = {
     '^@ultranos/ui-kit/native/NumericText$': '<rootDir>/__mocks__/@ultranos/ui-kit/native/NumericText.js',
     '^@ultranos/sync-engine$': '<rootDir>/../../packages/sync-engine/src/index.ts',
     '^@ultranos/audit-logger$': '<rootDir>/../../packages/audit-logger/src/index.ts',
+    '^@ultranos/crypto$': '<rootDir>/../../packages/crypto/src/index.ts',
+    '^@ultranos/crypto/mobile$': '<rootDir>/../../packages/crypto/src/mobile-ecdsa-keystore.ts',
     '^@react-native-async-storage/async-storage$': '<rootDir>/__mocks__/@react-native-async-storage/async-storage.js',
     '^react-native-iap$': '<rootDir>/__mocks__/react-native-iap.js',
     // Manual node_module mocks aren't auto-applied under pnpm (app __mocks__ isn't
