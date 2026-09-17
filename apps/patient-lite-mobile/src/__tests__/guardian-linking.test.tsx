@@ -18,9 +18,15 @@ import { MAX_ACTIVE_GUARDIAN_LINKS } from '@ultranos/shared-types'
 
 // ---- Mock dependencies ----
 
-// Mock fetch for Hub API calls
+// Mock fetch for Hub API calls. guardian-api calls hubFetch() (which wraps
+// pinnedFetch, NOT global.fetch), so route hubFetch through the same mock — its
+// returned objects already expose .ok/.json() as guardian-api expects.
 const mockFetch = jest.fn()
 global.fetch = mockFetch
+jest.mock('@/lib/hub-fetch', () => ({
+  hubFetch: (...args: unknown[]) => mockFetch(...args),
+  CompromisedDeviceError: class CompromisedDeviceError extends Error {},
+}))
 
 // Mock Supabase
 const mockSignInWithOtp = jest.fn()
