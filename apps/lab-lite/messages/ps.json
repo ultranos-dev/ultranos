@@ -183,7 +183,8 @@
     "supervisor": {
       "incompleteCount": "{count} incomplete verifications",
       "expand": "Show details",
-      "collapse": "Hide details"
+      "collapse": "Hide details",
+      "loadError": "د تصدیق حالت بارول ناکام شول — لاسي وګورئ"
     }
   },
   "metadata": {
@@ -1236,6 +1237,61 @@
         "stepsCompleted": "{count} ګامونه بشپړ شول",
         "stepN": "ګام {n}"
       }
+    },
+    "temperature": {
+      "dashboardTitle": "د تودوخې څارنه",
+      "noLocations": "هیڅ د څارنې ځایونه ترتیب شوي ندي",
+      "loadError": "د تودوخې معلومات بارول ناکام شول",
+      "retry": "بیا هڅه وکړئ",
+      "noReadings": "لاهم هیڅ لوستل نشوي",
+      "lastReading": "وروستی لوستل",
+      "source": "سرچینه",
+      "bleSensor": "BLE سینسر",
+      "manual": "لاسي",
+      "range": "هدف سلسله",
+      "readingOverdue": "لوستل ځنډول شوي",
+      "logReading": "لوستل ثبت کړئ",
+      "trend": "رجحان",
+      "trendTitle": "رجحان",
+      "close": "بندول",
+      "excursionAlert": "د تودوخې انحراف",
+      "peakTemp": "لوړه",
+      "duration": "موده",
+      "minutes": "دقیقه",
+      "connectSensor": "سینسر وصل کړئ",
+      "status": {
+        "green": "نورمال",
+        "amber": "د حد سره نږدې",
+        "red": "د سلسلې څخه بهر"
+      }
+    },
+    "waste": {
+      "title": "د ضایعاتو ډبې",
+      "activateNew": "نوې ډبه فعاله کړئ",
+      "empty": "هیڅ ډبه ثبت نشوې",
+      "loadError": "د ضایعاتو ډبو معلومات بارول ناکام شول",
+      "retry": "بیا هڅه وکړئ",
+      "fillLevel": "د ډکوالي کچه",
+      "daysActive": "{days} ورځې فعاله",
+      "type": {
+        "SHARPS": "تیزه",
+        "BIOHAZARD": "بیوخطره",
+        "CHEMICAL": "کیمیاوي",
+        "GENERAL": "عمومي"
+      },
+      "status": {
+        "ACTIVE": "فعاله",
+        "FULL": "ډکه",
+        "DISPOSED": "لرې شوې"
+      }
+    }
+  },
+  "chw": {
+    "log": {
+      "title": "نن جمع شوي نمونې",
+      "countBadge": "{count} نمونې جمع شوې",
+      "empty": "نن هیڅ نمونه جمع نشوې",
+      "loadError": "د نمونو ثبت بارول ناکام شول"
     }
   },
   "patientQueue": {
@@ -3502,7 +3558,9 @@
     "noResultsDescription": "هیڅ لېږنه د اوسنیو فلټرونو سره سمون نه لري.",
     "clearFilters": "فلټرونه پاک کړئ",
     "actionUpdateStatus": "حالت تازه کړئ",
-    "actionImportResult": "پایله وارد کړئ"
+    "actionImportResult": "پایله وارد کړئ",
+    "loadError": "د لیږدونو بارول ناکام شول",
+    "retry": "بیا هڅه وکړئ"
   },
   "outbreak": {
     "activateAriaLabel": "د اوباشی حالت فعالول",
@@ -3793,7 +3851,9 @@
       "activeAlert": "{count, plural, one {# فعاله زیاتونه پاملرنې ته اړتیا لري.} other {# فعالې زیاتونې پاملرنې ته اړتیا لري.}}",
       "searchPlaceholder": "د زیاتونو لټون…",
       "noResults": "سمون لرونکې زیاتونه ونه موندل شوه",
-      "clearSearch": "لټون پاک کړئ"
+      "clearSearch": "لټون پاک کړئ",
+      "loadError": "د زیاتونو معلومات بارول ناکام شول",
+      "retry": "بیا هڅه وکړئ"
     }
   },
   "logbook": {

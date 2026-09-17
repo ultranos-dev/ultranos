@@ -209,16 +209,33 @@ describe('TemperatureDashboard', () => {
     })
   })
 
-  it('shows an error message when data load fails', async () => {
+  it('shows error state (not empty) when data load fails', async () => {
     mockGetTemperatureLocations.mockRejectedValue(new Error('DB error'))
 
     const Dashboard = await getDashboard()
     render(<Dashboard />)
 
+    // Must show a role="alert" error state — never a false "no locations" empty state
     await waitFor(() => {
       const alert = screen.getByRole('alert')
-      expect(alert.textContent).toContain('Failed to load temperature data')
+      // The key 'loadError' is returned by our translation mock
+      expect(alert.textContent).toContain('loadError')
     })
+    // Must NOT show the empty/no-locations text
+    expect(screen.queryByText('noLocations')).not.toBeInTheDocument()
+  })
+
+  it('shows genuine empty state (not error) when load succeeds with zero locations', async () => {
+    mockGetTemperatureLocations.mockResolvedValue([])
+
+    const Dashboard = await getDashboard()
+    render(<Dashboard />)
+
+    // Should show the genuine "no locations" text — not an error
+    await waitFor(() => {
+      expect(screen.getByText('noLocations')).toBeInTheDocument()
+    })
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
   it('RTL snapshot — renders location cards correctly with dir="rtl"', async () => {

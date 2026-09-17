@@ -10,7 +10,8 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Clock } from '@ultranos/ui-kit/icons'
+import { Clock, TriangleAlert } from '@ultranos/ui-kit/icons'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { getTodayCHWSamples } from '@/lib/db'
 import type { CHWSampleCollection, CHWSampleType } from '@/types/chw-mode'
 
@@ -40,14 +41,21 @@ export function SamplesCollectedLog({ onBack }: Props) {
   const t = useTranslations('chw.log')
   const [samples, setSamples] = useState<CHWSampleCollection[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     async function load() {
-      const today = await getTodayCHWSamples()
-      // Sort newest first
-      const sorted = [...today].sort((a, b) => b.collectedAt.localeCompare(a.collectedAt))
-      setSamples(sorted)
-      setLoading(false)
+      setLoadError(false)
+      try {
+        const today = await getTodayCHWSamples()
+        // Sort newest first
+        const sorted = [...today].sort((a, b) => b.collectedAt.localeCompare(a.collectedAt))
+        setSamples(sorted)
+      } catch {
+        setLoadError(true)
+      } finally {
+        setLoading(false)
+      }
     }
     void load()
   }, [])
@@ -57,19 +65,26 @@ export function SamplesCollectedLog({ onBack }: Props) {
       {/* Header with count badge */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-foreground">{t('title')}</h2>
-        {!loading && (
+        {!loading && !loadError && (
           <span className="rounded-full bg-primary px-3 py-1 text-lg font-bold text-white">
             {samples.length}
           </span>
         )}
       </div>
 
-      {!loading && samples.length > 0 && (
+      {!loading && !loadError && samples.length > 0 && (
         <p className="text-lg text-muted-foreground">{t('countBadge', { count: samples.length })}</p>
       )}
 
       {loading ? (
         <div className="flex h-32 items-center justify-center text-muted-foreground">…</div>
+      ) : loadError ? (
+        <div
+          role="alert"
+          className="flex h-32 items-center justify-center rounded-2xl bg-card ring-[0.65px] ring-border/50"
+        >
+          <EmptyState icon={TriangleAlert} title={t('loadError')} size="sm" />
+        </div>
       ) : samples.length === 0 ? (
         <div className="flex h-32 items-center justify-center rounded-2xl bg-muted text-xl text-muted-foreground">
           {t('empty')}

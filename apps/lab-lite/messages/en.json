@@ -183,7 +183,8 @@
     "supervisor": {
       "incompleteCount": "{count} incomplete verifications",
       "expand": "Show details",
-      "collapse": "Hide details"
+      "collapse": "Hide details",
+      "loadError": "Unable to load verification status — check manually"
     }
   },
   "metadata": {
@@ -1236,6 +1237,61 @@
         "stepsCompleted": "{count} steps completed",
         "stepN": "Step {n}"
       }
+    },
+    "temperature": {
+      "dashboardTitle": "Temperature Monitoring",
+      "noLocations": "No monitoring locations configured",
+      "loadError": "Unable to load temperature data",
+      "retry": "Retry",
+      "noReadings": "No readings yet",
+      "lastReading": "Last reading",
+      "source": "Source",
+      "bleSensor": "BLE Sensor",
+      "manual": "Manual",
+      "range": "Target range",
+      "readingOverdue": "Reading overdue",
+      "logReading": "Log Reading",
+      "trend": "Trend",
+      "trendTitle": "Trend",
+      "close": "Close",
+      "excursionAlert": "Temperature Excursion",
+      "peakTemp": "Peak",
+      "duration": "Duration",
+      "minutes": "min",
+      "connectSensor": "Connect Sensor",
+      "status": {
+        "green": "Normal",
+        "amber": "Near limit",
+        "red": "Out of range"
+      }
+    },
+    "waste": {
+      "title": "Waste Containers",
+      "activateNew": "Activate New Container",
+      "empty": "No containers recorded",
+      "loadError": "Unable to load waste container data",
+      "retry": "Retry",
+      "fillLevel": "Fill level",
+      "daysActive": "{days} days active",
+      "type": {
+        "SHARPS": "Sharps",
+        "BIOHAZARD": "Biohazard",
+        "CHEMICAL": "Chemical",
+        "GENERAL": "General"
+      },
+      "status": {
+        "ACTIVE": "Active",
+        "FULL": "Full",
+        "DISPOSED": "Disposed"
+      }
+    }
+  },
+  "chw": {
+    "log": {
+      "title": "Samples Collected Today",
+      "countBadge": "{count} samples collected",
+      "empty": "No samples collected today",
+      "loadError": "Unable to load sample log"
     }
   },
   "patientQueue": {
@@ -3502,7 +3558,9 @@
     "noResultsDescription": "No referral send-outs match the current filters.",
     "clearFilters": "Clear filters",
     "actionUpdateStatus": "Update Status",
-    "actionImportResult": "Import Result"
+    "actionImportResult": "Import Result",
+    "loadError": "Unable to load send-outs",
+    "retry": "Retry"
   },
   "outbreak": {
     "activateAriaLabel": "Activate Outbreak Mode",
@@ -3793,7 +3851,9 @@
       "activeAlert": "{count, plural, one {# active escalation needs attention.} other {# active escalations need attention.}}",
       "searchPlaceholder": "Search escalations…",
       "noResults": "No matching escalations",
-      "clearSearch": "Clear search"
+      "clearSearch": "Clear search",
+      "loadError": "Unable to load escalation data",
+      "retry": "Retry"
     }
   },
   "logbook": {

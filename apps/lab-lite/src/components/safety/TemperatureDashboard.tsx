@@ -35,12 +35,14 @@ export function TemperatureDashboard() {
   const t = useTranslations('safety.temperature')
   const [cards, setCards] = useState<LocationCardData[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [logModalLocation, setLogModalLocation] = useState<TemperatureLocation | null>(null)
   const [chartLocation, setChartLocation] = useState<TemperatureLocation | null>(null)
   const bleAvailable = isBleAvailable()
 
   const loadData = useCallback(async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const locations = await getTemperatureLocations()
       const cardData: LocationCardData[] = []
@@ -70,6 +72,8 @@ export function TemperatureDashboard() {
       }
 
       setCards(cardData)
+    } catch {
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -101,6 +105,29 @@ export function TemperatureDashboard() {
               <div key={i} className="h-40 rounded-lg bg-muted" />
             ))}
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold text-foreground mb-6">
+          {t('dashboardTitle')}
+        </h1>
+        <div
+          role="alert"
+          className="flex flex-col items-center gap-3 rounded-xl bg-card p-8 shadow-card ring-[0.65px] ring-border/50 text-center"
+        >
+          <p className="text-sm font-medium text-destructive">{t('loadError')}</p>
+          <button
+            type="button"
+            onClick={() => void loadData()}
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted"
+          >
+            {t('retry')}
+          </button>
         </div>
       </div>
     )

@@ -32,6 +32,13 @@ vi.mock('next-intl', () => ({
 
 vi.mock('@ultranos/ui-kit/icons', () => ({
   Clock: () => <svg data-testid="clock-icon" aria-hidden />,
+  TriangleAlert: () => <svg data-testid="triangle-alert-icon" aria-hidden />,
+}))
+
+vi.mock('@ultranos/ui-kit/components/ui/empty-state', () => ({
+  EmptyState: ({ title, icon: _icon }: { title: string; icon?: unknown }) => (
+    <div data-testid="empty-state">{title}</div>
+  ),
 }))
 
 vi.mock('@/lib/db', () => ({
@@ -120,5 +127,30 @@ describe('SamplesCollectedLog', () => {
     await waitFor(() => {
       expect(screen.getByRole('list')).toBeInTheDocument()
     })
+  })
+
+  it('shows error/unavailable state (not empty) when DB throws', async () => {
+    mockGetTodayCHWSamples.mockRejectedValue(new Error('IndexedDB unavailable'))
+    render(<SamplesCollectedLog />)
+
+    // Should show the error state with role="alert"
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+    // Should NOT show the "empty" (no samples today) text — that is a false empty
+    expect(screen.queryByText('empty')).not.toBeInTheDocument()
+    // Should NOT remain in the loading spinner state
+    expect(screen.queryByText('…')).not.toBeInTheDocument()
+  })
+
+  it('shows genuine empty state when load succeeds with no samples', async () => {
+    mockGetTodayCHWSamples.mockResolvedValue([])
+    render(<SamplesCollectedLog />)
+
+    await waitFor(() => {
+      expect(screen.getByText('empty')).toBeInTheDocument()
+    })
+    // No error alert when data loaded successfully
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })

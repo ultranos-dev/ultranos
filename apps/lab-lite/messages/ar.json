@@ -183,7 +183,8 @@
     "supervisor": {
       "incompleteCount": "{count} incomplete verifications",
       "expand": "Show details",
-      "collapse": "Hide details"
+      "collapse": "Hide details",
+      "loadError": "تعذّر تحميل حالة التحقق — تحقق يدويًا"
     }
   },
   "metadata": {
@@ -1236,6 +1237,61 @@
         "stepsCompleted": "{count} خطوات مكتملة",
         "stepN": "الخطوة {n}"
       }
+    },
+    "temperature": {
+      "dashboardTitle": "مراقبة درجات الحرارة",
+      "noLocations": "لا توجد مواقع مراقبة مكوّنة",
+      "loadError": "تعذّر تحميل بيانات درجات الحرارة",
+      "retry": "إعادة المحاولة",
+      "noReadings": "لا توجد قراءات بعد",
+      "lastReading": "آخر قراءة",
+      "source": "المصدر",
+      "bleSensor": "مستشعر BLE",
+      "manual": "يدوي",
+      "range": "النطاق المستهدف",
+      "readingOverdue": "القراءة متأخرة",
+      "logReading": "تسجيل قراءة",
+      "trend": "الاتجاه",
+      "trendTitle": "الاتجاه",
+      "close": "إغلاق",
+      "excursionAlert": "انحراف في درجة الحرارة",
+      "peakTemp": "الذروة",
+      "duration": "المدة",
+      "minutes": "دقيقة",
+      "connectSensor": "توصيل مستشعر",
+      "status": {
+        "green": "طبيعي",
+        "amber": "قريب من الحد",
+        "red": "خارج النطاق"
+      }
+    },
+    "waste": {
+      "title": "حاويات النفايات",
+      "activateNew": "تفعيل حاوية جديدة",
+      "empty": "لا توجد حاويات مسجلة",
+      "loadError": "تعذّر تحميل بيانات حاويات النفايات",
+      "retry": "إعادة المحاولة",
+      "fillLevel": "مستوى الامتلاء",
+      "daysActive": "{days} أيام نشطة",
+      "type": {
+        "SHARPS": "حاد",
+        "BIOHAZARD": "خطر بيولوجي",
+        "CHEMICAL": "كيميائي",
+        "GENERAL": "عام"
+      },
+      "status": {
+        "ACTIVE": "نشط",
+        "FULL": "ممتلئ",
+        "DISPOSED": "تمت إزالته"
+      }
+    }
+  },
+  "chw": {
+    "log": {
+      "title": "العينات المجمعة اليوم",
+      "countBadge": "{count} عينات مجمعة",
+      "empty": "لا توجد عينات مجمعة اليوم",
+      "loadError": "تعذّر تحميل سجل العينات"
     }
   },
   "patientQueue": {
@@ -3502,7 +3558,9 @@
     "noResultsDescription": "لا توجد إحالات تطابق عوامل التصفية الحالية.",
     "clearFilters": "مسح عوامل التصفية",
     "actionUpdateStatus": "تحديث الحالة",
-    "actionImportResult": "استيراد النتيجة"
+    "actionImportResult": "استيراد النتيجة",
+    "loadError": "تعذّر تحميل الإرساليات",
+    "retry": "إعادة المحاولة"
   },
   "outbreak": {
     "activateAriaLabel": "تفعيل وضع التفشي",
@@ -3793,7 +3851,9 @@
       "activeAlert": "{count, plural, one {# تصعيد نشط يحتاج إلى انتباه.} other {# تصعيدات نشطة تحتاج إلى انتباه.}}",
       "searchPlaceholder": "البحث في التصعيدات…",
       "noResults": "لا توجد تصعيدات مطابقة",
-      "clearSearch": "مسح البحث"
+      "clearSearch": "مسح البحث",
+      "loadError": "تعذّر تحميل بيانات التصعيد",
+      "retry": "إعادة المحاولة"
     }
   },
   "logbook": {

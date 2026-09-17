@@ -12,18 +12,41 @@ import type { PatientVerificationRecord } from '@ultranos/shared-types'
  * alert listing the affected sample IDs. Renders nothing when all verifications
  * are complete (no-noise principle).
  *
+ * On load error: shows a visible error indicator so the supervisor is NOT
+ * misled into thinking all verifications are complete (safety requirement).
+ *
  * PHI: only sampleId (opaque) is shown — never patient name or ID number.
  */
 export function IncompleteVerificationsAlert() {
   const t = useTranslations()
   const [records, setRecords] = useState<PatientVerificationRecord[]>([])
   const [expanded, setExpanded] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     getIncompleteVerifications()
-      .then(setRecords)
-      .catch(() => setRecords([]))
+      .then((data) => {
+        setRecords(data)
+        setLoadError(false)
+      })
+      .catch(() => {
+        // Do NOT mask a load error as "no incomplete verifications" — that would be a
+        // false-negative safety failure. Surface the error visibly instead.
+        setLoadError(true)
+      })
   }, [])
+
+  if (loadError) {
+    return (
+      <div
+        role="alert"
+        className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        data-testid="incomplete-verifications-error"
+      >
+        {t('verification.supervisor.loadError')}
+      </div>
+    )
+  }
 
   if (records.length === 0) return null
 

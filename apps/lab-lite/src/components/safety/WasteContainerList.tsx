@@ -6,6 +6,8 @@ import type { WasteContainer, WasteAlert } from '@/types/waste-tracking'
 import { ContainerStatus, FillLevel } from '@/types/waste-tracking'
 import { getAllContainers } from '@/lib/db'
 import { checkWasteAlerts } from '@/lib/safety/waste-alerts'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { TriangleAlert } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 
 const FILL_PERCENT: Record<FillLevel, number> = {
@@ -34,19 +36,27 @@ export function WasteContainerList({
   const [containers, setContainers] = useState<WasteContainer[]>([])
   const [alerts, setAlerts] = useState<WasteAlert[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+
+  function load() {
+    setLoadError(false)
+    setLoading(true)
+    Promise.all([getAllContainers(), checkWasteAlerts()])
+      .then(([allContainers, wasteAlerts]) => {
+        setContainers(allContainers)
+        setAlerts(wasteAlerts)
+      })
+      .catch(() => {
+        setLoadError(true)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }
 
   useEffect(() => {
-    async function load() {
-      setLoading(true)
-      const [allContainers, wasteAlerts] = await Promise.all([
-        getAllContainers(),
-        checkWasteAlerts(),
-      ])
-      setContainers(allContainers)
-      setAlerts(wasteAlerts)
-      setLoading(false)
-    }
-    void load()
+    load()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const alertMap = useMemo(() => {
@@ -94,7 +104,18 @@ export function WasteContainerList({
         </Button>
       </div>
 
-      {sorted.length === 0 ? (
+      {loadError ? (
+        <div
+          role="alert"
+          className="flex min-h-[8rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
+        >
+          <EmptyState
+            icon={TriangleAlert}
+            title={t('loadError')}
+            action={{ label: t('retry'), onClick: load }}
+          />
+        </div>
+      ) : sorted.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">{t('empty')}</p>
       ) : (
         <ul className="flex flex-col gap-2">
