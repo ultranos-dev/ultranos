@@ -44,7 +44,12 @@
     "./components/ui/app-toaster": "./src/components/ui/app-toaster.tsx",
     "./components/ui/notification-row": "./src/components/ui/notification-row.tsx",
     "./components/ui/notification-detail-modal": "./src/components/ui/notification-detail-modal.tsx",
-    "./notification-presentation": "./src/notification-presentation.ts"
+    "./notification-presentation": "./src/notification-presentation.ts",
+    "./hooks/use-async-data": {
+      "import": "./dist/hooks/use-async-data.js",
+      "types": "./dist/hooks/use-async-data.d.ts"
+    },
+    "./components/ui/async-states": "./src/components/ui/async-states.tsx"
   },
   "scripts": {
     "build": "tsc",
