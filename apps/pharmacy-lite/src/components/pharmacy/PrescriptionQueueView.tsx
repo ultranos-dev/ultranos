@@ -113,7 +113,7 @@ export function PrescriptionQueueView() {
         await loadData()
       } catch (err) {
         console.error('[PrescriptionQueueView] retry failed:', err instanceof Error ? err.message : 'unknown')
-        setError('Retry sync failed. Please try again.')
+        setError(t('retryError'))
       } finally {
         setRetryingId(null)
       }
