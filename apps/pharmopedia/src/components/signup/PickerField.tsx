@@ -62,7 +62,7 @@ export function PickerField({ label, placeholder, value, options, onSelect, disa
               <Pressable
                 onPress={() => { onSelect(item); setOpen(false); setQuery('') }}
                 accessibilityRole="button"
-                style={[styles.option, { borderBottomColor: colors.borderSubtle ?? colors.border }]}
+                style={[styles.option, { borderBottomColor: colors.borderSubtle }]}
               >
                 <Text style={[styles.optionText, { color: colors.textPrimary }]}>{item}</Text>
               </Pressable>

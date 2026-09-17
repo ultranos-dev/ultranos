@@ -101,7 +101,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     const sub = Appearance.addChangeListener(({ colorScheme }) => {
-      onSystemChange(colorScheme)
+      onSystemChange(colorScheme ?? null)
     })
     return () => sub.remove()
   }, [onSystemChange])

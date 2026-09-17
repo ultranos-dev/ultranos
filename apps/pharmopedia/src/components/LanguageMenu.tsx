@@ -38,7 +38,7 @@ export function LanguageMenu() {
   const [anchor, setAnchor] = useState<Anchor>(FALLBACK_ANCHOR)
   const triggerRef = useRef<View>(null)
 
-  const current = OPTIONS.find((o) => o.value === lang) ?? OPTIONS[0]
+  const current = OPTIONS.find((o) => o.value === lang) ?? OPTIONS[0]!
 
   function openMenu() {
     const node = triggerRef.current as unknown as {

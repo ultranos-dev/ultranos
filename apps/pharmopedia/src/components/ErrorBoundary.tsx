@@ -21,7 +21,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return { hasError: true }
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       return <CrashFallback inline={this.props.inline} />
     }
