@@ -1331,6 +1331,103 @@ export const labRouter = createTRPCRouter({
     }),
 
   /**
+   * Pull active specimens for the caller's lab — used by lab-lite on login to
+   * rehydrate the local samples table after PHI cleanup wipes it on session end.
+   *
+   * Data-minimized (Rule #7): returns only the fields needed for sample handling
+   * and worklist display. note is encrypted and unneeded — never returned.
+   * patient_ref is stored as a BARE blind index; we re-prefix it as Patient/<ref>
+   * so the client can store it in the FHIR subject.reference format.
+   *
+   * Ownership scope: scoped to ctx.lab.labId — never leaks another lab's specimens.
+   * Audit: emits SPECIMEN READ (Rule #6) with count metadata only (no PHI).
+   */
+  pullSpecimens: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
+    .use(enforceLabActive())
+    .output(
+      z.object({
+        specimens: z.array(
+          z.object({
+            id: z.string(),
+            labSampleId: z.string(),
+            pipelineStatus: z.string(),
+            fhirStatus: z.string(),
+            specimenType: z.string().optional(),
+            subjectReference: z.string(),          // Patient/<blindIndex> — re-prefixed from bare stored ref
+            serviceRequestRef: z.string().optional(), // ServiceRequest/<id>
+            receivedFrom: z.string().optional(),
+            receivedTime: z.string().optional(),
+            condition: z.string().optional(),
+            hlcTimestamp: z.string(),
+          }),
+        ),
+      }),
+    )
+    .query(async ({ ctx }) => {
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      const labId = ctx.lab?.labId
+      const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
+
+      if (!labId) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Lab affiliation required' })
+      }
+
+      const { data: rows, error } = await ctx.supabase
+        .from('specimens')
+        .select('id, lab_sample_id, pipeline_status, fhir_status, specimen_type, patient_ref, service_request_id, received_from, received_time, condition, hlc_timestamp')
+        .eq('lab_id', labId)
+        .in('pipeline_status', ['received', 'in-processing'])
+        .order('received_time', { ascending: true })
+        .limit(500)
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch specimens' })
+      }
+
+      const specimens = (rows ?? []).map((row: Record<string, unknown>) => {
+        const serviceRequestId = row.service_request_id as string | null
+        const receivedFrom = row.received_from as string | null
+        const condition = row.condition as string | null
+        const specimenType = row.specimen_type as string | null
+
+        return {
+          id: row.id as string,
+          labSampleId: row.lab_sample_id as string,
+          pipelineStatus: row.pipeline_status as string,
+          fhirStatus: row.fhir_status as string,
+          ...(specimenType != null ? { specimenType } : {}),
+          // Re-prefix the bare blind index to match FHIR subject.reference format
+          subjectReference: `Patient/${row.patient_ref as string}`,
+          ...(serviceRequestId != null ? { serviceRequestRef: `ServiceRequest/${serviceRequestId}` } : {}),
+          ...(receivedFrom != null ? { receivedFrom } : {}),
+          ...(row.received_time != null ? { receivedTime: row.received_time as string } : {}),
+          ...(condition != null ? { condition } : {}),
+          hlcTimestamp: row.hlc_timestamp as string,
+        }
+      })
+
+      // Audit the PHI read (Rule #6). No PHI in metadata — opaque labId + count only.
+      try {
+        await audit.emit({
+          action: 'READ',
+          resourceType: 'SPECIMEN',
+          resourceId: labId,
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { specimenAction: 'pull_specimens', count: specimens.length },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'SPECIMEN', resourceId: labId })
+      }
+
+      return { specimens }
+    }),
+
+  /**
    * Story lab-attachments: Upload a specimen photo or document attachment.
    * Mirrors uploadResult guards: virus scan → encrypt → insert into specimen_files.
    * Emits PHI_WRITE audit with resourceType 'SPECIMEN'.
