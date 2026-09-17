@@ -195,7 +195,12 @@
     "contactRole": "رول",
     "contactPhone": "تلیفون",
     "archiveConfirmTitle": "مرکز آرشیف کړئ؟",
-    "archiveConfirmDesc": "دا مرکز به د فعالو لیستونو نه پټ شي. تاسو کولی شئ وروسته یې بیرته راوباسئ."
+    "archiveConfirmDesc": "دا مرکز به د فعالو لیستونو نه پټ شي. تاسو کولی شئ وروسته یې بیرته راوباسئ.",
+    "filterAll": "ټول",
+    "filterActive": "فعال",
+    "filterInactive": "غیر فعال",
+    "filterArchived": "آرشیف شوی",
+    "export": "CSV صادرول"
   },
   "dashboard": {
     "pageTitle": "ډیشبورډ",
@@ -479,7 +484,9 @@
     "suspendReason": "لامل (اختیاري)",
     "confirmSuspend": "معلق کول",
     "restore": "بیرته راوستل",
-    "includeArchived": "آرشیف شوي شامل کړئ"
+    "includeArchived": "آرشیف شوي شامل کړئ",
+    "filterArchived": "آرشیف شوی",
+    "add": "اضافه کړئ"
   },
   "mentorship": {
     "pageTitle": "لارښوونه",
@@ -861,7 +868,10 @@
     "detailSave": "بدلونونه خوندي کړئ",
     "detailCancel": "لغوه کول",
     "detailNever": "هیڅکله",
-    "detailSuspendPlaceholder": "د تعلیق لامل"
+    "detailSuspendPlaceholder": "د تعلیق لامل",
+    "add": "اضافه کړئ",
+    "detailArchive": "آرشیف",
+    "detailRestore": "بیرته راوستل"
   },
   "aiModels": {
     "pageTitle": "د مصنوعي ذهانت ماډلونه",

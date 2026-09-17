@@ -195,7 +195,12 @@
     "contactRole": "الدور",
     "contactPhone": "الهاتف",
     "archiveConfirmTitle": "أرشفة المنشأة؟",
-    "archiveConfirmDesc": "سيتم إخفاء هذه المنشأة من القوائم النشطة. يمكنك استعادتها لاحقاً."
+    "archiveConfirmDesc": "سيتم إخفاء هذه المنشأة من القوائم النشطة. يمكنك استعادتها لاحقاً.",
+    "filterAll": "الكل",
+    "filterActive": "نشط",
+    "filterInactive": "غير نشط",
+    "filterArchived": "مؤرشف",
+    "export": "تصدير CSV"
   },
   "dashboard": {
     "pageTitle": "لوحة التحكم",
@@ -479,7 +484,9 @@
     "suspendReason": "السبب (اختياري)",
     "confirmSuspend": "إيقاف",
     "restore": "استعادة",
-    "includeArchived": "تضمين المؤرشفة"
+    "includeArchived": "تضمين المؤرشفة",
+    "filterArchived": "مؤرشف",
+    "add": "إضافة"
   },
   "mentorship": {
     "pageTitle": "الإرشاد المهني",
@@ -861,7 +868,10 @@
     "detailSave": "حفظ التغييرات",
     "detailCancel": "إلغاء",
     "detailNever": "أبدًا",
-    "detailSuspendPlaceholder": "سبب التعليق"
+    "detailSuspendPlaceholder": "سبب التعليق",
+    "add": "إضافة",
+    "detailArchive": "أرشفة",
+    "detailRestore": "استعادة"
   },
   "aiModels": {
     "pageTitle": "نماذج الذكاء الاصطناعي",

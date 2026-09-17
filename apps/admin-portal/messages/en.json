@@ -195,7 +195,12 @@
     "contactRole": "Role",
     "contactPhone": "Phone",
     "archiveConfirmTitle": "Archive Facility?",
-    "archiveConfirmDesc": "This facility will be hidden from active lists. You can restore it later."
+    "archiveConfirmDesc": "This facility will be hidden from active lists. You can restore it later.",
+    "filterAll": "All",
+    "filterActive": "Active",
+    "filterInactive": "Inactive",
+    "filterArchived": "Archived",
+    "export": "Export CSV"
   },
   "dashboard": {
     "pageTitle": "Dashboard",
@@ -479,7 +484,9 @@
     "suspendReason": "Reason (optional)",
     "confirmSuspend": "Suspend",
     "restore": "Restore",
-    "includeArchived": "Include archived"
+    "includeArchived": "Include archived",
+    "filterArchived": "Archived",
+    "add": "Add"
   },
   "mentorship": {
     "pageTitle": "Mentorship",
@@ -861,7 +868,10 @@
     "detailSave": "Save Changes",
     "detailCancel": "Cancel",
     "detailNever": "Never",
-    "detailSuspendPlaceholder": "Reason for suspension"
+    "detailSuspendPlaceholder": "Reason for suspension",
+    "add": "Add",
+    "detailArchive": "Archive",
+    "detailRestore": "Restore"
   },
   "aiModels": {
     "pageTitle": "AI Models",

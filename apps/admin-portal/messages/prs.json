@@ -195,7 +195,12 @@
     "contactRole": "نقش",
     "contactPhone": "تلفن",
     "archiveConfirmTitle": "بایگانی مرکز؟",
-    "archiveConfirmDesc": "این مرکز از فهرست‌های فعال پنهان می‌شود. می‌توانید بعداً آن را بازیابی کنید."
+    "archiveConfirmDesc": "این مرکز از فهرست‌های فعال پنهان می‌شود. می‌توانید بعداً آن را بازیابی کنید.",
+    "filterAll": "همه",
+    "filterActive": "فعال",
+    "filterInactive": "غیرفعال",
+    "filterArchived": "بایگانی‌شده",
+    "export": "برون‌ریزی CSV"
   },
   "dashboard": {
     "pageTitle": "داشبورد",
@@ -479,7 +484,9 @@
     "suspendReason": "دلیل (اختیاری)",
     "confirmSuspend": "تعلیق",
     "restore": "بازیابی",
-    "includeArchived": "شامل بایگانی‌شده‌ها"
+    "includeArchived": "شامل بایگانی‌شده‌ها",
+    "filterArchived": "بایگانی‌شده",
+    "add": "افزودن"
   },
   "mentorship": {
     "pageTitle": "راهنمایی",
@@ -861,7 +868,10 @@
     "detailSave": "ذخیره تغییرات",
     "detailCancel": "لغو",
     "detailNever": "هرگز",
-    "detailSuspendPlaceholder": "دلیل تعلیق"
+    "detailSuspendPlaceholder": "دلیل تعلیق",
+    "add": "افزودن",
+    "detailArchive": "بایگانی",
+    "detailRestore": "بازیابی"
   },
   "aiModels": {
     "pageTitle": "مدل‌های هوش مصنوعی",
