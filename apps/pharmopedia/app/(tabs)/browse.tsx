@@ -38,6 +38,8 @@ export default function BrowseTab() {
   const [drugs, setDrugs] = useState<DrugSearchResult[]>([])
   const [classesLoading, setClassesLoading] = useState(true)
   const [drugsLoading, setDrugsLoading] = useState(false)
+  const [classesError, setClassesError] = useState(false)
+  const [drugsError, setDrugsError] = useState(false)
   const [classesRefreshing, setClassesRefreshing] = useState(false)
   const [drugsRefreshing, setDrugsRefreshing] = useState(false)
 
@@ -45,11 +47,12 @@ export default function BrowseTab() {
     let cancelled = false
     async function loadClasses() {
       setClassesLoading(true)
+      setClassesError(false)
       try {
         const data = await getTherapeuticClasses(getDatabase())
         if (!cancelled) setClasses(data)
       } catch {
-        if (!cancelled) setClasses([])
+        if (!cancelled) { setClasses([]); setClassesError(true) }
       } finally {
         if (!cancelled) setClassesLoading(false)
       }
@@ -61,12 +64,14 @@ export default function BrowseTab() {
   async function handleClassPress(cls: string) {
     setSelectedClass(cls)
     setDrugs([])
+    setDrugsError(false)
     setDrugsLoading(true)
     try {
       const data = await getDrugsByTherapeuticClass(getDatabase(), cls, lang)
       setDrugs(data)
     } catch {
       setDrugs([])
+      setDrugsError(true)
     } finally {
       setDrugsLoading(false)
     }
@@ -75,6 +80,7 @@ export default function BrowseTab() {
   function handleBack() {
     setSelectedClass(null)
     setDrugs([])
+    setDrugsError(false)
   }
 
   useEffect(() => {
@@ -100,10 +106,12 @@ export default function BrowseTab() {
   const onRefreshDrugs = useCallback(async () => {
     if (!selectedClass) return
     setDrugsRefreshing(true)
+    setDrugsError(false)
     try {
       const data = await getDrugsByTherapeuticClass(getDatabase(), selectedClass, lang)
       setDrugs(data)
     } catch {
+      setDrugsError(true)
       // keep existing data on error
     } finally {
       setDrugsRefreshing(false)
@@ -134,6 +142,10 @@ export default function BrowseTab() {
             {[0, 1, 2].map((i) => (
               <SkeletonCard key={i} testID={`skeleton-drug-${i}`} />
             ))}
+          </View>
+        ) : drugsError ? (
+          <View style={styles.center} testID="drugs-unavailable">
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('browse.unavailableDrugs')}</Text>
           </View>
         ) : drugs.length === 0 ? (
           <View style={styles.center}><Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('browse.noDrugs')}</Text></View>
@@ -191,7 +203,9 @@ export default function BrowseTab() {
             ? undefined
             : (classesLoading
                 ? <View>{[0, 1, 2, 3].map((i) => <SkeletonCard key={i} testID={`skeleton-class-${i}`} />)}</View>
-                : <EmptyState icon={FolderOpen} title={t('browse.emptyTitle')} description={t('browse.emptyDescription')} />)
+                : classesError
+                  ? <EmptyState testID="classes-unavailable" icon={FolderOpen} title={t('browse.unavailableClasses')} />
+                  : <EmptyState icon={FolderOpen} title={t('browse.emptyTitle')} description={t('browse.emptyDescription')} />)
         }
         refreshing={searching ? false : classesRefreshing}
         onRefresh={searching ? undefined : onRefreshClasses}

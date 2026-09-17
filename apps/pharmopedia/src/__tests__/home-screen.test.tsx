@@ -4,12 +4,15 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native'
 const push = vi.fn()
 const addRecent = vi.fn()
 const clearRecents = vi.fn()
-const h = vi.hoisted(() => ({ role: 'PATIENT' }))
+const h = vi.hoisted(() => ({ role: 'PATIENT', bookmarksInitialized: true }))
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
 vi.mock('expo-router', () => ({ useRouter: () => ({ push }) }))
 vi.mock('@/store/auth-store', () => ({ useAuthStore: (s: (x: { user: { role: string } | null }) => unknown) => s({ user: { role: h.role } }) }))
-vi.mock('@/store/bookmark-store', () => ({ useBookmarkStore: (s: (x: { bookmarks: []; brandBookmarks: [] }) => unknown) => s({ bookmarks: [], brandBookmarks: [] }) }))
+vi.mock('@/store/bookmark-store', () => ({
+  useBookmarkStore: (s: (x: { bookmarks: []; brandBookmarks: []; initialized: boolean }) => unknown) =>
+    s({ bookmarks: [], brandBookmarks: [], initialized: h.bookmarksInitialized }),
+}))
 vi.mock('@/store/recent-search-store', () => ({
   useRecentSearchStore: (s: (x: { recents: string[]; add: ReturnType<typeof vi.fn>; clear: ReturnType<typeof vi.fn> }) => unknown) =>
     s({ recents: ['amox', 'metformin'], add: addRecent, clear: clearRecents }),
@@ -47,6 +50,16 @@ vi.mock('@/components/DrugCard', () => {
   }
 })
 
+// SkeletonCard stub — avoids Reanimated/theme deps in unit tests.
+vi.mock('@/components/SkeletonCard', () => {
+  const React = require('react')
+  const { View } = require('react-native')
+  return {
+    SkeletonCard: ({ testID }: { testID?: string }) =>
+      React.createElement(View, { testID }),
+  }
+})
+
 import HomeTab from '@/app/(tabs)/index'
 import { getActiveRecalls } from '@/db/recalls'
 
@@ -62,13 +75,14 @@ const ROW = {
 describe('HomeTab', () => {
   beforeEach(() => {
     h.role = 'PATIENT'
+    h.bookmarksInitialized = true
     push.mockClear()
     addRecent.mockClear()
     clearRecents.mockClear()
     vi.mocked(getActiveRecalls).mockReset()
     vi.mocked(getActiveRecalls).mockResolvedValue([])
     // Default: empty query (dashboard mode)
-    mockUseDrugSearch.mockReturnValue({ query: '', results: [], loading: false, search: vi.fn() })
+    mockUseDrugSearch.mockReturnValue({ query: '', results: [], brands: [], loading: false, search: vi.fn() })
   })
 
   // ── Inline search behavior ───────────────────────────────────────────────
@@ -141,5 +155,20 @@ describe('HomeTab', () => {
   it('shows the saved-empty CTA when there are no bookmarks', () => {
     const { getByText } = render(<HomeTab />)
     expect(getByText('home.browseCta')).toBeTruthy()
+  })
+
+  // ── 4-state: bookmark store not yet initialized ─────────────────────────
+
+  it('shows skeleton instead of saved-empty CTA while bookmarks are loading', () => {
+    h.bookmarksInitialized = false
+    const { getByTestId, queryByText } = render(<HomeTab />)
+    expect(getByTestId('home-saved-loading')).toBeTruthy()
+    expect(queryByText('home.browseCta')).toBeNull()
+  })
+
+  it('does NOT show home.savedEmpty while bookmark store is initializing', () => {
+    h.bookmarksInitialized = false
+    const { queryByText } = render(<HomeTab />)
+    expect(queryByText('home.savedEmpty')).toBeNull()
   })
 })

@@ -119,6 +119,7 @@ const prs: Translations = {
       referencePrice: 'قیمت مرجع',
       rx: 'فقط با نسخه',
       otc: 'بدون نسخه',
+      unavailable: 'بارگذاری برندها ممکن نشد — اتصال خود را بررسی کنید',
     },
   },
   pricing: {
@@ -158,6 +159,8 @@ const prs: Translations = {
     emptyTitle: 'هنوز دسته‌بندی وجود ندارد',
     emptyDescription: 'کتابچه خود را همگام‌سازی کنید',
     drugsCountLabel: 'دارو',
+    unavailableClasses: 'بارگذاری دسته‌ها ممکن نشد — اتصال خود را بررسی کنید',
+    unavailableDrugs: 'بارگذاری داروهای این دسته ممکن نشد',
   },
   saved: {
     empty: 'هیچ داروی ذخیره‌ای ندارید — روی آیکون نشانک در هر دارو ضربه بزنید',

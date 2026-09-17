@@ -9,6 +9,7 @@ import { SearchBar } from '@/components/SearchBar'
 import { SearchResults } from '@/components/SearchResults'
 import { DrugCard } from '@/components/DrugCard'
 import { BrandResultCard } from '@/components/BrandResultCard'
+import { SkeletonCard } from '@/components/SkeletonCard'
 import type { DrugSearchResult, BrandSearchResult } from '@ultranos/shared-types'
 import { useDrugSearch } from '@/hooks/useDrugSearch'
 import { getActiveRecalls, type RecallSummary } from '@/db/recalls'
@@ -42,6 +43,7 @@ export default function HomeTab() {
   const user = useAuthStore((s) => s.user)
   const bookmarks = useBookmarkStore((s) => s.bookmarks)
   const brandBookmarks = useBookmarkStore((s) => s.brandBookmarks)
+  const bookmarksInitialized = useBookmarkStore((s) => s.initialized)
   const recents = useRecentSearchStore((s) => s.recents)
   const addRecent = useRecentSearchStore((s) => s.add)
   const clearRecents = useRecentSearchStore((s) => s.clear)
@@ -184,7 +186,11 @@ export default function HomeTab() {
                 </Pressable>
               )}
             </View>
-            {savedTop.length > 0 ? (
+            {!bookmarksInitialized ? (
+              <View testID="home-saved-loading">
+                {[0, 1, 2].map((i) => <SkeletonCard key={i} testID={`skeleton-home-saved-${i}`} />)}
+              </View>
+            ) : savedTop.length > 0 ? (
               <View style={styles.savedList}>
                 {savedTop.map((item) =>
                   item.kind === 'brand' ? (

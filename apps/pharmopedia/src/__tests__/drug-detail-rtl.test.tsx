@@ -4,7 +4,7 @@
  * RTL snapshot tests for the DrugDetailScreen (single-scroll collapsible layout).
  * Asserts pinned SafetyZone is present, no tab bar nodes, and LTR/RTL snapshots.
  */
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render } from '@testing-library/react-native'
 
 // ── lang store — mutable so tests can override ─────────────────────────────
@@ -32,35 +32,43 @@ vi.mock('@/store/bookmark-store', () => ({
 
 // ── db / api ───────────────────────────────────────────────────────────────
 
-vi.mock('@/db/drug-catalog', () => {
-  const entry = {
-    atcCode: 'J01CA04', innName: 'amoxicillin', brandNames: ['Augmentin'],
-    doseForms: ['tablet'], therapeuticClass: 'Antibiotic',
-    localNames: { ar: 'أموكسيسيلين' },
-    images: [{ url: 'https://x/advil.jpg', brand: 'Advil', isPrimary: true }],
-    summaryPlain: { en: 'Broad-spectrum antibiotic.', ar: 'مضاد حيوي واسع الطيف.' },
-    usedFor: [{ en: 'Bacterial infections' }], commonSideEffects: [{ en: 'Nausea' }],
-    whenToSeekHelp: { en: 'If rash develops' }, storageInstructions: { en: 'Store below 25°C' },
-    pregnancySummaryPlain: { en: 'Category B' }, warningsSummaryPlain: { en: 'May cause stomach bleeding' },
-    version: 1, lastUpdated: '2026-06-12T00:00:00Z',
-    mechanismOfAction: 'Inhibits cell wall synthesis', indicationsClinical: [],
-    adultDosing: [], pediatricDosing: [], renalAdjustment: undefined,
-    adverseEvents: [], contraindications: [], interactions: [],
-    pregnancyClinical: undefined, administrationNotes: {}, pharmacokinetics: {},
-  }
-  return {
-    getDrugRowByAtcCode: vi.fn().mockResolvedValue({
-      tier1_json: JSON.stringify(entry),
-      tier2_json: JSON.stringify(entry),
-      tier3_json: null,
-    }),
-    scopeEntryForRole: vi.fn().mockReturnValue(entry),
-  }
-})
+const drugCatalogEntry = vi.hoisted(() => ({
+  atcCode: 'J01CA04', innName: 'amoxicillin', brandNames: ['Augmentin'],
+  doseForms: ['tablet'], therapeuticClass: 'Antibiotic',
+  localNames: { ar: 'أموكسيسيلين' },
+  images: [{ url: 'https://x/advil.jpg', brand: 'Advil', isPrimary: true }],
+  summaryPlain: { en: 'Broad-spectrum antibiotic.', ar: 'مضاد حيوي واسع الطيف.' },
+  usedFor: [{ en: 'Bacterial infections' }], commonSideEffects: [{ en: 'Nausea' }],
+  whenToSeekHelp: { en: 'If rash develops' }, storageInstructions: { en: 'Store below 25°C' },
+  pregnancySummaryPlain: { en: 'Category B' }, warningsSummaryPlain: { en: 'May cause stomach bleeding' },
+  version: 1, lastUpdated: '2026-06-12T00:00:00Z',
+  mechanismOfAction: 'Inhibits cell wall synthesis', indicationsClinical: [],
+  adultDosing: [], pediatricDosing: [], renalAdjustment: undefined,
+  adverseEvents: [], contraindications: [], interactions: [],
+  pregnancyClinical: undefined, administrationNotes: {}, pharmacokinetics: {},
+}))
+
+vi.mock('@/db/drug-catalog', () => ({
+  getDrugRowByAtcCode: vi.fn().mockImplementation(async () => ({
+    tier1_json: JSON.stringify(drugCatalogEntry),
+    tier2_json: JSON.stringify(drugCatalogEntry),
+    tier3_json: null,
+  })),
+  scopeEntryForRole: vi.fn().mockImplementation(() => drugCatalogEntry),
+}))
 
 vi.mock('@/db/migrations', () => ({ getDatabase: vi.fn().mockReturnValue({}) }))
 
-vi.mock('@/api/drug-catalog', () => ({ getDrugByAtcCodeApi: vi.fn() }))
+vi.mock('@/api/drug-catalog', () => ({ getDrugByAtcCodeApi: vi.fn(), getBrandsByAtcApi: vi.fn().mockResolvedValue([]) }))
+
+// Mutable so the brands-error test can simulate a failure.
+const brandsDbState = vi.hoisted(() => ({ shouldReject: false }))
+vi.mock('@/db/brands', () => ({
+  getBrandsWithPresentations: vi.fn().mockImplementation(async () => {
+    if (brandsDbState.shouldReject) throw new Error('SQLite error')
+    return []
+  }),
+}))
 
 // ── expo-router ────────────────────────────────────────────────────────────
 
@@ -161,6 +169,10 @@ vi.mock('@ultranos/ui-kit/native', () => {
 import DrugDetailScreen from '@/app/drug/[atcCode]'
 
 describe('DrugDetailScreen — single scroll', () => {
+  beforeEach(() => {
+    brandsDbState.shouldReject = false
+  })
+
   it('renders the pinned safety zone and a collapsible section, no tab bar', async () => {
     mockLang.lang = 'en'
     const { findByText, queryByTestId } = render(<DrugDetailScreen />)
@@ -181,5 +193,18 @@ describe('DrugDetailScreen — single scroll', () => {
     const { toJSON, findByText } = render(<DrugDetailScreen />)
     await findByText('أموكسيسيلين')
     expect(toJSON()).toMatchSnapshot()
+  })
+
+  // ── 4-state: brands unavailable on SQLite error ────────────────────────────
+
+  it('shows brands-unavailable message (not silent absence) when brand load fails', async () => {
+    brandsDbState.shouldReject = true
+    mockLang.lang = 'en'
+    const { findByTestId, findByText } = render(<DrugDetailScreen />)
+    await findByText('amoxicillin')
+    // section-brands is still mounted (not silently absent)
+    expect(await findByTestId('section-brands')).toBeTruthy()
+    // inside it renders the unavailable message
+    expect(await findByTestId('brands-unavailable')).toBeTruthy()
   })
 })

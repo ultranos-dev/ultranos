@@ -143,6 +143,7 @@ const en = {
       referencePrice: 'Reference price',
       rx: 'Prescription only',
       otc: 'Over the counter',
+      unavailable: 'Could not load brands — check your connection',
     },
   },
   pricing: {
@@ -193,6 +194,8 @@ const en = {
     emptyDescription: 'Sync your catalog to browse by class',
     noDrugs: 'No drugs in this category',
     drugsCountLabel: 'drugs',
+    unavailableClasses: 'Could not load categories — check your connection',
+    unavailableDrugs: 'Could not load drugs in this category',
   },
   saved: {
     empty: 'No saved drugs yet — tap the bookmark icon on any drug to save it',
