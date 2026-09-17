@@ -11,4 +11,7 @@ const supabase = {
   },
 }
 
-module.exports = { supabase }
+// Named export used by useSessionExpiry and others.
+const clearAuthTokens = jest.fn().mockResolvedValue(undefined)
+
+module.exports = { supabase, clearAuthTokens }

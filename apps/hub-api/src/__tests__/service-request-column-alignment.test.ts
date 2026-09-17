@@ -94,6 +94,9 @@ describe('flattenServiceRequest → service_requests column alignment', () => {
 const PATIENTS_COLUMNS = new Set([
   'id', 'name_given', 'name_father', 'name_grandfather', 'name_family',
   'birth_date', 'birth_year', 'gender',
+  // Real column (text) — the patient-photo feature signs this into a short-lived
+  // URL for lab identity verification; never the raw key/UUID (Rule #7).
+  'photo_url',
 ])
 const PRACTITIONERS_COLUMNS = new Set(['id', 'given_name', 'family_name'])
 

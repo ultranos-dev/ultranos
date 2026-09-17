@@ -1,9 +1,11 @@
 // Jest setup for patient-lite-mobile tests
 // Mock expo-secure-store for testing
 jest.mock('expo-secure-store', () => ({
-  getItemAsync: jest.fn(),
-  setItemAsync: jest.fn(),
-  deleteItemAsync: jest.fn(),
+  // Async APIs must return promises — the store calls .catch()/await on these.
+  // A bare jest.fn() returns undefined, which crashes the worker on `.catch`.
+  getItemAsync: jest.fn().mockResolvedValue(null),
+  setItemAsync: jest.fn().mockResolvedValue(undefined),
+  deleteItemAsync: jest.fn().mockResolvedValue(undefined),
   WHEN_PASSCODE_SET_THIS_DEVICE_ONLY: 'WHEN_PASSCODE_SET_THIS_DEVICE_ONLY',
 }))
 
@@ -73,15 +75,18 @@ jest.mock('expo-sqlite', () => ({
   }),
 }))
 
-// Mock @/lib/supabase so tests never require real Supabase env vars.
-// The real supabase.ts calls createClient on module load which requires
-// EXPO_PUBLIC_SUPABASE_URL to be set — this mock intercepts before that.
-jest.mock('@/lib/supabase', () => ({
-  supabase: {
-    auth: {
-      getSession: jest.fn().mockResolvedValue({ data: { session: null } }),
-      signInWithOtp: jest.fn().mockResolvedValue({ data: {}, error: null }),
-      onAuthStateChange: jest.fn().mockReturnValue({ data: { subscription: { unsubscribe: jest.fn() } } }),
-    },
-  },
-}))
+// Note: @/lib/supabase is mocked via moduleNameMapper -> __mocks__/supabase.js
+// (which exports both `supabase` and `clearAuthTokens`). No inline mock here —
+// an inline jest.mock() factory would override the manual mock and drop exports.
+
+// Default the device-security store to a "checked, not compromised" state so that
+// write-path tests (non-GET hubFetch) aren't blocked by the integrity guard, which
+// throws while `checked` is still false. Device-security-specific tests override
+// this in their own beforeEach (they call useDeviceSecurityStore.setState directly).
+const { useDeviceSecurityStore } = require('@/stores/device-security-store')
+useDeviceSecurityStore.setState({
+  checked: true,
+  isCompromised: false,
+  reasons: [],
+  checkedAt: '2026-01-01T00:00:00.000Z',
+})

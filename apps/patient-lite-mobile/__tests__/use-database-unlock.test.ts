@@ -26,6 +26,29 @@ jest.mock('react-native', () => ({
   Platform: { OS: 'ios' },
 }))
 
+// Drain worker + consent dual-write wiring. Stateful so the "not twice" and
+// "stop on lock" cases behave like the real start/stop lifecycle.
+let drainRunning = false
+const mockSyncQueue = { __brand: 'sync-queue' }
+const mockStartDrainWorker = jest.fn(() => {
+  drainRunning = true
+  return mockSyncQueue
+})
+const mockStopDrainWorker = jest.fn(() => {
+  drainRunning = false
+})
+const mockIsDrainWorkerRunning = jest.fn(() => drainRunning)
+const mockSetSyncEngineQueue = jest.fn()
+
+jest.mock('@/lib/sync-drain-init', () => ({
+  startDrainWorker: (...args) => mockStartDrainWorker(...args),
+  stopDrainWorker: (...args) => mockStopDrainWorker(...args),
+  isDrainWorkerRunning: (...args) => mockIsDrainWorkerRunning(...args),
+}))
+jest.mock('@/lib/consent-sync', () => ({
+  setSyncEngineQueue: (...args) => mockSetSyncEngineQueue(...args),
+}))
+
 import { unlockWithBiometrics } from '@/lib/mobile-key-service'
 import { getEncryptedDbConnection, closeDatabase, isDatabaseOpen, markAuthenticated } from '@/lib/encrypted-db'
 import { AppState } from 'react-native'
@@ -42,6 +65,7 @@ const mockedMarkAuth = markAuthenticated as jest.MockedFunction<typeof markAuthe
 describe('useDatabaseUnlock', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    drainRunning = false
     mockAppStateCallback = null
     mockedIsOpen.mockReturnValue(false)
     mockedUnlock.mockResolvedValue({ success: true, unlockToken: MOCK_TOKEN })
