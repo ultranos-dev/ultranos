@@ -1776,6 +1776,14 @@ class LabLiteDatabase extends Dexie {
       monitoringFlags: '++id, [patientRef+medicationCode+testRequired], status, dueDate, patientRef',
       medicationLabMappings: '&atcCode, version',
     })
+    // v48 — QC "today" lookups. qc-run-service queries qcRuns by the compound key
+    // [analyte+instrumentId+calendarDate], but that index was never declared (only
+    // [analyte+instrumentId+controlLevel] existed), so those queries threw
+    // "KeyPath ... is not indexed" at runtime. Add the missing index (keeping the
+    // existing one). calendarDate (YYYY-MM-DD) is already stored on every qcRun.
+    this.version(48).stores({
+      qcRuns: '&id, analyte, loincCode, instrumentId, runDate, [analyte+instrumentId+controlLevel], [analyte+instrumentId+calendarDate]',
+    })
   }
 }
 
@@ -2505,15 +2513,22 @@ export async function putOrders(orders: LabOrderEntry[]): Promise<void> {
 }
 
 /** Return all orders, ordered newest-first. */
-export async function getOrders(): Promise<LabOrderEntry[]> {
+export async function getOrders(status?: LabOrderStatus): Promise<LabOrderEntry[]> {
   const db = getDb()
-  return db.orders.orderBy('authoredOn').reverse().toArray()
+  const all = await db.orders.orderBy('authoredOn').reverse().toArray()
+  return status ? all.filter((o) => o.status === status) : all
 }
 
 /** Return active orders for a specific patient reference. */
 export async function getOrdersForPatient(patientRef: string): Promise<LabOrderEntry[]> {
   const db = getDb()
   return db.orders.where('patientRef').equals(patientRef).toArray()
+}
+
+/** Return a single locally-cached order by its primary key (&orderId), or undefined. */
+export async function getOrderById(orderId: string): Promise<LabOrderEntry | undefined> {
+  const db = getDb()
+  return db.orders.get(orderId)
 }
 
 /**

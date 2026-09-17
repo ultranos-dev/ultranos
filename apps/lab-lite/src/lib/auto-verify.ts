@@ -14,7 +14,17 @@ import type {
   AutoVerifyEvaluation,
   QcStatus,
 } from '../types/authorization'
+import type { QcWarning } from '@/lib/db'
 import { LabRole } from '@ultranos/shared-types'
+
+/**
+ * Map a QC warning code to the binary QcStatus the auto-verification engine uses.
+ * Safety-first: ANY active warning (failing run, drift, or no QC run today) blocks
+ * auto-verification; only the absence of a warning (null) counts as passing.
+ */
+export function qcStatusFromWarning(warning: QcWarning | null): QcStatus {
+  return warning == null ? 'passing' : 'failing'
+}
 
 /** Roles that are eligible to have their results auto-verified. */
 const AUTO_VERIFY_ELIGIBLE_ROLES: readonly string[] = [
