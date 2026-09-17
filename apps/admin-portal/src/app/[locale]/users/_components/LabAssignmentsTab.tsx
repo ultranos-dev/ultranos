@@ -7,6 +7,7 @@ import { trpc } from '@/lib/trpc'
 import type { LabRole } from '@ultranos/shared-types'
 import { ExportButton } from '@/components/ExportButton'
 import { TriangleAlert, Users, FileSearch } from '@ultranos/ui-kit/icons'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -24,6 +25,7 @@ interface StaffRow {
   lastActiveAt: string | null
   createdAt: string
   labHasManager: boolean
+  photoUrl?: string | null
 }
 
 interface LabOption {
@@ -295,7 +297,12 @@ export default function LabAssignmentsTab() {
                     role="button"
                     className="cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
                   >
-                    <td className="ps-4 pe-4 py-3 text-muted-foreground">{truncateEmail(row.email)}</td>
+                    <td className="ps-4 pe-4 py-3 text-muted-foreground">
+                      <div className="flex items-center gap-2.5">
+                        <Avatar src={row.photoUrl} name={row.email} size={28} />
+                        {truncateEmail(row.email)}
+                      </div>
+                    </td>
                     <td className="ps-4 pe-4 py-3 font-medium text-foreground">
                       <span className="flex items-center gap-1.5">
                         {row.labName}

@@ -149,7 +149,7 @@ export const usersRouter = createTRPCRouter({
       .from('practitioners')
       .select(
         'id, given_name, family_name, telecom_email, telecom_phone, role, status, ' +
-          'org_id, qualification_display, identifier_value, license_expiry',
+          'org_id, qualification_display, identifier_value, license_expiry, avatar_url, updated_at',
       )
       .eq('auth_user_id', ctx.user.sub)
       .maybeSingle()
@@ -159,11 +159,14 @@ export const usersRouter = createTRPCRouter({
       await emitProfileAudit(audit, ctx, 'READ', 'PRACTITIONER', ctx.user.sub)
       return {
         kind: 'practitioner',
+        practitionerId: undefined,
         displayName: '',
         givenName: '',
         familyName: '',
         role: ctx.user.role,
         status: (ctx.user as { status?: string | null }).status ?? 'ACTIVE',
+        avatarUrl: null,
+        updatedAt: null,
       } as const
     }
 
@@ -197,6 +200,7 @@ export const usersRouter = createTRPCRouter({
 
     return {
       kind: 'practitioner',
+      practitionerId: row.id as string,
       displayName: [given, family].filter(Boolean).join(' '),
       givenName: given,
       familyName: family,
@@ -208,6 +212,8 @@ export const usersRouter = createTRPCRouter({
       licenseId: (row.identifier_value as string | null) ?? undefined,
       licenseExpiry: (row.license_expiry as string | null) ?? undefined,
       status: (row.status as string | null) ?? (ctx.user as { status?: string | null }).status ?? 'ACTIVE',
+      avatarUrl: (row.avatar_url as string | null) ?? null,
+      updatedAt: (row.updated_at as string | null) ?? null,
     } as const
   }),
 })

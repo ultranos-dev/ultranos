@@ -10,6 +10,7 @@ import { encryptField, decryptField, generateBlindIndex } from '@ultranos/crypto
 import { getCachedEncryptionKey, getFieldEncryptionKeys } from '@/lib/field-encryption'
 import { computeScreeningReminders } from '@/lib/screening-reminders'
 import { buildNotificationContent } from '@/lib/notification-content'
+import { signPhotoUrls } from '@/lib/photo-urls'
 
 /**
  * ADMIN-role-only middleware guard.
@@ -125,6 +126,48 @@ function buildCsvExport(headers: string[], rows: string[][], prefix: string) {
     filename: `${prefix}-${new Date().toISOString().split('T')[0]}.csv`,
     mimeType: 'text/csv',
   }
+}
+
+/**
+ * Enterprise user-profile fields (practitioners). camelCase input → snake_case column.
+ * Existing clinical columns + new HR columns (job_title/department/employee_id/avatar_url).
+ */
+const USER_PROFILE_COLUMN_MAP: Record<string, string> = {
+  phone: 'telecom_phone',
+  jobTitle: 'job_title',
+  department: 'department',
+  employeeId: 'employee_id',
+  avatarUrl: 'avatar_url',
+  qualification: 'qualification_display',
+  registrationNumber: 'identifier_value',
+  licenseExpiry: 'license_expiry',
+  clinicName: 'clinic_name',
+  clinicAddress: 'clinic_address',
+  consultationLanguages: 'consultation_languages',
+}
+
+/** Zod fragment (all optional) for the enterprise profile fields — spread into create/update inputs. */
+const userProfileFieldsSchema = {
+  phone: z.string().max(40).optional(),
+  jobTitle: z.string().max(120).optional(),
+  department: z.string().max(120).optional(),
+  employeeId: z.string().max(60).optional(),
+  avatarUrl: z.string().max(500).optional(),
+  qualification: z.string().max(200).optional(),
+  registrationNumber: z.string().max(120).optional(),
+  licenseExpiry: z.string().max(20).optional(),
+  clinicName: z.string().max(200).optional(),
+  clinicAddress: z.string().max(300).optional(),
+  consultationLanguages: z.array(z.string().max(60)).optional(),
+} as const
+
+/** Build a snake_case column patch from camelCase profile input; '' → null so fields can be cleared. */
+function mapUserProfileInput(input: Record<string, unknown>): Record<string, unknown> {
+  const cols: Record<string, unknown> = {}
+  for (const [k, col] of Object.entries(USER_PROFILE_COLUMN_MAP)) {
+    if (input[k] !== undefined) cols[col] = input[k] === '' ? null : input[k]
+  }
+  return cols
 }
 
 /**
@@ -325,7 +368,7 @@ export const adminRouter = createTRPCRouter({
   listLabs: adminProcedure
     .input(
       z.object({
-        status: z.enum(['ALL', 'ACTIVE', 'SUSPENDED', 'PENDING']).default('ALL'),
+        status: z.enum(['ALL', 'ACTIVE', 'SUSPENDED', 'PENDING', 'ARCHIVED']).default('ALL'),
         cursor: z.number().int().min(0).default(0),
         limit: z.number().int().min(1).max(100).default(25),
         includeArchived: z.boolean().optional(),
@@ -1282,7 +1325,7 @@ export const adminRouter = createTRPCRouter({
           .select(`
             id, practitioner_id, status, registry_number, submitted_at,
             documents,
-            practitioners!inner(given_name, family_name, telecom_email, kyc_status, org_id)
+            practitioners!inner(given_name, family_name, telecom_email, kyc_status, org_id, avatar_url)
           `)
           .eq('status', 'PENDING')
           .eq('practitioners.org_id', ctx.user.orgId)
@@ -1308,11 +1351,18 @@ export const adminRouter = createTRPCRouter({
         const total = breached.length
         const paged = breached.slice(input.cursor, input.cursor + input.limit)
 
+        // Batch-sign staff photos for this page
+        const kycSlaPhotoMap = await signPhotoUrls(ctx.supabase, 'staff-photos', paged.map((s) => s._avatarKey))
+        const pagedWithPhotos = paged.map(({ _avatarKey, ...rest }) => ({
+          ...rest,
+          photoUrl: _avatarKey ? kycSlaPhotoMap[_avatarKey] ?? null : null,
+        }))
+
         // Audit PHI read — CLAUDE.md rule 6
-        await emitKycListAudit(ctx, input.status, paged.length)
+        await emitKycListAudit(ctx, input.status, pagedWithPhotos.length)
 
         return {
-          submissions: paged,
+          submissions: pagedWithPhotos,
           total,
           cursor: input.cursor,
           limit: input.limit,
@@ -1325,7 +1375,7 @@ export const adminRouter = createTRPCRouter({
         .select(`
           id, practitioner_id, status, registry_number, submitted_at,
           documents,
-          practitioners!inner(given_name, family_name, telecom_email, kyc_status, org_id)
+          practitioners!inner(given_name, family_name, telecom_email, kyc_status, org_id, avatar_url)
         `, { count: 'exact' })
         .eq('practitioners.org_id', ctx.user.orgId)
         .order('submitted_at', { ascending: true })
@@ -1350,7 +1400,14 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      const submissions = (rows ?? []).map((row: Record<string, unknown>) => mapKycQueueEntry(row))
+      const rawSubmissions = (rows ?? []).map((row: Record<string, unknown>) => mapKycQueueEntry(row))
+
+      // Batch-sign staff photos
+      const kycPhotoMap = await signPhotoUrls(ctx.supabase, 'staff-photos', rawSubmissions.map((s) => s._avatarKey))
+      const submissions = rawSubmissions.map(({ _avatarKey, ...rest }) => ({
+        ...rest,
+        photoUrl: _avatarKey ? kycPhotoMap[_avatarKey] ?? null : null,
+      }))
 
       // Audit PHI read — CLAUDE.md rule 6
       await emitKycListAudit(ctx, input.status, submissions.length)
@@ -2399,7 +2456,7 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         role: z.string().optional(),
-        status: z.enum(['ALL', 'ACTIVE', 'SUSPENDED', 'PENDING_INVITE']).default('ALL'),
+        status: z.enum(['ALL', 'ACTIVE', 'SUSPENDED', 'PENDING_INVITE', 'ARCHIVED']).default('ALL'),
         search: z.string().max(200).optional(),
         cursor: z.number().int().min(0).default(0),
         limit: z.number().int().min(1).max(100).default(25),
@@ -2408,13 +2465,16 @@ export const adminRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       let query = ctx.supabase
         .from('practitioners')
-        .select('id, auth_user_id, given_name, family_name, role, status, telecom_email, last_login_at, created_at, suspended_at, suspension_reason', { count: 'exact' })
+        .select('id, auth_user_id, given_name, family_name, role, status, telecom_email, telecom_phone, job_title, department, avatar_url, last_login_at, created_at, suspended_at, suspension_reason, archived_at', { count: 'exact' })
         .eq('org_id', ctx.user.orgId)
         .order('created_at', { ascending: false })
         .range(input.cursor, input.cursor + input.limit - 1)
 
       if (input.status !== 'ALL') {
         query = query.eq('status', input.status)
+      } else {
+        // Default: exclude archived users
+        query = query.neq('status', 'ARCHIVED')
       }
 
       if (input.role) {
@@ -2444,11 +2504,22 @@ export const adminRouter = createTRPCRouter({
         email: (row.telecom_email as string) ?? null,
         role: (row.role as string) ?? '',
         status: (row.status as string) ?? 'ACTIVE',
+        phone: (row.telecom_phone as string) ?? null,
+        jobTitle: (row.job_title as string) ?? null,
+        department: (row.department as string) ?? null,
+        avatarUrl: (row.avatar_url as string) ?? null,
         lastLoginAt: (row.last_login_at as string) ?? null,
         createdAt: (row.created_at as string) ?? null,
         suspendedAt: (row.suspended_at as string) ?? null,
         suspensionReason: (row.suspension_reason as string) ?? null,
+        archivedAt: (row.archived_at as string) ?? null,
       }))
+
+      // Batch-sign staff photos → ready-to-render URLs (client never needs the raw key).
+      const staffPhotoMap = await signPhotoUrls(ctx.supabase, 'staff-photos', users.map((u) => u.avatarUrl))
+      for (const u of users) {
+        ;(u as Record<string, unknown>).photoUrl = u.avatarUrl ? staffPhotoMap[u.avatarUrl] ?? null : null
+      }
 
       // Audit PHI read — CLAUDE.md rule 6
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
@@ -2484,7 +2555,7 @@ export const adminRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { data: user, error } = await ctx.supabase
         .from('practitioners')
-        .select('id, auth_user_id, given_name, family_name, role, status, telecom_email, last_login_at, created_at, suspended_at, suspension_reason, suspended_by, invited_by, pending_suspension_date')
+        .select('id, auth_user_id, given_name, family_name, role, status, telecom_email, last_login_at, created_at, updated_at, suspended_at, suspension_reason, suspended_by, invited_by, pending_suspension_date, archived_at, telecom_phone, job_title, department, employee_id, avatar_url, qualification_display, identifier_value, license_expiry, clinic_name, clinic_address, consultation_languages')
         .eq('id', input.userId)
         .eq('org_id', ctx.user.orgId)
         .single()
@@ -2536,11 +2607,24 @@ export const adminRouter = createTRPCRouter({
         status: (user.status as string) ?? 'ACTIVE',
         lastLoginAt: (user.last_login_at as string) ?? null,
         createdAt: (user.created_at as string) ?? null,
+        updatedAt: (user.updated_at as string) ?? null,
         suspendedAt: (user.suspended_at as string) ?? null,
         suspensionReason: (user.suspension_reason as string) ?? null,
         suspendedBy: (user.suspended_by as string) ?? null,
         invitedBy: (user.invited_by as string) ?? null,
         pendingSuspensionDate: (user.pending_suspension_date as string) ?? null,
+        archivedAt: (user.archived_at as string) ?? null,
+        phone: (user.telecom_phone as string) ?? null,
+        jobTitle: (user.job_title as string) ?? null,
+        department: (user.department as string) ?? null,
+        employeeId: (user.employee_id as string) ?? null,
+        avatarUrl: (user.avatar_url as string) ?? null,
+        qualification: (user.qualification_display as string) ?? null,
+        registrationNumber: (user.identifier_value as string) ?? null,
+        licenseExpiry: (user.license_expiry as string) ?? null,
+        clinicName: (user.clinic_name as string) ?? null,
+        clinicAddress: (user.clinic_address as string) ?? null,
+        consultationLanguages: (user.consultation_languages as string[]) ?? null,
         hasMfa,
       }
     }),
@@ -2557,6 +2641,7 @@ export const adminRouter = createTRPCRouter({
         familyName: z.string().max(200).default(''),
         role: z.string().min(1),
         password: z.string().min(8).max(128),
+        ...userProfileFieldsSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -2654,6 +2739,7 @@ export const adminRouter = createTRPCRouter({
           invited_by: adminPractitioner?.id ?? null,
           created_at: now,
           password_hash: 'SUPABASE_AUTH_MANAGED',
+          ...mapUserProfileInput(input),
         })
         .select('id')
         .single()
@@ -2729,11 +2815,11 @@ export const adminRouter = createTRPCRouter({
       z.object({
         userId: z.string().uuid(),
         name: z.string().min(1).max(200).optional(),
+        givenName: z.string().min(1).max(200).optional(),
+        familyName: z.string().max(200).optional(),
         role: z.string().min(1).optional(),
-      }).refine(
-        (data) => data.name || data.role,
-        { message: 'At least one of name or role must be provided' },
-      ),
+        ...userProfileFieldsSchema,
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Verify user exists and belongs to org
@@ -2753,7 +2839,7 @@ export const adminRouter = createTRPCRouter({
 
       const updateData: Record<string, unknown> = {}
 
-      // Handle name change
+      // Handle name change (legacy single-field `name`)
       if (input.name) {
         const nameParts = input.name.trim().split(/\s+/)
         const familyName = nameParts.length > 1 ? nameParts.pop()! : ''
@@ -2761,6 +2847,12 @@ export const adminRouter = createTRPCRouter({
         updateData.given_name = givenName
         updateData.family_name = familyName
       }
+      // Explicit given/family name (enterprise edit) takes precedence
+      if (input.givenName !== undefined) updateData.given_name = input.givenName
+      if (input.familyName !== undefined) updateData.family_name = input.familyName
+
+      // Enterprise profile fields
+      Object.assign(updateData, mapUserProfileInput(input))
 
       // Handle role change
       if (input.role && input.role !== existing.role) {
@@ -2813,7 +2905,7 @@ export const adminRouter = createTRPCRouter({
 
       const { error: updateError } = await ctx.supabase
         .from('practitioners')
-        .update(updateData)
+        .update({ ...updateData, updated_at: new Date().toISOString() })
         .eq('id', input.userId)
         .eq('org_id', ctx.user.orgId)
 
@@ -2845,6 +2937,132 @@ export const adminRouter = createTRPCRouter({
       }
 
       return { success: true, userId: input.userId }
+    }),
+
+  /**
+   * Archive (soft-delete) a user: set status to ARCHIVED, ban in Supabase Auth,
+   * terminate sessions. Excluded from the default user list; recoverable via restoreUser.
+   */
+  archiveUser: adminProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { data: existing, error: fetchError } = await ctx.supabase
+        .from('practitioners')
+        .select('id, status, auth_user_id')
+        .eq('id', input.userId)
+        .eq('org_id', ctx.user.orgId)
+        .single()
+
+      if (fetchError || !existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+      }
+
+      const now = new Date().toISOString()
+      const { error: updateError } = await ctx.supabase
+        .from('practitioners')
+        .update({ status: 'ARCHIVED', archived_at: now, updated_at: now })
+        .eq('id', input.userId)
+        .eq('org_id', ctx.user.orgId)
+
+      if (updateError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to archive user' })
+      }
+
+      // Ban in Supabase Auth + terminate sessions (best-effort)
+      if (existing.auth_user_id) {
+        try {
+          await ctx.supabase.auth.admin.updateUserById(existing.auth_user_id as string, {
+            ban_duration: '876000h',
+            user_metadata: { status: 'ARCHIVED' },
+          })
+        } catch {
+          console.warn('[AUTH_BAN_FAILURE]', { userId: input.userId, action: 'archive' })
+        }
+      }
+      try {
+        await ctx.supabase.from('active_sessions').delete().eq('practitioner_id', input.userId)
+      } catch {
+        console.warn('[SESSION_TERMINATION] Failed to clear sessions', { userId: input.userId })
+      }
+
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'USER_ARCHIVED',
+          resourceType: 'USER_ACCOUNT',
+          resourceId: input.userId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { endpoint: 'admin.archiveUser' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'USER_ARCHIVED', resourceType: 'USER_ACCOUNT', resourceId: input.userId })
+      }
+
+      return { success: true, userId: input.userId, status: 'ARCHIVED' }
+    }),
+
+  /**
+   * Restore an archived user: set status back to ACTIVE, unban in Supabase Auth.
+   */
+  restoreUser: adminProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { data: existing, error: fetchError } = await ctx.supabase
+        .from('practitioners')
+        .select('id, status, auth_user_id')
+        .eq('id', input.userId)
+        .eq('org_id', ctx.user.orgId)
+        .single()
+
+      if (fetchError || !existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+      }
+      if (existing.status !== 'ARCHIVED') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: `Cannot restore a user with status ${existing.status} — expected ARCHIVED` })
+      }
+
+      const now = new Date().toISOString()
+      const { error: updateError } = await ctx.supabase
+        .from('practitioners')
+        .update({ status: 'ACTIVE', archived_at: null, updated_at: now })
+        .eq('id', input.userId)
+        .eq('org_id', ctx.user.orgId)
+
+      if (updateError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to restore user' })
+      }
+
+      if (existing.auth_user_id) {
+        try {
+          await ctx.supabase.auth.admin.updateUserById(existing.auth_user_id as string, {
+            ban_duration: 'none',
+            user_metadata: { status: 'ACTIVE' },
+          })
+        } catch {
+          console.warn('[AUTH_UNBAN_FAILURE]', { userId: input.userId, action: 'restore' })
+        }
+      }
+
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'USER_RESTORED',
+          resourceType: 'USER_ACCOUNT',
+          resourceId: input.userId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { endpoint: 'admin.restoreUser' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'USER_RESTORED', resourceType: 'USER_ACCOUNT', resourceId: input.userId })
+      }
+
+      return { success: true, userId: input.userId, status: 'ACTIVE' }
     }),
 
   /**
@@ -3233,6 +3451,38 @@ export const adminRouter = createTRPCRouter({
     const familyName = (meta.family_name as string) ?? ''
     const name = ((meta.name as string) ?? (givenName + ' ' + familyName)).trim()
 
+    // Look up the caller's practitioner row (if any) to surface avatar info.
+    // Pure-admin accounts have NO practitioner row — for those the avatar lives in
+    // auth user_metadata.avatar_url (set by the staff-photo route's auth-self path),
+    // and the photo control targets the auth user id instead of a practitioner id.
+    let practitionerId: string | null = null
+    let avatarUrl: string | null = null
+    let updatedAt: string | null = null
+    try {
+      const { data: pRow } = await ctx.supabase
+        .from('practitioners')
+        .select('id, avatar_url, updated_at')
+        .eq('auth_user_id', ctx.user.sub)
+        .maybeSingle()
+      if (pRow) {
+        const p = pRow as { id: string; avatar_url: string | null; updated_at: string | null }
+        practitionerId = p.id
+        avatarUrl = p.avatar_url ?? null
+        updatedAt = p.updated_at ?? null
+      }
+    } catch {
+      // Non-blocking — practitioner lookup failure must never break admin profile load
+    }
+
+    // Pure-admin fallback: avatar key stored in auth metadata.
+    if (!practitionerId) {
+      avatarUrl = (meta.avatar_url as string | null) ?? null
+    }
+
+    // The id the Settings photo control uploads under: a real practitioner id when the
+    // admin also has a practitioner row, otherwise the auth user id (auth-self path).
+    const photoTargetId = practitionerId ?? authUser.id
+
     return {
       id: authUser.id,
       authUserId: authUser.id,
@@ -3242,6 +3492,10 @@ export const adminRouter = createTRPCRouter({
       email: authUser.email ?? null,
       role: ((meta.role as string) ?? ctx.user.role ?? '').toUpperCase(),
       createdAt: authUser.created_at ?? null,
+      practitionerId,
+      photoTargetId,
+      avatarUrl,
+      updatedAt,
     }
   }),
 
@@ -4454,15 +4708,19 @@ export const adminRouter = createTRPCRouter({
 
       const practitionerIds = (staff ?? []).map((s: any) => s.practitioner_id)
       let emailMap: Record<string, string> = {}
+      const avatarKeyMap: Record<string, string | null> = {}
 
       if (practitionerIds.length > 0) {
         const { data: practitioners } = await ctx.supabase
           .from('practitioners')
-          .select('id, auth_user_id')
+          .select('id, auth_user_id, avatar_url')
           .in('id', practitionerIds)
 
         if (practitioners && practitioners.length > 0) {
-          const lookups = practitioners
+          for (const p of practitioners as any[]) {
+            avatarKeyMap[p.id] = (p.avatar_url as string) ?? null
+          }
+          const lookups = (practitioners as any[])
             .filter((p: any) => p.auth_user_id)
             .map(async (p: any) => {
               const { data } = await ctx.supabase.auth.admin.getUserById(p.auth_user_id)
@@ -4474,12 +4732,18 @@ export const adminRouter = createTRPCRouter({
         }
       }
 
-      return (staff ?? []).map((s: any) => ({
-        practitionerId: s.practitioner_id as string,
-        email: emailMap[s.practitioner_id] ?? '',
-        labRole: s.lab_role as LabRole,
-        createdAt: s.created_at as string,
-      }))
+      const staffPhotoMap = await signPhotoUrls(ctx.supabase, 'staff-photos', Object.values(avatarKeyMap))
+
+      return (staff ?? []).map((s: any) => {
+        const avatarKey = avatarKeyMap[s.practitioner_id as string] ?? null
+        return {
+          practitionerId: s.practitioner_id as string,
+          email: emailMap[s.practitioner_id] ?? '',
+          labRole: s.lab_role as LabRole,
+          createdAt: s.created_at as string,
+          photoUrl: avatarKey ? staffPhotoMap[avatarKey] ?? null : null,
+        }
+      })
     }),
 
   /**
@@ -4759,15 +5023,19 @@ export const adminRouter = createTRPCRouter({
       const practitionerIds = [...new Set(pageRows.map((s: any) => s.practitioner_id as string))]
       const emailMap: Record<string, string> = {}
       const lastLoginMap: Record<string, string | null> = {}
+      const avatarKeyMapAll: Record<string, string | null> = {}
 
       if (practitionerIds.length > 0) {
         const { data: practitioners } = await ctx.supabase
           .from('practitioners')
-          .select('id, auth_user_id')
+          .select('id, auth_user_id, avatar_url')
           .in('id', practitionerIds)
 
         if (practitioners && practitioners.length > 0) {
-          const lookups = practitioners
+          for (const p of practitioners as any[]) {
+            avatarKeyMapAll[p.id] = (p.avatar_url as string) ?? null
+          }
+          const lookups = (practitioners as any[])
             .filter((p: any) => p.auth_user_id)
             .map(async (p: any) => {
               const { data } = await ctx.supabase.auth.admin.getUserById(p.auth_user_id)
@@ -4779,6 +5047,8 @@ export const adminRouter = createTRPCRouter({
           await Promise.all(lookups)
         }
       }
+
+      const allStaffPhotoMap = await signPhotoUrls(ctx.supabase, 'staff-photos', Object.values(avatarKeyMapAll))
 
       // Step 3: Determine which labs have a manager (AC #4)
       const labIds = [...new Set(pageRows.map((s: any) => s.lab_id as string))]
@@ -4816,6 +5086,7 @@ export const adminRouter = createTRPCRouter({
 
       const items = filteredRows.map((s: any) => {
         const lab = s.labs as { id: string; lab_name: string }
+        const avatarKey = avatarKeyMapAll[s.practitioner_id as string] ?? null
         return {
           practitionerId: s.practitioner_id as string,
           email: emailMap[s.practitioner_id] ?? '',
@@ -4825,6 +5096,7 @@ export const adminRouter = createTRPCRouter({
           lastActiveAt: lastLoginMap[s.practitioner_id] ?? null,
           createdAt: s.created_at as string,
           labHasManager: managerLabIds.has(s.lab_id as string),
+          photoUrl: avatarKey ? allStaffPhotoMap[avatarKey] ?? null : null,
         }
       })
 
@@ -5035,8 +5307,8 @@ export const adminRouter = createTRPCRouter({
           id, mentor_practitioner_id, mentee_practitioner_id, lab_id, goals,
           status, start_date, dissolved_at, dissolved_reason, dissolved_notes,
           created_at,
-          mentor:practitioners!mentorship_pairings_mentor_practitioner_id_fkey(id, given_name, family_name, auth_user_id),
-          mentee:practitioners!mentorship_pairings_mentee_practitioner_id_fkey(id, given_name, family_name, auth_user_id),
+          mentor:practitioners!mentorship_pairings_mentor_practitioner_id_fkey(id, given_name, family_name, auth_user_id, avatar_url),
+          mentee:practitioners!mentorship_pairings_mentee_practitioner_id_fkey(id, given_name, family_name, auth_user_id, avatar_url),
           labs!mentorship_pairings_lab_id_fkey(id, lab_name)
         `)
         .order('created_at', { ascending: false })
@@ -5090,17 +5362,31 @@ export const adminRouter = createTRPCRouter({
         await Promise.all(lookups)
       }
 
+      // Collect avatar keys for batch signing
+      const mentorshipAvatarKeys: Array<string | null> = []
+      for (const row of pageRows) {
+        const mentor = row.mentor as any
+        const mentee = row.mentee as any
+        mentorshipAvatarKeys.push((mentor?.avatar_url as string) ?? null)
+        mentorshipAvatarKeys.push((mentee?.avatar_url as string) ?? null)
+      }
+      const mentorshipPhotoMap = await signPhotoUrls(ctx.supabase, 'staff-photos', mentorshipAvatarKeys)
+
       const items = pageRows.map((row: any) => {
-        const mentor = row.mentor as { id: string; given_name: string; family_name: string } | null
-        const mentee = row.mentee as { id: string; given_name: string; family_name: string } | null
+        const mentor = row.mentor as { id: string; given_name: string; family_name: string; avatar_url?: string } | null
+        const mentee = row.mentee as { id: string; given_name: string; family_name: string; avatar_url?: string } | null
         const lab = row.labs as { id: string; lab_name: string } | null
+        const mentorAvatarKey = mentor?.avatar_url ?? null
+        const menteeAvatarKey = mentee?.avatar_url ?? null
 
         return {
           id: row.id as string,
           mentorName: mentor ? `${mentor.given_name ?? ''} ${mentor.family_name ?? ''}`.trim() : 'Unknown',
           mentorEmail: mentor ? (emailMap[mentor.id] ?? '') : '',
+          mentorPhotoUrl: mentorAvatarKey ? mentorshipPhotoMap[mentorAvatarKey] ?? null : null,
           menteeName: mentee ? `${mentee.given_name ?? ''} ${mentee.family_name ?? ''}`.trim() : 'Unknown',
           menteeEmail: mentee ? (emailMap[mentee.id] ?? '') : '',
+          menteePhotoUrl: menteeAvatarKey ? mentorshipPhotoMap[menteeAvatarKey] ?? null : null,
           labName: lab?.lab_name ?? 'Unknown',
           startDate: row.start_date as string,
           status: row.status as string,
@@ -7827,6 +8113,7 @@ function mapKycQueueEntry(row: Record<string, unknown>) {
     family_name: string
     telecom_email: string
     kyc_status: string
+    avatar_url?: string | null
   } | null
   const providerName = practitioner
     ? `${practitioner.given_name ?? ''} ${practitioner.family_name ?? ''}`.trim()
@@ -7851,6 +8138,7 @@ function mapKycQueueEntry(row: Record<string, unknown>) {
     slaDeadline: sla.deadline,
     slaBreached: sla.breached,
     slaRemainingHours: sla.remainingHours,
+    _avatarKey: (practitioner?.avatar_url as string) ?? null,
   }
 }
 

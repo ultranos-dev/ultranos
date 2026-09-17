@@ -16,6 +16,13 @@ vi.mock('next/link', () => ({
   ),
 }))
 
+// StaffAvatar (in the profile modal) imports the Supabase browser client; stub it.
+vi.mock('@/lib/supabase', () => ({
+  getSupabaseBrowserClient: () => ({
+    storage: { from: () => ({ createSignedUrl: vi.fn().mockResolvedValue({ data: null }) }) },
+  }),
+}))
+
 // Mock trpc client
 const mockListUsers = vi.fn()
 vi.mock('@/lib/trpc', () => ({
@@ -115,16 +122,12 @@ describe('Users List Page', () => {
       expect(screen.getByText('No staff users yet')).toBeTruthy()
     })
 
-    // Empty state has a Create User CTA
-    const createLinks = screen.getAllByText('Create User')
-    expect(createLinks.length).toBeGreaterThanOrEqual(1)
-    const emptyStateCta = createLinks.find(
-      (el) => el.closest('a')?.getAttribute('href') === '/users/create',
-    )
-    expect(emptyStateCta).toBeTruthy()
+    // Empty state + toolbar both expose an "Add" CTA (opens the create modal)
+    const addButtons = screen.getAllByText('Add')
+    expect(addButtons.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('shows "Create User" button', async () => {
+  it('shows "Add" button in the toolbar', async () => {
     mockListUsers.mockResolvedValue({ users: mockUsers, totalCount: 3 })
 
     render(<AllUsersTab />)
@@ -133,11 +136,8 @@ describe('Users List Page', () => {
       expect(screen.getByText('Dr. Alice Smith')).toBeTruthy()
     })
 
-    const createUserLinks = screen.getAllByText('Create User')
-    const topCta = createUserLinks.find(
-      (el) => el.closest('a')?.getAttribute('href') === '/users/create',
-    )
-    expect(topCta).toBeTruthy()
+    // Toolbar "Add" button (create-user modal trigger)
+    expect(screen.getByRole('button', { name: 'Add' })).toBeTruthy()
   })
 
   it('shows suspended users banner when suspended users exist', async () => {

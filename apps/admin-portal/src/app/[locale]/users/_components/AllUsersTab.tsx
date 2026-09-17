@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
@@ -11,9 +10,12 @@ import { Badge } from '@/components/ui/badge'
 import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Users, FileSearch } from '@ultranos/ui-kit/icons'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
+import { UserFormModal } from '@/components/users/UserFormModal'
+import { UserProfileModal } from '@/components/users/UserProfileModal'
 
 type RoleFilter = 'ALL' | 'ADMIN' | 'CLINICIAN' | 'DOCTOR' | 'PHARMACIST' | 'LAB_TECH'
-type StatusFilter = 'ALL' | 'ACTIVE' | 'SUSPENDED' | 'PENDING_INVITE'
+type StatusFilter = 'ALL' | 'ACTIVE' | 'SUSPENDED' | 'PENDING_INVITE' | 'ARCHIVED'
 
 interface User {
   id: string
@@ -24,6 +26,10 @@ interface User {
   moduleName?: string | null
   status: string
   mfaEnrolled?: boolean
+  phone?: string | null
+  jobTitle?: string | null
+  department?: string | null
+  photoUrl?: string | null
   lastLoginAt: string | null
   createdAt: string
 }
@@ -33,12 +39,14 @@ function StatusBadge({ status }: { status: string }) {
     ACTIVE: 'success',
     SUSPENDED: 'destructive',
     PENDING_INVITE: 'warning',
+    ARCHIVED: 'secondary',
   }
 
   const labelMap: Record<string, string> = {
     ACTIVE: 'Active',
     SUSPENDED: 'Suspended',
     PENDING_INVITE: 'Pending Invite',
+    ARCHIVED: 'Archived',
   }
 
   return (
@@ -68,18 +76,18 @@ export function formatRelativeTime(iso: string | null): string {
 }
 
 const ROLE_FILTERS: RoleFilter[] = ['ALL', 'ADMIN', 'CLINICIAN', 'DOCTOR', 'PHARMACIST', 'LAB_TECH']
-const STATUS_FILTERS: StatusFilter[] = ['ALL', 'ACTIVE', 'SUSPENDED', 'PENDING_INVITE']
+const STATUS_FILTERS: StatusFilter[] = ['ALL', 'ACTIVE', 'SUSPENDED', 'PENDING_INVITE', 'ARCHIVED']
 const STATUS_LABELS: Record<StatusFilter, string> = {
   ALL: 'All',
   ACTIVE: 'Active',
   SUSPENDED: 'Suspended',
   PENDING_INVITE: 'Pending Invite',
+  ARCHIVED: 'Archived',
 }
 const PAGE_SIZE = 20
 
 export default function AllUsersTab() {
   const t = useTranslations('users')
-  const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [page, setPage] = useState(1)
@@ -89,6 +97,11 @@ export default function AllUsersTab() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Modal state
+  const [formOpen, setFormOpen] = useState(false)
+  const [profileUserId, setProfileUserId] = useState<string | null>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
+
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true)
@@ -97,7 +110,7 @@ export default function AllUsersTab() {
         cursor: (page - 1) * PAGE_SIZE,
         limit: PAGE_SIZE,
         ...(roleFilter !== 'ALL' && { role: roleFilter }),
-        ...(statusFilter !== 'ALL' && { status: statusFilter as 'ACTIVE' | 'SUSPENDED' | 'PENDING_INVITE' }),
+        ...(statusFilter !== 'ALL' && { status: statusFilter as 'ACTIVE' | 'SUSPENDED' | 'PENDING_INVITE' | 'ARCHIVED' }),
         ...(search.trim() && { search: search.trim() }),
       })
       setUsers(result.users)
@@ -141,9 +154,20 @@ export default function AllUsersTab() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Toolbar: filters + search + CTA — one row, always rendered */}
+      {/* Toolbar: search → status filter → role filter → Add → Export — one row, always rendered */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Status filter — pill tab-bar (primary) */}
+        {/* Search input */}
+        <SearchInput
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          className="min-w-[200px] flex-1"
+          inputClassName="rounded-full"
+          aria-label={t('searchPlaceholder')}
+        />
+
+        {/* Status filter — pill tab-bar */}
         <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {STATUS_FILTERS.map((s) => (
             <button
@@ -176,21 +200,9 @@ export default function AllUsersTab() {
           ))}
         </select>
 
-        {/* Search input */}
-        <SearchInput
-          dir="auto"
-          placeholder={t('searchPlaceholder')}
-          value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className="min-w-[200px] flex-1"
-          aria-label={t('searchPlaceholder')}
-        />
-
-        {/* Export + Create User CTA */}
+        {/* Add + Export */}
+        <Button onClick={() => setFormOpen(true)}>{t('add')}</Button>
         <ExportButton exportFn={() => trpc.admin.exportUsers.query()} filters={{}} />
-        <Button asChild>
-          <Link href="/users/create">Create User</Link>
-        </Button>
       </div>
 
       {error && (
@@ -217,7 +229,7 @@ export default function AllUsersTab() {
               icon={Users}
               title={t('noUsers')}
               description={t('noUsersDescription')}
-              action={{ label: t('createUser'), onClick: () => router.push('/users/create') }}
+              action={{ label: t('add'), onClick: () => setFormOpen(true) }}
             />
           </div>
         ) : users.length === 0 ? (
@@ -237,6 +249,8 @@ export default function AllUsersTab() {
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Email</th>
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Role</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Department</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Phone</th>
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">MFA</th>
                   <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Last Login</th>
@@ -246,17 +260,14 @@ export default function AllUsersTab() {
                 {users.map((user) => (
                   <tr
                     key={user.id}
-                    onClick={() => router.push(`/users/${user.id}`)}
+                    onClick={() => { setProfileUserId(user.id); setProfileOpen(true) }}
                     className="cursor-pointer transition-colors hover:bg-muted/50"
                   >
                     <td className="px-4 py-3 font-medium text-foreground">
-                      <Link
-                        href={`/users/${user.id}`}
-                        className="hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      <div className="flex items-center gap-2.5">
+                        <Avatar src={user.photoUrl} name={user.name} size={28} />
                         {user.name}
-                      </Link>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
                     <td className="px-4 py-3 text-foreground">
@@ -265,6 +276,8 @@ export default function AllUsersTab() {
                         <span className="text-muted-foreground"> ({user.moduleName})</span>
                       )}
                     </td>
+                    <td className="px-4 py-3 text-muted-foreground">{user.department ?? '—'}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{user.phone ?? '—'}</td>
                     <td className="px-4 py-3"><StatusBadge status={user.status} /></td>
                     <td className="px-4 py-3"><MfaBadge enrolled={user.mfaEnrolled ?? false} /></td>
                     <td className="px-4 py-3 text-muted-foreground">{formatRelativeTime(user.lastLoginAt)}</td>
@@ -300,6 +313,23 @@ export default function AllUsersTab() {
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Create user modal */}
+      <UserFormModal
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onCreated={fetchUsers}
+      />
+
+      {/* User profile modal */}
+      {profileUserId && (
+        <UserProfileModal
+          open={profileOpen}
+          onOpenChange={setProfileOpen}
+          userId={profileUserId}
+          onChanged={fetchUsers}
+        />
       )}
     </div>
   )

@@ -155,18 +155,6 @@ describe('LabAssignmentsTab', () => {
   })
 })
 
-describe('UsersPage tab shell', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockListAllLabStaff.mockResolvedValue({ items: [], nextCursor: null })
-    mockListLabsForFilter.mockResolvedValue([])
-    mockGetManagerlessLabs.mockResolvedValue([])
-  })
-
-  it('renders "All Users" tab link and "Lab Assignments" tab link', async () => {
-    const { default: UsersPage } = await import('../app/[locale]/users/page')
-    render(<UsersPage />)
-    expect(screen.getByRole('link', { name: 'All Users' })).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Lab Assignments' })).toBeTruthy()
-  })
-})
+// NOTE: the "All Users / Lab Assignments" tab shell was intentionally removed —
+// /users now renders the users list directly. The LabAssignmentsTab component is
+// still exercised above; its former tab-shell test is obsolete and was removed.
