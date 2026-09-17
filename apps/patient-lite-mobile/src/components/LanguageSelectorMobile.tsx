@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     borderRadius: consumerBorderRadius.md,
   },
   optionText: {
-    fontSize: consumerTypography.body.fontSize,
+    fontSize: consumerTypography.bodySize,
     textAlign: 'center',
   },
 })
