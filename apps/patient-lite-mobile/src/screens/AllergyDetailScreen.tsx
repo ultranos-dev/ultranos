@@ -83,11 +83,14 @@ export function AllergyDetailScreen() {
   const route = useRoute<AllergyDetailRouteProp>()
   const navigation = useNavigation()
   const { allergyId } = route.params
-  const { patient } = usePatientProfile()
-  const { events, isLoading } = useMedicalHistory(patient?.id)
+  const { patient, isLoading: profileLoading } = usePatientProfile()
+  const { events, isLoading: historyLoading, error: historyError } = useMedicalHistory(patient?.id)
   const auditedRef = useRef<string | null>(null)
 
   const [allergy, setAllergy] = useState<FhirAllergyIntolerance | null>(null)
+
+  // Treat patient-still-loading as overall loading — never show "not found" until patient is resolved
+  const isLoading = profileLoading || historyLoading
 
   useEffect(() => {
     // Search all allergy events (active + resolved) so resolved allergies navigated from timeline are found
@@ -108,14 +111,27 @@ export function AllergyDetailScreen() {
     }
   }, [allergyId, events, patient?.id])
 
+  // Loading: patient is loading OR history is loading — never show "not found" until both settle
   if (isLoading) {
     return (
-      <View style={[styles.screen, { backgroundColor: colors.surface }, styles.centered]}>
-        <ActivityIndicator size="large" color={colors.primary[500]} />
+      <View style={[styles.screen, { backgroundColor: colors.surface }, styles.centered]} testID="allergy-detail-loading">
+        <ActivityIndicator size="large" color={colors.primary[500]} testID="allergy-detail-spinner" />
       </View>
     )
   }
 
+  // Error state: history failed to load — warn "unavailable", never claim "not found"
+  if (historyError) {
+    return (
+      <View style={[styles.screen, { backgroundColor: colors.surface }, styles.centered]} testID="allergy-detail-unavailable">
+        <Text style={[styles.subheaderText, { color: colors.textPrimary }]}>
+          {t('allergy.loadError', { defaultValue: 'Allergy status unavailable' })}
+        </Text>
+      </View>
+    )
+  }
+
+  // Confirmed not-found: patient resolved, history settled, allergy genuinely absent
   if (!allergy) {
     return (
       <View style={[styles.screen, { backgroundColor: colors.surface }, styles.centered]} testID="allergy-detail-not-found">

@@ -183,6 +183,8 @@ export function NotificationsScreen({
   const {
     notifications,
     isLoading,
+    hasLoadedOnce,
+    fetchError,
     fetchNotifications,
     startPolling,
     stopPolling,
@@ -237,17 +239,45 @@ export function NotificationsScreen({
     />
   ), [handlePress])
 
-  // AC #10: Empty state rendered via ListEmptyComponent so pull-to-refresh still works
-  const emptyComponent = useCallback(() => (
-    <View style={styles.emptyState}>
-      {/* TODO: Replace emoji with a proper illustration asset per AC #10 */}
-      <View style={[styles.emptyIllustration, { backgroundColor: colors.primary[50] }]}>
-        <Text style={styles.emptyIcon}>{'\u{1F514}'}</Text>
+  // AC #10: Empty/loading/error state rendered via ListEmptyComponent so pull-to-refresh still works
+  const emptyComponent = useCallback(() => {
+    // Loading: first load hasn't settled yet — show indicator, never "No notifications"
+    if (!hasLoadedOnce || isLoading) {
+      return (
+        <View style={styles.emptyState} testID="notifications-loading">
+          <View style={[styles.emptyIllustration, { backgroundColor: colors.primary[50] }]}>
+            <Text style={styles.emptyIcon}>{'\u{1F514}'}</Text>
+          </View>
+          <Text style={[styles.emptyText, { color: colors.textPrimary }]}>{t('notifications.loading')}</Text>
+        </View>
+      )
+    }
+
+    // Error: fetch failed and no cached data — warn "unavailable", not empty
+    if (fetchError) {
+      return (
+        <View style={styles.emptyState} testID="notifications-error">
+          <View style={[styles.emptyIllustration, { backgroundColor: colors.primary[50] }]}>
+            <Text style={styles.emptyIcon}>{'⚠️'}</Text>
+          </View>
+          <Text style={[styles.emptyText, { color: colors.textPrimary }]}>{t('notifications.fetchError')}</Text>
+          <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>{t('notifications.retry')}</Text>
+        </View>
+      )
+    }
+
+    // Confirmed empty: loaded successfully, genuinely no notifications
+    return (
+      <View style={styles.emptyState} testID="notifications-empty">
+        {/* TODO: Replace emoji with a proper illustration asset per AC #10 */}
+        <View style={[styles.emptyIllustration, { backgroundColor: colors.primary[50] }]}>
+          <Text style={styles.emptyIcon}>{'\u{1F514}'}</Text>
+        </View>
+        <Text style={[styles.emptyText, { color: colors.textPrimary }]}>{t('notifications.emptyTitle')}</Text>
+        <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>{t('notifications.emptySubtitle')}</Text>
       </View>
-      <Text style={[styles.emptyText, { color: colors.textPrimary }]}>{t('notifications.emptyTitle')}</Text>
-      <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>{t('notifications.emptySubtitle')}</Text>
-    </View>
-  ), [t, colors])
+    )
+  }, [t, colors, hasLoadedOnce, isLoading, fetchError])
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]} testID="notifications-screen">

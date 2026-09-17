@@ -147,7 +147,9 @@ export function HomeDashboardScreen() {
       </View>
 
       {/* SECTION 1: Allergies — ALWAYS FIRST per CLAUDE.md rule #4 */}
-      <AllergyBanner allergies={activeAllergies} isLoading={historyLoading} error={historyError} />
+      <View testID="allergy-section">
+        <AllergyBanner allergies={activeAllergies} isLoading={historyLoading} error={historyError} />
+      </View>
 
       {/* SECTION 2: Patient Summary Card */}
       <PatientSummaryCard patient={patient} />
@@ -174,6 +176,8 @@ export function HomeDashboardScreen() {
       {/* SECTION 4: Medications Summary */}
       <MedicationsSection
         count={activeMedications.length}
+        isLoading={historyLoading}
+        error={historyError}
         onViewAll={navigateToTimeline}
       />
 
@@ -182,6 +186,8 @@ export function HomeDashboardScreen() {
         lastEncounterDate={lastEncounterDate}
         lastPrescriptionDate={lastPrescriptionDate}
         locale={locale}
+        isLoading={historyLoading}
+        error={historyError}
       />
 
       {/* SECTION 6: Settings — Theme Toggle (AC #1) */}
@@ -240,13 +246,45 @@ function QRValidityIndicator({
 
 function MedicationsSection({
   count,
+  isLoading,
+  error,
   onViewAll,
 }: {
   count: number
+  isLoading?: boolean
+  error?: string | null
   onViewAll: () => void
 }) {
   const { t } = useTranslation()
   const { colors } = useTheme()
+
+  // Loading state: never assert "no medications" while history is loading
+  if (isLoading) {
+    return (
+      <View style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} testID="medications-section-loading">
+        <View style={styles.sectionIconRow}>
+          <Text style={styles.sectionIcon}>{NAV_ICONS.prescriptions.emoji}</Text>
+          <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
+            {t('dashboard.medicationsLoading', { defaultValue: 'Loading medications…' })}
+          </Text>
+        </View>
+      </View>
+    )
+  }
+
+  // Error state: warn that medication status is unknown, never claim "no medications" on failure
+  if (error) {
+    return (
+      <View style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} testID="medications-section-error">
+        <View style={styles.sectionIconRow}>
+          <Text style={styles.sectionIcon}>{NAV_ICONS.prescriptions.emoji}</Text>
+          <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
+            {t('dashboard.medicationsUnavailable', { defaultValue: 'Medications unavailable' })}
+          </Text>
+        </View>
+      </View>
+    )
+  }
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} testID="medications-section">
@@ -280,13 +318,45 @@ function RecentActivitySection({
   lastEncounterDate,
   lastPrescriptionDate,
   locale,
+  isLoading,
+  error,
 }: {
   lastEncounterDate: string | null
   lastPrescriptionDate: string | null
   locale: string
+  isLoading?: boolean
+  error?: string | null
 }) {
   const { t } = useTranslation()
   const { colors } = useTheme()
+
+  // Loading state: never assert "no activity" while history is loading
+  if (isLoading) {
+    return (
+      <View style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} testID="recent-activity-loading">
+        <View style={styles.sectionIconRow}>
+          <Text style={styles.sectionIcon}>📅</Text>
+          <Text style={[styles.bodyText, { color: colors.textMuted }]}>
+            {t('dashboard.activityLoading', { defaultValue: 'Loading activity…' })}
+          </Text>
+        </View>
+      </View>
+    )
+  }
+
+  // Error state: warn that activity status is unknown
+  if (error) {
+    return (
+      <View style={[styles.card, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} testID="recent-activity-error">
+        <View style={styles.sectionIconRow}>
+          <Text style={styles.sectionIcon}>📅</Text>
+          <Text style={[styles.bodyText, { color: colors.textMuted }]}>
+            {t('dashboard.activityUnavailable', { defaultValue: 'Recent activity unavailable' })}
+          </Text>
+        </View>
+      </View>
+    )
+  }
 
   if (!lastEncounterDate && !lastPrescriptionDate) {
     return (

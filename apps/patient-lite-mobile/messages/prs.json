@@ -281,6 +281,10 @@
     "lastVisit": "آخرین ویزیت: {{date}}",
     "lastPrescription": "آخرین نسخه: {{date}}",
     "noRecentActivity": "فعالیت اخیری وجود ندارد",
+    "medicationsLoading": "در حال بارگذاری داروها…",
+    "medicationsUnavailable": "داروها در دسترس نیست",
+    "activityLoading": "در حال بارگذاری فعالیت…",
+    "activityUnavailable": "فعالیت اخیر در دسترس نیست",
     "emptyTitle": "خوش آمدید",
     "emptySubtitle": "اطلاعات صحی شما پس از اولین ویزیت در اینجا نمایش داده می‌شود"
   }

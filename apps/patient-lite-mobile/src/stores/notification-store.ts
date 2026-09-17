@@ -36,6 +36,10 @@ export interface NotificationState {
   notifications: NotificationItem[]
   unreadCount: number
   isLoading: boolean
+  /** True once the first fetch OR cache load has completed (success or error). */
+  hasLoadedOnce: boolean
+  /** Non-null when the last fetch failed and no cached data is available. */
+  fetchError: string | null
   lastFetched: Date | null
 
   fetchNotifications: () => Promise<void>
@@ -84,10 +88,12 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
   unreadCount: 0,
   isLoading: false,
+  hasLoadedOnce: false,
+  fetchError: null,
   lastFetched: null,
 
   fetchNotifications: async () => {
-    set({ isLoading: true })
+    set({ isLoading: true, fetchError: null })
     try {
       const token = await getAuthToken()
       const { notifications: items } = await apiFetchNotifications(token)
@@ -106,10 +112,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       }
 
       const unreadCount = sorted.filter(n => n.status !== 'ACKNOWLEDGED').length
-      set({ notifications: sorted, unreadCount, isLoading: false, lastFetched: new Date() })
+      set({ notifications: sorted, unreadCount, isLoading: false, hasLoadedOnce: true, fetchError: null, lastFetched: new Date() })
     } catch {
       // Network failure — fall back to cache
-      set({ isLoading: false })
+      set({ isLoading: false, hasLoadedOnce: true, fetchError: 'Failed to load notifications' })
       if (get().notifications.length === 0) {
         await get().loadFromCache()
       }
@@ -117,15 +123,20 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   loadFromCache: async () => {
-    if (!isDatabaseOpen()) return
+    if (!isDatabaseOpen()) {
+      set({ hasLoadedOnce: true })
+      return
+    }
+    set({ isLoading: true })
     try {
       const db = await getEncryptedDbConnection()
       const rows = await getLocalNotifications(db)
       const items = rows.map(fromLocalNotification)
       const unreadCount = items.filter(n => n.status !== 'ACKNOWLEDGED').length
-      set({ notifications: items, unreadCount })
+      set({ notifications: items, unreadCount, isLoading: false, hasLoadedOnce: true })
     } catch {
       // Cache read failure is non-fatal
+      set({ isLoading: false, hasLoadedOnce: true })
     }
   },
 

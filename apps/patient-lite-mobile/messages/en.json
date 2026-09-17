@@ -281,6 +281,10 @@
     "lastVisit": "Last Visit: {{date}}",
     "lastPrescription": "Last Prescription: {{date}}",
     "noRecentActivity": "No recent activity",
+    "medicationsLoading": "Loading medications…",
+    "medicationsUnavailable": "Medications unavailable",
+    "activityLoading": "Loading activity…",
+    "activityUnavailable": "Recent activity unavailable",
     "emptyTitle": "Welcome",
     "emptySubtitle": "Your health information will appear here after your first visit"
   }

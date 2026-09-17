@@ -281,6 +281,10 @@
     "lastVisit": "آخر زيارة: {{date}}",
     "lastPrescription": "آخر وصفة: {{date}}",
     "noRecentActivity": "لا يوجد نشاط حديث",
+    "medicationsLoading": "جاري تحميل الأدوية…",
+    "medicationsUnavailable": "الأدوية غير متاحة",
+    "activityLoading": "جاري تحميل النشاط…",
+    "activityUnavailable": "النشاط الأخير غير متاح",
     "emptyTitle": "مرحباً",
     "emptySubtitle": "ستظهر معلوماتك الصحية هنا بعد زيارتك الأولى"
   }
