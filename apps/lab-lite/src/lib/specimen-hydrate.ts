@@ -45,7 +45,12 @@ function fromDto(dto: SpecimenPullDto): FhirSpecimen {
       ? { collection: { collector: { reference: dto.receivedFrom } } }
       : {}),
     meta: {
-      lastUpdated: dto.receivedTime ?? now,
+      // Use local hydration time — the hub DTO carries no real last-modified timestamp,
+      // and using receivedTime would falsely imply received == last-modified.
+      // Newer-wins logic relies on hlcTimestamp (below), not on this field.
+      lastUpdated: now,
+      // Rehydration placeholder: hub API doesn't expose version_id;
+      // newer-wins uses hlcTimestamp, not versionId.
       versionId: '1',
     },
     _ultranos: {

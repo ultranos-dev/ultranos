@@ -234,6 +234,23 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
       intervalRef.current = setInterval(fetchAndSort, REFRESH_INTERVAL_MS)
     }
 
+    // Re-fetch immediately when SyncProvider signals hydration is complete so
+    // restored samples appear on the worklist right away (not after the 60 s tick).
+    // fetchAndSort dedupes in-flight runs via inFlightRef, so concurrent fires are safe.
+    // SSR guard: window is not available in the Next.js server environment.
+    if (typeof window !== 'undefined') {
+      const onHydrated = () => { void fetchAndSort() }
+      window.addEventListener('lab-samples-hydrated', onHydrated)
+      return () => {
+        cancelledRef.current = true
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current)
+          intervalRef.current = null
+        }
+        window.removeEventListener('lab-samples-hydrated', onHydrated)
+      }
+    }
+
     return () => {
       cancelledRef.current = true
       if (intervalRef.current) {
