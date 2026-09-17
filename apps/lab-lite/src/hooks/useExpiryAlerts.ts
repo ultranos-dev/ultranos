@@ -20,7 +20,6 @@ export function useExpiryAlerts(): {
   criticalCount: number
   warningCount: number
   loading: boolean
-  error: boolean
   refresh: () => void
 } {
   const [alerts, setAlerts] = useState<ExpiryAlert[]>([])
@@ -70,5 +69,5 @@ export function useExpiryAlerts(): {
   const criticalCount = alerts.filter((a) => a.severity === 'critical').length
   const warningCount = alerts.filter((a) => a.severity === 'warning').length
 
-  return { alerts, criticalCount, warningCount, loading, error, refresh: runCheck }
+  return { alerts, criticalCount, warningCount, loading, refresh: runCheck }
 }

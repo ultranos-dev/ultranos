@@ -4,7 +4,7 @@
  *
  * Surfaces:
  * 1. useDriftAlerts — error field exposed; consumer renders unavailable, not silent-nothing
- * 2. useExpiryAlerts — catch added; error field exposed
+ * 2. useExpiryAlerts — catch added; error field removed (no consumer — WasteDashboardView builds alerts itself)
  * 3. QcHistoryView — load error shows unavailable, not empty
  * 4. StaffHealthDashboard — load error != access-denied
  * 5. DonorReportList — error from hook rendered, not silent-empty
@@ -139,6 +139,7 @@ describe('useDriftAlerts', () => {
 const mockGetActiveReagents = vi.hoisted(() => vi.fn())
 const mockGetConsumptionLog = vi.hoisted(() => vi.fn())
 const mockProjectExpiry = vi.hoisted(() => vi.fn())
+const mockGetDb = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/db', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>()
@@ -146,10 +147,8 @@ vi.mock('@/lib/db', async (importOriginal) => {
     ...actual,
     getActiveReagents: mockGetActiveReagents,
     getConsumptionLogForReagent: mockGetConsumptionLog,
-    // getDb needed by StaffHealthDashboard test
-    getDb: vi.fn().mockReturnValue({
-      employee_health_records: { toArray: vi.fn().mockResolvedValue([]) },
-    }),
+    // mockGetDb is used by StaffHealthDashboard (default) and useRecentPatients tests
+    getDb: mockGetDb,
   }
 })
 
@@ -171,22 +170,21 @@ describe('useExpiryAlerts', () => {
     mockProjectExpiry.mockReset()
   })
 
-  it('returns error=true when getActiveReagents throws', async () => {
+  it('returns loading=false and empty alerts when getActiveReagents throws', async () => {
+    // error field removed — hook swallows the throw and returns empty alerts
     mockGetActiveReagents.mockRejectedValue(new Error('IndexedDB unavailable'))
     const { result } = renderHook(() => useExpiryAlerts())
 
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(result.current.error).toBe(true)
     expect(result.current.alerts).toHaveLength(0)
   })
 
-  it('returns error=false and empty alerts when no reagents expire early', async () => {
+  it('returns loading=false and empty alerts when no reagents expire early', async () => {
     mockGetActiveReagents.mockResolvedValue([])
     mockProjectExpiry.mockReturnValue(null)
     const { result } = renderHook(() => useExpiryAlerts())
 
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(result.current.error).toBe(false)
     expect(result.current.alerts).toHaveLength(0)
   })
 })
@@ -283,6 +281,10 @@ import { StaffHealthDashboard } from '@/components/safety/StaffHealthDashboard'
 describe('StaffHealthDashboard', () => {
   beforeEach(() => {
     mockGetAllStaffReminders.mockReset()
+    // Default getDb for StaffHealthDashboard (employee_health_records)
+    mockGetDb.mockReturnValue({
+      employee_health_records: { toArray: vi.fn().mockResolvedValue([]) },
+    })
   })
 
   it('shows loadError UI (not accessDenied) when DB throws for an authenticated manager', async () => {
@@ -381,19 +383,6 @@ describe('DonorReportList', () => {
 // ---------------------------------------------------------------------------
 // Surface 6: useRecentPatients — loading field distinguishable from empty
 // ---------------------------------------------------------------------------
-
-const mockGetDb = vi.hoisted(() => vi.fn())
-
-// Override the getDb mock set above with a more controllable version
-vi.mock('@/lib/db', async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>()
-  return {
-    ...actual,
-    getActiveReagents: mockGetActiveReagents,
-    getConsumptionLogForReagent: mockGetConsumptionLog,
-    getDb: mockGetDb,
-  }
-})
 
 import { useRecentPatients } from '@/hooks/useRecentPatients'
 
