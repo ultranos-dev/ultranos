@@ -214,7 +214,8 @@
     "detailNotFound": "Alert not found",
     "noAlertsDescription": "No prescribing anomaly alerts match the current filter.",
     "noReports": "No monthly reports generated yet.",
-    "reportsUnavailable": "Monthly reports unavailable — could not load."
+    "reportsUnavailable": "Monthly reports unavailable — could not load.",
+    "reportsLoading": "Loading monthly reports…"
   },
   "audit": {
     "pageTitle": "Audit Log",

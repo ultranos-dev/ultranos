@@ -136,6 +136,7 @@ function ClinicalSafetySection() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reportsError, setReportsError] = useState(false)
+  const [reportsLoading, setReportsLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
@@ -143,6 +144,7 @@ function ClinicalSafetySection() {
         setLoading(true)
         setError(null)
         setReportsError(false)
+        setReportsLoading(true)
         // Fetch metrics and reports independently so a reports failure doesn't
         // hide metrics, and an empty reports list is distinguished from an error.
         const metricsResult = await trpc.admin.getClinicalSafetyMetrics.query()
@@ -152,9 +154,12 @@ function ClinicalSafetySection() {
           setReports(result.reports)
         }).catch(() => {
           setReportsError(true)
+        }).finally(() => {
+          setReportsLoading(false)
         })
       } catch (err: unknown) {
         setError((err as Error)?.message ?? 'Failed to load clinical safety metrics')
+        setReportsLoading(false)
       } finally {
         setLoading(false)
       }
@@ -207,7 +212,9 @@ function ClinicalSafetySection() {
       {/* Monthly reports list */}
       <div>
         <h3 className="text-lg font-semibold text-foreground">Monthly Reports</h3>
-        {reportsError ? (
+        {reportsLoading ? (
+          <div className="mt-2 text-sm text-muted-foreground">{t('reportsLoading')}</div>
+        ) : reportsError ? (
           <div className="mt-2">
             <EmptyState size="sm" icon={FileText} title={t('reportsUnavailable')} />
           </div>

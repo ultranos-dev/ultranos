@@ -477,6 +477,30 @@ describe('Surface 6 — Alerts ClinicalSafetySection', () => {
     })
     expect(screen.queryByText('Monthly reports unavailable — could not load.')).not.toBeInTheDocument()
   })
+
+  it('while reports fetch is pending, does NOT show "no reports" empty state (reportsLoading gate)', async () => {
+    // Metrics resolve immediately; reports are held pending (deferred promise)
+    mockGetClinicalSafetyMetrics.mockResolvedValue(MOCK_METRICS)
+    mockListClinicalSafetyReports.mockReturnValue(new Promise(() => {})) // never resolves
+
+    const user = userEvent.setup()
+    render(<AlertsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Clinical Safety')).toBeInTheDocument()
+    })
+    await user.click(screen.getByText('Clinical Safety'))
+
+    // Metrics section should be visible once metrics resolve
+    await waitFor(() => {
+      expect(screen.getByText('Interaction Check Completion (24h)')).toBeInTheDocument()
+    })
+
+    // The "no reports" empty state must NOT appear while reports are still loading
+    expect(screen.queryByText('No monthly reports generated yet.')).not.toBeInTheDocument()
+    // The loading indicator should be shown instead
+    expect(screen.getByText('Loading monthly reports…')).toBeInTheDocument()
+  })
 })
 
 // ════════════════════════════════════════════════════════════════
