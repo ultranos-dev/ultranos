@@ -33,4 +33,11 @@ describe('QuarantinePage', () => {
     render(<QuarantinePage />)
     expect(await screen.findByText('quarantineEmpty')).toBeInTheDocument()
   })
+  it('shows unavailable error state (not empty/"clear") when load fails', async () => {
+    getQuarantinedBatches.mockRejectedValue(new Error('DB offline'))
+    render(<QuarantinePage />)
+    // Error state must appear; the false-clear "quarantineEmpty" must NOT appear
+    expect(await screen.findByTestId('quarantine-error')).toBeInTheDocument()
+    expect(screen.queryByText('quarantineEmpty')).not.toBeInTheDocument()
+  })
 })

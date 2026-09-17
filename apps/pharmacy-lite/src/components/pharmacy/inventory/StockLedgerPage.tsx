@@ -21,17 +21,32 @@ export function StockLedgerPage() {
   const [typeFilter, setTypeFilter] = useState<StockMovementType | ''>('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
     async function load() {
-      const [m, cat] = await Promise.all([
-        queryMovements({ type: typeFilter || undefined, from: from || undefined, to: to ? `${to}T23:59:59.999Z` : undefined, limit: 500 }),
-        db.catalogItems.toArray(),
-      ])
-      setMoves(m)
-      setItems(new Map(cat.map((c) => [c.id, c])))
+      setLoading(true)
+      setLoadError(false)
+      try {
+        const [m, cat] = await Promise.all([
+          queryMovements({ type: typeFilter || undefined, from: from || undefined, to: to ? `${to}T23:59:59.999Z` : undefined, limit: 500 }),
+          db.catalogItems.toArray(),
+        ])
+        if (!cancelled) {
+          setMoves(m)
+          setItems(new Map(cat.map((c) => [c.id, c])))
+        }
+      } catch (err) {
+        if (!cancelled) setLoadError(true)
+        console.error('[StockLedgerPage] load failed:', err instanceof Error ? err.message : 'unknown')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
-    load()
+    void load()
+    return () => { cancelled = true }
   }, [typeFilter, from, to])
 
   const filtered = useMemo(() => {
@@ -62,7 +77,21 @@ export function StockLedgerPage() {
       </div>
 
       <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div
+            data-testid="ledger-loading"
+            className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground"
+          >
+            {t('loading')}
+          </div>
+        ) : loadError ? (
+          <div
+            data-testid="ledger-error"
+            className="flex min-h-[16rem] items-center justify-center"
+          >
+            <EmptyState icon={FileSearch} title={t('loadError')} />
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex min-h-[16rem] items-center justify-center">
             <EmptyState icon={FileSearch} title={t('ledgerEmptyTitle')} description={t('ledgerEmptyDescription')} />
           </div>

@@ -52,27 +52,38 @@ export function StockTable({
   const [adjustRow, setAdjustRow] = useState<StockRow | null>(null)
   const [disposeRow, setDisposeRow] = useState<StockRow | null>(null)
   const [historyRow, setHistoryRow] = useState<StockRow | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   const load = useCallback(async () => {
-    const [batches, items, settings] = await Promise.all([
-      db.stockBatches.toArray(),
-      db.catalogItems.toArray(),
-      db.pharmacySettings.toCollection().first(),
-    ])
-    const itemMap = new Map(items.map((item) => [item.id, item]))
-    const newRows = batches.map((batch) => ({ batch, catalogItem: itemMap.get(batch.catalogItemId) }))
-    setRows(newRows)
-    if (settings) {
-      setCurrency(settings.currency)
-      setCurrencyMinorUnits(settings.currencyMinorUnits)
-    }
+    setLoading(true)
+    setLoadError(false)
+    try {
+      const [batches, items, settings] = await Promise.all([
+        db.stockBatches.toArray(),
+        db.catalogItems.toArray(),
+        db.pharmacySettings.toCollection().first(),
+      ])
+      const itemMap = new Map(items.map((item) => [item.id, item]))
+      const newRows = batches.map((batch) => ({ batch, catalogItem: itemMap.get(batch.catalogItemId) }))
+      setRows(newRows)
+      if (settings) {
+        setCurrency(settings.currency)
+        setCurrencyMinorUnits(settings.currencyMinorUnits)
+      }
 
-    // Compute WAC per distinct catalogItemId (deduplicated calls)
-    const distinctIds = Array.from(new Set(batches.map((b) => b.catalogItemId)))
-    const wacResults = await Promise.all(distinctIds.map((id) => getWac(id)))
-    const newWacMap = new Map<string, number | null>()
-    distinctIds.forEach((id, i) => newWacMap.set(id, wacResults[i] ?? null))
-    setWacMap(newWacMap)
+      // Compute WAC per distinct catalogItemId (deduplicated calls)
+      const distinctIds = Array.from(new Set(batches.map((b) => b.catalogItemId)))
+      const wacResults = await Promise.all(distinctIds.map((id) => getWac(id)))
+      const newWacMap = new Map<string, number | null>()
+      distinctIds.forEach((id, i) => newWacMap.set(id, wacResults[i] ?? null))
+      setWacMap(newWacMap)
+    } catch (err) {
+      setLoadError(true)
+      console.error('[StockTable] load failed:', err instanceof Error ? err.message : 'unknown')
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -133,7 +144,21 @@ export function StockTable({
 
   return (
     <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div
+          data-testid="stock-table-loading"
+          className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground"
+        >
+          {t('loading')}
+        </div>
+      ) : loadError ? (
+        <div
+          data-testid="stock-table-error"
+          className="flex min-h-[16rem] items-center justify-center"
+        >
+          <EmptyState icon={Package} title={t('loadError')} />
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="flex min-h-[16rem] items-center justify-center">
           <EmptyState
             icon={filtersActive ? FileSearch : Package}

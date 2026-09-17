@@ -268,6 +268,27 @@ describe('PrescriptionQueueView', () => {
     })
   })
 
+  it('does NOT show empty state while loading — shows loading placeholder first', async () => {
+    // Simulate a slow Dexie query: hold the promise until we check the loading state
+    let resolve!: () => void
+    mockGetActiveItems.mockReturnValue(new Promise<[]>((res) => { resolve = () => res([]) }))
+
+    const { PrescriptionQueueView } = await import(
+      '@/components/pharmacy/PrescriptionQueueView'
+    )
+    render(<PrescriptionQueueView />)
+
+    // Loading placeholder must be visible; empty state must NOT be visible
+    expect(screen.getByTestId('queue-loading')).toBeInTheDocument()
+    expect(screen.queryByText('noActive')).not.toBeInTheDocument()
+
+    // Settle the query
+    resolve()
+    await waitFor(() => {
+      expect(screen.queryByTestId('queue-loading')).not.toBeInTheDocument()
+    })
+  })
+
   it('shows empty state when no items in tab', async () => {
     await renderQueue()
 
@@ -300,7 +321,7 @@ describe('PrescriptionQueueView', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toBeInTheDocument()
     })
-    expect(screen.getByRole('alert')).toHaveTextContent(/failed to load/i)
+    expect(screen.getByRole('alert')).toHaveTextContent(/loadError/i)
   })
 })
 

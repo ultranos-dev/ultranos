@@ -6,6 +6,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 // NextIntlClientProvider + messages={en} wrapper pattern the brief prescribes.
 vi.mock('next-intl', async () => await vi.importActual('next-intl'))
 
+const mockQueryMovements = vi.fn()
+vi.mock('@/lib/inventory/stock-movement', () => ({
+  queryMovements: (...args: unknown[]) => mockQueryMovements(...args),
+}))
+
 import { NextIntlClientProvider } from 'next-intl'
 import en from '../../messages/en.json'
 import { db } from '@/lib/db'
@@ -23,12 +28,18 @@ function mv(id: string, o: Partial<StockMovement>): StockMovement {
 }
 
 beforeEach(async () => {
+  mockQueryMovements.mockReset()
   await db.stockMovements.clear(); await db.catalogItems.clear()
   await db.catalogItems.put(ITEM)
   await db.stockMovements.bulkPut([
     mv('m1', { type: 'disposed', reasonCode: 'expired' }),
     mv('m2', { type: 'received', quantity: 50, timestamp: '2026-02-01T00:00:00.000Z' }),
   ])
+  // Default: delegate to real DB via stock-movement (we only override when testing error)
+  mockQueryMovements.mockImplementation(async (opts: Record<string, unknown>) => {
+    const { queryMovements: realQuery } = await vi.importActual<typeof import('@/lib/inventory/stock-movement')>('@/lib/inventory/stock-movement')
+    return realQuery(opts as Parameters<typeof realQuery>[0])
+  })
 })
 
 function renderPage() {
@@ -43,6 +54,24 @@ describe('StockLedgerPage', () => {
     await waitFor(() => expect(screen.getAllByText('Paracetamol').length).toBeGreaterThan(0))
     expect(screen.getAllByText('Disposed').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Received').length).toBeGreaterThan(0)
+  })
+
+  it('does NOT show empty state while loading — shows loading placeholder first', async () => {
+    let resolve!: () => void
+    mockQueryMovements.mockReturnValue(new Promise<[]>((res) => { resolve = () => res([]) }))
+    renderPage()
+    expect(screen.getByTestId('ledger-loading')).toBeInTheDocument()
+    expect(screen.queryByText('No stock movements')).not.toBeInTheDocument()
+    resolve()
+    await waitFor(() => expect(screen.queryByTestId('ledger-loading')).not.toBeInTheDocument())
+  })
+
+  it('shows unavailable error state (not empty) when load fails', async () => {
+    mockQueryMovements.mockRejectedValue(new Error('DB error'))
+    renderPage()
+    await waitFor(() => expect(screen.getByTestId('ledger-error')).toBeInTheDocument())
+    // The genuine empty-state title "No stock movements" must NOT appear on error
+    expect(screen.queryByText('No stock movements')).not.toBeInTheDocument()
   })
 
   it('filters by movement type', async () => {

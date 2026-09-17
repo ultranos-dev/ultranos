@@ -26,6 +26,7 @@ export function PrescriptionQueueView() {
   const [completedItems, setCompletedItems] = useState<QueueItem[]>([])
   const [failedItems, setFailedItems] = useState<QueueItem[]>([])
   const [retryingId, setRetryingId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const TABS: { id: TabId; label: string }[] = [
@@ -35,6 +36,7 @@ export function PrescriptionQueueView() {
   ]
 
   const loadData = useCallback(async () => {
+    setLoading(true)
     try {
       setError(null)
       const [active, completed, failed] = await Promise.all([
@@ -46,10 +48,12 @@ export function PrescriptionQueueView() {
       setCompletedItems(completed)
       setFailedItems(failed)
     } catch (err) {
-      setError('Failed to load queue data. Please try refreshing.')
+      setError(t('loadError'))
       console.error('[PrescriptionQueueView] loadData failed:', err instanceof Error ? err.message : 'unknown')
+    } finally {
+      setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     loadData()
@@ -205,7 +209,14 @@ export function PrescriptionQueueView() {
         id={`tabpanel-${activeTab}`}
         aria-labelledby={`tab-${activeTab}`}
       >
-        {currentItems.length === 0 ? (
+        {loading ? (
+          <div
+            data-testid="queue-loading"
+            className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 text-sm text-muted-foreground"
+          >
+            {t('loading')}
+          </div>
+        ) : currentItems.length === 0 ? (
           <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
             <EmptyState
               icon={filtersActive ? FileSearch : List}
