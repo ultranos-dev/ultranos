@@ -151,10 +151,54 @@ describe('EncounterHistoryList', () => {
     await db.medications.clear()
     await db.observations.clear()
     await db.allergyIntolerances.clear()
+    // Reset sync store lastSyncedAt so tests start with no sync history
+    const { useSyncStore } = await import('../stores/sync-store')
+    useSyncStore.setState({ lastSyncedAt: null })
     resetStores()
   })
 
+  // NOTE: The "Dexie read throws → unavailable" test is in the sibling file
+  // encounter-history-list-error.test.tsx (uses full db mock for isolation).
+
+  // ------------------------------------------------------------------
+  // Bug 2b: Empty local + no sync confirmation → "may be incomplete" warning
+  // ------------------------------------------------------------------
+  it('shows may-be-incomplete warning when local is empty and no sync has run', async () => {
+    // No encounters in Dexie, globalLastSyncedAt is null (no sync yet)
+    render(<EncounterHistoryList patientId={TEST_PATIENT_ID} />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('encounters-unsynced')).toBeTruthy()
+    })
+    expect(screen.queryByTestId('no-encounters')).toBeNull()
+    expect(screen.queryByTestId('encounters-unavailable')).toBeNull()
+    expect(screen.getByText(/encountersMayBeIncomplete/)).toBeTruthy()
+  })
+
+  // ------------------------------------------------------------------
+  // Confirmed empty after sync → legitimate "No encounters" EmptyState
+  // ------------------------------------------------------------------
+  it('shows genuine empty state when no encounters exist and sync has run', async () => {
+    // Simulate a prior successful sync
+    const { useSyncStore } = await import('../stores/sync-store')
+    useSyncStore.setState({ lastSyncedAt: '2026-09-01T10:00:00Z' })
+
+    render(<EncounterHistoryList patientId={TEST_PATIENT_ID} />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('no-encounters')).toBeTruthy()
+    })
+    expect(screen.queryByTestId('encounters-unsynced')).toBeNull()
+    expect(screen.queryByTestId('encounters-unavailable')).toBeNull()
+  })
+
+  // ------------------------------------------------------------------
+  // Original "no encounters" test — now requires a sync timestamp
+  // ------------------------------------------------------------------
   it('shows empty state when no encounters exist', async () => {
+    const { useSyncStore } = await import('../stores/sync-store')
+    useSyncStore.setState({ lastSyncedAt: '2026-09-01T10:00:00Z' })
+
     render(<EncounterHistoryList patientId={TEST_PATIENT_ID} />)
 
     await waitFor(() => {

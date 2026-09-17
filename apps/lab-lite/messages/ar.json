@@ -131,6 +131,7 @@
     "qrVerificationFailed": "فشل التحقّق من رمز QR",
     "verificationFailed": "فشل التحقّق من المريض",
     "recentPatients": "المرضى الأخيرون",
+    "recentPatientsLoading": "جارٍ تحميل المرضى الأخيرين…",
     "noRecentPatients": "لا توجد مرضى مؤخراً",
     "yearsOld": "{age} سنة",
     "searchPatients": "البحث عن المرضى",
@@ -183,7 +184,8 @@
     "supervisor": {
       "incompleteCount": "{count} incomplete verifications",
       "expand": "Show details",
-      "collapse": "Hide details"
+      "collapse": "Hide details",
+      "loadError": "تعذّر تحميل حالة التحقق — تحقق يدويًا"
     }
   },
   "metadata": {
@@ -606,7 +608,10 @@
     "loading": "جارٍ تحميل الطلبات…",
     "noResultsTitle": "لا توجد طلبات مطابقة",
     "noResultsDescription": "لا توجد طلبات تطابق عوامل التصفية الحالية.",
-    "clearFilters": "مسح عوامل التصفية"
+    "clearFilters": "مسح عوامل التصفية",
+    "unavailableTitle": "تعذّر تحميل الطلبات",
+    "unavailableDescription": "الخادم غير متاح. تحقق من اتصالك وحاول مجددًا.",
+    "retry": "إعادة المحاولة"
   },
   "settings": {
     "title": "الإعدادات",
@@ -941,7 +946,8 @@
           "warning": "تحذير"
         },
         "daysUntilExpiry": "{days} يوم حتى انتهاء الصلاحية",
-        "projectedLoss": "خسارة متوقعة {loss} أفغاني"
+        "projectedLoss": "خسارة متوقعة {loss} أفغاني",
+        "expiryAlertsUnavailable": "بيانات تنبيهات الانتهاء غير متوفرة. تحقق من حالة الكاشف يدوياً."
       },
       "alerts": {
         "criticalTitle": "حرج — ينتهي في {days} يوم",
@@ -1233,6 +1239,74 @@
         "stepsCompleted": "{count} خطوات مكتملة",
         "stepN": "الخطوة {n}"
       }
+    },
+    "temperature": {
+      "dashboardTitle": "مراقبة درجات الحرارة",
+      "noLocations": "لا توجد مواقع مراقبة مكوّنة",
+      "loadError": "تعذّر تحميل بيانات درجات الحرارة",
+      "retry": "إعادة المحاولة",
+      "noReadings": "لا توجد قراءات بعد",
+      "lastReading": "آخر قراءة",
+      "source": "المصدر",
+      "bleSensor": "مستشعر BLE",
+      "manual": "يدوي",
+      "range": "النطاق المستهدف",
+      "readingOverdue": "القراءة متأخرة",
+      "logReading": "تسجيل قراءة",
+      "trend": "الاتجاه",
+      "trendTitle": "الاتجاه",
+      "close": "إغلاق",
+      "excursionAlert": "انحراف في درجة الحرارة",
+      "peakTemp": "الذروة",
+      "duration": "المدة",
+      "minutes": "دقيقة",
+      "connectSensor": "توصيل مستشعر",
+      "status": {
+        "green": "طبيعي",
+        "amber": "قريب من الحد",
+        "red": "خارج النطاق"
+      }
+    },
+    "waste": {
+      "title": "حاويات النفايات",
+      "activateNew": "تفعيل حاوية جديدة",
+      "empty": "لا توجد حاويات مسجلة",
+      "loadError": "تعذّر تحميل بيانات حاويات النفايات",
+      "retry": "إعادة المحاولة",
+      "fillLevel": "مستوى الامتلاء",
+      "daysActive": "{days} أيام نشطة",
+      "type": {
+        "SHARPS": "حاد",
+        "BIOHAZARD": "خطر بيولوجي",
+        "CHEMICAL": "كيميائي",
+        "GENERAL": "عام"
+      },
+      "status": {
+        "ACTIVE": "نشط",
+        "FULL": "ممتلئ",
+        "DISPOSED": "تمت إزالته"
+      }
+    },
+    "health": {
+      "staffDashboard": "لوحة صحة الكوادر",
+      "totalStaff": "إجمالي الكوادر",
+      "hepBImmunity": "المناعة من التهاب الكبد B",
+      "tbCurrent": "فحص السل ساري المفعول",
+      "overdueScreenings": "الفحوصات المتأخرة",
+      "noStaffRecords": "لا توجد سجلات صحية للكوادر.",
+      "upToDate": "محدَّث",
+      "reminderCount": "{count} تذكير(ات)",
+      "accessDenied": "الوصول مرفوض",
+      "labManagerRequired": "هذه اللوحة متاحة لمديري المختبرات فقط.",
+      "loadError": "تعذّر تحميل بيانات صحة الكوادر. حاول مجدداً."
+    }
+  },
+  "chw": {
+    "log": {
+      "title": "العينات المجمعة اليوم",
+      "countBadge": "{count} عينات مجمعة",
+      "empty": "لا توجد عينات مجمعة اليوم",
+      "loadError": "تعذّر تحميل سجل العينات"
     }
   },
   "patientQueue": {
@@ -2876,7 +2950,8 @@
     "cancel": "إلغاء",
     "invalidPeriod": "يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء",
     "existingDraft": "يوجد تقرير مسودة بالفعل لهذا البرنامج والفترة.",
-    "overwriteDraft": "إنشاء جديد"
+    "overwriteDraft": "إنشاء جديد",
+    "loadError": "تعذّر تحميل التقارير. حاول مجدداً."
   },
   "certification": {
     "pageTitle": "مسیر گواهینامه من",
@@ -3499,7 +3574,9 @@
     "noResultsDescription": "لا توجد إحالات تطابق عوامل التصفية الحالية.",
     "clearFilters": "مسح عوامل التصفية",
     "actionUpdateStatus": "تحديث الحالة",
-    "actionImportResult": "استيراد النتيجة"
+    "actionImportResult": "استيراد النتيجة",
+    "loadError": "تعذّر تحميل الإرساليات",
+    "retry": "إعادة المحاولة"
   },
   "outbreak": {
     "activateAriaLabel": "تفعيل وضع التفشي",
@@ -3790,7 +3867,9 @@
       "activeAlert": "{count, plural, one {# تصعيد نشط يحتاج إلى انتباه.} other {# تصعيدات نشطة تحتاج إلى انتباه.}}",
       "searchPlaceholder": "البحث في التصعيدات…",
       "noResults": "لا توجد تصعيدات مطابقة",
-      "clearSearch": "مسح البحث"
+      "clearSearch": "مسح البحث",
+      "loadError": "تعذّر تحميل بيانات التصعيد",
+      "retry": "إعادة المحاولة"
     }
   },
   "logbook": {
@@ -3818,6 +3897,51 @@
     "authStatus": "الحالة",
     "loadMore": "تحميل المزيد",
     "clearFilters": "مسح عوامل التصفية"
+  },
+  "qc": {
+    "driftUnavailable": "بيانات تنبيهات انجراف مراقبة الجودة غير متوفرة — تحقق من حالة مراقبة الجودة يدوياً.",
+    "driftRejectTitle": "مراقبة الجودة خارج نطاق السيطرة",
+    "driftWarningTitle": "تحذير مراقبة الجودة",
+    "acknowledge": "الإقرار",
+    "acknowledgeAlert": "الإقرار بالتنبيه",
+    "viewHistory": "عرض سجل مراقبة الجودة",
+    "viewQcHistory": "عرض سجل مراقبة الجودة",
+    "acknowledgeAlertTitle": "الإقرار بتنبيه الانجراف",
+    "resolutionActionLabel": "إجراء الحل",
+    "resolutionRequired": "الرجاء تحديد إجراء الحل",
+    "notesLabel": "ملاحظات",
+    "optional": "اختياري",
+    "notesPlaceholder": "أضف ملاحظات…",
+    "cancel": "إلغاء",
+    "confirmAcknowledge": "تأكيد",
+    "acknowledging": "جارٍ الإقرار…",
+    "acknowledgeError": "فشل الإقرار بالتنبيه",
+    "result": {
+      "pass": "نجاح",
+      "fail": "فشل"
+    },
+    "history": {
+      "loading": "جارٍ تحميل سجل مراقبة الجودة…",
+      "empty": "لم يُسجَّل أي تشغيل لمراقبة الجودة بعد.",
+      "loadError": "تعذّر تحميل سجل مراقبة الجودة. حاول مجدداً.",
+      "title": "سجل مراقبة الجودة — {analyte}",
+      "tableLabel": "سجل تشغيل مراقبة الجودة لـ {analyte}",
+      "chartLegend": "أخضر = المتوسط · عنبري = ±2SD · أحمر = ±3SD",
+      "col": {
+        "date": "التاريخ",
+        "controlLevel": "مستوى التحكم",
+        "measuredValues": "القيم المقاسة",
+        "expectedRange": "النطاق المتوقع",
+        "result": "النتيجة",
+        "tech": "الفني"
+      }
+    },
+    "resolution": {
+      "recalibrated": "إعادة المعايرة",
+      "maintenancePerformed": "الصيانة أُجريت",
+      "falseAlarmVerified": "إنذار كاذب تم التحقق منه",
+      "deferredToSupervisor": "أُحيل إلى المشرف"
+    }
   },
   "attachments": {
     "dropZoneLabel": "إرفاق ملفات — صور أو مستندات PDF",

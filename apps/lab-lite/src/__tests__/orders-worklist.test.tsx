@@ -1,3 +1,4 @@
+import 'fake-indexeddb/auto'
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -8,6 +9,9 @@ const ordersMessages: Record<string, any> = {
   title: 'Test Orders',
   emptyState: 'No test orders',
   refresh: 'Refresh',
+  unavailableTitle: 'Unable to load orders',
+  unavailableDescription: 'The server is unreachable. Check your connection and try again.',
+  retry: 'Retry',
   filters: {
     all: 'All',
     received: 'Received',
@@ -230,9 +234,63 @@ describe('OrderCard', () => {
 })
 
 describe('OrdersWorklist', () => {
-  it('renders empty state when no orders', () => {
-    render(<OrdersWorklist orders={[]} loading={false} />)
+  it('renders empty state when no orders (loaded, no error)', () => {
+    render(<OrdersWorklist orders={[]} loading={false} error={null} />)
     expect(screen.getByText('No test orders')).toBeDefined()
+  })
+
+  it('does NOT render empty state while still loading — stays in loading state', () => {
+    render(<OrdersWorklist orders={[]} loading={true} error={null} />)
+    // Must NOT show the genuine-empty text while loading
+    expect(screen.queryByText('No test orders')).toBeNull()
+    // Must show loading indicator
+    const container = document.querySelector('[aria-busy="true"]')
+    expect(container).not.toBeNull()
+  })
+
+  it('renders unavailable/error state (not "No test orders") when error and no data', () => {
+    render(
+      <OrdersWorklist
+        orders={[]}
+        loading={false}
+        error="Hub unreachable — unable to load orders"
+        onRefresh={() => {}}
+      />,
+    )
+    // Must show the unavailable title — NOT the genuine-empty "No test orders"
+    expect(screen.getByText('Unable to load orders')).toBeDefined()
+    expect(screen.queryByText('No test orders')).toBeNull()
+  })
+
+  it('renders data (not unavailable) when error is set but cached orders exist', () => {
+    const order = makeOrder()
+    render(
+      <OrdersWorklist
+        orders={[order]}
+        loading={false}
+        error={null}
+        onRefresh={() => {}}
+      />,
+    )
+    expect(screen.queryByText('Unable to load orders')).toBeNull()
+    expect(screen.queryByText('No test orders')).toBeNull()
+    expect(screen.getByText('Ahmad')).toBeDefined()
+  })
+
+  it('renders a Retry button in the unavailable state that calls onRefresh', async () => {
+    const mockRefresh = vi.fn()
+    const user = userEvent.setup()
+    render(
+      <OrdersWorklist
+        orders={[]}
+        loading={false}
+        error="Hub unreachable — unable to load orders"
+        onRefresh={mockRefresh}
+      />,
+    )
+    const retryBtn = screen.getByRole('button', { name: 'Retry' })
+    await user.click(retryBtn)
+    expect(mockRefresh).toHaveBeenCalledOnce()
   })
 
   it('renders loading skeletons when loading', () => {

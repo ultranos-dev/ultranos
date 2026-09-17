@@ -9,7 +9,8 @@ import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { Card } from '@/components/Card'
 import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { CalendarClock } from '@ultranos/ui-kit/icons'
+import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
+import { CalendarClock, AlertTriangle } from '@ultranos/ui-kit/icons'
 
 interface RecentEncounter {
   id: string
@@ -68,9 +69,15 @@ export function RecentEncountersList() {
   const t = useTranslations('dashboard')
   const unknownPatient = t('unknownPatient')
   const [encounters, setEncounters] = useState<RecentEncounter[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const activeEncounter = useEncounterStore((s) => s.activeEncounter)
 
   useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setLoadError(false)
+
     async function loadRecent() {
       try {
         const recent = await db.encounters
@@ -120,18 +127,44 @@ export function RecentEncountersList() {
           })
         )
 
-        setEncounters(items)
+        if (!cancelled) setEncounters(items)
       } catch {
-        // Dexie unavailable
+        // Dexie unavailable — surface error; never collapse to a false empty.
+        if (!cancelled) setLoadError(true)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
 
-    loadRecent()
-  }, [activeEncounter])
+    void loadRecent()
+    return () => { cancelled = true }
+  }, [activeEncounter, unknownPatient])
+
+  if (loading) {
+    return (
+      <Card data-testid="recent-encounters-loading">
+        <h3 className="text-lg font-semibold text-foreground">{t('recentEncounters')}</h3>
+        <div className="mt-3 space-y-2">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-4/5" />
+        </div>
+      </Card>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <Card data-testid="recent-encounters-error">
+        <h3 className="text-lg font-semibold text-foreground">{t('recentEncounters')}</h3>
+        <EmptyState size="sm" icon={AlertTriangle} title={t('encountersUnavailable')} />
+      </Card>
+    )
+  }
 
   if (encounters.length === 0) {
     return (
-      <Card>
+      <Card data-testid="recent-encounters-empty">
         <h3 className="text-lg font-semibold text-foreground">{t('recentEncounters')}</h3>
         <EmptyState size="sm" icon={CalendarClock} title={t('noEncountersYet')} />
       </Card>

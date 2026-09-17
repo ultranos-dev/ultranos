@@ -63,6 +63,7 @@ export function WasteDashboardView() {
   const [allReagents, setAllReagents] = useState<ReagentInventoryEntry[]>([])
   const [activeReagents, setActiveReagents] = useState<ReagentInventoryEntry[]>([])
   const [expiryAlerts, setExpiryAlerts] = useState<ExpiryAlert[]>([])
+  const [expiryLoadError, setExpiryLoadError] = useState(false)
   const [period, setPeriod] = useState<Period>('this-month')
   const [loading, setLoading] = useState(true)
 
@@ -70,28 +71,34 @@ export function WasteDashboardView() {
 
   const loadData = useCallback(async () => {
     setLoading(true)
+    setExpiryLoadError(false)
     try {
       const [all, active] = await Promise.all([getAllReagents(), getActiveReagents()])
       setAllReagents(all)
       setActiveReagents(active)
 
-      // Build expiry alerts
-      const alerts: ExpiryAlert[] = []
-      for (const entry of active) {
-        const log = await getConsumptionLogForReagent(entry.reagentId)
-        const projection = projectExpiryBeforeDepletion(entry, log, today)
-        if (projection) {
-          alerts.push(generateExpiryAlert(entry, projection))
+      // Build expiry alerts — catch separately so a DB error here renders
+      // "unavailable" rather than silently showing zero expiry alerts.
+      try {
+        const alerts: ExpiryAlert[] = []
+        for (const entry of active) {
+          const log = await getConsumptionLogForReagent(entry.reagentId)
+          const projection = projectExpiryBeforeDepletion(entry, log, today)
+          if (projection) {
+            alerts.push(generateExpiryAlert(entry, projection))
+          }
         }
+        // Sort: critical first, then by daysUntilExpiry ascending
+        alerts.sort((a, b) => {
+          if (a.severity !== b.severity) {
+            return a.severity === 'critical' ? -1 : 1
+          }
+          return a.daysUntilExpiry - b.daysUntilExpiry
+        })
+        setExpiryAlerts(alerts)
+      } catch {
+        setExpiryLoadError(true)
       }
-      // Sort: critical first, then by daysUntilExpiry ascending
-      alerts.sort((a, b) => {
-        if (a.severity !== b.severity) {
-          return a.severity === 'critical' ? -1 : 1
-        }
-        return a.daysUntilExpiry - b.daysUntilExpiry
-      })
-      setExpiryAlerts(alerts)
     } finally {
       setLoading(false)
     }
@@ -189,8 +196,18 @@ export function WasteDashboardView() {
         />
       </div>
 
-      {/* Expiry alerts panel */}
-      {expiryAlerts.length > 0 && (
+      {/* Expiry alerts panel — show unavailable on error, alerts on success */}
+      {expiryLoadError && (
+        <div
+          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+          role="alert"
+          aria-live="polite"
+          data-testid="expiry-alerts-unavailable"
+        >
+          {t('expiryAlertsUnavailable')}
+        </div>
+      )}
+      {!expiryLoadError && expiryAlerts.length > 0 && (
         <section aria-labelledby="expiry-alerts-heading">
           <h2
             id="expiry-alerts-heading"

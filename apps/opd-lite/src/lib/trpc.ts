@@ -1,7 +1,7 @@
 import type { DrugSearchResult, FhirPatient, FhirAllergyIntolerance, PharmacyDirectoryEntry, LabDirectoryEntry, LabOrderStatus } from '@ultranos/shared-types'
 import { getHubTrpcUrl, getHubBaseUrl } from '@/lib/hub-url'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
-import { toFhirAllergyIntolerance } from '@/lib/sync-pull'
+import { toFhirAllergyIntolerance, toFhirMedicationStatement } from '@/lib/sync-pull'
 
 export interface PatientSearchResult {
   patients: FhirPatient[]
@@ -687,5 +687,43 @@ export async function fetchLabOrderStatuses(ids: string[]): Promise<LabOrderStat
     return body.result?.data?.json ?? []
   } catch {
     return []
+  }
+}
+
+/**
+ * Fetch active MedicationStatements for a patient from the Hub
+ * (medicationStatement.listActive), re-shaped into nested FHIR via toFhirMedicationStatement.
+ *
+ * Returns `null` when the Hub cannot be reached / there is no auth session so the caller
+ * falls back to the local Dexie cache (offline-first). An empty array is a definitive
+ * "the Hub knows of no active medications for this patient" (≠ null).
+ *
+ * Note: the Hub endpoint accepts `patientRef` as the full "Patient/{id}" reference.
+ */
+export async function fetchActiveMedicationsFromHub(
+  patientId: string,
+): Promise<Array<Record<string, unknown>> | null> {
+  const hubUrl = getHubApiUrl()
+  try {
+    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+    const { data: { session } } = await getSupabaseBrowserClient().auth.getSession()
+    if (!session?.access_token) return null
+
+    const input = encodeURIComponent(JSON.stringify({ json: { patientRef: `Patient/${patientId}` } }))
+    const res = await fetch(`${hubUrl}/medicationStatement.listActive?input=${input}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+    if (!res.ok) return null
+
+    const body = await res.json() as { result?: { data?: { json?: { statements: Array<Record<string, unknown>>; count: number } } } }
+    const statements = body?.result?.data?.json?.statements
+    if (!Array.isArray(statements)) return null
+
+    // Re-shape Hub camelCase rows into nested FHIR MedicationStatement objects,
+    // the same format that ActiveMedicationsList reads from Dexie.
+    return statements.map((row) => toFhirMedicationStatement(row))
+  } catch {
+    return null
   }
 }

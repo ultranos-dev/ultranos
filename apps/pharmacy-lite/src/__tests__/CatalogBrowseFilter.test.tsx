@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { CatalogBrowsePage } from '@/components/pharmacy/inventory/CatalogBrowsePage'
 
 vi.mock('next-intl', () => ({
@@ -47,6 +47,45 @@ vi.mock('@/lib/trpc', () => ({
   searchDrugCatalog: vi.fn().mockResolvedValue([]),
   setDrugPrice: vi.fn(),
 }))
+
+// Grab the mocked toArray so individual tests can control its timing
+const { mockToArray } = vi.hoisted(() => ({ mockToArray: vi.fn() }))
+
+describe('CatalogBrowsePage — 4-state loading (loading → error → empty → data)', () => {
+  it('shows loading state and NOT the empty-state while the DB query is in flight', async () => {
+    // Suspend the toArray promise so loading=true for the full test assertion
+    let resolveItems!: (v: unknown[]) => void
+    mockToArray.mockReturnValueOnce(new Promise((res) => { resolveItems = res }))
+
+    // Override the db mock just for this test
+    const { db } = await import('@/lib/db')
+    ;(db.catalogItems.toArray as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      () => new Promise((res) => { resolveItems = res }),
+    )
+
+    render(<CatalogBrowsePage />)
+
+    // Loading indicator visible immediately
+    expect(screen.getByText('loading')).toBeInTheDocument()
+    // Empty-state must NOT appear while loading
+    expect(screen.queryByText('noCatalogItems')).toBeNull()
+
+    // Settle the promise so no pending state leaks
+    await act(async () => { resolveItems([]) })
+    // After load settles with empty catalog, the genuine empty state appears
+    await waitFor(() => expect(screen.getByText('noCatalogItems')).toBeInTheDocument())
+  })
+
+  it('shows loadError state (not the empty state) when the DB query rejects', async () => {
+    const { db } = await import('@/lib/db')
+    ;(db.catalogItems.toArray as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('IDB failure'))
+
+    render(<CatalogBrowsePage />)
+
+    await waitFor(() => expect(screen.getByText('loadError')).toBeInTheDocument())
+    expect(screen.queryByText('noCatalogItems')).toBeNull()
+  })
+})
 
 describe('CatalogBrowsePage — active/inactive filter + reactivate', () => {
   beforeEach(() => { mockReactivate.mockReset() })

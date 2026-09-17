@@ -131,6 +131,7 @@
     "qrVerificationFailed": "تایید QR ناکام شد",
     "verificationFailed": "تایید مریض ناکام شد",
     "recentPatients": "مریضان اخیر",
+    "recentPatientsLoading": "در حال بارگذاری مریضان اخیر…",
     "noRecentPatients": "مریض اخیری وجود ندارد",
     "yearsOld": "{age} ساله",
     "searchPatients": "جستجوی مریضان",
@@ -183,7 +184,8 @@
     "supervisor": {
       "incompleteCount": "{count} incomplete verifications",
       "expand": "Show details",
-      "collapse": "Hide details"
+      "collapse": "Hide details",
+      "loadError": "بارگذاری وضعیت تأیید ناموفق بود — دستی بررسی کنید"
     }
   },
   "metadata": {
@@ -606,7 +608,10 @@
     "loading": "در حال بارگیری سفارش‌ها…",
     "noResultsTitle": "سفارشی مطابق یافت نشد",
     "noResultsDescription": "هیچ سفارشی با فیلترهای فعلی مطابقت ندارد.",
-    "clearFilters": "پاک کردن فیلترها"
+    "clearFilters": "پاک کردن فیلترها",
+    "unavailableTitle": "بارگیری سفارش‌ها ممکن نیست",
+    "unavailableDescription": "سرور در دسترس نیست. اتصال خود را بررسی کرده و دوباره تلاش کنید.",
+    "retry": "تلاش مجدد"
   },
   "settings": {
     "title": "تنظیمات",
@@ -941,7 +946,8 @@
           "warning": "هشدار"
         },
         "daysUntilExpiry": "{days} روز تا انقضا",
-        "projectedLoss": "ضرر پیش‌بینی‌شده {loss} افغانی"
+        "projectedLoss": "ضرر پیش‌بینی‌شده {loss} افغانی",
+        "expiryAlertsUnavailable": "داده‌های هشدار انقضا در دسترس نیست. وضعیت کاشف را دستی بررسی کنید."
       },
       "alerts": {
         "criticalTitle": "بحرانی — در {days} روز منقضی می‌شود",
@@ -1233,6 +1239,74 @@
         "stepsCompleted": "{count} مرحله تکمیل شد",
         "stepN": "مرحله {n}"
       }
+    },
+    "temperature": {
+      "dashboardTitle": "نظارت بر دما",
+      "noLocations": "هیچ مکان نظارتی پیکربندی نشده است",
+      "loadError": "بارگذاری داده‌های دما ناموفق بود",
+      "retry": "تلاش مجدد",
+      "noReadings": "هنوز قرائتی ثبت نشده",
+      "lastReading": "آخرین قرائت",
+      "source": "منبع",
+      "bleSensor": "سنسور BLE",
+      "manual": "دستی",
+      "range": "محدوده هدف",
+      "readingOverdue": "قرائت دیرکرد دارد",
+      "logReading": "ثبت قرائت",
+      "trend": "روند",
+      "trendTitle": "روند",
+      "close": "بستن",
+      "excursionAlert": "انحراف دما",
+      "peakTemp": "اوج",
+      "duration": "مدت",
+      "minutes": "دقیقه",
+      "connectSensor": "اتصال سنسور",
+      "status": {
+        "green": "طبیعی",
+        "amber": "نزدیک به حد",
+        "red": "خارج از محدوده"
+      }
+    },
+    "waste": {
+      "title": "ظروف زباله",
+      "activateNew": "فعال‌سازی ظرف جدید",
+      "empty": "هیچ ظرفی ثبت نشده است",
+      "loadError": "بارگذاری داده‌های ظروف زباله ناموفق بود",
+      "retry": "تلاش مجدد",
+      "fillLevel": "سطح پری",
+      "daysActive": "{days} روز فعال",
+      "type": {
+        "SHARPS": "تیزها",
+        "BIOHAZARD": "خطر زیستی",
+        "CHEMICAL": "شیمیایی",
+        "GENERAL": "عمومی"
+      },
+      "status": {
+        "ACTIVE": "فعال",
+        "FULL": "پر",
+        "DISPOSED": "دفع شده"
+      }
+    },
+    "health": {
+      "staffDashboard": "داشبورد صحت کارکنان",
+      "totalStaff": "مجموع کارکنان",
+      "hepBImmunity": "ایمنی هپاتیت ب",
+      "tbCurrent": "غربالگری سل به‌روز",
+      "overdueScreenings": "غربالگری‌های معوق",
+      "noStaffRecords": "هیچ پرونده صحی کارکنان یافت نشد.",
+      "upToDate": "به‌روز",
+      "reminderCount": "{count} یادآوری",
+      "accessDenied": "دسترسی رد شد",
+      "labManagerRequired": "این داشبورد فقط برای مدیران آزمایشگاه قابل دسترسی است.",
+      "loadError": "بارگذاری داده‌های صحت کارکنان ناموفق بود. دوباره تلاش کنید."
+    }
+  },
+  "chw": {
+    "log": {
+      "title": "نمونه‌های جمع‌آوری‌شده امروز",
+      "countBadge": "{count} نمونه جمع‌آوری شد",
+      "empty": "امروز هیچ نمونه‌ای جمع‌آوری نشده است",
+      "loadError": "بارگذاری سجل نمونه‌ها ناموفق بود"
     }
   },
   "patientQueue": {
@@ -2876,7 +2950,8 @@
     "cancel": "لغو",
     "invalidPeriod": "تاریخ پایان باید بعد از تاریخ شروع باشد",
     "existingDraft": "یک گزارش پیش‌نویس برای این برنامه و دوره وجود دارد.",
-    "overwriteDraft": "ایجاد جدید"
+    "overwriteDraft": "ایجاد جدید",
+    "loadError": "بارگذاری گزارش‌ها ناموفق بود. دوباره تلاش کنید."
   },
   "certification": {
     "pageTitle": "مسیر تصدیق‌نامه من",
@@ -3499,7 +3574,9 @@
     "noResultsDescription": "هیچ ارجاعی با فیلترهای فعلی مطابقت ندارد.",
     "clearFilters": "پاک کردن فیلترها",
     "actionUpdateStatus": "به‌روزرسانی وضعیت",
-    "actionImportResult": "وارد کردن نتیجه"
+    "actionImportResult": "وارد کردن نتیجه",
+    "loadError": "بارگذاری ارسال‌ها ناموفق بود",
+    "retry": "تلاش مجدد"
   },
   "outbreak": {
     "activateAriaLabel": "فعال کردن حالت اپیدمی",
@@ -3790,7 +3867,9 @@
       "activeAlert": "{count, plural, one {# تشدید فعال نیاز به توجه دارد.} other {# تشدید فعال نیاز به توجه دارد.}}",
       "searchPlaceholder": "جستجوی تشدیدها…",
       "noResults": "تشدید مطابقی یافت نشد",
-      "clearSearch": "پاک کردن جستجو"
+      "clearSearch": "پاک کردن جستجو",
+      "loadError": "بارگذاری داده‌های تشدید ناموفق بود",
+      "retry": "تلاش مجدد"
     }
   },
   "logbook": {
@@ -3818,6 +3897,51 @@
     "authStatus": "وضعیت",
     "loadMore": "بارگیری بیشتر",
     "clearFilters": "پاک کردن فیلترها"
+  },
+  "qc": {
+    "driftUnavailable": "داده‌های هشدار انحراف کنترل کیفیت در دسترس نیست — وضعیت QC را دستی بررسی کنید.",
+    "driftRejectTitle": "QC خارج از کنترل",
+    "driftWarningTitle": "هشدار QC",
+    "acknowledge": "تأیید",
+    "acknowledgeAlert": "تأیید هشدار",
+    "viewHistory": "مشاهده تاریخچه QC",
+    "viewQcHistory": "مشاهده تاریخچه QC",
+    "acknowledgeAlertTitle": "تأیید هشدار انحراف",
+    "resolutionActionLabel": "اقدام حل",
+    "resolutionRequired": "لطفاً اقدام حل را انتخاب کنید",
+    "notesLabel": "یادداشت‌ها",
+    "optional": "اختیاری",
+    "notesPlaceholder": "یادداشت اضافه کنید…",
+    "cancel": "لغو",
+    "confirmAcknowledge": "تأیید",
+    "acknowledging": "در حال تأیید…",
+    "acknowledgeError": "تأیید هشدار ناموفق بود",
+    "result": {
+      "pass": "قبول",
+      "fail": "رد"
+    },
+    "history": {
+      "loading": "در حال بارگذاری تاریخچه QC…",
+      "empty": "هنوز هیچ اجرای QC ثبت نشده.",
+      "loadError": "بارگذاری تاریخچه QC ناموفق بود. دوباره تلاش کنید.",
+      "title": "تاریخچه QC — {analyte}",
+      "tableLabel": "تاریخچه اجرای QC برای {analyte}",
+      "chartLegend": "سبز = میانگین · عنبری = ±2SD · قرمز = ±3SD",
+      "col": {
+        "date": "تاریخ",
+        "controlLevel": "سطح کنترل",
+        "measuredValues": "مقادیر اندازه‌گیری‌شده",
+        "expectedRange": "محدوده مورد انتظار",
+        "result": "نتیجه",
+        "tech": "تکنسین"
+      }
+    },
+    "resolution": {
+      "recalibrated": "کالیبراسیون مجدد",
+      "maintenancePerformed": "نگهداری انجام شد",
+      "falseAlarmVerified": "هشدار کاذب تأیید شد",
+      "deferredToSupervisor": "به سرپرست ارجاع شد"
+    }
   },
   "attachments": {
     "dropZoneLabel": "پیوست فایل‌ها — تصاویر یا اسناد PDF",

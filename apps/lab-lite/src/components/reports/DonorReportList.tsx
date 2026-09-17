@@ -17,9 +17,21 @@ interface Props {
 
 export function DonorReportList({ programCode, onOpenReport }: Props) {
   const t = useTranslations('donorReport')
-  const { reports, loading } = useDonorReports({ programCode })
+  const { reports, loading, error } = useDonorReports({ programCode })
 
   if (loading) return <p className="text-sm text-muted-foreground animate-pulse">Loading…</p>
+
+  if (error) {
+    return (
+      <div
+        className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-center"
+        role="alert"
+        data-testid="donor-report-load-error"
+      >
+        <p className="text-sm text-amber-800">{t('loadError')}</p>
+      </div>
+    )
+  }
 
   if (reports.length === 0) {
     return (

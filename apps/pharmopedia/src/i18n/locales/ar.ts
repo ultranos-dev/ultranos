@@ -119,6 +119,7 @@ const ar: Translations = {
       referencePrice: 'السعر الإرشادي',
       rx: 'بوصفة طبية فقط',
       otc: 'بدون وصفة طبية',
+      unavailable: 'تعذّر تحميل العلامات التجارية — تحقق من اتصالك',
     },
   },
   pricing: {
@@ -158,6 +159,8 @@ const ar: Translations = {
     emptyTitle: 'لا توجد فئات بعد',
     emptyDescription: 'قم بمزامنة الكتالوج للتصفح حسب الفئة',
     drugsCountLabel: 'أدوية',
+    unavailableClasses: 'تعذّر تحميل الفئات — تحقق من اتصالك',
+    unavailableDrugs: 'تعذّر تحميل أدوية هذه الفئة',
   },
   saved: {
     empty: 'لا توجد أدوية محفوظة بعد — اضغط على أيقونة الإشارة المرجعية لأي دواء لحفظه',

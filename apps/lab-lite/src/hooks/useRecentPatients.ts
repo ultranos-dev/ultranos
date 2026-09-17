@@ -10,8 +10,12 @@ interface VerifiedPatientCache {
   verifiedAt: string
 }
 
-export function useRecentPatients(limit = 5) {
+export function useRecentPatients(limit = 5): {
+  patients: VerifiedPatientCache[]
+  loading: boolean
+} {
   const [patients, setPatients] = useState<VerifiedPatientCache[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
@@ -25,11 +29,13 @@ export function useRecentPatients(limit = 5) {
           .toArray()
         setPatients(items as VerifiedPatientCache[])
       } catch {
-        // IndexedDB unavailable
+        // IndexedDB unavailable — leave patients empty, loading false
+      } finally {
+        setLoading(false)
       }
     }
     load()
   }, [limit])
 
-  return patients
+  return { patients, loading }
 }

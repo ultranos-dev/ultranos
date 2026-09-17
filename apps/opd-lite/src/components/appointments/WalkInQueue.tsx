@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import { Users } from '@ultranos/ui-kit/icons'
+import { Users, AlertTriangle } from '@ultranos/ui-kit/icons'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Button } from '@/components/ui/Button'
 import { useAppointments } from '@/hooks/useAppointments'
@@ -23,7 +23,7 @@ function minutesElapsed(isoTimestamp: string): number {
 export function WalkInQueue() {
   const t = useTranslations('appointments')
   const { selectedDate } = useAppointmentStore()
-  const { appointments, addWalkIn, updateStatus } =
+  const { appointments, loadError, addWalkIn, updateStatus } =
     useAppointments(selectedDate)
 
   const [selectedAppointment, setSelectedAppointment] =
@@ -126,7 +126,11 @@ export function WalkInQueue() {
       )}
 
       {/* Walk-in list */}
-      {walkIns.length === 0 ? (
+      {loadError ? (
+        <div className="flex min-h-[12rem] items-center justify-center" data-testid="walkin-queue-unavailable">
+          <EmptyState icon={AlertTriangle} title={t('queueUnavailable')} />
+        </div>
+      ) : walkIns.length === 0 ? (
         <div className="flex min-h-[12rem] items-center justify-center">
           <EmptyState icon={Users} title={t('noWalkIns')} />
         </div>

@@ -7,6 +7,7 @@ import { Spacing } from '@ultranos/ui-kit/tokens.native'
 import { CollapsibleList, EmptyState } from '@ultranos/ui-kit/native'
 import { DrugCard } from '@/components/DrugCard'
 import { BrandResultCard } from '@/components/BrandResultCard'
+import { SkeletonCard } from '@/components/SkeletonCard'
 import { useLangStore } from '@/store/lang-store'
 import { useBookmarkStore } from '@/store/bookmark-store'
 import type { DrugSearchResult, BrandSearchResult } from '@ultranos/shared-types'
@@ -21,6 +22,7 @@ export default function SavedTab() {
   const lang = useLangStore((s) => s.lang)
   const bookmarks = useBookmarkStore((s) => s.bookmarks)
   const brandBookmarks = useBookmarkStore((s) => s.brandBookmarks)
+  const initialized = useBookmarkStore((s) => s.initialized)
   const [refreshing, setRefreshing] = useState(false)
 
   const onRefresh = useCallback(() => {
@@ -56,12 +58,18 @@ export default function SavedTab() {
         </View>
       )}
       ListEmptyComponent={
-        <EmptyState
-          icon={BookmarkPlus}
-          title={t('saved.emptyTitle')}
-          description={t('saved.emptyDescription')}
-          action={{ label: t('saved.browseCta'), onPress: () => router.push('/(tabs)/browse') }}
-        />
+        initialized ? (
+          <EmptyState
+            icon={BookmarkPlus}
+            title={t('saved.emptyTitle')}
+            description={t('saved.emptyDescription')}
+            action={{ label: t('saved.browseCta'), onPress: () => router.push('/(tabs)/browse') }}
+          />
+        ) : (
+          <View testID="saved-loading">
+            {[0, 1, 2].map((i) => <SkeletonCard key={i} testID={`skeleton-saved-${i}`} />)}
+          </View>
+        )
       }
       refreshing={refreshing}
       onRefresh={onRefresh}

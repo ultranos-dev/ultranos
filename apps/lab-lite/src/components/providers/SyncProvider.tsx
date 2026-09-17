@@ -11,6 +11,7 @@ import { reportQueueAuditEvent } from '@/lib/queue-audit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { drainResultSyncQueue } from '@/lib/result-sync'
 import { drainSpecimenSyncQueue } from '@/lib/specimen-sync'
+import { hydrateSamplesFromHub } from '@/lib/specimen-hydrate'
 
 /**
  * SyncProvider — centralized sync lifecycle management for Lab Lite.
@@ -81,6 +82,20 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       void drainSpecimenSyncQueue(getToken)
     }
     if (typeof navigator !== 'undefined' && navigator.onLine) runResultDrain()
+
+    // Rehydrate local samples from Hub once on initial-online auth start.
+    // Fixes data-loss: PHI cleanup wipes samples on session end; since lab-lite
+    // is push-only, specimens from previous sessions vanish without this pull.
+    // Runs ONLY here (not in the 30s interval or reconnect handler) so it fires
+    // at most once per login. After resolving, dispatch an event so the worklist
+    // can refresh and show restored samples immediately.
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
+      void hydrateSamplesFromHub(getToken).then(({ hydrated }) => {
+        if (hydrated > 0) {
+          window.dispatchEvent(new Event('lab-samples-hydrated'))
+        }
+      })
+    }
 
     // Mark synced on initial startup when online
     if (typeof navigator !== 'undefined' && navigator.onLine) {

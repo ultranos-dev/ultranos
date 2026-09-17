@@ -18,6 +18,43 @@ const mockGetOverdueSendOuts = vi.fn()
 const mockGetDb = vi.fn()
 const mockSession = { userId: 'user-001', labRole: 'LAB_TECH' }
 
+const SENDOUT_MESSAGES: Record<string, string> = {
+  pageTitle: 'Send-Outs',
+  loading: 'loading',
+  noResultsTitle: 'No send-outs found',
+  noResultsDescription: 'noResultsDescription',
+  clearFilters: 'Clear filters',
+  filterStatusAll: 'All',
+  filterLabAll: 'All labs',
+  filterStatusAria: 'Filter by status',
+  filterLabAria: 'Filter by lab',
+  searchPlaceholder: 'Search…',
+  colTrackingId: 'Tracking ID',
+  colReferenceLab: 'Reference Lab',
+  colTestRequested: 'Test Requested',
+  colDateSent: 'Date Sent',
+  colStatus: 'Status',
+  colElapsed: 'Elapsed',
+  colActions: 'Actions',
+  actionUpdateStatus: 'Update Status',
+  actionImportResult: 'Import Result',
+  statusLabelSent: 'Sent',
+  statusLabelReceived: 'Received',
+  statusLabelProcessing: 'Processing',
+  statusLabelResultsAvailable: 'Results Available',
+  statusLabelCancelled: 'Cancelled',
+  viewPending: 'View pending',
+  loadError: 'loadError',
+  retry: 'retry',
+}
+
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, params?: Record<string, unknown>) => {
+    if (key === 'overdueBanner' && params?.count !== undefined) return `${params.count} send-outs are overdue`
+    return SENDOUT_MESSAGES[key] ?? key
+  },
+}))
+
 vi.mock('../lib/sendout-tat', () => ({
   getOverdueSendOuts: mockGetOverdueSendOuts,
 }))
@@ -38,12 +75,34 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
   AlertTriangle: ({ size, className }: { size: number; className?: string }) => (
     <span data-testid="alert-icon" data-size={size} className={className} />
   ),
+  TriangleAlert: () => <span data-testid="triangle-alert-icon" />,
   Clock: ({ size }: { size: number }) => <span data-testid="clock-icon" data-size={size} />,
   X: () => <button data-testid="close-btn" />,
   Send: () => <span data-testid="send-icon" />,
   Upload: () => <span data-testid="upload-icon" />,
   FileText: () => <span data-testid="filetext-icon" />,
   ChevronRight: () => <span data-testid="chevron-icon" />,
+  FileSearch: () => <span data-testid="filesearch-icon" />,
+}))
+
+vi.mock('@ultranos/ui-kit/components/ui/search-input', () => ({
+  SearchInput: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
+}))
+
+vi.mock('@ultranos/ui-kit/components/ui/empty-state', () => ({
+  EmptyState: ({ title, description, action }: { title: string; description?: string; action?: { label: string; onClick: () => void } }) => (
+    <div data-testid="empty-state">
+      <span>{title}</span>
+      {description && <span>{description}</span>}
+      {action && <button type="button" onClick={action.onClick}>{action.label}</button>}
+    </div>
+  ),
+}))
+
+vi.mock('@/components/ui/badge', () => ({
+  Badge: ({ children, variant }: { children: React.ReactNode; variant?: string }) => (
+    <span data-testid="badge" data-variant={variant}>{children}</span>
+  ),
 }))
 
 // Stub child modals to keep page tests focused
@@ -125,7 +184,7 @@ function setupDb(sendOuts: SendOut[], labs: ReferenceLab[]) {
 }
 
 async function renderPage() {
-  const { default: SendOutsPage } = await import('../app/[locale]/sendouts/page')
+  const { default: SendOutsPage } = await import('../app/[locale]/(app)/sendouts/page')
   return render(<SendOutsPage />)
 }
 
@@ -290,5 +349,49 @@ describe('SendOutsPage — RTL layout (Task 14.9)', () => {
 
     container.setAttribute('dir', 'rtl')
     expect(container).toMatchSnapshot()
+  })
+})
+
+describe('SendOutsPage — 4-state loading (error/empty gates)', () => {
+  it('shows error state (not empty) when DB load throws', async () => {
+    // Simulate a DB failure
+    mockGetDb.mockReturnValue({
+      send_outs: {
+        orderBy: vi.fn().mockReturnValue({
+          reverse: vi.fn().mockReturnValue({
+            toArray: vi.fn().mockRejectedValue(new Error('IndexedDB unavailable')),
+          }),
+        }),
+      },
+      reference_labs: {
+        toArray: vi.fn().mockRejectedValue(new Error('IndexedDB unavailable')),
+        get: vi.fn(),
+      },
+    })
+    mockGetOverdueSendOuts.mockRejectedValue(new Error('IndexedDB unavailable'))
+
+    await renderPage()
+
+    // Should show error/unavailable state with role="alert"
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+    // Should NOT show the "no send-outs" empty state — that would be a false empty
+    expect(screen.queryByText('noResultsTitle')).not.toBeInTheDocument()
+    // Should NOT be stuck in loading state
+    expect(screen.queryByText('loading')).not.toBeInTheDocument()
+  })
+
+  it('shows empty state (not error) when load succeeds with zero records', async () => {
+    setupDb([], [])
+
+    await renderPage()
+
+    // Should show genuine empty state (no data loaded, no error)
+    await waitFor(() => {
+      expect(screen.getByText('No send-outs found')).toBeInTheDocument()
+    })
+    // Must NOT show an error alert
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })

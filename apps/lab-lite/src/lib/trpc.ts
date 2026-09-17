@@ -725,6 +725,43 @@ export async function fetchOrderPatientDetails(
   }
 }
 
+// ── Specimen pull (rehydration on login) ────────────────────────────────────
+
+/** Data-minimized specimen shape returned by lab.pullSpecimens. */
+export interface SpecimenPullDto {
+  id: string
+  labSampleId: string
+  pipelineStatus: string
+  fhirStatus: string
+  specimenType?: string
+  subjectReference: string        // Patient/<blindIndex>
+  serviceRequestRef?: string      // ServiceRequest/<id>
+  receivedFrom?: string
+  receivedTime?: string
+  condition?: string
+  hlcTimestamp: string
+}
+
+/**
+ * Pull active specimens from the Hub API for rehydration on login.
+ * Returns ONLY data-minimized fields (no note, no real UUID) — Rule #7.
+ * Requires valid LAB_TECH JWT.
+ */
+export async function pullSpecimens(token: string): Promise<{ specimens: SpecimenPullDto[] }> {
+  const res = await fetch(`${getHubApiUrl()}/lab.pullSpecimens?input=${encodeURIComponent(JSON.stringify({ json: {} }))}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(15_000),
+  })
+  if (!res.ok) throw new Error(`Pull specimens failed: ${res.status}`)
+  const body = (await res.json()) as {
+    result: { data: { json: { specimens: SpecimenPullDto[] } } }
+  }
+  return {
+    specimens: body.result.data.json.specimens ?? [],
+  }
+}
+
 /**
  * Acknowledge an order as RECEIVED by this lab.
  * Triggers a notification to the ordering physician in OPD-Lite.

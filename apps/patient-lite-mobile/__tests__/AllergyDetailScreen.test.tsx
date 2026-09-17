@@ -53,13 +53,6 @@ jest.mock('react-i18next', () => ({
   }),
 }))
 
-jest.mock('@/hooks/usePatientProfile', () => ({
-  usePatientProfile: () => ({
-    patient: { id: PATIENT_ID },
-    isLoading: false,
-  }),
-}))
-
 const mockAllergyEvent = {
   id: ALLERGY_ID,
   type: 'allergy' as const,
@@ -71,20 +64,39 @@ const mockAllergyEvent = {
   resource: mockAllergy,
 }
 
+// Variable mock state — changed per describe block
+let mockPatientLoading = false
+let mockPatient: { id: string } | null = { id: PATIENT_ID }
+let mockHistoryLoading = false
+let mockHistoryError: string | null = null
+let mockHistoryEvents: typeof mockAllergyEvent[] = [mockAllergyEvent]
+
+jest.mock('@/hooks/usePatientProfile', () => ({
+  usePatientProfile: () => ({
+    patient: mockPatient,
+    isLoading: mockPatientLoading,
+  }),
+}))
+
 jest.mock('@/hooks/useMedicalHistory', () => ({
   useMedicalHistory: () => ({
-    events: [mockAllergyEvent],
+    events: mockHistoryEvents,
     activeMedications: [],
-    activeAllergies: [mockAllergy],
-    isLoading: false,
-    error: null,
+    activeAllergies: mockAllergy ? [mockAllergy] : [],
+    isLoading: mockHistoryLoading,
+    error: mockHistoryError,
     refresh: jest.fn(),
   }),
 }))
 
-describe('AllergyDetailScreen', () => {
+describe('AllergyDetailScreen — happy path', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockPatientLoading = false
+    mockPatient = { id: PATIENT_ID }
+    mockHistoryLoading = false
+    mockHistoryError = null
+    mockHistoryEvents = [mockAllergyEvent]
   })
 
   it('renders all detail fields (substance, criticality, dates, provider)', () => {
@@ -128,5 +140,87 @@ describe('AllergyDetailScreen', () => {
     expect(queryByText('Edit')).toBeNull()
     expect(queryByText('Save')).toBeNull()
     expect(queryByTestId('edit-button')).toBeNull()
+  })
+})
+
+describe('AllergyDetailScreen — 4-state (loading / error / not-found / data)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockHistoryError = null
+    mockHistoryEvents = [mockAllergyEvent]
+  })
+
+  // --- PHI SAFETY: No "not found" while patient is still loading ---
+  it('shows loading indicator while patient profile is loading — never "not found"', () => {
+    mockPatientLoading = true
+    mockPatient = null
+    mockHistoryLoading = false
+
+    const { getByTestId, queryByTestId, queryByText } = render(<AllergyDetailScreen />)
+
+    expect(getByTestId('allergy-detail-loading')).toBeTruthy()
+    expect(queryByTestId('allergy-detail-not-found')).toBeNull()
+    // Must not claim allergy is absent while patient is unresolved
+    expect(queryByText('errors.generic')).toBeNull()
+  })
+
+  // --- PHI SAFETY: No "not found" while history is loading ---
+  it('shows loading indicator while history is loading — never "not found"', () => {
+    mockPatientLoading = false
+    mockPatient = { id: PATIENT_ID }
+    mockHistoryLoading = true
+    mockHistoryEvents = [] // history not yet loaded
+
+    const { getByTestId, queryByTestId } = render(<AllergyDetailScreen />)
+
+    expect(getByTestId('allergy-detail-loading')).toBeTruthy()
+    expect(queryByTestId('allergy-detail-not-found')).toBeNull()
+  })
+
+  // --- Error: history failed to load → "unavailable", never "not found" ---
+  it('shows unavailable state on history error — not "not found"', () => {
+    mockPatientLoading = false
+    mockPatient = { id: PATIENT_ID }
+    mockHistoryLoading = false
+    mockHistoryError = 'Failed to load medical history'
+    mockHistoryEvents = []
+
+    const { getByTestId, queryByTestId } = render(<AllergyDetailScreen />)
+
+    expect(getByTestId('allergy-detail-unavailable')).toBeTruthy()
+    expect(queryByTestId('allergy-detail-not-found')).toBeNull()
+    expect(queryByTestId('allergy-detail-screen')).toBeNull()
+  })
+
+  // --- Confirmed not-found: patient + history settled, allergy genuinely absent ---
+  it('shows not-found only when patient+history settled and allergy is genuinely absent', () => {
+    mockPatientLoading = false
+    mockPatient = { id: PATIENT_ID }
+    mockHistoryLoading = false
+    mockHistoryError = null
+    mockHistoryEvents = [] // allergy not in events
+
+    const { getByTestId, queryByTestId } = render(<AllergyDetailScreen />)
+
+    expect(getByTestId('allergy-detail-not-found')).toBeTruthy()
+    expect(queryByTestId('allergy-detail-screen')).toBeNull()
+    expect(queryByTestId('allergy-detail-loading')).toBeNull()
+    expect(queryByTestId('allergy-detail-unavailable')).toBeNull()
+  })
+
+  // --- Loaded data: patient+history settled, allergy found → full detail ---
+  it('shows full allergy detail when patient+history settled and allergy found', () => {
+    mockPatientLoading = false
+    mockPatient = { id: PATIENT_ID }
+    mockHistoryLoading = false
+    mockHistoryError = null
+    mockHistoryEvents = [mockAllergyEvent]
+
+    const { getByTestId, queryByTestId } = render(<AllergyDetailScreen />)
+
+    expect(getByTestId('allergy-detail-screen')).toBeTruthy()
+    expect(queryByTestId('allergy-detail-loading')).toBeNull()
+    expect(queryByTestId('allergy-detail-not-found')).toBeNull()
+    expect(queryByTestId('allergy-detail-unavailable')).toBeNull()
   })
 })

@@ -30,6 +30,7 @@ export function QuarantinePage() {
 
   const [rows, setRows] = useState<BatchRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   // Per-batch release state: batchId → { busy, error }
   const [releaseState, setReleaseState] = useState<Record<string, { busy: boolean; error: string | null }>>({})
@@ -39,6 +40,7 @@ export function QuarantinePage() {
 
   const load = useCallback(async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const batches = await getQuarantinedBatches()
 
@@ -62,6 +64,7 @@ export function QuarantinePage() {
         })),
       )
     } catch (err) {
+      setLoadError(true)
       console.error('[QuarantinePage] load failed:', err instanceof Error ? err.message : 'unknown')
     } finally {
       setLoading(false)
@@ -152,6 +155,13 @@ export function QuarantinePage() {
         {loading ? (
           <div className="flex min-h-[16rem] items-center justify-center">
             <EmptyState icon={ShieldAlert} title={t('quarantineLoading')} />
+          </div>
+        ) : loadError ? (
+          <div
+            data-testid="quarantine-error"
+            className="flex min-h-[16rem] items-center justify-center"
+          >
+            <EmptyState icon={ShieldAlert} title={t('quarantineLoadError')} />
           </div>
         ) : rows.length === 0 ? (
           <div className="flex min-h-[16rem] items-center justify-center">

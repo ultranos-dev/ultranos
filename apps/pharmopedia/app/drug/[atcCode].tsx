@@ -52,6 +52,7 @@ export default function DrugDetailScreen() {
 
   const [entry, setEntry] = useState<DrugEntryTier1 | DrugEntryTier2 | DrugEntryTier3 | null>(null)
   const [brands, setBrands] = useState<DrugBrandWithPresentations[]>([])
+  const [brandsError, setBrandsError] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export default function DrugDetailScreen() {
   }, [atcCode])
 
   async function loadBrands(code: string) {
+    setBrandsError(false)
     try {
       // Offline-first: read the synced cache, fall back to the Hub only if empty.
       let result = await getBrandsWithPresentations(getDatabase(), code)
@@ -69,6 +71,7 @@ export default function DrugDetailScreen() {
       setBrands(result)
     } catch {
       setBrands([])
+      setBrandsError(true)
     }
   }
 
@@ -168,9 +171,11 @@ export default function DrugDetailScreen() {
         <SafetyZone entry={entry} lang={lang} isClinical={isClinical} />
 
         <View style={styles.sectionList}>
-          {brands.length > 0 && (
+          {(brands.length > 0 || brandsError) && (
             <CollapsibleSection testID="section-brands" title={t('drug.brands.title')} defaultOpen={false}>
-              <ErrorBoundary inline><BrandsSection brands={brands} lang={lang} t={t} /></ErrorBoundary>
+              {brandsError
+                ? <Text testID="brands-unavailable" style={[styles.noDetail, { color: colors.textMuted }]}>{t('drug.brands.unavailable')}</Text>
+                : <ErrorBoundary inline><BrandsSection brands={brands} lang={lang} t={t} /></ErrorBoundary>}
             </CollapsibleSection>
           )}
           {sections.length === 0 && brands.length === 0 ? (

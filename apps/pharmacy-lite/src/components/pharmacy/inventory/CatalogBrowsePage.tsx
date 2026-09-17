@@ -29,6 +29,8 @@ export function CatalogBrowsePage() {
   const isSyncingCatalog = useInventoryStore((s) => s.isSyncingCatalog)
 
   const [rows, setRows] = useState<CatalogRowData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<'active' | 'all'>('active')
   const [hubResults, setHubResults] = useState<DrugSearchResult[]>([])
@@ -38,14 +40,21 @@ export function CatalogBrowsePage() {
   const [editingItem, setEditingItem] = useState<CatalogItem | undefined>(undefined)
 
   const reload = useCallback(async () => {
-    const items = await db.catalogItems.toArray()
-    const withStock = await Promise.all(
-      items.map(async (item) => ({
-        item,
-        stockOnHand: await getTotalStockOnHand(item.id),
-      }))
-    )
-    setRows(withStock)
+    setLoadError(false)
+    try {
+      const items = await db.catalogItems.toArray()
+      const withStock = await Promise.all(
+        items.map(async (item) => ({
+          item,
+          stockOnHand: await getTotalStockOnHand(item.id),
+        }))
+      )
+      setRows(withStock)
+    } catch {
+      setLoadError(true)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -155,7 +164,17 @@ export function CatalogBrowsePage() {
       </div>
 
       {/* Local catalog table */}
-      {filtered.length > 0 ? (
+      {loading ? (
+        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 text-sm text-muted-foreground">
+          {t('loading')}
+        </div>
+      ) : loadError ? (
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState icon={Package} title={t('loadError')} />
+          </div>
+        </div>
+      ) : filtered.length > 0 ? (
         <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -282,7 +301,7 @@ export function CatalogBrowsePage() {
       )}
 
       {/* Hub drug catalog fallback section */}
-      {filtered.length === 0 && search.trim().length >= 2 && hubResults.length > 0 && (
+      {!loading && !loadError && filtered.length === 0 && search.trim().length >= 2 && hubResults.length > 0 && (
         <div className="flex flex-col gap-2">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
             {t('globalDrugCatalog')}

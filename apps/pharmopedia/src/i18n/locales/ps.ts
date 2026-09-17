@@ -119,6 +119,7 @@ const ps: Translations = {
       referencePrice: 'لومړنۍ بیه',
       rx: 'یوازې د نسخې سره',
       otc: 'پرته له نسخې',
+      unavailable: 'برانډونه پورته نه شول — خپل اتصال وګورئ',
     },
   },
   pricing: {
@@ -158,6 +159,8 @@ const ps: Translations = {
     emptyTitle: 'تر اوسه هیڅ کټګوري نشته',
     emptyDescription: 'خپل کتابچه همغږي کړئ',
     drugsCountLabel: 'درمل',
+    unavailableClasses: 'کټګورۍ پورته نه شوې — خپل اتصال وګورئ',
+    unavailableDrugs: 'د دې کټګورۍ درمل پورته نه شول',
   },
   saved: {
     empty: 'تاسو هیڅ خوندي شوي دارو نلرئ — د هرې درملې د نښانک آیکون باندې فشار ورکړئ',

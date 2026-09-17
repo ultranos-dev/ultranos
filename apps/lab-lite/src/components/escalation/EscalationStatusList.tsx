@@ -19,7 +19,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
-import { CircleCheck, FileSearch } from '@ultranos/ui-kit/icons'
+import { CircleCheck, FileSearch, TriangleAlert } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import { LabRole } from '@ultranos/shared-types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -210,9 +210,11 @@ export function EscalationStatusList() {
   const [activeChains, setActiveChains] = useState<EscalationChain[]>([])
   const [historyChains, setHistoryChains] = useState<EscalationChain[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [search, setSearch] = useState('')
 
   const load = useCallback(async () => {
+    setError(false)
     try {
       const [active, history] = await Promise.all([
         getActiveEscalations(),
@@ -221,6 +223,8 @@ export function EscalationStatusList() {
       // Sort active chains: most recent first
       setActiveChains(active.sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
       setHistoryChains(history.sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
+    } catch {
+      setError(true)
     } finally {
       setLoading(false)
     }
@@ -307,8 +311,19 @@ export function EscalationStatusList() {
         </div>
       )}
 
-      {/* Chain list — cards */}
-      {chains.length === 0 ? (
+      {/* Chain list — error / empty / data */}
+      {error ? (
+        <div
+          role="alert"
+          className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
+        >
+          <EmptyState
+            icon={TriangleAlert}
+            title={t('loadError')}
+            action={{ label: t('retry'), onClick: () => void load() }}
+          />
+        </div>
+      ) : chains.length === 0 ? (
         <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
           <EmptyState
             icon={filtersActive ? FileSearch : CircleCheck}

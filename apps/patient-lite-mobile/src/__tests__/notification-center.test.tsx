@@ -226,24 +226,51 @@ function renderDetailScreen(notificationId = 'n1') {
 // --- Tests ---
 
 describe('Story 18.6: Patient Notification Center', () => {
+  // Capture original store action functions before ANY test overrides them via setState.
+  // Tests that call useNotificationStore.setState({ startPolling: jest.fn(), ... }) replace
+  // the store's function references. beforeEach must restore them so subsequent tests get
+  // the real implementations.
+  const originalStoreActions = {
+    fetchNotifications: useNotificationStore.getState().fetchNotifications,
+    startPolling: useNotificationStore.getState().startPolling,
+    stopPolling: useNotificationStore.getState().stopPolling,
+    markAsRead: useNotificationStore.getState().markAsRead,
+    loadFromCache: useNotificationStore.getState().loadFromCache,
+  }
+
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
-    // Reset store
+    // Reset store — restore original action functions AND reset data state.
+    // Without restoring actions, tests that did setState({ startPolling: jest.fn() })
+    // leave those mocks in place for all subsequent tests.
     useNotificationStore.setState({
       notifications: [],
       unreadCount: 0,
       isLoading: false,
+      hasLoadedOnce: false,
+      fetchError: null,
       lastFetched: null,
+      ...originalStoreActions,
     })
     mockFetchNotifications.mockResolvedValue({ notifications: allNotifications })
     mockAcknowledgeNotification.mockResolvedValue({ success: true })
     mockFetchUnreadCount.mockResolvedValue({ count: 4 })
   })
 
-  afterEach(() => {
-    jest.useRealTimers()
+  afterEach(async () => {
+    // Stop polling first so no new fetches start
     useNotificationStore.getState().stopPolling()
+    // Drain any in-flight async microtask chains (fetchNotifications has 2+ async hops)
+    // before the next test mounts — prevents Zustand set() from firing on the next test's
+    // rendered component. Multiple ticks needed to clear the full promise chain.
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+      await Promise.resolve()
+      jest.runAllTimers()
+    })
+    jest.useRealTimers()
   })
 
   // AC #1: Notification list renders, newest-first
@@ -338,10 +365,18 @@ describe('Story 18.6: Patient Notification Center', () => {
     const HapticsMod = require('expo-haptics')
     const hapticSpy = jest.spyOn(HapticsMod, 'notificationAsync').mockResolvedValue(undefined)
 
+    // Override startPolling to prevent async fetchNotifications from running during render.
+    // This test only verifies haptic fires on escalation render — polling is AC#7's concern.
+    const mockStartPolling = jest.fn()
+    const mockStopPolling = jest.fn()
     useNotificationStore.setState({
       notifications: [escalationNotification],
       unreadCount: 1,
-    })
+      hasLoadedOnce: true,
+      fetchError: null,
+      startPolling: mockStartPolling,
+      stopPolling: mockStopPolling,
+    } as any)
 
     const { getByTestId, getByText } = renderScreen()
 
@@ -351,7 +386,10 @@ describe('Story 18.6: Patient Notification Center', () => {
     })
 
     expect(hapticSpy).toHaveBeenCalledWith(HapticsMod.NotificationFeedbackType.Warning)
-    hapticSpy.mockRestore()
+    // Do NOT call hapticSpy.mockRestore() — it restores the original jest.fn() without
+    // .mockResolvedValue(), leaving subsequent tests with a non-Promise haptics mock
+    // which causes NotificationCard's .catch() to throw. jest.clearAllMocks() in beforeEach
+    // is sufficient to clear call counts for isolation.
   })
 
   // AC #6: Tab badge shows correct unread count
@@ -379,19 +417,24 @@ describe('Story 18.6: Patient Notification Center', () => {
   })
 
   // AC #7: Polling starts on focus, stops on blur
-  it('starts and stops polling (AC #7)', () => {
+  it('starts and stops polling (AC #7)', async () => {
     const store = useNotificationStore.getState()
 
+    // startPolling calls fetchNotifications() immediately (async), so we need to
+    // flush the promise chain before asserting the call count
     store.startPolling()
+    await act(async () => {
+      jest.advanceTimersByTime(0)
+    })
     expect(mockFetchNotifications).toHaveBeenCalledTimes(1)
 
-    act(() => {
+    await act(async () => {
       jest.advanceTimersByTime(30_000)
     })
     expect(mockFetchNotifications).toHaveBeenCalledTimes(2)
 
     store.stopPolling()
-    act(() => {
+    await act(async () => {
       jest.advanceTimersByTime(60_000)
     })
     expect(mockFetchNotifications).toHaveBeenCalledTimes(2)
@@ -399,10 +442,20 @@ describe('Story 18.6: Patient Notification Center', () => {
 
   // AC #9: Pull-to-refresh triggers fetch
   it('pull-to-refresh triggers fetchNotifications (AC #9)', async () => {
+    // Replace fetchNotifications in the store with a synchronous jest.fn() so we can
+    // verify the FlatList onRefresh wires up to it without triggering async state updates.
+    const mockStoreFetch = jest.fn().mockResolvedValue(undefined)
+    const mockStartPolling = jest.fn()
+    const mockStopPolling = jest.fn()
     useNotificationStore.setState({
       notifications: [labNotification],
       unreadCount: 1,
-    })
+      hasLoadedOnce: true,
+      fetchError: null,
+      fetchNotifications: mockStoreFetch,
+      startPolling: mockStartPolling,
+      stopPolling: mockStopPolling,
+    } as any)
 
     const { getByTestId } = renderScreen()
 
@@ -413,22 +466,25 @@ describe('Story 18.6: Patient Notification Center', () => {
     const flatList = getByTestId('notification-list')
     fireEvent(flatList, 'refresh')
 
-    expect(mockFetchNotifications).toHaveBeenCalled()
+    expect(mockStoreFetch).toHaveBeenCalled()
   })
 
-  // AC #10: Empty state
-  it('shows empty state when no notifications (AC #10)', async () => {
+  // AC #10: Empty state (only after first load settles)
+  it('shows empty state when no notifications after load settles (AC #10)', async () => {
     mockFetchNotifications.mockResolvedValue({ notifications: [] })
     useNotificationStore.setState({
       notifications: [],
       unreadCount: 0,
       isLoading: false,
+      hasLoadedOnce: true,  // First load has settled — safe to show empty
+      fetchError: null,
     })
 
-    const { getByText } = renderScreen()
+    const { getByText, getByTestId } = renderScreen()
 
     await waitFor(() => {
       expect(getByText('No notifications yet')).toBeTruthy()
+      expect(getByTestId('notifications-empty')).toBeTruthy()
     })
   })
 
@@ -437,10 +493,17 @@ describe('Story 18.6: Patient Notification Center', () => {
     const originalIsRTL = I18nManager.isRTL
     I18nManager.isRTL = true
 
+    // Override startPolling to prevent async fetch from running outside act
+    const mockStartPolling = jest.fn()
+    const mockStopPolling = jest.fn()
     useNotificationStore.setState({
       notifications: [labNotification, escalationNotification],
       unreadCount: 2,
-    })
+      hasLoadedOnce: true,
+      fetchError: null,
+      startPolling: mockStartPolling,
+      stopPolling: mockStopPolling,
+    } as any)
 
     const { getByTestId } = renderScreen()
 
@@ -449,6 +512,62 @@ describe('Story 18.6: Patient Notification Center', () => {
     })
 
     I18nManager.isRTL = originalIsRTL
+  })
+
+  // --- 4-state tests ---
+
+  // Loading: before first settle, never show "No notifications"
+  it('shows loading indicator when hasLoadedOnce is false — never "No notifications"', () => {
+    useNotificationStore.setState({
+      notifications: [],
+      unreadCount: 0,
+      isLoading: false,   // Even if isLoading is false, before first settle show loading
+      hasLoadedOnce: false,
+      fetchError: null,
+    })
+
+    const { queryByText, getByTestId } = renderScreen()
+
+    expect(queryByText('No notifications yet')).toBeNull()
+    expect(getByTestId('notifications-loading')).toBeTruthy()
+  })
+
+  // Loading: isLoading=true also shows loading indicator
+  it('shows loading indicator while isLoading is true — never "No notifications"', () => {
+    useNotificationStore.setState({
+      notifications: [],
+      unreadCount: 0,
+      isLoading: true,
+      hasLoadedOnce: false,
+      fetchError: null,
+    })
+
+    const { queryByText, getByTestId } = renderScreen()
+
+    expect(queryByText('No notifications yet')).toBeNull()
+    expect(getByTestId('notifications-loading')).toBeTruthy()
+  })
+
+  // Error: fetch failed → "unavailable" not "No notifications"
+  it('shows error state when fetchError is set — never "No notifications"', () => {
+    // Override startPolling/fetchNotifications so useFocusEffect cannot clear fetchError
+    const noOp = jest.fn()
+    useNotificationStore.setState({
+      notifications: [],
+      unreadCount: 0,
+      isLoading: false,
+      hasLoadedOnce: true,
+      fetchError: 'Failed to load notifications',
+      lastFetched: null,
+      startPolling: noOp,
+      stopPolling: noOp,
+      fetchNotifications: jest.fn().mockResolvedValue(undefined),
+    } as any)
+
+    const { queryByText, getByTestId } = renderScreen()
+
+    expect(queryByText('No notifications yet')).toBeNull()
+    expect(getByTestId('notifications-error')).toBeTruthy()
   })
 
   // Offline: cached notifications display

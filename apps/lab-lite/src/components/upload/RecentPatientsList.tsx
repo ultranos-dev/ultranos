@@ -12,10 +12,30 @@ interface VerifiedPatientCache {
 interface RecentPatientsListProps {
   patients: VerifiedPatientCache[]
   onSelect: (patient: VerifiedPatientCache) => void
+  /** When true, show a skeleton placeholder rather than the empty state */
+  loading?: boolean
 }
 
-export function RecentPatientsList({ patients, onSelect }: RecentPatientsListProps) {
+export function RecentPatientsList({ patients, onSelect, loading = false }: RecentPatientsListProps) {
   const t = useTranslations('verification')
+
+  if (loading) {
+    return (
+      <div
+        className="rounded-lg border border-border bg-card p-4"
+        aria-busy="true"
+        aria-label={t('recentPatientsLoading')}
+        data-testid="recent-patients-loading"
+      >
+        <div className="h-3.5 w-28 animate-pulse rounded bg-muted" />
+        <div className="mt-2 space-y-2">
+          {[1, 2].map((i) => (
+            <div key={i} className="h-8 w-full animate-pulse rounded bg-muted/60" />
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   if (patients.length === 0) return null
 

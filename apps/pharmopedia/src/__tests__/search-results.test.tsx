@@ -19,7 +19,18 @@ vi.mock('@ultranos/ui-kit/native', () => {
     NumericText: ({ children, ...p }: any) => require('react').createElement(require('react-native').Text, p, children),
     Chip: ({ label, selected, onPress, testID }: { label: string; selected?: boolean; onPress?: () => void; testID?: string }) =>
       React.createElement(Pressable, { testID, onPress, accessibilityState: { selected } }, React.createElement(Text, null, label)),
-    EmptyState: ({ title }: { title: string }) => React.createElement(View, { testID: 'empty' }, React.createElement(Text, null, title)),
+    EmptyState: ({ title, testID }: { title: string; testID?: string }) =>
+      React.createElement(View, { testID: testID ?? 'empty' }, React.createElement(Text, null, title)),
+  }
+})
+
+// SkeletonCard stub — avoids Reanimated/theme deps in unit tests.
+vi.mock('@/components/SkeletonCard', () => {
+  const React = require('react')
+  const { View } = require('react-native')
+  return {
+    SkeletonCard: ({ testID }: { testID?: string }) =>
+      React.createElement(View, { testID }),
   }
 })
 
@@ -58,5 +69,23 @@ describe('SearchResults filter chips', () => {
   it('shows an empty state when nothing matches', () => {
     render(<SearchResults query="zzz" results={[]} brands={[]} loading={false} lang="en" onSelectGeneric={vi.fn()} onSelectBrand={vi.fn()} />)
     expect(screen.getByTestId('empty')).toBeTruthy()
+  })
+})
+
+describe('SearchResults — 4-state: loading', () => {
+  it('shows skeleton cards while loading (no false empty)', () => {
+    render(<SearchResults query="cip" results={[]} brands={[]} loading={true} lang="en" onSelectGeneric={vi.fn()} onSelectBrand={vi.fn()} />)
+    expect(screen.getByTestId('search-loading')).toBeTruthy()
+  })
+
+  it('does NOT show empty state while loading', () => {
+    render(<SearchResults query="cip" results={[]} brands={[]} loading={true} lang="en" onSelectGeneric={vi.fn()} onSelectBrand={vi.fn()} />)
+    expect(screen.queryByTestId('empty')).toBeNull()
+  })
+
+  it('does NOT show result cards while loading', () => {
+    render(<SearchResults query="cip" results={generics} brands={brands} loading={true} lang="en" onSelectGeneric={vi.fn()} onSelectBrand={vi.fn()} />)
+    expect(screen.queryByTestId('drug-card-J01MA02')).toBeNull()
+    expect(screen.queryByTestId('brand-result-b1')).toBeNull()
   })
 })

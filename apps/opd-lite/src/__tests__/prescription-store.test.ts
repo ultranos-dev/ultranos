@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { usePrescriptionStore } from '@/stores/prescription-store'
 import { db } from '@/lib/db'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
@@ -45,9 +45,15 @@ describe('usePrescriptionStore', () => {
     usePrescriptionStore.setState({
       pendingPrescriptions: [],
       isSaving: false,
+      loadError: false,
     })
     await db.medications.clear()
     await db.syncQueue.clear()
+  })
+
+  afterEach(() => {
+    // Restore any vi.spyOn mocks so they don't bleed into subsequent tests.
+    vi.restoreAllMocks()
   })
 
   describe('addPrescription', () => {
@@ -276,6 +282,45 @@ describe('usePrescriptionStore', () => {
       usePrescriptionStore.setState({ isSaving: true })
       usePrescriptionStore.getState().clearPhiState()
       expect(usePrescriptionStore.getState().isSaving).toBe(false)
+    })
+
+    it('resets loadError flag', () => {
+      usePrescriptionStore.setState({ loadError: true })
+      usePrescriptionStore.getState().clearPhiState()
+      expect(usePrescriptionStore.getState().loadError).toBe(false)
+    })
+  })
+
+  describe('loadPrescriptions — 4-state error handling', () => {
+    it('sets loadError when Dexie read throws, not a silent empty', async () => {
+      // Simulate Dexie failure. Use direct property assignment (not vi.spyOn)
+      // because Dexie prototype methods may not be configurable — vi.spyOn +
+      // mockRestore() is not guaranteed to work on them. We save + restore
+      // the original manually in try/finally.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tableObj = db.medications as unknown as Record<string, any>
+      const originalWhere = tableObj.where
+      tableObj.where = () => { throw new Error('IndexedDB unavailable') }
+
+      try {
+        await expect(
+          usePrescriptionStore.getState().loadPrescriptions(encounterId)
+        ).rejects.toThrow('Failed to load prescriptions')
+
+        // PHI safety: error flag must be set so consumers can show unavailable
+        expect(usePrescriptionStore.getState().loadError).toBe(true)
+        // Must NOT leave an empty list as if successfully loaded zero
+        expect(usePrescriptionStore.getState().pendingPrescriptions).toHaveLength(0)
+      } finally {
+        tableObj.where = originalWhere
+      }
+    })
+
+    it('clears loadError and loads data on successful call after a prior error', async () => {
+      usePrescriptionStore.setState({ loadError: true })
+      // DB is empty — successful load of zero records
+      await usePrescriptionStore.getState().loadPrescriptions(encounterId)
+      expect(usePrescriptionStore.getState().loadError).toBe(false)
     })
   })
 })

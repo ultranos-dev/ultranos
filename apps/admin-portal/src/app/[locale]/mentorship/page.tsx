@@ -461,17 +461,29 @@ function PairingDetailPanel({
 }) {
   const [detail, setDetail] = useState<PairingDetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const [detailError, setDetailError] = useState(false)
 
   useEffect(() => {
     setLoading(true)
+    setDetailError(false)
     trpc.admin.getMentorshipPairingDetail
       .query({ pairingId })
       .then(setDetail)
-      .catch(() => {})
+      .catch(() => { setDetailError(true) })
       .finally(() => setLoading(false))
   }, [pairingId])
 
   if (loading) return <tr><td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">Loading details...</td></tr>
+  if (detailError) return (
+    <tr>
+      <td colSpan={6} className="px-6 py-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">Details unavailable — could not load pairing data.</p>
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close detail">Close</Button>
+        </div>
+      </td>
+    </tr>
+  )
   if (!detail) return null
 
   return (

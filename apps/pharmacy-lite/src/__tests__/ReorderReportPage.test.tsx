@@ -31,4 +31,11 @@ describe('ReorderReportPage', () => {
     render(<ReorderReportPage />)
     expect(await screen.findByText('empty')).toBeInTheDocument()
   })
+  it('shows unavailable error state (not "nothing to reorder") when load fails', async () => {
+    getReorderReport.mockRejectedValue(new Error('DB offline'))
+    render(<ReorderReportPage />)
+    // Error state must appear; the false-empty "empty" must NOT appear
+    expect(await screen.findByTestId('reorder-error')).toBeInTheDocument()
+    expect(screen.queryByText('empty')).not.toBeInTheDocument()
+  })
 })

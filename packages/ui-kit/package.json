@@ -49,7 +49,12 @@
     "./components/photo/photo-avatar-field": "./src/components/photo/photo-avatar-field.tsx",
     "./components/photo/photo-cropper": "./src/components/photo/photo-cropper.tsx",
     "./components/photo/use-webcam-capture": "./src/components/photo/use-webcam-capture.ts",
-    "./notification-presentation": "./src/notification-presentation.ts"
+    "./notification-presentation": "./src/notification-presentation.ts",
+    "./hooks/use-async-data": {
+      "import": "./dist/hooks/use-async-data.js",
+      "types": "./dist/hooks/use-async-data.d.ts"
+    },
+    "./components/ui/async-states": "./src/components/ui/async-states.tsx"
   },
   "scripts": {
     "build": "tsc",

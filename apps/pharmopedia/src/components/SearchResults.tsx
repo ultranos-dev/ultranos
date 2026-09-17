@@ -8,6 +8,7 @@ import { Chip, EmptyState } from '@ultranos/ui-kit/native'
 import { Spacing } from '@ultranos/ui-kit/tokens.native'
 import { DrugCard } from '@/components/DrugCard'
 import { BrandResultCard } from '@/components/BrandResultCard'
+import { SkeletonCard } from '@/components/SkeletonCard'
 
 type Filter = 'all' | 'gen' | 'brand'
 
@@ -52,7 +53,11 @@ export function SearchResults({ query, results, brands, loading, lang, onSelectG
         ))}
       </View>
 
-      {isEmpty ? (
+      {loading ? (
+        <View testID="search-loading">
+          {[0, 1, 2].map((i) => <SkeletonCard key={i} testID={`skeleton-search-${i}`} />)}
+        </View>
+      ) : isEmpty ? (
         <EmptyState icon={SearchX} title={t('search.noResultsTitle')} description={t('search.noResultsDescription')} />
       ) : (
         <View style={styles.list}>

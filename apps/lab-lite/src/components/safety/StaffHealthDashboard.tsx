@@ -35,8 +35,10 @@ export function StaffHealthDashboard() {
   const [loading, setLoading] = useState(true)
   const [selectedPractitioner, setSelectedPractitioner] = useState<string | null>(null)
   const [accessDenied, setAccessDenied] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   const loadDashboard = useCallback(async () => {
+    setLoadError(false)
     if (!session || session.labRole !== LabRole.LAB_MANAGER) {
       setAccessDenied(true)
       setLoading(false)
@@ -96,7 +98,8 @@ export function StaffHealthDashboard() {
         overdueCount,
       })
     } catch {
-      setAccessDenied(true)
+      // A DB/crypto error is a load failure, not an access denial.
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -126,9 +129,17 @@ export function StaffHealthDashboard() {
     )
   }
 
+  if (loadError) {
+    return (
+      <div className="p-6 text-center" data-testid="staff-health-load-error">
+        <p className="text-amber-700 font-medium">{t('loadError')}</p>
+      </div>
+    )
+  }
+
   if (accessDenied) {
     return (
-      <div className="p-6 text-center">
+      <div className="p-6 text-center" data-testid="staff-health-access-denied">
         <p className="text-red-600 font-medium">{t('accessDenied')}</p>
         <p className="text-sm text-muted-foreground mt-2">{t('labManagerRequired')}</p>
       </div>

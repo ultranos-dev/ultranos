@@ -117,7 +117,7 @@ export function SurveillanceAlertHistory() {
 
       {loading ? (
         <div className="mt-6 text-muted-foreground">Loading alerts...</div>
-      ) : alerts.length === 0 ? (
+      ) : !error && alerts.length === 0 ? (
         <EmptyState className="mt-6" title={`No surveillance alerts found${filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.`} />
       ) : (
         <>

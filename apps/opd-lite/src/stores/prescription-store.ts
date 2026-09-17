@@ -12,6 +12,9 @@ import { hlc, serializeHlc } from '@/lib/hlc'
 interface PrescriptionState {
   pendingPrescriptions: FhirMedicationRequestZod[]
   isSaving: boolean
+  /** True after a loadPrescriptions call that threw — consumers must show
+   *  "unavailable" rather than an empty list to satisfy PHI safety rule. */
+  loadError: boolean
 
   addPrescription: (
     form: PrescriptionFormData,
@@ -48,6 +51,7 @@ export const usePrescriptionStore = create<PrescriptionState>()(
   immer((set, get) => ({
     pendingPrescriptions: [],
     isSaving: false,
+    loadError: false,
 
     addPrescription: async (form, encounterId, patientId, practitionerRef, interactionCtx?) => {
       // P1+P3: Atomic check-and-set prevents race condition and ensures
@@ -211,6 +215,7 @@ export const usePrescriptionStore = create<PrescriptionState>()(
     },
 
     loadPrescriptions: async (encounterId) => {
+      set((state) => { state.loadError = false })
       try {
         const medications = await db.medications
           .where('encounter.reference')
@@ -245,6 +250,10 @@ export const usePrescriptionStore = create<PrescriptionState>()(
           state.pendingPrescriptions = active
         })
       } catch {
+        // PHI safety: a Dexie read failure must be visible, not a silent empty.
+        // Set the error flag so consumers can show "unavailable" rather than
+        // rendering a false "no prescriptions" state.
+        set((state) => { state.loadError = true })
         throw new Error('Failed to load prescriptions')
       }
     },
@@ -254,6 +263,7 @@ export const usePrescriptionStore = create<PrescriptionState>()(
       set((state) => {
         state.pendingPrescriptions = []
         state.isSaving = false
+        state.loadError = false
       })
     },
   })),

@@ -310,6 +310,51 @@ describe('RecentEncountersList', () => {
     await vi.waitFor(() => {
       expect(screen.getByText('noEncountersYet')).toBeDefined()
     })
+    // Empty state must NOT flash before loading is done — verify it appears after a settled load
+    expect(screen.queryByTestId('recent-encounters-loading')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('recent-encounters-error')).not.toBeInTheDocument()
+  })
+
+  it('shows loading skeleton before Dexie resolves (no premature empty)', async () => {
+    // Pause the Dexie resolve so we can inspect the in-flight state
+    let resolveToArray: (v: unknown[]) => void = () => {}
+    mockEncountersOrderBy.mockReturnValue({
+      reverse: vi.fn().mockReturnValue({
+        limit: vi.fn().mockReturnValue({
+          toArray: vi.fn().mockReturnValue(new Promise((r) => { resolveToArray = r })),
+        }),
+      }),
+    })
+    const { RecentEncountersList } = await import('@/components/dashboard/RecentEncountersList')
+    render(<RecentEncountersList />)
+
+    // Must show loading, NOT the empty state
+    expect(screen.getByTestId('recent-encounters-loading')).toBeInTheDocument()
+    expect(screen.queryByText('noEncountersYet')).not.toBeInTheDocument()
+
+    // Resolve to settle the component
+    resolveToArray([])
+    await vi.waitFor(() => {
+      expect(screen.queryByTestId('recent-encounters-loading')).not.toBeInTheDocument()
+    })
+  })
+
+  it('shows unavailable (not empty) when Dexie throws on load', async () => {
+    mockEncountersOrderBy.mockReturnValue({
+      reverse: vi.fn().mockReturnValue({
+        limit: vi.fn().mockReturnValue({
+          toArray: vi.fn().mockRejectedValue(new Error('IndexedDB closed')),
+        }),
+      }),
+    })
+    const { RecentEncountersList } = await import('@/components/dashboard/RecentEncountersList')
+    render(<RecentEncountersList />)
+
+    await vi.waitFor(() => {
+      expect(screen.getByTestId('recent-encounters-error')).toBeInTheDocument()
+    })
+    // Must NOT show the empty "no encounters yet" text
+    expect(screen.queryByText('noEncountersYet')).not.toBeInTheDocument()
   })
 
   it('displays encounters with patient names and status', async () => {

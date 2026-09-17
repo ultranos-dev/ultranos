@@ -26,7 +26,7 @@ import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { ResultTrendChart, ResultSummaryTable } from '@/components/clinical/ResultTrendChart'
 import { LabReportDetail } from '@/components/clinical/LabReportDetail'
-import { ChevronDown, ChevronRight, AlertCircle, AlertTriangle, CircleCheck, WifiOff } from '@ultranos/ui-kit/icons'
+import { ChevronDown, ChevronRight, AlertCircle, AlertTriangle, CircleCheck, WifiOff, ServerOff } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
 import type { TrendDataPoint } from '@/lib/lab-results/result-grouper'
@@ -244,6 +244,7 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
   const [groups, setGroups] = useState<GroupedResults[]>([])
   const [pinnedCriticals, setPinnedCriticals] = useState<LocalDiagnosticReport[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [consentDenied, setConsentDenied] = useState<string | null>(null)
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
   const [nextCursor, setNextCursor] = useState<string | null>(null)
@@ -295,7 +296,9 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
         )
       }
     } catch {
-      // Offline-tolerant: show whatever is cached
+      // PHI safety: error must surface as "unavailable", never a false empty.
+      // Only set on initial load (no cursor) — load-more errors don't wipe data.
+      if (!cursor) setLoadError(true)
     } finally {
       setLoading(false)
       setLoadingMore(false)
@@ -346,6 +349,24 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
           ? t('consentExpiredDetail')
           : t('consentRequiredDetail')}
       </Alert>
+    )
+  }
+
+  // ── Load error ───────────────────────────────────────────────────────────
+  // PHI safety: a failure must never collapse to a false "no results" empty.
+  if (loadError) {
+    return (
+      <div
+        className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
+        data-testid="timeline-unavailable"
+      >
+        <EmptyState
+          icon={ServerOff}
+          title={t('resultsUnavailable')}
+          description={t('resultsUnavailableDetail')}
+          action={{ label: t('retry'), onClick: () => loadPage() }}
+        />
+      </div>
     )
   }
 

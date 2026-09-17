@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { AlertTriangle } from '@ultranos/ui-kit/icons'
 import { db } from '@/lib/db'
 import type { LocalEncounter, SoapLedgerEntry } from '@/lib/db'
 import { EncounterDetailModal } from '@/components/patient/EncounterDetailModal'
@@ -190,12 +191,15 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
   const [selected, setSelected] = useState<EncounterSummary | null>(null)
   const [localLastSyncedAt, setLocalLastSyncedAt] = useState<string | null>(null)
   const [revalidationFailed, setRevalidationFailed] = useState(false)
+  // 'error' = Dexie read failure; 'unsynced' = empty local + no Hub confirmation
+  const [dexieError, setDexieError] = useState(false)
   const globalLastSyncedAt = useSyncStore((s) => s.lastSyncedAt)
   const lastSyncedAt = localLastSyncedAt ?? globalLastSyncedAt
   const cancelledRef = useRef({ current: false })
   const initialAuditFired = useRef(false)
 
   const loadFromDexie = useCallback(async (cancelled: { current: boolean }, options?: { skipAudit?: boolean }) => {
+    // Throws on Dexie failure — callers must catch to set error state.
     const encounters = await db.encounters
       .where('subject.reference')
       .equals(`Patient/${patientId}`)
@@ -211,6 +215,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
 
     if (!cancelled.current) {
       setSummaries(items)
+      setDexieError(false)
       if (!options?.skipAudit && !initialAuditFired.current) {
         initialAuditFired.current = true
         auditPhiAccess(
@@ -228,10 +233,12 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
   const revalidateFromHub = useCallback(async (cancelled: { current: boolean }) => {
     try {
       // TODO: Implement listPatientEncounters in trpc.ts (Story 20.5)
-      // For now, Hub revalidation is handled by the sync engine pull path.
-      if (!cancelled.current) {
-        setRevalidationFailed(false)
-      }
+      // Hub revalidation is handled by the sync engine pull path; a direct per-patient
+      // endpoint does not yet exist. Do NOT clear revalidationFailed here — we cannot
+      // confirm that the Hub agrees with local data when the stub returns silently.
+      // When handleSyncNow uses pullPatientChanges successfully, it sets revalidationFailed
+      // false explicitly. This stub intentionally leaves the flag as-is.
+      void cancelled // prevent unused-var lint; the stub is here for structure only
     } catch {
       // Offline or Hub unavailable — Dexie data remains authoritative
       if (!cancelled.current) {
@@ -248,11 +255,14 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
         // Step 1: Load from Dexie (instant, offline-first)
         await loadFromDexie(cancelled)
       } catch {
-        // Dexie unavailable
+        // Dexie unavailable — set error state so we never show a false "no encounters"
+        if (!cancelled.current) {
+          setDexieError(true)
+        }
       } finally {
         if (!cancelled.current) setLoading(false)
       }
-      // Step 2: Background revalidation from Hub
+      // Step 2: Background revalidation from Hub (stub — follow-up Story 20.5)
       revalidateFromHub(cancelled)
     }
     init()
@@ -262,7 +272,10 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
   // Reload from Dexie when the sync engine pulls new data
   useEffect(() => {
     if (globalLastSyncedAt) {
-      loadFromDexie(cancelledRef.current, { skipAudit: true })
+      loadFromDexie(cancelledRef.current, { skipAudit: true }).catch(() => {
+        // Dexie still unavailable after sync — keep showing error state
+        setDexieError(true)
+      })
       setRevalidationFailed(false)
     }
   }, [globalLastSyncedAt, loadFromDexie])
@@ -307,6 +320,42 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
     )
   }
 
+  // Dexie read error — cannot determine encounter history; never show "No encounters".
+  if (dexieError) {
+    return (
+      <div
+        className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
+        role="alert"
+        aria-live="assertive"
+        data-testid="encounters-unavailable"
+      >
+        <div className="flex flex-col items-center gap-3 px-6 text-center">
+          <AlertTriangle size={32} className="text-destructive" aria-hidden="true" />
+          <p className="text-sm font-semibold text-destructive">{t('encountersUnavailable')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Empty local cache + Hub unconfirmed (stub revalidation never ran successfully) —
+  // device may not be fully synced; show "may be incomplete" instead of "No encounters".
+  if (summaries.length === 0 && !globalLastSyncedAt && !localLastSyncedAt) {
+    return (
+      <div
+        className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
+        role="status"
+        aria-live="polite"
+        data-testid="encounters-unsynced"
+      >
+        <div className="flex flex-col items-center gap-3 px-6 text-center">
+          <AlertTriangle size={32} className="text-warning" aria-hidden="true" />
+          <p className="text-sm text-foreground">{t('encountersMayBeIncomplete')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Confirmed empty — the sync engine has pulled data and there are genuinely no encounters.
   if (summaries.length === 0) {
     return (
       <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">

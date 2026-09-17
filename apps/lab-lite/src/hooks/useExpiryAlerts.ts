@@ -24,9 +24,11 @@ export function useExpiryAlerts(): {
 } {
   const [alerts, setAlerts] = useState<ExpiryAlert[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   const runCheck = useCallback(async () => {
     const today = new Date().toISOString().slice(0, 10)
+    setError(false)
 
     try {
       const activeReagents = await getActiveReagents()
@@ -49,6 +51,10 @@ export function useExpiryAlerts(): {
       })
 
       setAlerts(newAlerts)
+    } catch {
+      // Expose load failures — expired reagents going silently invisible is
+      // an operational-safety risk (wrong reagents may still be used).
+      setError(true)
     } finally {
       setLoading(false)
     }

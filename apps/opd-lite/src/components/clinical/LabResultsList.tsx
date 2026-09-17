@@ -8,6 +8,7 @@ import { DirectionalIcon } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { AlertTriangle } from '@ultranos/ui-kit/icons'
 import { checkLabsConsent, type ConsentCheckResult } from '@/lib/consent-check'
 
 interface LabResultsListProps {
@@ -75,9 +76,11 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
   const t = useTranslations('labResults')
   const [reports, setReports] = useState<LocalDiagnosticReport[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [consentResult, setConsentResult] = useState<ConsentCheckResult | null>(null)
 
   const loadReports = useCallback(async () => {
+    setLoadError(false)
     try {
       // AC #5 / Task 6: Consent enforcement before displaying results
       const consent = await checkLabsConsent(patientId)
@@ -113,7 +116,9 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
         )
       }
     } catch {
-      // Offline-tolerant: show empty state
+      // PHI safety: a load failure must surface as unavailable, never as a false
+      // "no results" — CLAUDE.md Rule #1 (no PHI in logs), Rule #3/#4 pattern.
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -127,6 +132,23 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
     return (
       <div className="py-4 text-center text-sm text-muted-foreground">
         {t('loading')}
+      </div>
+    )
+  }
+
+  // PHI safety: load error → show unavailable, never collapse to a false empty.
+  if (loadError) {
+    return (
+      <div
+        className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
+        data-testid="lab-results-unavailable"
+      >
+        <EmptyState
+          icon={AlertTriangle}
+          title={t('resultsUnavailable')}
+          description={t('resultsUnavailableDetail')}
+          action={{ label: t('retry'), onClick: loadReports }}
+        />
       </div>
     )
   }

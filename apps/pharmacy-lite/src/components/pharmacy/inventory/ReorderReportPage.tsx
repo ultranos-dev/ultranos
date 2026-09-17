@@ -33,6 +33,7 @@ export function ReorderReportPage() {
 
   const [lines, setLines] = useState<ReorderLine[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [minorUnits, setMinorUnits] = useState(2)
   const [rowStates, setRowStates] = useState<Map<string, RowState>>(new Map())
@@ -43,6 +44,7 @@ export function ReorderReportPage() {
 
   const loadReport = useCallback(async (mu: number) => {
     setLoading(true)
+    setLoadError(false)
     setGeneratedCount(null)
     setGenerateError(null)
     try {
@@ -62,8 +64,9 @@ export function ReorderReportPage() {
         })
       }
       setRowStates(states)
-    } catch {
-      // load failed — keep empty state
+    } catch (err) {
+      setLoadError(true)
+      console.error('[ReorderReportPage] loadReport failed:', err instanceof Error ? err.message : 'unknown')
     } finally {
       setLoading(false)
     }
@@ -169,6 +172,13 @@ export function ReorderReportPage() {
         {loading ? (
           <div className="flex min-h-[16rem] items-center justify-center">
             <EmptyState icon={Package} title={t('loading')} />
+          </div>
+        ) : loadError ? (
+          <div
+            data-testid="reorder-error"
+            className="flex min-h-[16rem] items-center justify-center"
+          >
+            <EmptyState icon={Package} title={t('loadError')} />
           </div>
         ) : lines.length === 0 ? (
           <div className="flex min-h-[16rem] items-center justify-center">

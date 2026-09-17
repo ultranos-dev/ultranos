@@ -131,6 +131,7 @@
     "qrVerificationFailed": "QR verification failed",
     "verificationFailed": "Patient verification failed",
     "recentPatients": "Recent Patients",
+    "recentPatientsLoading": "Loading recent patients…",
     "noRecentPatients": "No recent patients",
     "yearsOld": "{age} years",
     "searchPatients": "Search Patients",
@@ -183,7 +184,8 @@
     "supervisor": {
       "incompleteCount": "{count} incomplete verifications",
       "expand": "Show details",
-      "collapse": "Hide details"
+      "collapse": "Hide details",
+      "loadError": "Unable to load verification status — check manually"
     }
   },
   "metadata": {
@@ -606,7 +608,10 @@
     "loading": "Loading orders…",
     "noResultsTitle": "No matching orders",
     "noResultsDescription": "No orders match the current filters.",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "unavailableTitle": "Unable to load orders",
+    "unavailableDescription": "The server is unreachable. Check your connection and try again.",
+    "retry": "Retry"
   },
   "settings": {
     "title": "Settings",
@@ -941,7 +946,8 @@
           "warning": "Warning"
         },
         "daysUntilExpiry": "{days} days until expiry",
-        "projectedLoss": "{loss} AFN projected loss"
+        "projectedLoss": "{loss} AFN projected loss",
+        "expiryAlertsUnavailable": "Expiry alert data unavailable. Check reagent status manually."
       },
       "alerts": {
         "criticalTitle": "Critical — Expiring in {days} days",
@@ -1233,6 +1239,74 @@
         "stepsCompleted": "{count} steps completed",
         "stepN": "Step {n}"
       }
+    },
+    "temperature": {
+      "dashboardTitle": "Temperature Monitoring",
+      "noLocations": "No monitoring locations configured",
+      "loadError": "Unable to load temperature data",
+      "retry": "Retry",
+      "noReadings": "No readings yet",
+      "lastReading": "Last reading",
+      "source": "Source",
+      "bleSensor": "BLE Sensor",
+      "manual": "Manual",
+      "range": "Target range",
+      "readingOverdue": "Reading overdue",
+      "logReading": "Log Reading",
+      "trend": "Trend",
+      "trendTitle": "Trend",
+      "close": "Close",
+      "excursionAlert": "Temperature Excursion",
+      "peakTemp": "Peak",
+      "duration": "Duration",
+      "minutes": "min",
+      "connectSensor": "Connect Sensor",
+      "status": {
+        "green": "Normal",
+        "amber": "Near limit",
+        "red": "Out of range"
+      }
+    },
+    "waste": {
+      "title": "Waste Containers",
+      "activateNew": "Activate New Container",
+      "empty": "No containers recorded",
+      "loadError": "Unable to load waste container data",
+      "retry": "Retry",
+      "fillLevel": "Fill level",
+      "daysActive": "{days} days active",
+      "type": {
+        "SHARPS": "Sharps",
+        "BIOHAZARD": "Biohazard",
+        "CHEMICAL": "Chemical",
+        "GENERAL": "General"
+      },
+      "status": {
+        "ACTIVE": "Active",
+        "FULL": "Full",
+        "DISPOSED": "Disposed"
+      }
+    },
+    "health": {
+      "staffDashboard": "Staff Health Dashboard",
+      "totalStaff": "Total Staff",
+      "hepBImmunity": "Hep B Immune",
+      "tbCurrent": "TB Screening Current",
+      "overdueScreenings": "Overdue Screenings",
+      "noStaffRecords": "No staff health records found.",
+      "upToDate": "Up to date",
+      "reminderCount": "{count} reminder(s)",
+      "accessDenied": "Access Denied",
+      "labManagerRequired": "This dashboard is only accessible to Lab Managers.",
+      "loadError": "Unable to load staff health data. Please try again."
+    }
+  },
+  "chw": {
+    "log": {
+      "title": "Samples Collected Today",
+      "countBadge": "{count} samples collected",
+      "empty": "No samples collected today",
+      "loadError": "Unable to load sample log"
     }
   },
   "patientQueue": {
@@ -2908,7 +2982,8 @@
     "cancel": "Cancel",
     "invalidPeriod": "End date must be after start date",
     "existingDraft": "A draft report already exists for this program and period.",
-    "overwriteDraft": "Generate New"
+    "overwriteDraft": "Generate New",
+    "loadError": "Unable to load reports. Please try again."
   },
   "certification": {
     "pageTitle": "My Certification Pathway",
@@ -3499,7 +3574,9 @@
     "noResultsDescription": "No referral send-outs match the current filters.",
     "clearFilters": "Clear filters",
     "actionUpdateStatus": "Update Status",
-    "actionImportResult": "Import Result"
+    "actionImportResult": "Import Result",
+    "loadError": "Unable to load send-outs",
+    "retry": "Retry"
   },
   "outbreak": {
     "activateAriaLabel": "Activate Outbreak Mode",
@@ -3790,7 +3867,9 @@
       "activeAlert": "{count, plural, one {# active escalation needs attention.} other {# active escalations need attention.}}",
       "searchPlaceholder": "Search escalations…",
       "noResults": "No matching escalations",
-      "clearSearch": "Clear search"
+      "clearSearch": "Clear search",
+      "loadError": "Unable to load escalation data",
+      "retry": "Retry"
     }
   },
   "logbook": {
@@ -3818,6 +3897,51 @@
     "authStatus": "Status",
     "loadMore": "Load more",
     "clearFilters": "Clear filters"
+  },
+  "qc": {
+    "driftUnavailable": "QC drift alert data unavailable — check QC status manually.",
+    "driftRejectTitle": "QC Out of Control",
+    "driftWarningTitle": "QC Warning",
+    "acknowledge": "Acknowledge",
+    "acknowledgeAlert": "Acknowledge Alert",
+    "viewHistory": "View QC History",
+    "viewQcHistory": "View QC History",
+    "acknowledgeAlertTitle": "Acknowledge Drift Alert",
+    "resolutionActionLabel": "Resolution Action",
+    "resolutionRequired": "Please select a resolution action",
+    "notesLabel": "Notes",
+    "optional": "optional",
+    "notesPlaceholder": "Add notes…",
+    "cancel": "Cancel",
+    "confirmAcknowledge": "Confirm",
+    "acknowledging": "Acknowledging…",
+    "acknowledgeError": "Failed to acknowledge alert",
+    "result": {
+      "pass": "PASS",
+      "fail": "FAIL"
+    },
+    "history": {
+      "loading": "Loading QC history…",
+      "empty": "No QC runs recorded yet.",
+      "loadError": "Unable to load QC history. Please try again.",
+      "title": "QC History — {analyte}",
+      "tableLabel": "QC Run History for {analyte}",
+      "chartLegend": "Green = mean · Amber = ±2SD · Red = ±3SD",
+      "col": {
+        "date": "Date",
+        "controlLevel": "Control Level",
+        "measuredValues": "Measured Values",
+        "expectedRange": "Expected Range",
+        "result": "Result",
+        "tech": "Technician"
+      }
+    },
+    "resolution": {
+      "recalibrated": "Recalibrated",
+      "maintenancePerformed": "Maintenance Performed",
+      "falseAlarmVerified": "False Alarm Verified",
+      "deferredToSupervisor": "Deferred to Supervisor"
+    }
   },
   "attachments": {
     "dropZoneLabel": "Attach files — images or PDFs",

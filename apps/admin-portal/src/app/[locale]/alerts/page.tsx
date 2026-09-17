@@ -135,20 +135,31 @@ function ClinicalSafetySection() {
   const [reportLoading, setReportLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [reportsError, setReportsError] = useState(false)
+  const [reportsLoading, setReportsLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
       try {
         setLoading(true)
         setError(null)
-        const [metricsResult, reportsResult] = await Promise.all([
-          trpc.admin.getClinicalSafetyMetrics.query(),
-          trpc.admin.listClinicalSafetyReports.query({ limit: 12 }),
-        ])
+        setReportsError(false)
+        setReportsLoading(true)
+        // Fetch metrics and reports independently so a reports failure doesn't
+        // hide metrics, and an empty reports list is distinguished from an error.
+        const metricsResult = await trpc.admin.getClinicalSafetyMetrics.query()
         setMetrics(metricsResult)
-        setReports(reportsResult.reports)
+        // Reports are secondary — fetch separately so partial failure is explicit.
+        trpc.admin.listClinicalSafetyReports.query({ limit: 12 }).then((result) => {
+          setReports(result.reports)
+        }).catch(() => {
+          setReportsError(true)
+        }).finally(() => {
+          setReportsLoading(false)
+        })
       } catch (err: unknown) {
         setError((err as Error)?.message ?? 'Failed to load clinical safety metrics')
+        setReportsLoading(false)
       } finally {
         setLoading(false)
       }
@@ -201,7 +212,13 @@ function ClinicalSafetySection() {
       {/* Monthly reports list */}
       <div>
         <h3 className="text-lg font-semibold text-foreground">Monthly Reports</h3>
-        {reports.length === 0 ? (
+        {reportsLoading ? (
+          <div className="mt-2 text-sm text-muted-foreground">{t('reportsLoading')}</div>
+        ) : reportsError ? (
+          <div className="mt-2">
+            <EmptyState size="sm" icon={FileText} title={t('reportsUnavailable')} />
+          </div>
+        ) : reports.length === 0 ? (
           <div className="mt-2">
             <EmptyState size="sm" icon={FileText} title={t('noReports')} />
           </div>

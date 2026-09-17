@@ -379,4 +379,26 @@ describe('RecentDispensingList', () => {
     // EmptyState renders t('noActivityToday') — i18n mock returns key string
     expect(screen.getByText('noActivityToday')).toBeInTheDocument()
   })
+
+  it('shows skeleton (not empty state) while loading=true', async () => {
+    const { RecentDispensingList } = await import(
+      '@/components/pharmacy/RecentDispensingList'
+    )
+    render(<RecentDispensingList items={[]} loading={true} />)
+
+    // Skeleton placeholder visible
+    expect(screen.getByTestId('recent-dispensing-skeleton')).toBeInTheDocument()
+    // Empty-state must NOT appear while loading
+    expect(screen.queryByText('noActivityToday')).toBeNull()
+  })
+
+  it('shows empty state (not skeleton) once loading settles with no data', async () => {
+    const { RecentDispensingList } = await import(
+      '@/components/pharmacy/RecentDispensingList'
+    )
+    render(<RecentDispensingList items={[]} loading={false} />)
+
+    expect(screen.getByText('noActivityToday')).toBeInTheDocument()
+    expect(screen.queryByTestId('recent-dispensing-skeleton')).toBeNull()
+  })
 })

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
@@ -90,23 +91,27 @@ vi.mock('@/lib/db', () => ({
   },
 }))
 
-// Mock useAppointments hook
+// Mock useAppointments hook — exposed as a vi.fn() so individual tests can
+// control its return value (e.g., to set loadError=true).
 const mockUpdateStatus = vi.fn()
 const mockAddWalkIn = vi.fn()
 const mockCreateAppointment = vi.fn()
 const mockAppointments: unknown[] = []
 
+const mockUseAppointments = vi.fn(() => ({
+  appointments: mockAppointments,
+  slots: [],
+  loading: false,
+  loadError: false,
+  updateStatus: mockUpdateStatus,
+  addWalkIn: mockAddWalkIn,
+  createAppointment: mockCreateAppointment,
+  cancelAppointment: vi.fn(),
+  syncAppointments: vi.fn(),
+}))
+
 vi.mock('@/hooks/useAppointments', () => ({
-  useAppointments: () => ({
-    appointments: mockAppointments,
-    slots: [],
-    loading: false,
-    updateStatus: mockUpdateStatus,
-    addWalkIn: mockAddWalkIn,
-    createAppointment: mockCreateAppointment,
-    cancelAppointment: vi.fn(),
-    syncAppointments: vi.fn(),
-  }),
+  useAppointments: (...args: unknown[]) => mockUseAppointments(...args),
 }))
 
 const nowIso = new Date().toISOString()
@@ -148,6 +153,18 @@ describe('Appointment Scheduling', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockAppointments.length = 0
+    // Restore default useAppointments mock after any per-test overrides
+    mockUseAppointments.mockImplementation(() => ({
+      appointments: mockAppointments,
+      slots: [],
+      loading: false,
+      loadError: false,
+      updateStatus: mockUpdateStatus,
+      addWalkIn: mockAddWalkIn,
+      createAppointment: mockCreateAppointment,
+      cancelAppointment: vi.fn(),
+      syncAppointments: vi.fn(),
+    }))
   })
 
   it('DayScheduleView renders time slots', async () => {
@@ -307,5 +324,61 @@ describe('Appointment Scheduling', () => {
 
     expect(state.selectedDate.toDateString()).toBe(today.toDateString())
     expect(state.viewMode).toBe('day')
+  })
+})
+
+// ─── useAppointments hook — 4-state error exposure ───────────────────────────
+// These tests verify loadError behaviour in WalkInQueue.
+describe('useAppointments — loadError exposure', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    // Restore default mock so loadError starts at false
+    mockUseAppointments.mockImplementation(() => ({
+      appointments: [],
+      slots: [],
+      loading: false,
+      loadError: false,
+      updateStatus: vi.fn(),
+      addWalkIn: vi.fn(),
+      createAppointment: vi.fn(),
+      cancelAppointment: vi.fn(),
+      syncAppointments: vi.fn(),
+    }))
+  })
+
+  it('WalkInQueue shows unavailable state (not empty) when hook exposes loadError=true', async () => {
+    // Override for this one test: loadError=true simulates a Dexie failure.
+    // mockUseAppointments is the backing fn for the vi.mock factory, so setting
+    // its implementation here takes effect for any NEW render in this test.
+    mockUseAppointments.mockReturnValueOnce({
+      appointments: [],
+      slots: [],
+      loading: false,
+      loadError: true,
+      updateStatus: vi.fn(),
+      addWalkIn: vi.fn(),
+      createAppointment: vi.fn(),
+      cancelAppointment: vi.fn(),
+      syncAppointments: vi.fn(),
+    })
+
+    const { WalkInQueue } = await import('@/components/appointments/WalkInQueue')
+    render(<WalkInQueue />)
+
+    // Must show unavailable, NOT the "no walk-ins" empty state
+    await waitFor(() => {
+      expect(screen.getByTestId('walkin-queue-unavailable')).toBeInTheDocument()
+    })
+    expect(screen.queryByText('noWalkIns')).not.toBeInTheDocument()
+  })
+
+  it('WalkInQueue shows empty state (not unavailable) when loadError=false and no walk-ins', async () => {
+    // Default mock: loadError=false, no walk-in appointments
+    const { WalkInQueue } = await import('@/components/appointments/WalkInQueue')
+    render(<WalkInQueue />)
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('walkin-queue-unavailable')).not.toBeInTheDocument()
+    })
   })
 })

@@ -7,7 +7,7 @@ import { getDb } from '@/lib/db'
 import { getOverdueSendOuts } from '@/lib/sendout-tat'
 import { StatusUpdateModal } from '@/components/sendout/StatusUpdateModal'
 import { ResultImportModal } from '@/components/sendout/ResultImportModal'
-import { AlertTriangle, Send, FileSearch } from '@ultranos/ui-kit/icons'
+import { AlertTriangle, Send, FileSearch, TriangleAlert } from '@ultranos/ui-kit/icons'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { Badge } from '@/components/ui/badge'
@@ -45,11 +45,13 @@ export default function SendOutsPage() {
   const [filterLabId, setFilterLabId] = useState('')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [statusModal, setStatusModal] = useState<SendOut | null>(null)
   const [resultModal, setResultModal] = useState<SendOut | null>(null)
 
   const loadData = useCallback(async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const db = getDb()
       const [all, allLabs, overdue] = await Promise.all([
@@ -60,6 +62,8 @@ export default function SendOutsPage() {
       setSendOuts(all)
       setLabs(new Map(allLabs.map((l) => [l.id, l])))
       setOverdueSendOuts(overdue)
+    } catch {
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -156,11 +160,19 @@ export default function SendOutsPage() {
         </select>
       </div>
 
-      {/* Content box — single cohesive box (loading / empty / table) */}
+      {/* Content box — single cohesive box (loading / error / empty / table) */}
       <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
         {loading ? (
           <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">
             {t('loading')}
+          </div>
+        ) : loadError ? (
+          <div className="flex min-h-[16rem] items-center justify-center" role="alert">
+            <EmptyState
+              icon={TriangleAlert}
+              title={t('loadError')}
+              action={{ label: t('retry'), onClick: () => void loadData() }}
+            />
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex min-h-[16rem] items-center justify-center">

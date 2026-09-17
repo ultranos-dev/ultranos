@@ -78,6 +78,7 @@ export default function InventoryPage() {
   const [orderTotal, setOrderTotal] = useState(0)
   const [orderCursor, setOrderCursor] = useState(0)
   const [ordersLoading, setOrdersLoading] = useState(false)
+  const [ordersSettled, setOrdersSettled] = useState(false)
   const [advancingId, setAdvancingId] = useState<string | null>(null)
   const [viewingOrder, setViewingOrder] = useState<PurchaseOrder | null>(null)
 
@@ -120,6 +121,7 @@ export default function InventoryPage() {
       setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setOrdersLoading(false)
+      setOrdersSettled(true)
     }
   }, [orderCursor])
 
@@ -206,7 +208,7 @@ export default function InventoryPage() {
           <div className="space-y-4">
             {heatmapLoading ? (
               <div className="text-muted-foreground">Loading inventory overview...</div>
-            ) : labs.length === 0 ? (
+            ) : !error && labs.length === 0 ? (
               <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
                 <EmptyState
                   icon={TrendingUp}
@@ -214,7 +216,7 @@ export default function InventoryPage() {
                   description={t('noHeatmapDescription')}
                 />
               </div>
-            ) : (
+            ) : error ? null : (
               <>
                 <HeatMapGrid labs={labs} reagentCategories={reagentCategories} cells={cells} />
 
@@ -237,9 +239,9 @@ export default function InventoryPage() {
         {/* Purchase Orders Tab */}
         {tab === 'orders' && (
           <div>
-            {ordersLoading ? (
+            {ordersLoading || !ordersSettled ? (
               <div className="text-muted-foreground">Loading purchase orders...</div>
-            ) : orders.length === 0 ? (
+            ) : !error && orders.length === 0 ? (
               <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
                 <EmptyState
                   icon={Package}
@@ -247,7 +249,7 @@ export default function InventoryPage() {
                   description={t('noPurchaseOrdersDescription')}
                 />
               </div>
-            ) : (
+            ) : error ? null : (
               <>
                 <div className="overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
                   <table className="w-full text-sm">
