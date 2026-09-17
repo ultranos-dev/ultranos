@@ -1188,6 +1188,7 @@
     "pageOf": "مخ {current} له {total}",
     "allergyFlag": "حساسیت لري",
     "allergySyncing": "—",
+    "allergySyncingAria": "د حساسیت حالت همغږي کیږي",
     "nidMissingBadge": "بدون تذکره",
     "syncing": "همغږي کیږي...",
     "noResultsDescription": "د خپل لټون یا فلترونو تنظیم وکړئ ترڅو هغه ومومئ چې لټوئ یې.",

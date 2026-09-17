@@ -1188,6 +1188,7 @@
     "pageOf": "صفحة {current} من {total}",
     "allergyFlag": "لديه حساسية",
     "allergySyncing": "—",
+    "allergySyncingAria": "جارٍ مزامنة حالة الحساسية",
     "nidMissingBadge": "بدون هوية",
     "syncing": "جارٍ المزامنة...",
     "noResultsDescription": "حاول تعديل بحثك أو الفلاتر للعثور على ما تبحث عنه.",

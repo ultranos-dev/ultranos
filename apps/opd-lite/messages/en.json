@@ -1188,6 +1188,7 @@
     "pageOf": "Page {current} of {total}",
     "allergyFlag": "Has allergies",
     "allergySyncing": "—",
+    "allergySyncingAria": "Syncing allergy status",
     "nidMissingBadge": "NID Missing",
     "syncing": "Syncing...",
     "noResultsDescription": "Try adjusting your search or filters to find what you are looking for.",

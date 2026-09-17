@@ -575,7 +575,7 @@ export function PatientDirectory() {
                         // AllergyBanner's "never-false-none" principle applied here.
                         <span
                           className="text-xs text-muted-foreground"
-                          aria-label={t('allergySyncing')}
+                          aria-label={t('allergySyncingAria')}
                           data-testid="allergy-syncing"
                         >
                           {t('allergySyncing')}

@@ -1188,6 +1188,7 @@
     "pageOf": "صفحه {current} از {total}",
     "allergyFlag": "حساسیت دارد",
     "allergySyncing": "—",
+    "allergySyncingAria": "همگام‌سازی وضعیت حساسیت",
     "nidMissingBadge": "بدون تذکره",
     "syncing": "همگام‌سازی...",
     "noResultsDescription": "جستجو یا فیلترهای خود را تنظیم کنید تا آنچه را که دنبال می‌کنید پیدا کنید.",

@@ -485,6 +485,27 @@ describe('Encounter Dashboard', () => {
     expect(rail.contains(allergyBanner)).toBe(false)
   })
 
+  it('renders prescription-load-error banner when prescription store has a loadError', async () => {
+    const patient = makePatient('patient-rx-err', 'Test RxErr')
+    usePatientStore.setState({ selectedPatient: patient })
+
+    // Mock loadPrescriptions to simulate a Dexie failure: sets loadError=true
+    // (no throw — the real store sets loadError then re-throws, but the dashboard
+    // useEffect does not catch the re-throw; only the store state drives the UI)
+    const mockLoadPrescriptions = vi.fn().mockImplementation(async () => {
+      usePrescriptionStore.setState({ loadError: true } as never)
+    })
+    usePrescriptionStore.setState({ loadPrescriptions: mockLoadPrescriptions } as never)
+
+    render(<EncounterDashboard patientId="patient-rx-err" />)
+
+    fireEvent.click(screen.getByText('Start Encounter'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('prescription-load-error')).toBeInTheDocument()
+    })
+  })
+
   it('P3: allows prescription add with UNAVAILABLE flag when allergy data has load error', async () => {
     const patient = makePatient('patient-p3', 'Test P3')
     usePatientStore.setState({ selectedPatient: patient })
