@@ -365,4 +365,12 @@ const en = {
 } as const
 
 export default en
-export type Translations = typeof en
+
+// `en` is declared `as const`, so `typeof en` types every value as its exact
+// English string literal. Translations in other locales are different strings,
+// so deriving the shape directly would reject every translated value. Widen all
+// leaf literals to `string` while preserving the key structure.
+type DeepStringify<T> = {
+  [K in keyof T]: T[K] extends string ? string : DeepStringify<T[K]>
+}
+export type Translations = DeepStringify<typeof en>
