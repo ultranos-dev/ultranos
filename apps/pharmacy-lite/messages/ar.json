@@ -305,7 +305,8 @@
     "dispensingComplete": "اكتمل الصرف",
     "collectPayment": "تحصيل الدفع — {invoiceNumber}",
     "noActivityDescription": "ستظهر الأدوية التي تم صرفها هنا أثناء تنفيذ الوصفات خلال وردیتك.",
-    "startScanning": "ابدأ المسح"
+    "startScanning": "ابدأ المسح",
+    "loading": "جاري تحميل الصرف الأخير…"
   },
   "queue": {
     "active": "نشطة",
@@ -1135,7 +1136,8 @@
     "searchPlaceholder": "البحث عن التحويلات...",
     "noResultsTitle": "لا توجد تحويلات مطابقة",
     "noResultsDescription": "حاول تعديل البحث أو عوامل التصفية.",
-    "clearFilters": "مسح عوامل التصفية"
+    "clearFilters": "مسح عوامل التصفية",
+    "loadError": "تعذّر تحميل التحويلات. يرجى المحاولة مرة أخرى."
   },
   "procurement": {
     "suppliersTitle": "الموردون",

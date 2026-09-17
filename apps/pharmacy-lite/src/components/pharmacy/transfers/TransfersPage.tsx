@@ -29,14 +29,18 @@ export function TransfersPage() {
   const currentLocationId = useLocationStore((s) => s.currentLocationId)
   const [transfers, setTransfers] = useState<StockTransfer[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [actionInProgress, setActionInProgress] = useState(false)
   const [tab, setTab] = useState<TabKey>('all')
   const [search, setSearch] = useState('')
 
   const loadTransfers = useCallback(async () => {
+    setLoadError(false)
     try {
       const data = await getTransfers(CURRENT_LOCATION_ID)
       setTransfers(data)
+    } catch {
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -183,6 +187,12 @@ export function TransfersPage() {
       {loading ? (
         <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 text-sm text-muted-foreground">
           {t('loading')}
+        </div>
+      ) : loadError ? (
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState icon={Truck} title={t('loadError')} />
+          </div>
         </div>
       ) : visibleCount === 0 ? (
         <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">

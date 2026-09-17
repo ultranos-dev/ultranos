@@ -305,7 +305,8 @@
     "dispensingComplete": "تحویل کامل شد",
     "collectPayment": "دریافت پرداخت — {invoiceNumber}",
     "noActivityDescription": "ادویه‌های تحویل داده شده در اینجا نمایش داده می‌شوند وقتی نسخه‌ها را در طول شیفت انجام می‌دهید.",
-    "startScanning": "شروع اسکن"
+    "startScanning": "شروع اسکن",
+    "loading": "در حال بارگذاری توزیع اخیر…"
   },
   "queue": {
     "active": "فعال",
@@ -1135,7 +1136,8 @@
     "searchPlaceholder": "جستجوی انتقال‌ها...",
     "noResultsTitle": "هیچ انتقالی مطابقت ندارد",
     "noResultsDescription": "جستجو یا فیلترها را تنظیم کنید.",
-    "clearFilters": "پاک کردن فیلترها"
+    "clearFilters": "پاک کردن فیلترها",
+    "loadError": "بارگذاری انتقالات ناکام شد. لطفاً دوباره تلاش کنید."
   },
   "procurement": {
     "suppliersTitle": "تامین‌کنندگان",

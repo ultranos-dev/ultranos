@@ -305,7 +305,8 @@
     "dispensingComplete": "ورکول بشپړ شول",
     "collectPayment": "تادیه راټولول — {invoiceNumber}",
     "noActivityDescription": "ورکړل شوي درملونه به دلته ښکاره شي کله چې د خپلې شیفت پر مهال نسخې پوره کوئ.",
-    "startScanning": "سکین پیل کړئ"
+    "startScanning": "سکین پیل کړئ",
+    "loading": "وروستي وویشل کیدل بارول کیږي…"
   },
   "queue": {
     "active": "فعال",
@@ -1135,7 +1136,8 @@
     "searchPlaceholder": "د لیږدونو لټون...",
     "noResultsTitle": "هیڅ سمون لرونکی لیږد نشته",
     "noResultsDescription": "خپل لټون یا فلټرونه سم کړئ.",
-    "clearFilters": "فلټرونه پاک کړئ"
+    "clearFilters": "فلټرونه پاک کړئ",
+    "loadError": "لیږدونه بارول ناکام شول. بیا هڅه وکړئ."
   },
   "procurement": {
     "suppliersTitle": "عرضه کوونکي",

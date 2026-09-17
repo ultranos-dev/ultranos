@@ -107,6 +107,7 @@ export function PharmacyDashboard() {
     failedSync: 0,
     recentDispenses: [],
   })
+  const [statsLoading, setStatsLoading] = useState(true)
   const [unverifiedCount, setUnverifiedCount] = useState(0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -116,6 +117,8 @@ export function PharmacyDashboard() {
       setStats(data)
     } catch {
       // Silently handle query errors — dashboard will show stale data
+    } finally {
+      setStatsLoading(false)
     }
     // Best-effort Hub count of pending physician reviews. fetchPending… never
     // throws (degrades to 0 offline/on error) so it can't break local stats.
@@ -183,7 +186,7 @@ export function PharmacyDashboard() {
 
       {/* Recent dispensing list */}
       <section>
-        <RecentDispensingList items={stats.recentDispenses} />
+        <RecentDispensingList items={stats.recentDispenses} loading={statsLoading} />
       </section>
     </div>
   )

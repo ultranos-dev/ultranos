@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Bookmark } from '@ultranos/ui-kit/icons'
 import { Badge } from '@/components/ui/badge'
 
@@ -17,6 +18,7 @@ export interface RecentDispenseItem {
 
 interface RecentDispensingListProps {
   items: RecentDispenseItem[]
+  loading?: boolean
 }
 
 function formatTime(isoString: string): string {
@@ -36,7 +38,7 @@ const syncBadgeClasses: Record<RecentDispenseItem['syncStatus'], string> = {
   failed: 'bg-destructive/10 text-destructive border-destructive/20',
 }
 
-export function RecentDispensingList({ items }: RecentDispensingListProps) {
+export function RecentDispensingList({ items, loading = false }: RecentDispensingListProps) {
   const router = useRouter()
   const t = useTranslations('dispensing')
   const tCommon = useTranslations('common')
@@ -52,7 +54,17 @@ export function RecentDispensingList({ items }: RecentDispensingListProps) {
       <h3 className="text-sm font-semibold text-muted-foreground">
         {t('recentDispensing')}
       </h3>
-      {items.length === 0 ? (
+      {loading ? (
+        <div
+          data-testid="recent-dispensing-skeleton"
+          className="flex flex-col gap-2 overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-4"
+          aria-label={t('loading')}
+        >
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full rounded-lg" />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
         <EmptyState
           icon={Bookmark}
           title={t('noActivityToday')}

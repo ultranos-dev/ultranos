@@ -305,7 +305,8 @@
     "dispensingComplete": "Dispensing Complete",
     "collectPayment": "Collect Payment — {invoiceNumber}",
     "noActivityDescription": "Dispensed medications will appear here as you fill prescriptions throughout your shift.",
-    "startScanning": "Start Scanning"
+    "startScanning": "Start Scanning",
+    "loading": "Loading recent dispensing…"
   },
   "queue": {
     "active": "Active",
@@ -1135,7 +1136,8 @@
     "searchPlaceholder": "Search transfers...",
     "noResultsTitle": "No matching transfers",
     "noResultsDescription": "Try adjusting your search or filters.",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "loadError": "Could not load transfers. Please try again."
   },
   "procurement": {
     "suppliersTitle": "Suppliers",
