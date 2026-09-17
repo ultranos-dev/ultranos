@@ -16,20 +16,24 @@ import { getAllActiveDriftAlerts } from '@/lib/qc/drift-detector'
 interface UseDriftAlertsResult {
   alerts: DriftAlert[]
   loading: boolean
+  error: boolean
   refresh: () => void
 }
 
 export function useDriftAlerts(): UseDriftAlertsResult {
   const [alerts, setAlerts] = useState<DriftAlert[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   const load = useCallback(async () => {
+    setError(false)
     try {
       const active = await getAllActiveDriftAlerts()
       setAlerts(active)
     } catch {
-      // Never expose drift alert load failures to the UI — fail silently
-      setAlerts([])
+      // QC drift is operational-safety — expose load failures so the UI can
+      // show "unavailable" rather than silently rendering nothing.
+      setError(true)
     } finally {
       setLoading(false)
     }
@@ -39,5 +43,5 @@ export function useDriftAlerts(): UseDriftAlertsResult {
     void load()
   }, [load])
 
-  return { alerts, loading, refresh: () => void load() }
+  return { alerts, loading, error, refresh: () => void load() }
 }

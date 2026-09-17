@@ -131,6 +131,7 @@
     "qrVerificationFailed": "QR تایید ناکام شو",
     "verificationFailed": "د ناروغ تایید ناکام شو",
     "recentPatients": "وروستي ناروغان",
+    "recentPatientsLoading": "وروستي ناروغان بارېږي…",
     "noRecentPatients": "وروستي ناروغان نشته",
     "yearsOld": "{age} کلن",
     "searchPatients": "ناروغان لټول",
@@ -945,7 +946,8 @@
           "warning": "خبرتیا"
         },
         "daysUntilExpiry": "تر پای نیټې {days} ورځې",
-        "projectedLoss": "متوقع زیان {loss} افغاني"
+        "projectedLoss": "متوقع زیان {loss} افغاني",
+        "expiryAlertsUnavailable": "د پای نیټې خبرتیا معلومات نشته. د کاشف حالت لاسي وګورئ."
       },
       "alerts": {
         "criticalTitle": "بحراني — {days} ورځو کې پای کیږي",
@@ -1284,6 +1286,19 @@
         "FULL": "ډکه",
         "DISPOSED": "لرې شوې"
       }
+    },
+    "health": {
+      "staffDashboard": "د کارمندانو د روغتیا ډشبورډ",
+      "totalStaff": "ټول کارمندان",
+      "hepBImmunity": "د هیپاټایتس B مصونیت",
+      "tbCurrent": "د TB سکریننګ اوسمهاله",
+      "overdueScreenings": "ځنډول شوې سکریننګونه",
+      "noStaffRecords": "د کارمندانو روغتیایي ریکارډونه ونه موندل شول.",
+      "upToDate": "اوسمهاله",
+      "reminderCount": "{count} یادونه",
+      "accessDenied": "لاسرسی رد شو",
+      "labManagerRequired": "دا ډشبورډ یوازې د لابراتوار مدیرانو لپاره لاسرسی وړ دی.",
+      "loadError": "د کارمندانو روغتیا معلومات بارول ناکام شول. بیا هڅه وکړئ."
     }
   },
   "chw": {
@@ -2935,7 +2950,8 @@
     "cancel": "لغوه",
     "invalidPeriod": "د پای نیټه باید د پیل نیټې وروسته وي",
     "existingDraft": "د دې پروګرام او دورې لپاره یو مسوده راپور شتون لري.",
-    "overwriteDraft": "نوی جوړ کړئ"
+    "overwriteDraft": "نوی جوړ کړئ",
+    "loadError": "راپورونه بارول ناکام شول. بیا هڅه وکړئ."
   },
   "certification": {
     "pageTitle": "زما د تصدیق لار",
@@ -3881,6 +3897,51 @@
     "authStatus": "حالت",
     "loadMore": "نور بار کړئ",
     "clearFilters": "فلټرونه پاک کړئ"
+  },
+  "qc": {
+    "driftUnavailable": "د QC انحراف خبرتیا معلومات نشته — د QC حالت لاسي وګورئ.",
+    "driftRejectTitle": "QC له کنترول نه وتلی",
+    "driftWarningTitle": "د QC خبرتیا",
+    "acknowledge": "تصدیق",
+    "acknowledgeAlert": "د خبرتیا تصدیق",
+    "viewHistory": "د QC تاریخچه وګورئ",
+    "viewQcHistory": "د QC تاریخچه وګورئ",
+    "acknowledgeAlertTitle": "د انحراف خبرتیا تصدیق",
+    "resolutionActionLabel": "د حل اقدام",
+    "resolutionRequired": "مهرباني وکړئ د حل اقدام غوره کړئ",
+    "notesLabel": "یادښتونه",
+    "optional": "اختیاري",
+    "notesPlaceholder": "یادښتونه اضافه کړئ…",
+    "cancel": "لغو",
+    "confirmAcknowledge": "تایید",
+    "acknowledging": "تصدیق کېږي…",
+    "acknowledgeError": "د خبرتیا تصدیق ناکام شو",
+    "result": {
+      "pass": "پاس",
+      "fail": "ناکام"
+    },
+    "history": {
+      "loading": "د QC تاریخچه بارېږي…",
+      "empty": "لا هیڅ QC چلول ثبت نه دي.",
+      "loadError": "د QC تاریخچه بارول ناکام شول. بیا هڅه وکړئ.",
+      "title": "د QC تاریخچه — {analyte}",
+      "tableLabel": "د {analyte} لپاره د QC چلولو تاریخچه",
+      "chartLegend": "شنه = اوسط · عنبري = ±2SD · سور = ±3SD",
+      "col": {
+        "date": "نیټه",
+        "controlLevel": "د کنترول کچه",
+        "measuredValues": "اندازه‌شوي ارزښتونه",
+        "expectedRange": "متوقع سلسله",
+        "result": "پایله",
+        "tech": "ټیکنیشن"
+      }
+    },
+    "resolution": {
+      "recalibrated": "بیا کالیبرول شو",
+      "maintenancePerformed": "ساتنه ترسره شوه",
+      "falseAlarmVerified": "غلط خبرتیا تصدیق شوه",
+      "deferredToSupervisor": "سرپرست ته ولیږل شو"
+    }
   },
   "attachments": {
     "dropZoneLabel": "فایلونه ضمیمه کړئ — انځورونه یا PDF اسناد",

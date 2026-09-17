@@ -131,6 +131,7 @@
     "qrVerificationFailed": "فشل التحقّق من رمز QR",
     "verificationFailed": "فشل التحقّق من المريض",
     "recentPatients": "المرضى الأخيرون",
+    "recentPatientsLoading": "جارٍ تحميل المرضى الأخيرين…",
     "noRecentPatients": "لا توجد مرضى مؤخراً",
     "yearsOld": "{age} سنة",
     "searchPatients": "البحث عن المرضى",
@@ -945,7 +946,8 @@
           "warning": "تحذير"
         },
         "daysUntilExpiry": "{days} يوم حتى انتهاء الصلاحية",
-        "projectedLoss": "خسارة متوقعة {loss} أفغاني"
+        "projectedLoss": "خسارة متوقعة {loss} أفغاني",
+        "expiryAlertsUnavailable": "بيانات تنبيهات الانتهاء غير متوفرة. تحقق من حالة الكاشف يدوياً."
       },
       "alerts": {
         "criticalTitle": "حرج — ينتهي في {days} يوم",
@@ -1284,6 +1286,19 @@
         "FULL": "ممتلئ",
         "DISPOSED": "تمت إزالته"
       }
+    },
+    "health": {
+      "staffDashboard": "لوحة صحة الكوادر",
+      "totalStaff": "إجمالي الكوادر",
+      "hepBImmunity": "المناعة من التهاب الكبد B",
+      "tbCurrent": "فحص السل ساري المفعول",
+      "overdueScreenings": "الفحوصات المتأخرة",
+      "noStaffRecords": "لا توجد سجلات صحية للكوادر.",
+      "upToDate": "محدَّث",
+      "reminderCount": "{count} تذكير(ات)",
+      "accessDenied": "الوصول مرفوض",
+      "labManagerRequired": "هذه اللوحة متاحة لمديري المختبرات فقط.",
+      "loadError": "تعذّر تحميل بيانات صحة الكوادر. حاول مجدداً."
     }
   },
   "chw": {
@@ -2935,7 +2950,8 @@
     "cancel": "إلغاء",
     "invalidPeriod": "يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء",
     "existingDraft": "يوجد تقرير مسودة بالفعل لهذا البرنامج والفترة.",
-    "overwriteDraft": "إنشاء جديد"
+    "overwriteDraft": "إنشاء جديد",
+    "loadError": "تعذّر تحميل التقارير. حاول مجدداً."
   },
   "certification": {
     "pageTitle": "مسیر گواهینامه من",
@@ -3881,6 +3897,51 @@
     "authStatus": "الحالة",
     "loadMore": "تحميل المزيد",
     "clearFilters": "مسح عوامل التصفية"
+  },
+  "qc": {
+    "driftUnavailable": "بيانات تنبيهات انجراف مراقبة الجودة غير متوفرة — تحقق من حالة مراقبة الجودة يدوياً.",
+    "driftRejectTitle": "مراقبة الجودة خارج نطاق السيطرة",
+    "driftWarningTitle": "تحذير مراقبة الجودة",
+    "acknowledge": "الإقرار",
+    "acknowledgeAlert": "الإقرار بالتنبيه",
+    "viewHistory": "عرض سجل مراقبة الجودة",
+    "viewQcHistory": "عرض سجل مراقبة الجودة",
+    "acknowledgeAlertTitle": "الإقرار بتنبيه الانجراف",
+    "resolutionActionLabel": "إجراء الحل",
+    "resolutionRequired": "الرجاء تحديد إجراء الحل",
+    "notesLabel": "ملاحظات",
+    "optional": "اختياري",
+    "notesPlaceholder": "أضف ملاحظات…",
+    "cancel": "إلغاء",
+    "confirmAcknowledge": "تأكيد",
+    "acknowledging": "جارٍ الإقرار…",
+    "acknowledgeError": "فشل الإقرار بالتنبيه",
+    "result": {
+      "pass": "نجاح",
+      "fail": "فشل"
+    },
+    "history": {
+      "loading": "جارٍ تحميل سجل مراقبة الجودة…",
+      "empty": "لم يُسجَّل أي تشغيل لمراقبة الجودة بعد.",
+      "loadError": "تعذّر تحميل سجل مراقبة الجودة. حاول مجدداً.",
+      "title": "سجل مراقبة الجودة — {analyte}",
+      "tableLabel": "سجل تشغيل مراقبة الجودة لـ {analyte}",
+      "chartLegend": "أخضر = المتوسط · عنبري = ±2SD · أحمر = ±3SD",
+      "col": {
+        "date": "التاريخ",
+        "controlLevel": "مستوى التحكم",
+        "measuredValues": "القيم المقاسة",
+        "expectedRange": "النطاق المتوقع",
+        "result": "النتيجة",
+        "tech": "الفني"
+      }
+    },
+    "resolution": {
+      "recalibrated": "إعادة المعايرة",
+      "maintenancePerformed": "الصيانة أُجريت",
+      "falseAlarmVerified": "إنذار كاذب تم التحقق منه",
+      "deferredToSupervisor": "أُحيل إلى المشرف"
+    }
   },
   "attachments": {
     "dropZoneLabel": "إرفاق ملفات — صور أو مستندات PDF",

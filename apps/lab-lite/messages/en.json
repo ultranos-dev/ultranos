@@ -131,6 +131,7 @@
     "qrVerificationFailed": "QR verification failed",
     "verificationFailed": "Patient verification failed",
     "recentPatients": "Recent Patients",
+    "recentPatientsLoading": "Loading recent patients…",
     "noRecentPatients": "No recent patients",
     "yearsOld": "{age} years",
     "searchPatients": "Search Patients",
@@ -945,7 +946,8 @@
           "warning": "Warning"
         },
         "daysUntilExpiry": "{days} days until expiry",
-        "projectedLoss": "{loss} AFN projected loss"
+        "projectedLoss": "{loss} AFN projected loss",
+        "expiryAlertsUnavailable": "Expiry alert data unavailable. Check reagent status manually."
       },
       "alerts": {
         "criticalTitle": "Critical — Expiring in {days} days",
@@ -1284,6 +1286,19 @@
         "FULL": "Full",
         "DISPOSED": "Disposed"
       }
+    },
+    "health": {
+      "staffDashboard": "Staff Health Dashboard",
+      "totalStaff": "Total Staff",
+      "hepBImmunity": "Hep B Immune",
+      "tbCurrent": "TB Screening Current",
+      "overdueScreenings": "Overdue Screenings",
+      "noStaffRecords": "No staff health records found.",
+      "upToDate": "Up to date",
+      "reminderCount": "{count} reminder(s)",
+      "accessDenied": "Access Denied",
+      "labManagerRequired": "This dashboard is only accessible to Lab Managers.",
+      "loadError": "Unable to load staff health data. Please try again."
     }
   },
   "chw": {
@@ -2967,7 +2982,8 @@
     "cancel": "Cancel",
     "invalidPeriod": "End date must be after start date",
     "existingDraft": "A draft report already exists for this program and period.",
-    "overwriteDraft": "Generate New"
+    "overwriteDraft": "Generate New",
+    "loadError": "Unable to load reports. Please try again."
   },
   "certification": {
     "pageTitle": "My Certification Pathway",
@@ -3881,6 +3897,51 @@
     "authStatus": "Status",
     "loadMore": "Load more",
     "clearFilters": "Clear filters"
+  },
+  "qc": {
+    "driftUnavailable": "QC drift alert data unavailable — check QC status manually.",
+    "driftRejectTitle": "QC Out of Control",
+    "driftWarningTitle": "QC Warning",
+    "acknowledge": "Acknowledge",
+    "acknowledgeAlert": "Acknowledge Alert",
+    "viewHistory": "View QC History",
+    "viewQcHistory": "View QC History",
+    "acknowledgeAlertTitle": "Acknowledge Drift Alert",
+    "resolutionActionLabel": "Resolution Action",
+    "resolutionRequired": "Please select a resolution action",
+    "notesLabel": "Notes",
+    "optional": "optional",
+    "notesPlaceholder": "Add notes…",
+    "cancel": "Cancel",
+    "confirmAcknowledge": "Confirm",
+    "acknowledging": "Acknowledging…",
+    "acknowledgeError": "Failed to acknowledge alert",
+    "result": {
+      "pass": "PASS",
+      "fail": "FAIL"
+    },
+    "history": {
+      "loading": "Loading QC history…",
+      "empty": "No QC runs recorded yet.",
+      "loadError": "Unable to load QC history. Please try again.",
+      "title": "QC History — {analyte}",
+      "tableLabel": "QC Run History for {analyte}",
+      "chartLegend": "Green = mean · Amber = ±2SD · Red = ±3SD",
+      "col": {
+        "date": "Date",
+        "controlLevel": "Control Level",
+        "measuredValues": "Measured Values",
+        "expectedRange": "Expected Range",
+        "result": "Result",
+        "tech": "Technician"
+      }
+    },
+    "resolution": {
+      "recalibrated": "Recalibrated",
+      "maintenancePerformed": "Maintenance Performed",
+      "falseAlarmVerified": "False Alarm Verified",
+      "deferredToSupervisor": "Deferred to Supervisor"
+    }
   },
   "attachments": {
     "dropZoneLabel": "Attach files — images or PDFs",

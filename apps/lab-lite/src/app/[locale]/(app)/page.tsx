@@ -38,13 +38,26 @@ export default function LabHomePage() {
   const t = useTranslations()
   const { queueCounts, todayUploadsCompleted, todayResultsPending, recentUploads, loading, error, retry, lastRefreshedAt } =
     useDashboardData()
-  const { alerts, refresh: refreshAlerts } = useDriftAlerts()
+  const { alerts, error: driftError, refresh: refreshAlerts } = useDriftAlerts()
 
   return (
     <div className="flex flex-col gap-4">
       <UploadSuccessBanner />
-      {/* Story 43.6: Show drift alert banner when active QC alerts exist */}
-      <DriftAlertBanner alerts={alerts} onAcknowledged={refreshAlerts} />
+      {/* Story 43.6: Show drift alert banner when active QC alerts exist;
+          show an unavailable notice on load error so QC failures are never
+          silently hidden (operational-safety surface). */}
+      {driftError ? (
+        <div
+          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+          role="alert"
+          aria-live="polite"
+          data-testid="drift-alert-unavailable"
+        >
+          {t('qc.driftUnavailable')}
+        </div>
+      ) : (
+        <DriftAlertBanner alerts={alerts} onAcknowledged={refreshAlerts} />
+      )}
       {error && (
         <div className="flex items-center justify-between rounded-md bg-amber-50 p-3 text-sm text-amber-700" role="alert" aria-live="assertive">
           <span>{error}</span>

@@ -118,19 +118,35 @@ export function QcHistoryView({ analyte, instrumentId, analyteDisplayName }: QcH
   const t = useTranslations('qc')
   const [runs, setRuns] = useState<QcRun[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   const displayName = analyteDisplayName ?? analyte
 
   useEffect(() => {
     let active = true
+    setLoadError(false)
     getQcRunHistory(analyte, instrumentId, 50)
       .then((data) => { if (active) { setRuns(data); setLoading(false) } })
-      .catch(() => { if (active) setLoading(false) })
+      .catch(() => {
+        if (active) { setLoadError(true); setLoading(false) }
+      })
     return () => { active = false }
   }, [analyte, instrumentId])
 
   if (loading) {
     return <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{t('history.loading')}</p>
+  }
+
+  if (loadError) {
+    return (
+      <p
+        style={{ fontSize: '0.875rem', color: '#b45309' }}
+        role="alert"
+        data-testid="qc-history-load-error"
+      >
+        {t('history.loadError')}
+      </p>
+    )
   }
 
   return (

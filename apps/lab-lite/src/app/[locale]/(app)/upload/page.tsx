@@ -101,7 +101,7 @@ export default function UploadPage() {
   const t = useTranslations()
   const session = useAuthSessionStore((s) => s.session)
   const [state, dispatch] = useReducer(wizardReducer, initialState)
-  const recentPatients = useRecentPatients(5)
+  const { patients: recentPatients, loading: recentPatientsLoading } = useRecentPatients(5)
   const [verifyMode, setVerifyMode] = useState<'search' | 'manual' | 'qr'>('search')
   const [verifyError, setVerifyError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -349,7 +349,7 @@ export default function UploadPage() {
           {/* Render verification options only if not yet verified */}
           {!state.patient && (
             <>
-              <RecentPatientsList patients={recentPatients} onSelect={handleRecentPatientSelect} />
+              <RecentPatientsList patients={recentPatients} loading={recentPatientsLoading} onSelect={handleRecentPatientSelect} />
 
               {/* Search / Manual / QR toggle */}
               <div className="flex rounded-lg border border-border bg-muted/30 p-1">

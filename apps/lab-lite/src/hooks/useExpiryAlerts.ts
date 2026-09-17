@@ -20,13 +20,16 @@ export function useExpiryAlerts(): {
   criticalCount: number
   warningCount: number
   loading: boolean
+  error: boolean
   refresh: () => void
 } {
   const [alerts, setAlerts] = useState<ExpiryAlert[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   const runCheck = useCallback(async () => {
     const today = new Date().toISOString().slice(0, 10)
+    setError(false)
 
     try {
       const activeReagents = await getActiveReagents()
@@ -49,6 +52,10 @@ export function useExpiryAlerts(): {
       })
 
       setAlerts(newAlerts)
+    } catch {
+      // Expose load failures — expired reagents going silently invisible is
+      // an operational-safety risk (wrong reagents may still be used).
+      setError(true)
     } finally {
       setLoading(false)
     }
@@ -63,5 +70,5 @@ export function useExpiryAlerts(): {
   const criticalCount = alerts.filter((a) => a.severity === 'critical').length
   const warningCount = alerts.filter((a) => a.severity === 'warning').length
 
-  return { alerts, criticalCount, warningCount, loading, refresh: runCheck }
+  return { alerts, criticalCount, warningCount, loading, error, refresh: runCheck }
 }
