@@ -189,6 +189,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const removePrescription = usePrescriptionStore((s) => s.removePrescription)
   const loadPrescriptions = usePrescriptionStore((s) => s.loadPrescriptions)
   const applyPharmacyToPending = usePrescriptionStore((s) => s.applyPharmacyToPending)
+  const prescriptionLoadError = usePrescriptionStore((s) => s.loadError)
   const [prescriptionError, setPrescriptionError] = useState<string | null>(null)
   // One preferred pharmacy for the whole prescription (not per medication).
   const [prescriptionPharmacy, setPrescriptionPharmacy] = useState<{ id: string; name?: string } | undefined>(undefined)
@@ -926,6 +927,14 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           {prescriptionError && (
             <Alert variant="destructive" role="alert" className="mt-3" icon={<AlertTriangle className="h-4 w-4" />}>
               <p className="text-sm font-semibold text-destructive">{prescriptionError}</p>
+            </Alert>
+          )}
+
+          {/* PHI safety: prescription load failure must be visible, never a false empty.
+              This alert replaces the silent empty list when Dexie is unavailable. */}
+          {prescriptionLoadError && (
+            <Alert variant="warning" role="alert" className="mt-3" data-testid="prescription-load-error">
+              <p className="text-sm font-semibold">{tPrescription('loadUnavailable')}</p>
             </Alert>
           )}
 

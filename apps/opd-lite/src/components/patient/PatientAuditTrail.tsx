@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { ChevronDown, History } from '@ultranos/ui-kit/icons'
+import { ChevronDown, History, AlertTriangle } from '@ultranos/ui-kit/icons'
 import { formatRelativeTime } from '@ultranos/ui-kit'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
@@ -69,6 +69,7 @@ export function PatientAuditTrail({
   const [entries, setEntries] = useState<AuditEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState(false)
   const [cursor, setCursor] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(false)
 
@@ -77,11 +78,15 @@ export function PatientAuditTrail({
   const fetchEntries = useCallback(
     async (nextCursor?: string) => {
       setLoading(true)
+      if (!nextCursor) setLoadError(false)
       try {
         const supabase = getSupabaseBrowserClient()
         const { data: sessionData } = await supabase.auth.getSession()
         const token = sessionData.session?.access_token
-        if (!token) return
+        if (!token) {
+          setLoadError(true)
+          return
+        }
 
         const input: Record<string, unknown> = {
           patientId,
@@ -95,7 +100,10 @@ export function PatientAuditTrail({
           { headers: { Authorization: `Bearer ${token}` } },
         )
 
-        if (!res.ok) return
+        if (!res.ok) {
+          if (!nextCursor) setLoadError(true)
+          return
+        }
 
         const body = (await res.json()) as {
           result: {
@@ -117,7 +125,8 @@ export function PatientAuditTrail({
         setHasMore(result.hasMore)
         setLoaded(true)
       } catch {
-        // Silently fail — audit trail is non-critical UI
+        // Non-critical UI, but must not silently render blank — show unavailable.
+        if (!nextCursor) setLoadError(true)
       } finally {
         setLoading(false)
       }
@@ -183,7 +192,11 @@ export function PatientAuditTrail({
             <p className="text-sm text-muted-foreground">{t('auditLoading')}</p>
           )}
 
-          {loaded && entries.length === 0 && (
+          {!loading && loadError && (
+            <EmptyState size="sm" icon={AlertTriangle} title={t('auditUnavailable')} data-testid="audit-trail-error" />
+          )}
+
+          {loaded && !loadError && entries.length === 0 && (
             <EmptyState size="sm" icon={History} title={t('auditEmpty')} />
           )}
 

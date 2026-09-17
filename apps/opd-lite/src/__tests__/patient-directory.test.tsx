@@ -47,6 +47,7 @@ vi.mock('next-intl', () => ({
       previous: 'Previous',
       next: 'Next',
       allergyFlag: 'Has allergies',
+      allergySyncing: '—',
       nidMissingBadge: 'NID Missing',
       syncing: 'Syncing...',
       statTotal: 'Total patients',
@@ -135,11 +136,16 @@ vi.mock('@/lib/db', () => ({
   },
 }))
 
+// Expose syncAll as a module-level mock so individual tests can control its behaviour
+// (e.g. a never-resolving Promise to simulate in-progress sync).
+const mockSyncAll = vi.fn().mockResolvedValue([])
+const mockCancelSync = vi.fn()
+
 // Mock use-patient-list-sync
 vi.mock('@/lib/use-patient-list-sync', () => ({
   usePatientListSync: () => ({
-    syncAll: vi.fn().mockResolvedValue([]),
-    cancel: vi.fn(),
+    syncAll: mockSyncAll,
+    cancel: mockCancelSync,
   }),
 }))
 
@@ -192,6 +198,8 @@ const patient2 = makePatient({
 describe('PatientDirectory', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Reset syncAll to the default (immediately resolves) so syncing tests don't bleed
+    mockSyncAll.mockResolvedValue([])
     mockPatientsToArray.mockResolvedValue([patient1, patient2])
     mockAllergyToArray.mockResolvedValue([
       { id: 'a-1', patient: { reference: 'Patient/p-1' } },
@@ -523,5 +531,51 @@ describe('PatientDirectory', () => {
 
     const allTab = screen.getByRole('button', { name: 'All' }) as HTMLButtonElement
     expect(allTab.getAttribute('aria-pressed')).toBe('true')
+  })
+
+  // ─── Surface #7: allergy column provisional during sync ───────────────────
+
+  it('allergy column shows syncing indicator (not confident "no") while Hub sync is in progress', async () => {
+    // Use a patient with NO local allergy data yet (simulates unsynced state)
+    mockPatientsToArray.mockResolvedValue([makePatient({ id: 'p-no-allergy', _ultranos: { nameGiven: 'Layla', isActive: true, hasAllergies: false } })])
+    mockAllergyToArray.mockResolvedValue([]) // No local allergy records yet
+
+    // Make syncAll hang (never resolves) — simulates sync still in progress
+    let resolveSyncAll!: (v: never[]) => void
+    mockSyncAll.mockReturnValue(new Promise<never[]>((r) => { resolveSyncAll = r }))
+
+    const { PatientDirectory } = await import('@/components/patients/PatientDirectory')
+    render(<PatientDirectory />)
+
+    // Wait for patient to appear
+    await vi.waitFor(() => {
+      expect(screen.queryByText(/Layla/)).not.toBeNull()
+    })
+
+    // While syncing: the allergy column must show the syncing indicator (data-testid="allergy-syncing")
+    // and must NOT assert a confident "no allergies" (i.e., the allergyFlag should not appear)
+    const syncingCells = screen.queryAllByTestId('allergy-syncing')
+    expect(syncingCells.length).toBeGreaterThanOrEqual(1)
+
+    // Resolve sync so no pending async work leaks into the next test
+    resolveSyncAll([])
+  })
+
+  it('allergy column shows neutral dot (not syncing indicator) after sync settles with no allergies', async () => {
+    // syncAll resolves immediately (default mock — set in beforeEach)
+    mockPatientsToArray.mockResolvedValue([makePatient({ id: 'p-no-allergy' })])
+    mockAllergyToArray.mockResolvedValue([])
+
+    const { PatientDirectory } = await import('@/components/patients/PatientDirectory')
+    render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      expect(screen.queryByText('Ahmad Khan')).not.toBeNull()
+    })
+
+    // After sync settles: must NOT show syncing indicator
+    expect(screen.queryByTestId('allergy-syncing')).toBeNull()
+    // Must NOT show allergyFlag for a patient with no allergy data
+    expect(screen.queryByText('Has allergies')).toBeNull()
   })
 })

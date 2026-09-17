@@ -561,7 +561,7 @@ export function PatientDirectory() {
                         : '·'}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
-                      {row.hasAllergies && (
+                      {row.hasAllergies ? (
                         <span
                           className="inline-flex items-center gap-1 rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-semibold text-destructive"
                           aria-label={t('allergyFlag')}
@@ -569,6 +569,19 @@ export function PatientDirectory() {
                           <AlertTriangle className="h-3 w-3" aria-hidden="true" />
                           {t('allergyFlag')}
                         </span>
+                      ) : syncing ? (
+                        // Never assert "no allergies" while the Hub sync is still
+                        // in progress — the allergy data may not be local yet.
+                        // AllergyBanner's "never-false-none" principle applied here.
+                        <span
+                          className="text-xs text-muted-foreground"
+                          aria-label={t('allergySyncing')}
+                          data-testid="allergy-syncing"
+                        >
+                          {t('allergySyncing')}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">·</span>
                       )}
                     </td>
                   </tr>

@@ -14,6 +14,7 @@ interface UseAppointmentsReturn {
   appointments: FhirAppointmentZod[]
   slots: FhirSlotZod[]
   loading: boolean
+  loadError: boolean
   createAppointment: (data: {
     patientRef: string
     patientName: string
@@ -52,11 +53,13 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
   const [appointments, setAppointments] = useState<FhirAppointmentZod[]>([])
   const [slots, setSlots] = useState<FhirSlotZod[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const initialLoadDone = useRef(false)
 
   const loadData = useCallback(async () => {
     if (!initialLoadDone.current) {
       setLoading(true)
+      setLoadError(false)
     }
     try {
       const dayStart = startOfDay(date).toISOString()
@@ -75,8 +78,12 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
 
       setAppointments(dayAppointments as FhirAppointmentZod[])
       setSlots(daySlots as FhirSlotZod[])
+      // Clear any prior error now that we have fresh data
+      setLoadError(false)
     } catch {
-      // Dexie failure — keep existing state
+      // Dexie failure — keep existing state; surface error on initial load
+      // so consumers can show "unavailable" instead of a false empty queue.
+      if (!initialLoadDone.current) setLoadError(true)
     } finally {
       setLoading(false)
       initialLoadDone.current = true
@@ -310,6 +317,7 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
     appointments,
     slots,
     loading,
+    loadError,
     createAppointment,
     updateStatus,
     cancelAppointment,

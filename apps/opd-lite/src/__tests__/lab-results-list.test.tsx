@@ -72,6 +72,7 @@ function makeReport(overrides: Partial<FhirDiagnosticReport> = {}): FhirDiagnost
 
 describe('LabResultsList', () => {
   beforeEach(async () => {
+    vi.restoreAllMocks() // Restore any spies from previous tests before clearing
     vi.clearAllMocks()
     await db.diagnosticReports.clear()
     vi.mocked(checkLabsConsent).mockResolvedValue({ granted: true })
@@ -228,6 +229,38 @@ describe('LabResultsList', () => {
     const items = screen.getAllByRole('listitem')
     expect(items[0]!.textContent).toContain('Newer Test')
     expect(items[1]!.textContent).toContain('Older Test')
+  })
+
+  // 4-state: error → unavailable (never a false empty)
+  it('shows unavailable state (not empty) when Dexie read throws', async () => {
+    // Simulate a load failure. We trigger this by making checkLabsConsent throw,
+    // which fires the component's catch block and sets loadError=true.
+    // Patching db.diagnosticReports.where directly is unreliable in tests because
+    // the encryption proxy wraps it dynamically, making spy/restore non-trivial.
+    // The catch block is what we are testing — the specific throw origin does not matter.
+    vi.mocked(checkLabsConsent).mockRejectedValueOnce(new Error('simulated load failure'))
+
+    const onSelectReport = vi.fn()
+    render(<LabResultsList patientId={TEST_PATIENT_ID} onSelectReport={onSelectReport} />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('lab-results-unavailable')).toBeInTheDocument()
+    })
+    // Must NOT show the empty "no results" title
+    expect(screen.queryByText('noResults')).not.toBeInTheDocument()
+    // checkLabsConsent is restored to { granted: true } by the next beforeEach
+  })
+
+  // 4-state: loaded-zero → empty (not unavailable)
+  it('shows empty state (not unavailable) when loaded zero results', async () => {
+    // DB is empty (cleared in beforeEach)
+    const onSelectReport = vi.fn()
+    render(<LabResultsList patientId={TEST_PATIENT_ID} onSelectReport={onSelectReport} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('noResults')).toBeInTheDocument()
+    })
+    expect(screen.queryByTestId('lab-results-unavailable')).not.toBeInTheDocument()
   })
 
   // Consent enforcement tests (Task 6)
