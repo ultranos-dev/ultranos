@@ -213,7 +213,8 @@
     "detailActionError": "Failed to perform action",
     "detailNotFound": "Alert not found",
     "noAlertsDescription": "No prescribing anomaly alerts match the current filter.",
-    "noReports": "No monthly reports generated yet."
+    "noReports": "No monthly reports generated yet.",
+    "reportsUnavailable": "Monthly reports unavailable — could not load."
   },
   "audit": {
     "pageTitle": "Audit Log",
@@ -815,7 +816,8 @@
     "publishing": "Publishing…",
     "publishError": "Failed to publish",
     "errorLoad": "Failed to fetch data",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "modelsUnavailable": "Model data unavailable — could not load."
   },
   "pharmacies": {
     "title": "Pharmacies",

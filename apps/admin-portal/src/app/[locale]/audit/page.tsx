@@ -261,6 +261,7 @@ export default function AuditChainPage() {
             )}
 
             {/* Verification history table (AC #6) */}
+            {!error && (
             <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
             {verifications.length === 0 ? (
               <div className="flex min-h-[16rem] items-center justify-center">
@@ -303,6 +304,7 @@ export default function AuditChainPage() {
               </div>
             )}
             </div>
+            )}
 
             {/* Pagination */}
             {totalPages > 1 && (

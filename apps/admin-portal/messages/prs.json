@@ -213,7 +213,8 @@
     "detailActionError": "اقدام ناکام شد",
     "detailNotFound": "هشدار یافت نشد",
     "noAlertsDescription": "هیچ هشدار ناهنجاری تجویزی با فیلتر فعلی مطابقت ندارد.",
-    "noReports": "هنوز هیچ گزارش ماهانه‌ای ایجاد نشده است."
+    "noReports": "هنوز هیچ گزارش ماهانه‌ای ایجاد نشده است.",
+    "reportsUnavailable": "گزارش‌های ماهانه در دسترس نیست — بارگذاری ناکام شد."
   },
   "audit": {
     "pageTitle": "گزارش ممیزی",
@@ -815,7 +816,8 @@
     "publishing": "در حال انتشار…",
     "publishError": "انتشار ناکام شد",
     "errorLoad": "دریافت داده ناکام شد",
-    "loading": "در حال بارگذاری…"
+    "loading": "در حال بارگذاری…",
+    "modelsUnavailable": "داده‌های مدل در دسترس نیست — بارگذاری ناکام شد."
   },
   "pharmacies": {
     "title": "Pharmacies",

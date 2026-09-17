@@ -213,7 +213,8 @@
     "detailActionError": "اقدام ناکام شو",
     "detailNotFound": "خبرتیا ونه موندل شوه",
     "noAlertsDescription": "د نسخې د بې نظمۍ هیڅ خبرداری د اوسني فلټر سره سمون نه خوري.",
-    "noReports": "تر اوسه هیڅ میاشتنی راپور نه دی جوړ شوی."
+    "noReports": "تر اوسه هیڅ میاشتنی راپور نه دی جوړ شوی.",
+    "reportsUnavailable": "میاشتنی راپورونه شتون نلري — بارول ناکام شو."
   },
   "audit": {
     "pageTitle": "د آډیټ لاګ",
@@ -815,7 +816,8 @@
     "publishing": "خپرول روان دي…",
     "publishError": "خپرول ناکام شو",
     "errorLoad": "معلوماتو راوړل ناکام شو",
-    "loading": "بارول کیږي…"
+    "loading": "بارول کیږي…",
+    "modelsUnavailable": "د ماډل معلومات شتون نلري — بارول ناکام شو."
   },
   "pharmacies": {
     "title": "Pharmacies",

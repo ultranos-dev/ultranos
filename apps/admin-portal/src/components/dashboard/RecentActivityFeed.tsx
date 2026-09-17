@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Activity as ActivityIcon } from '@ultranos/ui-kit/icons'
 
 interface Activity {
   id: string
@@ -37,6 +39,7 @@ function relativeTime(timestamp: string): string {
 export function RecentActivityFeed() {
   const router = useRouter()
   const [activities, setActivities] = useState<Activity[]>([])
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
   useEffect(() => {
@@ -44,9 +47,8 @@ export function RecentActivityFeed() {
       .query({ limit: 10 })
       .then((res) => setActivities(res.activities))
       .catch(() => setError(true))
+      .finally(() => setLoading(false))
   }, [])
-
-  if (error) return null
 
   return (
     <div className="rounded-xl bg-card border border-border p-6 shadow-card">
@@ -62,7 +64,18 @@ export function RecentActivityFeed() {
         </Button>
       </div>
 
-      {activities.length === 0 ? (
+      {loading ? (
+        <p className="mt-4 text-sm text-muted-foreground">Loading activity…</p>
+      ) : error ? (
+        <div className="mt-4">
+          <EmptyState
+            size="sm"
+            icon={ActivityIcon}
+            title="Activity unavailable"
+            description="Could not load recent activity."
+          />
+        </div>
+      ) : activities.length === 0 ? (
         <p className="mt-4 text-sm text-muted-foreground">No recent activity.</p>
       ) : (
         <ul className="mt-4 space-y-3">

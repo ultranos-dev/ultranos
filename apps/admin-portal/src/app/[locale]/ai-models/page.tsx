@@ -164,6 +164,10 @@ export default function AIModelsPage() {
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">{t('loading')}</td>
                   </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">{t('modelsUnavailable')}</td>
+                  </tr>
                 ) : models.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">{t('noModels')}</td>
