@@ -10,7 +10,8 @@ export interface FacilityKindConfig {
   updateFn: (input: Record<string, unknown>) => Promise<unknown>
   archiveFn: (input: { id: string }) => Promise<unknown>
   restoreFn: (input: { id: string }) => Promise<unknown>
-  listFn: (input: { cursor: number; limit: number; q?: string; includeArchived?: boolean }) => Promise<{ facilities: any[]; nextCursor: number | null }>
+  listFn: (input: { cursor: number; limit: number; q?: string; status?: string; includeArchived?: boolean }) => Promise<{ facilities: any[]; nextCursor: number | null }>
+  exportFn: () => Promise<{ data: string; filename: string; mimeType: string }>
   getDetailFn?: (input: { id: string }) => Promise<unknown>
 }
 
@@ -27,6 +28,7 @@ export const pharmacyKind: FacilityKindConfig = {
   archiveFn: (i) => trpc.pharmacy.archive.mutate(i),
   restoreFn: (i) => trpc.pharmacy.restore.mutate(i),
   listFn: (i) => trpc.pharmacy.listForAdmin.query(i as never),
+  exportFn: () => trpc.pharmacy.exportCsv.query(),
   getDetailFn: (i) => trpc.pharmacy.getDetail.query(i as never),
 }
 
@@ -46,5 +48,6 @@ export const clinicalKind: FacilityKindConfig = {
   archiveFn: (i) => trpc.clinicalFacility.archive.mutate(i),
   restoreFn: (i) => trpc.clinicalFacility.restore.mutate(i),
   listFn: (i) => trpc.clinicalFacility.listForAdmin.query(i as never),
+  exportFn: () => trpc.clinicalFacility.exportCsv.query(),
   getDetailFn: (i) => trpc.clinicalFacility.getDetail.query(i as never),
 }

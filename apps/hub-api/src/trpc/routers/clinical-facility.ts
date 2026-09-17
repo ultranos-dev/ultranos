@@ -55,12 +55,15 @@ export const clinicalFacilityRouter = createTRPCRouter({
   listForAdmin: adminProcedure
     .input(z.object({
       facilityTypes: z.array(facilityType).optional(),
+      status: z.enum(['ALL', 'ACTIVE', 'INACTIVE', 'ARCHIVED']).optional(),
       cursor: z.number().int().min(0).default(0),
       limit: z.number().int().min(1).max(100).default(50),
       q: z.string().max(100).optional(),
       includeArchived: z.boolean().optional(),
     }))
     .query(({ ctx, input }) => crud.list(ctx as never, input)),
+
+  exportCsv: adminProcedure.query(({ ctx }) => crud.exportCsv(ctx as never)),
 
   getDetail: adminProcedure
     .input(z.object({ id: z.string().uuid() }))

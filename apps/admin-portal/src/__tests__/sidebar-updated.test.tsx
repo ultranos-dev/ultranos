@@ -130,9 +130,14 @@ describe('AppSidebar — updated nav items and footer', () => {
     expect(screen.getByText('admin@ultranos.com')).toBeTruthy()
   })
 
-  it('renders "Create User" nav item', () => {
+  it('does NOT render a "Create User" nav item (creation is a modal now)', () => {
     render(<AppSidebar />)
-    expect(screen.getByText('Create User')).toBeTruthy()
+    expect(screen.queryByText('Create User')).toBeNull()
+  })
+
+  it('renders "Clinics & Hospitals" nav item', () => {
+    render(<AppSidebar />)
+    expect(screen.getByText('Clinics & Hospitals')).toBeTruthy()
   })
 
   it('does NOT render a standalone "Staff" nav item', () => {

@@ -12,7 +12,7 @@ import { FlaskConical, FileSearch } from '@ultranos/ui-kit/icons'
 import { LabProfileModal } from '@/components/labs/LabProfileModal'
 import { LabFormModal } from '@/components/labs/LabFormModal'
 
-type StatusFilter = 'ALL' | 'PENDING' | 'ACTIVE' | 'SUSPENDED'
+type StatusFilter = 'ALL' | 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED'
 
 interface LabEntry {
   id: string
@@ -64,7 +64,7 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-const STATUS_FILTERS: StatusFilter[] = ['ALL', 'PENDING', 'ACTIVE', 'SUSPENDED']
+const STATUS_FILTERS: StatusFilter[] = ['ALL', 'PENDING', 'ACTIVE', 'SUSPENDED', 'ARCHIVED']
 const PAGE_SIZE = 25
 
 export default function LabsPage() {
@@ -74,7 +74,6 @@ export default function LabsPage() {
   const [cursor, setCursor] = useState(0)
   const [filter, setFilter] = useState<StatusFilter>('ALL')
   const [search, setSearch] = useState('')
-  const [includeArchived, setIncludeArchived] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -92,7 +91,6 @@ export default function LabsPage() {
         status: filter,
         cursor,
         limit: PAGE_SIZE,
-        includeArchived,
       })
       setLabs(result.labs)
       setTotal(result.total)
@@ -101,7 +99,7 @@ export default function LabsPage() {
     } finally {
       setLoading(false)
     }
-  }, [filter, cursor, includeArchived])
+  }, [filter, cursor])
 
   useEffect(() => {
     fetchLabs()
@@ -123,8 +121,17 @@ export default function LabsPage() {
     <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
 
-        {/* Toolbar: filter tabs + search + actions — one row, always visible */}
+        {/* Toolbar: search → status filter → Create → Export — one row, always visible */}
         <div className="flex flex-wrap items-center gap-3">
+          <SearchInput
+            dir="auto"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="min-w-[200px] flex-1"
+            inputClassName="rounded-full"
+            aria-label={t('searchPlaceholder')}
+          />
           <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
@@ -138,29 +145,12 @@ export default function LabsPage() {
                 }`}
                 aria-pressed={filter === s}
               >
-                {s === 'ALL' ? t('filterAll') : s === 'PENDING' ? t('filterPending') : s === 'ACTIVE' ? t('filterActive') : t('filterSuspended')}
+                {s === 'ALL' ? t('filterAll') : s === 'PENDING' ? t('filterPending') : s === 'ACTIVE' ? t('filterActive') : s === 'SUSPENDED' ? t('filterSuspended') : t('filterArchived')}
               </button>
             ))}
           </div>
-          <SearchInput
-            dir="auto"
-            placeholder={t('searchPlaceholder')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="min-w-[200px] flex-1"
-            aria-label={t('searchPlaceholder')}
-          />
-          <label className="inline-flex items-center gap-2 text-sm text-muted-foreground select-none cursor-pointer">
-            <input
-              type="checkbox"
-              checked={includeArchived}
-              onChange={(e) => { setIncludeArchived(e.target.checked); setCursor(0) }}
-              className="h-4 w-4 rounded border-border"
-            />
-            {t('includeArchived')}
-          </label>
           <Button onClick={() => { setEditInitial(undefined); setFormOpen(true) }}>
-            {t('createLab')}
+            {t('add')}
           </Button>
           <ExportButton exportFn={() => trpc.admin.exportLabs.query()} filters={{}} />
         </div>
@@ -179,7 +169,7 @@ export default function LabsPage() {
                 icon={FlaskConical}
                 title={t('noLabs')}
                 description={t('noLabsDescription')}
-                action={{ label: t('createLab'), onClick: () => { setEditInitial(undefined); setFormOpen(true) } }}
+                action={{ label: t('add'), onClick: () => { setEditInitial(undefined); setFormOpen(true) } }}
               />
             </div>
           ) : visible.length === 0 ? (

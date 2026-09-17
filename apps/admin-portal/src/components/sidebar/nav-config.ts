@@ -54,14 +54,14 @@ export const navGroups: NavGroup[] = [
     title: 'Operations',
     icon: FlaskConical,
     items: [
+      { title: 'Clinics & Hospitals', url: '/clinics', icon: Hospital },
+      { title: 'Pharmacies', url: '/pharmacies', icon: Building2 },
       { title: 'Labs', url: '/labs', icon: FlaskConical },
       { title: 'Inventory', url: '/inventory', icon: Package },
       { title: 'Suppliers', url: '/inventory/suppliers' },
       { title: 'Network', url: '/network', icon: Globe },
       { title: 'Mentorship', url: '/mentorship', icon: Users },
       { title: 'Certifications', url: '/certifications', icon: FileCheck },
-      { title: 'Pharmacies', url: '/pharmacies', icon: Building2 },
-      { title: 'Clinics & Hospitals', url: '/clinics', icon: Hospital },
     ],
   },
   {
@@ -69,7 +69,6 @@ export const navGroups: NavGroup[] = [
     icon: Users,
     items: [
       { title: 'Users', url: '/users', icon: Users },
-      { title: 'Create User', url: '/users/create' },
       { title: 'AI Models', url: '/ai-models', icon: Cpu },
       { title: 'Audit Log', url: '/audit', icon: FileText },
     ],

@@ -5,11 +5,15 @@ import { SearchInput } from '@/components/ui/search-input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
+import { ExportButton } from '@/components/ExportButton'
 import { FileSearch } from '@ultranos/ui-kit/icons'
 import type { LucideIcon } from '@ultranos/ui-kit/icons'
 import { FacilityFormModal } from './FacilityFormModal'
 import { FacilityProfileModal } from './FacilityProfileModal'
 import type { FacilityKindConfig } from './config'
+
+type FacilityStatus = 'ALL' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED'
+const FACILITY_STATUS_FILTERS: FacilityStatus[] = ['ALL', 'ACTIVE', 'INACTIVE', 'ARCHIVED']
 
 interface FacilityEntry {
   id: string
@@ -37,7 +41,7 @@ export function FacilityManager({
 
   const [facilities, setFacilities] = useState<FacilityEntry[]>([])
   const [search, setSearch] = useState('')
-  const [includeArchived, setIncludeArchived] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<FacilityStatus>('ALL')
   const [loading, setLoading] = useState(true)
 
   // Profile modal state
@@ -49,14 +53,14 @@ export function FacilityManager({
   const [editInitial, setEditInitial] = useState<(Record<string, unknown> & { id: string }) | undefined>(undefined)
 
   const fetchFacilities = useCallback(
-    async (q?: string, archived?: boolean) => {
+    async (q?: string, status?: FacilityStatus) => {
       setLoading(true)
       try {
         const result = await kindConfig.listFn({
           cursor: 0,
           limit: 50,
           ...(q ? { q } : {}),
-          includeArchived: archived ?? includeArchived,
+          status: status ?? statusFilter,
         })
         setFacilities(result.facilities)
       } finally {
@@ -64,22 +68,22 @@ export function FacilityManager({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [kindConfig, includeArchived],
+    [kindConfig, statusFilter],
   )
 
   useEffect(() => {
-    fetchFacilities(search.trim() || undefined, includeArchived)
+    fetchFacilities(search.trim() || undefined, statusFilter)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function handleSearch(q: string) {
     setSearch(q)
-    fetchFacilities(q.trim() || undefined, includeArchived)
+    fetchFacilities(q.trim() || undefined, statusFilter)
   }
 
-  function handleArchivedToggle(checked: boolean) {
-    setIncludeArchived(checked)
-    fetchFacilities(search.trim() || undefined, checked)
+  function handleFilterChange(next: FacilityStatus) {
+    setStatusFilter(next)
+    fetchFacilities(search.trim() || undefined, next)
   }
 
   function handleRowClick(id: string) {
@@ -98,7 +102,17 @@ export function FacilityManager({
   }
 
   function handleSaved() {
-    fetchFacilities(search.trim() || undefined, includeArchived)
+    fetchFacilities(search.trim() || undefined, statusFilter)
+  }
+
+  function statusLabel(s: FacilityStatus): string {
+    return s === 'ALL'
+      ? (t('facilities.filterAll') ?? 'All')
+      : s === 'ACTIVE'
+        ? (t('facilities.filterActive') ?? 'Active')
+        : s === 'INACTIVE'
+          ? (t('facilities.filterInactive') ?? 'Inactive')
+          : (t('facilities.filterArchived') ?? 'Archived')
   }
 
   function statusBadge(facility: FacilityEntry) {
@@ -116,7 +130,7 @@ export function FacilityManager({
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold text-foreground">{t(titleKey)}</h1>
 
-      {/* ONE toolbar row: search → include-archived → Add */}
+      {/* ONE toolbar row: search → status filter → Create → Export */}
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput
           dir="auto"
@@ -124,18 +138,32 @@ export function FacilityManager({
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
           className="min-w-[200px] flex-1"
+          inputClassName="rounded-full"
           aria-label={t('facilities.searchPlaceholder') ?? 'Search'}
         />
-        <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-foreground">
-          <input
-            type="checkbox"
-            checked={includeArchived}
-            onChange={(e) => handleArchivedToggle(e.target.checked)}
-            className="h-4 w-4 rounded border-border"
-          />
-          {t('facilities.includeArchived') ?? 'Include archived'}
-        </label>
+        <div className="flex w-fit gap-1 rounded-full border border-border bg-card p-1">
+          {FACILITY_STATUS_FILTERS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => handleFilterChange(s)}
+              aria-pressed={statusFilter === s}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                statusFilter === s
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {statusLabel(s)}
+            </button>
+          ))}
+        </div>
         <Button onClick={handleAdd}>{t('facilities.add') ?? 'Add'}</Button>
+        <ExportButton
+          exportFn={() => kindConfig.exportFn()}
+          filters={{}}
+          label={t('facilities.export') ?? 'Export CSV'}
+        />
       </div>
 
       {/* ONE content box */}

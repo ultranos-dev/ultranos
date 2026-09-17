@@ -16,6 +16,24 @@ import type { FacilityProfileBase } from '@ultranos/shared-types'
 
 type Ctx = { supabase: any; user: { role: string; orgId: string | null; sub: string; sessionId?: string } }
 
+/** Status filter for facility lists — mirrors the labs status-tab pattern. */
+export type FacilityStatusFilter = 'ALL' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED'
+
+/** CSV builder — mirrors admin.ts buildCsvExport (base64 payload, formula-injection guard). */
+function buildFacilityCsv(headers: string[], rows: string[][], prefix: string) {
+  const esc = (s: string) => {
+    let val = (s ?? '').replace(/"/g, '""')
+    if (/^[=+\-@\t\r]/.test(val)) val = `'${val}`
+    return `"${val}"`
+  }
+  const csv = [headers.join(','), ...rows.map((r) => r.map(esc).join(','))].join('\n')
+  return {
+    data: Buffer.from(csv).toString('base64'),
+    filename: `${prefix}-${new Date().toISOString().split('T')[0]}.csv`,
+    mimeType: 'text/csv',
+  }
+}
+
 // -------------------------------------------------------------------
 // DB column (snake_case) → TS property (camelCase)
 // -------------------------------------------------------------------
@@ -81,12 +99,22 @@ export function buildFacilityCrud(opts: {
   }
 
   return {
-    async list(ctx: Ctx, input: { facilityTypes?: string[]; cursor: number; limit: number; q?: string; includeArchived?: boolean }) {
+    async list(ctx: Ctx, input: { facilityTypes?: string[]; cursor: number; limit: number; q?: string; includeArchived?: boolean; status?: FacilityStatusFilter }) {
       const orgId = requireOrg(ctx)
       let query = ctx.supabase.from(table).select('*')
         .eq('org_id', orgId)
         .in(typeColumn, input.facilityTypes?.length ? input.facilityTypes : typeValues)
-      if (!input.includeArchived) query = query.is('archived_at', null)
+      // Status filter drives archived/active selection (replaces the include-archived toggle).
+      if (input.status === 'ARCHIVED') {
+        query = query.not('archived_at', 'is', null)
+      } else if (input.status === 'ACTIVE') {
+        query = query.is('archived_at', null).eq('is_active', true)
+      } else if (input.status === 'INACTIVE') {
+        query = query.is('archived_at', null).eq('is_active', false)
+      } else if (!input.includeArchived) {
+        // ALL (default): active + inactive, excluding archived
+        query = query.is('archived_at', null)
+      }
       if (input.q) {
         const safe = input.q.replace(/[,()"]/g, ' ').trim()
         if (safe) query = query.ilike('name', `%${safe}%`)
@@ -97,6 +125,23 @@ export function buildFacilityCrud(opts: {
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
       const facilities = (data ?? []).map(mapFacilityRow)
       return { facilities, nextCursor: facilities.length === input.limit ? input.cursor + input.limit : null }
+    },
+
+    /** Export all org facilities of this kind as CSV (mirrors admin.exportLabs). */
+    async exportCsv(ctx: Ctx) {
+      const orgId = requireOrg(ctx)
+      const { data, error } = await ctx.supabase.from(table).select('*')
+        .eq('org_id', orgId)
+        .in(typeColumn, typeValues)
+        .order('name', { ascending: true })
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
+      const headers = ['ID', 'Name', 'Type', 'City', 'Province', 'Phone', 'Email', 'Active', 'Archived', 'Created At']
+      const rows = (data ?? []).map((r: Record<string, unknown>) => [
+        String(r.id ?? ''), String(r.name ?? ''), String(r[typeColumn] ?? ''),
+        String(r.city ?? ''), String(r.province ?? ''), String(r.phone ?? ''), String(r.email ?? ''),
+        r.is_active ? 'Yes' : 'No', r.archived_at ? 'Yes' : 'No', String(r.created_at ?? ''),
+      ])
+      return buildFacilityCsv(headers, rows, table.replace(/_/g, '-'))
     },
 
     async getDetail(ctx: Ctx, input: { id: string }) {
