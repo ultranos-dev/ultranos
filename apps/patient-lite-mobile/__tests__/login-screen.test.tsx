@@ -1,3 +1,4 @@
+jest.mock('react-i18next', () => require('../src/test-utils/react-i18next-mock'))
 /**
  * Tests for LoginScreen — Story 18.2, Task 3.
  *
@@ -10,10 +11,12 @@
 import React from 'react'
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native'
 import { LoginScreen } from '../src/screens/LoginScreen'
-import { supabase } from '../src/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
-// Mock supabase
-jest.mock('../src/lib/supabase', () => ({
+// Mock supabase. Must mock the same specifier the component imports ('@/lib/supabase');
+// mocking the relative path left the component bound to __mocks__/supabase.js (via
+// moduleNameMapper), so per-test verifyOtp mocks never applied.
+jest.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
       signInWithOtp: jest.fn(),

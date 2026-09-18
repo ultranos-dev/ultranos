@@ -21,9 +21,14 @@ function makeT(namespace) {
     let value = namespace ? lookup(`${namespace}.${key}`) : undefined
     if (typeof value !== 'string') value = lookup(key)
     if (typeof value !== 'string') {
-      return params && 'defaultValue' in params ? String(params.defaultValue) : key
+      // i18next allows t(key, 'default string') as well as t(key, { defaultValue }).
+      if (typeof params === 'string') return params
+      if (params && typeof params === 'object' && 'defaultValue' in params) {
+        return String(params.defaultValue)
+      }
+      return key
     }
-    if (params) {
+    if (params && typeof params === 'object') {
       let text = value
       for (const [k, v] of Object.entries(params)) {
         text = text.replace(new RegExp(`{{\\s*${k}\\s*}}`, 'g'), String(v))

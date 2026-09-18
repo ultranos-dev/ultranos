@@ -43,7 +43,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           ]
         }
       >
-        passport.title
+        My Passport
       </Text>
       <Text
         style={
@@ -57,7 +57,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           ]
         }
       >
-        passport.subtitle
+        Your health identity card
       </Text>
     </View>
     <View
@@ -102,7 +102,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
             ]
           }
         >
-          passport.fieldName
+          Name
         </Text>
         <View
           style={
@@ -114,7 +114,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="passport.fieldName: Fatima Al-Rashid"
+            accessibilityLabel="Name: Fatima Al-Rashid"
             style={
               [
                 {
@@ -154,7 +154,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
             ]
           }
         >
-          passport.fieldNameLocal
+          Name (Local)
         </Text>
         <View
           style={
@@ -166,7 +166,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="passport.fieldNameLocal: فاطمة الرشيد"
+            accessibilityLabel="Name (Local): فاطمة الرشيد"
             style={
               [
                 {
@@ -206,7 +206,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
             ]
           }
         >
-          passport.fieldAge
+          Age
         </Text>
         <View
           style={
@@ -218,7 +218,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="passport.fieldAge: 36"
+            accessibilityLabel="Age: 36"
             style={
               [
                 {
@@ -258,7 +258,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
             ]
           }
         >
-          passport.fieldGender
+          Gender
         </Text>
         <View
           style={
@@ -270,7 +270,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="passport.fieldGender: female"
+            accessibilityLabel="Gender: female"
             style={
               [
                 {
@@ -310,7 +310,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
             ]
           }
         >
-          passport.fieldNationalId
+          National ID
         </Text>
         <View
           style={
@@ -322,7 +322,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="passport.fieldNationalId: hidden"
+            accessibilityLabel="National ID: hidden"
             style={
               [
                 {
@@ -440,7 +440,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           ]
         }
       >
-        passport.qrTitle
+        Your Medical ID
       </Text>
       <Text
         style={
@@ -458,7 +458,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           ]
         }
       >
-        passport.qrSubtitle
+        Show this QR code to your healthcare provider
       </Text>
       <View
         testID="patient-qr-code"
@@ -663,7 +663,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           ]
         }
       >
-        passport.title
+        My Passport
       </Text>
       <Text
         style={
@@ -677,7 +677,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           ]
         }
       >
-        passport.subtitle
+        Your health identity card
       </Text>
     </View>
     <View
@@ -722,7 +722,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
             ]
           }
         >
-          passport.fieldName
+          Name
         </Text>
         <View
           style={
@@ -734,7 +734,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="passport.fieldName: Fatima Al-Rashid"
+            accessibilityLabel="Name: Fatima Al-Rashid"
             style={
               [
                 {
@@ -774,7 +774,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
             ]
           }
         >
-          passport.fieldNameLocal
+          Name (Local)
         </Text>
         <View
           style={
@@ -786,7 +786,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="passport.fieldNameLocal: فاطمة الرشيد"
+            accessibilityLabel="Name (Local): فاطمة الرشيد"
             style={
               [
                 {
@@ -826,7 +826,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
             ]
           }
         >
-          passport.fieldAge
+          Age
         </Text>
         <View
           style={
@@ -838,7 +838,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="passport.fieldAge: 36"
+            accessibilityLabel="Age: 36"
             style={
               [
                 {
@@ -878,7 +878,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
             ]
           }
         >
-          passport.fieldGender
+          Gender
         </Text>
         <View
           style={
@@ -890,7 +890,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="passport.fieldGender: female"
+            accessibilityLabel="Gender: female"
             style={
               [
                 {
@@ -930,7 +930,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
             ]
           }
         >
-          passport.fieldNationalId
+          National ID
         </Text>
         <View
           style={
@@ -942,7 +942,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="passport.fieldNationalId: hidden"
+            accessibilityLabel="National ID: hidden"
             style={
               [
                 {
@@ -1060,7 +1060,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           ]
         }
       >
-        passport.qrTitle
+        Your Medical ID
       </Text>
       <Text
         style={
@@ -1078,7 +1078,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           ]
         }
       >
-        passport.qrSubtitle
+        Show this QR code to your healthcare provider
       </Text>
       <View
         testID="patient-qr-code"
