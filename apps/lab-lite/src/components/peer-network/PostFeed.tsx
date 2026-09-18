@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { getDb } from '@/lib/db'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import type { PeerPost, PeerPostStatus } from '@/lib/peer-network-types'
 
 interface PostFeedProps {
@@ -107,9 +108,7 @@ export function PostFeed({ onSelectPost, onCreatePost, searchQuery }: PostFeedPr
 
       {/* Post list */}
       {filteredPosts.length === 0 ? (
-        <div className="py-12 text-center">
-          <p className="text-sm text-muted-foreground">{t('noPosts')}</p>
-        </div>
+        <EmptyState title={t('noPosts')} />
       ) : (
         <div className="flex flex-col gap-3">
           {filteredPosts.map((post) => (

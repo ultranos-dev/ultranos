@@ -158,11 +158,13 @@ describe('PostFeed RTL snapshots', () => {
     expect(container).toMatchSnapshot()
   })
 
-  it('filter row uses ms-auto for the "Ask Question" button (logical margin)', () => {
+  it('filter row uses ms-auto for the "Ask Question" button (logical margin)', async () => {
     document.dir = 'rtl'
-    const { container } = render(
+    const { container, findByRole } = render(
       <PostFeed onSelectPost={() => {}} onCreatePost={() => {}} />,
     )
+    // Wait out the initial loading state before the filter row (and button) render.
+    await findByRole('button')
     const askBtn = container.querySelector('button')
     expect(askBtn?.className).toMatch(/ms-auto/)
   })
