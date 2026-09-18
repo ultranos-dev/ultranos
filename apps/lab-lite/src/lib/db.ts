@@ -2636,6 +2636,10 @@ export interface LabResult {
   loincCode?: string      // procedure identifier — used by trigger engine + anomaly detection
   patientRef?: string     // opaque Patient/{uuid} — used only for prior-result lookup (Story 53.3)
   reportComment?: string  // optional free-text comment on the result
+  // QC provenance (write-once — see putLabResult). Snapshot of the governing QC
+  // run at result-entry time; warning banner state. Once set they are immutable.
+  qcSnapshot?: QcSnapshot | null
+  qcWarning?: QcWarning
 }
 
 /**
@@ -2780,6 +2784,18 @@ export async function markAcknowledgmentsSynced(ids: string[]): Promise<void> {
 /** Upsert a lab result (used in tests and by result-entry flow). */
 export async function putLabResult(result: LabResult): Promise<void> {
   const db = getDb()
+  // qcSnapshot / qcWarning are write-once: once a result has them set, a later
+  // put (e.g. a status-only update that omits or nulls them) must NOT clear or
+  // overwrite them. First-write-wins — if the stored record has no QC value yet,
+  // an incoming value is allowed to set it. Non-QC fields remain freely updatable.
+  const existing = await db.lab_results.get(result.id)
+  if (existing) {
+    const merged = { ...result }
+    if (existing.qcSnapshot != null) merged.qcSnapshot = existing.qcSnapshot
+    if (existing.qcWarning != null) merged.qcWarning = existing.qcWarning
+    await db.lab_results.put(merged)
+    return
+  }
   await db.lab_results.put(result)
 }
 
