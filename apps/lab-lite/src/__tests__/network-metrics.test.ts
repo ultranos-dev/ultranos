@@ -33,6 +33,7 @@ function makeFakeDb(
   return {
     orders: {
       where: (kp: string) => makeWhere(orders, kp),
+      toArray: async () => orders,
     },
     uploadQueue: {
       where: (kp: string) => makeWhere(uploadQueue, kp),
@@ -94,9 +95,8 @@ describe('aggregateNetworkMetrics', () => {
     const metrics = await aggregateNetworkMetrics()
 
     expect(metrics.totalSamplesToday).toBe(0)
-    expect(metrics.avgTATByLocation).toEqual({})
     expect(metrics.pendingResultsByLocation).toEqual({})
-    expect(metrics.stockoutAlerts).toBe(0)
+    expect(metrics.syncFailures).toBe(0)
     expect(metrics.asOf).toBeDefined()
   })
 

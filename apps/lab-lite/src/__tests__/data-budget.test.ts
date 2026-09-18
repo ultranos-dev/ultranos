@@ -234,35 +234,49 @@ describe('Data Budget — Metering Layer', () => {
 
 describe('Data Budget — Projection Calculations', () => {
   it('calculates projected exhaustion date', async () => {
-    const { calculateProjectedExhaustion } = await import('@ultranos/sync-engine')
-    const result = calculateProjectedExhaustion({
-      planSizeMB: 500,
-      usedMB: 250,
-      avgDailyUsageMB: 10,
-      cycleEndDate: '2026-06-30',
-    })
-    // 250MB remaining / 10MB per day = 25 days from now (±1 for time-of-day rounding)
-    expect(result).not.toBeNull()
-    if (result) {
-      const projected = new Date(result)
-      const now = new Date()
-      const diffDays = Math.round((projected.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-      expect(diffDays).toBeGreaterThanOrEqual(24)
-      expect(diffDays).toBeLessThanOrEqual(25)
+    // Freeze "now" before the fixture cycleEndDate so the projection is not
+    // capped/floored by the current date drifting past the hardcoded fixtures.
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 5, 1)) // 2026-06-01 local
+    try {
+      const { calculateProjectedExhaustion } = await import('@ultranos/sync-engine')
+      const result = calculateProjectedExhaustion({
+        planSizeMB: 500,
+        usedMB: 250,
+        avgDailyUsageMB: 10,
+        cycleEndDate: '2026-06-30',
+      })
+      // 250MB remaining / 10MB per day = 25 days from now (±1 for time-of-day rounding)
+      expect(result).not.toBeNull()
+      if (result) {
+        const projected = new Date(result)
+        const now = new Date()
+        const diffDays = Math.round((projected.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+        expect(diffDays).toBeGreaterThanOrEqual(24)
+        expect(diffDays).toBeLessThanOrEqual(25)
+      }
+    } finally {
+      vi.useRealTimers()
     }
   })
 
   it('caps projection at cycle end date', async () => {
-    const { calculateProjectedExhaustion } = await import('@ultranos/sync-engine')
-    const result = calculateProjectedExhaustion({
-      planSizeMB: 500,
-      usedMB: 10,
-      avgDailyUsageMB: 1,
-      cycleEndDate: '2026-06-01', // close end
-    })
-    // 490MB / 1MB per day = 490 days — but capped at cycle end
-    if (result) {
-      expect(new Date(result).getTime()).toBeLessThanOrEqual(new Date('2026-06-01').getTime())
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 4, 1)) // 2026-05-01 local — before the cycle end fixture
+    try {
+      const { calculateProjectedExhaustion } = await import('@ultranos/sync-engine')
+      const result = calculateProjectedExhaustion({
+        planSizeMB: 500,
+        usedMB: 10,
+        avgDailyUsageMB: 1,
+        cycleEndDate: '2026-06-01', // close end
+      })
+      // 490MB / 1MB per day = 490 days — but capped at cycle end
+      if (result) {
+        expect(new Date(result).getTime()).toBeLessThanOrEqual(new Date('2026-06-01').getTime())
+      }
+    } finally {
+      vi.useRealTimers()
     }
   })
 

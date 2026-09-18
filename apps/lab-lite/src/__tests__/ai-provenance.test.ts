@@ -93,7 +93,9 @@ vi.mock('@/lib/db', () => ({
 }))
 
 // P7 fix: mock the correct module (@ultranos/audit-logger/client, not @/lib/audit-client)
-const emitClientAuditMock = vi.fn()
+// vi.mock is hoisted above const declarations, so the mock fn must be created via
+// vi.hoisted (its name doesn't match Vitest's `mock*` prefix allowlist).
+const { emitClientAuditMock } = vi.hoisted(() => ({ emitClientAuditMock: vi.fn() }))
 vi.mock('@ultranos/audit-logger/client', () => ({
   emitClientAudit: emitClientAuditMock,
   setAuditStoreAdapter: vi.fn(),
@@ -456,8 +458,18 @@ describe('ProvenanceDrainWorker', () => {
     }
     const syncFn: ProvenanceSyncFn = vi.fn().mockResolvedValue([{ id: 'r1', success: false }])
 
-    const worker = new ProvenanceDrainWorker({ store, syncFn })
-    await worker.drain()
+    // The worker sleeps with exponential backoff (1s, 4s) between retries; use
+    // fake timers so the retries run without real-time waits (avoids the 5s test
+    // timeout). Drive the promise while advancing timers.
+    vi.useFakeTimers()
+    try {
+      const worker = new ProvenanceDrainWorker({ store, syncFn })
+      const p = worker.drain()
+      await vi.runAllTimersAsync()
+      await p
+    } finally {
+      vi.useRealTimers()
+    }
 
     // After 3 attempts with all-failure results, markFailed is called
     expect(syncFn).toHaveBeenCalledTimes(3)
@@ -472,16 +484,25 @@ describe('ProvenanceDrainWorker', () => {
     }
     const syncFn: ProvenanceSyncFn = vi.fn()
 
-    const originalOnLine = Object.getOwnPropertyDescriptor(navigator, 'onLine')
+    // In jsdom, navigator.onLine lives on the prototype (no own descriptor), so
+    // capture the prototype descriptor and always restore it — otherwise the
+    // forced-offline own property leaks into later tests and breaks their drains.
+    const proto = Object.getPrototypeOf(navigator)
+    const protoOnLine = Object.getOwnPropertyDescriptor(proto, 'onLine')
     Object.defineProperty(navigator, 'onLine', { value: false, configurable: true })
 
-    const worker = new ProvenanceDrainWorker({ store, syncFn })
-    await worker.drain()
+    try {
+      const worker = new ProvenanceDrainWorker({ store, syncFn })
+      await worker.drain()
 
-    expect(store.getPending).not.toHaveBeenCalled()
-    expect(syncFn).not.toHaveBeenCalled()
-
-    if (originalOnLine) Object.defineProperty(navigator, 'onLine', originalOnLine)
+      expect(store.getPending).not.toHaveBeenCalled()
+      expect(syncFn).not.toHaveBeenCalled()
+    } finally {
+      // Remove the forced own property so navigator.onLine falls back to the
+      // prototype getter (true by default in jsdom).
+      delete (navigator as unknown as { onLine?: boolean }).onLine
+      if (protoOnLine) Object.defineProperty(proto, 'onLine', protoOnLine)
+    }
   })
 
   it('does not run concurrent drain cycles', async () => {
@@ -522,8 +543,16 @@ describe('ProvenanceDrainWorker', () => {
       { id: 'r2', success: false },
     ])
 
-    const worker = new ProvenanceDrainWorker({ store, syncFn })
-    await worker.drain()
+    // Exponential-backoff sleeps between r2 retries — fake timers to skip them.
+    vi.useFakeTimers()
+    try {
+      const worker = new ProvenanceDrainWorker({ store, syncFn })
+      const p = worker.drain()
+      await vi.runAllTimersAsync()
+      await p
+    } finally {
+      vi.useRealTimers()
+    }
 
     // r1 marked synced on first call
     expect(store.markSynced).toHaveBeenCalledWith(['r1'])

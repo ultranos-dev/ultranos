@@ -139,6 +139,7 @@ describe('resumeActiveEscalations', () => {
 
     const { resumeActiveEscalations } = await import('../lib/escalation-timer')
     await resumeActiveEscalations()
+    await vi.advanceTimersByTimeAsync(0)
 
     expect(events).toHaveLength(1)
     expect(events[0].step.stepNumber).toBe(3)

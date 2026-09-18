@@ -9,12 +9,19 @@ import {
 
 vi.mock('../lib/db', () => ({
   getDb: () => ({
+    // reassignSample runs its update inside db.transaction('rw', [...], cb) —
+    // the mock just executes the callback so the inner modify/custody calls run.
+    transaction: vi.fn(async (_mode: string, _tables: unknown, cb: () => Promise<void>) => cb()),
     samples: {
+      // Guard in reassignSample reads the sample to confirm current assignee.
+      get: vi.fn().mockResolvedValue({ id: 'sample-1', _ultranos: { assignedTechId: 'tech-A' } }),
       toArray: vi.fn().mockResolvedValue([]),
       where: vi.fn().mockReturnThis(),
       equals: vi.fn().mockReturnThis(),
       modify: vi.fn().mockResolvedValue(1),
     },
+    // Referenced in the reassign transaction's table list.
+    custodyEvents: {},
     queueEntries: {
       toArray: vi.fn().mockResolvedValue([]),
     },
@@ -51,6 +58,12 @@ vi.mock('../lib/db', () => ({
 vi.mock('../lib/hlc', () => ({
   hlc: { now: vi.fn().mockReturnValue({ ts: 1000, counter: 0, node: 'test' }) },
   serializeHlc: vi.fn().mockReturnValue('2026-01-01T00:00:00.000Z'),
+}))
+
+// reassignSample releases the source tech's lock first; stub it out so the test
+// focuses on the reassignment (custody + sync) behavior.
+vi.mock('../lib/sample-lock-service', () => ({
+  releaseLock: vi.fn().mockResolvedValue(undefined),
 }))
 
 // ---------------------------------------------------------------------------
@@ -199,10 +212,14 @@ describe('getHistoricalPatterns', () => {
     vi.mocked(db.getWorkloadSnapshotsByDateRange).mockResolvedValue(snapshots as any)
 
     const result = await getHistoricalPatterns(30)
-    // Hour 8: tech-A (5) + tech-B (3) = 8
-    expect(result.peakHours[8]).toBe(8)
-    // Hour 14: tech-A (2)
-    expect(result.peakHours[14]).toBe(2)
+    // The source buckets by LOCAL hour (new Date(snapshotAt).getHours()), so
+    // derive the expected bucket keys the same way to stay timezone-independent.
+    const hour08 = new Date('2026-01-01T08:00:00.000Z').getHours()
+    const hour14 = new Date('2026-01-02T14:00:00.000Z').getHours()
+    // 08:00Z bucket: tech-A (3+2=5) + tech-B (2+1=3) = 8
+    expect(result.peakHours[hour08]).toBe(8)
+    // 14:00Z bucket: tech-A (1+1=2)
+    expect(result.peakHours[hour14]).toBe(2)
   })
 })
 

@@ -186,7 +186,7 @@ describe('acknowledgeHandover', () => {
 
   it('marks report as ACKNOWLEDGED with incoming tech and timestamp', async () => {
     const report = await generateHandoverReport('tech-001', 'Alice')
-    await acknowledgeHandover(report.id, 'tech-002', 'All noted')
+    await acknowledgeHandover(report.id, 'tech-002', 'Bob', 'All noted')
 
     const updated = await getHandoverReport(report.id)
     expect(updated!.status).toBe('ACKNOWLEDGED')

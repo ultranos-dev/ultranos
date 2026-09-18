@@ -21,12 +21,12 @@ const mockGetDb = vi.mocked(getDb)
 /** Build a mock HLC-style sentAt string representing `msDaysAgo` days ago. */
 function sentAtDaysAgo(days: number): string {
   const ms = Date.now() - days * 24 * 60 * 60 * 1000
-  return `${ms}|0|test`
+  return `${ms}:0:test`
 }
 
 /** Build a mock HLC for resultsAvailableAt (wall-clock, now). */
 function hlcNow(): string {
-  return `${Date.now()}|0|test`
+  return `${Date.now()}:0:test`
 }
 
 function makeSendOut(overrides: Partial<SendOut> = {}): SendOut {
@@ -77,6 +77,9 @@ function makeMockDb(overrides: Record<string, unknown> = {}) {
     reference_labs: {
       get: vi.fn(),
       toArray: vi.fn(),
+    },
+    lab_config: {
+      get: vi.fn().mockResolvedValue(undefined),
     },
     ...overrides,
   } as unknown as ReturnType<typeof getDb>
@@ -171,7 +174,7 @@ describe('getOverdueSendOuts', () => {
     ;(db.reference_labs.toArray as ReturnType<typeof vi.fn>).mockResolvedValue([lab])
     mockGetDb.mockReturnValue(db)
 
-    const result = await getOverdueSendOuts(1.5)
+    const result = await getOverdueSendOuts()
 
     expect(result).toHaveLength(1)
     expect(result[0]?.id).toBe('so-overdue')
