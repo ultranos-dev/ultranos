@@ -6,7 +6,7 @@
  * and RTL layout snapshot.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import type { SendOut, ReferenceLab } from '../types/reference-lab'
 
@@ -126,7 +126,9 @@ vi.mock('@/components/sendout/ResultImportModal', () => ({
 // Helpers
 // ---------------------------------------------------------------------------
 
-const ISO_SENT = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+// Fixed (not now()-relative) so the rendered date is deterministic in snapshots.
+// 2 days before the frozen test clock (2026-09-09).
+const ISO_SENT = new Date('2026-09-07T12:00:00.000Z').toISOString()
 
 function makeSendOut(overrides: Partial<SendOut> = {}): SendOut {
   const now = new Date().toISOString()
@@ -191,6 +193,13 @@ async function renderPage() {
 beforeEach(() => {
   vi.clearAllMocks()
   mockGetOverdueSendOuts.mockResolvedValue([])
+  // Freeze the clock so relative "sent/received" dates in the snapshot are stable.
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-09-09T12:00:00.000Z'))
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 // ---------------------------------------------------------------------------
