@@ -707,6 +707,7 @@ class LabLiteDatabase extends Dexie {
   rangeVersions!: Dexie.Table<RangeVersionEntry, string>
   // v12 — Consent, Waste, Cultural, Payments, Priority, Peer, Safety, Network, Temp, Health
   consentRecords!: Dexie.Table<ConsentRecord, number>
+  familyDelegates!: Dexie.Table<FamilyDelegate, number>
   waste_containers!: Dexie.Table<WasteContainer, string>
   waste_disposal_records!: Dexie.Table<WasteDisposalRecord, string>
   culturalPreferences!: Dexie.Table<PatientCulturalPreferences, string>
@@ -1783,6 +1784,11 @@ class LabLiteDatabase extends Dexie {
     // existing one). calendarDate (YYYY-MM-DD) is already stored on every qcRun.
     this.version(48).stores({
       qcRuns: '&id, analyte, loincCode, instrumentId, runDate, [analyte+instrumentId+controlLevel], [analyte+instrumentId+calendarDate]',
+    })
+    // v49 — Family Delegate result access (Story 45.3). Encrypted phone/name;
+    // append-only revoke (status flips, record retained).
+    this.version(49).stores({
+      familyDelegates: '++id, patientRef, consentRecordId, delegatePhone, status',
     })
   }
 }
@@ -3362,6 +3368,63 @@ export async function acknowledgeExcursion(
 export async function getExcursionsByDateRange(from: string, to: string): Promise<TemperatureExcursion[]> {
   const all = await getDb().temperature_excursions.toArray()
   return all.filter((e) => e.startTime >= from && e.startTime <= to)
+}
+
+// ---------------------------------------------------------------------------
+// Family Delegate helpers (v49) — Story 45.3: Family Delegate Result Access
+// Consent Tier (append-only): revoke flips status, never deletes. delegatePhone/
+// delegateName are stored encrypted (ciphertext) — never plaintext.
+// ---------------------------------------------------------------------------
+
+export type DelegateRelationship =
+  | 'spouse' | 'parent' | 'child' | 'sibling' | 'grandchild' | 'in-law' | 'other'
+
+export interface FamilyDelegate {
+  id?: number
+  patientRef: string
+  delegatePhone: string          // encrypted ciphertext (never plaintext)
+  delegateName?: string          // encrypted ciphertext, optional
+  delegateRelationship: DelegateRelationship
+  consentRecordId: number        // links to the active ConsentRecord authorizing this delegate
+  status: 'active' | 'revoked'
+  registeredAt: string           // ISO 8601
+  registeredByTechId: string
+  hlcTimestamp: string
+  syncStatus: 'pending' | 'synced' | 'failed'
+  revokedAt?: string
+  revocationReason?: string
+}
+
+/** Register a family delegate. Returns the auto-generated id. */
+export async function addFamilyDelegate(delegate: Omit<FamilyDelegate, 'id'>): Promise<number> {
+  return getDb().familyDelegates.add(delegate as FamilyDelegate)
+}
+
+/** All delegates for a patient (any status). */
+export async function getDelegatesByPatient(patientRef: string): Promise<FamilyDelegate[]> {
+  return getDb().familyDelegates.where('patientRef').equals(patientRef).toArray()
+}
+
+/** The delegate linked to a consent record, if any. */
+export async function getDelegateByConsentId(consentRecordId: number): Promise<FamilyDelegate | undefined> {
+  const results = await getDb().familyDelegates.where('consentRecordId').equals(consentRecordId).toArray()
+  return results[0]
+}
+
+/** The active (non-revoked) delegate for an encrypted phone, if any. */
+export async function getActiveDelegateByPhone(delegatePhone: string): Promise<FamilyDelegate | undefined> {
+  const results = await getDb().familyDelegates.where('delegatePhone').equals(delegatePhone).toArray()
+  return results.find((d) => d.status === 'active')
+}
+
+/** Revoke a delegate (append-only: status flips to 'revoked', record retained). */
+export async function revokeDelegate(id: number, reason: string): Promise<void> {
+  await getDb().familyDelegates.update(id, {
+    status: 'revoked',
+    revokedAt: new Date().toISOString(),
+    revocationReason: reason,
+    syncStatus: 'pending',
+  })
 }
 
 // ---------------------------------------------------------------------------
