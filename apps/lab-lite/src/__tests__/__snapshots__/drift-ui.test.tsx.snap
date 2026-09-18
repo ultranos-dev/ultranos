@@ -234,7 +234,7 @@ exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders corre
             <td
               class="px-3 py-2.5 text-muted-foreground"
             >
-              LEVEL_2
+              L2
             </td>
             <td
               class="px-3 py-2.5 text-end tabular-nums text-foreground"
@@ -349,7 +349,7 @@ exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders corre
             <td
               class="px-3 py-2.5 text-muted-foreground"
             >
-              LEVEL_2
+              L2
             </td>
             <td
               class="px-3 py-2.5 text-end tabular-nums text-foreground"

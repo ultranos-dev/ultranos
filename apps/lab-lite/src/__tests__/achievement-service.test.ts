@@ -112,7 +112,7 @@ function makeQcRun(techId: string, pass: boolean): any {
     analyte: 'Glucose',
     loincCode: '2345-7',
     instrumentId: 'inst-1',
-    controlLevel: 'LEVEL_2',
+    controlLevel: 'L2',
     targetMean: 100,
     targetSd: 5,
     observedValue: pass ? 100 : 200, // pass: 0 SD; fail: 20 SD

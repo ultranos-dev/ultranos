@@ -47,12 +47,10 @@ export interface QcRun extends QcRunInput {
  * Control material levels used in QC runs.
  * Labs typically run 3 levels: low (LEVEL_1), normal (LEVEL_2), high (LEVEL_3).
  */
-// NOTE: two vocabularies are in use — the QC-entry form writes 'L1'/'L2'/'L3'
-// while the drift/advisory subsystem queries 'LEVEL_1'/'LEVEL_2'/'LEVEL_3'. Both are
-// accepted here so the code typechecks; the values do NOT match at runtime, so
-// drift-detector's level-scoped queries won't match form-entered runs. Unifying the
-// vocabulary (and the tests on each side) is a follow-up data-model decision.
-export type QcControlLevel = 'L1' | 'L2' | 'L3' | 'LEVEL_1' | 'LEVEL_2' | 'LEVEL_3'
+// QC control level. Canonical vocabulary is 'L1'/'L2'/'L3' — the values the QC-entry
+// form persists to the qcRuns table. (The drift/advisory subsystem previously queried
+// 'LEVEL_1'/… which never matched stored runs — unified here.)
+export type QcControlLevel = 'L1' | 'L2' | 'L3'
 
 /**
  * Westgard multi-rule identifiers.

@@ -31,8 +31,8 @@ export async function getActiveAdvisory(
   const activeAlerts = await db.driftAlerts
     .where('[analyte+instrumentId+controlLevel]')
     .between(
-      [analyte, instrumentId, 'LEVEL_1'],
-      [analyte, instrumentId, 'LEVEL_3'],
+      [analyte, instrumentId, 'L1'],
+      [analyte, instrumentId, 'L3'],
       true,
       true,
     )

@@ -232,7 +232,7 @@ describe('QcHistoryView', () => {
       {
         id: 'run-1',
         calendarDate: '2026-09-01',
-        controlLevel: 'LEVEL_2',
+        controlLevel: 'L2',
         controlValues: { Hgb: 110 },
         expectedRange: { low: 95, high: 115 },
         passOrFail: 'PASS',

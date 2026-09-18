@@ -50,7 +50,7 @@ function makeQcRun(overrides: Partial<QcRun> & { daysAgo?: number }): QcRun {
     analyte: 'Hemoglobin',
     loincCode: '718-7',
     instrumentId: 'analyzer-01',
-    controlLevel: 'LEVEL_2',
+    controlLevel: 'L2',
     controlValues: { value: 14.0 },
     expectedRange: { low: 13.0, high: 15.0 },
     passOrFail: 'PASS',

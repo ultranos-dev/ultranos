@@ -21,7 +21,7 @@ const HISTORY_LIMIT = 20
 /**
  * Analyze QC runs for a specific analyte/instrument combination and produce drift alerts.
  *
- * Analyzes each control level (LEVEL_1, LEVEL_2, LEVEL_3) independently.
+ * Analyzes each control level (L1, L2, L3) independently.
  * Creates new DriftAlert records for any violations not already active.
  * Returns all currently active (unacknowledged) alerts sorted by severity.
  *
@@ -33,7 +33,7 @@ export async function analyzeDrift(
   instrumentId: string,
 ): Promise<DriftAlert[]> {
   const db = getDb()
-  const controlLevels: QcControlLevel[] = ['LEVEL_1', 'LEVEL_2', 'LEVEL_3']
+  const controlLevels: QcControlLevel[] = ['L1', 'L2', 'L3']
 
   for (const controlLevel of controlLevels) {
     // Fetch last 20 QC runs for this analyte/instrument/level, ordered oldest → newest
@@ -105,8 +105,8 @@ export async function analyzeDrift(
   const activeAlerts = await db.driftAlerts
     .where('[analyte+instrumentId+controlLevel]')
     .between(
-      [analyte, instrumentId, 'LEVEL_1'],
-      [analyte, instrumentId, 'LEVEL_3'],
+      [analyte, instrumentId, 'L1'],
+      [analyte, instrumentId, 'L3'],
       true,
       true,
     )
@@ -157,8 +157,8 @@ export async function getDriftAlertHistory(
   return db.driftAlerts
     .where('[analyte+instrumentId+controlLevel]')
     .between(
-      [analyte, instrumentId, 'LEVEL_1'],
-      [analyte, instrumentId, 'LEVEL_3'],
+      [analyte, instrumentId, 'L1'],
+      [analyte, instrumentId, 'L3'],
       true,
       true,
     )

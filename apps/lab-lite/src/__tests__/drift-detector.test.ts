@@ -153,7 +153,7 @@ describe('QC advisory flag', () => {
     analyte: 'Hemoglobin',
     loincCode: '718-7',
     instrumentId: 'instr-abc',
-    controlLevel: 'LEVEL_2',
+    controlLevel: 'L2',
     ruleViolated: '1_3S',
     severity: 'REJECT',
     message: 'REJECT: latest value exceeds ±3SD limit. Stop testing and recalibrate.',

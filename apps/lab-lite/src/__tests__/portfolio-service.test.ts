@@ -149,7 +149,7 @@ function makeQcRun(techId: string, runDate: string, targetMean: number, targetSd
     analyte: 'Hemoglobin',
     loincCode,
     instrumentId: 'INST-001',
-    controlLevel: 'LEVEL_2',
+    controlLevel: 'L2',
     targetMean,
     targetSd,
     observedValue,
