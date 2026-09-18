@@ -17,6 +17,7 @@ export type SmsDeliveryStatus =
   | 'delivered'
   | 'failed'
   | 'confirmed'
+  | 'pending_manual'   // queued for manual follow-up (critical-value escalation fallback)
 
 // ---------------------------------------------------------------------------
 // Adapter result types

@@ -50,10 +50,12 @@ async function resolveLabIdentity(): Promise<LabIdentity> {
     // This is a best-effort lookup; inventory sync is non-critical.
     const settings = await db.daily_log_settings.get('singleton')
     if (settings && 'labId' in settings && typeof settings.labId === 'string') {
+      // daily_log_settings may carry lab identity fields not in the base type.
+      const s = settings as Record<string, unknown>
       return {
-        labId: settings.labId as string,
-        labName: (settings.labName as string | undefined) ?? 'Unknown Lab',
-        labLocation: (settings.labLocation as InventoryLabLocation | undefined) ?? {
+        labId: s.labId as string,
+        labName: (s.labName as string | undefined) ?? 'Unknown Lab',
+        labLocation: (s.labLocation as InventoryLabLocation | undefined) ?? {
           district: 'unknown',
           province: 'unknown',
         },

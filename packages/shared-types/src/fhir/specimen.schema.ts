@@ -71,6 +71,8 @@ const SpecimenUltranosExtSchema = z.object({
     message: z.string(),
     timestamp: z.string(),
   })).optional(),
+  // Urgency copied from the paired lab order (for STAT handover counts).
+  orderUrgency: z.enum(['routine', 'urgent', 'asap', 'stat']).optional(),
 })
 
 const AnnotationSchema = z.object({

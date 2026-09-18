@@ -361,6 +361,43 @@ export function reportTemperatureEvent(payload: {
 }
 
 /**
+ * Emit a result-distribution audit event (Story 42.6). Fire-and-forget — records
+ * each fan-out enqueue/delivery. No PHI: reportId + destination are opaque refs.
+ */
+export function reportDistributionEvent(payload: {
+  action: 'DISTRIBUTION_ENQUEUED' | 'DISTRIBUTION_DELIVERED' | 'DISTRIBUTION_FAILED' | 'DISTRIBUTION_RETRY'
+  reportId: string
+  destination: string
+  priority?: number
+  retryCount?: number
+  actorId?: string
+  timestamp?: string
+}): void {
+  const session = useAuthSessionStore.getState().session
+  const input: ClientAuditEventInput = {
+    actorId: session?.userId ?? payload.actorId ?? 'unknown',
+    actorRole: UserRole.LAB_TECH,
+    action: AuditAction.UPDATE,
+    resourceType: AuditResourceType.DIAGNOSTIC_REPORT,
+    resourceId: payload.reportId,
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      distributionEvent: payload.action,
+      destination: payload.destination,
+      outcome: 'SUCCESS',
+      source: 'lab-lite',
+      ...(payload.priority != null ? { priority: payload.priority } : {}),
+      ...(payload.retryCount != null ? { retryCount: payload.retryCount } : {}),
+    },
+  }
+  try {
+    void emitClientAudit(input)
+  } catch {
+    // Audit is best-effort — never block distribution.
+  }
+}
+
+/**
  * Emit an equipment/instrument management audit event (Story 48.x).
  * No PHI — instrument names, types, and queue positions only. The specific
  * resource kind is carried in metadata since AuditResourceType has no dedicated

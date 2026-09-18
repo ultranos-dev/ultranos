@@ -10,7 +10,7 @@
 import { getDb, enqueueSyncEvent } from '../db'
 import { hlc, serializeHlc } from '../hlc'
 import { emitClientAudit } from '@ultranos/audit-logger/client'
-import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
+import { AuditAction, AuditResourceType, UserRole } from '@ultranos/shared-types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import type {
   ResupplyRequest,
@@ -157,9 +157,12 @@ export async function submitResupplyRequest(
 
   // Audit log: RESUPPLY_REQUEST_SUBMITTED (AC 9)
   emitClientAudit({
+    actorId: request.requestedBy,
+    actorRole: UserRole.LAB_TECH,
     action: AuditAction.CREATE,
     resourceType: AuditResourceType.SUPPLY_REQUEST,
     resourceId: request.requestId,
+    hlcTimestamp: serializeHlc(hlc.now()),
     metadata: {
       labId: request.labId,
       urgency: request.urgency,

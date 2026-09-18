@@ -16,10 +16,12 @@ interface CustodyTimelineProps {
   practitionerNames?: Record<string, string>
 }
 
-const EVENT_TYPE_CONFIG: Record<
+// Partial: sample-custody events are mapped here; non-sample event types (e.g. the
+// lock-* lifecycle) fall back to the status-change styling at the lookup site.
+const EVENT_TYPE_CONFIG: Partial<Record<
   CustodyEventType,
   { colorClass: string; bgClass: string; icon: React.ReactNode }
-> = {
+>> = {
   received: {
     colorClass: 'text-primary',
     bgClass: 'bg-primary/10 ring-primary',
@@ -133,7 +135,7 @@ export function CustodyTimeline({ events, practitionerNames = {} }: CustodyTimel
   return (
     <ol className="relative" data-testid="custody-timeline" aria-label={t('ariaLabel')}>
       {events.map((event, index) => {
-        const config = EVENT_TYPE_CONFIG[event.eventType]
+        const config = EVENT_TYPE_CONFIG[event.eventType] ?? EVENT_TYPE_CONFIG['status-change']!
         const isLast = index === events.length - 1
 
         return (

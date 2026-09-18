@@ -121,6 +121,8 @@ export enum AuditResourceType {
   CONSULTATION = 'CONSULTATION',
   // Story 53.6 — AI Provenance Trail
   AI_PROVENANCE = 'AI_PROVENANCE',
+  // Story 48.x — Procurement supply/resupply requests
+  SUPPLY_REQUEST = 'SUPPLY_REQUEST',
   DRUG_CATALOG = 'DRUG_CATALOG',
   // Procurement Phase 3a
   PURCHASE_ORDER = 'PURCHASE_ORDER',

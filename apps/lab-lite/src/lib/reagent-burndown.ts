@@ -71,7 +71,7 @@ export async function calculateDailyConsumptionRate(
     return { averageDailyUsage: 0, unit: '', dataPointCount: 0, confidenceLevel: 'low' }
   }
 
-  const unit = entries[0]!.unit
+  const unit = entries[0]!.unit ?? ''  // unit is optional on ReagentConsumptionEntry
   const totalConsumed = entries.reduce((sum, e) => sum + e.quantityUsed, 0)
 
   // Window = time from first entry to now, capped at lookbackDays

@@ -9,7 +9,8 @@
 
 import { getDb } from '../db'
 import { emitClientAudit } from '@ultranos/audit-logger/client'
-import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
+import { AuditAction, AuditResourceType, UserRole } from '@ultranos/shared-types'
+import { hlc, serializeHlc } from '../hlc'
 import { calculateLeadTimeDays, calculateTotalCost } from './cost-tracker'
 import type { ResupplyRequest, ResupplyStatus, OrderHistoryEntry } from '../db'
 
@@ -117,9 +118,12 @@ export async function applyStatusUpdate(payload: StatusUpdatePayload): Promise<v
 
   // Audit log: RESUPPLY_STATUS_UPDATED (AC 9)
   emitClientAudit({
+    actorId: payload.updatedBy,
+    actorRole: UserRole.LAB_TECH,
     action: AuditAction.UPDATE,
     resourceType: AuditResourceType.SUPPLY_REQUEST,
     resourceId: payload.requestId,
+    hlcTimestamp: serializeHlc(hlc.now()),
     metadata: {
       oldStatus,
       newStatus: payload.newStatus,
