@@ -4,9 +4,20 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import { NextIntlClientProvider } from 'next-intl'
+import type { ReactElement } from 'react'
 import { TeamAchievementDashboard } from '../components/achievements/TeamAchievementDashboard'
 import { AchievementType } from '../lib/db'
 import type { Achievement, TeamAchievement, Streak } from '../lib/db'
+import messages from '../../messages/en.json'
+
+function renderWithI18n(ui: ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      {ui}
+    </NextIntlClientProvider>,
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Mock dependencies
@@ -69,7 +80,7 @@ beforeEach(() => {
 
 describe('TeamAchievementDashboard', () => {
   it('renders when gamification is enabled', async () => {
-    render(<TeamAchievementDashboard />)
+    renderWithI18n(<TeamAchievementDashboard />)
     await waitFor(() => {
       expect(screen.getByTestId('team-achievement-dashboard')).toBeInTheDocument()
     })
@@ -78,7 +89,7 @@ describe('TeamAchievementDashboard', () => {
   it('renders nothing (null) when gamification is disabled', async () => {
     mockGetSchedulerConfig.mockResolvedValue({ ...DEFAULT_CONFIG, gamificationEnabled: false })
 
-    const { container } = render(<TeamAchievementDashboard />)
+    const { container } = renderWithI18n(<TeamAchievementDashboard />)
     await waitFor(() => {
       expect(container).toBeEmptyDOMElement()
     })
@@ -87,7 +98,7 @@ describe('TeamAchievementDashboard', () => {
   it('uses collaborative language — no competitive framing', async () => {
     mockStreaks.push({ type: 'ZERO_REJECTION', currentDays: 4, startDate: '2026-04-27' })
 
-    render(<TeamAchievementDashboard />)
+    renderWithI18n(<TeamAchievementDashboard />)
     await waitFor(() => {
       expect(screen.getByTestId('team-achievement-dashboard')).toBeInTheDocument()
     })
@@ -113,7 +124,7 @@ describe('TeamAchievementDashboard', () => {
     })
 
     // Dashboard renders without tech name
-    const { container } = render(<TeamAchievementDashboard />)
+    const { container } = renderWithI18n(<TeamAchievementDashboard />)
     await waitFor(() => {
       // Badge rendered
       const badges = container.querySelectorAll('[data-testid="achievement-badge"]')
@@ -127,14 +138,14 @@ describe('TeamAchievementDashboard', () => {
   it('renders streak progress when active streak exists', async () => {
     mockStreaks.push({ type: 'ZERO_REJECTION', currentDays: 3, startDate: '2026-04-29' })
 
-    render(<TeamAchievementDashboard />)
+    renderWithI18n(<TeamAchievementDashboard />)
     await waitFor(() => {
       expect(screen.getByTestId('streak-progress')).toBeInTheDocument()
     })
   })
 
   it('renders milestone progress bars', async () => {
-    render(<TeamAchievementDashboard />)
+    renderWithI18n(<TeamAchievementDashboard />)
     await waitFor(() => {
       const bars = screen.getAllByTestId('milestone-progress-bar')
       expect(bars).toHaveLength(3) // 1K, 5K, 10K

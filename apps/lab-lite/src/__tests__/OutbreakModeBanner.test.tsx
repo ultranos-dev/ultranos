@@ -13,9 +13,21 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render as rtlRender, screen, waitFor } from '@testing-library/react'
 import { fireEvent } from '@testing-library/react'
+import { NextIntlClientProvider } from 'next-intl'
+import type { ReactElement } from 'react'
+import messages from '../../messages/en.json'
 import type { OutbreakModeConfig } from '../types/outbreak'
+
+// Wrap all renders in the i18n provider so useTranslations resolves.
+function render(ui: ReactElement) {
+  return rtlRender(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      {ui}
+    </NextIntlClientProvider>,
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Mocks

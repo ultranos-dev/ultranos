@@ -1,9 +1,26 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { NextIntlClientProvider } from 'next-intl'
+import type { ReactElement } from 'react'
 import { InstallPrompt } from '../components/InstallPrompt'
+import messages from '../../messages/en.json'
+
+// InstallPrompt reads the sidebar width via useSidebar; provide the minimal
+// context shape so the component renders without a SidebarProvider wrapper.
+vi.mock('@/components/ui/sidebar', () => ({
+  useSidebar: () => ({ state: 'expanded' }),
+}))
 
 const DISMISS_KEY = 'lab-lite-install-dismissed'
+
+function renderWithI18n(ui: ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      {ui}
+    </NextIntlClientProvider>,
+  )
+}
 
 function fireBeforeInstallPrompt() {
   const promptMock = vi.fn().mockResolvedValue(undefined)
@@ -27,7 +44,7 @@ describe('InstallPrompt', () => {
   })
 
   it('does not show banner before 2 minutes', () => {
-    render(<InstallPrompt />)
+    renderWithI18n(<InstallPrompt />)
     fireBeforeInstallPrompt()
 
     act(() => {
@@ -38,7 +55,7 @@ describe('InstallPrompt', () => {
   })
 
   it('shows banner after 2 minutes when beforeinstallprompt fires', () => {
-    render(<InstallPrompt />)
+    renderWithI18n(<InstallPrompt />)
     fireBeforeInstallPrompt()
 
     act(() => {
@@ -51,7 +68,7 @@ describe('InstallPrompt', () => {
   })
 
   it('does not show banner if beforeinstallprompt never fires', () => {
-    render(<InstallPrompt />)
+    renderWithI18n(<InstallPrompt />)
 
     act(() => {
       vi.advanceTimersByTime(3 * 60 * 1000)
@@ -63,7 +80,7 @@ describe('InstallPrompt', () => {
   it('persists dismissal to localStorage', async () => {
     vi.useRealTimers()
 
-    render(<InstallPrompt />)
+    renderWithI18n(<InstallPrompt />)
     fireBeforeInstallPrompt()
 
     // Directly set showBanner by re-rendering with a shorter delay
@@ -71,7 +88,7 @@ describe('InstallPrompt', () => {
     // Instead, let's test the localStorage logic directly
     vi.useFakeTimers()
 
-    const { unmount } = render(<InstallPrompt />)
+    const { unmount } = renderWithI18n(<InstallPrompt />)
     fireBeforeInstallPrompt()
 
     act(() => {
@@ -92,7 +109,7 @@ describe('InstallPrompt', () => {
   it('does not show banner if previously dismissed', () => {
     localStorage.setItem(DISMISS_KEY, 'true')
 
-    render(<InstallPrompt />)
+    renderWithI18n(<InstallPrompt />)
     fireBeforeInstallPrompt()
 
     act(() => {

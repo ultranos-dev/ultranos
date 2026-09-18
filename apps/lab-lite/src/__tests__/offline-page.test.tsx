@@ -1,11 +1,22 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { NextIntlClientProvider } from 'next-intl'
+import type { ReactElement } from 'react'
+import messages from '../../messages/en.json'
 import OfflinePage from '../app/[locale]/(auth)/offline/page'
+
+function renderWithI18n(ui: ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      {ui}
+    </NextIntlClientProvider>,
+  )
+}
 
 describe('OfflinePage', () => {
   it('renders the offline message', () => {
-    render(<OfflinePage />)
+    renderWithI18n(<OfflinePage />)
 
     expect(
       screen.getByText(
@@ -21,7 +32,7 @@ describe('OfflinePage', () => {
       writable: true,
     })
 
-    render(<OfflinePage />)
+    renderWithI18n(<OfflinePage />)
 
     const button = screen.getByRole('button', { name: /try again/i })
     expect(button).toBeInTheDocument()

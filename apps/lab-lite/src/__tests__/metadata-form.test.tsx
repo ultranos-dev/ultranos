@@ -1,8 +1,28 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
+import {
+  render as rtlRender,
+  screen,
+  fireEvent,
+  waitFor,
+  cleanup,
+} from '@testing-library/react'
+import type { ReactElement } from 'react'
+import { NextIntlClientProvider } from 'next-intl'
 import { MetadataForm } from '../components/MetadataForm'
 import { LOINC_CATEGORIES } from '../lib/loinc-categories'
 import type { OcrSuggestion } from '../lib/trpc'
+import messages from '../../messages/en.json'
+
+// The component uses next-intl's `useTranslations('metadata')`. Wrap every
+// render in a real NextIntlClientProvider with the actual English messages so
+// the tests assert real translated strings (pattern a).
+function render(ui: ReactElement) {
+  return rtlRender(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      {ui}
+    </NextIntlClientProvider>,
+  )
+}
 
 const defaultProps = {
   onSubmit: vi.fn(),
