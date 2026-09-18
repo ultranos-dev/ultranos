@@ -864,5 +864,3 @@ export async function getMyRole(token: string): Promise<GetMyRoleResult> {
   const body = await res.json() as { result: { data: { json: GetMyRoleResult } } }
   return body.result.data.json
 }
-
-export { getHubApiUrl }
