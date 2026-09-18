@@ -181,7 +181,9 @@ describe('approveResult', () => {
       actorRole: 'SUPERVISOR',
     })
 
-    expect(dispatchResultRelease).toHaveBeenCalledWith(baseResult)
+    // Signature expanded: dispatchResultRelease(result, labName, guidanceContentIds).
+    // guidanceContentIds is undefined here (no guidance content matched).
+    expect(dispatchResultRelease).toHaveBeenCalledWith(baseResult, 'Lab Lite', undefined)
   })
 
   it('critical result: requires criticalValueAcknowledged=true', async () => {

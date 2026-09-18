@@ -93,7 +93,8 @@ describe('AuthGuard (Lab Lite)', () => {
     )
 
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument()
-    expect(container.innerHTML).toBe('')
+    // During loading the guard shows a busy skeleton (never the protected children).
+    expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument()
 
     resolveSession({
       data: {
