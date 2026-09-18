@@ -708,6 +708,8 @@ class LabLiteDatabase extends Dexie {
   // v12 — Consent, Waste, Cultural, Payments, Priority, Peer, Safety, Network, Temp, Health
   consentRecords!: Dexie.Table<ConsentRecord, number>
   familyDelegates!: Dexie.Table<FamilyDelegate, number>
+  labOverheadConfig!: Dexie.Table<LabOverheadConfig, string>
+  testCostConfigs!: Dexie.Table<TestCostConfig, string>
   waste_containers!: Dexie.Table<WasteContainer, string>
   waste_disposal_records!: Dexie.Table<WasteDisposalRecord, string>
   culturalPreferences!: Dexie.Table<PatientCulturalPreferences, string>
@@ -1789,6 +1791,12 @@ class LabLiteDatabase extends Dexie {
     // append-only revoke (status flips, record retained).
     this.version(49).stores({
       familyDelegates: '++id, patientRef, consentRecordId, delegatePhone, status',
+    })
+    // v50 — Lab costing/finance config. Single overhead config (id 'lab-overhead');
+    // per-test cost config keyed by testCode.
+    this.version(50).stores({
+      labOverheadConfig: '&id',
+      testCostConfigs: '&testCode',
     })
   }
 }
@@ -3463,6 +3471,81 @@ export async function revokeDelegate(id: number, reason: string): Promise<void> 
     revocationReason: reason,
     syncStatus: 'pending',
   })
+}
+
+// ---------------------------------------------------------------------------
+// QC snapshot types (Story 42.5 / 43.x) — immutable QC state bound to a result.
+// NOTE: shapes derived from qc-snapshot-service usage; controlValues/expectedRange
+// inner shapes are inferred (kept as numeric maps) pending the QC-model spec.
+// ---------------------------------------------------------------------------
+
+/** QC warning severity bound to a result (null = QC passing / no warning). */
+export type QcWarning = 'NO_QC_TODAY' | 'QC_FAILING' | 'QC_DRIFT' | null
+
+/** Immutable, denormalized copy of a QC run captured at result-authorization time. */
+export interface QcSnapshot {
+  qcRunId: string
+  analyte: string
+  instrumentId: string
+  controlLevel: string
+  passOrFail: 'PASS' | 'FAIL'
+  controlValues: Record<string, number>
+  expectedRange: Record<string, number>
+  qcTimestamp: string
+  snapshotTakenAt: string
+}
+
+// ---------------------------------------------------------------------------
+// Lab costing / finance config (v50) — Story 41.x cost-per-test analysis.
+// ---------------------------------------------------------------------------
+
+/** Lab-wide monthly overhead inputs (single record, id 'lab-overhead'). */
+export interface LabOverheadConfig {
+  id: string
+  monthlyRent: number
+  monthlyUtilities: number
+  monthlyEquipmentDepreciation: number
+  monthlyMiscOverhead: number
+  staffCount: number
+  avgMonthlySalary: number
+  avgTestsPerShift: number
+  shiftsPerMonth: number
+  lastUpdated: string
+}
+
+/** Per-test cost inputs, keyed by testCode. */
+export interface TestCostConfig {
+  id?: string
+  testCode: string
+  testName: string
+  reagentCostPerTest: number
+  consumableCost: number
+  currentPrice: number
+  laborAllocation: number
+  overheadAllocation: number
+  lastUpdated: string
+  updatedBy: string
+}
+
+/** The single lab overhead config, if set. */
+export async function getLabOverheadConfig(): Promise<LabOverheadConfig | undefined> {
+  const all = await getDb().labOverheadConfig.toArray()
+  return all[0]
+}
+
+/** Create or update the lab overhead config (upsert by &id). */
+export async function putLabOverheadConfig(config: LabOverheadConfig): Promise<void> {
+  await getDb().labOverheadConfig.put(config)
+}
+
+/** All per-test cost configs. */
+export async function getAllTestCostConfigs(): Promise<TestCostConfig[]> {
+  return getDb().testCostConfigs.toArray()
+}
+
+/** Bulk create/update per-test cost configs (upsert by &testCode). */
+export async function putTestCostConfigs(configs: Omit<TestCostConfig, 'id'>[]): Promise<void> {
+  await getDb().testCostConfigs.bulkPut(configs as TestCostConfig[])
 }
 
 // ---------------------------------------------------------------------------
