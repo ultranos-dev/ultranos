@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react-native'
+jest.mock('react-i18next', () => require('../test-utils/react-i18next-mock'))
 import { ProgressBar, CompletionCheckmark, PulsingDots } from '@/components/VisualProgress'
 
 describe('VisualProgress', () => {

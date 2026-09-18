@@ -1,3 +1,4 @@
+jest.mock('react-i18next', () => require('../src/test-utils/react-i18next-mock'))
 import { render, fireEvent, waitFor } from '@testing-library/react-native'
 import { I18nManager } from 'react-native'
 import { ConsentScope, ConsentStatus } from '@ultranos/shared-types'

@@ -1,3 +1,4 @@
+jest.mock('react-i18next', () => require('../src/test-utils/react-i18next-mock'))
 import { render, fireEvent } from '@testing-library/react-native'
 import { I18nManager } from 'react-native'
 import { MedicalTimeline } from '@/components/timeline/MedicalTimeline'
@@ -138,7 +139,7 @@ describe('MedicalTimeline', () => {
     )
 
     // Should show "Private Health Matter" not the real label
-    expect(getByText('Private Health Matter')).toBeTruthy()
+    expect(getByText(/Private Health Matter/)).toBeTruthy()
     expect(queryByText('Depression')).toBeNull()
 
     // Tap to reveal

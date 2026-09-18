@@ -1,3 +1,4 @@
+jest.mock('react-i18next', () => require('../src/test-utils/react-i18next-mock'))
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native'
 import { MedicalTimeline } from '@/components/timeline/MedicalTimeline'
 import * as audit from '@/lib/audit'
@@ -55,7 +56,7 @@ describe('Sensitive medication in MedicalTimeline', () => {
       />,
     )
 
-    expect(getByText('Private Health Matter')).toBeTruthy()
+    expect(getByText(/Private Health Matter/)).toBeTruthy()
     expect(queryByText('Tenofovir 300mg')).toBeNull()
   })
 
@@ -146,7 +147,7 @@ describe('Sensitive medication in MedicalTimeline', () => {
     })
 
     await waitFor(() => {
-      expect(queryByText('Private Health Matter')).toBeNull()
+      expect(queryByText(/Private Health Matter/)).toBeNull()
     })
 
     // Advance 30 seconds
@@ -154,7 +155,7 @@ describe('Sensitive medication in MedicalTimeline', () => {
       jest.advanceTimersByTime(30_000)
     })
 
-    expect(getByText('Private Health Matter')).toBeTruthy()
+    expect(getByText(/Private Health Matter/)).toBeTruthy()
   })
 
   it('keeps sensitive medication masked on biometric failure', async () => {
@@ -184,7 +185,7 @@ describe('Sensitive medication in MedicalTimeline', () => {
     })
 
     await waitFor(() => {
-      expect(getByText('Private Health Matter')).toBeTruthy()
+      expect(getByText(/Private Health Matter/)).toBeTruthy()
       expect(queryByText('Tenofovir 300mg')).toBeNull()
     })
   })

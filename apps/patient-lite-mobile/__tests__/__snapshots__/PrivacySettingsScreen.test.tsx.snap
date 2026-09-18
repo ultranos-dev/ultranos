@@ -250,7 +250,9 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
             testID="consent-updated-PRESCRIPTIONS"
           >
             Last updated: 
-            Apr 28, 2026, 06:00 AM
+            <Text>
+              Apr 28, 2026, 06:00 AM
+            </Text>
           </Text>
         </View>
         <RCTSwitch
@@ -939,7 +941,9 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
             testID="consent-updated-PRESCRIPTIONS"
           >
             Last updated: 
-            Apr 28, 2026, 06:00 AM
+            <Text>
+              Apr 28, 2026, 06:00 AM
+            </Text>
           </Text>
         </View>
         <RCTSwitch

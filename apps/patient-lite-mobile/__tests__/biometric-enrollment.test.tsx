@@ -1,3 +1,4 @@
+jest.mock('react-i18next', () => require('../src/test-utils/react-i18next-mock'))
 /**
  * Tests for BiometricEnrollmentScreen — Story 18.2, Task 4.
  *
