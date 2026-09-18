@@ -106,7 +106,7 @@ describe('krl-sync-worker', () => {
       expect(purged).toBe(2)
       const remaining = await db.practitionerKeys.toArray()
       expect(remaining).toHaveLength(1)
-      expect(remaining[0].publicKey).toBe('key-b')
+      expect(remaining[0]!.publicKey).toBe('key-b')
     })
 
     it('returns 0 when no matching keys in cache', async () => {
@@ -141,7 +141,7 @@ describe('krl-sync-worker', () => {
 
       const stored = await db.revokedKeys.toArray()
       expect(stored).toHaveLength(1)
-      expect(stored[0].publicKey).toBe('revoked-1')
+      expect(stored[0]!.publicKey).toBe('revoked-1')
 
       expect(mockAudit).toHaveBeenCalledWith(
         'actor-1',
@@ -167,7 +167,7 @@ describe('krl-sync-worker', () => {
       // Existing KRL retained (fail-closed)
       const stored = await db.revokedKeys.toArray()
       expect(stored).toHaveLength(1)
-      expect(stored[0].publicKey).toBe('existing-key')
+      expect(stored[0]!.publicKey).toBe('existing-key')
 
       expect(mockAudit).toHaveBeenCalledWith(
         'actor-1',

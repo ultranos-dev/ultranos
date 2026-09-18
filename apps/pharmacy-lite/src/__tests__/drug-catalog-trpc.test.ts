@@ -53,7 +53,7 @@ describe('searchDrugCatalog', () => {
     })
     const results = await searchDrugCatalog('ome')
     expect(results).toHaveLength(1)
-    expect(results[0].atcCode).toBe('A02BC01')
+    expect(results[0]!.atcCode).toBe('A02BC01')
   })
 
   it('throws on non-ok response', async () => {

@@ -99,7 +99,7 @@ describe('StockTable — 4-state behavior', () => {
 
     // Patch db.stockBatches.toArray on the real db object temporarily.
     const original = db.stockBatches.toArray.bind(db.stockBatches)
-    vi.spyOn(db.stockBatches, 'toArray').mockReturnValueOnce(deferred)
+    vi.spyOn(db.stockBatches, 'toArray').mockReturnValueOnce(deferred as unknown as ReturnType<typeof db.stockBatches.toArray>)
 
     renderTable()
 

@@ -12,7 +12,7 @@ vi.mock('@ultranos/sync-engine', async () => {
 })
 
 // Mock auth session store (required by prescription-verify revalidation path)
-const mockGetAccessToken = vi.fn<() => Promise<string | null>>().mockResolvedValue('test-token')
+const mockGetAccessToken = vi.fn<[], Promise<string | null>>().mockResolvedValue('test-token')
 vi.mock('@/stores/auth-session-store', () => ({
   useAuthSessionStore: Object.assign(vi.fn(), {
     getState: vi.fn(() => ({

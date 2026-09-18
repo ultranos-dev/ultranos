@@ -52,7 +52,7 @@ import { SyncProvider } from '@/components/providers/SyncProvider'
 /** Flush all pending microtasks so in-flight async guards reset before next step. */
 const flushPromises = () => new Promise((r) => setTimeout(r, 0))
 
-beforeEach(() => vi.clearAllMocks())
+beforeEach(() => { vi.clearAllMocks() })
 
 describe('SyncProvider wholesale pull trigger', () => {
   it('runs pullWholesale on mount', async () => {
