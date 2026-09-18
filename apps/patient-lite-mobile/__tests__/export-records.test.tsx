@@ -37,6 +37,12 @@ jest.mock('@/components/PatientQRCode', () => ({
   },
 }))
 
+// The export button is wrapped in a PremiumGate; bypass entitlement gating so the
+// export UI itself is under test (entitlement is covered by PremiumGate's own tests).
+jest.mock('@/components/PremiumGate', () => ({
+  PremiumGate: ({ children }: { children: React.ReactNode }) => children,
+}))
+
 jest.mock('@/hooks/usePatientProfile')
 jest.mock('@/lib/encrypted-db')
 jest.mock('@/lib/audit')

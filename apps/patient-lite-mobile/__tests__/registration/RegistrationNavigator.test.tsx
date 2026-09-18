@@ -73,14 +73,20 @@ jest.mock('@/theme/consumer', () => ({
 }))
 
 // Mock i18n
+// This suite asserts raw i18n keys, so keep t(key)=>key; add the i18n object that
+// useAppLocale reads (i18n.language) to avoid the "reading 'language'" crash.
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
+    i18n: { language: 'en', changeLanguage: () => Promise.resolve() },
   }),
+  initReactI18next: { type: '3rdParty', init: () => {} },
 }))
 
 // Mock i18n SupportedLocale type
-jest.mock('@/i18n', () => ({}))
+jest.mock('@/i18n', () => ({
+  getDirection: (locale: string) => (['ar', 'prs', 'ps'].includes(locale) ? 'rtl' : 'ltr'),
+}))
 
 import { RegistrationNavigator } from '@/navigation/RegistrationNavigator'
 
@@ -104,7 +110,8 @@ describe('RegistrationNavigator', () => {
     const { getByText } = render(
       <RegistrationNavigator onRegistrationComplete={mockOnComplete} />,
     )
-    expect(getByText('auth.phoneTitle')).toBeTruthy()
+    // PhoneInputScreen renders the send-OTP action (there is no separate title key).
+    expect(getByText('auth.sendOtp')).toBeTruthy()
   })
 
   it('calls register with collected data on profile submission', async () => {
@@ -180,6 +187,7 @@ describe('RegistrationNavigator', () => {
 
     // The error handling is tested indirectly — the navigator catches errors
     // and sets step back to 'profile' with the error message
-    expect(getByText('auth.phoneTitle')).toBeTruthy()
+    // PhoneInputScreen renders the send-OTP action (there is no separate title key).
+    expect(getByText('auth.sendOtp')).toBeTruthy()
   })
 })
