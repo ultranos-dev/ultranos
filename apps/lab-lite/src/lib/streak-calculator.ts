@@ -17,7 +17,6 @@
 
 import { getDb } from '@/lib/db'
 import type { QualityStreak, QualityStreakType } from '@/lib/quality-streak-types'
-import { crypto } from '@/lib/delegate-crypto'
 
 // ---------------------------------------------------------------------------
 // Pass/fail predicate for a single QC run

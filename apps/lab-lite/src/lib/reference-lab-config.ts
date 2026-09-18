@@ -9,6 +9,8 @@
  */
 
 import { getDb, putReferenceLab, getActiveReferenceLabs } from './db'
+// Re-export so UI (ReferenceLabConfigPanel) can import the active-labs query from here.
+export { getActiveReferenceLabs }
 import { hlc, serializeHlc } from './hlc'
 import { reportSendOutAuditEvent } from './audit-client'
 import type { ReferenceLab, CreateRefLabInput } from '@/types/reference-lab'

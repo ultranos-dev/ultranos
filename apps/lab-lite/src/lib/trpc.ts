@@ -5,11 +5,64 @@
  * hub-api's AppRouter type (and its runtime dependencies) into the PWA build.
  */
 
-function getHubApiUrl(): string {
+export function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
     return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
   }
   return process.env.HUB_API_URL ?? 'http://localhost:3004/api/trpc'
+}
+
+/**
+ * Minimal procedure caller — maps `.mutate(input)` / `.query(input)` to a raw
+ * fetch against the Hub API tRPC HTTP endpoint (superjson-wrapped `{ json }`).
+ * Avoids importing hub-api's AppRouter into the PWA build.
+ */
+interface TrpcProcedure {
+  mutate: (input?: unknown) => Promise<unknown>
+  query: (input?: unknown) => Promise<unknown>
+}
+
+function unwrapTrpcData(data: unknown): unknown {
+  const d = data as { result?: { data?: unknown } }
+  const inner = d?.result?.data
+  if (inner && typeof inner === 'object' && 'json' in (inner as object)) {
+    return (inner as { json: unknown }).json
+  }
+  return inner ?? data
+}
+
+function makeTrpcProcedure(path: string): TrpcProcedure {
+  return {
+    async mutate(input?: unknown) {
+      const res = await fetch(`${getHubApiUrl()}/${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ json: input ?? null }),
+      })
+      if (!res.ok) throw new Error(`tRPC ${path} failed: ${res.status}`)
+      return unwrapTrpcData(await res.json())
+    },
+    async query(input?: unknown) {
+      const url = new URL(`${getHubApiUrl()}/${path}`)
+      if (input !== undefined) url.searchParams.set('input', JSON.stringify({ json: input }))
+      const res = await fetch(url.toString())
+      if (!res.ok) throw new Error(`tRPC ${path} failed: ${res.status}`)
+      return unwrapTrpcData(await res.json())
+    },
+  }
+}
+
+/**
+ * Lightweight tRPC client for Lab Lite. Only the procedures actually consumed
+ * by the PWA are declared; add more as needed. Typed loosely to keep hub-api's
+ * router types out of the client bundle.
+ */
+export function getTrpcClient() {
+  return {
+    lab: {
+      syncQualityProfile: makeTrpcProcedure('lab.syncQualityProfile'),
+    },
+  }
 }
 
 type AuthEventType =

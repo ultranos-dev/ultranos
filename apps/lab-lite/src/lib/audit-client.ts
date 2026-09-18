@@ -361,6 +361,50 @@ export function reportTemperatureEvent(payload: {
 }
 
 /**
+ * Emit an equipment/instrument management audit event (Story 48.x).
+ * No PHI — instrument names, types, and queue positions only. The specific
+ * resource kind is carried in metadata since AuditResourceType has no dedicated
+ * INSTRUMENT member; events are recorded under SYSTEM. Awaited by callers but
+ * never throws — equipment workflow must not be blocked by audit failures.
+ */
+export async function emitEquipmentAuditEvent(payload: {
+  action: 'CREATE' | 'UPDATE'
+  resourceType: 'INSTRUMENT' | 'INSTRUMENT_BATCH' | 'INSTRUMENT_QUEUE'
+  resourceId: string
+  detail?: Record<string, unknown>
+  actorId?: string
+}): Promise<void> {
+  const session = useAuthSessionStore.getState().session
+
+  const actionMap: Record<string, AuditAction> = {
+    CREATE: AuditAction.CREATE,
+    UPDATE: AuditAction.UPDATE,
+  }
+
+  const input: ClientAuditEventInput = {
+    actorId: session?.userId ?? payload.actorId ?? 'unknown',
+    actorRole: UserRole.LAB_TECH,
+    action: actionMap[payload.action],
+    resourceType: AuditResourceType.SYSTEM,
+    resourceId: payload.resourceId,
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      equipmentResourceType: payload.resourceType,
+      equipmentAction: payload.action,
+      outcome: 'SUCCESS',
+      source: 'lab-lite',
+      ...(payload.detail ? { detail: payload.detail } : {}),
+    },
+  }
+
+  try {
+    await emitClientAudit(input)
+  } catch {
+    // Audit is best-effort — never block equipment workflow.
+  }
+}
+
+/**
  * Emit a safety report manager action audit event.
  * Only manager actions are audited — report submission is NOT audited
  * to preserve reporter anonymity (Story 47.6, CLAUDE.md Rule #6 exception).

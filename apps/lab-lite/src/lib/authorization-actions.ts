@@ -25,6 +25,26 @@ import type { LabResultForAuthorization } from '../types/authorization'
 import { isCriticalResult } from './permissions'
 import type { CompletedChecklist, CriticalValueMatch } from './critical-values/types'
 
+/**
+ * Emitted when a result is authorized/released. Consumed by the distribution
+ * orchestrator (Story 42.6) to fan out projections to OPD-Lite, Patient-Lite,
+ * the logbook, and stats. No raw PHI: patientRef is an opaque blind-index ref.
+ */
+export interface ResultReleasedEvent {
+  reportId: string
+  sampleId: string
+  patientRef: string
+  authorizedBy: string
+  authorizedAt: string                 // ISO 8601
+  loincCode: string
+  testName: string
+  flagLevel: 'normal' | 'abnormal' | 'critical'
+  templateVersion: string
+  conclusion?: string
+  labName?: string
+  receivedAt?: string                  // ISO 8601 — when the sample was received (for TAT)
+}
+
 interface ApproveOptions {
   result: LabResultForAuthorization
   actorId: string

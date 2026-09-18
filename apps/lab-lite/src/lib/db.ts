@@ -46,6 +46,9 @@ import type { ConsultationRecipient } from '@/lib/consultation-recipients'
 import type { KnowledgeCard, TriggerRule } from '@/lib/knowledge-cards'
 import type { GuidanceContent, GuidanceTrigger } from '@/lib/public-health-guidance'
 import type { MedicationLabMapping } from '@ultranos/shared-types'
+import type { PlausibilityConfig, ResultSnapshot, FlagAcknowledgment } from '@/lib/plausibility/types'
+import type { AuthorizationAction } from '@/types/authorization'
+import type { InventorySnapshotItem } from '@/lib/inventory/inventory-types'
 
 // ---------------------------------------------------------------------------
 // Achievement types (v17) — Story 51.7: Gamified Team Quality Engagement
@@ -86,6 +89,10 @@ export interface AchievementPreferences {
   techId: string
   showOnTeamDashboard: boolean      // default true
 }
+
+// Streak is computed in achievement-service; re-export (type-only, no runtime cycle)
+// so consumers can import it from the db barrel alongside Achievement/TeamAchievement.
+export type { Streak } from './achievement-service'
 
 export interface AchievementSchedulerConfig {
   id: 'achievement-scheduler'       // singleton
@@ -370,12 +377,18 @@ export interface TatOverrideEntry extends TestTatProfile {
 // No PHI content stored unencrypted — audio/thumbprint stored as Blob.
 // ---------------------------------------------------------------------------
 
+// Consent capture method + language. Method reflects the physical capture modality
+// offered in the consent flow (voice recording, thumbprint image, or both).
+export type ConsentMethod = 'audio' | 'thumbprint' | 'both'
+// Supported UI locales (mirrors src/i18n/routing.ts).
+export type ConsentLanguage = 'en' | 'ar' | 'prs' | 'ps'
+
 export interface ConsentRecord {
   id?: number
   patientRef: string
   encounterId: string
-  method: 'audio' | 'video' | 'both'
-  language: string
+  method: ConsentMethod
+  language: ConsentLanguage
   consentTextVersion: string
   audioBlob?: Blob
   thumbprintBlob?: Blob
@@ -667,6 +680,136 @@ export interface MonitoringFlag {
   updatedAt: string                // ISO 8601
 }
 
+// ---------------------------------------------------------------------------
+// v53 — Write-Once/Distribute-Many, Procurement, Multi-Branch Network
+// (Stories 42.5, 42.6, 48.x, 54.1). No raw PHI: patientRef is an opaque
+// blind-index ref; stats/inventory hold aggregate operational data only.
+// ---------------------------------------------------------------------------
+
+/** Downstream targets a released result is fanned out to (Story 42.6). */
+export type DistributionDestination = 'OPD_LITE' | 'PATIENT_LITE' | 'LOGBOOK' | 'STATS'
+/** Lifecycle of a single distribution queue entry. */
+export type DistributionStatus = 'pending' | 'delivering' | 'delivered' | 'failed'
+
+export interface DistributionQueueEntry {
+  id?: number
+  reportId: string
+  destination: DistributionDestination
+  payload: string                  // JSON-serialized projection
+  status: DistributionStatus
+  retryCount: number
+  lastAttemptAt: string | null     // ISO 8601
+  createdAt: string                // ISO 8601
+  priority: number                 // 1 = critical, 2 = abnormal, 3 = normal
+}
+
+/** Aggregate per-month, per-analyte lab throughput counters (Story 42.6 STATS). */
+export interface LabStat {
+  id?: number
+  yearMonth: string                // YYYY-MM
+  loincCode: string
+  totalCount: number
+  normalCount: number
+  abnormalCount: number
+  criticalCount: number
+  totalTurnaroundMinutes: number   // running sum, divide by totalCount for mean
+  lastUpdated: string              // ISO 8601
+}
+
+/** Procurement resupply workflow status (Story 48.x). */
+export type ResupplyStatus =
+  | 'submitted'
+  | 'received'
+  | 'approved'
+  | 'ordered'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'rejected'
+
+export interface StatusUpdate {
+  status: ResupplyStatus
+  updatedAt: string                // ISO 8601
+  updatedBy: string                // opaque actor ID
+  note: string | null
+}
+
+export interface ResupplyRequestItem {
+  reagentCode: string
+  reagentDisplay: string
+  quantityRequested: number
+  unitOfMeasure: string
+  currentStock: number
+  daysOfSupplyRemaining: number
+  unitPrice: number | null         // set by coordinator during pricing
+  totalPrice: number | null
+}
+
+export interface ResupplyRequest {
+  id?: number
+  requestId: string                // UUID — stable sync key to Hub
+  labId: string
+  requestedBy: string              // opaque actor ID
+  requestedAt: string              // ISO 8601
+  hlcTimestamp: string
+  items: ResupplyRequestItem[]
+  urgency: 'routine' | 'urgent' | 'critical'
+  notes: string
+  status: ResupplyStatus
+  statusHistory: StatusUpdate[]    // append-only
+  batchOrderId: string | null      // Hub supplier batch ID
+  estimatedDelivery: string | null // ISO 8601
+  actualDelivery: string | null    // ISO 8601
+  syncStatus: 'pending' | 'synced' | 'failed'
+  createdAt: string                // ISO 8601
+  updatedAt: string                // ISO 8601
+}
+
+export interface OrderHistoryEntry {
+  id?: number
+  requestId: string
+  labId: string
+  requestedBy: string
+  requestedAt: string              // ISO 8601
+  deliveredAt: string              // ISO 8601
+  items: ResupplyRequestItem[]
+  urgency: 'routine' | 'urgent' | 'critical'
+  batchOrderId: string | null
+  leadTimeDays: number
+  totalCost: number | null
+  volumeSavingsAFN: number | null
+  createdAt: string                // ISO 8601
+}
+
+export interface NetworkInventoryEntry {
+  id?: number
+  labId: string
+  labName: string
+  district: string
+  province: string
+  coordinates?: { lat: number; lng: number }
+  snapshotAt: string               // ISO 8601 — when the snapshot was recorded
+  receivedAt: string               // ISO 8601 — when this lab received it
+  items: InventorySnapshotItem[]
+}
+
+export interface RedistributionRecommendation {
+  id?: number
+  reagentCode: string
+  reagentDisplay: string
+  deficitLabId: string
+  deficitLabName: string
+  deficitDaysOfSupply: number
+  sourceLabId: string
+  sourceLabName: string
+  sourceDaysOfSupply: number
+  suggestedTransferQty: number
+  distanceKm: number | null
+  distanceLabel: string
+  createdAt: string                // ISO 8601
+  dismissedUntil: string | null    // ISO 8601 — null = active
+}
+
 class LabLiteDatabase extends Dexie {
   uploadQueue!: Dexie.Table<UploadQueueEntry, number>
   practitioner_keys!: Dexie.Table<PractitionerKeyCache, string>
@@ -713,6 +856,19 @@ class LabLiteDatabase extends Dexie {
   testCostConfigs!: Dexie.Table<TestCostConfig, string>
   outbreak_configs!: Dexie.Table<OutbreakModeConfig, string>
   daily_sitreps!: Dexie.Table<DailySitrep, string>
+  // v52 — Result Plausibility (Story 43.5). No PHI beyond opaque patientRef; snapshots
+  // hold analyte values for delta checks; flag acks store char-count only, never text.
+  plausibilityConfigs!: Dexie.Table<PlausibilityConfig, string>
+  resultSnapshots!: Dexie.Table<ResultSnapshot, string>
+  flagAcknowledgments!: Dexie.Table<FlagAcknowledgment, [string, string]>
+  // v53 — Distribution fan-out, offline authorization trail, procurement, network
+  authorizationActions!: Dexie.Table<AuthorizationAction, number>
+  distributionQueue!: Dexie.Table<DistributionQueueEntry, number>
+  labStats!: Dexie.Table<LabStat, number>
+  resupplyRequests!: Dexie.Table<ResupplyRequest, number>
+  orderHistory!: Dexie.Table<OrderHistoryEntry, number>
+  networkInventory!: Dexie.Table<NetworkInventoryEntry, number>
+  redistributionRecommendations!: Dexie.Table<RedistributionRecommendation, number>
   waste_containers!: Dexie.Table<WasteContainer, string>
   waste_disposal_records!: Dexie.Table<WasteDisposalRecord, string>
   culturalPreferences!: Dexie.Table<PatientCulturalPreferences, string>
@@ -1806,6 +1962,26 @@ class LabLiteDatabase extends Dexie {
       outbreak_configs: '&id, status',
       daily_sitreps: '&id, outbreakConfigId, reportDate',
     })
+    // v52 — Result Plausibility (Story 43.5). Config keyed by LOINC; snapshots indexed
+    // by [patientRef+loincCode] for delta lookups + enteredAt for recency ordering;
+    // flag acks keyed by [flagId+resultId] (one ack per flag per result).
+    this.version(52).stores({
+      plausibilityConfigs: '&loincCode, analyteName',
+      resultSnapshots: '&id, [patientRef+loincCode], enteredAt, patientRef',
+      flagAcknowledgments: '&[flagId+resultId], flagId, resultId',
+    })
+    // v53 — Distribution fan-out queue (priority + status drain ordering), offline
+    // authorization audit trail, procurement resupply + order history, and the
+    // multi-branch network inventory + redistribution caches.
+    this.version(53).stores({
+      authorizationActions: '++id, resultId, syncStatus, timestamp',
+      distributionQueue: '++id, reportId, status, priority, destination, [status+priority]',
+      labStats: '++id, &[yearMonth+loincCode], yearMonth, loincCode',
+      resupplyRequests: '++id, &requestId, labId, status, requestedAt, urgency, syncStatus',
+      orderHistory: '++id, &requestId, labId, deliveredAt',
+      networkInventory: '++id, &labId, district, snapshotAt',
+      redistributionRecommendations: '++id, deficitLabId, sourceLabId, createdAt',
+    })
   }
 }
 
@@ -1822,6 +1998,151 @@ export function getDb(): LabLiteDatabase {
     dbInstance.on('ready', () => seedTestTimeEstimatesIfEmpty().catch(() => { /* best-effort */ }))
   }
   return dbInstance
+}
+
+/**
+ * Plausibility data-access facade (Story 43.5). Consumers (delta-checker,
+ * FlagAcknowledgmentDialog) import `db` and call these three methods; tests mock
+ * this object directly. Methods resolve the Dexie instance lazily via getDb().
+ */
+export const db = {
+  /** Lab-manager threshold override for an analyte, keyed by LOINC. */
+  async getPlausibilityConfig(loincCode: string): Promise<PlausibilityConfig | undefined> {
+    return getDb().plausibilityConfigs.get(loincCode)
+  },
+  /** Most recent prior result snapshot for a patient+analyte strictly before `before`. */
+  async getMostRecentSnapshot(
+    patientRef: string,
+    loincCode: string,
+    before: string,
+  ): Promise<ResultSnapshot | undefined> {
+    const rows = await getDb().resultSnapshots
+      .where('[patientRef+loincCode]')
+      .equals([patientRef, loincCode])
+      .and((s) => s.enteredAt < before)
+      .sortBy('enteredAt')
+    return rows.length ? rows[rows.length - 1] : undefined
+  },
+  /** Record a plausibility-flag acknowledgment (char-count only, never explanation text). */
+  async addFlagAcknowledgment(ack: FlagAcknowledgment): Promise<void> {
+    await getDb().flagAcknowledgments.put(ack)
+  },
+  /** Persist a result snapshot so future delta checks have a prior value to compare. */
+  async addResultSnapshot(snapshot: ResultSnapshot): Promise<void> {
+    await getDb().resultSnapshots.put(snapshot)
+  },
+  /** Upsert a lab-manager plausibility threshold override. */
+  async putPlausibilityConfig(config: PlausibilityConfig): Promise<void> {
+    await getDb().plausibilityConfigs.put(config)
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Offline authorization sync (Story 42.5)
+// ---------------------------------------------------------------------------
+
+/** All authorization actions not yet confirmed synced to the Hub. */
+export async function getUnsyncedAuthorizationActions(): Promise<AuthorizationAction[]> {
+  return getDb().authorizationActions.where('syncStatus').notEqual('synced').toArray()
+}
+
+/** Mark the given authorization-action rows as synced (Tier 2 — both kept as addenda). */
+export async function markAuthorizationActionsSynced(ids: number[]): Promise<void> {
+  if (ids.length === 0) return
+  const db = getDb()
+  await db.transaction('rw', db.authorizationActions, async () => {
+    for (const id of ids) {
+      await db.authorizationActions.update(id, { syncStatus: 'synced' as const })
+    }
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Distribution fan-out queue (Story 42.6)
+// ---------------------------------------------------------------------------
+
+/** Enqueue one distribution projection; returns the new entry's numeric id. */
+export async function addDistributionQueueEntry(
+  entry: Omit<DistributionQueueEntry, 'id'>,
+): Promise<number> {
+  return getDb().distributionQueue.add(entry as DistributionQueueEntry)
+}
+
+/** Patch a distribution queue entry (status/retry/lastAttempt). */
+export async function updateDistributionQueueEntry(
+  id: number,
+  updates: Partial<DistributionQueueEntry>,
+): Promise<void> {
+  await getDb().distributionQueue.update(id, updates)
+}
+
+/** Pending entries in drain order: priority ascending (critical first), then FIFO by createdAt. */
+export async function getPendingDistributionEntries(): Promise<DistributionQueueEntry[]> {
+  const pending = await getDb().distributionQueue.where('status').equals('pending').toArray()
+  return pending.sort((a, b) => a.priority - b.priority || a.createdAt.localeCompare(b.createdAt))
+}
+
+/** All distribution entries for a given report (one per destination) — for the status panel. */
+export async function getDistributionStatusForReport(
+  reportId: string,
+): Promise<DistributionQueueEntry[]> {
+  return getDb().distributionQueue.where('reportId').equals(reportId).toArray()
+}
+
+// ---------------------------------------------------------------------------
+// Aggregate lab throughput stats (Story 42.6 — STATS destination)
+// ---------------------------------------------------------------------------
+
+/** Increment the per-month, per-analyte counters for a released result. */
+export async function upsertLabStat(
+  yearMonth: string,
+  loincCode: string,
+  flagLevel: 'normal' | 'abnormal' | 'critical',
+  turnaroundMinutes: number,
+): Promise<void> {
+  const db = getDb()
+  await db.transaction('rw', db.labStats, async () => {
+    const existing = await db.labStats
+      .where('[yearMonth+loincCode]')
+      .equals([yearMonth, loincCode])
+      .first()
+    const nowIso = new Date().toISOString()
+    if (existing) {
+      await db.labStats.update(existing.id!, {
+        totalCount: existing.totalCount + 1,
+        normalCount: existing.normalCount + (flagLevel === 'normal' ? 1 : 0),
+        abnormalCount: existing.abnormalCount + (flagLevel === 'abnormal' ? 1 : 0),
+        criticalCount: existing.criticalCount + (flagLevel === 'critical' ? 1 : 0),
+        totalTurnaroundMinutes: existing.totalTurnaroundMinutes + turnaroundMinutes,
+        lastUpdated: nowIso,
+      })
+    } else {
+      await db.labStats.add({
+        yearMonth,
+        loincCode,
+        totalCount: 1,
+        normalCount: flagLevel === 'normal' ? 1 : 0,
+        abnormalCount: flagLevel === 'abnormal' ? 1 : 0,
+        criticalCount: flagLevel === 'critical' ? 1 : 0,
+        totalTurnaroundMinutes: turnaroundMinutes,
+        lastUpdated: nowIso,
+      } as LabStat)
+    }
+  })
+}
+
+// ---------------------------------------------------------------------------
+// CHW / courier offline sync markers (Story 54.2)
+// ---------------------------------------------------------------------------
+
+/** Mark a CHW-collected sample as synced to the Hub. */
+export async function markCHWSampleSynced(id: string): Promise<void> {
+  await getDb().chw_samples.update(id, { syncStatus: 'synced' as CHWSampleCollection['syncStatus'] })
+}
+
+/** Mark a courier handoff record as synced to the Hub. */
+export async function markCourierHandoffSynced(id: string): Promise<void> {
+  await getDb().courier_handoffs.update(id, { syncStatus: 'synced' as CourierHandoff['syncStatus'] })
 }
 
 export interface QueueEntryAuditCallback {
@@ -3028,6 +3349,9 @@ export async function putLabLocation(location: LabLocation): Promise<void> {
   const db = getDb()
   await db.lab_locations.put(location)
 }
+
+/** Alias used by network-service — upsert a lab/satellite location. */
+export const putLocation = putLabLocation
 
 /** Return all active lab locations. */
 export async function getActiveLocations(): Promise<LabLocation[]> {
