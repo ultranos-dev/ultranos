@@ -158,7 +158,7 @@ describe('ExpiringConsentsPage', () => {
         expect(screen.getByTestId('empty-state')).toBeInTheDocument()
       })
 
-      const [url, init] = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0]
+      const [url, init] = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0]!
       expect(String(url)).toContain('consent.expiringSoon')
       expect((init as RequestInit).headers).toHaveProperty('Authorization', 'Bearer test')
     })

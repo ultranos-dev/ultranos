@@ -111,7 +111,8 @@ const mockUseAppointments = vi.fn(() => ({
 }))
 
 vi.mock('@/hooks/useAppointments', () => ({
-  useAppointments: (...args: unknown[]) => mockUseAppointments(...args),
+  useAppointments: (...args: unknown[]) =>
+    (mockUseAppointments as (...a: unknown[]) => unknown)(...args),
 }))
 
 const nowIso = new Date().toISOString()
@@ -260,8 +261,8 @@ describe('Appointment Scheduling', () => {
 
     expect(patientButtons).toHaveLength(2)
     // Khalid (queuePosition=1) should come before Fatima (queuePosition=2)
-    expect(patientButtons[0].textContent).toContain('Khalid M.')
-    expect(patientButtons[1].textContent).toContain('Fatima A.')
+    expect(patientButtons[0]!.textContent).toContain('Khalid M.')
+    expect(patientButtons[1]!.textContent).toContain('Fatima A.')
   })
 
   it('Urgent walk-ins display red styling', async () => {

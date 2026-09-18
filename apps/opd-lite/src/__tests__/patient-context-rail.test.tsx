@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import type { FhirPatient } from '@ultranos/shared-types'
+import { AdministrativeGender } from '@ultranos/shared-types'
 
 // Mock child components — they use next-intl / Dexie / Supabase internally;
 // this test only verifies that PatientContextRail passes props to the right
@@ -36,17 +37,17 @@ const TEST_PATIENT_ID = '11111111-1111-1111-1111-111111111111'
 const testPatient: FhirPatient = {
   id: TEST_PATIENT_ID,
   resourceType: 'Patient',
-  gender: 'male',
+  gender: AdministrativeGender.MALE,
   birthDate: '1990-05-15',
+  birthYearOnly: false,
   name: [{ text: 'Test Patient', family: 'Patient', given: ['Test'] }],
   _ultranos: {
     nameLocal: 'Test Patient Local',
     nameLatin: 'Test Patient Latin',
     nationalIdHash: 'hash123',
-    consentGranted: true,
-    consentTimestamp: '2024-01-01T00:00:00Z',
-    isOfflineCreated: false,
-    hlcTimestamp: '2024-01-01T00:00:00Z_0000_node1',
+    isActive: true,
+    patient_tier: 'FREE',
+    isNomadic: false,
     createdAt: '2024-01-01T00:00:00Z',
   },
   meta: {

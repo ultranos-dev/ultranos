@@ -7,8 +7,10 @@ import { useSoapNoteStore } from '@/stores/soap-note-store'
 import { useVitalsStore } from '@/stores/vitals-store'
 import { useDiagnosisStore } from '@/stores/diagnosis-store'
 import { usePrescriptionStore } from '@/stores/prescription-store'
+import type { PrescriptionFormData } from '@/lib/prescription-config'
 import { db } from '@/lib/db'
 import type { FhirPatient } from '@ultranos/shared-types'
+import { AdministrativeGender } from '@ultranos/shared-types'
 
 // Capture all emitted audit events
 let auditEvents: ClientAuditEvent[] = []
@@ -33,14 +35,18 @@ function setupAuthSession() {
 const mockPatient: FhirPatient = {
   id: 'patient-001',
   resourceType: 'Patient',
-  name: [{ use: 'official', given: ['Test'], family: 'Patient' }],
-  gender: 'male',
+  name: [{ given: ['Test'], family: 'Patient' }],
+  gender: AdministrativeGender.MALE,
   birthDate: '1990-01-01',
+  birthYearOnly: false,
   identifier: [],
   _ultranos: {
     nameLocal: 'Test Patient',
     nationalIdHash: 'hash-123',
     createdAt: new Date().toISOString(),
+    patient_tier: 'FREE',
+    isActive: true,
+    isNomadic: false,
   },
   meta: { lastUpdated: new Date().toISOString(), versionId: '1' },
 }
@@ -187,7 +193,7 @@ describe('OPD-Lite Audit Integration', () => {
   describe('Diagnosis', () => {
     it('emits CREATE audit event on diagnosis add', async () => {
       await useDiagnosisStore.getState().addDiagnosis(
-        { code: 'J06.9', display: 'URTI', chapter: 'X' },
+        { code: 'J06.9', display: 'URTI' },
         'enc-001',
         'patient-001',
         'primary',
@@ -202,7 +208,7 @@ describe('OPD-Lite Audit Integration', () => {
 
     it('emits DELETE_REQUEST audit event on diagnosis remove', async () => {
       const condition = await useDiagnosisStore.getState().addDiagnosis(
-        { code: 'J06.9', display: 'URTI', chapter: 'X' },
+        { code: 'J06.9', display: 'URTI' },
         'enc-001',
         'patient-001',
         'primary',
@@ -218,7 +224,7 @@ describe('OPD-Lite Audit Integration', () => {
 
     it('emits READ audit event on diagnosis load', async () => {
       await useDiagnosisStore.getState().addDiagnosis(
-        { code: 'J06.9', display: 'URTI', chapter: 'X' },
+        { code: 'J06.9', display: 'URTI' },
         'enc-001',
         'patient-001',
         'primary',
@@ -245,7 +251,7 @@ describe('OPD-Lite Audit Integration', () => {
             frequencyCode: 'BID',
             durationDays: 5,
             route: 'oral',
-          } as unknown,
+          } as unknown as PrescriptionFormData,
           'enc-001',
           'patient-001',
           'Practitioner/doctor-001',
@@ -268,22 +274,22 @@ describe('OPD-Lite Audit Integration', () => {
       usePatientStore.getState().selectPatient(mockPatient)
 
       const event = auditEvents[0]
-      expect(event.actorId).toBe('doctor-001')
+      expect(event!.actorId).toBe('doctor-001')
     })
 
     it('includes source metadata', () => {
       usePatientStore.getState().selectPatient(mockPatient)
 
       const event = auditEvents[0]
-      expect(event.metadata?.source).toBe('opd-lite')
+      expect(event!.metadata?.source).toBe('opd-lite')
     })
 
     it('includes HLC timestamp', () => {
       usePatientStore.getState().selectPatient(mockPatient)
 
       const event = auditEvents[0]
-      expect(event.hlcTimestamp).toBeTruthy()
-      expect(event.hlcTimestamp).toMatch(/^\d{15}:\d{5}:/)
+      expect(event!.hlcTimestamp).toBeTruthy()
+      expect(event!.hlcTimestamp).toMatch(/^\d{15}:\d{5}:/)
     })
 
     it('does not emit when no auth session exists', () => {

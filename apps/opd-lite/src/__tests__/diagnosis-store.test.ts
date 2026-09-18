@@ -45,7 +45,7 @@ describe('useDiagnosisStore', () => {
       .addDiagnosis(testItem, encounterId, patientId, 'primary')
 
     expect(condition.resourceType).toBe('Condition')
-    expect(condition.code.coding![0].code).toBe('J06.9')
+    expect(condition.code.coding![0]!.code).toBe('J06.9')
     expect(condition._ultranos.diagnosisRank).toBe('primary')
 
     // Verify persisted in Dexie
@@ -89,7 +89,7 @@ describe('useDiagnosisStore', () => {
     // Still exists in Dexie but with inactive status (Tier 1 append-only)
     const stored = await db.conditions.get(condition.id)
     expect(stored).toBeDefined()
-    expect(stored!.clinicalStatus.coding[0].code).toBe('inactive')
+    expect(stored!.clinicalStatus.coding[0]!.code).toBe('inactive')
   })
 
   it('toggles diagnosis rank from primary to secondary', async () => {
@@ -99,7 +99,7 @@ describe('useDiagnosisStore', () => {
 
     await useDiagnosisStore.getState().updateRank(condition.id, 'secondary')
 
-    const updated = useDiagnosisStore.getState().conditions[0]
+    const updated = useDiagnosisStore.getState().conditions[0]!
     expect(updated._ultranos.diagnosisRank).toBe('secondary')
 
     // Verify persisted
@@ -128,7 +128,7 @@ describe('useDiagnosisStore', () => {
     await useDiagnosisStore.getState().loadConditions(encounterId)
     expect(useDiagnosisStore.getState().conditions).toHaveLength(1)
     expect(
-      useDiagnosisStore.getState().conditions[0].clinicalStatus.coding[0].code,
+      useDiagnosisStore.getState().conditions[0]!.clinicalStatus.coding[0]!.code,
     ).toBe('active')
   })
 
@@ -151,7 +151,7 @@ describe('useDiagnosisStore', () => {
 
     await useDiagnosisStore.getState().updateRank(condition.id, 'secondary')
 
-    const updated = useDiagnosisStore.getState().conditions[0]
+    const updated = useDiagnosisStore.getState().conditions[0]!
     expect(updated.meta.versionId).toBe('2')
   })
 

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { MockInstance } from 'vitest'
 
 // ── vi.hoisted: declare mocks before vi.mock factories run ────────────────────
 // vi.mock factories are hoisted to the top of the file by Vitest, so any
@@ -89,7 +90,7 @@ const validInteraction = { drugA: 'Warfarin', drugB: 'Aspirin', severity: 'CONTR
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('syncAllVocabulary', () => {
-  let fetchSpy: ReturnType<typeof vi.spyOn>
+  let fetchSpy: MockInstance<Parameters<typeof fetch>, ReturnType<typeof fetch>>
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -175,7 +176,7 @@ describe('syncAllVocabulary', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('getEffectiveSinceVersion (via syncAllVocabulary)', () => {
-  let fetchSpy: ReturnType<typeof vi.spyOn>
+  let fetchSpy: MockInstance<Parameters<typeof fetch>, ReturnType<typeof fetch>>
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -218,7 +219,7 @@ describe('getEffectiveSinceVersion (via syncAllVocabulary)', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('applyMedicationUpdates (via syncAllVocabulary)', () => {
-  let fetchSpy: ReturnType<typeof vi.spyOn>
+  let fetchSpy: MockInstance<Parameters<typeof fetch>, ReturnType<typeof fetch>>
 
   beforeEach(() => {
     vi.clearAllMocks()

@@ -17,6 +17,8 @@ function makePatient(id: string, nameLocal: string): FhirPatient {
       nameLocal,
       isActive: true,
       createdAt: new Date().toISOString(),
+      patient_tier: 'FREE',
+      isNomadic: false,
     },
     meta: { lastUpdated: new Date().toISOString() },
   }

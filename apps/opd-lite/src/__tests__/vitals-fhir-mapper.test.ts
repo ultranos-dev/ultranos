@@ -16,9 +16,9 @@ describe('mapVitalsToObservations', () => {
       ctx,
     )
     expect(obs).toHaveLength(1)
-    expect(obs[0].code.coding![0].code).toBe(LOINC.BODY_WEIGHT)
-    expect(obs[0].valueQuantity!.value).toBe(70)
-    expect(obs[0].valueQuantity!.unit).toBe('kg')
+    expect(obs[0]!.code.coding![0]!.code).toBe(LOINC.BODY_WEIGHT)
+    expect(obs[0]!.valueQuantity!.value).toBe(70)
+    expect(obs[0]!.valueQuantity!.unit).toBe('kg')
   })
 
   it('creates height observation with LOINC 8302-2', () => {
@@ -27,9 +27,9 @@ describe('mapVitalsToObservations', () => {
       ctx,
     )
     expect(obs).toHaveLength(1)
-    expect(obs[0].code.coding![0].code).toBe(LOINC.BODY_HEIGHT)
-    expect(obs[0].valueQuantity!.value).toBe(175)
-    expect(obs[0].valueQuantity!.unit).toBe('cm')
+    expect(obs[0]!.code.coding![0]!.code).toBe(LOINC.BODY_HEIGHT)
+    expect(obs[0]!.valueQuantity!.value).toBe(175)
+    expect(obs[0]!.valueQuantity!.unit).toBe('cm')
   })
 
   it('creates BMI observation when bmi is provided', () => {
@@ -37,7 +37,7 @@ describe('mapVitalsToObservations', () => {
       { weight: '70', height: '175', systolic: '', diastolic: '', temperature: '', bmi: 22.86 },
       ctx,
     )
-    const bmiObs = obs.find((o) => o.code.coding![0].code === LOINC.BMI)
+    const bmiObs = obs.find((o) => o.code.coding![0]!.code === LOINC.BMI)
     expect(bmiObs).toBeDefined()
     expect(bmiObs!.valueQuantity!.unit).toBe('kg/m2')
   })
@@ -48,12 +48,12 @@ describe('mapVitalsToObservations', () => {
       ctx,
     )
     expect(obs).toHaveLength(1)
-    expect(obs[0].code.coding![0].code).toBe(LOINC.BLOOD_PRESSURE)
-    expect(obs[0].component).toHaveLength(2)
-    expect(obs[0].component![0].code.coding![0].code).toBe(LOINC.SYSTOLIC_BP)
-    expect(obs[0].component![0].valueQuantity!.value).toBe(120)
-    expect(obs[0].component![1].code.coding![0].code).toBe(LOINC.DIASTOLIC_BP)
-    expect(obs[0].component![1].valueQuantity!.value).toBe(80)
+    expect(obs[0]!.code.coding![0]!.code).toBe(LOINC.BLOOD_PRESSURE)
+    expect(obs[0]!.component).toHaveLength(2)
+    expect(obs[0]!.component![0]!.code.coding![0]!.code).toBe(LOINC.SYSTOLIC_BP)
+    expect(obs[0]!.component![0]!.valueQuantity!.value).toBe(120)
+    expect(obs[0]!.component![1]!.code.coding![0]!.code).toBe(LOINC.DIASTOLIC_BP)
+    expect(obs[0]!.component![1]!.valueQuantity!.value).toBe(80)
   })
 
   it('does not create BP observation when only systolic is provided', () => {
@@ -78,9 +78,9 @@ describe('mapVitalsToObservations', () => {
       ctx,
     )
     expect(obs).toHaveLength(1)
-    expect(obs[0].code.coding![0].code).toBe(LOINC.BODY_TEMPERATURE)
-    expect(obs[0].valueQuantity!.value).toBe(37.2)
-    expect(obs[0].valueQuantity!.unit).toBe('Cel')
+    expect(obs[0]!.code.coding![0]!.code).toBe(LOINC.BODY_TEMPERATURE)
+    expect(obs[0]!.valueQuantity!.value).toBe(37.2)
+    expect(obs[0]!.valueQuantity!.unit).toBe('Cel')
   })
 
   it('creates all observations when all vitals are provided', () => {
@@ -105,8 +105,8 @@ describe('mapVitalsToObservations', () => {
       { weight: '70', height: '', systolic: '', diastolic: '', temperature: '', bmi: null },
       ctx,
     )
-    expect(obs[0].encounter.reference).toBe(`Encounter/${ctx.encounterId}`)
-    expect(obs[0].subject.reference).toBe(`Patient/${ctx.patientId}`)
+    expect(obs[0]!.encounter.reference).toBe(`Encounter/${ctx.encounterId}`)
+    expect(obs[0]!.subject.reference).toBe(`Patient/${ctx.patientId}`)
   })
 
   it('sets FHIR Observation status to final', () => {
@@ -114,7 +114,7 @@ describe('mapVitalsToObservations', () => {
       { weight: '70', height: '', systolic: '', diastolic: '', temperature: '', bmi: null },
       ctx,
     )
-    expect(obs[0].status).toBe('final')
+    expect(obs[0]!.status).toBe('final')
   })
 
   it('includes vital-signs category', () => {
@@ -122,7 +122,7 @@ describe('mapVitalsToObservations', () => {
       { weight: '70', height: '', systolic: '', diastolic: '', temperature: '', bmi: null },
       ctx,
     )
-    expect(obs[0].category![0].coding![0].code).toBe('vital-signs')
+    expect(obs[0]!.category![0]!.coding![0]!.code).toBe('vital-signs')
   })
 
   it('sets _ultranos.isOfflineCreated to true', () => {
@@ -130,7 +130,7 @@ describe('mapVitalsToObservations', () => {
       { weight: '70', height: '', systolic: '', diastolic: '', temperature: '', bmi: null },
       ctx,
     )
-    expect(obs[0]._ultranos.isOfflineCreated).toBe(true)
+    expect(obs[0]!._ultranos.isOfflineCreated).toBe(true)
   })
 
   it('sets performer reference from practitionerRef', () => {
@@ -138,7 +138,7 @@ describe('mapVitalsToObservations', () => {
       { weight: '70', height: '', systolic: '', diastolic: '', temperature: '', bmi: null },
       ctx,
     )
-    expect(obs[0].performer).toEqual([
+    expect(obs[0]!.performer).toEqual([
       { reference: 'Practitioner/test-practitioner-123' },
     ])
   })
@@ -148,6 +148,6 @@ describe('mapVitalsToObservations', () => {
       { weight: '70', height: '', systolic: '', diastolic: '', temperature: '', bmi: null },
       ctx,
     )
-    expect(obs[0]._ultranos.hlcTimestamp).toBe(ctx.hlcTimestamp)
+    expect(obs[0]!._ultranos.hlcTimestamp).toBe(ctx.hlcTimestamp)
   })
 })

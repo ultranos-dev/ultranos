@@ -78,7 +78,7 @@ describe('AuditDrainWorker', () => {
 
     expect(syncFn).toHaveBeenCalledTimes(3) // Initial + 2 retries
     expect(store.markFailed).toHaveBeenCalled()
-    expect(events[0].status).toBe('failed')
+    expect(events[0]!.status).toBe('failed')
   })
 
   it('handles partial success — synced events removed from retry', async () => {

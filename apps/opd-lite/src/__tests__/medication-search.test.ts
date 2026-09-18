@@ -28,13 +28,13 @@ describe('searchMedications (Dexie-backed)', () => {
   it('finds medications by name', async () => {
     const results = await searchMedications('Amoxicillin')
     expect(results.length).toBeGreaterThan(0)
-    expect(results[0].item.display).toBe('Amoxicillin')
+    expect(results[0]!.item.display).toBe('Amoxicillin')
   })
 
   it('returns Name, Dosage Form, and Strength in results', async () => {
     const results = await searchMedications('Amoxicillin')
     expect(results.length).toBeGreaterThan(0)
-    const item = results[0].item
+    const item = results[0]!.item
     expect(item).toHaveProperty('display')
     expect(item).toHaveProperty('form')
     expect(item).toHaveProperty('strength')
@@ -46,7 +46,7 @@ describe('searchMedications (Dexie-backed)', () => {
   it('supports fuzzy matching', async () => {
     const results = await searchMedications('amoxcilin') // misspelled
     expect(results.length).toBeGreaterThan(0)
-    expect(results[0].item.display).toBe('Amoxicillin')
+    expect(results[0]!.item.display).toBe('Amoxicillin')
   })
 
   it('limits results to 20', async () => {
@@ -57,8 +57,8 @@ describe('searchMedications (Dexie-backed)', () => {
   it('includes match indices for highlighting', async () => {
     const results = await searchMedications('Metformin')
     expect(results.length).toBeGreaterThan(0)
-    expect(results[0].matches).toBeDefined()
-    expect(results[0].matches!.length).toBeGreaterThan(0)
+    expect(results[0]!.matches).toBeDefined()
+    expect(results[0]!.matches!.length).toBeGreaterThan(0)
   })
 
   it('finds medications by dosage form', async () => {
@@ -98,11 +98,11 @@ describe('searchMedications — online (Hub API) path', () => {
     ])
     const results = await searchMedications('amox')
     expect(results).toHaveLength(1)
-    expect(results[0].item.code).toBe('J01CA04')
-    expect(results[0].item.display).toBe('Amoxicillin')
-    expect(results[0].item.form).toBe('Capsule 500mg')
-    expect(results[0].item.strength).toBe('')
-    expect(results[0].matches).toBeUndefined()
+    expect(results[0]!.item.code).toBe('J01CA04')
+    expect(results[0]!.item.display).toBe('Amoxicillin')
+    expect(results[0]!.item.form).toBe('Capsule 500mg')
+    expect(results[0]!.item.strength).toBe('')
+    expect(results[0]!.matches).toBeUndefined()
   })
 
   it('uses localName as display when present', async () => {
@@ -117,7 +117,7 @@ describe('searchMedications — online (Hub API) path', () => {
       },
     ])
     const results = await searchMedications('para')
-    expect(results[0].item.display).toBe('پاراستامول')
+    expect(results[0]!.item.display).toBe('پاراستامول')
   })
 
   it('falls back to local Dexie when Hub throws', async () => {
@@ -125,7 +125,7 @@ describe('searchMedications — online (Hub API) path', () => {
     const results = await searchMedications('Amoxicillin')
     expect(searchDrugCatalog).toHaveBeenCalledTimes(1)
     expect(results.length).toBeGreaterThan(0)
-    expect(results[0].item.strength).toBeTruthy()
+    expect(results[0]!.item.strength).toBeTruthy()
   })
 
   it('falls back to local Dexie when offline', async () => {
@@ -133,6 +133,6 @@ describe('searchMedications — online (Hub API) path', () => {
     const results = await searchMedications('Amoxicillin')
     expect(searchDrugCatalog).not.toHaveBeenCalled()
     expect(results.length).toBeGreaterThan(0)
-    expect(results[0].item.strength).toBeTruthy()  // Dexie results have real strength values
+    expect(results[0]!.item.strength).toBeTruthy()  // Dexie results have real strength values
   })
 })

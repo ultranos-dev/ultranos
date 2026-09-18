@@ -154,7 +154,6 @@ function setupAuthSession() {
     sessionId: 'sess-abc',
     email: 'ahmed@hospital.com',
     name: 'Dr Ahmed',
-    token: 'mock-jwt-token',
   })
 }
 

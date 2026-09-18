@@ -13,19 +13,19 @@ describe('searchSOAPMacros', () => {
   it('returns hypertension template when searching "hypertension"', () => {
     const results = searchSOAPMacros('hypertension')
     expect(results).toHaveLength(1)
-    expect(results[0].keyword).toBe('hypertension')
-    expect(results[0].label).toBe('Hypertension (HTN)')
-    expect(results[0].subjective).toBeTruthy()
-    expect(results[0].objective).toBeTruthy()
-    expect(results[0].assessment).toBeTruthy()
-    expect(results[0].plan).toBeTruthy()
+    expect(results[0]!.keyword).toBe('hypertension')
+    expect(results[0]!.label).toBe('Hypertension (HTN)')
+    expect(results[0]!.subjective).toBeTruthy()
+    expect(results[0]!.objective).toBeTruthy()
+    expect(results[0]!.assessment).toBeTruthy()
+    expect(results[0]!.plan).toBeTruthy()
   })
 
   it('returns diabetes template when searching "diabetes"', () => {
     const results = searchSOAPMacros('diabetes')
     expect(results).toHaveLength(1)
-    expect(results[0].keyword).toBe('diabetes')
-    expect(results[0].label).toBe('Diabetes Mellitus Type 2')
+    expect(results[0]!.keyword).toBe('diabetes')
+    expect(results[0]!.label).toBe('Diabetes Mellitus Type 2')
   })
 
   it('returns URI template when searching "uri"', () => {
@@ -51,8 +51,8 @@ describe('searchSOAPMacros', () => {
     expect(upper).toHaveLength(1)
     expect(lower).toHaveLength(1)
     expect(mixed).toHaveLength(1)
-    expect(upper[0].keyword).toBe(lower[0].keyword)
-    expect(upper[0].keyword).toBe(mixed[0].keyword)
+    expect(upper[0]!.keyword).toBe(lower[0]!.keyword)
+    expect(upper[0]!.keyword).toBe(mixed[0]!.keyword)
   })
 
   it('returns empty array for non-matching query', () => {

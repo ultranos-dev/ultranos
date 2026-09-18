@@ -81,7 +81,7 @@ describe('practitionerKeys encryption', () => {
     await db.practitionerKeys.put(entry)
 
     // Read through raw (un-proxied) table — should see encrypted blob, not plaintext
-    const raw = (await _testRawPractitionerKeys.get('pk-raw-check')) as Record<string, unknown>
+    const raw = (await _testRawPractitionerKeys.get('pk-raw-check')) as unknown as Record<string, unknown>
     expect(raw).toBeDefined()
     expect('_enc' in raw).toBe(true)
     expect(raw['practitionerName']).toBeUndefined()
@@ -132,7 +132,7 @@ describe('diagnosticReports encryption', () => {
     const report = makeDiagnosticReport('dr-raw-check')
     await db.diagnosticReports.put(report)
 
-    const raw = (await _testRawDiagnosticReports.get('dr-raw-check')) as Record<string, unknown>
+    const raw = (await _testRawDiagnosticReports.get('dr-raw-check')) as unknown as Record<string, unknown>
     expect(raw).toBeDefined()
     expect('_enc' in raw).toBe(true)
     expect(raw['conclusion']).toBeUndefined()
@@ -276,7 +276,7 @@ describe('runPendingEncryptionMigrations', () => {
     expect(result).toEqual(plaintextEntry)
 
     // Raw IDB record should now have _enc field (was plaintext before migration)
-    const raw = (await _testRawPractitionerKeys.get('pk-migrate-test')) as Record<string, unknown>
+    const raw = (await _testRawPractitionerKeys.get('pk-migrate-test')) as unknown as Record<string, unknown>
     expect('_enc' in raw).toBe(true)
   })
 
@@ -297,7 +297,7 @@ describe('runPendingEncryptionMigrations', () => {
     const result = await db.diagnosticReports.get('dr-migrate-test')
     expect(result).toEqual(plaintextReport)
 
-    const raw = (await _testRawDiagnosticReports.get('dr-migrate-test')) as Record<string, unknown>
+    const raw = (await _testRawDiagnosticReports.get('dr-migrate-test')) as unknown as Record<string, unknown>
     expect('_enc' in raw).toBe(true)
   })
 

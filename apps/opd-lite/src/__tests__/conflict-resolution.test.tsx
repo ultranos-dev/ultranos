@@ -60,7 +60,7 @@ function makeConflictEntry(
     id: `conflict-${Math.random().toString(36).slice(2, 8)}`,
     resourceType: 'AllergyIntolerance',
     resourceId: 'allergy-abc12345',
-    action: 'allergyIntolerance:create',
+    action: 'create',
     payload: JSON.stringify({
       id: 'allergy-abc12345',
       resourceType: 'AllergyIntolerance',
@@ -151,7 +151,7 @@ describe('getTier1Conflicts', () => {
 
     const conflicts = await getTier1Conflicts()
     expect(conflicts).toHaveLength(1)
-    expect(conflicts[0].id).toBe('c1')
+    expect(conflicts[0]!.id).toBe('c1')
   })
 })
 

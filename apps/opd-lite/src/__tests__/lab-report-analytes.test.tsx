@@ -82,7 +82,9 @@ function makeReport(overrides: Partial<FhirDiagnosticReport> = {}): FhirDiagnost
 }
 
 describe('LabReportDetail — structured analytes', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('renders the analyte table (value, unit, reference range) from the local store', async () => {
     render(<LabReportDetail report={makeReport()} onBack={vi.fn()} />)

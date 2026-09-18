@@ -26,7 +26,7 @@ import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { ResultTrendChart, ResultSummaryTable } from '@/components/clinical/ResultTrendChart'
 import { LabReportDetail } from '@/components/clinical/LabReportDetail'
-import { ChevronDown, ChevronRight, AlertCircle, AlertTriangle, CircleCheck, WifiOff, ServerOff } from '@ultranos/ui-kit/icons'
+import { ChevronDown, ChevronRight, AlertCircle, AlertTriangle, CircleCheck, WifiOff, CloudOff } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
 import type { TrendDataPoint } from '@/lib/lab-results/result-grouper'
@@ -361,7 +361,7 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
         data-testid="timeline-unavailable"
       >
         <EmptyState
-          icon={ServerOff}
+          icon={CloudOff}
           title={t('resultsUnavailable')}
           description={t('resultsUnavailableDetail')}
           action={{ label: t('retry'), onClick: () => loadPage() }}

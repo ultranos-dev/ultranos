@@ -15,7 +15,7 @@ import {
 } from '@ultranos/sync-engine'
 import { auditPhiAccess, AuditAction } from './audit'
 import type { AuditResourceType } from './audit'
-import type { FhirPatient, PatientAddress, PatientTier } from '@ultranos/shared-types'
+import type { FhirPatient, PatientAddress, PatientTier, PatientLanguage } from '@ultranos/shared-types'
 import { getHubTrpcUrl } from '@/lib/hub-url'
 
 const HUB_BASE_URL = getHubTrpcUrl()
@@ -83,7 +83,7 @@ function toFhirPatient(row: Record<string, unknown>): FhirPatient {
       guardianId: (row.guardianId as string) ?? undefined,
       consentVersion: (row.consentVersion as string) ?? undefined,
       patient_tier: ((row.patientTier as string) ?? 'FREE') as PatientTier,
-      preferredLanguage: (row.preferredLanguage as string) ?? undefined,
+      preferredLanguage: (row.preferredLanguage as PatientLanguage) ?? undefined,
       isActive: (row.isActive as boolean) ?? true,
       createdBy: (row.createdBy as string) ?? undefined,
       createdAt: (row.createdAt as string) ?? new Date().toISOString(),

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { useEncounterStore } from '@/stores/encounter-store'
 import { db } from '@/lib/db'
 import { deserializeHlc } from '@ultranos/sync-engine'
+import type { FhirEncounterZod } from '@ultranos/shared-types'
 
 const TEST_PATIENT_ID = 'b7e3c8a0-1111-4000-8000-000000000001'
 const TEST_PRACTITIONER_REF = 'Practitioner/test-doc'
@@ -371,7 +372,7 @@ describe('encounter store', () => {
           period: { start: '' },
           _ultranos: { isOfflineCreated: true, hlcTimestamp: '', createdAt: '' },
           meta: { lastUpdated: '' },
-        } as unknown,
+        } as unknown as FhirEncounterZod,
       })
 
       await useEncounterStore.getState().loadActiveEncounter('nonexistent-patient')

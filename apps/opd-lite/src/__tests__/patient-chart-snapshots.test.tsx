@@ -3,6 +3,7 @@ import { render } from '@testing-library/react'
 import { db } from '../lib/db'
 import { useAuthSessionStore } from '../stores/auth-session-store'
 import type { FhirPatient, FhirEncounterZod } from '@ultranos/shared-types'
+import { AdministrativeGender } from '@ultranos/shared-types'
 
 // next-intl context isn't provided in unit tests; components only need the locale.
 // Preserve the {substances} interpolation so allergy-content coverage (Rule #4)
@@ -64,17 +65,17 @@ const TEST_PATIENT_ID = '44444444-4444-4444-4444-444444444444'
 const testPatient: FhirPatient = {
   id: TEST_PATIENT_ID,
   resourceType: 'Patient',
-  gender: 'female',
+  gender: AdministrativeGender.FEMALE,
   birthDate: '1985-03-20',
+  birthYearOnly: false,
   name: [{ text: 'Snapshot Patient', family: 'Patient', given: ['Snapshot'] }],
   _ultranos: {
     nameLocal: 'Snapshot Patient Local',
     nameLatin: 'Snapshot Patient Latin',
     nationalIdHash: 'hash456',
-    consentGranted: true,
-    consentTimestamp: '2024-01-01T00:00:00Z',
-    isOfflineCreated: false,
-    hlcTimestamp: '2024-01-01T00:00:00Z_0000_node1',
+    isActive: true,
+    patient_tier: 'FREE',
+    isNomadic: false,
     createdAt: '2024-01-01T00:00:00Z',
   },
   meta: {
@@ -104,7 +105,7 @@ function resetStores() {
     practitionerId: 'pract-1',
     role: 'physician',
     email: 'doc@test.com',
-    token: 'test-token',
+    sessionId: 'sess-test',
   })
 }
 

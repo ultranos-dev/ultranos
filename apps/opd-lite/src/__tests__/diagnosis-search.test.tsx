@@ -40,8 +40,8 @@ describe('DiagnosisSearch', () => {
     const listbox = await screen.findByRole('listbox')
     const options = within(listbox).getAllByRole('option')
     // First result should contain an ICD code and the word hypertension
-    expect(options[0].textContent).toMatch(/[A-Z]\d/)
-    expect(options[0].textContent).toMatch(/hypertens/i)
+    expect(options[0]!.textContent).toMatch(/[A-Z]\d/)
+    expect(options[0]!.textContent).toMatch(/hypertens/i)
   })
 
   it('does not show results for single character', async () => {
@@ -61,7 +61,7 @@ describe('DiagnosisSearch', () => {
 
     const listbox = await screen.findByRole('listbox')
     const options = within(listbox).getAllByRole('option')
-    await user.click(options[0])
+    await user.click(options[0]!)
 
     expect(mockOnSelect).toHaveBeenCalledWith(
       expect.objectContaining({ code: 'R50.9' }),
@@ -79,7 +79,7 @@ describe('DiagnosisSearch', () => {
 
     const listbox = await screen.findByRole('listbox')
     const options = within(listbox).getAllByRole('option')
-    await user.click(options[0])
+    await user.click(options[0]!)
 
     expect(mockOnSelect).toHaveBeenCalledWith(
       expect.objectContaining({ code: 'R50.9' }),
@@ -94,7 +94,7 @@ describe('DiagnosisSearch', () => {
     const input = screen.getByRole('combobox')
     await user.type(input, 'fever')
     const listbox = await screen.findByRole('listbox')
-    await user.click(within(listbox).getAllByRole('option')[0])
+    await user.click(within(listbox).getAllByRole('option')[0]!)
 
     expect(input).toHaveValue('')
   })

@@ -22,7 +22,9 @@ const patient = {
 } as unknown as FhirPatient
 
 describe('PatientAvatar → modal', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('reads the STORED photo key for the signed URL (not a hardcoded .jpg)', () => {
     render(<PatientAvatar patient={patient} patientId={PID} />)

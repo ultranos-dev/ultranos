@@ -94,7 +94,7 @@ describe('useVitalsStore', () => {
     const saved = await db.observations.toArray()
     expect(saved.length).toBe(2) // weight + temperature
 
-    const weightObs = saved.find((o) => o.code.coding![0].code === LOINC.BODY_WEIGHT)
+    const weightObs = saved.find((o) => o.code.coding![0]!.code === LOINC.BODY_WEIGHT)
     expect(weightObs).toBeDefined()
     expect(weightObs!.valueQuantity!.value).toBe(70)
     expect(weightObs!.encounter.reference).toBe('Encounter/enc-1')
@@ -108,7 +108,7 @@ describe('useVitalsStore', () => {
     await useVitalsStore.getState().persistObservations()
 
     const saved = await db.observations.toArray()
-    expect(saved[0].performer).toEqual([
+    expect(saved[0]!.performer).toEqual([
       { reference: 'Practitioner/test-practitioner-123' },
     ])
   })

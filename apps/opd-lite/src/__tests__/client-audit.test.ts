@@ -38,12 +38,12 @@ describe('emitClientAudit', () => {
     await emitClientAudit(makeInput())
 
     expect(captured).toHaveLength(1)
-    expect(captured[0].id).toBeTruthy()
-    expect(captured[0].queuedAt).toBeTruthy()
-    expect(captured[0].status).toBe('pending')
-    expect(captured[0].actorId).toBe('user-001')
-    expect(captured[0].action).toBe('READ')
-    expect(captured[0].resourceType).toBe('PATIENT')
+    expect(captured[0]!.id).toBeTruthy()
+    expect(captured[0]!.queuedAt).toBeTruthy()
+    expect(captured[0]!.status).toBe('pending')
+    expect(captured[0]!.actorId).toBe('user-001')
+    expect(captured[0]!.action).toBe('READ')
+    expect(captured[0]!.resourceType).toBe('PATIENT')
   })
 
   it('preserves all input fields', async () => {
@@ -53,9 +53,9 @@ describe('emitClientAudit', () => {
     })
     await emitClientAudit(input)
 
-    expect(captured[0].patientId).toBe('pat-123')
-    expect(captured[0].metadata).toEqual({ source: 'test' })
-    expect(captured[0].hlcTimestamp).toBe('000001234567890:00000:node1')
+    expect(captured[0]!.patientId).toBe('pat-123')
+    expect(captured[0]!.metadata).toEqual({ source: 'test' })
+    expect(captured[0]!.hlcTimestamp).toBe('000001234567890:00000:node1')
   })
 
   it('strips PHI field names from metadata at runtime', async () => {
@@ -70,12 +70,12 @@ describe('emitClientAudit', () => {
 
     await emitClientAudit(input)
 
-    expect(captured[0].metadata).toEqual({
+    expect(captured[0]!.metadata).toEqual({
       source: 'test',
       phiAccess: 'patient_view',
     })
-    expect(captured[0].metadata).not.toHaveProperty('name')
-    expect(captured[0].metadata).not.toHaveProperty('diagnosis')
+    expect(captured[0]!.metadata).not.toHaveProperty('name')
+    expect(captured[0]!.metadata).not.toHaveProperty('diagnosis')
   })
 
   it('never throws even if adapter fails', async () => {
@@ -107,6 +107,6 @@ describe('emitClientAudit', () => {
     await emitClientAudit(makeInput())
 
     expect(captured).toHaveLength(2)
-    expect(captured[0].id).not.toBe(captured[1].id)
+    expect(captured[0]!.id).not.toBe(captured[1]!.id)
   })
 })

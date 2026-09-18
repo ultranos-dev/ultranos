@@ -93,7 +93,7 @@ describe('Story 10.1: Cross-Encounter Interaction Checks', () => {
 
       expect(result.result).toBe('BLOCKED')
       expect(result.interactions.length).toBeGreaterThanOrEqual(1)
-      expect(result.interactions[0].severity).toBe(DrugInteractionSeverity.CONTRAINDICATED)
+      expect(result.interactions[0]!.severity).toBe(DrugInteractionSeverity.CONTRAINDICATED)
     })
   })
 
@@ -104,7 +104,7 @@ describe('Story 10.1: Cross-Encounter Interaction Checks', () => {
       const matches = checkAllergyMatch('Penicillin', [penicillinAllergy])
 
       expect(matches.length).toBeGreaterThanOrEqual(1)
-      expect(matches[0].severity).toBe(DrugInteractionSeverity.ALLERGY_MATCH)
+      expect(matches[0]!.severity).toBe(DrugInteractionSeverity.ALLERGY_MATCH)
     })
 
     it('detects fuzzy allergy match via substring', () => {

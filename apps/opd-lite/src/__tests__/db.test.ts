@@ -15,6 +15,8 @@ function makePatient(overrides: Partial<LocalPatient> = {}): LocalPatient {
       nameLatin: 'Ahmed Al-Rashid',
       namePhonetic: 'AHMT ALRXT',
       nationalIdHash: 'sha256_abc123',
+      patient_tier: 'FREE',
+      isNomadic: false,
       isActive: true,
       createdAt: new Date().toISOString(),
     },

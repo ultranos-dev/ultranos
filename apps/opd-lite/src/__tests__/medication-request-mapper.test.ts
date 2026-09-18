@@ -42,8 +42,8 @@ describe('mapFormToMedicationRequest', () => {
 
   it('maps medicationCodeableConcept with code, display, and text', () => {
     const result = mapFormToMedicationRequest(baseForm, context)
-    expect(result.medicationCodeableConcept.coding[0].code).toBe('RX001')
-    expect(result.medicationCodeableConcept.coding[0].display).toBe('Amoxicillin')
+    expect(result.medicationCodeableConcept.coding![0]!.code).toBe('RX001')
+    expect(result.medicationCodeableConcept.coding![0]!.display).toBe('Amoxicillin')
     expect(result.medicationCodeableConcept.text).toBe('Amoxicillin 500 mg (Capsule)')
   })
 

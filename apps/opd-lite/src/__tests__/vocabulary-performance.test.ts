@@ -24,8 +24,8 @@ describe('Vocabulary search performance with 1000+ records', () => {
       medications.push({
         code: `PERF${String(i).padStart(4, '0')}`,
         display: `${drugNames[i % drugNames.length]} ${Math.floor(i / drugNames.length)}`,
-        form: forms[i % forms.length],
-        strength: strengths[i % strengths.length],
+        form: forms[i % forms.length]!,
+        strength: strengths[i % strengths.length]!,
         version: 1,
       })
     }
@@ -73,12 +73,12 @@ describe('Vocabulary search performance with 1000+ records', () => {
   it('fuzzy medication search works over 1000+ records', async () => {
     const results = await searchMedications('Amoxcilin') // misspelled
     expect(results.length).toBeGreaterThan(0)
-    expect(results[0].item.display).toContain('Amoxicillin')
+    expect(results[0]!.item.display).toContain('Amoxicillin')
   })
 
   it('fuzzy ICD-10 search works over 1000+ records', async () => {
     const results = await searchVocab('Cardovascular') // misspelled
     expect(results.length).toBeGreaterThan(0)
-    expect(results[0].item.display).toContain('Cardiovascular')
+    expect(results[0]!.item.display).toContain('Cardiovascular')
   })
 })

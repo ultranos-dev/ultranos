@@ -42,7 +42,7 @@ describe('searchDrugCatalog', () => {
     mockSearchResponse([MOCK_DRUG])
     const results = await searchDrugCatalog('amox')
     expect(results).toHaveLength(1)
-    expect(results[0].atcCode).toBe('J01CA04')
+    expect(results[0]!.atcCode).toBe('J01CA04')
     const [calledUrl] = mockFetch.mock.calls[0] as [string, RequestInit]
     expect(calledUrl).toContain('drugCatalog.search')
     const inputParam = JSON.parse(new URL(calledUrl).searchParams.get('input')!)

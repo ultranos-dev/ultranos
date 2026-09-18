@@ -152,9 +152,9 @@ vi.mock('@ultranos/ui-kit', () => ({
   formatTime: (date: Date) => date.toLocaleTimeString(),
 }))
 
-import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { useAuthSessionStore, type AuthSession } from '@/stores/auth-session-store'
 
-function setupAuthSession(overrides?: Partial<Parameters<typeof useAuthSessionStore.getState>['0'] extends never ? never : {
+function setupAuthSession(overrides?: Partial<{
   name: string
   role: string
   email: string
@@ -167,7 +167,7 @@ function setupAuthSession(overrides?: Partial<Parameters<typeof useAuthSessionSt
     email: overrides?.email ?? 'ahmed@hospital.com',
     name: overrides?.name ?? 'Dr Ahmed',
     token: 'mock-jwt-token',
-  })
+  } as AuthSession & { token: string })
 }
 
 // ─── Task 2: ProfileCard ─────────────────────────────────────────────
@@ -244,7 +244,7 @@ describe('SessionInfoCard', () => {
       email: 'ahmed@hospital.com',
       name: 'Dr Ahmed',
       token: `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.${btoa(JSON.stringify({ exp: nowSec + 600, iat: nowSec - 300 })).replace(/=/g, '')}.fake`,
-    })
+    } as AuthSession & { token: string })
 
     const { SessionInfoCard } = await import('@/components/settings/SessionInfoCard')
     render(<SessionInfoCard />)
@@ -264,7 +264,7 @@ describe('SessionInfoCard', () => {
       email: 'ahmed@hospital.com',
       name: 'Dr Ahmed',
       token: `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.${btoa(JSON.stringify({ exp: nowSec + 600, iat: nowSec - 300 })).replace(/=/g, '')}.fake`,
-    })
+    } as AuthSession & { token: string })
 
     const { SessionInfoCard } = await import('@/components/settings/SessionInfoCard')
     const { container } = render(<SessionInfoCard />)
@@ -282,7 +282,7 @@ describe('SessionInfoCard', () => {
       email: 'ahmed@hospital.com',
       name: 'Dr Ahmed',
       token: `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.${btoa(JSON.stringify({ exp: nowSec + 180, iat: nowSec - 720 })).replace(/=/g, '')}.fake`,
-    })
+    } as AuthSession & { token: string })
 
     const { SessionInfoCard } = await import('@/components/settings/SessionInfoCard')
     const { container } = render(<SessionInfoCard />)
@@ -300,7 +300,7 @@ describe('SessionInfoCard', () => {
       email: 'ahmed@hospital.com',
       name: 'Dr Ahmed',
       token: `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.${btoa(JSON.stringify({ exp: nowSec + 60, iat: nowSec - 840 })).replace(/=/g, '')}.fake`,
-    })
+    } as AuthSession & { token: string })
 
     const { SessionInfoCard } = await import('@/components/settings/SessionInfoCard')
     const { container } = render(<SessionInfoCard />)

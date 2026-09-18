@@ -102,7 +102,7 @@ function makeCondition(encounterId: string, display: string): FhirCondition {
     },
     subject: { reference: `Patient/${TEST_PATIENT_ID}` },
     encounter: { reference: `Encounter/${encounterId}` },
-    _ultranos: { diagnosisRank: 1, isOfflineCreated: false, hlcTimestamp: '2024-06-15T10:00:00Z', createdAt: '2024-06-15T10:00:00Z' },
+    _ultranos: { diagnosisRank: 'primary', isOfflineCreated: false, hlcTimestamp: '2024-06-15T10:00:00Z', createdAt: '2024-06-15T10:00:00Z' },
     meta: { versionId: '1', lastUpdated: '2024-06-15T10:00:00Z' },
   } as FhirCondition
 }
@@ -138,7 +138,7 @@ function resetStores() {
     practitionerId: 'pract-1',
     role: 'physician',
     email: 'doc@test.com',
-    token: 'test-token',
+    sessionId: 'sess-test',
   })
 }
 
@@ -217,8 +217,8 @@ describe('EncounterHistoryList', () => {
       const items = screen.getAllByTestId('encounter-item')
       expect(items).toHaveLength(2)
       // Newest should be first
-      expect(items[0].textContent).toContain('Jun')
-      expect(items[0].textContent).toContain('15')
+      expect(items[0]!.textContent).toContain('Jun')
+      expect(items[0]!.textContent).toContain('15')
     })
   })
 

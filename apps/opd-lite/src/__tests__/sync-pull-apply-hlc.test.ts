@@ -36,7 +36,9 @@ vi.mock('@ultranos/sync-engine', async (importActual) => ({
 import { pullPatientChanges } from '@/lib/sync-pull'
 
 describe('pullPatientChanges — HLC guard on apply', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('applies a pulled Patient without crashing when the local record has no hlcTimestamp', async () => {
     // Local patient exists, has _ultranos, but NO hlcTimestamp (the crash trigger).

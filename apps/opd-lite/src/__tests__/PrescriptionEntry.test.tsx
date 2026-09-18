@@ -15,7 +15,7 @@ beforeAll(async () => {
 })
 
 describe('PrescriptionEntry', () => {
-  const onSubmit = vi.fn<(form: PrescriptionFormData) => void>()
+  const onSubmit = vi.fn<[form: PrescriptionFormData], void>()
 
   function setup(disabled = false) {
     const user = userEvent.setup()
@@ -42,7 +42,7 @@ describe('PrescriptionEntry', () => {
     const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Amoxicillin')
     const listbox = await screen.findByRole('listbox')
-    const firstOption = within(listbox).getAllByRole('option')[0]
+    const firstOption = within(listbox).getAllByRole('option')[0]!
     expect(firstOption.textContent).toContain('Amoxicillin')
     expect(firstOption.textContent).toContain('500 mg')
     expect(firstOption.textContent).toContain('Capsule')
@@ -53,7 +53,7 @@ describe('PrescriptionEntry', () => {
     const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Amoxicillin')
     const listbox = await screen.findByRole('listbox')
-    const firstOption = within(listbox).getAllByRole('option')[0]
+    const firstOption = within(listbox).getAllByRole('option')[0]!
     await user.click(firstOption)
 
     // Dosage form should now be visible
@@ -67,7 +67,7 @@ describe('PrescriptionEntry', () => {
     const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Paracetamol')
     const listbox = await screen.findByRole('listbox')
-    await user.click(within(listbox).getAllByRole('option')[0])
+    await user.click(within(listbox).getAllByRole('option')[0]!)
 
     const frequencySelect = screen.getByLabelText(/frequency/i)
     expect(frequencySelect).toBeInTheDocument()
@@ -84,12 +84,12 @@ describe('PrescriptionEntry', () => {
     const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Amoxicillin')
     const listbox = await screen.findByRole('listbox')
-    await user.click(within(listbox).getAllByRole('option')[0])
+    await user.click(within(listbox).getAllByRole('option')[0]!)
 
     await user.click(screen.getByRole('button', { name: 'addPrescription' }))
 
     expect(onSubmit).toHaveBeenCalledTimes(1)
-    const callArg = onSubmit.mock.calls[0][0]
+    const callArg = onSubmit.mock.calls[0]![0]
     expect(callArg.medicationCode).toBeTruthy()
     expect(callArg.medicationDisplay).toBe('Amoxicillin')
     expect(callArg.dosageQuantity).toBeTruthy()
@@ -102,7 +102,7 @@ describe('PrescriptionEntry', () => {
     const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Amoxicillin')
     const listbox = await screen.findByRole('listbox')
-    await user.click(within(listbox).getAllByRole('option')[0])
+    await user.click(within(listbox).getAllByRole('option')[0]!)
     await user.click(screen.getByRole('button', { name: 'addPrescription' }))
 
     // Form should reset — search input should be empty again
@@ -133,7 +133,7 @@ describe('PrescriptionEntry', () => {
     const input = screen.getByRole('combobox', { name: 'searchAria' })
     await user.type(input, 'Metformin')
     const listbox = await screen.findByRole('listbox')
-    await user.click(within(listbox).getAllByRole('option')[0])
+    await user.click(within(listbox).getAllByRole('option')[0]!)
 
     // Clear button should be visible
     const clearBtn = screen.getByRole('button', { name: 'clearAria' })

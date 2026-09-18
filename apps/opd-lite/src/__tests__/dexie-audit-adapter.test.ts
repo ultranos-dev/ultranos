@@ -49,9 +49,9 @@ describe('DexieAuditAdapter', () => {
 
     const pending = await adapter.getPending(10)
     expect(pending).toHaveLength(3)
-    expect(pending[0].id).toBe(e1.id) // earliest first
-    expect(pending[1].id).toBe(e2.id)
-    expect(pending[2].id).toBe(e3.id)
+    expect(pending[0]!.id).toBe(e1.id) // earliest first
+    expect(pending[1]!.id).toBe(e2.id)
+    expect(pending[2]!.id).toBe(e3.id)
   })
 
   it('only fetches pending events, not synced or failed', async () => {
@@ -70,8 +70,8 @@ describe('DexieAuditAdapter', () => {
 
     const pending = await adapter.getPending(10)
     expect(pending).toHaveLength(1)
-    expect(pending[0].status).toBe('pending')
-    expect(pending[0].id).toBe(e1.id)
+    expect(pending[0]!.status).toBe('pending')
+    expect(pending[0]!.id).toBe(e1.id)
   })
 
   it('marks events as synced', async () => {

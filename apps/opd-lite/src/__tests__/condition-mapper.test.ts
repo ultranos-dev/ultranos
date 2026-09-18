@@ -22,10 +22,10 @@ describe('mapIcd10ToCondition', () => {
 
   it('uses the ICD-10 system URI in code.coding', () => {
     const condition = mapIcd10ToCondition(input)
-    expect(condition.code.coding![0].system).toBe(
+    expect(condition.code.coding![0]!.system).toBe(
       'http://hl7.org/fhir/sid/icd-10',
     )
-    expect(condition.code.coding![0].code).toBe('J06.9')
+    expect(condition.code.coding![0]!.code).toBe('J06.9')
   })
 
   it('sets subject and encounter references correctly', () => {
@@ -46,12 +46,12 @@ describe('mapIcd10ToCondition', () => {
 
   it('sets clinicalStatus to active', () => {
     const condition = mapIcd10ToCondition(input)
-    expect(condition.clinicalStatus.coding[0].code).toBe('active')
+    expect(condition.clinicalStatus.coding[0]!.code).toBe('active')
   })
 
   it('sets category to encounter-diagnosis', () => {
     const condition = mapIcd10ToCondition(input)
-    expect(condition.category![0].coding[0].code).toBe('encounter-diagnosis')
+    expect(condition.category![0]!.coding[0]!.code).toBe('encounter-diagnosis')
   })
 
   it('generates a unique id', () => {

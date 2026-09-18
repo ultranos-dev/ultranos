@@ -95,7 +95,7 @@ describe('phi-cleanup', () => {
         id: 'sq-1',
         resourceType: 'Patient',
         resourceId: 'p-1',
-        action: 'CREATE',
+        action: 'create',
         payload: '{}',
         status: 'pending',
         hlcTimestamp: '0:0:node',

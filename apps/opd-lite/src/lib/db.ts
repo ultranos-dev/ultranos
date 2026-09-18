@@ -66,9 +66,13 @@ export interface SyncQueueEntry {
   id: string
   resourceType: string
   resourceId: string
-  action: 'create' | 'update' | 'sync:conflict_resolved' | 'pull-conflict'
+  // Mirrors the canonical @ultranos/sync-engine SyncQueueEntry.action union (includes 'delete').
+  action: 'create' | 'update' | 'delete' | 'sync:conflict_resolved' | 'pull-conflict'
   payload: string
-  status: 'pending' | 'syncing' | 'failed' | 'synced' | 'resolved'
+  // 'awaiting-key' is written by the sync-engine drain worker when the session
+  // key is unavailable (see @ultranos/sync-engine queue.ts); mirror it here so the
+  // Dexie entity type matches the canonical SyncQueueEntry it stores.
+  status: 'pending' | 'syncing' | 'failed' | 'synced' | 'resolved' | 'awaiting-key'
   hlcTimestamp: string
   createdAt: string
   retryCount: number
@@ -183,7 +187,23 @@ export interface LocalDiagnosticReport {
   performer?: { display?: string; reference?: string }[]
   presentedForm?: { contentType?: string; url?: string; title?: string; data?: string }[]
   acknowledgedAt?: string
-  meta?: { lastUpdated?: string }
+  // FHIR R4 DiagnosticReport.result — references to the Observation resources
+  // (structured analytes) that belong to this report.
+  result?: { reference?: string; display?: string }[]
+  meta?: { lastUpdated?: string; versionId?: string }
+  // Ultranos extension namespace (per CLAUDE.md: createdAt lives here, never in meta).
+  // Populated from the lab→hub→OPD pull path; all fields optional as older records may lack them.
+  _ultranos?: {
+    createdAt?: string
+    hlcTimestamp?: string
+    isOfflineCreated?: boolean
+    // Nullable: the hub→FHIR mapper (MappedDiagnosticReport in trpc.ts) may carry a null labId.
+    labId?: string | null
+    flagLevel?: 'normal' | 'abnormal' | 'critical'
+    sampleId?: string
+    templateVersion?: string
+    virusScanStatus?: 'pending' | 'clean' | 'infected' | 'error'
+  }
 }
 
 export interface ModelDownloadProgress {

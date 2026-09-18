@@ -39,7 +39,9 @@ function sinceHlcFromFetch(fetchMock: ReturnType<typeof vi.fn>): string {
 }
 
 describe('pullPatientChanges — watermark sanitization', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('resets a poisoned (ISO) watermark to 0 so real-HLC allergies are re-pulled', async () => {
     syncMetaGet.mockResolvedValue({ patientId: PID, lastPulledHlc: '2026-09-10T18:47:00.702+00', lastPulledAt: '' })

@@ -136,7 +136,8 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setNewPassword(e.target.value)}
                 autoComplete="new-password"
               />
-              <PasswordStrengthBar strength={strength} label={strengthLabels[strength]} />
+              {/* strength is 0|1|2|3|4 and strengthLabels has exactly those 5 indices */}
+              <PasswordStrengthBar strength={strength} label={strengthLabels[strength]!} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm-password">{t('confirmPassword')}</Label>

@@ -45,7 +45,8 @@ export function buildBreadcrumbs(rawPathname: string): BreadcrumbSegment[] {
   // Direct match
   if (ROUTE_LABELS[pathname]) {
     if (pathname === '/') {
-      return [{ label: ROUTE_LABELS['/'], href: '/' }]
+      // Guarded: enclosing `if (ROUTE_LABELS[pathname])` proves '/' is present.
+      return [{ label: ROUTE_LABELS['/']!, href: '/' }]
     }
     const segments = pathname.split('/').filter(Boolean)
     const crumbs: BreadcrumbSegment[] = []

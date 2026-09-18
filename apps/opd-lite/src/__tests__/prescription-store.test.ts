@@ -62,7 +62,7 @@ describe('usePrescriptionStore', () => {
       await store.addPrescription(baseForm, encounterId, patientId, practitionerRef)
       const state = usePrescriptionStore.getState()
       expect(state.pendingPrescriptions).toHaveLength(1)
-      expect(state.pendingPrescriptions[0].medicationCodeableConcept.coding[0].display).toBe('Amoxicillin')
+      expect(state.pendingPrescriptions[0]!.medicationCodeableConcept.coding![0]!.display).toBe('Amoxicillin')
     })
 
     it('persists prescription to Dexie', async () => {

@@ -29,22 +29,22 @@ describe('InteractionChecker service (Dexie-backed)', () => {
       const result = await checkInteractions('Warfarin', ['Aspirin'])
       expect(result.result).toBe('BLOCKED')
       expect(result.interactions.length).toBeGreaterThanOrEqual(1)
-      expect(result.interactions[0].severity).toBe(DrugInteractionSeverity.CONTRAINDICATED)
-      expect(result.interactions[0].description).toBeTruthy()
+      expect(result.interactions[0]!.severity).toBe(DrugInteractionSeverity.CONTRAINDICATED)
+      expect(result.interactions[0]!.description).toBeTruthy()
     })
 
     it('returns BLOCKED for MAJOR interactions', async () => {
       const result = await checkInteractions('Warfarin', ['Ibuprofen'])
       expect(result.result).toBe('BLOCKED')
       expect(result.interactions.length).toBeGreaterThanOrEqual(1)
-      expect(result.interactions[0].severity).toBe(DrugInteractionSeverity.MAJOR)
+      expect(result.interactions[0]!.severity).toBe(DrugInteractionSeverity.MAJOR)
     })
 
     it('returns WARNING for MODERATE interactions', async () => {
       const result = await checkInteractions('Omeprazole', ['Clopidogrel'])
       expect(result.result).toBe('WARNING')
       expect(result.interactions.length).toBeGreaterThanOrEqual(1)
-      expect(result.interactions[0].severity).toBe(DrugInteractionSeverity.MODERATE)
+      expect(result.interactions[0]!.severity).toBe(DrugInteractionSeverity.MODERATE)
     })
 
     it('is bidirectional - order of drugs does not matter', async () => {
@@ -77,7 +77,7 @@ describe('InteractionChecker service (Dexie-backed)', () => {
     it('interaction results include drugA, drugB, severity, and description', async () => {
       const result = await checkInteractions('Warfarin', ['Aspirin'])
       expect(result.interactions.length).toBeGreaterThan(0)
-      const interaction = result.interactions[0]
+      const interaction = result.interactions[0]!
       expect(interaction).toHaveProperty('drugA')
       expect(interaction).toHaveProperty('drugB')
       expect(interaction).toHaveProperty('severity')
@@ -90,7 +90,7 @@ describe('InteractionChecker service (Dexie-backed)', () => {
     it('detects dual RAAS blockade (ACE inhibitor + ARB)', async () => {
       const result = await checkInteractions('Lisinopril', ['Losartan'])
       expect(result.result).toBe('BLOCKED')
-      expect(result.interactions[0].severity).toBe(DrugInteractionSeverity.CONTRAINDICATED)
+      expect(result.interactions[0]!.severity).toBe(DrugInteractionSeverity.CONTRAINDICATED)
     })
 
     it('detects serotonin syndrome risk (SSRI + TCA)', async () => {
@@ -137,7 +137,7 @@ describe('InteractionChecker service (Dexie-backed)', () => {
     it('handles MINOR interactions as WARNING', async () => {
       const result = await checkInteractions('Cetirizine', ['Loratadine'])
       expect(result.result).toBe('WARNING')
-      expect(result.interactions[0].severity).toBe(DrugInteractionSeverity.MINOR)
+      expect(result.interactions[0]!.severity).toBe(DrugInteractionSeverity.MINOR)
     })
 
     it('detects NSAIDs + ACE inhibitor interaction', async () => {

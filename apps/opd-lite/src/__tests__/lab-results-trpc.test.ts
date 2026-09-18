@@ -43,7 +43,7 @@ describe('mapHubReportToFhir', () => {
     expect(result.resourceType).toBe('DiagnosticReport')
     expect(result.status).toBe('final')
     expect(result.code.coding).toHaveLength(1)
-    expect(result.code.coding[0]).toEqual({
+    expect(result.code.coding![0]).toEqual({
       system: 'http://loinc.org',
       code: '58410-2',
       display: 'CBC panel',
@@ -217,8 +217,7 @@ describe('fetchDiagnosticReportsForPatient', () => {
       code: { coding: [{ system: 'http://loinc.org', code: '12345', display: 'Cached Test' }] },
       subject: { reference: 'Patient/p2' },
       issued: '2026-05-01T00:00:00.000Z',
-      _ultranos: { createdAt: '2026-05-01T00:00:00.000Z', hlcTimestamp: '', isOfflineCreated: false },
-      meta: { versionId: '1', lastUpdated: '2026-05-01T00:00:00.000Z' },
+      meta: { lastUpdated: '2026-05-01T00:00:00.000Z' },
     })
 
     // Simulate network failure
@@ -229,7 +228,7 @@ describe('fetchDiagnosticReportsForPatient', () => {
     // Cached data should still be present
     const cached = await db.diagnosticReports.get('cached-1')
     expect(cached).toBeDefined()
-    expect(cached!.code.coding[0]!.display).toBe('Cached Test')
+    expect(cached!.code.coding![0]!.display).toBe('Cached Test')
   })
 
   it('calls diagnosticReport.listByPatient with the real Patient/<id> reference', async () => {

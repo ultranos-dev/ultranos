@@ -47,9 +47,9 @@ describe('checkAllergyMatch', () => {
     const results = checkAllergyMatch('Penicillin', allergies)
 
     expect(results).toHaveLength(1)
-    expect(results[0].severity).toBe(DrugInteractionSeverity.ALLERGY_MATCH)
-    expect(results[0].drugA).toBe('Penicillin')
-    expect(results[0].drugB).toBe('Penicillin')
+    expect(results[0]!.severity).toBe(DrugInteractionSeverity.ALLERGY_MATCH)
+    expect(results[0]!.drugA).toBe('Penicillin')
+    expect(results[0]!.drugB).toBe('Penicillin')
   })
 
   it('matches case-insensitively', () => {
@@ -57,7 +57,7 @@ describe('checkAllergyMatch', () => {
     const results = checkAllergyMatch('PENICILLIN', allergies)
 
     expect(results).toHaveLength(1)
-    expect(results[0].severity).toBe(DrugInteractionSeverity.ALLERGY_MATCH)
+    expect(results[0]!.severity).toBe(DrugInteractionSeverity.ALLERGY_MATCH)
   })
 
   it('matches when drug name contains allergy substance (substring)', () => {
@@ -65,7 +65,7 @@ describe('checkAllergyMatch', () => {
     const results = checkAllergyMatch('Amoxicillin (Penicillin-class)', allergies)
 
     expect(results).toHaveLength(1)
-    expect(results[0].severity).toBe(DrugInteractionSeverity.ALLERGY_MATCH)
+    expect(results[0]!.severity).toBe(DrugInteractionSeverity.ALLERGY_MATCH)
   })
 
   it('matches when allergy substance contains drug name (reverse substring)', () => {
@@ -73,7 +73,7 @@ describe('checkAllergyMatch', () => {
     const results = checkAllergyMatch('Sulfonamide', allergies)
 
     expect(results).toHaveLength(1)
-    expect(results[0].severity).toBe(DrugInteractionSeverity.ALLERGY_MATCH)
+    expect(results[0]!.severity).toBe(DrugInteractionSeverity.ALLERGY_MATCH)
   })
 
   it('returns empty array when no allergies match', () => {
@@ -97,14 +97,14 @@ describe('checkAllergyMatch', () => {
     const results = checkAllergyMatch('Aspirin 500mg', allergies)
 
     expect(results).toHaveLength(1)
-    expect(results[0].drugB).toBe('Aspirin')
+    expect(results[0]!.drugB).toBe('Aspirin')
   })
 
   it('description includes the allergy substance name', () => {
     const allergies = [makeAllergy('Penicillin')]
     const results = checkAllergyMatch('Penicillin V', allergies)
 
-    expect(results[0].description).toContain('Penicillin')
-    expect(results[0].description).toContain('allergy')
+    expect(results[0]!.description).toContain('Penicillin')
+    expect(results[0]!.description).toContain('allergy')
   })
 })
