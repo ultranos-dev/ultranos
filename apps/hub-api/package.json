@@ -15,10 +15,13 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",
     "@trpc/server": "^11.0.0",
+    "@ultranos/audit-logger": "workspace:*",
     "@ultranos/billing": "workspace:*",
     "@ultranos/crypto": "workspace:*",
     "@ultranos/drug-db": "workspace:*",
+    "@ultranos/mpi-engine": "workspace:*",
     "@ultranos/shared-types": "workspace:*",
+    "@ultranos/sync-engine": "workspace:*",
     "ioredis": "^5.10.1",
     "jose": "^6.2.3",
     "next": "^15.0.0",
