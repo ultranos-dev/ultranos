@@ -58,11 +58,14 @@ describe('ProfileSetupScreen — Story 27.10', () => {
   })
 
   it('enables continue when name and DOB are valid', () => {
-    const { getByLabelText } = render(
+    const { getByLabelText, getByText } = render(
       <ProfileSetupScreen onComplete={mockOnComplete} onBack={mockOnBack} />,
     )
 
+    // Form requires first name, father's name, gender, and a valid DOB.
     fireEvent.changeText(getByLabelText('registration.firstNameLabel'), 'Ahmad')
+    fireEvent.changeText(getByLabelText('registration.fatherNameLabel'), 'Karimi')
+    fireEvent.press(getByText('registration.genderMale'))
     fireEvent.changeText(getByLabelText('registration.dobLabel'), '19900115')
 
     const continueButton = getByLabelText('registration.continue')
@@ -70,16 +73,20 @@ describe('ProfileSetupScreen — Story 27.10', () => {
   })
 
   it('calls onComplete with profile data when submitted', () => {
-    const { getByLabelText } = render(
+    const { getByLabelText, getByText } = render(
       <ProfileSetupScreen onComplete={mockOnComplete} onBack={mockOnBack} />,
     )
 
     fireEvent.changeText(getByLabelText('registration.firstNameLabel'), 'Ahmad')
+    fireEvent.changeText(getByLabelText('registration.fatherNameLabel'), 'Karimi')
+    fireEvent.press(getByText('registration.genderMale'))
     fireEvent.changeText(getByLabelText('registration.dobLabel'), '19900115')
     fireEvent.press(getByLabelText('registration.continue'))
 
     expect(mockOnComplete).toHaveBeenCalledWith({
       firstName: 'Ahmad',
+      nameFather: 'Karimi',
+      gender: 'male',
       dateOfBirth: '1990-01-15',
       preferredLanguage: 'en',
     })

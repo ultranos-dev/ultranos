@@ -145,6 +145,8 @@ describe('RegistrationNavigator', () => {
     })
 
     fireEvent.changeText(getByLabelText('registration.firstNameLabel'), 'Ahmad')
+    fireEvent.changeText(getByLabelText('registration.fatherNameLabel'), 'Karimi')
+    fireEvent.press(getByText('registration.genderMale'))
     fireEvent.changeText(getByLabelText('registration.dobLabel'), '19900115')
     fireEvent.press(getByText('registration.continue'))
 
