@@ -70,6 +70,8 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
   }
 
   const managerId = session?.userId ?? 'unknown'
+  // No attributable user → disable state-changing actions (audit integrity).
+  const hasValidActor = Boolean(session?.userId)
 
   const filteredReports = reports.filter((r) => {
     if (statusFilter !== 'ALL' && r.status !== statusFilter) return false
@@ -165,7 +167,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
             <div className="flex gap-3">
               <Button
                 onClick={() => handleAcknowledge(selectedReport.id)}
-                disabled={actionInProgress}
+                disabled={actionInProgress || !hasValidActor}
               >
                 {t('acknowledgeButton')}
               </Button>
@@ -191,7 +193,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
               />
               <Button
                 onClick={() => handleInvestigate(selectedReport.id)}
-                disabled={!investigationNotes.trim() || actionInProgress}
+                disabled={!investigationNotes.trim() || actionInProgress || !hasValidActor}
               >
                 {t('beginInvestigationButton')}
               </Button>
@@ -215,7 +217,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
               <Button
                 variant="warning"
                 onClick={() => handleClose(selectedReport.id)}
-                disabled={!resolutionText.trim() || actionInProgress}
+                disabled={!resolutionText.trim() || actionInProgress || !hasValidActor}
               >
                 {t('closeReportButton')}
               </Button>

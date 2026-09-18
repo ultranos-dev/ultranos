@@ -5,6 +5,15 @@ import { useTranslations } from 'next-intl'
 import { SafetyConcernCategory } from '@/types/safety-reporting'
 import { submitAnonymousReport } from '@/lib/safety/safety-report-service'
 import { Button } from '@/components/ui/Button'
+import {
+  Droplets,
+  ShieldAlert,
+  Trash2,
+  AlertTriangle,
+  ClipboardList,
+  Lock,
+} from '@ultranos/ui-kit/icons'
+import type { ComponentType } from 'react'
 
 const CATEGORIES = [
   SafetyConcernCategory.HAND_HYGIENE,
@@ -14,12 +23,13 @@ const CATEGORIES = [
   SafetyConcernCategory.OTHER,
 ] as const
 
-const CATEGORY_ICONS: Record<SafetyConcernCategory, string> = {
-  [SafetyConcernCategory.HAND_HYGIENE]: '🧴',
-  [SafetyConcernCategory.PPE_NON_USE]: '🧤',
-  [SafetyConcernCategory.IMPROPER_WASTE_DISPOSAL]: '🗑️',
-  [SafetyConcernCategory.EQUIPMENT_MISUSE]: '⚠️',
-  [SafetyConcernCategory.OTHER]: '📋',
+// Lucide icons per category (CLAUDE.md: standardize on lucide, no emoji/inline).
+const CATEGORY_ICONS: Record<SafetyConcernCategory, ComponentType<{ className?: string }>> = {
+  [SafetyConcernCategory.HAND_HYGIENE]: Droplets,
+  [SafetyConcernCategory.PPE_NON_USE]: ShieldAlert,
+  [SafetyConcernCategory.IMPROPER_WASTE_DISPOSAL]: Trash2,
+  [SafetyConcernCategory.EQUIPMENT_MISUSE]: AlertTriangle,
+  [SafetyConcernCategory.OTHER]: ClipboardList,
 }
 
 interface AnonymousReportFormProps {
@@ -90,7 +100,7 @@ export function AnonymousReportForm({ onSubmitted }: AnonymousReportFormProps) {
       {/* Privacy notice */}
       <div className="rounded-lg border border-primary bg-primary/10 p-4">
         <div className="flex items-start gap-3">
-          <span className="text-xl">🔒</span>
+          <Lock className="h-5 w-5 text-primary" />
           <div>
             <h3 className="text-sm font-semibold text-primary">
               {t('privacyNoticeTitle')}
@@ -108,23 +118,26 @@ export function AnonymousReportForm({ onSubmitted }: AnonymousReportFormProps) {
           {t('categoryLabel')}
         </label>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setCategory(cat)}
-              className={`flex items-center gap-3 rounded-lg border-2 p-4 text-start transition-colors ${
-                category === cat
-                  ? 'border-primary-500 bg-primary-50'
-                  : 'border-border hover:border-border'
-              }`}
-            >
-              <span className="text-2xl">{CATEGORY_ICONS[cat]}</span>
-              <span className="text-sm font-medium">
-                {t(`category.${cat}`)}
-              </span>
-            </button>
-          ))}
+          {CATEGORIES.map((cat) => {
+            const Icon = CATEGORY_ICONS[cat]
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setCategory(cat)}
+                className={`flex items-center gap-3 rounded-lg border-2 p-4 text-start transition-colors ${
+                  category === cat
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-border hover:border-border'
+                }`}
+              >
+                <Icon className="h-6 w-6" />
+                <span className="text-sm font-medium">
+                  {t(`category.${cat}`)}
+                </span>
+              </button>
+            )
+          })}
         </div>
       </div>
 

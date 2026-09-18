@@ -9,6 +9,8 @@ import {
 } from '@/types/safety-reporting'
 import { getSafetyReports } from '@/lib/db'
 import { Button } from '@/components/ui/Button'
+import { useRequireLabRole } from '@/hooks/useLabPermission'
+import { LabRole } from '@ultranos/shared-types'
 
 type TimePeriod = '30d' | '90d' | '12m'
 
@@ -26,6 +28,8 @@ interface SafetyTrendDashboardProps {
 
 export function SafetyTrendDashboard({ onBack }: SafetyTrendDashboardProps) {
   const t = useTranslations('safety.reporting')
+  // Aggregate safety trends are manager-only (contains cross-report patterns).
+  const isManager = useRequireLabRole(LabRole.LAB_MANAGER)
   const [reports, setReports] = useState<SafetyReport[]>([])
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState<TimePeriod>('30d')
@@ -105,6 +109,10 @@ export function SafetyTrendDashboard({ onBack }: SafetyTrendDashboardProps) {
   }
 
   const maxCatCount = Math.max(1, ...Object.values(stats.byCat))
+
+  if (!isManager) {
+    return <p className="p-6 text-sm text-muted-foreground" role="alert">{t('managerOnly')}</p>
+  }
 
   if (loading) {
     return <p className="p-6 text-sm text-muted-foreground">{t('loading')}</p>

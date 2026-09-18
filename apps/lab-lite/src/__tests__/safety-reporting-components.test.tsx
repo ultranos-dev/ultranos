@@ -111,7 +111,7 @@ describe('AnonymousReportForm', () => {
 
   it('renders all 5 concern category buttons', () => {
     render(<AnonymousReportForm />)
-    expect(screen.getByText('category.HAND_HYGIENE')).toBeDefined()
+    expect(screen.getAllByText('category.HAND_HYGIENE')[0]).toBeDefined()
     expect(screen.getByText('category.PPE_NON_USE')).toBeDefined()
     expect(screen.getByText('category.IMPROPER_WASTE_DISPOSAL')).toBeDefined()
     expect(screen.getByText('category.EQUIPMENT_MISUSE')).toBeDefined()
@@ -135,7 +135,7 @@ describe('AnonymousReportForm', () => {
 
   it('submit button is disabled when details are too short (< 10 chars)', () => {
     render(<AnonymousReportForm />)
-    fireEvent.click(screen.getByText('category.HAND_HYGIENE'))
+    fireEvent.click(screen.getAllByText('category.HAND_HYGIENE').find((el) => el.closest('button'))!)
     const textarea = screen.getByRole('textbox')
     fireEvent.change(textarea, { target: { value: 'Short' } })
     const submitBtn = screen.getByText('submitButton')
@@ -144,7 +144,7 @@ describe('AnonymousReportForm', () => {
 
   it('submit button is enabled with category + valid details', () => {
     render(<AnonymousReportForm />)
-    fireEvent.click(screen.getByText('category.HAND_HYGIENE'))
+    fireEvent.click(screen.getAllByText('category.HAND_HYGIENE').find((el) => el.closest('button'))!)
     const textarea = screen.getByRole('textbox')
     fireEvent.change(textarea, { target: { value: 'This is a valid safety concern description.' } })
     const submitBtn = screen.getByText('submitButton')
@@ -167,7 +167,7 @@ describe('AnonymousReportForm', () => {
   it('shows error message on submission failure', async () => {
     mockSubmitAnonymousReport.mockRejectedValue(new Error('DB error'))
     render(<AnonymousReportForm />)
-    fireEvent.click(screen.getByText('category.HAND_HYGIENE'))
+    fireEvent.click(screen.getAllByText('category.HAND_HYGIENE').find((el) => el.closest('button'))!)
     const textarea = screen.getByRole('textbox')
     fireEvent.change(textarea, { target: { value: 'Valid description of the concern observed.' } })
     fireEvent.click(screen.getByText('submitButton'))
@@ -233,8 +233,8 @@ describe('SafetyReportManagement', () => {
     mockAcknowledgeReport.mockResolvedValue(undefined)
 
     render(<SafetyReportManagement />)
-    await waitFor(() => screen.getByText('category.HAND_HYGIENE'))
-    fireEvent.click(screen.getByText('category.HAND_HYGIENE'))
+    await waitFor(() => screen.getAllByText('category.HAND_HYGIENE')[0])
+    fireEvent.click(screen.getAllByText('category.HAND_HYGIENE').find((el) => el.closest('button'))!)
 
     await waitFor(() => {
       expect(screen.getByText('acknowledgeButton')).toBeDefined()
@@ -247,8 +247,8 @@ describe('SafetyReportManagement', () => {
     mockAcknowledgeReport.mockResolvedValue(undefined)
 
     render(<SafetyReportManagement />)
-    await waitFor(() => screen.getByText('category.HAND_HYGIENE'))
-    fireEvent.click(screen.getByText('category.HAND_HYGIENE'))
+    await waitFor(() => screen.getAllByText('category.HAND_HYGIENE')[0])
+    fireEvent.click(screen.getAllByText('category.HAND_HYGIENE').find((el) => el.closest('button'))!)
     await waitFor(() => screen.getByText('acknowledgeButton'))
     fireEvent.click(screen.getByText('acknowledgeButton'))
 
@@ -263,8 +263,8 @@ describe('SafetyReportManagement', () => {
     mockGetSafetyReports.mockResolvedValue([report])
 
     render(<SafetyReportManagement />)
-    await waitFor(() => screen.getByText('category.HAND_HYGIENE'))
-    fireEvent.click(screen.getByText('category.HAND_HYGIENE'))
+    await waitFor(() => screen.getAllByText('category.HAND_HYGIENE')[0])
+    fireEvent.click(screen.getAllByText('category.HAND_HYGIENE').find((el) => el.closest('button'))!)
     await waitFor(() => screen.getByText('acknowledgeButton'))
 
     expect(screen.getByText('acknowledgeButton').closest('button')).toHaveProperty('disabled', true)
@@ -275,8 +275,8 @@ describe('SafetyReportManagement', () => {
     mockGetSafetyReports.mockResolvedValue([report])
 
     render(<SafetyReportManagement />)
-    await waitFor(() => screen.getByText('category.HAND_HYGIENE'))
-    fireEvent.click(screen.getByText('category.HAND_HYGIENE'))
+    await waitFor(() => screen.getAllByText('category.HAND_HYGIENE')[0])
+    fireEvent.click(screen.getAllByText('category.HAND_HYGIENE').find((el) => el.closest('button'))!)
 
     await waitFor(() => {
       expect(screen.getByText('closeReportButton')).toBeDefined()

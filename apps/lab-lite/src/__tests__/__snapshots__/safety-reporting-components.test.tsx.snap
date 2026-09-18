@@ -15,10 +15,8 @@ exports[`AnonymousReportForm > RTL snapshot — form layout mirrors correctly 1`
           class="flex items-start gap-3"
         >
           <span
-            class="text-xl"
-          >
-            🔒
-          </span>
+            data-testid="icon-lock"
+          />
           <div>
             <h3
               class="text-sm font-semibold text-primary"
@@ -47,10 +45,8 @@ exports[`AnonymousReportForm > RTL snapshot — form layout mirrors correctly 1`
             type="button"
           >
             <span
-              class="text-2xl"
-            >
-              🧴
-            </span>
+              data-testid="icon-droplets"
+            />
             <span
               class="text-sm font-medium"
             >
@@ -62,10 +58,8 @@ exports[`AnonymousReportForm > RTL snapshot — form layout mirrors correctly 1`
             type="button"
           >
             <span
-              class="text-2xl"
-            >
-              🧤
-            </span>
+              data-testid="icon-shield-alert"
+            />
             <span
               class="text-sm font-medium"
             >
@@ -77,10 +71,8 @@ exports[`AnonymousReportForm > RTL snapshot — form layout mirrors correctly 1`
             type="button"
           >
             <span
-              class="text-2xl"
-            >
-              🗑️
-            </span>
+              data-testid="icon-trash2"
+            />
             <span
               class="text-sm font-medium"
             >
@@ -92,10 +84,8 @@ exports[`AnonymousReportForm > RTL snapshot — form layout mirrors correctly 1`
             type="button"
           >
             <span
-              class="text-2xl"
-            >
-              ⚠️
-            </span>
+              data-testid="icon-alert-triangle"
+            />
             <span
               class="text-sm font-medium"
             >
@@ -107,10 +97,8 @@ exports[`AnonymousReportForm > RTL snapshot — form layout mirrors correctly 1`
             type="button"
           >
             <span
-              class="text-2xl"
-            >
-              📋
-            </span>
+              data-testid="icon-clipboard-list"
+            />
             <span
               class="text-sm font-medium"
             >
