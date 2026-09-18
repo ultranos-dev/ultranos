@@ -20,6 +20,7 @@ const mockCustodyEventsPut = vi.fn()
 const mockSamplesGet = vi.fn()
 const mockSamplesUpdate = vi.fn()
 const mockSamplesBulkGet = vi.fn()
+const mockTransportSessionsAdd = vi.fn()
 
 vi.mock('@/lib/db', () => ({
   createTransportSession: vi.fn(),
@@ -29,11 +30,17 @@ vi.mock('@/lib/db', () => ({
   getTransportsByCourier: vi.fn(),
   getDb: vi.fn(() => ({
     custody_events: { put: mockCustodyEventsPut },
+    transport_sessions: { add: mockTransportSessionsAdd, put: vi.fn(), get: vi.fn(), update: vi.fn() },
     samples: {
       get: mockSamplesGet,
       update: mockSamplesUpdate,
       bulkGet: mockSamplesBulkGet,
     },
+    // Dexie transaction(mode, ...tables, cb) — run the callback inline.
+    transaction: vi.fn((...args: unknown[]) => {
+      const cb = args[args.length - 1] as () => unknown
+      return Promise.resolve(cb())
+    }),
   })),
 }))
 
@@ -136,6 +143,10 @@ function makeSpecimen(id: string, labSampleId: string, sampleTypeDisplay: string
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // Source uses crypto.randomUUID() for session/custody IDs (not the uuid pkg).
+  vi.spyOn(crypto, 'randomUUID').mockReturnValue(
+    'mock-uuid' as `${string}-${string}-${string}-${string}-${string}`,
+  )
   mockCustodyEventsPut.mockResolvedValue(undefined)
   mockSamplesGet.mockResolvedValue(undefined)
   mockSamplesUpdate.mockResolvedValue(undefined)
@@ -166,7 +177,7 @@ describe('startTransport', () => {
     expect(session.conditionAtDelivery).toBeNull()
     expect(session.flags).toEqual([])
 
-    expect(createTransportSession).toHaveBeenCalledWith(expect.objectContaining({
+    expect(mockTransportSessionsAdd).toHaveBeenCalledWith(expect.objectContaining({
       id: 'mock-uuid',
       status: 'in-transit',
       courierId: 'courier-001',

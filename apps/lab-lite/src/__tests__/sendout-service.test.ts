@@ -57,6 +57,11 @@ function makeMockDb(overrides: Record<string, unknown> = {}) {
     lab_results: {
       put: vi.fn(),
     },
+    // Dexie transaction(mode, ...tables, cb) — run the callback inline.
+    transaction: vi.fn((..._args: unknown[]) => {
+      const cb = _args[_args.length - 1] as () => unknown
+      return Promise.resolve(cb())
+    }),
     ...overrides,
   } as unknown as ReturnType<typeof getDb>
 }

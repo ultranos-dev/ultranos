@@ -21,7 +21,9 @@ vi.mock('@/lib/db', () => ({
   getTransportsByCourier: vi.fn(),
   getDb: vi.fn(() => ({
     custody_events: { put: vi.fn() },
+    transport_sessions: { add: vi.fn(), put: vi.fn(), get: vi.fn(), update: vi.fn() },
     samples: { get: vi.fn(() => undefined), update: vi.fn(), bulkGet: vi.fn(() => []) },
+    transaction: vi.fn((...args: unknown[]) => Promise.resolve((args[args.length - 1] as () => unknown)())),
   })),
 }))
 
@@ -98,11 +100,13 @@ beforeEach(() => {
   const mockGetDb = vi.mocked(getDb)
   mockGetDb.mockReturnValue({
     custody_events: { put: vi.fn().mockResolvedValue(undefined) },
+    transport_sessions: { add: vi.fn().mockResolvedValue(undefined), put: vi.fn().mockResolvedValue(undefined), get: vi.fn().mockResolvedValue(undefined), update: vi.fn().mockResolvedValue(undefined) },
     samples: {
       get: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       bulkGet: vi.fn().mockResolvedValue([]),
     },
+    transaction: vi.fn((...args: unknown[]) => Promise.resolve((args[args.length - 1] as () => unknown)())),
   } as never)
 })
 
@@ -157,6 +161,7 @@ describe('transport audit event emission (story 13.7)', () => {
     const mockGetDb = vi.mocked(getDb)
     mockGetDb.mockReturnValue({
       custody_events: { put: vi.fn().mockResolvedValue(undefined) },
+      transport_sessions: { add: vi.fn().mockResolvedValue(undefined), put: vi.fn().mockResolvedValue(undefined), get: vi.fn().mockResolvedValue(undefined), update: vi.fn().mockResolvedValue(undefined) },
       samples: {
         get: vi.fn().mockResolvedValue(undefined),
         update: vi.fn().mockResolvedValue(undefined),
@@ -180,6 +185,7 @@ describe('transport audit event emission (story 13.7)', () => {
           },
         ]),
       },
+      transaction: vi.fn((...args: unknown[]) => Promise.resolve((args[args.length - 1] as () => unknown)())),
     } as never)
 
     await recordDelivery('session-1', { conditionAtDelivery: 'acceptable' })
