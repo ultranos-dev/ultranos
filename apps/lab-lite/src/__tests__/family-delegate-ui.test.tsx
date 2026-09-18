@@ -185,7 +185,7 @@ describe('9.4 DelegateRegistration', () => {
 
     render(<DelegateRegistration {...defaultProps} />)
 
-    expect(screen.getByText('loadingConsent')).toBeDefined()
+    expect(screen.getByText('registering')).toBeDefined()
   })
 
   it('renders form fields after consent loads', async () => {
@@ -195,7 +195,7 @@ describe('9.4 DelegateRegistration', () => {
 
     await waitFor(() => {
       expect(screen.getByLabelText('phone')).toBeDefined()
-      expect(screen.getByLabelText('Relationship to Patient')).toBeDefined()
+      expect(screen.getByLabelText('relationship')).toBeDefined()
       expect(screen.getByLabelText('name')).toBeDefined()
     })
   })
@@ -288,7 +288,7 @@ describe('9.4 DelegateRegistration', () => {
       target: { value: '+93701234567' },
     })
 
-    fireEvent.change(screen.getByLabelText('Relationship to Patient'), {
+    fireEvent.change(screen.getByLabelText('relationship'), {
       target: { value: 'spouse' },
     })
 
@@ -315,7 +315,7 @@ describe('9.4 DelegateRegistration', () => {
       target: { value: '+93701234567' },
     })
 
-    fireEvent.change(screen.getByLabelText('Relationship to Patient'), {
+    fireEvent.change(screen.getByLabelText('relationship'), {
       target: { value: 'parent' },
     })
 
@@ -383,7 +383,7 @@ describe('9.5 RevokeDelegateDialog', () => {
   it('renders dialog with reason textarea and action buttons', () => {
     render(<RevokeDelegateDialog {...defaultProps} />)
 
-    expect(screen.getByTestId('dialog')).toBeDefined()
+    expect(screen.getByRole('dialog')).toBeDefined()
     expect(screen.getByRole('heading', { name: 'revokeDelegate' })).toBeDefined()
     expect(screen.getByPlaceholderText('revokeReasonPlaceholder')).toBeDefined()
     expect(screen.getByText('revokeSubmit')).toBeDefined()
@@ -490,7 +490,7 @@ describe('9.5 RevokeDelegateDialog', () => {
       </div>,
     )
 
-    expect(screen.getByTestId('dialog')).toBeDefined()
+    expect(screen.getByRole('dialog')).toBeDefined()
     expect(container).toMatchSnapshot()
   })
 })
@@ -594,7 +594,7 @@ describe('9.4+ DelegateManagementSection', () => {
     fireEvent.click(screen.getByText('addDelegate'))
 
     await waitFor(() => {
-      expect(screen.getByText('loadingConsent')).toBeDefined()
+      expect(screen.getByText('registering')).toBeDefined()
     })
   })
 
@@ -609,7 +609,7 @@ describe('9.4+ DelegateManagementSection', () => {
 
     fireEvent.click(screen.getByText('revokeDelegate'))
 
-    expect(screen.getByTestId('dialog')).toBeDefined()
+    expect(screen.getByRole('dialog')).toBeDefined()
   })
 
   it('reloads delegate list after successful registration', async () => {
@@ -638,7 +638,7 @@ describe('9.4+ DelegateManagementSection', () => {
       target: { value: '+93701234567' },
     })
 
-    fireEvent.change(screen.getByLabelText('Relationship to Patient'), {
+    fireEvent.change(screen.getByLabelText('relationship'), {
       target: { value: 'spouse' },
     })
 

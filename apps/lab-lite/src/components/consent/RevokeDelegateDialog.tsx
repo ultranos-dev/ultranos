@@ -48,6 +48,9 @@ export function RevokeDelegateDialog({
       })
 
       onRevoked()
+    } catch {
+      // Never surface the underlying error detail (may reference PHI/storage internals).
+      setError(t('revokeError'))
     } finally {
       setSubmitting(false)
     }

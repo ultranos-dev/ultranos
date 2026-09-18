@@ -33,14 +33,25 @@ export function DelegateManagementSection({ patientRef }: DelegateManagementSect
 
   const [delegates, setDelegates] = useState<FamilyDelegate[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [showRegister, setShowRegister] = useState(false)
   const [revoking, setRevoking] = useState<FamilyDelegate | null>(null)
 
   const loadDelegates = useCallback(async () => {
     setLoading(true)
-    const all = await getDelegatesByPatient(patientRef)
-    setDelegates(all)
-    setLoading(false)
+    setError('')
+    try {
+      const all = await getDelegatesByPatient(patientRef)
+      setDelegates(all)
+    } catch {
+      // Never surface the underlying error detail (may reference storage internals).
+      setError(t('loadError'))
+    } finally {
+      setLoading(false)
+    }
+    // t is referentially stable (next-intl memoizes); excluded to avoid re-running
+    // the loader on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientRef])
 
   useEffect(() => {
@@ -55,16 +66,23 @@ export function DelegateManagementSection({ patientRef }: DelegateManagementSect
         <h3 id="delegates-section-title" className="text-base font-semibold text-foreground dark:text-foreground">
           {t('sectionTitle')}
         </h3>
-        <button
-          type="button"
-          onClick={() => setShowRegister(true)}
-          className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-        >
-          {t('addDelegate')}
-        </button>
+        {/* One active delegate at a time — hide "Add" once an active delegate exists. */}
+        {activeDelegates.length === 0 && (
+          <button
+            type="button"
+            onClick={() => setShowRegister(true)}
+            className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            {t('addDelegate')}
+          </button>
+        )}
       </div>
 
-      {loading ? (
+      {error ? (
+        <p className="mt-4 text-sm text-red-600 dark:text-red-400" role="alert">
+          {error}
+        </p>
+      ) : loading ? (
         <div className="mt-4 text-sm text-muted-foreground" aria-busy="true">…</div>
       ) : activeDelegates.length === 0 ? (
         <p className="mt-4 text-sm text-muted-foreground dark:text-muted-foreground">
