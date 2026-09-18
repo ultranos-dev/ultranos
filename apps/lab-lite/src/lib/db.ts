@@ -32,6 +32,8 @@ import type { OutbreakModeConfig, DailySitrep } from '@/types/outbreak'
 import type { EncryptedHealthRecord } from '@/types/employee-health'
 import type { AtlasEntry, AtlasCategory } from '@/lib/visual-atlas'
 import type { QcRun, DriftAlert } from '@/lib/qc/types'
+// Re-export so consumers can import QC types from the db barrel (used broadly).
+export type { QcRun, QcRunInput } from '@/lib/qc/types'
 import type { SurveillanceAlert, ReportableDiseaseConfig, SurveillanceBaseline, SurveillanceSchedulerConfig } from '@/lib/surveillance-types'
 import type { QualityStreak, QualityMetric, Badge, EarnedBadge } from '@/lib/quality-streak-types'
 import type { CriticalValueThreshold, CompletedChecklist, ChecklistConfig } from '@/lib/critical-values/types'

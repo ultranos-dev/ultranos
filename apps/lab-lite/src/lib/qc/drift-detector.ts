@@ -49,7 +49,8 @@ export async function analyzeDrift(
     // Use the most recent run's values as the reference
     const referenceRun = recentRuns[recentRuns.length - 1]
     if (!referenceRun) continue
-    const { targetMean, targetSd, loincCode } = referenceRun
+    const { targetMean, targetSd } = referenceRun
+    const loincCode = referenceRun.loincCode ?? ''
     const observedValues = recentRuns.map((r) => r.observedValue)
 
     // Run all Westgard rules

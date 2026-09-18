@@ -10,25 +10,49 @@
  * Control materials are run independently of patient samples to verify instrument accuracy.
  * No PHI: runBy is an opaque practitioner ID, not a patient identifier.
  */
-export interface QcRun {
+/**
+ * Fields captured by the QC-entry workflow (QcRunEntryForm). The statistical fields
+ * on QcRun are DERIVED from these at save time (see saveQcRun).
+ */
+export interface QcRunInput {
   id: string
   analyte: string            // e.g. "Hemoglobin", "Glucose"
-  loincCode: string          // LOINC code for the analyte
   instrumentId: string       // opaque instrument/analyzer ID
+  loincCode?: string         // LOINC code for the analyte (optional in the entry form)
   controlLevel: QcControlLevel
-  targetMean: number         // manufacturer's stated target mean (from control lot insert)
-  targetSd: number           // manufacturer's stated target SD (from control lot insert)
-  observedValue: number      // the measured control value
-  runDate: string            // ISO 8601 date of the run
-  runBy: string              // practitioner ID — opaque, not a patient
-  hlcTimestamp: string       // HLC for offline sync ordering
+  controlValues: Record<string, number>   // measured control value(s), keyed (e.g. { value })
+  expectedRange: { low: number; high: number }  // acceptable range (target mean ± 2SD)
+  passOrFail: 'PASS' | 'FAIL'
+  timestamp: string          // HLC-serialized for causal ordering / recency
+  calendarDate: string       // YYYY-MM-DD, for same-day lookups
+  techId: string             // practitioner ID — opaque, not a patient
+}
+
+/**
+ * A single stored QC control run. Carries both the entry-workflow fields and the
+ * statistical fields (targetMean/targetSd/observedValue) derived from them at save
+ * time, so the Westgard/drift/streak subsystems read real numbers rather than the
+ * previously-undefined values. No PHI: techId/runBy are opaque practitioner IDs.
+ */
+export interface QcRun extends QcRunInput {
+  targetMean: number         // derived: midpoint of expectedRange
+  targetSd: number           // derived: (high - low) / 4 (range assumed ±2SD)
+  observedValue: number      // derived: controlValues.value
+  runDate: string            // = calendarDate
+  runBy: string              // = techId
+  hlcTimestamp: string       // = timestamp (HLC for offline sync ordering)
 }
 
 /**
  * Control material levels used in QC runs.
  * Labs typically run 3 levels: low (LEVEL_1), normal (LEVEL_2), high (LEVEL_3).
  */
-export type QcControlLevel = 'LEVEL_1' | 'LEVEL_2' | 'LEVEL_3'
+// NOTE: two vocabularies are in use — the QC-entry form writes 'L1'/'L2'/'L3'
+// while the drift/advisory subsystem queries 'LEVEL_1'/'LEVEL_2'/'LEVEL_3'. Both are
+// accepted here so the code typechecks; the values do NOT match at runtime, so
+// drift-detector's level-scoped queries won't match form-entered runs. Unifying the
+// vocabulary (and the tests on each side) is a follow-up data-model decision.
+export type QcControlLevel = 'L1' | 'L2' | 'L3' | 'LEVEL_1' | 'LEVEL_2' | 'LEVEL_3'
 
 /**
  * Westgard multi-rule identifiers.

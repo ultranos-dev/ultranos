@@ -13,7 +13,8 @@
 import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { saveQcRun } from '@/services/qc-run-service'
-import type { QcRun } from '@/lib/db'
+import type { QcRun, QcRunInput } from '@/lib/db'
+import type { QcControlLevel } from '@/lib/qc/types'
 import { hlc, serializeHlc } from '@/lib/hlc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
@@ -33,7 +34,7 @@ export function QcRunEntryForm({ onSaved }: QcRunEntryFormProps) {
 
   const [analyte, setAnalyte] = useState('')
   const [instrumentId, setInstrumentId] = useState('')
-  const [controlLevel, setControlLevel] = useState('L1')
+  const [controlLevel, setControlLevel] = useState<QcControlLevel>('L1')
   const [measuredValue, setMeasuredValue] = useState('')
   const [expectedLow, setExpectedLow] = useState('')
   const [expectedHigh, setExpectedHigh] = useState('')
@@ -61,7 +62,7 @@ export function QcRunEntryForm({ onSaved }: QcRunEntryFormProps) {
     if (!instrumentId.trim()) { setError(t('form.error.instrumentRequired')); return }
     if (!hasValidInputs) { setError(t('form.error.invalidValues')); return }
 
-    const run: QcRun = {
+    const run: QcRunInput = {
       id: generateId(),
       analyte: analyte.trim(),
       instrumentId: instrumentId.trim(),
@@ -76,8 +77,8 @@ export function QcRunEntryForm({ onSaved }: QcRunEntryFormProps) {
 
     setSaving(true)
     try {
-      await saveQcRun(run)
-      setSavedRun(run)
+      const saved = await saveQcRun(run)
+      setSavedRun(saved)
       // Reset form
       setAnalyte('')
       setInstrumentId('')
@@ -85,7 +86,7 @@ export function QcRunEntryForm({ onSaved }: QcRunEntryFormProps) {
       setMeasuredValue('')
       setExpectedLow('')
       setExpectedHigh('')
-      onSaved?.(run)
+      onSaved?.(saved)
     } catch (err) {
       setError(t('form.error.saveFailed'))
     } finally {
@@ -207,7 +208,7 @@ export function QcRunEntryForm({ onSaved }: QcRunEntryFormProps) {
           <select
             id={`${formId}-level`}
             value={controlLevel}
-            onChange={(e) => setControlLevel(e.target.value)}
+            onChange={(e) => setControlLevel(e.target.value as QcControlLevel)}
             style={{
               width: '100%',
               padding: '0.5rem 0.75rem',

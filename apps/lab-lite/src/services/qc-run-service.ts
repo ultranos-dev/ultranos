@@ -14,7 +14,7 @@
 
 import Dexie from 'dexie'
 import { getDb } from '@/lib/db'
-import type { QcRun } from '@/lib/db'
+import type { QcRun, QcRunInput } from '@/lib/db'
 import { hlc, serializeHlc } from '@/lib/hlc'
 import { emitClientAudit } from '@ultranos/audit-logger/client'
 import type { ClientAuditEventInput } from '@ultranos/audit-logger/client'
@@ -29,10 +29,34 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
  * Persist a new QC run to Dexie and emit an audit event.
  * Never throws from the audit path — QC save must not be blocked by audit failures.
  */
-export async function saveQcRun(run: QcRun): Promise<void> {
+/**
+ * Derive the statistical fields (targetMean/targetSd/observedValue/…) from the entry
+ * workflow inputs so the Westgard/drift/streak subsystems read real numbers. A full
+ * QcRun passed in is re-derived idempotently.
+ */
+export function enrichQcRun(input: QcRunInput): QcRun {
+  const observedValue =
+    input.controlValues.value ?? Object.values(input.controlValues)[0] ?? 0
+  const targetMean = (input.expectedRange.low + input.expectedRange.high) / 2
+  // Acceptable range is target mean ± 2SD by convention → SD = width / 4.
+  const targetSd = (input.expectedRange.high - input.expectedRange.low) / 4
+  return {
+    ...input,
+    observedValue,
+    targetMean,
+    targetSd,
+    runDate: input.calendarDate,
+    runBy: input.techId,
+    hlcTimestamp: input.timestamp,
+  }
+}
+
+export async function saveQcRun(input: QcRunInput): Promise<QcRun> {
   const db = getDb()
+  const run = enrichQcRun(input)
   await db.qcRuns.put(run)
   _emitQcRunAuditEvent(run)
+  return run
 }
 
 /**
