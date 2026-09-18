@@ -2398,6 +2398,44 @@ export async function addSOPAcknowledgment(ack: SOPAcknowledgment): Promise<void
   await db.sop_acknowledgments.put(ack)
 }
 
+/** All acknowledgments for an SOP. */
+export async function getSOPAcknowledgments(sopId: string): Promise<SOPAcknowledgment[]> {
+  return getDb().sop_acknowledgments.where('sopId').equals(sopId).toArray()
+}
+
+/** All acknowledgments made by a technician. */
+export async function getTechnicianAcknowledgments(technicianId: string): Promise<SOPAcknowledgment[]> {
+  return getDb().sop_acknowledgments.where('technicianId').equals(technicianId).toArray()
+}
+
+/** Whether a technician has acknowledged a specific SOP version. */
+export async function hasAcknowledgedSOP(
+  sopId: string,
+  technicianId: string,
+  sopVersion: string,
+): Promise<boolean> {
+  const acks = await getDb()
+    .sop_acknowledgments.where('[sopId+technicianId]')
+    .equals([sopId, technicianId])
+    .toArray()
+  return acks.some((a) => a.sopVersion === sopVersion)
+}
+
+/** Acknowledgments not yet pushed to the Hub. */
+export async function getPendingSOPAcknowledgments(): Promise<SOPAcknowledgment[]> {
+  return getDb().sop_acknowledgments.where('syncStatus').equals('pending').toArray()
+}
+
+/** Mark the given acknowledgments as synced. */
+export async function markAcknowledgmentsSynced(ids: string[]): Promise<void> {
+  const db = getDb()
+  await db.transaction('rw', db.sop_acknowledgments, async () => {
+    for (const id of ids) {
+      await db.sop_acknowledgments.update(id, { syncStatus: 'synced' })
+    }
+  })
+}
+
 // ---------------------------------------------------------------------------
 // Lab result helpers (v8) — required by learning trigger engine
 // ---------------------------------------------------------------------------
