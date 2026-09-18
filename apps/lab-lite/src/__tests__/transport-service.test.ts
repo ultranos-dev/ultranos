@@ -297,9 +297,9 @@ describe('recordDelivery — stability exceeded', () => {
 
     expect(result.status).toBe('flagged')
     expect(result.flags).toHaveLength(1)
-    expect(result.flags[0].flagType).toBe('stability-exceeded')
-    expect(result.flags[0].sampleId).toBe('sample-blood')
-    expect(result.flags[0].labSampleId).toBe('LAB-2026-001')
+    expect(result.flags[0]!.flagType).toBe('stability-exceeded')
+    expect(result.flags[0]!.sampleId).toBe('sample-blood')
+    expect(result.flags[0]!.labSampleId).toBe('LAB-2026-001')
 
     expect(reportTransportAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -352,8 +352,8 @@ describe('recordDelivery — temperature excursion condition', () => {
     // 2 samples → 2 temperature-excursion flags
     const tempFlags = result.flags.filter((f) => f.flagType === 'temperature-excursion')
     expect(tempFlags).toHaveLength(2)
-    expect(tempFlags[0].sampleId).toBe('sample-a')
-    expect(tempFlags[1].sampleId).toBe('sample-b')
+    expect(tempFlags[0]!.sampleId).toBe('sample-a')
+    expect(tempFlags[1]!.sampleId).toBe('sample-b')
 
     expect(reportTransportAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -450,8 +450,8 @@ describe('getActiveTransportsForCourier', () => {
     const result = await getActiveTransportsForCourier('courier-001')
 
     expect(result).toHaveLength(1)
-    expect(result[0].id).toBe('session-active')
-    expect(result[0].status).toBe('in-transit')
+    expect(result[0]!.id).toBe('session-active')
+    expect(result[0]!.status).toBe('in-transit')
 
     expect(getTransportsByCourier).toHaveBeenCalledWith('courier-001')
   })

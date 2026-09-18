@@ -37,13 +37,13 @@ describe('generateRecommendations', () => {
   it('returns red recommendation for personnel red', () => {
     const items = generateRecommendations('personnel', 'red', {})
     expect(items).toHaveLength(1)
-    expect(items[0].key).toBe('readiness.recommendations.personnelRed')
+    expect(items[0]!.key).toBe('readiness.recommendations.personnelRed')
   })
 
   it('returns amber recommendation for personnel amber', () => {
     const items = generateRecommendations('personnel', 'amber', {})
     expect(items).toHaveLength(1)
-    expect(items[0].key).toBe('readiness.recommendations.personnelAmber')
+    expect(items[0]!.key).toBe('readiness.recommendations.personnelAmber')
   })
 
   // -----------------------------------------------------------------------
@@ -53,17 +53,17 @@ describe('generateRecommendations', () => {
     const ctx = { reagentName: 'Chemistry strips', testType: 'CHEM', supplierName: 'BioSupply' }
     const items = generateRecommendations('reagents', 'red', ctx)
     expect(items.length).toBeGreaterThan(0)
-    expect(items[0].key).toBe('readiness.recommendations.reagentsRed')
-    expect(items[0].args?.reagentName).toBe('Chemistry strips')
-    expect(items[0].args?.supplierName).toBe('BioSupply')
+    expect(items[0]!.key).toBe('readiness.recommendations.reagentsRed')
+    expect(items[0]!.args?.reagentName).toBe('Chemistry strips')
+    expect(items[0]!.args?.supplierName).toBe('BioSupply')
   })
 
   it('returns amber reagent recommendation with daysRemaining', () => {
     const ctx = { reagentName: 'Hematology kit', testType: 'CBC', daysRemaining: 10 }
     const items = generateRecommendations('reagents', 'amber', ctx)
     expect(items.length).toBeGreaterThan(0)
-    expect(items[0].key).toBe('readiness.recommendations.reagentsAmber')
-    expect(items[0].args?.daysRemaining).toBe(10)
+    expect(items[0]!.key).toBe('readiness.recommendations.reagentsAmber')
+    expect(items[0]!.args?.daysRemaining).toBe(10)
   })
 
   it('handles multiple reagent issues via issues array', () => {
@@ -85,15 +85,15 @@ describe('generateRecommendations', () => {
   it('returns amber recommendation for equipment amber', () => {
     const items = generateRecommendations('equipment', 'amber', {})
     expect(items).toHaveLength(1)
-    expect(items[0].key).toBe('readiness.recommendations.equipmentAmber')
+    expect(items[0]!.key).toBe('readiness.recommendations.equipmentAmber')
   })
 
   it('returns red recommendation for equipment red with args', () => {
     const ctx = { equipmentName: 'Hematology Analyzer', affectedTests: 'CBC, Diff' }
     const items = generateRecommendations('equipment', 'red', ctx)
     expect(items).toHaveLength(1)
-    expect(items[0].key).toBe('readiness.recommendations.equipmentRed')
-    expect(items[0].args?.equipmentName).toBe('Hematology Analyzer')
+    expect(items[0]!.key).toBe('readiness.recommendations.equipmentRed')
+    expect(items[0]!.args?.equipmentName).toBe('Hematology Analyzer')
   })
 
   // -----------------------------------------------------------------------
@@ -102,15 +102,15 @@ describe('generateRecommendations', () => {
   it('returns red order recommendation with urgentCount', () => {
     const items = generateRecommendations('pendingOrders', 'red', { urgentCount: 3 })
     expect(items).toHaveLength(1)
-    expect(items[0].key).toBe('readiness.recommendations.ordersRed')
-    expect(items[0].args?.urgentCount).toBe(3)
+    expect(items[0]!.key).toBe('readiness.recommendations.ordersRed')
+    expect(items[0]!.args?.urgentCount).toBe(3)
   })
 
   it('returns amber order recommendation with pendingCount', () => {
     const items = generateRecommendations('pendingOrders', 'amber', { pendingCount: 5 })
     expect(items).toHaveLength(1)
-    expect(items[0].key).toBe('readiness.recommendations.ordersAmber')
-    expect(items[0].args?.pendingCount).toBe(5)
+    expect(items[0]!.key).toBe('readiness.recommendations.ordersAmber')
+    expect(items[0]!.args?.pendingCount).toBe(5)
   })
 
   // -----------------------------------------------------------------------
@@ -119,20 +119,20 @@ describe('generateRecommendations', () => {
   it('returns red power recommendation', () => {
     const items = generateRecommendations('power', 'red', {})
     expect(items).toHaveLength(1)
-    expect(items[0].key).toBe('readiness.recommendations.powerRed')
+    expect(items[0]!.key).toBe('readiness.recommendations.powerRed')
   })
 
   it('returns partial amber when percentElapsed is provided', () => {
     const items = generateRecommendations('power', 'amber', { percentElapsed: 60, remainingMinutes: 90 })
     expect(items).toHaveLength(1)
-    expect(items[0].key).toBe('readiness.recommendations.powerPartialAmber')
-    expect(items[0].args?.percentElapsed).toBe(60)
-    expect(items[0].args?.remainingMinutes).toBe(90)
+    expect(items[0]!.key).toBe('readiness.recommendations.powerPartialAmber')
+    expect(items[0]!.args?.percentElapsed).toBe(60)
+    expect(items[0]!.args?.remainingMinutes).toBe(90)
   })
 
   it('returns plain amber when no percentElapsed', () => {
     const items = generateRecommendations('power', 'amber', {})
     expect(items).toHaveLength(1)
-    expect(items[0].key).toBe('readiness.recommendations.powerAmber')
+    expect(items[0]!.key).toBe('readiness.recommendations.powerAmber')
   })
 })

@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { InspectionReadinessView } from '@/components/safety/InspectionReadinessView'
 import { LabRole } from '@ultranos/shared-types'
+import { AuditStatus } from '@/types/infection-control-audit'
+import type { InspectionReadinessPack } from '@/types/infection-control-audit'
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string, params?: Record<string, unknown>) => {
@@ -22,9 +24,9 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { generateInspectionPack } from '@/lib/safety/inspection-readiness'
 
 const mockManager = { labRole: LabRole.LAB_MANAGER }
-const mockTechnician = { labRole: LabRole.LAB_TECHNICIAN }
+const mockTechnician = { labRole: LabRole.LAB_TECH }
 
-const mockPack = {
+const mockPack: InspectionReadinessPack = {
   generatedAt: '2025-04-01T10:00:00.000Z',
   dateRange: { start: '2025-01-01', end: '2025-03-31' },
   auditResults: [
@@ -34,7 +36,7 @@ const mockPack = {
       auditMonth: '2025-01',
       conductedBy: 'practitioner-123',
       complianceScore: 90,
-      status: 'COMPLETED',
+      status: AuditStatus.COMPLETED,
       completedAt: '2025-01-15T10:00:00.000Z',
       notes: '',
       hlcTimestamp: 'hlc-test',
@@ -189,7 +191,7 @@ describe('InspectionReadinessView', () => {
       vi.mocked(useAuthSessionStore).mockReturnValue(mockManager)
       vi.mocked(generateInspectionPack).mockResolvedValue({
         ...mockPack,
-        auditResults: [{ ...mockPack.auditResults[0], complianceScore: null }],
+        auditResults: [{ ...mockPack.auditResults[0]!, complianceScore: null }],
       })
       render(<InspectionReadinessView />)
 

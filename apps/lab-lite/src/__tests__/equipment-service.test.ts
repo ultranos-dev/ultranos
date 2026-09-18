@@ -47,7 +47,7 @@ function makeDbTable<T extends { id: string }>(store: T[]) {
     get: async (id: string) => store.find((r) => r.id === id),
     update: async (id: string, changes: Partial<T>) => {
       const idx = store.findIndex((r) => r.id === id)
-      if (idx >= 0) Object.assign(store[idx], changes)
+      if (idx >= 0) Object.assign(store[idx]!, changes)
     },
     toArray: async () => [...store],
     where: (key: string) => ({
@@ -66,7 +66,7 @@ function makeDbTable<T extends { id: string }>(store: T[]) {
         const boundsFilter = (item: T): boolean => {
           if (Array.isArray(_lower)) {
             const keyParts = (key as string).replace(/^\[|\]$/g, '').split('+')
-            const firstKey = keyParts[0]
+            const firstKey = keyParts[0]!
             return (item as any)[firstKey] === _lower[0]
           }
           const v = (item as any)[key as string]
@@ -176,9 +176,9 @@ describe('Instrument Registry (AC 1)', () => {
     const id = await registerInstrument(makeInstrument())
     const instruments = await getInstruments()
     expect(instruments).toHaveLength(1)
-    expect(instruments[0].id).toBe(id)
-    expect(instruments[0].name).toBe('CBC Analyzer')
-    expect(instruments[0].status).toBe('IN_SERVICE')
+    expect(instruments[0]!.id).toBe(id)
+    expect(instruments[0]!.name).toBe('CBC Analyzer')
+    expect(instruments[0]!.status).toBe('IN_SERVICE')
   })
 
   it('sets instrument to out of service', async () => {
@@ -293,29 +293,29 @@ describe('computeQueueTimes (AC 3)', () => {
     const queue = [makeBatch(1, 10)]
     const result = computeQueueTimes(queue, instrument)
     const now = new Date()
-    const diff = Math.abs(result[0].estimatedStartTime!.getTime() - now.getTime())
+    const diff = Math.abs(result[0]!.estimatedStartTime!.getTime() - now.getTime())
     expect(diff).toBeLessThan(5000) // within 5 seconds of now
   })
 
   it('subsequent batches start after previous completion', () => {
     const queue = [makeBatch(1, 10), makeBatch(2, 20), makeBatch(3, 15)]
     const result = computeQueueTimes(queue, instrument)
-    expect(result[1].estimatedStartTime!.getTime()).toBe(result[0].estimatedCompletionTime!.getTime())
-    expect(result[2].estimatedStartTime!.getTime()).toBe(result[1].estimatedCompletionTime!.getTime())
+    expect(result[1]!.estimatedStartTime!.getTime()).toBe(result[0]!.estimatedCompletionTime!.getTime())
+    expect(result[2]!.estimatedStartTime!.getTime()).toBe(result[1]!.estimatedCompletionTime!.getTime())
   })
 
   it('RUNNING batch uses startedAt as start time', () => {
     const started = new Date(Date.now() - 5 * 60_000) // 5 min ago
     const batch = { ...makeBatch(1, 10, 'RUNNING'), startedAt: started.toISOString() }
     const result = computeQueueTimes([batch], instrument)
-    expect(result[0].estimatedStartTime!.getTime()).toBe(started.getTime())
+    expect(result[0]!.estimatedStartTime!.getTime()).toBe(started.getTime())
   })
 
   it('completion time = start time + run minutes', () => {
     const queue = [makeBatch(1, 30)]
     const result = computeQueueTimes(queue, instrument)
-    const expectedMs = result[0].estimatedStartTime!.getTime() + 30 * 60_000
-    expect(result[0].estimatedCompletionTime!.getTime()).toBe(expectedMs)
+    const expectedMs = result[0]!.estimatedStartTime!.getTime() + 30 * 60_000
+    expect(result[0]!.estimatedCompletionTime!.getTime()).toBe(expectedMs)
   })
 })
 
@@ -362,8 +362,8 @@ describe('Batch Lifecycle (AC 6)', () => {
     await startBatch(b1.id)
     await completeBatch(b1.id)
     expect(mockHistory).toHaveLength(1)
-    expect(mockHistory[0].instrumentId).toBe(id)
-    expect(mockHistory[0].batchId).toBe(b1.id)
+    expect(mockHistory[0]!.instrumentId).toBe(id)
+    expect(mockHistory[0]!.batchId).toBe(b1.id)
   })
 
   it('creates next-in-line notification after completion', async () => {
@@ -376,7 +376,7 @@ describe('Batch Lifecycle (AC 6)', () => {
 
     const notifs = await getActiveInstrumentNotifications('tech-2')
     expect(notifs.length).toBeGreaterThanOrEqual(1)
-    expect(notifs[0].batchId).toBe(b2.id)
+    expect(notifs[0]!.batchId).toBe(b2.id)
   })
 
   it('cancels a batch and reorders remaining queue', async () => {

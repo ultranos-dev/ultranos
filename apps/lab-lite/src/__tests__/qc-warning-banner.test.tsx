@@ -60,6 +60,12 @@ describe('QcWarningBanner — passing state (Task 9.4)', () => {
       timestamp: new Date().toISOString(),
       calendarDate: new Date().toISOString().slice(0, 10),
       techId: 'tech-abc',
+      targetMean: 12.5,
+      targetSd: 0.75,
+      observedValue: 12.5,
+      runDate: new Date().toISOString().slice(0, 10),
+      runBy: 'tech-abc',
+      hlcTimestamp: new Date().toISOString(),
     })
   })
 
@@ -101,6 +107,12 @@ describe('QcWarningBanner — failing state (Task 9.4)', () => {
       timestamp: new Date().toISOString(),
       calendarDate: new Date().toISOString().slice(0, 10),
       techId: 'tech-abc',
+      targetMean: 12.5,
+      targetSd: 0.75,
+      observedValue: 10.0,
+      runDate: new Date().toISOString().slice(0, 10),
+      runBy: 'tech-abc',
+      hlcTimestamp: new Date().toISOString(),
     })
   })
 

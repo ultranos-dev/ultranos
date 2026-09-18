@@ -39,7 +39,7 @@ function makeRecord(overrides?: Partial<EmployeeHealthRecord>): EmployeeHealthRe
 function daysFromNow(days: number): string {
   const d = new Date()
   d.setDate(d.getDate() - days)
-  return d.toISOString().split('T')[0]
+  return d.toISOString().split('T')[0]!
 }
 
 describe('getReminderState', () => {

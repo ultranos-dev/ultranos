@@ -78,6 +78,8 @@ const defaultProps = {
   loincCode: '2085-9',
   loincDisplay: 'Cholesterol',
   sampleType: 'Blood',
+  patientFirstName: 'Test',
+  patientAge: 42,
   onClose: vi.fn(),
   onSuccess: vi.fn(),
 }

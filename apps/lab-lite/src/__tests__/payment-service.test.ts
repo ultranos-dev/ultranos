@@ -53,7 +53,7 @@ describe('Payment Service', () => {
       const db = getDb()
       const stored = await db.payments.toArray()
       expect(stored).toHaveLength(1)
-      expect(stored[0].patientRef).toBe('pat-123')
+      expect(stored[0]!.patientRef).toBe('pat-123')
     })
 
     it('generates sequential receipt numbers for the same day', async () => {
@@ -184,7 +184,7 @@ describe('Payment Service', () => {
       const payments = await getPaymentsForPatient('pat-multi')
       expect(payments).toHaveLength(2)
       // Newest first
-      expect(payments[0].outstandingBalance).toBe(0)
+      expect(payments[0]!.outstandingBalance).toBe(0)
     })
   })
 

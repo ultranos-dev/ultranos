@@ -18,6 +18,7 @@ const MOCK_REPORT: HandoverReport = {
   outgoingTechId: 'tech-001',
   outgoingTechName: 'Alice',
   incomingTechId: null,
+  incomingTechName: null,
   status: 'PENDING',
   createdAt: new Date().toISOString(),
   acknowledgedAt: null,
@@ -41,6 +42,7 @@ describe('HandoverAcknowledgment', () => {
       <HandoverAcknowledgment
         report={MOCK_REPORT}
         incomingTechId="tech-002"
+        incomingTechName="Tech Two"
         onAcknowledged={vi.fn()}
       />,
     )
@@ -53,6 +55,7 @@ describe('HandoverAcknowledgment', () => {
       <HandoverAcknowledgment
         report={MOCK_REPORT}
         incomingTechId="tech-002"
+        incomingTechName="Tech Two"
         onAcknowledged={vi.fn()}
       />,
     )
@@ -65,6 +68,7 @@ describe('HandoverAcknowledgment', () => {
       <HandoverAcknowledgment
         report={MOCK_REPORT}
         incomingTechId="tech-002"
+        incomingTechName="Tech Two"
         onAcknowledged={vi.fn()}
       />,
     )
@@ -82,6 +86,7 @@ describe('HandoverAcknowledgment', () => {
       <HandoverAcknowledgment
         report={MOCK_REPORT}
         incomingTechId="tech-002"
+        incomingTechName="Tech Two"
         onAcknowledged={vi.fn()}
       />,
     )
@@ -124,6 +129,7 @@ describe('HandoverAcknowledgment', () => {
       <HandoverAcknowledgment
         report={MOCK_REPORT}
         incomingTechId="tech-002"
+        incomingTechName="Tech Two"
         onAcknowledged={vi.fn()}
       />,
     )
@@ -142,6 +148,7 @@ describe('HandoverAcknowledgment', () => {
       <HandoverAcknowledgment
         report={MOCK_REPORT}
         incomingTechId="tech-002"
+        incomingTechName="Tech Two"
         onAcknowledged={vi.fn()}
       />,
     )

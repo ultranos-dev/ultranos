@@ -216,7 +216,7 @@ describe('ReferenceRangeEditor — edit dialog (Task 10.14)', () => {
       fireEvent.click(hgbRow)
       const editButtons = screen.queryAllByText(/edit/i)
       if (editButtons.length > 0) {
-        fireEvent.click(editButtons[0])
+        fireEvent.click(editButtons[0]!)
         await waitFor(() => {
           const saveBtn = screen.queryByTestId('save-range-button')
           if (saveBtn) {

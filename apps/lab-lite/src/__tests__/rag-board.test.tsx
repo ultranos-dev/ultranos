@@ -110,8 +110,11 @@ function makeBoard(overrides: Partial<RAGBoardState>): RAGBoardState {
 }
 
 function setAuthorizedRole(role: string) {
-  mockUseAuthSessionStore.mockImplementation((selector: (s: { session: { labRole: string } | null }) => unknown) =>
-    selector({ session: { labRole: role } })
+  mockUseAuthSessionStore.mockImplementation(
+    ((selector: (s: { session: { labRole: string } | null }) => unknown) =>
+      selector({ session: { labRole: role } })) as Parameters<
+      typeof mockUseAuthSessionStore.mockImplementation
+    >[0],
   )
 }
 

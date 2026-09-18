@@ -187,9 +187,9 @@ describe('QcRunEntryForm — saves to Dexie (Task 9.9)', () => {
     const db = getDb()
     const saved = await db.qcRuns.toArray()
     expect(saved).toHaveLength(1)
-    expect(saved[0].analyte).toBe('718-7')
-    expect(saved[0].instrumentId).toBe('analyzer-01')
-    expect(saved[0].passOrFail).toBe('PASS')
+    expect(saved[0]!.analyte).toBe('718-7')
+    expect(saved[0]!.instrumentId).toBe('analyzer-01')
+    expect(saved[0]!.passOrFail).toBe('PASS')
   })
 
   it('onSaved callback receives the saved run with correct passOrFail', async () => {

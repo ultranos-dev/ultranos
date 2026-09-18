@@ -51,6 +51,12 @@ function makeQcRun(overrides: Partial<QcRun> & { daysAgo?: number }): QcRun {
     loincCode: '718-7',
     instrumentId: 'analyzer-01',
     controlLevel: 'LEVEL_2',
+    controlValues: { value: 14.0 },
+    expectedRange: { low: 13.0, high: 15.0 },
+    passOrFail: 'PASS',
+    timestamp: new Date().toISOString(),
+    calendarDate: makeDay(daysAgo),
+    techId: 'tech-001',
     targetMean: 14.0,
     targetSd: 0.5,
     observedValue: 14.0, // passing by default

@@ -35,7 +35,7 @@ vi.mock('../lib/db', async (importOriginal) => {
         },
         update: async (id: string, changes: Partial<ProcedureCompetency>) => {
           const idx = mockProcedureCompetencies.findIndex((r) => r.id === id)
-          if (idx >= 0) Object.assign(mockProcedureCompetencies[idx], changes)
+          if (idx >= 0) Object.assign(mockProcedureCompetencies[idx]!, changes)
         },
         bulkPut: async (records: ProcedureCompetency[]) => {
           for (const r of records) {
@@ -173,7 +173,7 @@ describe('updateCompetencyFromResult', () => {
     await updateCompetencyFromResult('tech-1', '58410-2', 'CBC', new Date().toISOString())
 
     expect(mockProcedureCompetencies).toHaveLength(1)
-    const rec = mockProcedureCompetencies[0]
+    const rec = mockProcedureCompetencies[0]!
     expect(rec.technicianId).toBe('tech-1')
     expect(rec.procedureRef).toBe('58410-2')
     expect(rec.procedureName).toBe('CBC')
@@ -201,14 +201,14 @@ describe('updateCompetencyFromResult', () => {
 
     await updateCompetencyFromResult('tech-1', '58410-2', 'CBC', new Date().toISOString())
 
-    expect(mockProcedureCompetencies[0].totalPerformed).toBe(4)
+    expect(mockProcedureCompetencies[0]!.totalPerformed).toBe(4)
   })
 
   it('stores no patient data — only technicianId + procedureRef + counts', async () => {
     mockLabResults.push(makeResult('tech-2', '2345-7', 0))
     await updateCompetencyFromResult('tech-2', '2345-7', 'Glucose', new Date().toISOString())
 
-    const rec = mockProcedureCompetencies[0]
+    const rec = mockProcedureCompetencies[0]!
     // Verify no PHI fields exist
     expect((rec as any).patientRef).toBeUndefined()
     expect((rec as any).sampleId).toBeUndefined()
@@ -237,9 +237,9 @@ describe('recalculateAllCompetencies', () => {
     const results = await recalculateAllCompetencies(techId)
     const byRef = Object.fromEntries(results.map((r) => [r.procedureRef, r]))
 
-    expect(byRef['GREEN-LOINC'].status).toBe('active')
-    expect(byRef['YELLOW-LOINC'].status).toBe('decay_risk')
-    expect(byRef['RED-LOINC'].status).toBe('decayed')
+    expect(byRef['GREEN-LOINC']!.status).toBe('active')
+    expect(byRef['YELLOW-LOINC']!.status).toBe('decay_risk')
+    expect(byRef['RED-LOINC']!.status).toBe('decayed')
   })
 
   it('counts performedLast90Days correctly', async () => {

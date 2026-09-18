@@ -78,6 +78,7 @@ describe('SessionTimeoutWrapper', () => {
       practitionerId: 'p1',
       role: 'LAB_TECH',
       sessionId: 's1',
+      labRole: null,
       email: 'tech@lab.example',
     })
 
@@ -105,6 +106,7 @@ describe('SessionTimeoutWrapper', () => {
       practitionerId: 'p1',
       role: 'UNKNOWN_ROLE',
       sessionId: 's1',
+      labRole: null,
       email: 'user@lab.example',
     })
 
@@ -124,6 +126,7 @@ describe('SessionTimeoutWrapper', () => {
         practitionerId: 'p1',
         role: 'LAB_TECH',
         sessionId: 's1',
+        labRole: null,
         email: 'tech@lab.example',
       })
 
@@ -154,6 +157,7 @@ describe('SessionTimeoutWrapper', () => {
         practitionerId: 'p1',
         role: 'LAB_TECH',
         sessionId: 's1',
+        labRole: null,
         email: 'tech@lab.example',
       })
 
@@ -184,6 +188,7 @@ describe('SessionTimeoutWrapper', () => {
         practitionerId: 'p1',
         role: 'LAB_TECH',
         sessionId: 's1',
+        labRole: null,
         email: 'tech@lab.example',
       })
 
@@ -214,6 +219,7 @@ describe('SessionTimeoutWrapper', () => {
         practitionerId: 'p1',
         role: 'LAB_TECH',
         sessionId: 's1',
+        labRole: null,
         email: 'tech@lab.example',
       })
 
@@ -242,6 +248,7 @@ describe('SessionTimeoutWrapper', () => {
         practitionerId: 'p1',
         role: 'LAB_TECH',
         sessionId: 's1',
+        labRole: null,
         email: 'tech@lab.example',
       })
 
@@ -272,6 +279,7 @@ describe('SessionTimeoutWrapper', () => {
         practitionerId: 'p1',
         role: 'LAB_TECH',
         sessionId: 's1',
+        labRole: null,
         email: '',
       })
 
@@ -298,6 +306,7 @@ describe('SessionTimeoutWrapper', () => {
         practitionerId: 'p1',
         role: 'LAB_TECH',
         sessionId: 's1',
+        labRole: null,
         email: 'tech@lab.example',
       })
 
@@ -326,6 +335,7 @@ describe('SessionTimeoutWrapper', () => {
         practitionerId: 'p1',
         role: 'LAB_TECH',
         sessionId: 's1',
+        labRole: null,
         email: 'tech@lab.example',
       })
 

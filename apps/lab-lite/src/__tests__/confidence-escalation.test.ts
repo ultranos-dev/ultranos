@@ -14,8 +14,8 @@ vi.mock('@/stores/auth-session-store', () => ({
   useAuthSessionStore: { getState: (...args: unknown[]) => mockGetState(...args) },
 }))
 
-const mockHlcNow = vi.fn(() => ({ wallTime: 1000, counter: 0, nodeId: 'test' }))
-const mockSerializeHlc = vi.fn(() => 'hlc-test-string')
+const mockHlcNow = vi.fn((..._args: unknown[]) => ({ wallTime: 1000, counter: 0, nodeId: 'test' }))
+const mockSerializeHlc = vi.fn((..._args: unknown[]) => 'hlc-test-string')
 vi.mock('@/lib/hlc', () => ({
   hlc: { now: (...args: unknown[]) => mockHlcNow(...args) },
   serializeHlc: (...args: unknown[]) => mockSerializeHlc(...args),

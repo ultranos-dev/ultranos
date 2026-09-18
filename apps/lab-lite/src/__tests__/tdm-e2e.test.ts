@@ -143,7 +143,7 @@ describe('TDM E2E: pharmacy dispense → lab monitoring flag', () => {
     // ASSERTION 1: exactly one flag created
     expect(flags).toHaveLength(1)
 
-    const flag = flags[0]
+    const flag = flags[0]!
 
     // ASSERTION 2: correct LOINC code (INR)
     expect(flag.testRequired).toBe('6301-6')

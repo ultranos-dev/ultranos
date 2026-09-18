@@ -196,7 +196,7 @@ describe('createExposureNotificationPayloads', () => {
       labManagerId: 'Practitioner/mgr-001',
     })
     const payloads = createExposureNotificationPayloads(report)
-    expect(payloads[0].type).toBe('EXPOSURE_INCIDENT')
+    expect(payloads[0]!.type).toBe('EXPOSURE_INCIDENT')
   })
 
   it('notification payload contains no patient demographics', () => {
@@ -218,8 +218,8 @@ describe('createExposureNotificationPayloads', () => {
       labManagerId: 'Practitioner/mgr-001',
     })
     const payloads = createExposureNotificationPayloads(report)
-    expect(payloads[0].incidentId).toBe(report.id)
-    expect(payloads[0].exposureType).toBe(ExposureType.NEEDLESTICK)
+    expect(payloads[0]!.incidentId).toBe(report.id)
+    expect(payloads[0]!.exposureType).toBe(ExposureType.NEEDLESTICK)
   })
 })
 

@@ -52,9 +52,9 @@ describe('token-generator', () => {
         { color: 'red', symbol: 'star', displayKey: 'red-star' },
         { color: 'blue', symbol: 'circle', displayKey: 'blue-circle' },
       ]
-      const result = recycleToken(active[0], active)
+      const result = recycleToken(active[0]!, active)
       expect(result).toHaveLength(1)
-      expect(result[0].displayKey).toBe('blue-circle')
+      expect(result[0]!.displayKey).toBe('blue-circle')
     })
 
     it('returns original array unchanged if token not found', () => {

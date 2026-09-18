@@ -91,7 +91,7 @@ describe('phi-cleanup (lab-lite)', () => {
     })
 
     it('has no overlap with PHI_TABLES', () => {
-      const phiSet = new Set(PHI_TABLES)
+      const phiSet = new Set<string>(PHI_TABLES)
       for (const t of PRESERVE_TABLES) {
         expect(phiSet.has(t)).toBe(false)
       }

@@ -459,7 +459,7 @@ describe('reportSmsAuditEvent', () => {
     })
 
     expect(mockFn).toHaveBeenCalledOnce()
-    const input = mockFn.mock.calls[0][0] as { metadata: Record<string, unknown> }
+    const input = mockFn.mock.calls[0]![0] as { metadata: Record<string, unknown> }
 
     // PHI guard — verify no forbidden fields in metadata
     expect(input.metadata).not.toHaveProperty('recipientPhone')
@@ -487,7 +487,7 @@ describe('reportSmsAuditEvent', () => {
       recipientRole: 'medical_director',
     })
 
-    const input = mockFn.mock.calls[0][0] as { metadata: Record<string, unknown> }
+    const input = mockFn.mock.calls[0]![0] as { metadata: Record<string, unknown> }
     expect(input.metadata).toHaveProperty('outcome', 'FAILURE')
   })
 })
@@ -507,7 +507,7 @@ describe('NativeSmsAdapter', () => {
 
   it('does not expose checkStatus (programmatic delivery tracking unavailable)', () => {
     const adapter = new NativeSmsAdapter()
-    expect((adapter as Record<string, unknown>)['checkStatus']).toBeUndefined()
+    expect((adapter as unknown as Record<string, unknown>)['checkStatus']).toBeUndefined()
   })
 })
 
@@ -588,7 +588,7 @@ describe('escalation timing', () => {
       .equals('DiagnosticReport/esc-timer-001')
       .toArray()
     expect(step1).toHaveLength(1)
-    expect(step1[0].escalationStep).toBe(1)
+    expect(step1[0]!.escalationStep).toBe(1)
 
     // Advance 15 minutes — step 2 should fire
     await vi.advanceTimersByTimeAsync(15 * 60 * 1000 + 100)
@@ -599,6 +599,6 @@ describe('escalation timing', () => {
       .toArray()
     const step2 = allEntries.filter((e) => e.escalationStep === 2)
     expect(step2.length).toBeGreaterThanOrEqual(1)
-    expect(step2[0].recipientRole).toBe('medical_director')
+    expect(step2[0]!.recipientRole).toBe('medical_director')
   })
 })

@@ -179,10 +179,10 @@ describe('Sample collection → worklist pipeline', () => {
 
     const items = await runHookSamplesPath(db)
     expect(items).toHaveLength(1)
-    expect(items[0].sampleId).toBe('specimen-abc-003')
-    expect(items[0].sampleId).not.toBe(ORDER_ID)
-    expect(items[0].orderId).toBe(ORDER_ID)
-    expect(items[0].hasOrder).toBe(true)
+    expect(items[0]!.sampleId).toBe('specimen-abc-003')
+    expect(items[0]!.sampleId).not.toBe(ORDER_ID)
+    expect(items[0]!.orderId).toBe(ORDER_ID)
+    expect(items[0]!.hasOrder).toBe(true)
   })
 
   // -------------------------------------------------------------------------
@@ -228,8 +228,8 @@ describe('Sample collection → worklist pipeline', () => {
 
     const items = await runHookSamplesPath(db)
     expect(items).toHaveLength(1)
-    expect(items[0].sampleId).toBe('specimen-abc-006')
-    expect(items[0].orderId).toBe(ORDER_ID)
+    expect(items[0]!.sampleId).toBe('specimen-abc-006')
+    expect(items[0]!.orderId).toBe(ORDER_ID)
     // No item for ORDER_ID_2 — the fallback is gone
     const ghost = items.find((i) => i.orderId === ORDER_ID_2)
     expect(ghost).toBeUndefined()

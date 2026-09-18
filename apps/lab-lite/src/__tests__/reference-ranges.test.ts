@@ -206,47 +206,47 @@ describe('flagResult — flag codes', () => {
   })
 
   it('returns N for value within normal range', () => {
-    const { flag } = flagResult(14.0, RANGE)
+    const { flag } = flagResult(14.0, RANGE)!
     expect(flag).toBe('N')
   })
 
   it('returns L for value below rangeMin but above criticalMin', () => {
-    const { flag } = flagResult(10.0, RANGE)
+    const { flag } = flagResult(10.0, RANGE)!
     expect(flag).toBe('L')
   })
 
   it('returns H for value above rangeMax but below criticalMax', () => {
-    const { flag } = flagResult(19.0, RANGE)
+    const { flag } = flagResult(19.0, RANGE)!
     expect(flag).toBe('H')
   })
 
   it('returns LL for value at or below criticalMin', () => {
-    const { flag } = flagResult(7.0, RANGE)
+    const { flag } = flagResult(7.0, RANGE)!
     expect(flag).toBe('LL')
   })
 
   it('returns LL for value below criticalMin', () => {
-    const { flag } = flagResult(5.0, RANGE)
+    const { flag } = flagResult(5.0, RANGE)!
     expect(flag).toBe('LL')
   })
 
   it('returns HH for value at or above criticalMax', () => {
-    const { flag } = flagResult(20.0, RANGE)
+    const { flag } = flagResult(20.0, RANGE)!
     expect(flag).toBe('HH')
   })
 
   it('returns HH for value above criticalMax', () => {
-    const { flag } = flagResult(22.0, RANGE)
+    const { flag } = flagResult(22.0, RANGE)!
     expect(flag).toBe('HH')
   })
 
   it('returns N at exactly rangeMin boundary (inclusive)', () => {
-    const { flag } = flagResult(12.0, RANGE)
+    const { flag } = flagResult(12.0, RANGE)!
     expect(flag).toBe('N')
   })
 
   it('returns N at exactly rangeMax boundary (inclusive)', () => {
-    const { flag } = flagResult(17.5, RANGE)
+    const { flag } = flagResult(17.5, RANGE)!
     expect(flag).toBe('N')
   })
 })
@@ -260,12 +260,12 @@ describe('flagResult — no critical thresholds', () => {
   })
 
   it('returns L when below rangeMin and no criticalMin', () => {
-    const { flag } = flagResult(75.0, RANGE_NO_CRITICAL)
+    const { flag } = flagResult(75.0, RANGE_NO_CRITICAL)!
     expect(flag).toBe('L')
   })
 
   it('returns H when above rangeMax and no criticalMax', () => {
-    const { flag } = flagResult(110.0, RANGE_NO_CRITICAL)
+    const { flag } = flagResult(110.0, RANGE_NO_CRITICAL)!
     expect(flag).toBe('H')
   })
 })

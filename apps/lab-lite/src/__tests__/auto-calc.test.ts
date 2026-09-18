@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { computeAutoFields } from '../lib/auto-calc'
 import { TEMPLATE_REGISTRY } from '../lib/result-templates'
 
-const CBC = TEMPLATE_REGISTRY['58410-2']
-const LIPID = TEMPLATE_REGISTRY['57698-3']
-const HBA1C = TEMPLATE_REGISTRY['4548-4']
-const BMP = TEMPLATE_REGISTRY['51990-0']
-const LFT = TEMPLATE_REGISTRY['24325-3']
+const CBC = TEMPLATE_REGISTRY['58410-2']!
+const LIPID = TEMPLATE_REGISTRY['57698-3']!
+const HBA1C = TEMPLATE_REGISTRY['4548-4']!
+const BMP = TEMPLATE_REGISTRY['51990-0']!
+const LFT = TEMPLATE_REGISTRY['24325-3']!
 
 describe('computeAutoFields — CBC', () => {
   it('computes MCV, MCH, MCHC from HGB, HCT, RBC', () => {

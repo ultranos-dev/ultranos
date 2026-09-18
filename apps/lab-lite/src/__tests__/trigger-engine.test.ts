@@ -28,8 +28,8 @@ describe('evaluateKnowledgeCardTriggers — single match', () => {
       '58410-2',
     )
     expect(cards).toHaveLength(1)
-    expect(cards[0].id).toBe('KC-WBC-BLAST-001')
-    expect(cards[0].severity).toBe('critical')
+    expect(cards[0]!.id).toBe('KC-WBC-BLAST-001')
+    expect(cards[0]!.severity).toBe('critical')
   })
 
   it('returns KC-HGB-SEVERE-001 when Hgb < 5', () => {
@@ -38,7 +38,7 @@ describe('evaluateKnowledgeCardTriggers — single match', () => {
       '58410-2',
     )
     expect(cards).toHaveLength(1)
-    expect(cards[0].id).toBe('KC-HGB-SEVERE-001')
+    expect(cards[0]!.id).toBe('KC-HGB-SEVERE-001')
   })
 
   it('returns KC-PLT-CRITICAL-001 when platelets < 20', () => {
@@ -47,7 +47,7 @@ describe('evaluateKnowledgeCardTriggers — single match', () => {
       '58410-2',
     )
     expect(cards).toHaveLength(1)
-    expect(cards[0].id).toBe('KC-PLT-CRITICAL-001')
+    expect(cards[0]!.id).toBe('KC-PLT-CRITICAL-001')
   })
 
   it('returns KC-K-HYPERKALEMIA-001 when K+ > 6.5', () => {
@@ -56,7 +56,7 @@ describe('evaluateKnowledgeCardTriggers — single match', () => {
       '24326-1',
     )
     expect(cards).toHaveLength(1)
-    expect(cards[0].id).toBe('KC-K-HYPERKALEMIA-001')
+    expect(cards[0]!.id).toBe('KC-K-HYPERKALEMIA-001')
   })
 
   it('returns KC-NA-HYPONATREMIA-001 when Na+ < 120', () => {
@@ -65,7 +65,7 @@ describe('evaluateKnowledgeCardTriggers — single match', () => {
       '24326-1',
     )
     expect(cards).toHaveLength(1)
-    expect(cards[0].id).toBe('KC-NA-HYPONATREMIA-001')
+    expect(cards[0]!.id).toBe('KC-NA-HYPONATREMIA-001')
   })
 
   it('returns KC-ALT-HEPATIC-001 when ALT > 400', () => {
@@ -74,7 +74,7 @@ describe('evaluateKnowledgeCardTriggers — single match', () => {
       '24325-3',
     )
     expect(cards).toHaveLength(1)
-    expect(cards[0].id).toBe('KC-ALT-HEPATIC-001')
+    expect(cards[0]!.id).toBe('KC-ALT-HEPATIC-001')
   })
 
   it('returns KC-CREAT-RENAL-001 when creatinine > 10', () => {
@@ -83,7 +83,7 @@ describe('evaluateKnowledgeCardTriggers — single match', () => {
       '24362-6',
     )
     expect(cards).toHaveLength(1)
-    expect(cards[0].id).toBe('KC-CREAT-RENAL-001')
+    expect(cards[0]!.id).toBe('KC-CREAT-RENAL-001')
   })
 
   it('returns KC-MALARIA-SEVERE-001 when parasitemia_pct >= 5', () => {
@@ -92,7 +92,7 @@ describe('evaluateKnowledgeCardTriggers — single match', () => {
       '32700-7',
     )
     expect(cards).toHaveLength(1)
-    expect(cards[0].id).toBe('KC-MALARIA-SEVERE-001')
+    expect(cards[0]!.id).toBe('KC-MALARIA-SEVERE-001')
   })
 })
 

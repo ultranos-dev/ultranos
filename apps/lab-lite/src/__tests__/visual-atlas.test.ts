@@ -168,13 +168,13 @@ describe('buildEntryIndex', () => {
   })
 
   it('builds an index keyed by entry ID', () => {
-    const cat = ATLAS_CATEGORY_TREE[0]
+    const cat = ATLAS_CATEGORY_TREE[0]!
     // Inject a fake entry into the first subcategory to test index building
-    const fakeEntry = ALL_SEED_ENTRIES[0]
+    const fakeEntry = ALL_SEED_ENTRIES[0]!
     const catCopy = {
       ...cat,
       subcategories: [
-        { ...cat.subcategories[0], entries: [fakeEntry] },
+        { ...cat.subcategories[0]!, entries: [fakeEntry] },
       ],
     }
     const idx = buildEntryIndex([catCopy])
@@ -230,7 +230,7 @@ describe('searchAtlas', () => {
   it('matches a single keyword (case-insensitive)', () => {
     const results = searchAtlas(entries, 'neutrophil')
     expect(results).toHaveLength(1)
-    expect(results[0].id).toBe('ATLAS-BC-NEUT-001')
+    expect(results[0]!.id).toBe('ATLAS-BC-NEUT-001')
   })
 
   it('matches keyword regardless of case', () => {
@@ -252,7 +252,7 @@ describe('searchAtlas', () => {
     // 'granulocyte' only matches neutrophil
     const results = searchAtlas(entries, 'white granulocyte')
     expect(results).toHaveLength(1)
-    expect(results[0].id).toBe('ATLAS-BC-NEUT-001')
+    expect(results[0]!.id).toBe('ATLAS-BC-NEUT-001')
   })
 
   it('returns no results when no entry matches all words', () => {
@@ -263,7 +263,7 @@ describe('searchAtlas', () => {
   it('sorts by tag match count — more tag matches first', () => {
     // 'blast leukaemia acute' — 3 tags match for blastCell, 0 for others
     const blastFirst = searchAtlas(entries, 'blast')
-    expect(blastFirst[0].id).toBe('ATLAS-BC-BLAST-001')
+    expect(blastFirst[0]!.id).toBe('ATLAS-BC-BLAST-001')
   })
 
   it('also matches on the entry name i18n key segment', () => {

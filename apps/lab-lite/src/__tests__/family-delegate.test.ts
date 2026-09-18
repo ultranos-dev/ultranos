@@ -117,6 +117,7 @@ function makeDelegate(overrides: Partial<Omit<FamilyDelegate, 'id'>> = {}): Omit
 async function seedConsent(patientRef = 'Patient/test-abc') {
   return addConsentRecord({
     patientRef,
+    encounterId: 'Encounter/test-abc',
     method: 'audio',
     language: 'en',
     consentTextVersion: '1.0.0',

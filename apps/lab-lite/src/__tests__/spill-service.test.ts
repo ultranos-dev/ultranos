@@ -129,7 +129,7 @@ describe('completeStep', () => {
       location: 'Bench 1',
       techId: 'tech-001',
     })
-    mockDb[incident.id].stepsCompleted = [1]
+    mockDb[incident.id]!.stepsCompleted = [1]
 
     await completeStep(incident.id, 1, 'tech-001')
 

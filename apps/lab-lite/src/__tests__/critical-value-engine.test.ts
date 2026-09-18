@@ -133,10 +133,10 @@ describe('checkResultForCriticalValues', () => {
 
     const criticals = await checkResultForCriticalValues(observations)
     expect(criticals).toHaveLength(2)
-    expect(criticals[0].analyte).toBe('Potassium')
-    expect(criticals[0].direction).toBe('high')
-    expect(criticals[1].analyte).toBe('Glucose')
-    expect(criticals[1].direction).toBe('low')
+    expect(criticals[0]!.analyte).toBe('Potassium')
+    expect(criticals[0]!.direction).toBe('high')
+    expect(criticals[1]!.analyte).toBe('Glucose')
+    expect(criticals[1]!.direction).toBe('low')
   })
 
   it('skips null and non-finite values', async () => {

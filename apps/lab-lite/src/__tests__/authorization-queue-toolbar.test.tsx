@@ -10,7 +10,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import messages from '../../messages/en.json'
-import type { LabResult } from '@/lib/db'
+import type { LabResultForAuthorization } from '@/types/authorization'
 import { AuthorizationQueue } from '@/components/authorization/AuthorizationQueue'
 
 vi.mock('next/navigation', () => ({
@@ -34,7 +34,7 @@ describe('AuthorizationQueue — toolbar visible when empty (OPD template)', () 
   it('renders the search field and empty state when there are no results', () => {
     render(
       <Wrapper>
-        <AuthorizationQueue results={[] as LabResult[]} />
+        <AuthorizationQueue results={[] as LabResultForAuthorization[]} />
       </Wrapper>,
     )
 

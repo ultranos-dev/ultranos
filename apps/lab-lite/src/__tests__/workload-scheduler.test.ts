@@ -113,10 +113,10 @@ describe('tagPendingTests', () => {
 
     const tagged = await tagPendingTests(orders)
     expect(tagged).toHaveLength(2)
-    expect(tagged[0].requiresPower).toBe(true)
-    expect(tagged[0].batchSize).toBe(20)
-    expect(tagged[1].requiresPower).toBe(false)
-    expect(tagged[1].displayName).toBe('Urinalysis')
+    expect(tagged[0]!.requiresPower).toBe(true)
+    expect(tagged[0]!.batchSize).toBe(20)
+    expect(tagged[1]!.requiresPower).toBe(false)
+    expect(tagged[1]!.displayName).toBe('Urinalysis')
   })
 
   it('falls back for unknown codes', async () => {
@@ -128,9 +128,9 @@ describe('tagPendingTests', () => {
     ]
 
     const tagged = await tagPendingTests(orders)
-    expect(tagged[0].requiresPower).toBe(true)
-    expect(tagged[0].estimatedMinutes).toBe(15)
-    expect(tagged[0].batchSize).toBe(1)
+    expect(tagged[0]!.requiresPower).toBe(true)
+    expect(tagged[0]!.estimatedMinutes).toBe(15)
+    expect(tagged[0]!.batchSize).toBe(1)
   })
 })
 
@@ -211,8 +211,8 @@ describe('generateSchedule', () => {
     ]
 
     const result = generateSchedule(tests, budget)
-    expect(result.scheduledGroups[0].loincCode).toBe('58410-2')
-    expect(result.scheduledGroups[0].hasUrgent).toBe(true)
+    expect(result.scheduledGroups[0]!.loincCode).toBe('58410-2')
+    expect(result.scheduledGroups[0]!.hasUrgent).toBe(true)
   })
 
   it('puts manual tests last with phase=manual', () => {
@@ -224,7 +224,7 @@ describe('generateSchedule', () => {
     const result = generateSchedule(tests, budget)
     const manualGroups = result.scheduledGroups.filter((g) => g.phase === 'manual')
     expect(manualGroups).toHaveLength(1)
-    expect(manualGroups[0].loincCode).toBe('24356-8')
+    expect(manualGroups[0]!.loincCode).toBe('24356-8')
   })
 
   it('marks overflow when budget is exceeded', () => {
@@ -243,9 +243,9 @@ describe('generateSchedule', () => {
     const result = generateSchedule(tests, tightBudget)
     const overflow = result.scheduledGroups.filter((g) => g.phase === 'overflow')
     expect(overflow).toHaveLength(1)
-    expect(overflow[0].loincCode).toBe('3016-3') // TSH doesn't fit
+    expect(overflow[0]!.loincCode).toBe('3016-3') // TSH doesn't fit
     expect(result.warnings.length).toBeGreaterThanOrEqual(1)
-    expect(result.warnings[0].severity).toBe('red')
+    expect(result.warnings[0]!.severity).toBe('red')
   })
 
   it('returns empty schedule with zero budget used when no tests are provided', () => {

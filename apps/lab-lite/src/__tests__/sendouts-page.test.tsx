@@ -144,7 +144,6 @@ function makeSendOut(overrides: Partial<SendOut> = {}): SendOut {
     processingStartedAt: null,
     resultsAvailableAt: null,
     cancelledAt: null,
-    shippingManifestId: 'manifest-001',
     referralFormId: 'referral-001',
     resultId: null,
     meta: { lastUpdated: now, versionId: '1' },

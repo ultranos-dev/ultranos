@@ -79,7 +79,9 @@ import { SimplifiedResultEntry } from '../components/outbreak/SimplifiedResultEn
 // ---------------------------------------------------------------------------
 
 describe('SimplifiedResultEntry — rendering', () => {
-  afterEach(() => vi.clearAllMocks())
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('renders with data-testid="simplified-result-entry"', () => {
     render(
@@ -149,7 +151,9 @@ describe('SimplifiedResultEntry — rendering', () => {
 })
 
 describe('SimplifiedResultEntry — result buttons (AC #5)', () => {
-  afterEach(() => vi.clearAllMocks())
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('renders POSITIVE button', () => {
     render(
@@ -228,7 +232,9 @@ describe('SimplifiedResultEntry — result buttons (AC #5)', () => {
 })
 
 describe('SimplifiedResultEntry — submit behavior', () => {
-  afterEach(() => vi.clearAllMocks())
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('Submit button is disabled when sampleId is empty', () => {
     render(
@@ -361,7 +367,9 @@ describe('SimplifiedResultEntry — submit behavior', () => {
 })
 
 describe('SimplifiedResultEntry — close', () => {
-  afterEach(() => vi.clearAllMocks())
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('calls onClose when close button is clicked', () => {
     const onClose = vi.fn()

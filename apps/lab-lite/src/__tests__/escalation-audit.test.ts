@@ -64,7 +64,7 @@ describe('reportEscalationEvent', () => {
 
   it('does NOT include critical value in audit metadata (PHI rule)', () => {
     reportEscalationEvent(basePayload)
-    const callArg = vi.mocked(emitClientAudit).mock.calls[0][0]
+    const callArg = vi.mocked(emitClientAudit).mock.calls[0]![0]!
     const metadataStr = JSON.stringify(callArg.metadata)
     // The critical value (a number) should not appear in metadata
     // Verify that only allowed fields are in metadata
@@ -72,8 +72,8 @@ describe('reportEscalationEvent', () => {
     expect(callArg.metadata).not.toHaveProperty('value')
     expect(callArg.metadata).not.toHaveProperty('analyte') // only IDs, not clinical data
     // Confirm opaque IDs ARE present
-    expect(callArg.metadata.chainId).toBe('chain-uuid-001')
-    expect(callArg.metadata.resultId).toBe('result-uuid-001')
+    expect(callArg.metadata!.chainId).toBe('chain-uuid-001')
+    expect(callArg.metadata!.resultId).toBe('result-uuid-001')
   })
 
   it('includes chainId and resultId in every event', () => {
@@ -90,9 +90,9 @@ describe('reportEscalationEvent', () => {
     for (const action of actions) {
       vi.clearAllMocks()
       reportEscalationEvent({ ...basePayload, action })
-      const callArg = vi.mocked(emitClientAudit).mock.calls[0][0]
-      expect(callArg.metadata.chainId).toBe('chain-uuid-001')
-      expect(callArg.metadata.resultId).toBe('result-uuid-001')
+      const callArg = vi.mocked(emitClientAudit).mock.calls[0]![0]!
+      expect(callArg.metadata!.chainId).toBe('chain-uuid-001')
+      expect(callArg.metadata!.resultId).toBe('result-uuid-001')
     }
   })
 })

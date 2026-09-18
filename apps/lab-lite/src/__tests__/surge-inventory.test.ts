@@ -79,8 +79,8 @@ describe('calculateSurgeProjections', () => {
     reagentsData = [makeReagent({ daysAgo: 10, testsPerformed: 100, expectedTests: 200 })]
     const result = await calculateSurgeProjections(['51587-4'], 3)
     expect(result).toHaveLength(1)
-    expect(result[0].baselineBurnRate).toBe(10)
-    expect(result[0].surgedBurnRate).toBe(30)
+    expect(result[0]!.baselineBurnRate).toBe(10)
+    expect(result[0]!.surgedBurnRate).toBe(30)
   })
 
   it('computes daysUntilDepletion = remainingTests / surgedBurnRate', async () => {
@@ -88,21 +88,21 @@ describe('calculateSurgeProjections', () => {
     // daysUntilDepletion = 100/30 ≈ 3.3 days
     reagentsData = [makeReagent({ daysAgo: 10, testsPerformed: 100, expectedTests: 200 })]
     const result = await calculateSurgeProjections(['51587-4'], 3)
-    expect(result[0].daysUntilDepletion).toBeCloseTo(3.3, 1)
+    expect(result[0]!.daysUntilDepletion).toBeCloseTo(3.3, 1)
   })
 
   it('marks isCritical = true when daysUntilDepletion <= 7', async () => {
     // 10/day base × 3 = 30/day; 100 remaining → 3.3 days → critical
     reagentsData = [makeReagent({ daysAgo: 10, testsPerformed: 100, expectedTests: 200 })]
     const result = await calculateSurgeProjections(['51587-4'], 3)
-    expect(result[0].isCritical).toBe(true)
+    expect(result[0]!.isCritical).toBe(true)
   })
 
   it('marks isCritical = false when daysUntilDepletion > 7', async () => {
     // 1/day base × 3 = 3/day; 100 remaining → 33.3 days → not critical
     reagentsData = [makeReagent({ daysAgo: 10, testsPerformed: 10, expectedTests: 110 })]
     const result = await calculateSurgeProjections(['51587-4'], 3)
-    expect(result[0].isCritical).toBe(false)
+    expect(result[0]!.isCritical).toBe(false)
   })
 
   it('marks isCritical = false at exactly 7.0 days is the boundary', async () => {
@@ -111,7 +111,7 @@ describe('calculateSurgeProjections', () => {
     reagentsData = [makeReagent({ daysAgo: 10, testsPerformed: 100, expectedTests: 310 })]
     const result = await calculateSurgeProjections(['51587-4'], 3)
     // daysUntilDepletion = 210/30 = 7.0 → isCritical = true (<=7)
-    expect(result[0].isCritical).toBe(true)
+    expect(result[0]!.isCritical).toBe(true)
   })
 
   it('sorts results by daysUntilDepletion ascending (most critical first)', async () => {
@@ -122,15 +122,15 @@ describe('calculateSurgeProjections', () => {
       makeReagent({ reagentId: 'B', daysAgo: 10, testsPerformed: 10, expectedTests: 1010 }),
     ]
     const result = await calculateSurgeProjections(['51587-4'], 3)
-    expect(result[0].reagentId).toBe('A')
-    expect(result[1].reagentId).toBe('B')
-    expect(result[0].daysUntilDepletion).toBeLessThan(result[1].daysUntilDepletion)
+    expect(result[0]!.reagentId).toBe('A')
+    expect(result[1]!.reagentId).toBe('B')
+    expect(result[0]!.daysUntilDepletion).toBeLessThan(result[1]!.daysUntilDepletion)
   })
 
   it('reports correct currentStock (remaining tests)', async () => {
     reagentsData = [makeReagent({ testsPerformed: 80, expectedTests: 200 })]
     const result = await calculateSurgeProjections(['51587-4'], 3)
-    expect(result[0].currentStock).toBe(120)
+    expect(result[0]!.currentStock).toBe(120)
   })
 
   it('returns Infinity daysUntilDepletion when surgedBurnRate = 0', async () => {
@@ -138,14 +138,14 @@ describe('calculateSurgeProjections', () => {
     reagentsData = [makeReagent({ daysAgo: 10, testsPerformed: 0, expectedTests: 100 })]
     const result = await calculateSurgeProjections(['51587-4'], 3)
     // daysUntilDepletion is rounded to 1 decimal of Infinity = Infinity
-    expect(result[0].daysUntilDepletion).toBe(Infinity)
-    expect(result[0].isCritical).toBe(false)
+    expect(result[0]!.daysUntilDepletion).toBe(Infinity)
+    expect(result[0]!.isCritical).toBe(false)
   })
 
   it('applies surgeMultiplier = 5 correctly', async () => {
     reagentsData = [makeReagent({ daysAgo: 10, testsPerformed: 100, expectedTests: 200 })]
     const result = await calculateSurgeProjections(['51587-4'], 5)
-    expect(result[0].surgedBurnRate).toBe(50)
+    expect(result[0]!.surgedBurnRate).toBe(50)
   })
 })
 

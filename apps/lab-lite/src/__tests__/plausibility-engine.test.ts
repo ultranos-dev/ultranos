@@ -105,8 +105,8 @@ describe('checkConsistency — internal consistency rules', () => {
       '718-7': 13.0, // Hemoglobin
     })
     expect(flags).toHaveLength(1)
-    expect(flags[0].ruleType).toBe('INTERNAL_CONSISTENCY')
-    expect(flags[0].severity).toBe('CRITICAL')
+    expect(flags[0]!.ruleType).toBe('INTERNAL_CONSISTENCY')
+    expect(flags[0]!.severity).toBe('CRITICAL')
   })
 
   it('does NOT fire rbc-hgb-consistency for consistent values', () => {
@@ -124,14 +124,14 @@ describe('checkConsistency — internal consistency rules', () => {
       '1751-7': 5.0, // Albumin (impossible: > TP)
     })
     expect(flags).toHaveLength(1)
-    expect(flags[0].severity).toBe('CRITICAL')
+    expect(flags[0]!.severity).toBe('CRITICAL')
   })
 
   it('fires hgb-hct-consistency WARNING when Hct/Hgb ratio is abnormal', () => {
     // Hgb=10, Hct=50 → ratio 5.0 (outside 2.0–4.0 rule-of-three range)
     const flags = checkConsistency({ '718-7': 10.0, '4544-3': 50.0 })
     expect(flags).toHaveLength(1)
-    expect(flags[0].severity).toBe('WARNING')
+    expect(flags[0]!.severity).toBe('WARNING')
   })
 
   it('can fire multiple rules simultaneously', () => {

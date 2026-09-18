@@ -120,7 +120,7 @@ describe('Outbreak lifecycle integration', () => {
     })
     vi.mocked(dbModule.getActiveOutbreak).mockImplementation(() => {
       const active = Object.values(dbStore).find((c) => c.status === 'active')
-      return Promise.resolve(active ?? null)
+      return Promise.resolve(active ?? undefined)
     })
     vi.mocked(dbModule.addDailySitrep).mockResolvedValue(undefined)
   })

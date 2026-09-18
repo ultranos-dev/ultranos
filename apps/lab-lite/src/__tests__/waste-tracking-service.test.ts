@@ -82,7 +82,7 @@ describe('Waste Tracking DB Helpers', () => {
 
     const result = await getActiveContainers()
     expect(result).toHaveLength(1)
-    expect(result[0].id).toBe(active.id)
+    expect(result[0]!.id).toBe(active.id)
   })
 
   it('getContainerHistory returns disposed containers for location+type', async () => {
@@ -109,7 +109,7 @@ describe('Waste Tracking DB Helpers', () => {
 
     const history = await getContainerHistory('Station 1', ContainerType.SHARPS)
     expect(history).toHaveLength(1)
-    expect(history[0].id).toBe(disposed1.id)
+    expect(history[0]!.id).toBe(disposed1.id)
   })
 
   it('getAllContainers returns all containers', async () => {
@@ -136,7 +136,7 @@ describe('Waste Tracking DB Helpers', () => {
     await addDisposalRecord(record)
     const records = await getDisposalRecords()
     expect(records).toHaveLength(1)
-    expect(records[0].containerId).toBe('container-1')
+    expect(records[0]!.containerId).toBe('container-1')
   })
 })
 
@@ -231,8 +231,8 @@ describe('Waste Tracking Service', () => {
     const updated = await getWasteContainerById(container.id)
     expect(updated!.fillLevel).toBe(FillLevel.HALF)
     expect(updated!.fillHistory).toHaveLength(1)
-    expect(updated!.fillHistory[0].level).toBe(FillLevel.HALF)
-    expect(updated!.fillHistory[0].recordedBy).toBe('tech-1')
+    expect(updated!.fillHistory[0]!.level).toBe(FillLevel.HALF)
+    expect(updated!.fillHistory[0]!.recordedBy).toBe('tech-1')
   })
 
   it('updateFillLevel to FULL sets status to FULL and fillDate', async () => {
@@ -272,8 +272,8 @@ describe('Waste Tracking Service', () => {
 
     const records = await getDisposalRecords()
     expect(records).toHaveLength(1)
-    expect(records[0].containerId).toBe(container.id)
-    expect(records[0].disposalMethod).toBe(DisposalMethod.INCINERATION)
+    expect(records[0]!.containerId).toBe(container.id)
+    expect(records[0]!.disposalMethod).toBe(DisposalMethod.INCINERATION)
   })
 
   it('updateFillLevel throws for non-existent container', async () => {

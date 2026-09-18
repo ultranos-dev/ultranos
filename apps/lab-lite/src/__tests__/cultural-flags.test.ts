@@ -116,8 +116,8 @@ describe('Cultural Flags — Dexie CRUD', () => {
     expect(result).toBeDefined()
     expect(result!.patientRef).toBe('patient-001')
     expect(result!.flags).toHaveLength(2)
-    expect(result!.flags[0].type).toBe(CulturalFlagType.FEMALE_PHLEBOTOMIST)
-    expect(result!.flags[1].type).toBe(CulturalFlagType.PRIVACY_SCREEN)
+    expect(result!.flags[0]!.type).toBe(CulturalFlagType.FEMALE_PHLEBOTOMIST)
+    expect(result!.flags[1]!.type).toBe(CulturalFlagType.PRIVACY_SCREEN)
   })
 
   it('returns undefined for non-existent patient', async () => {
@@ -175,7 +175,7 @@ describe('Cultural Flags — Dexie CRUD', () => {
     const result = await getPatientCulturalPreferences('patient-new')
     expect(result).toBeDefined()
     expect(result!.flags).toHaveLength(1)
-    expect(result!.flags[0].type).toBe(CulturalFlagType.PRAYER_TIME_ACCOMMODATION)
+    expect(result!.flags[0]!.type).toBe(CulturalFlagType.PRAYER_TIME_ACCOMMODATION)
   })
 
   it('removes a flag from preferences', async () => {
@@ -194,7 +194,7 @@ describe('Cultural Flags — Dexie CRUD', () => {
 
     const result = await getPatientCulturalPreferences('patient-004')
     expect(result!.flags).toHaveLength(1)
-    expect(result!.flags[0].type).toBe(CulturalFlagType.FASTING_CARE)
+    expect(result!.flags[0]!.type).toBe(CulturalFlagType.FASTING_CARE)
   })
 
   it('removeCulturalFlag is a no-op when patient has no preferences', async () => {
@@ -223,8 +223,8 @@ describe('Cultural Flags — Dexie CRUD', () => {
     )
 
     const result = await getPatientCulturalPreferences('patient-005')
-    expect(result!.flags[0].isActive).toBe(false)
-    expect(result!.flags[0].setByTechId).toBe('tech-002')
+    expect(result!.flags[0]!.isActive).toBe(false)
+    expect(result!.flags[0]!.setByTechId).toBe('tech-002')
   })
 
   it('handles CUSTOM flag with description', async () => {
@@ -235,8 +235,8 @@ describe('Cultural Flags — Dexie CRUD', () => {
     await setPatientCulturalPreferences(prefs)
 
     const result = await getPatientCulturalPreferences('patient-006')
-    expect(result!.flags[0].type).toBe(CulturalFlagType.CUSTOM)
-    expect(result!.flags[0].customDescription).toBe('Prefers left arm draw')
+    expect(result!.flags[0]!.type).toBe(CulturalFlagType.CUSTOM)
+    expect(result!.flags[0]!.customDescription).toBe('Prefers left arm draw')
   })
 
   it('persists across visits (multiple writes with same patientRef)', async () => {
@@ -250,7 +250,7 @@ describe('Cultural Flags — Dexie CRUD', () => {
     const visit2 = await getPatientCulturalPreferences('patient-persist')
     expect(visit2).toBeDefined()
     expect(visit2!.flags).toHaveLength(1)
-    expect(visit2!.flags[0].type).toBe(CulturalFlagType.FEMALE_PHLEBOTOMIST)
+    expect(visit2!.flags[0]!.type).toBe(CulturalFlagType.FEMALE_PHLEBOTOMIST)
 
     // Add another flag in visit 2
     await addCulturalFlag(

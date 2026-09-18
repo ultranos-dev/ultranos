@@ -244,8 +244,8 @@ describe('detectAnomalies — severity sorting', () => {
     // Verify strict severity ordering: urgent before elevated, elevated before notable
     const severityOrder: Record<string, number> = { urgent: 3, elevated: 2, notable: 1 }
     for (let i = 1; i < flags.length; i++) {
-      expect(severityOrder[flags[i - 1]!.severity]).toBeGreaterThanOrEqual(
-        severityOrder[flags[i]!.severity],
+      expect(severityOrder[flags[i - 1]!.severity]!).toBeGreaterThanOrEqual(
+        severityOrder[flags[i]!.severity]!,
       )
     }
   })

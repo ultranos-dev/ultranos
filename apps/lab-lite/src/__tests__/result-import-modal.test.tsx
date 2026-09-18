@@ -19,7 +19,7 @@ const mockSession = { userId: 'user-001', labRole: 'LAB_TECH' }
 
 // Component adopted next-intl useTranslations — resolve keys via real en.json
 vi.mock('next-intl', async () => {
-  const en = (await import('../../messages/en.json')).default as Record<string, Record<string, string>>
+  const en = (await import('../../messages/en.json')).default as unknown as Record<string, Record<string, string>>
   return {
     useTranslations:
       (ns: string) =>
@@ -77,7 +77,6 @@ function makeSendOut(overrides: Partial<SendOut> = {}): SendOut {
     processingStartedAt: null,
     resultsAvailableAt: null,
     cancelledAt: null,
-    shippingManifestId: 'manifest-001',
     referralFormId: 'referral-001',
     resultId: null,
     meta: { lastUpdated: now, versionId: '1' },
@@ -135,7 +134,7 @@ describe('ResultImportModal — manual entry mode', () => {
     await waitFor(() => screen.getByLabelText(/Value/i))
 
     const submitBtn = screen.getAllByRole('button', { name: /Import Result/ }).find(
-      (b) => b.tagName === 'BUTTON' && b.type === 'submit',
+      (b) => b.tagName === 'BUTTON' && (b as HTMLButtonElement).type === 'submit',
     ) ?? screen.getAllByRole('button', { name: /Import Result/ })[0]
     expect(submitBtn).toBeDisabled()
   })

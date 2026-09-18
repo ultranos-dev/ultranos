@@ -201,7 +201,7 @@ describe('PHI guard — audit metadata', () => {
 
     expect(emitClientAudit).toHaveBeenCalled()
 
-    const callArg = (emitClientAudit as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<string, unknown>
+    const callArg = (emitClientAudit as ReturnType<typeof vi.fn>).mock.calls[0]![0] as Record<string, unknown>
     const metaStr = JSON.stringify(callArg.metadata)
 
     // No PHI in metadata

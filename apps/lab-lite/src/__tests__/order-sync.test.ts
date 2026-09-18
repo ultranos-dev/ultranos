@@ -113,8 +113,8 @@ describe('Order Sync (pullOrders / acknowledgeOrder)', () => {
     await putOrders([entry])
     const stored = await getOrders()
     expect(stored).toHaveLength(1)
-    expect(stored[0].patientFirstName).toBe('Ahmad')
-    expect(stored[0].status).toBe('RECEIVED')
+    expect(stored[0]!.patientFirstName).toBe('Ahmad')
+    expect(stored[0]!.status).toBe('RECEIVED')
   })
 
   it('updateOrderStatus marks a cached order CANCELLED (tombstone reconciliation)', async () => {
@@ -139,7 +139,7 @@ describe('Order Sync (pullOrders / acknowledgeOrder)', () => {
     // Orders should still be readable from Dexie
     const cached = await getOrders()
     expect(cached).toHaveLength(1)
-    expect(cached[0].patientFirstName).toBe('Ahmad')
+    expect(cached[0]!.patientFirstName).toBe('Ahmad')
   })
 })
 

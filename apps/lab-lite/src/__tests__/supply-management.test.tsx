@@ -92,13 +92,15 @@ function makeSupplyItem(overrides: Partial<SupplyItem> = {}): SupplyItem {
   }
 }
 
+type StoreState = Parameters<Parameters<typeof useAuthSessionStore>[0]>[0]
+
 function setRole(role: string | null) {
   mockUseAuthSessionStore.mockImplementation(
-    (selector: (s: { session: { labRole: string; practitionerId: string } | null }) => unknown) =>
+    (selector: (s: StoreState) => unknown) =>
       selector(
-        role
+        (role
           ? { session: { labRole: role, practitionerId: 'tech-abc12345' } }
-          : { session: null },
+          : { session: null }) as unknown as StoreState,
       ),
   )
 }
@@ -220,8 +222,8 @@ describe('SupplyManagement add supply', () => {
     fireEvent.change(nameInput, { target: { value: 'New Reagent' } })
 
     const inputs = screen.getAllByRole('spinbutton')
-    fireEvent.change(inputs[0], { target: { value: '50' } }) // currentStock
-    fireEvent.change(inputs[1], { target: { value: '10' } }) // reorderThreshold
+    fireEvent.change(inputs[0]!, { target: { value: '50' } }) // currentStock
+    fireEvent.change(inputs[1]!, { target: { value: '10' } }) // reorderThreshold
 
     const unitInput = screen.getAllByRole('textbox').find(
       (el) => el.getAttribute('aria-required') === 'true' && el.getAttribute('value') === '',
@@ -271,7 +273,7 @@ describe('SupplyManagement add supply', () => {
     const nameInput = screen.getByRole('textbox', { name: /rag\.supply\.fieldName/i })
     fireEvent.change(nameInput, { target: { value: 'Bad Reagent' } })
 
-    const stockInput = screen.getAllByRole('spinbutton')[0]
+    const stockInput = screen.getAllByRole('spinbutton')[0]!
     fireEvent.change(stockInput, { target: { value: '-5' } })
 
     await act(async () => {
@@ -296,8 +298,8 @@ describe('SupplyManagement add supply', () => {
     const nameInput = screen.getByRole('textbox', { name: /rag\.supply\.fieldName/i })
     fireEvent.change(nameInput, { target: { value: 'Good Reagent' } })
     const spinbuttons = screen.getAllByRole('spinbutton')
-    fireEvent.change(spinbuttons[0], { target: { value: '50' } })
-    fireEvent.change(spinbuttons[1], { target: { value: '10' } })
+    fireEvent.change(spinbuttons[0]!, { target: { value: '50' } })
+    fireEvent.change(spinbuttons[1]!, { target: { value: '10' } })
     const requiredTextboxes = screen.getAllByRole('textbox').filter(
       (el) => el.getAttribute('aria-required') === 'true',
     )

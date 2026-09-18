@@ -107,7 +107,7 @@ describe('Temperature Monitoring DB Helpers', () => {
       await putTemperatureLocation(loc)
       const all = await getTemperatureLocations()
       expect(all).toHaveLength(1)
-      expect(all[0].name).toBe('Reagent Fridge 1')
+      expect(all[0]!.name).toBe('Reagent Fridge 1')
     })
 
     it('upserts an existing location', async () => {
@@ -116,7 +116,7 @@ describe('Temperature Monitoring DB Helpers', () => {
       await putTemperatureLocation({ ...loc, name: 'Updated Name' })
       const all = await getTemperatureLocations()
       expect(all).toHaveLength(1)
-      expect(all[0].name).toBe('Updated Name')
+      expect(all[0]!.name).toBe('Updated Name')
     })
 
     it('deletes a location', async () => {
@@ -159,7 +159,7 @@ describe('Temperature Monitoring DB Helpers', () => {
         new Date('2025-01-02').toISOString(),
       )
       expect(rangeReadings).toHaveLength(1)
-      expect(rangeReadings[0].id).toBe(old.id)
+      expect(rangeReadings[0]!.id).toBe(old.id)
     })
   })
 
@@ -169,7 +169,7 @@ describe('Temperature Monitoring DB Helpers', () => {
       await addExcursion(exc)
       const active = await getActiveExcursions()
       expect(active).toHaveLength(1)
-      expect(active[0].severity).toBe(ExcursionSeverity.CRITICAL)
+      expect(active[0]!.severity).toBe(ExcursionSeverity.CRITICAL)
     })
 
     it('finds ongoing excursion for a location', async () => {

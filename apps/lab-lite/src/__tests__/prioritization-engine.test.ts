@@ -119,7 +119,7 @@ describe('prioritizeSamples', () => {
     })
     const stat = makeInput({ sampleId: 'stat-fresh', urgency: 'stat' })
     const result = prioritizeSamples([stat, expiredRoutine])
-    expect(result[0].sampleId).toBe('expired')
+    expect(result[0]!.sampleId).toBe('expired')
   })
 
   it('time-in-queue breaks ties within same urgency', () => {
@@ -134,7 +134,7 @@ describe('prioritizeSamples', () => {
       receivedAt: new Date(now - 10 * 60_000).toISOString(),
     })
     const result = prioritizeSamples([newerSample, olderSample])
-    expect(result[0].sampleId).toBe('old')
+    expect(result[0]!.sampleId).toBe('old')
   })
 
   it('batching groups same-type samples adjacent within urgency tier', () => {
@@ -218,7 +218,7 @@ describe('prioritizeSamples', () => {
     })
     const result = prioritizeSamples([r2, r1])
     // Both expired, but stat still before routine
-    expect(result[0].sampleId).toBe('e-stat')
+    expect(result[0]!.sampleId).toBe('e-stat')
   })
 })
 
@@ -246,14 +246,14 @@ describe('applyManualOverrides', () => {
     ]
     const prioritized = prioritizeSamples(inputs)
     // Without override: [c, b, a]
-    expect(prioritized[0].sampleId).toBe('c')
+    expect(prioritized[0]!.sampleId).toBe('c')
 
     const overrides: PriorityOverride[] = [
       { sampleId: 'a', manualPosition: 0, overriddenAt: new Date().toISOString() },
     ]
     const result = applyManualOverrides(prioritized, overrides)
-    expect(result[0].sampleId).toBe('a')
-    expect(result[0].isManualOverride).toBe(true)
+    expect(result[0]!.sampleId).toBe('a')
+    expect(result[0]!.isManualOverride).toBe(true)
   })
 
   it('marks overridden samples with isManualOverride = true', () => {
@@ -278,6 +278,6 @@ describe('applyManualOverrides', () => {
     const result = applyManualOverrides(prioritized, overrides)
     expect(result).toHaveLength(2)
     // 'a' should be at end (clamped to position 1)
-    expect(result[result.length - 1].sampleId).toBe('a')
+    expect(result[result.length - 1]!.sampleId).toBe('a')
   })
 })

@@ -113,8 +113,8 @@ describe('Upload Queue Worker — drainQueue', () => {
 
     const items = await getQueueItems()
     expect(items).toHaveLength(1)
-    expect(items[0].status).toBe('failed')
-    expect(items[0].retryCount).toBe(3)
+    expect(items[0]!.status).toBe('failed')
+    expect(items[0]!.retryCount).toBe(3)
   })
 
   it('marks item as failed after 3 retries', async () => {
@@ -127,8 +127,8 @@ describe('Upload Queue Worker — drainQueue', () => {
 
     const items = await getQueueItems()
     expect(items).toHaveLength(1)
-    expect(items[0].status).toBe('failed')
-    expect(items[0].retryCount).toBe(3)
+    expect(items[0]!.status).toBe('failed')
+    expect(items[0]!.retryCount).toBe(3)
   })
 
   it('surfaces the failure reason via onSyncError (e.g. KYC_REQUIRED)', async () => {

@@ -44,9 +44,9 @@ describe('Orders Dexie Table (v4)', () => {
     await putOrders([makeOrder()])
     const orders = await getOrders()
     expect(orders).toHaveLength(1)
-    expect(orders[0].patientFirstName).toBe('Ahmad')
-    expect(orders[0].patientAge).toBe(45)
-    expect(orders[0].urgency).toBe('stat')
+    expect(orders[0]!.patientFirstName).toBe('Ahmad')
+    expect(orders[0]!.patientAge).toBe(45)
+    expect(orders[0]!.urgency).toBe('stat')
   })
 
   it('putOrders upserts by orderId (no duplicates)', async () => {
@@ -56,7 +56,7 @@ describe('Orders Dexie Table (v4)', () => {
 
     const orders = await getOrders()
     expect(orders).toHaveLength(1)
-    expect(orders[0].status).toBe('IN_PROGRESS')
+    expect(orders[0]!.status).toBe('IN_PROGRESS')
   })
 
   it('getOrderById returns correct order', async () => {
@@ -66,7 +66,7 @@ describe('Orders Dexie Table (v4)', () => {
     const found = await getOrderById(order.orderId)
     expect(found).toBeDefined()
     expect(found!.orderId).toBe(order.orderId)
-    expect(found!.testsRequested[0].loincCode).toBe('58410-2')
+    expect(found!.testsRequested[0]!.loincCode).toBe('58410-2')
   })
 
   it('getOrderById returns undefined for non-existent order', async () => {
@@ -83,7 +83,7 @@ describe('Orders Dexie Table (v4)', () => {
 
     const received = await getOrders('RECEIVED')
     expect(received).toHaveLength(1)
-    expect(received[0].status).toBe('RECEIVED')
+    expect(received[0]!.status).toBe('RECEIVED')
 
     const all = await getOrders()
     expect(all).toHaveLength(3)

@@ -63,7 +63,7 @@ describe('Auth audit events via canonical logger', () => {
     // emitClientAudit is async internally, give it a tick
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    const event = captured[0]
+    const event = captured[0]!
     expect(event.action).toBe(AuditAction.LOGIN)
     expect(event.resourceType).toBe(AuditResourceType.USER_ACCOUNT)
     expect(event.actorId).toBe('user-123')
@@ -81,7 +81,7 @@ describe('Auth audit events via canonical logger', () => {
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    const event = captured[0]
+    const event = captured[0]!
     expect(event.action).toBe(AuditAction.LOGIN)
     expect(event.metadata).toMatchObject({
       authEvent: 'LOGIN_FAILURE',
@@ -98,7 +98,7 @@ describe('Auth audit events via canonical logger', () => {
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    const event = captured[0]
+    const event = captured[0]!
     expect(event.action).toBe(AuditAction.MFA_FAIL)
     expect(event.metadata).toMatchObject({
       authEvent: 'MFA_VERIFY_SUCCESS',
@@ -112,7 +112,7 @@ describe('Auth audit events via canonical logger', () => {
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    const event = captured[0]
+    const event = captured[0]!
     expect(event.action).toBe(AuditAction.MFA_FAIL)
     expect(event.metadata).toMatchObject({
       authEvent: 'MFA_VERIFY_FAILURE',
@@ -133,7 +133,7 @@ describe('Auth audit events via canonical logger', () => {
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    expect(captured[0].hlcTimestamp).toBe('000001234567890:00000:test-node')
+    expect(captured[0]!.hlcTimestamp).toBe('000001234567890:00000:test-node')
   })
 })
 
@@ -149,7 +149,7 @@ describe('Queue audit events via canonical logger', () => {
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    const event = captured[0]
+    const event = captured[0]!
     expect(event.action).toBe(AuditAction.CREATE)
     expect(event.resourceType).toBe(AuditResourceType.LAB_RESULT)
     expect(event.resourceId).toBe('1')
@@ -168,7 +168,7 @@ describe('Queue audit events via canonical logger', () => {
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    expect(captured[0].action).toBe(AuditAction.UPDATE)
+    expect(captured[0]!.action).toBe(AuditAction.UPDATE)
   })
 
   it('emits QUEUE_ITEM_EXPIRED as UPDATE', async () => {
@@ -182,7 +182,7 @@ describe('Queue audit events via canonical logger', () => {
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    expect(captured[0].action).toBe(AuditAction.UPDATE)
+    expect(captured[0]!.action).toBe(AuditAction.UPDATE)
   })
 
   it('emits QUEUE_ITEM_DISCARDED as UPDATE', async () => {
@@ -196,7 +196,7 @@ describe('Queue audit events via canonical logger', () => {
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    expect(captured[0].action).toBe(AuditAction.UPDATE)
+    expect(captured[0]!.action).toBe(AuditAction.UPDATE)
   })
 
   it('preserves all metadata fields after migration', async () => {
@@ -211,7 +211,7 @@ describe('Queue audit events via canonical logger', () => {
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    const md = captured[0].metadata as Record<string, unknown>
+    const md = captured[0]!.metadata as Record<string, unknown>
     expect(md.outcome).toBe('SUCCESS')
     expect(md.queueEntryId).toBe(42)
     expect(md.testCategory).toBe('Thyroid Function — TSH')
@@ -243,7 +243,7 @@ describe('Queue audit events via canonical logger', () => {
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    expect(captured[0].actorId).toBe('tech-001')
+    expect(captured[0]!.actorId).toBe('tech-001')
   })
 })
 
@@ -253,7 +253,7 @@ describe('IndexedDB persistence for failed events', () => {
 
     await vi.waitFor(() => expect(mockAdapter.append).toHaveBeenCalledTimes(1))
 
-    const storedEvent = (mockAdapter.append as ReturnType<typeof vi.fn>).mock.calls[0][0] as ClientAuditEvent
+    const storedEvent = (mockAdapter.append as ReturnType<typeof vi.fn>).mock.calls[0]![0] as ClientAuditEvent
     expect(storedEvent.status).toBe('pending')
     expect(storedEvent.id).toBeTruthy()
   })
@@ -272,6 +272,6 @@ describe('IndexedDB persistence for failed events', () => {
 
     // Event was persisted locally — not dropped
     expect(captured).toHaveLength(1)
-    expect(captured[0].status).toBe('pending')
+    expect(captured[0]!.status).toBe('pending')
   })
 })

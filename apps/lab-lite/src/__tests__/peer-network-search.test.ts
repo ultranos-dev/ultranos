@@ -66,8 +66,8 @@ describe('Peer Network — Search', () => {
     const results = await searchPeerPosts('reagent')
     expect(results).toHaveLength(2)
     // Title match (3 points) should rank higher than body match (1 point)
-    expect(results[0].post.id).toBe('p1')
-    expect(results[0].score).toBeGreaterThan(results[1].score)
+    expect(results[0]!.post.id).toBe('p1')
+    expect(results[0]!.score).toBeGreaterThan(results[1]!.score)
   })
 
   it('tag match scores higher than body match', async () => {
@@ -79,7 +79,7 @@ describe('Peer Network — Search', () => {
     const results = await searchPeerPosts('analyzer')
     expect(results).toHaveLength(2)
     // Tag match (2 points) > body match (1 point)
-    expect(results[0].post.id).toBe('p1')
+    expect(results[0]!.post.id).toBe('p1')
   })
 
   it('resolved posts get a boost', async () => {
@@ -93,7 +93,7 @@ describe('Peer Network — Search', () => {
     // Resolved post gets +1 bonus, and title match is 3 for both
     // resolved post: 3 (title) + 1 (resolved) = 4
     // active post: 3 (title) = 3
-    expect(results[0].post.id).toBe('p2')
+    expect(results[0]!.post.id).toBe('p2')
   })
 
   it('marks posts with mentor responses as verified answers', async () => {
@@ -112,7 +112,7 @@ describe('Peer Network — Search', () => {
 
     const results = await searchPeerPosts('staining')
     expect(results).toHaveLength(1)
-    expect(results[0].hasVerifiedAnswer).toBe(true)
+    expect(results[0]!.hasVerifiedAnswer).toBe(true)
   })
 
   it('does not mark posts without mentor responses as verified', async () => {
@@ -131,7 +131,7 @@ describe('Peer Network — Search', () => {
 
     const results = await searchPeerPosts('staining')
     expect(results).toHaveLength(1)
-    expect(results[0].hasVerifiedAnswer).toBe(false)
+    expect(results[0]!.hasVerifiedAnswer).toBe(false)
   })
 
   it('excludes removed posts from results', async () => {
@@ -143,7 +143,7 @@ describe('Peer Network — Search', () => {
 
     const results = await searchPeerPosts('reagents')
     expect(results).toHaveLength(1)
-    expect(results[0].post.status).toBe('active')
+    expect(results[0]!.post.status).toBe('active')
   })
 
   it('multi-word search matches all terms', async () => {
@@ -159,6 +159,6 @@ describe('Peer Network — Search', () => {
     // p2 matches one in title, one in body: 3+1 = 4
     // p3 matches one in title: 3
     expect(results.length).toBeGreaterThanOrEqual(2)
-    expect(results[0].post.id).toBe('p1')
+    expect(results[0]!.post.id).toBe('p1')
   })
 })

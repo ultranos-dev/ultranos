@@ -36,6 +36,12 @@ function makeRun(overrides: Partial<QcRun> = {}): QcRun {
     timestamp: new Date().toISOString(),
     calendarDate: TODAY,
     techId: 'tech-abc',
+    targetMean: 12.5,
+    targetSd: 0.75,
+    observedValue: 12.5,
+    runDate: TODAY,
+    runBy: 'tech-abc',
+    hlcTimestamp: new Date().toISOString(),
     ...overrides,
   }
 }

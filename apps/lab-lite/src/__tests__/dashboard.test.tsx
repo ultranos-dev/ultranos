@@ -40,7 +40,7 @@ vi.mock('next-intl', () => ({
     // Root-level: key is "namespace.key"
     const [ns, ...rest] = key.split('.')
     const k = rest.join('.')
-    return i18nMessages[ns]?.[k] ?? key
+    return i18nMessages[ns!]?.[k] ?? key
   },
   useLocale: () => 'en',
 }))
@@ -110,7 +110,8 @@ function setAuthSession() {
     sessionId: 'sess-1',
     email: 'tech@lab.com',
     labName: 'Central Diagnostics Lab',
-    technicianName: 'Dr. Ahmad',
+    name: 'Dr. Ahmad',
+    labRole: null,
   })
 }
 

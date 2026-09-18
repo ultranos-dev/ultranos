@@ -131,10 +131,10 @@ describe('Health Record Service (Story 47.3, Task 4)', () => {
 
     const stored = await testDb.employee_health_records.toArray()
     expect(stored).toHaveLength(1)
-    expect(stored[0].practitionerId).toBe('prac-1')
+    expect(stored[0]!.practitionerId).toBe('prac-1')
     // encryptedPayload should exist (stored as ArrayBuffer or Uint8Array by IndexedDB)
-    expect(stored[0].encryptedPayload).toBeDefined()
-    expect(stored[0].encryptedPayload.byteLength).toBeGreaterThan(0)
+    expect(stored[0]!.encryptedPayload).toBeDefined()
+    expect(stored[0]!.encryptedPayload.byteLength).toBeGreaterThan(0)
   })
 
   it('reads and decrypts a health record', async () => {
@@ -238,8 +238,8 @@ describe('Health Record Service (Story 47.3, Task 4)', () => {
 
     const record = await getHealthRecord('prac-1')
     expect(record!.exposureHistory).toHaveLength(2)
-    expect(record!.exposureHistory[0].id).toBe('exp-1')
-    expect(record!.exposureHistory[1].id).toBe('exp-2')
+    expect(record!.exposureHistory[0]!.id).toBe('exp-1')
+    expect(record!.exposureHistory[1]!.id).toBe('exp-2')
 
     // Verify audit
     expect(mockAudit).toHaveBeenCalledWith(

@@ -394,9 +394,9 @@ describe('getComplianceTrends', () => {
 
     const trends = await getComplianceTrends(6)
     expect(trends.length).toBe(1)
-    expect(trends[0].month).toBe('2025-01')
+    expect(trends[0]!.month).toBe('2025-01')
     // The later audit has score 100
-    expect(trends[0].score).toBe(100)
+    expect(trends[0]!.score).toBe(100)
   })
 
   it('limits to requested number of months', async () => {

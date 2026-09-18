@@ -3,7 +3,7 @@ import { mapResultToFhirBundle } from '../lib/result-to-fhir'
 import type { LabResult, LabObservation } from '../lib/db'
 import { TEMPLATE_REGISTRY } from '../lib/result-templates'
 
-const CBC = TEMPLATE_REGISTRY['58410-2']
+const CBC = TEMPLATE_REGISTRY['58410-2']!
 
 const MOCK_RESULT: LabResult = {
   id: 'result-uuid-001',

@@ -18,6 +18,7 @@ import type {
   MicroLearningModule,
   ModuleCompletion,
 } from '../lib/micro-learning-types'
+import { SOPCategory } from '../lib/sop-types'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -315,7 +316,7 @@ describe('Trigger Engine — evaluateTriggers (Task 2)', () => {
       version: '2.0.0',
       effectiveDate: '2026-05-01',
       author: 'Lab Manager',
-      category: 'HEMATOLOGY',
+      category: SOPCategory.HEMATOLOGY,
       content: '## Updated CBC SOP',
       images: [],
       status: 'active',

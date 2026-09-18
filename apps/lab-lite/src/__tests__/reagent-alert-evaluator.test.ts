@@ -235,6 +235,6 @@ describe('getCachedAlerts', () => {
     )
     const result = await getCachedAlerts()
     expect(result).toHaveLength(1)
-    expect(result[0].reagentId).toBe('r1')
+    expect(result[0]!.reagentId).toBe('r1')
   })
 })

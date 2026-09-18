@@ -88,7 +88,7 @@ describe('Sample lifecycle audit — SAMPLE_RECEIVED', () => {
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    const evt = captured[0]
+    const evt = captured[0]!
     expect(evt.action).toBe(AuditAction.SAMPLE_RECEIVED)
     expect(evt.resourceType).toBe(AuditResourceType.LAB_SAMPLE)
     expect(evt.resourceId).toBe('spec-uuid-001')
@@ -110,7 +110,7 @@ describe('Sample lifecycle audit — SAMPLE_RECEIVED', () => {
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    const evt = captured[0]
+    const evt = captured[0]!
     // Verify no PHI-like keys in metadata
     const meta = evt.metadata as Record<string, unknown>
     expect(meta).not.toHaveProperty('patientName')
@@ -143,7 +143,7 @@ describe('Sample lifecycle audit — SAMPLE_PROCESSED', () => {
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
-    const evt = captured[0]
+    const evt = captured[0]!
     expect(evt.action).toBe(AuditAction.SAMPLE_PROCESSED)
     expect(evt.resourceType).toBe(AuditResourceType.LAB_SAMPLE)
     expect(evt.resourceId).toBe('spec-uuid-010')
@@ -160,8 +160,8 @@ describe('Sample lifecycle audit — SAMPLE_PROCESSED', () => {
     await vi.waitFor(() => expect(captured).toHaveLength(1))
 
     // Both SAMPLE_RECEIVED and SAMPLE_PROCESSED map to LAB_SAMPLE per audit-client
-    expect(captured[0].resourceType).toBe(AuditResourceType.LAB_SAMPLE)
-    expect(captured[0].resourceType).not.toBe(AuditResourceType.LAB_RESULT)
+    expect(captured[0]!.resourceType).toBe(AuditResourceType.LAB_SAMPLE)
+    expect(captured[0]!.resourceType).not.toBe(AuditResourceType.LAB_RESULT)
   })
 
   it('never throws on SAMPLE_PROCESSED even when adapter is broken', async () => {
@@ -192,7 +192,7 @@ describe('Sample lifecycle audit — function signature matches component usage'
     ).not.toThrow()
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
-    expect(captured[0].action).toBe(AuditAction.SAMPLE_RECEIVED)
+    expect(captured[0]!.action).toBe(AuditAction.SAMPLE_RECEIVED)
   })
 
   it('accepts the SampleDetailView call shape (specimen.id only)', async () => {
@@ -205,6 +205,6 @@ describe('Sample lifecycle audit — function signature matches component usage'
     ).not.toThrow()
 
     await vi.waitFor(() => expect(captured).toHaveLength(1))
-    expect(captured[0].action).toBe(AuditAction.SAMPLE_PROCESSED)
+    expect(captured[0]!.action).toBe(AuditAction.SAMPLE_PROCESSED)
   })
 })

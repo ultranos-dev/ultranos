@@ -137,7 +137,7 @@ describe('activateOutbreakMode', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     _invalidateOutbreakCache()
-    vi.mocked(db.getActiveOutbreak).mockResolvedValue(null)
+    vi.mocked(db.getActiveOutbreak).mockResolvedValue(undefined)
     vi.mocked(db.putOutbreakConfig).mockResolvedValue(undefined)
     mockOutbreakConfigsGet.mockImplementation((id: string) =>
       id === 'test-config-1' ? Promise.resolve({ ...mockConfig }) : Promise.resolve(null),
@@ -316,7 +316,7 @@ describe('isOutbreakModeActive', () => {
   })
 
   it('returns null when no active outbreak', async () => {
-    vi.mocked(db.getActiveOutbreak).mockResolvedValue(null)
+    vi.mocked(db.getActiveOutbreak).mockResolvedValue(undefined)
     const result = await isOutbreakModeActive()
     expect(result).toBeNull()
   })

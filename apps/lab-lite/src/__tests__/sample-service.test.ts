@@ -88,9 +88,9 @@ describe('accessionSample', () => {
     const specimen = await accessionSample(BASE_INPUT)
     const events = await getCustodyEventsForSample(specimen.id)
     expect(events).toHaveLength(1)
-    expect(events[0].eventType).toBe('received')
-    expect(events[0].fromActorId).toBe('courier-001')
-    expect(events[0].sampleId).toBe(specimen.id)
+    expect(events[0]!.eventType).toBe('received')
+    expect(events[0]!.fromActorId).toBe('courier-001')
+    expect(events[0]!.sampleId).toBe(specimen.id)
   })
 
   it('emits SAMPLE_ACCESSIONED audit event', async () => {

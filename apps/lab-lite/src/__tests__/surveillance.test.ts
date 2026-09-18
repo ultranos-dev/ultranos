@@ -194,8 +194,8 @@ describe('calculateRollingBaseline', () => {
             filter: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue(entries) })),
           })),
         })),
-      } as unknown as ReturnType<typeof getDb>,
-    })
+      },
+    } as unknown as ReturnType<typeof getDb>)
 
     const baseline = await calculateRollingBaseline(disease, asOfDate)
 
@@ -241,8 +241,8 @@ describe('calculateRollingBaseline', () => {
             filter: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),
           })),
         })),
-      } as unknown as ReturnType<typeof getDb>,
-    })
+      },
+    } as unknown as ReturnType<typeof getDb>)
 
     const baseline = await calculateRollingBaseline(disease, asOfDate)
 
@@ -271,8 +271,8 @@ describe('calculateRollingBaseline', () => {
             })),
           })),
         })),
-      } as unknown as ReturnType<typeof getDb>,
-    })
+      },
+    } as unknown as ReturnType<typeof getDb>)
 
     const baseline = await calculateRollingBaseline(disease, asOfDate)
     expect(baseline.totalTests).toBe(0)
@@ -306,8 +306,8 @@ describe('detectPositivitySpike', () => {
             })),
           })),
         })),
-      } as unknown as ReturnType<typeof getDb>,
-    })
+      },
+    } as unknown as ReturnType<typeof getDb>)
   }
 
   it('12.3 — detects critical spike at 2x threshold', async () => {
@@ -476,8 +476,8 @@ describe('detectDiseaseCluster', () => {
             })),
           })),
         })),
-      } as unknown as ReturnType<typeof getDb>,
-    })
+      },
+    } as unknown as ReturnType<typeof getDb>)
   }
 
   it('12.5 — detects cluster when case count meets threshold', async () => {
@@ -689,8 +689,8 @@ describe('runSurveillanceCheck', () => {
           })),
         })),
         lab_locations: { toArray: vi.fn().mockResolvedValue([]) },
-      } as unknown as ReturnType<typeof getDb>,
-    })
+      },
+    } as unknown as ReturnType<typeof getDb>)
 
     await runSurveillanceCheck('cluster')
 
@@ -727,8 +727,8 @@ describe('runSurveillanceCheck', () => {
           })),
         })),
         lab_locations: { toArray: vi.fn().mockResolvedValue([]) },
-      } as unknown as ReturnType<typeof getDb>,
-    })
+      },
+    } as unknown as ReturnType<typeof getDb>)
 
     const notifiedAlerts: SurveillanceAlert[] = []
     const unsubscribe = onSurveillanceAlert((a) => notifiedAlerts.push(a))
@@ -767,8 +767,8 @@ describe('runSurveillanceCheck', () => {
           })),
         })),
         lab_locations: { toArray: vi.fn().mockResolvedValue([]) },
-      } as unknown as ReturnType<typeof getDb>,
-    })
+      },
+    } as unknown as ReturnType<typeof getDb>)
 
     await runSurveillanceCheck('cluster')
 
@@ -808,10 +808,10 @@ describe('runSurveillanceCheck', () => {
             filter: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue([]) })),
           })),
         })),
-      } as unknown as ReturnType<typeof getDb>,
-    })
+      },
+    } as unknown as ReturnType<typeof getDb>)
 
-    vi.mocked(getSurveillanceBaseline).mockResolvedValue(null)
+    vi.mocked(getSurveillanceBaseline).mockResolvedValue(undefined)
 
     // These should complete without error even with no network
     await expect(calculateRollingBaseline(disease, '2026-05-31')).resolves.toBeDefined()
@@ -842,8 +842,8 @@ describe('configuration threshold honouring', () => {
             filter: vi.fn(() => ({ toArray: vi.fn().mockResolvedValue(entriesAt2x) })),
           })),
         })),
-      } as unknown as ReturnType<typeof getDb>,
-    })
+      },
+    } as unknown as ReturnType<typeof getDb>)
 
     vi.mocked(getSurveillanceBaseline).mockResolvedValue({
       id: 'malaria_2026-05-31',
@@ -883,8 +883,8 @@ describe('configuration threshold honouring', () => {
             })),
           })),
         })),
-      } as unknown as ReturnType<typeof getDb>,
-    })
+      },
+    } as unknown as ReturnType<typeof getDb>)
 
     const result = await detectDiseaseCluster(disease, [])
     expect(result.detected).toBe(false)
@@ -903,8 +903,8 @@ describe('configuration threshold honouring', () => {
             })),
           })),
         })),
-      } as unknown as ReturnType<typeof getDb>,
-    })
+      },
+    } as unknown as ReturnType<typeof getDb>)
 
     const result5 = await detectDiseaseCluster(disease, [])
     expect(result5.detected).toBe(true)

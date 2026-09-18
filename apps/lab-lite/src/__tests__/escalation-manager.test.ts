@@ -80,7 +80,7 @@ const criticalResult: CriticalValueResult = {
 describe('initiateEscalation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(getDefaultEscalationContact).mockResolvedValue(null)
+    vi.mocked(getDefaultEscalationContact).mockResolvedValue(undefined)
     vi.mocked(createEscalationChain).mockResolvedValue(undefined)
   })
 
@@ -88,7 +88,7 @@ describe('initiateEscalation', () => {
     const chain = await initiateEscalation(criticalResult, 'result-001', 'Patient/pat-001', 'prac-physician-001')
 
     expect(createEscalationChain).toHaveBeenCalledOnce()
-    const savedChain = vi.mocked(createEscalationChain).mock.calls[0][0]
+    const savedChain = vi.mocked(createEscalationChain).mock.calls[0]![0]
 
     expect(savedChain.steps).toHaveLength(5)
     expect(savedChain.status).toBe('active')
@@ -101,12 +101,12 @@ describe('initiateEscalation', () => {
     const chain = await initiateEscalation(criticalResult, 'result-001', 'Patient/pat-001', 'prac-physician-001')
     const after = Date.now()
 
-    const savedChain = vi.mocked(createEscalationChain).mock.calls[0][0]
+    const savedChain = vi.mocked(createEscalationChain).mock.calls[0]![0]
     const steps = savedChain.steps
 
-    const step3Time = new Date(steps[2].scheduledAt).getTime()
-    const step4Time = new Date(steps[3].scheduledAt).getTime()
-    const step5Time = new Date(steps[4].scheduledAt).getTime()
+    const step3Time = new Date(steps[2]!.scheduledAt).getTime()
+    const step4Time = new Date(steps[3]!.scheduledAt).getTime()
+    const step5Time = new Date(steps[4]!.scheduledAt).getTime()
     const createdTime = new Date(savedChain.createdAt).getTime()
 
     // Step 3: T+15 minutes
@@ -118,12 +118,12 @@ describe('initiateEscalation', () => {
   })
 
   it('uses fallback contact IDs when contacts not configured', async () => {
-    vi.mocked(getDefaultEscalationContact).mockResolvedValue(null)
+    vi.mocked(getDefaultEscalationContact).mockResolvedValue(undefined)
     await initiateEscalation(criticalResult, 'result-001', 'Patient/pat-001', 'prac-physician-001')
 
-    const savedChain = vi.mocked(createEscalationChain).mock.calls[0][0]
-    const step4 = savedChain.steps[3]
-    const step5 = savedChain.steps[4]
+    const savedChain = vi.mocked(createEscalationChain).mock.calls[0]![0]
+    const step4 = savedChain.steps[3]!
+    const step5 = savedChain.steps[4]!
 
     expect(step4.recipientId).toBe('medical_director_unset')
     expect(step5.recipientId).toBe('district_officer_unset')
@@ -144,7 +144,7 @@ describe('acknowledgeStep', () => {
       currentStep: 2,
     }))
     // Status should NOT be set to acknowledged
-    const callArg = vi.mocked(updateEscalationChain).mock.calls[0][1]
+    const callArg = vi.mocked(updateEscalationChain).mock.calls[0]![1]
     expect(callArg).not.toHaveProperty('status', 'acknowledged')
   })
 
@@ -166,7 +166,7 @@ describe('acknowledgeStep', () => {
 
     await acknowledgeStep('test-chain-uuid-001', 3, 'prac-physician-001')
 
-    const callArg = vi.mocked(updateEscalationChain).mock.calls[0][1]
+    const callArg = vi.mocked(updateEscalationChain).mock.calls[0]![1]
     const steps = callArg.steps as EscalationStep[]
     const pendingAfterAck = steps.filter((s: EscalationStep) => s.stepNumber > 3 && s.status === 'skipped')
     expect(pendingAfterAck.length).toBe(2) // steps 4 and 5 should be skipped

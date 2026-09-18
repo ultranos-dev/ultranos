@@ -9,12 +9,14 @@ describe('Order Data Minimization (CLAUDE.md Rule #7)', () => {
       patientFirstName: 'Ahmad',
       patientAge: 45,
       patientRef: 'Patient/123',
+      patientPhotoUrl: null,
       testsRequested: [{ loincCode: '58410-2', loincDisplay: 'CBC' }],
       urgency: 'stat',
       orderingPhysicianName: 'Dr. Karimi',
       specialInstructions: null,
       status: 'active',
       authoredOn: '2026-05-30T10:00:00.000Z',
+      assignedToLab: false,
     }
 
     // Verify only allowed fields are present

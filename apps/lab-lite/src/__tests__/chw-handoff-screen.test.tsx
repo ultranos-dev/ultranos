@@ -137,7 +137,7 @@ describe('CourierHandoffScreen', () => {
       render(<CourierHandoffScreen onDone={vi.fn()} />)
       await advanceToStep2()
       await scanBarcode('CHW-0601-001')
-      await userEvent.click(screen.getAllByRole('button', { name: /next/i })[0])
+      await userEvent.click(screen.getAllByRole('button', { name: /next/i })[0]!)
       // Skip temperature step
       await userEvent.click(screen.getByRole('button', { name: /skip|next/i }))
     }
@@ -177,7 +177,7 @@ describe('CourierHandoffScreen', () => {
       // Navigate to success
       await advanceToStep2()
       await scanBarcode('CHW-0601-001')
-      await userEvent.click(screen.getAllByRole('button', { name: /next/i })[0])
+      await userEvent.click(screen.getAllByRole('button', { name: /next/i })[0]!)
       await userEvent.click(screen.getByRole('button', { name: /skip|next/i }))
       await userEvent.click(screen.getByRole('button', { name: /confirmButton/i }))
       await waitFor(() => screen.getByText('successTitle'))

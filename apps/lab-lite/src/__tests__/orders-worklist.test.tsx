@@ -342,7 +342,7 @@ describe('OrdersWorklist', () => {
     const user = userEvent.setup()
     const filterButtons = screen.getAllByText('Received')
     // The first "Received" is the filter button; click it
-    await user.click(filterButtons[0])
+    await user.click(filterButtons[0]!)
 
     expect(screen.getByText(/Received-Patient/)).toBeDefined()
     expect(screen.queryByText(/InProgress-Patient/)).toBeNull()

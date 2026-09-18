@@ -326,7 +326,7 @@ describe('getLogbookEntries — filters', () => {
   it('filters by patientRef (case-insensitive substring)', async () => {
     const { entries } = await getLogbookEntries({ patientRef: 'aaa' })
     expect(entries).toHaveLength(1)
-    expect(entries[0].id).toBe('f1')
+    expect(entries[0]!.id).toBe('f1')
   })
 
   it('filters by technicianId', async () => {
@@ -341,7 +341,7 @@ describe('getLogbookEntries — filters', () => {
 
     const page2 = await getLogbookEntries(undefined, 2, 2)
     expect(page2.entries).toHaveLength(1)
-    expect(page2.entries[0].id).toBe('f3')
+    expect(page2.entries[0]!.id).toBe('f3')
   })
 })
 
@@ -373,7 +373,7 @@ describe('Audit events — no PHI', () => {
 
     const calls = (reportLogbookEvent as ReturnType<typeof vi.fn>).mock.calls
     expect(calls.length).toBeGreaterThan(0)
-    const call = calls[0][0] as Record<string, unknown>
+    const call = calls[0]![0] as Record<string, unknown>
     expect(call.action).toBe('LOGBOOK_ENTRY_CREATED')
     expect(call.entryId).toBeDefined()
 

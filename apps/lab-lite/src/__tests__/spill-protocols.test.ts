@@ -25,7 +25,7 @@ describe('getSpillProtocol', () => {
     it('requires only gloves as mandatory PPE', () => {
       const required = protocol.ppe.filter((p) => p.required)
       expect(required).toHaveLength(1)
-      expect(required[0].item).toBe('gloves')
+      expect(required[0]!.item).toBe('gloves')
     })
 
     it('has 8 steps', () => {
@@ -179,7 +179,7 @@ describe('getAllSpillProtocols', () => {
     const tierOrder = [RiskTier.LOW, RiskTier.MODERATE, RiskTier.HIGH, RiskTier.CRITICAL]
     const tiers = protocols.map((p) => tierOrder.indexOf(p.riskTier))
     for (let i = 1; i < tiers.length; i++) {
-      expect(tiers[i]).toBeGreaterThan(tiers[i - 1])
+      expect(tiers[i]!).toBeGreaterThan(tiers[i - 1]!)
     }
   })
 

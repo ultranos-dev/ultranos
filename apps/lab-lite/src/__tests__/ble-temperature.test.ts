@@ -69,8 +69,8 @@ describe('BLE Temperature', () => {
 
       const sensors = await scanForSensors()
       expect(sensors).toHaveLength(1)
-      expect(sensors[0].id).toBe('device-123')
-      expect(sensors[0].name).toBe('BLE Thermometer')
+      expect(sensors[0]!.id).toBe('device-123')
+      expect(sensors[0]!.name).toBe('BLE Thermometer')
 
       Object.defineProperty(navigator, 'bluetooth', {
         value: undefined,

@@ -141,7 +141,8 @@ import type { ConsentRecord, FamilyDelegate } from '../lib/db'
 const ACTIVE_CONSENT: ConsentRecord = {
   id: 1,
   patientRef: 'Patient/test-abc',
-  method: 'verbal',
+  encounterId: 'Encounter/test-enc-001',
+  method: 'audio',
   language: 'en',
   consentTextVersion: '1.0.0',
   witnessingTechId: 'tech-1',

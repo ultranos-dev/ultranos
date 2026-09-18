@@ -32,8 +32,8 @@ describe('evaluateGuidanceTriggers — single positive match', () => {
       '5028-2',
     )
     expect(content).toHaveLength(1)
-    expect(content[0].id).toBe('PHG-MALARIA-001')
-    expect(content[0].conditionCode).toBe('MALARIA_POSITIVE')
+    expect(content[0]!.id).toBe('PHG-MALARIA-001')
+    expect(content[0]!.conditionCode).toBe('MALARIA_POSITIVE')
   })
 
   it('returns PHG-MALARIA-001 for malaria smear positive', () => {
@@ -42,7 +42,7 @@ describe('evaluateGuidanceTriggers — single positive match', () => {
       '32700-7',
     )
     expect(content).toHaveLength(1)
-    expect(content[0].id).toBe('PHG-MALARIA-001')
+    expect(content[0]!.id).toBe('PHG-MALARIA-001')
   })
 
   it('returns PHG-MALARIA-001 for malaria result "reactive" synonym', () => {
@@ -51,7 +51,7 @@ describe('evaluateGuidanceTriggers — single positive match', () => {
       '5028-2',
     )
     expect(content).toHaveLength(1)
-    expect(content[0].id).toBe('PHG-MALARIA-001')
+    expect(content[0]!.id).toBe('PHG-MALARIA-001')
   })
 
   it('returns PHG-TB-001 for TB GeneXpert positive (mtb_detected)', () => {
@@ -60,7 +60,7 @@ describe('evaluateGuidanceTriggers — single positive match', () => {
       '25398-2',
     )
     expect(content).toHaveLength(1)
-    expect(content[0].id).toBe('PHG-TB-001')
+    expect(content[0]!.id).toBe('PHG-TB-001')
   })
 
   it('returns PHG-TB-001 for TB smear positive (afb_result)', () => {
@@ -69,7 +69,7 @@ describe('evaluateGuidanceTriggers — single positive match', () => {
       '25398-2',
     )
     expect(content).toHaveLength(1)
-    expect(content[0].id).toBe('PHG-TB-001')
+    expect(content[0]!.id).toBe('PHG-TB-001')
   })
 
   it('returns PHG-HEPB-001 for hepatitis B surface antigen positive', () => {
@@ -78,7 +78,7 @@ describe('evaluateGuidanceTriggers — single positive match', () => {
       '24365-0',
     )
     expect(content).toHaveLength(1)
-    expect(content[0].id).toBe('PHG-HEPB-001')
+    expect(content[0]!.id).toBe('PHG-HEPB-001')
   })
 
   it('returns PHG-HEPC-001 for hepatitis C antibody positive', () => {
@@ -87,7 +87,7 @@ describe('evaluateGuidanceTriggers — single positive match', () => {
       '13955-0',
     )
     expect(content).toHaveLength(1)
-    expect(content[0].id).toBe('PHG-HEPC-001')
+    expect(content[0]!.id).toBe('PHG-HEPC-001')
   })
 
   it('returns PHG-HIV-001 for HIV rapid test positive', () => {
@@ -96,7 +96,7 @@ describe('evaluateGuidanceTriggers — single positive match', () => {
       '75622-1',
     )
     expect(content).toHaveLength(1)
-    expect(content[0].id).toBe('PHG-HIV-001')
+    expect(content[0]!.id).toBe('PHG-HIV-001')
   })
 
   it('returns PHG-ANEMIA-SEVERE-001 for hemoglobin < 7 g/dL on CBC', () => {
@@ -105,7 +105,7 @@ describe('evaluateGuidanceTriggers — single positive match', () => {
       '58410-2',
     )
     expect(content).toHaveLength(1)
-    expect(content[0].id).toBe('PHG-ANEMIA-SEVERE-001')
+    expect(content[0]!.id).toBe('PHG-ANEMIA-SEVERE-001')
   })
 })
 
@@ -169,8 +169,8 @@ describe('evaluateGuidanceTriggers — multiple conditions', () => {
       { mtb_detected: 'detected' },
       '25398-2',
     )
-    expect(malariaContent[0].id).toBe('PHG-MALARIA-001')
-    expect(tbContent[0].id).toBe('PHG-TB-001')
+    expect(malariaContent[0]!.id).toBe('PHG-MALARIA-001')
+    expect(tbContent[0]!.id).toBe('PHG-TB-001')
   })
 
   it('returns both Hep B and Hep C when evaluated together via CBC context (anemia co-trigger)', () => {
@@ -259,7 +259,7 @@ describe('evaluateGuidanceTriggers — positive synonym normalization', () => {
     it(`fires for malaria_result = "${synonym}"`, () => {
       const content = evaluateGuidanceTriggers({ malaria_result: synonym }, '5028-2')
       expect(content).toHaveLength(1)
-      expect(content[0].id).toBe('PHG-MALARIA-001')
+      expect(content[0]!.id).toBe('PHG-MALARIA-001')
     })
   }
 
@@ -492,7 +492,7 @@ describe('evaluateAndAttachGuidance — audit payload excludes PHI', () => {
       '5028-2',
     )
     expect(content).toHaveLength(1)
-    expect(content[0].id).toBe('PHG-MALARIA-001')
+    expect(content[0]!.id).toBe('PHG-MALARIA-001')
   })
 
   it('GUIDANCE_SEED conditionCodes are all unique — no duplicate triggers', () => {

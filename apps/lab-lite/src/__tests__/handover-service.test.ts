@@ -30,6 +30,7 @@ function makeReport(overrides: Partial<HandoverReport> = {}): HandoverReport {
     outgoingTechId: 'tech-001',
     outgoingTechName: 'Alice',
     incomingTechId: null,
+    incomingTechName: null,
     status: 'PENDING',
     createdAt: new Date().toISOString(),
     acknowledgedAt: null,
@@ -69,7 +70,7 @@ describe('Handover DB helpers', () => {
 
     const results = await getPendingHandoverReports()
     expect(results).toHaveLength(1)
-    expect(results[0].id).toBe(pending.id)
+    expect(results[0]!.id).toBe(pending.id)
   })
 })
 
@@ -120,8 +121,8 @@ describe('generateHandoverReport', () => {
 
     const report = await generateHandoverReport('tech-001', 'Alice')
     expect(report.incompleteOrders).toHaveLength(1)
-    expect(report.incompleteOrders[0].orderId).toBe('order-001')
-    expect(report.incompleteOrders[0].urgency).toBe('routine')
+    expect(report.incompleteOrders[0]!.orderId).toBe('order-001')
+    expect(report.incompleteOrders[0]!.urgency).toBe('routine')
   })
 
   it('does not include patient names or diagnoses in the report', async () => {
@@ -198,24 +199,24 @@ describe('acknowledgeHandover', () => {
   it('creates a new ACTIVE shift session for the incoming tech', async () => {
     const db = getDb()
     const report = await generateHandoverReport('tech-001', 'Alice')
-    await acknowledgeHandover(report.id, 'tech-002')
+    await acknowledgeHandover(report.id, 'tech-002', 'Bob')
 
     const sessions = await db.shift_sessions.where('techId').equals('tech-002').toArray()
     expect(sessions).toHaveLength(1)
-    expect(sessions[0].status).toBe('ACTIVE')
-    expect(sessions[0].endedAt).toBeNull()
+    expect(sessions[0]!.status).toBe('ACTIVE')
+    expect(sessions[0]!.endedAt).toBeNull()
   })
 
   it('allows acknowledgment without optional notes', async () => {
     const report = await generateHandoverReport('tech-001', 'Alice')
-    await acknowledgeHandover(report.id, 'tech-002')
+    await acknowledgeHandover(report.id, 'tech-002', 'Bob')
 
     const updated = await getHandoverReport(report.id)
     expect(updated!.incomingNotes).toBeNull()
   })
 
   it('throws when acknowledging a non-existent report', async () => {
-    await expect(acknowledgeHandover('bad-id', 'tech-002')).rejects.toThrow(
+    await expect(acknowledgeHandover('bad-id', 'tech-002', 'Bob')).rejects.toThrow(
       'Handover report bad-id not found',
     )
   })

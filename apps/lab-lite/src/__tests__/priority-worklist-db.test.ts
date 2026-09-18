@@ -23,9 +23,9 @@ describe('Priority override Dexie helpers (v20)', () => {
     await setPriorityOverride('sample-abc', 2)
     const result = await getPriorityOverrides()
     expect(result).toHaveLength(1)
-    expect(result[0].sampleId).toBe('sample-abc')
-    expect(result[0].manualPosition).toBe(2)
-    expect(result[0].overriddenAt).toBeDefined()
+    expect(result[0]!.sampleId).toBe('sample-abc')
+    expect(result[0]!.manualPosition).toBe(2)
+    expect(result[0]!.overriddenAt).toBeDefined()
   })
 
   it('setPriorityOverride replaces existing entry for same sampleId', async () => {
@@ -33,7 +33,7 @@ describe('Priority override Dexie helpers (v20)', () => {
     await setPriorityOverride('sample-abc', 5)
     const result = await getPriorityOverrides()
     expect(result).toHaveLength(1)
-    expect(result[0].manualPosition).toBe(5)
+    expect(result[0]!.manualPosition).toBe(5)
   })
 
   it('clearPriorityOverride removes an entry', async () => {
@@ -42,7 +42,7 @@ describe('Priority override Dexie helpers (v20)', () => {
     await clearPriorityOverride('sample-abc')
     const result = await getPriorityOverrides()
     expect(result).toHaveLength(1)
-    expect(result[0].sampleId).toBe('sample-xyz')
+    expect(result[0]!.sampleId).toBe('sample-xyz')
   })
 
   it('clearAllPriorityOverrides removes all entries', async () => {
@@ -56,7 +56,7 @@ describe('Priority override Dexie helpers (v20)', () => {
   it('overriddenAt is a valid ISO timestamp', async () => {
     await setPriorityOverride('sample-ts', 3)
     const result = await getPriorityOverrides()
-    const ts = result[0].overriddenAt
+    const ts = result[0]!.overriddenAt
     expect(new Date(ts).getTime()).not.toBeNaN()
   })
 

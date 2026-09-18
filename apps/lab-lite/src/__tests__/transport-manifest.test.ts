@@ -184,7 +184,7 @@ describe('generateManifest', () => {
 
     const manifest = generateManifest(session, specimens, LOCATIONS)
 
-    expect(manifest.samples[0].sampleType).toBe('Unknown')
+    expect(manifest.samples[0]!.sampleType).toBe('Unknown')
   })
 
   it("falls back to 'Unknown' when type.coding array is empty", () => {
@@ -198,7 +198,7 @@ describe('generateManifest', () => {
 
     const manifest = generateManifest(session, [specimen], LOCATIONS)
 
-    expect(manifest.samples[0].sampleType).toBe('Unknown')
+    expect(manifest.samples[0]!.sampleType).toBe('Unknown')
   })
 
   it('uses raw session.pickupTimestamp in the manifest unchanged', () => {

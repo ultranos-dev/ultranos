@@ -63,7 +63,7 @@ describe('Waste Alerts', () => {
         a.message.includes('75%'),
     )
     expect(fillAlerts.length).toBeGreaterThanOrEqual(1)
-    expect(fillAlerts[0].severity).toBe('WARNING')
+    expect(fillAlerts[0]!.severity).toBe('WARNING')
   })
 
   it('fires URGENT alert at FULL fill level', async () => {
@@ -81,7 +81,7 @@ describe('Waste Alerts', () => {
         a.message.includes('100%'),
     )
     expect(fillAlerts.length).toBeGreaterThanOrEqual(1)
-    expect(fillAlerts[0].severity).toBe('URGENT')
+    expect(fillAlerts[0]!.severity).toBe('URGENT')
   })
 
   it('fires alert at 80% of average fill time', async () => {
@@ -155,7 +155,7 @@ describe('Waste Alerts', () => {
         a.message.includes('has not been checked'),
     )
     expect(staleAlerts.length).toBeGreaterThanOrEqual(1)
-    expect(staleAlerts[0].severity).toBe('WARNING')
+    expect(staleAlerts[0]!.severity).toBe('WARNING')
   })
 
   it('does not alert for disposed containers', async () => {

@@ -76,7 +76,7 @@ function makeOrder(overrides: Partial<LabOrderEntry> = {}): LabOrderEntry {
     urgency: 'routine',
     orderingPhysicianName: 'Dr. Omar',
     specialInstructions: null,
-    status: 'PENDING',
+    status: 'RECEIVED',
     authoredOn: makeTodayIso(),
     receivedAt: makeTodayIso(),
     syncedAt: makeTodayIso(),
@@ -90,7 +90,7 @@ describe('aggregateNetworkMetrics', () => {
   })
 
   it('returns zeros when no orders exist', async () => {
-    mockGetDb.mockReturnValue(makeFakeDb([], [], []) as ReturnType<typeof getDb>)
+    mockGetDb.mockReturnValue(makeFakeDb([], [], []) as unknown as ReturnType<typeof getDb>)
 
     const metrics = await aggregateNetworkMetrics()
 
@@ -102,11 +102,11 @@ describe('aggregateNetworkMetrics', () => {
 
   it('counts today\'s orders', async () => {
     const orders = [
-      makeOrder({ orderId: 'o1', status: 'PENDING' }),
-      makeOrder({ orderId: 'o2', status: 'PENDING' }),
+      makeOrder({ orderId: 'o1', status: 'RECEIVED' }),
+      makeOrder({ orderId: 'o2', status: 'RECEIVED' }),
       makeOrder({ orderId: 'o3', status: 'IN_PROGRESS' }),
     ]
-    mockGetDb.mockReturnValue(makeFakeDb(orders, [], []) as ReturnType<typeof getDb>)
+    mockGetDb.mockReturnValue(makeFakeDb(orders, [], []) as unknown as ReturnType<typeof getDb>)
 
     const metrics = await aggregateNetworkMetrics()
 
@@ -131,7 +131,7 @@ describe('getLocationStatus', () => {
     }
     mockGetNetworkSnapshot.mockResolvedValue(snapshot)
     // No upload queue entries — live counts are zero
-    mockGetDb.mockReturnValue(makeFakeDb([], [], []) as ReturnType<typeof getDb>)
+    mockGetDb.mockReturnValue(makeFakeDb([], [], []) as unknown as ReturnType<typeof getDb>)
 
     const status = await getLocationStatus('loc-main')
 
@@ -144,7 +144,7 @@ describe('getLocationStatus', () => {
 
   it('returns offline stub when no snapshot exists', async () => {
     mockGetNetworkSnapshot.mockResolvedValue(undefined)
-    mockGetDb.mockReturnValue(makeFakeDb([], [], []) as ReturnType<typeof getDb>)
+    mockGetDb.mockReturnValue(makeFakeDb([], [], []) as unknown as ReturnType<typeof getDb>)
 
     const status = await getLocationStatus('loc-unknown')
 

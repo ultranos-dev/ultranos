@@ -20,7 +20,7 @@ vi.mock('@/stores/auth-session-store', () => ({
 }))
 
 import { getDb } from '../lib/db'
-import type { QcRun } from '../lib/db'
+import type { QcRunInput } from '../lib/db'
 import {
   saveQcRun,
   getLatestQcRun,
@@ -39,7 +39,7 @@ import { emitClientAudit } from '@ultranos/audit-logger/client'
 const TODAY = new Date().toISOString().slice(0, 10)
 const YESTERDAY = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
 
-function makeRun(overrides: Partial<QcRun> = {}): QcRun {
+function makeRun(overrides: Partial<QcRunInput> = {}): QcRunInput {
   return {
     id: crypto.randomUUID(),
     analyte: '718-7',
@@ -100,8 +100,8 @@ describe('QC Run CRUD (Task 9.1)', () => {
     await saveQcRun(r1)
     await saveQcRun(r2)
     const history = await getQcRunHistory('718-7', 'analyzer-01')
-    expect(history[0].id).toBe('r2')
-    expect(history[1].id).toBe('r1')
+    expect(history[0]!.id).toBe('r2')
+    expect(history[1]!.id).toBe('r1')
   })
 
   it('getQcRunHistory respects limit', async () => {
@@ -256,7 +256,7 @@ describe('Audit events (Task 9.10)', () => {
     const run = makeRun()
     await saveQcRun(run)
     expect(emitClientAudit).toHaveBeenCalledOnce()
-    const call = vi.mocked(emitClientAudit).mock.calls[0][0]
+    const call = vi.mocked(emitClientAudit).mock.calls[0]![0]
     // No PHI — verify only operational metadata
     expect(call.metadata?.analyte).toBe('718-7')
     expect(call.metadata?.instrumentId).toBe('analyzer-01')

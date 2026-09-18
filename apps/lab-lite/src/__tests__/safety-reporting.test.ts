@@ -90,8 +90,8 @@ describe('Safety Report DB Helpers (v14)', () => {
     const all = await getSafetyReports()
     expect(all).toHaveLength(2)
     // Descending — newest first
-    expect(all[0].id).toBe(newer.id)
-    expect(all[1].id).toBe(older.id)
+    expect(all[0]!.id).toBe(newer.id)
+    expect(all[1]!.id).toBe(older.id)
   })
 
   it('filters reports by status', async () => {
@@ -102,7 +102,7 @@ describe('Safety Report DB Helpers (v14)', () => {
 
     const results = await getSafetyReportsByStatus(ReportStatus.SUBMITTED)
     expect(results).toHaveLength(1)
-    expect(results[0].id).toBe(submitted.id)
+    expect(results[0]!.id).toBe(submitted.id)
   })
 
   it('updates report status and associated fields', async () => {
@@ -248,7 +248,7 @@ describe('Safety Report Service', () => {
     })
 
     expect(enqueueSyncEvent).toHaveBeenCalled()
-    const call = (enqueueSyncEvent as ReturnType<typeof vi.fn>).mock.calls[0][0]
+    const call = (enqueueSyncEvent as ReturnType<typeof vi.fn>).mock.calls[0]![0]
     expect(call.resourceType).toBe('SafetyReport')
     // Verify payload has no auth/identity info
     expect(call.payload).not.toHaveProperty('userId')
@@ -270,7 +270,7 @@ describe('Safety Report Service', () => {
 
     // Should be called twice: once for report, once for notification
     expect(enqueueSyncEvent).toHaveBeenCalledTimes(2)
-    const notifCall = (enqueueSyncEvent as ReturnType<typeof vi.fn>).mock.calls[1][0]
+    const notifCall = (enqueueSyncEvent as ReturnType<typeof vi.fn>).mock.calls[1]![0]
     expect(notifCall.resourceType).toBe('SafetyConcernNotification')
     expect(notifCall.payload.type).toBe('SAFETY_CONCERN_REPORTED')
     // No reporter identity in notification

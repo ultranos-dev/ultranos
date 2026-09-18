@@ -22,6 +22,7 @@ const baseOverhead: LabOverheadConfig = {
   avgMonthlySalary: 20000,
   avgTestsPerShift: 10,
   shiftsPerMonth: 20,
+  lastUpdated: '2026-01-01T00:00:00.000Z',
 }
 
 function makeConfig(overrides: Partial<TestCostConfig> = {}): TestCostConfig {
@@ -153,10 +154,10 @@ describe('calculateAllTestCosts', () => {
     ]
     const results = calculateAllTestCosts(configs)
     expect(results).toHaveLength(2)
-    expect(results[0].testCode).toBe('A')
-    expect(results[1].testCode).toBe('B')
-    expect(results[0].isProfitable).toBe(true)
-    expect(results[1].isProfitable).toBe(false)
+    expect(results[0]!.testCode).toBe('A')
+    expect(results[1]!.testCode).toBe('B')
+    expect(results[0]!.isProfitable).toBe(true)
+    expect(results[1]!.isProfitable).toBe(false)
   })
 })
 

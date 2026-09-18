@@ -25,6 +25,7 @@ vi.mock('@/lib/delegate-crypto', () => ({
 
 import { calculateMonthlyMetrics, getMetricsForPeriod, currentPeriod } from '@/lib/quality-metrics-calculator'
 import { getDb } from '@/lib/db'
+import type { QcRun } from '@/lib/db'
 
 const TECH_ID = 'tech-001'
 const PERIOD = '2026-05'
@@ -73,7 +74,7 @@ describe('calculateMonthlyMetrics', () => {
       runBy: TECH_ID,
       hlcTimestamp: new Date().toISOString(),
     }))
-    await db.qcRuns.bulkAdd(runs)
+    await db.qcRuns.bulkAdd(runs as QcRun[])
 
     const metrics = await calculateMonthlyMetrics(TECH_ID, PERIOD)
     const cvMetric = metrics.find((m) => m.metricType === 'hemoglobin_cv')!
@@ -118,7 +119,7 @@ describe('calculateMonthlyMetrics', () => {
       runBy: TECH_ID,
       hlcTimestamp: new Date().toISOString(),
     }))
-    await db.qcRuns.bulkAdd(runs)
+    await db.qcRuns.bulkAdd(runs as QcRun[])
 
     const metrics = await calculateMonthlyMetrics(TECH_ID, PERIOD)
     const cvMetric = metrics.find((m) => m.metricType === 'hemoglobin_cv')!

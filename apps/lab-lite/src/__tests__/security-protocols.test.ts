@@ -182,7 +182,7 @@ describe('Emergency Encryption', () => {
     const record = stored[0] as EncryptedRecord
     expect(record.encryptedData).toBeTruthy()
     // Original PHI field must not be present
-    expect((record as Record<string, unknown>)._ultranos).toBeUndefined()
+    expect((record as unknown as Record<string, unknown>)._ultranos).toBeUndefined()
   })
 
   it('decrypts records back to original with the correct key', async () => {

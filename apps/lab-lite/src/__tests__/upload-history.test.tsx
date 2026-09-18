@@ -6,7 +6,7 @@ import { useAuthSessionStore } from '../stores/auth-session-store'
 
 // Page + list adopted next-intl useTranslations — resolve via real en.json
 vi.mock('next-intl', async () => {
-  const en = (await import('../../messages/en.json')).default as Record<string, Record<string, string>>
+  const en = (await import('../../messages/en.json')).default as unknown as Record<string, Record<string, string>>
   return {
     useTranslations:
       (ns: string) =>
@@ -89,7 +89,7 @@ function setAuthSession() {
     sessionId: 'sess-1',
     email: 'tech@lab.com',
     labName: 'Central Diagnostics Lab',
-    technicianName: 'Dr. Ahmad',
+    labRole: null,
   })
 }
 

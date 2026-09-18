@@ -436,7 +436,7 @@ describe('useRecentPatients', () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.patients).toHaveLength(1)
-    expect(result.current.patients[0].firstName).toBe('Ahmad')
+    expect(result.current.patients[0]!.firstName).toBe('Ahmad')
   })
 
   it('loading=false and empty on IndexedDB error', async () => {

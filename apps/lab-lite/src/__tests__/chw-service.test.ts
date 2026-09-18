@@ -100,7 +100,7 @@ import {
 // ---------------------------------------------------------------------------
 
 describe('identifyPatientByQR', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('returns pid, firstName, age from a valid QR payload', async () => {
     const qr = JSON.stringify({
@@ -169,7 +169,7 @@ describe('identifyPatientByQR', () => {
 // ---------------------------------------------------------------------------
 
 describe('identifyPatientByName', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('returns matching patient by first name (case-insensitive)', async () => {
     // Two Ahmads in fixture — should return one via fatherName disambiguation

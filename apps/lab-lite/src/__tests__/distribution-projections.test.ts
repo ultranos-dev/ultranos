@@ -40,7 +40,7 @@ describe('buildOpdProjection', () => {
     expect(proj.resourceType).toBe('DiagnosticReport')
     expect(proj.status).toBe('final')
     expect(proj.subject.reference).toBe('Patient/patient-uuid-001')
-    expect(proj.code.coding[0].code).toBe('26464-8')
+    expect(proj.code.coding[0]!.code).toBe('26464-8')
     expect(proj._ultranos.flagLevel).toBe('normal')
     expect(proj._ultranos.templateVersion).toBe('1.2.0')
     expect(proj._ultranos.sampleId).toBe('LAB-20260601-0001')

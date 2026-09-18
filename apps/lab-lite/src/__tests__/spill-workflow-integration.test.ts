@@ -109,7 +109,7 @@ describe('Full spill workflow — Blood/Serum (MODERATE)', () => {
     await completeStep(incident.id, 2, 'tech-001')
     await completeStep(incident.id, 3, 'tech-001')
 
-    expect(db[incident.id].stepsCompleted).toEqual(expect.arrayContaining([1, 2, 3]))
+    expect(db[incident.id]!.stepsCompleted).toEqual(expect.arrayContaining([1, 2, 3]))
     expect(reportSpillAuditEvent).toHaveBeenCalledWith(expect.objectContaining({
       action: 'SPILL_STEP_COMPLETED',
       stepNumber: 3,
@@ -118,8 +118,8 @@ describe('Full spill workflow — Blood/Serum (MODERATE)', () => {
     // Step 3 — complete
     await completeSpillIncident(incident.id, 'Bleach applied, area cleared.', 'tech-001')
 
-    expect(db[incident.id].completedAt).not.toBeNull()
-    expect(db[incident.id].notes).toBe('Bleach applied, area cleared.')
+    expect(db[incident.id]!.completedAt).not.toBeNull()
+    expect(db[incident.id]!.notes).toBe('Bleach applied, area cleared.')
     expect(enqueueSyncEvent).toHaveBeenCalledWith(expect.objectContaining({
       resourceType: 'SPILL_INCIDENT',
       resourceId: incident.id,
@@ -162,7 +162,7 @@ describe('Step completion idempotency', () => {
     await completeStep(incident.id, 1, 'tech-002')
     await completeStep(incident.id, 1, 'tech-002') // duplicate
 
-    expect(db[incident.id].stepsCompleted.filter((s) => s === 1)).toHaveLength(1)
+    expect(db[incident.id]!.stepsCompleted.filter((s) => s === 1)).toHaveLength(1)
   })
 })
 
@@ -189,8 +189,8 @@ describe('Offline resilience — sync queue failure', () => {
     ).resolves.not.toThrow()
 
     // Local record is still updated
-    expect(db[incident.id].completedAt).not.toBeNull()
-    expect(db[incident.id].notes).toBe('Offline test notes.')
+    expect(db[incident.id]!.completedAt).not.toBeNull()
+    expect(db[incident.id]!.notes).toBe('Offline test notes.')
   })
 })
 
@@ -204,15 +204,15 @@ describe('getAllSpillIncidents — ordering', () => {
     const i2 = await startSpillIncident({ spillType: SpillType.BLOOD_SERUM, location: 'B', techId: 'tech-2' })
     const i3 = await startSpillIncident({ spillType: SpillType.CHEMICAL_REAGENT, location: 'C', techId: 'tech-3' })
 
-    db[i1.id].occurredAt = '2026-03-01T08:00:00.000Z'
-    db[i2.id].occurredAt = '2026-03-01T09:30:00.000Z'
-    db[i3.id].occurredAt = '2026-03-01T11:00:00.000Z'
+    db[i1.id]!.occurredAt = '2026-03-01T08:00:00.000Z'
+    db[i2.id]!.occurredAt = '2026-03-01T09:30:00.000Z'
+    db[i3.id]!.occurredAt = '2026-03-01T11:00:00.000Z'
 
     const result = await getAllSpillIncidents()
 
     expect(result).toHaveLength(3)
-    expect(result[0].id).toBe(i3.id)
-    expect(result[1].id).toBe(i2.id)
-    expect(result[2].id).toBe(i1.id)
+    expect(result[0]!.id).toBe(i3.id)
+    expect(result[1]!.id).toBe(i2.id)
+    expect(result[2]!.id).toBe(i1.id)
   })
 })

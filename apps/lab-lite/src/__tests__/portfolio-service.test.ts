@@ -271,10 +271,10 @@ describe('getAverageTAT', () => {
     )
     const result = await getAverageTAT('tech-1', RANGE)
     expect(result).toHaveLength(1)
-    expect(result[0].loincCode).toBe('718-7')
+    expect(result[0]!.loincCode).toBe('718-7')
     // Average TAT: (2h + 1h) / 2 = 1.5h = 90 min
-    expect(result[0].avgTatMinutes).toBe(90)
-    expect(result[0].sampleCount).toBe(2)
+    expect(result[0]!.avgTatMinutes).toBe(90)
+    expect(result[0]!.sampleCount).toBe(2)
   })
 
   it('groups by loincCode with correct sampleCount', async () => {
@@ -412,9 +412,9 @@ describe('getTrainingModules', () => {
     })
     const result = await getTrainingModules('tech-1')
     expect(result).toHaveLength(1)
-    expect(result[0].title).toBe('Hemoglobin SOP')
-    expect(result[0].category).toBe('HEMATOLOGY')
-    expect(result[0].acknowledgedAt).toBe('2026-01-15T10:00:00Z')
+    expect(result[0]!.title).toBe('Hemoglobin SOP')
+    expect(result[0]!.category).toBe('HEMATOLOGY')
+    expect(result[0]!.acknowledgedAt).toBe('2026-01-15T10:00:00Z')
   })
 })
 

@@ -161,7 +161,7 @@ describe('useOrderSync — 4-state loading fix', () => {
     expect(result.current.loading).toBe(false)
     // Cached order must be visible
     expect(result.current.orders).toHaveLength(1)
-    expect(result.current.orders[0].orderId).toBe('order-001')
+    expect(result.current.orders[0]!.orderId).toBe('order-001')
     // Must NOT set an error — the user has stale data to work with
     expect(result.current.error).toBeNull()
   })
@@ -239,6 +239,6 @@ describe('useOrderSync — 4-state loading fix', () => {
     expect(result.current.loading).toBe(false)
     expect(result.current.error).toBeNull()
     expect(result.current.orders).toHaveLength(1)
-    expect(result.current.orders[0].orderId).toBe('server-order-01')
+    expect(result.current.orders[0]!.orderId).toBe('server-order-01')
   })
 })

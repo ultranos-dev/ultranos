@@ -35,7 +35,7 @@ import {
 } from '@/lib/db'
 
 const mockManager = { labRole: LabRole.LAB_MANAGER }
-const mockTechnician = { labRole: LabRole.LAB_TECHNICIAN }
+const mockTechnician = { labRole: LabRole.LAB_TECH }
 
 const defaultTemplate = {
   id: 'ic-hh-01',
@@ -61,8 +61,8 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(getChecklistTemplates).mockResolvedValue([defaultTemplate, customTemplate])
   vi.mocked(putChecklistTemplate).mockResolvedValue(undefined)
-  vi.mocked(deleteChecklistTemplate).mockResolvedValue(undefined)
-  vi.mocked(deactivateChecklistTemplate).mockResolvedValue(undefined)
+  vi.mocked(deleteChecklistTemplate).mockResolvedValue(true)
+  vi.mocked(deactivateChecklistTemplate).mockResolvedValue(true)
   vi.mocked(resetChecklistTemplatesToDefaults).mockResolvedValue(undefined)
 })
 
@@ -149,7 +149,7 @@ describe('ChecklistTemplateEditor', () => {
 
       fireEvent.click(screen.getByRole('button', { name: 'addItem' }))
 
-      const descInput = screen.getByPlaceholderText
+      const descInput = typeof screen.getByPlaceholderText === 'function'
         ? screen.queryByDisplayValue('')
         : null
 

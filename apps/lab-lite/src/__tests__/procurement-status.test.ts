@@ -123,9 +123,9 @@ describe('applyStatusUpdate — status transitions', () => {
 
     expect(updates.status).toBe('received')
     expect(updates.statusHistory).toHaveLength(2)
-    expect(updates.statusHistory![1].status).toBe('received')
-    expect(updates.statusHistory![1].updatedBy).toBe('coordinator-001')
-    expect(updates.statusHistory![1].note).toBe('Request received at Hub')
+    expect(updates.statusHistory![1]!.status).toBe('received')
+    expect(updates.statusHistory![1]!.updatedBy).toBe('coordinator-001')
+    expect(updates.statusHistory![1]!.note).toBe('Request received at Hub')
   })
 
   it('transitions to approved', async () => {
@@ -168,8 +168,8 @@ describe('applyStatusUpdate — status transitions', () => {
 
     const updates = mockUpdate.mock.calls[0][1] as Partial<ResupplyRequest>
     expect(updates.status).toBe('ordered')
-    expect(updates.items![0].unitPrice).toBe(45)
-    expect(updates.items![0].totalPrice).toBe(2250)
+    expect(updates.items![0]!.unitPrice).toBe(45)
+    expect(updates.items![0]!.totalPrice).toBe(2250)
   })
 
   it('transitions to shipped', async () => {
@@ -304,11 +304,11 @@ describe('status history append-only', () => {
     // 3 existing entries + 1 new = 4
     expect(updates.statusHistory).toHaveLength(4)
     // All original entries preserved
-    expect(updates.statusHistory![0].status).toBe('submitted')
-    expect(updates.statusHistory![1].status).toBe('received')
-    expect(updates.statusHistory![2].status).toBe('approved')
+    expect(updates.statusHistory![0]!.status).toBe('submitted')
+    expect(updates.statusHistory![1]!.status).toBe('received')
+    expect(updates.statusHistory![2]!.status).toBe('approved')
     // New entry appended
-    expect(updates.statusHistory![3].status).toBe('ordered')
+    expect(updates.statusHistory![3]!.status).toBe('ordered')
   })
 })
 
@@ -339,7 +339,7 @@ describe('audit logging on status update', () => {
     await applyStatusUpdate(payload)
 
     expect(emitClientAudit).toHaveBeenCalledOnce()
-    const auditArgs = (emitClientAudit as ReturnType<typeof vi.fn>).mock.calls[0][0]
+    const auditArgs = (emitClientAudit as ReturnType<typeof vi.fn>).mock.calls[0]![0]
     expect(auditArgs.resourceId).toBe('req-uuid-001')
     expect(auditArgs.metadata.oldStatus).toBe('submitted')
     expect(auditArgs.metadata.newStatus).toBe('received')

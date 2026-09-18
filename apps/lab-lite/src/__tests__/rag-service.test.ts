@@ -70,7 +70,7 @@ describe('calculatePersonnelRAG', () => {
     ]
     mockGetDb.mockReturnValue(makeDb({
       shift_sessions: { toArray: vi.fn().mockResolvedValue(sessions) },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculatePersonnelRAG()
     expect(result.status).toBe('GREEN')
@@ -84,7 +84,7 @@ describe('calculatePersonnelRAG', () => {
     ]
     mockGetDb.mockReturnValue(makeDb({
       shift_sessions: { toArray: vi.fn().mockResolvedValue(sessions) },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculatePersonnelRAG()
     expect(result.status).toBe('AMBER')
@@ -97,7 +97,7 @@ describe('calculatePersonnelRAG', () => {
     ]
     mockGetDb.mockReturnValue(makeDb({
       shift_sessions: { toArray: vi.fn().mockResolvedValue(sessions) },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculatePersonnelRAG()
     expect(result.status).toBe('RED')
@@ -107,7 +107,7 @@ describe('calculatePersonnelRAG', () => {
   it('returns RED with "0 techs" when no active sessions', async () => {
     mockGetDb.mockReturnValue(makeDb({
       shift_sessions: { toArray: vi.fn().mockResolvedValue([]) },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculatePersonnelRAG()
     expect(result.status).toBe('RED')
@@ -121,7 +121,7 @@ describe('calculatePersonnelRAG', () => {
     ]
     mockGetDb.mockReturnValue(makeDb({
       shift_sessions: { toArray: vi.fn().mockResolvedValue(sessions) },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculatePersonnelRAG()
     expect(result.status).toBe('RED')
@@ -131,7 +131,7 @@ describe('calculatePersonnelRAG', () => {
   it('returns AMBER on db error', async () => {
     mockGetDb.mockReturnValue(makeDb({
       shift_sessions: { toArray: vi.fn().mockRejectedValue(new Error('db fail')) },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculatePersonnelRAG()
     expect(result.status).toBe('AMBER')
@@ -145,7 +145,7 @@ describe('calculatePersonnelRAG', () => {
     ]
     mockGetDb.mockReturnValue(makeDb({
       shift_sessions: { toArray: vi.fn().mockResolvedValue(sessions) },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculatePersonnelRAG()
     const details = result.details as import('@/lib/rag-service').PersonnelDetail[]
@@ -166,7 +166,7 @@ describe('calculateEquipmentRAG', () => {
     ]
     mockGetDb.mockReturnValue(makeDb({
       instruments: { toArray: vi.fn().mockResolvedValue(instruments) },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateEquipmentRAG()
     expect(result.status).toBe('GREEN')
@@ -180,7 +180,7 @@ describe('calculateEquipmentRAG', () => {
     ]
     mockGetDb.mockReturnValue(makeDb({
       instruments: { toArray: vi.fn().mockResolvedValue(instruments) },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateEquipmentRAG()
     expect(result.status).toBe('RED')
@@ -190,7 +190,7 @@ describe('calculateEquipmentRAG', () => {
   it('returns AMBER when no instruments configured', async () => {
     mockGetDb.mockReturnValue(makeDb({
       instruments: { toArray: vi.fn().mockResolvedValue([]) },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateEquipmentRAG()
     expect(result.status).toBe('AMBER')
@@ -207,7 +207,7 @@ describe('calculateEquipmentRAG', () => {
           { id: 'inst-1', name: 'Analyzer', status: 'IN_SERVICE', outOfServiceReason: null, nextMaintenanceDue: inSixDays, lastMaintenanceDate: null, updatedAt: '' },
         ]),
       },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateEquipmentRAG()
     expect(result.status).toBe('AMBER')
@@ -223,7 +223,7 @@ describe('calculateEquipmentRAG', () => {
           { id: 'inst-1', name: 'Analyzer', status: 'IN_SERVICE', outOfServiceReason: null, nextMaintenanceDue: inTenDays, lastMaintenanceDate: null, updatedAt: '' },
         ]),
       },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateEquipmentRAG()
     expect(result.status).toBe('GREEN')
@@ -239,7 +239,7 @@ describe('calculateEquipmentRAG', () => {
           { id: 'inst-1', name: 'Analyzer', status: 'OUT_OF_SERVICE', outOfServiceReason: 'Broken', nextMaintenanceDue: inThreeDays, lastMaintenanceDate: null, updatedAt: '' },
         ]),
       },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateEquipmentRAG()
     expect(result.status).toBe('RED')
@@ -253,7 +253,7 @@ describe('calculateEquipmentRAG', () => {
           { id: 'inst-1', name: 'Analyzer', status: 'IN_SERVICE', outOfServiceReason: null, nextMaintenanceDue: null, lastMaintenanceDate: null, updatedAt: '' },
         ]),
       },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateEquipmentRAG()
     expect(typeof result.updatedAt).toBe('string')
@@ -264,7 +264,7 @@ describe('calculateEquipmentRAG', () => {
   it('returns AMBER on db error', async () => {
     mockGetDb.mockReturnValue(makeDb({
       instruments: { toArray: vi.fn().mockRejectedValue(new Error('db fail')) },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateEquipmentRAG()
     expect(result.status).toBe('AMBER')
@@ -315,7 +315,7 @@ describe('calculateSupplyRAG', () => {
 
     const result = await calculateSupplyRAG()
     const details = result.details as import('@/lib/rag-service').SupplyDetail[]
-    expect(details[0].estimatedDaysRemaining).toBe(3)
+    expect(details[0]!.estimatedDaysRemaining).toBe(3)
   })
 
   it('sets estimatedDaysRemaining to null when dailyUsage is 0', async () => {
@@ -325,7 +325,7 @@ describe('calculateSupplyRAG', () => {
 
     const result = await calculateSupplyRAG()
     const details = result.details as import('@/lib/rag-service').SupplyDetail[]
-    expect(details[0].estimatedDaysRemaining).toBeNull()
+    expect(details[0]!.estimatedDaysRemaining).toBeNull()
   })
 
   it('returns AMBER when no supply items configured', async () => {
@@ -381,7 +381,7 @@ describe('calculateQCRAG', () => {
         toArray: vi.fn().mockResolvedValue([]),
       },
     })
-    mockGetDb.mockReturnValue(db as ReturnType<typeof getDb>)
+    mockGetDb.mockReturnValue(db as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateQCRAG()
     expect(result.status).toBe('GREEN')
@@ -401,12 +401,12 @@ describe('calculateQCRAG', () => {
         toArray: vi.fn().mockResolvedValue([]),
       },
     })
-    mockGetDb.mockReturnValue(db as ReturnType<typeof getDb>)
+    mockGetDb.mockReturnValue(db as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateQCRAG()
     expect(result.status).toBe('RED')
     const details = result.details as import('@/lib/rag-service').QcDetail[]
-    expect(details[0].status).toBe('FAILED')
+    expect(details[0]!.status).toBe('FAILED')
   })
 
   it('returns AMBER when unacknowledged drift alert exists', async () => {
@@ -420,13 +420,13 @@ describe('calculateQCRAG', () => {
         toArray: vi.fn().mockResolvedValue([makeDriftAlert('Glucose', '2-2s')]),
       },
     })
-    mockGetDb.mockReturnValue(db as ReturnType<typeof getDb>)
+    mockGetDb.mockReturnValue(db as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateQCRAG()
     expect(result.status).toBe('AMBER')
     const details = result.details as import('@/lib/rag-service').QcDetail[]
-    expect(details[0].status).toBe('DRIFT_WARNING')
-    expect(details[0].westgardViolations).toContain('2-2s')
+    expect(details[0]!.status).toBe('DRIFT_WARNING')
+    expect(details[0]!.westgardViolations).toContain('2-2s')
   })
 
   it('returns AMBER when no QC data in current shift window', async () => {
@@ -440,7 +440,7 @@ describe('calculateQCRAG', () => {
         toArray: vi.fn().mockResolvedValue([]),
       },
     })
-    mockGetDb.mockReturnValue(db as ReturnType<typeof getDb>)
+    mockGetDb.mockReturnValue(db as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateQCRAG()
     expect(result.status).toBe('AMBER')
@@ -460,7 +460,7 @@ describe('calculateQCRAG', () => {
         toArray: vi.fn().mockResolvedValue([]),
       },
     })
-    mockGetDb.mockReturnValue(db as ReturnType<typeof getDb>)
+    mockGetDb.mockReturnValue(db as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateQCRAG()
     // newer run is PASSING — older rejected run should be ignored
@@ -481,13 +481,13 @@ describe('calculateQCRAG', () => {
         toArray: vi.fn().mockResolvedValue([]),
       },
     })
-    mockGetDb.mockReturnValue(db as ReturnType<typeof getDb>)
+    mockGetDb.mockReturnValue(db as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateQCRAG()
     expect(result.status).toBe('AMBER')
     const details = result.details as import('@/lib/rag-service').QcDetail[]
-    expect(details[0].status).toBe('DRIFT_WARNING')
-    expect(details[0].westgardViolations).toContain('SD=0: QC target misconfigured')
+    expect(details[0]!.status).toBe('DRIFT_WARNING')
+    expect(details[0]!.westgardViolations).toContain('SD=0: QC target misconfigured')
   })
 
   it('does NOT reject when z-score is exactly 3.0 (boundary: > 3, not >= 3)', async () => {
@@ -504,12 +504,12 @@ describe('calculateQCRAG', () => {
         toArray: vi.fn().mockResolvedValue([]),
       },
     })
-    mockGetDb.mockReturnValue(db as ReturnType<typeof getDb>)
+    mockGetDb.mockReturnValue(db as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateQCRAG()
     expect(result.status).toBe('GREEN')
     const details = result.details as import('@/lib/rag-service').QcDetail[]
-    expect(details[0].status).toBe('PASSING')
+    expect(details[0]!.status).toBe('PASSING')
   })
 
   it('returns AMBER on db error', async () => {
@@ -518,7 +518,7 @@ describe('calculateQCRAG', () => {
         filter: vi.fn().mockReturnThis(),
         toArray: vi.fn().mockRejectedValue(new Error('db fail')),
       },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
 
     const result = await calculateQCRAG()
     expect(result.status).toBe('AMBER')
@@ -549,7 +549,7 @@ describe('getFullRAGStatus', () => {
         filter: vi.fn().mockReturnThis(),
         toArray: vi.fn().mockResolvedValue([]),
       },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
     mockGetAllSupplyItems.mockResolvedValue([
       { id: '1', name: 'S', category: 'Reagent', currentStock: 100, unit: 'mL', reorderThreshold: 5, criticalThreshold: 2, dailyUsageEstimate: 1, lastUpdated: '', updatedBy: '' },
     ])
@@ -582,7 +582,7 @@ describe('getFullRAGStatus', () => {
         filter: vi.fn().mockReturnThis(),
         toArray: vi.fn().mockResolvedValue([]),
       },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
     mockGetAllSupplyItems.mockResolvedValue([
       { id: '1', name: 'S', category: 'Reagent', currentStock: 100, unit: 'mL', reorderThreshold: 5, criticalThreshold: 2, dailyUsageEstimate: 1, lastUpdated: '', updatedBy: '' },
     ])
@@ -614,7 +614,7 @@ describe('getFullRAGStatus', () => {
         filter: vi.fn().mockReturnThis(),
         toArray: vi.fn().mockResolvedValue([]),
       },
-    }) as ReturnType<typeof getDb>)
+    }) as unknown as ReturnType<typeof getDb>)
     mockGetAllSupplyItems.mockResolvedValue([
       { id: '1', name: 'S', category: 'Reagent', currentStock: 100, unit: 'mL', reorderThreshold: 5, criticalThreshold: 2, dailyUsageEstimate: 1, lastUpdated: '', updatedBy: '' },
     ])

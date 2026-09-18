@@ -236,11 +236,11 @@ describe('checkStabilityWindows', () => {
     const specimen = makeSpecimen('sp-001', 'L2026-001', 'Whole Blood')
     const flags = checkStabilityWindows(session, [specimen])
     expect(flags).toHaveLength(1)
-    expect(flags[0].sampleId).toBe('sp-001')
-    expect(flags[0].labSampleId).toBe('L2026-001')
-    expect(flags[0].flagType).toBe('stability-exceeded')
-    expect(flags[0].message).toContain('L2026-001')
-    expect(flags[0].message).toContain('6-hour')
+    expect(flags[0]!.sampleId).toBe('sp-001')
+    expect(flags[0]!.labSampleId).toBe('L2026-001')
+    expect(flags[0]!.flagType).toBe('stability-exceeded')
+    expect(flags[0]!.message).toContain('L2026-001')
+    expect(flags[0]!.message).toContain('6-hour')
   })
 
   // ---- urine (2h window) ----
@@ -264,8 +264,8 @@ describe('checkStabilityWindows', () => {
     const specimen = makeSpecimen('sp-002', 'L2026-002', 'Urine')
     const flags = checkStabilityWindows(session, [specimen])
     expect(flags).toHaveLength(1)
-    expect(flags[0].flagType).toBe('stability-exceeded')
-    expect(flags[0].message).toContain('2-hour')
+    expect(flags[0]!.flagType).toBe('stability-exceeded')
+    expect(flags[0]!.message).toContain('2-hour')
   })
 
   // ---- swab (24h window) ----
@@ -282,7 +282,7 @@ describe('checkStabilityWindows', () => {
     const specimen = makeSpecimen('sp-003', 'L2026-003', 'Throat Swab')
     const flags = checkStabilityWindows(session, [specimen])
     expect(flags).toHaveLength(1)
-    expect(flags[0].message).toContain('24-hour')
+    expect(flags[0]!.message).toContain('24-hour')
   })
 
   // ---- csf (1h window) ----
@@ -299,7 +299,7 @@ describe('checkStabilityWindows', () => {
     const specimen = makeSpecimen('sp-004', 'L2026-004', 'Cerebrospinal Fluid')
     const flags = checkStabilityWindows(session, [specimen])
     expect(flags).toHaveLength(1)
-    expect(flags[0].message).toContain('1-hour')
+    expect(flags[0]!.message).toContain('1-hour')
   })
 
   // ---- stool (24h window) ----
@@ -316,7 +316,7 @@ describe('checkStabilityWindows', () => {
     const specimen = makeSpecimen('sp-005', 'L2026-005', 'Feces')
     const flags = checkStabilityWindows(session, [specimen])
     expect(flags).toHaveLength(1)
-    expect(flags[0].message).toContain('24-hour')
+    expect(flags[0]!.message).toContain('24-hour')
   })
 
   // ---- configurable windows ----
@@ -328,7 +328,7 @@ describe('checkStabilityWindows', () => {
     const specimen = makeSpecimen('sp-006', 'L2026-006', 'Whole Blood')
     const flags = checkStabilityWindows(session, [specimen], labSettings)
     expect(flags).toHaveLength(1)
-    expect(flags[0].message).toContain('3-hour')
+    expect(flags[0]!.message).toContain('3-hour')
   })
 
   it('does NOT flag when elapsed is within the custom lab window', () => {
@@ -367,7 +367,7 @@ describe('checkStabilityWindows', () => {
     } as unknown as FhirSpecimen
     const flags = checkStabilityWindows(session, [specimen])
     expect(flags).toHaveLength(1)
-    expect(flags[0].message).toContain('6-hour')
+    expect(flags[0]!.message).toContain('6-hour')
   })
 
   it('only flags samples that have exceeded, leaves others unflagged', () => {
@@ -377,7 +377,7 @@ describe('checkStabilityWindows', () => {
     const swab = makeSpecimen('sp-011', 'L2026-011', 'Swab')
     const flags = checkStabilityWindows(session, [urine, swab])
     expect(flags).toHaveLength(1)
-    expect(flags[0].sampleId).toBe('sp-010')
+    expect(flags[0]!.sampleId).toBe('sp-010')
   })
 
   it('generates flags for all exceeded samples in a multi-sample session', () => {
@@ -415,7 +415,7 @@ describe('checkStabilityWindows', () => {
     const specimen = makeSpecimen('sp-016', 'L2026-016', 'Whole Blood')
     const flags = checkStabilityWindows(session, [specimen])
     expect(flags).toHaveLength(1)
-    const ts = new Date(flags[0].timestamp)
+    const ts = new Date(flags[0]!.timestamp)
     expect(isNaN(ts.getTime())).toBe(false)
   })
 })

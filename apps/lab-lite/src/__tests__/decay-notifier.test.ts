@@ -42,7 +42,7 @@ vi.mock('../lib/db', async (importOriginal) => {
         },
         update: async (id: string, changes: Partial<DecayNotification>) => {
           const idx = mockDecayNotifications.findIndex((x) => x.id === id)
-          if (idx >= 0) Object.assign(mockDecayNotifications[idx], changes)
+          if (idx >= 0) Object.assign(mockDecayNotifications[idx]!, changes)
         },
         where: (key: string) => ({
           equals: (val: any) => ({
@@ -137,12 +137,12 @@ describe('checkForDecayNotifications', () => {
     expect(first).toHaveLength(1)
 
     // Dismiss it
-    await dismissDecayNotification(first[0].id)
+    await dismissDecayNotification(first[0]!.id)
 
     // Second check — should create a new one
     const second = await checkForDecayNotifications('tech-1')
     expect(second).toHaveLength(1)
-    expect(second[0].id).not.toBe(first[0].id)
+    expect(second[0]!.id).not.toBe(first[0]!.id)
   })
 
   it('links the micro-learning module when one exists', async () => {
@@ -150,7 +150,7 @@ describe('checkForDecayNotifications', () => {
 
     const created = await checkForDecayNotifications('tech-1')
 
-    expect(created[0].linkedModuleId).toBe('module-123')
+    expect(created[0]!.linkedModuleId).toBe('module-123')
   })
 
   it('has null linkedModuleId when no module exists', async () => {
@@ -158,14 +158,14 @@ describe('checkForDecayNotifications', () => {
 
     const created = await checkForDecayNotifications('tech-1')
 
-    expect(created[0].linkedModuleId).toBeNull()
+    expect(created[0]!.linkedModuleId).toBeNull()
   })
 
   it('stores no patient data in notifications — only procedureRef and counts', async () => {
     mockCompetencies.push(makeCompetency('RISK-001', 'decay_risk', 60))
 
     const created = await checkForDecayNotifications('tech-1')
-    const notif = created[0]
+    const notif = created[0]!
 
     expect((notif as any).patientRef).toBeUndefined()
     expect((notif as any).sampleId).toBeUndefined()
@@ -188,7 +188,7 @@ describe('getActiveDecayNotifications', () => {
 
     const active = await getActiveDecayNotifications('tech-1')
     expect(active).toHaveLength(1)
-    expect(active[0].procedureRef).toBe('A')
+    expect(active[0]!.procedureRef).toBe('A')
   })
 })
 

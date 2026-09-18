@@ -20,6 +20,7 @@ function makeReport(overrides: Partial<HandoverReport> = {}): HandoverReport {
     outgoingTechId: 'tech-001',
     outgoingTechName: 'Alice',
     incomingTechId: null,
+    incomingTechName: null,
     status: 'PENDING',
     createdAt: new Date().toISOString(),
     acknowledgedAt: null,
@@ -68,7 +69,7 @@ describe('usePendingHandovers', () => {
     })
 
     expect(result.current.pendingHandovers).toHaveLength(1)
-    expect(result.current.pendingHandovers[0].id).toBe(report.id)
+    expect(result.current.pendingHandovers[0]!.id).toBe(report.id)
   })
 
   it('does not return ACKNOWLEDGED reports as pending', async () => {
@@ -82,7 +83,7 @@ describe('usePendingHandovers', () => {
     })
 
     expect(result.current.pendingHandovers).toHaveLength(1)
-    expect(result.current.pendingHandovers[0].id).toBe(pending.id)
+    expect(result.current.pendingHandovers[0]!.id).toBe(pending.id)
   })
 
   it(`marks handovers older than ${HANDOVER_ALERT_THRESHOLD_MINUTES} min as expired alerts`, async () => {
@@ -101,7 +102,7 @@ describe('usePendingHandovers', () => {
 
     expect(result.current.pendingHandovers).toHaveLength(2)
     expect(result.current.expiredHandovers).toHaveLength(1)
-    expect(result.current.expiredHandovers[0].id).toBe(oldReport.id)
+    expect(result.current.expiredHandovers[0]!.id).toBe(oldReport.id)
   })
 
   it('does not include fresh handovers in expiredHandovers', async () => {

@@ -169,7 +169,7 @@ describe('buildResupplyRequest', () => {
     expect(req.status).toBe('submitted')
     expect(req.syncStatus).toBe('pending')
     expect(req.statusHistory).toHaveLength(1)
-    expect(req.statusHistory[0].status).toBe('submitted')
+    expect(req.statusHistory[0]!.status).toBe('submitted')
     expect(req.batchOrderId).toBeNull()
     expect(req.estimatedDelivery).toBeNull()
     expect(req.actualDelivery).toBeNull()
@@ -200,8 +200,8 @@ describe('buildResupplyRequest', () => {
       notes: '',
       hlcTimestamp: '2026-05-31T00:00:00Z:0:test',
     })
-    expect(req.items[0].unitPrice).toBeNull()
-    expect(req.items[0].totalPrice).toBeNull()
+    expect(req.items[0]!.unitPrice).toBeNull()
+    expect(req.items[0]!.totalPrice).toBeNull()
   })
 })
 
@@ -221,6 +221,6 @@ describe('status history is append-only', () => {
     })
     // The initial history has exactly one entry — submitted
     expect(req.statusHistory).toHaveLength(1)
-    expect(req.statusHistory[0].status).toBe('submitted')
+    expect(req.statusHistory[0]!.status).toBe('submitted')
   })
 })

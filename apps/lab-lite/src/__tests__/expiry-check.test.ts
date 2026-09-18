@@ -64,7 +64,7 @@ describe('48-Hour Expiry Check', () => {
 
     expect(result.expiredCount).toBe(1)
     const items = await getQueueItems()
-    expect(items[0].status).toBe('expired')
+    expect(items[0]!.status).toBe('expired')
   })
 
   it('does not mark items younger than 48 hours', async () => {
@@ -75,7 +75,7 @@ describe('48-Hour Expiry Check', () => {
 
     expect(result.expiredCount).toBe(0)
     const items = await getQueueItems()
-    expect(items[0].status).toBe('pending')
+    expect(items[0]!.status).toBe('pending')
   })
 
   it('does not re-expire already expired items', async () => {
@@ -97,7 +97,7 @@ describe('48-Hour Expiry Check', () => {
 
     expect(result.expiredCount).toBe(0)
     const items = await getQueueItems()
-    expect(items[0].status).toBe('failed')
+    expect(items[0]!.status).toBe('failed')
   })
 
   it('emits audit event for each expired item', async () => {

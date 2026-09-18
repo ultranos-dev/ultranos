@@ -158,7 +158,7 @@ describe('HMIS Dexie helpers', () => {
     await saveHmisReport(r2025)
     const results = await getHmisReportsByYear(2026)
     expect(results).toHaveLength(1)
-    expect(results[0].reportYear).toBe(2026)
+    expect(results[0]!.reportYear).toBe(2026)
   })
 
   it('finalizeHmisReport transitions status to finalized', async () => {
@@ -333,9 +333,9 @@ describe('correction tracking', () => {
         },
       ],
     })
-    expect(report.corrections[0].originalValue).toBe(5)
-    expect(report.corrections[0].correctedValue).toBe(7)
-    expect(report.corrections[0].fieldPath).toBe('testCategorySummary[0].totalPositive')
+    expect(report.corrections[0]!.originalValue).toBe(5)
+    expect(report.corrections[0]!.correctedValue).toBe(7)
+    expect(report.corrections[0]!.fieldPath).toBe('testCategorySummary[0].totalPositive')
   })
 })
 
@@ -490,7 +490,7 @@ describe('HMIS audit events', () => {
       reportYear: 2026,
     })
     expect(emitClientAudit).toHaveBeenCalledTimes(1)
-    const call = vi.mocked(emitClientAudit).mock.calls[0][0]
+    const call = vi.mocked(emitClientAudit).mock.calls[0]![0]
     expect(call).toHaveProperty('actorId')
     expect(call).toHaveProperty('resourceId', 'report-opaque-123')
     // Verify no PHI in metadata
@@ -507,7 +507,7 @@ describe('HMIS audit events', () => {
       fieldPath: 'testCategorySummary[0].totalPositive',
     })
     expect(emitClientAudit).toHaveBeenCalledTimes(1)
-    const call = vi.mocked(emitClientAudit).mock.calls[0][0]
+    const call = vi.mocked(emitClientAudit).mock.calls[0]![0]
     expect(call.metadata).toHaveProperty('fieldPath', 'testCategorySummary[0].totalPositive')
   })
 
@@ -519,7 +519,7 @@ describe('HMIS audit events', () => {
       reportYear: 2026,
     })
     expect(emitClientAudit).toHaveBeenCalledTimes(1)
-    const call = vi.mocked(emitClientAudit).mock.calls[0][0]
+    const call = vi.mocked(emitClientAudit).mock.calls[0]![0]
     expect(call.metadata).toHaveProperty('hmisEvent', 'HMIS_REPORT_FINALIZED')
   })
 
@@ -532,7 +532,7 @@ describe('HMIS audit events', () => {
       format: 'pdf',
     })
     expect(emitClientAudit).toHaveBeenCalledTimes(1)
-    const call = vi.mocked(emitClientAudit).mock.calls[0][0]
+    const call = vi.mocked(emitClientAudit).mock.calls[0]![0]
     expect(call.metadata).toHaveProperty('format', 'pdf')
   })
 })

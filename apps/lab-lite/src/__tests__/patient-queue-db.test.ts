@@ -66,8 +66,8 @@ describe('patient-queue Dexie CRUD', () => {
     const active = await getActiveQueue()
     expect(active).toHaveLength(2)
     // Oldest first
-    expect(active[0].tokenDisplayKey).toBe('blue-star')
-    expect(active[1].tokenDisplayKey).toBe('red-circle')
+    expect(active[0]!.tokenDisplayKey).toBe('blue-star')
+    expect(active[1]!.tokenDisplayKey).toBe('red-circle')
   })
 
   it('callNextPatient sets status to serving and records calledAt', async () => {
@@ -116,7 +116,7 @@ describe('patient-queue Dexie CRUD', () => {
 
     const history = await getQueueHistory(today)
     expect(history).toHaveLength(1)
-    expect(history[0].tokenDisplayKey).toBe('blue-star')
+    expect(history[0]!.tokenDisplayKey).toBe('blue-star')
   })
 
   it('clearCompletedEntries removes completed and no-show entries', async () => {

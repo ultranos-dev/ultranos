@@ -79,7 +79,7 @@ vi.mock('next-intl', () => ({
       const leafKey = rest.slice(1).join('.')
       if (i18nMessages[compoundNs]?.[leafKey]) return i18nMessages[compoundNs][leafKey]
     }
-    return i18nMessages[ns]?.[k] ?? key
+    return i18nMessages[ns!]?.[k] ?? key
   },
   useLocale: () => 'en',
 }))

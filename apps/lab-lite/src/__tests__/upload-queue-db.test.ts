@@ -42,9 +42,9 @@ describe('Upload Queue Database (Dexie)', () => {
 
     const items = await getQueueItems()
     expect(items).toHaveLength(1)
-    expect(items[0].patientFirstName).toBe('Ahmad')
-    expect(items[0].status).toBe('pending')
-    expect(items[0].metadata.loincCode).toBe('58410-2')
+    expect(items[0]!.patientFirstName).toBe('Ahmad')
+    expect(items[0]!.status).toBe('pending')
+    expect(items[0]!.metadata.loincCode).toBe('58410-2')
   })
 
   it('stores file data correctly', async () => {
@@ -55,9 +55,9 @@ describe('Upload Queue Database (Dexie)', () => {
     const items = await getQueueItems()
     // fake-indexeddb may not fully preserve Blob in jsdom;
     // verify the entry was stored with the file reference and metadata
-    expect(items[0].file).toBeDefined()
-    expect(items[0].fileName).toBe('stored.pdf')
-    expect(items[0].fileType).toBe('application/pdf')
+    expect(items[0]!.file).toBeDefined()
+    expect(items[0]!.fileName).toBe('stored.pdf')
+    expect(items[0]!.fileType).toBe('application/pdf')
   })
 
   it('returns items in FIFO order (oldest first)', async () => {
@@ -66,9 +66,9 @@ describe('Upload Queue Database (Dexie)', () => {
     await addToQueue(makeEntry({ patientFirstName: 'Third', queuedAt: '2026-04-30T10:00:00Z' }))
 
     const items = await getQueueItems()
-    expect(items[0].patientFirstName).toBe('First')
-    expect(items[1].patientFirstName).toBe('Second')
-    expect(items[2].patientFirstName).toBe('Third')
+    expect(items[0]!.patientFirstName).toBe('First')
+    expect(items[1]!.patientFirstName).toBe('Second')
+    expect(items[2]!.patientFirstName).toBe('Third')
   })
 
   it('enforces 50-item queue limit', async () => {
@@ -94,7 +94,7 @@ describe('Upload Queue Database (Dexie)', () => {
     await updateQueueItemStatus(id, 'uploading')
 
     const items = await getQueueItems()
-    expect(items[0].status).toBe('uploading')
+    expect(items[0]!.status).toBe('uploading')
   })
 
   it('updates retry count and last attempt timestamp', async () => {
@@ -103,9 +103,9 @@ describe('Upload Queue Database (Dexie)', () => {
     await updateQueueItemStatus(id, 'failed', { retryCount: 2, lastAttemptAt: now })
 
     const items = await getQueueItems()
-    expect(items[0].retryCount).toBe(2)
-    expect(items[0].lastAttemptAt).toBe(now)
-    expect(items[0].status).toBe('failed')
+    expect(items[0]!.retryCount).toBe(2)
+    expect(items[0]!.lastAttemptAt).toBe(now)
+    expect(items[0]!.status).toBe('failed')
   })
 
   it('removes a queue item by ID', async () => {
@@ -116,7 +116,7 @@ describe('Upload Queue Database (Dexie)', () => {
 
     const items = await getQueueItems()
     expect(items).toHaveLength(1)
-    expect(items[0].patientFirstName).toBe('Keep')
+    expect(items[0]!.patientFirstName).toBe('Keep')
   })
 
   it('returns correct queue count', async () => {
@@ -140,7 +140,7 @@ describe('Upload Queue Database (Dexie)', () => {
     await addToQueue(entry)
 
     const items = await getQueueItems()
-    const item = items[0]
+    const item = items[0]!
     expect(item.fileName).toBe('scan.png')
     expect(item.fileType).toBe('image/png')
     expect(item.patientRef).toBe('ref-xyz')

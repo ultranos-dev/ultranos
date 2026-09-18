@@ -118,8 +118,8 @@ describe('Health Record Crypto (Story 47.3, Task 2)', () => {
     const decrypted = await decryptHealthRecord(encrypted, key)
 
     expect(decrypted.exposureHistory).toHaveLength(2)
-    expect(decrypted.exposureHistory[0].id).toBe('exp-a')
-    expect(decrypted.exposureHistory[1].pepTaken).toBe(false)
+    expect(decrypted.exposureHistory[0]!.id).toBe('exp-a')
+    expect(decrypted.exposureHistory[1]!.pepTaken).toBe(false)
   })
 
   it('preserves TB screening history through round-trip', async () => {
@@ -136,6 +136,6 @@ describe('Health Record Crypto (Story 47.3, Task 2)', () => {
     const decrypted = await decryptHealthRecord(encrypted, key)
 
     expect(decrypted.tbScreeningHistory).toHaveLength(3)
-    expect(decrypted.tbScreeningHistory[1].result).toBe(TbScreeningResult.POSITIVE)
+    expect(decrypted.tbScreeningHistory[1]!.result).toBe(TbScreeningResult.POSITIVE)
   })
 })

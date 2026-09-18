@@ -5,6 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { detectCriticalValues, buildObservationFromResult } from '../lib/critical-values/critical-value-detector'
 import type { CriticalValueThreshold } from '../lib/critical-values/types'
+import type { AbnormalityFlag } from '../types/authorization'
 
 const mockGetCriticalThreshold = vi.fn().mockResolvedValue(undefined)
 
@@ -53,7 +54,7 @@ describe('detectCriticalValues', () => {
     const matches = await detectCriticalValues([
       { loincCode: '2823-3', analyte: 'Potassium', abnormalityFlags: ['H'] },
       { loincCode: '2345-7', analyte: 'Glucose', abnormalityFlags: ['L'] },
-      { loincCode: '718-7', analyte: 'Hemoglobin', abnormalityFlags: ['N'] },
+      { loincCode: '718-7', analyte: 'Hemoglobin', abnormalityFlags: ['N'] as unknown as AbnormalityFlag[] },
       { loincCode: '6690-2', analyte: 'WBC', abnormalityFlags: [] },
     ])
 
@@ -80,7 +81,7 @@ describe('detectCriticalValues', () => {
     ])
 
     expect(matches).toHaveLength(1)
-    expect(matches[0].threshold).toBe(6.0) // lab override, not default 6.5
+    expect(matches[0]!.threshold).toBe(6.0) // lab override, not default 6.5
   })
 
   it('returns both HIGH and LOW matches when result has both HH and LL flags', async () => {

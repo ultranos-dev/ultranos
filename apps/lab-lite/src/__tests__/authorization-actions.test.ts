@@ -293,7 +293,7 @@ describe('approveResult', () => {
       ],
     })
 
-    const call = vi.mocked(reportChecklistEvent).mock.calls[0][0]
+    const call = vi.mocked(reportChecklistEvent).mock.calls[0]![0]!
     // criticalAnalytes should be strings like "Potassium - LOW", NOT "2.5" or numeric values
     for (const entry of call.criticalAnalytes) {
       expect(typeof entry).toBe('string')

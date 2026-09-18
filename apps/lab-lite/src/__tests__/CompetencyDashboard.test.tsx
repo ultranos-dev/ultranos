@@ -160,7 +160,7 @@ describe('CompetencyDashboard', () => {
     await waitFor(() => {
       const rows = screen.getAllByRole('row')
       // First data row should be the red one (after header row)
-      expect(rows[1].getAttribute('data-testid')).toBe('competency-row-B-RED')
+      expect(rows[1]!.getAttribute('data-testid')).toBe('competency-row-B-RED')
     })
   })
 

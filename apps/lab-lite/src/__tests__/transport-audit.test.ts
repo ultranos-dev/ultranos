@@ -208,7 +208,7 @@ describe('transport audit event emission (story 13.7)', () => {
       sampleIds: ['s-x'],
     })
 
-    const call = mockReportTransportAuditEvent.mock.calls[0][0]
+    const call = mockReportTransportAuditEvent.mock.calls[0]![0]
     expect(call.transportSessionId).toBeTruthy()
     expect(call.courierId).toBe('COURIER-ABC')
   })

@@ -63,7 +63,7 @@ describe('escalation timer', () => {
   })
 
   it('emits step event when advanceEscalation returns a step', async () => {
-    const mockStep = { stepNumber: 2, type: 'inapp_notification', recipientId: 'prac-001', recipientRole: 'physician', scheduledAt: new Date().toISOString(), sentAt: null, acknowledgedAt: null, status: 'pending' as const }
+    const mockStep = { stepNumber: 2, type: 'inapp_notification' as const, recipientId: 'prac-001', recipientRole: 'physician', scheduledAt: new Date().toISOString(), sentAt: null, acknowledgedAt: null, status: 'pending' as const }
     vi.mocked(advanceEscalation).mockResolvedValueOnce(mockStep)
 
     const events: any[] = []
