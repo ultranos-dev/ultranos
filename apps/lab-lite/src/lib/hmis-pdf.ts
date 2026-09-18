@@ -12,6 +12,22 @@ import { formatReportingPeriod, HMIS_SECTIONS } from './hmis-template'
 
 const RTL_LOCALES = ['ar', 'prs', 'ps']
 
+// Named label keys used across the PDF layout. Using a Record over a finite union
+// (not Record<string,string>) gives named string properties — so l.title etc. are
+// `string`, not `string | undefined` under noUncheckedIndexedAccess.
+type HmisPdfLabels = Record<
+  | 'title' | 'reportingPeriod' | 'status' | 'finalized' | 'draft' | 'date'
+  | 'sectionA' | 'sectionB' | 'sectionC' | 'sectionD' | 'sectionE' | 'sectionF'
+  | 'disease' | 'testCategory' | 'ageGroup' | 'indicator' | 'value'
+  | 'male' | 'female' | 'unknown' | 'total' | 'positive' | 'negative'
+  | 'totalTested' | 'totalPositive' | 'ratePercent' | 'field'
+  | 'reagent' | 'consumed' | 'remaining' | 'estDays' | 'previousMonth'
+  | 'noData' | 'noReagentData' | 'certification' | 'preparedBy' | 'reviewedBy'
+  | 'correctionsNote',
+  string
+>
+
+
 /**
  * Generate a PDF Blob for the HMIS monthly report.
  * Returns a Blob that can be used to create an object URL for download.
@@ -23,7 +39,7 @@ export async function exportHmisPdf(
   const { default: jsPDF } = await import('jspdf')
   const { default: autoTable } = await import('jspdf-autotable')
 
-  const labels: Record<string, Record<string, string>> = {
+  const labels: Record<string, HmisPdfLabels> = {
     en: {
       title: 'HMIS Monthly Laboratory Report',
       sectionA: 'Section A — Facility Information',
@@ -186,7 +202,7 @@ export async function exportHmisPdf(
     },
   }
 
-  const l = labels[locale] ?? labels.en
+  const l = labels[locale] ?? labels.en!
 
   const isRtl = RTL_LOCALES.includes(locale)
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', putOnlyUsedFonts: true })
