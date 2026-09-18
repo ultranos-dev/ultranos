@@ -3292,6 +3292,79 @@ export async function upsertSyncedLogbookEntry(entry: LabLogbookEntry): Promise<
 }
 
 // ---------------------------------------------------------------------------
+// Temperature monitoring helpers (Story 47.x — cold-chain readings/excursions)
+// ---------------------------------------------------------------------------
+
+/** Record a temperature reading. */
+export async function addTemperatureReading(reading: TemperatureReading): Promise<void> {
+  await getDb().temperature_readings.add(reading)
+}
+
+/** All readings for a location. */
+export async function getReadingsByLocation(locationId: string): Promise<TemperatureReading[]> {
+  return getDb().temperature_readings.where('locationId').equals(locationId).toArray()
+}
+
+/** Readings with timestamp within [from, to] (inclusive ISO instants). */
+export async function getReadingsByDateRange(from: string, to: string): Promise<TemperatureReading[]> {
+  const all = await getDb().temperature_readings.toArray()
+  return all.filter((r) => r.timestamp >= from && r.timestamp <= to)
+}
+
+/** All configured monitoring locations. */
+export async function getTemperatureLocations(): Promise<TemperatureLocation[]> {
+  return getDb().temperature_locations.toArray()
+}
+
+/** Create or update a monitoring location (upsert by &id). */
+export async function putTemperatureLocation(location: TemperatureLocation): Promise<void> {
+  await getDb().temperature_locations.put(location)
+}
+
+/** Remove a monitoring location. */
+export async function deleteTemperatureLocation(id: string): Promise<void> {
+  await getDb().temperature_locations.delete(id)
+}
+
+/** Create or update an excursion (upsert by &id — used for both open and resolve). */
+export async function addExcursion(excursion: TemperatureExcursion): Promise<void> {
+  await getDb().temperature_excursions.put(excursion)
+}
+
+/** Excursions that have not yet been acknowledged. */
+export async function getActiveExcursions(): Promise<TemperatureExcursion[]> {
+  const all = await getDb().temperature_excursions.toArray()
+  return all.filter((e) => !e.acknowledged)
+}
+
+/** The still-open excursion (endTime === null) for a location, if any. */
+export async function getOngoingExcursionForLocation(
+  locationId: string,
+): Promise<TemperatureExcursion | undefined> {
+  const all = await getDb().temperature_excursions.where('locationId').equals(locationId).toArray()
+  return all.find((e) => e.endTime === null)
+}
+
+/** Acknowledge an excursion, recording who acknowledged it and the affected reagents. */
+export async function acknowledgeExcursion(
+  id: string,
+  acknowledgedBy: string,
+  affectedReagents: string[],
+): Promise<void> {
+  await getDb().temperature_excursions.update(id, {
+    acknowledged: true,
+    acknowledgedBy,
+    affectedReagents,
+  })
+}
+
+/** Excursions whose startTime falls within [from, to] (inclusive ISO instants). */
+export async function getExcursionsByDateRange(from: string, to: string): Promise<TemperatureExcursion[]> {
+  const all = await getDb().temperature_excursions.toArray()
+  return all.filter((e) => e.startTime >= from && e.startTime <= to)
+}
+
+// ---------------------------------------------------------------------------
 // Visual Atlas helpers (v15) — Story 53.2
 // ---------------------------------------------------------------------------
 
