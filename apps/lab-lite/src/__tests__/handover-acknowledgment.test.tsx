@@ -69,7 +69,7 @@ describe('HandoverAcknowledgment', () => {
       />,
     )
 
-    fireEvent.click(screen.getByText('View details'))
+    fireEvent.click(screen.getByText('viewDetails'))
 
     await waitFor(() => {
       expect(screen.getByText('Centrifuge A — TEMPERATURE_EXCURSION')).toBeInTheDocument()
@@ -86,7 +86,7 @@ describe('HandoverAcknowledgment', () => {
       />,
     )
 
-    fireEvent.click(screen.getByText('View details'))
+    fireEvent.click(screen.getByText('viewDetails'))
 
     await waitFor(() => {
       expect(screen.getByRole('textbox', { name: /optional/i })).toBeInTheDocument()
@@ -99,20 +99,21 @@ describe('HandoverAcknowledgment', () => {
       <HandoverAcknowledgment
         report={MOCK_REPORT}
         incomingTechId="tech-002"
+        incomingTechName="Tech Two"
         onAcknowledged={onAcknowledged}
       />,
     )
 
-    fireEvent.click(screen.getByText('View details'))
-    await waitFor(() => screen.getByText('acknowledge'))
+    fireEvent.click(screen.getByText('viewDetails'))
+    await waitFor(() => screen.getByText('acknowledgeHandover'))
 
     const notes = screen.getByRole('textbox', { name: /optional/i })
     fireEvent.change(notes, { target: { value: 'Understood' } })
 
-    fireEvent.click(screen.getByText('acknowledge'))
+    fireEvent.click(screen.getByText('acknowledgeHandover'))
 
     await waitFor(() => {
-      expect(mockAcknowledge).toHaveBeenCalledWith('report-001', 'tech-002', 'Understood')
+      expect(mockAcknowledge).toHaveBeenCalledWith('report-001', 'tech-002', 'Tech Two', 'Understood')
       expect(onAcknowledged).toHaveBeenCalledTimes(1)
     })
   })
@@ -127,9 +128,9 @@ describe('HandoverAcknowledgment', () => {
       />,
     )
 
-    fireEvent.click(screen.getByText('View details'))
-    await waitFor(() => screen.getByText('acknowledge'))
-    fireEvent.click(screen.getByText('acknowledge'))
+    fireEvent.click(screen.getByText('viewDetails'))
+    await waitFor(() => screen.getByText('acknowledgeHandover'))
+    fireEvent.click(screen.getByText('acknowledgeHandover'))
 
     await waitFor(() => {
       expect(screen.getByText(/failed to acknowledge/i)).toBeInTheDocument()

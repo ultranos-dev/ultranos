@@ -85,20 +85,20 @@ describe('EndShiftDialog', () => {
   it('advances to confirm step on "Review & Confirm"', async () => {
     render(<EndShiftDialog isOpen={true} onClose={vi.fn()} onConfirmed={vi.fn()} />)
 
-    await waitFor(() => screen.getByText('Review & Confirm'))
-    fireEvent.click(screen.getByText('Review & Confirm'))
+    await waitFor(() => screen.getByText('reviewAndConfirm'))
+    fireEvent.click(screen.getByText('reviewAndConfirm'))
 
-    expect(screen.getByText('confirmEndShift')).toBeInTheDocument()
+    expect(screen.getByText('endShiftConfirm')).toBeInTheDocument()
   })
 
   it('calls finalizeHandover and onConfirmed when confirmed', async () => {
     const onConfirmed = vi.fn()
     render(<EndShiftDialog isOpen={true} onClose={vi.fn()} onConfirmed={onConfirmed} />)
 
-    await waitFor(() => screen.getByText('Review & Confirm'))
-    fireEvent.click(screen.getByText('Review & Confirm'))
+    await waitFor(() => screen.getByText('reviewAndConfirm'))
+    fireEvent.click(screen.getByText('reviewAndConfirm'))
 
-    const confirmBtn = await screen.findByText('endShift')
+    const confirmBtn = await screen.findByText('endShiftButton')
     fireEvent.click(confirmBtn)
 
     await waitFor(() => {
