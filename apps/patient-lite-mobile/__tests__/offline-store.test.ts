@@ -21,9 +21,15 @@ const MOCK_PATIENT: FhirPatient = {
   _ultranos: {
     nameLocal: 'فاطمة الرشيد',
     isActive: true,
+    // Required by FhirPatientSchema (PatientUltranosExtSchema.patient_tier); without
+    // it, loadPatientProfile's safeParse rejects the record as corrupt and returns null.
+    patient_tier: 'FREE',
+    // Schema applies isNomadic: z.boolean().default(false), so the parsed result
+    // includes it — set it here so round-trip toEqual comparisons match.
+    isNomadic: false,
     createdAt: '2026-01-01T00:00:00Z',
   },
-  meta: { lastUpdated: '2026-04-28T10:00:00Z' },
+  meta: { lastUpdated: '2026-04-28T10:00:00.000Z' },
 }
 
 describe('offline-store', () => {
