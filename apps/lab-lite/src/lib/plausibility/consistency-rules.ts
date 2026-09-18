@@ -30,8 +30,8 @@ export const CONSISTENCY_RULES: ConsistencyRule[] = [
     name: 'RBC vs Hemoglobin',
     requiredAnalytes: ['789-8', '718-7'],
     condition: (values) => {
-      const rbc = values['789-8']
-      const hgb = values['718-7']
+      const rbc = values['789-8']!
+      const hgb = values['718-7']!
       // Very low RBC with normal/high hemoglobin is physiologically impossible
       return rbc < 2.0 && hgb > 12.0
     },
@@ -43,8 +43,8 @@ export const CONSISTENCY_RULES: ConsistencyRule[] = [
     name: 'MCV vs RBC',
     requiredAnalytes: ['787-2', '789-8'],
     condition: (values) => {
-      const mcv = values['787-2']
-      const rbc = values['789-8']
+      const mcv = values['787-2']!
+      const rbc = values['789-8']!
       // Very high MCV (macrocytosis) with very high RBC count is inconsistent
       return mcv > 120 && rbc > 6.0
     },
@@ -56,8 +56,8 @@ export const CONSISTENCY_RULES: ConsistencyRule[] = [
     name: 'Hemoglobin vs Hematocrit',
     requiredAnalytes: ['718-7', '4544-3'],
     condition: (values) => {
-      const hgb = values['718-7']
-      const hct = values['4544-3']
+      const hgb = values['718-7']!
+      const hct = values['4544-3']!
       // Hct should be approximately 3x Hgb (rule of three)
       // Flag if ratio is outside 2.5–3.5 range (significant discrepancy)
       if (hgb <= 0) return false
@@ -72,8 +72,8 @@ export const CONSISTENCY_RULES: ConsistencyRule[] = [
     name: 'Platelets vs MPV',
     requiredAnalytes: ['777-3', '32623-1'],
     condition: (values) => {
-      const plt = values['777-3']
-      const mpv = values['32623-1']
+      const plt = values['777-3']!
+      const mpv = values['32623-1']!
       // Very high MPV with very high platelet count is rare
       return plt > 800 && mpv > 12
     },
@@ -85,8 +85,8 @@ export const CONSISTENCY_RULES: ConsistencyRule[] = [
     name: 'ALT vs AST',
     requiredAnalytes: ['1742-6', '1920-8'],
     condition: (values) => {
-      const alt = values['1742-6']
-      const ast = values['1920-8']
+      const alt = values['1742-6']!
+      const ast = values['1920-8']!
       if (alt <= 0 || ast <= 0) return false
       const ratio = ast / alt
       // AST:ALT > 10:1 is highly unusual (possible error, or severe hepatocellular damage)
@@ -101,8 +101,8 @@ export const CONSISTENCY_RULES: ConsistencyRule[] = [
     name: 'Glucose vs HbA1c',
     requiredAnalytes: ['2345-7', '59261-8'],
     condition: (values) => {
-      const glucose = values['2345-7']
-      const hba1c = values['59261-8']
+      const glucose = values['2345-7']!
+      const hba1c = values['59261-8']!
       // Very high acute glucose with very low HbA1c is inconsistent (suggests acute spike vs chronic)
       // Flag as informational warning only
       return glucose > 400 && hba1c < 6.0
@@ -115,8 +115,8 @@ export const CONSISTENCY_RULES: ConsistencyRule[] = [
     name: 'Sodium vs Chloride',
     requiredAnalytes: ['2951-2', '2075-0'],
     condition: (values) => {
-      const na = values['2951-2']
-      const cl = values['2075-0']
+      const na = values['2951-2']!
+      const cl = values['2075-0']!
       // Anion gap calculation: AG = Na - (Cl + HCO3)
       // Without HCO3, check Na - Cl ratio: normally 36±4 mEq/L
       const diff = na - cl
@@ -130,8 +130,8 @@ export const CONSISTENCY_RULES: ConsistencyRule[] = [
     name: 'Total Protein vs Albumin',
     requiredAnalytes: ['2885-2', '1751-7'],
     condition: (values) => {
-      const tp = values['2885-2']
-      const alb = values['1751-7']
+      const tp = values['2885-2']!
+      const alb = values['1751-7']!
       // Albumin cannot exceed total protein
       return alb > tp
     },

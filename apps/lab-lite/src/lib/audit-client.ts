@@ -114,7 +114,7 @@ export function reportQueueAuditEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.technicianId ?? 'unknown',
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: AuditResourceType.LAB_RESULT,
     resourceId: String(payload.queueEntryId),
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -157,7 +157,7 @@ export function reportPaymentEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.cashierId,
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: 'PAYMENT' as AuditResourceType,
     resourceId: payload.paymentId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -204,7 +204,7 @@ export function reportWasteEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.actorId ?? 'unknown',
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: AuditResourceType.WASTE_CONTAINER,
     resourceId: payload.containerId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -296,7 +296,7 @@ export function reportHealthRecordAuditEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.accessedBy,
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: AuditResourceType.EMPLOYEE_HEALTH,
     resourceId: payload.practitionerId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -342,7 +342,7 @@ export function reportTemperatureEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.actorId ?? 'unknown',
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: AuditResourceType.TEMPERATURE_MONITORING,
     resourceId: payload.locationId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -384,7 +384,7 @@ export async function emitEquipmentAuditEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.actorId ?? 'unknown',
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: AuditResourceType.SYSTEM,
     resourceId: payload.resourceId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -513,8 +513,8 @@ export function reportSecurityAuditEvent(payload: SecurityAuditPayload): void {
     SECURITY_BACKUP_GENERATED: AuditAction.CREATE,
     SECURITY_BACKUP_EXPORTED: AuditAction.READ,
     SECURITY_CHECKLIST_COMPLETED: AuditAction.UPDATE,
-    SECURITY_WIPE_INITIATED: AuditAction.DELETE,
-    SECURITY_WIPE_COMPLETED: AuditAction.DELETE,
+    SECURITY_WIPE_INITIATED: AuditAction.DELETE_REQUEST,
+    SECURITY_WIPE_COMPLETED: AuditAction.DELETE_REQUEST,
     SECURITY_RESTORE_INITIATED: AuditAction.CREATE,
     SECURITY_RESTORE_COMPLETE: AuditAction.CREATE,
     SECURITY_ALERT_DEACTIVATED: AuditAction.UPDATE,
@@ -523,7 +523,7 @@ export function reportSecurityAuditEvent(payload: SecurityAuditPayload): void {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? 'unknown',
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: 'SECURITY_PROTOCOL' as AuditResourceType,
     resourceId: 'device',
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -579,7 +579,7 @@ export function reportNetworkAuditEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.actorId,
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: 'NETWORK_LOCATION' as AuditResourceType,
     resourceId: payload.locationId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -693,7 +693,7 @@ export function reportHmisAuditEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? 'unknown',
     actorRole: (session?.labRole as unknown as UserRole) ?? UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: 'HMIS_REPORT' as AuditResourceType,
     resourceId: payload.reportId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -749,7 +749,7 @@ export function reportInfectionControlAuditEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.conductedBy,
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: 'INFECTION_CONTROL_AUDIT' as AuditResourceType,
     resourceId: payload.auditId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -804,7 +804,7 @@ export function reportReagentEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.actorId ?? 'unknown',
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: 'REAGENT_INVENTORY' as AuditResourceType,
     resourceId: payload.reagentId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -865,7 +865,7 @@ export function reportAuthorizationAuditEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.actorId ?? 'unknown',
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: AuditResourceType.LAB_RESULT,
     resourceId: payload.resultId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -958,7 +958,7 @@ export function reportSampleAuditEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.actorId,
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: AuditResourceType.SPECIMEN,
     resourceId: payload.sampleId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -1081,7 +1081,7 @@ export function reportSafetyAuditEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.techId,
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: resourceTypeMap[payload.action] as AuditResourceType,
     resourceId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -1359,7 +1359,7 @@ export function reportEscalationEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? 'unknown',
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: AuditResourceType.LAB_RESULT,
     resourceId: payload.chainId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -1519,7 +1519,7 @@ export function reportAmendmentEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.initiatedBy,
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action] ?? AuditAction.UPDATE,
+    action: actionMap[payload.action]! ?? AuditAction.UPDATE,
     resourceType: AuditResourceType.LAB_RESULT,
     resourceId: payload.originalReportId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -1570,7 +1570,7 @@ export function reportTransportAuditEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? payload.courierId,
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: 'TRANSPORT_SESSION' as AuditResourceType,
     resourceId: payload.transportSessionId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -1688,7 +1688,7 @@ export function reportOutbreakAuditEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: payload.actorId,
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: 'OUTBREAK_CONFIG' as AuditResourceType,
     resourceId: payload.outbreakConfigId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -1741,7 +1741,7 @@ export function reportSurveillanceAuditEvent(payload: {
   const input: ClientAuditEventInput = {
     actorId: 'system',
     actorRole: UserRole.LAB_TECH,
-    action: actionMap[payload.action],
+    action: actionMap[payload.action]!,
     resourceType: 'SURVEILLANCE_ALERT' as AuditResourceType,
     resourceId: payload.alertId ?? payload.diseaseCode ?? 'system',
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -1854,6 +1854,8 @@ export function reportSampleLockAuditEvent(payload: {
 }): void {
   try {
     const input: ClientAuditEventInput = {
+      actorId: payload.techId,
+      actorRole: UserRole.LAB_TECH,
       action: AuditAction.UPDATE,
       resourceType: AuditResourceType.LAB_RESULT,
       resourceId: payload.sampleId,
@@ -1885,6 +1887,8 @@ export function reportWorkloadAuditEvent(payload: {
   try {
     const isSampleEvent = payload.action === 'SAMPLE_REASSIGNED'
     const input: ClientAuditEventInput = {
+      actorId: payload.reassignedBy ?? payload.changedBy ?? payload.techId ?? 'unknown',
+      actorRole: UserRole.LAB_TECH,
       action: AuditAction.UPDATE,
       resourceType: isSampleEvent ? AuditResourceType.LAB_RESULT : ('TECH_AVAILABILITY' as AuditResourceType),
       resourceId: isSampleEvent ? (payload.sampleId ?? '') : (payload.techId ?? ''),
@@ -1919,6 +1923,8 @@ export function reportCHWPatientIdentifiedEvent(payload: {
 }): void {
   try {
     void emitClientAudit({
+      actorId: payload.chwPractitionerId,
+      actorRole: UserRole.LAB_TECH,
       action: AuditAction.READ,
       resourceType: AuditResourceType.LAB_SAMPLE,
       resourceId: payload.patientRef,
@@ -1944,6 +1950,8 @@ export function reportCHWSampleCollectedEvent(payload: {
 }): void {
   try {
     void emitClientAudit({
+      actorId: payload.chwPractitionerId,
+      actorRole: UserRole.LAB_TECH,
       action: AuditAction.CREATE,
       resourceType: AuditResourceType.LAB_SAMPLE,
       resourceId: payload.sampleId,
@@ -1969,6 +1977,8 @@ export function reportCHWLabelPrintedEvent(payload: {
 }): void {
   try {
     void emitClientAudit({
+      actorId: payload.chwPractitionerId,
+      actorRole: UserRole.LAB_TECH,
       action: AuditAction.READ,
       resourceType: AuditResourceType.LAB_SAMPLE,
       resourceId: payload.sampleId,
@@ -1994,6 +2004,8 @@ export function reportCHWHandoffEvent(payload: {
 }): void {
   try {
     void emitClientAudit({
+      actorId: payload.chwPractitionerId,
+      actorRole: UserRole.LAB_TECH,
       action: AuditAction.CREATE,
       resourceType: AuditResourceType.LAB_SAMPLE,
       resourceId: payload.handoffId,
@@ -2041,6 +2053,8 @@ interface SendOutAuditPayload {
 export function reportSendOutAuditEvent(payload: SendOutAuditPayload): void {
   try {
     void emitClientAudit({
+      actorId: payload.actorId ?? 'unknown',
+      actorRole: UserRole.LAB_TECH,
       action: AuditAction.UPDATE,
       resourceType: AuditResourceType.LAB_SAMPLE,
       resourceId: payload.sendOutId ?? payload.referenceLabId ?? 'unknown',
@@ -2083,7 +2097,7 @@ export function reportConsultationEvent(payload: {
     void emitClientAudit({
       actorId: session?.userId ?? 'unknown',
       actorRole: UserRole.LAB_TECH,
-      action: actionMap[payload.action] ?? AuditAction.UPDATE,
+      action: actionMap[payload.action]! ?? AuditAction.UPDATE,
       resourceType: AuditResourceType.CONSULTATION,
       resourceId: payload.consultationId,
       hlcTimestamp: serializeHlc(hlc.now()),
@@ -2228,7 +2242,7 @@ export function reportGuidanceEvent(payload: {
     void emitClientAudit({
       actorId: session?.userId ?? 'unknown',
       actorRole: UserRole.LAB_TECH,
-      action: actionMap[payload.action],
+      action: actionMap[payload.action]!,
       resourceType: 'PUBLIC_HEALTH_GUIDANCE' as AuditResourceType,
       resourceId: payload.guidanceId,
       hlcTimestamp: serializeHlc(hlc.now()),
@@ -2273,7 +2287,7 @@ export function reportLogbookEvent(payload: {
     const input: ClientAuditEventInput = {
       actorId: session?.userId ?? payload.technicianId ?? 'unknown',
       actorRole: UserRole.LAB_TECH,
-      action: actionMap[payload.action],
+      action: actionMap[payload.action]!,
       resourceType: 'LOGBOOK' as AuditResourceType,
       resourceId: payload.entryId,
       hlcTimestamp: serializeHlc(hlc.now()),
@@ -2382,7 +2396,7 @@ export function reportSpillAuditEvent(payload: {
     const input: ClientAuditEventInput = {
       actorId: session?.userId ?? payload.techId,
       actorRole: UserRole.LAB_TECH,
-      action: actionMap[payload.action],
+      action: actionMap[payload.action]!,
       resourceType: 'SAFETY_PROTOCOL' as AuditResourceType,
       resourceId: payload.incidentId,
       hlcTimestamp: serializeHlc(hlc.now()),
@@ -2427,11 +2441,11 @@ export function reportPlausibilityEvent(payload: {
       action: AuditAction.UPDATE,
       resourceType: AuditResourceType.LAB_RESULT,
       resourceId: payload.resultId,
-      patientRef: payload.patientRef, // opaque Patient/<uuid> — never a name
       hlcTimestamp: serializeHlc(hlc.now()),
       metadata: {
         plausibilityEvent: payload.event,
         outcome: 'SUCCESS',
+        patientRef: payload.patientRef, // opaque Patient/<uuid> — never a name
         flagId: payload.flagId,
         loincCode: payload.loincCode,
         ruleType: payload.ruleType,
