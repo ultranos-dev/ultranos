@@ -3192,10 +3192,11 @@ export interface LabLogbookEntry {
 // Append-only: entries are never modified or deleted after creation.
 // ---------------------------------------------------------------------------
 
-/** Append a new logbook entry (original). */
-export async function appendLogbookEntry(entry: LabLogbookEntry): Promise<void> {
+/** Append a new logbook entry (original). Returns the entry id. */
+export async function appendLogbookEntry(entry: LabLogbookEntry): Promise<string> {
   const db = getDb()
   await db.labLogbook.add(entry)
+  return entry.id
 }
 
 /** Append a logbook amendment entry. */
@@ -3223,6 +3224,71 @@ export async function getLogbookEntryByDiagnosticReportId(
 export async function getAllLogbookEntries(): Promise<LabLogbookEntry[]> {
   const db = getDb()
   return db.labLogbook.orderBy('seqNo').toArray()
+}
+
+/** Filter for the searchable logbook view (Story 42.8, AC 10.6). */
+export interface LogbookFilter {
+  dateFrom?: string          // inclusive ISO date (YYYY-MM-DD)
+  dateTo?: string            // inclusive ISO date (YYYY-MM-DD)
+  testType?: string          // exact match on LOINC display name
+  patientRef?: string        // case-insensitive substring on the opaque ref
+  technicianId?: string      // exact match
+}
+
+/**
+ * Return logbook entries (seqNo ascending) matching an optional filter, paginated.
+ * Returns the page plus the total count of matches (before pagination).
+ */
+export async function getLogbookEntries(
+  filter?: LogbookFilter,
+  offset = 0,
+  limit = 50,
+): Promise<{ entries: LabLogbookEntry[]; total: number }> {
+  const db = getDb()
+  let all = await db.labLogbook.orderBy('seqNo').toArray()
+  if (filter) {
+    if (filter.dateFrom) all = all.filter((e) => e.date >= filter.dateFrom!)
+    if (filter.dateTo) all = all.filter((e) => e.date <= filter.dateTo!)
+    if (filter.testType) all = all.filter((e) => e.testType === filter.testType)
+    if (filter.patientRef) {
+      const q = filter.patientRef.toLowerCase()
+      all = all.filter((e) => e.patientRef.toLowerCase().includes(q))
+    }
+    if (filter.technicianId) all = all.filter((e) => e.technicianId === filter.technicianId)
+  }
+  const total = all.length
+  return { entries: all.slice(offset, offset + limit), total }
+}
+
+/** Look up a single logbook entry by its primary key (&id). */
+export async function getLogbookEntryById(id: string): Promise<LabLogbookEntry | undefined> {
+  return getDb().labLogbook.get(id)
+}
+
+/** Look up a logbook entry by its sequence number. */
+export async function getLogbookEntryBySeqNo(seqNo: number): Promise<LabLogbookEntry | undefined> {
+  const results = await getDb().labLogbook.where('seqNo').equals(seqNo).toArray()
+  return results[0]
+}
+
+/** Entries that still need to be pushed to the Hub (syncStatus === 'pending'). */
+export async function getPendingLogbookSyncEntries(): Promise<LabLogbookEntry[]> {
+  return getDb().labLogbook.where('syncStatus').equals('pending').toArray()
+}
+
+/** Mark the given logbook entries as synced (append-only: only syncStatus changes). */
+export async function markLogbookEntriesSynced(ids: string[]): Promise<void> {
+  const db = getDb()
+  await db.transaction('rw', db.labLogbook, async () => {
+    for (const id of ids) {
+      await db.labLogbook.update(id, { syncStatus: 'synced' })
+    }
+  })
+}
+
+/** Idempotently store a logbook entry received from the Hub (put by &id). */
+export async function upsertSyncedLogbookEntry(entry: LabLogbookEntry): Promise<void> {
+  await getDb().labLogbook.put(entry)
 }
 
 // ---------------------------------------------------------------------------
