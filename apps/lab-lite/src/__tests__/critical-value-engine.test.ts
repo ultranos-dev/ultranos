@@ -3,7 +3,7 @@
  * AC: 1, 9 — Pure rule-based detection; deterministic.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { isCriticalValue, checkResultForCriticalValues } from '../lib/critical-value-engine'
+import { isCriticalValue, checkResultForCriticalValues, DetectionUnavailableError } from '../lib/critical-value-engine'
 import type { CriticalValueInput } from '../lib/critical-value-engine'
 
 // Mock the DB threshold lookup
@@ -81,10 +81,13 @@ describe('isCriticalValue', () => {
     expect(result.isCritical).toBe(false)
   })
 
-  it('returns not critical on threshold lookup failure (fail-open)', async () => {
+  it('throws (fail-loud) on threshold lookup failure — never silently "not critical"', async () => {
+    // CLAUDE.md Rule #3: a safety check must never default to "safe" (not critical)
+    // on failure — that is a false negative. Detection must surface as unavailable.
     vi.mocked(getCriticalThresholdByAnalyte).mockRejectedValue(new Error('DB error'))
-    const result = await isCriticalValue('2823-3', 'Potassium', 9.0)
-    expect(result.isCritical).toBe(false)
+    await expect(isCriticalValue('2823-3', 'Potassium', 9.0)).rejects.toBeInstanceOf(
+      DetectionUnavailableError,
+    )
   })
 
   it('handles threshold with only criticalHigh set', async () => {
