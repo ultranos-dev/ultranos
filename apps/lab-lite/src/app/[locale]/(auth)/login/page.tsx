@@ -54,7 +54,8 @@ export default function LoginPage() {
       })
 
       if (signInError) {
-        reportAuthEvent('LOGIN_FAILURE')
+        // Record the attempted staff email (actor, not patient PHI) for failed-login audit.
+        reportAuthEvent('LOGIN_FAILURE', { actorEmail: email })
         setError(t('invalidCredentials'))
         setLoading(false)
         return
