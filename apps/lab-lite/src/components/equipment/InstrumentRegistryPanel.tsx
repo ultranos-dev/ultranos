@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { ChevronLeft } from '@ultranos/ui-kit/icons'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import {
   getInstruments,
   registerInstrument,

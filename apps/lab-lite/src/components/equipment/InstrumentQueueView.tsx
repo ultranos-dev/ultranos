@@ -26,6 +26,7 @@ import type { QueuedBatchWithTimes } from '@/lib/equipment-service'
 import { BatchCard } from './BatchCard'
 import { QueueBatchDialog } from './QueueBatchDialog'
 import { Button } from '@/components/ui/Button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 
 // ---------------------------------------------------------------------------
 // P8: Inline cancel-reason modal — replaces window.prompt
