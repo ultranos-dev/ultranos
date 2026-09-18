@@ -28,6 +28,13 @@ vi.mock('@ultranos/ui-kit', () => ({
   DirectionalIcon: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
+// Components use next-intl useTranslations; resolve keys to themselves so these
+// RTL layout snapshots don't need a NextIntlClientProvider around every render.
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
+}))
+
 vi.mock('@/lib/outbreak-service', () => ({
   isOutbreakModeActive: vi.fn().mockResolvedValue(null),
   isOutbreakAuthorized: vi.fn().mockReturnValue(false),
