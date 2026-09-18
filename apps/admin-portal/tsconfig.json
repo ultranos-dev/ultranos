@@ -25,5 +25,10 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  // src/trpc/routers/* are orphaned/misplaced backend routers: they reference a
+  // tRPC server infra (@/trpc/init, @/lib/redis, field-encryption, …) that does not
+  // exist in this frontend app, have no root appRouter, and are imported by no live
+  // code. Excluded from typecheck pending a decision to relocate them to hub-api or
+  // remove them. (Nothing live depends on @/trpc here.)
+  "exclude": ["node_modules", "src/trpc"]
 }
