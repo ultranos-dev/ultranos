@@ -54,7 +54,7 @@ export async function processConfirmationReply(
 ): Promise<ConfirmationResult> {
   // Extract confirmation code from the reply body
   const match = CONFIRM_REPLY_REGEX.exec(inboundMessageBody)
-  if (!match) {
+  if (!match || match[1] == null) {
     return { matched: false, reason: 'No CONFIRM code found in message' }
   }
 

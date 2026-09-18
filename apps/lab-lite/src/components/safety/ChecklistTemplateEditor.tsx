@@ -158,7 +158,7 @@ export function ChecklistTemplateEditor() {
 
   const categoryOptions = [
     ...CHECKLIST_CATEGORIES,
-    ...allCategories.filter((c) => !CHECKLIST_CATEGORIES.includes(c)),
+    ...allCategories.filter((c) => !(CHECKLIST_CATEGORIES as readonly string[]).includes(c)),
   ]
 
   return (

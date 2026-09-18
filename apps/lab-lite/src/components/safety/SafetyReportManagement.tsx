@@ -201,8 +201,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
           )}
 
           {(selectedReport.status === ReportStatus.INVESTIGATING ||
-            selectedReport.status === ReportStatus.SUBMITTED) &&
-            selectedReport.status !== ReportStatus.CLOSED && (
+            selectedReport.status === ReportStatus.SUBMITTED) && (
             <div className="mt-4 space-y-3 border-t border-border pt-4">
               <label className="text-sm font-medium text-foreground">
                 {t('resolutionLabel')}

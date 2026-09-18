@@ -184,7 +184,7 @@ export async function isOutbreakModeActive(): Promise<OutbreakModeConfig | null>
   if (_cachedActiveOutbreak !== undefined) {
     return _cachedActiveOutbreak
   }
-  const result = await getActiveOutbreak()
+  const result = (await getActiveOutbreak()) ?? null
   _cachedActiveOutbreak = result
   return result
 }

@@ -24,14 +24,15 @@ export async function compressBody(
   const encoder = new TextEncoder()
   const stream = new Blob([encoder.encode(body)]).stream()
   const compressed = stream.pipeThrough(new CompressionStream('gzip'))
-  const chunks: Uint8Array[] = []
+  const chunks: BlobPart[] = []
   const reader = compressed.getReader()
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const { done, value } = await reader.read()
     if (done) break
-    chunks.push(value)
+    // Copy into a new Uint8Array backed by a plain ArrayBuffer so it is a valid BlobPart
+    chunks.push(new Uint8Array(value))
   }
 
   const compressedBlob = new Blob(chunks)

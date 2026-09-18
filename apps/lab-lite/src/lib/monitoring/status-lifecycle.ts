@@ -20,13 +20,15 @@ import { emitMonitoringAuditEvent } from './monitoring-audit'
 const DUE_WARNING_DAYS = 7  // flag transitions to 'due' 7 days before dueDate
 
 function today(): string {
-  return new Date().toISOString().split('T')[0]
+  const iso = new Date().toISOString()
+  return iso.split('T')[0] ?? iso
 }
 
 function addDays(isoDate: string, days: number): string {
   const d = new Date(isoDate)
   d.setDate(d.getDate() + days)
-  return d.toISOString().split('T')[0]
+  const iso = d.toISOString()
+  return iso.split('T')[0] ?? iso
 }
 
 function daysBetween(from: string, to: string): number {
@@ -108,7 +110,7 @@ export async function markTestCompleted(
 ): Promise<number> {
   const db = getDb()
   const now = new Date().toISOString()
-  const completionDate = completedAt.split('T')[0]
+  const completionDate = completedAt.split('T')[0] ?? completedAt
 
   const activeFlags = await db.monitoringFlags
     .where('patientRef')
@@ -166,7 +168,10 @@ export async function scheduleNextCycle(
   }
 
   const now = new Date().toISOString()
-  const nextDueDate = addDays(completedFlag.lastCompletedAt.split('T')[0], completedFlag.frequencyDays)
+  const nextDueDate = addDays(
+    completedFlag.lastCompletedAt.split('T')[0] ?? completedFlag.lastCompletedAt,
+    completedFlag.frequencyDays,
+  )
   const { hlc, serializeHlc } = await import('@/lib/hlc')
   const hlcTs = serializeHlc(hlc.now())
 

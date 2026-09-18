@@ -111,6 +111,7 @@ export function PatientVerifyScanner({ onVerified, onError, token }: PatientVeri
               firstName: cached.firstName,
               age: cached.age,
               patientRef: payload.pid,
+              photoUrl: null,
             })
             setVerificationSource('offline')
           } else {

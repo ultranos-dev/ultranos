@@ -2,7 +2,7 @@
  * Story 48.2 — Unit tests for reagent-burndown.ts
  * Task 10
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   calculateDailyConsumptionRate,
   projectUsageDepletionDate,
@@ -42,6 +42,14 @@ function makeEntry(quantityUsed: number, daysAgo: number, unit = 'mL'): import('
 
 beforeEach(() => {
   mockConsumptionEntries.length = 0
+  // projectUsageDepletionDate normalizes to midnight UTC; freeze the clock to a
+  // midnight instant so daysFromNow math is deterministic (not time-of-day flaky).
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-09-09T00:00:00.000Z'))
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 // ---------------------------------------------------------------------------

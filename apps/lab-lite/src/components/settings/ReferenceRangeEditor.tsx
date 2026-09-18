@@ -189,7 +189,7 @@ function formatCritical(criticalMin?: number, criticalMax?: number): string {
 export function ReferenceRangeEditor() {
   const t = useTranslations('settings')
   const session = useAuthSessionStore((s) => s.session)
-  const canEdit = canEditRanges(session?.labRole)
+  const canEdit = canEditRanges(session?.labRole ?? undefined)
 
   const [search, setSearch] = useState('')
   const [customRanges, setCustomRanges] = useState<ReferenceRange[]>([])

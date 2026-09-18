@@ -201,7 +201,7 @@ export function LabSettingsView() {
     setLockTimeoutHours(hours)
     try {
       const db = getDb()
-      await db.lab_config.put({ id: 'lockTimeoutHours', value: String(hours) })
+      await db.lab_config.put({ key: 'lockTimeoutHours', value: String(hours) })
     } catch {
       // non-fatal — best-effort save
     }
@@ -366,8 +366,7 @@ export function LabSettingsView() {
             <div className="flex justify-between">
               <dt className="text-sm text-muted-foreground">{t('labName')}</dt>
               <dd className="text-sm font-medium text-foreground">
-                {/* labName is used in LabIdentityCard via session but not in AuthSession interface */}
-                {(session as Record<string, unknown>)?.labName as string ?? 'Lab'}
+                {session?.labName ?? 'Lab'}
               </dd>
             </div>
             <div className="flex justify-between">

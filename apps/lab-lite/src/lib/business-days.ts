@@ -31,7 +31,7 @@ export function addBusinessDays(
   weekend: number[] = getDefaultWeekendDays(),
 ): string {
   // Parse without timezone shift: treat as local midnight
-  const [year, month, day] = startDate.split('-').map(Number)
+  const [year = 0, month = 1, day = 1] = startDate.split('-').map(Number)
   const date = new Date(year, month - 1, day)
 
   // If starting on a weekend day, advance to the next business day first

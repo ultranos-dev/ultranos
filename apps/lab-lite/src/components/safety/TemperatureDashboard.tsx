@@ -49,7 +49,7 @@ export function TemperatureDashboard() {
 
       for (const loc of locations) {
         const readings = await getReadingsByLocation(loc.id)
-        const latestReading = readings.length > 0 ? readings[0] : null
+        const latestReading = readings.length > 0 ? readings[0] ?? null : null
         const excursion = await getOngoingExcursionForLocation(loc.id)
         const promptDue = await isPromptDue(loc.id)
 
@@ -68,7 +68,7 @@ export function TemperatureDashboard() {
           }
         }
 
-        cardData.push({ location: loc, latestReading, status, excursion, promptDue })
+        cardData.push({ location: loc, latestReading, status, excursion: excursion ?? null, promptDue })
       }
 
       setCards(cardData)

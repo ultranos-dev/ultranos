@@ -51,9 +51,10 @@ export async function checkWasteAlerts(): Promise<WasteAlert[]> {
     }
 
     // Alert: container not checked in 48+ hours
+    const lastFill = container.fillHistory[container.fillHistory.length - 1]
     const lastCheck =
-      container.fillHistory.length > 0
-        ? new Date(container.fillHistory[container.fillHistory.length - 1].recordedAt).getTime()
+      lastFill !== undefined
+        ? new Date(lastFill.recordedAt).getTime()
         : new Date(container.startDate).getTime()
     const hoursSinceCheck = (now - lastCheck) / (1000 * 60 * 60)
 

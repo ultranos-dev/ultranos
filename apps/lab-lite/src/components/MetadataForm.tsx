@@ -103,7 +103,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toISOString().split('T')[0] ?? ''
     const newErrors: { category?: string; date?: string; confirm?: string } = {}
     if (!loincCode) newErrors.category = t('errorCategory')
     if (!collectionDate) {

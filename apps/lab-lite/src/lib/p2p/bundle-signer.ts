@@ -73,7 +73,7 @@ export function signDiagnosticReportBundle(
   // Loop-based base64 encoding (safe for any buffer size)
   let sigBinary = ''
   for (let i = 0; i < signatureBytes.length; i++) {
-    sigBinary += String.fromCharCode(signatureBytes[i])
+    sigBinary += String.fromCharCode(signatureBytes[i] ?? 0)
   }
 
   return {

@@ -61,7 +61,7 @@ function determineTrend(
 
 /** '2026-05' → ['2026-05-01', '2026-05-31'] (start and end ISO dates) */
 function periodBounds(period: string): { start: string; end: string } {
-  const [year, month] = period.split('-').map(Number)
+  const [year = 0, month = 0] = period.split('-').map(Number)
   const start = `${period}-01`
   const lastDay = new Date(year, month, 0).getDate()
   const end = `${period}-${String(lastDay).padStart(2, '0')}`
@@ -70,14 +70,14 @@ function periodBounds(period: string): { start: string; end: string } {
 
 /** Previous period: '2026-05' → '2026-04' */
 function previousPeriod(period: string): string {
-  const [year, month] = period.split('-').map(Number)
+  const [year = 0, month = 0] = period.split('-').map(Number)
   if (month === 1) return `${year - 1}-12`
   return `${year}-${String(month - 1).padStart(2, '0')}`
 }
 
 /** Quarter start period: '2026-05' → '2026-04' (start of Q2 2026) */
 function quarterStartPeriod(period: string): string {
-  const [year, month] = period.split('-').map(Number)
+  const [year = 0, month = 0] = period.split('-').map(Number)
   const quarterStartMonth = Math.floor((month - 1) / 3) * 3 + 1
   return `${year}-${String(quarterStartMonth).padStart(2, '0')}`
 }

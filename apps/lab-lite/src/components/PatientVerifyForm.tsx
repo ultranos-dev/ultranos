@@ -65,6 +65,7 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
             firstName: cached.firstName,
             age: cached.age,
             patientRef: trimmed,
+            photoUrl: null,
           })
           setVerificationSource('cached')
         } else {

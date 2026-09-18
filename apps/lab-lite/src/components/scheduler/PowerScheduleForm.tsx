@@ -106,7 +106,7 @@ export function PowerScheduleForm() {
             >
               <div className="flex flex-col gap-0.5">
                 <span className="text-sm font-medium text-foreground">
-                  {s.dayOfWeek !== null ? t(DAY_KEYS[s.dayOfWeek]) : t('defaultSchedule')}
+                  {s.dayOfWeek !== null ? t(DAY_KEYS[s.dayOfWeek] ?? 'defaultSchedule') : t('defaultSchedule')}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {s.startTime} — {Math.round(s.durationMinutes / 60 * 10) / 10}h

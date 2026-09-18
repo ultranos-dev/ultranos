@@ -108,7 +108,7 @@ export async function tagPendingTests(
 
 /** Parse HH:mm time string to total minutes since midnight. Throws on malformed input. */
 export function parseTimeToMinutes(time: string): number {
-  const [h, m] = time.split(':').map(Number)
+  const [h = NaN, m = NaN] = time.split(':').map(Number)
   if (isNaN(h) || isNaN(m)) throw new Error(`Invalid time format: expected HH:mm`)
   return h * 60 + m
 }

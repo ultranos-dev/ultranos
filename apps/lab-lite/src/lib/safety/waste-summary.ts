@@ -12,7 +12,12 @@ export async function generateMonthlySummary(
   const end = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999)).toISOString()
   const period = `${year}-${String(month).padStart(2, '0')}`
 
-  const records = await getDisposalRecords({ start, end })
+  // getDisposalRecords() returns all records (no arg overload); scope to the
+  // requested period here by disposal date, matching the container filter below.
+  const allRecords = await getDisposalRecords()
+  const records = allRecords.filter(
+    (r) => r.disposedAt >= start && r.disposedAt <= end,
+  )
 
   const byType: Record<ContainerType, number> = {
     [ContainerType.SHARPS]: 0,

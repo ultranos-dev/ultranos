@@ -374,6 +374,7 @@ export function SpillResponseWorkflow({ spillType, onClose, onComplete }: SpillR
         {/* ------------------------------------------------------------------ */}
         {phase.kind === 'step' && (() => {
           const step = protocol.steps[phase.stepIndex]
+          if (!step) return null
           const isLastStep = phase.stepIndex === protocol.steps.length - 1
           return (
             <div>

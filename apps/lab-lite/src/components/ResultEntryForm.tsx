@@ -444,7 +444,7 @@ export function ResultEntryForm({
 
           {/* Flag badge */}
           <div className="flex items-center pt-7">
-            <FlagBadge flag={flag} />
+            <FlagBadge flag={flag ?? null} />
           </div>
 
           {/* Comment toggle */}

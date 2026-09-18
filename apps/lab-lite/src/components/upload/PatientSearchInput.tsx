@@ -15,7 +15,7 @@ export function PatientSearchInput({ token, onSelect }: PatientSearchInputProps)
   const { query, results, isSearching, search, clear } = usePatientSearch(token)
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const handleInputChange = useCallback((value: string) => {
     clearTimeout(debounceRef.current)

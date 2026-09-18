@@ -80,7 +80,7 @@ export function CriticalValueAlert({
         !soundEnabled ? soundButtonRef.current : null,
         checkboxRef.current,
         buttonRef.current,
-      ].filter((el): el is HTMLElement => el !== null)
+      ].filter((el): el is HTMLButtonElement | HTMLInputElement => el !== null)
       const first = focusable[0]
       const last = focusable[focusable.length - 1]
       if (e.shiftKey) {
@@ -241,8 +241,8 @@ export function CriticalValueAlert({
               </p>
               <p className="text-sm text-red-600">
                 {cv.direction === 'high'
-                  ? t('criticalHigh', { threshold: cv.threshold, unit: cv.unit })
-                  : t('criticalLow', { threshold: cv.threshold, unit: cv.unit })}
+                  ? t('criticalHigh', { threshold: cv.threshold ?? '', unit: cv.unit ?? '' })
+                  : t('criticalLow', { threshold: cv.threshold ?? '', unit: cv.unit ?? '' })}
               </p>
             </div>
           ))}

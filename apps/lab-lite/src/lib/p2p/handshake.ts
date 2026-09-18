@@ -41,7 +41,7 @@ export async function exportEcdhPublicKey(keyPair: CryptoKeyPair): Promise<strin
   const bytes = new Uint8Array(raw)
   let binary = ''
   for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i])
+    binary += String.fromCharCode(bytes[i] ?? 0)
   }
   return btoa(binary)
 }
@@ -121,7 +121,8 @@ export async function computePairingCode(sharedSecret: ArrayBuffer): Promise<str
   const hash = await crypto.subtle.digest('SHA-256', sharedSecret)
   const bytes = new Uint8Array(hash)
   const num =
-    ((bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3]) >>> 0
+    (((bytes[0] ?? 0) << 24) | ((bytes[1] ?? 0) << 16) | ((bytes[2] ?? 0) << 8) | (bytes[3] ?? 0)) >>>
+    0
   return (num % 1_000_000).toString().padStart(6, '0')
 }
 

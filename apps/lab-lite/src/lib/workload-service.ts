@@ -119,7 +119,7 @@ export async function getCurrentWorkloads(): Promise<TechWorkload[]> {
   const completedToday: FhirSpecimen[] = await db.samples
     .filter((s: any) =>
       COMPLETED_STATUSES.includes(s._ultranos?.pipelineStatus) &&
-      (s._ultranos?.completedAt as string | undefined)?.startsWith(todayStr),
+      (s._ultranos?.completedAt as string | undefined)?.startsWith(todayStr) === true,
     )
     .toArray()
 
@@ -374,7 +374,7 @@ export async function reassignSample(
   const hlcNow = serializeHlc(hlc.now())
 
   // Atomic: update assignment + append custody event in one transaction
-  await db.transaction('rw', [db.samples, db.custodyEvents], async () => {
+  await db.transaction('rw', [db.samples, db.custody_events], async () => {
     await db.samples.where('id').equals(sampleId).modify((s: any) => {
       if (!s._ultranos) s._ultranos = {}
       s._ultranos.assignedTechId = toTechId

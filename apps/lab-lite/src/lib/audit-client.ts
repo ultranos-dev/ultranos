@@ -1730,6 +1730,8 @@ export function reportSurveillanceAuditEvent(payload: {
   severity?: 'warning' | 'critical'
   diseasesChecked?: number
   alertsGenerated?: number
+  /** Operational: name of the config field that changed (no PHI). */
+  fieldChanged?: string
 }): void {
   const actionMap: Record<SurveillanceAuditAction, AuditAction> = {
     SURVEILLANCE_ALERT_GENERATED: AuditAction.CREATE,
@@ -1753,6 +1755,7 @@ export function reportSurveillanceAuditEvent(payload: {
       ...(payload.severity ? { severity: payload.severity } : {}),
       ...(payload.diseasesChecked !== undefined ? { diseasesChecked: payload.diseasesChecked } : {}),
       ...(payload.alertsGenerated !== undefined ? { alertsGenerated: payload.alertsGenerated } : {}),
+      ...(payload.fieldChanged ? { fieldChanged: payload.fieldChanged } : {}),
       source: 'lab-lite',
     },
   }

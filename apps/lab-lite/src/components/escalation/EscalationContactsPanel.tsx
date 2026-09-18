@@ -74,7 +74,7 @@ export function EscalationContactsPanel() {
             next[role] = {
               ...EMPTY_FORM,
               name: contact.name,
-              phone: contact.phone ?? '',
+              phone: contact.phoneNumber ?? '',
             }
           }
         }
@@ -123,7 +123,8 @@ export function EscalationContactsPanel() {
       const contact: EscalationContact = {
         role,
         name: form.name.trim(),
-        phone: form.phone.trim() || null,
+        phoneNumber: form.phone.trim(),
+        isDefault: false,
         updatedAt: new Date().toISOString(),
       }
       await putEscalationContact(contact)

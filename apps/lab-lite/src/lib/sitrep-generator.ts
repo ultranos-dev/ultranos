@@ -102,7 +102,7 @@ async function computeReagentMetrics(
 
       const stockoutDate = new Date(today)
       stockoutDate.setDate(stockoutDate.getDate() + Math.floor(daysUntilDepletion))
-      criticalStockoutDate = stockoutDate.toISOString().split('T')[0]
+      criticalStockoutDate = stockoutDate.toISOString().split('T')[0] ?? null
     }
   }
 
@@ -136,13 +136,13 @@ export async function generateDailySitrep(
 
   // Filter to results entered today
   const todayResults = allResults.filter((r) => {
-    const enteredAt = (r as Record<string, unknown>).enteredAt as string | undefined
+    const enteredAt = r.enteredAt as string | undefined
     return enteredAt?.startsWith(reportDate)
   })
 
   const totalTestsPerformed = todayResults.length
   const positiveCount = todayResults.filter((r) =>
-    isPositiveResult(r as Record<string, unknown>),
+    isPositiveResult({ ...r }),
   ).length
 
   const positivityRate =

@@ -99,8 +99,9 @@ export async function generateInspectionPack(
       throw new Error('temperature tables not available')
     }
 
-    const allReadings = await dbAny['temperature_readings'].toArray()
-    const allExcursions = await dbAny['temperature_excursions'].toArray()
+    // Non-null: the `in` guard above proves both tables are present
+    const allReadings = await dbAny['temperature_readings']!.toArray()
+    const allExcursions = await dbAny['temperature_excursions']!.toArray()
 
     const readings = allReadings.filter(
       (r) =>

@@ -54,7 +54,7 @@ export async function captureQcSnapshot(
     // Spread-copy nested objects to ensure no reference sharing
     controlValues: { ...latestRun.controlValues },
     expectedRange: { ...latestRun.expectedRange },
-    qcTimestamp: latestRun.timestamp,
+    qcTimestamp: latestRun.hlcTimestamp,
     snapshotTakenAt: serializeHlc(hlc.now()),
   }
 

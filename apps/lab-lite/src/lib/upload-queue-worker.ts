@@ -56,7 +56,8 @@ async function blobToBase64(blob: Blob): Promise<string> {
   const bytes = new Uint8Array(buffer)
   let binary = ''
   for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i])
+    // Non-null: loop bound i < bytes.byteLength guarantees bytes[i] exists
+    binary += String.fromCharCode(bytes[i]!)
   }
   return btoa(binary)
 }

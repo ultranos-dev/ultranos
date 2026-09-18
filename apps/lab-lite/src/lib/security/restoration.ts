@@ -69,7 +69,8 @@ export async function restoreFromHub(opts: HubRestorationOptions): Promise<void>
       await db.transaction('rw', db.lab_results, async () => {
         await db.lab_results.clear()
         for (const result of results) {
-          await db.lab_results.put(result)
+          // Restoring our own serialized backup — shape is trusted at this boundary.
+          await db.lab_results.put(result as Parameters<typeof db.lab_results.put>[0])
         }
       })
     }
@@ -83,7 +84,8 @@ export async function restoreFromHub(opts: HubRestorationOptions): Promise<void>
       await db.transaction('rw', db.orders, async () => {
         await db.orders.clear()
         for (const order of orders) {
-          await db.orders.put(order)
+          // Restoring our own serialized backup — shape is trusted at this boundary.
+          await db.orders.put(order as Parameters<typeof db.orders.put>[0])
         }
       })
     }
@@ -97,7 +99,8 @@ export async function restoreFromHub(opts: HubRestorationOptions): Promise<void>
       await db.transaction('rw', db.practitioner_keys, async () => {
         await db.practitioner_keys.clear()
         for (const key of keys) {
-          await db.practitioner_keys.put(key)
+          // Restoring our own serialized backup — shape is trusted at this boundary.
+          await db.practitioner_keys.put(key as Parameters<typeof db.practitioner_keys.put>[0])
         }
       })
     }
@@ -111,7 +114,8 @@ export async function restoreFromHub(opts: HubRestorationOptions): Promise<void>
       await db.transaction('rw', db.samples, async () => {
         await db.samples.clear()
         for (const sample of samples) {
-          await db.samples.put(sample)
+          // Restoring our own serialized backup — shape is trusted at this boundary.
+          await db.samples.put(sample as Parameters<typeof db.samples.put>[0])
         }
       })
     }

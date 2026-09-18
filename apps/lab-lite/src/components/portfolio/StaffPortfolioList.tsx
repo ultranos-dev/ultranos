@@ -39,7 +39,7 @@ export function StaffPortfolioList({ onSelectTech }: StaffPortfolioListProps) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!canViewStaffPortfolios(session?.labRole)) {
+    if (!canViewStaffPortfolios(session?.labRole ?? undefined)) {
       setIsLoading(false)
       return
     }
@@ -71,7 +71,7 @@ export function StaffPortfolioList({ onSelectTech }: StaffPortfolioListProps) {
     void loadTechs()
   }, [session])
 
-  if (!canViewStaffPortfolios(session?.labRole)) {
+  if (!canViewStaffPortfolios(session?.labRole ?? undefined)) {
     return null
   }
 

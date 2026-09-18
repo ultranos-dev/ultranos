@@ -60,6 +60,7 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
 
     for (let i = 0; i < Math.min(files.length, remaining); i++) {
       const file = files[i]
+      if (!file) continue
       if (!isValidPhotoType(file)) {
         photoErrors.push(t('errorInvalidPhotoType'))
         continue

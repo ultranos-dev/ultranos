@@ -21,10 +21,10 @@ import type { WestgardRuleResult } from './types'
  * Action: WARNING — monitor next run.
  */
 export function check1_2s(values: number[], mean: number, sd: number): WestgardRuleResult {
-  if (values.length === 0) {
+  const latest = values[values.length - 1]
+  if (latest === undefined) {
     return { violated: false, rule: '1_2S', message: '', severity: 'WARNING', consecutiveCount: 0 }
   }
-  const latest = values[values.length - 1]
   const violated = Math.abs(latest - mean) > 2 * sd
   return {
     violated,
@@ -44,10 +44,10 @@ export function check1_2s(values: number[], mean: number, sd: number): WestgardR
  * Action: REJECT — stop testing, investigate and recalibrate.
  */
 export function check1_3s(values: number[], mean: number, sd: number): WestgardRuleResult {
-  if (values.length === 0) {
+  const latest = values[values.length - 1]
+  if (latest === undefined) {
     return { violated: false, rule: '1_3S', message: '', severity: 'REJECT', consecutiveCount: 0 }
   }
-  const latest = values[values.length - 1]
   const violated = Math.abs(latest - mean) > 3 * sd
   return {
     violated,
@@ -78,6 +78,7 @@ export function check2_2s(values: number[], mean: number, sd: number): WestgardR
 
   const last2 = values.slice(-2)
   const [v1, v2] = last2
+  if (v1 === undefined || v2 === undefined) return noViolation
   // Both > +2SD
   const bothHigh = v1 > mean + 2 * sd && v2 > mean + 2 * sd
   // Both < -2SD
@@ -112,7 +113,9 @@ export function checkR_4s(values: number[], mean: number, sd: number): WestgardR
   if (values.length < 2) return noViolation
 
   const last2 = values.slice(-2)
-  const range = Math.abs(last2[1] - last2[0])
+  const [r1, r2] = last2
+  if (r1 === undefined || r2 === undefined) return noViolation
+  const range = Math.abs(r2 - r1)
   const violated = range > 4 * sd
   return {
     violated,

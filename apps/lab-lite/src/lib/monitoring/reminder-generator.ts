@@ -68,7 +68,7 @@ export async function generateReminder(
   if (isThrottled(flag)) return false
 
   const now = new Date().toISOString()
-  const todayStr = now.split('T')[0]
+  const todayStr = now.split('T')[0] ?? now
   const daysOverdue = daysBetween(flag.dueDate, todayStr)
 
   const physicianPayload: MonitoringReminderPayload = {

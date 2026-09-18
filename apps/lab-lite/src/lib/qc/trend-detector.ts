@@ -33,14 +33,14 @@ export function detectTrend(values: number[]): TrendResult | null {
 
   // Determine direction of the most recent step
   if (lastIdx === 0) return null
-  const lastDiff = values[lastIdx] - values[lastIdx - 1]
+  const lastDiff = (values[lastIdx] ?? 0) - (values[lastIdx - 1] ?? 0)
   if (lastDiff === 0) return null  // No movement — no trend
 
   const direction: 'UP' | 'DOWN' = lastDiff > 0 ? 'UP' : 'DOWN'
 
   // Extend backwards while direction is consistent
   for (let i = lastIdx - 1; i > 0; i--) {
-    const diff = values[i] - values[i - 1]
+    const diff = (values[i] ?? 0) - (values[i - 1] ?? 0)
     if (direction === 'UP' && diff > 0) {
       consecutiveCount++
     } else if (direction === 'DOWN' && diff < 0) {
@@ -81,7 +81,7 @@ function calculateSlope(values: number[]): number {
   let numerator = 0
   let denominator = 0
   for (let i = 0; i < n; i++) {
-    numerator += (i - xMean) * (values[i] - yMean)
+    numerator += (i - xMean) * ((values[i] ?? 0) - yMean)
     denominator += (i - xMean) * (i - xMean)
   }
 

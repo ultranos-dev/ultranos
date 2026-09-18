@@ -327,7 +327,8 @@ export async function completeBatch(batchId: string): Promise<void> {
         .toArray()
       allQueued.sort((a, b) => a.position - b.position)
       for (let i = 0; i < allQueued.length; i++) {
-        await db.instrument_queue.update(allQueued[i].id, { position: i + 1 })
+        // Safe: i is bounded by allQueued.length
+        await db.instrument_queue.update(allQueued[i]!.id, { position: i + 1 })
       }
       nextBatch = allQueued.length > 0 ? allQueued[0] : undefined
     },
@@ -385,7 +386,8 @@ export async function cancelBatch(batchId: string, reason: string): Promise<void
       .toArray()
     remaining.sort((a, b) => a.position - b.position)
     for (let i = 0; i < remaining.length; i++) {
-      await db.instrument_queue.update(remaining[i].id, { position: i + 1 })
+      // Safe: i is bounded by remaining.length
+      await db.instrument_queue.update(remaining[i]!.id, { position: i + 1 })
     }
   })
 
@@ -441,7 +443,8 @@ export async function reorderQueue(
 
   await db.transaction('rw', db.instrument_queue, async () => {
     for (let i = 0; i < newOrder.length; i++) {
-      await db.instrument_queue.update(newOrder[i], { position: i + 1 })
+      // Safe: i is bounded by newOrder.length
+      await db.instrument_queue.update(newOrder[i]!, { position: i + 1 })
     }
   })
 
@@ -494,7 +497,8 @@ export function computeQueueTimes(
   let cursor = new Date()
 
   for (let i = 0; i < sorted.length; i++) {
-    const batch = sorted[i]
+    // Safe: i is bounded by sorted.length
+    const batch = sorted[i]!
     let estimatedStartTime: Date
 
     if (i === 0 && batch.status === 'RUNNING' && batch.startedAt) {

@@ -19,7 +19,7 @@ export function ReceiptView({ payment }: ReceiptViewProps) {
   const t = useTranslations('finance.receipt')
   const session = useAuthSessionStore((s) => s.session)
 
-  const labName = (session as Record<string, unknown>)?.labName as string ?? 'Lab'
+  const labName = session?.labName ?? 'Lab'
 
   const receipt = useMemo(
     () =>

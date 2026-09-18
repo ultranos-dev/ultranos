@@ -121,8 +121,9 @@ export function reportGuidanceDelivery(
   for (let i = 0; i < len; i++) {
     reportGuidanceEvent({
       action: 'GUIDANCE_DELIVERED',
-      guidanceId: guidanceIds[i],
-      conditionCode: conditionCodes[i],
+      // Safe: i is bounded by len = min(guidanceIds.length, conditionCodes.length)
+      guidanceId: guidanceIds[i]!,
+      conditionCode: conditionCodes[i]!,
       language,
       deliveryChannel,
     })

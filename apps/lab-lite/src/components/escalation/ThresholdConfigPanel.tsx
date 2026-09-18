@@ -175,7 +175,7 @@ export function ThresholdConfigPanel() {
 
                 {/* Critical Low — inline editable */}
                 <td className="px-4 py-3 text-end">
-                  {editing?.id === threshold.id && editing.field === 'criticalLow' ? (
+                  {editing !== null && editing.id === threshold.id && editing.field === 'criticalLow' ? (
                     <input
                       type="number"
                       value={editing.value}
@@ -201,7 +201,7 @@ export function ThresholdConfigPanel() {
 
                 {/* Critical High — inline editable */}
                 <td className="px-4 py-3 text-end">
-                  {editing?.id === threshold.id && editing.field === 'criticalHigh' ? (
+                  {editing !== null && editing.id === threshold.id && editing.field === 'criticalHigh' ? (
                     <input
                       type="number"
                       value={editing.value}

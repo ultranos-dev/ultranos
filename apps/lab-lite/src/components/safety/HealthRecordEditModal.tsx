@@ -43,7 +43,7 @@ export function HealthRecordEditModal({
   const [notes, setNotes] = useState(record?.notes ?? '')
 
   function validate(): string | null {
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toISOString().split('T')[0] ?? ''
     if (hepBTiterDate && hepBTiterDate > today) return t('validation.futureDate')
     if (tetanusDate && tetanusDate > today) return t('validation.futureDate')
     if (covidDate && covidDate > today) return t('validation.futureDate')

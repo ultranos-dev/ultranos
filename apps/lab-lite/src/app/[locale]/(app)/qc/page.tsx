@@ -17,7 +17,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { QcRunEntryForm } from '@/components/qc/QcRunEntryForm'
 import { QcHistoryView } from '@/components/qc/QcHistoryView'
-import type { QcRun } from '@/lib/db'
+import type { QcRun } from '@/lib/qc/types'
 
 export default function QcDashboardPage() {
   const t = useTranslations('qc')

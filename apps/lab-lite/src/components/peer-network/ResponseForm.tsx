@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
+import { LabRole } from '@ultranos/shared-types'
 import { getDb } from '@/lib/db'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { generateAnonymousDisplayName, MAX_PHOTOS } from '@/lib/peer-network-types'
@@ -31,7 +32,7 @@ export function ResponseForm({ postId, onResponseCreated, onCancel }: ResponseFo
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const authorId = session?.practitionerId || session?.userId || 'unknown'
-  const isMentor = session?.labRole === 'supervisor' || session?.labRole === 'lab_manager'
+  const isMentor = session?.labRole === LabRole.SUPERVISOR || session?.labRole === LabRole.LAB_MANAGER
 
   const handlePhotoSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -45,7 +46,7 @@ export function ResponseForm({ postId, onResponseCreated, onCancel }: ResponseFo
 
     for (let i = 0; i < Math.min(files.length, remaining); i++) {
       const file = files[i]
-      if (!isValidPhotoType(file)) continue
+      if (!file || !isValidPhotoType(file)) continue
       try {
         const processed = await processPhoto(file)
         newPhotos.push(processed)

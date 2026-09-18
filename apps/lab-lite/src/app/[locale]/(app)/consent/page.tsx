@@ -95,7 +95,8 @@ export default function ConsentPage() {
     try {
       const record = {
         patientRef,
-        encounterId,
+        // ConsentRecord.encounterId is a required string; the URL param is optional.
+        encounterId: encounterId ?? '',
         method: captureMethod,
         language: locale,
         consentTextVersion: CURRENT_CONSENT_VERSION,

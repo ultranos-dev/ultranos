@@ -11,6 +11,7 @@
  * Red    (#DC2626) + x octagon      → critical-low / critical-high
  */
 
+import type { JSX } from 'react'
 import type { Interpretation } from '@/lib/result-interpretation'
 
 // ---------------------------------------------------------------------------

@@ -93,7 +93,7 @@ export function InstrumentQueueView() {
   const techId = session?.practitionerId ?? ''
   // Derive display name from displayName field if available, fall back to email prefix
   const rawName = session?.email ?? ''
-  const techName = rawName.includes('@') ? rawName.split('@')[0] : rawName || 'Technician'
+  const techName = (rawName.includes('@') ? rawName.split('@')[0] : rawName) || 'Technician'
 
   const [instruments, setInstruments] = useState<Instrument[]>([])
   const [selectedInstrumentId, setSelectedInstrumentId] = useState<string>('')
@@ -114,7 +114,7 @@ export function InstrumentQueueView() {
     void getInstruments().then((all) => {
       setInstruments(all)
       if (all.length > 0) {
-        setSelectedInstrumentId((prev) => prev || all[0].id)
+        setSelectedInstrumentId((prev) => prev || (all[0]?.id ?? ''))
       }
     })
   }, [])
@@ -213,7 +213,8 @@ export function InstrumentQueueView() {
     const idx = queue.findIndex((b) => b.id === batchId)
     if (idx <= 0) return
     const newOrder = [...queue]
-    ;[newOrder[idx - 1], newOrder[idx]] = [newOrder[idx], newOrder[idx - 1]]
+    // Both indices are in-bounds: idx > 0 and idx < queue.length, so entries are present.
+    ;[newOrder[idx - 1], newOrder[idx]] = [newOrder[idx]!, newOrder[idx - 1]!]
     await applyReorder(newOrder.map((b) => b.id))
   }
 
@@ -222,7 +223,8 @@ export function InstrumentQueueView() {
     const idx = queue.findIndex((b) => b.id === batchId)
     if (idx < 0 || idx >= queue.length - 1) return
     const newOrder = [...queue]
-    ;[newOrder[idx], newOrder[idx + 1]] = [newOrder[idx + 1], newOrder[idx]]
+    // Both indices are in-bounds: 0 <= idx < queue.length - 1, so entries are present.
+    ;[newOrder[idx], newOrder[idx + 1]] = [newOrder[idx + 1]!, newOrder[idx]!]
     await applyReorder(newOrder.map((b) => b.id))
   }
 

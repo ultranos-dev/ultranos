@@ -558,15 +558,13 @@ export function ConsultationRequestBuilder({
         </div>
       )}
 
-      {/* Cancel button at bottom */}
-      {step !== 'submitted' && (
-        <button
-          className="self-center text-sm text-muted-foreground hover:underline"
-          onClick={onCancel}
-        >
-          {t('cancel')}
-        </button>
-      )}
+      {/* Cancel button at bottom — the 'submitted' step returns early above, so this always renders here */}
+      <button
+        className="self-center text-sm text-muted-foreground hover:underline"
+        onClick={onCancel}
+      >
+        {t('cancel')}
+      </button>
     </div>
   )
 }

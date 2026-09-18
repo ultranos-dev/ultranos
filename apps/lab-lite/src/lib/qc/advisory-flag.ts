@@ -43,7 +43,7 @@ export async function getActiveAdvisory(
 
   // Return most severe: REJECT before WARNING
   const rejectAlert = activeAlerts.find((a) => a.severity === 'REJECT')
-  return rejectAlert ?? activeAlerts[0]
+  return rejectAlert ?? activeAlerts[0] ?? null
 }
 
 /**

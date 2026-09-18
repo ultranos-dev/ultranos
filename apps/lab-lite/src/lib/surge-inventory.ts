@@ -67,7 +67,7 @@ export async function calculateSurgeProjections(
       surgedBurnRate: Math.round(surgedBurnRate * 10) / 10,
       daysUntilDepletion: Math.round(daysUntilDepletion * 10) / 10,
       projectedStockoutDate: isFinite(daysUntilDepletion)
-        ? stockoutDate.toISOString().split('T')[0]
+        ? stockoutDate.toISOString().split('T')[0] ?? ''
         : '',
       isCritical: daysUntilDepletion <= CRITICAL_DAYS_THRESHOLD,
     })

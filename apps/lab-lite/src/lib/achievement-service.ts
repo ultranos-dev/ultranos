@@ -86,7 +86,7 @@ export function getIsoWeekString(date: Date): string {
  */
 export async function evaluateMonthlyAchievements(yearMonth: string): Promise<Achievement[]> {
   const db = getDb()
-  const [year, month] = yearMonth.split('-').map(Number)
+  const [year = 0, month = 1] = yearMonth.split('-').map(Number)
   const periodStart = new Date(year, month - 1, 1).toISOString()
   const periodEnd = new Date(year, month, 0, 23, 59, 59, 999).toISOString()
 
@@ -548,8 +548,9 @@ function isoWeekToDateRange(
   const match = yearWeek.match(/^(\d{4})-W(\d{2})$/)
   if (!match) return null
 
-  const year = parseInt(match[1], 10)
-  const week = parseInt(match[2], 10)
+  // Safe: regex has two capture groups, guaranteed present after successful match
+  const year = parseInt(match[1] ?? '0', 10)
+  const week = parseInt(match[2] ?? '0', 10)
 
   // ISO week 1 is the week containing the first Thursday of the year
   const jan4 = new Date(Date.UTC(year, 0, 4))

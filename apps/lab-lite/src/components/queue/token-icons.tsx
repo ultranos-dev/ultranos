@@ -3,6 +3,7 @@
  * These are abstract symbols — they must NOT mirror in RTL.
  */
 
+import type { JSX } from 'react'
 import type { TokenSymbol } from '@/lib/token-generator'
 
 interface IconProps {

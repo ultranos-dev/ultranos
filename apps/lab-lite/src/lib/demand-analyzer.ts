@@ -144,14 +144,16 @@ function buildPattern(
     const parts = mk.split('-')
     const monthIdx = parseInt(parts[1] ?? '1', 10) - 1
     if (monthIdx >= 0 && monthIdx < 12) {
-      monthSums[monthIdx] += count
-      monthDays[monthIdx] += 30  // approximate
+      // Safe: monthIdx guarded to 0..11 and both arrays have fixed length 12
+      monthSums[monthIdx]! += count
+      monthDays[monthIdx]! += 30  // approximate
     }
   }
 
   // Compute average daily count per month
   const monthlyBaseline = monthSums.map((sum, i) =>
-    monthDays[i] > 0 ? parseFloat((sum / (monthDays[i] / 30)).toFixed(2)) : 0,
+    // Safe: i indexes monthDays which has the same fixed length 12 as monthSums
+    monthDays[i]! > 0 ? parseFloat((sum / (monthDays[i]! / 30)).toFixed(2)) : 0,
   ) as [number, number, number, number, number, number, number, number, number, number, number, number]
 
   const avgBaseline = monthlyBaseline.reduce((a, b) => a + b, 0) / 12

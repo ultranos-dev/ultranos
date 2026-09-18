@@ -48,8 +48,11 @@ class BleConnection implements P2PConnection {
 
     characteristic.addEventListener('characteristicvaluechanged', (evt) => {
       const target = evt.target as BluetoothRemoteGATTCharacteristic
-      if (target.value) {
-        this.receiveHandlers.forEach((h) => h(target.value!.buffer))
+      const dv = target.value
+      if (dv) {
+        // Copy into a standalone ArrayBuffer (dv.buffer is ArrayBufferLike)
+        const buf = dv.buffer.slice(dv.byteOffset, dv.byteOffset + dv.byteLength) as ArrayBuffer
+        this.receiveHandlers.forEach((h) => h(buf))
       }
     })
 

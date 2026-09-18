@@ -224,7 +224,7 @@ function getWorstState(reminders: ScreeningReminder[]): 'green' | 'amber' | 'red
   for (const r of reminders) {
     const state = getReminderState(r.daysUntilDue)
     if (state === 'OVERDUE') return 'red'
-    if (state === 'DUE' && worst !== 'red') worst = 'amber'
+    if (state === 'DUE') worst = 'amber'
     if (state === 'UPCOMING' && worst === 'green') worst = 'amber'
   }
   return worst

@@ -159,7 +159,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       lastBrace !== -1 && firstBrace !== -1 && firstBrace < lastBrace
         ? [content.slice(firstBrace, lastBrace + 1)]
         : null
-    if (!jsonMatch) {
+    if (!jsonMatch || !jsonMatch[0]) {
       return NextResponse.json({ error: 'AI response missing JSON' }, { status: 503 })
     }
 

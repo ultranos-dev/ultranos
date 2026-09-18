@@ -127,8 +127,8 @@ function BurndownMiniChart({
       aria-hidden="true"
       role="img"
       data-testid="burndown-chart"
-      title={`Projected depletion: ${daysUntilDepletion} days`}
     >
+      <title>{`Projected depletion: ${daysUntilDepletion} days`}</title>
       {/* Zero reference line */}
       <line
         x1="0" y1={H - 1}

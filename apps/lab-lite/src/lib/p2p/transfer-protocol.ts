@@ -38,7 +38,7 @@ export const CHUNK_SIZE = 16 * 1024
 function uint8ToBase64(bytes: Uint8Array): string {
   let binary = ''
   for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i])
+    binary += String.fromCharCode(bytes[i] ?? 0)
   }
   return btoa(binary)
 }
@@ -55,8 +55,9 @@ function uint8ToBase64(bytes: Uint8Array): string {
 export async function encryptBundle(
   plaintext: string,
   sessionKey: CryptoKey,
-): Promise<{ ciphertext: ArrayBuffer; iv: Uint8Array }> {
-  const iv = crypto.getRandomValues(new Uint8Array(12))
+): Promise<{ ciphertext: ArrayBuffer; iv: Uint8Array<ArrayBuffer> }> {
+  // ArrayBuffer-backed so iv satisfies BufferSource (TS 5.7 ArrayBufferLike split)
+  const iv = crypto.getRandomValues(new Uint8Array(new ArrayBuffer(12)))
   const encoded = new TextEncoder().encode(plaintext)
   const ciphertext = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
@@ -72,7 +73,7 @@ export async function encryptBundle(
  */
 export async function decryptBundle(
   ciphertext: ArrayBuffer,
-  iv: Uint8Array,
+  iv: Uint8Array<ArrayBuffer>,
   sessionKey: CryptoKey,
 ): Promise<string> {
   const plaintext = await crypto.subtle.decrypt(
@@ -194,7 +195,9 @@ export async function sendChunks({
 }: SendChunksOptions): Promise<void> {
   const totalChunks = chunks.length
   for (let i = 0; i < totalChunks; i++) {
-    const chunkData = uint8ToBase64(chunks[i])
+    const chunk = chunks[i]
+    if (!chunk) continue
+    const chunkData = uint8ToBase64(chunk)
     const msg: P2PMessage = {
       type: 'TRANSFER_CHUNK',
       chunkIndex: i,

@@ -136,7 +136,7 @@ function findBestMatch(
     return matching.reduce((best, r) => (r.altitudeMin > best.altitudeMin ? r : best))
   }
 
-  return matching[0]
+  return matching[0] ?? null
 }
 
 /**

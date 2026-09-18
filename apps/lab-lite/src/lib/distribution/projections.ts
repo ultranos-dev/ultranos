@@ -99,7 +99,7 @@ export function buildPatientProjection(event: ResultReleasedEvent): PatientProje
     testName: event.testName,
     resultSummary: flagSummary[event.flagLevel],
     flagLevel: event.flagLevel,
-    issuedDate: event.authorizedAt.split('T')[0], // date only, no time
+    issuedDate: event.authorizedAt.split('T')[0] ?? event.authorizedAt, // date only, no time
     ...(event.labName ? { labName: event.labName } : {}),
   }
 
@@ -128,7 +128,7 @@ const LOGBOOK_ALLOW_LIST: ReadonlySet<string> = new Set([
 export function buildLogbookProjection(event: ResultReleasedEvent): LogbookProjection {
   const raw: LogbookProjection = {
     diagnosticReportId: event.reportId,
-    date: event.authorizedAt.split('T')[0],
+    date: event.authorizedAt.split('T')[0] ?? event.authorizedAt,
     patientRef: event.patientRef,
     testType: event.testName,
     technicianId: event.authorizedBy,
@@ -165,7 +165,7 @@ export function buildStatsProjection(event: ResultReleasedEvent): StatsProjectio
   const raw: StatsProjection = {
     loincCode: event.loincCode,
     flagLevel: event.flagLevel,
-    date: event.authorizedAt.split('T')[0],
+    date: event.authorizedAt.split('T')[0] ?? event.authorizedAt,
     yearMonth: event.authorizedAt.substring(0, 7), // "YYYY-MM"
     turnaroundMinutes: Math.max(0, turnaroundMinutes),
   }
@@ -181,17 +181,18 @@ export function buildStatsProjection(event: ResultReleasedEvent): StatsProjectio
  * Strip any field not in the allow-list. Logs a shape-only warning (no PHI)
  * when unexpected fields are found.
  */
-function enforceAllowList<T extends Record<string, unknown>>(
+function enforceAllowList<T extends object>(
   obj: T,
   allowList: ReadonlySet<string>,
   projectionName: string,
-): Partial<T> {
+): T {
+  const source = obj as Record<string, unknown>
   const result: Record<string, unknown> = {}
   const stripped: string[] = []
 
-  for (const key of Object.keys(obj)) {
+  for (const key of Object.keys(source)) {
     if (allowList.has(key)) {
-      result[key] = obj[key]
+      result[key] = source[key]
     } else {
       stripped.push(key)
     }
@@ -203,5 +204,5 @@ function enforceAllowList<T extends Record<string, unknown>>(
     )
   }
 
-  return result as Partial<T>
+  return result as T
 }

@@ -24,7 +24,7 @@ export async function addToPatientQueue(
   entry: Omit<PatientQueueEntry, 'id'>,
 ): Promise<number> {
   const db = getDb()
-  return db.table('queueEntries').add(entry)
+  return db.table<PatientQueueEntry, number>('queueEntries').add(entry)
 }
 
 /** Get all waiting + serving entries, ordered oldest-first by registeredAt. */

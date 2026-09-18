@@ -52,7 +52,8 @@ export function generateToken(activeTokens: QueueToken[]): QueueToken {
 
   // Pick a random available token
   const index = Math.floor(Math.random() * available.length)
-  return available[index]
+  // Non-null: available.length === 0 is guarded above (throws), and index < length
+  return available[index]!
 }
 
 /**
@@ -89,13 +90,15 @@ export function generateTokenWithOverflow(
 
   if (available.length > 0) {
     const index = Math.floor(Math.random() * available.length)
-    return available[index]
+    // Non-null: available.length > 0 is guarded above, and index < length
+    return available[index]!
   }
 
   // Overflow: pick a random color+symbol and find the next available suffix
-  const color = TOKEN_COLORS[Math.floor(Math.random() * TOKEN_COLORS.length)]
+  // Non-null: TOKEN_COLORS / TOKEN_SYMBOLS are non-empty const tuples; index < length
+  const color = TOKEN_COLORS[Math.floor(Math.random() * TOKEN_COLORS.length)]!
   const symbol =
-    TOKEN_SYMBOLS[Math.floor(Math.random() * TOKEN_SYMBOLS.length)]
+    TOKEN_SYMBOLS[Math.floor(Math.random() * TOKEN_SYMBOLS.length)]!
 
   let suffix = 2
   while (activeKeys.has(`${color}-${symbol}-${suffix}`)) {

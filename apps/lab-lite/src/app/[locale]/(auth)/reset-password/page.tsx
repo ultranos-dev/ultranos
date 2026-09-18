@@ -49,14 +49,22 @@ export default function ResetPasswordPage() {
       return
     }
 
-    supabase.auth.exchangeCodeForSession(code).then(({ data, error: exchErr }) => {
-      if (exchErr || !data.session) {
-        setState('invalid')
-        return
-      }
-      setActorId(data.session.user.id)
-      setState('form')
-    })
+    // exchangeCodeForSession resolves to `any` (browser client is untyped);
+    // annotate the fields we actually read to keep type-safety.
+    type ExchangeResult = {
+      data: { session: { user: { id: string } } | null }
+      error: unknown
+    }
+    supabase.auth
+      .exchangeCodeForSession(code)
+      .then(({ data, error: exchErr }: ExchangeResult) => {
+        if (exchErr || !data.session) {
+          setState('invalid')
+          return
+        }
+        setActorId(data.session.user.id)
+        setState('form')
+      })
   }, [searchParams, supabase])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -149,7 +157,7 @@ export default function ResetPasswordPage() {
                       onChange={(e) => setNewPassword(e.target.value)}
                       autoComplete="new-password"
                     />
-                    <PasswordStrengthBar strength={strength} label={strengthLabels[strength]} />
+                    <PasswordStrengthBar strength={strength} label={strengthLabels[strength] ?? ''} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">{t('confirmPassword')}</Label>

@@ -93,7 +93,8 @@ export function generateConfirmCode(): string {
   }
 
   for (let i = 0; i < 4; i++) {
-    code += CONFIRM_CHARS[array[i] % CONFIRM_CHARS.length]
+    const value = array[i] ?? 0
+    code += CONFIRM_CHARS[value % CONFIRM_CHARS.length] ?? ''
   }
   return code
 }

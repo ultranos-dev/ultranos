@@ -15,7 +15,7 @@ export function DashboardHeader() {
           {t('greeting', { name: displayName })}
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          {(session as Record<string, unknown>)?.labName as string ?? t('defaultLabName')}
+          {session?.labName ?? t('defaultLabName')}
         </p>
       </div>
     </div>

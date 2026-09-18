@@ -288,14 +288,16 @@ export async function calculateSupplyRAG(): Promise<RAGDimensionResult> {
     const amberItems = details.filter((d) => d.ragStatus === 'AMBER')
 
     if (redItems.length > 0) {
-      const worst = redItems[0]
+      // Non-null: redItems.length > 0 is guarded above
+      const worst = redItems[0]!
       const daysLabel =
         worst.estimatedDaysRemaining !== null
           ? `${worst.estimatedDaysRemaining} day${worst.estimatedDaysRemaining === 1 ? '' : 's'} remaining`
           : 'stock critical'
       summary = `${worst.name}: ${daysLabel}`
     } else if (amberItems.length > 0) {
-      const worst = amberItems[0]
+      // Non-null: amberItems.length > 0 is guarded above
+      const worst = amberItems[0]!
       const daysLabel =
         worst.estimatedDaysRemaining !== null
           ? `${worst.estimatedDaysRemaining} day${worst.estimatedDaysRemaining === 1 ? '' : 's'} remaining`

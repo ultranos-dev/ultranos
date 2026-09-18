@@ -216,6 +216,9 @@ export default function ResultEntryPage({ params }: PageProps) {
     observations: Omit<LabObservation, 'id'>[],
     rangeSnapshots?: Map<string, RangeSnapshot>,
   ) {
+    // Sample must be loaded before a result can be saved (bundle + anomaly detection need it).
+    if (!sample) return
+
     const resultId = existingDraft?.result.id ?? crypto.randomUUID()
 
     const fullResult: LabResult = { ...resultRecord, id: resultId }

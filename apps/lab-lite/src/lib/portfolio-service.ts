@@ -183,9 +183,11 @@ export async function getAverageTAT(techId: string, range: DateRange): Promise<T
     if (!receivedTime) continue
     const tat = (new Date(r.enteredAt).getTime() - new Date(receivedTime).getTime()) / 60000
     if (tat < 0) continue
-    const bucket = byLoinc.get(r.loincCode) ?? []
+    const loincCode = r.loincCode
+    if (!loincCode) continue
+    const bucket = byLoinc.get(loincCode) ?? []
     bucket.push(tat)
-    byLoinc.set(r.loincCode, bucket)
+    byLoinc.set(loincCode, bucket)
   }
 
   return Array.from(byLoinc.entries()).map(([loincCode, tats]) => ({
@@ -300,19 +302,19 @@ export async function getTrainingModules(techId: string): Promise<TrainingModule
   const sopIds = acks.map((a: any) => a.sopId as string)
   const sops = await db.sops.bulkGet(sopIds).catch(() => [])
 
-  return acks
-    .map((ack: any, i: number) => {
-      const sop = sops[i]
-      if (!sop) return null
-      return {
-        sopId: ack.sopId,
-        title: sop.title,
-        category: sop.category,
-        version: ack.sopVersion,
-        acknowledgedAt: ack.acknowledgedAt,
-      } satisfies TrainingModule
+  const modules: TrainingModule[] = []
+  acks.forEach((ack: any, i: number) => {
+    const sop = sops[i]
+    if (!sop) return
+    modules.push({
+      sopId: ack.sopId,
+      title: sop.title,
+      category: sop.category,
+      version: ack.sopVersion,
+      acknowledgedAt: ack.acknowledgedAt,
     })
-    .filter((m): m is TrainingModule => m !== null)
+  })
+  return modules
 }
 
 export async function getMentorshipSessions(techId: string, range: DateRange): Promise<number> {

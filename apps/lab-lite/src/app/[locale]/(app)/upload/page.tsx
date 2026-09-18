@@ -71,12 +71,14 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return { ...state, step: action.payload }
     case 'NEXT_STEP': {
       const idx = STEP_ORDER.indexOf(state.step as _BaseWizardStep)
-      if (idx >= 0 && idx < STEP_ORDER.length - 1) return { ...state, step: STEP_ORDER[idx + 1] }
+      const next = STEP_ORDER[idx + 1]
+      if (idx >= 0 && next) return { ...state, step: next }
       return state
     }
     case 'PREV_STEP': {
       const idx = STEP_ORDER.indexOf(state.step as _BaseWizardStep)
-      if (idx > 0) return { ...state, step: STEP_ORDER[idx - 1] }
+      const prev = STEP_ORDER[idx - 1]
+      if (idx > 0 && prev) return { ...state, step: prev }
       return state
     }
     default:

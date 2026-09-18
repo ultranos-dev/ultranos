@@ -158,6 +158,15 @@ function checkReferenceRange(
 
   const flagged = flagResult(value, range)
 
+  if (!flagged) {
+    // flagResult returns null when the value cannot be flagged against the range
+    return {
+      checkType: 'REFERENCE_RANGE',
+      outcome: 'PASS',
+      message: 'No reference range available — flagging skipped',
+    }
+  }
+
   if (flagged.flag === 'N') {
     return { checkType: 'REFERENCE_RANGE', outcome: 'PASS', flagCode: 'N' }
   }

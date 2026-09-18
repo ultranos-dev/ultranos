@@ -116,7 +116,8 @@ export function formatOffline(input: FormatterInput): FormatterOutput {
     `*Clinical interpretation is requested from the recipient.*`,
   ].join('\n')
 
-  const suggestions = OBSERVATION_SUGGESTIONS[templateType] ?? OBSERVATION_SUGGESTIONS.default
+  const suggestions =
+    OBSERVATION_SUGGESTIONS[templateType] ?? OBSERVATION_SUGGESTIONS.default ?? []
 
   return {
     formattedText,

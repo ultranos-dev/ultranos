@@ -45,8 +45,12 @@ export async function decryptHealthRecord(
   encrypted: EncryptedHealthRecord,
   key: CryptoKey,
 ): Promise<EmployeeHealthRecord> {
+  // Copy the stored IV into a fresh ArrayBuffer-backed view so it satisfies
+  // BufferSource (TS 5.7 ArrayBuffer/SharedArrayBuffer split on typed arrays).
+  const ivBytes = new Uint8Array(encrypted.iv.length)
+  ivBytes.set(encrypted.iv)
   const plaintext = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: encrypted.iv },
+    { name: 'AES-GCM', iv: ivBytes },
     key,
     encrypted.encryptedPayload,
   )

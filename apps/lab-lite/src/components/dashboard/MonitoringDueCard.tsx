@@ -23,7 +23,7 @@ function daysBetween(from: string, to: string): number {
 }
 
 function today(): string {
-  return new Date().toISOString().split('T')[0]
+  return new Date().toISOString().split('T')[0] ?? ''
 }
 
 interface MonitoringRowProps {

@@ -35,7 +35,7 @@ async function generateReceiptNumber(date: Date): Promise<string> {
   let maxSeq = 0
   for (const p of todayPayments) {
     const match = p.receiptNumber.match(/-(\d{4})$/)
-    if (match) {
+    if (match?.[1]) {
       const seq = parseInt(match[1], 10)
       if (seq > maxSeq) maxSeq = seq
     }
@@ -117,9 +117,10 @@ export async function getPaymentsForPatient(patientRef: string): Promise<Payment
 /** Calculate outstanding balance for a patient from the full payment chain. */
 export async function getOutstandingBalance(patientRef: string): Promise<number> {
   const payments = await getPaymentsForPatient(patientRef)
-  if (payments.length === 0) return 0
+  const mostRecent = payments[0]
+  if (!mostRecent) return 0
   // The most recent payment's outstandingBalance reflects the current state
-  return payments[0].outstandingBalance
+  return mostRecent.outstandingBalance
 }
 
 /** Update the sync status of a payment by paymentId. */

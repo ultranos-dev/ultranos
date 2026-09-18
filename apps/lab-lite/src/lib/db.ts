@@ -3940,8 +3940,9 @@ export async function getSitrepsByOutbreak(outbreakConfigId: string): Promise<Da
 /** Returns true if semver string `a` is strictly newer than `b`. */
 export function semverIsNewer(a: string, b: string): boolean {
   const parse = (s: string) => s.split('.').map((n) => parseInt(n, 10) || 0)
-  const [aMaj, aMin, aPat] = parse(a)
-  const [bMaj, bMin, bPat] = parse(b)
+  // Missing segments default to 0 (noUncheckedIndexedAccess): a short version like "1.2" reads as 1.2.0
+  const [aMaj = 0, aMin = 0, aPat = 0] = parse(a)
+  const [bMaj = 0, bMin = 0, bPat = 0] = parse(b)
   if (aMaj !== bMaj) return aMaj > bMaj
   if (aMin !== bMin) return aMin > bMin
   return aPat > bPat
@@ -5052,9 +5053,10 @@ export async function seedKnowledgeCards(): Promise<void> {
 }
 
 function isNewerVersion(incoming: string, stored: string): boolean {
-  const parse = (v: string) => v.split('.').map((n) => parseInt(n, 10))
-  const [iMaj, iMin, iPat] = parse(incoming)
-  const [sMaj, sMin, sPat] = parse(stored)
+  const parse = (v: string) => v.split('.').map((n) => parseInt(n, 10) || 0)
+  // Missing segments default to 0 (noUncheckedIndexedAccess): a short version like "1.2" reads as 1.2.0
+  const [iMaj = 0, iMin = 0, iPat = 0] = parse(incoming)
+  const [sMaj = 0, sMin = 0, sPat = 0] = parse(stored)
   if (iMaj !== sMaj) return iMaj > sMaj
   if (iMin !== sMin) return iMin > sMin
   return iPat > sPat

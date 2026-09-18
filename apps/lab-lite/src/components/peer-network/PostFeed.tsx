@@ -135,7 +135,7 @@ function PostCard({ post, onClick }: { post: PeerPost; onClick: () => void }) {
         {/* Photo thumbnail */}
         {post.photos.length > 0 && (
           <img
-            src={`data:${post.photos[0].mimeType};base64,${post.photos[0].data}`}
+            src={`data:${post.photos[0]?.mimeType};base64,${post.photos[0]?.data}`}
             alt=""
             className="h-14 w-14 flex-shrink-0 rounded-lg object-cover"
           />

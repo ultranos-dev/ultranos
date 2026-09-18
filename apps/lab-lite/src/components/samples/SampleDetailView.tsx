@@ -107,7 +107,7 @@ export function SampleDetailView({
     setIsTransitioning(true)
     try {
       // AC 1/2: acquire lock before transitioning to in-processing
-      const techName = session?.practitionerName ?? actorId
+      const techName = session?.name ?? actorId
       const lockResult = await acquireLock(specimen.id, actorId, techName)
       if (!lockResult.success) {
         setLockBlocker({ lockedByName: lockResult.lockedBy, lockedAt: lockResult.lockedAt })

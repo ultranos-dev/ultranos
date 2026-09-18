@@ -100,14 +100,17 @@ export function exportToDhis2Json(
   // Test category summary
   for (const cat of report.testCategorySummary) {
     const prefix = `testCategory.${cat.loincCode}`
-    if (elementMap[`${prefix}.total`]) {
-      dataValues.push({ dataElement: elementMap[`${prefix}.total`], value: String(cat.totalPerformed) })
+    const totalDe = elementMap[`${prefix}.total`]
+    if (totalDe) {
+      dataValues.push({ dataElement: totalDe, value: String(cat.totalPerformed) })
     }
-    if (elementMap[`${prefix}.positive`]) {
-      dataValues.push({ dataElement: elementMap[`${prefix}.positive`], value: String(cat.totalPositive) })
+    const positiveDe = elementMap[`${prefix}.positive`]
+    if (positiveDe) {
+      dataValues.push({ dataElement: positiveDe, value: String(cat.totalPositive) })
     }
-    if (elementMap[`${prefix}.rate`]) {
-      dataValues.push({ dataElement: elementMap[`${prefix}.rate`], value: String(cat.positivityRate) })
+    const rateDe = elementMap[`${prefix}.rate`]
+    if (rateDe) {
+      dataValues.push({ dataElement: rateDe, value: String(cat.positivityRate) })
     }
   }
 
@@ -116,9 +119,12 @@ export function exportToDhis2Json(
     const totalKey = `disease.${disease.diseaseCode}.total`
     const posKey = `disease.${disease.diseaseCode}.positive`
     const rateKey = `disease.${disease.diseaseCode}.rate`
-    if (elementMap[totalKey]) dataValues.push({ dataElement: elementMap[totalKey], value: String(disease.totalTested) })
-    if (elementMap[posKey]) dataValues.push({ dataElement: elementMap[posKey], value: String(disease.totalPositive) })
-    if (elementMap[rateKey]) dataValues.push({ dataElement: elementMap[rateKey], value: String(disease.positivityRate) })
+    const totalDe = elementMap[totalKey]
+    if (totalDe) dataValues.push({ dataElement: totalDe, value: String(disease.totalTested) })
+    const posDe = elementMap[posKey]
+    if (posDe) dataValues.push({ dataElement: posDe, value: String(disease.totalPositive) })
+    const rateDe = elementMap[rateKey]
+    if (rateDe) dataValues.push({ dataElement: rateDe, value: String(disease.positivityRate) })
   }
 
   // Quality indicators
@@ -139,9 +145,12 @@ export function exportToDhis2Json(
   // Demographics
   for (const demo of report.demographics) {
     const demoPrefix = `demographic.${demo.ageGroup}`
-    if (elementMap[`${demoPrefix}.male`]) dataValues.push({ dataElement: elementMap[`${demoPrefix}.male`], value: String(demo.male) })
-    if (elementMap[`${demoPrefix}.female`]) dataValues.push({ dataElement: elementMap[`${demoPrefix}.female`], value: String(demo.female) })
-    if (elementMap[`${demoPrefix}.total`]) dataValues.push({ dataElement: elementMap[`${demoPrefix}.total`], value: String(demo.total) })
+    const maleDe = elementMap[`${demoPrefix}.male`]
+    if (maleDe) dataValues.push({ dataElement: maleDe, value: String(demo.male) })
+    const femaleDe = elementMap[`${demoPrefix}.female`]
+    if (femaleDe) dataValues.push({ dataElement: femaleDe, value: String(demo.female) })
+    const totalDe = elementMap[`${demoPrefix}.total`]
+    if (totalDe) dataValues.push({ dataElement: totalDe, value: String(demo.total) })
   }
 
   // Ensure at least disease-level entries are present even if no test categories matched

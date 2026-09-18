@@ -191,7 +191,8 @@ export async function renderDailyLogImage(
     const headers = ['Test Type', 'Total', 'Pos', 'Neg']
     for (let i = 0; i < headers.length; i++) {
       ctx.textAlign = i === 0 ? (rtl ? 'right' : 'left') : 'center'
-      ctx.fillText(headers[i], cols[i], y + 12)
+      // Safe: i is bounded by headers.length and cols has one entry per header column
+      ctx.fillText(headers[i]!, cols[i]!, y + 12)
     }
     y += 28
 
@@ -200,16 +201,17 @@ export async function renderDailyLogImage(
       ctx.font = FONT.body
       ctx.fillStyle = COLORS.text
       ctx.textAlign = rtl ? 'right' : 'left'
-      ctx.fillText(row.testLabel, cols[0], y)
+      // Safe: cols is a fixed 4-element array (indices 0-3 always present)
+      ctx.fillText(row.testLabel, cols[0]!, y)
 
       ctx.textAlign = 'center'
-      ctx.fillText(String(row.totalPerformed), cols[1], y)
+      ctx.fillText(String(row.totalPerformed), cols[1]!, y)
 
       ctx.fillStyle = row.totalPositive > 0 ? COLORS.positive : COLORS.muted
-      ctx.fillText(row.totalPositive > 0 ? String(row.totalPositive) : '—', cols[2], y)
+      ctx.fillText(row.totalPositive > 0 ? String(row.totalPositive) : '—', cols[2]!, y)
 
       ctx.fillStyle = row.totalNegative > 0 ? COLORS.text : COLORS.muted
-      ctx.fillText(row.totalNegative > 0 ? String(row.totalNegative) : '—', cols[3], y)
+      ctx.fillText(row.totalNegative > 0 ? String(row.totalNegative) : '—', cols[3]!, y)
 
       ctx.fillStyle = COLORS.text
       y += 28
@@ -233,12 +235,13 @@ export async function renderDailyLogImage(
   for (let i = 0; i < metrics.length; i++) {
     const x = 32 + i * colW + colW / 2
     ctx.font = 'bold 22px Inter, Arial, sans-serif'
-    ctx.fillStyle = metrics[i].color ?? COLORS.text
+    // Safe: i is bounded by metrics.length
+    ctx.fillStyle = metrics[i]!.color ?? COLORS.text
     ctx.textAlign = 'center'
-    ctx.fillText(metrics[i].value, x, y + 24)
+    ctx.fillText(metrics[i]!.value, x, y + 24)
     ctx.font = FONT.body
     ctx.fillStyle = COLORS.muted
-    ctx.fillText(metrics[i].label, x, y + 42)
+    ctx.fillText(metrics[i]!.label, x, y + 42)
   }
 
   y += 60
@@ -276,10 +279,11 @@ export async function renderDailyLogImage(
       ctx.font = 'bold 18px Inter, Arial, sans-serif'
       ctx.fillStyle = COLORS.text
       ctx.textAlign = 'center'
-      ctx.fillText(tatItems[i].value, x, y + 20)
+      // Safe: i is bounded by tatItems.length
+      ctx.fillText(tatItems[i]!.value, x, y + 20)
       ctx.font = FONT.body
       ctx.fillStyle = COLORS.muted
-      ctx.fillText(tatItems[i].label, x, y + 36)
+      ctx.fillText(tatItems[i]!.label, x, y + 36)
     }
     y += 50
   }

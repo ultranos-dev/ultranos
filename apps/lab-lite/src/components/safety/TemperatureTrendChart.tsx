@@ -202,9 +202,11 @@ function drawChart(
 
   // X-axis: first and last date labels
   ctx.textAlign = 'center'
-  if (readings.length > 0) {
-    const firstDate = new Date(readings[0].timestamp).toLocaleDateString()
-    const lastDate = new Date(readings[readings.length - 1].timestamp).toLocaleDateString()
+  const firstReading = readings[0]
+  const lastReading = readings[readings.length - 1]
+  if (firstReading && lastReading) {
+    const firstDate = new Date(firstReading.timestamp).toLocaleDateString()
+    const lastDate = new Date(lastReading.timestamp).toLocaleDateString()
     ctx.fillText(firstDate, toCanvasX(0), H - 4)
     if (readings.length > 1) {
       ctx.fillText(lastDate, toCanvasX(readings.length - 1), H - 4)

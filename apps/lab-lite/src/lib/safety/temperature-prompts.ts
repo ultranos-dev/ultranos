@@ -119,7 +119,7 @@ export async function getMissedPrompts(): Promise<
       missed.push({
         locationId: loc.id,
         locationName: loc.name,
-        lastReading: readings.length > 0 ? readings[0].timestamp : null,
+        lastReading: readings.length > 0 ? (readings[0]?.timestamp ?? null) : null,
       })
     }
   }

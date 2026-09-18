@@ -10,6 +10,64 @@
  * - Browser support: Chrome, Edge, Opera. NOT Firefox/Safari.
  */
 
+// ---------------------------------------------------------------------------
+// Minimal ambient declarations for the Web Bluetooth API.
+// These DOM types are not present in the TS lib configured for this project, so
+// we declare only the members actually referenced by the BLE code paths in this
+// app (ble-temperature.ts and p2p/ble-transport.ts). Declared globally here so
+// both consumers resolve them without duplicate-identifier conflicts.
+// ---------------------------------------------------------------------------
+declare global {
+  type BluetoothServiceUUID = string | number
+
+  interface BluetoothRemoteGATTCharacteristic extends EventTarget {
+    readonly value?: DataView
+    readValue(): Promise<DataView>
+    writeValueWithResponse(value: BufferSource): Promise<void>
+    startNotifications(): Promise<BluetoothRemoteGATTCharacteristic>
+  }
+
+  interface BluetoothRemoteGATTService {
+    getCharacteristic(
+      characteristic: BluetoothServiceUUID,
+    ): Promise<BluetoothRemoteGATTCharacteristic>
+  }
+
+  interface BluetoothRemoteGATTServer {
+    connect(): Promise<BluetoothRemoteGATTServer>
+    disconnect(): void
+    getPrimaryService(
+      service: BluetoothServiceUUID,
+    ): Promise<BluetoothRemoteGATTService>
+  }
+
+  interface BluetoothDevice extends EventTarget {
+    readonly id: string
+    readonly name?: string
+    readonly gatt?: BluetoothRemoteGATTServer
+  }
+
+  interface BluetoothRequestDeviceFilter {
+    services?: BluetoothServiceUUID[]
+    name?: string
+    namePrefix?: string
+  }
+
+  interface RequestDeviceOptions {
+    filters?: BluetoothRequestDeviceFilter[]
+    optionalServices?: BluetoothServiceUUID[]
+    acceptAllDevices?: boolean
+  }
+
+  interface Bluetooth {
+    requestDevice(options?: RequestDeviceOptions): Promise<BluetoothDevice>
+  }
+
+  interface Navigator {
+    readonly bluetooth?: Bluetooth
+  }
+}
+
 const HEALTH_THERMOMETER_SERVICE = 'health_thermometer' // UUID 0x1809
 const TEMPERATURE_MEASUREMENT_CHARACTERISTIC = 'temperature_measurement' // UUID 0x2A1C
 
@@ -39,7 +97,8 @@ export async function scanForSensors(): Promise<BleSensor[]> {
   if (!isBleAvailable()) return []
 
   try {
-    const device = await navigator.bluetooth.requestDevice({
+    // Non-null: isBleAvailable() above guarantees navigator.bluetooth is present
+    const device = await navigator.bluetooth!.requestDevice({
       filters: [{ services: [HEALTH_THERMOMETER_SERVICE] }],
       optionalServices: ['battery_service'],
     })

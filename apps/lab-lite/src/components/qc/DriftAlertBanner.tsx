@@ -36,6 +36,7 @@ export function DriftAlertBanner({ alerts, onAcknowledged }: DriftAlertBannerPro
 
   // Show the most severe alert (REJECT before WARNING, then most recent)
   const primaryAlert = alerts[0]
+  if (!primaryAlert) return null
   const isReject = primaryAlert.severity === 'REJECT'
   const rejectCount = alerts.filter((a) => a.severity === 'REJECT').length
   const warningCount = alerts.filter((a) => a.severity === 'WARNING').length
@@ -48,7 +49,7 @@ export function DriftAlertBanner({ alerts, onAcknowledged }: DriftAlertBannerPro
     : 'bg-amber-100 hover:bg-amber-200 text-amber-800'
 
   function handleAcknowledge() {
-    setSelectedAlert(primaryAlert)
+    setSelectedAlert(primaryAlert ?? null)
     setShowAcknowledgment(true)
   }
 

@@ -108,7 +108,7 @@ export function calculateRemindersFromRecord(
     reminders.push({
       practitionerId,
       screeningType: 'TB Screening',
-      dueDate: now.toISOString().split('T')[0],
+      dueDate: now.toISOString().split('T')[0] ?? '',
       message: 'TB screening has never been recorded',
       daysUntilDue: -Infinity,
     })
@@ -128,7 +128,7 @@ export function calculateRemindersFromRecord(
     reminders.push({
       practitionerId,
       screeningType: 'Hepatitis B Titer',
-      dueDate: now.toISOString().split('T')[0],
+      dueDate: now.toISOString().split('T')[0] ?? '',
       message: 'Hepatitis B titer has never been checked',
       daysUntilDue: -Infinity,
     })
@@ -181,7 +181,7 @@ function evaluateScreening(
   const state = getReminderState(daysUntilDue)
   if (!state) return null
 
-  const dueDate = nextDue.toISOString().split('T')[0]
+  const dueDate = nextDue.toISOString().split('T')[0] ?? ''
   const message = buildReminderMessage(screeningType, state, daysUntilDue)
 
   return {

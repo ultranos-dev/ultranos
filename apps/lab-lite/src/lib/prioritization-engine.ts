@@ -143,7 +143,7 @@ function deriveBatchGroup(loincCode: string, loincDisplay: string): string {
     '600-7': 'Blood Culture',
     '49581-7': 'CSF',
   }
-  return knownGroups[loincCode] ?? (loincDisplay.split('—')[0].trim() || loincCode)
+  return knownGroups[loincCode] ?? (loincDisplay.split('—')[0]?.trim() || loincCode)
 }
 
 // ---------------------------------------------------------------------------
@@ -208,6 +208,7 @@ function batchWithinTier(tier: PrioritizedSample[]): PrioritizedSample[] {
 
   for (let i = 0; i < result.length; i++) {
     const current = result[i]
+    if (!current) continue
     const nextItem = result[i + 1]
 
     // If the immediately next item is already the same group, we're already batched.
@@ -282,7 +283,8 @@ export function applyManualOverrides(
   let flowIdx = 0
   for (let i = 0; i < totalLength; i++) {
     if (result[i] === null && flowIdx < flowing.length) {
-      result[i] = flowing[flowIdx++]
+      // Non-null: flowIdx < flowing.length is guarded above
+      result[i] = flowing[flowIdx++]!
     }
   }
 

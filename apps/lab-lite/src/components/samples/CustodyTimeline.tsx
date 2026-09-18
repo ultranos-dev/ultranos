@@ -2,7 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl'
 import type { CustodyEvent, CustodyEventType } from '@/types/custody-event'
-import { RefreshCw, CircleX } from '@ultranos/ui-kit/icons'
+import { RefreshCw, CircleX, Truck, PackageCheck } from '@ultranos/ui-kit/icons'
 
 /**
  * CustodyTimeline — read-only vertical timeline of all custody events for a sample.
@@ -80,6 +80,20 @@ const EVENT_TYPE_CONFIG: Record<
       <CircleX size={14} aria-hidden="true" style={{ transform: 'none' }} />
     ),
   },
+  'transport-pickup': {
+    colorClass: 'text-blue-600',
+    bgClass: 'bg-blue-50 ring-blue-200',
+    icon: (
+      <Truck size={14} aria-hidden="true" style={{ transform: 'none' }} />
+    ),
+  },
+  'transport-delivery': {
+    colorClass: 'text-blue-700',
+    bgClass: 'bg-blue-50 ring-blue-300',
+    icon: (
+      <PackageCheck size={14} aria-hidden="true" style={{ transform: 'none' }} />
+    ),
+  },
 }
 
 function formatTimestamp(hlcTimestamp: string, locale: string): string {
@@ -87,7 +101,7 @@ function formatTimestamp(hlcTimestamp: string, locale: string): string {
   // HLC format: "<wallMs>-<counter>-<nodeId>" — wallMs is Unix epoch in ms
   try {
     const [wallMsPart] = hlcTimestamp.split('-')
-    const wallMs = parseInt(wallMsPart, 10)
+    const wallMs = parseInt(wallMsPart ?? '', 10)
     if (!isNaN(wallMs) && wallMs > 0) {
       return new Intl.DateTimeFormat(locale, {
         dateStyle: 'medium',

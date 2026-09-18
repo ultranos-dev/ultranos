@@ -6,6 +6,7 @@
 // ---------------------------------------------------------------------------
 
 import { getDb } from './db'
+import type { LabLogbookEntry } from './db'
 import type { HmisMonthlyReport, TestCategorySummary, PositivityRateEntry, DemographicBreakdown, AgeGroup } from './hmis-types'
 import { AGE_GROUPS } from './hmis-types'
 import { REPORTABLE_DISEASE_LOINC_MAP } from './hmis-template'
@@ -72,7 +73,7 @@ export async function aggregateMonthlyData(
   // ---------------------------------------------------------------------------
   // Fetch logbook entries for this month
   // ---------------------------------------------------------------------------
-  let entries: Awaited<ReturnType<typeof db.labLogbook.toArray>>
+  let entries: LabLogbookEntry[]
   try {
     entries = await db.labLogbook
       .where('date')

@@ -7,6 +7,12 @@ export interface AuthSession {
   role: string
   sessionId: string
   email: string
+  /** Display name derived from user metadata (full_name/name/given+family). Optional; may be empty. */
+  name?: string
+  /** Lab name from settings/config; not populated by setSession today. Optional. */
+  labName?: string
+  /** Lab identifier from settings/config; not populated by setSession today. Optional. */
+  labId?: string
   /** Lab sub-role within LAB_TECH umbrella. Story 42.1. */
   labRole: LabRole | null
 }
