@@ -35,7 +35,15 @@ function deriveToggleStates(consents: FhirConsent[]): Map<ConsentScope, { enable
   for (const consent of consents) {
     for (const scope of consent.category) {
       const existing = states.get(scope)
-      if (!existing || new Date(consent.dateTime).getTime() > new Date(existing.lastUpdated).getTime()) {
+      // Consent dateTime may be an ISO instant (stored records) or an HLC string
+      // (fresh toggles). HLC strings don't parse as Dates (NaN), so when either
+      // value isn't Date-comparable, fall back to append-only order: this consent
+      // comes later in the ledger, so it's the most recent action for the scope.
+      const current = new Date(consent.dateTime).getTime()
+      const prior = existing ? new Date(existing.lastUpdated).getTime() : NaN
+      const currentIsNewer =
+        !existing || Number.isNaN(current) || Number.isNaN(prior) || current > prior
+      if (currentIsNewer) {
         states.set(scope, {
           enabled: consent.status === ConsentStatus.ACTIVE,
           lastUpdated: consent.dateTime,
@@ -58,6 +66,9 @@ export function useConsentSettings(
   grantorUserId?: string,
 ): UseConsentSettingsResult {
   const [consents, setConsents] = useState<FhirConsent[]>([])
+  // Mirrors the committed consents for synchronous reads inside async callbacks
+  // (functional setState updaters don't run synchronously there).
+  const consentsRef = useRef<FhirConsent[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const opSeq = useRef(0)
@@ -65,6 +76,7 @@ export function useConsentSettings(
   const load = useCallback(async () => {
     if (!patientId) {
       setConsents([])
+      consentsRef.current = []
       setIsLoading(false)
       return
     }
@@ -86,6 +98,7 @@ export function useConsentSettings(
       })
 
       setConsents(stored)
+      consentsRef.current = stored
     } catch {
       if (seq !== opSeq.current) return
       emitAuditEvent({
@@ -110,20 +123,15 @@ export function useConsentSettings(
 
     const hlcTs = serializeHlc(hlc.now())
 
-    // Derive current state from latest consents via functional updater
-    // to avoid stale closure on rapid toggles
-    let newConsent: FhirConsent
-    let isCurrentlyEnabled = false
+    // Read current consents from the ref: functional setState updaters don't run
+    // synchronously inside an async callback, so reading `prev` there (and the
+    // captured updatedConsents) was unreliable and left saveConsents with a stale
+    // array. The ref always mirrors the latest committed consents.
+    const prevConsents = consentsRef.current
+    const isCurrentlyEnabled =
+      deriveToggleStates(prevConsents).get(scope)?.enabled ?? false
 
-    // Read current state synchronously from a snapshot
-    setConsents((prev) => {
-      const currentToggleStates = deriveToggleStates(prev)
-      const currentState = currentToggleStates.get(scope)
-      isCurrentlyEnabled = currentState?.enabled ?? false
-      return prev // no change — just reading
-    })
-
-    newConsent = isCurrentlyEnabled
+    const newConsent: FhirConsent = isCurrentlyEnabled
       ? await withdrawConsent({
           patientId,
           scope,
@@ -141,12 +149,10 @@ export function useConsentSettings(
           grantorUserId,
         })
 
-    // Optimistic update using functional form to avoid stale closure
-    let updatedConsents: FhirConsent[] = []
-    setConsents((prev) => {
-      updatedConsents = [...prev, newConsent]
-      return updatedConsents
-    })
+    // Optimistic update (append-only consent ledger).
+    const updatedConsents = [...prevConsents, newConsent]
+    consentsRef.current = updatedConsents
+    setConsents(updatedConsents)
 
     const consentRef = newConsent
     const isWithdrawal = consentRef.status === ConsentStatus.WITHDRAWN
@@ -172,6 +178,7 @@ export function useConsentSettings(
       queueConsentSync(consentRef)
     } catch {
       // Revert optimistic update on save failure
+      consentsRef.current = consentsRef.current.filter((c) => c.id !== consentRef.id)
       setConsents((prev) => prev.filter((c) => c.id !== consentRef.id))
 
       emitAuditEvent({

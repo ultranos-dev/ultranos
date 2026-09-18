@@ -11,6 +11,13 @@ jest.mock('@/lib/audit', () => ({
   emitAuditEvent: jest.fn(),
 }))
 
+// toggleConsent queues a high-priority Hub sync; without this mock the real
+// queueConsentSync throws in the test env and the catch reverts the optimistic
+// state update, making toggles appear to no-op.
+jest.mock('@/lib/consent-sync', () => ({
+  queueConsentSync: jest.fn(),
+}))
+
 jest.mock('@ultranos/sync-engine', () => ({
   HybridLogicalClock: jest.fn().mockImplementation(() => ({
     now: () => ({ wallMs: 1714400000000, counter: 1, nodeId: 'test-node' }),

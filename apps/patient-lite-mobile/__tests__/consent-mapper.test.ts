@@ -34,8 +34,8 @@ describe('consent-mapper', () => {
   })
 
   describe('createConsent', () => {
-    it('creates a valid FHIR Consent resource for a granted scope', () => {
-      const consent = createConsent({
+    it('creates a valid FHIR Consent resource for a granted scope', async () => {
+      const consent = await createConsent({
         patientId: PATIENT_ID,
         scope: ConsentScope.PRESCRIPTIONS,
         purpose: ConsentPurpose.TREATMENT,
@@ -57,8 +57,8 @@ describe('consent-mapper', () => {
       expect(consent.meta.lastUpdated).toBeTruthy()
     })
 
-    it('sets scope coding with FHIR system', () => {
-      const consent = createConsent({
+    it('sets scope coding with FHIR system', async () => {
+      const consent = await createConsent({
         patientId: PATIENT_ID,
         scope: ConsentScope.LABS,
         purpose: ConsentPurpose.TREATMENT,
@@ -73,8 +73,8 @@ describe('consent-mapper', () => {
       expect(consent.scope.coding[0].code).toBe('patient-privacy')
     })
 
-    it('assigns HLC timestamp to dateTime field', () => {
-      const consent = createConsent({
+    it('assigns HLC timestamp to dateTime field', async () => {
+      const consent = await createConsent({
         patientId: PATIENT_ID,
         scope: ConsentScope.VITALS,
         purpose: ConsentPurpose.TREATMENT,
@@ -87,8 +87,8 @@ describe('consent-mapper', () => {
       expect(consent.meta.lastUpdated).toBeTruthy()
     })
 
-    it('generates a SHA-256 audit hash', () => {
-      const consent = createConsent({
+    it('generates a SHA-256 audit hash', async () => {
+      const consent = await createConsent({
         patientId: PATIENT_ID,
         scope: ConsentScope.PRESCRIPTIONS,
         purpose: ConsentPurpose.TREATMENT,
@@ -102,8 +102,8 @@ describe('consent-mapper', () => {
   })
 
   describe('withdrawConsent', () => {
-    it('creates a WITHDRAWN consent resource', () => {
-      const consent = withdrawConsent({
+    it('creates a WITHDRAWN consent resource', async () => {
+      const consent = await withdrawConsent({
         patientId: PATIENT_ID,
         scope: ConsentScope.PRESCRIPTIONS,
         purpose: ConsentPurpose.TREATMENT,
@@ -117,8 +117,8 @@ describe('consent-mapper', () => {
       expect(consent._ultranos.withdrawalReason).toBe('No longer needed')
     })
 
-    it('sets provision end date on withdrawal', () => {
-      const consent = withdrawConsent({
+    it('sets provision end date on withdrawal', async () => {
+      const consent = await withdrawConsent({
         patientId: PATIENT_ID,
         scope: ConsentScope.LABS,
         purpose: ConsentPurpose.TREATMENT,
