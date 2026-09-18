@@ -95,5 +95,8 @@ export const MAX_PHOTOS = 3
 /** Maximum photo width after compression (pixels). */
 export const MAX_PHOTO_WIDTH = 800
 
-/** Maximum photo file size before compression (bytes): 2 MB. */
+/** Maximum photo file size AFTER compression (bytes): 2 MB. */
 export const MAX_PHOTO_SIZE = 2 * 1024 * 1024
+
+/** Maximum accepted upload size BEFORE compression (bytes): 10 MB. */
+export const MAX_PHOTO_UPLOAD_SIZE = 10 * 1024 * 1024

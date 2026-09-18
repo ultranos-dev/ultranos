@@ -1,14 +1,19 @@
-import { MAX_PHOTO_WIDTH, MAX_PHOTO_SIZE } from './peer-network-types'
+import { MAX_PHOTO_WIDTH, MAX_PHOTO_SIZE, MAX_PHOTO_UPLOAD_SIZE } from './peer-network-types'
 import type { PostPhoto } from './peer-network-types'
 
 /**
  * Strip EXIF metadata from a JPEG/PNG by re-encoding through a canvas.
  * This removes GPS coordinates, device info, timestamps — critical for privacy.
  * Also compresses to max 800px width and converts to JPEG.
+ *
+ * Two-tier size guard: reject inputs above the pre-compression upload cap (10 MB),
+ * then reject if the compressed output still exceeds MAX_PHOTO_SIZE (2 MB).
  */
 export async function processPhoto(file: File): Promise<PostPhoto> {
-  if (file.size > MAX_PHOTO_SIZE) {
-    throw new Error(`Photo exceeds ${MAX_PHOTO_SIZE / (1024 * 1024)} MB limit`)
+  if (file.size > MAX_PHOTO_UPLOAD_SIZE) {
+    throw new Error(
+      `Photo exceeds ${MAX_PHOTO_UPLOAD_SIZE / (1024 * 1024)} MB limit before compression`,
+    )
   }
 
   const bitmap = await createImageBitmap(file)
@@ -31,6 +36,11 @@ export async function processPhoto(file: File): Promise<PostPhoto> {
   bitmap.close()
 
   const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.8 })
+  if (blob.size > MAX_PHOTO_SIZE) {
+    throw new Error(
+      `Compressed photo exceeds ${MAX_PHOTO_SIZE / (1024 * 1024)} MB limit`,
+    )
+  }
   const buffer = await blob.arrayBuffer()
   const base64 = btoa(
     new Uint8Array(buffer).reduce((s, b) => s + String.fromCharCode(b), ''),

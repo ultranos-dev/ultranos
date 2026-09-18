@@ -15,7 +15,7 @@ const mockCtx = {
 }
 
 const mockBlob = (size: number, type = 'image/jpeg') =>
-  Object.assign(new Blob(), { size, type })
+  new Blob([new Uint8Array(size)], { type })
 
 const mockCanvas = {
   getContext: vi.fn(() => mockCtx),
