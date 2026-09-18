@@ -87,6 +87,8 @@ describe('SensitiveMedicationItem', () => {
       resourceId: MED_ID,
       patientId: PATIENT_ID,
       outcome: 'success',
+      // The unmask audit records who revealed the PHI (audit-trail requirement).
+      metadata: { unmaskedBy: PATIENT_ID },
     })
   })
 

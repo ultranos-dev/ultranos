@@ -44,12 +44,19 @@ describe('OnboardingFlow', () => {
     })
   })
 
-  it('skip button completes onboarding', () => {
+  it('skip button completes onboarding', async () => {
     const { getByTestId } = render(
       <OnboardingFlow onComplete={mockOnComplete} />,
     )
+    // Skip is not offered on the language step (step 0); advance to step 1 first.
+    fireEvent.press(getByTestId('language-button-en'))
+    await waitFor(() => {
+      expect(getByTestId('onboarding-skip')).toBeTruthy()
+    })
     fireEvent.press(getByTestId('onboarding-skip'))
-    expect(mockOnComplete).toHaveBeenCalled()
+    await waitFor(() => {
+      expect(mockOnComplete).toHaveBeenCalled()
+    })
     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
       '@ultranos/onboarding-complete',
       'true',
@@ -75,9 +82,11 @@ describe('OnboardingFlow', () => {
       expect(getByTestId('onboarding-step-2')).toBeTruthy()
     })
 
-    // Step 2 → Complete
+    // Step 2 → Complete (handleNext awaits markOnboardingComplete before onComplete)
     fireEvent.press(getByTestId('onboarding-next'))
-    expect(mockOnComplete).toHaveBeenCalled()
+    await waitFor(() => {
+      expect(mockOnComplete).toHaveBeenCalled()
+    })
   })
 })
 
