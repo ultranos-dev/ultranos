@@ -83,7 +83,7 @@ export async function buildInventorySnapshot(
     // Load consumption logs from trailing 30 days
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
     const consumptionLogs = await db.reagent_consumption_log
-      .where('loggedAt')
+      .where('consumedAt')
       .aboveOrEqual(thirtyDaysAgo)
       .toArray()
 
@@ -92,7 +92,7 @@ export async function buildInventorySnapshot(
     for (const log of consumptionLogs) {
       consumptionByReagentId.set(
         log.reagentId,
-        (consumptionByReagentId.get(log.reagentId) ?? 0) + log.testsConsumed,
+        (consumptionByReagentId.get(log.reagentId) ?? 0) + log.quantityUsed,
       )
     }
 

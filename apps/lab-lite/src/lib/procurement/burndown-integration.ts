@@ -50,8 +50,8 @@ export async function getDaysOfSupplyRemaining(
     .equals(reagentId)
     .toArray()
 
-  const recent = logs.filter((l) => l.loggedAt >= since.toISOString())
-  const totalConsumed = recent.reduce((sum, l) => sum + l.testsConsumed, 0)
+  const recent = logs.filter((l) => l.consumedAt >= since.toISOString())
+  const totalConsumed = recent.reduce((sum, l) => sum + l.quantityUsed, 0)
   const dailyRate = lookbackDays > 0 ? totalConsumed / lookbackDays : 0
 
   if (dailyRate <= 0) return currentStock > 0 ? 999 : 0

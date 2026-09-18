@@ -47,14 +47,14 @@ function makeReagent(
 }
 
 function makeConsumptionLog(
-  entries: Array<{ reagentId?: string; testsConsumed: number; loggedAt: string }>,
+  entries: Array<{ reagentId?: string; quantityUsed: number; consumedAt: string }>,
 ): ReagentConsumptionEntry[] {
   return entries.map((e, i) => ({
     id: i + 1,
     reagentId: e.reagentId ?? 'r-001',
-    testsConsumed: e.testsConsumed,
-    loggedAt: e.loggedAt,
-    loggedBy: 'tech-001',
+    quantityUsed: e.quantityUsed,
+    consumedAt: e.consumedAt,
+    technicianId: 'tech-001',
     notes: null,
   }))
 }
@@ -273,7 +273,7 @@ describe('projectExpiryBeforeDepletion', () => {
 
   it('returns null for insufficient data when opened < 3 days ago', () => {
     const entry = makeReagent({ openDate: '2026-05-30', expiryDate: '2026-07-31' })
-    const log = makeConsumptionLog([{ testsConsumed: 5, loggedAt: '2026-05-30' }])
+    const log = makeConsumptionLog([{ quantityUsed: 5, consumedAt: '2026-05-30' }])
     expect(projectExpiryBeforeDepletion(entry, log, '2026-05-31')).toBeNull()
   })
 
@@ -292,7 +292,7 @@ describe('projectExpiryBeforeDepletion', () => {
       testsPerformed: 60,
     })
     const log = makeConsumptionLog([
-      { testsConsumed: 60, loggedAt: '2026-05-10T08:00:00.000Z' },
+      { quantityUsed: 60, consumedAt: '2026-05-10T08:00:00.000Z' },
     ])
     const result = projectExpiryBeforeDepletion(entry, log, '2026-05-31')
     // dailyRate = 60/30 = 2/day. 30 days to Jun 30. projected consumption = 60. remaining = 40 - 60 < 0 → null
@@ -310,7 +310,7 @@ describe('projectExpiryBeforeDepletion', () => {
       costPerUnit: 500,
     })
     const log = makeConsumptionLog([
-      { testsConsumed: 10, loggedAt: '2026-05-15T08:00:00.000Z' },
+      { quantityUsed: 10, consumedAt: '2026-05-15T08:00:00.000Z' },
     ])
     const result = projectExpiryBeforeDepletion(entry, log, '2026-05-31')
     expect(result).not.toBeNull()
@@ -325,7 +325,7 @@ describe('projectExpiryBeforeDepletion', () => {
       expiryDate: '2026-05-15', // already expired
     })
     const log = makeConsumptionLog([
-      { testsConsumed: 20, loggedAt: '2026-04-15T08:00:00.000Z' },
+      { quantityUsed: 20, consumedAt: '2026-04-15T08:00:00.000Z' },
     ])
     expect(projectExpiryBeforeDepletion(entry, log, '2026-05-31')).toBeNull()
   })

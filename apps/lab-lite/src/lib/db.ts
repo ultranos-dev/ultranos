@@ -188,6 +188,8 @@ export interface UploadQueueMetadata {
   diagnosticReportId?: string
   /** Present when kind='specimen': the specimen this file is attached to. */
   specimenId?: string
+  /** Optional link to the sample this upload pertains to (used by daily-log aggregation). */
+  sampleId?: string
   /** Present when kind='specimen': whether this is a receipt or rejection photo. */
   attachmentContext?: 'receipt' | 'rejection'
   /** Optional: when set, the Hub notifies the ordering physician on upload success. */
@@ -273,11 +275,12 @@ export interface ReagentInventoryEntry {
 export interface ReagentConsumptionEntry {
   id?: number
   reagentId: string
-  loincCode: string                   // test that consumed it
-  quantityUsed: number
-  unit: string                        // mL, strips, tests, etc.
-  consumedAt: string                  // ISO 8601
-  technicianId: string
+  quantityUsed: number                // canonical quantity field (was also 'testsConsumed')
+  consumedAt: string                  // ISO 8601 (canonical timestamp; was also 'loggedAt')
+  loincCode?: string                  // test that consumed it (not set by the manual log form)
+  unit?: string                       // mL, strips, tests, etc.
+  technicianId?: string               // opaque tech ID (was also 'loggedBy')
+  notes?: string | null               // optional free-text note from the manual log form
 }
 
 // ---------------------------------------------------------------------------

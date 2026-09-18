@@ -164,8 +164,8 @@ const mockReagentInventory = [
 ]
 
 const mockConsumptionLogs = [
-  { reagentId: 'reagent-001', testsConsumed: 30, loggedAt: '2026-05-15T10:00:00Z' },
-  { reagentId: 'reagent-001', testsConsumed: 20, loggedAt: '2026-05-20T10:00:00Z' },
+  { reagentId: 'reagent-001', quantityUsed: 30, consumedAt: '2026-05-15T10:00:00Z' },
+  { reagentId: 'reagent-001', quantityUsed: 20, consumedAt: '2026-05-20T10:00:00Z' },
   // 50 tests in 30 days = 1.7/day daily rate
 ]
 

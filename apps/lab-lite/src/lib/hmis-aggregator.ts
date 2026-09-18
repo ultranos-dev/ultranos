@@ -177,7 +177,7 @@ export async function aggregateMonthlyData(
   try {
     const consumptionEntries = await db.reagent_consumption_log
       .filter((c: any) => {
-        const ts: string = c.loggedAt ?? ''
+        const ts: string = c.consumedAt ?? ''
         return ts >= `${dayStart}T00:00:00.000Z` && ts < `${dayEnd}T00:00:00.000Z`
       })
       .toArray()

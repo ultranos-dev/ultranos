@@ -12,6 +12,10 @@ export type CustodyEventType =
   | 'rejection'
   | 'transport-pickup'
   | 'transport-delivery'
+  // Sample-lock lifecycle (Story 49.x) — written by sample-lock-service.
+  | 'lock-acquired'
+  | 'lock-released'
+  | 'lock-expired'
 
 export interface CustodyEvent {
   id: string // UUID

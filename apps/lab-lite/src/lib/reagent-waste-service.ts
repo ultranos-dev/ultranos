@@ -152,19 +152,19 @@ export function projectExpiryBeforeDepletion(
   const windowStartStr = toDateString(windowStart)
 
   const windowEntries = consumptionLog.filter(
-    (e) => e.loggedAt.slice(0, 10) >= windowStartStr,
+    (e) => e.consumedAt.slice(0, 10) >= windowStartStr,
   )
   const entriesForRate = windowEntries.length > 0 ? windowEntries : consumptionLog
 
   const totalConsumedInWindow = entriesForRate.reduce(
-    (sum, e) => sum + e.testsConsumed,
+    (sum, e) => sum + e.quantityUsed,
     0,
   )
 
   // Days covered by window entries
   const oldestInWindow = entriesForRate.reduce(
-    (min, e) => (e.loggedAt < min ? e.loggedAt : min),
-    entriesForRate[0].loggedAt,
+    (min, e) => (e.consumedAt < min ? e.consumedAt : min),
+    entriesForRate[0]!.consumedAt,  // entriesForRate is non-empty (guarded above)
   )
   const windowDays = Math.max(
     1,
@@ -236,7 +236,7 @@ export function generateExpiryAlert(
 /** Parse a YYYY-MM-DD date string to a local midnight Date. */
 function parseLocalDate(dateStr: string): Date {
   const [year, month, day] = dateStr.split('-').map(Number)
-  return new Date(year, (month ?? 1) - 1, day ?? 1)
+  return new Date(year ?? 1970, (month ?? 1) - 1, day ?? 1)
 }
 
 /** Difference in whole days: end - start (positive = end is in the future). */

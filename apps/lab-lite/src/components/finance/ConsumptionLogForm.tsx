@@ -59,9 +59,9 @@ export function ConsumptionLogForm({ reagent, onSuccess }: ConsumptionLogFormPro
 
         await addReagentConsumptionLog({
           reagentId: reagent.reagentId,
-          testsConsumed: consumed,
-          loggedAt: now,
-          loggedBy: actorId,
+          quantityUsed: consumed,
+          consumedAt: now,
+          technicianId: actorId,
           notes: notes.trim() || null,
         })
 
@@ -113,9 +113,9 @@ export function ConsumptionLogForm({ reagent, onSuccess }: ConsumptionLogFormPro
 
       await addReagentConsumptionLog({
         reagentId: reagent.reagentId,
-        testsConsumed: 1,
-        loggedAt: now,
-        loggedBy: actorId,
+        quantityUsed: 1,
+        consumedAt: now,
+        technicianId: actorId,
         notes: null,
       })
 

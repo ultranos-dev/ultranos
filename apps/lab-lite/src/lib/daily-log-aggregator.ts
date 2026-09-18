@@ -163,12 +163,17 @@ async function calculateTurnaroundTime(date: string): Promise<TurnaroundTimeStat
     const bySample = new Map<string, { received?: string; completed?: string }>()
     for (const evt of events) {
       const entry = bySample.get(evt.sampleId) ?? {}
-      if (evt.eventType === 'RECEIVED' || evt.eventType === 'ACCESSIONED') {
+      // Received: the sample-received event, or a status-change into 'received'.
+      if (
+        evt.eventType === 'received' ||
+        (evt.eventType === 'status-change' && evt.toStatus === 'received')
+      ) {
         entry.received = evt.timestamp
       } else if (
-        evt.eventType === 'AUTHORIZED' ||
-        evt.eventType === 'COMPLETED' ||
-        evt.eventType === 'RELEASED'
+        // Completed: a status-change into a terminal pipeline status
+        // (PipelineStatus: received | in-processing | completed | reported | rejected).
+        evt.eventType === 'status-change' &&
+        (evt.toStatus === 'completed' || evt.toStatus === 'reported')
       ) {
         entry.completed = evt.timestamp
       }
