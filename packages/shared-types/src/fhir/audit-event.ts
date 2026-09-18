@@ -21,5 +21,22 @@ export interface AuditEvent {
   metadata?: Record<string, unknown> // non-PHI context only
 }
 
-// Input to emit — chainHash computed by logger
-export type AuditEventInput = Omit<AuditEvent, 'id' | 'timestamp' | 'chainHash'>
+// Input to emit — chainHash computed by logger.
+//
+// The enum-typed fields are widened to their string-literal-union form
+// (`${AuditAction}` → 'READ' | 'CREATE' | …). Because these are *string* enums,
+// this accepts BOTH the bare value (`action: 'CREATE'`) and the enum member
+// reference (`action: AuditAction.CREATE`) at call sites, while still rejecting
+// typos/invalid values (e.g. 'CRATE' is not in the union). The canonical stored
+// `AuditEvent` keeps the strict enum types; only the emit-input surface is widened
+// so the hundreds of call sites that pass valid string literals type-check without
+// forcing an enum import at every site.
+export type AuditEventInput = Omit<
+  AuditEvent,
+  'id' | 'timestamp' | 'chainHash' | 'actorRole' | 'action' | 'resourceType' | 'outcome'
+> & {
+  actorRole: `${UserRole}`
+  action: `${AuditAction}`
+  resourceType: `${AuditResourceType}`
+  outcome: `${AuditOutcome}`
+}

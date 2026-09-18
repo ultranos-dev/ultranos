@@ -1,6 +1,13 @@
 import { createHash, randomUUID } from 'crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { AuditEvent, AuditEventInput } from '@ultranos/shared-types'
+import type {
+  AuditEvent,
+  AuditEventInput,
+  AuditAction,
+  AuditOutcome,
+  AuditResourceType,
+  UserRole,
+} from '@ultranos/shared-types'
 
 // ============================================================
 // ULTRANOS AUDIT LOGGER
@@ -127,15 +134,18 @@ export class AuditLogger {
       id,
       timestamp,
       actorId: input.actorId,
-      actorRole: input.actorRole,
-      action: input.action,
-      resourceType: input.resourceType,
+      // Widened emit-input strings cast back to the canonical enum types for the
+      // stored AuditEvent. Values are byte-identical to the enum members (the input
+      // union is `${Enum}`), so this is a nominal-typing bridge, not a value change.
+      actorRole: input.actorRole as UserRole,
+      action: input.action as AuditAction,
+      resourceType: input.resourceType as AuditResourceType,
       resourceId: input.resourceId,
       patientId: input.patientId,
       sessionId: input.sessionId,
       deviceId: input.deviceId,
       sourceIpHash: input.sourceIpHash,
-      outcome: input.outcome,
+      outcome: input.outcome as AuditOutcome,
       denialReason: input.denialReason,
       chainHash: row.chain_hash,
       orgId: input.orgId ?? this.defaultOrgId,
