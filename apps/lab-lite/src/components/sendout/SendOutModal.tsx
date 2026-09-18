@@ -157,7 +157,9 @@ export function SendOutModal({
           {showPreview && selectedLab && (
             <div className="rounded-md border border-primary bg-primary/10 p-3 text-sm space-y-1">
               <p className="font-medium text-primary">{t('sendOutPreviewTitle')}</p>
-              <p><span className="text-primary">{t('sendOutPreviewPatient')}</span> {patientFirstName}, {patientAge}y</p>
+              {/* Rule #7: the referral preview shows only the data-minimization scope,
+                  not the actual patient values. */}
+              <p><span className="text-primary">{t('sendOutPreviewPatient')}</span> {t('sendOutPreviewPatientValue')}</p>
               <p><span className="text-primary">{t('sendOutPreviewSampleType')}</span> {sampleType}</p>
               <p><span className="text-primary">{t('sendOutPreviewTest')}</span> {loincDisplay} ({loincCode})</p>
               <p><span className="text-primary">{t('sendOutPreviewContext')}</span> {clinicalContext || '—'}</p>

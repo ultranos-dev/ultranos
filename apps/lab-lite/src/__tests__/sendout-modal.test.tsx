@@ -44,6 +44,15 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
   ExternalLink: ({ size }: { size: number }) => <span data-testid="ext-link-icon" data-size={size} />,
 }))
 
+// Modal adopted next-intl; resolve keys via real en.json so text assertions match.
+vi.mock('next-intl', () => {
+  const en = require('../../messages/en.json') as Record<string, Record<string, string>>
+  return {
+    useTranslations: (ns?: string) => (key: string) => (ns ? en[ns]?.[key] : undefined) ?? key,
+    useLocale: () => 'en',
+  }
+})
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
