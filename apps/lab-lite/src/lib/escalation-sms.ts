@@ -75,12 +75,19 @@ export async function sendCriticalValueSms(
   try {
     const { getDb } = await import('./db')
     const db = getDb()
+    // Persist a manual-follow-up entry conforming to the SmsQueueEntry shape.
     await db.smsQueue.add({
-      chainId,
-      phoneNumber, // stored for manual follow-up, not in logs
-      body: buildSmsBody(chainId, analyte, direction),
-      queuedAt: new Date().toISOString(),
+      recipientPhone: phoneNumber, // stored for manual follow-up, not in logs
+      messageBody: buildSmsBody(chainId, analyte, direction),
+      confirmCode: '',
+      criticalResultRef: chainId,
       status: 'pending_manual',
+      escalationStep: 0,
+      recipientRole: 'physician',
+      attempts: 0,
+      lastAttemptAt: null,
+      createdAt: new Date().toISOString(),
+      confirmedAt: null,
     })
   } catch {
     // Never throw — escalation timer must continue regardless

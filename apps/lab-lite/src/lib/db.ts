@@ -2654,6 +2654,22 @@ export interface LabResult {
   // run at result-entry time; warning banner state. Once set they are immutable.
   qcSnapshot?: QcSnapshot | null
   qcWarning?: QcWarning
+  // Authorization lifecycle (Story 42.5) — the lab_results table stores these on
+  // records that go through review; typed as strings to avoid a cyclic import of
+  // the authorization enums. See LabResultForAuthorization for the full view model.
+  authorizationStatus?: string
+  authorizedBy?: string
+  authorizedAt?: string
+  releasedAt?: string
+  syncStatus?: string
+  rejectionComments?: string
+  holdComments?: string
+  // Reference-lab send-out attribution (Story 54.4) — set when a result is imported
+  // from an external lab.
+  attribution?: string
+  sourceType?: string
+  sendOutId?: string
+  referenceLabId?: string
 }
 
 /**

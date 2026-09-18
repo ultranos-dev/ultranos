@@ -13,7 +13,8 @@ import { FileX } from '@ultranos/ui-kit/icons'
 import { canAccessAuthorizationQueue } from '@/lib/permissions'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getDb } from '@/lib/db'
-import type { LabResult, LabObservation } from '@/lib/db'
+import type { LabObservation } from '@/lib/db'
+import type { LabResultForAuthorization } from '@/types/authorization'
 import { LabRole } from '@ultranos/shared-types'
 import { AuthorizationStatus } from '@/types/authorization'
 
@@ -24,7 +25,7 @@ export default function ResultDetailPage() {
   const session = useAuthSessionStore((s) => s.session)
   const labRole = session?.labRole as LabRole | null
 
-  const [result, setResult] = useState<LabResult | null>(null)
+  const [result, setResult] = useState<LabResultForAuthorization | null>(null)
   const [observations, setObservations] = useState<LabObservation[]>([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -52,7 +53,9 @@ export default function ResultDetailPage() {
         if (!r) {
           setNotFound(true)
         } else {
-          setResult(r)
+          // Stored lab_results carry the authorization fields (see LabResult); narrow
+          // to the review view model.
+          setResult(r as unknown as LabResultForAuthorization)
           setObservations(obs)
         }
       } finally {

@@ -109,7 +109,7 @@ export interface AuthorizationAction {
   resultId: string
   action: AuthorizationActionType
   actorId: string
-  actorRole: LabRole
+  actorRole: LabRole | string   // role string as supplied by the caller/session
   timestamp: string             // HLC timestamp
   comments?: string
   criticalValueAcknowledged?: boolean
