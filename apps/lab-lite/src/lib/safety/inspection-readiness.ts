@@ -93,7 +93,7 @@ export async function generateInspectionPack(
 
     // Type assertion needed: temperature tables are not in the typed schema.
     // If they don't exist, accessing them will throw at runtime and we degrade.
-    const dbAny = db as unknown as Record<string, { toArray: () => Promise<Array<{ recordedAt?: string; startedAt?: string }>> }>
+    const dbAny = db as unknown as Record<string, { toArray: () => Promise<Array<{ timestamp?: string; startTime?: string }>> }>
 
     if (!('temperature_readings' in db) || !('temperature_excursions' in db)) {
       throw new Error('temperature tables not available')
@@ -104,16 +104,16 @@ export async function generateInspectionPack(
 
     const readings = allReadings.filter(
       (r) =>
-        r.recordedAt !== undefined &&
-        r.recordedAt >= dateRange.start &&
-        r.recordedAt <= dateRange.end + 'T23:59:59.999Z',
+        r.timestamp !== undefined &&
+        r.timestamp >= dateRange.start &&
+        r.timestamp <= dateRange.end + 'T23:59:59.999Z',
     )
 
     const excursions = allExcursions.filter(
       (e) =>
-        e.startedAt !== undefined &&
-        e.startedAt >= dateRange.start &&
-        e.startedAt <= dateRange.end + 'T23:59:59.999Z',
+        e.startTime !== undefined &&
+        e.startTime >= dateRange.start &&
+        e.startTime <= dateRange.end + 'T23:59:59.999Z',
     )
 
     const totalReadings = readings.length
@@ -121,7 +121,13 @@ export async function generateInspectionPack(
     const excursionRate = totalReadings > 0 ? excursionCount / totalReadings : 0
 
     temperatureCompliance = { totalReadings, excursionCount, excursionRate }
-    availableSections.push('temperatureCompliance')
+    // No readings in the period → treat the section as missing for the inspection
+    // pack (nothing to attest), rather than a hollow "0 readings" pass.
+    if (totalReadings === 0) {
+      missingSections.push('temperatureCompliance')
+    } else {
+      availableSections.push('temperatureCompliance')
+    }
   } catch {
     missingSections.push('temperatureCompliance')
     temperatureCompliance = { totalReadings: 0, excursionCount: 0, excursionRate: 0 }
