@@ -71,6 +71,10 @@ function makeMockDb(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // Source generates IDs via crypto.randomUUID() (not the uuid package).
+  vi.spyOn(crypto, 'randomUUID').mockReturnValue(
+    'mock-uuid' as `${string}-${string}-${string}-${string}-${string}`,
+  )
 })
 
 describe('addReferenceLab', () => {

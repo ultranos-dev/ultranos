@@ -93,6 +93,9 @@ import * as dbModule from '../lib/db'
 describe('generateDailySitrep — shape and persistence', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.spyOn(crypto, 'randomUUID').mockReturnValue(
+      'sitrep-uuid-test' as `${string}-${string}-${string}-${string}-${string}`,
+    )
     labResultsData = []
     pendingSamplesData = 0
     reagentsData = []
@@ -126,6 +129,9 @@ describe('generateDailySitrep — shape and persistence', () => {
 describe('generateDailySitrep — positivity rate', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.spyOn(crypto, 'randomUUID').mockReturnValue(
+      'sitrep-uuid-test' as `${string}-${string}-${string}-${string}-${string}`,
+    )
     labResultsData = []
     pendingSamplesData = 0
     reagentsData = []
@@ -241,6 +247,9 @@ describe('generateDailySitrep — pendingSamples', () => {
 describe('generateDailySitrep — reagent / stockout projection', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.spyOn(crypto, 'randomUUID').mockReturnValue(
+      'sitrep-uuid-test' as `${string}-${string}-${string}-${string}-${string}`,
+    )
     labResultsData = []
     pendingSamplesData = 0
     reagentsData = []
