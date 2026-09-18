@@ -24,7 +24,14 @@ import { getTodayQcRun } from '@/services/qc-run-service'
 
 const mockedGetTodayQcRun = vi.mocked(getTodayQcRun)
 
+beforeEach(() => {
+  // Freeze the clock: the banner stamps the QC "time" from now(); fake Date only.
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-09-09T12:00:00.000Z'))
+})
+
 afterEach(() => {
+  vi.useRealTimers()
   document.dir = 'ltr'
   vi.clearAllMocks()
 })

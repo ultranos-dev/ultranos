@@ -498,7 +498,7 @@ exports[`QualityDashboard RTL snapshots > LTR snapshot matches expected structur
         </p>
       </div>
       <div
-        aria-label="7-Day Zero Rejections — earned 2026-09-09T23:11:41.551Z"
+        aria-label="7-Day Zero Rejections — earned 2026-09-09T12:00:00.000Z"
         class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border bg-card shadow-sm"
       >
         <span
@@ -536,7 +536,7 @@ exports[`QualityDashboard RTL snapshots > LTR snapshot matches expected structur
         </p>
       </div>
       <div
-        aria-label="30-Day Zero Rejections — earned 2026-09-09T23:11:41.551Z"
+        aria-label="30-Day Zero Rejections — earned 2026-09-09T12:00:00.000Z"
         class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border bg-card shadow-sm"
       >
         <span
@@ -785,7 +785,7 @@ exports[`QualityDashboard RTL snapshots > LTR snapshot matches expected structur
         </p>
       </div>
       <div
-        aria-label="Zero Rejection Month — earned 2026-09-09T23:11:41.551Z"
+        aria-label="Zero Rejection Month — earned 2026-09-09T12:00:00.000Z"
         class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border bg-card shadow-sm"
       >
         <span

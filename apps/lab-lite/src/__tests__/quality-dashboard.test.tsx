@@ -10,7 +10,7 @@
  *  - RTL snapshot tests
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import 'fake-indexeddb/auto'
 
@@ -69,6 +69,10 @@ import { getDb } from '@/lib/db'
 const TECH_ID = 'tech-dashboard'
 
 beforeEach(async () => {
+  // Freeze the clock so streak "earned" timestamps/dates are deterministic in
+  // snapshots (fake Date only — fake-indexeddb + waitFor still use real timers).
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-09-09T12:00:00.000Z'))
   const db = getDb()
   await db.quality_streaks.clear()
   await db.quality_metrics.clear()
@@ -78,6 +82,10 @@ beforeEach(async () => {
   await db.samples.clear()
   await db.module_completions.clear()
   await db.micro_learning_modules.clear()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 // ---------------------------------------------------------------------------

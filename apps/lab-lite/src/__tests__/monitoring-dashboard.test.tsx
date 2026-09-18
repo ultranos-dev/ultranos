@@ -8,7 +8,7 @@
  *  - Offline: renders from Dexie cache when Hub unreachable (AC 10)
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import type { MonitoringFlag } from '../lib/db'
 
@@ -86,6 +86,13 @@ function makeFlag(overrides: Partial<MonitoringFlag> = {}): MonitoringFlag {
 beforeEach(() => {
   mockReturnedFlags = []
   vi.clearAllMocks()
+  // Freeze the clock so "days overdue" is deterministic (fake Date only).
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-09-09T12:00:00.000Z'))
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 // ---------------------------------------------------------------------------

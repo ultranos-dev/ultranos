@@ -236,7 +236,7 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
               >
                 Ordered
                  
-                258d
+                251d
               </span>
               <span
                 class="whitespace-nowrap text-[11px] text-muted-foreground"
@@ -488,7 +488,7 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
               >
                 Ordered
                  
-                258d
+                251d
               </span>
               <span
                 class="whitespace-nowrap text-[11px] text-muted-foreground"

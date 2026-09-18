@@ -1,8 +1,18 @@
 import 'fake-indexeddb/auto'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { LabOrderEntry } from '../lib/db'
+
+// Freeze the clock: the worklist renders "days since ordered" from now(); without
+// this the snapshot/day-count drifts daily. Fake Date only so async waitFor works.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-09-09T12:00:00.000Z'))
+})
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 // Mock next-intl
 const ordersMessages: Record<string, any> = {

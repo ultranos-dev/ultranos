@@ -5,7 +5,7 @@
  * including RTL snapshot tests.
  */
 
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import type { DriftAlert } from '@/lib/qc/types'
 import { DriftAlertBanner } from '@/components/qc/DriftAlertBanner'
@@ -320,7 +320,14 @@ describe('WestgardHistoryView', () => {
 
   // AC 9.18: RTL snapshot tests
   describe('RTL snapshots', () => {
+    // Freeze the clock so runDate-derived snapshots are deterministic (the test
+    // fixtures stamp new Date(); without this the rendered date drifts daily).
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] })
+      vi.setSystemTime(new Date('2026-09-09T12:00:00.000Z'))
+    })
     afterEach(() => {
+      vi.useRealTimers()
       document.dir = 'ltr'
     })
 
