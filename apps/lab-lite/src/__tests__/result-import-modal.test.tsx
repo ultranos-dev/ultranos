@@ -17,6 +17,21 @@ const mockImportSendOutResult = vi.fn()
 const mockGetDb = vi.fn()
 const mockSession = { userId: 'user-001', labRole: 'LAB_TECH' }
 
+// Component adopted next-intl useTranslations — resolve keys via real en.json
+vi.mock('next-intl', async () => {
+  const en = (await import('../../messages/en.json')).default as Record<string, Record<string, string>>
+  return {
+    useTranslations:
+      (ns: string) =>
+      (key: string, params?: Record<string, unknown>) => {
+        const raw = en[ns]?.[key] ?? `${ns}.${key}`
+        if (!params) return raw
+        return raw.replace(/\{(\w+)\}/g, (_, p) => String(params[p] ?? `{${p}}`))
+      },
+    useLocale: () => 'en',
+  }
+})
+
 vi.mock('../lib/sendout-service', () => ({
   importSendOutResult: mockImportSendOutResult,
 }))

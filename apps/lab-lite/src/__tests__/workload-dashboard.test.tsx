@@ -48,6 +48,8 @@ vi.mock('../stores/auth-session-store', () => ({
 }))
 
 vi.mock('../hooks/useLabPermission', () => ({
+  // Default: SUPERVISOR can VIEW_STAFF but cannot MANAGE_STAFF_ROLES (reassign)
+  useLabPermission: vi.fn((permission: string) => permission === 'VIEW_STAFF'),
   useRequireLabRole: vi.fn().mockReturnValue(true),
 }))
 
@@ -148,11 +150,15 @@ describe('WorkloadDashboard', () => {
 
 describe('WorkloadDashboard — access control', () => {
   it('shows insufficient permissions message when user is below SUPERVISOR', async () => {
-    const { useRequireLabRole } = await import('../hooks/useLabPermission')
-    vi.mocked(useRequireLabRole).mockReturnValueOnce(false)
+    const { useLabPermission } = await import('../hooks/useLabPermission')
+    // Below SUPERVISOR: cannot even view staff
+    vi.mocked(useLabPermission).mockReturnValue(false)
 
     render(<Wrapper><WorkloadDashboard /></Wrapper>)
     expect(screen.getByText('Insufficient permissions')).toBeDefined()
+
+    // Restore default so subsequent describes see SUPERVISOR view permission
+    vi.mocked(useLabPermission).mockImplementation((permission) => permission === 'VIEW_STAFF')
   })
 })
 

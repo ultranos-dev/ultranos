@@ -55,7 +55,7 @@ vi.mock('@/lib/db', () => ({
   }),
 }))
 
-import QueueDisplayPage from '@/app/[locale]/queue/display/page'
+import QueueDisplayPage from '@/app/[locale]/(app)/queue/display/page'
 
 describe('Queue display board — PHI protection', () => {
   beforeEach(() => {

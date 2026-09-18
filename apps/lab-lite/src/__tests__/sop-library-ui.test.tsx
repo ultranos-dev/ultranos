@@ -51,6 +51,10 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
   FileSearch: () => <svg data-testid="icon-file-search" />,
   Loader2: () => <svg data-testid="icon-loader2" />,
   ChevronLeft: () => <svg data-testid="icon-chevron-left" />,
+  // Additional icons pulled in by refactored components / SearchInput
+  BookOpen: () => <svg data-testid="icon-book-open" />,
+  AlertTriangle: () => <svg data-testid="icon-alert-triangle" />,
+  Search: () => <svg data-testid="icon-search" />,
 }))
 
 vi.mock('@ultranos/ui-kit', () => ({
@@ -190,9 +194,9 @@ describe('SOPLibrary — search filtering (P13)', () => {
       expect(screen.getByText('CBC Protocol')).toBeDefined()
     })
 
-    // Click the Chemistry tab
-    const chemTab = screen.getByRole('tab', { name: 'Chemistry' })
-    await user.click(chemTab)
+    // Select Chemistry from the category filter dropdown
+    const categorySelect = screen.getByRole('combobox', { name: 'Filter by category' })
+    await user.selectOptions(categorySelect, 'Chemistry')
 
     await waitFor(() => {
       expect(screen.getByText('Glucose Assay')).toBeDefined()
@@ -212,14 +216,13 @@ describe('SOPLibrary — search filtering (P13)', () => {
 
     // Filter to chemistry first
     await waitFor(() => expect(screen.getByText('CBC Protocol')).toBeDefined())
-    const chemTab = screen.getByRole('tab', { name: 'Chemistry' })
-    await user.click(chemTab)
+    const categorySelect = screen.getByRole('combobox', { name: 'Filter by category' })
+    await user.selectOptions(categorySelect, 'Chemistry')
 
     await waitFor(() => expect(screen.queryByText('CBC Protocol')).toBeNull())
 
     // Reset to All
-    const allTab = screen.getByRole('tab', { name: 'All' })
-    await user.click(allTab)
+    await user.selectOptions(categorySelect, 'All')
 
     await waitFor(() => {
       expect(screen.getByText('CBC Protocol')).toBeDefined()

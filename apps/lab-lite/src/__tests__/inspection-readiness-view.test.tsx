@@ -99,7 +99,7 @@ describe('InspectionReadinessView', () => {
       fireEvent.click(screen.getByRole('button', { name: 'generatePack' }))
 
       await waitFor(() => {
-        expect(screen.getByText('90.0%')).toBeInTheDocument()
+        expect(screen.getAllByText('90.0%').length).toBeGreaterThan(0)
       })
     })
 

@@ -4,6 +4,21 @@ import 'fake-indexeddb/auto'
 import { getDb, addToQueue, type UploadQueueEntry } from '../lib/db'
 import { useAuthSessionStore } from '../stores/auth-session-store'
 
+// Page + list adopted next-intl useTranslations — resolve via real en.json
+vi.mock('next-intl', async () => {
+  const en = (await import('../../messages/en.json')).default as Record<string, Record<string, string>>
+  return {
+    useTranslations:
+      (ns: string) =>
+      (key: string, params?: Record<string, unknown>) => {
+        const raw = en[ns]?.[key] ?? `${ns}.${key}`
+        if (!params) return raw
+        return raw.replace(/\{(\w+)\}/g, (_, p) => String(params[p] ?? `{${p}}`))
+      },
+    useLocale: () => 'en',
+  }
+})
+
 // Mock next/link
 vi.mock('next/link', () => ({
   default: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
@@ -80,7 +95,7 @@ function setAuthSession() {
 
 // Lazy import to ensure mocks are set up first
 async function renderHistoryPage() {
-  const { default: HistoryPage } = await import('../app/history/page')
+  const { default: HistoryPage } = await import('../app/[locale]/(app)/history/page')
   return render(<HistoryPage />)
 }
 
@@ -189,7 +204,7 @@ describe('Upload History Page (Story 17.3)', () => {
     expect(failedBadge.className).toContain('bg-red-50')
 
     const expiredBadge = screen.getByTestId('status-badge-expired')
-    expect(expiredBadge.className).toContain('bg-neutral-100')
+    expect(expiredBadge.className).toContain('bg-muted')
   })
 
   // AC #3: Expired items show Re-upload button
@@ -268,7 +283,7 @@ describe('Upload History Page (Story 17.3)', () => {
       expect(screen.getByText('Fatima')).toBeDefined()
     })
 
-    const searchInput = screen.getByLabelText('Search uploads')
+    const searchInput = screen.getByRole('textbox', { name: 'Search uploads' })
     fireEvent.change(searchInput, { target: { value: 'fatima' } })
 
     await waitFor(() => {
@@ -301,7 +316,7 @@ describe('Upload History Page (Story 17.3)', () => {
       expect(screen.getByText('Fatima')).toBeDefined()
     })
 
-    const searchInput = screen.getByLabelText('Search uploads')
+    const searchInput = screen.getByRole('textbox', { name: 'Search uploads' })
     fireEvent.change(searchInput, { target: { value: 'lipid' } })
 
     await waitFor(() => {
@@ -320,7 +335,7 @@ describe('Upload History Page (Story 17.3)', () => {
       expect(screen.getByText('Ahmad')).toBeDefined()
     })
 
-    const searchInput = screen.getByLabelText('Search uploads')
+    const searchInput = screen.getByRole('textbox', { name: 'Search uploads' })
     fireEvent.change(searchInput, { target: { value: 'nonexistent' } })
 
     await waitFor(() => {

@@ -11,6 +11,9 @@ import type { AlertLevel } from '../lib/db'
 // Mock i18n
 // ---------------------------------------------------------------------------
 
+// Controllable locale — component uses useLocale() (not a prop) for RTL detection
+let mockLocale = 'en'
+
 vi.mock('next-intl', () => ({
   useTranslations: (ns: string) => (key: string, params?: Record<string, unknown>) => {
     const full = `${ns}.${key}`
@@ -45,7 +48,7 @@ vi.mock('next-intl', () => ({
     }
     return map[full] ?? full
   },
-  useLocale: () => 'en',
+  useLocale: () => mockLocale,
 }))
 
 // ---------------------------------------------------------------------------
@@ -117,6 +120,7 @@ const { ReagentBurndownCard } = await import('../components/scheduler/ReagentBur
 beforeEach(() => {
   mockBurndownData = []
   mockIsLoading = false
+  mockLocale = 'en'
   mockRefresh.mockClear()
 })
 
@@ -222,7 +226,8 @@ describe('ReagentBurndownCard', () => {
 describe('ReagentBurndownCard RTL', () => {
   it('renders in RTL layout without errors', () => {
     mockBurndownData = [makeBurndownItem('r1', 'كاشف الجلوكوز', 'critical', 5)]
-    const { container } = render(<ReagentBurndownCard locale="ar" />)
+    mockLocale = 'ar'
+    const { container } = render(<ReagentBurndownCard />)
     const table = container.querySelector('table')
     expect(table?.getAttribute('dir')).toBe('rtl')
   })

@@ -1,6 +1,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import 'fake-indexeddb/auto'
+
+// UploadQueue adopted next-intl useTranslations — resolve via real en.json
+vi.mock('next-intl', async () => {
+  const en = (await import('../../messages/en.json')).default as Record<string, Record<string, string>>
+  return {
+    useTranslations:
+      (ns: string) =>
+      (key: string, params?: Record<string, unknown>) => {
+        const raw = en[ns]?.[key] ?? `${ns}.${key}`
+        if (!params) return raw
+        return raw.replace(/\{(\w+)\}/g, (_, p) => String(params[p] ?? `{${p}}`))
+      },
+    useLocale: () => 'en',
+  }
+})
+
 import { UploadQueue } from '../components/UploadQueue'
 import { getDb, addToQueue, type UploadQueueEntry } from '../lib/db'
 
