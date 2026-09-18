@@ -28,6 +28,7 @@ import type { SpillIncident } from '@/types/spill-protocol'
 import type { LabLocation, NetworkStatusSnapshot } from '@/types/lab-network'
 import type { TransportSession } from '@/types/transport'
 import type { TemperatureReading, TemperatureLocation, TemperatureExcursion } from '@/types/temperature-monitoring'
+import type { OutbreakModeConfig, DailySitrep } from '@/types/outbreak'
 import type { EncryptedHealthRecord } from '@/types/employee-health'
 import type { AtlasEntry, AtlasCategory } from '@/lib/visual-atlas'
 import type { QcRun, DriftAlert } from '@/lib/qc/types'
@@ -710,6 +711,8 @@ class LabLiteDatabase extends Dexie {
   familyDelegates!: Dexie.Table<FamilyDelegate, number>
   labOverheadConfig!: Dexie.Table<LabOverheadConfig, string>
   testCostConfigs!: Dexie.Table<TestCostConfig, string>
+  outbreak_configs!: Dexie.Table<OutbreakModeConfig, string>
+  daily_sitreps!: Dexie.Table<DailySitrep, string>
   waste_containers!: Dexie.Table<WasteContainer, string>
   waste_disposal_records!: Dexie.Table<WasteDisposalRecord, string>
   culturalPreferences!: Dexie.Table<PatientCulturalPreferences, string>
@@ -1797,6 +1800,11 @@ class LabLiteDatabase extends Dexie {
     this.version(50).stores({
       labOverheadConfig: '&id',
       testCostConfigs: '&testCode',
+    })
+    // v51 — Outbreak mode config + daily sitreps (Story 54.x). No PHI (aggregate counts).
+    this.version(51).stores({
+      outbreak_configs: '&id, status',
+      daily_sitreps: '&id, outbreakConfigId, reportDate',
     })
   }
 }
@@ -3546,6 +3554,31 @@ export async function getAllTestCostConfigs(): Promise<TestCostConfig[]> {
 /** Bulk create/update per-test cost configs (upsert by &testCode). */
 export async function putTestCostConfigs(configs: Omit<TestCostConfig, 'id'>[]): Promise<void> {
   await getDb().testCostConfigs.bulkPut(configs as TestCostConfig[])
+}
+
+// ---------------------------------------------------------------------------
+// Outbreak mode + daily sitrep helpers (v51) — Story 54.x
+// ---------------------------------------------------------------------------
+
+/** Create or update an outbreak-mode config (upsert by &id). */
+export async function putOutbreakConfig(config: OutbreakModeConfig): Promise<void> {
+  await getDb().outbreak_configs.put(config)
+}
+
+/** The currently-active outbreak config, if any. */
+export async function getActiveOutbreak(): Promise<OutbreakModeConfig | undefined> {
+  const all = await getDb().outbreak_configs.where('status').equals('active').toArray()
+  return all[0]
+}
+
+/** Append a daily sitrep (aggregate report — no PHI). */
+export async function addDailySitrep(sitrep: DailySitrep): Promise<void> {
+  await getDb().daily_sitreps.add(sitrep)
+}
+
+/** All sitreps for an outbreak, by outbreakConfigId. */
+export async function getSitrepsByOutbreak(outbreakConfigId: string): Promise<DailySitrep[]> {
+  return getDb().daily_sitreps.where('outbreakConfigId').equals(outbreakConfigId).toArray()
 }
 
 // ---------------------------------------------------------------------------
