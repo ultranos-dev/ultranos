@@ -49,6 +49,7 @@ import type { MedicationLabMapping } from '@ultranos/shared-types'
 import type { PlausibilityConfig, ResultSnapshot, FlagAcknowledgment } from '@/lib/plausibility/types'
 import type { AuthorizationAction } from '@/types/authorization'
 import type { InventorySnapshotItem } from '@/lib/inventory/inventory-types'
+import type { ProcedureCompetency, CompetencySnapshot, DecayNotification } from '@/lib/competency-types'
 
 // ---------------------------------------------------------------------------
 // Achievement types (v17) — Story 51.7: Gamified Team Quality Engagement
@@ -869,6 +870,10 @@ class LabLiteDatabase extends Dexie {
   orderHistory!: Dexie.Table<OrderHistoryEntry, number>
   networkInventory!: Dexie.Table<NetworkInventoryEntry, number>
   redistributionRecommendations!: Dexie.Table<RedistributionRecommendation, number>
+  // v54 — Procedure competency tracking (Story 46.x). No PHI (technician IDs + LOINC).
+  procedure_competencies!: Dexie.Table<ProcedureCompetency, string>
+  competency_snapshots!: Dexie.Table<CompetencySnapshot, string>
+  decay_notifications!: Dexie.Table<DecayNotification, string>
   waste_containers!: Dexie.Table<WasteContainer, string>
   waste_disposal_records!: Dexie.Table<WasteDisposalRecord, string>
   culturalPreferences!: Dexie.Table<PatientCulturalPreferences, string>
@@ -1981,6 +1986,12 @@ class LabLiteDatabase extends Dexie {
       orderHistory: '++id, &requestId, labId, deliveredAt',
       networkInventory: '++id, &labId, district, snapshotAt',
       redistributionRecommendations: '++id, deficitLabId, sourceLabId, createdAt',
+    })
+    // v54 — Procedure competency tracking (Story 46.x). Technician-scoped, no PHI.
+    this.version(54).stores({
+      procedure_competencies: '&id, technicianId, [technicianId+procedureRef]',
+      competency_snapshots: '&id, technicianId, [technicianId+snapshotDate]',
+      decay_notifications: '&id, technicianId, procedureRef, dismissed',
     })
   }
 }

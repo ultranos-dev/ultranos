@@ -170,11 +170,12 @@ export async function recalculateAllCompetencies(
   >()
 
   for (const r of results) {
+    if (!r.loincCode) continue  // results without a procedure code can't be attributed
     const entry = map.get(r.loincCode)
     if (!entry) {
       map.set(r.loincCode, {
         loincCode: r.loincCode,
-        loincDisplay: r.loincDisplay ?? r.loincCode,
+        loincDisplay: r.loincCode,  // LabResult has no display field; use the code
         latestAt: r.enteredAt,
         total: 1,
         last90: r.enteredAt >= cutoff90Iso ? 1 : 0,
@@ -306,7 +307,7 @@ export async function getProcedureTrend(
 
   if (snapshots.length === 0) return null
 
-  const oldSnapshot = snapshots[snapshots.length - 1]
+  const oldSnapshot = snapshots[snapshots.length - 1]!  // non-empty (checked above)
   const oldRecord = oldSnapshot.procedures.find(
     (p) => p.procedureRef === procedureRef,
   )
