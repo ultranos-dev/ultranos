@@ -86,6 +86,8 @@ export interface LabResultForAuthorization {
   syncStatus: AuthSyncStatus
   /** FHIR DiagnosticReport conclusion field — clinical interpretation text */
   conclusion?: string
+  /** Optional free-text report comment shown in the review panel. */
+  reportComment?: string
 }
 
 /**

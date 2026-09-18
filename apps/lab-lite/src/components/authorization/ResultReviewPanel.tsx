@@ -15,8 +15,8 @@ import { approveResult, rejectResult, holdResult } from '@/lib/authorization-act
 import { canAuthorize, canReject, canHold, isCriticalResult } from '@/lib/permissions'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { LabRole } from '@ultranos/shared-types'
-import type { LabResult, LabObservation } from '@/lib/db'
-import type { AbnormalityFlag } from '@/types/authorization'
+import type { LabObservation } from '@/lib/db'
+import type { AbnormalityFlag, LabResultForAuthorization } from '@/types/authorization'
 import { AuthorizationStatus } from '@/types/authorization'
 import type { RangeSnapshot, RangeSource } from '@/lib/reference-ranges/types'
 import {
@@ -25,7 +25,7 @@ import {
 } from '@/lib/reference-ranges/types'
 
 interface ResultReviewPanelProps {
-  result: LabResult
+  result: LabResultForAuthorization
   observations: LabObservation[]
   onClose: () => void
   onActionComplete: (newStatus: AuthorizationStatus) => void
@@ -52,6 +52,7 @@ function ConfirmDialog({
   onConfirm: (comment: string, checked: boolean) => void
   onCancel: () => void
 }) {
+  const t = useTranslations('authorization')
   const [comment, setComment] = useState('')
   const [checked, setChecked] = useState(false)
   const [error, setError] = useState('')

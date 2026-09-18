@@ -19,8 +19,7 @@ import { getDb } from '@/lib/db'
 import { canAuthorize, canReject, canHold } from '@/lib/permissions'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import type { LabRole } from '@ultranos/shared-types'
-import type { LabResult } from '@/lib/db'
-import type { AbnormalityFlag } from '@/types/authorization'
+import type { AbnormalityFlag, LabResultForAuthorization } from '@/types/authorization'
 import { AuthorizationStatus } from '@/types/authorization'
 
 type SortKey = 'severity' | 'timestamp' | 'urgency'
@@ -57,7 +56,7 @@ function FlagBadge({ flag }: { flag: AbnormalityFlag }) {
 
 interface AuthorizationQueueProps {
   /** Override pending results (for testing / SSR). */
-  results?: LabResult[]
+  results?: LabResultForAuthorization[]
 }
 
 export function AuthorizationQueue({ results: externalResults }: AuthorizationQueueProps) {
@@ -66,7 +65,7 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
   const session = useAuthSessionStore((s) => s.session)
   const labRole = session?.labRole as LabRole | null
 
-  const [results, setResults] = useState<LabResult[]>(externalResults ?? [])
+  const [results, setResults] = useState<LabResultForAuthorization[]>(externalResults ?? [])
   const [loading, setLoading] = useState(!externalResults)
   const [sortKey, setSortKey] = useState<SortKey>('severity')
   const [categoryFilter, setCategoryFilter] = useState<FilterCategory>(null)
@@ -85,7 +84,9 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
           .where('authorizationStatus')
           .equals(AuthorizationStatus.PENDING)
           .toArray()
-        if (active) setResults(rows)
+        // Stored rows carry the authorization fields (patientFirstName/age/flags);
+        // the lab_results Dexie type is the minimal LabResult, so narrow here.
+        if (active) setResults(rows as unknown as LabResultForAuthorization[])
       } catch {
         // Dexie unavailable — show empty state
       } finally {

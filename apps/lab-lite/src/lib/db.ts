@@ -2665,6 +2665,7 @@ export interface LabObservation {
   value: number | string | null  // observed value (number for quantitative analytes)
   flag?: 'L' | 'H' | 'LL' | 'HH' | 'A' | null  // reference-range flag
   unit?: string           // unit of measure (e.g. 'g/dL', '×10³/µL')
+  comment?: string        // optional per-observation note (no PHI)
 }
 
 
