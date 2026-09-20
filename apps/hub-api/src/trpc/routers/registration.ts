@@ -152,7 +152,7 @@ export const registrationRouter = createTRPCRouter({
         try {
           await audit.emit({
             action: 'CREATE',
-            resourceType: 'Organization',
+            resourceType: 'ORGANIZATION',
             resourceId: org.id,
             actorId: createdUserId,
             actorRole: 'ADMIN',

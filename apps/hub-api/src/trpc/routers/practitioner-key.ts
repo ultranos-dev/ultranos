@@ -51,7 +51,7 @@ export const practitionerKeyRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'READ',
-          resourceType: 'PractitionerKey',
+          resourceType: 'PRACTITIONER_KEY',
           resourceId: data.id,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
@@ -186,7 +186,7 @@ export const practitionerKeyRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'CREATE',
-          resourceType: 'PractitionerKey',
+          resourceType: 'PRACTITIONER_KEY',
           resourceId: data.id,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
@@ -239,7 +239,7 @@ export const practitionerKeyRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'UPDATE',
-          resourceType: 'PractitionerKey',
+          resourceType: 'PRACTITIONER_KEY',
           resourceId: data.id,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,

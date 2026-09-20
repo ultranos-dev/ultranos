@@ -61,7 +61,7 @@ export const allergyRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_READ',
-          resourceType: 'AllergyIntolerance',
+          resourceType: 'ALLERGY',
           resourceId: `patient-allergies:${input.patientId}`,
           patientId: input.patientId,
           actorId: ctx.user.sub,
@@ -177,7 +177,7 @@ export const allergyRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_WRITE',
-          resourceType: 'AllergyIntolerance',
+          resourceType: 'ALLERGY',
           resourceId: data.id,
           patientId,
           actorId: ctx.user.sub,

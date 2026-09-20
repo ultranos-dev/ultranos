@@ -132,12 +132,12 @@ export const consentRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_WRITE',
-          resourceType: 'Consent',
+          resourceType: 'CONSENT',
           resourceId: data.id,
           patientId: input.patientRef.replace('Patient/', ''),
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
-          outcome: 'success',
+          outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
           metadata: { syncAction: 'consent_synced' },
         })
@@ -310,12 +310,12 @@ export const consentRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_READ',
-          resourceType: 'Consent',
+          resourceType: 'CONSENT',
           resourceId: 'consent-check',
           patientId: input.patientId,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
-          outcome: 'success',
+          outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
           metadata: {
             checkedResourceType: input.resourceType,

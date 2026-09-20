@@ -4,7 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createTRPCRouter, protectedProcedure, baseProcedure } from '../init'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
-import { ROLE_MODULE_MAP, MODULE_DISPLAY_NAMES, LabRole, AuditAction } from '@ultranos/shared-types'
+import { ROLE_MODULE_MAP, MODULE_DISPLAY_NAMES, LabRole, AuditAction, UserRole } from '@ultranos/shared-types'
 import crypto from 'crypto'
 import { encryptField, decryptField, generateBlindIndex } from '@ultranos/crypto/server'
 import { getCachedEncryptionKey, getFieldEncryptionKeys } from '@/lib/field-encryption'
@@ -338,7 +338,7 @@ export const adminRouter = createTRPCRouter({
           resourceType: 'USER_ACCOUNT',
           resourceId: validatedActorId ?? 'anonymous',
           actorId: validatedActorId,
-          actorRole: ctx.user?.role ?? 'UNKNOWN',
+          actorRole: ctx.user?.role ?? UserRole.SYSTEM,
           outcome: isSuccess ? 'SUCCESS' : 'FAILURE',
           sessionId: ctx.user?.sessionId,
           sourceIpHash,

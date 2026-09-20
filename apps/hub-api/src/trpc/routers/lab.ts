@@ -412,7 +412,7 @@ export const labRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'CREATE',
-          resourceType: 'Organization',
+          resourceType: 'ORGANIZATION',
           resourceId: lab.id,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
@@ -1963,7 +1963,7 @@ export const labRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'READ',
-          resourceType: 'ServiceRequest',
+          resourceType: 'SERVICE_REQUEST',
           resourceId: 'order-pull',
           actorId: technicianId,
           actorRole: ctx.user.role,
@@ -2300,7 +2300,7 @@ export const labRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'UPDATE',
-          resourceType: 'ServiceRequest',
+          resourceType: 'SERVICE_REQUEST',
           resourceId: input.orderId,
           actorId: technicianId,
           actorRole: ctx.user.role,

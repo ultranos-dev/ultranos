@@ -272,7 +272,7 @@ export const billingRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: `BILLING_${webhookEvent.eventType}`,
-          resourceType: 'BillingEvent',
+          resourceType: 'BILLING',
           resourceId: billingEventRow.id as string,
           actorId: 'SYSTEM',
           actorRole: 'SYSTEM',
@@ -351,7 +351,7 @@ export const billingRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'DATA_PURGE_CONFIRMED',
-          resourceType: 'DataPurgeJob',
+          resourceType: 'DATA_PURGE_JOB',
           resourceId: input.purgeJobId,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
@@ -418,7 +418,7 @@ export const billingRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'DATA_PURGE_CANCELLED',
-          resourceType: 'DataPurgeJob',
+          resourceType: 'DATA_PURGE_JOB',
           resourceId: input.purgeJobId,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
@@ -476,7 +476,7 @@ export const billingRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'READ',
-          resourceType: 'Invoice',
+          resourceType: 'INVOICE',
           resourceId: `invoices:${input.customerId}`,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,

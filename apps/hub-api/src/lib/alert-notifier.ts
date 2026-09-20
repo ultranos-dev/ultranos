@@ -57,7 +57,7 @@ export async function sendAlert(payload: AlertPayload): Promise<void> {
     const audit = new AuditLogger(supabase)
     await audit.emit({
       action: 'ALERT',
-      resourceType: 'Metric',
+      resourceType: 'METRIC',
       resourceId: payload.metric,
       actorId: 'SYSTEM',
       actorRole: 'SYSTEM',

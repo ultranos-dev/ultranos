@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { ConsentScope, ConsentStatus } from '@ultranos/shared-types'
+import { tInstance } from '@/trpc/init'
 
 /**
  * Maps tRPC resource types to the ConsentScope required for access.
@@ -89,15 +90,19 @@ export async function checkConsent(
  * If no active consent is found, throws a 403 FORBIDDEN error.
  */
 export function enforceConsentMiddleware(resourceType: string) {
-  return async (opts: {
-    ctx: { supabase: SupabaseClient; user: { sub: string; role: string; sessionId: string } }
-    input: Record<string, unknown>
-    next: (opts: { ctx: typeof opts.ctx }) => Promise<unknown>
-  }) => {
+  return tInstance.middleware(async (opts) => {
+    // Applied downstream of protectedProcedure — re-emit non-null user so the
+    // narrowing propagates to procedures chained after this middleware.
+    const user = opts.ctx.user
+    if (!user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' })
+    }
+
     // Extract patient ID from input — support both formats
+    const input = opts.input as Record<string, unknown>
     const patientId =
-      (opts.input.patientId as string) ??
-      (opts.input.patientRef as string)?.replace('Patient/', '')
+      (input.patientId as string) ??
+      (input.patientRef as string)?.replace('Patient/', '')
 
     if (!patientId) {
       throw new TRPCError({
@@ -118,6 +123,6 @@ export function enforceConsentMiddleware(resourceType: string) {
       })
     }
 
-    return opts.next({ ctx: opts.ctx })
-  }
+    return opts.next({ ctx: { ...opts.ctx, user } })
+  })
 }

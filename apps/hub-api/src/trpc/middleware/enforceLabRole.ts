@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { type LabPermission, hasLabPermission } from '@ultranos/shared-types'
 import type { LabContext } from '../rbac'
+import { tInstance } from '@/trpc/init'
 
 /**
  * tRPC middleware factory that gates access behind a specific lab permission.
@@ -10,16 +11,20 @@ import type { LabContext } from '../rbac'
  * ADMIN bypass: no lab context present (set by labRestrictedProcedure).
  */
 export function enforceLabRole(requiredPermission: LabPermission) {
-  return async (opts: {
-    ctx: { lab?: LabContext; [key: string]: unknown }
-    input: unknown
-    next: (opts: { ctx: Record<string, unknown> }) => Promise<unknown>
-  }) => {
+  return tInstance.middleware(async (opts) => {
+    // Applied downstream of labRestrictedProcedure (→ protectedProcedure). Re-emit
+    // non-null user + the injected lab context so both propagate downstream.
+    const user = opts.ctx.user
+    if (!user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' })
+    }
+    // lab context injected upstream by labRestrictedProcedure (not on base ctx).
+    const lab = (opts.ctx as { lab?: LabContext }).lab
+
     // ADMIN bypass — explicit role check for safety
-    if (!opts.ctx.lab) {
-      const user = opts.ctx.user as { role?: string } | undefined
-      if (user?.role === 'ADMIN') {
-        return opts.next({ ctx: opts.ctx })
+    if (!lab) {
+      if (user.role === 'ADMIN') {
+        return opts.next({ ctx: { ...opts.ctx, user, lab } })
       }
       throw new TRPCError({
         code: 'FORBIDDEN',
@@ -27,7 +32,7 @@ export function enforceLabRole(requiredPermission: LabPermission) {
       })
     }
 
-    const { labRole } = opts.ctx.lab
+    const { labRole } = lab
 
     if (!hasLabPermission(labRole, requiredPermission)) {
       throw new TRPCError({
@@ -36,6 +41,6 @@ export function enforceLabRole(requiredPermission: LabPermission) {
       })
     }
 
-    return opts.next({ ctx: opts.ctx })
-  }
+    return opts.next({ ctx: { ...opts.ctx, user, lab } })
+  })
 }

@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server'
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { isSafetyCritical, type FeatureId } from '@ultranos/shared-types'
+import { tInstance } from '@/trpc/init'
 
 /**
  * Premium tier enforcement middleware — gates patient-facing API endpoints
@@ -26,25 +26,21 @@ export function enforcePremiumTier(featureId: FeatureId) {
     )
   }
 
-  return async (opts: {
-    ctx: {
-      supabase: SupabaseClient
-      user: { sub: string; role: string; sessionId: string; orgId: string | null }
-      _patientTier?: 'FREE' | 'PREMIUM'
+  return tInstance.middleware(async (opts) => {
+    // Applied downstream of protectedProcedure — user is present; guard defensively.
+    const user = opts.ctx.user
+    if (!user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' })
     }
-    input: Record<string, unknown>
-    next: (opts: {
-      ctx: typeof opts.ctx & { _patientTier: 'FREE' | 'PREMIUM' }
-    }) => Promise<unknown>
-  }) => {
-    // Use cached tier if already fetched in this request
-    let tier = opts.ctx._patientTier
+
+    // Use cached tier if already fetched in this request (injected upstream).
+    let tier = (opts.ctx as { _patientTier?: 'FREE' | 'PREMIUM' })._patientTier
 
     if (!tier) {
       const { data, error } = await opts.ctx.supabase
         .from('patients')
         .select('patient_tier')
-        .eq('id', opts.ctx.user.sub)
+        .eq('id', user.sub)
         .single()
 
       if (error || !data) {
@@ -65,7 +61,7 @@ export function enforcePremiumTier(featureId: FeatureId) {
     }
 
     return opts.next({
-      ctx: { ...opts.ctx, _patientTier: tier },
+      ctx: { ...opts.ctx, user, _patientTier: tier },
     })
-  }
+  })
 }

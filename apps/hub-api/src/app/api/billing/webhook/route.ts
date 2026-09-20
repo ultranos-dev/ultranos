@@ -209,7 +209,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     await audit.emit({
       action: `BILLING_${webhookEvent.eventType}`,
-      resourceType: 'BillingEvent',
+      resourceType: 'BILLING',
       resourceId: billingEventRow.id as string,
       actorId: 'SYSTEM',
       actorRole: 'SYSTEM',

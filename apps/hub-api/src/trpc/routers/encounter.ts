@@ -70,7 +70,7 @@ export const encounterRouter = createTRPCRouter({
         try {
           await audit.emit({
             action: 'PHI_WRITE',
-            resourceType: 'Encounter',
+            resourceType: 'ENCOUNTER',
             resourceId: existingId,
             patientId: input.patientId,
             actorId: ctx.user.sub,
@@ -136,7 +136,7 @@ export const encounterRouter = createTRPCRouter({
           try {
             await audit.emit({
               action: 'PHI_WRITE',
-              resourceType: 'Encounter',
+              resourceType: 'ENCOUNTER',
               resourceId: input.id,
               patientId: input.patientId,
               actorId: ctx.user.sub,
@@ -161,7 +161,7 @@ export const encounterRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_WRITE',
-          resourceType: 'Encounter',
+          resourceType: 'ENCOUNTER',
           resourceId: data.id,
           patientId: input.patientId,
           actorId: ctx.user.sub,
@@ -219,7 +219,7 @@ export const encounterRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_READ',
-          resourceType: 'Encounter',
+          resourceType: 'ENCOUNTER',
           resourceId: input.id,
           patientId: input.patientId,
           actorId: ctx.user.sub,
@@ -303,7 +303,7 @@ export const encounterRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_WRITE',
-          resourceType: 'Encounter',
+          resourceType: 'ENCOUNTER',
           resourceId: data.id,
           patientId: input.patientId,
           actorId: ctx.user.sub,
@@ -394,7 +394,7 @@ export const encounterRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_WRITE',
-          resourceType: 'Encounter',
+          resourceType: 'ENCOUNTER',
           resourceId: data.id,
           patientId: input.patientId,
           actorId: ctx.user.sub,
@@ -484,7 +484,7 @@ export const encounterRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_WRITE',
-          resourceType: 'ClinicalImpression',
+          resourceType: 'CLINICAL_IMPRESSION',
           resourceId: data.id,
           patientId: encounter.subject_id,
           actorId: ctx.user.sub,
@@ -546,7 +546,7 @@ export const encounterRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_READ',
-          resourceType: 'ClinicalImpression',
+          resourceType: 'CLINICAL_IMPRESSION',
           resourceId: `encounter-soap:${input.encounterId}`,
           patientId: encounter?.subject_id,
           actorId: ctx.user.sub,
@@ -615,7 +615,7 @@ export const encounterRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_READ',
-          resourceType: 'Encounter',
+          resourceType: 'ENCOUNTER',
           resourceId: `patient-encounters:${input.patientId}`,
           patientId: input.patientId,
           actorId: ctx.user.sub,
@@ -702,7 +702,7 @@ export const encounterRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_READ',
-          resourceType: 'Encounter',
+          resourceType: 'ENCOUNTER',
           resourceId: `practitioner-encounters:${ctx.user.sub}`,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
@@ -774,7 +774,7 @@ export const encounterRouter = createTRPCRouter({
         try {
           await audit.emit({
             action: 'PHI_READ',
-            resourceType: 'ClinicalImpression',
+            resourceType: 'CLINICAL_IMPRESSION',
             resourceId: input.encounterId,
             patientId,
             actorId: ctx.user.sub,
@@ -824,7 +824,7 @@ export const encounterRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_WRITE',
-          resourceType: 'ClinicalImpression',
+          resourceType: 'CLINICAL_IMPRESSION',
           resourceId: input.encounterId,
           patientId,
           actorId: ctx.user.sub,
@@ -968,7 +968,7 @@ export const encounterRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_WRITE',
-          resourceType: 'ClinicalImpression',
+          resourceType: 'CLINICAL_IMPRESSION',
           resourceId: input.encounterId,
           patientId: encounter.subject_id,
           actorId: ctx.user.sub,

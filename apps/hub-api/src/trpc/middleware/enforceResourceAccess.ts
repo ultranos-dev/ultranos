@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server'
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { hasResourceAccess } from '../rbac'
+import { tInstance } from '@/trpc/init'
 
 /**
  * tRPC middleware factory that enforces FHIR resource-level RBAC.
@@ -16,20 +16,21 @@ import { hasResourceAccess } from '../rbac'
  * - Consistency: uses the single ROLE_PERMISSIONS map from rbac.ts
  */
 export function enforceResourceAccess(resourceType: string) {
-  return async (opts: {
-    ctx: { supabase: SupabaseClient; user: { sub: string; role: string; sessionId: string } }
-    input: Record<string, unknown>
-    next: (opts: { ctx: typeof opts.ctx }) => Promise<unknown>
-  }) => {
-    const userRole = opts.ctx.user.role
+  return tInstance.middleware(async (opts) => {
+    // Applied downstream of protectedProcedure — re-emit non-null user so the
+    // narrowing propagates to procedures chained after this middleware.
+    const user = opts.ctx.user
+    if (!user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' })
+    }
 
-    if (!hasResourceAccess(userRole, resourceType)) {
+    if (!hasResourceAccess(user.role, resourceType)) {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: 'Access denied — insufficient permissions for this resource',
       })
     }
 
-    return opts.next({ ctx: opts.ctx })
-  }
+    return opts.next({ ctx: { ...opts.ctx, user } })
+  })
 }

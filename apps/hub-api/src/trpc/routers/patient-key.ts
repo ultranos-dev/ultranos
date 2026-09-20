@@ -67,7 +67,7 @@ export const patientKeyRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'CREATE',
-          resourceType: 'PatientKey',
+          resourceType: 'PATIENT_KEY',
           resourceId: data.id,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,

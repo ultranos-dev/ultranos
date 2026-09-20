@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
 import { getSupabaseClient } from '@/lib/supabase'
 import { verifySupabaseJwt, getSupabaseJwk } from '@/lib/jwt'
-import { metricsMiddleware } from '@/trpc/middleware/metrics'
+import { recordRequestMetrics } from '@/trpc/middleware/metrics'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { UserRole } from '@ultranos/shared-types'
 
@@ -23,13 +23,27 @@ export interface TRPCContext {
      * (which omit it) still fall back to `sub`.
      */
     practitionerId?: string
-    role: string
+    // The app role, normalized to a UserRole value (uppercased at construction).
+    // Typed as `${UserRole}` (the string-value union) so it flows directly into
+    // audit `actorRole` fields without a per-call-site cast. RBAC still treats any
+    // unrecognized value as no-access, so an unexpected token claim fails safe.
+    role: `${UserRole}`
     sessionId: string
     orgId: string | null
     facilityId: string | null
     status: string | null
   } | null
   headers: Headers
+}
+
+/**
+ * The context as seen DOWNSTREAM of `protectedProcedure`, which throws when
+ * `user` is null. Middleware factories `.use()`d on protected procedures should
+ * type their `opts.ctx` as this (or an intersection adding their own augmented
+ * fields) so `ctx.user` is non-null without per-access `?.` guards.
+ */
+export type AuthedTRPCContext = TRPCContext & {
+  user: NonNullable<TRPCContext['user']>
 }
 
 /**
@@ -60,7 +74,7 @@ export const createTRPCContext = async (opts: {
             // `practitioner_id` claim, falling back to sub) so participant-scoped
             // queries match whatever the spoke stored.
             practitionerId: (payload.practitioner_id as string) ?? payload.sub,
-            role: ((userMeta.role as string) ?? (payload.role as string) ?? '').toUpperCase(),
+            role: ((userMeta.role as string) ?? (payload.role as string) ?? '').toUpperCase() as `${UserRole}`,
             sessionId: (payload.session_id as string) ?? '',
             orgId: (userMeta.org_id as string) ?? (payload.org_id as string) ?? null,
             facilityId: (userMeta.facility_id as string) ?? (payload.facility_id as string) ?? null,
@@ -87,7 +101,20 @@ export const createCallerFactory = t.createCallerFactory
  * Base procedure with metrics middleware as outermost layer — Story 23.1 Task 1.
  * Every tRPC call records latency, count, and error metrics.
  */
-export const baseProcedure = t.procedure.use(metricsMiddleware)
+export const baseProcedure = t.procedure.use(
+  t.middleware(async (opts) => {
+    const start = performance.now()
+    try {
+      const result = await opts.next()
+      recordRequestMetrics(opts.path, opts.type, 'ok', performance.now() - start)
+      return result
+    } catch (err: unknown) {
+      const errorCode = (err as { code?: string })?.code ?? 'UNKNOWN'
+      recordRequestMetrics(opts.path, opts.type, 'error', performance.now() - start, errorCode)
+      throw err
+    }
+  }),
+)
 
 /** Expose the tRPC instance for middleware composition in rbac.ts */
 export const tInstance = t

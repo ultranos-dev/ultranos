@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { tInstance } from '@/trpc/init'
 
 /**
  * PENDING_VERIFICATION gate middleware — blocks clinical route access
@@ -19,19 +19,18 @@ import type { SupabaseClient } from '@supabase/supabase-js'
  *   patient, patient-key, consent, sync, vocabulary, practitioner-key
  */
 export function enforceVerifiedOrg() {
-  return async (opts: {
-    ctx: {
-      supabase: SupabaseClient
-      user: { sub: string; role: string; sessionId: string; orgId: string | null }
-    }
-    next: (opts: { ctx: typeof opts.ctx }) => Promise<unknown>
-  }) => {
-    // PLATFORM_ADMIN bypass — always allowed
-    if (opts.ctx.user.role === 'PLATFORM_ADMIN') {
-      return opts.next({ ctx: opts.ctx })
+  return tInstance.middleware(async (opts) => {
+    const user = opts.ctx.user
+    if (!user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' })
     }
 
-    if (!opts.ctx.user.orgId) {
+    // PLATFORM_ADMIN bypass — always allowed
+    if (user.role === 'PLATFORM_ADMIN') {
+      return opts.next({ ctx: { ...opts.ctx, user } })
+    }
+
+    if (!user.orgId) {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: 'KYC_REQUIRED',
@@ -42,7 +41,7 @@ export function enforceVerifiedOrg() {
     const { data: org, error } = await opts.ctx.supabase
       .from('organizations')
       .select('status')
-      .eq('id', opts.ctx.user.orgId)
+      .eq('id', user.orgId)
       .single()
 
     if (error || !org) {
@@ -56,7 +55,7 @@ export function enforceVerifiedOrg() {
 
     // Allowlist: only TRIAL and ACTIVE orgs may access clinical routes (fail-closed)
     if (status === 'TRIAL' || status === 'ACTIVE') {
-      return opts.next({ ctx: opts.ctx })
+      return opts.next({ ctx: { ...opts.ctx, user } })
     }
 
     if (status === 'PENDING_VERIFICATION') {
@@ -72,5 +71,5 @@ export function enforceVerifiedOrg() {
       message: 'ORG_INACTIVE',
       cause: { orgStatus: status },
     })
-  }
+  })
 }

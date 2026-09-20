@@ -255,7 +255,7 @@ export const appointmentRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_READ',
-          resourceType: 'Appointment',
+          resourceType: 'APPOINTMENT',
           resourceId: `practitioner-${input.practitionerId}`,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
@@ -310,7 +310,7 @@ export const appointmentRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_READ',
-          resourceType: 'Appointment',
+          resourceType: 'APPOINTMENT',
           resourceId: `patient-${input.patientId}`,
           patientId: input.patientId,
           actorId: ctx.user.sub,
@@ -424,7 +424,7 @@ export const appointmentRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_WRITE',
-          resourceType: 'Appointment',
+          resourceType: 'APPOINTMENT',
           resourceId: data.id,
           patientId: patientIds[0] ?? undefined,
           actorId: ctx.user.sub,
@@ -521,7 +521,7 @@ export const appointmentRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'PHI_WRITE',
-          resourceType: 'Appointment',
+          resourceType: 'APPOINTMENT',
           resourceId: input.id,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
@@ -648,7 +648,7 @@ export const appointmentRouter = createTRPCRouter({
         try {
           await audit.emit({
             action: 'PHI_WRITE',
-            resourceType: 'Appointment',
+            resourceType: 'APPOINTMENT',
             resourceId: appt.id,
             patientId: patientIds[0] ?? undefined,
             actorId: ctx.user.sub,

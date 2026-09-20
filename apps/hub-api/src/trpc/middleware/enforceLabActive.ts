@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import type { LabContext } from '../rbac'
+import { tInstance } from '@/trpc/init'
 
 /**
  * tRPC middleware that gates access to lab upload workflows
@@ -11,17 +12,22 @@ import type { LabContext } from '../rbac'
  * Returns clear errors for PENDING and SUSPENDED labs.
  */
 export function enforceLabActive() {
-  return async (opts: {
-    ctx: { lab?: LabContext; [key: string]: unknown }
-    input: unknown
-    next: (opts: { ctx: typeof opts.ctx }) => Promise<unknown>
-  }) => {
+  return tInstance.middleware(async (opts) => {
+    // Applied downstream of labRestrictedProcedure (→ protectedProcedure). Re-emit
+    // non-null user + the injected lab context so both propagate to downstream procedures.
+    const user = opts.ctx.user
+    if (!user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' })
+    }
+    // lab context injected upstream by labRestrictedProcedure (not on base ctx).
+    const lab = (opts.ctx as { lab?: LabContext }).lab
+
     // ADMIN bypass — no lab context present (set by labRestrictedProcedure)
-    if (!opts.ctx.lab) {
-      return opts.next({ ctx: opts.ctx })
+    if (!lab) {
+      return opts.next({ ctx: { ...opts.ctx, user, lab } })
     }
 
-    const { labStatus } = opts.ctx.lab
+    const { labStatus } = lab
 
     if (labStatus === 'PENDING') {
       throw new TRPCError({
@@ -44,6 +50,6 @@ export function enforceLabActive() {
       })
     }
 
-    return opts.next({ ctx: opts.ctx })
-  }
+    return opts.next({ ctx: { ...opts.ctx, user, lab } })
+  })
 }

@@ -142,7 +142,7 @@ export async function transitionOrg(
   try {
     await audit.emit({
       action: 'ORG_STATUS_TRANSITION',
-      resourceType: 'Organization',
+      resourceType: 'ORGANIZATION',
       resourceId: orgId,
       actorId: ctx.user?.sub ?? 'SYSTEM',
       actorRole: ctx.user?.role ?? 'SYSTEM',

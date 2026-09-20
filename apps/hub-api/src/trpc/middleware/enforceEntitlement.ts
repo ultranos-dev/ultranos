@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { tInstance } from '@/trpc/init'
 
 /**
  * Entitlement enforcement middleware — gates API access by org subscription.
@@ -28,42 +28,39 @@ import type { SupabaseClient } from '@supabase/supabase-js'
  * @param procedureType - 'query' for read operations, 'mutation' for writes
  */
 export function enforceEntitlement(moduleCode: string, procedureType: 'query' | 'mutation' = 'query') {
-  return async (opts: {
-    ctx: {
-      supabase: SupabaseClient
-      user: { sub: string; role: string; sessionId: string; orgId: string | null }
-      entitlement?: { moduleCode: string; status: string }
-      orgReadOnly?: boolean
+  return tInstance.middleware(async (opts) => {
+    // Applied downstream of protectedProcedure — user is present; guard defensively.
+    const user = opts.ctx.user
+    if (!user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' })
     }
-    input: Record<string, unknown>
-    next: (opts: {
-      ctx: typeof opts.ctx & {
-        entitlement: { moduleCode: string; status: string }
-        orgReadOnly: boolean
-      }
-    }) => Promise<unknown>
-  }) => {
+
+    // Per-request entitlement cache injected by an upstream enforceEntitlement, if any.
+    const cachedEntitlement = (
+      opts.ctx as { entitlement?: { moduleCode: string; status: string } }
+    ).entitlement
+
     // PLATFORM_ADMIN bypasses all checks — operates across orgs
-    if (opts.ctx.user.role === 'PLATFORM_ADMIN') {
+    if (user.role === 'PLATFORM_ADMIN') {
       return opts.next({
-        ctx: { ...opts.ctx, entitlement: { moduleCode, status: 'ADMIN_BYPASS' }, orgReadOnly: false },
+        ctx: { ...opts.ctx, user, entitlement: { moduleCode, status: 'ADMIN_BYPASS' }, orgReadOnly: false },
       })
     }
 
     // Org ADMIN bypasses module entitlement but NOT org status checks (D5: AC #2 compliance)
     // ADMIN of a CANCELLED org must be subject to read-only enforcement
-    if (opts.ctx.user.role === 'ADMIN') {
+    if (user.role === 'ADMIN') {
       // Still need to check org status for ADMIN
-      if (!opts.ctx.user.orgId) {
+      if (!user.orgId) {
         return opts.next({
-          ctx: { ...opts.ctx, entitlement: { moduleCode, status: 'ADMIN_BYPASS' }, orgReadOnly: false },
+          ctx: { ...opts.ctx, user, entitlement: { moduleCode, status: 'ADMIN_BYPASS' }, orgReadOnly: false },
         })
       }
       // Fall through to org status check below — ADMIN skips module entitlement but not status
     }
 
     // Org context required for non-patient endpoints
-    if (!opts.ctx.user.orgId) {
+    if (!user.orgId) {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'ORG_CONTEXT_REQUIRED' })
     }
 
@@ -72,7 +69,7 @@ export function enforceEntitlement(moduleCode: string, procedureType: 'query' | 
     const { data: org, error: orgError } = await opts.ctx.supabase
       .from('organizations')
       .select('id, status, cancelled_at')
-      .eq('id', opts.ctx.user.orgId)
+      .eq('id', user.orgId)
       .single()
 
     if (orgError || !org) {
@@ -121,12 +118,12 @@ export function enforceEntitlement(moduleCode: string, procedureType: 'query' | 
 
     // ── Per-request cache: if entitlement already resolved for this module, skip DB ──
     if (
-      opts.ctx.entitlement &&
-      opts.ctx.entitlement.moduleCode === moduleCode &&
-      opts.ctx.entitlement.status !== 'ADMIN_BYPASS'
+      cachedEntitlement &&
+      cachedEntitlement.moduleCode === moduleCode &&
+      cachedEntitlement.status !== 'ADMIN_BYPASS'
     ) {
       return opts.next({
-        ctx: { ...opts.ctx, entitlement: opts.ctx.entitlement, orgReadOnly },
+        ctx: { ...opts.ctx, user, entitlement: cachedEntitlement, orgReadOnly },
       })
     }
 
@@ -134,14 +131,14 @@ export function enforceEntitlement(moduleCode: string, procedureType: 'query' | 
     // A cancelled org can read data from any previously-subscribed module.
     if (orgReadOnly) {
       return opts.next({
-        ctx: { ...opts.ctx, entitlement: { moduleCode, status: 'cancelled_read_only' }, orgReadOnly },
+        ctx: { ...opts.ctx, user, entitlement: { moduleCode, status: 'cancelled_read_only' }, orgReadOnly },
       })
     }
 
     // ADMIN bypasses module entitlement (but already passed org status check above)
-    if (opts.ctx.user.role === 'ADMIN') {
+    if (user.role === 'ADMIN') {
       return opts.next({
-        ctx: { ...opts.ctx, entitlement: { moduleCode, status: 'ADMIN_BYPASS' }, orgReadOnly },
+        ctx: { ...opts.ctx, user, entitlement: { moduleCode, status: 'ADMIN_BYPASS' }, orgReadOnly },
       })
     }
 
@@ -149,7 +146,7 @@ export function enforceEntitlement(moduleCode: string, procedureType: 'query' | 
     const { data, error } = await opts.ctx.supabase
       .from('org_subscriptions')
       .select('id, status')
-      .eq('org_id', opts.ctx.user.orgId)
+      .eq('org_id', user.orgId)
       .eq('module_code', moduleCode)
       .in('status', ['ACTIVE', 'TRIAL'])
       .limit(1)
@@ -179,7 +176,7 @@ export function enforceEntitlement(moduleCode: string, procedureType: 'query' | 
     return opts.next({
       ctx: { ...opts.ctx, entitlement: { moduleCode, status: normalizedStatus }, orgReadOnly },
     })
-  }
+  })
 }
 
 /**
@@ -190,29 +187,26 @@ export function enforceEntitlement(moduleCode: string, procedureType: 'query' | 
  * can display appropriate UI for cancelled orgs in read-only mode.
  */
 export function enforceOrgStatus(procedureType: 'query' | 'mutation' = 'query') {
-  return async (opts: {
-    ctx: {
-      supabase: SupabaseClient
-      user: { sub: string; role: string; sessionId: string; orgId: string | null }
-      orgReadOnly?: boolean
+  return tInstance.middleware(async (opts) => {
+    const user = opts.ctx.user
+    if (!user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' })
     }
-    input: Record<string, unknown>
-    next: (opts: { ctx: typeof opts.ctx & { orgReadOnly: boolean } }) => Promise<unknown>
-  }) => {
+
     // PLATFORM_ADMIN bypasses all org status checks
-    if (opts.ctx.user.role === 'PLATFORM_ADMIN') {
-      return opts.next({ ctx: { ...opts.ctx, orgReadOnly: false } })
+    if (user.role === 'PLATFORM_ADMIN') {
+      return opts.next({ ctx: { ...opts.ctx, user, orgReadOnly: false } })
     }
 
     // ADMIN falls through to org status check (D5: must respect CANCELLED read-only)
-    if (!opts.ctx.user.orgId) {
-      return opts.next({ ctx: { ...opts.ctx, orgReadOnly: false } })
+    if (!user.orgId) {
+      return opts.next({ ctx: { ...opts.ctx, user, orgReadOnly: false } })
     }
 
     const { data: org, error } = await opts.ctx.supabase
       .from('organizations')
       .select('id, status, cancelled_at')
-      .eq('id', opts.ctx.user.orgId)
+      .eq('id', user.orgId)
       .single()
 
     if (error || !org) {
@@ -254,9 +248,9 @@ export function enforceOrgStatus(procedureType: 'query' | 'mutation' = 'query') 
         })
       }
 
-      return opts.next({ ctx: { ...opts.ctx, orgReadOnly: true } })
+      return opts.next({ ctx: { ...opts.ctx, user, orgReadOnly: true } })
     }
 
-    return opts.next({ ctx: { ...opts.ctx, orgReadOnly: false } })
-  }
+    return opts.next({ ctx: { ...opts.ctx, user, orgReadOnly: false } })
+  })
 }

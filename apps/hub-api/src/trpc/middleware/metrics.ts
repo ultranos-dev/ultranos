@@ -47,12 +47,32 @@ const requestErrors = new Counter({
 })
 
 /** Parse tRPC path into router + procedure labels. */
-function parsePathLabels(path: string): { router: string; procedure: string } {
+export function parsePathLabels(path: string): { router: string; procedure: string } {
   const dotIndex = path.indexOf('.')
   if (dotIndex === -1) {
     return { router: path, procedure: path }
   }
   return { router: path.slice(0, dotIndex), procedure: path.slice(dotIndex + 1) }
+}
+
+/**
+ * Record duration + count (+ error) metrics for one procedure call. Shared by the
+ * standalone `metricsMiddleware` (unit-tested directly) and the typed base-procedure
+ * middleware wired in `init.ts`, so the recording logic lives in exactly one place.
+ */
+export function recordRequestMetrics(
+  path: string,
+  type: string,
+  status: 'ok' | 'error',
+  durationMs: number,
+  errorCode?: string,
+): void {
+  const { router, procedure } = parsePathLabels(path)
+  requestDuration.observe({ router, procedure, type, status }, durationMs)
+  requestTotal.inc({ router, procedure, type, status })
+  if (status === 'error') {
+    requestErrors.inc({ router, procedure, error_code: errorCode ?? 'UNKNOWN' })
+  }
 }
 
 /**
@@ -69,26 +89,14 @@ export async function metricsMiddleware(opts: {
   next: (opts?: { ctx: unknown }) => Promise<unknown>
 }): Promise<unknown> {
   const start = performance.now()
-  const { router, procedure } = parsePathLabels(opts.path)
-  const type = opts.type
 
   try {
     const result = await opts.next()
-    const durationMs = performance.now() - start
-
-    requestDuration.observe({ router, procedure, type, status: 'ok' }, durationMs)
-    requestTotal.inc({ router, procedure, type, status: 'ok' })
-
+    recordRequestMetrics(opts.path, opts.type, 'ok', performance.now() - start)
     return result
   } catch (err: unknown) {
-    const durationMs = performance.now() - start
-
-    requestDuration.observe({ router, procedure, type, status: 'error' }, durationMs)
-    requestTotal.inc({ router, procedure, type, status: 'error' })
-
     const errorCode = (err as { code?: string })?.code ?? 'UNKNOWN'
-    requestErrors.inc({ router, procedure, error_code: errorCode })
-
+    recordRequestMetrics(opts.path, opts.type, 'error', performance.now() - start, errorCode)
     throw err
   }
 }

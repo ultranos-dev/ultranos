@@ -471,7 +471,7 @@ export const subscriptionRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'CREATE',
-          resourceType: 'Subscription',
+          resourceType: 'SUBSCRIPTION',
           resourceId: newSub.id as string,
           actorId: ctx.user.sub,
           actorRole: 'ADMIN',
@@ -572,7 +572,7 @@ export const subscriptionRouter = createTRPCRouter({
       try {
         await audit.emit({
           action: 'UPDATE',
-          resourceType: 'Subscription',
+          resourceType: 'SUBSCRIPTION',
           resourceId: input.subscriptionId,
           actorId: ctx.user.sub,
           actorRole: 'ADMIN',
