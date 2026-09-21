@@ -4,10 +4,12 @@ import { FacilityFormModal } from '@/components/facilities/FacilityFormModal'
 
 vi.mock('next-intl', () => ({ useTranslations: () => (k: string) => k }))
 
-const createFn = vi.fn().mockResolvedValue({ id: 'c1' })
+const createFn: (input: Record<string, unknown>) => Promise<{ id: string }> = vi
+  .fn()
+  .mockResolvedValue({ id: 'c1' })
 const kindConfig = {
-  key: 'clinical',
-  i18nNs: 'clinics',
+  key: 'clinical' as const,
+  i18nNs: 'clinics' as const,
   typeOptions: ['clinic', 'hospital', 'opd'],
   extraBooleanFields: [{ name: 'hasDelivery', label: 'hasDelivery' }],
   extraArrayFields: [{ name: 'departments', label: 'departments' }],

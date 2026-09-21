@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { trpc } from '@/lib/trpc'
 
-interface LabInitial {
+export interface LabInitial {
   id: string
   labName?: string | null
   licenseReference?: string | null
@@ -132,7 +132,11 @@ export function LabFormModal({ open, onOpenChange, initial, onSaved }: LabFormMo
       if (initial) {
         await trpc.admin.updateLab.mutate({ labId: initial.id, ...payload })
       } else {
-        await trpc.admin.createLab.mutate(payload)
+        // Payload is assembled dynamically from form state; the required
+        // labName/licenseRef are guaranteed non-empty by the canSave gate above.
+        await trpc.admin.createLab.mutate(
+          payload as Parameters<typeof trpc.admin.createLab.mutate>[0],
+        )
       }
       onSaved()
       onOpenChange(false)

@@ -13,8 +13,17 @@ import { PasswordStrengthBar, getPasswordStrength } from '@ultranos/ui-kit'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import type { Session } from '@supabase/supabase-js'
 
 type ResetState = 'loading' | 'invalid' | 'form'
+
+// The shared browser Supabase client is typed loosely (its methods infer to
+// `any` in this app), so we annotate only the fields this flow reads. `error`
+// is checked for truthiness only, hence `unknown`.
+type AuthTokenResponseLike = {
+  data: { session: Session | null }
+  error: unknown
+}
 
 export default function ResetPasswordPage() {
   const t = useTranslations('auth')
@@ -49,14 +58,16 @@ export default function ResetPasswordPage() {
       return
     }
 
-    supabase.auth.exchangeCodeForSession(code).then(({ data, error: exchErr }) => {
+    supabase.auth
+      .exchangeCodeForSession(code)
+      .then(({ data, error: exchErr }: AuthTokenResponseLike) => {
       if (exchErr || !data.session) {
         setState('invalid')
         return
       }
       setActorId(data.session.user.id)
       setState('form')
-    })
+      })
   }, [searchParams, supabase])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -152,7 +163,7 @@ export default function ResetPasswordPage() {
                       onChange={(e) => setNewPassword(e.target.value)}
                       autoComplete="new-password"
                     />
-                    <PasswordStrengthBar strength={strength} label={strengthLabels[strength]} />
+                    <PasswordStrengthBar strength={strength} label={strengthLabels[strength] ?? ''} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">{t('confirmPassword')}</Label>

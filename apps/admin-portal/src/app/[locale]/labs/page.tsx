@@ -10,7 +10,7 @@ import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FlaskConical, FileSearch } from '@ultranos/ui-kit/icons'
 import { LabProfileModal } from '@/components/labs/LabProfileModal'
-import { LabFormModal } from '@/components/labs/LabFormModal'
+import { LabFormModal, type LabInitial } from '@/components/labs/LabFormModal'
 
 type StatusFilter = 'ALL' | 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED'
 
@@ -80,7 +80,7 @@ export default function LabsPage() {
   // Modal state
   const [profileLabId, setProfileLabId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
-  const [editInitial, setEditInitial] = useState<LabEntry | undefined>(undefined)
+  const [editInitial, setEditInitial] = useState<LabInitial | undefined>(undefined)
 
   const fetchLabs = useCallback(async () => {
     try {

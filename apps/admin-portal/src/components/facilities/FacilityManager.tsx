@@ -232,7 +232,7 @@ export function FacilityManager({
           onOpenChange={setProfileOpen}
           facilityId={profileId}
           kindConfig={kindConfig}
-          onEdit={(profile) => handleEdit(profile as Record<string, unknown> & { id: string })}
+          onEdit={(profile) => handleEdit(profile as unknown as Record<string, unknown> & { id: string })}
           onChanged={handleSaved}
         />
       )}

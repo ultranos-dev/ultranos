@@ -37,7 +37,7 @@ export function StaffAvatar({
     getSupabaseBrowserClient().storage
       .from('staff-photos')
       .createSignedUrl(photoKey, 3600)
-      .then(({ data }) => { if (!cancelled) setSrc(data?.signedUrl ?? null) })
+      .then(({ data }: { data: { signedUrl: string } | null }) => { if (!cancelled) setSrc(data?.signedUrl ?? null) })
       .catch(() => { if (!cancelled) setSrc(null) })
     return () => { cancelled = true }
   }, [photoKey])

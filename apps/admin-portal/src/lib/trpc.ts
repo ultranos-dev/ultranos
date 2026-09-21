@@ -29,12 +29,28 @@ export const trpc = createTRPCClient<AppRouter>({
   ],
 })
 
-// Events accepted by the Hub API's reportAuthEvent endpoint.
+// Events the client attempts to report to the Hub API.
 type ReportableAuthEventType =
   | 'ADMIN_LOGIN_SUCCESS'
   | 'ADMIN_LOGIN_FAILURE'
   | 'ADMIN_PASSWORD_RESET_REQUESTED'
   | 'ADMIN_PASSWORD_RESET_COMPLETED'
+
+// Subset the Hub API's reportAuthEvent endpoint actually accepts (its zod enum).
+// The other reportable events are silently rejected there today; forward only
+// these two so the input type matches the endpoint contract.
+type ApiAcceptedAuthEventType = 'ADMIN_LOGIN_SUCCESS' | 'ADMIN_LOGIN_FAILURE'
+
+const API_ACCEPTED_EVENTS = new Set<ReportableAuthEventType>([
+  'ADMIN_LOGIN_SUCCESS',
+  'ADMIN_LOGIN_FAILURE',
+])
+
+function isApiAcceptedEvent(
+  event: AdminAuthEventType,
+): event is ApiAcceptedAuthEventType {
+  return API_ACCEPTED_EVENTS.has(event as ReportableAuthEventType)
+}
 
 // Full set of admin auth events (broader than what the API currently accepts).
 export type AdminAuthEventType =
@@ -62,9 +78,13 @@ export async function reportAdminAuthEvent(
   opts?: { actorId?: string; actorEmail?: string; factorId?: string },
 ): Promise<void> {
   if (!REPORTABLE_EVENTS.has(event)) return
+  // The Hub API endpoint only accepts the two login events (see its zod enum).
+  // Other reportable events are rejected there today, so they never had an
+  // effect — forward only what the endpoint contract allows.
+  if (!isApiAcceptedEvent(event)) return
   try {
     await trpc.admin.reportAuthEvent.mutate({
-      event: event as ReportableAuthEventType,
+      event,
       ...(opts?.actorId ? { actorId: opts.actorId } : {}),
       ...(opts?.actorEmail ? { actorEmail: opts.actorEmail } : {}),
     })
