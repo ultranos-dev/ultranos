@@ -7,7 +7,7 @@ import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { enforceEntitlement } from '../middleware/enforceEntitlement'
 import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
 import { AuditLogger } from '@ultranos/audit-logger'
-import { checkInteractions } from '@ultranos/drug-db'
+import { checkInteractions, type InteractionCheckOptions } from '@ultranos/drug-db'
 import { db } from '@/lib/supabase'
 import { buildNotificationContent } from '@/lib/notification-content'
 import {
@@ -86,7 +86,8 @@ async function createMedicationStatementOnDispense(
       .eq('status', 'active')
       .limit(1)
 
-    if (existing && existing.length > 0) {
+    const existingRow = existing?.[0]
+    if (existingRow) {
       // Update effective period
       await supabase
         .from('medication_statements')
@@ -95,7 +96,7 @@ async function createMedicationStatementOnDispense(
           metaLastUpdated: now,
           hlcTimestamp,
         }))
-        .eq('id', existing[0].id)
+        .eq('id', existingRow.id)
       return
     }
 
@@ -214,7 +215,7 @@ async function checkAIProcessingConsent(
   }
 
   const latest = data[0]
-  if (latest.status !== 'ACTIVE') {
+  if (!latest || latest.status !== 'ACTIVE') {
     return false
   }
 
@@ -867,7 +868,8 @@ export const medicationRouter = createTRPCRouter({
         .eq('status', 'completed')
         .limit(1)
 
-      if (existingDispense && existingDispense.length > 0) {
+      const existingDispenseRow = existingDispense?.[0]
+      if (existingDispenseRow) {
         // Audit the duplicate attempt before rejecting
         const dupAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
@@ -880,7 +882,7 @@ export const medicationRouter = createTRPCRouter({
             outcome: 'DENIED',
             sessionId: ctx.user.sessionId,
             metadata: {
-              existingDispenseId: existingDispense[0].id,
+              existingDispenseId: existingDispenseRow.id,
               attemptedDispenseId: input.dispenseId,
             },
           })
@@ -892,7 +894,7 @@ export const medicationRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'CONFLICT',
           message: 'Prescription has already been dispensed',
-          cause: { code: 'ALREADY_DISPENSED', existingDispenseId: existingDispense[0].id },
+          cause: { code: 'ALREADY_DISPENSED', existingDispenseId: existingDispenseRow.id },
         })
       }
 
@@ -1486,11 +1488,16 @@ export const medicationRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const storageKey = `${ctx.user.sub}/${crypto.randomUUID()}-${Date.now()}`
-      const expiresIn = 900 // 15 minutes
+      const expiresIn = 900 // 15 minutes — advertised to the client via expiresAt below
 
+      // NOTE: Supabase signed *upload* URLs do not support a custom server-side expiry —
+      // `createSignedUploadUrl` options only accept `{ upsert }` and the URL is valid for
+      // a fixed ~2h. The previously-passed `{ expiresIn }` was silently ignored at runtime
+      // (removed here — no behavior change). The 15-min window is currently only enforced
+      // client-side via the returned expiresAt. See NEEDS-REVIEW.
       const { data, error } = await ctx.supabase.storage
         .from('paper-prescriptions')
-        .createSignedUploadUrl(storageKey, { expiresIn })
+        .createSignedUploadUrl(storageKey)
 
       if (error || !data) {
         throw new TRPCError({
@@ -1801,7 +1808,10 @@ export const medicationRouter = createTRPCRouter({
           input.medicationDisplay,
           pendingRxNames,
           {
-            activeMedications: activeMedStatements,
+            // db.fromRow() camelCases rows at runtime but its type signature keeps
+            // the snake_case input shape; cast to the FHIR statement shape the
+            // checker expects (mirrors the activeAllergies cast below).
+            activeMedications: activeMedStatements as unknown as InteractionCheckOptions['activeMedications'],
             // Reshape the flat (decrypted) allergy rows into the FHIR shape the
             // drug-db checker reads (allergy._ultranos.substanceFreeText / code.text).
             activeAllergies: (allergies ?? []).map((row) => {
@@ -1811,7 +1821,7 @@ export const medicationRouter = createTRPCRouter({
                 code: { text: (a.substanceText as string) ?? undefined },
                 _ultranos: { substanceFreeText: (a.substanceFreeText as string) ?? undefined },
               }
-            }) as unknown as Parameters<typeof checkInteractions>[2]['activeAllergies'],
+            }) as unknown as InteractionCheckOptions['activeAllergies'],
           },
           adapter,
         )
@@ -1909,7 +1919,15 @@ export const medicationRouter = createTRPCRouter({
         })
       }
 
-      const rx = db.fromRow(rxRow)
+      // db.fromRow() camelCases keys at runtime but its type signature returns
+      // the input (snake_case) shape unchanged; cast to the camelCase view.
+      const rx = db.fromRow(rxRow) as unknown as {
+        subjectReference?: string
+        dosageInstruction?: unknown
+        dispenseRequest?: unknown
+        medicationDisplay?: string
+        medicationText?: string
+      }
 
       // Verify medication belongs to the claimed patient
       const expectedRef = `Patient/${input.patientId}`

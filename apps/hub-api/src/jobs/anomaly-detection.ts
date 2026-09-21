@@ -37,8 +37,8 @@ export async function runAnomalyDetection(supabase: SupabaseClient): Promise<Job
   const today = new Date()
   const windowStart = new Date(today)
   windowStart.setDate(windowStart.getDate() - ANALYSIS_WINDOW_DAYS)
-  const windowStartStr = windowStart.toISOString().split('T')[0]
-  const windowEndStr = today.toISOString().split('T')[0]
+  const windowStartStr = windowStart.toISOString().slice(0, 10)
+  const windowEndStr = today.toISOString().slice(0, 10)
 
   // ─── Rule 1: Controlled Substance Volume ───
   try {
@@ -180,7 +180,7 @@ async function detectControlledSubstanceVolumeFallback(
       if (!controlledCodes.has(code)) continue
 
       const providerId = r.requester_id as string
-      const day = (r.authored_on as string).split('T')[0]
+      const day = (r.authored_on as string).slice(0, 10)
       const prac = r.practitioners as { given_name?: string; family_name?: string } | null
       const name = prac ? `${prac.given_name ?? ''} ${prac.family_name ?? ''}`.trim() : 'Unknown'
 

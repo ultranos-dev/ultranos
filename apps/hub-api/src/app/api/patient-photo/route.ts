@@ -5,6 +5,7 @@ import { verifySupabaseJwt, getSupabaseJwk } from '@/lib/jwt'
 import { hasResourceAccess } from '@/trpc/rbac'
 import { isOriginAllowed, corsHeaders } from '@/lib/cors'
 import { AuditLogger } from '@ultranos/audit-logger'
+import type { UserRole } from '@ultranos/shared-types'
 
 /** Add CORS headers for allowed spoke origins (mirrors the tRPC route). */
 function withCors(req: Request, res: NextResponse): NextResponse {
@@ -21,7 +22,7 @@ const WEBP_QUALITY = 80
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-interface AuthedUser { sub: string; role: string; sessionId: string; orgId?: string }
+interface AuthedUser { sub: string; role: `${UserRole}`; sessionId: string; orgId?: string }
 
 async function authenticate(req: Request): Promise<AuthedUser | null> {
   const authHeader = req.headers.get('authorization')
@@ -33,7 +34,7 @@ async function authenticate(req: Request): Promise<AuthedUser | null> {
   const meta = (payload.user_metadata as Record<string, unknown>) ?? {}
   return {
     sub: payload.sub,
-    role: ((meta.role as string) ?? (payload.role as string) ?? '').toUpperCase(),
+    role: ((meta.role as string) ?? (payload.role as string) ?? '').toUpperCase() as `${UserRole}`,
     sessionId: (payload.session_id as string) ?? '',
     orgId: (meta.org_id as string) ?? (payload.org_id as string) ?? undefined,
   }

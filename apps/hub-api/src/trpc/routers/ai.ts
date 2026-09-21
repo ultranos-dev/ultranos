@@ -219,10 +219,7 @@ export const aiRouter = createTRPCRouter({
       let drugDbStalenessIncidents = 0
 
       for (const ev of events) {
-        if (!byModel[ev.model_id]) {
-          byModel[ev.model_id] = { started: 0, completed: 0, failed: 0, staleDegraded: 0 }
-        }
-        const m = byModel[ev.model_id]
+        const m = (byModel[ev.model_id] ??= { started: 0, completed: 0, failed: 0, staleDegraded: 0 })
         switch (ev.event_type) {
           case 'MODEL_UPDATE_STARTED':
             m.started++

@@ -121,8 +121,12 @@ export function rateLimitMiddleware(configOverride?: RateLimitConfig, tierName?:
       })
     }
 
+    // Pass ONLY the added field to next(); tRPC merges it onto the existing
+    // context. Spreading the whole `opts.ctx` here would re-widen a `user`
+    // that an upstream procedure (e.g. protectedProcedure) had narrowed to
+    // non-null, since this middleware's `opts.ctx` is typed as the base context.
     return opts.next({
-      ctx: ctxWithRateLimit,
+      ctx: { rateLimit: result },
     })
   })
 }

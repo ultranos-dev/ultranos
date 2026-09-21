@@ -6,9 +6,9 @@ import { enforceLabActive } from '../middleware/enforceLabActive'
 import { enforceLabRole } from '../middleware/enforceLabRole'
 import { enforceEntitlement } from '../middleware/enforceEntitlement'
 import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
-import { db } from '@/lib/supabase'
+import { db, selectExactCount } from '@/lib/supabase'
 import { AuditLogger } from '@ultranos/audit-logger'
-import { LabRole, LabPermission } from '@ultranos/shared-types'
+import { LabRole, LabPermission, UserRole, AuditAction, AuditOutcome } from '@ultranos/shared-types'
 import { generateBlindIndex, encryptField } from '@ultranos/crypto/server'
 import { getFieldEncryptionKeys } from '@/lib/field-encryption'
 import { scanFile } from '@/lib/virus-scanner'
@@ -32,7 +32,7 @@ async function dispatchResultNotifications(
     patientRef: string
     payload: { testCategory: string; labName: string; uploadTimestamp: string; diagnosticReportId: string }
     actorId: string
-    actorRole: string
+    actorRole: `${UserRole}`
     sessionId: string
     orderId?: string
   },
@@ -481,14 +481,14 @@ export const labRouter = createTRPCRouter({
 
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
 
-      const actionMap: Record<string, string> = {
+      const actionMap: Record<string, `${AuditAction}`> = {
         LOGIN_SUCCESS: 'LOGIN',
         LOGIN_FAILURE: 'LOGIN',
         MFA_VERIFY_SUCCESS: 'LOGIN',
         MFA_VERIFY_FAILURE: 'MFA_FAIL',
       }
 
-      const outcomeMap: Record<string, string> = {
+      const outcomeMap: Record<string, `${AuditOutcome}`> = {
         LOGIN_SUCCESS: 'SUCCESS',
         LOGIN_FAILURE: 'FAILURE',
         MFA_VERIFY_SUCCESS: 'SUCCESS',
@@ -2216,18 +2216,19 @@ export const labRouter = createTRPCRouter({
       }
 
       // Conditional update: only claim if not already claimed by another lab
-      const { error: updateError, count } = await ctx.supabase
-        .from('service_requests')
-        .update({
-          status: 'on-hold',
-          received_at: now,
-          received_by_lab_id: labId ?? null,
-          received_by_tech_id: technicianId,
-          meta_last_updated: now,
-        })
-        .eq('id', input.orderId)
-        .or(`received_by_lab_id.is.null${labId ? `,received_by_lab_id.eq.${labId}` : ''}`)
-        .select('id', { count: 'exact', head: true })
+      const { error: updateError, count } = await selectExactCount(
+        ctx.supabase
+          .from('service_requests')
+          .update({
+            status: 'on-hold',
+            received_at: now,
+            received_by_lab_id: labId ?? null,
+            received_by_tech_id: technicianId,
+            meta_last_updated: now,
+          })
+          .eq('id', input.orderId)
+          .or(`received_by_lab_id.is.null${labId ? `,received_by_lab_id.eq.${labId}` : ''}`),
+      )
 
       if (count === 0 && !updateError) {
         throw new TRPCError({
@@ -2539,7 +2540,9 @@ export const labRouter = createTRPCRouter({
           resourceId: input.practitionerId,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
-          outcome: error || !data ? 'NOT_FOUND' : 'SUCCESS',
+          // A not-found lookup is recorded as a FAILURE outcome (AuditOutcome has no
+          // NOT_FOUND member); the not-found detail lives in the audit record context.
+          outcome: error || !data ? 'FAILURE' : 'SUCCESS',
           sessionId: ctx.user.sessionId,
           metadata: { accessType: 'EMERGENCY', scope: 'VACCINATION_STATUS_ONLY' },
         })

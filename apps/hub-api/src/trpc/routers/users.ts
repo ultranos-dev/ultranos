@@ -1,5 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from '../init'
 import { AuditLogger } from '@ultranos/audit-logger'
+import type { UserRole } from '@ultranos/shared-types'
 import { decryptField } from '@ultranos/crypto/server'
 import { getFieldEncryptionKeys } from '@/lib/field-encryption'
 
@@ -40,7 +41,7 @@ export function ageFromBirth(birthDate?: string | null, birthYear?: number | nul
  */
 async function emitProfileAudit(
   audit: AuditLogger,
-  ctx: { user: { sub: string; role: string; sessionId: string } },
+  ctx: { user: { sub: string; role: `${UserRole}`; sessionId: string } },
   action: 'PHI_READ' | 'READ',
   resourceType: 'PATIENT' | 'PRACTITIONER',
   resourceId: string,

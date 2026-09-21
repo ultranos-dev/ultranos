@@ -67,8 +67,11 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ received: true })
   }
 
-  // Record the event for idempotency tracking
-  await supabase
+  // Record the event for idempotency tracking. Insert failure here is non-fatal —
+  // duplicate processing is safe due to idempotent tier updates. A PostgREST builder
+  // is thenable but not a Promise (no `.catch`), so we await and ignore any error
+  // instead of chaining `.catch()` (which would throw at runtime).
+  const { error: idempotencyError } = await supabase
     .from('patient_subscription_events')
     .insert({
       notification_id: event.notificationId,
@@ -77,10 +80,7 @@ export async function POST(request: Request): Promise<Response> {
       platform: event.platform,
       processed_at: new Date().toISOString(),
     })
-    .catch(() => {
-      // Insert failure for idempotency record is non-fatal
-      // Duplicate processing is safe due to idempotent tier updates
-    })
+  void idempotencyError
 
   // Determine new tier based on event type
   let newTier: 'FREE' | 'PREMIUM'

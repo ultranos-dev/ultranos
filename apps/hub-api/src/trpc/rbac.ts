@@ -131,8 +131,11 @@ export const labRestrictedProcedure = protectedProcedure.use(async (opts) => {
 
   // ADMIN bypass — no lab context injected; downstream endpoints
   // check ctx.lab existence to scope queries or return all results.
+  // Carry an explicit `lab: undefined` so both branches produce the same
+  // context shape ({ lab?: LabContext }); otherwise tRPC infers `lab` as
+  // `never` at the call sites.
   if (userRole === 'ADMIN') {
-    return opts.next({ ctx: opts.ctx })
+    return opts.next({ ctx: { ...opts.ctx, lab: undefined as LabContext | undefined } })
   }
 
   if (userRole !== 'LAB_TECH') {

@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { AuditLogger } from '@ultranos/audit-logger'
+import type { UserRole } from '@ultranos/shared-types'
 import { sendBillingNotification, type BillingNotificationType } from './billing-notifications'
 
 /**
@@ -54,7 +55,7 @@ export interface TransitionContext {
   supabase: SupabaseClient
   user?: {
     sub?: string
-    role?: string
+    role?: `${UserRole}`
     sessionId?: string
   } | null
 }

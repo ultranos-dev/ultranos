@@ -371,11 +371,16 @@ export const registrationRouter = createTRPCRouter({
       }
 
       const storageKey = `${input.practitionerId}/${input.documentType}-${Date.now()}`
-      const expiresIn = 900 // 15 minutes
+      const expiresIn = 900 // 15 minutes — advertised to the client via expiresAt below
 
+      // NOTE: Supabase signed *upload* URLs do not support a custom server-side expiry —
+      // `createSignedUploadUrl` options only accept `{ upsert }` and the URL is valid for
+      // a fixed ~2h. The previously-passed `{ expiresIn }` was silently ignored at runtime
+      // (removed here — no behavior change). The 15-min window is currently only enforced
+      // client-side via the returned expiresAt. See NEEDS-REVIEW.
       const { data, error } = await ctx.supabase.storage
         .from('kyc-documents')
-        .createSignedUploadUrl(storageKey, { expiresIn })
+        .createSignedUploadUrl(storageKey)
 
       if (error || !data) {
         throw new TRPCError({

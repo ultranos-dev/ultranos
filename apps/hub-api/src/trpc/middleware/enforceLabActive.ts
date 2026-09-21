@@ -20,36 +20,38 @@ export function enforceLabActive() {
       throw new TRPCError({ code: 'UNAUTHORIZED' })
     }
     // lab context injected upstream by labRestrictedProcedure (not on base ctx).
-    const lab = (opts.ctx as { lab?: LabContext }).lab
+    // Widen to `LabContext | undefined` so both return branches emit the same
+    // `lab` type — otherwise tRPC intersects `undefined` & `LabContext` → `never`.
+    const lab: LabContext | undefined = (opts.ctx as { lab?: LabContext }).lab
 
     // ADMIN bypass — no lab context present (set by labRestrictedProcedure)
-    if (!lab) {
-      return opts.next({ ctx: { ...opts.ctx, user, lab } })
+    if (lab) {
+      const { labStatus } = lab
+
+      if (labStatus === 'PENDING') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Lab registration is pending verification — upload access is not yet available',
+        })
+      }
+
+      if (labStatus === 'SUSPENDED') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Lab has been suspended — contact administration to restore access',
+        })
+      }
+
+      if (labStatus !== 'ACTIVE') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Lab is not in ACTIVE status — upload access denied',
+        })
+      }
     }
 
-    const { labStatus } = lab
-
-    if (labStatus === 'PENDING') {
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'Lab registration is pending verification — upload access is not yet available',
-      })
-    }
-
-    if (labStatus === 'SUSPENDED') {
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'Lab has been suspended — contact administration to restore access',
-      })
-    }
-
-    if (labStatus !== 'ACTIVE') {
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'Lab is not in ACTIVE status — upload access denied',
-      })
-    }
-
+    // Single return with `lab` kept at its declared `LabContext | undefined`
+    // type so tRPC does not intersect the branch types down to `never`.
     return opts.next({ ctx: { ...opts.ctx, user, lab } })
   })
 }

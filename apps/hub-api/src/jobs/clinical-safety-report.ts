@@ -184,9 +184,9 @@ export async function runClinicalSafetyReport(supabase: SupabaseClient): Promise
       tier1Stats.averageResolutionHours = Math.round(
         (resolutionTimes.reduce((sum, t) => sum + t, 0) / resolutionTimes.length) * 100,
       ) / 100
-      tier1Stats.maxResolutionHours = Math.round(resolutionTimes[resolutionTimes.length - 1] * 100) / 100
+      tier1Stats.maxResolutionHours = Math.round((resolutionTimes[resolutionTimes.length - 1] ?? 0) * 100) / 100
       const p95Idx = Math.ceil(resolutionTimes.length * 0.95) - 1
-      tier1Stats.p95ResolutionHours = Math.round(resolutionTimes[p95Idx] * 100) / 100
+      tier1Stats.p95ResolutionHours = Math.round((resolutionTimes[p95Idx] ?? 0) * 100) / 100
     }
 
     // Open Tier 1 conflicts
@@ -220,9 +220,9 @@ export async function runClinicalSafetyReport(supabase: SupabaseClient): Promise
       let drugDbStalenessIncidents = 0
 
       for (const ev of aiEvents) {
-        if (!byModel[ev.model_id]) byModel[ev.model_id] = { started: 0, completed: 0 }
-        if (ev.event_type === 'MODEL_UPDATE_STARTED') byModel[ev.model_id].started++
-        if (ev.event_type === 'MODEL_UPDATE_COMPLETED') byModel[ev.model_id].completed++
+        const modelCounts = (byModel[ev.model_id] ??= { started: 0, completed: 0 })
+        if (ev.event_type === 'MODEL_UPDATE_STARTED') modelCounts.started++
+        if (ev.event_type === 'MODEL_UPDATE_COMPLETED') modelCounts.completed++
         if (ev.event_type === 'MODEL_STALE_DEGRADED') {
           staleDeviceCount++
           if (ev.metadata?.modelType === 'DRUG_DB_OFFLINE') drugDbStalenessIncidents++

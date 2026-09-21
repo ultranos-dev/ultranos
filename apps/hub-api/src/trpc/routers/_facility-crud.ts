@@ -12,7 +12,7 @@
 
 import { TRPCError } from '@trpc/server'
 import { AuditLogger } from '@ultranos/audit-logger'
-import type { FacilityProfileBase } from '@ultranos/shared-types'
+import type { FacilityProfileBase, AuditAction, AuditResourceType, UserRole } from '@ultranos/shared-types'
 
 type Ctx = { supabase: any; user: { role: string; orgId: string | null; sub: string; sessionId?: string } }
 
@@ -82,8 +82,14 @@ export function buildFacilityCrud(opts: {
   async function audit(ctx: Ctx, action: string, resourceId: string) {
     try {
       await new AuditLogger(ctx.supabase, ctx.user.orgId ?? undefined).emit({
-        action, resourceType, resourceId, actorId: ctx.user.sub, actorRole: ctx.user.role,
-        outcome: 'SUCCESS', sessionId: ctx.user.sessionId, metadata: { endpoint: `${table}.${action}` },
+        action: action as `${AuditAction}`,
+        resourceType: resourceType as `${AuditResourceType}`,
+        resourceId,
+        actorId: ctx.user.sub,
+        actorRole: ctx.user.role as `${UserRole}`,
+        outcome: 'SUCCESS',
+        sessionId: ctx.user.sessionId,
+        metadata: { endpoint: `${table}.${action}` },
       })
     } catch { console.warn('[AUDIT_FAILURE]', { action, resourceType }) }
   }
@@ -155,7 +161,7 @@ export function buildFacilityCrud(opts: {
 
     async create(ctx: Ctx, input: Record<string, unknown> & { facilityType?: string; name: string }) {
       const orgId = requireOrg(ctx)
-      const insert = { ...toColumns(input), org_id: orgId, is_active: true }
+      const insert: Record<string, unknown> = { ...toColumns(input), org_id: orgId, is_active: true }
       if (opts.typeColumn && input.facilityType) insert[typeColumn] = input.facilityType
       const { data, error } = await ctx.supabase.from(table).insert(insert).select('*').single()
       if (error || !data) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })

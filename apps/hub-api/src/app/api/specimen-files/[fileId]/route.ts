@@ -6,6 +6,7 @@ import { checkConsent } from '@/trpc/middleware/enforceConsent'
 import { decryptField } from '@ultranos/crypto/server'
 import { getCachedEncryptionKey } from '@/lib/field-encryption'
 import { AuditLogger } from '@ultranos/audit-logger'
+import type { UserRole } from '@ultranos/shared-types'
 
 /**
  * GET /api/specimen-files/:fileId
@@ -49,7 +50,7 @@ export async function GET(
   const userMeta = (payload.user_metadata as Record<string, unknown>) ?? {}
   const user = {
     sub: payload.sub,
-    role: ((userMeta.role as string) ?? (payload.role as string) ?? '').toUpperCase(),
+    role: ((userMeta.role as string) ?? (payload.role as string) ?? '').toUpperCase() as `${UserRole}`,
     sessionId: (payload.session_id as string) ?? '',
     orgId: (userMeta.org_id as string) ?? (payload.org_id as string) ?? undefined,
   }

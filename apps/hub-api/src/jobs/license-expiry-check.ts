@@ -36,7 +36,7 @@ interface JobResult {
 export async function runLicenseExpiryCheck(supabase: SupabaseClient): Promise<JobResult> {
   const startedAt = new Date().toISOString()
   const audit = new AuditLogger(supabase)
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Date().toISOString().slice(0, 10)
 
   let suspendedCount = 0
   let notificationsSent = 0

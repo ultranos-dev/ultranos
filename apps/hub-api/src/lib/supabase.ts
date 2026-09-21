@@ -8,7 +8,9 @@ import {
 } from './field-encryption'
 import { getEncryptionConfig } from '@ultranos/crypto/server'
 
-const SENSITIVE_FIELDS = new Set(getEncryptionConfig().randomizedFields)
+// Widen to Set<string> so membership can be tested against arbitrary column
+// keys (getEncryptionConfig().randomizedFields is a narrow literal union).
+const SENSITIVE_FIELDS = new Set<string>(getEncryptionConfig().randomizedFields)
 
 let _client: SupabaseClient | null = null
 
@@ -129,4 +131,27 @@ export const db = {
     )
     return decrypted.map(toCamelCase) as T[]
   },
+}
+
+/**
+ * Request an exact affected-row count from a mutation (update/insert/delete) builder.
+ *
+ * PostgREST honours `{ count: 'exact', head: true }` on a mutation's `.select()` at
+ * runtime, but @supabase/postgrest-js only types the options object on the *query*
+ * `.select()` overload — the mutation-chain overload accepts `columns` only, so the
+ * two-argument form raises TS2554. This helper localises that single library-typing
+ * cast in one place and returns a precisely-typed `{ count, error }` result.
+ *
+ * No behaviour change: identical to `.select(columns, { count: 'exact', head: true })`.
+ */
+export async function selectExactCount(
+  mutationBuilder: { select: (columns: string) => unknown },
+  columns = 'id',
+): Promise<{ count: number | null; error: { message: string } | null }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see doc comment: options object is untyped on the mutation-chain .select() overload
+  const result = await (mutationBuilder.select as any)(columns, {
+    count: 'exact',
+    head: true,
+  })
+  return result as { count: number | null; error: { message: string } | null }
 }

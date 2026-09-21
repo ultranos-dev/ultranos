@@ -1,4 +1,4 @@
-import { jwtVerify, importJWK, createRemoteJWKSet, type JWTPayload, type KeyLike } from 'jose'
+import { jwtVerify, importJWK, createRemoteJWKSet, type JWTPayload } from 'jose'
 
 type JwtResult = JWTPayload & {
   sub?: string
@@ -25,6 +25,7 @@ export async function verifySupabaseJwt(
   try {
     // Peek at the header to determine algorithm
     const headerB64 = token.split('.')[0]
+    if (!headerB64) return null
     const header = JSON.parse(Buffer.from(headerB64.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString())
 
     if (header.alg === 'ES256') {

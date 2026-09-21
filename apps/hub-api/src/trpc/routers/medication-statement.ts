@@ -160,7 +160,8 @@ export const medicationStatementRouter = createTRPCRouter({
           .eq('status', 'active')
           .limit(1)
 
-        if (existing && existing.length > 0) {
+        const existingStatement = existing?.[0]
+        if (existingStatement) {
           // Update effective period for existing statement
           const { data: updated, error: updateError } = await ctx.supabase
             .from('medication_statements')
@@ -171,7 +172,7 @@ export const medicationStatementRouter = createTRPCRouter({
                 hlcTimestamp: input.hlcTimestamp,
               }),
             )
-            .eq('id', existing[0].id)
+            .eq('id', existingStatement.id)
             .select('id')
             .single()
 

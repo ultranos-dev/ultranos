@@ -162,7 +162,7 @@ export const drugCatalogRouter = createTRPCRouter({
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
       const brands = (data ?? []).map(mapBrandRow)
       const latestVersion = brands.length > 0
-        ? brands[brands.length - 1].version
+        ? brands[brands.length - 1]?.version ?? input.sinceVersion
         : input.sinceVersion
       return { brands, latestVersion }
     }),
@@ -186,7 +186,7 @@ export const drugCatalogRouter = createTRPCRouter({
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
       const presentations = (data ?? []).map(mapPresentationRow)
       const latestVersion = presentations.length > 0
-        ? presentations[presentations.length - 1].version
+        ? presentations[presentations.length - 1]?.version ?? input.sinceVersion
         : input.sinceVersion
       return { presentations, latestVersion }
     }),
@@ -315,7 +315,9 @@ export const drugCatalogRouter = createTRPCRouter({
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
 
       const withDistance: PharmacyPrice[] = (data ?? []).map((row) => {
-        const facility = row.pharmacy_facilities as {
+        // Untyped client infers the embedded to-one join as an array; at runtime
+        // this is a single facility object. Cast through unknown to the row shape.
+        const facility = row.pharmacy_facilities as unknown as {
           id: string
           name: string
           latitude: number

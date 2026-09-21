@@ -76,7 +76,9 @@ export const patientRouter = createTRPCRouter({
         })
       }
 
-      const rows = data ?? []
+      // Untyped SupabaseClient widens data to include GenericStringError; narrow
+      // to a plain row shape after the error check above.
+      const rows = (data ?? []) as unknown as Array<Record<string, unknown>>
       const nextCursor = rows.length === input.limit
         ? (rows[rows.length - 1] as Record<string, unknown>).created_at as string
         : null
@@ -250,6 +252,10 @@ export const patientRouter = createTRPCRouter({
         })
       }
 
+      // Untyped SupabaseClient widens data to include GenericStringError; narrow
+      // to a plain row shape after the error check above.
+      const searchRows = (data ?? []) as unknown as Array<Record<string, unknown>>
+
       // Audit PHI access — patient identity data returned (CLAUDE.md Rule #6)
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
@@ -261,7 +267,7 @@ export const patientRouter = createTRPCRouter({
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
-          metadata: { resultCount: (data ?? []).length },
+          metadata: { resultCount: searchRows.length },
         })
       } catch (auditError) {
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'PATIENT', resourceId: 'patient-search' })
@@ -271,7 +277,7 @@ export const patientRouter = createTRPCRouter({
       // (name, gender, birth_date, identifiers). No SENSITIVE_FIELDS are queried.
       // The _ultranos namespace fields require custom mapping that doesn't fit db.fromRowRaw().
       return {
-        patients: (data ?? []).map((row: Record<string, unknown>) => ({
+        patients: searchRows.map((row: Record<string, unknown>) => ({
           id: row.id,
           resourceType: 'Patient' as const,
           name: [{ text: row.name_local as string }],
@@ -850,9 +856,13 @@ export const patientRouter = createTRPCRouter({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Patient not found' })
       }
 
+      // Untyped SupabaseClient widens data to include GenericStringError; narrow
+      // to the patient row shape after the error/null checks above.
+      let patientRow = data as unknown as { merged_into?: string; is_active?: boolean } & Record<string, unknown>
+
       // Follow merged_into link transparently — if this patient was merged,
       // re-fetch the survivor record instead.
-      if (data.merged_into) {
+      if (patientRow.merged_into) {
         const { data: survivorData, error: survivorErr } = await ctx.supabase
           .from('patients')
           .select(
@@ -872,7 +882,7 @@ export const patientRouter = createTRPCRouter({
             'marital_status, displacement_category, nationality, occupation, ' +
             'education_level, disability, telecom_phone_use, emergency_contacts'
           )
-          .eq('id', data.merged_into)
+          .eq('id', patientRow.merged_into)
           .eq('is_active', true)
           .single()
 
@@ -883,8 +893,8 @@ export const patientRouter = createTRPCRouter({
           })
         }
 
-        data = survivorData
-      } else if (!data.is_active) {
+        patientRow = survivorData as unknown as { merged_into?: string; is_active?: boolean } & Record<string, unknown>
+      } else if (!patientRow.is_active) {
         // Not merged, just inactive — treat as not found
         throw new TRPCError({
           code: 'NOT_FOUND',
@@ -893,7 +903,7 @@ export const patientRouter = createTRPCRouter({
       }
 
       // Decrypt PHI fields via db.fromRow()
-      const patient = db.fromRow(data) as Record<string, unknown>
+      const patient = db.fromRow(patientRow) as Record<string, unknown>
 
       // Resolve updated_by to practitioner display name
       let updatedByName: string | undefined

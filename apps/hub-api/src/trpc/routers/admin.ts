@@ -3,7 +3,7 @@ import { TRPCError } from '@trpc/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createTRPCRouter, protectedProcedure, baseProcedure } from '../init'
 import { AuditLogger } from '@ultranos/audit-logger'
-import { db } from '@/lib/supabase'
+import { db, selectExactCount } from '@/lib/supabase'
 import { ROLE_MODULE_MAP, MODULE_DISPLAY_NAMES, LabRole, AuditAction, UserRole } from '@ultranos/shared-types'
 import crypto from 'crypto'
 import { encryptField, decryptField, generateBlindIndex } from '@ultranos/crypto/server'
@@ -706,12 +706,13 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Update lab status with optimistic lock — prevents TOCTOU race
-      const { error: updateError, count: updateCount } = await ctx.supabase
-        .from('labs')
-        .update({ status: transition.to, updated_at: new Date().toISOString() })
-        .eq('id', input.labId)
-        .eq('status', transition.from)
-        .select('id', { count: 'exact', head: true })
+      const { error: updateError, count: updateCount } = await selectExactCount(
+        ctx.supabase
+          .from('labs')
+          .update({ status: transition.to, updated_at: new Date().toISOString() })
+          .eq('id', input.labId)
+          .eq('status', transition.from),
+      )
 
       if (updateError) {
         throw new TRPCError({
@@ -743,7 +744,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Emit audit event
-      const auditActionMap: Record<string, string> = {
+      const auditActionMap: Record<string, `${AuditAction}`> = {
         APPROVE: 'LAB_APPROVED',
         SUSPEND: 'LAB_SUSPENDED',
         REACTIVATE: 'LAB_REACTIVATED',
@@ -773,7 +774,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Notify the lab technician (best-effort)
-      const notificationTypeMap: Record<string, string> = {
+      const notificationTypeMap: Record<typeof input.action, string> = {
         APPROVE: 'LAB_APPROVED',
         SUSPEND: 'LAB_SUSPENDED',
         REACTIVATE: 'LAB_REACTIVATED',
@@ -1103,7 +1104,7 @@ export const adminRouter = createTRPCRouter({
         const days = input.window === '7d' ? 7 : input.window === '30d' ? 30 : 60
         const futureDate = new Date(now)
         futureDate.setDate(futureDate.getDate() + days)
-        windowDate = futureDate.toISOString().split('T')[0]
+        windowDate = futureDate.toISOString().slice(0, 10)
       }
 
       // Query practitioners with license_expiry set
@@ -1136,7 +1137,7 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      const todayStr = now.toISOString().split('T')[0]
+      const todayStr = now.toISOString().slice(0, 10)
       const providers = (rows ?? []).map((row: Record<string, unknown>) => {
         // The practitioners table stores flat columns — license_expiry and kyc_status —
         // not a `_ultranos` jsonb. (Registry/license number lives on kyc_submissions and
@@ -1192,7 +1193,7 @@ export const adminRouter = createTRPCRouter({
       z.object({
         practitionerId: z.string().uuid(),
         newExpiryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD format')
-          .refine((val) => val > new Date().toISOString().split('T')[0], 'Expiry date must be in the future'),
+          .refine((val) => val > new Date().toISOString().slice(0, 10), 'Expiry date must be in the future'),
         documentUrl: z.string().url(),
       }),
     )
@@ -1290,7 +1291,14 @@ export const adminRouter = createTRPCRouter({
         return { lastRun: null, status: 'never_run' }
       }
 
-      const row = db.fromRowRaw(data)
+      // db.fromRowRaw() camelCases keys at runtime but returns the input
+      // (snake_case) type unchanged; cast to the camelCase view.
+      const row = db.fromRowRaw(data) as unknown as {
+        completedAt?: string | null
+        startedAt?: string | null
+        status?: string
+        summary?: unknown
+      }
       return {
         lastRun: row.completedAt ?? row.startedAt,
         status: row.status,
@@ -1585,12 +1593,13 @@ export const adminRouter = createTRPCRouter({
         submissionUpdate.admin_message = input.reason ?? null
       }
 
-      const { error: updateSubError, count: updateCount } = await ctx.supabase
-        .from('kyc_submissions')
-        .update(submissionUpdate)
-        .eq('id', input.submissionId)
-        .eq('status', 'PENDING')
-        .select('id', { count: 'exact', head: true })
+      const { error: updateSubError, count: updateCount } = await selectExactCount(
+        ctx.supabase
+          .from('kyc_submissions')
+          .update(submissionUpdate)
+          .eq('id', input.submissionId)
+          .eq('status', 'PENDING'),
+      )
 
       if (updateSubError) {
         throw new TRPCError({
@@ -1626,7 +1635,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Emit audit event — AC #10
-      const auditActionMap: Record<string, string> = {
+      const auditActionMap: Record<string, `${AuditAction}`> = {
         APPROVE: 'KYC_APPROVED',
         REJECT: 'KYC_REJECTED',
         REQUEST_MORE_INFO: 'KYC_MORE_INFO_REQUESTED',
@@ -1659,7 +1668,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Notify the provider (best-effort) — AC #5, #6
-      const notificationTypeMap: Record<string, string> = {
+      const notificationTypeMap: Record<typeof input.action, string> = {
         APPROVE: 'KYC_APPROVED',
         REJECT: 'KYC_REJECTED',
         REQUEST_MORE_INFO: 'KYC_MORE_INFO_REQUESTED',
@@ -1835,7 +1844,7 @@ export const adminRouter = createTRPCRouter({
 
       const dailyCounts: Record<string, number> = {}
       for (const row of (timelineRows ?? [])) {
-        const day = ((row as Record<string, unknown>).authored_on as string).split('T')[0]
+        const day = ((row as Record<string, unknown>).authored_on as string).slice(0, 10)
         dailyCounts[day] = (dailyCounts[day] ?? 0) + 1
       }
       const timeline = Object.entries(dailyCounts)
@@ -1971,12 +1980,13 @@ export const adminRouter = createTRPCRouter({
         review_reason: input.reason,
       }
 
-      const { error: updateError, count: updateCount } = await ctx.supabase
-        .from('prescribing_anomalies')
-        .update(updateData)
-        .eq('id', input.alertId)
-        .in('status', ['UNREVIEWED', 'ESCALATED'])
-        .select('id', { count: 'exact', head: true })
+      const { error: updateError, count: updateCount } = await selectExactCount(
+        ctx.supabase
+          .from('prescribing_anomalies')
+          .update(updateData)
+          .eq('id', input.alertId)
+          .in('status', ['UNREVIEWED', 'ESCALATED']),
+      )
 
       if (updateError) {
         throw new TRPCError({
@@ -1993,7 +2003,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Audit log for the review action
-      const auditActionMap: Record<string, string> = {
+      const auditActionMap: Record<string, `${AuditAction}`> = {
         DISMISS: 'ANOMALY_ALERT_DISMISSED',
         ESCALATE: 'ANOMALY_ALERT_ESCALATED',
         SUSPEND_PROVIDER: 'ANOMALY_PROVIDER_SUSPENDED',
@@ -3100,18 +3110,19 @@ export const adminRouter = createTRPCRouter({
       const now = new Date().toISOString()
 
       // Update practitioner status with optimistic lock
-      const { error: updateError, count: updateCount } = await ctx.supabase
-        .from('practitioners')
-        .update({
-          status: 'SUSPENDED',
-          suspended_at: now,
-          suspension_reason: input.reason,
-          suspended_by: ctx.user.sub,
-        })
-        .eq('id', input.userId)
-        .eq('org_id', ctx.user.orgId)
-        .neq('status', 'SUSPENDED')
-        .select('id', { count: 'exact', head: true })
+      const { error: updateError, count: updateCount } = await selectExactCount(
+        ctx.supabase
+          .from('practitioners')
+          .update({
+            status: 'SUSPENDED',
+            suspended_at: now,
+            suspension_reason: input.reason,
+            suspended_by: ctx.user.sub,
+          })
+          .eq('id', input.userId)
+          .eq('org_id', ctx.user.orgId)
+          .neq('status', 'SUSPENDED'),
+      )
 
       if (updateError) {
         throw new TRPCError({
@@ -3218,19 +3229,20 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Update practitioner status
-      const { error: updateError, count: updateCount } = await ctx.supabase
-        .from('practitioners')
-        .update({
-          status: 'ACTIVE',
-          suspended_at: null,
-          suspension_reason: null,
-          suspended_by: null,
-          pending_suspension_date: null,
-        })
-        .eq('id', input.userId)
-        .eq('org_id', ctx.user.orgId)
-        .eq('status', 'SUSPENDED')
-        .select('id', { count: 'exact', head: true })
+      const { error: updateError, count: updateCount } = await selectExactCount(
+        ctx.supabase
+          .from('practitioners')
+          .update({
+            status: 'ACTIVE',
+            suspended_at: null,
+            suspension_reason: null,
+            suspended_by: null,
+            pending_suspension_date: null,
+          })
+          .eq('id', input.userId)
+          .eq('org_id', ctx.user.orgId)
+          .eq('status', 'SUSPENDED'),
+      )
 
       if (updateError) {
         throw new TRPCError({
@@ -4233,7 +4245,7 @@ export const adminRouter = createTRPCRouter({
       const licenseExpiry = p.license_expiry as string | null
       let licenseDaysRemaining: number | null = null
       if (licenseExpiry) {
-        const today = new Date().toISOString().split('T')[0]
+        const today = new Date().toISOString().slice(0, 10)
         licenseDaysRemaining = Math.ceil(
           (new Date(licenseExpiry).getTime() - new Date(today).getTime()) / 86_400_000,
         )
@@ -4320,12 +4332,13 @@ export const adminRouter = createTRPCRouter({
       }
 
       // Optimistic lock: only escalate if currently UNREVIEWED
-      const { error: updateError, count: updateCount } = await ctx.supabase
-        .from('prescribing_anomalies')
-        .update(updateData)
-        .eq('id', input.alertId)
-        .eq('status', 'UNREVIEWED')
-        .select('id', { count: 'exact', head: true })
+      const { error: updateError, count: updateCount } = await selectExactCount(
+        ctx.supabase
+          .from('prescribing_anomalies')
+          .update(updateData)
+          .eq('id', input.alertId)
+          .eq('status', 'UNREVIEWED'),
+      )
 
       if (updateError) {
         throw new TRPCError({
@@ -4380,17 +4393,18 @@ export const adminRouter = createTRPCRouter({
       const now = new Date().toISOString()
 
       // Optimistic lock: only resolve if currently ESCALATED
-      const { error: updateError, count: updateCount } = await ctx.supabase
-        .from('prescribing_anomalies')
-        .update({
-          status: 'RESOLVED',
-          resolution_note: input.resolutionNote,
-          resolved_by: ctx.user.sub,
-          resolved_at: now,
-        })
-        .eq('id', input.alertId)
-        .eq('status', 'ESCALATED')
-        .select('id', { count: 'exact', head: true })
+      const { error: updateError, count: updateCount } = await selectExactCount(
+        ctx.supabase
+          .from('prescribing_anomalies')
+          .update({
+            status: 'RESOLVED',
+            resolution_note: input.resolutionNote,
+            resolved_by: ctx.user.sub,
+            resolved_at: now,
+          })
+          .eq('id', input.alertId)
+          .eq('status', 'ESCALATED'),
+      )
 
       if (updateError) {
         throw new TRPCError({
@@ -4439,12 +4453,13 @@ export const adminRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       // Optimistic lock: only reassign if currently ESCALATED
-      const { error: updateError, count: updateCount } = await ctx.supabase
-        .from('prescribing_anomalies')
-        .update({ assigned_to: input.assigneeId })
-        .eq('id', input.alertId)
-        .eq('status', 'ESCALATED')
-        .select('id', { count: 'exact', head: true })
+      const { error: updateError, count: updateCount } = await selectExactCount(
+        ctx.supabase
+          .from('prescribing_anomalies')
+          .update({ assigned_to: input.assigneeId })
+          .eq('id', input.alertId)
+          .eq('status', 'ESCALATED'),
+      )
 
       if (updateError) {
         throw new TRPCError({
@@ -4560,7 +4575,7 @@ export const adminRouter = createTRPCRouter({
         await audit.emit({
           action: 'ORG_THRESHOLDS_UPDATED',
           resourceType: 'ORGANIZATION',
-          resourceId: ctx.user.orgId,
+          resourceId: ctx.user.orgId ?? undefined,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
@@ -5251,7 +5266,7 @@ export const adminRouter = createTRPCRouter({
         const lab = s.labs as { id: string; lab_name: string }
         const email = emailMap[s.practitioner_id] ?? ''
         const lastActive = lastLoginMap[s.practitioner_id] ?? 'Never'
-        const assignedDate = s.created_at ? new Date(s.created_at as string).toISOString().split('T')[0] : ''
+        const assignedDate = s.created_at ? new Date(s.created_at as string).toISOString().slice(0, 10) : ''
         return [email, lab.lab_name, s.lab_role as string, lastActive, assignedDate]
       })
 
@@ -5802,7 +5817,9 @@ export const adminRouter = createTRPCRouter({
         resourceId: input.practitionerId,
         actorId: ctx.user.sub,
         actorRole: ctx.user.role,
-        outcome: error || !data ? 'NOT_FOUND' : 'SUCCESS',
+        // A not-found lookup is recorded as a FAILURE outcome (AuditOutcome has no
+        // NOT_FOUND member); the not-found detail lives in the audit record context.
+        outcome: error || !data ? 'FAILURE' : 'SUCCESS',
         sessionId: ctx.user.sessionId,
         metadata: {},
       })
@@ -7025,7 +7042,7 @@ export const adminRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
       const STATUS_ORDER = ['REQUESTED', 'APPROVED', 'ORDERED', 'SHIPPED', 'DELIVERED'] as const
-      const TIMESTAMP_FIELDS: Record<string, string> = {
+      const TIMESTAMP_FIELDS: Record<typeof input.newStatus, string> = {
         APPROVED: 'approved_at', ORDERED: 'ordered_at',
         SHIPPED: 'shipped_at', DELIVERED: 'delivered_at',
       }
@@ -7058,13 +7075,14 @@ export const adminRouter = createTRPCRouter({
       if (input.newStatus === 'APPROVED') updatePayload.approved_by = ctx.user.sub
 
       // Use optimistic locking: WHERE status = currentStatus prevents concurrent double-advance
-      const { error: updateErr, count: updatedCount } = await ctx.supabase
-        .from('purchase_orders')
-        .update(updatePayload)
-        .eq('id', input.orderId)
-        .eq('org_id', ctx.user.orgId)
-        .eq('status', (order as any).status)
-        .select('id', { count: 'exact', head: true })
+      const { error: updateErr, count: updatedCount } = await selectExactCount(
+        ctx.supabase
+          .from('purchase_orders')
+          .update(updatePayload)
+          .eq('id', input.orderId)
+          .eq('org_id', ctx.user.orgId)
+          .eq('status', (order as any).status),
+      )
 
       if (updateErr) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update order status' })
@@ -7185,12 +7203,13 @@ export const adminRouter = createTRPCRouter({
       if (input.leadTimeDays !== undefined) updatePayload.lead_time_days = input.leadTimeDays
       if (input.status !== undefined) updatePayload.status = input.status
 
-      const { error, count: updatedCount } = await ctx.supabase
-        .from('suppliers')
-        .update(updatePayload)
-        .eq('id', input.id)
-        .eq('org_id', ctx.user.orgId)
-        .select('id', { count: 'exact', head: true })
+      const { error, count: updatedCount } = await selectExactCount(
+        ctx.supabase
+          .from('suppliers')
+          .update(updatePayload)
+          .eq('id', input.id)
+          .eq('org_id', ctx.user.orgId),
+      )
 
       if (error) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update supplier' })
@@ -7256,14 +7275,17 @@ export const adminRouter = createTRPCRouter({
 
     const staffCounts: Record<string, number> = {}
     for (const row of (staffResult.data ?? []) as Record<string, string>[]) {
+      if (!row.lab_id) continue
       staffCounts[row.lab_id] = (staffCounts[row.lab_id] ?? 0) + 1
     }
     const pendingCounts: Record<string, number> = {}
     for (const row of (ordersResult.data ?? []) as Record<string, string>[]) {
+      if (!row.lab_id) continue
       pendingCounts[row.lab_id] = (pendingCounts[row.lab_id] ?? 0) + 1
     }
     const stockAlertCounts: Record<string, number> = {}
     for (const row of (stockRes.data ?? []) as Record<string, string>[]) {
+      if (!row.lab_id) continue
       stockAlertCounts[row.lab_id] = (stockAlertCounts[row.lab_id] ?? 0) + 1
     }
 
@@ -7286,7 +7308,7 @@ export const adminRouter = createTRPCRouter({
       await audit.emit({
         action: 'NETWORK_OVERVIEW_ACCESSED',
         resourceType: 'NETWORK',
-        resourceId: orgId,
+        resourceId: orgId ?? undefined,
         actorId: ctx.user.sub,
         actorRole: ctx.user.role,
         outcome: 'SUCCESS',
@@ -7440,17 +7462,18 @@ export const adminRouter = createTRPCRouter({
 
       // P5: atomic conditional update — prevents TOCTOU race where two concurrent requests
       // both read ACTIVE, both pass the check, and both dispatch duplicate notifications.
-      const { error: updateError, count: updatedCount } = await ctx.supabase
-        .from('outbreak_events')
-        .update({
-          status: 'RESOLVED',
-          resolved_at: new Date().toISOString(),
-          resolved_by: ctx.user.sub,
-          notes: input.notes ?? ob.notes,
-        })
-        .eq('id', input.outbreakId)
-        .eq('status', 'ACTIVE') // atomic guard — only succeeds if still ACTIVE
-        .select('id', { count: 'exact', head: true })
+      const { error: updateError, count: updatedCount } = await selectExactCount(
+        ctx.supabase
+          .from('outbreak_events')
+          .update({
+            status: 'RESOLVED',
+            resolved_at: new Date().toISOString(),
+            resolved_by: ctx.user.sub,
+            notes: input.notes ?? ob.notes,
+          })
+          .eq('id', input.outbreakId)
+          .eq('status', 'ACTIVE'), // atomic guard — only succeeds if still ACTIVE
+      )
 
       if (updateError) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to resolve outbreak' })
@@ -8145,7 +8168,7 @@ function mapKycQueueEntry(row: Record<string, unknown>) {
 /**
  * Emit audit event for KYC list reads — extracted to avoid duplication.
  */
-async function emitKycListAudit(ctx: { supabase: SupabaseClient; user: { sub: string; role: string; sessionId: string } }, statusFilter: string, resultCount: number) {
+async function emitKycListAudit(ctx: { supabase: SupabaseClient; user: { sub: string; role: `${UserRole}`; sessionId: string; orgId?: string | null } }, statusFilter: string, resultCount: number) {
   const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
   try {
     await audit.emit({

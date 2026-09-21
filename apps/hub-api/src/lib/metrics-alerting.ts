@@ -46,18 +46,20 @@ function calculateP95FromBuckets(
   const targetCount = total * 0.95
 
   for (let i = 0; i < buckets.length; i++) {
-    if (buckets[i].count >= targetCount) {
+    const bucket = buckets[i]
+    const prevBucket = buckets[i - 1]
+    if (bucket && bucket.count >= targetCount) {
       // Linear interpolation within the bucket
-      const prevCount = i > 0 ? buckets[i - 1].count : 0
-      const prevBound = i > 0 ? parseFloat(buckets[i - 1].le) : 0
-      const currBound = parseFloat(buckets[i].le)
+      const prevCount = i > 0 ? (prevBucket?.count ?? 0) : 0
+      const prevBound = i > 0 ? parseFloat(prevBucket?.le ?? '0') : 0
+      const currBound = parseFloat(bucket.le)
 
       if (isNaN(currBound) || currBound === Infinity) {
         return prevBound > 0 ? prevBound : null
       }
 
       const bucketRange = currBound - prevBound
-      const countInBucket = buckets[i].count - prevCount
+      const countInBucket = bucket.count - prevCount
       if (countInBucket === 0) return currBound
 
       const fraction = (targetCount - prevCount) / countInBucket
@@ -85,7 +87,7 @@ function groupBucketsByProcedure(
     const key = `${v.labels.router}.${v.labels.procedure}.${v.labels.type}`
     if (!groups.has(key)) groups.set(key, [])
     groups.get(key)!.push({ le, count: v.value })
-    types.set(key, v.labels.type)
+    types.set(key, v.labels.type ?? '')
   }
 
   const result = new Map<string, { type: string; p95: number }>()

@@ -59,7 +59,10 @@ export const patientAdminRouter = createTRPCRouter({
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceId: input.patientId })
       }
 
-      return { patient: { ...data, photoUrl } }
+      // Untyped SupabaseClient widens data to include GenericStringError; narrow
+      // to a plain row shape after the error/null check above.
+      const patientRow = data as unknown as Record<string, unknown>
+      return { patient: { ...patientRow, photoUrl } }
     }),
 
   // ── adminSearch ────────────────────────────────────────────
