@@ -29,7 +29,7 @@ describe('Redis client — Story 23.0', () => {
     vi.clearAllMocks()
     // Reset env
     delete process.env.REDIS_URL
-    delete process.env.NODE_ENV
+    delete (process.env as Record<string, string | undefined>).NODE_ENV
 
     // Re-mock ioredis for fresh module
     vi.mock('ioredis', () => ({
@@ -61,7 +61,7 @@ describe('Redis client — Story 23.0', () => {
 
     it('refuses non-TLS connection in production', () => {
       process.env.REDIS_URL = 'redis://localhost:6379'
-      process.env.NODE_ENV = 'production'
+      ;(process.env as Record<string, string | undefined>).NODE_ENV = 'production'
       const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const client = getRedisClient()
       expect(client).toBeNull()
@@ -73,7 +73,7 @@ describe('Redis client — Story 23.0', () => {
 
     it('allows TLS connection in production', () => {
       process.env.REDIS_URL = 'rediss://localhost:6380'
-      process.env.NODE_ENV = 'production'
+      ;(process.env as Record<string, string | undefined>).NODE_ENV = 'production'
       const client = getRedisClient()
       expect(client).toBeTruthy()
     })
@@ -137,7 +137,7 @@ describe('Redis client — Story 23.0', () => {
   describe('TLS enforcement in production', () => {
     it('logs error with non-TLS URL in production mode', () => {
       process.env.REDIS_URL = 'redis://myhost:6379'
-      process.env.NODE_ENV = 'production'
+      ;(process.env as Record<string, string | undefined>).NODE_ENV = 'production'
       const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const client = getRedisClient()
       expect(client).toBeNull()
@@ -149,7 +149,7 @@ describe('Redis client — Story 23.0', () => {
 
     it('does not block non-TLS URL in development', () => {
       process.env.REDIS_URL = 'redis://localhost:6379'
-      process.env.NODE_ENV = 'development'
+      ;(process.env as Record<string, string | undefined>).NODE_ENV = 'development'
       const client = getRedisClient()
       expect(client).not.toBeNull()
     })

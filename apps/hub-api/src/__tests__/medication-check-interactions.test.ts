@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { InteractionCheckSummary } from '@ultranos/drug-db'
+import { DrugInteractionSeverity } from '@ultranos/drug-db'
 
 // ---------------------------------------------------------------------------
 // Mocks — must come before dynamic imports
@@ -16,7 +17,11 @@ vi.mock('@/lib/supabase', () => ({
   },
 }))
 
-const mockCheckInteractions = vi.fn<(...args: any[]) => Promise<InteractionCheckSummary>>()
+// Declared via vi.hoisted so it is initialized before the hoisted vi.mock
+// factory below references it directly (avoids a TDZ ReferenceError).
+const { mockCheckInteractions } = vi.hoisted(() => ({
+  mockCheckInteractions: vi.fn<any[], Promise<InteractionCheckSummary>>(),
+}))
 
 vi.mock('@ultranos/drug-db', () => ({
   checkInteractions: mockCheckInteractions,
@@ -57,8 +62,8 @@ const { createCallerFactory } = await import('../trpc/init')
 const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string; orgId?: string } | null
+  supabaseFrom?: any
+  user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -76,9 +81,9 @@ function createTestContext(overrides?: {
 // ---------------------------------------------------------------------------
 
 const PATIENT_UUID = '00000000-0000-4000-8000-000000000001'
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'CLINICIAN', sessionId: 'sess-1', orgId: 'org-test-001' }
-const LAB_TECH_USER = { sub: 'lab-tech-001', role: 'LAB_TECH', sessionId: 'sess-2', orgId: 'org-test-001' }
-const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
+const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const LAB_TECH_USER = { sub: 'lab-tech-001', role: 'LAB_TECH' as const, sessionId: 'sess-2', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST' as const, sessionId: 'sess-3', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 
 const DEFAULT_INPUT = {
   medicationCode: 'RX001',
@@ -208,7 +213,7 @@ describe('medication.checkInteractions', () => {
       result: 'BLOCKED',
       interactions: [
         {
-          severity: 'CONTRAINDICATED',
+          severity: DrugInteractionSeverity.CONTRAINDICATED,
           drugA: 'Warfarin 5mg',
           drugB: 'Aspirin 100mg',
           description: 'Increased bleeding risk',
@@ -224,7 +229,7 @@ describe('medication.checkInteractions', () => {
 
     expect(result.result).toBe('BLOCKED')
     expect(result.interactions).toHaveLength(1)
-    expect(result.interactions[0].severity).toBe('CONTRAINDICATED')
+    expect(result.interactions[0]!.severity).toBe('CONTRAINDICATED')
   })
 
   it('returns BLOCKED when ALLERGY_MATCH found', async () => {
@@ -232,7 +237,7 @@ describe('medication.checkInteractions', () => {
       result: 'BLOCKED',
       interactions: [
         {
-          severity: 'ALLERGY_MATCH',
+          severity: DrugInteractionSeverity.ALLERGY_MATCH,
           drugA: 'Amoxicillin 500mg',
           drugB: 'Penicillin',
           description: 'Patient has documented allergy to "Penicillin"',
@@ -250,7 +255,7 @@ describe('medication.checkInteractions', () => {
     })
 
     expect(result.result).toBe('BLOCKED')
-    expect(result.interactions[0].severity).toBe('ALLERGY_MATCH')
+    expect(result.interactions[0]!.severity).toBe('ALLERGY_MATCH')
   })
 
   it('returns CLEAR when no interactions found', async () => {

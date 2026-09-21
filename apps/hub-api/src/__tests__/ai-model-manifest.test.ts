@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { TRPCError } from '@trpc/server'
+import { AIModelType, ModelUpdateEventType } from '@ultranos/shared-types'
 
 // Stub env before any imports
 vi.stubEnv('FIELD_ENCRYPTION_KEY', 'a'.repeat(64))
@@ -33,7 +34,7 @@ const { aiRouter } = await import('../trpc/routers/ai')
 
 const createCaller = createCallerFactory(aiRouter)
 
-function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string | null; status?: string | null } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: mockSupabaseClient as never,
     user: user ? { ...user, orgId: user.orgId ?? null, status: user.status ?? null } : null,
@@ -42,11 +43,11 @@ function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: s
 }
 
 function adminCtx() {
-  return makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' })
+  return makeCtx({ sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null })
 }
 
 function doctorCtx() {
-  return makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1' })
+  return makeCtx({ sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null })
 }
 
 function unauthCtx() {
@@ -110,11 +111,11 @@ describe('ai.getModelManifest', () => {
     const result = await caller.getModelManifest()
 
     expect(result.models).toHaveLength(2) // deduplicated by model_id
-    expect(result.models[0].modelId).toBe('soap-macros')
-    expect(result.models[0].currentVersion).toBe('2.0.0')
-    expect(result.models[0].deltaFromVersion).toBe('1.9.0')
-    expect(result.models[1].modelId).toBe('drug-db-offline')
-    expect(result.models[1].currentVersion).toBe('5.1.0')
+    expect(result.models[0]!.modelId).toBe('soap-macros')
+    expect(result.models[0]!.currentVersion).toBe('2.0.0')
+    expect(result.models[0]!.deltaFromVersion).toBe('1.9.0')
+    expect(result.models[1]!.modelId).toBe('drug-db-offline')
+    expect(result.models[1]!.currentVersion).toBe('5.1.0')
   })
 
   it('works without authentication (baseProcedure)', async () => {
@@ -149,7 +150,7 @@ describe('ai.getModelManifest', () => {
     const caller = createCaller(unauthCtx())
     const result = await caller.getModelManifest({ modelType: 'DRUG_DB_OFFLINE' as any })
     expect(result.models).toHaveLength(1)
-    expect(result.models[0].modelType).toBe('DRUG_DB_OFFLINE')
+    expect(result.models[0]!.modelType).toBe('DRUG_DB_OFFLINE')
   })
 
   it('returns empty array when no models exist', async () => {
@@ -193,7 +194,7 @@ describe('ai.getModelManifest', () => {
 describe('ai.publishModelVersion', () => {
   const validInput = {
     modelId: 'soap-macros',
-    modelType: 'SOAP_MACRO_TEMPLATES' as const,
+    modelType: AIModelType.SOAP_MACRO_TEMPLATES,
     version: '2.1.0',
     downloadUrl: 'https://cdn.example.com/soap-macros-2.1.0.json',
     fileSize: 530000,
@@ -283,13 +284,13 @@ describe('ai.reportModelUpdateEvents', () => {
         {
           deviceId: 'device-1',
           modelId: 'soap-macros',
-          eventType: 'MODEL_UPDATE_COMPLETED',
+          eventType: ModelUpdateEventType.MODEL_UPDATE_COMPLETED,
           metadata: { version: '2.0.0', downloadDurationMs: 1500, fileSize: 512000 },
         },
         {
           deviceId: 'device-1',
           modelId: 'drug-db-offline',
-          eventType: 'MODEL_UPDATE_FAILED',
+          eventType: ModelUpdateEventType.MODEL_UPDATE_FAILED,
           metadata: { error: 'checksum_mismatch', retryCount: 1 },
         },
       ],
@@ -309,7 +310,7 @@ describe('ai.reportModelUpdateEvents', () => {
       events: [{
         deviceId: 'device-1',
         modelId: 'soap-macros',
-        eventType: 'MODEL_UPDATE_STARTED',
+        eventType: ModelUpdateEventType.MODEL_UPDATE_STARTED,
         metadata: {},
       }],
     })
@@ -328,7 +329,7 @@ describe('ai.reportModelUpdateEvents', () => {
         events: [{
           deviceId: 'device-1',
           modelId: 'soap-macros',
-          eventType: 'MODEL_UPDATE_STARTED',
+          eventType: ModelUpdateEventType.MODEL_UPDATE_STARTED,
           metadata: {},
         }],
       }),

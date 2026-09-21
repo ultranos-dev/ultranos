@@ -20,10 +20,12 @@ const { createCallerFactory } = await import('../trpc/init')
 
 const createCaller = createCallerFactory(appRouter)
 
+type TestUser = NonNullable<import('../trpc/init').TRPCContext['user']>
+
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
-  supabaseRpc?: ReturnType<typeof vi.fn>
-  user?: { sub: string; practitionerId?: string; role: string; sessionId: string; orgId?: string } | null
+  supabaseFrom?: any
+  supabaseRpc?: any
+  user?: TestUser | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -39,9 +41,9 @@ function createTestContext(overrides?: {
   }
 }
 
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
-const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-2', orgId: 'org-test-001' }
-const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
+const CLINICIAN_USER: TestUser = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const ADMIN_USER: TestUser = { sub: 'admin-001', role: 'ADMIN' as const, sessionId: 'sess-2', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const PHARMACIST_USER: TestUser = { sub: 'pharma-001', role: 'PHARMACIST' as const, sessionId: 'sess-3', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 const ENCOUNTER_UUID = '00000000-0000-4000-8000-000000000100'
 const PATIENT_UUID = '00000000-0000-4000-8000-000000000001'
 
@@ -240,7 +242,7 @@ describe('encounter.create', () => {
     await caller.encounter.create(validInput)
     expect(rpc).toHaveBeenCalledWith(
       'audit_emit_with_lock',
-      expect.objectContaining({ p_action: 'PHI_WRITE', p_resource_type: 'Encounter' }),
+      expect.objectContaining({ p_action: 'PHI_WRITE', p_resource_type: 'ENCOUNTER' }),
     )
   })
 
@@ -430,7 +432,7 @@ describe('encounter.read', () => {
     await caller.encounter.read(validInput)
     expect(rpc).toHaveBeenCalledWith(
       'audit_emit_with_lock',
-      expect.objectContaining({ p_action: 'PHI_READ', p_resource_type: 'Encounter' }),
+      expect.objectContaining({ p_action: 'PHI_READ', p_resource_type: 'ENCOUNTER' }),
     )
   })
 })
@@ -591,7 +593,7 @@ describe('encounter.update', () => {
     await caller.encounter.update(validInput)
     expect(rpc).toHaveBeenCalledWith(
       'audit_emit_with_lock',
-      expect.objectContaining({ p_action: 'PHI_WRITE', p_resource_type: 'Encounter' }),
+      expect.objectContaining({ p_action: 'PHI_WRITE', p_resource_type: 'ENCOUNTER' }),
     )
   })
 })
@@ -912,7 +914,7 @@ describe('encounter.listByPatient', () => {
     await caller.encounter.listByPatient(validInput)
     expect(rpc).toHaveBeenCalledWith(
       'audit_emit_with_lock',
-      expect.objectContaining({ p_action: 'PHI_READ', p_resource_type: 'Encounter' }),
+      expect.objectContaining({ p_action: 'PHI_READ', p_resource_type: 'ENCOUNTER' }),
     )
   })
 })
@@ -1087,7 +1089,7 @@ describe('encounter.listByPractitioner', () => {
       'audit_emit_with_lock',
       expect.objectContaining({
         p_action: 'PHI_READ',
-        p_resource_type: 'Encounter',
+        p_resource_type: 'ENCOUNTER',
         p_actor_id: CLINICIAN_USER.sub,
         p_resource_id: `practitioner-encounters:${CLINICIAN_USER.sub}`,
       }),

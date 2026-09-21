@@ -90,8 +90,8 @@ const { createCallerFactory } = await import('../trpc/init')
 
 const createCaller = createCallerFactory(appRouter)
 
-const ADMIN_USER = { sub: UUID.admin, role: 'ADMIN', sessionId: 'sess-1', orgId: UUID.org }
-const NON_ADMIN_USER = { sub: UUID.user, role: 'DOCTOR', sessionId: 'sess-2', orgId: UUID.org }
+const ADMIN_USER = { sub: UUID.admin, role: 'ADMIN' as const, sessionId: 'sess-1', orgId: UUID.org, facilityId: null, status: 'ACTIVE' }
+const NON_ADMIN_USER = { sub: UUID.user, role: 'DOCTOR' as const, sessionId: 'sess-2', orgId: UUID.org, facilityId: null, status: 'ACTIVE' }
 
 function createAdminContext() {
   return {
@@ -487,9 +487,9 @@ describe('Surveillance Config CRUD', () => {
       const caller = createCaller(createAdminContext())
       const result = await caller.admin.listSurveillanceAlerts({ acknowledged: false, cursor: 0, limit: 25 })
       expect(result.alerts).toHaveLength(1)
-      expect(result.alerts[0].testCategory).toBe('Malaria RDT')
-      expect(result.alerts[0].currentRate).toBe(23)
-      expect(result.alerts[0].labName).toBe('Lab A')
+      expect(result.alerts[0]!.testCategory).toBe('Malaria RDT')
+      expect(result.alerts[0]!.currentRate).toBe(23)
+      expect(result.alerts[0]!.labName).toBe('Lab A')
       // Verify the acknowledged=false filter was actually applied to the query
       expect(isSpy).toHaveBeenCalledWith('acknowledged_at', null)
     })

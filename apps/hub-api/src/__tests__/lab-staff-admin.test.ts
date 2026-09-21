@@ -48,7 +48,7 @@ function makeAdminCtx() {
 
   const rpc = vi.fn().mockImplementation(() => {
     if (mockRpcReturn) return mockRpcReturn
-    return { data: { success: true, previousRole: 'LAB_TECH', newRole: 'SUPERVISOR', changed: true }, error: null }
+    return { data: { success: true, previousRole: 'LAB_TECH', newRole: 'SUPERVISOR' as import('@ultranos/shared-types').LabRole, changed: true }, error: null }
   })
 
   const getUserById = vi.fn().mockImplementation(() => {
@@ -62,15 +62,15 @@ function makeAdminCtx() {
       rpc,
       auth: { admin: { getUserById } },
     } as never,
-    user: { sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: null, status: null },
+    user: { sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', orgId: null, status: null, facilityId: null, },
     headers: new Headers(),
   }
 }
 
-function makeNonAdminCtx(role: string) {
+function makeNonAdminCtx(role: `${import('@ultranos/shared-types').UserRole}`) {
   return {
     supabase: { from: vi.fn(), rpc: vi.fn() } as never,
-    user: { sub: 'user-1', role, sessionId: 's1', orgId: null, status: null },
+    user: { sub: 'user-1', role, sessionId: 's1', orgId: null, status: null, facilityId: null },
     headers: new Headers(),
   }
 }
@@ -138,7 +138,7 @@ describe('admin.updateLabStaffRole', () => {
 
   it('changes role and emits audit event', async () => {
     mockRpcReturn = {
-      data: { success: true, previousRole: 'LAB_TECH', newRole: 'SUPERVISOR', changed: true },
+      data: { success: true, previousRole: 'LAB_TECH', newRole: 'SUPERVISOR' as import('@ultranos/shared-types').LabRole, changed: true },
       error: null,
     }
 
@@ -148,13 +148,13 @@ describe('admin.updateLabStaffRole', () => {
     const result = await caller.updateLabStaffRole({
       labId: '00000000-0000-0000-0000-000000000001',
       targetPractitionerId: '00000000-0000-0000-0000-000000000002',
-      newRole: 'SUPERVISOR',
+      newRole: 'SUPERVISOR' as import('@ultranos/shared-types').LabRole,
     })
 
     expect(result).toEqual({
       success: true,
       previousRole: 'LAB_TECH',
-      newRole: 'SUPERVISOR',
+      newRole: 'SUPERVISOR' as import('@ultranos/shared-types').LabRole,
     })
 
     // Audit event emitted
@@ -165,7 +165,7 @@ describe('admin.updateLabStaffRole', () => {
         resourceId: '00000000-0000-0000-0000-000000000002',
         metadata: expect.objectContaining({
           previousRole: 'LAB_TECH',
-          newRole: 'SUPERVISOR',
+          newRole: 'SUPERVISOR' as import('@ultranos/shared-types').LabRole,
           labId: '00000000-0000-0000-0000-000000000001',
         }),
       }),
@@ -185,7 +185,7 @@ describe('admin.updateLabStaffRole', () => {
       caller.updateLabStaffRole({
         labId: '00000000-0000-0000-0000-000000000001',
         targetPractitionerId: '00000000-0000-0000-0000-000000000002',
-        newRole: 'LAB_TECH',
+        newRole: 'LAB_TECH' as import('@ultranos/shared-types').LabRole,
       }),
     ).rejects.toMatchObject({ code: 'CONFLICT' })
   })
@@ -198,7 +198,7 @@ describe('admin.updateLabStaffRole', () => {
       caller.updateLabStaffRole({
         labId: '00000000-0000-0000-0000-000000000001',
         targetPractitionerId: '00000000-0000-0000-0000-000000000002',
-        newRole: 'SUPERVISOR',
+        newRole: 'SUPERVISOR' as import('@ultranos/shared-types').LabRole,
       }),
     ).rejects.toMatchObject({ code: 'FORBIDDEN' })
   })
@@ -216,7 +216,7 @@ describe('admin.updateLabStaffRole', () => {
       caller.updateLabStaffRole({
         labId: '00000000-0000-0000-0000-000000000001',
         targetPractitionerId: '00000000-0000-0000-0000-000000000099',
-        newRole: 'SUPERVISOR',
+        newRole: 'SUPERVISOR' as import('@ultranos/shared-types').LabRole,
       }),
     ).rejects.toMatchObject({ code: 'NOT_FOUND' })
   })

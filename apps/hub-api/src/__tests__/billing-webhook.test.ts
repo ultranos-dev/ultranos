@@ -62,8 +62,8 @@ const { createCallerFactory } = await import('../trpc/init')
 const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
-  supabaseRpc?: ReturnType<typeof vi.fn>
+  supabaseFrom?: any
+  supabaseRpc?: any
 }) {
   return {
     supabase: {
@@ -251,7 +251,7 @@ describe('billing.handleWebhook', () => {
     expect(mockAuditEmit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'BILLING_REFUND',
-        resourceType: 'BillingEvent',
+        resourceType: 'BILLING',
         actorId: 'SYSTEM',
         actorRole: 'SYSTEM',
         outcome: 'SUCCESS',

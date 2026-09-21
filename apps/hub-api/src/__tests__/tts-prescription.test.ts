@@ -37,12 +37,12 @@ const createCaller = createCallerFactory(appRouter)
 const PATIENT_UUID = '00000000-0000-4000-8000-000000000010'
 const RX_UUID = '00000000-0000-4000-8000-000000000020'
 
-const PATIENT_USER = { sub: PATIENT_UUID, role: 'PATIENT', sessionId: 'sess-p1', orgId: null, status: null }
-const DOCTOR_USER = { sub: 'doc-001', role: 'DOCTOR', sessionId: 'sess-d1', orgId: 'org-001', status: null }
-const PHARMACIST_USER = { sub: 'pharm-001', role: 'PHARMACIST', sessionId: 'sess-ph1', orgId: 'org-001', status: null }
+const PATIENT_USER = { sub: PATIENT_UUID, role: 'PATIENT' as const, sessionId: 'sess-p1', orgId: null, status: null, facilityId: null, }
+const DOCTOR_USER = { sub: 'doc-001', role: 'DOCTOR' as const, sessionId: 'sess-d1', orgId: 'org-001', status: null, facilityId: null, }
+const PHARMACIST_USER = { sub: 'pharm-001', role: 'PHARMACIST' as const, sessionId: 'sess-ph1', orgId: 'org-001', status: null, facilityId: null, }
 
 function createTestContext(overrides?: {
-  user?: { sub: string; role: string; sessionId: string; orgId?: string | null; status?: string | null } | null
+  user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
 }) {
   return {
     supabase: mockSupabaseClient as never,

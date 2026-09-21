@@ -67,7 +67,7 @@ const PHARM_SUB         = 'pharm-uuid-1'
 const MONITORED_ATC     = 'B01AA03'  // warfarin — seeded in medication_lab_mappings
 const UNMONITORED_ATC   = 'N05AN01'  // lithium — NOT in medication_lab_mappings
 
-const PHARMACIST_USER = { sub: PHARM_SUB, role: 'PHARMACIST', sessionId: 'sess-mon-1', orgId: 'org-test-001' }
+const PHARMACIST_USER = { sub: PHARM_SUB, role: 'PHARMACIST' as const, sessionId: 'sess-mon-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 
 function baseInput(medicationCode: string) {
   return {
@@ -259,7 +259,7 @@ describe('recordDispense monitoring event producer (Story 52.1)', () => {
 
     expect(res.success).toBe(true)
     expect(monitoringInsert).toHaveBeenCalledTimes(1)
-    const insertArg = monitoringInsert.mock.calls[0]![0]
+    const insertArg = (monitoringInsert.mock.calls[0] as any[])[0]
     expect(insertArg).toMatchObject({
       dispensing_event_id: DISPENSE_UUID,
       patient_id: PATIENT_UUID,

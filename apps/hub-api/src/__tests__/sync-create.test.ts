@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { AdministrativeGender } from '@ultranos/shared-types'
 
 vi.stubEnv('FIELD_ENCRYPTION_KEY', 'a'.repeat(64))
 vi.stubEnv('FIELD_ENCRYPTION_HMAC_KEY', 'b'.repeat(64))
@@ -55,7 +56,7 @@ const { appRouter } = await import('../trpc/routers/_app')
 const { createCallerFactory } = await import('../trpc/init')
 
 const PATIENT_UUID = '55555555-5555-5555-5555-555555555555'
-const TEST_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1' }
+const TEST_USER = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }
 
 describe('patient.syncCreate', () => {
   const createCaller = createCallerFactory(appRouter)
@@ -68,7 +69,7 @@ describe('patient.syncCreate', () => {
     nameLocal: 'Ahmad Mohammad',
     nameGiven: 'Ahmad',
     nameFather: 'Mohammad',
-    gender: 'male' as const,
+    gender: AdministrativeGender.MALE,
     birthYear: 1985,
     birthYearOnly: true,
     consent: { method: 'WRITTEN' as const, language: 'en' as const, version: 'v1.0-en' },

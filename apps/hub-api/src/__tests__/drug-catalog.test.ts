@@ -18,11 +18,11 @@ const { createCallerFactory } = await import('../trpc/init')
 const { appRouter } = await import('../trpc/routers/_app')
 const createCaller = createCallerFactory(appRouter)
 
-const DOCTOR_USER = { sub: 'doc-001', role: 'DOCTOR', sessionId: 's1', orgId: null, status: 'active' }
-const PHARMACIST_USER = { sub: 'ph-001', role: 'PHARMACIST', sessionId: 's2', orgId: null, status: 'active' }
-const PATIENT_USER = { sub: 'pat-001', role: 'PATIENT', sessionId: 's3', orgId: null, status: 'active' }
+const DOCTOR_USER = { sub: 'doc-001', role: 'DOCTOR' as const, sessionId: 's1', orgId: null, status: 'active', facilityId: null, }
+const PHARMACIST_USER = { sub: 'ph-001', role: 'PHARMACIST' as const, sessionId: 's2', orgId: null, status: 'active', facilityId: null, }
+const PATIENT_USER = { sub: 'pat-001', role: 'PATIENT' as const, sessionId: 's3', orgId: null, status: 'active', facilityId: null, }
 
-function ctx(user = DOCTOR_USER) {
+function ctx(user: NonNullable<import('../trpc/init').TRPCContext['user']> = DOCTOR_USER) {
   return { supabase: mockSupabase as never, user, headers: new Headers() }
 }
 
@@ -78,10 +78,10 @@ describe('drugCatalog.search', () => {
     const caller = createCaller(ctx())
     const result = await caller.drugCatalog.search({ q: 'amox', lang: 'en' })
     expect(result).toHaveLength(1)
-    expect(result[0].atcCode).toBe('J01CA04')
-    expect(result[0].innName).toBe('Amoxicillin')
+    expect(result[0]!.atcCode).toBe('J01CA04')
+    expect(result[0]!.innName).toBe('Amoxicillin')
     // Search results must NOT include tier content
-    expect((result[0] as Record<string, unknown>).mechanismOfAction).toBeUndefined()
+    expect((result[0]! as unknown as Record<string, unknown>).mechanismOfAction).toBeUndefined()
   })
 
   it('search returns results matching brand name', async () => {
@@ -120,7 +120,7 @@ describe('drugCatalog.getByAtcCode', () => {
     })
 
     const caller = createCaller(ctx(PATIENT_USER))
-    const result = await caller.drugCatalog.getByAtcCode({ atcCode: 'J01CA04' }) as Record<string, unknown>
+    const result = await caller.drugCatalog.getByAtcCode({ atcCode: 'J01CA04' }) as unknown as Record<string, unknown>
     expect(result.innName).toBe('Amoxicillin')
     expect(result.mechanismOfAction).toBeUndefined()
     expect(result.formularyStatus).toBeUndefined()
@@ -136,7 +136,7 @@ describe('drugCatalog.getByAtcCode', () => {
     })
 
     const caller = createCaller(ctx(DOCTOR_USER))
-    const result = await caller.drugCatalog.getByAtcCode({ atcCode: 'J01CA04' }) as Record<string, unknown>
+    const result = await caller.drugCatalog.getByAtcCode({ atcCode: 'J01CA04' }) as unknown as Record<string, unknown>
     expect(result.mechanismOfAction).toBe('Inhibits cell wall synthesis.')
     expect(result.formularyStatus).toBeUndefined()
   })
@@ -151,7 +151,7 @@ describe('drugCatalog.getByAtcCode', () => {
     })
 
     const caller = createCaller(ctx(PHARMACIST_USER))
-    const result = await caller.drugCatalog.getByAtcCode({ atcCode: 'J01CA04' }) as Record<string, unknown>
+    const result = await caller.drugCatalog.getByAtcCode({ atcCode: 'J01CA04' }) as unknown as Record<string, unknown>
     expect(result.mechanismOfAction).toBe('Inhibits cell wall synthesis.')
     expect(result.formularyStatus).toBe('on_formulary')
     expect(result.unitCost).toBe(3.2)
@@ -186,11 +186,11 @@ describe('drugCatalog.sync', () => {
     const caller = createCaller(ctx(DOCTOR_USER))
     const result = await caller.drugCatalog.sync({ sinceVersion: 0 })
     expect(result.entries).toHaveLength(1)
-    expect(result.entries[0].atcCode).toBe('J01CA04')
+    expect(result.entries[0]!.atcCode).toBe('J01CA04')
     // Clinical fields present for DOCTOR
-    expect((result.entries[0] as Record<string, unknown>).mechanismOfAction).toBeDefined()
+    expect((result.entries[0]! as unknown as Record<string, unknown>).mechanismOfAction).toBeDefined()
     // Pharmacist fields absent for DOCTOR
-    expect((result.entries[0] as Record<string, unknown>).formularyStatus).toBeUndefined()
+    expect((result.entries[0]! as unknown as Record<string, unknown>).formularyStatus).toBeUndefined()
     expect(result.latestVersion).toBe(1718000000000)
   })
 
@@ -334,9 +334,9 @@ describe('drugCatalog.getPrices', () => {
 
     expect(result).toHaveLength(2)
     // Al-Shifa (34.527, 69.179) is closer to (34.526, 69.176) than Ibn Sina (34.541, 69.202)
-    expect(result[0].pharmacyName).toBe('Al-Shifa Pharmacy')
-    expect(result[0].retailPrice).toBe(85)
-    expect(result[0].distanceKm).toBeGreaterThanOrEqual(0)
+    expect(result[0]!.pharmacyName).toBe('Al-Shifa Pharmacy')
+    expect(result[0]!.retailPrice).toBe(85)
+    expect(result[0]!.distanceKm).toBeGreaterThanOrEqual(0)
   })
 
   it('returns prices sorted by price ascending', async () => {
@@ -356,8 +356,8 @@ describe('drugCatalog.getPrices', () => {
       sort: 'price',
     })
 
-    expect(result[0].retailPrice).toBe(85)
-    expect(result[1].retailPrice).toBe(120)
+    expect(result[0]!.retailPrice).toBe(85)
+    expect(result[1]!.retailPrice).toBe(120)
   })
 
   it('returns empty array when no prices exist', async () => {

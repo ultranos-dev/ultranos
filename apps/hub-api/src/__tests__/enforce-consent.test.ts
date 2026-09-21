@@ -22,7 +22,7 @@ const { checkConsent, enforceConsentMiddleware } = await import(
 )
 
 const PATIENT_ID = 'patient-001'
-const TEST_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1' }
+const TEST_USER = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }
 
 function mockSupabaseConsents(consents: Array<{ id: string; status: string; category: string[]; date_time?: string; provision_end?: string | null }>) {
   return vi.fn().mockReturnValue({
@@ -229,7 +229,7 @@ describe('enforceConsentMiddleware', () => {
     const from = mockSupabaseConsents([
       { id: 'c1', status: ConsentStatus.ACTIVE, category: [ConsentScope.PRESCRIPTIONS] },
     ])
-    const middleware = enforceConsentMiddleware('MedicationRequest')
+    const middleware = (enforceConsentMiddleware('MedicationRequest') as any)._middlewares[0]
     const next = vi.fn().mockResolvedValue({ result: 'ok' })
 
     await middleware({
@@ -243,7 +243,7 @@ describe('enforceConsentMiddleware', () => {
 
   it('throws FORBIDDEN when no consent exists', async () => {
     const from = mockSupabaseConsents([])
-    const middleware = enforceConsentMiddleware('MedicationRequest')
+    const middleware = (enforceConsentMiddleware('MedicationRequest') as any)._middlewares[0]
     const next = vi.fn()
 
     await expect(
@@ -261,7 +261,7 @@ describe('enforceConsentMiddleware', () => {
     const from = mockSupabaseConsents([
       { id: 'c1', status: ConsentStatus.ACTIVE, category: [ConsentScope.PRESCRIPTIONS] },
     ])
-    const middleware = enforceConsentMiddleware('MedicationRequest')
+    const middleware = (enforceConsentMiddleware('MedicationRequest') as any)._middlewares[0]
     const next = vi.fn().mockResolvedValue({ result: 'ok' })
 
     await middleware({
@@ -275,7 +275,7 @@ describe('enforceConsentMiddleware', () => {
 
   it('throws BAD_REQUEST when no patient identifier provided', async () => {
     const from = mockSupabaseConsents([])
-    const middleware = enforceConsentMiddleware('MedicationRequest')
+    const middleware = (enforceConsentMiddleware('MedicationRequest') as any)._middlewares[0]
     const next = vi.fn()
 
     await expect(

@@ -6,6 +6,11 @@ vi.stubEnv('FIELD_ENCRYPTION_HMAC_KEY', 'b'.repeat(64))
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => ({ from: vi.fn() })),
+  // Mirrors the real helper: calls `.select(columns, { count, head })` on the
+  // passed mutation builder and returns its `{ count, error }` result.
+  selectExactCount: vi.fn(async (mutationBuilder: any, columns = 'id') => {
+    return await mutationBuilder.select(columns, { count: 'exact', head: true })
+  }),
   db: {
     toRow: (d: any) => d,
     toRowRaw: (d: any) => d,
@@ -45,7 +50,7 @@ const { adminRouter } = await import('../trpc/routers/admin')
 function makeCtx(overrides: Record<string, unknown> = {}) {
   return {
     supabase: { from: mockFrom, auth: { admin: { getUserById: vi.fn() } } } as never,
-    user: { sub: 'admin-1', role: 'ADMIN', orgId: 'org-1', sessionId: 'sess-1', ...overrides },
+    user: { sub: 'admin-1', role: 'ADMIN' as const, orgId: 'org-1', sessionId: 'sess-1', ...overrides, facilityId: null, status: 'ACTIVE' },
     headers: new Headers(),
   }
 }

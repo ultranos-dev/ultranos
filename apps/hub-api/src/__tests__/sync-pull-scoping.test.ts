@@ -27,7 +27,7 @@ const SINCE_HLC = '000001700000000:00000:node-1'
 function authCtx(supabase: unknown) {
   return {
     supabase: supabase as never,
-    user: { sub: 'user-1', role: 'DOCTOR', sessionId: 'session-1', userId: 'user-1', orgId: 'org-1' },
+    user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'session-1', userId: 'user-1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' },
     headers: new Headers(),
   }
 }
@@ -99,7 +99,7 @@ function makeSupabase(opts: { encounterIds: string[]; soapRows?: Record<string, 
 
 describe('sync.pull — patient scoping', () => {
   const createCaller = createCallerFactory(appRouter)
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('scopes SOAP notes to the patient via their encounters (no cross-patient pull)', async () => {
     const { supabase, calls } = makeSupabase({

@@ -23,12 +23,12 @@ function mockPatientQuery(result: { data: any; error: any }) {
 }
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
+  supabaseFrom?: any
   _patientTier?: 'FREE' | 'PREMIUM'
 }) {
   return {
     supabase: { from: overrides?.supabaseFrom ?? vi.fn() } as never,
-    user: { sub: 'patient-001', role: 'PATIENT', sessionId: 'sess-1', orgId: null },
+    user: { sub: 'patient-001', role: 'PATIENT' as const, sessionId: 'sess-1', orgId: null, facilityId: null, status: 'ACTIVE' },
     headers: new Headers(),
     _patientTier: overrides?._patientTier,
   }
@@ -53,7 +53,7 @@ describe('enforcePremiumTier', () => {
   it('throws PREMIUM_REQUIRED for FREE tier patient', async () => {
     const fromMock = mockPatientQuery({ data: { patient_tier: 'FREE' }, error: null })
     const ctx = createTestContext({ supabaseFrom: fromMock })
-    const middleware = enforcePremiumTier('MEDICAL_HISTORY_EXPORT')
+    const middleware = (enforcePremiumTier('MEDICAL_HISTORY_EXPORT') as any)._middlewares[0]
 
     await expect(
       middleware({ ctx, input: {}, next: mockNext }),
@@ -73,7 +73,7 @@ describe('enforcePremiumTier', () => {
   it('passes through for PREMIUM tier patient', async () => {
     const fromMock = mockPatientQuery({ data: { patient_tier: 'PREMIUM' }, error: null })
     const ctx = createTestContext({ supabaseFrom: fromMock })
-    const middleware = enforcePremiumTier('MEDICAL_HISTORY_EXPORT')
+    const middleware = (enforcePremiumTier('MEDICAL_HISTORY_EXPORT') as any)._middlewares[0]
 
     await middleware({ ctx, input: {}, next: mockNext })
 
@@ -87,7 +87,7 @@ describe('enforcePremiumTier', () => {
   it('uses cached tier from context and skips DB lookup', async () => {
     const fromMock = vi.fn()
     const ctx = createTestContext({ supabaseFrom: fromMock, _patientTier: 'PREMIUM' })
-    const middleware = enforcePremiumTier('GUARDIAN_LINKING')
+    const middleware = (enforcePremiumTier('GUARDIAN_LINKING') as any)._middlewares[0]
 
     await middleware({ ctx, input: {}, next: mockNext })
 
@@ -99,7 +99,7 @@ describe('enforcePremiumTier', () => {
   it('uses cached FREE tier from context', async () => {
     const fromMock = vi.fn()
     const ctx = createTestContext({ supabaseFrom: fromMock, _patientTier: 'FREE' })
-    const middleware = enforcePremiumTier('NOTIFICATION_CENTER')
+    const middleware = (enforcePremiumTier('NOTIFICATION_CENTER') as any)._middlewares[0]
 
     await expect(
       middleware({ ctx, input: {}, next: mockNext }),
@@ -111,7 +111,7 @@ describe('enforcePremiumTier', () => {
   it('defaults to FREE tier on DB error (fail-closed)', async () => {
     const fromMock = mockPatientQuery({ data: null, error: { code: 'PGRST116' } })
     const ctx = createTestContext({ supabaseFrom: fromMock })
-    const middleware = enforcePremiumTier('PRESCRIPTION_HISTORY')
+    const middleware = (enforcePremiumTier('PRESCRIPTION_HISTORY') as any)._middlewares[0]
 
     await expect(
       middleware({ ctx, input: {}, next: mockNext }),
@@ -121,7 +121,7 @@ describe('enforcePremiumTier', () => {
   it('defaults to FREE tier when patient_tier is null', async () => {
     const fromMock = mockPatientQuery({ data: { patient_tier: null }, error: null })
     const ctx = createTestContext({ supabaseFrom: fromMock })
-    const middleware = enforcePremiumTier('MEDICAL_HISTORY_EXPORT')
+    const middleware = (enforcePremiumTier('MEDICAL_HISTORY_EXPORT') as any)._middlewares[0]
 
     await expect(
       middleware({ ctx, input: {}, next: mockNext }),
@@ -131,7 +131,7 @@ describe('enforcePremiumTier', () => {
   it('includes featureId in error cause payload', async () => {
     const fromMock = mockPatientQuery({ data: { patient_tier: 'FREE' }, error: null })
     const ctx = createTestContext({ supabaseFrom: fromMock })
-    const middleware = enforcePremiumTier('GUARDIAN_LINKING')
+    const middleware = (enforcePremiumTier('GUARDIAN_LINKING') as any)._middlewares[0]
 
     try {
       await middleware({ ctx, input: {}, next: mockNext })

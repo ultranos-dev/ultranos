@@ -32,7 +32,7 @@ const UUID_MISSING = '00000000-0000-0000-0000-000000000000'
 
 // ─── Test helpers ───
 
-function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string | null; status?: string | null } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: createMockSupabase() as never,
     user: user ? { ...user, orgId: user.orgId ?? null, status: user.status ?? null } : null,
@@ -41,7 +41,7 @@ function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: s
 }
 
 function makeAdminCtx() {
-  return makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' })
+  return makeCtx({ sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null })
 }
 
 function createMockSupabase() {
@@ -144,12 +144,12 @@ describe('admin.listExpiringProviders', () => {
     const result = await caller.listExpiringProviders({ window: 'all', cursor: 0, limit: 25 })
 
     expect(result.providers).toHaveLength(2)
-    expect(result.providers[0].practitionerId).toBe(UUID_P1)
-    expect(result.providers[0].name).toBe('John Smith')
+    expect(result.providers[0]!.practitionerId).toBe(UUID_P1)
+    expect(result.providers[0]!.name).toBe('John Smith')
     // The router queries flat columns only; licenseNumber/issuingBody are not joined
-    expect(result.providers[0].licenseNumber).toBe('')
-    expect(result.providers[0].issuingBody).toBe('')
-    expect(result.providers[0].kycStatus).toBe('ACTIVE')
+    expect(result.providers[0]!.licenseNumber).toBe('')
+    expect(result.providers[0]!.issuingBody).toBe('')
+    expect(result.providers[0]!.kycStatus).toBe('ACTIVE')
     expect(result.total).toBe(2)
   })
 
@@ -183,7 +183,7 @@ describe('admin.listExpiringProviders', () => {
   })
 
   it('rejects non-ADMIN callers with FORBIDDEN', async () => {
-    const ctx = makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1' })
+    const ctx = makeCtx({ sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null })
     const caller = createCallerFactory(adminRouter)(ctx)
     await expect(caller.listExpiringProviders({ window: 'all' })).rejects.toMatchObject({
       code: 'FORBIDDEN',
@@ -252,7 +252,7 @@ describe('admin.renewProviderLicense', () => {
   })
 
   it('rejects non-ADMIN callers with FORBIDDEN', async () => {
-    const ctx = makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1' })
+    const ctx = makeCtx({ sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null })
     const caller = createCallerFactory(adminRouter)(ctx)
 
     await expect(

@@ -50,7 +50,7 @@ vi.mock('@/lib/field-encryption', () => ({
 const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRouter } = await import('../trpc/routers/lab')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return { supabase: { from: mockFrom } as never, user, headers: new Headers() }
 }
 function setupLab(status = 'ACTIVE') {
@@ -77,7 +77,7 @@ const VITALS = [
 ]
 
 describe('lab.getOrderPatientDetails', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('returns full name + blood group + latest vitals for a visible order', async () => {
     setupLab()
@@ -89,7 +89,7 @@ describe('lab.getOrderPatientDetails', () => {
     obsLimit.mockResolvedValue({ data: VITALS, error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     const res = await caller.lab.getOrderPatientDetails({ orderId: ORDER_ID })
 
     expect(res.fullName).toEqual({ given: 'احمد منگل', father: 'مرجان خان', grandfather: 'قمرجان' })
@@ -113,7 +113,7 @@ describe('lab.getOrderPatientDetails', () => {
     obsLimit.mockResolvedValue({ data: [], error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     const res = await caller.lab.getOrderPatientDetails({ orderId: ORDER_ID })
     const json = JSON.stringify(res)
     expect(json).not.toContain(PATIENT_ID)
@@ -125,13 +125,13 @@ describe('lab.getOrderPatientDetails', () => {
     setupLab()
     srMaybeSingle.mockResolvedValue({ data: { id: ORDER_ID, patient_id: PATIENT_ID, received_by_lab_id: 'other-lab' }, error: null })
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     await expect(caller.lab.getOrderPatientDetails({ orderId: ORDER_ID })).rejects.toMatchObject({ code: 'NOT_FOUND' })
   })
 
   it('rejects non-LAB_TECH roles', async () => {
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1', orgId: 'org-1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     await expect(caller.lab.getOrderPatientDetails({ orderId: ORDER_ID })).rejects.toMatchObject({ code: 'FORBIDDEN' })
   })
 })

@@ -30,7 +30,7 @@ vi.mock('@/lib/supabase', () => ({
 const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRouter } = await import('../trpc/routers/lab')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: { from: mockFrom } as never,
     user,
@@ -46,7 +46,7 @@ describe('lab.reportAuthEvent', () => {
   it('emits LOGIN audit event on successful login', async () => {
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
 
     const result = await caller.lab.reportAuthEvent({
@@ -91,7 +91,7 @@ describe('lab.reportAuthEvent', () => {
   it('emits MFA_FAIL audit event on failed MFA verification', async () => {
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
 
     const result = await caller.lab.reportAuthEvent({
@@ -111,7 +111,7 @@ describe('lab.reportAuthEvent', () => {
   it('emits LOGIN audit event on successful MFA verification', async () => {
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
 
     const result = await caller.lab.reportAuthEvent({
@@ -138,7 +138,7 @@ describe('lab.reportAuthEvent', () => {
       actorEmail: 'sensitive@hospital.org',
     })
 
-    const emittedMetadata = mockAuditEmit.mock.calls[0]![0].metadata
+    const emittedMetadata = (mockAuditEmit.mock.calls[0] as any[])[0].metadata
     expect(JSON.stringify(emittedMetadata)).not.toContain('sensitive@hospital.org')
     expect(emittedMetadata.failedEmail).toBe('[REDACTED]')
   })
@@ -151,7 +151,7 @@ describe('lab.reportAuthEvent', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
 
     const result = await caller.lab.reportAuthEvent({
@@ -166,7 +166,7 @@ describe('lab.reportAuthEvent', () => {
     const headers = new Headers({ 'x-forwarded-for': '192.168.1.1' })
     const caller = createCallerFactory(router)({
       supabase: { from: mockFrom } as never,
-      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' },
+      user: { sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null },
       headers,
     })
 
@@ -175,7 +175,7 @@ describe('lab.reportAuthEvent', () => {
       actorId: '11111111-1111-1111-1111-111111111111',
     })
 
-    const emittedEvent = mockAuditEmit.mock.calls[0]![0]
+    const emittedEvent = (mockAuditEmit.mock.calls[0] as any[])[0]
     expect(emittedEvent.sourceIpHash).toBeDefined()
     // Should be a SHA-256 hex hash, not the raw IP
     expect(emittedEvent.sourceIpHash).not.toBe('192.168.1.1')

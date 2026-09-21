@@ -174,7 +174,7 @@ describe('isKeyRevoked', () => {
 describe('medication.getStatus — signature verification enforcement', () => {
   let createCaller: any
 
-  const TEST_USER = { sub: 'pharmacist-001', role: 'PHARMACIST', sessionId: 'sess-1', orgId: 'org-001' }
+  const TEST_USER = { sub: 'pharmacist-001', role: 'PHARMACIST' as const, sessionId: 'sess-1', orgId: 'org-001', facilityId: null, status: 'ACTIVE' }
   const RX_UUID = '00000000-0000-4000-8000-000000000001'
 
   beforeAll(async () => {

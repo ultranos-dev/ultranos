@@ -29,7 +29,7 @@ const { patientKeyRouter } = await import('../trpc/routers/patient-key')
 const router = createTRPCRouter({ patientKey: patientKeyRouter })
 const createCaller = createCallerFactory(router)
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: { from: mockFrom } as never,
     user,
@@ -54,7 +54,7 @@ beforeEach(() => {
 describe('patientKey.register', () => {
   describe('successful registration', () => {
     it('registers a patient key with default 1-year expiry', async () => {
-      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT', sessionId: 'sess-1' }))
+      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       mockInsertSingle.mockResolvedValue({
         data: { id: 'pk-1' },
@@ -89,7 +89,7 @@ describe('patientKey.register', () => {
 
   describe('duplicate key rejection', () => {
     it('throws CONFLICT when public key already registered', async () => {
-      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT', sessionId: 'sess-1' }))
+      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       mockInsertSingle.mockResolvedValue({
         data: null,
@@ -107,7 +107,7 @@ describe('patientKey.register', () => {
 
   describe('RBAC — PATIENT role only', () => {
     it('allows PATIENT to register own key', async () => {
-      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT', sessionId: 'sess-1' }))
+      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
       mockInsertSingle.mockResolvedValue({ data: { id: 'pk-1' }, error: null })
 
       const result = await caller.patientKey.register(VALID_INPUT)
@@ -115,7 +115,7 @@ describe('patientKey.register', () => {
     })
 
     it('rejects DOCTOR role', async () => {
-      const caller = createCaller(makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 'sess-1' }))
+      const caller = createCaller(makeCtx({ sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       await expect(caller.patientKey.register(VALID_INPUT)).rejects.toThrow(
         expect.objectContaining({ code: 'FORBIDDEN' }),
@@ -123,7 +123,7 @@ describe('patientKey.register', () => {
     })
 
     it('rejects PHARMACIST role', async () => {
-      const caller = createCaller(makeCtx({ sub: 'pharma-1', role: 'PHARMACIST', sessionId: 'sess-1' }))
+      const caller = createCaller(makeCtx({ sub: 'pharma-1', role: 'PHARMACIST' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       await expect(caller.patientKey.register(VALID_INPUT)).rejects.toThrow(
         expect.objectContaining({ code: 'FORBIDDEN' }),
@@ -131,7 +131,7 @@ describe('patientKey.register', () => {
     })
 
     it('allows ADMIN role (bypasses role check)', async () => {
-      const caller = createCaller(makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 'sess-1' }))
+      const caller = createCaller(makeCtx({ sub: 'admin-1', role: 'ADMIN' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
       mockInsertSingle.mockResolvedValue({ data: { id: 'pk-1' }, error: null })
 
       const result = await caller.patientKey.register(VALID_INPUT)
@@ -139,7 +139,7 @@ describe('patientKey.register', () => {
     })
 
     it('rejects PATIENT registering key for a different patient', async () => {
-      const caller = createCaller(makeCtx({ sub: 'other-patient', role: 'PATIENT', sessionId: 'sess-1' }))
+      const caller = createCaller(makeCtx({ sub: 'other-patient', role: 'PATIENT' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       await expect(caller.patientKey.register(VALID_INPUT)).rejects.toThrow(
         expect.objectContaining({
@@ -152,7 +152,7 @@ describe('patientKey.register', () => {
 
   describe('input validation', () => {
     it('rejects invalid public key format (too short)', async () => {
-      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT', sessionId: 'sess-1' }))
+      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       await expect(caller.patientKey.register({
         publicKeyP256: 'shortkey',
@@ -161,7 +161,7 @@ describe('patientKey.register', () => {
     })
 
     it('rejects public key with invalid characters', async () => {
-      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT', sessionId: 'sess-1' }))
+      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       await expect(caller.patientKey.register({
         publicKeyP256: 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE!@#$invalidcharshere' + 'a'.repeat(60),
@@ -172,14 +172,14 @@ describe('patientKey.register', () => {
 
   describe('audit logging', () => {
     it('emits audit event on successful registration', async () => {
-      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT', sessionId: 'sess-1' }))
+      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
       mockInsertSingle.mockResolvedValue({ data: { id: 'pk-123' }, error: null })
 
       await caller.patientKey.register(VALID_INPUT)
 
       expect(mockEmit).toHaveBeenCalledWith({
         action: 'CREATE',
-        resourceType: 'PatientKey',
+        resourceType: 'PATIENT_KEY',
         resourceId: 'pk-123',
         actorId: PATIENT_ID,
         actorRole: 'PATIENT',
@@ -190,7 +190,7 @@ describe('patientKey.register', () => {
     })
 
     it('does not block registration when audit fails', async () => {
-      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT', sessionId: 'sess-1' }))
+      const caller = createCaller(makeCtx({ sub: PATIENT_ID, role: 'PATIENT' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
       mockInsertSingle.mockResolvedValue({ data: { id: 'pk-123' }, error: null })
       mockEmit.mockRejectedValueOnce(new Error('Audit service unavailable'))
 

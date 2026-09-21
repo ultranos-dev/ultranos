@@ -45,7 +45,7 @@ const ENCOUNTER_UUID = '66666666-6666-6666-6666-666666666666'
 
 const TEST_USER = {
   sub: PRACT_UUID,
-  role: 'DOCTOR',
+  role: 'DOCTOR' as const,
   sessionId: 'sess-1',
   orgId: ORG_UUID,
   facilityId: null,
@@ -153,7 +153,7 @@ function encounterOp(hlc: string) {
 
 describe('sync.push — Tier-1 append-only conflict pipeline', () => {
   const createCaller = createCallerFactory(appRouter)
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('records a conflict (never overwrites) when a concurrent allergy edit arrives from another device', async () => {
     const sink: Sink = { upserts: [], conflicts: [] }

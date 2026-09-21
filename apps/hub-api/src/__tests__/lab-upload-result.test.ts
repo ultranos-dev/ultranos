@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // ── Supabase mock chain ──────────────────────────────────────
 const mockInsertSingle = vi.fn()
 const mockInsertSelect = vi.fn(() => ({ single: mockInsertSingle }))
-const mockInsert = vi.fn(() => ({ select: mockInsertSelect }))
+const mockInsert = vi.fn((): any => ({ select: mockInsertSelect }))
 const mockDeleteEq = vi.fn().mockResolvedValue({ error: null })
 const mockDelete = vi.fn(() => ({ eq: mockDeleteEq }))
 
@@ -97,7 +97,7 @@ vi.mock('@/lib/supabase', () => ({
 const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRouter } = await import('../trpc/routers/lab')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string | null } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: { from: mockFrom } as never,
     user,
@@ -145,7 +145,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     const result = await caller.lab.uploadResult(validInput)
 
@@ -166,7 +166,7 @@ describe('lab.uploadResult', () => {
     const { encryptField } = await import('@ultranos/crypto/server')
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await caller.lab.uploadResult(validInput)
 
@@ -182,7 +182,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await caller.lab.uploadResult(validInput)
 
@@ -201,7 +201,7 @@ describe('lab.uploadResult', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await expect(caller.lab.uploadResult(validInput)).rejects.toMatchObject({
       code: 'BAD_REQUEST',
@@ -220,7 +220,7 @@ describe('lab.uploadResult', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await expect(caller.lab.uploadResult(validInput)).rejects.toMatchObject({
       code: 'INTERNAL_SERVER_ERROR',
@@ -242,7 +242,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     const result = await caller.lab.uploadResult(validInput)
     expect(result.virusScanStatus).toBe('pending')
@@ -252,7 +252,7 @@ describe('lab.uploadResult', () => {
     const hugeBase64 = Buffer.alloc(21 * 1024 * 1024).toString('base64')
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await expect(
       caller.lab.uploadResult({ ...validInput, fileBase64: hugeBase64 }),
@@ -270,14 +270,14 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await caller.lab.uploadResult(validInput)
 
     // Verify diagnostic_reports insert includes performer_id (practitioners.id FK, not technician row PK)
     // and lab_id. practitioner_id comes from resolvePerformerId which looks up lab_technicians.practitioner_id.
     // The mockRbacSingle fixture returns practitioner_id='practitioner-1', so that's what gets stored.
-    const insertCall = mockInsert.mock.calls[0]![0]
+    const insertCall = (mockInsert.mock.calls[0] as any[])[0]
     expect(insertCall).toEqual(
       expect.objectContaining({
         performer_id: 'practitioner-1',
@@ -297,7 +297,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await caller.lab.uploadResult(validInput)
 
@@ -325,7 +325,7 @@ describe('lab.uploadResult', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await expect(caller.lab.uploadResult(validInput)).rejects.toThrow()
 
@@ -346,7 +346,7 @@ describe('lab.uploadResult', () => {
     const hugeBase64 = Buffer.alloc(21 * 1024 * 1024).toString('base64')
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await expect(
       caller.lab.uploadResult({ ...validInput, fileBase64: hugeBase64 }),
@@ -373,11 +373,11 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await caller.lab.uploadResult(validInput)
 
-    const auditCall = mockAuditEmit.mock.calls[0]![0]
+    const auditCall = (mockAuditEmit.mock.calls[0] as any[])[0]
     const metadataStr = JSON.stringify(auditCall.metadata)
     // No patient name, raw patient ID, file content, or diagnosis
     expect(metadataStr).not.toContain('patient-123')
@@ -394,7 +394,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: { code: '42P01', message: 'relation error' } })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await expect(caller.lab.uploadResult(validInput)).rejects.toMatchObject({
       code: 'INTERNAL_SERVER_ERROR',
@@ -407,7 +407,7 @@ describe('lab.uploadResult', () => {
 
   it('validates required input fields', async () => {
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     // Missing loincCode
     await expect(
@@ -434,13 +434,13 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     const result = await caller.lab.uploadResult(validInput)
     expect(result.status).toBe('preliminary')
 
     // Verify the DB insert used 'preliminary'
-    const insertCall = mockInsert.mock.calls[0]![0]
+    const insertCall = (mockInsert.mock.calls[0] as any[])[0]
     expect(insertCall.status).toBe('preliminary')
   })
 
@@ -524,7 +524,7 @@ describe('lab.uploadResult', () => {
 
     const scopedCtx = {
       supabase: scopedSupabase as never,
-      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      user: { sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' },
       lab: { technicianId: 'tech-1', labId: 'lab-1' },
       headers: new Headers(),
     }
@@ -612,7 +612,7 @@ describe('lab.uploadResult', () => {
     const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
     const scopedCtx = {
       supabase: scopedSupabase as never,
-      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      user: { sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' },
       lab: { technicianId: 'tech-1', labId: 'lab-1' },
       headers: new Headers(),
     }
@@ -704,7 +704,7 @@ describe('lab.uploadResult', () => {
     const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
     const scopedCtx = {
       supabase: scopedSupabase as never,
-      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      user: { sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' },
       lab: { technicianId: 'tech-1', labId: 'lab-1' },
       headers: new Headers(),
     }
@@ -737,7 +737,7 @@ describe('lab.uploadResult', () => {
     }).mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await caller.lab.uploadResult({ ...validInput, loincCode: '  4548-4  ' })
 
@@ -799,7 +799,7 @@ describe('lab.uploadResult', () => {
     const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
     const scopedCtx = {
       supabase: scopedSupabase as never,
-      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      user: { sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' },
       lab: { technicianId: 'tech-1', labId: 'lab-1' },
       headers: new Headers(),
     }
@@ -811,7 +811,7 @@ describe('lab.uploadResult', () => {
     await caller.lab.uploadResult({ ...validInput, patientRef: 'Patient/abc123' })
 
     expect(insertedReportData).not.toBeNull()
-    expect((insertedReportData as Record<string, unknown>).patient_ref).toBe('abc123')
+    expect((insertedReportData as unknown as Record<string, unknown>).patient_ref).toBe('abc123')
   })
 
   it('stores patient_ref unchanged when already bare (idempotent strip)', async () => {
@@ -865,7 +865,7 @@ describe('lab.uploadResult', () => {
     const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
     const scopedCtx = {
       supabase: scopedSupabase as never,
-      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      user: { sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' },
       lab: { technicianId: 'tech-1', labId: 'lab-1' },
       headers: new Headers(),
     }
@@ -877,7 +877,7 @@ describe('lab.uploadResult', () => {
     await caller.lab.uploadResult({ ...validInput, patientRef: 'abc123' })
 
     expect(insertedReportData).not.toBeNull()
-    expect((insertedReportData as Record<string, unknown>).patient_ref).toBe('abc123')
+    expect((insertedReportData as unknown as Record<string, unknown>).patient_ref).toBe('abc123')
   })
 
   it('accepts the literal "custom" sentinel as a valid loincCode', async () => {
@@ -889,7 +889,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     // 'custom' must not be rejected — it is a valid sentinel for structured-entry codes
     const result = await caller.lab.uploadResult({ ...validInput, loincCode: 'custom', loincDisplay: 'Custom test' })
@@ -981,7 +981,7 @@ describe('lab.uploadResult', () => {
     const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
     const scopedCtx = {
       supabase: scopedSupabase as never,
-      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      user: { sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' },
       lab: { technicianId: 'tech-1', labId: 'lab-1' },
       headers: new Headers(),
     }
@@ -1030,7 +1030,7 @@ describe('lab.uploadResult', () => {
     const doctorNotif = (notifInsertedRows as any[]).find((n) => n.recipientRole === 'CLINICIAN')
     expect(doctorNotif).toBeUndefined()
     // service_requests must NOT be queried when orderId is absent (no encounters table either)
-    const fromCalled = (scopedCtx.supabase.from as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0])
+    const fromCalled = ((scopedCtx.supabase as any).from as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0])
     expect(fromCalled).not.toContain('encounters')
     expect(fromCalled).not.toContain('service_requests')
   })
@@ -1043,7 +1043,7 @@ describe('lab.uploadResult', () => {
     })
 
     // Add ownership-check support for diagnostic_reports.select().eq().maybeSingle()
-    const origFrom = scopedCtx.supabase.from as ReturnType<typeof vi.fn>
+    const origFrom = (scopedCtx.supabase as any).from as ReturnType<typeof vi.fn>
     const origImpl = origFrom.getMockImplementation()
     origFrom.mockImplementation((table: string) => {
       if (table === 'diagnostic_reports') {
@@ -1154,7 +1154,7 @@ describe('lab.uploadResult', () => {
     const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
     const scopedCtx = {
       supabase: scopedSupabase as never,
-      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      user: { sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' },
       lab: { technicianId: 'tech-1', labId: 'lab-1' },
       headers: new Headers(),
     }
@@ -1230,7 +1230,7 @@ describe('lab.uploadResult', () => {
     const scopedSupabase = { from: vi.fn((table: string) => makeScopedFrom(table)) }
     const scopedCtx = {
       supabase: scopedSupabase as never,
-      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' },
+      user: { sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' },
       lab: { technicianId: 'tech-1', labId: 'lab-1' },
       headers: new Headers(),
     }

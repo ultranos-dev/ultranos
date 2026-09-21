@@ -21,8 +21,8 @@ const { createCallerFactory } = await import('../trpc/init')
 const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string } | null
+  supabaseFrom?: any
+  user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -35,7 +35,7 @@ function createTestContext(overrides?: {
   }
 }
 
-const TEST_USER = { sub: 'patient-001', role: 'PATIENT', sessionId: 'sess-1' }
+const TEST_USER = { sub: 'patient-001', role: 'PATIENT' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }
 
 const CONSENT_UUID = '00000000-0000-4000-8000-000000000010'
 

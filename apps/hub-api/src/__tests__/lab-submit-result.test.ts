@@ -75,7 +75,7 @@ vi.mock('@/lib/field-encryption', () => ({
 const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRouter } = await import('../trpc/routers/lab')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return { supabase: { from: mockFrom } as never, user, headers: new Headers() }
 }
 function setupLab(status = 'ACTIVE') {
@@ -117,11 +117,11 @@ describe('lab.submitResult', () => {
   it('writes the report with status preliminary and patient_ref as the BARE blind index (R1)', async () => {
     setupLab()
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     const res = await caller.lab.submitResult(makeBundle())
 
     expect(res).toEqual({ diagnosticReportId: REPORT_ID, observationCount: 1 })
-    const upserted = drUpsert.mock.calls[0]![0]
+    const upserted = (drUpsert.mock.calls[0] as any[])[0]
     // R1: subject.reference is `Patient/<blindIndex>`; the stored patient_ref must be the
     // BARE blindIndex (prefix stripped) to match OPD's patientBlindRef(realUuid) read path.
     expect(PATIENT_REF).toBe('Patient/hmac-abc123')
@@ -130,10 +130,10 @@ describe('lab.submitResult', () => {
 
   it('fans analytes into diagnostic_report_observations (replace-then-insert)', async () => {
     setupLab()
-    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     await caller.lab.submitResult(makeBundle())
     expect(droDeleteEq).toHaveBeenCalled() // idempotent: clears prior analytes for this report
-    const rows = droInsert.mock.calls[0]![0]
+    const rows = (droInsert.mock.calls[0] as any[])[0]
     expect(rows).toHaveLength(1)
     expect(rows[0]).toMatchObject({
       diagnostic_report_id: REPORT_ID, observation_id: '44444444-4444-4444-4444-444444444444',
@@ -143,13 +143,13 @@ describe('lab.submitResult', () => {
 
   it('dispatches a LAB_RESULT_AVAILABLE notification to the ordering doctor when orderId is provided', async () => {
     setupLab()
-    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     await caller.lab.submitResult({
       ...makeBundle(),
       orderId: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
     })
     await new Promise((r) => setTimeout(r, 0)) // notification is fire-and-forget
-    const inserted = notifInsert.mock.calls[0]![0]
+    const inserted = (notifInsert.mock.calls[0] as any[])[0]
     expect(inserted.some((n: any) => n.recipientRole === 'CLINICIAN' && n.type === 'LAB_RESULT_AVAILABLE')).toBe(true)
     // requester_id from service_requests must be used (not encounters)
     const clinicianNotif = inserted.find((n: any) => n.recipientRole === 'CLINICIAN')
@@ -158,13 +158,13 @@ describe('lab.submitResult', () => {
 
   it('LAB_RESULT_AVAILABLE notification carries descriptor columns (sourceApp=LAB_LITE)', async () => {
     setupLab()
-    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     await caller.lab.submitResult({
       ...makeBundle(),
       orderId: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
     })
     await new Promise((r) => setTimeout(r, 0))
-    const inserted = notifInsert.mock.calls[0]![0]
+    const inserted = (notifInsert.mock.calls[0] as any[])[0]
     const clinicianNotif = inserted.find((n: any) => n.recipientRole === 'CLINICIAN')
     expect(clinicianNotif).toMatchObject({
       sourceApp: 'LAB_LITE',
@@ -178,7 +178,7 @@ describe('lab.submitResult', () => {
 
   it('sends only patient notification when no orderId is provided', async () => {
     setupLab()
-    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     await caller.lab.submitResult(makeBundle()) // no orderId
     await new Promise((r) => setTimeout(r, 0))
     // service_requests must NOT be queried
@@ -187,14 +187,14 @@ describe('lab.submitResult', () => {
     expect(fromCalls).not.toContain('encounters')
     // Only patient notification (or no notifications call at all — both valid)
     if (notifInsert.mock.calls.length > 0) {
-      const inserted = notifInsert.mock.calls[0]![0]
+      const inserted = (notifInsert.mock.calls[0] as any[])[0]
       expect(inserted.every((n: any) => n.recipientRole !== 'CLINICIAN')).toBe(true)
     }
   })
 
   it('emits a PHI write audit event (Rule #6)', async () => {
     setupLab()
-    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     await caller.lab.submitResult(makeBundle())
     expect(mockAuditEmit).toHaveBeenCalledWith(expect.objectContaining({ action: 'CREATE', resourceType: 'LAB_RESULT', resourceId: REPORT_ID }))
   })
@@ -202,12 +202,12 @@ describe('lab.submitResult', () => {
   it('rejects an existing report owned by another lab', async () => {
     setupLab()
     drMaybeSingle.mockResolvedValue({ data: { id: REPORT_ID, lab_id: 'other-lab' }, error: null })
-    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     await expect(caller.lab.submitResult(makeBundle())).rejects.toMatchObject({ code: 'FORBIDDEN' })
   })
 
   it('rejects non-lab roles', async () => {
-    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1', orgId: 'org-1' }))
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     await expect(caller.lab.submitResult(makeBundle())).rejects.toBeDefined()
   })
 
@@ -216,7 +216,7 @@ describe('lab.submitResult', () => {
   it('throws INTERNAL_SERVER_ERROR when audit.emit rejects on the write path (Rule #6 guarantee)', async () => {
     setupLab()
     mockAuditEmit.mockRejectedValueOnce(new Error('audit down'))
-    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }))
+    const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     await expect(caller.lab.submitResult(makeBundle())).rejects.toMatchObject({
       code: 'INTERNAL_SERVER_ERROR',
     })

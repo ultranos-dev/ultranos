@@ -32,8 +32,8 @@ const { appRouter } = await import('../trpc/routers/_app')
 const { createCallerFactory } = await import('../trpc/init')
 const createCaller = createCallerFactory(appRouter)
 
-const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
-const DOCTOR_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
+const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST' as const, sessionId: 'sess-3', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const DOCTOR_USER = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 const PATIENT_UUID = '00000000-0000-4000-8000-000000000001'
 const RX_UUID = '00000000-0000-4000-8000-000000000200'
 
@@ -63,7 +63,7 @@ function makeCtx(user: unknown, from: unknown) {
   }
 }
 
-beforeEach(() => vi.clearAllMocks())
+beforeEach(() => { vi.clearAllMocks() })
 
 describe('medication.listForPharmacy', () => {
   it('denies a DOCTOR (pharmacist-only)', async () => {

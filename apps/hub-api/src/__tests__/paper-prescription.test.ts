@@ -25,8 +25,8 @@ const { createCallerFactory } = await import('../trpc/init')
 
 const createCaller = createCallerFactory(appRouter)
 
-const TEST_PHARMACIST = { sub: 'pharmacist-001', role: 'PHARMACIST', sessionId: 'sess-1', orgId: 'org-test-001' }
-const TEST_DOCTOR = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-2', orgId: 'org-test-001' }
+const TEST_PHARMACIST = { sub: 'pharmacist-001', role: 'PHARMACIST' as const, sessionId: 'sess-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const TEST_DOCTOR = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-2', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 
 function entitlementMock() {
   return {
@@ -73,9 +73,9 @@ function auditLogMock() {
 }
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
+  supabaseFrom?: any
   storageMock?: any
-  user?: { sub: string; role: string; sessionId: string; orgId?: string } | null
+  user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -297,8 +297,15 @@ describe('medication.getPaperRxUploadUrl (Story 24.3)', () => {
 
     // Verify bucket name
     expect(storageMock.from).toHaveBeenCalledWith('paper-prescriptions')
-    // Verify 15-minute expiry
-    expect(createSignedUploadUrlMock.mock.calls[0][1]).toEqual({ expiresIn: 900 })
+    // createSignedUploadUrl is called with only the storage key — Supabase's
+    // upload-URL options accept `{ upsert }` (not `{ expiresIn }`), so the
+    // previously-passed expiry was silently ignored at runtime and removed.
+    // The 15-minute expiry is now advertised to the client via result.expiresAt.
+    expect(createSignedUploadUrlMock.mock.calls[0][0]).toContain('pharmacist-001/')
+    expect(createSignedUploadUrlMock.mock.calls[0][1]).toBeUndefined()
+    const expiresMs = new Date(result.expiresAt).getTime() - Date.now()
+    expect(expiresMs).toBeGreaterThan(890 * 1000)
+    expect(expiresMs).toBeLessThanOrEqual(900 * 1000)
   })
 
   it('rejects invalid content types', async () => {

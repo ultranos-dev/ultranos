@@ -53,7 +53,7 @@ describe('buildFacilityCrud.create', () => {
     const chain = { insert: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), single: vi.fn().mockResolvedValue({ data: row, error: null }) }
     const c = ctx(chain)
     await crud.create(c, { facilityType: 'clinic', name: 'New247', is247: true })
-    const insertArg = (chain.insert as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<string, unknown>
+    const insertArg = ((chain.insert as ReturnType<typeof vi.fn>).mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(insertArg).toHaveProperty('is_24_7', true)
     expect(insertArg).not.toHaveProperty('is247')
   })

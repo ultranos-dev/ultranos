@@ -31,8 +31,8 @@ const mockDecryptField = vi.fn((ciphertext: string) => {
 })
 
 vi.mock('@ultranos/crypto/server', () => ({
-  encryptField: (...args: any[]) => mockEncryptField(...args),
-  decryptField: (...args: any[]) => mockDecryptField(...args),
+  encryptField: (...args: any[]) => (mockEncryptField as (...a: any[]) => any)(...args),
+  decryptField: (...args: any[]) => (mockDecryptField as (...a: any[]) => any)(...args),
   getEncryptionConfig: () => ({ randomizedFields: [] }),
 }))
 
@@ -64,7 +64,7 @@ function createMockSupabase() {
 function makeAdminCtx(mock: ReturnType<typeof createMockSupabase>) {
   return {
     supabase: { from: mock.from } as never,
-    user: { sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: null, status: null },
+    user: { sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', orgId: null, status: null, facilityId: null, },
     headers: new Headers(),
   }
 }
@@ -72,7 +72,7 @@ function makeAdminCtx(mock: ReturnType<typeof createMockSupabase>) {
 function makeDoctorCtx(mock: ReturnType<typeof createMockSupabase>) {
   return {
     supabase: { from: mock.from } as never,
-    user: { sub: 'doc-1', role: 'DOCTOR', sessionId: 's1', orgId: null, status: null },
+    user: { sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', orgId: null, status: null, facilityId: null, },
     headers: new Headers(),
   }
 }
@@ -144,7 +144,7 @@ describe('admin.getEmployeeHealth', () => {
 
     expect(mockAuditEmit).toHaveBeenCalledWith(
       expect.objectContaining({
-        outcome: 'NOT_FOUND',
+        outcome: 'FAILURE',
       }),
     )
   })

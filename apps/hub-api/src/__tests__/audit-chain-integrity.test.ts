@@ -68,7 +68,7 @@ const { createCallerFactory } = await import('../trpc/init')
 const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(
-  user: { sub: string; role: string; sessionId: string } | null,
+  user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null,
   chainEntries: Array<Record<string, unknown>> = [],
 ) {
   return {
@@ -132,7 +132,7 @@ describe('health.auditChainIntegrity', () => {
           }
         }),
       } as never,
-      user: { sub: 'admin-001', role: 'ADMIN', sessionId: 'session-001' },
+      user: { sub: 'admin-001', role: 'ADMIN' as const, sessionId: 'session-001', facilityId: null, status: 'ACTIVE', orgId: null },
       headers: new Headers(),
     }
 
@@ -156,7 +156,7 @@ describe('health.auditChainIntegrity', () => {
           }),
         }),
       } as never,
-      user: { sub: 'doc-001', role: 'DOCTOR', sessionId: 'session-001' },
+      user: { sub: 'doc-001', role: 'DOCTOR' as const, sessionId: 'session-001', facilityId: null, status: 'ACTIVE', orgId: null },
       headers: new Headers(),
     }
 
@@ -209,7 +209,7 @@ describe('health.auditChainIntegrity', () => {
           }
         }),
       } as never,
-      user: { sub: 'admin-001', role: 'ADMIN', sessionId: 'session-001' },
+      user: { sub: 'admin-001', role: 'ADMIN' as const, sessionId: 'session-001', facilityId: null, status: 'ACTIVE', orgId: null },
       headers: new Headers(),
     }
 

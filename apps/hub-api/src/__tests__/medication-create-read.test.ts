@@ -21,8 +21,8 @@ const { createCallerFactory } = await import('../trpc/init')
 const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string; orgId?: string } | null
+  supabaseFrom?: any
+  user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -35,9 +35,9 @@ function createTestContext(overrides?: {
   }
 }
 
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
-const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
-const LAB_TECH_USER = { sub: 'lab-001', role: 'LAB_TECH', sessionId: 'sess-4', orgId: 'org-test-001' }
+const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST' as const, sessionId: 'sess-3', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const LAB_TECH_USER = { sub: 'lab-001', role: 'LAB_TECH' as const, sessionId: 'sess-4', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 const PATIENT_UUID = '00000000-0000-4000-8000-000000000001'
 const PRESCRIPTION_UUID = '00000000-0000-4000-8000-000000000200'
 const ENCOUNTER_UUID = '00000000-0000-4000-8000-000000000100'
@@ -285,7 +285,7 @@ describe('medication.create', () => {
     const caller = createCaller(ctx)
 
     await caller.medication.create(validCreateInput)
-    expect(ctx.supabase.rpc).toHaveBeenCalled()
+    expect((ctx.supabase as any).rpc).toHaveBeenCalled()
   })
 
   it('rejects create when interactionCheck is BLOCKED without interactionOverride', async () => {
@@ -420,6 +420,6 @@ describe('medication.read', () => {
     const caller = createCaller(ctx)
 
     await caller.medication.read(validInput)
-    expect(ctx.supabase.rpc).toHaveBeenCalled()
+    expect((ctx.supabase as any).rpc).toHaveBeenCalled()
   })
 })

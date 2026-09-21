@@ -29,10 +29,10 @@ const { subscriptionRouter } = await import('../trpc/routers/subscription')
 
 const createCaller = createCallerFactory(subscriptionRouter)
 
-function makeCtx(role: string, orgId: string | null = 'org-test-001') {
+function makeCtx(role: `${import('@ultranos/shared-types').UserRole}`, orgId: string | null = 'org-test-001') {
   return {
     supabase: mockSupabaseClient as never,
-    user: { sub: 'admin-1', role, sessionId: 'sess-1', orgId, status: null },
+    user: { sub: 'admin-1', role, sessionId: 'sess-1', orgId, status: null, facilityId: null },
     headers: new Headers(),
   }
 }
@@ -212,7 +212,7 @@ describe('Story 27.7 AC #4: Suspended user cannot access protectedProcedure', ()
   it('throws FORBIDDEN with ACCOUNT_SUSPENDED message for suspended users', async () => {
     const ctx = {
       supabase: mockSupabaseClient as never,
-      user: { sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-1', status: 'SUSPENDED' },
+      user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: 'org-1', status: 'SUSPENDED', facilityId: null, },
       headers: new Headers(),
     }
 

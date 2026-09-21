@@ -59,13 +59,13 @@ const { appRouter } = await import('../trpc/routers/_app')
 const { createCallerFactory } = await import('../trpc/init')
 const createCaller = createCallerFactory(appRouter)
 
-const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-1', orgId: 'org-1' }
-const PLATFORM_ADMIN_USER = { sub: 'padmin-001', role: 'PLATFORM_ADMIN', sessionId: 'sess-3', orgId: 'org-1' }
-const DOCTOR_USER = { sub: 'doc-001', role: 'DOCTOR', sessionId: 'sess-2', orgId: 'org-1' }
+const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN' as const, sessionId: 'sess-1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }
+const PLATFORM_ADMIN_USER = { sub: 'padmin-001', role: 'PLATFORM_ADMIN' as const, sessionId: 'sess-3', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }
+const DOCTOR_USER = { sub: 'doc-001', role: 'DOCTOR' as const, sessionId: 'sess-2', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string; orgId: string | null } | null
+  supabaseFrom?: any
+  user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
 }) {
   return {
     supabase: { from: overrides?.supabaseFrom ?? vi.fn() } as never,
@@ -149,7 +149,7 @@ describe('billing.getInvoices', () => {
     expect(mockAuditEmit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'READ',
-        resourceType: 'Invoice',
+        resourceType: 'INVOICE',
         actorId: 'admin-001',
         actorRole: 'ADMIN',
         outcome: 'SUCCESS',

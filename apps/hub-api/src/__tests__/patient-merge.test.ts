@@ -42,8 +42,8 @@ vi.mock('@/lib/async-mpi-scoring', () => ({ runAsyncMpiScoring: vi.fn().mockReso
 const { appRouter } = await import('../trpc/routers/_app')
 const { createCallerFactory } = await import('../trpc/init')
 
-const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-admin', orgId: null, status: null }
-const DOCTOR_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-doc', orgId: null, status: null }
+const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN' as const, sessionId: 'sess-admin', orgId: null, status: null, facilityId: null, }
+const DOCTOR_USER = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-doc', orgId: null, status: null, facilityId: null, }
 const SURVIVOR_ID = '11111111-1111-1111-1111-111111111111'
 const DUPLICATE_ID = '22222222-2222-2222-2222-222222222222'
 const MERGE_AUDIT_ID = '33333333-3333-3333-3333-333333333333'

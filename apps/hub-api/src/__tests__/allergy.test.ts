@@ -21,8 +21,8 @@ const { createCallerFactory } = await import('../trpc/init')
 const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string; orgId?: string } | null
+  supabaseFrom?: any
+  user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -35,9 +35,9 @@ function createTestContext(overrides?: {
   }
 }
 
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
-const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-2', orgId: 'org-test-001' }
-const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
+const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN' as const, sessionId: 'sess-2', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST' as const, sessionId: 'sess-3', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 const ALLERGY_UUID = '00000000-0000-4000-8000-000000000020'
 
 /** Mock for organizations table used by enforceVerifiedOrg middleware */
@@ -178,7 +178,7 @@ describe('allergy.list', () => {
     const rpcSpy = (ctx.supabase as any).rpc as ReturnType<typeof vi.fn>
     expect(rpcSpy).toHaveBeenCalledWith('audit_emit_with_lock', expect.objectContaining({
       p_action: 'PHI_READ',
-      p_resource_type: 'AllergyIntolerance',
+      p_resource_type: 'ALLERGY',
     }))
   })
 
@@ -288,7 +288,7 @@ describe('allergy.create', () => {
     const rpcSpy = (ctx.supabase as any).rpc as ReturnType<typeof vi.fn>
     expect(rpcSpy).toHaveBeenCalledWith('audit_emit_with_lock', expect.objectContaining({
       p_action: 'PHI_WRITE',
-      p_resource_type: 'AllergyIntolerance',
+      p_resource_type: 'ALLERGY',
     }))
   })
 

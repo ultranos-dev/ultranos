@@ -104,7 +104,7 @@ describe('patientRegistration.register — nameFather and gender', () => {
     })
 
     expect(result).not.toHaveProperty('blocked')
-    const rpcCall = ctx.supabase.rpc.mock.calls[0]
+    const rpcCall = (ctx.supabase as any).rpc.mock.calls[0]
     const pPatient = rpcCall[1]['p_patient'] as Record<string, unknown>
     expect(pPatient).toHaveProperty('nameFather', 'Mohammad')
     expect(pPatient).toHaveProperty('gender', 'male')

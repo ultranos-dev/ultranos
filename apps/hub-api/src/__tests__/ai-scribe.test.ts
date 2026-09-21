@@ -34,9 +34,9 @@ const { aiScribeInvocationsTotal, aiScribeEditRate } = await import('@/lib/clini
 const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
-  supabaseRpc?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string; orgId?: string } | null
+  supabaseFrom?: any
+  supabaseRpc?: any
+  user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -51,8 +51,8 @@ function createTestContext(overrides?: {
 
 // ─── Test users ────────────────────────────────────────────────────────────
 
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
-const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
+const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST' as const, sessionId: 'sess-3', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 
 const ENCOUNTER_UUID = '00000000-0000-4000-8000-000000000100'
 const PATIENT_UUID = '00000000-0000-4000-8000-000000000010'
@@ -360,7 +360,7 @@ describe('encounter.parseSOAPWithAI', () => {
       'audit_emit_with_lock',
       expect.objectContaining({
         p_action: 'PHI_WRITE',
-        p_resource_type: 'ClinicalImpression',
+        p_resource_type: 'CLINICAL_IMPRESSION',
         p_actor_id: 'doctor-001',
       }),
     )
@@ -574,7 +574,7 @@ describe('encounter.commitAISOAPNote', () => {
       'audit_emit_with_lock',
       expect.objectContaining({
         p_action: 'PHI_WRITE',
-        p_resource_type: 'ClinicalImpression',
+        p_resource_type: 'CLINICAL_IMPRESSION',
         p_actor_id: 'doctor-001',
       }),
     )

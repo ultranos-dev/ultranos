@@ -21,7 +21,7 @@ vi.mock('@/lib/supabase', () => ({
 const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRestrictedProcedure } = await import('../trpc/rbac')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: { from: mockFrom } as never,
     user,
@@ -51,7 +51,7 @@ describe('labRestrictedProcedure', () => {
       }),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.labEndpoint()
     expect(result.lab).toEqual({
@@ -67,7 +67,7 @@ describe('labRestrictedProcedure', () => {
       labEndpoint: labRestrictedProcedure.query(() => 'ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'DOCTOR', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'DOCTOR' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.labEndpoint()).rejects.toMatchObject({
       code: 'FORBIDDEN',
@@ -91,7 +91,7 @@ describe('labRestrictedProcedure', () => {
       labEndpoint: labRestrictedProcedure.query(() => 'ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.labEndpoint()).rejects.toMatchObject({
       code: 'FORBIDDEN',
@@ -101,11 +101,14 @@ describe('labRestrictedProcedure', () => {
   it('ADMIN bypasses LAB_TECH restriction without lab context', async () => {
     const router = createTRPCRouter({
       labEndpoint: labRestrictedProcedure.query(({ ctx }) => {
-        return { hasLab: 'lab' in ctx }
+        // ADMIN bypass carries an explicit `lab: undefined` (so both branches
+        // of the middleware produce the same ctx type) — meaning ADMIN has no
+        // actual lab affiliation. Assert on the value, not mere key presence.
+        return { hasLab: (ctx as { lab?: unknown }).lab != null }
       }),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' }),
+      makeCtx({ sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.labEndpoint()
     expect(result.hasLab).toBe(false)
@@ -128,7 +131,7 @@ describe('labRestrictedProcedure', () => {
       }),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u2', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'u2', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.labEndpoint()
     expect(result.lab.labStatus).toBe('PENDING')
@@ -151,7 +154,7 @@ describe('labRestrictedProcedure', () => {
       }),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u3', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'u3', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.labEndpoint()
     expect(result.lab.labRole).toBe('SUPERVISOR')

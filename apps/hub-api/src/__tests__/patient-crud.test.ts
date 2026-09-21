@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { AdministrativeGender } from '@ultranos/shared-types'
 
 const TEST_ENCRYPTION_KEY = 'a'.repeat(64)
 const TEST_HMAC_KEY = 'b'.repeat(64)
@@ -13,9 +14,9 @@ const mockFromRow = vi.fn((data: any) => data)
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => ({})),
   db: {
-    toRow: (...args: any[]) => mockToRow(...args),
+    toRow: (...args: any[]) => (mockToRow as (...a: any[]) => any)(...args),
     toRowRaw: (data: any) => data,
-    fromRow: (...args: any[]) => mockFromRow(...args),
+    fromRow: (...args: any[]) => (mockFromRow as (...a: any[]) => any)(...args),
     fromRowRaw: (data: any) => data,
     fromRows: (data: any[]) => data,
   },
@@ -66,7 +67,7 @@ const { appRouter } = await import('../trpc/routers/_app')
 const { createCallerFactory } = await import('../trpc/init')
 
 const PATIENT_UUID = '11111111-1111-1111-1111-111111111111'
-const TEST_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1' }
+const TEST_USER = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }
 
 function createMockFrom() {
   return vi.fn()
@@ -84,7 +85,7 @@ function createTestContext(mockFrom: ReturnType<typeof vi.fn>) {
 const VALID_MPI_INPUT = {
   nameLocal: 'Test Patient',
   nameGiven: 'Test',
-  gender: 'male' as const,
+  gender: AdministrativeGender.MALE,
   birthYear: 1990,
   birthYearOnly: true,
   consent: { method: 'WRITTEN' as const, language: 'en' as const, version: 'v1.0-en' },
@@ -134,7 +135,7 @@ describe('patient.create', () => {
 
     await caller.patient.create({
       nameLocal: 'Encrypted Name',
-      gender: 'male',
+      gender: AdministrativeGender.MALE,
       birthDate: '1985-06-15',
       birthYearOnly: false,
       consent: { method: 'WRITTEN', language: 'en', version: 'v1.0-en' },
@@ -142,7 +143,7 @@ describe('patient.create', () => {
 
     // Verify db.toRow() was called (mandatory encryption path)
     expect(mockToRow).toHaveBeenCalled()
-    const rowArg = mockToRow.mock.calls[0][0]
+    const rowArg = (mockToRow.mock.calls[0] as any[])[0]
     // Verify encrypted copies are included
     expect(rowArg).toHaveProperty('nameLocalEnc', 'Encrypted Name')
     expect(rowArg).toHaveProperty('birth_date_enc', '1985-06-15')
@@ -159,7 +160,7 @@ describe('patient.create', () => {
 
     // Verify db.toRow() received a hashed national ID (64-char hex)
     expect(mockToRow).toHaveBeenCalled()
-    const rowArg = mockToRow.mock.calls[0][0]
+    const rowArg = (mockToRow.mock.calls[0] as any[])[0]
     expect(rowArg.national_id_hash).toMatch(/^[0-9a-f]{64}$/)
     // Raw national ID should NOT be in the row
     expect(rowArg).not.toHaveProperty('nationalId')
@@ -170,7 +171,7 @@ describe('patient.create', () => {
     vi.mocked(computeMpiResult).mockReturnValueOnce({
       decision: 'BLOCK',
       topScore: 95,
-      candidates: [{ candidate: { id: 'existing-1', nameGiven: 'Test' }, score: 95, breakdown: {}, hardIdMatch: false }],
+      candidates: [{ candidate: { id: 'existing-1', nameGiven: 'Test' }, score: 95, breakdown: {} as any, hardIdMatch: false }],
     })
 
     const ctx = createRpcContext()
@@ -187,7 +188,7 @@ describe('patient.create', () => {
 
     await caller.patient.create({
       nameLocal: 'Audit Test Patient',
-      gender: 'male',
+      gender: AdministrativeGender.MALE,
       birthYear: 1990,
       birthYearOnly: true,
       consent: { method: 'WRITTEN', language: 'en', version: 'v1.0-en' },
@@ -229,7 +230,7 @@ describe('patient.read', () => {
               name_latin_enc: null,
               name_phonetic: null,
               name_phonetic_enc: null,
-              gender: 'male',
+              gender: AdministrativeGender.MALE,
               birth_date: '1990-01-01',
               birth_date_enc: '1990-01-01',
               birth_year_only: false,
@@ -286,12 +287,12 @@ describe('patient.read', () => {
     // Override consent middleware mock to deny access
     const { enforceConsentMiddleware: consentMw } = await import('../trpc/middleware/enforceConsent')
     const consentMock = vi.mocked(consentMw)
-    consentMock.mockReturnValueOnce(async (opts: any) => {
+    consentMock.mockReturnValueOnce((async (opts: any) => {
       throw new (await import('@trpc/server')).TRPCError({
         code: 'FORBIDDEN',
         message: 'No active consent',
       })
-    })
+    }) as any)
 
     // Re-import the router to pick up the new mock — not possible with module-level mocks.
     // Instead, verify that the consent middleware function was wired in by checking
@@ -308,7 +309,7 @@ describe('patient.read', () => {
             data: {
               id: PATIENT_UUID,
               name_local: 'Test',
-              gender: 'male',
+              gender: AdministrativeGender.MALE,
               birth_date: '1990-01-01',
               birth_year_only: false,
               is_active: true,
@@ -361,7 +362,7 @@ describe('patient.read', () => {
               id: PATIENT_UUID,
               name_local: 'Test',
               name_local_enc: 'Test',
-              gender: 'male',
+              gender: AdministrativeGender.MALE,
               birth_date: '1990-01-01',
               birth_year_only: false,
               is_active: true,
@@ -502,7 +503,7 @@ describe('patient.update', () => {
       patientId: PATIENT_UUID,
       lastKnownUpdate: '2026-06-01T00:00:00Z',
       nameLocal: 'Updated Name',
-      gender: 'female',
+      gender: AdministrativeGender.FEMALE,
     })
 
     expect(result.id).toBe(PATIENT_UUID)
@@ -511,7 +512,7 @@ describe('patient.update', () => {
 
     // Verify db.toRow() was called for encryption
     expect(mockToRow).toHaveBeenCalled()
-    const rowArg = mockToRow.mock.calls[0][0]
+    const rowArg = (mockToRow.mock.calls[0] as any[])[0]
     expect(rowArg.nameLocal).toBe('Updated Name')
     expect(rowArg.nameLocalEnc).toBe('Updated Name')
     expect(rowArg.gender).toBe('female')
@@ -546,7 +547,7 @@ describe('patient.update', () => {
 
     // Verify db.toRow() received a hashed national ID
     expect(mockToRow).toHaveBeenCalled()
-    const rowArg = mockToRow.mock.calls[0][0]
+    const rowArg = (mockToRow.mock.calls[0] as any[])[0]
     expect(rowArg.nationalIdHash).toMatch(/^[0-9a-f]{64}$/)
   })
 
@@ -620,7 +621,7 @@ describe('patient.search — phonetic results', () => {
               data: [{
                 id: PATIENT_UUID,
                 name: [{ given: ['Ahmad'], text: 'Ahmad Mohammad' }],
-                gender: 'male',
+                gender: AdministrativeGender.MALE,
                 birth_date: null,
                 birth_year_only: true,
                 birth_year: 1985,
@@ -714,7 +715,7 @@ describe('patient.checkDuplicates', () => {
     mockComputeMpiResult.mockReturnValue({
       decision: 'BLOCK',
       topScore: 95,
-      candidates: [{ candidate: { id: 'p2' }, score: 95, breakdown: {}, hardIdMatch: false }],
+      candidates: [{ candidate: { id: 'p2' }, score: 95, breakdown: {} as any, hardIdMatch: false }],
     })
 
     const mockFrom = createMockFrom()

@@ -13,7 +13,7 @@ const { createCallerFactory } = await import('../trpc/init')
 const { appRouter } = await import('../trpc/routers/_app')
 const createCaller = createCallerFactory(appRouter)
 
-const PATIENT_USER = { sub: 'pat-001', role: 'PATIENT', sessionId: 's3', orgId: null, status: 'active' }
+const PATIENT_USER = { sub: 'pat-001', role: 'PATIENT' as const, sessionId: 's3', orgId: null, status: 'active', facilityId: null, }
 function ctx(user = PATIENT_USER) { return { supabase: mockSupabase as never, user, headers: new Headers() } }
 
 const PRES_ROW = {
@@ -40,11 +40,11 @@ describe('drugCatalog.getBrandsByAtc', () => {
     const caller = createCaller(ctx())
     const result = await caller.drugCatalog.getBrandsByAtc({ atcCode: 'J01CR02' })
     expect(result).toHaveLength(1)
-    expect(result[0].brandName).toBe('Augmentin')
-    expect(result[0].manufacturer).toBe('GSK')
-    expect(result[0].presentations).toHaveLength(1)
-    expect(result[0].presentations[0].strength).toBe('625 mg')
-    expect(result[0].presentations[0].referencePrice).toBe(12.5)
+    expect(result[0]!.brandName).toBe('Augmentin')
+    expect(result[0]!.manufacturer).toBe('GSK')
+    expect(result[0]!.presentations).toHaveLength(1)
+    expect(result[0]!.presentations[0]!.strength).toBe('625 mg')
+    expect(result[0]!.presentations[0]!.referencePrice).toBe(12.5)
   })
 
   it('returns [] when the drug has no brands', async () => {
@@ -75,7 +75,7 @@ describe('drugCatalog.syncBrands', () => {
     const caller = createCaller(ctx())
     const res = await caller.drugCatalog.syncBrands({ sinceVersion: 0 })
     expect(res.brands).toHaveLength(1)
-    expect(res.brands[0].brandName).toBe('Augmentin')
+    expect(res.brands[0]!.brandName).toBe('Augmentin')
     expect(res.latestVersion).toBe(1718000000001)
   })
 })
@@ -92,7 +92,7 @@ describe('drugCatalog.syncBrandPresentations', () => {
     const caller = createCaller(ctx())
     const res = await caller.drugCatalog.syncBrandPresentations({ sinceVersion: 0 })
     expect(res.presentations).toHaveLength(1)
-    expect(res.presentations[0].strength).toBe('625 mg')
+    expect(res.presentations[0]!.strength).toBe('625 mg')
     expect(res.latestVersion).toBe(1718000000002)
   })
 })

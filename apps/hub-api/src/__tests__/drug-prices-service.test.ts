@@ -28,16 +28,16 @@ const PRICES: PharmacyPrice[] = [
 describe('sortPrices', () => {
   it('sorts by distance ascending when sort=distance', () => {
     const sorted = sortPrices(PRICES, 'distance')
-    expect(sorted[0].pharmacyName).toBe('Beta')   // 0.4 km
-    expect(sorted[1].pharmacyName).toBe('Alpha')  // 2.5 km
-    expect(sorted[2].pharmacyName).toBe('Gamma')  // 5.1 km
+    expect(sorted[0]!.pharmacyName).toBe('Beta')   // 0.4 km
+    expect(sorted[1]!.pharmacyName).toBe('Alpha')  // 2.5 km
+    expect(sorted[2]!.pharmacyName).toBe('Gamma')  // 5.1 km
   })
 
   it('sorts by price ascending when sort=price', () => {
     const sorted = sortPrices(PRICES, 'price')
-    expect(sorted[0].pharmacyName).toBe('Gamma')  // 80 AFN
-    expect(sorted[1].pharmacyName).toBe('Alpha')  // 95 AFN
-    expect(sorted[2].pharmacyName).toBe('Beta')   // 120 AFN
+    expect(sorted[0]!.pharmacyName).toBe('Gamma')  // 80 AFN
+    expect(sorted[1]!.pharmacyName).toBe('Alpha')  // 95 AFN
+    expect(sorted[2]!.pharmacyName).toBe('Beta')   // 120 AFN
   })
 
   it('does not mutate the original array', () => {

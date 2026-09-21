@@ -8,6 +8,13 @@ vi.stubEnv('FIELD_ENCRYPTION_HMAC_KEY', 'b'.repeat(64))
 // ── Supabase & db mock ──────────────────────────────────────
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => ({ from: vi.fn() })),
+  // Mirrors the real helper: calls `.select(columns, { count, head })` on the
+  // passed mutation builder and returns its `{ count, error }` result, so the
+  // test's chain mocks continue to drive the optimistic-lock count.
+  selectExactCount: vi.fn(async (mutationBuilder: any, columns = 'id') => {
+    const result = await mutationBuilder.select(columns, { count: 'exact', head: true })
+    return result as { count: number | null; error: { message: string } | null }
+  }),
   db: {
     toRow: (data: any) => data,
     toRowRaw: (data: any) => data,
@@ -79,15 +86,15 @@ function buildMockSupabase(overrides: Record<string, any> = {}) {
 function makeAdminCtx(supabase: any) {
   return {
     supabase,
-    user: { sub: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', role: 'ADMIN', sessionId: 'sess-1', orgId: 'org-1', status: null },
+    user: { sub: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', role: 'ADMIN' as const, sessionId: 'sess-1', orgId: 'org-1', status: null, facilityId: null, },
     headers: new Headers(),
   }
 }
 
-function makeNonAdminCtx(supabase: any, role = 'DOCTOR') {
+function makeNonAdminCtx(supabase: any, role: `${import('@ultranos/shared-types').UserRole}` = 'DOCTOR') {
   return {
     supabase,
-    user: { sub: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', role, sessionId: 'sess-1', orgId: 'org-1', status: null },
+    user: { sub: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', role, sessionId: 'sess-1', orgId: 'org-1', status: null, facilityId: null },
     headers: new Headers(),
   }
 }
@@ -243,7 +250,7 @@ describe('Story 22.3: Lab Approval & Suspension Workflow', () => {
       )
 
       // Notification sent to technician — AC #5
-      expect(supabase.from).toHaveBeenCalledWith('notifications')
+      expect((supabase as any).from).toHaveBeenCalledWith('notifications')
     })
   })
 
@@ -505,9 +512,10 @@ describe('Story 22.3: Lab Approval & Suspension Workflow', () => {
   describe('enforceLabActive middleware', () => {
     it('blocks SUSPENDED lab from uploading', async () => {
       const { enforceLabActive } = await import('../trpc/middleware/enforceLabActive')
-      const middleware = enforceLabActive()
+      const middleware = (enforceLabActive() as any)._middlewares[0]
 
       const ctx = {
+        user: { sub: '22222222-2222-2222-2222-222222222222', role: 'LAB_TECH' as const, sessionId: 'sess-1', orgId: null, facilityId: null, status: 'ACTIVE' },
         lab: { technicianId: '22222222-2222-2222-2222-222222222222', labId: '11111111-1111-1111-1111-111111111111', labStatus: 'SUSPENDED' as const },
       }
 
@@ -521,9 +529,10 @@ describe('Story 22.3: Lab Approval & Suspension Workflow', () => {
 
     it('blocks PENDING lab from uploading', async () => {
       const { enforceLabActive } = await import('../trpc/middleware/enforceLabActive')
-      const middleware = enforceLabActive()
+      const middleware = (enforceLabActive() as any)._middlewares[0]
 
       const ctx = {
+        user: { sub: '22222222-2222-2222-2222-222222222222', role: 'LAB_TECH' as const, sessionId: 'sess-1', orgId: null, facilityId: null, status: 'ACTIVE' },
         lab: { technicianId: '22222222-2222-2222-2222-222222222222', labId: '11111111-1111-1111-1111-111111111111', labStatus: 'PENDING' as const },
       }
 
@@ -537,10 +546,11 @@ describe('Story 22.3: Lab Approval & Suspension Workflow', () => {
 
     it('allows ACTIVE lab to proceed', async () => {
       const { enforceLabActive } = await import('../trpc/middleware/enforceLabActive')
-      const middleware = enforceLabActive()
+      const middleware = (enforceLabActive() as any)._middlewares[0]
 
       const mockNext = vi.fn().mockResolvedValue({ result: 'ok' })
       const ctx = {
+        user: { sub: '22222222-2222-2222-2222-222222222222', role: 'LAB_TECH' as const, sessionId: 'sess-1', orgId: null, facilityId: null, status: 'ACTIVE' },
         lab: { technicianId: '22222222-2222-2222-2222-222222222222', labId: '11111111-1111-1111-1111-111111111111', labStatus: 'ACTIVE' as const },
       }
 

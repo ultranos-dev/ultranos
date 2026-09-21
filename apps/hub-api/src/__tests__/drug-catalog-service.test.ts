@@ -79,16 +79,16 @@ describe('scopeEntryToTier', () => {
     expect(result.innName).toBe('Amoxicillin')
     expect(result.summaryPlain).toEqual({ en: 'An antibiotic for bacterial infections.' })
     // Tier 2 fields must be absent
-    expect((result as Record<string, unknown>).mechanismOfAction).toBeUndefined()
-    expect((result as Record<string, unknown>).adultDosing).toBeUndefined()
-    expect((result as Record<string, unknown>).interactions).toBeUndefined()
+    expect((result as unknown as Record<string, unknown>).mechanismOfAction).toBeUndefined()
+    expect((result as unknown as Record<string, unknown>).adultDosing).toBeUndefined()
+    expect((result as unknown as Record<string, unknown>).interactions).toBeUndefined()
     // Tier 3 fields must be absent
-    expect((result as Record<string, unknown>).formularyStatus).toBeUndefined()
-    expect((result as Record<string, unknown>).unitCost).toBeUndefined()
+    expect((result as unknown as Record<string, unknown>).formularyStatus).toBeUndefined()
+    expect((result as unknown as Record<string, unknown>).unitCost).toBeUndefined()
   })
 
   it('returns tier-1 + tier-2 fields for DOCTOR role', () => {
-    const result = scopeEntryToTier(FULL_ROW, 'DOCTOR') as Record<string, unknown>
+    const result = scopeEntryToTier(FULL_ROW, 'DOCTOR') as unknown as Record<string, unknown>
     expect(result.atcCode).toBe('J01CA04')
     expect(result.mechanismOfAction).toBe('Inhibits cell wall synthesis.')
     expect(result.adultDosing).toBeDefined()
@@ -99,7 +99,7 @@ describe('scopeEntryToTier', () => {
   })
 
   it('returns all tiers for PHARMACIST role', () => {
-    const result = scopeEntryToTier(FULL_ROW, 'PHARMACIST') as Record<string, unknown>
+    const result = scopeEntryToTier(FULL_ROW, 'PHARMACIST') as unknown as Record<string, unknown>
     expect(result.atcCode).toBe('J01CA04')
     expect(result.mechanismOfAction).toBe('Inhibits cell wall synthesis.')
     expect(result.formularyStatus).toBe('on_formulary')

@@ -56,7 +56,7 @@ function createMockFrom() {
 
 function createTestContext(
   mockFrom: ReturnType<typeof vi.fn>,
-  user = { sub: PATIENT_UUID, role: 'PATIENT', sessionId: 'sess-1', orgId: null, status: null },
+  user = { sub: PATIENT_UUID, role: 'PATIENT' as const, sessionId: 'sess-1', orgId: null, status: null, facilityId: null, },
 ) {
   return {
     supabase: { from: mockFrom } as never,
@@ -208,11 +208,10 @@ describe('patient.updateTier', () => {
     const mockFrom = createMockFrom()
     const ctx = createTestContext(mockFrom, {
       sub: 'different-patient-id',
-      role: 'PATIENT',
+      role: 'PATIENT' as const,
       sessionId: 'sess-2',
       orgId: null,
-      status: null,
-    })
+      status: null, facilityId: null, })
     const caller = createCaller(ctx)
 
     await expect(

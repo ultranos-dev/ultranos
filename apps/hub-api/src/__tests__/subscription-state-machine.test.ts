@@ -171,14 +171,14 @@ describe('Subscription State Machine', () => {
 
       await transitionOrg('org-1', 'ACTIVE', 'payment succeeded', {
         supabase: mockDb as any,
-        user: { sub: 'user-1', role: 'ADMIN', sessionId: 'sess-1' },
+        user: { sub: 'user-1', role: 'ADMIN' as const, sessionId: 'sess-1' },
       })
 
       const mockEmit = (AuditLogger as any).mock.results[0].value.emit
       expect(mockEmit).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'ORG_STATUS_TRANSITION',
-          resourceType: 'Organization',
+          resourceType: 'ORGANIZATION',
           resourceId: 'org-1',
           actorId: 'user-1',
           actorRole: 'ADMIN',

@@ -17,6 +17,11 @@ vi.mock('ioredis', () => ({
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => mockSupabaseClient),
+  // Mirrors the real helper: calls `.select(columns, { count, head })` on the
+  // passed mutation builder and returns its `{ count, error }` result.
+  selectExactCount: vi.fn(async (mutationBuilder: any, columns = 'id') => {
+    return await mutationBuilder.select(columns, { count: 'exact', head: true })
+  }),
   db: {
     toRow: (data: any) => data,
     toRowRaw: (data: any) => data,
@@ -56,19 +61,17 @@ const createCaller = createCallerFactory(appRouter)
 
 const ADMIN_USER = {
   sub: '00000000-0000-4000-8000-000000000001',
-  role: 'ADMIN',
+  role: 'ADMIN' as const,
   sessionId: 'sess-admin-1',
   orgId: '00000000-0000-4000-8000-000000000099',
-  status: null,
-}
+  status: null, facilityId: null, }
 
 const DOCTOR_USER = {
   sub: '00000000-0000-4000-8000-000000000002',
-  role: 'DOCTOR',
+  role: 'DOCTOR' as const,
   sessionId: 'sess-doctor-1',
   orgId: '00000000-0000-4000-8000-000000000099',
-  status: null,
-}
+  status: null, facilityId: null, }
 
 function createAdminContext() {
   return {
@@ -255,10 +258,10 @@ describe('Story 22.2 — KYC Admin Endpoints', () => {
       const result = await caller.admin.listKycSubmissions({ status: 'ALL', cursor: 0, limit: 25 })
 
       expect(result.submissions).toHaveLength(1)
-      expect(result.submissions[0].submissionId).toBe(SUBMISSION_UUID)
+      expect(result.submissions[0]!.submissionId).toBe(SUBMISSION_UUID)
       // Router builds providerName from flat given_name + family_name (not FHIR text field)
-      expect(result.submissions[0].providerName).toBe('Ahmed Hassan')
-      expect(result.submissions[0].registryNumber).toBe('REG-12345')
+      expect(result.submissions[0]!.providerName).toBe('Ahmed Hassan')
+      expect(result.submissions[0]!.registryNumber).toBe('REG-12345')
       expect(result.total).toBe(1)
     })
 
@@ -269,8 +272,8 @@ describe('Story 22.2 — KYC Admin Endpoints', () => {
 
       const result = await caller.admin.listKycSubmissions({ status: 'ALL' })
 
-      expect(result.submissions[0].slaBreached).toBe(true)
-      expect(result.submissions[0].slaRemainingHours).toBeNull()
+      expect(result.submissions[0]!.slaBreached).toBe(true)
+      expect(result.submissions[0]!.slaRemainingHours).toBeNull()
     })
 
     it('SLA_BREACHED filter returns only breached submissions', async () => {
@@ -301,10 +304,10 @@ describe('Story 22.2 — KYC Admin Endpoints', () => {
       expect(result.submission.id).toBe(SUBMISSION_UUID)
       expect(result.providerName).toBe('Dr. Ahmed Hassan')
       expect(result.ocrFields).toHaveLength(1)
-      expect(result.ocrFields[0].documentType).toBe('MEDICAL_LICENSE')
-      expect(result.ocrFields[0].fields).toHaveLength(4)
+      expect(result.ocrFields[0]!.documentType).toBe('MEDICAL_LICENSE')
+      expect(result.ocrFields[0]!.fields).toHaveLength(4)
       expect(result.documentUrls).toHaveLength(1)
-      expect(result.documentUrls[0].url).toContain('signed')
+      expect(result.documentUrls[0]!.url).toContain('signed')
     })
 
     it('emits a PHI_READ audit event', async () => {

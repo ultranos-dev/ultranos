@@ -91,7 +91,7 @@ const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRouter } = await import('../trpc/routers/lab')
 
 // Helper: build a ctx that looks like a LAB_TECH in lab-1
-function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return { supabase: { from: mockFrom } as never, user, headers: new Headers() }
 }
 function setupLab(status = 'ACTIVE') {
@@ -126,7 +126,7 @@ describe('lab.pullSpecimens', () => {
   it('returns specimens for the callers lab with camelCase DTO', async () => {
     setupLab()
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
-      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }),
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }),
     )
     const res = await caller.lab.pullSpecimens()
     expect(res.specimens).toHaveLength(2)
@@ -155,7 +155,7 @@ describe('lab.pullSpecimens', () => {
   it('applies lab_id filter (ownership scope) — never leaks other labs\' specimens', async () => {
     setupLab()
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
-      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }),
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }),
     )
     await caller.lab.pullSpecimens()
 
@@ -167,7 +167,7 @@ describe('lab.pullSpecimens', () => {
   it('only returns received and in-processing statuses (active filter)', async () => {
     setupLab()
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
-      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }),
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }),
     )
     await caller.lab.pullSpecimens()
 
@@ -181,7 +181,7 @@ describe('lab.pullSpecimens', () => {
     // Add a note field to the DB row — it must NOT appear in the output
     setupSpecimenQuery([{ ...specRow1, note: 'enc-sensitive-note' }])
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
-      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }),
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }),
     )
     const res = await caller.lab.pullSpecimens()
     expect((res.specimens[0] as any).note).toBeUndefined()
@@ -190,7 +190,7 @@ describe('lab.pullSpecimens', () => {
   it('emits a SPECIMEN READ audit event (Rule #6) with count metadata', async () => {
     setupLab()
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
-      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }),
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }),
     )
     await caller.lab.pullSpecimens()
     expect(mockAuditEmit).toHaveBeenCalledWith(
@@ -209,14 +209,14 @@ describe('lab.pullSpecimens', () => {
     // (middleware fires before the router's own PRECONDITION_FAILED guard)
     mockTechSingle.mockResolvedValue({ data: null, error: null })
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
-      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }),
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }),
     )
     await expect(caller.lab.pullSpecimens()).rejects.toBeDefined()
   })
 
   it('rejects non-lab roles (RBAC)', async () => {
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
-      makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1', orgId: 'org-1' }),
+      makeCtx({ sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }),
     )
     await expect(caller.lab.pullSpecimens()).rejects.toBeDefined()
   })
@@ -225,7 +225,7 @@ describe('lab.pullSpecimens', () => {
     setupLab()
     setupSpecimenQuery([])
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(
-      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' }),
+      makeCtx({ sub: 'authuser-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }),
     )
     const res = await caller.lab.pullSpecimens()
     expect(res.specimens).toEqual([])

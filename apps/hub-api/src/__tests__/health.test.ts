@@ -22,7 +22,7 @@ const { createCallerFactory } = await import('../trpc/init')
 
 const createCaller = createCallerFactory(appRouter)
 
-function createTestContext(overrides?: { supabaseFrom?: ReturnType<typeof vi.fn> }) {
+function createTestContext(overrides?: { supabaseFrom?: any }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({

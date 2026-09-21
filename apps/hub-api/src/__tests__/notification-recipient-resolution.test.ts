@@ -142,7 +142,7 @@ function makeSupabase(store: NotifRow[], practitioners: PracRow[]) {
 }
 
 function makeCtx(
-  user: { sub: string; practitionerId?: string; role: string; sessionId: string } | null,
+  user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null,
   store: NotifRow[],
   practitioners: PracRow[],
 ) {
@@ -151,8 +151,8 @@ function makeCtx(
 }
 
 const DOCTOR_PRACS: PracRow[] = [{ id: DOCTOR_PRAC, auth_user_id: DOCTOR_SUB }]
-const DOCTOR_USER = { sub: DOCTOR_SUB, practitionerId: DOCTOR_SUB, role: 'DOCTOR', sessionId: 's1' }
-const PATIENT_USER = { sub: PATIENT_SUB, practitionerId: PATIENT_SUB, role: 'PATIENT', sessionId: 's2' }
+const DOCTOR_USER = { sub: DOCTOR_SUB, practitionerId: DOCTOR_SUB, role: 'DOCTOR' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }
+const PATIENT_USER = { sub: PATIENT_SUB, practitionerId: PATIENT_SUB, role: 'PATIENT' as const, sessionId: 's2', facilityId: null, status: 'ACTIVE', orgId: null }
 
 function seedNotifs(): NotifRow[] {
   return [
@@ -200,7 +200,7 @@ function callerFor(ctx: ReturnType<typeof makeCtx>) {
 // ── Tests ──────────────────────────────────────────────────────
 
 describe('notification recipient resolution (auth sub → practitioners.id)', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('list returns a clinician notification keyed by the resolved practitioner id', async () => {
     const store = seedNotifs()

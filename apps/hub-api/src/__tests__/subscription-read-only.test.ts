@@ -60,7 +60,7 @@ function createMockSupabase(overrides: {
 function createMockContext(supabase: any) {
   return {
     supabase,
-    user: { sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-1' },
+    user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' },
   }
 }
 
@@ -78,7 +78,7 @@ describe('Subscription Read-Only Mode', () => {
       cancelledAt: thirtyDaysAgo.toISOString(),
     })
 
-    const middleware = enforceEntitlement('OPD_LITE', 'query')
+    const middleware = (enforceEntitlement('OPD_LITE', 'query') as any)._middlewares[0]
     let passedCtx: any = null
 
     await middleware({
@@ -104,7 +104,7 @@ describe('Subscription Read-Only Mode', () => {
       cancelledAt: thirtyDaysAgo.toISOString(),
     })
 
-    const middleware = enforceEntitlement('OPD_LITE', 'mutation')
+    const middleware = (enforceEntitlement('OPD_LITE', 'mutation') as any)._middlewares[0]
 
     await expect(
       middleware({
@@ -124,7 +124,7 @@ describe('Subscription Read-Only Mode', () => {
       cancelledAt: hundredDaysAgo.toISOString(),
     })
 
-    const middleware = enforceEntitlement('OPD_LITE', 'query')
+    const middleware = (enforceEntitlement('OPD_LITE', 'query') as any)._middlewares[0]
 
     await expect(
       middleware({
@@ -144,7 +144,7 @@ describe('Subscription Read-Only Mode', () => {
       cancelledAt: hundredDaysAgo.toISOString(),
     })
 
-    const middleware = enforceEntitlement('OPD_LITE', 'mutation')
+    const middleware = (enforceEntitlement('OPD_LITE', 'mutation') as any)._middlewares[0]
 
     await expect(
       middleware({
@@ -164,7 +164,7 @@ describe('Subscription Read-Only Mode', () => {
       cancelledAt: tenDaysAgo.toISOString(),
     })
 
-    const middleware = enforceEntitlement('OPD_LITE', 'query')
+    const middleware = (enforceEntitlement('OPD_LITE', 'query') as any)._middlewares[0]
     let ctxResult: any = null
 
     await middleware({
@@ -187,7 +187,7 @@ describe('Subscription Read-Only Mode', () => {
       subscriptionStatus: 'ACTIVE',
     })
 
-    const middleware = enforceEntitlement('OPD_LITE', 'mutation')
+    const middleware = (enforceEntitlement('OPD_LITE', 'mutation') as any)._middlewares[0]
     let ctxResult: any = null
 
     await middleware({
@@ -208,14 +208,14 @@ describe('Subscription Read-Only Mode', () => {
       cancelledAt: new Date().toISOString(),
     })
 
-    const middleware = enforceEntitlement('OPD_LITE', 'mutation')
+    const middleware = (enforceEntitlement('OPD_LITE', 'mutation') as any)._middlewares[0]
 
     // D5: ADMIN no longer bypasses org status — should be blocked on mutations
     await expect(
       middleware({
         ctx: {
           supabase: mockDb,
-          user: { sub: 'admin-1', role: 'ADMIN', sessionId: 'sess-1', orgId: 'org-1' },
+          user: { sub: 'admin-1', role: 'ADMIN' as const, sessionId: 'sess-1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' },
         },
         input: {},
         next: async () => 'ok',
@@ -232,13 +232,13 @@ describe('Subscription Read-Only Mode', () => {
       cancelledAt: tenDaysAgo.toISOString(),
     })
 
-    const middleware = enforceEntitlement('OPD_LITE', 'query')
+    const middleware = (enforceEntitlement('OPD_LITE', 'query') as any)._middlewares[0]
     let ctxResult: any = null
 
     await middleware({
       ctx: {
         supabase: mockDb,
-        user: { sub: 'admin-1', role: 'ADMIN', sessionId: 'sess-1', orgId: 'org-1' },
+        user: { sub: 'admin-1', role: 'ADMIN' as const, sessionId: 'sess-1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' },
       },
       input: {},
       next: async (opts: any) => {
@@ -259,13 +259,13 @@ describe('Subscription Read-Only Mode', () => {
       cancelledAt: new Date().toISOString(),
     })
 
-    const middleware = enforceEntitlement('OPD_LITE', 'mutation')
+    const middleware = (enforceEntitlement('OPD_LITE', 'mutation') as any)._middlewares[0]
     let ctxResult: any = null
 
     await middleware({
       ctx: {
         supabase: mockDb,
-        user: { sub: 'padmin-1', role: 'PLATFORM_ADMIN', sessionId: 'sess-1', orgId: 'org-1' },
+        user: { sub: 'padmin-1', role: 'PLATFORM_ADMIN' as const, sessionId: 'sess-1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' },
       },
       input: {},
       next: async (opts: any) => {
@@ -284,7 +284,7 @@ describe('Subscription Read-Only Mode', () => {
       cancelledAt: null,
     })
 
-    const middleware = enforceEntitlement('OPD_LITE', 'query')
+    const middleware = (enforceEntitlement('OPD_LITE', 'query') as any)._middlewares[0]
     let ctxResult: any = null
 
     await middleware({
@@ -306,7 +306,7 @@ describe('Subscription Read-Only Mode', () => {
       cancelledAt: null,
     })
 
-    const middleware = enforceEntitlement('OPD_LITE', 'mutation')
+    const middleware = (enforceEntitlement('OPD_LITE', 'mutation') as any)._middlewares[0]
 
     await expect(
       middleware({
@@ -328,7 +328,7 @@ describe('Subscription Read-Only Mode', () => {
       subscriptionStatus: null,
     })
 
-    const middleware = enforceEntitlement('OPD_LITE', 'query')
+    const middleware = (enforceEntitlement('OPD_LITE', 'query') as any)._middlewares[0]
     let ctxResult: any = null
 
     await middleware({

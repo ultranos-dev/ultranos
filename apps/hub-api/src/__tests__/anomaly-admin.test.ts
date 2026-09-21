@@ -5,6 +5,11 @@ vi.stubEnv('FIELD_ENCRYPTION_HMAC_KEY', 'b'.repeat(64))
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => ({ from: vi.fn() })),
+  // Mirrors the real helper: calls `.select(columns, { count, head })` on the
+  // passed mutation builder and returns its `{ count, error }` result.
+  selectExactCount: vi.fn(async (mutationBuilder: any, columns = 'id') => {
+    return await mutationBuilder.select(columns, { count: 'exact', head: true })
+  }),
   db: {
     toRow: (data: any) => data,
     toRowRaw: (data: any) => data,
@@ -44,7 +49,7 @@ function chainMock(resolveValue: any = { data: null, error: null, count: 0 }) {
 }
 
 function makeCtx(
-  user: { sub: string; role: string; sessionId: string; orgId?: string | null; status?: string | null } | null,
+  user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null,
   supabaseOverride?: any,
 ) {
   const defaultChain = chainMock()
@@ -57,8 +62,8 @@ function makeCtx(
   }
 }
 
-const adminUser = { sub: 'admin-1', role: 'ADMIN', sessionId: 's1' }
-const doctorUser = { sub: 'doc-1', role: 'DOCTOR', sessionId: 's1' }
+const adminUser = { sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }
+const doctorUser = { sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }
 
 describe('admin.listAnomalyAlerts', () => {
   it('returns filtered, paginated results sorted by severity', async () => {
@@ -76,9 +81,9 @@ describe('admin.listAnomalyAlerts', () => {
 
     expect(result.alerts).toHaveLength(2)
     expect(result.total).toBe(2)
-    expect(result.alerts[0].id).toBe('00000000-0000-0000-0000-000000000001')
-    expect(result.alerts[0].severity).toBe('HIGH')
-    expect(result.alerts[1].severity).toBe('MEDIUM')
+    expect(result.alerts[0]!.id).toBe('00000000-0000-0000-0000-000000000001')
+    expect(result.alerts[0]!.severity).toBe('HIGH')
+    expect(result.alerts[1]!.severity).toBe('MEDIUM')
   })
 
   it('non-ADMIN callers rejected with FORBIDDEN', async () => {

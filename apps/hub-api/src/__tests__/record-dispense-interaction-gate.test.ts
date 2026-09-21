@@ -59,7 +59,7 @@ const PRESCRIPTION_UUID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
 const PATIENT_UUID      = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
 const PHARM_SUB         = 'pharm-uuid-1'
 
-const PHARMACIST_USER = { sub: PHARM_SUB, role: 'PHARMACIST', sessionId: 'sess-gate-1', orgId: 'org-test-001' }
+const PHARMACIST_USER = { sub: PHARM_SUB, role: 'PHARMACIST' as const, sessionId: 'sess-gate-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 
 const BASE_INPUT = {
   dispenseId: DISPENSE_UUID,

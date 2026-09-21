@@ -45,7 +45,7 @@ const { appRouter } = await import('../trpc/routers/_app')
 const { createCallerFactory } = await import('../trpc/init')
 const createCaller = createCallerFactory(appRouter)
 
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
+const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 const REAL_PATIENT_ID = '00000000-0000-4000-8000-000000000001'
 const PATIENT_REF = `Patient/${REAL_PATIENT_ID}`
 const LAB_UUID = '00000000-0000-4000-8000-000000000300'

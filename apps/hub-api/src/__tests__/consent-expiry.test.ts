@@ -43,7 +43,7 @@ vi.mock('@/lib/async-mpi-scoring', () => ({ runAsyncMpiScoring: vi.fn().mockReso
 const { appRouter } = await import('../trpc/routers/_app')
 const { createCallerFactory } = await import('../trpc/init')
 
-const TEST_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1' }
+const TEST_USER = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }
 const PATIENT_UUID = '77777777-7777-7777-7777-777777777777'
 
 function createTestContext(mockFrom: ReturnType<typeof vi.fn>) {
@@ -168,7 +168,7 @@ describe('consent.expiringSoon', () => {
     const result = await caller.consent.expiringSoon({ limit: 50, offset: 0 })
 
     expect(result.consents).toHaveLength(2)
-    expect(result.consents[0].id).toBe('c1')
+    expect(result.consents[0]!.id).toBe('c1')
     expect(mockAuditEmit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'PHI_READ',

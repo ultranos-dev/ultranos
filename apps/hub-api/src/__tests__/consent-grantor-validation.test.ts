@@ -52,7 +52,7 @@ describe('consent.sync — grantor impersonation prevention (D167)', () => {
     const mock = createMockSupabase()
     const caller = createCallerFactory(consentRouter)({
       supabase: mock as never,
-      user: { sub: 'patient-001', role: 'PATIENT', sessionId: 'sess-1' },
+      user: { sub: 'patient-001', role: 'PATIENT' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null },
       headers: new Headers(),
     })
 
@@ -67,7 +67,7 @@ describe('consent.sync — grantor impersonation prevention (D167)', () => {
     const mock = createMockSupabase()
     const caller = createCallerFactory(consentRouter)({
       supabase: mock as never,
-      user: { sub: 'attacker-999', role: 'PATIENT', sessionId: 'sess-1' },
+      user: { sub: 'attacker-999', role: 'PATIENT' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null },
       headers: new Headers(),
     })
 
@@ -90,7 +90,7 @@ describe('consent.sync — grantor impersonation prevention (D167)', () => {
     const mock = createMockSupabase()
     const caller = createCallerFactory(consentRouter)({
       supabase: mock as never,
-      user: { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-1' },
+      user: { sub: 'admin-001', role: 'ADMIN' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null },
       headers: new Headers(),
     })
 

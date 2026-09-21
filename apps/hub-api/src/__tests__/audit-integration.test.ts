@@ -65,7 +65,7 @@ const { createCallerFactory } = await import('../trpc/init')
 
 const createCaller = createCallerFactory(appRouter)
 
-function makeAuthCtx(role = 'DOCTOR') {
+function makeAuthCtx(role: `${import('@ultranos/shared-types').UserRole}` = 'DOCTOR') {
   return {
     supabase: {
       from: vi.fn().mockImplementation((table: string) => {
@@ -176,7 +176,7 @@ function makeAuthCtx(role = 'DOCTOR') {
         }
       }),
     } as never,
-    user: { sub: 'user-001', role, sessionId: 'session-001', orgId: 'org-test-001' },
+    user: { sub: 'user-001', role, sessionId: 'session-001', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' },
     headers: new Headers(),
   }
 }

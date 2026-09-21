@@ -95,7 +95,7 @@ describe('patientRegistration.register — MPI integration', () => {
     const result = await caller.patientRegistration.register(VALID_REGISTER_INPUT)
     const id = (result as Record<string, unknown>)['patientId'] ?? (result as Record<string, unknown>)['id']
     expect(id).toBeTruthy()
-    expect(ctx.supabase.rpc).toHaveBeenCalledWith(
+    expect((ctx.supabase as any).rpc).toHaveBeenCalledWith(
       'create_patient_with_consent',
       expect.objectContaining({ p_consent: expect.objectContaining({ consent_method: 'SELF_REGISTERED' }) }),
     )
@@ -136,7 +136,7 @@ describe('patientRegistration.register — MPI integration', () => {
     const ctx = makeRegisterContext()
     const caller = createCaller(ctx)
     await caller.patientRegistration.register(VALID_REGISTER_INPUT)
-    const rpcCall = ctx.supabase.rpc.mock.calls[0]
+    const rpcCall = (ctx.supabase as any).rpc.mock.calls[0]
     const pPatient = rpcCall[1]['p_patient'] as Record<string, unknown>
     expect(pPatient['mpi_warn']).toBe(true)
   })

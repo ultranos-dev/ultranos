@@ -5,6 +5,11 @@ vi.stubEnv('FIELD_ENCRYPTION_HMAC_KEY', 'b'.repeat(64))
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => ({ from: vi.fn() })),
+  // Mirrors the real helper: calls `.select(columns, { count, head })` on the
+  // passed mutation builder and returns its `{ count, error }` result.
+  selectExactCount: vi.fn(async (mutationBuilder: any, columns = 'id') => {
+    return await mutationBuilder.select(columns, { count: 'exact', head: true })
+  }),
   db: {
     toRow: (data: any) => data,
     toRowRaw: (data: any) => data,
@@ -66,7 +71,7 @@ function buildMockSupabase(overrides: Record<string, any> = {}) {
 function makeCtx(supabase?: any) {
   return {
     supabase: supabase ?? buildMockSupabase(),
-    user: { sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: 'org-1', status: 'ACTIVE' },
+    user: { sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', orgId: 'org-1', status: 'ACTIVE', facilityId: null, },
     headers: new Headers(),
   }
 }
@@ -116,8 +121,8 @@ describe('Inventory — Stock Level Logic', () => {
     const result = await caller.getInventoryOverview({})
 
     expect(result.cells).toHaveLength(1)
-    expect(result.cells[0].stockLevel).toBe('RED')
-    expect(result.cells[0].quantity).toBe(0)
+    expect(result.cells[0]!.stockLevel).toBe('RED')
+    expect(result.cells[0]!.quantity).toBe(0)
   })
 
   it('classifies quantity 5 as AMBER (<=7)', async () => {
@@ -150,7 +155,7 @@ describe('Inventory — Stock Level Logic', () => {
     const caller = createCallerFactory(adminRouter)(makeCtx(supabase))
     const result = await caller.getInventoryOverview({})
 
-    expect(result.cells[0].stockLevel).toBe('AMBER')
+    expect(result.cells[0]!.stockLevel).toBe('AMBER')
   })
 
   it('classifies quantity 20 as GREEN (>14)', async () => {
@@ -183,7 +188,7 @@ describe('Inventory — Stock Level Logic', () => {
     const caller = createCallerFactory(adminRouter)(makeCtx(supabase))
     const result = await caller.getInventoryOverview({})
 
-    expect(result.cells[0].stockLevel).toBe('GREEN')
+    expect(result.cells[0]!.stockLevel).toBe('GREEN')
   })
 
   it('classifies quantity 10 as YELLOW (8-14)', async () => {
@@ -216,7 +221,7 @@ describe('Inventory — Stock Level Logic', () => {
     const caller = createCallerFactory(adminRouter)(makeCtx(supabase))
     const result = await caller.getInventoryOverview({})
 
-    expect(result.cells[0].stockLevel).toBe('YELLOW')
+    expect(result.cells[0]!.stockLevel).toBe('YELLOW')
   })
 
   it('classifies quantity 14 as YELLOW (boundary)', async () => {
@@ -249,7 +254,7 @@ describe('Inventory — Stock Level Logic', () => {
     const caller = createCallerFactory(adminRouter)(makeCtx(supabase))
     const result = await caller.getInventoryOverview({})
 
-    expect(result.cells[0].stockLevel).toBe('YELLOW')
+    expect(result.cells[0]!.stockLevel).toBe('YELLOW')
   })
 
   it('emits INVENTORY_OVERVIEW_ACCESSED audit event', async () => {

@@ -42,10 +42,10 @@ const TEST_ORG_ID = '00000000-0000-4000-a000-000000000001'
 const TEST_SUB_ID = '00000000-0000-4000-a000-000000000010'
 const TEST_SUB_ID_2 = '00000000-0000-4000-a000-000000000020'
 
-function makeCtx(role: string, orgId: string | null = TEST_ORG_ID) {
+function makeCtx(role: `${import('@ultranos/shared-types').UserRole}`, orgId: string | null = TEST_ORG_ID) {
   return {
     supabase: mockSupabase as never,
-    user: { sub: 'user-admin-1', role, sessionId: 'sess-1', orgId, status: null },
+    user: { sub: 'user-admin-1', role, sessionId: 'sess-1', orgId, status: null, facilityId: null },
     headers: new Headers(),
   }
 }
@@ -357,7 +357,7 @@ describe('Story 27.5 — Admin Subscription Management', () => {
       expect(mockEmit).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'CREATE',
-          resourceType: 'Subscription',
+          resourceType: 'SUBSCRIPTION',
           actorRole: 'ADMIN',
           actorId: 'user-admin-1',
         }),
@@ -491,7 +491,7 @@ describe('Story 27.5 — Admin Subscription Management', () => {
       expect(mockEmit).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'UPDATE',
-          resourceType: 'Subscription',
+          resourceType: 'SUBSCRIPTION',
           actorRole: 'ADMIN',
           metadata: expect.objectContaining({ cancellation: true }),
         }),

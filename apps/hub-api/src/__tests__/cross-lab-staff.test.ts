@@ -31,7 +31,7 @@ const { createCallerFactory } = await import('../trpc/init')
 const { adminRouter } = await import('../trpc/routers/admin')
 
 // ── Helpers ────────────────────────────────────────────────
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   // Build a fluent Supabase mock chain
   const chain = {
     data: null as any,
@@ -47,7 +47,7 @@ function makeCtx(user: { sub: string; role: string; sessionId: string } | null) 
   // Make the chain thenable for queries without .limit()
   chain.then = (resolve: any) => resolve({ data: chain.data, error: chain.error })
 
-  const from = vi.fn(() => chain)
+  const from = vi.fn((..._args: any[]) => chain)
 
   return {
     supabase: {
@@ -66,7 +66,7 @@ function makeCtx(user: { sub: string; role: string; sessionId: string } | null) 
 }
 
 function adminCtx() {
-  return makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' })
+  return makeCtx({ sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null })
 }
 
 const STAFF_ROWS = [
@@ -194,12 +194,12 @@ describe('admin.listAllLabStaff', () => {
     })
 
     const caller = createCallerFactory(adminRouter)(ctx as any)
-    const result = await caller.listAllLabStaff({ roleFilter: 'LAB_TECH', limit: 20 })
+    const result = await caller.listAllLabStaff({ roleFilter: 'LAB_TECH' as import('@ultranos/shared-types').LabRole, limit: 20 })
 
     // Verify .eq was called with lab_role filter
     expect(eqCalls.some(([col, val]) => col === 'lab_role' && val === 'LAB_TECH')).toBe(true)
     expect(result.items).toHaveLength(1)
-    expect(result.items[0].labRole).toBe('LAB_TECH')
+    expect(result.items[0]!.labRole).toBe('LAB_TECH')
   })
 
   it('lab filter returns only matching lab', async () => {
@@ -250,7 +250,7 @@ describe('admin.listAllLabStaff', () => {
   })
 
   it('non-ADMIN callers rejected with FORBIDDEN', async () => {
-    const ctx = makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1' })
+    const ctx = makeCtx({ sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null })
     const caller = createCallerFactory(adminRouter)(ctx as any)
     await expect(caller.listAllLabStaff({ limit: 20 })).rejects.toMatchObject({
       code: 'FORBIDDEN',
@@ -354,7 +354,7 @@ describe('admin.exportLabStaffCsv', () => {
   })
 
   it('non-ADMIN callers rejected with FORBIDDEN', async () => {
-    const ctx = makeCtx({ sub: 'lab-1', role: 'LAB_TECH', sessionId: 's1' })
+    const ctx = makeCtx({ sub: 'lab-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null })
     const caller = createCallerFactory(adminRouter)(ctx as any)
     await expect(caller.exportLabStaffCsv({})).rejects.toMatchObject({
       code: 'FORBIDDEN',
@@ -369,7 +369,7 @@ describe('admin.listLabsForFilter', () => {
 
   it('returns list of labs for ADMIN', async () => {
     const ctx = adminCtx()
-    ctx._from.mockImplementation(() => {
+    ctx._from.mockImplementation((() => {
       const chain = {
         data: [
           { id: 'lab-1', lab_name: 'Central Lab' },
@@ -382,7 +382,7 @@ describe('admin.listLabsForFilter', () => {
       }
       chain.then = (resolve: any) => resolve({ data: chain.data, error: chain.error })
       return chain
-    })
+    }) as any)
 
     const caller = createCallerFactory(adminRouter)(ctx as any)
     const result = await caller.listLabsForFilter()
@@ -393,7 +393,7 @@ describe('admin.listLabsForFilter', () => {
   })
 
   it('non-ADMIN callers rejected with FORBIDDEN', async () => {
-    const ctx = makeCtx({ sub: 'pharm-1', role: 'PHARMACIST', sessionId: 's1' })
+    const ctx = makeCtx({ sub: 'pharm-1', role: 'PHARMACIST' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null })
     const caller = createCallerFactory(adminRouter)(ctx as any)
     await expect(caller.listLabsForFilter()).rejects.toMatchObject({
       code: 'FORBIDDEN',

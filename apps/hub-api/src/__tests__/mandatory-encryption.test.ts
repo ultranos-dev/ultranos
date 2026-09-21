@@ -53,7 +53,7 @@ describe('mandatory encryption (Story 7.3b)', () => {
         id: '123',
         diagnosis: 'Hypertension',
         soapAssessment: 'Patient presenting with elevated BP',
-      })
+      }) as Record<string, any>
 
       // PHI fields must be encrypted
       expect(result.diagnosis).toMatch(/^v1:/)
@@ -119,7 +119,7 @@ describe('mandatory encryption (Story 7.3b)', () => {
       const result = db.toRowRaw(
         { recipientRef: 'user-1', status: 'QUEUED' },
         'non-PHI: notifications',
-      )
+      ) as Record<string, any>
 
       expect(result.recipient_ref).toBe('user-1')
       expect(result.status).toBe('QUEUED')

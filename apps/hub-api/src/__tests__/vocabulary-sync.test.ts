@@ -44,7 +44,7 @@ const createCaller = createCallerFactory(appRouter)
 function createAuthContext() {
   return {
     supabase: mockSupabaseClient as never,
-    user: { sub: 'test-user', role: 'DOCTOR', sessionId: 'test-session', orgId: 'org-test-001' },
+    user: { sub: 'test-user', role: 'DOCTOR' as const, sessionId: 'test-session', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' },
     headers: new Headers(),
   }
 }

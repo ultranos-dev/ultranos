@@ -171,7 +171,7 @@ const router = createTRPCRouter({ lab: labRouter })
 function makeCaller() {
   return createCallerFactory(router)({
     supabase: { from: mockFrom } as never,
-    user: { sub: 'tech-001', role: 'LAB_TECH', sessionId: 'sess-test-1', orgId: 'org-1' },
+    user: { sub: 'tech-001', role: 'LAB_TECH' as const, sessionId: 'sess-test-1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' },
     headers: new Headers(),
   } as never)
 }
@@ -254,7 +254,7 @@ describe('lab.pullDispenseMonitoringEvents', () => {
     const caller = makeCaller()
     await caller.lab.pullDispenseMonitoringEvents({ limit: 100 })
 
-    const call = mockAuditEmit.mock.calls[0]![0] as Record<string, any>
+    const call = (mockAuditEmit.mock.calls[0] as any[])[0] as Record<string, any>
     const meta = call.metadata as Record<string, unknown>
     expect(meta).toHaveProperty('eventCount')
     expect(meta).toHaveProperty('labId')

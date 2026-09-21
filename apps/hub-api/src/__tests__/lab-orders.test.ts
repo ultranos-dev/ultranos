@@ -73,6 +73,11 @@ const mockFrom = vi.fn((table: string) => {
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => ({ from: mockFrom })),
+  // Mirrors the real helper: calls `.select(columns, { count, head })` on the
+  // passed mutation builder and returns its `{ count, error }` result.
+  selectExactCount: vi.fn(async (mutationBuilder: any, columns = 'id') => {
+    return await mutationBuilder.select(columns, { count: 'exact', head: true })
+  }),
   db: {
     toRow: (data: any) => data,
     toRowRaw: (data: any) => data,
@@ -164,7 +169,7 @@ describe('lab.pullOrders audit events', () => {
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)({
       supabase: { from: mockFrom } as never,
-      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' },
+      user: { sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     } as never)
 
@@ -189,7 +194,7 @@ describe('lab.pullOrders audit events', () => {
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)({
       supabase: { from: mockFrom } as never,
-      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' },
+      user: { sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     } as never)
 
@@ -297,7 +302,7 @@ describe('lab.acknowledgeOrder audit events', () => {
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)({
       supabase: { from: trackingFrom } as never,
-      user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-1' },
+      user: { sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     } as never)
 

@@ -408,7 +408,7 @@ describe('Story 23.3: Audit Chain Integrity Monitoring', () => {
           }),
           rpc: vi.fn().mockResolvedValue({ data: [{ chain_hash: 'mock' }], error: null }),
         } as never,
-        user: { sub: 'admin-001', role: 'ADMIN', sessionId: 'session-001', orgId: null, status: null },
+        user: { sub: 'admin-001', role: 'ADMIN' as const, sessionId: 'session-001', orgId: null, status: null, facilityId: null, },
         headers: new Headers(),
       }
     }
@@ -466,7 +466,7 @@ describe('Story 23.3: Audit Chain Integrity Monitoring', () => {
             }),
           }),
         } as never,
-        user: { sub: 'doc-001', role: 'DOCTOR', sessionId: 'session-001', orgId: null, status: null },
+        user: { sub: 'doc-001', role: 'DOCTOR' as const, sessionId: 'session-001', orgId: null, status: null, facilityId: null, },
         headers: new Headers(),
       }
 

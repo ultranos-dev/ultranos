@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { AdministrativeGender } from '@ultranos/shared-types'
 
 const TEST_ENCRYPTION_KEY = 'a'.repeat(64)
 const TEST_HMAC_KEY = 'b'.repeat(64)
@@ -65,14 +66,14 @@ const { createCallerFactory } = await import('../trpc/init')
 
 const PATIENT_UUID  = '11111111-1111-1111-1111-111111111111'
 const CONSENT_UUID  = '22222222-2222-2222-2222-222222222222'
-const TEST_USER     = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-mpi-1' }
+const TEST_USER     = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-mpi-1', facilityId: null, status: 'ACTIVE', orgId: null }
 
 const VALID_CREATE_INPUT = {
   nameLocal: 'Ahmad Mohammad Karim',
   nameGiven: 'Ahmad',
   nameFather: 'Mohammad',
   nameGrandfather: 'Karim',
-  gender: 'male' as const,
+  gender: AdministrativeGender.MALE,
   birthYear: 1985,
   birthYearOnly: true,
   consent: { method: 'WRITTEN' as const, language: 'en' as const, version: 'v1.0-en' },
@@ -115,7 +116,7 @@ describe('patient.create — MPI ALLOW path', () => {
     const ctx = makeRpcSuccessContext()
     const caller = createCaller(ctx)
     await caller.patient.create(VALID_CREATE_INPUT)
-    const rpcCall = (ctx.supabase as { rpc: ReturnType<typeof vi.fn> }).rpc.mock.calls[0]
+    const rpcCall = (ctx.supabase as { rpc: ReturnType<typeof vi.fn> }).rpc.mock.calls[0]!
     const pConsent = rpcCall[1]['p_consent'] as Record<string, unknown>
     expect(pConsent['consent_method']).toBe('WRITTEN')
     expect(pConsent['consent_language']).toBe('en')
@@ -126,7 +127,7 @@ describe('patient.create — MPI ALLOW path', () => {
     const ctx = makeRpcSuccessContext()
     const caller = createCaller(ctx)
     await caller.patient.create(VALID_CREATE_INPUT)
-    const rpcCall = (ctx.supabase as { rpc: ReturnType<typeof vi.fn> }).rpc.mock.calls[0]
+    const rpcCall = (ctx.supabase as { rpc: ReturnType<typeof vi.fn> }).rpc.mock.calls[0]!
     const pPatient = rpcCall[1]['p_patient'] as Record<string, unknown>
     expect(Array.isArray(pPatient['name_phonetic_given'])).toBe(true)
     expect(Array.isArray(pPatient['name_phonetic_father'])).toBe(true)
@@ -135,7 +136,7 @@ describe('patient.create — MPI ALLOW path', () => {
   it('emits PHI_WRITE audit with mpiDecision=ALLOW', async () => {
     const mockEmit = vi.fn().mockResolvedValue({})
     const { AuditLogger } = await import('@ultranos/audit-logger')
-    vi.mocked(AuditLogger).mockImplementationOnce(() => ({ emit: mockEmit }))
+    vi.mocked(AuditLogger).mockImplementationOnce(() => ({ emit: mockEmit }) as any)
 
     const ctx = makeRpcSuccessContext()
     const caller = createCaller(ctx)

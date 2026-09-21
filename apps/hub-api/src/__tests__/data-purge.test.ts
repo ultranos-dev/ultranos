@@ -136,7 +136,7 @@ describe('Data Purge Management', () => {
 
       await audit.emit({
         action: 'DATA_PURGE_CONFIRMED',
-        resourceType: 'DataPurgeJob',
+        resourceType: 'DATA_PURGE_JOB',
         resourceId: 'purge-1',
         actorId: 'platform-admin-1',
         actorRole: 'PLATFORM_ADMIN',
@@ -148,7 +148,7 @@ describe('Data Purge Management', () => {
       expect(audit.emit).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'DATA_PURGE_CONFIRMED',
-          resourceType: 'DataPurgeJob',
+          resourceType: 'DATA_PURGE_JOB',
           actorRole: 'PLATFORM_ADMIN',
         }),
       )
@@ -207,7 +207,7 @@ describe('Data Purge Management', () => {
 
       await audit.emit({
         action: 'DATA_PURGE_CANCELLED',
-        resourceType: 'DataPurgeJob',
+        resourceType: 'DATA_PURGE_JOB',
         resourceId: 'purge-2',
         actorId: 'platform-admin-1',
         actorRole: 'PLATFORM_ADMIN',
@@ -219,7 +219,7 @@ describe('Data Purge Management', () => {
       expect(audit.emit).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'DATA_PURGE_CANCELLED',
-          resourceType: 'DataPurgeJob',
+          resourceType: 'DATA_PURGE_JOB',
         }),
       )
     })

@@ -24,7 +24,7 @@ vi.mock('@ultranos/audit-logger', () => ({
   })),
 }))
 
-let mockSupabaseClient: {
+let mockSupabaseClient!: {
   from: ReturnType<typeof vi.fn>
 }
 
@@ -32,8 +32,8 @@ const { appRouter } = await import('../trpc/routers/_app')
 const { createCallerFactory } = await import('../trpc/init')
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string } | null
+  supabaseFrom?: any
+  user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
 }) {
   return {
     supabase: {
@@ -60,7 +60,7 @@ describe('blind index for national_id', () => {
 
     const ctx = createTestContext({
       supabaseFrom: mockFrom,
-      user: { sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1' },
+      user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null },
     })
 
     const caller = createCaller(ctx)
@@ -72,7 +72,7 @@ describe('blind index for national_id', () => {
     // Get the `.or()` call and verify it uses HMAC hash, not plain SHA-256
     const selectMock = mockFrom.mock.results[0]!.value.select
     const orMock = selectMock.mock.results[0]!.value.or
-    const orArg = orMock.mock.calls[0]![0] as string
+    const orArg = (orMock.mock.calls[0] as any[])[0] as string
 
     // The hash in the query should be an HMAC-SHA256 (deterministic with key),
     // not a plain SHA-256 hash

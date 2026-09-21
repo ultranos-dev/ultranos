@@ -275,7 +275,7 @@ describe('tRPC subscription router: listModules', () => {
 
     const caller = createCallerFactory(subscriptionRouter)({
       supabase: supabase as any,
-      user: { sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-uuid' },
+      user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: 'org-uuid', facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     })
 
@@ -346,7 +346,7 @@ describe('tRPC subscription router: listOrgSubscriptions', () => {
 
     const caller = createCallerFactory(subscriptionRouter)({
       supabase: supabase as any,
-      user: { sub: 'user-1', role: 'ADMIN', sessionId: 'sess-1', orgId: 'org-uuid' },
+      user: { sub: 'user-1', role: 'ADMIN' as const, sessionId: 'sess-1', orgId: 'org-uuid', facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     })
 
@@ -388,7 +388,7 @@ describe('tRPC subscription router: listOrgSubscriptions', () => {
 
     const caller = createCallerFactory(subscriptionRouter)({
       supabase: supabase as any,
-      user: { sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-uuid' },
+      user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: 'org-uuid', facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     })
 
@@ -407,7 +407,7 @@ describe('tRPC subscription router: listOrgSubscriptions', () => {
 
     const caller = createCallerFactory(subscriptionRouter)({
       supabase: { from: vi.fn() } as any,
-      user: { sub: 'user-1', role: 'PATIENT', sessionId: 'sess-1', orgId: null },
+      user: { sub: 'user-1', role: 'PATIENT' as const, sessionId: 'sess-1', orgId: null, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     })
 
@@ -436,7 +436,7 @@ describe('tRPC subscription router: getOrgSubscription', () => {
 
     const caller = createCallerFactory(subscriptionRouter)({
       supabase: supabase as any,
-      user: { sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: TEST_ORG_ID },
+      user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: TEST_ORG_ID, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     })
 
@@ -467,7 +467,7 @@ describe('tRPC subscription router: getOrgSubscription', () => {
 
     const caller = createCallerFactory(subscriptionRouter)({
       supabase: supabase as any,
-      user: { sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: TEST_ORG_ID },
+      user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: TEST_ORG_ID, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     })
 
@@ -494,7 +494,7 @@ describe('tRPC subscription router: getOrgSubscription', () => {
 
     const caller = createCallerFactory(subscriptionRouter)({
       supabase: supabase as any,
-      user: { sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: TEST_ORG_ID },
+      user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: TEST_ORG_ID, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     })
 
@@ -522,7 +522,7 @@ describe('Cross-org authorization enforcement', () => {
 
     const caller = createCallerFactory(subscriptionRouter)({
       supabase: { from: vi.fn() } as any,
-      user: { sub: 'user-1', role: 'ADMIN', sessionId: 'sess-1', orgId: ORG_A },
+      user: { sub: 'user-1', role: 'ADMIN' as const, sessionId: 'sess-1', orgId: ORG_A, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     })
 
@@ -535,7 +535,7 @@ describe('Cross-org authorization enforcement', () => {
 
     const caller = createCallerFactory(subscriptionRouter)({
       supabase: { from: vi.fn() } as any,
-      user: { sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: ORG_A },
+      user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: ORG_A, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     })
 
@@ -548,7 +548,7 @@ describe('Cross-org authorization enforcement', () => {
 
     const caller = createCallerFactory(subscriptionRouter)({
       supabase: { from: vi.fn() } as any,
-      user: { sub: 'user-1', role: 'PATIENT', sessionId: 'sess-1', orgId: ORG_A },
+      user: { sub: 'user-1', role: 'PATIENT' as const, sessionId: 'sess-1', orgId: ORG_A, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     })
 

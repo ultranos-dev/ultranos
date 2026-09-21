@@ -4,7 +4,7 @@ import { TRPCError } from '@trpc/server'
 // Configurable mock chain for Supabase operations
 const mockInsertSingle = vi.fn()
 const mockInsertSelect = vi.fn(() => ({ single: mockInsertSingle }))
-const mockInsert = vi.fn(() => ({ select: mockInsertSelect }))
+const mockInsert = vi.fn((): any => ({ select: mockInsertSelect }))
 
 // Mock delete chain for compensating cleanup
 const mockDeleteEq = vi.fn().mockResolvedValue({ error: null })
@@ -39,7 +39,7 @@ vi.mock('@/lib/supabase', () => ({
 const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRouter } = await import('../trpc/routers/lab')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: { from: mockFrom } as never,
     user,
@@ -75,7 +75,7 @@ describe('lab.register', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
 
     const result = await caller.lab.register(validInput)
@@ -106,14 +106,14 @@ describe('lab.register', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
 
     await caller.lab.register(validInput)
     expect(mockAuditEmit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'CREATE',
-        resourceType: 'Organization',
+        resourceType: 'ORGANIZATION',
         actorId: 'tech-1',
         outcome: 'SUCCESS',
       }),
@@ -134,7 +134,7 @@ describe('lab.register', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
 
     await expect(caller.lab.register(validInput)).rejects.toMatchObject({
@@ -149,7 +149,7 @@ describe('lab.register', () => {
   it('validates required input fields', async () => {
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
 
     // Missing labName
@@ -171,7 +171,7 @@ describe('lab.register', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
 
     await expect(caller.lab.register(validInput)).rejects.toMatchObject({
@@ -192,7 +192,7 @@ describe('lab.register', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
 
     const { accreditationRef: _, ...inputWithoutAccreditation } = validInput

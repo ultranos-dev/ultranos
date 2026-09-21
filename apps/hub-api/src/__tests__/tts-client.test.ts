@@ -78,7 +78,7 @@ describe('synthesizeSpeech', () => {
     await synthesizeSpeech('مرحبا', 'AR_LEVANTINE')
 
     expect(fetchSpy).toHaveBeenCalledTimes(1)
-    const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string)
+    const body = JSON.parse((fetchSpy.mock.calls[0] as any[])[1]?.body as string)
     expect(body.voice.languageCode).toBe('ar-XA')
     expect(body.voice.name).toBe('ar-XA-Wavenet-A')
     expect(body.audioConfig.audioEncoding).toBe('MP3')

@@ -43,7 +43,7 @@ describe('protectedProcedure (JWT auth placeholder)', () => {
     const createCaller = createCallerFactory(testRouter)
     const caller = createCaller({
       supabase: { from: vi.fn() } as never,
-      user: { sub: 'user-123', role: 'DOCTOR', sessionId: 'session-456' },
+      user: { sub: 'user-123', role: 'DOCTOR' as const, sessionId: 'session-456', facilityId: null, status: 'ACTIVE', orgId: null },
       headers: new Headers(),
     })
 

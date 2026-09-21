@@ -16,7 +16,7 @@ const { createTRPCRouter, createCallerFactory, protectedProcedure } =
   await import('../trpc/init')
 const { roleRestrictedProcedure } = await import('../trpc/rbac')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: { from: vi.fn() } as never,
     user,
@@ -30,7 +30,7 @@ describe('roleRestrictedProcedure', () => {
       clinicianOnly: roleRestrictedProcedure(['DOCTOR']).query(() => 'ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'DOCTOR', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'DOCTOR' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.clinicianOnly()
     expect(result).toBe('ok')
@@ -41,7 +41,7 @@ describe('roleRestrictedProcedure', () => {
       multi: roleRestrictedProcedure(['DOCTOR', 'PHARMACIST']).query(() => 'ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'PHARMACIST', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'PHARMACIST' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.multi()
     expect(result).toBe('ok')
@@ -52,7 +52,7 @@ describe('roleRestrictedProcedure', () => {
       clinicianOnly: roleRestrictedProcedure(['DOCTOR']).query(() => 'ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'PHARMACIST', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'PHARMACIST' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.clinicianOnly()).rejects.toThrow(TRPCError)
     await expect(caller.clinicianOnly()).rejects.toMatchObject({
@@ -76,7 +76,7 @@ describe('roleRestrictedProcedure', () => {
       clinicianOnly: roleRestrictedProcedure(['DOCTOR']).query(() => 'ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: '', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: '' as any, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.clinicianOnly()).rejects.toThrow(TRPCError)
     await expect(caller.clinicianOnly()).rejects.toMatchObject({
@@ -89,7 +89,7 @@ describe('roleRestrictedProcedure', () => {
       clinicianOnly: roleRestrictedProcedure(['DOCTOR']).query(() => 'ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'ADMIN', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'ADMIN' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.clinicianOnly()
     expect(result).toBe('ok')
@@ -100,7 +100,7 @@ describe('roleRestrictedProcedure', () => {
       clinical: roleRestrictedProcedure(['DOCTOR', 'PHARMACIST']).query(() => 'data'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'patient-1', role: 'PATIENT', sessionId: 's1' }),
+      makeCtx({ sub: 'patient-1', role: 'PATIENT' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.clinical()).rejects.toMatchObject({
       code: 'FORBIDDEN',

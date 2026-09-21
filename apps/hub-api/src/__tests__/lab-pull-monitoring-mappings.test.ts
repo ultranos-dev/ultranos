@@ -153,7 +153,7 @@ const router = createTRPCRouter({ lab: labRouter })
 function makeCaller() {
   return createCallerFactory(router)({
     supabase: { from: mockFrom } as never,
-    user: { sub: 'tech-001', role: 'LAB_TECH', sessionId: 'sess-test-1', orgId: 'org-1' },
+    user: { sub: 'tech-001', role: 'LAB_TECH' as const, sessionId: 'sess-test-1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' },
     headers: new Headers(),
   } as never)
 }

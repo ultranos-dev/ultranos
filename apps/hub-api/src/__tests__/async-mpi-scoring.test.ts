@@ -49,7 +49,7 @@ describe('runAsyncMpiScoring', () => {
 
     // Should update patients with mpi_score
     expect(mockSupabase.from).toHaveBeenCalledWith('patients')
-    const updateCall = mockSupabase.from.mock.results[0].value.update
+    const updateCall = mockSupabase.from.mock.results[0]!.value.update
     expect(updateCall).toHaveBeenCalledWith(
       expect.objectContaining({ mpi_score: 20 })
     )

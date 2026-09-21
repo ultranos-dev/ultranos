@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { SignJWT, exportJWK, generateKeyPair } from 'jose'
-import type { KeyLike } from 'jose'
+import type { CryptoKey } from 'jose'
 
 // Mock Supabase before imports
 vi.mock('@/lib/supabase', () => ({
@@ -14,8 +14,8 @@ vi.mock('@/lib/supabase', () => ({
   },
 }))
 
-let privateKey: KeyLike
-let publicKey: KeyLike
+let privateKey: CryptoKey
+let publicKey: CryptoKey
 let jwkPublic: object
 
 beforeEach(async () => {
@@ -27,7 +27,7 @@ beforeEach(async () => {
 
 async function createTestJwt(
   payload: Record<string, unknown>,
-  key: KeyLike,
+  key: CryptoKey,
   options?: { expiresIn?: string },
 ) {
   let builder = new SignJWT(payload)

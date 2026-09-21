@@ -75,7 +75,7 @@ describe('consent.sync — SECURITY_VIOLATION audit on rejection (Story 21.3)', 
     const mock = createMockSupabase()
     const caller = createCallerFactory(consentRouter)({
       supabase: mock as never,
-      user: { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1' },
+      user: { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null },
       headers: new Headers(),
     })
 
@@ -101,7 +101,7 @@ describe('consent.sync — SECURITY_VIOLATION audit on rejection (Story 21.3)', 
     const mock = createMockSupabase()
     const caller = createCallerFactory(consentRouter)({
       supabase: mock as never,
-      user: { sub: 'attacker-999', role: 'PATIENT', sessionId: 'sess-2' },
+      user: { sub: 'attacker-999', role: 'PATIENT' as const, sessionId: 'sess-2', facilityId: null, status: 'ACTIVE', orgId: null },
       headers: new Headers(),
     })
 
@@ -124,7 +124,7 @@ describe('consent.sync — SECURITY_VIOLATION audit on rejection (Story 21.3)', 
     const mock = createMockSupabase()
     const caller = createCallerFactory(consentRouter)({
       supabase: mock as never,
-      user: { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-admin' },
+      user: { sub: 'admin-001', role: 'ADMIN' as const, sessionId: 'sess-admin', facilityId: null, status: 'ACTIVE', orgId: null },
       headers: new Headers(),
     })
 
@@ -142,7 +142,7 @@ describe('consent.sync — SECURITY_VIOLATION audit on rejection (Story 21.3)', 
     const mock = createMockSupabase()
     const caller = createCallerFactory(consentRouter)({
       supabase: mock as never,
-      user: { sub: 'patient-001', role: 'PATIENT', sessionId: 'sess-3' },
+      user: { sub: 'patient-001', role: 'PATIENT' as const, sessionId: 'sess-3', facilityId: null, status: 'ACTIVE', orgId: null },
       headers: new Headers(),
     })
 
@@ -162,7 +162,7 @@ describe('consent.sync — SECURITY_VIOLATION audit on rejection (Story 21.3)', 
     // CLINICIAN has Consent access but is NOT a consent grantor role
     const caller = createCallerFactory(consentRouter)({
       supabase: mock as never,
-      user: { sub: 'clinician-001', role: 'CLINICIAN', sessionId: 'sess-4' },
+      user: { sub: 'clinician-001', role: 'DOCTOR' as const, sessionId: 'sess-4', facilityId: null, status: 'ACTIVE', orgId: null },
       headers: new Headers(),
     })
 

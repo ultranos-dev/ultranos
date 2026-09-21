@@ -44,9 +44,9 @@ const { createCallerFactory } = await import('../trpc/init')
 const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
-  supabaseRpc?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string } | null
+  supabaseFrom?: any
+  supabaseRpc?: any
+  user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
   lab?: { technicianId: string; labId: string; labStatus: string } | null
 }) {
   const supabase = {
@@ -62,10 +62,10 @@ function createTestContext(overrides?: {
   }
 }
 
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
-const LAB_TECH_USER = { sub: 'lab-001', role: 'LAB_TECH', sessionId: 'sess-2', orgId: 'org-test-001' }
-const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
-const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-4', orgId: 'org-test-001' }
+const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const LAB_TECH_USER = { sub: 'lab-001', role: 'LAB_TECH' as const, sessionId: 'sess-2', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST' as const, sessionId: 'sess-3', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN' as const, sessionId: 'sess-4', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 const REPORT_UUID = '00000000-0000-4000-8000-000000000200'
 const PATIENT_REF = 'Patient/00000000-0000-4000-8000-000000000001'
 // diagnostic_reports.patient_ref is stored as a blind index (mocked as `hmac_<id>`).
@@ -200,8 +200,8 @@ describe('diagnosticReport.read', () => {
     expect(result.resourceType).toBe('DiagnosticReport')
     expect(result.reportConclusion).toBe('Normal results')
     expect(result.files).toHaveLength(1)
-    expect(result.files[0].downloadUrl).toBe(`/api/lab-files/${FILE_UUID}`)
-    expect(result.files[0].fileName).toBe('results.pdf')
+    expect(result.files[0]!.downloadUrl).toBe(`/api/lab-files/${FILE_UUID}`)
+    expect(result.files[0]!.fileName).toBe('results.pdf')
     // Ensure no encrypted_content in response
     expect((result.files[0] as any).encryptedContent).toBeUndefined()
   })
@@ -388,7 +388,7 @@ describe('diagnosticReport.listByPatient', () => {
 
     const result = await caller.diagnosticReport.listByPatient(validInput)
     expect(result.reports).toHaveLength(2)
-    expect(result.reports[0].id).toBe(REPORT_UUID)
+    expect(result.reports[0]!.id).toBe(REPORT_UUID)
     expect(result.nextCursor).toBeUndefined()
   })
 
@@ -586,7 +586,7 @@ describe('diagnosticReport.listByLab', () => {
     const result = await caller.diagnosticReport.listByLab(validInput)
     expect(result.reports).toHaveLength(2)
     // Shows all statuses including pending for technician view
-    expect(result.reports[1].virusScanStatus).toBe('pending')
+    expect(result.reports[1]!.virusScanStatus).toBe('pending')
   })
 
   it('pagination works correctly', async () => {

@@ -104,7 +104,7 @@ function embeddedColumns(src: string, resource: string): string[] {
   const re = new RegExp(resource + '![^(]*\\(([^)]*)\\)', 'g')
   const cols: string[] = []
   for (const m of src.matchAll(re)) {
-    cols.push(...m[1].split(',').map((c) => c.trim()).filter(Boolean))
+    cols.push(...m[1]!.split(',').map((c) => c.trim()).filter(Boolean))
   }
   return cols
 }

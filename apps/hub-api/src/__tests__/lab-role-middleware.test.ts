@@ -22,7 +22,7 @@ const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRestrictedProcedure } = await import('../trpc/rbac')
 const { enforceLabRole } = await import('../trpc/middleware/enforceLabRole')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: { from: mockFrom } as never,
     user,
@@ -96,7 +96,7 @@ describe('enforceLabRole middleware', () => {
           .query(() => 'ok'),
       })
       const caller = createCallerFactory(router)(
-        makeCtx({ sub: 'u1', role: 'LAB_TECH', sessionId: 's1' }),
+        makeCtx({ sub: 'u1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
       )
 
       if (allowed) {
@@ -117,7 +117,7 @@ describe('enforceLabRole middleware', () => {
         .query(() => 'admin-ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' }),
+      makeCtx({ sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.gated()).resolves.toBe('admin-ok')
   })
@@ -129,7 +129,7 @@ describe('enforceLabRole middleware', () => {
         .query(() => 'ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'DOCTOR', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'DOCTOR' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.gated()).rejects.toMatchObject({
       code: 'FORBIDDEN',
@@ -145,7 +145,7 @@ describe('enforceLabRole middleware', () => {
         .query(() => 'ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.gated()).rejects.toMatchObject({
       message: expect.stringContaining('LAB_TECH'),
@@ -167,7 +167,7 @@ describe('labRestrictedProcedure includes labRole in context', () => {
       }),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.check()
     expect(result.labRole).toBe('SUPERVISOR')
@@ -183,7 +183,7 @@ describe('labRestrictedProcedure includes labRole in context', () => {
       check: labRestrictedProcedure.query(() => 'ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'auth-uuid-123', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'auth-uuid-123', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await caller.check()
 
@@ -208,7 +208,7 @@ describe('labRestrictedProcedure includes labRole in context', () => {
       }),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.check()
     expect(result.labRole).toBe('LAB_TECH')

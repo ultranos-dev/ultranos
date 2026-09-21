@@ -44,12 +44,12 @@ const createCaller = createCallerFactory(appRouter)
 
 const ORG_ID = '00000000-0000-4000-8000-000000000099'
 
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: ORG_ID }
-const NO_ORG_USER = { sub: 'doctor-002', role: 'DOCTOR', sessionId: 'sess-4', orgId: null }
+const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: ORG_ID, facilityId: null, status: 'ACTIVE' }
+const NO_ORG_USER = { sub: 'doctor-002', role: 'DOCTOR' as const, sessionId: 'sess-4', orgId: null, facilityId: null, status: 'ACTIVE' }
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string; orgId?: string | null } | null
+  supabaseFrom?: any
+  user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -112,7 +112,7 @@ describe('enforceEntitlement — direct middleware test', () => {
   })
 
   it('allows through when org has ACTIVE subscription', async () => {
-    const middleware = enforceEntitlement('OPD_LITE')
+    const middleware = (enforceEntitlement('OPD_LITE') as any)._middlewares[0]
     const nextFn = vi.fn().mockResolvedValue('ok')
     // enforceEntitlement now queries organizations first, then org_subscriptions
     const supabase = {
@@ -127,7 +127,7 @@ describe('enforceEntitlement — direct middleware test', () => {
     await middleware({
       ctx: {
         supabase: supabase as any,
-        user: { sub: 'doc-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: ORG_ID },
+        user: { sub: 'doc-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: ORG_ID, facilityId: null, status: 'ACTIVE' },
       },
       input: {},
       next: nextFn,
@@ -141,7 +141,7 @@ describe('enforceEntitlement — direct middleware test', () => {
   })
 
   it('allows through when org has TRIAL subscription', async () => {
-    const middleware = enforceEntitlement('OPD_LITE')
+    const middleware = (enforceEntitlement('OPD_LITE') as any)._middlewares[0]
     const nextFn = vi.fn().mockResolvedValue('ok')
     const supabase = {
       from: vi.fn((table: string) => {
@@ -155,7 +155,7 @@ describe('enforceEntitlement — direct middleware test', () => {
     await middleware({
       ctx: {
         supabase: supabase as any,
-        user: { sub: 'doc-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: ORG_ID },
+        user: { sub: 'doc-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: ORG_ID, facilityId: null, status: 'ACTIVE' },
       },
       input: {},
       next: nextFn,
@@ -169,7 +169,7 @@ describe('enforceEntitlement — direct middleware test', () => {
   })
 
   it('throws SUBSCRIPTION_REQUIRED when no subscription exists', async () => {
-    const middleware = enforceEntitlement('PHARMACY_LITE')
+    const middleware = (enforceEntitlement('PHARMACY_LITE') as any)._middlewares[0]
     const nextFn = vi.fn()
     const supabase = {
       from: vi.fn((table: string) => {
@@ -184,7 +184,7 @@ describe('enforceEntitlement — direct middleware test', () => {
       middleware({
         ctx: {
           supabase: supabase as any,
-          user: { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-5', orgId: ORG_ID },
+          user: { sub: 'pharma-001', role: 'PHARMACIST' as const, sessionId: 'sess-5', orgId: ORG_ID, facilityId: null, status: 'ACTIVE' },
         },
         input: {},
         next: nextFn,
@@ -195,14 +195,14 @@ describe('enforceEntitlement — direct middleware test', () => {
   })
 
   it('throws ORG_CONTEXT_REQUIRED for null org_id', async () => {
-    const middleware = enforceEntitlement('OPD_LITE')
+    const middleware = (enforceEntitlement('OPD_LITE') as any)._middlewares[0]
     const nextFn = vi.fn()
 
     await expect(
       middleware({
         ctx: {
           supabase: {} as any,
-          user: { sub: 'doc-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: null },
+          user: { sub: 'doc-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: null, facilityId: null, status: 'ACTIVE' },
         },
         input: {},
         next: nextFn,
@@ -215,7 +215,7 @@ describe('enforceEntitlement — direct middleware test', () => {
   it('ADMIN bypasses module entitlement (but still passes org status check)', async () => {
     // ADMIN with an orgId: the middleware checks org status (CANCELLED/SUSPENDED guard)
     // but skips the module subscription entitlement check.
-    const middleware = enforceEntitlement('LAB_LITE')
+    const middleware = (enforceEntitlement('LAB_LITE') as any)._middlewares[0]
     const nextFn = vi.fn().mockResolvedValue('ok')
     const supabase = {
       from: vi.fn((table: string) => {
@@ -230,7 +230,7 @@ describe('enforceEntitlement — direct middleware test', () => {
     await middleware({
       ctx: {
         supabase: supabase as any,
-        user: { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-2', orgId: ORG_ID },
+        user: { sub: 'admin-001', role: 'ADMIN' as const, sessionId: 'sess-2', orgId: ORG_ID, facilityId: null, status: 'ACTIVE' },
       },
       input: {},
       next: nextFn,
@@ -244,7 +244,7 @@ describe('enforceEntitlement — direct middleware test', () => {
   })
 
   it('PLATFORM_ADMIN bypasses without DB query', async () => {
-    const middleware = enforceEntitlement('OPD_LITE')
+    const middleware = (enforceEntitlement('OPD_LITE') as any)._middlewares[0]
     const nextFn = vi.fn().mockResolvedValue('ok')
     const supabase = {
       from: vi.fn(() => {
@@ -255,7 +255,7 @@ describe('enforceEntitlement — direct middleware test', () => {
     await middleware({
       ctx: {
         supabase: supabase as any,
-        user: { sub: 'padmin-001', role: 'PLATFORM_ADMIN', sessionId: 'sess-3', orgId: ORG_ID },
+        user: { sub: 'padmin-001', role: 'PLATFORM_ADMIN' as const, sessionId: 'sess-3', orgId: ORG_ID, facilityId: null, status: 'ACTIVE' },
       },
       input: {},
       next: nextFn,
@@ -270,7 +270,7 @@ describe('enforceEntitlement — direct middleware test', () => {
 
   it('rejects expired subscription (not in ACTIVE/TRIAL)', async () => {
     // The middleware only queries for ACTIVE/TRIAL, so expired/cancelled won't match
-    const middleware = enforceEntitlement('OPD_LITE')
+    const middleware = (enforceEntitlement('OPD_LITE') as any)._middlewares[0]
     const nextFn = vi.fn()
     const supabase = {
       from: vi.fn((table: string) => {
@@ -286,7 +286,7 @@ describe('enforceEntitlement — direct middleware test', () => {
       middleware({
         ctx: {
           supabase: supabase as any,
-          user: { sub: 'doc-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: ORG_ID },
+          user: { sub: 'doc-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: ORG_ID, facilityId: null, status: 'ACTIVE' },
         },
         input: {},
         next: nextFn,

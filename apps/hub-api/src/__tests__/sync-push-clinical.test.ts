@@ -36,7 +36,7 @@ const ORG_UUID = '269c2a80-c6ee-4c69-90ad-434afc77f027'
 
 const TEST_USER = {
   sub: PRACT_UUID,
-  role: 'DOCTOR',
+  role: 'DOCTOR' as const,
   sessionId: 'sess-1',
   orgId: ORG_UUID,
   facilityId: null,

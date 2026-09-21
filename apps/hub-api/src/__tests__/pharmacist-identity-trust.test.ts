@@ -29,7 +29,7 @@ const createCaller = createCallerFactory(appRouter)
 const RX_UUID = '00000000-0000-4000-8000-000000000001'
 const DISPENSE_UUID = '00000000-0000-4000-8000-000000000010'
 const HLC_TS = '000001714400000:00000:node-abc'
-const TEST_USER = { sub: 'pharmacist-001', role: 'PHARMACIST', sessionId: 'sess-1', orgId: 'org-test-001' }
+const TEST_USER = { sub: 'pharmacist-001', role: 'PHARMACIST' as const, sessionId: 'sess-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 
 const ACTIVE_RX = {
   id: RX_UUID,

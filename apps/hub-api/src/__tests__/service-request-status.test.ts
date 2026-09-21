@@ -27,7 +27,7 @@ function makeCtx({ practitionerId = PRAC as string | null, rows = [] as unknown[
   const supabase = { from: vi.fn((t: string) => (t === 'practitioners' ? prac : sr)) }
   const ctx = {
     supabase,
-    user: { sub: 'auth-1', practitionerId: 'auth-1', role: 'DOCTOR', orgId: 'org-1', sessionId: 's1', facilityId: null, status: null },
+    user: { sub: 'auth-1', practitionerId: 'auth-1', role: 'DOCTOR' as const, orgId: 'org-1', sessionId: 's1', facilityId: null, status: null },
     headers: new Headers(),
   }
   return { ctx, sr, prac }
@@ -55,7 +55,7 @@ function makePatientRefCtx({
   const supabase = { from: vi.fn((t: string) => (t === 'practitioners' ? prac : sr)) }
   const ctx = {
     supabase,
-    user: { sub: 'auth-1', practitionerId: 'auth-1', role: 'DOCTOR', orgId: 'org-1', sessionId: 's1', facilityId: null, status: null },
+    user: { sub: 'auth-1', practitionerId: 'auth-1', role: 'DOCTOR' as const, orgId: 'org-1', sessionId: 's1', facilityId: null, status: null },
     headers: new Headers(),
   }
   return { ctx, sr, prac, maybeSingleMock }
@@ -125,7 +125,7 @@ describe('serviceRequest.getOrderPatientRef', () => {
     const supabase = { from: vi.fn((t: string) => (t === 'practitioners' ? prac : sr)) }
     const ctx = {
       supabase,
-      user: { sub: 'auth-1', practitionerId: 'auth-1', role: 'DOCTOR', orgId: 'org-1', sessionId: 's1', facilityId: null, status: null },
+      user: { sub: 'auth-1', practitionerId: 'auth-1', role: 'DOCTOR' as const, orgId: 'org-1', sessionId: 's1', facilityId: null, status: null },
       headers: new Headers(),
     }
 

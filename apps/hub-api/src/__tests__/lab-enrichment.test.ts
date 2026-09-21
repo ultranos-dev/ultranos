@@ -47,7 +47,7 @@ const { adminRouter } = await import('../trpc/routers/admin')
 function makeAdminCtx(supabase: any) {
   return {
     supabase,
-    user: { sub: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', role: 'ADMIN', sessionId: 'sess-1', orgId: 'org-1', status: null },
+    user: { sub: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', role: 'ADMIN' as const, sessionId: 'sess-1', orgId: 'org-1', status: null, facilityId: null, },
     headers: new Headers(),
   }
 }

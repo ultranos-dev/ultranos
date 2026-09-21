@@ -16,7 +16,7 @@ const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { roleRestrictedProcedure } = await import('../trpc/rbac')
 const { enforceResourceAccess } = await import('../trpc/middleware/enforceResourceAccess')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: { from: vi.fn() } as never,
     user,
@@ -32,7 +32,7 @@ describe('enforceResourceAccess middleware', () => {
         .query(() => 'patient-data'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1' }),
+      makeCtx({ sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     expect(await caller.get()).toBe('patient-data')
   })
@@ -44,7 +44,7 @@ describe('enforceResourceAccess middleware', () => {
         .query(() => 'encounter-data'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1' }),
+      makeCtx({ sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     expect(await caller.get()).toBe('encounter-data')
   })
@@ -56,7 +56,7 @@ describe('enforceResourceAccess middleware', () => {
         .query(() => 'rx-data'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'pharm-1', role: 'PHARMACIST', sessionId: 's1' }),
+      makeCtx({ sub: 'pharm-1', role: 'PHARMACIST' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     expect(await caller.get()).toBe('rx-data')
   })
@@ -68,7 +68,7 @@ describe('enforceResourceAccess middleware', () => {
         .query(() => 'encounter-data'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'pharm-1', role: 'PHARMACIST', sessionId: 's1' }),
+      makeCtx({ sub: 'pharm-1', role: 'PHARMACIST' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.get()).rejects.toMatchObject({ code: 'FORBIDDEN' })
   })
@@ -80,7 +80,7 @@ describe('enforceResourceAccess middleware', () => {
         .query(() => 'vitals-data'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'pharm-1', role: 'PHARMACIST', sessionId: 's1' }),
+      makeCtx({ sub: 'pharm-1', role: 'PHARMACIST' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.get()).rejects.toMatchObject({ code: 'FORBIDDEN' })
   })
@@ -92,7 +92,7 @@ describe('enforceResourceAccess middleware', () => {
         .query(() => 'consent-data'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'patient-1', role: 'PATIENT', sessionId: 's1' }),
+      makeCtx({ sub: 'patient-1', role: 'PATIENT' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     expect(await caller.get()).toBe('consent-data')
   })
@@ -104,7 +104,7 @@ describe('enforceResourceAccess middleware', () => {
         .query(() => 'encounter-data'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'patient-1', role: 'PATIENT', sessionId: 's1' }),
+      makeCtx({ sub: 'patient-1', role: 'PATIENT' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.get()).rejects.toMatchObject({ code: 'FORBIDDEN' })
   })
@@ -116,7 +116,7 @@ describe('enforceResourceAccess middleware', () => {
         .query(() => 'encounter-data'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' }),
+      makeCtx({ sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     expect(await caller.get()).toBe('encounter-data')
   })
@@ -128,7 +128,7 @@ describe('enforceResourceAccess middleware', () => {
         .query(() => 'data'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'UNKNOWN_ROLE', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'UNKNOWN_ROLE' as any, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.get()).rejects.toMatchObject({ code: 'FORBIDDEN' })
   })

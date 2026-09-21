@@ -22,7 +22,7 @@ const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRestrictedProcedure } = await import('../trpc/rbac')
 const { enforceLabActive } = await import('../trpc/middleware/enforceLabActive')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: { from: mockFrom } as never,
     user,
@@ -55,7 +55,7 @@ describe('enforceLabActive middleware', () => {
         .query(() => 'upload-ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.upload()
     expect(result).toBe('upload-ok')
@@ -70,7 +70,7 @@ describe('enforceLabActive middleware', () => {
         .query(() => 'upload-ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.upload()).rejects.toMatchObject({
       code: 'FORBIDDEN',
@@ -87,7 +87,7 @@ describe('enforceLabActive middleware', () => {
         .query(() => 'upload-ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'u1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'u1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.upload()).rejects.toMatchObject({
       code: 'FORBIDDEN',
@@ -103,7 +103,7 @@ describe('enforceLabActive middleware', () => {
         .query(() => 'admin-upload-ok'),
     })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' }),
+      makeCtx({ sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.upload()
     expect(result).toBe('admin-upload-ok')

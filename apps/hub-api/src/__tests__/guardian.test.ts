@@ -81,11 +81,11 @@ const { guardianRouter } = await import('../trpc/routers/guardian')
 
 // ── Helpers ────────────────────────────────────────────────────
 
-function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string | null; status?: string | null } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: {
       from: mockFrom,
-      auth: { admin: { verifyOtp: mockVerifyOtp } },
+      auth: { verifyOtp: mockVerifyOtp, admin: { verifyOtp: mockVerifyOtp } },
     } as never,
     user: user ? { ...user, orgId: user.orgId ?? null, status: user.status ?? null } : null,
     headers: new Headers(),
@@ -93,8 +93,8 @@ function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: s
 }
 
 const PATIENT_ID = '00000000-0000-4000-8000-000000000040'
-const PATIENT_USER = { sub: PATIENT_ID, role: 'PATIENT', sessionId: 's-p1' }
-const OTHER_PATIENT_USER = { sub: '00000000-0000-4000-8000-000000000099', role: 'PATIENT', sessionId: 's-p2' }
+const PATIENT_USER = { sub: PATIENT_ID, role: 'PATIENT' as const, sessionId: 's-p1', facilityId: null, status: 'ACTIVE', orgId: null }
+const OTHER_PATIENT_USER = { sub: '00000000-0000-4000-8000-000000000099', role: 'PATIENT' as const, sessionId: 's-p2', facilityId: null, status: 'ACTIVE', orgId: null }
 const GUARDIAN_LINK_ID = '00000000-0000-4000-8000-000000000020'
 const GUARDIAN_USER_ID = '00000000-0000-4000-8000-000000000030'
 const VALID_NONCE = '00000000-0000-4000-8000-000000000050'
@@ -359,7 +359,7 @@ describe('guardian.createLink', () => {
       }),
     )
     // bodyParams must be a real object, not a string
-    const callArg = mockNotificationInsert.mock.calls[0]![0]
+    const callArg = (mockNotificationInsert.mock.calls[0] as any[])[0]
     expect(typeof callArg.bodyParams).toBe('object')
     expect(callArg.bodyParams).not.toBeNull()
   })

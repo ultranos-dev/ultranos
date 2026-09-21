@@ -23,8 +23,8 @@ const { createCallerFactory } = await import('../trpc/init')
 const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string; orgId?: string } | null
+  supabaseFrom?: any
+  user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -79,8 +79,8 @@ const MS_UUID_2 = '00000000-0000-4000-8000-000000000102'
 const RX_UUID = '00000000-0000-4000-8000-000000000201'
 const ENC_UUID = '00000000-0000-4000-8000-000000000301'
 
-const CLINICIAN_USER = { sub: 'doc-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
-const PHARMACIST_USER = { sub: 'pharm-001', role: 'PHARMACIST', sessionId: 'sess-2', orgId: 'org-test-001' }
+const CLINICIAN_USER = { sub: 'doc-001', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const PHARMACIST_USER = { sub: 'pharm-001', role: 'PHARMACIST' as const, sessionId: 'sess-2', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 
 describe('medicationStatement.listActive', () => {
   it('returns active medication statements for a patient', async () => {
@@ -412,7 +412,7 @@ describe('medicationStatement.listActiveForPharmacist', () => {
   })
 
   it('denies a PATIENT role (FORBIDDEN)', async () => {
-    const caller = createCaller(createTestContext({ user: { sub: 'pat-001', role: 'PATIENT', sessionId: 's1', orgId: 'org-1' } }))
+    const caller = createCaller(createTestContext({ user: { sub: 'pat-001', role: 'PATIENT' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' } }))
     await expect(caller.medicationStatement.listActiveForPharmacist({ patientRef: 'Patient/pat-001' })).rejects.toThrow()
   })
 

@@ -9,7 +9,7 @@ const mockEq = vi.fn().mockReturnThis()
 const mockIs = vi.fn().mockReturnThis()
 const mockGt = vi.fn(() => ({ data: [], error: null }))
 const mockSelect = vi.fn(() => ({ eq: mockEq, single: mockSingle, in: mockIn, lte: mockLte, is: mockIs, gt: mockGt }))
-const mockFrom = vi.fn(() => ({ select: mockSelect }))
+const mockFrom = vi.fn((): any => ({ select: mockSelect }))
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => ({ from: mockFrom })),
@@ -24,7 +24,7 @@ vi.mock('@/lib/supabase', () => ({
 
 const { createTRPCRouter, createCallerFactory, protectedProcedure } = await import('../trpc/init')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: { from: mockFrom } as never,
     user,
@@ -46,8 +46,7 @@ describe('practitioner key router', () => {
 
       const router = createTRPCRouter({ practitionerKey: practitionerKeyRouter })
       const caller = createCallerFactory(router)(makeCtx({
-        sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1',
-      }))
+        sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       mockSingle.mockResolvedValue({
         data: {
@@ -80,8 +79,7 @@ describe('practitioner key router', () => {
 
       const router = createTRPCRouter({ practitionerKey: practitionerKeyRouter })
       const caller = createCallerFactory(router)(makeCtx({
-        sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1',
-      }))
+        sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       mockSingle.mockResolvedValue({
         data: {
@@ -108,8 +106,7 @@ describe('practitioner key router', () => {
 
       const router = createTRPCRouter({ practitionerKey: practitionerKeyRouter })
       const caller = createCallerFactory(router)(makeCtx({
-        sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1',
-      }))
+        sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       mockSingle.mockResolvedValue({
         data: {
@@ -135,8 +132,7 @@ describe('practitioner key router', () => {
 
       const router = createTRPCRouter({ practitionerKey: practitionerKeyRouter })
       const caller = createCallerFactory(router)(makeCtx({
-        sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1',
-      }))
+        sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       mockSingle.mockResolvedValue({
         data: null,
@@ -166,8 +162,7 @@ describe('practitioner key router', () => {
 
       const router = createTRPCRouter({ practitionerKey: practitionerKeyRouter })
       const caller = createCallerFactory(router)(makeCtx({
-        sub: 'user-1', role: 'DOCTOR', sessionId: 'sess-1',
-      }))
+        sub: 'user-1', role: 'DOCTOR' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       const mockData = [
         { public_key_ed25519: 'key1', revoked_at: '2026-06-01T00:00:00Z' },
@@ -206,8 +201,7 @@ describe('practitioner key router', () => {
 
       const router = createTRPCRouter({ practitionerKey: practitionerKeyRouter })
       const caller = createCallerFactory(router)(makeCtx({
-        sub: 'admin-1', role: 'ADMIN', sessionId: 'sess-1',
-      }))
+        sub: 'admin-1', role: 'ADMIN' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       const mockUpdate = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
@@ -244,8 +238,7 @@ describe('practitioner key router', () => {
 
       const router = createTRPCRouter({ practitionerKey: practitionerKeyRouter })
       const caller = createCallerFactory(router)(makeCtx({
-        sub: 'doc-1', role: 'DOCTOR', sessionId: 'sess-1',
-      }))
+        sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 'sess-1', facilityId: null, status: 'ACTIVE', orgId: null }))
 
       await expect(caller.practitionerKey.revokeKey({
         publicKey: 'dGVzdC1rZXk=',

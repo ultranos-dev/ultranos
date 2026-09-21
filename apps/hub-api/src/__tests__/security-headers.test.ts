@@ -32,7 +32,7 @@ describe('CORS utility (cors.ts)', () => {
 
     it('allows localhost origins in development when no env var set', async () => {
       delete process.env.CORS_ALLOWED_ORIGINS
-      process.env.NODE_ENV = 'development'
+      ;(process.env as Record<string, string | undefined>).NODE_ENV = 'development'
       const { isOriginAllowed } = await import('../lib/cors')
       expect(isOriginAllowed('http://localhost:3000')).toBe(true)
       expect(isOriginAllowed('http://localhost:3001')).toBe(true)
@@ -41,7 +41,7 @@ describe('CORS utility (cors.ts)', () => {
 
     it('rejects all origins in production when no env var set', async () => {
       delete process.env.CORS_ALLOWED_ORIGINS
-      process.env.NODE_ENV = 'production'
+      ;(process.env as Record<string, string | undefined>).NODE_ENV = 'production'
       const { isOriginAllowed } = await import('../lib/cors')
       expect(isOriginAllowed('http://localhost:3000')).toBe(false)
       expect(isOriginAllowed('https://opd.ultranos.app')).toBe(false)
@@ -69,21 +69,21 @@ describe('CORS utility (cors.ts)', () => {
   describe('validateCorsConfig', () => {
     it('throws in production when CORS_ALLOWED_ORIGINS is not set', async () => {
       delete process.env.CORS_ALLOWED_ORIGINS
-      process.env.NODE_ENV = 'production'
+      ;(process.env as Record<string, string | undefined>).NODE_ENV = 'production'
       const { validateCorsConfig } = await import('../lib/cors')
       expect(() => validateCorsConfig()).toThrow('CORS_ALLOWED_ORIGINS must be set in production')
     })
 
     it('does not throw in production when CORS_ALLOWED_ORIGINS is set', async () => {
       process.env.CORS_ALLOWED_ORIGINS = 'https://opd.ultranos.app'
-      process.env.NODE_ENV = 'production'
+      ;(process.env as Record<string, string | undefined>).NODE_ENV = 'production'
       const { validateCorsConfig } = await import('../lib/cors')
       expect(() => validateCorsConfig()).not.toThrow()
     })
 
     it('does not throw in development when CORS_ALLOWED_ORIGINS is not set', async () => {
       delete process.env.CORS_ALLOWED_ORIGINS
-      process.env.NODE_ENV = 'development'
+      ;(process.env as Record<string, string | undefined>).NODE_ENV = 'development'
       const { validateCorsConfig } = await import('../lib/cors')
       expect(() => validateCorsConfig()).not.toThrow()
     })
@@ -142,7 +142,7 @@ describe('HTTPS enforcement middleware', () => {
   }
 
   it('redirects HTTP to HTTPS in production', async () => {
-    process.env.NODE_ENV = 'production'
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production'
 
     const { middleware } = await import('../middleware')
     const req = makeRequest('http://api.ultranos.app/api/trpc/patient.list', {
@@ -158,7 +158,7 @@ describe('HTTPS enforcement middleware', () => {
   })
 
   it('allows HTTPS requests in production', async () => {
-    process.env.NODE_ENV = 'production'
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production'
 
     const { middleware } = await import('../middleware')
     const req = makeRequest('https://api.ultranos.app/api/trpc/patient.list', {
@@ -172,7 +172,7 @@ describe('HTTPS enforcement middleware', () => {
   })
 
   it('does not redirect in development', async () => {
-    process.env.NODE_ENV = 'development'
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'development'
 
     const { middleware } = await import('../middleware')
     const req = makeRequest('http://localhost:3000/api/trpc/patient.list', {
@@ -185,7 +185,7 @@ describe('HTTPS enforcement middleware', () => {
   })
 
   it('allows requests without x-forwarded-proto in production', async () => {
-    process.env.NODE_ENV = 'production'
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production'
 
     const { middleware } = await import('../middleware')
     const req = makeRequest('https://api.ultranos.app/api/trpc/patient.list')
@@ -196,7 +196,7 @@ describe('HTTPS enforcement middleware', () => {
   })
 
   it('handles comma-separated x-forwarded-proto from multiple proxies', async () => {
-    process.env.NODE_ENV = 'production'
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production'
 
     const { middleware } = await import('../middleware')
     const req = makeRequest('https://api.ultranos.app/api/trpc/patient.list', {

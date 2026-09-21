@@ -112,7 +112,7 @@ function buildFromMock(opts: {
 function makeLabTechCtx(fromImpl: ReturnType<typeof vi.fn>) {
   return {
     supabase: { from: fromImpl } as never,
-    user: { sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: null, status: null },
+    user: { sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: null, status: null, facilityId: null, },
     headers: new Headers(),
   }
 }
@@ -191,7 +191,7 @@ describe('lab.getEmergencyVaccinationStatus', () => {
     await caller.getEmergencyVaccinationStatus({ practitionerId: PRACTITIONER_ID })
 
     expect(mockAuditEmit).toHaveBeenCalledWith(
-      expect.objectContaining({ outcome: 'NOT_FOUND' }),
+      expect.objectContaining({ outcome: 'FAILURE' }),
     )
   })
 

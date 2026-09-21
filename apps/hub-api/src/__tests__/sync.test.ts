@@ -46,10 +46,10 @@ const { createCallerFactory } = await import('../trpc/init')
 
 const createCaller = createCallerFactory(appRouter)
 
-function createAuthContext(role = 'DOCTOR') {
+function createAuthContext(role: `${import('@ultranos/shared-types').UserRole}` = 'DOCTOR') {
   return {
     supabase: mockSupabaseClient as never,
-    user: { sub: 'user-1', role, sessionId: 'session-1', userId: 'user-1', orgId: 'org-1' },
+    user: { sub: 'user-1', role, sessionId: 'session-1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' },
     headers: new Headers(),
   }
 }
@@ -247,7 +247,7 @@ describe('sync.push', () => {
     expect(result.results[0]!.success).toBe(true)
     // synced_by is NOT NULL with no DB default — it MUST be stamped from the
     // authenticated actor, or the upsert fails and the allergy never persists.
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow.syncedBy).toBe('user-1')
     expect(upsertedRow.syncedAt).toBeTruthy()
   })
@@ -407,12 +407,12 @@ describe('sync.push — wholesale ingestion (B1)', () => {
 
     // Verify upsert targeted 'wholesale_customers'
     // mockFrom call[0] = conflict-check select, call[1] = upsert
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('wholesale_customers')
 
     // Verify the row has orgId stamped from context + hlcTimestamp as-is
     // (The mock db.toRow is a pass-through — no snake_case conversion in tests)
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow).toMatchObject({ id: 'c1', name: 'Herat Depot', orgId: 'org-1', hlcTimestamp: '100' })
   })
 
@@ -445,7 +445,7 @@ describe('sync.push — wholesale ingestion (B1)', () => {
     // PHARMACIST caller with orgId = null (no org context)
     const noOrgCtx = {
       supabase: mockSupabaseClient as never,
-      user: { sub: 'user-2', role: 'PHARMACIST', sessionId: 'session-2', userId: 'user-2', orgId: null },
+      user: { sub: 'user-2', role: 'PHARMACIST' as const, sessionId: 'session-2', orgId: null, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     }
     const callerNoOrg = createCaller(noOrgCtx)
@@ -504,10 +504,10 @@ describe('sync.push — wholesale ingestion (B1)', () => {
 
     expect(res.results[0]).toMatchObject({ resourceId: 'o1', success: true })
 
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('sales_orders')
 
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow.lines).toEqual(lines)
   })
 })
@@ -649,11 +649,11 @@ describe('sync.push — ContractPrice ingestion', () => {
 
     // Verify upsert targeted 'contract_prices'
     // mockFrom call[0] = conflict-check select, call[1] = upsert
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('contract_prices')
 
     // flattener maps priceMinor -> price; org stamped from context
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow).toMatchObject({ id: 'cp1', price: 1800, orgId: 'org-1' })
   })
 
@@ -697,7 +697,7 @@ describe('sync.push — ContractPrice ingestion', () => {
 
     expect(res.results[0]).toMatchObject({ resourceId: 'cp2', success: true })
 
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     const upsertedTiers = upsertedRow.tiers as Array<{ minQuantity: number; priceMinor: number }>
     expect(upsertedTiers).toHaveLength(1)
     expect(upsertedTiers[0]!.minQuantity).toBe(10)
@@ -750,11 +750,11 @@ describe('sync.push — ContractPrice delete', () => {
     expect(res.results[0]).toMatchObject({ resourceId: 'cp1', success: true })
 
     // Verify upsert targeted 'contract_prices'
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('contract_prices')
 
     // deleted_at must be stamped on the upserted row
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow.deletedAt ?? upsertedRow.deleted_at).toBeTruthy()
   })
 })
@@ -807,10 +807,10 @@ describe('sync.push — inventory/procurement ingestion', () => {
 
     expect(res.results[0]).toMatchObject({ resourceId: 's1', success: true })
 
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('pharmacy_suppliers')
 
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow).toMatchObject({ id: 's1', name: 'Kabul Medical Supplies', orgId: 'org-1' })
   })
 
@@ -830,10 +830,10 @@ describe('sync.push — inventory/procurement ingestion', () => {
 
     expect(res.results[0]).toMatchObject({ resourceId: 'po1', success: true })
 
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('pharmacy_purchase_orders')
 
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow.items).toEqual(items)
     expect(upsertedRow.totalCost).toBe(50000)
     expect(upsertedRow.orgId).toBe('org-1')
@@ -855,10 +855,10 @@ describe('sync.push — inventory/procurement ingestion', () => {
 
     expect(res.results[0]).toMatchObject({ resourceId: 'gr1', success: true })
 
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('goods_receipts')
 
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow.items).toEqual(items)
     expect(upsertedRow.receivedBy).toBe('p1')
     expect(upsertedRow.orgId).toBe('org-1')
@@ -879,10 +879,10 @@ describe('sync.push — inventory/procurement ingestion', () => {
 
     expect(res.results[0]).toMatchObject({ resourceId: 'sb1', success: true })
 
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('stock_batches')
 
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow.quantityOnHand).toBe(48)
     expect(upsertedRow.orgId).toBe('org-1')
   })
@@ -902,10 +902,10 @@ describe('sync.push — inventory/procurement ingestion', () => {
 
     expect(res.results[0]).toMatchObject({ resourceId: 'sm1', success: true })
 
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('stock_movements')
 
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     // Critical mapping: client `timestamp` → `movementTimestamp` (→ movement_timestamp column)
     expect(upsertedRow.movementTimestamp).toBe('2026-09-07T10:00:00Z')
     expect(upsertedRow.quantity).toBe(5)
@@ -962,10 +962,10 @@ describe('sync.push — transfers/stock-count ingestion', () => {
 
     expect(res.results[0]).toMatchObject({ resourceId: 'st1', success: true })
 
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('stock_transfers')
 
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow.items).toEqual(items)
     // fromLocationId preserved (camelCase, db.toRow is pass-through in tests)
     expect(upsertedRow.fromLocationId).toBe('loc-a')
@@ -988,10 +988,10 @@ describe('sync.push — transfers/stock-count ingestion', () => {
 
     expect(res.results[0]).toMatchObject({ resourceId: 'sc1', success: true })
 
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('stock_counts')
 
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow.items).toEqual(items)
     // inner item has expectedQty preserved
     expect((upsertedRow.items as typeof items)[0]!.expectedQty).toBe(48)
@@ -1084,7 +1084,7 @@ describe('sync.pull — org-scoped wholesale (B2)', () => {
 
     const noOrgCtx = {
       supabase: mockSupabaseClient as never,
-      user: { sub: 'user-2', role: 'PHARMACIST', sessionId: 'session-2', userId: 'user-2', orgId: null },
+      user: { sub: 'user-2', role: 'PHARMACIST' as const, sessionId: 'session-2', orgId: null, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     }
     const callerNoOrg = createCaller(noOrgCtx)
@@ -1162,11 +1162,11 @@ describe('sync.push — POS ingestion', () => {
     expect(res.results[0]).toMatchObject({ resourceId: 'inv-1', success: true })
 
     // Verify upsert targeted 'invoices'
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('invoices')
 
     // Critical: client `items` → renamed `invoiceItems` (→ invoice_items column, ENCRYPTED)
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow.invoiceItems).toEqual(items)
     expect(upsertedRow.patientId).toBe('pat-1')
     expect(upsertedRow.orgId).toBe('org-1')
@@ -1199,11 +1199,11 @@ describe('sync.push — POS ingestion', () => {
     expect(res.results[0]).toMatchObject({ resourceId: 'pay-1', success: true })
 
     // Verify upsert targeted 'payments'
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('payments')
 
     // Critical: client `timestamp` → renamed `paymentTimestamp` (→ payment_timestamp column)
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow.paymentTimestamp).toBe('2026-09-08T10:00:00Z')
     expect(upsertedRow.amount).toBe(3000)
     expect(upsertedRow.orgId).toBe('org-1')
@@ -1236,11 +1236,11 @@ describe('sync.push — POS ingestion', () => {
     expect(res.results[0]).toMatchObject({ resourceId: 'le-1', success: true })
 
     // Verify upsert targeted 'patient_ledger_entries'
-    const upsertTableCall = mockFrom.mock.calls[1]![0] as string
+    const upsertTableCall = (mockFrom.mock.calls[1] as any[])[0] as string
     expect(upsertTableCall).toBe('patient_ledger_entries')
 
     // Critical renames: `note` → `ledgerNote` (ENCRYPTED), `timestamp` → `ledgerTimestamp`
-    const upsertedRow = upsertSpy.mock.calls[0]![0] as Record<string, unknown>
+    const upsertedRow = (upsertSpy.mock.calls[0] as any[])[0] as Record<string, unknown>
     expect(upsertedRow.ledgerNote).toBe('Patient paid in full for Amoxicillin prescription')
     expect(upsertedRow.ledgerTimestamp).toBe('2026-09-08T10:05:00Z')
     expect(upsertedRow.patientId).toBe('pat-1')

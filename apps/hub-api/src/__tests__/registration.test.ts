@@ -58,18 +58,16 @@ const ORG_UUID = '00000000-0000-4000-8000-000000000901'
 const USER_UUID = '00000000-0000-4000-8000-000000000902'
 const ADMIN_USER = {
   sub: USER_UUID,
-  role: 'ADMIN',
+  role: 'ADMIN' as const,
   sessionId: 'sess-admin-1',
-  orgId: ORG_UUID,
-}
+  orgId: ORG_UUID, facilityId: null, status: 'ACTIVE' }
 
 const PRACTITIONER_UUID = '00000000-0000-4000-8000-000000000903'
 const DOCTOR_USER = {
   sub: PRACTITIONER_UUID,
-  role: 'DOCTOR',
+  role: 'DOCTOR' as const,
   sessionId: 'sess-doctor-1',
-  orgId: ORG_UUID,
-}
+  orgId: ORG_UUID, facilityId: null, status: 'ACTIVE' }
 
 function createUnauthContext() {
   return {
@@ -545,8 +543,8 @@ describe('registration.selectInitialModules', () => {
     expect(result.success).toBe(true)
     expect(result.subscriptions).toHaveLength(2)
     expect(insertedRows).toHaveLength(2)
-    expect(insertedRows[0].status).toBe('TRIAL')
-    expect(insertedRows[0].expires_at).toBe('2026-06-14T00:00:00.000Z')
+    expect(insertedRows[0]!.status).toBe('TRIAL')
+    expect(insertedRows[0]!.expires_at).toBe('2026-06-14T00:00:00.000Z')
   })
 
   it('rejects empty module list', async () => {
@@ -661,7 +659,7 @@ describe('registration.selectInitialModules', () => {
   it('rejects non-ADMIN role', async () => {
     const ctx = {
       supabase: mockSupabaseClient as never,
-      user: { sub: 'doc-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: ORG_UUID },
+      user: { sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: ORG_UUID, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     }
     const caller = createCaller(ctx)
@@ -708,7 +706,7 @@ describe('PENDING_VERIFICATION gate', () => {
 
     const ctx = {
       supabase: mockSupabaseClient as never,
-      user: { sub: 'doc-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: ORG_UUID },
+      user: { sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: ORG_UUID, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     }
     const caller = createCaller(ctx)
@@ -748,7 +746,7 @@ describe('PENDING_VERIFICATION gate', () => {
 
     const ctx = {
       supabase: mockSupabaseClient as never,
-      user: { sub: 'admin-1', role: 'ADMIN', sessionId: 'sess-1', orgId: ORG_UUID },
+      user: { sub: 'admin-1', role: 'ADMIN' as const, sessionId: 'sess-1', orgId: ORG_UUID, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     }
     const caller = createCaller(ctx)
@@ -794,7 +792,7 @@ describe('PENDING_VERIFICATION gate', () => {
 
     const ctx = {
       supabase: mockSupabaseClient as never,
-      user: { sub: 'doc-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: ORG_UUID },
+      user: { sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: ORG_UUID, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     }
     const caller = createCaller(ctx)
@@ -826,7 +824,7 @@ describe('PENDING_VERIFICATION gate', () => {
 
     const ctx = {
       supabase: mockSupabaseClient as never,
-      user: { sub: 'doc-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: ORG_UUID },
+      user: { sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: ORG_UUID, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     }
     const caller = createCaller(ctx)
@@ -865,7 +863,7 @@ describe('PENDING_VERIFICATION gate', () => {
 
     const ctx = {
       supabase: mockSupabaseClient as never,
-      user: { sub: 'doc-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: ORG_UUID },
+      user: { sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: ORG_UUID, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     }
     const caller = createCaller(ctx)
@@ -918,7 +916,7 @@ describe('PENDING_VERIFICATION gate', () => {
 
     const ctx = {
       supabase: mockSupabaseClient as never,
-      user: { sub: 'doc-1', role: 'DOCTOR', sessionId: 'sess-1', orgId: ORG_UUID },
+      user: { sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 'sess-1', orgId: ORG_UUID, facilityId: null, status: 'ACTIVE' },
       headers: new Headers(),
     }
     const caller = createCaller(ctx)

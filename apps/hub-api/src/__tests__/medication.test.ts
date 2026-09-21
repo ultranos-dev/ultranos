@@ -24,8 +24,8 @@ const { createCallerFactory } = await import('../trpc/init')
 const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string } | null
+  supabaseFrom?: any
+  user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -49,7 +49,7 @@ const RX_UUID_3 = '00000000-0000-4000-8000-000000000003'
 const RX_UUID_4 = '00000000-0000-4000-8000-000000000004'
 const RX_UUID_BAD = '00000000-0000-4000-8000-ffffffffffff'
 
-const TEST_USER = { sub: 'pharmacist-001', role: 'PHARMACIST', sessionId: 'sess-1', orgId: 'org-test-001' }
+const TEST_USER = { sub: 'pharmacist-001', role: 'PHARMACIST' as const, sessionId: 'sess-1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 
 // Ed25519 key pair for signed bundle tests (Story 21.2)
 let testKeyPair: crypto.KeyPairKeyObjectResult
@@ -757,7 +757,7 @@ describe('medication.recordDispense', () => {
     ).rejects.toThrow('Prescription has already been dispensed')
 
     // Verify audit was called (AuditLogger uses rpc('audit_emit_with_lock', ...) not from('audit_log'))
-    expect(ctx.supabase.rpc).toHaveBeenCalled()
+    expect((ctx.supabase as any).rpc).toHaveBeenCalled()
   })
 
   it('throws INTERNAL_SERVER_ERROR when dispense insert fails', async () => {
@@ -886,7 +886,7 @@ describe('medication.recordDispense', () => {
     await caller.medication.recordDispense(validInput)
 
     // Audit logger uses rpc('audit_emit_with_lock', ...) not from('audit_log')
-    expect(ctx.supabase.rpc).toHaveBeenCalled()
+    expect((ctx.supabase as any).rpc).toHaveBeenCalled()
   })
 
   it('ignores dispense with older HLC when prescription already completed (AC 5)', async () => {

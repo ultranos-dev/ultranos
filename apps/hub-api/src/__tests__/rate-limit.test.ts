@@ -62,7 +62,7 @@ describe('Rate Limiting', () => {
   describe('deriveIdentifier', () => {
     it('returns auth scope with user sub for authenticated requests', () => {
       const ctx = makeCtx({
-        user: { sub: 'user-123', role: 'CLINICIAN', sessionId: 's1', orgId: null },
+        user: { sub: 'user-123', role: 'DOCTOR' as const, sessionId: 's1', orgId: null, facilityId: null, status: 'ACTIVE' },
       })
       const result = deriveIdentifier(ctx)
       expect(result.scope).toBe('auth')
@@ -210,9 +210,9 @@ describe('Rate Limiting', () => {
     it('allows request under limit and attaches rateLimit to ctx', async () => {
       mockPipelineExec.mockResolvedValue([[null, 1], [null, 1]])
 
-      const middleware = rateLimitMiddleware()
+      const middleware = (rateLimitMiddleware() as any)._middlewares[0]
       const ctx = makeCtx({
-        user: { sub: 'user-1', role: 'CLINICIAN', sessionId: 's1', orgId: null },
+        user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 's1', orgId: null, facilityId: null, status: 'ACTIVE' },
       })
 
       let capturedCtx: Record<string, unknown> | undefined
@@ -223,7 +223,7 @@ describe('Rate Limiting', () => {
           capturedCtx = opts.ctx
           return { ok: true }
         },
-      } as Parameters<ReturnType<typeof rateLimitMiddleware>>[0])
+      } as any)
 
       expect(capturedCtx?.rateLimit).toBeDefined()
       const rl = capturedCtx!.rateLimit as { allowed: boolean; limit: number; remaining: number }
@@ -235,16 +235,16 @@ describe('Rate Limiting', () => {
     it('throws TOO_MANY_REQUESTS when limit exceeded and attaches rateLimit to ctx', async () => {
       mockPipelineExec.mockResolvedValue([[null, 101], [null, 1]]) // over 100
 
-      const middleware = rateLimitMiddleware()
+      const middleware = (rateLimitMiddleware() as any)._middlewares[0]
       const ctx = makeCtx({
-        user: { sub: 'user-1', role: 'CLINICIAN', sessionId: 's1', orgId: null },
+        user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 's1', orgId: null, facilityId: null, status: 'ACTIVE' },
       })
 
       const opts = {
         ctx,
         path: 'encounter.list',
         next: async () => ({ ok: true }),
-      } as Parameters<ReturnType<typeof rateLimitMiddleware>>[0]
+      } as any
 
       await expect(middleware(opts)).rejects.toThrow(TRPCError)
 
@@ -254,10 +254,10 @@ describe('Rate Limiting', () => {
       try {
         mockPipelineExec.mockResolvedValue([[null, 102], [null, 1]])
         await middleware({
-          ctx: makeCtx({ user: { sub: 'user-1', role: 'CLINICIAN', sessionId: 's1', orgId: null } }),
+          ctx: makeCtx({ user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 's1', orgId: null, facilityId: null, status: 'ACTIVE' } }),
           path: 'encounter.list',
           next: async () => ({ ok: true }),
-        } as Parameters<ReturnType<typeof rateLimitMiddleware>>[0])
+        } as any)
       } catch (err) {
         expect((err as TRPCError).code).toBe('TOO_MANY_REQUESTS')
       }
@@ -266,7 +266,7 @@ describe('Rate Limiting', () => {
     it('uses unauthenticated tier for requests without user', async () => {
       mockPipelineExec.mockResolvedValue([[null, 1], [null, 1]])
 
-      const middleware = rateLimitMiddleware()
+      const middleware = (rateLimitMiddleware() as any)._middlewares[0]
       const ctx = makeCtx() // no user
 
       let capturedCtx: Record<string, unknown> | undefined
@@ -277,7 +277,7 @@ describe('Rate Limiting', () => {
           capturedCtx = opts.ctx
           return { ok: true }
         },
-      } as Parameters<ReturnType<typeof rateLimitMiddleware>>[0])
+      } as any)
 
       const rl = capturedCtx!.rateLimit as { limit: number; remaining: number }
       expect(rl.limit).toBe(20) // unauthenticated default
@@ -287,9 +287,9 @@ describe('Rate Limiting', () => {
     it('accepts config override with tier name for patient.search', async () => {
       mockPipelineExec.mockResolvedValue([[null, 1], [null, 1]])
 
-      const middleware = rateLimitMiddleware(RATE_LIMIT_TIERS.patientSearch, 'patientSearch')
+      const middleware = (rateLimitMiddleware(RATE_LIMIT_TIERS.patientSearch, 'patientSearch') as any)._middlewares[0]
       const ctx = makeCtx({
-        user: { sub: 'user-1', role: 'CLINICIAN', sessionId: 's1', orgId: null },
+        user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 's1', orgId: null, facilityId: null, status: 'ACTIVE' },
       })
 
       let capturedCtx: Record<string, unknown> | undefined
@@ -300,7 +300,7 @@ describe('Rate Limiting', () => {
           capturedCtx = opts.ctx
           return { ok: true }
         },
-      } as Parameters<ReturnType<typeof rateLimitMiddleware>>[0])
+      } as any)
 
       const rl = capturedCtx!.rateLimit as { limit: number }
       expect(rl.limit).toBe(10) // patientSearch override
@@ -313,9 +313,9 @@ describe('Rate Limiting', () => {
     it('rejects patient.search at stricter limit threshold', async () => {
       mockPipelineExec.mockResolvedValue([[null, 11], [null, 1]]) // over 10
 
-      const middleware = rateLimitMiddleware(RATE_LIMIT_TIERS.patientSearch, 'patientSearch')
+      const middleware = (rateLimitMiddleware(RATE_LIMIT_TIERS.patientSearch, 'patientSearch') as any)._middlewares[0]
       const ctx = makeCtx({
-        user: { sub: 'user-1', role: 'CLINICIAN', sessionId: 's1', orgId: null },
+        user: { sub: 'user-1', role: 'DOCTOR' as const, sessionId: 's1', orgId: null, facilityId: null, status: 'ACTIVE' },
       })
 
       await expect(
@@ -323,7 +323,7 @@ describe('Rate Limiting', () => {
           ctx,
           path: 'patient.search',
           next: async () => ({ ok: true }),
-        } as Parameters<ReturnType<typeof rateLimitMiddleware>>[0]),
+        } as any),
       ).rejects.toThrow(TRPCError)
     })
   })

@@ -88,7 +88,7 @@ const PATIENT_REF = mockBlindIndex(PATIENT_UUID)
 
 function makeAuthCtx(userId = ACTOR_ID) {
   return {
-    user: { sub: userId, role: 'PATIENT', sessionId: 'sess-1', orgId: null, facilityId: null, status: null },
+    user: { sub: userId, role: 'PATIENT' as const, sessionId: 'sess-1', orgId: null, facilityId: null, status: null },
     headers: new Headers(),
   }
 }

@@ -128,7 +128,7 @@ vi.mock('@/lib/supabase', () => ({
 const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRouter } = await import('../trpc/routers/lab')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string | null } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: { from: mockFrom } as never,
     user,
@@ -169,13 +169,13 @@ describe('lab.uploadSpecimenFile', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     const res = await caller.lab.uploadSpecimenFile(validInput)
     expect(res.fileId).toMatch(/^[0-9a-f-]{36}$/)
 
     // Verify the row written to specimen_files has encrypted_content (v1:) and 64-char hash
-    const insertedRow = mockInsert.mock.calls[0]![0]
+    const insertedRow = (mockInsert.mock.calls[0] as any[])[0]
     expect(insertedRow.encrypted_content.startsWith('v1:')).toBe(true)
     expect(insertedRow.file_hash).toHaveLength(64)
 
@@ -202,13 +202,13 @@ describe('lab.uploadSpecimenFile', () => {
     const { encryptField } = await import('@ultranos/crypto/server')
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await caller.lab.uploadSpecimenFile(validInput)
 
     expect(encryptField).toHaveBeenCalledWith(validInput.fileBase64, 'a'.repeat(64))
 
-    const insertedRow = mockInsert.mock.calls[0]![0]
+    const insertedRow = (mockInsert.mock.calls[0] as any[])[0]
     expect(insertedRow.encrypted_content).toMatch(/^v1:/)
   })
 
@@ -219,7 +219,7 @@ describe('lab.uploadSpecimenFile', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await caller.lab.uploadSpecimenFile(validInput)
 
@@ -237,7 +237,7 @@ describe('lab.uploadSpecimenFile', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await expect(caller.lab.uploadSpecimenFile(validInput)).rejects.toMatchObject({
       code: 'BAD_REQUEST',
@@ -263,7 +263,7 @@ describe('lab.uploadSpecimenFile', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await expect(caller.lab.uploadSpecimenFile(validInput)).rejects.toMatchObject({
       code: 'INTERNAL_SERVER_ERROR',
@@ -282,7 +282,7 @@ describe('lab.uploadSpecimenFile', () => {
     const hugeBase64 = Buffer.alloc(21 * 1024 * 1024).toString('base64')
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await expect(
       caller.lab.uploadSpecimenFile({ ...validInput, fileBase64: hugeBase64 }),
@@ -298,12 +298,12 @@ describe('lab.uploadSpecimenFile', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     // validInput.patientRef = 'Patient/abc' — prefix must be stripped before storage
     await caller.lab.uploadSpecimenFile(validInput)
 
-    const insertedRow = mockInsert.mock.calls[0]![0]
+    const insertedRow = (mockInsert.mock.calls[0] as any[])[0]
     expect(insertedRow).toEqual(
       expect.objectContaining({
         specimen_id: validInput.specimenId,
@@ -323,11 +323,11 @@ describe('lab.uploadSpecimenFile', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await caller.lab.uploadSpecimenFile({ ...validInput, patientRef: 'Patient/abc123' })
 
-    const insertedRow = mockInsert.mock.calls[0]![0]
+    const insertedRow = (mockInsert.mock.calls[0] as any[])[0]
     expect(insertedRow.patient_ref).toBe('abc123')
   })
 
@@ -338,11 +338,11 @@ describe('lab.uploadSpecimenFile', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await caller.lab.uploadSpecimenFile({ ...validInput, patientRef: 'abc123' })
 
-    const insertedRow = mockInsert.mock.calls[0]![0]
+    const insertedRow = (mockInsert.mock.calls[0] as any[])[0]
     expect(insertedRow.patient_ref).toBe('abc123')
   })
 
@@ -359,12 +359,12 @@ describe('lab.uploadSpecimenFile', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     const result = await caller.lab.uploadSpecimenFile(validInput)
     expect(result.fileId).toBe('specimen-file-deferred')
 
-    const insertedRow = mockInsert.mock.calls[0]![0]
+    const insertedRow = (mockInsert.mock.calls[0] as any[])[0]
     expect(insertedRow.virus_scan_status).toBe('pending')
   })
 
@@ -375,7 +375,7 @@ describe('lab.uploadSpecimenFile', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     const result = await caller.lab.uploadSpecimenFile({ ...validInput, attachmentContext: 'receipt' })
     expect(result.fileId).toBe('specimen-file-receipt')
@@ -383,7 +383,7 @@ describe('lab.uploadSpecimenFile', () => {
 
   it('rejects invalid attachmentContext', async () => {
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }))
 
     await expect(
       caller.lab.uploadSpecimenFile({ ...validInput, attachmentContext: 'other' as any }),

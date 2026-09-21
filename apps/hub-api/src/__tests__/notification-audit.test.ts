@@ -60,7 +60,7 @@ vi.mock('@/lib/supabase', () => ({
 const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { notificationRouter } = await import('../trpc/routers/notification')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: { from: mockFrom } as never,
     user,
@@ -68,8 +68,8 @@ function makeCtx(user: { sub: string; role: string; sessionId: string } | null) 
   }
 }
 
-const SYSTEM_USER = { sub: 'system-1', role: 'SYSTEM', sessionId: 's-sys' }
-const DOCTOR_USER = { sub: 'doctor-1', role: 'DOCTOR', sessionId: 's-d1' }
+const SYSTEM_USER = { sub: 'system-1', role: 'SYSTEM' as const, sessionId: 's-sys', facilityId: null, status: 'ACTIVE', orgId: null }
+const DOCTOR_USER = { sub: 'doctor-1', role: 'DOCTOR' as const, sessionId: 's-d1', facilityId: null, status: 'ACTIVE', orgId: null }
 
 describe('Notification Audit Events (AC: 10)', () => {
   beforeEach(() => {

@@ -63,7 +63,7 @@ describe('mapBrandWithPresentations', () => {
     })
     expect(bw.brandName).toBe('Augmentin')
     expect(bw.presentations).toHaveLength(1)
-    expect(bw.presentations[0].strength).toBe('625 mg')
+    expect(bw.presentations[0]!.strength).toBe('625 mg')
   })
 
   it('returns an empty presentations array when none are embedded', () => {

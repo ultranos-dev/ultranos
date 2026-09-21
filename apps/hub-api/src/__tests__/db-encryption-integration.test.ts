@@ -50,7 +50,7 @@ describe('db helper with mandatory field-level encryption (Story 7.3b)', () => {
         status: 'QUEUED',
       }
 
-      const result = db.toRowRaw(row, 'non-PHI: notifications')
+      const result = db.toRowRaw(row, 'non-PHI: notifications') as Record<string, any>
 
       expect(result.recipient_ref).toBe('user-123')
       expect(result.notification_type).toBe('LAB_RESULT')
@@ -62,7 +62,6 @@ describe('db helper with mandatory field-level encryption (Story 7.3b)', () => {
 
       // @ts-expect-error — intentionally omitting required reason parameter
       expect(() => db.toRowRaw(row)).toThrow(TypeError)
-      // @ts-expect-error — empty string is not a valid reason
       expect(() => db.toRowRaw(row, '')).toThrow(TypeError)
     })
 
@@ -83,7 +82,7 @@ describe('db helper with mandatory field-level encryption (Story 7.3b)', () => {
         status: 'QUEUED',
       }
 
-      const result = db.toRowRaw(row, 'non-PHI: notifications')
+      const result = db.toRowRaw(row, 'non-PHI: notifications') as Record<string, any>
 
       expect(result.recipient_ref).toBe('user-1')
       expect(result.status).toBe('QUEUED')
@@ -120,7 +119,7 @@ describe('db helper with mandatory field-level encryption (Story 7.3b)', () => {
         status: 'QUEUED',
       }
 
-      const result = db.fromRowRaw(row)
+      const result = db.fromRowRaw(row) as Record<string, any>
 
       expect(result.recipientRef).toBe('user-123')
       expect(result.createdAt).toBe('2026-01-01')

@@ -52,7 +52,7 @@ const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRestrictedProcedure } = await import('../trpc/rbac')
 const { enforceLabRole } = await import('../trpc/middleware/enforceLabRole')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string }) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null }) {
   return {
     supabase: {
       from: mockFrom,
@@ -148,7 +148,7 @@ describe('lab.getMyRole', () => {
     // Dynamically import the router to use our mocks
     const { labRouter } = await import('../trpc/routers/lab')
     const caller = createCallerFactory(labRouter)(
-      makeCtx({ sub: 'prac-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'prac-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.getMyRole()
     expect(result.labRole).toBe('SUPERVISOR')
@@ -177,7 +177,7 @@ describe('lab.getMyRole', () => {
 
     const { labRouter } = await import('../trpc/routers/lab')
     const caller = createCallerFactory(labRouter)(
-      makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' }),
+      makeCtx({ sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.getMyRole()
     expect(result.labRole).toBeNull()
@@ -193,7 +193,7 @@ describe('lab.listStaff', () => {
     setupLabContext('LAB_TECH')
     const { labRouter } = await import('../trpc/routers/lab')
     const caller = createCallerFactory(labRouter)(
-      makeCtx({ sub: 'prac-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'prac-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.listStaff()).rejects.toMatchObject({
       code: 'FORBIDDEN',
@@ -204,7 +204,7 @@ describe('lab.listStaff', () => {
     setupLabContext('SUPERVISOR')
     const { labRouter } = await import('../trpc/routers/lab')
     const caller = createCallerFactory(labRouter)(
-      makeCtx({ sub: 'prac-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'prac-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     // Should not throw FORBIDDEN (may fail on supabase mock but not FORBIDDEN)
     const result = await caller.listStaff().catch((e: any) => {
@@ -225,7 +225,7 @@ describe('lab.updateStaffRole', () => {
     setupLabContext('SUPERVISOR')
     const { labRouter } = await import('../trpc/routers/lab')
     const caller = createCallerFactory(labRouter)(
-      makeCtx({ sub: 'prac-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'prac-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(
       caller.updateStaffRole({
@@ -239,7 +239,7 @@ describe('lab.updateStaffRole', () => {
     setupLabContext('LAB_TECH')
     const { labRouter } = await import('../trpc/routers/lab')
     const caller = createCallerFactory(labRouter)(
-      makeCtx({ sub: 'prac-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'prac-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(
       caller.updateStaffRole({

@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // ============================================================
 
 // Mock Redis module
-let mockIsRedisHealthy = vi.fn<() => Promise<boolean>>()
+let mockIsRedisHealthy = vi.fn<[], Promise<boolean>>()
 
 vi.mock('@/lib/redis', () => ({
   getRedisClient: vi.fn(),
@@ -32,7 +32,7 @@ const { createCallerFactory } = await import('../trpc/init')
 const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
-  supabaseFrom?: ReturnType<typeof vi.fn>
+  supabaseFrom?: any
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn().mockReturnValue({

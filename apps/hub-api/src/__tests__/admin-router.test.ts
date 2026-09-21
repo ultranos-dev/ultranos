@@ -26,7 +26,7 @@ vi.mock('@ultranos/audit-logger', () => ({
 const { createCallerFactory } = await import('../trpc/init')
 const { adminRouter } = await import('../trpc/routers/admin')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string | null; status?: string | null } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   // Build a fully chainable mock that handles the expanded dashboardStats query set:
   // .select().eq(), .select().in(), .select().eq().in(), .select().eq().eq(),
   // .select().not().order().range().lte().gte(), .select().order().limit().maybeSingle()
@@ -64,7 +64,7 @@ function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: s
 describe('Admin Router — ADMIN guard', () => {
   it('ADMIN can access dashboardStats', async () => {
     const caller = createCallerFactory(adminRouter)(
-      makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' }),
+      makeCtx({ sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.dashboardStats()
     expect(result).toMatchObject({
@@ -77,7 +77,7 @@ describe('Admin Router — ADMIN guard', () => {
 
   it('ADMIN can access health', async () => {
     const caller = createCallerFactory(adminRouter)(
-      makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' }),
+      makeCtx({ sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     const result = await caller.health()
     expect(result.status).toBe('ok')
@@ -86,7 +86,7 @@ describe('Admin Router — ADMIN guard', () => {
 
   it('DOCTOR is rejected with FORBIDDEN', async () => {
     const caller = createCallerFactory(adminRouter)(
-      makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1' }),
+      makeCtx({ sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.dashboardStats()).rejects.toMatchObject({
       code: 'FORBIDDEN',
@@ -95,7 +95,7 @@ describe('Admin Router — ADMIN guard', () => {
 
   it('PHARMACIST is rejected with FORBIDDEN', async () => {
     const caller = createCallerFactory(adminRouter)(
-      makeCtx({ sub: 'pharm-1', role: 'PHARMACIST', sessionId: 's1' }),
+      makeCtx({ sub: 'pharm-1', role: 'PHARMACIST' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.health()).rejects.toMatchObject({
       code: 'FORBIDDEN',
@@ -104,7 +104,7 @@ describe('Admin Router — ADMIN guard', () => {
 
   it('LAB_TECH is rejected with FORBIDDEN', async () => {
     const caller = createCallerFactory(adminRouter)(
-      makeCtx({ sub: 'lab-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'lab-1', role: 'LAB_TECH' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }),
     )
     await expect(caller.dashboardStats()).rejects.toMatchObject({
       code: 'FORBIDDEN',
@@ -131,7 +131,7 @@ describe('Admin Router — ADMIN guard', () => {
         action: 'LOGIN',
         resourceType: 'USER_ACCOUNT',
         outcome: 'SUCCESS',
-        actorRole: 'UNKNOWN',
+        actorRole: 'SYSTEM',
         metadata: expect.objectContaining({
           authEvent: 'ADMIN_LOGIN_SUCCESS',
           portal: 'admin',
@@ -153,7 +153,7 @@ describe('Admin Router — ADMIN guard', () => {
         action: 'LOGIN',
         resourceType: 'USER_ACCOUNT',
         outcome: 'FAILURE',
-        actorRole: 'UNKNOWN',
+        actorRole: 'SYSTEM',
         metadata: expect.objectContaining({
           authEvent: 'ADMIN_LOGIN_FAILURE',
           portal: 'admin',
@@ -167,7 +167,7 @@ describe('Admin Router — ADMIN guard', () => {
 describe('Admin Router — createUser split name', () => {
   it('rejects input with legacy `name` field', async () => {
     const caller = createCallerFactory(adminRouter)(
-      makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: 'org-1' }),
+      makeCtx({ sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }),
     )
     // @ts-expect-error intentionally passing old shape
     await expect(caller.createUser({ name: 'Ahmad Shah', email: 'a@b.com', role: 'DOCTOR', password: 'pass1234' }))
@@ -201,7 +201,7 @@ describe('Admin Router — createUser split name', () => {
         from: fromMock,
         auth: { admin: { createUser: createUserMock, generateLink: generateLinkMock } },
       } as never,
-      user: { sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: 'org-1', status: null },
+      user: { sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', orgId: 'org-1', status: null, facilityId: null, },
       headers: new Headers(),
     }
 
@@ -224,7 +224,7 @@ describe('Admin Router — createUser split name', () => {
 describe('Admin Router — enrollChw split name', () => {
   it('rejects input with legacy `fullName` field', async () => {
     const caller = createCallerFactory(adminRouter)(
-      makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: 'org-1' }),
+      makeCtx({ sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }),
     )
     // @ts-expect-error intentionally passing old shape
     await expect(caller.enrollChw({ fullName: 'Fatima Noori', phone: '+93700000001', assignedLabId: '00000000-0000-0000-0000-000000000001' }))
@@ -257,7 +257,7 @@ describe('Admin Router — enrollChw split name', () => {
 
     const ctx = {
       supabase: { from: fromMock } as never,
-      user: { sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: 'org-1', status: null },
+      user: { sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', orgId: 'org-1', status: null, facilityId: null, },
       headers: new Headers(),
     }
 
@@ -308,7 +308,7 @@ describe('Admin Router — enrollChw split name', () => {
 
     const ctx = {
       supabase: { from: fromMock } as never,
-      user: { sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: 'org-1', status: null },
+      user: { sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', orgId: 'org-1', status: null, facilityId: null, },
       headers: new Headers(),
     }
 

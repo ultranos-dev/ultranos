@@ -83,7 +83,7 @@ const { notificationRouter } = await import('../trpc/routers/notification')
 
 // ── Helpers ────────────────────────────────────────────────────
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
   return {
     supabase: { from: mockFrom } as never,
     user,
@@ -91,9 +91,9 @@ function makeCtx(user: { sub: string; role: string; sessionId: string } | null) 
   }
 }
 
-const DOCTOR_USER = { sub: 'doctor-1', role: 'DOCTOR', sessionId: 's1' }
-const SYSTEM_USER = { sub: 'system-1', role: 'SYSTEM', sessionId: 's-sys' }
-const PATIENT_USER = { sub: 'patient-1', role: 'PATIENT', sessionId: 's-p1' }
+const DOCTOR_USER = { sub: 'doctor-1', role: 'DOCTOR' as const, sessionId: 's1', facilityId: null, status: 'ACTIVE', orgId: null }
+const SYSTEM_USER = { sub: 'system-1', role: 'SYSTEM' as const, sessionId: 's-sys', facilityId: null, status: 'ACTIVE', orgId: null }
+const PATIENT_USER = { sub: 'patient-1', role: 'PATIENT' as const, sessionId: 's-p1', facilityId: null, status: 'ACTIVE', orgId: null }
 
 // ── Tests ──────────────────────────────────────────────────────
 // NOTE: notification.dispatch was removed from the public tRPC router (security review).
@@ -138,12 +138,12 @@ describe('notification.list', () => {
     const result = await caller.notification.list()
 
     expect(result.notifications).toHaveLength(1)
-    expect(result.notifications[0].type).toBe('LAB_RESULT_AVAILABLE')
-    expect(result.notifications[0].sourceApp).toBe('LAB_LITE')
-    expect(result.notifications[0].subjectKey).toBe('ORDER_RECEIVED')
-    expect(result.notifications[0].bodyKey).toBe('orderReceivedBody')
-    expect(result.notifications[0].bodyParams).toEqual({ testCategory: 'CBC' })
-    expect(result.notifications[0].notesKey).toBe('orderReceivedNotes')
+    expect(result.notifications[0]!.type).toBe('LAB_RESULT_AVAILABLE')
+    expect(result.notifications[0]!.sourceApp).toBe('LAB_LITE')
+    expect(result.notifications[0]!.subjectKey).toBe('ORDER_RECEIVED')
+    expect(result.notifications[0]!.bodyKey).toBe('orderReceivedBody')
+    expect(result.notifications[0]!.bodyParams).toEqual({ testCategory: 'CBC' })
+    expect(result.notifications[0]!.notesKey).toBe('orderReceivedNotes')
   })
 
   it('rejects unauthenticated list requests', async () => {

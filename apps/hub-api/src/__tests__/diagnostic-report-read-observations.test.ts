@@ -83,7 +83,7 @@ const { diagnosticReportRouter } = await import('../trpc/routers/diagnostic-repo
 function makeCtx() {
   return {
     supabase: { from: mockFrom } as never,
-    user: { sub: 'doc-1', role: 'DOCTOR', sessionId: 's1', orgId: 'org-1', facilityId: null, status: null },
+    user: { sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: null },
     headers: new Headers(),
   }
 }

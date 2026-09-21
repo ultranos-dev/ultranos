@@ -67,7 +67,7 @@ function makeAdminCtx(fromImpl: (...args: any[]) => any) {
       auth: { admin: { getUserById: vi.fn().mockResolvedValue({ data: { user: { email: 'test@test.com' } } }) } },
       rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
     } as never,
-    user: { sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: null, status: null },
+    user: { sub: 'admin-1', role: 'ADMIN' as const, sessionId: 's1', orgId: null, status: null, facilityId: null, },
     headers: new Headers(),
   }
 }
@@ -75,7 +75,7 @@ function makeAdminCtx(fromImpl: (...args: any[]) => any) {
 function makeDoctorCtx() {
   return {
     supabase: { from: vi.fn(), auth: { admin: { getUserById: vi.fn() } }, rpc: vi.fn() } as never,
-    user: { sub: 'doc-1', role: 'DOCTOR', sessionId: 's1', orgId: null, status: null },
+    user: { sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 's1', orgId: null, status: null, facilityId: null, },
     headers: new Headers(),
   }
 }
@@ -87,7 +87,7 @@ function makeLabTechCtx(fromImpl: (...args: any[]) => any) {
       auth: { admin: { getUserById: vi.fn().mockResolvedValue({ data: { user: { email: 'tech@test.com' } } }) } },
       rpc: vi.fn(),
     } as never,
-    user: { sub: MENTEE_ID, role: 'LAB_TECH', sessionId: 's1', orgId: null, status: null },
+    user: { sub: MENTEE_ID, role: 'LAB_TECH' as const, sessionId: 's1', orgId: null, status: null, facilityId: null, },
     headers: new Headers(),
   }
 }

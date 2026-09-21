@@ -153,8 +153,8 @@ describe('Patient Self-Registration — Story 27.10', () => {
 
       expect(result.success).toBe(true)
       expect(result.patientId).toBeDefined()
-      expect(result.session.accessToken).toBe('mock-access-token')
-      expect(result.session.refreshToken).toBe('mock-refresh-token')
+      expect(result.session!.accessToken).toBe('mock-access-token')
+      expect(result.session!.refreshToken).toBe('mock-refresh-token')
 
       // Verify patient was created via rpc('create_patient_with_consent', ...)
       // with FREE tier and no org_id (AC #2, #3)

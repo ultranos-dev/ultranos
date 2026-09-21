@@ -31,8 +31,8 @@ const { createCallerFactory } = await import('../trpc/init')
 
 const createCaller = createCallerFactory(appRouter)
 
-const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-admin', orgId: 'org-test-001' }
-const NON_ADMIN_USER = { sub: 'user-001', role: 'CLINICIAN', sessionId: 'sess-user', orgId: 'org-test-001' }
+const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN' as const, sessionId: 'sess-admin', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
+const NON_ADMIN_USER = { sub: 'user-001', role: 'DOCTOR' as const, sessionId: 'sess-user', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }
 
 function createTestContext(overrides?: { user?: any }) {
   const supabase = {
@@ -246,8 +246,8 @@ describe('admin.listClinicalSafetyReports', () => {
     const result = await caller.admin.listClinicalSafetyReports({ limit: 12 })
 
     expect(result.reports).toHaveLength(2)
-    expect(result.reports[0].month).toBe(4)
-    expect(result.reports[0].year).toBe(2026)
+    expect(result.reports[0]!.month).toBe(4)
+    expect(result.reports[0]!.year).toBe(2026)
     expect(result.total).toBe(2)
   })
 })
