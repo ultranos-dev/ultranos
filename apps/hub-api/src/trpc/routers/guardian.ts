@@ -53,14 +53,16 @@ export const guardianRouter = createTRPCRouter({
 
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
 
-      // Server-side OTP verification via Supabase Admin SDK.
-      // `type` is always 'sms' for phone-based OTP regardless of delivery
-      // channel (SMS vs WhatsApp) — Supabase Admin SDK convention.
-      const { data, error } = await ctx.supabase.auth.admin.verifyOtp({
+      // Server-side phone-OTP verification. `verifyOtp` lives on `auth`, not
+      // `auth.admin` (GoTrueAdminApi has no verifyOtp). `type` is always 'sms' for
+      // phone-based OTP regardless of delivery channel (SMS vs WhatsApp).
+      // Note: on success this sets a session on the request-scoped client; we only
+      // read data.user.id (the session is discarded when the request ends).
+      const { data, error } = await ctx.supabase.auth.verifyOtp({
         phone: input.guardianPhone,
         token: input.otp,
         type: 'sms',
-      } as any) // Supabase Admin SDK types may not include phone OTP params
+      })
 
       if (error || !data?.user?.id) {
         try {
