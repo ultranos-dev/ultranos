@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist/types",
+    "incremental": false,
+    "composite": false,
+    "plugins": []
+  },
+  "include": ["src/trpc/routers/_app.ts"],
+  "exclude": ["node_modules", "**/__tests__/**", "**/*.test.ts"]
+}

@@ -1,6 +1,11 @@
 import { createTRPCClient, httpBatchLink } from '@trpc/client'
 import superjson from 'superjson'
-import type { AppRouter } from 'hub-api/src/trpc/routers/_app'
+// Import the AppRouter type from hub-api's emitted declaration bundle, NOT its source.
+// hub-api's `tsc -p tsconfig.types.json` (pnpm -F hub-api build:types) emits a fully
+// self-contained _app.d.ts (the `typeof appRouter` type inlined, no `@/` imports), so
+// admin-portal gets full end-to-end tRPC type safety without deep-typechecking hub-api's
+// source under a mismatched tsconfig (which pulled in ~90 phantom errors).
+import type { AppRouter } from 'hub-api/types/app-router'
 
 function getHubApiUrl(): string {
   return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
