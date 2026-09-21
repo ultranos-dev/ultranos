@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { createHash } from 'crypto'
 import { getRedisClient } from '@/lib/redis'
+import { tInstance } from '../init'
 import type { TRPCContext } from '../init'
 
 export interface RateLimitConfig {
@@ -11,6 +12,8 @@ export interface RateLimitConfig {
 }
 
 export const RATE_LIMIT_TIERS = {
+  /** General authenticated-endpoint default. */
+  default: { limit: 100, windowSec: 60 } satisfies RateLimitConfig,
   authenticated: { limit: 100, windowSec: 60 } satisfies RateLimitConfig,
   unauthenticated: { limit: 20, windowSec: 60 } satisfies RateLimitConfig,
   patientSearch: { limit: 10, windowSec: 60 } satisfies RateLimitConfig,
@@ -96,11 +99,7 @@ export async function checkRateLimit(
  * Attaches rate limit info to ctx.rateLimit for header injection via responseMeta.
  */
 export function rateLimitMiddleware(configOverride?: RateLimitConfig, tierName?: string) {
-  return async (opts: {
-    ctx: TRPCContext
-    path: string
-    next: (opts: { ctx: TRPCContext & { rateLimit?: RateLimitResult } }) => Promise<unknown>
-  }) => {
+  return tInstance.middleware(async (opts) => {
     const { scope, id } = deriveIdentifier(opts.ctx)
     const config = configOverride ?? (scope === 'auth'
       ? RATE_LIMIT_TIERS.authenticated
@@ -125,5 +124,5 @@ export function rateLimitMiddleware(configOverride?: RateLimitConfig, tierName?:
     return opts.next({
       ctx: ctxWithRateLimit,
     })
-  }
+  })
 }
