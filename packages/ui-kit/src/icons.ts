@@ -168,6 +168,8 @@ export {
   Download,
   Upload,
   Printer,
+  Archive,
+  ArchiveRestore,
   RefreshCw,
   RotateCcw,
   Undo2,

@@ -73,6 +73,10 @@ const SpecimenUltranosExtSchema = z.object({
   })).optional(),
   // Urgency copied from the paired lab order (for STAT handover counts).
   orderUrgency: z.enum(['routine', 'urgent', 'asap', 'stat']).optional(),
+  // Worklist archive flag — when true the sample is moved off the active
+  // worklist into the Archived shelf. Orthogonal to pipelineStatus (a sample
+  // of any pipeline state may be archived) and reversible via unarchive.
+  archived: z.boolean().optional(),
 })
 
 const AnnotationSchema = z.object({
