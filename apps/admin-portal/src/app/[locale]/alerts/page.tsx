@@ -8,7 +8,8 @@ import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Bell, FileText } from '@ultranos/ui-kit/icons'
+import { SearchInput } from '@/components/ui/search-input'
+import { Bell, FileText, FileSearch } from '@ultranos/ui-kit/icons'
 
 type AlertTab = 'anomalies' | 'clinical-safety'
 type StatusFilter = 'ALL' | 'UNREVIEWED' | 'ESCALATED' | 'DISMISSED' | 'SUSPENDED'
@@ -279,6 +280,7 @@ export default function AlertsPage() {
   const [total, setTotal] = useState(0)
   const [cursor, setCursor] = useState(0)
   const [filter, setFilter] = useState<StatusFilter>('ALL')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -312,6 +314,15 @@ export default function AlertsPage() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
+
+  const alertQuery = search.trim().toLowerCase()
+  const visibleAlerts = alertQuery
+    ? alerts.filter(
+        (a) =>
+          a.practitionerName.toLowerCase().includes(alertQuery) ||
+          a.id.toLowerCase().includes(alertQuery),
+      )
+    : alerts
 
   return (
     <div className="flex flex-col gap-4">
@@ -349,16 +360,25 @@ export default function AlertsPage() {
           <ClinicalSafetySection />
         ) : (
         <>
-        {/* Toolbar: status filter tabs + Export — one row — AC #11 */}
+        {/* Toolbar: search + status filter tabs + Export — one row — AC #11 */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          <SearchInput
+            dir="auto"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="min-w-[200px] flex-1"
+            inputClassName="h-9 rounded-full"
+            aria-label={t('searchPlaceholder')}
+          />
+          <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
                 type="button"
                 aria-pressed={filter === s}
                 onClick={() => handleFilterChange(s)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                   filter === s
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -379,9 +399,9 @@ export default function AlertsPage() {
         <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
           {loading ? (
             <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">{t('loadingAlerts')}</div>
-          ) : alerts.length === 0 ? (
+          ) : visibleAlerts.length === 0 ? (
             <div className="flex min-h-[16rem] items-center justify-center">
-              <EmptyState icon={Bell} title={t('noAlerts')} description={t('noAlertsDescription')} />
+              <EmptyState icon={alertQuery || filter !== 'ALL' ? FileSearch : Bell} title={t('noAlerts')} description={t('noAlertsDescription')} />
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -397,7 +417,7 @@ export default function AlertsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {alerts.map((alert) => (
+                  {visibleAlerts.map((alert) => (
                     <tr
                       key={alert.id}
                       onClick={() => router.push(`/alerts/${alert.id}`)}

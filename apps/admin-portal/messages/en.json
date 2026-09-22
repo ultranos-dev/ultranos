@@ -217,6 +217,7 @@
   },
   "alerts": {
     "pageTitle": "Alerts",
+    "searchPlaceholder": "Search by provider or alert ID…",
     "tabPrescribing": "Prescribing Anomalies",
     "tabClinical": "Clinical Safety",
     "filterAll": "All",
@@ -259,7 +260,33 @@
     "noAlertsDescription": "No prescribing anomaly alerts match the current filter.",
     "noReports": "No monthly reports generated yet.",
     "reportsUnavailable": "Monthly reports unavailable — could not load.",
-    "reportsLoading": "Loading monthly reports…"
+    "reportsLoading": "Loading monthly reports…",
+    "alertHistory": {
+      "heading": "Alert History",
+      "searchPlaceholder": "Search by lab or test category…",
+      "searchAriaLabel": "Search alerts",
+      "filterAll": "All",
+      "filterUnacknowledged": "Unacknowledged",
+      "filterAcknowledged": "Acknowledged",
+      "colDateTime": "Date/Time",
+      "colLab": "Lab",
+      "colTestCategory": "Test Category",
+      "colPositivityRate": "Positivity Rate",
+      "colStatus": "Status",
+      "colActions": "Actions",
+      "statusAcknowledged": "Acknowledged",
+      "statusUnacknowledged": "Unacknowledged",
+      "acknowledge": "Acknowledge",
+      "loadingAlerts": "Loading alerts…",
+      "emptyTitle": "No surveillance alerts found.",
+      "emptyTitleWithStatus": "No surveillance alerts found with status {status}.",
+      "paginationShowing": "Showing {from}–{to} of {total}",
+      "paginationPrevious": "Previous",
+      "paginationNext": "Next",
+      "paginationPageOf": "Page {current} of {total}",
+      "unknown": "Unknown",
+      "errorLoad": "Failed to load alerts"
+    }
   },
   "audit": {
     "pageTitle": "Audit Log",
@@ -530,6 +557,7 @@
   },
   "network": {
     "pageTitle": "Network",
+    "searchPlaceholder": "Search labs by name…",
     "activateOutbreakMode": "Activate Outbreak Mode",
     "enrollChw": "Enroll CHW",
     "filterAll": "All",
@@ -741,6 +769,7 @@
     "certAssignSelectPathway": "Select Pathway",
     "certAssignSuccess": "Pathway assigned successfully",
     "certAssignError": "Failed to assign pathway",
+    "certBack": "← Back to Lab Assignments",
     "healthPageTitle": "Employee Health Record",
     "healthBack": "← Back to Lab Assignments",
     "healthHepB": "Hepatitis B",
@@ -877,6 +906,8 @@
   },
   "aiModels": {
     "pageTitle": "AI Models",
+    "searchPlaceholder": "Search by model ID…",
+    "filterAllTypes": "All Types",
     "publishNewVersion": "Publish New Version",
     "cancelPublish": "Cancel",
     "statsRegisteredModels": "Registered Models",

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Users, FileSearch } from '@ultranos/ui-kit/icons'
+import { Users, FileSearch, ChevronDown } from '@ultranos/ui-kit/icons'
 import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { UserFormModal } from '@/components/users/UserFormModal'
 import { UserProfileModal } from '@/components/users/UserProfileModal'
@@ -163,18 +163,18 @@ export default function AllUsersTab() {
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           className="min-w-[200px] flex-1"
-          inputClassName="rounded-full"
+          inputClassName="h-9 rounded-full"
           aria-label={t('searchPlaceholder')}
         />
 
         {/* Status filter — pill tab-bar */}
-        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+        <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {STATUS_FILTERS.map((s) => (
             <button
               key={s}
               type="button"
               onClick={() => handleStatusFilterChange(s)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                 statusFilter === s
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -187,21 +187,24 @@ export default function AllUsersTab() {
         </div>
 
         {/* Role filter — secondary select */}
-        <select
-          value={roleFilter}
-          onChange={(e) => handleRoleFilterChange(e.target.value as RoleFilter)}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-          aria-label={t('filterByRole')}
-        >
-          {ROLE_FILTERS.map((r) => (
-            <option key={r} value={r}>
-              {r === 'ALL' ? 'All Roles' : r.replace('_', ' ')}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={roleFilter}
+            onChange={(e) => handleRoleFilterChange(e.target.value as RoleFilter)}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label={t('filterByRole')}
+          >
+            {ROLE_FILTERS.map((r) => (
+              <option key={r} value={r}>
+                {r === 'ALL' ? 'All Roles' : r.replace('_', ' ')}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
 
         {/* Add + Export */}
-        <Button onClick={() => setFormOpen(true)}>{t('add')}</Button>
+        <Button className="h-9" onClick={() => setFormOpen(true)}>{t('add')}</Button>
         <ExportButton exportFn={() => trpc.admin.exportUsers.query()} filters={{}} />
       </div>
 

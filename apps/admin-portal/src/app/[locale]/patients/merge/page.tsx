@@ -206,7 +206,7 @@ export default function MergeWizardPage() {
   return (
     <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-3">
-          <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Patients</Link>
+          <Button asChild variant="ghost" size="sm" className="w-fit px-0"><Link href="/patients">&larr; Back to Patients</Link></Button>
           <h1 className="text-2xl font-semibold text-foreground">{t('mergePageTitle')}</h1>
         </div>
 

@@ -73,15 +73,10 @@ export default function BillingPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-4">
-          <Link
-            href="/subscriptions"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {t('billingBack')}
-          </Link>
-          <h1 className="text-2xl font-semibold text-foreground">{t('billingPageTitle')}</h1>
-        </div>
+        <Button asChild variant="ghost" size="sm" className="w-fit px-0">
+          <Link href="/subscriptions">{t('billingBack')}</Link>
+        </Button>
+        <h1 className="text-2xl font-semibold text-foreground">{t('billingPageTitle')}</h1>
 
         {error && (
           <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
@@ -96,7 +91,7 @@ export default function BillingPage() {
             onRemove={() => setShowRemoveModal(true)}
           />
         ) : (
-          <div className="rounded-xl border border-warning/20 bg-warning/10 p-6">
+          <div className="rounded-xl border border-warning/20 bg-warning/10 p-5">
             <p className="text-sm font-medium text-warning">
               {t('billingNoPaymentMethod')}
             </p>

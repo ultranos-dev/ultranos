@@ -91,13 +91,22 @@ export default function LicenseExpiryPage() {
 
         {/* Toolbar: window tabs + search + export — one row, always visible */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          <SearchInput
+            dir="auto"
+            placeholder={t('expirySearchPlaceholder')}
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setCursor(0) }}
+            className="min-w-[200px] flex-1"
+            inputClassName="h-9 rounded-full"
+            aria-label={t('expirySearchPlaceholder')}
+          />
+          <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {(['all', '60d', '30d', '7d'] as const).map((w) => (
               <button
                 key={w}
                 type="button"
                 onClick={() => { setExpiryWindow(w); setCursor(0) }}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                   expiryWindow === w
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -108,14 +117,6 @@ export default function LicenseExpiryPage() {
               </button>
             ))}
           </div>
-          <SearchInput
-            dir="auto"
-            placeholder={t('expirySearchPlaceholder')}
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setCursor(0) }}
-            className="min-w-[200px] flex-1"
-            aria-label={t('expirySearchPlaceholder')}
-          />
           <ExportButton exportFn={() => trpc.admin.exportExpiringProviders.query()} filters={{}} />
         </div>
 

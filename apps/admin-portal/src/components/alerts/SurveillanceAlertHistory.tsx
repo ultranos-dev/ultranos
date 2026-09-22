@@ -1,13 +1,22 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { AcknowledgeAlertModal } from './AcknowledgeAlertModal'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
+import { SearchInput } from '@/components/ui/search-input'
+import { Bell, FileSearch } from '@ultranos/ui-kit/icons'
 
 type FilterTab = 'ALL' | 'UNACKNOWLEDGED' | 'ACKNOWLEDGED'
+
+const FILTER_LABEL_KEYS: Record<FilterTab, string> = {
+  ALL: 'filterAll',
+  UNACKNOWLEDGED: 'filterUnacknowledged',
+  ACKNOWLEDGED: 'filterAcknowledged',
+}
 
 interface Alert {
   id: string
@@ -25,11 +34,11 @@ interface Alert {
 
 const PAGE_SIZE = 25
 
-function formatDateTime(iso: string | null | undefined): string {
-  if (!iso) return 'Unknown'
+function formatDateTime(iso: string | null | undefined, unknownLabel: string): string {
+  if (!iso) return unknownLabel
   try {
     const d = new Date(iso)
-    if (isNaN(d.getTime())) return 'Unknown'
+    if (isNaN(d.getTime())) return unknownLabel
     return d.toLocaleString(undefined, {
       year: 'numeric',
       month: 'short',
@@ -38,15 +47,17 @@ function formatDateTime(iso: string | null | undefined): string {
       minute: '2-digit',
     })
   } catch {
-    return 'Unknown'
+    return unknownLabel
   }
 }
 
 export function SurveillanceAlertHistory() {
+  const t = useTranslations('alerts.alertHistory')
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [total, setTotal] = useState(0)
   const [cursor, setCursor] = useState(0)
   const [filter, setFilter] = useState<FilterTab>('ALL')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [ackAlert, setAckAlert] = useState<Alert | null>(null)
@@ -65,11 +76,11 @@ export function SurveillanceAlertHistory() {
       setAlerts(result.alerts)
       setTotal(result.total)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load alerts')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setLoading(false)
     }
-  }, [filter, cursor])
+  }, [filter, cursor, t])
 
   useEffect(() => {
     fetchAlerts()
@@ -89,54 +100,84 @@ export function SurveillanceAlertHistory() {
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
   const FILTERS: FilterTab[] = ['ALL', 'UNACKNOWLEDGED', 'ACKNOWLEDGED']
 
+  const q = search.trim().toLowerCase()
+  const visibleAlerts = q
+    ? alerts.filter(
+        (a) =>
+          a.labName.toLowerCase().includes(q) ||
+          a.testCategory.toLowerCase().includes(q),
+      )
+    : alerts
+
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-foreground">Alert History</h3>
-        {/* Filter tabs */}
-        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+    <div className="flex flex-col gap-4">
+      <h3 className="text-lg font-semibold text-foreground">{t('heading')}</h3>
+
+      {/* Toolbar: search + status filter — one row */}
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
+          aria-label={t('searchAriaLabel')}
+        />
+        <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {FILTERS.map((f) => (
             <button
               key={f}
+              type="button"
+              aria-pressed={filter === f}
               onClick={() => handleFilterChange(f)}
-              className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                 filter === f
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
+              {t(FILTER_LABEL_KEYS[f])}
             </button>
           ))}
         </div>
       </div>
 
       {error && (
-        <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+        <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
       {loading ? (
-        <div className="mt-6 text-muted-foreground">Loading alerts...</div>
-      ) : !error && alerts.length === 0 ? (
-        <EmptyState className="mt-6" title={`No surveillance alerts found${filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.`} />
+        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 text-sm text-muted-foreground">{t('loadingAlerts')}</div>
+      ) : !error && visibleAlerts.length === 0 ? (
+        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <EmptyState
+            icon={q || filter !== 'ALL' ? FileSearch : Bell}
+            title={
+              filter === 'ALL'
+                ? t('emptyTitle')
+                : t('emptyTitleWithStatus', { status: t(FILTER_LABEL_KEYS[filter]) })
+            }
+          />
+        </div>
       ) : (
         <>
-          <div className="mt-4 overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <div className="overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
             <table className="w-full text-sm">
               <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Date/Time</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Lab</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Test Category</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Positivity Rate</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
-                  <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDateTime')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colLab')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colTestCategory')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colPositivityRate')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
+                  <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colActions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {alerts.map((alert) => (
+                {visibleAlerts.map((alert) => (
                   <tr key={alert.id} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-4 py-3 text-muted-foreground font-numeric">{formatDateTime(alert.triggeredAt)}</td>
+                    <td className="px-4 py-3 text-muted-foreground font-numeric">{formatDateTime(alert.triggeredAt, t('unknown'))}</td>
                     <td className="px-4 py-3 font-medium">{alert.labName}</td>
                     <td className="px-4 py-3 text-muted-foreground">{alert.testCategory}</td>
                     <td className="px-4 py-3">
@@ -145,9 +186,9 @@ export function SurveillanceAlertHistory() {
                     </td>
                     <td className="px-4 py-3">
                       {alert.acknowledgedAt ? (
-                        <Badge variant="success">Acknowledged</Badge>
+                        <Badge variant="success">{t('statusAcknowledged')}</Badge>
                       ) : (
-                        <Badge variant="destructive">Unacknowledged</Badge>
+                        <Badge variant="destructive">{t('statusUnacknowledged')}</Badge>
                       )}
                     </td>
                     <td className="px-4 py-3 text-end">
@@ -157,7 +198,7 @@ export function SurveillanceAlertHistory() {
                           size="xs"
                           onClick={() => setAckAlert(alert)}
                         >
-                          Acknowledge
+                          {t('acknowledge')}
                         </Button>
                       )}
                     </td>
@@ -169,9 +210,13 @@ export function SurveillanceAlertHistory() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>
-                Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
+                {t('paginationShowing', {
+                  from: cursor + 1,
+                  to: Math.min(cursor + PAGE_SIZE, total),
+                  total,
+                })}
               </span>
               <div className="flex gap-2">
                 <Button
@@ -180,10 +225,10 @@ export function SurveillanceAlertHistory() {
                   onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                   disabled={cursor === 0}
                 >
-                  Previous
+                  {t('paginationPrevious')}
                 </Button>
                 <span className="flex items-center px-2">
-                  Page {currentPage} of {totalPages}
+                  {t('paginationPageOf', { current: currentPage, total: totalPages })}
                 </span>
                 <Button
                   variant="outline"
@@ -191,7 +236,7 @@ export function SurveillanceAlertHistory() {
                   onClick={() => setCursor(cursor + PAGE_SIZE)}
                   disabled={cursor + PAGE_SIZE >= total}
                 >
-                  Next
+                  {t('paginationNext')}
                 </Button>
               </div>
             </div>

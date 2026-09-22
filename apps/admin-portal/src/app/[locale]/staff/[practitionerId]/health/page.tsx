@@ -184,9 +184,10 @@ export default function EmployeeHealthPage() {
         {/* Header + back link */}
         <div className="flex flex-wrap items-center gap-3">
           <Button
-            variant="link"
+            variant="ghost"
+            size="sm"
             onClick={() => router.push('/users?tab=lab-assignments')}
-            className="px-0"
+            className="w-fit px-0"
           >
             {t('healthBack')}
           </Button>

@@ -273,7 +273,7 @@ export default function LabDetailPage() {
         {/* Lab details grid — AC #9 */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* Registration Documents */}
-          <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-6">
+          <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailRegistrationInfo')}</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
@@ -292,7 +292,7 @@ export default function LabDetailPage() {
           </div>
 
           {/* Technician Credentials */}
-          <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-6">
+          <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailTechnician')}</h2>
             {lab.technician ? (
               <dl className="mt-3 space-y-2 text-sm">
@@ -320,7 +320,7 @@ export default function LabDetailPage() {
         </div>
 
         {/* Status Transition History — AC #9 */}
-        <div className="rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 p-6">
+        <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailStatusHistory')}</h2>
           {lab.statusHistory.length === 0 ? (
             <EmptyState size="sm" icon={ClipboardList} title={t('detailNoStatusHistory')} />

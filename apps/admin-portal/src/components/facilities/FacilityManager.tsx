@@ -138,17 +138,17 @@ export function FacilityManager({
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
           className="min-w-[200px] flex-1"
-          inputClassName="rounded-full"
+          inputClassName="h-9 rounded-full"
           aria-label={t('facilities.searchPlaceholder') ?? 'Search'}
         />
-        <div className="flex w-fit gap-1 rounded-full border border-border bg-card p-1">
+        <div className="flex h-9 w-fit items-stretch gap-1 rounded-full border border-border bg-card p-1">
           {FACILITY_STATUS_FILTERS.map((s) => (
             <button
               key={s}
               type="button"
               onClick={() => handleFilterChange(s)}
               aria-pressed={statusFilter === s}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                 statusFilter === s
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -158,7 +158,7 @@ export function FacilityManager({
             </button>
           ))}
         </div>
-        <Button onClick={handleAdd}>{t('facilities.add') ?? 'Add'}</Button>
+        <Button className="h-9" onClick={handleAdd}>{t('facilities.add') ?? 'Add'}</Button>
         <ExportButton
           exportFn={() => kindConfig.exportFn()}
           filters={{}}

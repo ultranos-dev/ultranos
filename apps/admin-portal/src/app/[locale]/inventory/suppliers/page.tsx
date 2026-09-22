@@ -158,13 +158,22 @@ export default function SuppliersPage() {
 
         {/* Toolbar: status tabs + search + create — one row, always visible */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          <SearchInput
+            dir="auto"
+            placeholder={t('suppliersSearchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="min-w-[200px] flex-1"
+            inputClassName="h-9 rounded-full"
+            aria-label={t('suppliersSearchPlaceholder')}
+          />
+          <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {SUPPLIER_STATUS_FILTERS.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => setStatusFilter(s)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                   statusFilter === s
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -175,15 +184,7 @@ export default function SuppliersPage() {
               </button>
             ))}
           </div>
-          <SearchInput
-            dir="auto"
-            placeholder={t('suppliersSearchPlaceholder')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="min-w-[200px] flex-1"
-            aria-label={t('suppliersSearchPlaceholder')}
-          />
-          <Button onClick={openCreate}>
+          <Button className="h-9" onClick={openCreate}>
             {t('addSupplier')}
           </Button>
         </div>

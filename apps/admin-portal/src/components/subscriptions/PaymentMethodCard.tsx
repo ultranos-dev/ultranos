@@ -19,7 +19,7 @@ export function PaymentMethodCard({ method, onUpdate, onRemove }: PaymentMethodC
   const expiry = `${String(method.expMonth).padStart(2, '0')}/${String(method.expYear).slice(-2)}`
 
   return (
-    <div className="rounded-xl border border-border bg-card p-6 shadow-card">
+    <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-foreground uppercase tracking-wide">{method.brand}</p>

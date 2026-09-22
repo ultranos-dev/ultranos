@@ -121,32 +121,39 @@ export default function PatientsPage() {
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="min-w-[200px] flex-1"
+              inputClassName="h-9 rounded-full"
               aria-label="Search patients"
             />
 
-            {/* MPI Warnings Only checkbox */}
-            <label className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-pointer">
-              <input
-                type="checkbox"
-                checked={mpiWarnOnly}
-                onChange={handleMpiWarnToggle}
-                className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
-              />
-              {t('mpiWarningsOnly')}
-            </label>
+            {/* Boolean filters — segmented pill toggles */}
+            <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
+              <button
+                type="button"
+                onClick={handleMpiWarnToggle}
+                aria-pressed={mpiWarnOnly}
+                className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
+                  mpiWarnOnly
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {t('mpiWarningsOnly')}
+              </button>
+              <button
+                type="button"
+                onClick={handleIncludeInactiveToggle}
+                aria-pressed={includeInactive}
+                className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
+                  includeInactive
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {t('includeInactive')}
+              </button>
+            </div>
 
-            {/* Include Inactive checkbox */}
-            <label className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-pointer">
-              <input
-                type="checkbox"
-                checked={includeInactive}
-                onChange={handleIncludeInactiveToggle}
-                className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
-              />
-              {t('includeInactive')}
-            </label>
-
-            <Button asChild>
+            <Button asChild className="h-9">
               <Link href="/patients/merge">{t('mergePatients')}</Link>
             </Button>
         </div>

@@ -217,6 +217,7 @@
   },
   "alerts": {
     "pageTitle": "هشدارها",
+    "searchPlaceholder": "جستجو بر اساس ارائه‌دهنده یا شناسه هشدار…",
     "tabPrescribing": "ناهنجاری‌های نسخه",
     "tabClinical": "ایمنی بالینی",
     "filterAll": "همه",
@@ -259,7 +260,33 @@
     "noAlertsDescription": "هیچ هشدار ناهنجاری تجویزی با فیلتر فعلی مطابقت ندارد.",
     "noReports": "هنوز هیچ گزارش ماهانه‌ای ایجاد نشده است.",
     "reportsUnavailable": "گزارش‌های ماهانه در دسترس نیست — بارگذاری ناکام شد.",
-    "reportsLoading": "در حال بارگذاری گزارش‌های ماهانه…"
+    "reportsLoading": "در حال بارگذاری گزارش‌های ماهانه…",
+    "alertHistory": {
+      "heading": "تاریخچه هشدارها",
+      "searchPlaceholder": "جستجو بر اساس آزمایشگاه یا دسته آزمایش…",
+      "searchAriaLabel": "جستجوی هشدارها",
+      "filterAll": "همه",
+      "filterUnacknowledged": "تأییدنشده",
+      "filterAcknowledged": "تأییدشده",
+      "colDateTime": "تاریخ/زمان",
+      "colLab": "آزمایشگاه",
+      "colTestCategory": "دسته آزمایش",
+      "colPositivityRate": "نرخ مثبت‌بودن",
+      "colStatus": "وضعیت",
+      "colActions": "اقدامات",
+      "statusAcknowledged": "تأییدشده",
+      "statusUnacknowledged": "تأییدنشده",
+      "acknowledge": "تأیید",
+      "loadingAlerts": "در حال بارگذاری هشدارها…",
+      "emptyTitle": "هیچ هشدار مراقبتی یافت نشد.",
+      "emptyTitleWithStatus": "هیچ هشدار مراقبتی با وضعیت {status} یافت نشد.",
+      "paginationShowing": "نمایش {from}–{to} از {total}",
+      "paginationPrevious": "قبلی",
+      "paginationNext": "بعدی",
+      "paginationPageOf": "صفحه {current} از {total}",
+      "unknown": "نامعلوم",
+      "errorLoad": "بارگذاری هشدارها ناکام شد"
+    }
   },
   "audit": {
     "pageTitle": "گزارش ممیزی",
@@ -530,6 +557,7 @@
   },
   "network": {
     "pageTitle": "شبکه",
+    "searchPlaceholder": "جستجوی آزمایشگاه‌ها بر اساس نام…",
     "activateOutbreakMode": "فعال‌سازی حالت همه‌گیری",
     "enrollChw": "ثبت‌نام کارمند بهداشت جامعه",
     "filterAll": "همه",
@@ -741,6 +769,7 @@
     "certAssignSelectPathway": "انتخاب مسیر",
     "certAssignSuccess": "مسیر با موفقیت تخصیص یافت",
     "certAssignError": "تخصیص مسیر ناکام شد",
+    "certBack": "← بازگشت به تخصیص‌های آزمایشگاه",
     "healthPageTitle": "پرونده سلامت کارمند",
     "healthBack": "← بازگشت به تخصیص‌های آزمایشگاه",
     "healthHepB": "هپاتیت B",
@@ -877,6 +906,8 @@
   },
   "aiModels": {
     "pageTitle": "مدل‌های هوش مصنوعی",
+    "searchPlaceholder": "جستجو بر اساس شناسه مدل…",
+    "filterAllTypes": "همه انواع",
     "publishNewVersion": "انتشار نسخه جدید",
     "cancelPublish": "لغو",
     "statsRegisteredModels": "مدل‌های ثبت‌شده",

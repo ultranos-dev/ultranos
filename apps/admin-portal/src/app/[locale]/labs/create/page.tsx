@@ -40,7 +40,7 @@ export default function CreateLabPage() {
   return (
     <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-3">
-          <Button variant="outline" size="sm" onClick={() => router.push('/labs')}>
+          <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => router.push('/labs')}>
             {t('backToLabs')}
           </Button>
           <h1 className="text-2xl font-semibold text-foreground">{t('createPageTitle')}</h1>

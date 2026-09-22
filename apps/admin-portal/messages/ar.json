@@ -217,6 +217,7 @@
   },
   "alerts": {
     "pageTitle": "التنبيهات",
+    "searchPlaceholder": "البحث بمقدّم الخدمة أو معرّف التنبيه…",
     "tabPrescribing": "شذوذات الوصفات",
     "tabClinical": "السلامة السريرية",
     "filterAll": "الكل",
@@ -259,7 +260,33 @@
     "noAlertsDescription": "لا توجد تنبيهات شذوذ وصف مطابقة للعامل الحالي.",
     "noReports": "لم يتم إنشاء أي تقارير شهرية بعد.",
     "reportsUnavailable": "التقارير الشهرية غير متاحة — تعذّر التحميل.",
-    "reportsLoading": "جارٍ تحميل التقارير الشهرية…"
+    "reportsLoading": "جارٍ تحميل التقارير الشهرية…",
+    "alertHistory": {
+      "heading": "سجل التنبيهات",
+      "searchPlaceholder": "البحث بالمختبر أو فئة الفحص…",
+      "searchAriaLabel": "البحث في التنبيهات",
+      "filterAll": "الكل",
+      "filterUnacknowledged": "غير مُقرّ",
+      "filterAcknowledged": "مُقرّ",
+      "colDateTime": "التاريخ/الوقت",
+      "colLab": "المختبر",
+      "colTestCategory": "فئة الفحص",
+      "colPositivityRate": "معدل الإيجابية",
+      "colStatus": "الحالة",
+      "colActions": "الإجراءات",
+      "statusAcknowledged": "مُقرّ",
+      "statusUnacknowledged": "غير مُقرّ",
+      "acknowledge": "إقرار",
+      "loadingAlerts": "جارٍ تحميل التنبيهات…",
+      "emptyTitle": "لا توجد تنبيهات ترصّد.",
+      "emptyTitleWithStatus": "لا توجد تنبيهات ترصّد بالحالة {status}.",
+      "paginationShowing": "عرض {from}–{to} من {total}",
+      "paginationPrevious": "السابق",
+      "paginationNext": "التالي",
+      "paginationPageOf": "صفحة {current} من {total}",
+      "unknown": "غير معروف",
+      "errorLoad": "فشل في تحميل التنبيهات"
+    }
   },
   "audit": {
     "pageTitle": "سجل التدقيق",
@@ -530,6 +557,7 @@
   },
   "network": {
     "pageTitle": "الشبكة",
+    "searchPlaceholder": "البحث عن المختبرات بالاسم…",
     "activateOutbreakMode": "تفعيل وضع الوباء",
     "enrollChw": "تسجيل عامل صحة مجتمعي",
     "filterAll": "الكل",
@@ -741,6 +769,7 @@
     "certAssignSelectPathway": "اختر المسار",
     "certAssignSuccess": "تم تعيين المسار بنجاح",
     "certAssignError": "فشل في تعيين المسار",
+    "certBack": "→ العودة إلى تكليفات المختبر",
     "healthPageTitle": "سجل صحة الموظف",
     "healthBack": "→ العودة إلى تكليفات المختبر",
     "healthHepB": "التهاب الكبد B",
@@ -877,6 +906,8 @@
   },
   "aiModels": {
     "pageTitle": "نماذج الذكاء الاصطناعي",
+    "searchPlaceholder": "البحث بمعرّف النموذج…",
+    "filterAllTypes": "جميع الأنواع",
     "publishNewVersion": "نشر إصدار جديد",
     "cancelPublish": "إلغاء",
     "statsRegisteredModels": "النماذج المسجلة",

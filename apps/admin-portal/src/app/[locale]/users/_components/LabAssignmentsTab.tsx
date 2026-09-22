@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import type { LabRole } from '@ultranos/shared-types'
 import { ExportButton } from '@/components/ExportButton'
-import { TriangleAlert, Users, FileSearch } from '@ultranos/ui-kit/icons'
+import { TriangleAlert, Users, FileSearch, ChevronDown } from '@ultranos/ui-kit/icons'
 import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
 import { Button } from '@/components/ui/button'
@@ -176,13 +176,13 @@ export default function LabAssignmentsTab() {
       {/* Toolbar: filters + actions — one row */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Role filter — pill tab-bar */}
-        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+        <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {ROLE_FILTERS.map((r) => (
             <button
               key={r}
               type="button"
               onClick={() => { setRoleFilter(r); resetPagination() }}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                 roleFilter === r
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -195,37 +195,43 @@ export default function LabAssignmentsTab() {
         </div>
 
         {/* Lab filter */}
-        <select
-          value={labFilter}
-          onChange={(e) => { setLabFilter(e.target.value); resetPagination() }}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-          aria-label="Filter by lab"
-        >
-          <option value="">All Labs</option>
-          {labsError && <option disabled>Failed to load labs</option>}
-          {labs.map((l) => (
-            <option key={l.id} value={l.id}>
-              {l.labName}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={labFilter}
+            onChange={(e) => { setLabFilter(e.target.value); resetPagination() }}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label="Filter by lab"
+          >
+            <option value="">All Labs</option>
+            {labsError && <option disabled>Failed to load labs</option>}
+            {labs.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.labName}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
 
         {/* Activity filter */}
-        <select
-          value={activityFilter}
-          onChange={(e) => { setActivityFilter(e.target.value as ActivityFilter); resetPagination() }}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-          aria-label="Filter by activity"
-        >
-          <option value="ALL">All Activity</option>
-          <option value="ACTIVE_7D">Active (7d)</option>
-          <option value="INACTIVE">Inactive</option>
-        </select>
+        <div className="relative">
+          <select
+            value={activityFilter}
+            onChange={(e) => { setActivityFilter(e.target.value as ActivityFilter); resetPagination() }}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label="Filter by activity"
+          >
+            <option value="ALL">All Activity</option>
+            <option value="ACTIVE_7D">Active (7d)</option>
+            <option value="INACTIVE">Inactive</option>
+          </select>
+          <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
 
         <Button
           onClick={() => setShowAssignModal(true)}
           aria-label="Assign to Lab"
-          className="ms-auto"
+          className="h-9"
         >
           Assign to Lab
         </Button>

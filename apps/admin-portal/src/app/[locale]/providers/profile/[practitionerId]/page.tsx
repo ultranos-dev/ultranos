@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FileText, ShieldAlert } from '@ultranos/ui-kit/icons'
@@ -208,7 +209,7 @@ export default function ProviderProfilePage() {
   if (error && !profile) {
     return (
       <div className="flex flex-col gap-4">
-        <Link href="/providers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('profileBack')}</Link>
+        <Button asChild variant="ghost" size="sm" className="w-fit px-0"><Link href="/providers">{t('profileBack')}</Link></Button>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -221,7 +222,7 @@ export default function ProviderProfilePage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <Link href="/providers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('profileBack')}</Link>
+        <Button asChild variant="ghost" size="sm" className="w-fit px-0"><Link href="/providers">{t('profileBack')}</Link></Button>
 
         <h1 className="text-2xl font-semibold text-foreground">{practitioner.name}</h1>
 

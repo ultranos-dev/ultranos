@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
@@ -60,7 +60,6 @@ function formatDateTime(iso: string | null, never: string): string {
 export default function UserDetailPage() {
   const t = useTranslations('users')
   const params = useParams()
-  const _router = useRouter()
   const userId = params.userId as string
 
   const [user, setUser] = useState<UserDetail | null>(null)
@@ -185,7 +184,7 @@ export default function UserDetailPage() {
   if (error && !user) {
     return (
       <div className="flex flex-col gap-4">
-        <Link href="/users" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('detailBackToUsers')}</Link>
+        <Button asChild variant="ghost" size="sm" className="w-fit px-0"><Link href="/users">{t('detailBackToUsers')}</Link></Button>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -195,7 +194,7 @@ export default function UserDetailPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <Link href="/users" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('detailBackToUsers')}</Link>
+        <Button asChild variant="ghost" size="sm" className="w-fit px-0"><Link href="/users">{t('detailBackToUsers')}</Link></Button>
 
         <h1 className="text-2xl font-semibold text-foreground">{user.name}</h1>
 

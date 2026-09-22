@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { AddModuleDialog } from '@/components/subscriptions/AddModuleDialog'
@@ -114,15 +115,13 @@ export default function SubscriptionsPage() {
         )}
 
         {/* Subscribed Modules Table */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('modulesHeading')}</h2>
-            <div className="flex items-center gap-3">
-              <ExportButton exportFn={() => trpc.subscription.exportSubscriptions.query()} filters={{}} />
-              <Button onClick={() => setShowAddDialog(true)}>
-                {t('addModule')}
-              </Button>
-            </div>
+        <div className="flex flex-col gap-4">
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('modulesHeading')}</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <ExportButton exportFn={() => trpc.subscription.exportSubscriptions.query()} filters={{}} />
+            <Button className="h-9" onClick={() => setShowAddDialog(true)}>
+              {t('addModule')}
+            </Button>
           </div>
 
           {subscriptions.length === 0 ? (
@@ -196,13 +195,13 @@ export default function SubscriptionsPage() {
           onModuleRemoved={fetchData}
         />
 
-        <div className="flex gap-4">
-          <a href="/subscriptions/billing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            {t('manageBilling')}
-          </a>
-          <a href="/subscriptions/invoices" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            {t('viewInvoices')}
-          </a>
+        <div className="flex flex-wrap gap-3">
+          <Button asChild variant="ghost" size="sm" className="w-fit px-0">
+            <Link href="/subscriptions/billing">{t('manageBilling')}</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm" className="w-fit px-0">
+            <Link href="/subscriptions/invoices">{t('viewInvoices')}</Link>
+          </Button>
         </div>
       </div>
   )

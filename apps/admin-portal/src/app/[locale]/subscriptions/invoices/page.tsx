@@ -97,23 +97,20 @@ export default function InvoicesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <Link
-          href="/subscriptions"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
-        >
-          {t('invoicesBack')}
-        </Link>
+        <Button asChild variant="ghost" size="sm" className="w-fit px-0">
+          <Link href="/subscriptions">{t('invoicesBack')}</Link>
+        </Button>
         <h1 className="text-2xl font-semibold text-foreground">{t('invoicesPageTitle')}</h1>
 
         {/* Toolbar: status tabs — one row, always visible */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => handleStatusFilterChange(s)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                   statusFilter === s
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'

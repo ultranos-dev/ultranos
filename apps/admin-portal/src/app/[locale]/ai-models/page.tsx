@@ -7,6 +7,9 @@ import type { AIModelType } from '@ultranos/shared-types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
+import { SearchInput } from '@/components/ui/search-input'
+import { Brain, FileSearch, TriangleAlert } from '@ultranos/ui-kit/icons'
 
 interface ModelEntry {
   modelId: string
@@ -73,6 +76,8 @@ export default function AIModelsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showPublishForm, setShowPublishForm] = useState(false)
+  const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState<'ALL' | (typeof MODEL_TYPES)[number]>('ALL')
 
   const fetchData = useCallback(async () => {
     try {
@@ -96,6 +101,12 @@ export default function AIModelsPage() {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  const q = search.trim().toLowerCase()
+  const filteredModels = models
+    .filter((m) => (typeFilter === 'ALL' ? true : m.modelType === typeFilter))
+    .filter((m) => (q ? m.modelId.toLowerCase().includes(q) : true))
+  const filtersActive = q.length > 0 || typeFilter !== 'ALL'
 
   return (
     <div className="flex flex-col gap-4">
@@ -140,10 +151,36 @@ export default function AIModelsPage() {
         )}
 
         {/* Model Registry Table */}
-        <div>
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('manifestTitle')}</h2>
-            <Button onClick={() => setShowPublishForm(!showPublishForm)}>
+        <div className="flex flex-col gap-4">
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('manifestTitle')}</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <SearchInput
+              dir="auto"
+              placeholder={t('searchPlaceholder')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="min-w-[200px] flex-1"
+              inputClassName="h-9 rounded-full"
+              aria-label={t('searchPlaceholder')}
+            />
+            <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
+              {(['ALL', ...MODEL_TYPES] as const).map((mt) => (
+                <button
+                  key={mt}
+                  type="button"
+                  onClick={() => setTypeFilter(mt)}
+                  aria-pressed={typeFilter === mt}
+                  className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
+                    typeFilter === mt
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {mt === 'ALL' ? t('filterAllTypes') : mt.replace(/_/g, ' ')}
+                </button>
+              ))}
+            </div>
+            <Button className="h-9" onClick={() => setShowPublishForm(!showPublishForm)}>
               {showPublishForm ? t('cancelPublish') : t('publishNewVersion')}
             </Button>
           </div>
@@ -162,18 +199,28 @@ export default function AIModelsPage() {
               <tbody className="divide-y divide-border">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">{t('loading')}</td>
+                    <td colSpan={6}>
+                      <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">{t('loading')}</div>
+                    </td>
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">{t('modelsUnavailable')}</td>
+                    <td colSpan={6}>
+                      <div className="flex min-h-[16rem] items-center justify-center">
+                        <EmptyState icon={TriangleAlert} title={t('modelsUnavailable')} />
+                      </div>
+                    </td>
                   </tr>
-                ) : models.length === 0 ? (
+                ) : filteredModels.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">{t('noModels')}</td>
+                    <td colSpan={6}>
+                      <div className="flex min-h-[16rem] items-center justify-center">
+                        <EmptyState icon={filtersActive ? FileSearch : Brain} title={t('noModels')} />
+                      </div>
+                    </td>
                   </tr>
                 ) : (
-                  models.map((model) => (
+                  filteredModels.map((model) => (
                     <tr key={`${model.modelId}-${model.currentVersion}`} className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 text-sm font-medium text-foreground">{model.modelId}</td>
                       <td className="px-4 py-3 text-sm"><ModelTypeBadge type={model.modelType} /></td>

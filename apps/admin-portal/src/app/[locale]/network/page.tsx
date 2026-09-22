@@ -9,7 +9,8 @@ import { OutbreakDashboard } from '@/components/network/OutbreakDashboard'
 import { ChwEnrollmentModal } from '@/components/network/ChwEnrollmentModal'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Network } from '@ultranos/ui-kit/icons'
+import { SearchInput } from '@/components/ui/search-input'
+import { Network, FileSearch } from '@ultranos/ui-kit/icons'
 
 type StatusFilter = 'ALL' | 'ACTIVE' | 'PENDING' | 'SUSPENDED'
 
@@ -44,6 +45,7 @@ export default function NetworkPage() {
   const [labs, setLabs] = useState<LabSummary[]>([])
   const [outbreaks, setOutbreaks] = useState<Outbreak[]>([])
   const [filter, setFilter] = useState<StatusFilter>('ALL')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showOutbreakModal, setShowOutbreakModal] = useState(false)
@@ -70,9 +72,10 @@ export default function NetworkPage() {
     fetchData()
   }, [fetchData])
 
-  const filteredLabs = filter === 'ALL'
-    ? labs
-    : labs.filter((l) => l.status === filter)
+  const q = search.trim().toLowerCase()
+  const filteredLabs = labs
+    .filter((l) => (filter === 'ALL' ? true : l.status === filter))
+    .filter((l) => (q ? l.labName.toLowerCase().includes(q) : true))
 
   return (
     <div className="flex flex-col gap-4">
@@ -80,14 +83,23 @@ export default function NetworkPage() {
 
         {/* Toolbar: filter tabs + actions — one row, always visible */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          <SearchInput
+            dir="auto"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="min-w-[200px] flex-1"
+            inputClassName="h-9 rounded-full"
+            aria-label={t('searchPlaceholder')}
+          />
+          <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
                 type="button"
                 aria-pressed={filter === s}
                 onClick={() => setFilter(s)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                   filter === s
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -97,10 +109,10 @@ export default function NetworkPage() {
               </button>
             ))}
           </div>
-          <Button variant="destructive" onClick={() => setShowOutbreakModal(true)}>
+          <Button variant="destructive" className="h-9" onClick={() => setShowOutbreakModal(true)}>
             {t('activateOutbreakMode')}
           </Button>
-          <Button onClick={() => setShowChwModal(true)}>
+          <Button className="h-9" onClick={() => setShowChwModal(true)}>
             {t('enrollChw')}
           </Button>
         </div>
@@ -117,7 +129,7 @@ export default function NetworkPage() {
             {filteredLabs.length === 0 ? (
               <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
                 <EmptyState
-                  icon={Network}
+                  icon={q || filter !== 'ALL' ? FileSearch : Network}
                   title={t('noNodes')}
                   description={t('noNodesDescription')}
                 />

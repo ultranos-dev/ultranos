@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { MilestoneReviewModal } from '@/components/certifications/MilestoneReviewModal'
@@ -61,6 +61,7 @@ function formatType(type: string): string {
 export default function PractitionerCertificationsPage() {
   const t = useTranslations('staff')
   const params = useParams()
+  const router = useRouter()
   const practitionerId = params.practitionerId as string
 
   const [pathways, setPathways] = useState<PathwayProgress[]>([])
@@ -150,8 +151,9 @@ export default function PractitionerCertificationsPage() {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-2xl font-semibold text-foreground">{t('certificationsPageTitle')}</h1>
+        <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => router.push('/users?tab=lab-assignments')}>{t('certBack')}</Button>
+        <h1 className="text-2xl font-semibold text-foreground">{t('certificationsPageTitle')}</h1>
+        <div className="flex flex-wrap items-center gap-3">
           <Button onClick={openAssignModal}>
             {t('certAssignPathway')}
           </Button>

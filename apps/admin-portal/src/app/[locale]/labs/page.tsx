@@ -129,16 +129,16 @@ export default function LabsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="min-w-[200px] flex-1"
-            inputClassName="rounded-full"
+            inputClassName="h-9 rounded-full"
             aria-label={t('searchPlaceholder')}
           />
-          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => handleFilterChange(s)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                   filter === s
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -149,7 +149,7 @@ export default function LabsPage() {
               </button>
             ))}
           </div>
-          <Button onClick={() => { setEditInitial(undefined); setFormOpen(true) }}>
+          <Button className="h-9" onClick={() => { setEditInitial(undefined); setFormOpen(true) }}>
             {t('add')}
           </Button>
           <ExportButton exportFn={() => trpc.admin.exportLabs.query()} filters={{}} />

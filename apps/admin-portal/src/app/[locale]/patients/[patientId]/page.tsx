@@ -94,7 +94,7 @@ export default function PatientDetailPage() {
   if (error && !patient) {
     return (
       <div className="flex flex-col gap-4">
-        <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('detailBackToPatients')}</Link>
+        <Button asChild variant="ghost" size="sm" className="w-fit px-0"><Link href="/patients">{t('detailBackToPatients')}</Link></Button>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -104,7 +104,7 @@ export default function PatientDetailPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('detailBackToPatients')}</Link>
+        <Button asChild variant="ghost" size="sm" className="w-fit px-0"><Link href="/patients">{t('detailBackToPatients')}</Link></Button>
 
         <div className="flex items-center gap-3">
           <Avatar src={patient.photoUrl} name={formatName(patient)} size={64} />

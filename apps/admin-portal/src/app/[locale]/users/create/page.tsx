@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 // ROLE_MODULE_MAP and MODULE_DISPLAY_NAMES reserved for future role-based module config
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ interface UnavailableRole {
 }
 
 export default function CreateUserPage() {
+  const t = useTranslations('users')
   const [availableRoles, setAvailableRoles] = useState<AvailableRole[]>([])
   const [unavailableRoles, setUnavailableRoles] = useState<UnavailableRole[]>([])
   const [loading, setLoading] = useState(true)
@@ -105,6 +107,7 @@ export default function CreateUserPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Button asChild variant="ghost" size="sm" className="w-fit px-0"><a href="/users">{t('detailBackToUsers')}</a></Button>
       <h1 className="text-2xl font-semibold text-foreground">Create Staff User</h1>
       <p className="text-muted-foreground">
         Assign roles based on your organization&apos;s active module subscriptions.

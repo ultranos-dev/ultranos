@@ -217,6 +217,7 @@
   },
   "alerts": {
     "pageTitle": "خبرتیاوې",
+    "searchPlaceholder": "د چمتوکوونکي یا د خبرتیا پیژندنې له مخې لټون…",
     "tabPrescribing": "د نسخه نامنظمۍ",
     "tabClinical": "کلینیکي خوندیتوب",
     "filterAll": "ټول",
@@ -259,7 +260,33 @@
     "noAlertsDescription": "د نسخې د بې نظمۍ هیڅ خبرداری د اوسني فلټر سره سمون نه خوري.",
     "noReports": "تر اوسه هیڅ میاشتنی راپور نه دی جوړ شوی.",
     "reportsUnavailable": "میاشتنی راپورونه شتون نلري — بارول ناکام شو.",
-    "reportsLoading": "د میاشتنیو راپورونو بارول…"
+    "reportsLoading": "د میاشتنیو راپورونو بارول…",
+    "alertHistory": {
+      "heading": "د خبرتیاوو تاریخچه",
+      "searchPlaceholder": "د لابراتوار یا د ازموینې کټګورۍ له مخې لټون…",
+      "searchAriaLabel": "خبرتیاوې ولټوئ",
+      "filterAll": "ټول",
+      "filterUnacknowledged": "نه منل شوی",
+      "filterAcknowledged": "منل شوی",
+      "colDateTime": "نیټه/وخت",
+      "colLab": "لابراتوار",
+      "colTestCategory": "د ازموینې کټګوري",
+      "colPositivityRate": "د مثبتوالي کچه",
+      "colStatus": "حالت",
+      "colActions": "اقدامونه",
+      "statusAcknowledged": "منل شوی",
+      "statusUnacknowledged": "نه منل شوی",
+      "acknowledge": "منل",
+      "loadingAlerts": "خبرتیاوې بارول روان دي…",
+      "emptyTitle": "د څارنې هیڅ خبرتیا ونه موندل شوه.",
+      "emptyTitleWithStatus": "د {status} حالت سره د څارنې هیڅ خبرتیا ونه موندل شوه.",
+      "paginationShowing": "ښودل {from}–{to} له {total}",
+      "paginationPrevious": "مخکینی",
+      "paginationNext": "راتلونکی",
+      "paginationPageOf": "پاڼه {current} له {total}",
+      "unknown": "نامعلوم",
+      "errorLoad": "د خبرتیاوو بارول ناکام شو"
+    }
   },
   "audit": {
     "pageTitle": "د آډیټ لاګ",
@@ -530,6 +557,7 @@
   },
   "network": {
     "pageTitle": "شبکه",
+    "searchPlaceholder": "د نوم له مخې د لابراتوارونو لټون…",
     "activateOutbreakMode": "د اپیدیمي حالت فعالول",
     "enrollChw": "د ټولنیز روغتیا کارمند ثبتول",
     "filterAll": "ټول",
@@ -741,6 +769,7 @@
     "certAssignSelectPathway": "لار وټاکئ",
     "certAssignSuccess": "لار بریالۍ ټاکل شوه",
     "certAssignError": "د لار ټاکل ناکام شو",
+    "certBack": "← د لابراتوار دندو ته شاته",
     "healthPageTitle": "د کارمند روغتیا پرونه",
     "healthBack": "← د لابراتوار دندو ته شاته",
     "healthHepB": "د ځیګر التهاب B",
@@ -877,6 +906,8 @@
   },
   "aiModels": {
     "pageTitle": "د مصنوعي ذهانت ماډلونه",
+    "searchPlaceholder": "د ماډل د پیژندنې له مخې لټون…",
+    "filterAllTypes": "ټول ډولونه",
     "publishNewVersion": "نوې نسخه خپرول",
     "cancelPublish": "لغوه کول",
     "statsRegisteredModels": "ثبت شوي ماډلونه",

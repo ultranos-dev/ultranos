@@ -51,7 +51,7 @@ export function RecentActivityFeed() {
   }, [])
 
   return (
-    <div className="rounded-xl bg-card border border-border p-6 shadow-card">
+    <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-muted-foreground">Recent Activity</p>
         <Button
