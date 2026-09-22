@@ -51,7 +51,7 @@ vi.mock('html5-qrcode', () => ({
   Html5Qrcode: vi.fn().mockImplementation(() => ({ start: vi.fn(), stop: vi.fn(), clear: vi.fn() })),
 }))
 
-import { wizardReducer, initialState } from '../app/[locale]/(app)/upload/page'
+import { wizardReducer, initialState } from '../app/[locale]/(app)/upload/wizard'
 
 describe('Upload wizard reducer — order picker', () => {
   it('initial step is SELECT_ORDER', () => {

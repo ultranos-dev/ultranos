@@ -13,88 +13,14 @@ import { ResultUpload } from '@/components/ResultUpload'
 import { MetadataForm, type MetadataFormValues, type OcrStatus } from '@/components/MetadataForm'
 import { ReviewStep } from '@/components/upload/ReviewStep'
 import { addToQueue } from '@/lib/db'
-import { analyzeUpload, type OcrAnalysisResult, type VerifyPatientResult } from '@/lib/trpc'
+import { analyzeUpload, type VerifyPatientResult } from '@/lib/trpc'
 import { Button } from '@/components/ui/Button'
 import { reportQueueAuditEvent } from '@/lib/audit-client'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useRecentPatients } from '@/hooks/useRecentPatients'
 import type { PatientSearchItem } from '@/hooks/usePatientSearch'
-
-/** Extended wizard step — SELECT_ORDER is the branch entry point before VERIFY_PATIENT. */
-export type WizardStep = _BaseWizardStep | 'SELECT_ORDER'
-
-// ── Wizard State ────────────────────────────────────────
-
-interface WizardState {
-  step: WizardStep
-  patient: { patientRef: string; patientFirstName: string; patientAge: number } | null
-  /** Set when the upload is tied to an existing lab order (notifies ordering physician). */
-  orderId: string | null
-  file: { file: File; fileName: string; fileType: string } | null
-  ocrResult: OcrAnalysisResult | null
-  ocrLoading: boolean
-  metadata: MetadataFormValues | null
-}
-
-type WizardAction =
-  | { type: 'SET_PATIENT'; payload: { patientRef: string; patientFirstName: string; patientAge: number } }
-  | { type: 'SET_ORDER'; payload: { patient: { patientRef: string; patientFirstName: string; patientAge: number }; orderId: string } }
-  | { type: 'SET_FILE'; payload: { file: File; fileName: string; fileType: string } }
-  | { type: 'SET_OCR_LOADING'; payload: boolean }
-  | { type: 'SET_OCR_RESULT'; payload: OcrAnalysisResult }
-  | { type: 'SET_METADATA'; payload: MetadataFormValues }
-  | { type: 'GO_TO_STEP'; payload: WizardStep }
-  | { type: 'NEXT_STEP' }
-  | { type: 'PREV_STEP' }
-
-/** Linear step chain for NEXT/PREV navigation — SELECT_ORDER is the branch entry point, not part of this chain. */
-const STEP_ORDER: _BaseWizardStep[] = ['VERIFY_PATIENT', 'UPLOAD_FILE', 'TAG_METADATA', 'REVIEW_SUBMIT']
-
-export function wizardReducer(state: WizardState, action: WizardAction): WizardState {
-  switch (action.type) {
-    case 'SET_PATIENT':
-      // Free-form path: always clears any stale orderId
-      return { ...state, patient: action.payload, orderId: null, step: 'UPLOAD_FILE', file: null, ocrResult: null, ocrLoading: false, metadata: null }
-    case 'SET_ORDER':
-      // Order-linked path: sets patient + orderId, resets file/ocr/metadata
-      return { ...state, patient: action.payload.patient, orderId: action.payload.orderId, step: 'UPLOAD_FILE', file: null, ocrResult: null, ocrLoading: false, metadata: null }
-    case 'SET_FILE':
-      return { ...state, file: action.payload }
-    case 'SET_OCR_LOADING':
-      return { ...state, ocrLoading: action.payload }
-    case 'SET_OCR_RESULT':
-      return { ...state, ocrResult: action.payload, ocrLoading: false }
-    case 'SET_METADATA':
-      return { ...state, metadata: action.payload, step: 'REVIEW_SUBMIT' }
-    case 'GO_TO_STEP':
-      return { ...state, step: action.payload }
-    case 'NEXT_STEP': {
-      const idx = STEP_ORDER.indexOf(state.step as _BaseWizardStep)
-      const next = STEP_ORDER[idx + 1]
-      if (idx >= 0 && next) return { ...state, step: next }
-      return state
-    }
-    case 'PREV_STEP': {
-      const idx = STEP_ORDER.indexOf(state.step as _BaseWizardStep)
-      const prev = STEP_ORDER[idx - 1]
-      if (idx > 0 && prev) return { ...state, step: prev }
-      return state
-    }
-    default:
-      return state
-  }
-}
-
-export const initialState: WizardState = {
-  step: 'SELECT_ORDER',
-  patient: null,
-  orderId: null,
-  file: null,
-  ocrResult: null,
-  ocrLoading: false,
-  metadata: null,
-}
+import { wizardReducer, initialState } from './wizard'
 
 // ── Page Component ──────────────────────────────────────
 
@@ -312,9 +238,7 @@ export default function UploadPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground">{t('upload.title')}</h1>
-      </div>
+      <h1 className="text-2xl font-semibold text-foreground">{t('upload.title')}</h1>
 
       <StepIndicator currentStep={state.step as _BaseWizardStep} />
 
@@ -330,15 +254,15 @@ export default function UploadPage() {
       {state.step === 'VERIFY_PATIENT' && (
         <div className="flex flex-col gap-4">
           {verifyError && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700" role="alert">
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive" role="alert">
               {verifyError}
             </div>
           )}
 
           {/* Render patient already verified state */}
           {state.patient && (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-              <h3 className="mb-3 text-sm font-semibold text-green-800">{t('verification.patientVerified')}</h3>
+            <div className="rounded-lg border border-success/30 bg-success/10 p-4">
+              <h3 className="mb-3 text-sm font-semibold text-success">{t('verification.patientVerified')}</h3>
               <dl className="grid grid-cols-2 gap-2 text-sm">
                 <dt className="font-medium text-muted-foreground">{t('verification.firstName')}</dt>
                 <dd className="text-foreground">{state.patient.patientFirstName}</dd>
@@ -360,7 +284,7 @@ export default function UploadPage() {
                   onClick={() => setVerifyMode('search')}
                   className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 ${
                     verifyMode === 'search'
-                      ? 'bg-card text-primary-700 shadow-sm'
+                      ? 'bg-card text-primary shadow-sm'
                       : 'text-muted-foreground [@media(hover:hover)and(pointer:fine)]:hover:text-foreground'
                   }`}
                 >
@@ -371,7 +295,7 @@ export default function UploadPage() {
                   onClick={() => setVerifyMode('manual')}
                   className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 ${
                     verifyMode === 'manual'
-                      ? 'bg-card text-primary-700 shadow-sm'
+                      ? 'bg-card text-primary shadow-sm'
                       : 'text-muted-foreground [@media(hover:hover)and(pointer:fine)]:hover:text-foreground'
                   }`}
                 >
@@ -382,7 +306,7 @@ export default function UploadPage() {
                   onClick={() => setVerifyMode('qr')}
                   className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 ${
                     verifyMode === 'qr'
-                      ? 'bg-card text-primary-700 shadow-sm'
+                      ? 'bg-card text-primary shadow-sm'
                       : 'text-muted-foreground [@media(hover:hover)and(pointer:fine)]:hover:text-foreground'
                   }`}
                 >
