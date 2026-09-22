@@ -18,7 +18,13 @@ export interface SearchInputProps
   className?: string
   /** Extra classes for the inner input element. */
   inputClassName?: string
-  /** Accessible label for the magnifier button. Falls back to `aria-label`, then `placeholder`, then "Search". */
+  /**
+   * Accessible label for the trailing magnifier button. Defaults to "Search".
+   * The button's name is intentionally kept INDEPENDENT of the input's own
+   * `aria-label`/`placeholder` so the two controls never share an accessible
+   * name (a duplicate-name a11y issue, and it makes `getByLabelText` ambiguous).
+   * Pass a localized string here when you want the button labelled per-locale.
+   */
   searchLabel?: string
 }
 
@@ -35,11 +41,9 @@ function SearchInput({
   type = 'text',
   ...props
 }: SearchInputProps) {
-  const label =
-    searchLabel ??
-    (typeof props['aria-label'] === 'string' ? (props['aria-label'] as string) : undefined) ??
-    (typeof props.placeholder === 'string' ? props.placeholder : undefined) ??
-    'Search'
+  // Button label is decoupled from the input's aria-label/placeholder so the
+  // input and its magnifier button never expose the same accessible name.
+  const label = searchLabel ?? 'Search'
 
   return (
     <div className={cn('relative flex items-center', className)}>
@@ -59,7 +63,7 @@ function SearchInput({
       <Button
         type="button"
         variant="default"
-        size="icon-sm"
+        size="icon-xs"
         aria-label={label}
         className="absolute end-1.5 top-1/2 -translate-y-1/2"
         onClick={(e) => {
@@ -71,7 +75,7 @@ function SearchInput({
           }
         }}
       >
-        <Search className="size-4" />
+        <Search className="size-3" />
       </Button>
     </div>
   )
