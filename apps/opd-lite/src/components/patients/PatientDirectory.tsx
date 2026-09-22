@@ -8,7 +8,7 @@ import { Card } from '@/components/Card'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { Users, UserCheck, AlertTriangle, Clock, FileSearch, ChevronUp, ChevronDown } from '@ultranos/ui-kit/icons'
-import { Input } from '@ultranos/ui-kit/components/ui/input'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { formatDate, formatRelativeTime } from '@ultranos/ui-kit'
 import { db } from '@/lib/db'
 import type { LocalPatient } from '@/lib/db'
@@ -85,6 +85,7 @@ function latestIso(a?: string | null, b?: string | null): string | null {
 
 export function PatientDirectory() {
   const t = useTranslations('patients')
+  const tCommon = useTranslations('common')
   const router = useRouter()
   const locale = useLocale()
 
@@ -375,36 +376,23 @@ export function PatientDirectory() {
     setPage(1)
   }, [])
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-muted-foreground">{t('title')}...</p>
-      </div>
-    )
-  }
-
   return (
     <div className="flex flex-col gap-4">
-      {/* Header row */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold text-foreground">
-            {t('title')}
-          </h1>
-          {syncing && (
-            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-              {t('syncing')}
-            </span>
-          )}
-        </div>
-        <Button variant="primary" onClick={handleRegisterNew}>
-          {t('registerNew')}
-        </Button>
+      {/* Header row — standalone h1 with syncing indicator */}
+      <div className="flex items-center gap-3">
+        <h1 className="text-2xl font-semibold text-foreground">
+          {t('title')}
+        </h1>
+        {syncing && (
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+            {t('syncing')}
+          </span>
+        )}
       </div>
 
       {/* Stat strip — derived from already-loaded patient rows */}
-      {rows.length > 0 && (
+      {!loading && rows.length > 0 && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4" data-testid="stat-strip">
           <Card>
             <div className="flex items-center justify-between gap-2">
@@ -437,17 +425,29 @@ export function PatientDirectory() {
         </div>
       )}
 
-      {/* Status pill tab-bar + secondary filters */}
+      {/* Toolbar: search → status pills → secondary filters → Register (search-first golden order) */}
       <div className="flex flex-wrap items-center gap-3">
+        {/* Search */}
+        <SearchInput
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
+          aria-label={t('searchPlaceholder')}
+          searchLabel={tCommon('search')}
+        />
+
         {/* Status pill tab-bar */}
-        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+        <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {(['all', 'active', 'inactive'] as StatusFilter[]).map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => { setStatusFilter(tab); setPage(1) }}
               className={[
-                'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                'flex items-center rounded-full px-4 text-sm font-medium transition-colors',
                 statusFilter === tab
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground',
@@ -459,61 +459,68 @@ export function PatientDirectory() {
           ))}
         </div>
 
-        {/* Search */}
-        <Input
-          type="text"
-          dir="auto"
-          placeholder={t('searchPlaceholder')}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="min-w-[200px] flex-1"
-          aria-label={t('searchPlaceholder')}
-        />
-
         {/* Secondary filters */}
-        <select
-          value={allergyFilter}
-          onChange={(e) => { setAllergyFilter(e.target.value as AllergyFilter); setPage(1) }}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-          aria-label={t('hasAllergies')}
-        >
-          <option value="all">{t('hasAllergies')}: {t('all')}</option>
-          <option value="yes">{t('hasAllergies')}: {t('yes')}</option>
-          <option value="no">{t('hasAllergies')}: {t('no')}</option>
-        </select>
+        <div className="relative">
+          <select
+            value={allergyFilter}
+            onChange={(e) => { setAllergyFilter(e.target.value as AllergyFilter); setPage(1) }}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label={t('hasAllergies')}
+          >
+            <option value="all">{t('hasAllergies')}: {t('all')}</option>
+            <option value="yes">{t('hasAllergies')}: {t('yes')}</option>
+            <option value="no">{t('hasAllergies')}: {t('no')}</option>
+          </select>
+          <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
 
-        <select
-          value={visitFilter}
-          onChange={(e) => { setVisitFilter(e.target.value as VisitFilter); setPage(1) }}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-          aria-label={t('lastVisitFilter')}
-        >
-          <option value="all">{t('lastVisitFilter')}: {t('all')}</option>
-          <option value="today">{t('lastVisitFilter')}: {t('today')}</option>
-          <option value="week">{t('lastVisitFilter')}: {t('thisWeek')}</option>
-          <option value="month">{t('lastVisitFilter')}: {t('thisMonth')}</option>
-        </select>
+        <div className="relative">
+          <select
+            value={visitFilter}
+            onChange={(e) => { setVisitFilter(e.target.value as VisitFilter); setPage(1) }}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label={t('lastVisitFilter')}
+          >
+            <option value="all">{t('lastVisitFilter')}: {t('all')}</option>
+            <option value="today">{t('lastVisitFilter')}: {t('today')}</option>
+            <option value="week">{t('lastVisitFilter')}: {t('thisWeek')}</option>
+            <option value="month">{t('lastVisitFilter')}: {t('thisMonth')}</option>
+          </select>
+          <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
+
+        <Button variant="primary" className="h-9" onClick={handleRegisterNew}>
+          {t('registerNew')}
+        </Button>
       </div>
 
-      {/* Empty states */}
-      {rows.length === 0 ? (
-        <EmptyState
-          icon={Users}
-          title={t('noPatients')}
-          description={t('noPatientsDescription')}
-          action={{ label: t('registerNew'), onClick: handleRegisterNew }}
-        />
+      {/* Content box — loading / empty / no-results / table all live inside */}
+      {loading ? (
+        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <p className="text-muted-foreground">{t('title')}...</p>
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <EmptyState
+            icon={Users}
+            title={t('noPatients')}
+            description={t('noPatientsDescription')}
+            action={{ label: t('registerNew'), onClick: handleRegisterNew }}
+          />
+        </div>
       ) : sorted.length === 0 ? (
-        <EmptyState
-          icon={FileSearch}
-          title={t('noResults')}
-          description={t('noResultsDescription')}
-          action={{ label: t('clearFilters'), onClick: handleClearFilters }}
-        />
+        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <EmptyState
+            icon={FileSearch}
+            title={t('noResults')}
+            description={t('noResultsDescription')}
+            action={{ label: t('clearFilters'), onClick: handleClearFilters }}
+          />
+        </div>
       ) : (
         <>
           {/* Table */}
-          <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+          <div className="overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-muted">
                 <tr>
@@ -547,7 +554,7 @@ export function PatientDirectory() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-background">
+              <tbody className="divide-y divide-border">
                 {paginated.map((row) => (
                   <tr
                     key={row.id}

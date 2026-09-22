@@ -4,11 +4,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatDate } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@ultranos/ui-kit/components/ui/input'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
-import { CalendarClock } from '@ultranos/ui-kit/icons'
+import { CalendarClock, ChevronDown } from '@ultranos/ui-kit/icons'
 import { getHubApiUrl, getAuthHeaders } from '@/lib/hub-auth'
 
 interface ExpiringConsent {
@@ -27,6 +27,7 @@ export default function ExpiringConsentsPage() {
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const t = useTranslations('consent')
   const tNav = useTranslations('sidebar')
+  const tCommon = useTranslations('common')
   const [consents, setConsents] = useState<ExpiringConsent[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
@@ -95,16 +96,44 @@ export default function ExpiringConsentsPage() {
     <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-semibold text-foreground">{tNav('expiringConsents')}</h1>
 
-        {loading && (
-          <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+        {/* Toolbar: search + expiry-window filter (always rendered) */}
+        <div className="flex flex-wrap items-center gap-3">
+          <SearchInput
+            dir="auto"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="min-w-[200px] flex-1"
+            inputClassName="h-9 rounded-full"
+            aria-label={t('searchPlaceholder')}
+            searchLabel={tCommon('search')}
+          />
+          <div className="relative">
+            <select
+              value={windowFilter}
+              onChange={(e) => setWindowFilter(e.target.value as typeof windowFilter)}
+              className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+              aria-label={t('windowAll')}
+            >
+              <option value="all">{t('windowAll')}</option>
+              <option value="30">{t('window30')}</option>
+              <option value="60">{t('window60')}</option>
+              <option value="90">{t('window90')}</option>
+            </select>
+            <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
             <table className="w-full text-sm">
-              <thead className="bg-muted text-muted-foreground">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-3 text-start font-semibold">{t('colPatientId')}</th>
-                  <th className="px-4 py-3 text-start font-semibold">{t('colExpiryDate')}</th>
-                  <th className="px-4 py-3 text-start font-semibold">{t('colDaysUntilExpiry')}</th>
-                  <th className="px-4 py-3 text-start font-semibold">{t('colVersion')}</th>
-                  <th className="px-4 py-3 text-start font-semibold">{t('colGrantorRole')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colPatientId')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colExpiryDate')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDaysUntilExpiry')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colVersion')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colGrantorRole')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -120,97 +149,67 @@ export default function ExpiringConsentsPage() {
               </tbody>
             </table>
           </div>
+        ) : fetchError ? (
+          <div className="rounded-xl bg-card p-4 shadow-card ring-[0.65px] ring-border/50">
+            <Alert variant="destructive" role="alert">
+              {t('fetchError')}
+            </Alert>
+          </div>
+        ) : consents.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+            <EmptyState icon={CalendarClock} title={t('emptyTitle')} description={t('emptyDescription')} />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+            <EmptyState icon={CalendarClock} title={t('noResultsFiltered')} />
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+            <table className="w-full text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colPatientId')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colExpiryDate')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDaysUntilExpiry')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colVersion')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colGrantorRole')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filtered.map((c) => {
+                  const days = daysUntilExpiry(c.provision_end)
+                  return (
+                    <tr key={c.id} className="hover:bg-muted/50">
+                      <td className="px-4 py-3 font-mono text-xs">
+                        {extractPatientId(c.patient_ref)}
+                      </td>
+                      <td className="px-4 py-3">
+                        {formatDate(c.provision_end, locale)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={expiryPillClass(days)}>
+                          {days}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">{c.consent_version}</td>
+                      <td className="px-4 py-3">{c.grantor_role}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
 
-        {!loading && fetchError && (
-          <Alert variant="destructive" role="alert">
-            {t('fetchError')}
-          </Alert>
-        )}
-
-        {!loading && !fetchError && (
-          <>
-            {/* Toolbar: search + expiry-window filter (always visible, matches Patients directory) */}
-            <div className="flex flex-wrap items-center gap-3">
-              <Input
-                type="text"
-                dir="auto"
-                placeholder={t('searchPlaceholder')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="min-w-[200px] flex-1"
-                aria-label={t('searchPlaceholder')}
-              />
-              <select
-                value={windowFilter}
-                onChange={(e) => setWindowFilter(e.target.value as typeof windowFilter)}
-                className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-                aria-label={t('windowAll')}
-              >
-                <option value="all">{t('windowAll')}</option>
-                <option value="30">{t('window30')}</option>
-                <option value="60">{t('window60')}</option>
-                <option value="90">{t('window90')}</option>
-              </select>
-            </div>
-
-            {consents.length === 0 ? (
-              <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
-                <EmptyState icon={CalendarClock} title={t('emptyTitle')} description={t('emptyDescription')} />
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
-                <EmptyState icon={CalendarClock} title={t('noResultsFiltered')} />
-              </div>
-            ) : (
-            <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
-              <table className="w-full text-sm">
-                <thead className="bg-muted text-muted-foreground">
-                  <tr>
-                    <th className="px-4 py-3 text-start font-semibold">{t('colPatientId')}</th>
-                    <th className="px-4 py-3 text-start font-semibold">{t('colExpiryDate')}</th>
-                    <th className="px-4 py-3 text-start font-semibold">{t('colDaysUntilExpiry')}</th>
-                    <th className="px-4 py-3 text-start font-semibold">{t('colVersion')}</th>
-                    <th className="px-4 py-3 text-start font-semibold">{t('colGrantorRole')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {filtered.map((c) => {
-                    const days = daysUntilExpiry(c.provision_end)
-                    return (
-                      <tr key={c.id} className="hover:bg-muted/50">
-                        <td className="px-4 py-3 font-mono text-xs">
-                          {extractPatientId(c.patient_ref)}
-                        </td>
-                        <td className="px-4 py-3">
-                          {formatDate(c.provision_end, locale)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={expiryPillClass(days)}>
-                            {days}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">{c.consent_version}</td>
-                        <td className="px-4 py-3">{c.grantor_role}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-            )}
-
-            {consents.length > 0 && (
-              <div className="mt-4 flex items-center gap-4">
-                <Button variant="outline" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>
-                  {t('previous')}
-                </Button>
-                <Button variant="outline" disabled={consents.length < limit} onClick={() => setOffset(offset + limit)}>
-                  {t('next')}
-                </Button>
-              </div>
-            )}
-          </>
+        {!loading && !fetchError && consents.length > 0 && (
+          <div className="flex items-center gap-4">
+            <Button variant="outline" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>
+              {t('previous')}
+            </Button>
+            <Button variant="outline" disabled={consents.length < limit} onClick={() => setOffset(offset + limit)}>
+              {t('next')}
+            </Button>
+          </div>
         )}
     </div>
   )

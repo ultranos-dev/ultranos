@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatDate, formatDateTime } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@ultranos/ui-kit/components/ui/input'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
+import { ChevronDown } from '@ultranos/ui-kit/icons'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
@@ -107,6 +108,7 @@ export function NotificationCenter() {
   const router = useRouter()
   const t = useTranslations('notificationCenter')
   const tNotif = useTranslations('notifications')
+  const tCommon = useTranslations('common')
 
   const {
     notifications,
@@ -155,7 +157,18 @@ export function NotificationCenter() {
     <div className="flex flex-col gap-4">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
-        <div role="tablist" className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+        <SearchInput
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
+          aria-label={t('searchPlaceholder')}
+          searchLabel={tCommon('search')}
+        />
+
+        <div role="tablist" className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {TABS.map(tab => (
             <button
               key={tab.key}
@@ -163,7 +176,7 @@ export function NotificationCenter() {
               role="tab"
               aria-selected={activeTab === tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                 activeTab === tab.key
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -174,32 +187,26 @@ export function NotificationCenter() {
           ))}
         </div>
 
-        <Input
-          type="text"
-          dir="auto"
-          placeholder={t('searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="min-w-[200px] flex-1"
-          aria-label={t('searchPlaceholder')}
-        />
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as StatusKey)}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-          aria-label={t('statusAll')}
-        >
-          <option value="all">{t('statusAll')}</option>
-          <option value="unread">{t('statusUnread')}</option>
-          <option value="read">{t('statusRead')}</option>
-        </select>
+        <div className="relative">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as StatusKey)}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label={t('statusAll')}
+          >
+            <option value="all">{t('statusAll')}</option>
+            <option value="unread">{t('statusUnread')}</option>
+            <option value="read">{t('statusRead')}</option>
+          </select>
+          <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
 
         <Button
           variant="primary"
           disabled={unreadCount === 0}
           onClick={acknowledgeAll}
           aria-label={t('markAllReadAria')}
+          className="h-9"
         >
           {t('markAllRead')}
         </Button>

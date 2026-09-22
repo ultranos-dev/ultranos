@@ -124,7 +124,7 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
   // Loading state
   if (loading) {
     return (
-      <div className="mx-auto max-w-2xl flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <Skeleton className="h-8 w-1/2" />
         <Skeleton className="h-40 w-full" />
         <Skeleton className="h-32 w-full" />
@@ -135,7 +135,7 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
   // Error states
   if (!patient) {
     return (
-      <div className="mx-auto max-w-2xl flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         {needsReauth ? (
           <>
             <p className="font-semibold text-muted-foreground">

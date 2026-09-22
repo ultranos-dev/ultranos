@@ -17,19 +17,16 @@ export default function AppointmentsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Page header: title (left) + book action & Day/Week toggle (right) */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold text-foreground">{tNav('appointments')}</h1>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button variant="primary" onClick={() => setBookOpen(true)} className="gap-2">
-            <CalendarPlus className="h-4 w-4" aria-hidden="true" />
-            {t('bookAppointment')}
-          </Button>
-          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+      {/* Standalone page title */}
+      <h1 className="text-2xl font-semibold text-foreground">{tNav('appointments')}</h1>
+
+      {/* Toolbar: Day/Week toggle + Book action folded at end */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
           <button
             type="button"
             onClick={() => setViewMode('day')}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
               viewMode === 'day' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -38,14 +35,17 @@ export default function AppointmentsPage() {
           <button
             type="button"
             onClick={() => setViewMode('week')}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
               viewMode === 'week' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {t('weekView')}
           </button>
-          </div>
         </div>
+        <Button variant="primary" onClick={() => setBookOpen(true)} className="h-9 gap-2">
+          <CalendarPlus className="h-4 w-4" aria-hidden="true" />
+          {t('bookAppointment')}
+        </Button>
       </div>
       {viewMode === 'day' ? <DayScheduleView /> : <WeekScheduleView />}
 

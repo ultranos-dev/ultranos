@@ -618,6 +618,8 @@
   },
   "dashboard": {
     "welcome": "Welcome, {name}",
+    "searchPlaceholder": "Search by name or National ID...",
+    "searchAriaLabel": "Patient search",
     "unknownPatient": "Unknown Patient",
     "statusInProgress": "In Progress",
     "statusCompleted": "Completed",
@@ -657,6 +659,7 @@
     "back": "Back",
     "next": "Next",
     "unknown": "Unknown",
+    "search": "Search",
     "emDash": "·"
   },
   "errors": {

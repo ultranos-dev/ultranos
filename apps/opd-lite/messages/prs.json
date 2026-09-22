@@ -618,6 +618,8 @@
   },
   "dashboard": {
     "welcome": "خوش آمدید، {name}",
+    "searchPlaceholder": "جستجو با نام یا شماره تذکره...",
+    "searchAriaLabel": "جستجوی مریض",
     "unknownPatient": "بیمار ناشناخته",
     "statusInProgress": "در حال انجام",
     "statusCompleted": "تکمیل شد",
@@ -657,6 +659,7 @@
     "back": "بازگشت",
     "next": "بعدی",
     "unknown": "نامعلوم",
+    "search": "جستجو",
     "emDash": "·"
   },
   "errors": {

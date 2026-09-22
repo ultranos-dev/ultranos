@@ -43,9 +43,34 @@ vi.mock('@ultranos/ui-kit/components/ui/empty-state', () => ({
   ),
 }))
 
-// Mock CalendarClock icon
+// Mock icons used by the page and the ui-kit SearchInput
 vi.mock('@ultranos/ui-kit/icons', () => ({
   CalendarClock: () => <svg data-testid="icon-calendar-clock" />,
+  ChevronDown: () => <svg data-testid="icon-chevron-down" />,
+  Search: () => <svg data-testid="icon-search" />,
+}))
+
+// Mock the ui-kit SearchInput so it renders a plain input carrying the aria-label
+vi.mock('@ultranos/ui-kit/components/ui/search-input', () => ({
+  SearchInput: ({
+    value,
+    onChange,
+    placeholder,
+    'aria-label': ariaLabel,
+  }: {
+    value: string
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    placeholder?: string
+    'aria-label'?: string
+  }) => (
+    <input
+      type="search"
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      aria-label={ariaLabel}
+    />
+  ),
 }))
 
 // Mock Alert from ui-kit

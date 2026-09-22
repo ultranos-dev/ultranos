@@ -468,7 +468,11 @@ describe('ClinicalDashboard', () => {
   it('renders inline patient search', async () => {
     const { ClinicalDashboard } = await import('@/components/dashboard/ClinicalDashboard')
     render(<ClinicalDashboard />)
-    expect(screen.getByLabelText('Patient search')).toBeDefined()
+    // Search input is the ui-kit SearchInput; its aria-label is the i18n key
+    // 'searchAriaLabel' (the next-intl mock returns keys verbatim). The magnifier
+    // button carries the 'common.search' → 'search' label, so this matches only
+    // the input.
+    expect(screen.getByLabelText('searchAriaLabel')).toBeDefined()
   })
 
   it('renders all four summary cards', async () => {

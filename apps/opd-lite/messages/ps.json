@@ -618,6 +618,8 @@
   },
   "dashboard": {
     "welcome": "ښه راغلاست، {name}",
+    "searchPlaceholder": "د نوم یا تذکرې شمیرې په واسطه لټون...",
+    "searchAriaLabel": "د ناروغ لټون",
     "unknownPatient": "نامعلوم ناروغ",
     "statusInProgress": "روان دی",
     "statusCompleted": "بشپړ شو",
@@ -657,6 +659,7 @@
     "back": "شاته",
     "next": "راتلونکی",
     "unknown": "نامعلوم",
+    "search": "لټون",
     "emDash": "·"
   },
   "errors": {

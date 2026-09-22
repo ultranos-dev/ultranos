@@ -1,12 +1,12 @@
 'use client'
 
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { usePatientStore } from '@/stores/patient-store'
 import { usePatientSearch } from '@/lib/use-patient-search'
-import { SearchInput } from '@/components/search-input'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { PatientResultList } from '@/components/patient-result-list'
 import { Button } from '@/components/ui/Button'
 import { TodayEncountersCard } from './TodayEncountersCard'
@@ -24,17 +24,40 @@ function formatRole(role: string): string {
 export function ClinicalDashboard() {
   const router = useRouter()
   const t = useTranslations('dashboard')
+  const tCommon = useTranslations('common')
   const session = useAuthSessionStore((s) => s.session)
   const { query, results, isSearching, selectPatient } = usePatientStore()
   const { search } = usePatientSearch()
   const searchRef = useRef<HTMLDivElement>(null)
 
+  // Local immediate input value; the actual search (Dexie decrypt-and-filter) is
+  // debounced 250ms so it does not run on every keystroke. Preserves the debounce
+  // behaviour previously baked into the app-local SearchInput component.
+  const [inputValue, setInputValue] = useState(query)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Keep the input in sync when the store query is reset externally (e.g. after
+  // selecting a patient clears the query).
+  useEffect(() => {
+    setInputValue(query)
+  }, [query])
+
   const handleQueryChange = useCallback(
     (value: string) => {
-      search(value)
+      setInputValue(value)
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      debounceRef.current = setTimeout(() => {
+        search(value)
+      }, 250)
     },
     [search]
   )
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
 
   const handleSelect = useCallback(
     (patient: FhirPatient) => {
@@ -73,7 +96,15 @@ export function ClinicalDashboard() {
 
       {/* Inline patient search */}
       <section ref={searchRef}>
-        <SearchInput value={query} onChange={handleQueryChange} />
+        <SearchInput
+          type="search"
+          value={inputValue}
+          onChange={(e) => handleQueryChange(e.target.value)}
+          placeholder={t('searchPlaceholder')}
+          aria-label={t('searchAriaLabel')}
+          searchLabel={tCommon('search')}
+          inputClassName="h-9 rounded-full"
+        />
         {(results.length > 0 || isSearching || query.length > 0) && (
           <div className="mt-2">
             <PatientResultList

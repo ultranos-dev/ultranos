@@ -93,7 +93,7 @@ export function DayScheduleView() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center rounded-xl bg-card py-12 shadow-card ring-[0.65px] ring-border/50">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
       </div>
     )

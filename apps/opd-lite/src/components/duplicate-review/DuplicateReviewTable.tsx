@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@ultranos/ui-kit/components/ui/input'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
@@ -80,6 +80,7 @@ const decisionBadgeConfig: Record<ReviewDecision, { labelKey: string; classes: s
 
 export function DuplicateReviewTable() {
   const t = useTranslations('duplicateReview')
+  const tCommon = useTranslations('common')
 
   const [rows, setRows] = useState<DuplicateReviewRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -130,26 +131,6 @@ export function DuplicateReviewTable() {
     }
   }
 
-  /* ---- Loading / Error states ---- */
-
-  if (loading) {
-    return (
-      <div className="space-y-2" aria-label={t('loading')} aria-busy="true">
-        <Skeleton className="h-12 w-full rounded-xl" />
-        <Skeleton className="h-12 w-full rounded-xl" />
-        <Skeleton className="h-12 w-full rounded-xl" />
-      </div>
-    )
-  }
-
-  if (error && rows.length === 0) {
-    return (
-      <Alert variant="destructive" role="alert">
-        {error}
-      </Alert>
-    )
-  }
-
   /* ---- Two-pane master-detail ---- */
 
   const selectedRow = rows.find((r) => r.id === selectedId) ?? null
@@ -164,21 +145,32 @@ export function DuplicateReviewTable() {
 
   return (
     <div className="flex flex-col gap-4">
-      {error && (
+      {error && rows.length > 0 && (
         <Alert variant="destructive" role="alert">
           {error}
         </Alert>
       )}
 
-      {/* Toolbar: tab-bar + search (matches Patients directory) */}
+      {/* Toolbar: search + tab-bar (search-first golden order) */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+        <SearchInput
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
+          aria-label={t('searchPlaceholder')}
+          searchLabel={tCommon('search')}
+        />
+
+        <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {(['all', 'pending', 'resolved'] as const).map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setStatusTab(tab)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                 statusTab === tab
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -193,19 +185,25 @@ export function DuplicateReviewTable() {
             </button>
           ))}
         </div>
-
-        <Input
-          type="text"
-          dir="auto"
-          placeholder={t('searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="min-w-[200px] flex-1"
-          aria-label={t('searchPlaceholder')}
-        />
       </div>
 
-      {rows.length === 0 ? (
+      {loading ? (
+        <div
+          className="space-y-2 rounded-xl bg-card p-3 shadow-card ring-[0.65px] ring-border/50"
+          aria-label={t('loading')}
+          aria-busy="true"
+        >
+          <Skeleton className="h-12 w-full rounded-xl" />
+          <Skeleton className="h-12 w-full rounded-xl" />
+          <Skeleton className="h-12 w-full rounded-xl" />
+        </div>
+      ) : error && rows.length === 0 ? (
+        <div className="rounded-xl bg-card p-4 shadow-card ring-[0.65px] ring-border/50">
+          <Alert variant="destructive" role="alert">
+            {error}
+          </Alert>
+        </div>
+      ) : rows.length === 0 ? (
         <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
           <EmptyState title={t('noReviews')} />
         </div>
@@ -217,7 +215,7 @@ export function DuplicateReviewTable() {
       <div className="lg:grid lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:gap-4 lg:items-start">
 
         {/* ---- LEFT PANE: compact selectable list ---- */}
-        <div className="overflow-hidden rounded-xl ring-[0.65px] ring-border/50">
+        <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
           {filteredRows.length === 0 ? (
             <div className="flex min-h-[16rem] items-center justify-center">
               <EmptyState icon={UserSearch} title={t('noResultsFiltered')} />

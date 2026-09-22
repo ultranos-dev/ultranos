@@ -618,6 +618,8 @@
   },
   "dashboard": {
     "welcome": "مرحبًا، {name}",
+    "searchPlaceholder": "ابحث بالاسم أو الرقم الوطني...",
+    "searchAriaLabel": "بحث المرضى",
     "unknownPatient": "مريض مجهول",
     "statusInProgress": "قيد التنفيذ",
     "statusCompleted": "مكتمل",
@@ -657,6 +659,7 @@
     "back": "رجوع",
     "next": "التالي",
     "unknown": "غير معروف",
+    "search": "بحث",
     "emDash": "·"
   },
   "errors": {
