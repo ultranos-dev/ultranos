@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
@@ -108,5 +108,44 @@ describe('EventBrowser', () => {
     })
 
     expect(screen.getByText('noEventsDescription')).toBeTruthy()
+  })
+
+  it('sends the selected action group to the server (server-side filtering)', async () => {
+    mockListAuditEvents.mockResolvedValue({ events: mockEvents, total: 3 })
+
+    render(<EventBrowser />)
+    await waitFor(() => expect(screen.getByText('KYC_APPROVED')).toBeTruthy())
+
+    fireEvent.change(screen.getByLabelText('Filter by action type'), {
+      target: { value: 'KYC_ACTIONS' },
+    })
+
+    await waitFor(() => {
+      expect(mockListAuditEvents).toHaveBeenLastCalledWith(
+        expect.objectContaining({ actionGroup: 'KYC_ACTIONS' }),
+      )
+    })
+  })
+
+  it('sends the debounced actor search to the server', async () => {
+    mockListAuditEvents.mockResolvedValue({ events: mockEvents, total: 3 })
+
+    render(<EventBrowser />)
+    await waitFor(() => expect(screen.getByText('KYC_APPROVED')).toBeTruthy())
+
+    // getByLabelText matches ONLY the input (its aria-label), not the magnifier
+    // button — which now has its own decoupled 'Search' label (ui-kit a11y fix).
+    fireEvent.change(screen.getByLabelText('searchActorPlaceholder'), {
+      target: { value: 'alice' },
+    })
+
+    await waitFor(
+      () => {
+        expect(mockListAuditEvents).toHaveBeenLastCalledWith(
+          expect.objectContaining({ actorSearch: 'alice' }),
+        )
+      },
+      { timeout: 2000 },
+    )
   })
 })

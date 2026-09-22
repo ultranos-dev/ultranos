@@ -3130,6 +3130,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 cursor?: number | undefined;
                 action?: string | undefined;
                 outcome?: "SUCCESS" | "FAILURE" | "ALL" | undefined;
+                actionGroup?: "ALL" | "KYC_ACTIONS" | "LAB_ACTIONS" | "USER_ACTIONS" | "ALERT_ACTIONS" | "AUTH_EVENTS" | "SETTINGS_CHANGES" | undefined;
+                actorSearch?: string | undefined;
             };
             output: {
                 events: {
@@ -3156,6 +3158,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 endDate: string;
                 action?: string | undefined;
                 outcome?: "SUCCESS" | "FAILURE" | "ALL" | undefined;
+                actionGroup?: "ALL" | "KYC_ACTIONS" | "LAB_ACTIONS" | "USER_ACTIONS" | "ALERT_ACTIONS" | "AUTH_EVENTS" | "SETTINGS_CHANGES" | undefined;
+                actorSearch?: string | undefined;
             };
             output: {
                 data: string;

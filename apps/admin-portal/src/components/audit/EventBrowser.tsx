@@ -7,7 +7,7 @@ import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { SearchInput } from '@/components/ui/search-input'
 import { EmptyState } from '@/components/ui/empty-state'
-import { FileText } from '@ultranos/ui-kit/icons'
+import { FileText, FileSearch, ChevronDown } from '@ultranos/ui-kit/icons'
 
 interface AuditEvent {
   id: string
@@ -42,8 +42,6 @@ const ACTION_GROUP_LABELS: Record<ActionGroup, string> = {
   AUTH_EVENTS: 'Auth Events',
   SETTINGS_CHANGES: 'Settings Changes',
 }
-
-
 const REDACTED_KEYS = ['patient', 'diagnosis', 'medication', 'allergy', 'note']
 
 const PAGE_SIZE = 50
@@ -107,6 +105,8 @@ export function EventBrowser() {
   const [actionGroup, setActionGroup] = useState<ActionGroup>('ALL')
   const [outcomeFilter, setOutcomeFilter] = useState<OutcomeFilter>('ALL')
   const [actorSearch, setActorSearch] = useState('')
+  // Debounced actor search actually sent to the server (avoids a query per keystroke).
+  const [actorQuery, setActorQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -123,6 +123,8 @@ export function EventBrowser() {
         limit: PAGE_SIZE,
         startDate: `${dateFrom}T00:00:00.000Z`,
         endDate: `${dateTo}T23:59:59.999Z`,
+        ...(actionGroup !== 'ALL' && { actionGroup }),
+        ...(actorQuery && { actorSearch: actorQuery }),
         ...(selectedOutcome && { outcome: selectedOutcome as 'SUCCESS' | 'FAILURE' }),
       })
       setEvents(result.events as AuditEvent[])
@@ -132,11 +134,20 @@ export function EventBrowser() {
     } finally {
       setLoading(false)
     }
-  }, [page, dateFrom, dateTo, outcomeFilter])
+  }, [page, dateFrom, dateTo, outcomeFilter, actionGroup, actorQuery])
 
   useEffect(() => {
     fetchEvents()
   }, [fetchEvents])
+
+  // Debounce the actor search box → server query, resetting to page 1.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setActorQuery(actorSearch.trim())
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(id)
+  }, [actorSearch])
 
   function handleFilterChange<T>(setter: (v: T) => void) {
     return (value: T) => {
@@ -147,15 +158,30 @@ export function EventBrowser() {
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
+  // Filtering (action group, actor, outcome, dates) is applied server-side; the
+  // returned rows are already the filtered result set for the current page.
+  const filtersActive =
+    actionGroup !== 'ALL' || actorQuery.length > 0 || outcomeFilter !== 'ALL'
+
   return (
     <div className="flex flex-col gap-4">
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
+          <SearchInput
+            placeholder={t('searchActorPlaceholder')}
+            value={actorSearch}
+            onChange={(e) => setActorSearch(e.target.value)}
+            className="min-w-[200px] flex-1"
+            inputClassName="h-9 rounded-full"
+            aria-label={t('searchActorPlaceholder')}
+          />
+
+          {/* Date range */}
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => handleFilterChange(setDateFrom)(e.target.value)}
-            className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="h-9 rounded-full border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Date from"
           />
           <span className="text-sm text-muted-foreground">to</span>
@@ -163,47 +189,47 @@ export function EventBrowser() {
             type="date"
             value={dateTo}
             onChange={(e) => handleFilterChange(setDateTo)(e.target.value)}
-            className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="h-9 rounded-full border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Date to"
           />
 
-          <select
-            value={actionGroup}
-            onChange={(e) => handleFilterChange(setActionGroup)(e.target.value as ActionGroup)}
-            className="rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Filter by action type"
-          >
-            {(Object.keys(ACTION_GROUP_LABELS) as ActionGroup[]).map((g) => (
-              <option key={g} value={g}>
-                {ACTION_GROUP_LABELS[g]}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={actionGroup}
+              onChange={(e) => handleFilterChange(setActionGroup)(e.target.value as ActionGroup)}
+              className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
+              aria-label="Filter by action type"
+            >
+              {(Object.keys(ACTION_GROUP_LABELS) as ActionGroup[]).map((g) => (
+                <option key={g} value={g}>
+                  {ACTION_GROUP_LABELS[g]}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          </div>
 
-          <select
-            value={outcomeFilter}
-            onChange={(e) => handleFilterChange(setOutcomeFilter)(e.target.value as OutcomeFilter)}
-            className="rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Filter by outcome"
-          >
-            <option value="ALL">All Outcomes</option>
-            <option value="SUCCESS">SUCCESS</option>
-            <option value="FAILURE">FAILURE</option>
-          </select>
-
-          <SearchInput
-            placeholder={t('searchActorPlaceholder')}
-            value={actorSearch}
-            onChange={(e) => handleFilterChange(setActorSearch)(e.target.value)}
-            className="min-w-[200px] flex-1"
-            aria-label={t('searchActorPlaceholder')}
-          />
+          <div className="relative">
+            <select
+              value={outcomeFilter}
+              onChange={(e) => handleFilterChange(setOutcomeFilter)(e.target.value as OutcomeFilter)}
+              className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
+              aria-label="Filter by outcome"
+            >
+              <option value="ALL">All Outcomes</option>
+              <option value="SUCCESS">SUCCESS</option>
+              <option value="FAILURE">FAILURE</option>
+            </select>
+            <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          </div>
 
         <ExportButton
           exportFn={() =>
             trpc.admin.exportAuditEvents.query({
               startDate: `${dateFrom}T00:00:00.000Z`,
               endDate: `${dateTo}T23:59:59.999Z`,
+              ...(actionGroup !== 'ALL' && { actionGroup }),
+              ...(actorQuery && { actorSearch: actorQuery }),
               ...(selectedOutcome && { outcome: selectedOutcome as 'SUCCESS' | 'FAILURE' }),
             })
           }
@@ -221,7 +247,7 @@ export function EventBrowser() {
       ) : events.length === 0 ? (
         <div className="flex min-h-[16rem] items-center justify-center">
           <EmptyState
-            icon={FileText}
+            icon={filtersActive ? FileSearch : FileText}
             title={t('noEvents')}
             description={t('noEventsDescription')}
           />

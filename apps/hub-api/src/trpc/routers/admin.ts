@@ -129,6 +129,38 @@ function buildCsvExport(headers: string[], rows: string[][], prefix: string) {
 }
 
 /**
+ * Audit `action` → group classification. An action belongs to a group when its
+ * (case-insensitive) string contains ANY of the group's keywords. Mirrors the
+ * admin-portal EventBrowser groups so server-side filtering matches the UI.
+ */
+const AUDIT_ACTION_GROUP_KEYWORDS = {
+  KYC_ACTIONS: ['KYC'],
+  LAB_ACTIONS: ['LAB'],
+  USER_ACTIONS: ['USER', 'PRACTITIONER', 'STAFF'],
+  ALERT_ACTIONS: ['ALERT', 'ANOMALY', 'OUTBREAK'],
+  AUTH_EVENTS: ['LOGIN', 'LOGOUT', 'AUTH', 'TOKEN', 'MFA', 'PASSWORD', 'SESSION'],
+  SETTINGS_CHANGES: ['SETTING', 'CONFIG'],
+} as const
+
+type AuditActionGroup = 'ALL' | keyof typeof AUDIT_ACTION_GROUP_KEYWORDS
+
+/**
+ * Build a PostgREST `.or()` clause that matches any of an action group's
+ * keywords via ILIKE. Note: inside `.or()`, `*` is the wildcard (not `%`).
+ */
+function actionGroupOrClause(group: Exclude<AuditActionGroup, 'ALL'>): string {
+  return AUDIT_ACTION_GROUP_KEYWORDS[group].map((kw) => `action.ilike.*${kw}*`).join(',')
+}
+
+/**
+ * Strip characters that would break the PostgREST filter / `.or()` grammar so a
+ * free-text actor search can be safely embedded in an ILIKE pattern.
+ */
+function sanitizeFilterTerm(term: string): string {
+  return term.replace(/[,()".*:\\%]/g, '').trim()
+}
+
+/**
  * Enterprise user-profile fields (practitioners). camelCase input → snake_case column.
  * Existing clinical columns + new HR columns (job_title/department/employee_id/avatar_url).
  */
@@ -3789,6 +3821,10 @@ export const adminRouter = createTRPCRouter({
         startDate: z.string().datetime(),
         endDate: z.string().datetime(),
         action: z.string().optional(),
+        actionGroup: z
+          .enum(['ALL', 'KYC_ACTIONS', 'LAB_ACTIONS', 'USER_ACTIONS', 'ALERT_ACTIONS', 'AUTH_EVENTS', 'SETTINGS_CHANGES'])
+          .default('ALL'),
+        actorSearch: z.string().max(100).optional(),
         outcome: z.enum(['ALL', 'SUCCESS', 'FAILURE']).default('ALL'),
         cursor: z.number().int().min(0).default(0),
         limit: z.number().int().min(1).max(100).default(25),
@@ -3854,6 +3890,24 @@ export const adminRouter = createTRPCRouter({
         query = query.eq('outcome', input.outcome)
       }
 
+      if (input.actionGroup !== 'ALL') {
+        query = query.or(actionGroupOrClause(input.actionGroup))
+      }
+
+      if (input.actorSearch) {
+        const term = sanitizeFilterTerm(input.actorSearch).toLowerCase()
+        if (term) {
+          const nameMatchedIds = practitionerIds.filter((id) =>
+            (practitionerNameMap.get(id) ?? '').toLowerCase().includes(term),
+          )
+          if (nameMatchedIds.length > 0) {
+            query = query.or(`actor_id.in.(${nameMatchedIds.join(',')}),actor_role.ilike.*${term}*`)
+          } else {
+            query = query.ilike('actor_role', `%${term}%`)
+          }
+        }
+      }
+
       const { data: rows, error, count } = await query
 
       if (error) {
@@ -3894,6 +3948,10 @@ export const adminRouter = createTRPCRouter({
         startDate: z.string().datetime(),
         endDate: z.string().datetime(),
         action: z.string().optional(),
+        actionGroup: z
+          .enum(['ALL', 'KYC_ACTIONS', 'LAB_ACTIONS', 'USER_ACTIONS', 'ALERT_ACTIONS', 'AUTH_EVENTS', 'SETTINGS_CHANGES'])
+          .default('ALL'),
+        actorSearch: z.string().max(100).optional(),
         outcome: z.enum(['ALL', 'SUCCESS', 'FAILURE']).default('ALL'),
       }).refine(
         (data) => {
@@ -3959,6 +4017,24 @@ export const adminRouter = createTRPCRouter({
 
       if (input.outcome !== 'ALL') {
         query = query.eq('outcome', input.outcome)
+      }
+
+      if (input.actionGroup !== 'ALL') {
+        query = query.or(actionGroupOrClause(input.actionGroup))
+      }
+
+      if (input.actorSearch) {
+        const term = sanitizeFilterTerm(input.actorSearch).toLowerCase()
+        if (term) {
+          const nameMatchedIds = practitionerIds.filter((id) =>
+            (practitionerNameMap.get(id) ?? '').toLowerCase().includes(term),
+          )
+          if (nameMatchedIds.length > 0) {
+            query = query.or(`actor_id.in.(${nameMatchedIds.join(',')}),actor_role.ilike.*${term}*`)
+          } else {
+            query = query.ilike('actor_role', `%${term}%`)
+          }
+        }
       }
 
       const { data: rows, error } = await query
