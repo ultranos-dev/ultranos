@@ -225,7 +225,12 @@
     "discard": "رد کردن",
     "confirmDiscard": "تایید رد",
     "confirm": "تایید",
-    "cancel": "لغو"
+    "cancel": "لغو",
+    "filterAll": "همه",
+    "statusCompleted": "تکمیل‌شده",
+    "statusPending": "در انتظار",
+    "statusFailed": "ناموفق",
+    "statusExpired": "منقضی‌شده"
   },
   "dashboard": {
     "todaysActivity": "فعالیت امروز",
@@ -353,7 +358,12 @@
       "status": "وضعیت",
       "referenceId": "مرجع",
       "received": "تاریخ دریافت"
-    }
+    },
+    "searchPlaceholder": "جستجوی اعلان‌ها…",
+    "filterAll": "همه",
+    "filterUnread": "خوانده‌نشده",
+    "filterRead": "خوانده‌شده",
+    "noResults": "اعلان مطابقی یافت نشد"
   },
   "queue": {
     "title": "صف بارگذاری",
@@ -550,7 +560,15 @@
     "emptyTitle": "هیچ نمونه‌ای در صف نیست",
     "emptyHint": "نمونه‌های دریافت‌شده به‌طور خودکار در اینجا نمایش داده می‌شوند.",
     "enterResult": "ثبت نتیجه",
-    "recollect": "جمع‌آوری مجدد"
+    "recollect": "جمع‌آوری مجدد",
+    "archive": "بایگانی",
+    "unarchive": "خروج از بایگانی",
+    "statusFilter": {
+      "label": "وضعیت نمونه",
+      "active": "فعال",
+      "archived": "بایگانی‌شده"
+    },
+    "searchPlaceholder": "جستجو بر اساس شناسه نمونه یا سفارش…"
   },
   "orders": {
     "title": "درخواست‌های آزمایش",
@@ -674,7 +692,8 @@
     "smsConfigSaved": "پیکربندی SMS ذخیره شد",
     "smsTestSent": "پیامک آزمایشی در صف قرار گرفت",
     "criticalValues": "ارزش‌های بحرانی و ارتقاء",
-    "criticalValuesDesc": "آستانه‌های نتایج بحرانی و مخاطبین تشدید"
+    "criticalValuesDesc": "آستانه‌های نتایج بحرانی و مخاطبین تشدید",
+    "backToSettings": "بازگشت به تنظیمات"
   },
   "queuePage": {
     "title": "صف بارگذاری",
@@ -742,7 +761,9 @@
       "preview": "پیش نمایش رسید",
       "thankYou": "از پرداخت شما متشکریم",
       "empty": "هنوز رسیدی موجود نیست",
-      "emptyHint": "پرداخت‌های ثبت‌شده در اینجا نمایش داده می‌شوند."
+      "emptyHint": "پرداخت‌های ثبت‌شده در اینجا نمایش داده می‌شوند.",
+      "searchPlaceholder": "جستجو بر اساس شماره رسید…",
+      "noResults": "رسید مطابقی یافت نشد"
     },
     "reconciliation": {
       "title": "تسویه آخر روز",
@@ -913,41 +934,40 @@
       },
       "waste": {
         "title": "داشبورد اتلاف معرف",
-        "addNew": "افزودن معرف",
+        "loading": "در حال بارگذاری…",
+        "addReagent": "افزودن معرف",
         "period": {
-          "this-month": "این ماه",
-          "last-month": "ماه گذشته",
-          "3-months": "۳ ماه",
-          "6-months": "۶ ماه"
+          "this_month": "این ماه",
+          "last_month": "ماه گذشته",
+          "3_months": "۳ ماه",
+          "6_months": "۶ ماه"
         },
-        "summary": {
-          "totalWaste": "کل اتلاف",
-          "financialLoss": "ضرر مالی",
-          "wasteRate": "نرخ اتلاف",
-          "efficiency": "کارایی"
+        "totalTracked": "کل ردیابی‌شده",
+        "overallEfficiency": "کارایی کلی",
+        "wasteRate": "نرخ اتلاف",
+        "financialLoss": "ضرر مالی",
+        "expiryAlertsHeading": "هشدارهای انقضا",
+        "expiryAlertsUnavailable": "داده‌های هشدار انقضا در دسترس نیست. وضعیت کاشف را دستی بررسی کنید.",
+        "expiryAlertIcon": "هشدار انقضا",
+        "alerts": {
+          "expiryWarning": "در {openDate} باز شد — احتمالاً ~{remainingTests} آزمایش استفاده‌نشده می‌ماند، تا {daysUntilExpiry} روز دیگر منقضی می‌شود."
         },
-        "alerts": "هشدارهای انقضا",
-        "noAlerts": "هیچ هشداری وجود ندارد",
-        "activeReagents": "معرف‌های فعال",
+        "activeReagentsHeading": "معرف‌های فعال",
         "noActiveReagents": "هیچ معرف فعالی وجود ندارد",
-        "wasteHistory": "تاریخچه اتلاف",
-        "noWasteHistory": "هیچ معرف دفع‌شده‌ای در این دوره وجود ندارد",
-        "table": {
+        "wasteHistoryHeading": "تاریخچه اتلاف",
+        "col": {
           "name": "نام",
           "lot": "لات",
-          "expiry": "انقضا",
-          "remaining": "باقی‌مانده",
-          "status": "وضعیت",
-          "loss": "ضرر (افغانی)",
-          "sortLoss": "مرتب‌سازی بر اساس ضرر"
-        },
-        "alertSeverity": {
-          "critical": "بحرانی",
-          "warning": "هشدار"
-        },
-        "daysUntilExpiry": "{days} روز تا انقضا",
-        "projectedLoss": "ضرر پیش‌بینی‌شده {loss} افغانی",
-        "expiryAlertsUnavailable": "داده‌های هشدار انقضا در دسترس نیست. وضعیت کاشف را دستی بررسی کنید."
+          "openDate": "تاریخ باز شدن",
+          "expiryDate": "تاریخ انقضا",
+          "disposalDate": "تاریخ دفع",
+          "progress": "پیشرفت",
+          "efficiency": "کارایی",
+          "daysLeft": "روزهای باقی‌مانده",
+          "alert": "هشدار",
+          "wasteReason": "دلیل اتلاف",
+          "financialLoss": "ضرر مالی"
+        }
       },
       "alerts": {
         "criticalTitle": "بحرانی — در {days} روز منقضی می‌شود",
@@ -2728,7 +2748,8 @@
       "notYetEarned": "هنوز کسب نشده",
       "noneYet": "هنوز هیچ نشانی ندارید — اولین نشان نزدیک‌تر از آن است که فکر می‌کنید.",
       "keepWorking": "ادامه دهید"
-    }
+    },
+    "title": "کیفیت من"
   },
   "hmisReport": {
     "title": "گزارش ماهانه HMIS",
@@ -3019,7 +3040,8 @@
     "statusDecayedNever": "Never performed",
     "neverPerformed": "Never",
     "dismiss": "Dismiss",
-    "dismissNotification": "Dismiss this notification"
+    "dismissNotification": "Dismiss this notification",
+    "filterAll": "همه"
   },
   "rag": {
     "readinessBoard": "تابلوی آمادگی لابراتوار",

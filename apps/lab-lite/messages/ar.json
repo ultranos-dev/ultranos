@@ -225,7 +225,12 @@
     "discard": "تجاهل",
     "confirmDiscard": "تأكيد التجاهل",
     "confirm": "تأكيد",
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "filterAll": "الكل",
+    "statusCompleted": "مكتمل",
+    "statusPending": "قيد الانتظار",
+    "statusFailed": "فشل",
+    "statusExpired": "منتهي الصلاحية"
   },
   "dashboard": {
     "todaysActivity": "نشاط اليوم",
@@ -353,7 +358,12 @@
       "status": "الحالة",
       "referenceId": "المرجع",
       "received": "تاريخ الاستلام"
-    }
+    },
+    "searchPlaceholder": "البحث في الإشعارات…",
+    "filterAll": "الكل",
+    "filterUnread": "غير مقروءة",
+    "filterRead": "مقروءة",
+    "noResults": "لا توجد إشعارات مطابقة"
   },
   "queue": {
     "title": "قائمة انتظار الرفع",
@@ -550,7 +560,15 @@
     "emptyTitle": "لا توجد عينات في قائمة الانتظار",
     "emptyHint": "ستظهر العينات المستلمة هنا تلقائيًا.",
     "enterResult": "إدخال النتيجة",
-    "recollect": "إعادة التجميع"
+    "recollect": "إعادة التجميع",
+    "archive": "أرشفة",
+    "unarchive": "إلغاء الأرشفة",
+    "statusFilter": {
+      "label": "حالة العينة",
+      "active": "نشطة",
+      "archived": "مؤرشفة"
+    },
+    "searchPlaceholder": "البحث برقم العينة أو الطلب…"
   },
   "orders": {
     "title": "طلبات الفحوصات",
@@ -674,7 +692,8 @@
     "smsConfigSaved": "تم حفظ إعدادات SMS",
     "smsTestSent": "تم إضافة رسالة SMS الاختبارية إلى قائمة الانتظار",
     "criticalValues": "القيم الحرجة والتصعيد",
-    "criticalValuesDesc": "حدود النتائج الحرجة وجهات اتصال التصعيد"
+    "criticalValuesDesc": "حدود النتائج الحرجة وجهات اتصال التصعيد",
+    "backToSettings": "العودة إلى الإعدادات"
   },
   "queuePage": {
     "title": "قائمة التحميل",
@@ -742,7 +761,9 @@
       "preview": "معاينة الإيصال",
       "thankYou": "شكراً لدفعكم",
       "empty": "لا توجد إيصالات بعد",
-      "emptyHint": "ستظهر المدفوعات المسجلة هنا."
+      "emptyHint": "ستظهر المدفوعات المسجلة هنا.",
+      "searchPlaceholder": "البحث برقم الإيصال…",
+      "noResults": "لا توجد إيصالات مطابقة"
     },
     "reconciliation": {
       "title": "تسوية نهاية اليوم",
@@ -913,41 +934,40 @@
       },
       "waste": {
         "title": "لوحة هدر الكواشف",
-        "addNew": "إضافة كاشف",
+        "loading": "جارٍ التحميل…",
+        "addReagent": "إضافة كاشف",
         "period": {
-          "this-month": "هذا الشهر",
-          "last-month": "الشهر الماضي",
-          "3-months": "3 أشهر",
-          "6-months": "6 أشهر"
+          "this_month": "هذا الشهر",
+          "last_month": "الشهر الماضي",
+          "3_months": "3 أشهر",
+          "6_months": "6 أشهر"
         },
-        "summary": {
-          "totalWaste": "إجمالي الهدر",
-          "financialLoss": "الخسارة المالية",
-          "wasteRate": "نسبة الهدر",
-          "efficiency": "الكفاءة"
+        "totalTracked": "إجمالي المُتتبَّع",
+        "overallEfficiency": "الكفاءة الإجمالية",
+        "wasteRate": "نسبة الهدر",
+        "financialLoss": "الخسارة المالية",
+        "expiryAlertsHeading": "تنبيهات انتهاء الصلاحية",
+        "expiryAlertsUnavailable": "بيانات تنبيهات الانتهاء غير متوفرة. تحقق من حالة الكاشف يدوياً.",
+        "expiryAlertIcon": "تنبيه انتهاء الصلاحية",
+        "alerts": {
+          "expiryWarning": "فُتح في {openDate} — من المرجح عدم استخدام ~{remainingTests} اختبار، وينتهي خلال {daysUntilExpiry} يوم."
         },
-        "alerts": "تنبيهات انتهاء الصلاحية",
-        "noAlerts": "لا توجد تنبيهات",
-        "activeReagents": "الكواشف النشطة",
+        "activeReagentsHeading": "الكواشف النشطة",
         "noActiveReagents": "لا توجد كواشف نشطة",
-        "wasteHistory": "تاريخ الهدر",
-        "noWasteHistory": "لا توجد كواشف مُتخلَّص منها في هذه الفترة",
-        "table": {
+        "wasteHistoryHeading": "تاريخ الهدر",
+        "col": {
           "name": "الاسم",
           "lot": "الدفعة",
-          "expiry": "الانتهاء",
-          "remaining": "المتبقي",
-          "status": "الحالة",
-          "loss": "الخسارة (أفغاني)",
-          "sortLoss": "ترتيب حسب الخسارة"
-        },
-        "alertSeverity": {
-          "critical": "حرج",
-          "warning": "تحذير"
-        },
-        "daysUntilExpiry": "{days} يوم حتى انتهاء الصلاحية",
-        "projectedLoss": "خسارة متوقعة {loss} أفغاني",
-        "expiryAlertsUnavailable": "بيانات تنبيهات الانتهاء غير متوفرة. تحقق من حالة الكاشف يدوياً."
+          "openDate": "تاريخ الفتح",
+          "expiryDate": "تاريخ الانتهاء",
+          "disposalDate": "تاريخ التخلص",
+          "progress": "التقدم",
+          "efficiency": "الكفاءة",
+          "daysLeft": "الأيام المتبقية",
+          "alert": "تنبيه",
+          "wasteReason": "سبب الهدر",
+          "financialLoss": "الخسارة المالية"
+        }
       },
       "alerts": {
         "criticalTitle": "حرج — ينتهي في {days} يوم",
@@ -2728,7 +2748,8 @@
       "notYetEarned": "لم يتم الحصول عليه بعد",
       "noneYet": "لا توجد شارات بعد — أول شارة أقرب مما تظن.",
       "keepWorking": "استمر"
-    }
+    },
+    "title": "جودتي"
   },
   "hmisReport": {
     "title": "تقرير HMIS الشهري",
@@ -3019,7 +3040,8 @@
     "statusDecayedNever": "Never performed",
     "neverPerformed": "Never",
     "dismiss": "Dismiss",
-    "dismissNotification": "Dismiss this notification"
+    "dismissNotification": "Dismiss this notification",
+    "filterAll": "الكل"
   },
   "rag": {
     "readinessBoard": "لوحة الاستعداد المختبري",

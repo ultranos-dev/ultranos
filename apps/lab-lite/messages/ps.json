@@ -225,7 +225,12 @@
     "discard": "لغوه کول",
     "confirmDiscard": "د لغوه کولو تایید",
     "confirm": "تایید",
-    "cancel": "لغوه کول"
+    "cancel": "لغوه کول",
+    "filterAll": "ټول",
+    "statusCompleted": "بشپړ",
+    "statusPending": "په تمه",
+    "statusFailed": "ناکام",
+    "statusExpired": "نیټه تیره"
   },
   "dashboard": {
     "todaysActivity": "د نن ورځې فعالیت",
@@ -353,7 +358,12 @@
       "status": "حالت",
       "referenceId": "مرجع",
       "received": "د ترلاسه کولو نیټه"
-    }
+    },
+    "searchPlaceholder": "د خبرتیاوو لټون…",
+    "filterAll": "ټول",
+    "filterUnread": "نالوستل شوي",
+    "filterRead": "لوستل شوي",
+    "noResults": "هیڅ ورته خبرتیا ونه موندل شوه"
   },
   "queue": {
     "title": "د پورته کولو لیست",
@@ -550,7 +560,15 @@
     "emptyTitle": "په قطار کې هیڅ نمونه نشته",
     "emptyHint": "ترلاسه شوې نمونې به په اتوماتيک ډول دلته ښکاره شي.",
     "enterResult": "پایله دننه کړئ",
-    "recollect": "بیا ټولول"
+    "recollect": "بیا ټولول",
+    "archive": "آرشیف",
+    "unarchive": "له آرشیف ویستل",
+    "statusFilter": {
+      "label": "د نمونې حالت",
+      "active": "فعال",
+      "archived": "آرشیف شوی"
+    },
+    "searchPlaceholder": "د نمونې یا امر پیژندنې له مخې لټون…"
   },
   "orders": {
     "title": "د ازموینو غوښتنې",
@@ -674,7 +692,8 @@
     "smsConfigSaved": "د SMS ترتیبات خوندي شول",
     "smsTestSent": "د ازموینې SMS صف کې اضافه شو",
     "criticalValues": "بحراني ارزښتونه او لوړیدنه",
-    "criticalValuesDesc": "د بحراني پایلو حدونه او د زیاتون اړیکې"
+    "criticalValuesDesc": "د بحراني پایلو حدونه او د زیاتون اړیکې",
+    "backToSettings": "بیرته ترتیباتو ته"
   },
   "queuePage": {
     "title": "د پورته کولو لیست",
@@ -742,7 +761,9 @@
       "preview": "د رسید مخکتنه",
       "thankYou": "د تادیې مننه",
       "empty": "تر اوسه هیڅ رسید نشته",
-      "emptyHint": "ثبت شوي تادیات به دلته ښکاره شي."
+      "emptyHint": "ثبت شوي تادیات به دلته ښکاره شي.",
+      "searchPlaceholder": "د رسید شمیرې له مخې لټون…",
+      "noResults": "هیڅ ورته رسید ونه موندل شو"
     },
     "reconciliation": {
       "title": "د ورځې پای تسویه",
@@ -913,41 +934,40 @@
       },
       "waste": {
         "title": "د ریجنټ ضیاع ډشبورډ",
-        "addNew": "ریجنټ اضافه کول",
+        "loading": "بارول کیږي…",
+        "addReagent": "ریجنټ اضافه کول",
         "period": {
-          "this-month": "دا میاشت",
-          "last-month": "تیره میاشت",
-          "3-months": "۳ میاشتې",
-          "6-months": "۶ میاشتې"
+          "this_month": "دا میاشت",
+          "last_month": "تیره میاشت",
+          "3_months": "۳ میاشتې",
+          "6_months": "۶ میاشتې"
         },
-        "summary": {
-          "totalWaste": "ټول ضیاع",
-          "financialLoss": "مالي زیان",
-          "wasteRate": "د ضیاع کچه",
-          "efficiency": "مؤثریت"
+        "totalTracked": "ټول تعقیب شوي",
+        "overallEfficiency": "ټولیز مؤثریت",
+        "wasteRate": "د ضیاع کچه",
+        "financialLoss": "مالي زیان",
+        "expiryAlertsHeading": "د پای نیټې خبرتیاوې",
+        "expiryAlertsUnavailable": "د پای نیټې خبرتیا معلومات نشته. د کاشف حالت لاسي وګورئ.",
+        "expiryAlertIcon": "د پای نیټې خبرتیا",
+        "alerts": {
+          "expiryWarning": "په {openDate} پرانیستل شو — احتمالاً ~{remainingTests} ازموینې ناکارول شوې پاتې کیږي، تر {daysUntilExpiry} ورځو پورې پای ته رسیږي."
         },
-        "alerts": "د پای نیټې خبرتیاوې",
-        "noAlerts": "هیڅ خبرتیا نشته",
-        "activeReagents": "فعال ریجنټونه",
+        "activeReagentsHeading": "فعال ریجنټونه",
         "noActiveReagents": "هیڅ فعال ریجنټ نشته",
-        "wasteHistory": "د ضیاع تاریخچه",
-        "noWasteHistory": "پدې موده کې هیڅ لرې شوی ریجنټ نشته",
-        "table": {
+        "wasteHistoryHeading": "د ضیاع تاریخچه",
+        "col": {
           "name": "نوم",
           "lot": "لاټ",
-          "expiry": "پای نیټه",
-          "remaining": "پاتې",
-          "status": "حالت",
-          "loss": "زیان (افغاني)",
-          "sortLoss": "د زیان له مخې ترتیب"
-        },
-        "alertSeverity": {
-          "critical": "بحراني",
-          "warning": "خبرتیا"
-        },
-        "daysUntilExpiry": "تر پای نیټې {days} ورځې",
-        "projectedLoss": "متوقع زیان {loss} افغاني",
-        "expiryAlertsUnavailable": "د پای نیټې خبرتیا معلومات نشته. د کاشف حالت لاسي وګورئ."
+          "openDate": "د پرانیستو نیټه",
+          "expiryDate": "د پای نیټه",
+          "disposalDate": "د لرې کولو نیټه",
+          "progress": "پرمختګ",
+          "efficiency": "مؤثریت",
+          "daysLeft": "پاتې ورځې",
+          "alert": "خبرتیا",
+          "wasteReason": "د ضیاع دلیل",
+          "financialLoss": "مالي زیان"
+        }
       },
       "alerts": {
         "criticalTitle": "بحراني — {days} ورځو کې پای کیږي",
@@ -2728,7 +2748,8 @@
       "notYetEarned": "لا ترلاسه نه دی",
       "noneYet": "لا بیجونه نشته — لومړی بیج ستاسو له فکر هم نږدې دی.",
       "keepWorking": "دوام ورکړئ"
-    }
+    },
+    "title": "زما کیفیت"
   },
   "hmisReport": {
     "title": "د HMIS میاشتنی راپور",
@@ -3019,7 +3040,8 @@
     "statusDecayedNever": "Never performed",
     "neverPerformed": "Never",
     "dismiss": "Dismiss",
-    "dismissNotification": "Dismiss this notification"
+    "dismissNotification": "Dismiss this notification",
+    "filterAll": "ټول"
   },
   "rag": {
     "readinessBoard": "د لابراتوار د چمتوالي بورډ",

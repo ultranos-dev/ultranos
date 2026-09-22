@@ -225,7 +225,12 @@
     "discard": "Discard",
     "confirmDiscard": "Confirm discard",
     "confirm": "Confirm",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "filterAll": "All",
+    "statusCompleted": "Completed",
+    "statusPending": "Pending",
+    "statusFailed": "Failed",
+    "statusExpired": "Expired"
   },
   "dashboard": {
     "todaysActivity": "Today's Activity",
@@ -353,7 +358,12 @@
       "status": "Status",
       "referenceId": "Reference",
       "received": "Received"
-    }
+    },
+    "searchPlaceholder": "Search notifications…",
+    "filterAll": "All",
+    "filterUnread": "Unread",
+    "filterRead": "Read",
+    "noResults": "No matching notifications"
   },
   "queue": {
     "title": "Upload Queue",
@@ -550,7 +560,15 @@
     "emptyTitle": "No samples in queue",
     "emptyHint": "Received samples will appear here automatically.",
     "enterResult": "Enter Result",
-    "recollect": "Re-collect"
+    "recollect": "Re-collect",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "statusFilter": {
+      "label": "Sample status",
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "searchPlaceholder": "Search by sample or order ID…"
   },
   "orders": {
     "title": "Test Orders",
@@ -674,7 +692,8 @@
     "smsTestSent": "Test SMS queued",
     "criticalValues": "Critical Values & Escalation",
     "loading": "Loading…",
-    "criticalValuesDesc": "Critical result thresholds and escalation contacts"
+    "criticalValuesDesc": "Critical result thresholds and escalation contacts",
+    "backToSettings": "Back to Settings"
   },
   "queuePage": {
     "title": "Upload Queue",
@@ -742,7 +761,9 @@
       "preview": "Receipt Preview",
       "thankYou": "Thank you for your payment",
       "empty": "No receipts yet",
-      "emptyHint": "Recorded payments will appear here."
+      "emptyHint": "Recorded payments will appear here.",
+      "searchPlaceholder": "Search by receipt number…",
+      "noResults": "No matching receipts"
     },
     "reconciliation": {
       "title": "End-of-Day Reconciliation",
@@ -913,41 +934,40 @@
       },
       "waste": {
         "title": "Reagent Waste Dashboard",
-        "addNew": "Add Reagent",
+        "loading": "Loading…",
+        "addReagent": "Add Reagent",
         "period": {
-          "this-month": "This Month",
-          "last-month": "Last Month",
-          "3-months": "3 Months",
-          "6-months": "6 Months"
+          "this_month": "This Month",
+          "last_month": "Last Month",
+          "3_months": "3 Months",
+          "6_months": "6 Months"
         },
-        "summary": {
-          "totalWaste": "Total Waste",
-          "financialLoss": "Financial Loss",
-          "wasteRate": "Waste Rate",
-          "efficiency": "Efficiency"
+        "totalTracked": "Total Tracked",
+        "overallEfficiency": "Overall Efficiency",
+        "wasteRate": "Waste Rate",
+        "financialLoss": "Financial Loss",
+        "expiryAlertsHeading": "Expiry Alerts",
+        "expiryAlertsUnavailable": "Expiry alert data unavailable. Check reagent status manually.",
+        "expiryAlertIcon": "Expiry alert",
+        "alerts": {
+          "expiryWarning": "opened {openDate} — ~{remainingTests} tests likely unused, expires in {daysUntilExpiry} days."
         },
-        "alerts": "Expiry Alerts",
-        "noAlerts": "No expiry alerts",
-        "activeReagents": "Active Reagents",
+        "activeReagentsHeading": "Active Reagents",
         "noActiveReagents": "No active reagents",
-        "wasteHistory": "Waste History",
-        "noWasteHistory": "No disposed reagents in this period",
-        "table": {
+        "wasteHistoryHeading": "Waste History",
+        "col": {
           "name": "Name",
           "lot": "Lot",
-          "expiry": "Expiry",
-          "remaining": "Remaining",
-          "status": "Status",
-          "loss": "Loss (AFN)",
-          "sortLoss": "Sort by loss"
-        },
-        "alertSeverity": {
-          "critical": "Critical",
-          "warning": "Warning"
-        },
-        "daysUntilExpiry": "{days} days until expiry",
-        "projectedLoss": "{loss} AFN projected loss",
-        "expiryAlertsUnavailable": "Expiry alert data unavailable. Check reagent status manually."
+          "openDate": "Open Date",
+          "expiryDate": "Expiry Date",
+          "disposalDate": "Disposal Date",
+          "progress": "Progress",
+          "efficiency": "Efficiency",
+          "daysLeft": "Days Left",
+          "alert": "Alert",
+          "wasteReason": "Waste Reason",
+          "financialLoss": "Financial Loss"
+        }
       },
       "alerts": {
         "criticalTitle": "Critical — Expiring in {days} days",
@@ -2728,7 +2748,8 @@
       "notYetEarned": "Not yet earned",
       "noneYet": "No badges yet — your first one is closer than you think.",
       "keepWorking": "Keep going"
-    }
+    },
+    "title": "My Quality"
   },
   "hmisReport": {
     "title": "HMIS Monthly Report",
@@ -3051,7 +3072,8 @@
     "statusDecayedNever": "Never performed",
     "neverPerformed": "Never",
     "dismiss": "Dismiss",
-    "dismissNotification": "Dismiss this notification"
+    "dismissNotification": "Dismiss this notification",
+    "filterAll": "All"
   },
   "rag": {
     "readinessBoard": "Lab Readiness Board",
