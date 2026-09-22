@@ -647,34 +647,188 @@ Safety-critical banner that renders FIRST in the patient view, never collapsed, 
 - Active indicator: Wise Green circular fill (36px diameter) behind the icon
 - Spacing: 44–48px center-to-center
 
-### Tab Bar Filter Pattern
+### List-Page Toolbar Row (Golden Pattern) — THE canonical redesign
 
-All status/filter tab bars across admin-portal and spoke apps use a consistent pill-container pattern:
+> **Reference implementation (the single source of truth):** lab-lite `/orders` —
+> `apps/lab-lite/src/components/orders/OrdersWorklist.tsx` (the row) + `apps/lab-lite/src/components/orders/OrderFilters.tsx` (the pills + dropdown).
+> **Every list / table / search-first page across all 4 apps (admin-portal, opd-lite, pharmacy-lite, lab-lite) MUST match this byte-for-byte** — same element order, same heights, same radii, same search-icon-button. Copy from the reference; do not re-derive.
+
+A list page is exactly three stacked blocks: **page root → ONE toolbar row → ONE content box.**
 
 ```tsx
-// Container
-<div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
-  {tabs.map((tab) => (
+<div className="flex flex-col gap-4">                    {/* page root — FULL WIDTH: never mx-auto / max-w-* / nested <main> / p-6 */}
+  <h1 className="text-2xl font-semibold text-foreground">{title}</h1>   {/* standalone — NO action button beside it */}
+
+  {/* ── THE TOOLBAR ROW — always rendered (never gated behind loading / data.length) ── */}
+  <div className="flex flex-wrap items-center gap-3">
+    {/* 1 SEARCH  →  2 FILTER PILLS  →  3 FILTER DROPDOWN  →  4 ACTION BUTTONS */}
+  </div>
+
+  {/* ── THE CONTENT BOX — loading / empty / table all live inside this one box ── */}
+  <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+    …
+  </div>
+</div>
+```
+
+#### Canonical element order — left → right, NEVER reorder
+
+**`Search → Filter pills → Filter dropdown → Action buttons`** — search is ALWAYS first.
+
+> ⛔ **The #1 mistake:** rendering **pills first, then search** (the old admin-portal / opd-lite convention). That is WRONG. Search leads; the pill bar comes after it. If you are converting a page that was pills-first, you must physically move the `SearchInput` JSX **above** the pill group — updating the pill height alone is not "done."
+
+Every control in the row is **`h-9` (36px)** tall. The search field and every `<select>` are **`rounded-full`** so they visually match the pill bar and the action buttons. Nothing in the row is `rounded-xl` / `rounded-lg` / `py-1.5`.
+
+#### 1. Search bar — the `flex-1` space-filler (FIRST)
+
+```tsx
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
+
+<SearchInput
+  type="text"
+  dir="auto"
+  placeholder={t('searchPlaceholder')}
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  className="min-w-[200px] flex-1"      // ← wrapper: fills the row, min 200px
+  inputClassName="h-9 rounded-full"     // ← REQUIRED override — the base Input is h-10 rounded-xl
+  aria-label={t('searchPlaceholder')}
+/>
+```
+
+- Always use the shared `SearchInput` — never a bare `<input>` or the plain `<Input>` for list search.
+- `className="min-w-[200px] flex-1"` on the wrapper is what makes the search grow and push the actions to the end. This is why you must NOT add `ms-auto` to a trailing button — the search already fills the gap.
+- `inputClassName="h-9 rounded-full"` is mandatory: without it the field renders `h-10 rounded-xl` and mismatches the row.
+- For localized apps, also pass `searchLabel={tCommon('search')}` so the magnifier button gets a localized accessible name (see the search-icon-button spec below).
+
+#### 2. Filter selector bar (pill tabs) — primary categorical dimension (SECOND)
+
+```tsx
+<div role="tablist" className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
+  {OPTIONS.map((opt) => (
     <button
-      key={tab}
-      onClick={() => setFilter(tab)}
-      className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-        filter === tab
-          ? 'bg-primary text-primary-foreground'   // ← active: green fill, white text
-          : 'text-muted-foreground hover:text-foreground'
+      key={opt}
+      type="button"
+      role="tab"
+      aria-pressed={active === opt}
+      onClick={() => setActive(opt)}
+      className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
+        active === opt
+          ? 'bg-primary text-primary-foreground'          // active: green fill, WHITE text
+          : 'text-muted-foreground hover:text-foreground'  // inactive: no bg, no border
       }`}
     >
-      {tab}
+      {label(opt)}
     </button>
   ))}
 </div>
 ```
 
-**Rules:**
-- Container: `rounded-full border border-border bg-card p-1 w-fit` — pill shape, fits content
-- Active tab: `bg-primary text-primary-foreground` — green fill, **white** text (never `text-foreground` which is dark)
-- Inactive tab: `text-muted-foreground hover:text-foreground` — no border, no background
-- Individual tab buttons are `rounded-full` (not `rounded-xl` or `rounded-lg`)
+- Container is exactly `flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit`. The `h-9` + `items-stretch` sets the height; the buttons stretch to fill it.
+- Buttons carry **no vertical padding** — `flex items-center rounded-full px-4 text-sm font-medium` only. **Never `py-1.5`** (that was the old height and is now banned in the toolbar).
+- Active = `bg-primary text-primary-foreground` (green fill, white text — never `text-foreground`). Inactive = `text-muted-foreground hover:text-foreground`.
+- The pill bar is for the ONE primary dimension (status / type / mode). If the page has no meaningful categorical filter, omit the pill bar — do not invent tabs.
+
+#### 3. Filter dropdown (`<select>`) — a SECOND dimension only (THIRD, optional)
+
+Only render a dropdown when a **second, distinct** filter dimension is genuinely needed. **Never** duplicate the dimension the pill bar already covers (e.g. status pills + a status `<select>` is a violation — pick one).
+
+```tsx
+import { ChevronDown } from '@ultranos/ui-kit/icons'
+
+<div className="relative">
+  <select
+    value={value}
+    onChange={(e) => setValue(e.target.value)}
+    className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+    aria-label={t('filterLabel')}
+  >
+    <option value="ALL">{t('all')}</option>
+    {options.map((o) => <option key={o} value={o}>{label(o)}</option>)}
+  </select>
+  <ChevronDown
+    size={16}
+    aria-hidden="true"
+    className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+  />
+</div>
+```
+
+- The native select arrow is unstylable and sits too close to the edge — so `appearance-none` removes it and a lucide `ChevronDown` is drawn at `end-3` (logical, RTL-safe). `pe-9` reserves room so option text never runs under the chevron.
+- Select classes are exactly `h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm`. **Never `rounded-xl … px-3 py-2`** in a toolbar filter.
+- **Date-range inputs** (two `<input type="date">` = one dimension) each use `h-9 rounded-full border border-border bg-background px-3 text-sm`.
+- This chevron treatment applies ONLY to toolbar filter selects. `<select>`s inside forms, dialogs, and table rows keep the standard form-input style (`rounded-xl … px-3 py-2`) and are NOT toolbar controls.
+
+#### 4. Action buttons — contextual, folded at the END (LAST)
+
+```tsx
+{/* Refresh (secondary) */}
+<Button variant="secondary" onClick={onRefresh} aria-label={t('refresh')}>
+  <RefreshCw className="size-4" /> {t('refresh')}
+</Button>
+
+{/* Primary action (New / Create / Add / Export) */}
+<Button onClick={onCreate}>          {/* variant="default", h-9 by default — do NOT force size="sm" */}
+  <Plus className="size-4" /> {t('newItem')}
+</Button>
+```
+
+- Actions are the LAST items in the row, in reading order after the filters. **Never** push a lone action to the far edge with `ms-auto` (that recreates the split-header anti-pattern the search-fills-the-gap layout exists to avoid).
+- Use the default `Button` size (`h-9`). Do not use `size="sm"` (h-8) + an `h-9` override — just use the default size.
+- A primary link-action uses `<Button asChild><Link …></Button>`, never a hand-styled `<a>`/`<Link>` pill.
+
+#### Search-icon button (inside `SearchInput`) — the exact spec
+
+The trailing magnifier lives inside `SearchInput` (`packages/ui-kit/src/components/ui/search-input.tsx`) — you do not build it per-page, but it must match:
+
+- Button: `variant="default"` `size="icon-xs"` → **24×24px** (`size-6`), positioned `absolute end-1.5 top-1/2 -translate-y-1/2` (logical `end`, RTL-safe).
+- Icon: `<Search className="size-3" />` → **12×12px** (25% smaller than the old 16px — deliberate).
+- Accessible name: defaults to `"Search"`, kept **independent** of the input's `aria-label`/placeholder (the two controls must never share an accessible name). Pass `searchLabel` to localize the button.
+- The input reserves `pe-11` so text never runs under the button.
+
+#### Content box + table (the one box below the row)
+
+```tsx
+<div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+  {loading ? (
+    <div className="flex min-h-[16rem] items-center justify-center">…</div>
+  ) : rows.length === 0 ? (
+    <div className="flex min-h-[16rem] items-center justify-center">
+      <EmptyState icon={filtersActive ? FileSearch : Inbox} title={…} description={…}
+        action={filtersActive ? { label: t('clearFilters'), onClick: clearFilters } : undefined} />
+    </div>
+  ) : (
+    <table className="w-full text-sm">
+      <thead className="bg-muted">
+        <tr><th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">…</th></tr>
+      </thead>
+      <tbody className="divide-y divide-border">
+        <tr className="hover:bg-muted/50">…</tr>
+      </tbody>
+    </table>
+  )}
+</div>
+```
+
+- One box: `overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50`. Loading, empty, and the table ALL live inside it (empty/loading centered via `flex min-h-[16rem] items-center justify-center`).
+- Table head `bg-muted`; `th` = `px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide`; body `divide-y divide-border`; rows `hover:bg-muted/50`. No `bg-background`/`bg-popover` on `<tbody>` (it inherits the box).
+- A non-tabular list uses `divide-y divide-border` rows instead of a `<table>`, still inside the same box.
+- Empty states use the ui-kit `EmptyState` — never ad-hoc `<p>No data</p>`. Pagination is a sibling **below** the box (no `mt-*`).
+
+#### When filters are a separate sub-component
+
+If the pills + dropdown live in their own component (like `OrderFilters`), wrap that component's root in `<div className="contents">` so its children flow directly into the parent `flex flex-wrap items-center gap-3` row (no extra nesting box). The search and action buttons stay in the page/list component around it, preserving the `Search → [filters component] → buttons` order.
+
+#### Divergence checklist (what "not redesigned accordingly" looks like)
+
+A page is NOT done if any of these is true (all were found in the wild, e.g. pharmacy-lite `CatalogBrowsePage`, which renders pills before search):
+- Pills rendered **before** the search bar (must be search-first).
+- Pill buttons still have `py-1.5`, or the pill container lacks `h-9 items-stretch`.
+- Search missing `inputClassName="h-9 rounded-full"` (renders as `h-10 rounded-xl`).
+- A toolbar `<select>` still `rounded-xl … px-3 py-2` with the native arrow (no `appearance-none` + `ChevronDown`).
+- A trailing action pushed with `ms-auto`, or a primary action sitting beside the `<h1>`.
+- The toolbar gated behind `loading` / `data.length > 0` instead of always rendered.
+- Loading / empty rendered outside the content box, or empty state built inline instead of `EmptyState`.
 
 ### Charts & Data Visualization
 
@@ -1043,3 +1197,10 @@ When reviewing Ultranos UI code, check for these issues:
 | Custom `border-b` header bar inside page | Remove entirely | `BreadcrumbHeader` / `PageHeader` is the only header per page |
 | Nested `<main>` tag in page content | Change to `<div>` | Shell already provides `<main id="main-content">` |
 | `p-6` or `p-4` on component root that is a page delegate | Remove — double-padding on top of shell's `p-4` | Delegate components follow the same rules as page.tsx files |
+| Filter pills rendered **before** the search bar | Move `SearchInput` above the pill group — order is `Search → pills → dropdown → buttons` | The golden list toolbar (lab-lite `/orders`) is search-first; pills-first is the deprecated convention |
+| Pill button with `py-1.5`, or pill container without `h-9 items-stretch` | Container `flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit`; buttons `flex items-center rounded-full px-4 text-sm font-medium` (no `py-*`) | All toolbar controls are `h-9`; the container height + `items-stretch` sizes the buttons |
+| `SearchInput` without `inputClassName="h-9 rounded-full"` | Add it | The base `Input` is `h-10 rounded-xl` and mismatches the `h-9 rounded-full` row |
+| Toolbar `<select>` as `rounded-xl … px-3 py-2` with native arrow | Wrap in `relative`, use `h-9 w-full appearance-none rounded-full … ps-3 pe-9` + a `<ChevronDown>` at `end-3` | Toolbar filters match the pill radius/height; native arrows are unstylable and sit too close to the edge (form/dialog selects are exempt) |
+| Trailing action pushed with `ms-auto`, or a primary action beside the `<h1>` | Fold the action into the END of the toolbar row; the `flex-1` search fills the gap | Recreates the split-header anti-pattern the search-fills-the-gap layout avoids |
+| Toolbar gated behind `loading` / `data.length > 0` | Always render the toolbar row; box the loading/empty state inside the content box | The toolbar must never disappear while loading |
+| Two controls filtering the same dimension (status pills + status `<select>`) | Keep one control per dimension | Duplicative filtering; dropdowns are for a SECOND distinct dimension only |
