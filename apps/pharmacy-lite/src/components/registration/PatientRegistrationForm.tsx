@@ -504,7 +504,7 @@ export function PatientRegistrationForm({
                 type="text"
                 inputMode="text"
                 maxLength={200}
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                 placeholder={t('nationalIdPlaceholder')}
                 value={nationalId}
                 onChange={(e) => setNationalId(e.target.value)}
@@ -530,7 +530,7 @@ export function PatientRegistrationForm({
                 className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                   fieldErrors.gender
                     ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                    : 'border-border focus:border-blue-400 focus:ring-blue-400'
+                    : 'border-border focus:border-ring focus:ring-ring'
                 }`}
               >
                 <option value="">{t('genderPlaceholder')}</option>
@@ -557,7 +557,7 @@ export function PatientRegistrationForm({
                     if (e.target.checked) setBirthDate('')
                     else setBirthYear('')
                   }}
-                  className="h-5 w-5 border-border text-blue-600 focus:ring-blue-400"
+                  className="h-5 w-5 border-border text-primary focus:ring-ring"
                 />
                 <span className="text-sm font-medium text-foreground">
                   {t('birthYearOnly')}
@@ -583,7 +583,7 @@ export function PatientRegistrationForm({
                     className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                       fieldErrors.birthYear
                         ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                        : 'border-border focus:border-blue-400 focus:ring-blue-400'
+                        : 'border-border focus:border-ring focus:ring-ring'
                     }`}
                     placeholder={t('birthYearPlaceholder')}
                     value={birthYear}
@@ -611,7 +611,7 @@ export function PatientRegistrationForm({
                     className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                       fieldErrors.birthDate
                         ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                        : 'border-border focus:border-blue-400 focus:ring-blue-400'
+                        : 'border-border focus:border-ring focus:ring-ring'
                     }`}
                     value={birthDate}
                     onChange={(e) => setBirthDate(e.target.value)}
@@ -641,7 +641,7 @@ export function PatientRegistrationForm({
                 type="tel"
                 dir="ltr"
                 inputMode="tel"
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                 placeholder={t('phonePlaceholder')}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -665,7 +665,7 @@ export function PatientRegistrationForm({
                 onChange={(e) =>
                   setPreferredLanguage(e.target.value as 'en' | 'ar' | 'prs')
                 }
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="en">{t('languageEnglish')}</option>
                 <option value="ar">{t('languageArabic')}</option>
@@ -713,7 +713,7 @@ export function PatientRegistrationForm({
               id="blood-group"
               value={bloodGroup}
               onChange={(e) => setBloodGroup(e.target.value)}
-              className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+              className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
             >
               {BLOOD_GROUPS.map((bg) => (
                 <option key={bg} value={bg}>

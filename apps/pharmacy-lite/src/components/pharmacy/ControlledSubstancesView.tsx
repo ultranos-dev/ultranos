@@ -169,38 +169,8 @@ export function ControlledSubstancesView() {
         {t('title')}
       </h1>
 
-      {/* Toolbar: date range filters + search — one row, always visible */}
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="cs-date-from"
-            className="text-xs font-medium text-muted-foreground"
-          >
-            {t('dateFrom')}
-          </label>
-          <input
-            id="cs-date-from"
-            type="date"
-            value={filters.dateFrom}
-            onChange={handleDateFromChange}
-            className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="cs-date-to"
-            className="text-xs font-medium text-muted-foreground"
-          >
-            {t('dateTo')}
-          </label>
-          <input
-            id="cs-date-to"
-            type="date"
-            value={filters.dateTo}
-            onChange={handleDateToChange}
-            className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
-          />
-        </div>
+      {/* Toolbar: search + date range filters — one row, always visible */}
+      <div className="flex flex-wrap items-center gap-3">
         <SearchInput
           type="text"
           dir="auto"
@@ -208,26 +178,26 @@ export function ControlledSubstancesView() {
           value={search}
           onChange={handleSearchChange}
           className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
           aria-label={t('searchPlaceholder')}
         />
+        <input
+          id="cs-date-from"
+          type="date"
+          aria-label={t('dateFrom')}
+          value={filters.dateFrom}
+          onChange={handleDateFromChange}
+          className="h-9 rounded-full border border-border bg-background px-3 text-sm text-foreground"
+        />
+        <input
+          id="cs-date-to"
+          type="date"
+          aria-label={t('dateTo')}
+          value={filters.dateTo}
+          onChange={handleDateToChange}
+          className="h-9 rounded-full border border-border bg-background px-3 text-sm text-foreground"
+        />
       </div>
-
-      {/* Running Balances */}
-      {balances.length > 0 && (
-        <div>
-          <h2 className="text-sm font-semibold text-foreground mb-2">{tBalances('title')}</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {balances.map((item) => (
-              <div key={item.catalogItemId} className="rounded-lg border border-destructive/20 bg-destructive/10 p-3">
-                <p className="text-xs font-bold text-destructive">C{item.schedule}</p>
-                <p className="text-sm font-medium text-foreground">{item.catalogItemName}</p>
-                <p className="text-lg font-bold tabular-nums text-foreground">{item.totalOnHand}</p>
-                <p className="text-[10px] text-muted-foreground">{tBalances('batchCount', { count: item.batchCount })}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Record count */}
       {!loading && !error && dispenses.length > 0 && (
@@ -343,6 +313,23 @@ export function ControlledSubstancesView() {
           </div>
         )}
       </div>
+
+      {/* Running Balances — below the content box */}
+      {balances.length > 0 && (
+        <div>
+          <h2 className="text-sm font-semibold text-foreground mb-2">{tBalances('title')}</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {balances.map((item) => (
+              <div key={item.catalogItemId} className="rounded-lg border border-destructive/20 bg-destructive/10 p-3">
+                <p className="text-xs font-bold text-destructive">C{item.schedule}</p>
+                <p className="text-sm font-medium text-foreground">{item.catalogItemName}</p>
+                <p className="text-lg font-bold tabular-nums text-foreground">{item.totalOnHand}</p>
+                <p className="text-[10px] text-muted-foreground">{tBalances('batchCount', { count: item.batchCount })}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Pagination — root sibling below the box */}
       {!loading && !error && dispenses.length > 0 && totalPages > 1 && (

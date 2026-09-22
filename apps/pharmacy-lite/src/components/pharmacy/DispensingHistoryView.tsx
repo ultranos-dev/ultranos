@@ -47,11 +47,12 @@ export function DispensingHistoryView() {
       <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
 
       {/* Toolbar: filter bar controls + Shift Summary action — one row */}
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <HistoryFilterBar filters={filters} onFiltersChange={handleFiltersChange} />
         <Button
           variant="secondary"
           data-testid="shift-summary-button"
+          className="h-9"
           onClick={() => setShowShiftSummary(true)}
         >
           {t('shiftSummaryButton')}

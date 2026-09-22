@@ -39,7 +39,7 @@ exports[`OrderDetailPage > LTR snapshot 1`] = `
       SO-1
        
       <span
-        class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+        class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
       >
         orderStatus_confirmed
       </span>
@@ -288,7 +288,7 @@ exports[`OrderDetailPage > RTL snapshot 1`] = `
       SO-1
        
       <span
-        class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+        class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
       >
         orderStatus_confirmed
       </span>

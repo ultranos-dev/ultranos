@@ -148,14 +148,12 @@ export function PatientAccountsPage() {
 
     return (
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => setSelectedPatientId(null)}>
-            {t('backToList')}
-          </Button>
-          <h1 className="text-2xl font-semibold text-foreground">
-            {t('patientAccount', { name: account?.patientName ?? 'Patient' })}
-          </h1>
-        </div>
+        <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => setSelectedPatientId(null)}>
+          {t('backToList')}
+        </Button>
+        <h1 className="text-2xl font-semibold text-foreground">
+          {t('patientAccount', { name: account?.patientName ?? 'Patient' })}
+        </h1>
 
         {/* Balance + Credit Limit */}
         <div className="grid gap-4 md:grid-cols-2">
@@ -305,6 +303,7 @@ export function PatientAccountsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
           aria-label={t('searchAccountsPlaceholder')}
         />
       </div>

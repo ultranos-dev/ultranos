@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { FileText, FileSearch, Plus } from '@ultranos/ui-kit/icons'
@@ -130,25 +131,6 @@ export function SupplierInvoicesPage() {
 
       {/* Toolbar: pill-tabs + search + Record invoice action — one row, always visible */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Pill tabs */}
-        <div className="rounded-full border border-border bg-card p-1 w-fit flex items-center">
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={
-                activeTab === tab
-                  ? 'rounded-full px-4 py-1.5 text-sm font-medium bg-primary text-primary-foreground'
-                  : 'rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground'
-              }
-              aria-pressed={activeTab === tab}
-            >
-              {tabLabel(tab)}
-            </button>
-          ))}
-        </div>
-
         {/* Search */}
         <SearchInput
           type="search"
@@ -157,18 +139,36 @@ export function SupplierInvoicesPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
           aria-label={t('searchPlaceholder')}
         />
 
+        {/* Pill tabs */}
+        <div className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={
+                activeTab === tab
+                  ? 'flex items-center rounded-full px-4 text-sm font-medium bg-primary text-primary-foreground'
+                  : 'flex items-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground'
+              }
+              aria-pressed={activeTab === tab}
+            >
+              {tabLabel(tab)}
+            </button>
+          ))}
+        </div>
+
         {/* Primary action — folded at end of toolbar */}
-        <Link
-          href="/inventory/invoices/new"
-          aria-label={t('newInvoice')}
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <Plus size={16} />
-          {t('newInvoice')}
-        </Link>
+        <Button asChild className="h-9">
+          <Link href="/inventory/invoices/new" aria-label={t('newInvoice')}>
+            <Plus size={16} />
+            {t('newInvoice')}
+          </Link>
+        </Button>
       </div>
 
       {/* Content box — loading / empty / table */}

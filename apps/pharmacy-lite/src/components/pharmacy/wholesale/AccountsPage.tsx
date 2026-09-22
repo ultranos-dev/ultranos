@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { Wallet } from '@ultranos/ui-kit/icons'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
+import { Wallet, FileSearch } from '@ultranos/ui-kit/icons'
 import { getAccountsWithBalance, recordPayment } from '@/lib/wholesale/customer-account-service'
 import { getAllCustomers } from '@/lib/wholesale/customer-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -41,6 +42,7 @@ function parseToMinor(value: string, minorUnits: number): number {
 export function AccountsPage() {
   const t = useTranslations('wholesale')
   const [accounts, setAccounts] = useState<AccountWithName[]>([])
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -133,6 +135,12 @@ export function AccountsPage() {
 
   const fmt = (amount: number) => formatAmount(amount, currency, minorUnits)
 
+  const query = search.trim().toLowerCase()
+  const filtersActive = query !== ''
+  const filtered = query
+    ? accounts.filter((a) => a.customerName.toLowerCase().includes(query))
+    : accounts
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold text-foreground">{t('accountsTitle')}</h1>
@@ -143,18 +151,33 @@ export function AccountsPage() {
         </div>
       )}
 
+      {/* Toolbar: search — always visible */}
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
+          type="text"
+          dir="auto"
+          placeholder={t('accountsSearchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
+          aria-label={t('accountsSearchPlaceholder')}
+        />
+      </div>
+
       {/* Content box — loading / empty / table */}
       <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
         {loading ? (
           <div className="flex min-h-[16rem] items-center justify-center">
             <EmptyState icon={Wallet} title={t('accountsLoading')} />
           </div>
-        ) : accounts.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="flex min-h-[16rem] items-center justify-center">
             <EmptyState
-              icon={Wallet}
-              title={t('accountsNoBalances')}
-              description={t('accountsNoBalancesDescription')}
+              icon={filtersActive ? FileSearch : Wallet}
+              title={filtersActive ? t('accountsNoResults') : t('accountsNoBalances')}
+              description={filtersActive ? t('noResultsDescription') : t('accountsNoBalancesDescription')}
+              action={filtersActive ? { label: t('clearSearch'), onClick: () => setSearch('') } : undefined}
             />
           </div>
         ) : (
@@ -176,7 +199,7 @@ export function AccountsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {accounts.map((account) => (
+              {filtered.map((account) => (
                 <tr key={account.id} className="hover:bg-muted/50">
                   <td className="px-4 py-3 font-medium text-foreground">{account.customerName}</td>
                   <td className="px-4 py-3 tabular-nums text-warning font-semibold font-numeric">

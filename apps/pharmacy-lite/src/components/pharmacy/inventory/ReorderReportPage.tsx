@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@ultranos/ui-kit/components/ui/button'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { Package } from '@ultranos/ui-kit/icons'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
+import { Package, FileSearch } from '@ultranos/ui-kit/icons'
 import { getReorderReport, generateReorderPurchaseOrders } from '@/lib/procurement/reorder-service'
 import type { ReorderLine } from '@/lib/procurement/reorder-service'
 import { getActiveSuppliers } from '@/lib/procurement/supplier-service'
@@ -32,6 +33,7 @@ export function ReorderReportPage() {
   const session = useAuthSessionStore((s) => s.session)
 
   const [lines, setLines] = useState<ReorderLine[]>([])
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
@@ -105,6 +107,12 @@ export function ReorderReportPage() {
     return state.selected && state.supplierId && state.qty > 0
   })
 
+  const query = search.trim().toLowerCase()
+  const filtersActive = query !== ''
+  const filteredLines = query
+    ? lines.filter((line) => line.catalogItemName.toLowerCase().includes(query))
+    : lines
+
   async function handleGenerate() {
     if (includableLines.length === 0) return
     setGenerating(true)
@@ -156,10 +164,21 @@ export function ReorderReportPage() {
         </div>
       )}
 
-      {/* Toolbar */}
+      {/* Toolbar: search + Generate POs — always visible */}
       <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
+          type="text"
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
+          aria-label={t('searchPlaceholder')}
+        />
         <Button
           data-testid="generate-pos-btn"
+          className="h-9"
           disabled={generating || includableLines.length === 0}
           onClick={handleGenerate}
         >
@@ -180,12 +199,13 @@ export function ReorderReportPage() {
           >
             <EmptyState icon={Package} title={t('loadError')} />
           </div>
-        ) : lines.length === 0 ? (
+        ) : filteredLines.length === 0 ? (
           <div className="flex min-h-[16rem] items-center justify-center">
             <EmptyState
-              icon={Package}
-              title={t('empty')}
-              description={t('emptyDescription')}
+              icon={filtersActive ? FileSearch : Package}
+              title={filtersActive ? t('noResults') : t('empty')}
+              description={filtersActive ? t('noResultsDescription') : t('emptyDescription')}
+              action={filtersActive ? { label: t('clearSearch'), onClick: () => setSearch('') } : undefined}
             />
           </div>
         ) : (
@@ -219,7 +239,7 @@ export function ReorderReportPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {lines.map((line) => {
+              {filteredLines.map((line) => {
                 const state = rowStates.get(line.catalogItemId)
                 if (!state) return null
                 const hasEffectiveSupplier = !!state.supplierId

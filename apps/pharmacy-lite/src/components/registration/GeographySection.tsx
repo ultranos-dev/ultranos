@@ -94,7 +94,7 @@ export function GeographySection({
           <input
             id="origin-village"
             type="text"
-            className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
             placeholder={t('villagePlaceholder')}
             value={origin.village}
             onChange={(e) =>
@@ -122,7 +122,7 @@ export function GeographySection({
             type="checkbox"
             checked={sameAsOrigin}
             onChange={(e) => onSameAsOriginChange(e.target.checked)}
-            className="h-5 w-5 rounded border-border text-blue-600 focus:ring-blue-400"
+            className="h-5 w-5 rounded border-border text-primary focus:ring-ring"
           />
           <span className="text-sm font-medium text-foreground">
             {t('sameAsOrigin')}
@@ -168,7 +168,7 @@ export function GeographySection({
               <input
                 id="current-village"
                 type="text"
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                 placeholder={t('villagePlaceholder')}
                 value={current.village}
                 onChange={(e) =>
@@ -189,7 +189,7 @@ export function GeographySection({
               type="checkbox"
               checked={isNomadic ?? false}
               onChange={(e) => onIsNomadicChange(e.target.checked)}
-              className="h-5 w-5 rounded border-border text-blue-600 focus:ring-blue-400"
+              className="h-5 w-5 rounded border-border text-primary focus:ring-ring"
             />
             <span className="text-sm font-medium text-foreground">
               {t('isNomadic')}

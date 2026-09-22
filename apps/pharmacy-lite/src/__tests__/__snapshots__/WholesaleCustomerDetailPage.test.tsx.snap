@@ -204,7 +204,7 @@ exports[`CustomerDetailPage > LTR snapshot 1`] = `
         contractPricesHeading
       </h2>
       <div
-        class="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 mb-4"
+        class="overflow-hidden rounded-lg border border-border mb-4"
       >
         <table
           class="w-full text-sm"
@@ -610,7 +610,7 @@ exports[`CustomerDetailPage > LTR snapshot with tiers 1`] = `
         contractPricesHeading
       </h2>
       <div
-        class="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 mb-4"
+        class="overflow-hidden rounded-lg border border-border mb-4"
       >
         <table
           class="w-full text-sm"
@@ -1076,7 +1076,7 @@ exports[`CustomerDetailPage > RTL snapshot 1`] = `
         contractPricesHeading
       </h2>
       <div
-        class="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 mb-4"
+        class="overflow-hidden rounded-lg border border-border mb-4"
       >
         <table
           class="w-full text-sm"
@@ -1482,7 +1482,7 @@ exports[`CustomerDetailPage > RTL snapshot with tiers 1`] = `
         contractPricesHeading
       </h2>
       <div
-        class="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 mb-4"
+        class="overflow-hidden rounded-lg border border-border mb-4"
       >
         <table
           class="w-full text-sm"

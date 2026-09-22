@@ -24,6 +24,7 @@ export function PatientSearchBar({ onSelectPatient, onRegisterNew }: PatientSear
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('placeholder')}
           className="w-full"
+          inputClassName="h-9 rounded-full"
           data-testid="patient-search-input"
           autoComplete="off"
         />

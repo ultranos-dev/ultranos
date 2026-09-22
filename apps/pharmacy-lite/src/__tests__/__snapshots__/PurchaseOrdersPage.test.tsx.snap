@@ -16,64 +16,11 @@ exports[`PurchaseOrdersPage > LTR snapshot 1`] = `
       class="flex flex-wrap items-center gap-3"
     >
       <div
-        class="rounded-full border border-border bg-card p-1 w-fit flex items-center"
-      >
-        <button
-          aria-pressed="true"
-          class="rounded-full px-4 py-1.5 text-sm font-medium bg-primary text-primary-foreground"
-          type="button"
-        >
-          tabAll
-        </button>
-        <button
-          aria-pressed="false"
-          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          type="button"
-        >
-          tabDraft
-        </button>
-        <button
-          aria-pressed="false"
-          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          type="button"
-        >
-          tabPendingApproval
-        </button>
-        <button
-          aria-pressed="false"
-          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          type="button"
-        >
-          tabSent
-        </button>
-        <button
-          aria-pressed="false"
-          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          type="button"
-        >
-          tabPartiallyReceived
-        </button>
-        <button
-          aria-pressed="false"
-          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          type="button"
-        >
-          tabClosed
-        </button>
-        <button
-          aria-pressed="false"
-          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          type="button"
-        >
-          tabCancelled
-        </button>
-      </div>
-      <div
         class="relative flex items-center min-w-[200px] flex-1"
       >
         <input
           aria-label="searchPlaceholder"
-          class="flex h-10 rounded-xl border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11"
+          class="flex border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11 h-9 rounded-full"
           data-slot="input"
           dir="auto"
           placeholder="searchPlaceholder"
@@ -81,16 +28,16 @@ exports[`PurchaseOrdersPage > LTR snapshot 1`] = `
           value=""
         />
         <button
-          aria-label="searchPlaceholder"
-          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 size-8 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 absolute end-1.5 top-1/2 -translate-y-1/2"
-          data-size="icon-sm"
+          aria-label="Search"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 size-6 [&_svg:not([class*='size-'])]:size-3 absolute end-1.5 top-1/2 -translate-y-1/2"
+          data-size="icon-xs"
           data-slot="button"
           data-variant="default"
           type="button"
         >
           <svg
             aria-hidden="true"
-            class="lucide lucide-search size-4"
+            class="lucide lucide-search size-3"
             fill="none"
             height="24"
             stroke="currentColor"
@@ -112,9 +59,65 @@ exports[`PurchaseOrdersPage > LTR snapshot 1`] = `
           </svg>
         </button>
       </div>
+      <div
+        class="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit"
+      >
+        <button
+          aria-pressed="true"
+          class="flex items-center rounded-full px-4 text-sm font-medium bg-primary text-primary-foreground"
+          type="button"
+        >
+          tabAll
+        </button>
+        <button
+          aria-pressed="false"
+          class="flex items-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          tabDraft
+        </button>
+        <button
+          aria-pressed="false"
+          class="flex items-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          tabPendingApproval
+        </button>
+        <button
+          aria-pressed="false"
+          class="flex items-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          tabSent
+        </button>
+        <button
+          aria-pressed="false"
+          class="flex items-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          tabPartiallyReceived
+        </button>
+        <button
+          aria-pressed="false"
+          class="flex items-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          tabClosed
+        </button>
+        <button
+          aria-pressed="false"
+          class="flex items-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          tabCancelled
+        </button>
+      </div>
       <a
         aria-label="newPurchaseOrder"
-        class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 h-9"
+        data-size="default"
+        data-slot="button"
+        data-variant="default"
         href="/inventory/orders/new"
       >
         <svg
@@ -279,64 +282,11 @@ exports[`PurchaseOrdersPage > RTL snapshot 1`] = `
       class="flex flex-wrap items-center gap-3"
     >
       <div
-        class="rounded-full border border-border bg-card p-1 w-fit flex items-center"
-      >
-        <button
-          aria-pressed="true"
-          class="rounded-full px-4 py-1.5 text-sm font-medium bg-primary text-primary-foreground"
-          type="button"
-        >
-          tabAll
-        </button>
-        <button
-          aria-pressed="false"
-          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          type="button"
-        >
-          tabDraft
-        </button>
-        <button
-          aria-pressed="false"
-          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          type="button"
-        >
-          tabPendingApproval
-        </button>
-        <button
-          aria-pressed="false"
-          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          type="button"
-        >
-          tabSent
-        </button>
-        <button
-          aria-pressed="false"
-          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          type="button"
-        >
-          tabPartiallyReceived
-        </button>
-        <button
-          aria-pressed="false"
-          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          type="button"
-        >
-          tabClosed
-        </button>
-        <button
-          aria-pressed="false"
-          class="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          type="button"
-        >
-          tabCancelled
-        </button>
-      </div>
-      <div
         class="relative flex items-center min-w-[200px] flex-1"
       >
         <input
           aria-label="searchPlaceholder"
-          class="flex h-10 rounded-xl border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11"
+          class="flex border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11 h-9 rounded-full"
           data-slot="input"
           dir="auto"
           placeholder="searchPlaceholder"
@@ -344,16 +294,16 @@ exports[`PurchaseOrdersPage > RTL snapshot 1`] = `
           value=""
         />
         <button
-          aria-label="searchPlaceholder"
-          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 size-8 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 absolute end-1.5 top-1/2 -translate-y-1/2"
-          data-size="icon-sm"
+          aria-label="Search"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 size-6 [&_svg:not([class*='size-'])]:size-3 absolute end-1.5 top-1/2 -translate-y-1/2"
+          data-size="icon-xs"
           data-slot="button"
           data-variant="default"
           type="button"
         >
           <svg
             aria-hidden="true"
-            class="lucide lucide-search size-4"
+            class="lucide lucide-search size-3"
             fill="none"
             height="24"
             stroke="currentColor"
@@ -375,9 +325,65 @@ exports[`PurchaseOrdersPage > RTL snapshot 1`] = `
           </svg>
         </button>
       </div>
+      <div
+        class="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit"
+      >
+        <button
+          aria-pressed="true"
+          class="flex items-center rounded-full px-4 text-sm font-medium bg-primary text-primary-foreground"
+          type="button"
+        >
+          tabAll
+        </button>
+        <button
+          aria-pressed="false"
+          class="flex items-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          tabDraft
+        </button>
+        <button
+          aria-pressed="false"
+          class="flex items-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          tabPendingApproval
+        </button>
+        <button
+          aria-pressed="false"
+          class="flex items-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          tabSent
+        </button>
+        <button
+          aria-pressed="false"
+          class="flex items-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          tabPartiallyReceived
+        </button>
+        <button
+          aria-pressed="false"
+          class="flex items-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          tabClosed
+        </button>
+        <button
+          aria-pressed="false"
+          class="flex items-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground"
+          type="button"
+        >
+          tabCancelled
+        </button>
+      </div>
       <a
         aria-label="newPurchaseOrder"
-        class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 h-9"
+        data-size="default"
+        data-slot="button"
+        data-variant="default"
         href="/inventory/orders/new"
       >
         <svg

@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { ShieldAlert } from '@ultranos/ui-kit/icons'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
+import { ShieldAlert, FileSearch } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/button'
 import { getQuarantinedBatches, releaseFromQuarantine, BatchNotQuarantinedError } from '@/lib/inventory/qc-service'
 import { recordDisposal } from '@/lib/inventory/stock-movement'
@@ -29,6 +30,7 @@ export function QuarantinePage() {
   const performedBy = session?.practitionerId ?? session?.userId ?? 'unknown'
 
   const [rows, setRows] = useState<BatchRow[]>([])
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
 
@@ -146,9 +148,29 @@ export function QuarantinePage() {
     })
   }
 
+  const query = search.trim().toLowerCase()
+  const filtersActive = query !== ''
+  const filteredRows = query
+    ? rows.filter((b) => b.itemName.toLowerCase().includes(query))
+    : rows
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold text-foreground">{t('quarantineTitle')}</h1>
+
+      {/* Toolbar: search — always visible */}
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
+          type="text"
+          dir="auto"
+          placeholder={t('quarantineSearchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
+          aria-label={t('quarantineSearchPlaceholder')}
+        />
+      </div>
 
       {/* Content box */}
       <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
@@ -163,12 +185,13 @@ export function QuarantinePage() {
           >
             <EmptyState icon={ShieldAlert} title={t('quarantineLoadError')} />
           </div>
-        ) : rows.length === 0 ? (
+        ) : filteredRows.length === 0 ? (
           <div className="flex min-h-[16rem] items-center justify-center">
             <EmptyState
-              icon={ShieldAlert}
-              title={t('quarantineEmpty')}
-              description={t('quarantineEmptyDescription')}
+              icon={filtersActive ? FileSearch : ShieldAlert}
+              title={filtersActive ? t('noResultsTitle') : t('quarantineEmpty')}
+              description={filtersActive ? t('noResultsDescription') : t('quarantineEmptyDescription')}
+              action={filtersActive ? { label: t('clearFilters'), onClick: () => setSearch('') } : undefined}
             />
           </div>
         ) : (
@@ -199,7 +222,7 @@ export function QuarantinePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {rows.map((b) => {
+              {filteredRows.map((b) => {
                 const rs = releaseState[b.id]
                 const ds = disposeState[b.id]
                 return (

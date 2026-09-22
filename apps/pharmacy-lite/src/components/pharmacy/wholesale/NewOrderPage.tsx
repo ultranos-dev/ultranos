@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { ChevronLeft, Plus, Trash2 } from '@ultranos/ui-kit/icons'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
+import { ChevronLeft, ChevronDown, Plus, Trash2 } from '@ultranos/ui-kit/icons'
 import { getActiveCustomers } from '@/lib/wholesale/customer-service'
 import { createDraft, confirm } from '@/lib/wholesale/sales-order-service'
 import { resolveContractPrice } from '@/lib/wholesale/contract-price-service'
@@ -319,21 +320,24 @@ export function NewOrderPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="customer-select-input">{t('newOrderCustomerLabel')}</Label>
-            <select
-              id="customer-select-input"
-              data-testid="customer-select"
-              value={customerId}
-              onChange={(e) => { void handleCustomerChange(e.target.value) }}
-              className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              disabled={loadingCustomers}
-            >
-              <option value="">{loadingCustomers ? t('loading') : t('newOrderSelectCustomer')}</option>
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                id="customer-select-input"
+                data-testid="customer-select"
+                value={customerId}
+                onChange={(e) => { void handleCustomerChange(e.target.value) }}
+                className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                disabled={loadingCustomers}
+              >
+                <option value="">{loadingCustomers ? t('loading') : t('newOrderSelectCustomer')}</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -371,11 +375,13 @@ export function NewOrderPage() {
 
         {/* Catalog search */}
         <div className="relative mb-4">
-          <Input
+          <SearchInput
             type="search"
             placeholder={t('newOrderSearchCatalog')}
             value={catalogSearch}
             onChange={(e) => setCatalogSearch(e.target.value)}
+            className="w-full"
+            inputClassName="h-9 rounded-full"
             aria-label={t('newOrderSearchCatalog')}
           />
           {catalogResults.length > 0 && (
@@ -415,47 +421,47 @@ export function NewOrderPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted">
                 <tr>
-                  <th className="px-3 py-2 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
                     {t('newOrderColDescription')}
                   </th>
-                  <th className="px-3 py-2 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
                     {t('newOrderColUnit')}
                   </th>
-                  <th className="px-3 py-2 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
                     {t('newOrderColQty')}
                   </th>
-                  <th className="px-3 py-2 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">
                     {t('newOrderColUnitPrice')}
                   </th>
-                  <th className="px-3 py-2 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">
                     {t('newOrderColLineTotal')}
                   </th>
-                  <th className="px-3 py-2" aria-label="actions" />
+                  <th className="px-4 py-3" aria-label="actions" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {lines.map((line) => (
                   <tr key={line.id} className="hover:bg-muted/50">
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-3">
                       <input
                         type="text"
                         value={line.description}
                         onChange={(e) => updateLine(line.id, { description: e.target.value })}
                         placeholder={t('newOrderDescriptionPlaceholder')}
-                        className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="w-full rounded-md border border-border bg-background h-9 px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       />
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-3">
                       <select
                         value={line.unit}
                         onChange={(e) => handleUnitChange(line.id, e.target.value as 'each' | 'pack')}
-                        className="rounded-md border border-border bg-background text-foreground px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="rounded-md border border-border bg-background text-foreground h-9 px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       >
                         <option value="each">{t('newOrderUnitEach')}</option>
                         <option value="pack">{t('newOrderUnitPack')}</option>
                       </select>
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-3">
                       <input
                         type="number"
                         min="1"
@@ -479,10 +485,10 @@ export function NewOrderPage() {
                             })
                           }
                         }}
-                        className="w-20 rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="w-20 rounded-md border border-border bg-background h-9 px-2 text-sm text-foreground tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       />
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-3">
                       {/* User types in major units; stored as minor units */}
                       <input
                         type="number"
@@ -498,13 +504,13 @@ export function NewOrderPage() {
                             priceOverridden: true,
                           })
                         }}
-                        className="w-28 rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="w-28 rounded-md border border-border bg-background h-9 px-2 text-sm text-foreground tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       />
                     </td>
-                    <td className="px-3 py-2 text-end tabular-nums text-muted-foreground font-numeric">
+                    <td className="px-4 py-3 text-end tabular-nums text-muted-foreground font-numeric">
                       {formatAmount(lineTotal(line), currency, currencyMinorUnits)}
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-3">
                       <button
                         type="button"
                         onClick={() => removeLine(line.id)}

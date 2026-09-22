@@ -193,7 +193,7 @@ export function DistrictAutocomplete({
                 ? 'cursor-not-allowed border-border bg-muted text-muted-foreground'
                 : error
                   ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                  : 'border-border focus:border-blue-400 focus:ring-blue-400'
+                  : 'border-border focus:border-ring focus:ring-ring'
             }`}
             placeholder={disabled ? '' : placeholder}
             value={query}

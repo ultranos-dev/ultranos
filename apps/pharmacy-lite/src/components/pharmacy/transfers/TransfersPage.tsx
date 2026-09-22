@@ -155,7 +155,17 @@ export function TransfersPage() {
 
       {/* Toolbar: status tabs + search — always visible */}
       <div className="flex flex-wrap items-center gap-3">
-        <div role="tablist" className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+        <SearchInput
+          type="text"
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
+          aria-label={t('searchPlaceholder')}
+        />
+        <div role="tablist" className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {TABS.map((tb) => (
             <button
               key={tb.key}
@@ -163,7 +173,7 @@ export function TransfersPage() {
               role="tab"
               aria-selected={tab === tb.key}
               onClick={() => setTab(tb.key)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                 tab === tb.key
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -173,15 +183,6 @@ export function TransfersPage() {
             </button>
           ))}
         </div>
-        <SearchInput
-          type="text"
-          dir="auto"
-          placeholder={t('searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="min-w-[200px] flex-1"
-          aria-label={t('searchPlaceholder')}
-        />
       </div>
 
       {loading ? (

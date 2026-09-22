@@ -101,9 +101,10 @@ export function CustomersPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
           aria-label={t('searchCustomers')}
         />
-        <Button variant="default" onClick={() => setDialogOpen(true)} aria-label={t('newCustomer')}>
+        <Button variant="default" onClick={() => setDialogOpen(true)} className="h-9" aria-label={t('newCustomer')}>
           <UserPlus size={16} className="me-2" />
           {t('newCustomer')}
         </Button>

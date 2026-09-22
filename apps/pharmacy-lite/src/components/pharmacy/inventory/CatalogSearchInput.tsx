@@ -46,6 +46,7 @@ export function CatalogSearchInput({ onSelect, placeholder }: CatalogSearchInput
         onSearch={() => handleSearch(query)}
         placeholder={placeholder ?? 'Search by name or scan barcode...'}
         className="w-full"
+        inputClassName="h-9 rounded-full"
       />
       {isOpen && (
         <ul className="absolute z-10 mt-1 w-full divide-y divide-border rounded-lg border border-border bg-card shadow-card overflow-hidden max-h-60 overflow-y-auto">

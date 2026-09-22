@@ -66,17 +66,15 @@ export function PosPage() {
 
     return (
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-fit px-0"
-            onClick={() => clearActiveInvoice()}
-          >
-            {t('backToList')}
-          </Button>
-          <h1 className="text-2xl font-semibold text-foreground">{t('pointOfSale')}</h1>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-fit px-0"
+          onClick={() => clearActiveInvoice()}
+        >
+          {t('backToList')}
+        </Button>
+        <h1 className="text-2xl font-semibold text-foreground">{t('pointOfSale')}</h1>
 
         <InvoiceSummary
           invoice={activeInvoice}
@@ -147,7 +145,17 @@ export function PosPage() {
 
       {/* Toolbar: status tabs + search — always visible */}
       <div className="flex flex-wrap items-center gap-3">
-        <div role="tablist" className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+        <SearchInput
+          type="text"
+          dir="auto"
+          placeholder={t('searchInvoicesPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
+          aria-label={t('searchInvoicesPlaceholder')}
+        />
+        <div role="tablist" className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {TABS.map((tb) => (
             <button
               key={tb.key}
@@ -155,7 +163,7 @@ export function PosPage() {
               role="tab"
               aria-selected={statusTab === tb.key}
               onClick={() => setStatusTab(tb.key)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                 statusTab === tb.key
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -165,15 +173,6 @@ export function PosPage() {
             </button>
           ))}
         </div>
-        <SearchInput
-          type="text"
-          dir="auto"
-          placeholder={t('searchInvoicesPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="min-w-[200px] flex-1"
-          aria-label={t('searchInvoicesPlaceholder')}
-        />
       </div>
 
       {/* Content panel — single cohesive box */}

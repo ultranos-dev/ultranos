@@ -127,7 +127,17 @@ export function CatalogBrowsePage() {
 
       {/* Toolbar: status filter + search + sync indicator + Add item — one row, always visible */}
       <div className="flex flex-wrap items-center gap-3">
-        <div role="tablist" className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+        <SearchInput
+          type="text"
+          dir="auto"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t('searchByName')}
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
+          aria-label={t('searchByName')}
+        />
+        <div role="tablist" className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {(['active', 'all'] as const).map((f) => (
             <button
               key={f}
@@ -135,7 +145,7 @@ export function CatalogBrowsePage() {
               role="tab"
               aria-selected={statusFilter === f}
               onClick={() => setStatusFilter(f)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                 statusFilter === f
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -145,19 +155,10 @@ export function CatalogBrowsePage() {
             </button>
           ))}
         </div>
-        <SearchInput
-          type="text"
-          dir="auto"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t('searchByName')}
-          className="min-w-[200px] flex-1"
-          aria-label={t('searchByName')}
-        />
         {isSyncingCatalog && (
           <span className="text-sm text-muted-foreground">{t('syncing')}</span>
         )}
-        <Button onClick={openCreate} size="sm">
+        <Button onClick={openCreate} size="sm" className="h-9">
           <Plus className="me-1.5 h-4 w-4" />
           {t('addItem')}
         </Button>

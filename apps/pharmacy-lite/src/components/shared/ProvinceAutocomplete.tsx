@@ -203,7 +203,7 @@ export function ProvinceAutocomplete({
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               error
                 ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                : 'border-border focus:border-blue-400 focus:ring-blue-400'
+                : 'border-border focus:border-ring focus:ring-ring'
             }`}
             placeholder={placeholder}
             value={query}

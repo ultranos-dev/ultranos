@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { ScrollText } from '@ultranos/ui-kit/icons'
+import { ScrollText, ChevronDown } from '@ultranos/ui-kit/icons'
 import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
 import {
   getProcurementAuditEvents,
@@ -93,46 +93,53 @@ export function ProcurementAuditPage() {
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
 
-      {/* Toolbar: resource filter → action filter → search */}
+      {/* Toolbar: search → resource filter → action filter */}
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          value={filter.resourceType ?? ''}
-          onChange={(e) =>
-            setFilter((prev) => ({
-              ...prev,
-              resourceType: e.target.value ? (e.target.value as AuditResourceType) : undefined,
-            }))
-          }
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-        >
-          <option value="">{t('filterAllResources')}</option>
-          {PROCUREMENT_RESOURCE_TYPES.map((rt) => (
-            <option key={rt} value={rt}>{t(resourceLabel(rt))}</option>
-          ))}
-        </select>
-
-        <select
-          value={filter.action ?? ''}
-          onChange={(e) =>
-            setFilter((prev) => ({
-              ...prev,
-              action: e.target.value ? (e.target.value as AuditAction) : undefined,
-            }))
-          }
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-        >
-          <option value="">{t('filterAllActions')}</option>
-          {PROCUREMENT_ACTIONS.map((a) => (
-            <option key={a} value={a}>{t(actionLabel(a))}</option>
-          ))}
-        </select>
-
         <SearchInput
           value={filter.search}
           onChange={(e) => setFilter((prev) => ({ ...prev, search: e.target.value }))}
           placeholder={t('searchPlaceholder')}
           className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
         />
+
+        <div className="relative">
+          <select
+            value={filter.resourceType ?? ''}
+            onChange={(e) =>
+              setFilter((prev) => ({
+                ...prev,
+                resourceType: e.target.value ? (e.target.value as AuditResourceType) : undefined,
+              }))
+            }
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+          >
+            <option value="">{t('filterAllResources')}</option>
+            {PROCUREMENT_RESOURCE_TYPES.map((rt) => (
+              <option key={rt} value={rt}>{t(resourceLabel(rt))}</option>
+            ))}
+          </select>
+          <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
+
+        <div className="relative">
+          <select
+            value={filter.action ?? ''}
+            onChange={(e) =>
+              setFilter((prev) => ({
+                ...prev,
+                action: e.target.value ? (e.target.value as AuditAction) : undefined,
+              }))
+            }
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+          >
+            <option value="">{t('filterAllActions')}</option>
+            {PROCUREMENT_ACTIONS.map((a) => (
+              <option key={a} value={a}>{t(actionLabel(a))}</option>
+            ))}
+          </select>
+          <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
       </div>
 
       {/* Content box */}

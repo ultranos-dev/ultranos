@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { FileSearch } from '@ultranos/ui-kit/icons'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
+import { FileSearch, ChevronDown } from '@ultranos/ui-kit/icons'
 import { db } from '@/lib/db'
 import { queryMovements } from '@/lib/inventory/stock-movement'
 import type { CatalogItem, StockMovement, StockMovementType } from '@/lib/inventory/types'
@@ -60,20 +61,29 @@ export function StockLedgerPage() {
       <h1 className="text-2xl font-semibold text-foreground">{t('ledgerTitle')}</h1>
 
       <div className="flex flex-wrap items-center gap-3">
-        <input
-          value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('ledgerSearchPlaceholder')}
-          className="min-w-[200px] flex-1 rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+        <SearchInput
+          type="text"
+          dir="auto"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t('ledgerSearchPlaceholder')}
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
+          aria-label={t('ledgerSearchPlaceholder')}
         />
-        <select data-testid="ledger-type-filter" value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value as StockMovementType | '')}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm">
-          <option value="">{t('ledgerTypeAll')}</option>
-          {MOVEMENT_TYPES.map((mt) => <option key={mt} value={mt}>{t(`movement_${mt}`)}</option>)}
-        </select>
+        <div className="relative">
+          <select data-testid="ledger-type-filter" value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value as StockMovementType | '')}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm">
+            <option value="">{t('ledgerTypeAll')}</option>
+            {MOVEMENT_TYPES.map((mt) => <option key={mt} value={mt}>{t(`movement_${mt}`)}</option>)}
+          </select>
+          <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
         <input type="date" aria-label={t('ledgerFrom')} value={from} onChange={(e) => setFrom(e.target.value)}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm" />
+          className="h-9 rounded-full border border-border bg-background text-foreground px-3 text-sm" />
         <input type="date" aria-label={t('ledgerTo')} value={to} onChange={(e) => setTo(e.target.value)}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm" />
+          className="h-9 rounded-full border border-border bg-background text-foreground px-3 text-sm" />
       </div>
 
       <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">

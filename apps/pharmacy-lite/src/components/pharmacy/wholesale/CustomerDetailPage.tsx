@@ -381,7 +381,7 @@ export function CustomerDetailPage() {
             />
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50 mb-4">
+          <div className="overflow-hidden rounded-lg border border-border mb-4">
             <table className="w-full text-sm">
               <thead className="bg-muted">
                 <tr>

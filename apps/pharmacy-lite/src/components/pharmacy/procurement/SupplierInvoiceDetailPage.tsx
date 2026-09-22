@@ -54,13 +54,13 @@ function formatAmount(amount: number, currency: string, minorUnits: number): str
 function statusBadgeClass(status: SupplierInvoiceStatus): string {
   switch (status) {
     case 'pending':
-      return 'inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning'
+      return 'inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning'
     case 'approved':
-      return 'inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success'
+      return 'inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success'
     case 'disputed':
-      return 'inline-flex items-center rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive'
+      return 'inline-flex items-center rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive'
     default:
-      return 'inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground'
+      return 'inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground'
   }
 }
 
@@ -80,11 +80,11 @@ function statusKey(status: SupplierInvoiceStatus): string {
 function settlementBadgeClass(status: 'unpaid' | 'partial' | 'paid'): string {
   switch (status) {
     case 'paid':
-      return 'inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success'
+      return 'inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success'
     case 'partial':
-      return 'inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning'
+      return 'inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning'
     default:
-      return 'inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground'
+      return 'inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground'
   }
 }
 
@@ -94,9 +94,9 @@ function settlementBadgeClass(status: 'unpaid' | 'partial' | 'paid'): string {
 
 function matchBadgeClass(status: 'matched' | 'variance'): string {
   if (status === 'matched') {
-    return 'inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success'
+    return 'inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success'
   }
-  return 'inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning'
+  return 'inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning'
 }
 
 // ---------------------------------------------------------------------------

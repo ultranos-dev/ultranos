@@ -81,21 +81,8 @@ export function StockOverviewPage() {
         onFilterQuarantined={() => setActiveFilter('quarantined')}
       />
 
-      {/* Toolbar: active-filter chip + search + Receive Stock — one row, always visible */}
+      {/* Toolbar: search + active-filter pills + Receive Stock — one row, always visible */}
       <div className="flex flex-wrap items-center gap-3">
-        {activeFilter !== 'all' && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-sm font-medium text-foreground">
-            {filterLabels[activeFilter]}
-            <button
-              type="button"
-              onClick={() => setActiveFilter('all')}
-              className="ms-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-              aria-label={t('clearFilter')}
-            >
-              ×
-            </button>
-          </span>
-        )}
         <SearchInput
           type="text"
           dir="auto"
@@ -103,11 +90,30 @@ export function StockOverviewPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
           aria-label={t('searchByProduct')}
         />
-        <Link href="/inventory/receive">
-          <Button variant="default">{t('receiveStock')}</Button>
-        </Link>
+        <div role="tablist" className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {(['all', 'low-stock', 'near-expiry', 'quarantined'] as ActiveFilter[]).map((f) => (
+            <button
+              key={f}
+              type="button"
+              role="tab"
+              aria-selected={activeFilter === f}
+              onClick={() => setActiveFilter(f)}
+              className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
+                activeFilter === f
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {filterLabels[f]}
+            </button>
+          ))}
+        </div>
+        <Button asChild variant="default" className="h-9">
+          <Link href="/inventory/receive">{t('receiveStock')}</Link>
+        </Button>
       </div>
 
       {/* Stock table — single cohesive box */}

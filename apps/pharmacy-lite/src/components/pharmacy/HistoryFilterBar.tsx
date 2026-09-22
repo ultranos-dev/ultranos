@@ -15,36 +15,18 @@ export function HistoryFilterBar({ filters, onFiltersChange }: HistoryFilterBarP
     onFiltersChange({ ...filters, ...patch })
   }
 
+  const syncStatusValue: SyncStatus | 'all' = filters.syncStatus ?? 'all'
+  const syncTabs: { key: SyncStatus | 'all'; labelKey: string }[] = [
+    { key: 'all', labelKey: 'filterAll' },
+    { key: 'synced', labelKey: 'filterSynced' },
+    { key: 'pending', labelKey: 'filterPending' },
+    { key: 'failed', labelKey: 'filterFailed' },
+  ]
+
   // `contents` lets these controls participate directly in the parent toolbar's
-  // flex row (single Notifications-style row: date filters -> wide search -> select).
+  // flex row (single Notifications-style row: search -> sync-status pills -> dates).
   return (
     <div data-testid="history-filter-bar" className="contents">
-      <div className="flex flex-col gap-1">
-        <label htmlFor="filter-date-from" className="text-xs font-medium text-muted-foreground">
-          {t('filterFrom')}
-        </label>
-        <input
-          id="filter-date-from"
-          type="date"
-          value={filters.dateFrom ?? ''}
-          onChange={(e) => update({ dateFrom: e.target.value || undefined })}
-          className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="filter-date-to" className="text-xs font-medium text-muted-foreground">
-          {t('filterTo')}
-        </label>
-        <input
-          id="filter-date-to"
-          type="date"
-          value={filters.dateTo ?? ''}
-          onChange={(e) => update({ dateTo: e.target.value || undefined })}
-          className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
-        />
-      </div>
-
       <SearchInput
         id="filter-medication"
         type="text"
@@ -53,23 +35,52 @@ export function HistoryFilterBar({ filters, onFiltersChange }: HistoryFilterBarP
         value={filters.medicationName ?? ''}
         onChange={(e) => update({ medicationName: e.target.value || undefined })}
         className="min-w-[200px] flex-1"
+        inputClassName="h-9 rounded-full"
         aria-label={t('filterMedication')}
       />
 
-      <select
-        id="filter-sync-status"
-        value={filters.syncStatus ?? ''}
-        onChange={(e) =>
-          update({ syncStatus: (e.target.value || undefined) as SyncStatus | undefined })
-        }
-        className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+      <div
+        role="tablist"
         aria-label={t('filterSyncStatus')}
+        className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit"
       >
-        <option value="">{t('filterAll')}</option>
-        <option value="synced">{t('filterSynced')}</option>
-        <option value="pending">{t('filterPending')}</option>
-        <option value="failed">{t('filterFailed')}</option>
-      </select>
+        {syncTabs.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            role="tab"
+            aria-selected={syncStatusValue === tab.key}
+            onClick={() =>
+              update({ syncStatus: tab.key === 'all' ? undefined : (tab.key as SyncStatus) })
+            }
+            className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
+              syncStatusValue === tab.key
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {t(tab.labelKey)}
+          </button>
+        ))}
+      </div>
+
+      <input
+        id="filter-date-from"
+        type="date"
+        aria-label={t('filterFrom')}
+        value={filters.dateFrom ?? ''}
+        onChange={(e) => update({ dateFrom: e.target.value || undefined })}
+        className="h-9 rounded-full border border-border bg-background px-3 text-sm text-foreground"
+      />
+
+      <input
+        id="filter-date-to"
+        type="date"
+        aria-label={t('filterTo')}
+        value={filters.dateTo ?? ''}
+        onChange={(e) => update({ dateTo: e.target.value || undefined })}
+        className="h-9 rounded-full border border-border bg-background px-3 text-sm text-foreground"
+      />
     </div>
   )
 }
