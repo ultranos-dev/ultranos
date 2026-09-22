@@ -6,7 +6,7 @@ exports[`AnonymousReportForm > RTL snapshot — form layout mirrors correctly 1`
     dir="rtl"
   >
     <div
-      class="mx-auto max-w-lg flex flex-col gap-4"
+      class="flex flex-col gap-4"
     >
       <div
         class="rounded-lg border border-primary bg-primary/10 p-4"
@@ -115,7 +115,7 @@ exports[`AnonymousReportForm > RTL snapshot — form layout mirrors correctly 1`
           detailsLabel
         </label>
         <textarea
-          class="w-full rounded-lg border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
+          class="w-full rounded-lg border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
           id="safety-report-details"
           placeholder="detailsPlaceholder"
           rows="5"

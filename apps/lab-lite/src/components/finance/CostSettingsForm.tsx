@@ -233,7 +233,7 @@ export function CostSettingsForm() {
 
   if (!isManager) {
     return (
-      <div className="p-6 text-sm text-red-600" role="alert">
+      <div className="p-6 text-sm text-destructive" role="alert">
         Access restricted to Lab Managers.
       </div>
     )
@@ -245,7 +245,7 @@ export function CostSettingsForm() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">{t('title')}</h1>
+      <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
 
       {/* Section 1 — Overhead & Labor */}
       <section aria-labelledby="overhead-section-heading" className="rounded-lg border border-border p-5 space-y-4">
@@ -284,7 +284,7 @@ export function CostSettingsForm() {
         </div>
 
         {overheadCalc.divisionGuardTriggered ? (
-          <p className="text-sm text-amber-600" role="alert">
+          <p className="text-sm text-warning" role="alert">
             {t('divisionGuardWarning')}
           </p>
         ) : (
@@ -376,7 +376,7 @@ export function CostSettingsForm() {
       {errors.length > 0 && (
         <ul className="space-y-1" role="alert" aria-live="polite">
           {errors.map((err) => (
-            <li key={err} className="text-sm text-red-600">
+            <li key={err} className="text-sm text-destructive">
               {err}
             </li>
           ))}
@@ -385,7 +385,7 @@ export function CostSettingsForm() {
 
       {/* Success */}
       {saveSuccess && (
-        <p className="text-sm text-green-600" role="status" aria-live="polite">
+        <p className="text-sm text-success" role="status" aria-live="polite">
           {t('saveSuccess')}
         </p>
       )}

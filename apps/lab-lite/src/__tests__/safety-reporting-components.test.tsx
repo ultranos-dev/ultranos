@@ -56,6 +56,8 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
   AlertTriangle: () => <span data-testid="icon-alert-triangle" />,
   ClipboardList: () => <span data-testid="icon-clipboard-list" />,
   Lock: () => <span data-testid="icon-lock" />,
+  ChevronDown: () => <span data-testid="icon-chevron-down" />,
+  FileSearch: () => <span data-testid="icon-file-search" />,
 }))
 
 vi.mock('@/components/ui/Button', () => ({

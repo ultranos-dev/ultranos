@@ -14,7 +14,7 @@ export default function SuppliersPage() {
           &larr; {t('backToSettings')}
         </Link>
       </div>
-      <h1 className="text-2xl font-bold text-foreground">{t('pageTitle')}</h1>
+      <h1 className="text-2xl font-semibold text-foreground">{t('pageTitle')}</h1>
       <SupplierConfigPanel />
     </div>
   )

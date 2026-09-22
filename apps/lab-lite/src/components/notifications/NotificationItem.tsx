@@ -20,13 +20,13 @@ function getNotificationDisplay(type: string): NotificationDisplay {
     case 'LAB_RESULT_AVAILABLE':
       return {
         labelKey: 'resultUploaded',
-        iconColor: 'text-green-600',
+        iconColor: 'text-success',
         icon: <Check size={20} className="h-5 w-5" aria-hidden="true" />,
       }
     case 'LAB_RESULT_ESCALATION':
       return {
         labelKey: 'resultAwaitingReview',
-        iconColor: 'text-yellow-600',
+        iconColor: 'text-warning',
         icon: <AlertTriangle size={20} className="h-5 w-5" aria-hidden="true" />,
       }
     case 'ANOMALY_FLAG':

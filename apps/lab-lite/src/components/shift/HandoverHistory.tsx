@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { getAllHandoverReports } from '@/lib/db'
 import type { HandoverReport } from '@/lib/db'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { ClipboardList } from '@ultranos/ui-kit/icons'
+import { ClipboardList, ChevronDown } from '@ultranos/ui-kit/icons'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/Button'
 
@@ -60,20 +60,24 @@ export function HandoverHistory() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Toolbar: title + status filter — one row, always visible */}
+      <h1 className="text-2xl font-semibold text-foreground">{t('historyTitle')}</h1>
+
+      {/* Toolbar: status filter — one row, always visible */}
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-2xl font-semibold text-foreground">{t('historyTitle')}</h2>
-        <select
-          aria-label={t('allFilter')}
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="ms-auto rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-        >
-          <option value="ALL">{t('allFilter')}</option>
-          <option value="PENDING">{t('statusPending')}</option>
-          <option value="ACKNOWLEDGED">{t('statusAcknowledged')}</option>
-          <option value="EXPIRED">{t('statusExpired')}</option>
-        </select>
+        <div className="relative">
+          <select
+            aria-label={t('allFilter')}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+          >
+            <option value="ALL">{t('allFilter')}</option>
+            <option value="PENDING">{t('statusPending')}</option>
+            <option value="ACKNOWLEDGED">{t('statusAcknowledged')}</option>
+            <option value="EXPIRED">{t('statusExpired')}</option>
+          </select>
+          <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
       </div>
 
       {/* Content box — single cohesive box (loading / error / empty / table) */}

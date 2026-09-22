@@ -190,18 +190,18 @@ describe('Upload History Page (Story 17.3)', () => {
       expect(screen.getByTestId('status-badge-completed')).toBeDefined()
     })
 
-    // Verify color classes
+    // Verify semantic color-token classes
     const completedBadge = screen.getByTestId('status-badge-completed')
-    expect(completedBadge.className).toContain('bg-green-50')
+    expect(completedBadge.className).toContain('bg-success/10')
 
     const pendingBadge = screen.getByTestId('status-badge-pending')
-    expect(pendingBadge.className).toContain('bg-yellow-50')
+    expect(pendingBadge.className).toContain('bg-warning/10')
 
     const uploadingBadge = screen.getByTestId('status-badge-uploading')
-    expect(uploadingBadge.className).toContain('bg-orange-50')
+    expect(uploadingBadge.className).toContain('bg-warning/10')
 
     const failedBadge = screen.getByTestId('status-badge-failed')
-    expect(failedBadge.className).toContain('bg-red-50')
+    expect(failedBadge.className).toContain('bg-destructive/10')
 
     const expiredBadge = screen.getByTestId('status-badge-expired')
     expect(expiredBadge.className).toContain('bg-muted')

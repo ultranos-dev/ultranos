@@ -18,7 +18,7 @@ exports[`SOPLibrary RTL snapshots (P13) > renders SOPLibrary in LTR 1`] = `
       >
         <input
           aria-label="Search SOPs..."
-          class="flex h-10 rounded-xl border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11"
+          class="flex border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11 h-9 rounded-full"
           data-slot="input"
           dir="auto"
           placeholder="Search SOPs..."
@@ -26,9 +26,9 @@ exports[`SOPLibrary RTL snapshots (P13) > renders SOPLibrary in LTR 1`] = `
           value=""
         />
         <button
-          aria-label="Search SOPs..."
-          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 size-8 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 absolute end-1.5 top-1/2 -translate-y-1/2"
-          data-size="icon-sm"
+          aria-label="Search"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 size-6 [&_svg:not([class*='size-'])]:size-3 absolute end-1.5 top-1/2 -translate-y-1/2"
+          data-size="icon-xs"
           data-slot="button"
           data-variant="default"
           type="button"
@@ -38,41 +38,48 @@ exports[`SOPLibrary RTL snapshots (P13) > renders SOPLibrary in LTR 1`] = `
           />
         </button>
       </div>
-      <select
-        aria-label="Filter by category"
-        class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+      <div
+        class="relative"
       >
-        <option
-          value="ALL"
+        <select
+          aria-label="Filter by category"
+          class="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
         >
-          All
-        </option>
-        <option
-          value="HEMATOLOGY"
-        >
-          Hematology
-        </option>
-        <option
-          value="CHEMISTRY"
-        >
-          Chemistry
-        </option>
-        <option
-          value="MICROBIOLOGY"
-        >
-          Microbiology
-        </option>
-        <option
-          value="GENERAL_LAB_SAFETY"
-        >
-          General Lab Safety
-        </option>
-        <option
-          value="OTHER"
-        >
-          Other
-        </option>
-      </select>
+          <option
+            value="ALL"
+          >
+            All
+          </option>
+          <option
+            value="HEMATOLOGY"
+          >
+            Hematology
+          </option>
+          <option
+            value="CHEMISTRY"
+          >
+            Chemistry
+          </option>
+          <option
+            value="MICROBIOLOGY"
+          >
+            Microbiology
+          </option>
+          <option
+            value="GENERAL_LAB_SAFETY"
+          >
+            General Lab Safety
+          </option>
+          <option
+            value="OTHER"
+          >
+            Other
+          </option>
+        </select>
+        <svg
+          data-testid="icon-chevron-down"
+        />
+      </div>
     </div>
     <div
       class="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
@@ -144,7 +151,7 @@ exports[`SOPLibrary RTL snapshots (P13) > renders SOPLibrary in RTL 1`] = `
       >
         <input
           aria-label="Search SOPs..."
-          class="flex h-10 rounded-xl border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11"
+          class="flex border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11 h-9 rounded-full"
           data-slot="input"
           dir="auto"
           placeholder="Search SOPs..."
@@ -152,9 +159,9 @@ exports[`SOPLibrary RTL snapshots (P13) > renders SOPLibrary in RTL 1`] = `
           value=""
         />
         <button
-          aria-label="Search SOPs..."
-          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 size-8 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 absolute end-1.5 top-1/2 -translate-y-1/2"
-          data-size="icon-sm"
+          aria-label="Search"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 size-6 [&_svg:not([class*='size-'])]:size-3 absolute end-1.5 top-1/2 -translate-y-1/2"
+          data-size="icon-xs"
           data-slot="button"
           data-variant="default"
           type="button"
@@ -164,41 +171,48 @@ exports[`SOPLibrary RTL snapshots (P13) > renders SOPLibrary in RTL 1`] = `
           />
         </button>
       </div>
-      <select
-        aria-label="Filter by category"
-        class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+      <div
+        class="relative"
       >
-        <option
-          value="ALL"
+        <select
+          aria-label="Filter by category"
+          class="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
         >
-          All
-        </option>
-        <option
-          value="HEMATOLOGY"
-        >
-          Hematology
-        </option>
-        <option
-          value="CHEMISTRY"
-        >
-          Chemistry
-        </option>
-        <option
-          value="MICROBIOLOGY"
-        >
-          Microbiology
-        </option>
-        <option
-          value="GENERAL_LAB_SAFETY"
-        >
-          General Lab Safety
-        </option>
-        <option
-          value="OTHER"
-        >
-          Other
-        </option>
-      </select>
+          <option
+            value="ALL"
+          >
+            All
+          </option>
+          <option
+            value="HEMATOLOGY"
+          >
+            Hematology
+          </option>
+          <option
+            value="CHEMISTRY"
+          >
+            Chemistry
+          </option>
+          <option
+            value="MICROBIOLOGY"
+          >
+            Microbiology
+          </option>
+          <option
+            value="GENERAL_LAB_SAFETY"
+          >
+            General Lab Safety
+          </option>
+          <option
+            value="OTHER"
+          >
+            Other
+          </option>
+        </select>
+        <svg
+          data-testid="icon-chevron-down"
+        />
+      </div>
     </div>
     <div
       class="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
@@ -270,7 +284,7 @@ exports[`SOPLibrary RTL snapshots (P13) > renders empty SOPLibrary in LTR 1`] = 
       >
         <input
           aria-label="Search SOPs..."
-          class="flex h-10 rounded-xl border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11"
+          class="flex border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11 h-9 rounded-full"
           data-slot="input"
           dir="auto"
           placeholder="Search SOPs..."
@@ -278,9 +292,9 @@ exports[`SOPLibrary RTL snapshots (P13) > renders empty SOPLibrary in LTR 1`] = 
           value=""
         />
         <button
-          aria-label="Search SOPs..."
-          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 size-8 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 absolute end-1.5 top-1/2 -translate-y-1/2"
-          data-size="icon-sm"
+          aria-label="Search"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 size-6 [&_svg:not([class*='size-'])]:size-3 absolute end-1.5 top-1/2 -translate-y-1/2"
+          data-size="icon-xs"
           data-slot="button"
           data-variant="default"
           type="button"
@@ -290,41 +304,48 @@ exports[`SOPLibrary RTL snapshots (P13) > renders empty SOPLibrary in LTR 1`] = 
           />
         </button>
       </div>
-      <select
-        aria-label="Filter by category"
-        class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+      <div
+        class="relative"
       >
-        <option
-          value="ALL"
+        <select
+          aria-label="Filter by category"
+          class="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
         >
-          All
-        </option>
-        <option
-          value="HEMATOLOGY"
-        >
-          Hematology
-        </option>
-        <option
-          value="CHEMISTRY"
-        >
-          Chemistry
-        </option>
-        <option
-          value="MICROBIOLOGY"
-        >
-          Microbiology
-        </option>
-        <option
-          value="GENERAL_LAB_SAFETY"
-        >
-          General Lab Safety
-        </option>
-        <option
-          value="OTHER"
-        >
-          Other
-        </option>
-      </select>
+          <option
+            value="ALL"
+          >
+            All
+          </option>
+          <option
+            value="HEMATOLOGY"
+          >
+            Hematology
+          </option>
+          <option
+            value="CHEMISTRY"
+          >
+            Chemistry
+          </option>
+          <option
+            value="MICROBIOLOGY"
+          >
+            Microbiology
+          </option>
+          <option
+            value="GENERAL_LAB_SAFETY"
+          >
+            General Lab Safety
+          </option>
+          <option
+            value="OTHER"
+          >
+            Other
+          </option>
+        </select>
+        <svg
+          data-testid="icon-chevron-down"
+        />
+      </div>
     </div>
     <div
       class="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"
@@ -361,7 +382,7 @@ exports[`SOPLibrary RTL snapshots (P13) > renders empty SOPLibrary in RTL 1`] = 
       >
         <input
           aria-label="Search SOPs..."
-          class="flex h-10 rounded-xl border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11"
+          class="flex border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11 h-9 rounded-full"
           data-slot="input"
           dir="auto"
           placeholder="Search SOPs..."
@@ -369,9 +390,9 @@ exports[`SOPLibrary RTL snapshots (P13) > renders empty SOPLibrary in RTL 1`] = 
           value=""
         />
         <button
-          aria-label="Search SOPs..."
-          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 size-8 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 absolute end-1.5 top-1/2 -translate-y-1/2"
-          data-size="icon-sm"
+          aria-label="Search"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 size-6 [&_svg:not([class*='size-'])]:size-3 absolute end-1.5 top-1/2 -translate-y-1/2"
+          data-size="icon-xs"
           data-slot="button"
           data-variant="default"
           type="button"
@@ -381,41 +402,48 @@ exports[`SOPLibrary RTL snapshots (P13) > renders empty SOPLibrary in RTL 1`] = 
           />
         </button>
       </div>
-      <select
-        aria-label="Filter by category"
-        class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+      <div
+        class="relative"
       >
-        <option
-          value="ALL"
+        <select
+          aria-label="Filter by category"
+          class="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
         >
-          All
-        </option>
-        <option
-          value="HEMATOLOGY"
-        >
-          Hematology
-        </option>
-        <option
-          value="CHEMISTRY"
-        >
-          Chemistry
-        </option>
-        <option
-          value="MICROBIOLOGY"
-        >
-          Microbiology
-        </option>
-        <option
-          value="GENERAL_LAB_SAFETY"
-        >
-          General Lab Safety
-        </option>
-        <option
-          value="OTHER"
-        >
-          Other
-        </option>
-      </select>
+          <option
+            value="ALL"
+          >
+            All
+          </option>
+          <option
+            value="HEMATOLOGY"
+          >
+            Hematology
+          </option>
+          <option
+            value="CHEMISTRY"
+          >
+            Chemistry
+          </option>
+          <option
+            value="MICROBIOLOGY"
+          >
+            Microbiology
+          </option>
+          <option
+            value="GENERAL_LAB_SAFETY"
+          >
+            General Lab Safety
+          </option>
+          <option
+            value="OTHER"
+          >
+            Other
+          </option>
+        </select>
+        <svg
+          data-testid="icon-chevron-down"
+        />
+      </div>
     </div>
     <div
       class="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"

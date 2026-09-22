@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
-import { ArrowUp, ArrowDown, Minus, BookOpen } from '@ultranos/ui-kit/icons'
+import { ArrowUp, ArrowDown, Minus, BookOpen, GraduationCap } from '@ultranos/ui-kit/icons'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { getDb } from '@/lib/db'
 import { recalculateAllCompetencies, getProcedureTrend } from '@/lib/competency-tracker'
 import {
@@ -41,7 +42,7 @@ function StatusBadge({
         : t('statusActiveRecent')
     return (
       <span
-        className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300"
+        className="inline-flex items-center rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-medium text-success"
         data-testid="badge-active"
       >
         {label}
@@ -55,7 +56,7 @@ function StatusBadge({
         : t('statusDecayRiskUnknown')
     return (
       <span
-        className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+        className="inline-flex items-center rounded-full bg-warning/15 px-2.5 py-0.5 text-xs font-medium text-warning"
         data-testid="badge-decay-risk"
       >
         {label}
@@ -69,7 +70,7 @@ function StatusBadge({
       : t('statusDecayedNever')
   return (
     <span
-      className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-300"
+      className="inline-flex items-center rounded-full bg-destructive/15 px-2.5 py-0.5 text-xs font-medium text-destructive"
       data-testid="badge-decayed"
     >
       {label}
@@ -86,7 +87,7 @@ function TrendIcon({ trend }: { trend: CompetencyTrend | null }) {
     return (
       <ArrowUp
         size={14}
-        className="text-green-600 dark:text-green-400"
+        className="text-success"
         aria-label="Improving"
       />
     )
@@ -95,7 +96,7 @@ function TrendIcon({ trend }: { trend: CompetencyTrend | null }) {
     return (
       <ArrowDown
         size={14}
-        className="text-red-500 dark:text-red-400"
+        className="text-destructive"
         aria-label="Declining"
       />
     )
@@ -104,7 +105,7 @@ function TrendIcon({ trend }: { trend: CompetencyTrend | null }) {
     return (
       <Minus
         size={14}
-        className="text-muted-foreground dark:text-muted-foreground"
+        className="text-muted-foreground"
         aria-label="Stable"
       />
     )
@@ -127,23 +128,23 @@ function DecayNotificationCard({
 }) {
   return (
     <div
-      className="flex items-start justify-between rounded-lg border border-yellow-300 bg-yellow-50 p-3 dark:border-yellow-700 dark:bg-yellow-900/20"
+      className="flex items-start justify-between rounded-lg border border-warning/30 bg-warning/10 p-3"
       role="alert"
       data-testid={`decay-notification-${notification.procedureRef}`}
     >
       <div className="flex items-start gap-2">
         <BookOpen
           size={16}
-          className="mt-0.5 shrink-0 text-yellow-600 dark:text-yellow-400"
+          className="mt-0.5 shrink-0 text-warning"
         />
-        <p className="text-sm text-yellow-800 dark:text-yellow-200">
+        <p className="text-sm text-warning">
           {buildDecayMessage(notification.procedureName, notification.daysSinceLast)}
         </p>
       </div>
       <button
         type="button"
         onClick={() => onDismiss(notification.id)}
-        className="ms-3 shrink-0 text-xs text-yellow-600 underline hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-200"
+        className="ms-3 shrink-0 text-xs text-warning underline hover:text-warning/80"
         aria-label={t('dismissNotification')}
       >
         {t('dismiss')}
@@ -169,10 +170,10 @@ function CompetencyRow({
 
   return (
     <tr
-      className="border-b border-border/50 last:border-0 dark:border-border"
+      className="transition-colors hover:bg-muted/50"
       data-testid={`competency-row-${row.procedureRef}`}
     >
-      <td className="py-3 pe-4 ps-2">
+      <td className="px-4 py-3">
         <div className="flex flex-col gap-0.5">
           <span className="text-sm font-medium text-foreground">
             {row.procedureName}
@@ -182,19 +183,19 @@ function CompetencyRow({
           </span>
         </div>
       </td>
-      <td className="py-3 pe-4">
+      <td className="px-4 py-3">
         <StatusBadge status={row.status} daysSinceLast={row.daysSinceLast} t={t} />
       </td>
-      <td className="hidden py-3 pe-4 text-sm text-muted-foreground dark:text-muted-foreground sm:table-cell">
+      <td className="hidden px-4 py-3 text-sm text-muted-foreground sm:table-cell">
         {lastPerformedLabel}
       </td>
-      <td className="hidden py-3 pe-4 text-sm text-muted-foreground dark:text-muted-foreground sm:table-cell">
+      <td className="hidden px-4 py-3 text-sm text-muted-foreground sm:table-cell">
         {row.totalPerformed}
       </td>
-      <td className="hidden py-3 pe-4 text-sm text-muted-foreground dark:text-muted-foreground md:table-cell">
+      <td className="hidden px-4 py-3 text-sm text-muted-foreground md:table-cell">
         {row.performedLast90Days}
       </td>
-      <td className="py-3 pe-2">
+      <td className="px-4 py-3">
         <TrendIcon trend={row.trend} />
       </td>
     </tr>
@@ -225,6 +226,7 @@ export function CompetencyDashboard({ technicianId }: Props) {
   const [rows, setRows] = useState<CompetencyRowData[]>([])
   const [notifications, setNotifications] = useState<DecayNotification[]>([])
   const [loading, setLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState<ProcedureCompetency['status'] | 'ALL'>('ALL')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -274,37 +276,25 @@ export function CompetencyDashboard({ technicianId }: Props) {
     setNotifications((prev) => prev.filter((n) => n.id !== notificationId))
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-        {t('loading')}
-      </div>
-    )
-  }
-
-  if (rows.length === 0) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-6 text-center dark:border-border dark:bg-card">
-        <p className="text-sm text-muted-foreground dark:text-muted-foreground">
-          {t('noProcedures')}
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground dark:text-muted-foreground">
-          {t('noProceduresHint')}
-        </p>
-      </div>
-    )
-  }
-
   // Summary counts
   const activeCount = rows.filter((r) => r.status === 'active').length
   const riskCount = rows.filter((r) => r.status === 'decay_risk').length
   const decayedCount = rows.filter((r) => r.status === 'decayed').length
 
+  const STATUS_PILLS: Array<{ key: ProcedureCompetency['status'] | 'ALL'; label: string }> = [
+    { key: 'ALL', label: t('filterAll') },
+    { key: 'active', label: t('summaryActive') },
+    { key: 'decay_risk', label: t('summaryRisk') },
+    { key: 'decayed', label: t('summaryDecayed') },
+  ]
+
+  const visibleRows = statusFilter === 'ALL' ? rows : rows.filter((r) => r.status === statusFilter)
+
   return (
-    <div className="space-y-4" data-testid="competency-dashboard">
+    <div className="flex flex-col gap-4" data-testid="competency-dashboard">
       {/* Decay notifications */}
       {notifications.length > 0 && (
-        <div className="space-y-2" data-testid="decay-notifications">
+        <div className="flex flex-col gap-2" data-testid="decay-notifications">
           {notifications.map((n) => (
             <DecayNotificationCard
               key={n.id}
@@ -319,71 +309,95 @@ export function CompetencyDashboard({ technicianId }: Props) {
       {/* Summary counts */}
       <div className="grid grid-cols-3 gap-3">
         <div
-          className="rounded-lg border border-green-200 bg-green-50 p-3 text-center dark:border-green-800 dark:bg-green-900/20"
+          className="rounded-xl bg-success/10 p-3 text-center shadow-card ring-[0.65px] ring-success/30"
           data-testid="summary-active"
         >
-          <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-            {activeCount}
-          </p>
-          <p className="mt-0.5 text-xs text-green-600 dark:text-green-400">
-            {t('summaryActive')}
-          </p>
+          <p className="text-2xl font-bold text-success">{activeCount}</p>
+          <p className="mt-0.5 text-xs text-success">{t('summaryActive')}</p>
         </div>
         <div
-          className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-center dark:border-yellow-800 dark:bg-yellow-900/20"
+          className="rounded-xl bg-warning/10 p-3 text-center shadow-card ring-[0.65px] ring-warning/30"
           data-testid="summary-risk"
         >
-          <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
-            {riskCount}
-          </p>
-          <p className="mt-0.5 text-xs text-yellow-600 dark:text-yellow-400">
-            {t('summaryRisk')}
-          </p>
+          <p className="text-2xl font-bold text-warning">{riskCount}</p>
+          <p className="mt-0.5 text-xs text-warning">{t('summaryRisk')}</p>
         </div>
         <div
-          className="rounded-lg border border-red-200 bg-red-50 p-3 text-center dark:border-red-800 dark:bg-red-900/20"
+          className="rounded-xl bg-destructive/10 p-3 text-center shadow-card ring-[0.65px] ring-destructive/30"
           data-testid="summary-decayed"
         >
-          <p className="text-2xl font-bold text-red-700 dark:text-red-300">
-            {decayedCount}
-          </p>
-          <p className="mt-0.5 text-xs text-red-600 dark:text-red-400">
-            {t('summaryDecayed')}
-          </p>
+          <p className="text-2xl font-bold text-destructive">{decayedCount}</p>
+          <p className="mt-0.5 text-xs text-destructive">{t('summaryDecayed')}</p>
         </div>
       </div>
 
-      {/* Procedure table */}
-      <div className="overflow-x-auto rounded-lg border border-border bg-card dark:border-border dark:bg-card">
-        <table className="w-full text-start" data-testid="competency-table">
-          <thead>
-            <tr className="border-b border-border dark:border-border">
-              <th className="px-2 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
-                {t('colProcedure')}
-              </th>
-              <th className="px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
-                {t('colStatus')}
-              </th>
-              <th className="hidden px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground sm:table-cell">
-                {t('colLastPerformed')}
-              </th>
-              <th className="hidden px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground sm:table-cell">
-                {t('colTotal')}
-              </th>
-              <th className="hidden px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground md:table-cell">
-                {t('colLast90')}
-              </th>
-              <th className="px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
-                {t('colTrend')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <CompetencyRow key={row.id} row={row} t={t} />
-            ))}
-          </tbody>
-        </table>
+      {/* Toolbar: status filter pills — one row, always visible */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div role="tablist" className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {STATUS_PILLS.map((pill) => (
+            <button
+              key={pill.key}
+              type="button"
+              role="tab"
+              aria-pressed={statusFilter === pill.key}
+              onClick={() => setStatusFilter(pill.key)}
+              className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
+                statusFilter === pill.key
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {pill.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Procedure table — single cohesive box (loading / empty / table) */}
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        {loading ? (
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground" aria-busy="true">
+            {t('loading')}
+          </div>
+        ) : visibleRows.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              icon={GraduationCap}
+              title={t('noProcedures')}
+              description={t('noProceduresHint')}
+            />
+          </div>
+        ) : (
+          <table className="w-full text-start" data-testid="competency-table">
+            <thead className="bg-muted">
+              <tr>
+                <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {t('colProcedure')}
+                </th>
+                <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {t('colStatus')}
+                </th>
+                <th className="hidden px-4 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground sm:table-cell">
+                  {t('colLastPerformed')}
+                </th>
+                <th className="hidden px-4 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground sm:table-cell">
+                  {t('colTotal')}
+                </th>
+                <th className="hidden px-4 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground md:table-cell">
+                  {t('colLast90')}
+                </th>
+                <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {t('colTrend')}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {visibleRows.map((row) => (
+                <CompetencyRow key={row.id} row={row} t={t} />
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   )

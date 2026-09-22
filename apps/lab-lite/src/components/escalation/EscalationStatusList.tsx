@@ -265,7 +265,17 @@ export function EscalationStatusList() {
 
       {/* Toolbar: pill tabs + wide search + refresh — one row, always visible */}
       <div className="flex flex-wrap items-center gap-3">
-        <div role="tablist" className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+        <SearchInput
+          type="text"
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
+          aria-label={t('searchPlaceholder')}
+        />
+        <div role="tablist" className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -273,7 +283,7 @@ export function EscalationStatusList() {
               role="tab"
               aria-selected={activeTab === tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`inline-flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -290,16 +300,7 @@ export function EscalationStatusList() {
             </button>
           ))}
         </div>
-        <SearchInput
-          type="text"
-          dir="auto"
-          placeholder={t('searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="min-w-[200px] flex-1"
-          aria-label={t('searchPlaceholder')}
-        />
-        <Button variant="outline" size="sm" onClick={() => void load()}>
+        <Button variant="outline" onClick={() => void load()}>
           {t('refresh')}
         </Button>
       </div>

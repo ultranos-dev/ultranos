@@ -291,6 +291,65 @@ export async function transitionSampleStatus(
 }
 
 /**
+ * Archive or unarchive a sample.
+ *
+ * Archiving moves a sample off the active worklist into the Archived shelf
+ * without changing its pipeline status — the flag is orthogonal and fully
+ * reversible. Writes a custody event, emits an audit event (Rule #6), and
+ * enqueues a sync event so the change propagates to the Hub.
+ */
+export async function setSampleArchived(
+  sampleId: string,
+  archived: boolean,
+  actorId: string,
+): Promise<void> {
+  const specimen = await getSampleById(sampleId)
+  if (!specimen) throw new Error(`Sample not found: ${sampleId}`)
+
+  // No-op if already in the requested state — avoids redundant custody/audit noise.
+  if ((specimen._ultranos.archived ?? false) === archived) return
+
+  const now = new Date().toISOString()
+  const hlcTs = serializeHlc(hlc.now())
+
+  const updated: FhirSpecimen = {
+    ...specimen,
+    meta: {
+      ...specimen.meta,
+      lastUpdated: now,
+      versionId: String(parseInt(specimen.meta.versionId ?? '1') + 1),
+    },
+    _ultranos: { ...specimen._ultranos, archived, hlcTimestamp: hlcTs },
+  }
+  await putSample(updated)
+
+  const custodyEvent: CustodyEvent = {
+    id: crypto.randomUUID(),
+    sampleId,
+    eventType: archived ? 'archive' : 'unarchive',
+    fromActorId: actorId,
+    toActorId: actorId,
+    timestamp: hlcTs,
+  }
+  await addCustodyEvent(custodyEvent)
+
+  reportSampleAuditEvent({
+    action: archived ? 'SAMPLE_ARCHIVED' : 'SAMPLE_UNARCHIVED',
+    sampleId,
+    labSampleId: specimen._ultranos.labSampleId,
+    actorId,
+    patientRef: specimen.subject.reference,
+  })
+
+  await enqueueSyncEvent({
+    resourceType: 'Specimen',
+    resourceId: sampleId,
+    payload: updated,
+    hlcTimestamp: hlcTs,
+  })
+}
+
+/**
  * Reject a sample with a reason.
  * Sets FHIR status to 'unsatisfactory', pipeline status to 'rejected',
  * creates a custody event, and queues a rejection notification to the

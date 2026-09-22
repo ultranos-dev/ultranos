@@ -19,6 +19,7 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
   ArrowDown: () => <span data-testid="trend-declining" />,
   Minus: () => <span data-testid="trend-stable" />,
   BookOpen: () => <span data-testid="book-open-icon" />,
+  GraduationCap: () => <span data-testid="graduation-cap-icon" />,
 }))
 
 const mockCompetencies: ProcedureCompetency[] = []

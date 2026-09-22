@@ -13,6 +13,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getDb, getPriorityOverrides, setPriorityOverride, clearPriorityOverride } from '@/lib/db'
+import { setSampleArchived } from '@/lib/sample-service'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 import {
   prioritizeSamples,
   applyManualOverrides,
@@ -28,6 +30,9 @@ const REFRESH_INTERVAL_MS = 60_000
 
 export type WorklistMode = 'auto' | 'manual'
 
+/** Which shelf the worklist is showing: the active queue or the archived shelf. */
+export type WorklistStatusFilter = 'active' | 'archived'
+
 export interface UsePrioritizedWorklistResult {
   /** Ordered list of samples ready to process. */
   samples: PrioritizedSample[]
@@ -35,6 +40,9 @@ export interface UsePrioritizedWorklistResult {
   error: string | null
   mode: WorklistMode
   setMode: (mode: WorklistMode) => void
+  /** Active vs Archived shelf. */
+  statusFilter: WorklistStatusFilter
+  setStatusFilter: (filter: WorklistStatusFilter) => void
   /**
    * Reorder a sample to a new 0-based position in the list.
    * Persists to Dexie and triggers re-render.
@@ -44,6 +52,10 @@ export interface UsePrioritizedWorklistResult {
    * Clear the manual override for a sample, reverting to algorithm order.
    */
   resetOverride: (sampleId: string) => Promise<void>
+  /**
+   * Archive (true) or unarchive (false) a sample, then refresh the list.
+   */
+  setArchived: (sampleId: string, archived: boolean) => Promise<void>
 }
 
 /** Extract the orderId from a FHIR Reference string like "ServiceRequest/<id>". */
@@ -122,6 +134,7 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [mode, setMode] = useState<WorklistMode>('auto')
+  const [statusFilter, setStatusFilter] = useState<WorklistStatusFilter>('active')
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const cancelledRef = useRef(false)
@@ -142,9 +155,15 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
       // to an empty worklist — that would be a false-negative (Bug 3).
       let samplesReadError: unknown = null
       try {
-        // Attempt to use the samples table (may be empty if 42.3 not yet synced)
+        // Attempt to use the samples table (may be empty if 42.3 not yet synced).
+        // Active shelf: pipeline-active AND not archived.
+        // Archived shelf: any sample flagged archived (regardless of pipeline state).
         const activeSamples = await db.samples
-          .filter((s) => ACTIVE_STATUSES.has(s._ultranos.pipelineStatus))
+          .filter((s) =>
+            statusFilter === 'archived'
+              ? s._ultranos.archived === true
+              : ACTIVE_STATUSES.has(s._ultranos.pipelineStatus) && s._ultranos.archived !== true,
+          )
           .toArray()
 
         if (activeSamples.length > 0) {
@@ -224,7 +243,7 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
     } finally {
       inFlightRef.current = false
     }
-  }, [mode])
+  }, [mode, statusFilter])
 
   useEffect(() => {
     cancelledRef.current = false
@@ -271,5 +290,22 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
     await fetchAndSort()
   }, [fetchAndSort])
 
-  return { samples, loading, error, mode, setMode, reorder, resetOverride }
+  const setArchived = useCallback(async (sampleId: string, archived: boolean) => {
+    const actorId = useAuthSessionStore.getState().session?.userId ?? 'unknown'
+    await setSampleArchived(sampleId, archived, actorId)
+    await fetchAndSort()
+  }, [fetchAndSort])
+
+  return {
+    samples,
+    loading,
+    error,
+    mode,
+    setMode,
+    statusFilter,
+    setStatusFilter,
+    reorder,
+    resetOverride,
+    setArchived,
+  }
 }

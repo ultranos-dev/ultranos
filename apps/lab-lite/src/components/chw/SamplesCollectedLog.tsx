@@ -10,7 +10,7 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Clock, TriangleAlert } from '@ultranos/ui-kit/icons'
+import { Clock, TriangleAlert, FlaskConical } from '@ultranos/ui-kit/icons'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { getTodayCHWSamples } from '@/lib/db'
 import type { CHWSampleCollection, CHWSampleType } from '@/types/chw-mode'
@@ -64,9 +64,9 @@ export function SamplesCollectedLog({ onBack }: Props) {
     <div className="flex flex-col gap-4 p-4">
       {/* Header with count badge */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">{t('title')}</h2>
+        <h2 className="text-2xl font-semibold text-foreground">{t('title')}</h2>
         {!loading && !loadError && (
-          <span className="rounded-full bg-primary px-3 py-1 text-lg font-bold text-white">
+          <span className="rounded-full bg-primary px-3 py-1 text-lg font-bold text-primary-foreground">
             {samples.length}
           </span>
         )}
@@ -76,26 +76,26 @@ export function SamplesCollectedLog({ onBack }: Props) {
         <p className="text-lg text-muted-foreground">{t('countBadge', { count: samples.length })}</p>
       )}
 
-      {loading ? (
-        <div className="flex h-32 items-center justify-center text-muted-foreground">…</div>
-      ) : loadError ? (
-        <div
-          role="alert"
-          className="flex h-32 items-center justify-center rounded-2xl bg-card ring-[0.65px] ring-border/50"
-        >
-          <EmptyState icon={TriangleAlert} title={t('loadError')} size="sm" />
-        </div>
-      ) : samples.length === 0 ? (
-        <div className="flex h-32 items-center justify-center rounded-2xl bg-muted text-xl text-muted-foreground">
-          {t('empty')}
-        </div>
-      ) : (
-        <ul className="flex flex-col gap-3" aria-label={t('title')}>
-          {samples.map((sample) => (
-            <SampleRow key={sample.id} sample={sample} />
-          ))}
-        </ul>
-      )}
+      {/* Content box — single cohesive box (loading / error / empty / list) */}
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        {loading ? (
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground" aria-busy="true">…</div>
+        ) : loadError ? (
+          <div role="alert" className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState icon={TriangleAlert} title={t('loadError')} />
+          </div>
+        ) : samples.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState icon={FlaskConical} title={t('empty')} />
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-3 p-3" aria-label={t('title')}>
+            {samples.map((sample) => (
+              <SampleRow key={sample.id} sample={sample} />
+            ))}
+          </ul>
+        )}
+      </div>
 
       {onBack && (
         <button

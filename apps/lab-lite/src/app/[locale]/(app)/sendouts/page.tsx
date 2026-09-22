@@ -7,7 +7,7 @@ import { getDb } from '@/lib/db'
 import { getOverdueSendOuts } from '@/lib/sendout-tat'
 import { StatusUpdateModal } from '@/components/sendout/StatusUpdateModal'
 import { ResultImportModal } from '@/components/sendout/ResultImportModal'
-import { AlertTriangle, Send, FileSearch, TriangleAlert } from '@ultranos/ui-kit/icons'
+import { AlertTriangle, Send, FileSearch, TriangleAlert, ChevronDown } from '@ultranos/ui-kit/icons'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { Badge } from '@/components/ui/badge'
@@ -134,30 +134,45 @@ export default function SendOutsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
           aria-label={t('searchPlaceholder')}
         />
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-          aria-label={t('filterStatusAria')}
-        >
-          <option value="all">{t('filterStatusAll')}</option>
-          {STATUS_ORDER.map((s) => (
-            <option key={s} value={s}>{t(STATUS_LABEL_KEY[s])}</option>
-          ))}
-        </select>
-        <select
-          value={filterLabId}
-          onChange={(e) => setFilterLabId(e.target.value)}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-          aria-label={t('filterLabAria')}
-        >
-          <option value="">{t('filterLabAll')}</option>
-          {[...labs.values()].map((l) => (
-            <option key={l.id} value={l.id}>{l.name}</option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label={t('filterStatusAria')}
+          >
+            <option value="all">{t('filterStatusAll')}</option>
+            {STATUS_ORDER.map((s) => (
+              <option key={s} value={s}>{t(STATUS_LABEL_KEY[s])}</option>
+            ))}
+          </select>
+          <ChevronDown
+            size={16}
+            aria-hidden="true"
+            className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+        </div>
+        <div className="relative">
+          <select
+            value={filterLabId}
+            onChange={(e) => setFilterLabId(e.target.value)}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label={t('filterLabAria')}
+          >
+            <option value="">{t('filterLabAll')}</option>
+            {[...labs.values()].map((l) => (
+              <option key={l.id} value={l.id}>{l.name}</option>
+            ))}
+          </select>
+          <ChevronDown
+            size={16}
+            aria-hidden="true"
+            className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+        </div>
       </div>
 
       {/* Content box — single cohesive box (loading / error / empty / table) */}

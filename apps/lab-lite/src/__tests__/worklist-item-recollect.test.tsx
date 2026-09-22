@@ -23,6 +23,8 @@ vi.mock('next-intl', () => ({
     const map: Record<string, string> = {
       enterResult: 'Enter Result',
       recollect: 'Re-collect',
+      archive: 'Archive',
+      unarchive: 'Unarchive',
     }
     return map[key] ?? key
   },
@@ -81,9 +83,6 @@ vi.mock('@/components/worklist/UrgencyBadge', () => ({
 vi.mock('@/components/worklist/StabilityBadge', () => ({
   StabilityBadge: () => null,
 }))
-vi.mock('@/components/worklist/BatchGroupIndicator', () => ({
-  BatchGroupIndicator: () => null,
-}))
 vi.mock('@/components/samples/LockIndicator', () => ({
   LockIndicator: () => null,
 }))
@@ -112,8 +111,6 @@ function makeSample(overrides: Partial<PrioritizedSample> = {}): PrioritizedSamp
 
 const defaultProps = {
   rank: 1,
-  isInBatch: false,
-  isBatchStart: false,
   isDragging: false,
   onDragStart: vi.fn(),
   onDragOver: vi.fn(),

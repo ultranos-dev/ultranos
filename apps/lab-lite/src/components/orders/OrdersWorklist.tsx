@@ -73,6 +73,7 @@ export function OrdersWorklist({ orders, loading, error, onRefresh }: OrdersWork
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
           aria-label={t('searchPlaceholder')}
         />
         <OrderFilters value={filters} onChange={setFilters} />

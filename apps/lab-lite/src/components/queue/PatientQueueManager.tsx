@@ -18,6 +18,9 @@ import {
   clearCompletedEntries,
   type PatientQueueEntry,
 } from '@/lib/patient-queue'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Users } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/Button'
 import { TokenBadge } from './TokenBadge'
 import { TokenCard, PrintTokenButton } from './TokenCard'
 
@@ -155,53 +158,40 @@ export function PatientQueueManager() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header actions */}
+    <div className="flex flex-col gap-4">
+      {/* Header actions — one toolbar row */}
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={() => setShowRegister(true)}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
-        >
+        <Button variant="primary" onClick={() => setShowRegister(true)}>
           {t('tokens.registerPatient')}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="primary"
           onClick={async () => {
             const nextWaiting = waitingEntries[0]
             if (nextWaiting?.id != null) await handleCall(nextWaiting.id)
           }}
           disabled={waitingCount === 0}
-          className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {t('tokens.callNext')}
-        </button>
-        <button
-          type="button"
-          onClick={handleOpenDisplay}
-          className="rounded-md bg-muted px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-        >
+        </Button>
+        <Button variant="secondary" onClick={handleOpenDisplay}>
           {t('tokens.displayMode')}
-        </button>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="rounded-md bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 transition-colors ms-auto"
-        >
+        </Button>
+        <Button variant="danger" onClick={handleReset}>
           {t('tokens.resetQueue')}
-        </button>
+        </Button>
       </div>
 
       {/* Register patient modal */}
       {showRegister && (
-        <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+        <div className="rounded-xl bg-card p-4 shadow-card ring-[0.65px] ring-border/50">
           <h3 className="font-semibold mb-3">
             {t('tokens.registerPatient')}
           </h3>
           <select
             value={selectedPatientId}
             onChange={(e) => setSelectedPatientId(e.target.value)}
-            className="w-full rounded-md border border-border px-3 py-2 text-sm mb-3"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm mb-3"
           >
             <option value="">{t('tokens.selectPatient')}</option>
             {patients.map((p) => (
@@ -211,21 +201,12 @@ export function PatientQueueManager() {
             ))}
           </select>
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={handleRegister}
-              disabled={!selectedPatientId}
-              className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
-            >
+            <Button variant="primary" onClick={handleRegister} disabled={!selectedPatientId}>
               {t('tokens.confirm')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowRegister(false)}
-              className="rounded-md bg-muted px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
-            >
+            </Button>
+            <Button variant="secondary" onClick={() => setShowRegister(false)}>
               {t('tokens.cancel')}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -266,8 +247,8 @@ export function PatientQueueManager() {
 
       {/* Now serving */}
       {servingEntry && (
-        <div className="rounded-lg border-2 border-green-300 bg-green-50 p-4">
-          <h3 className="text-sm font-semibold text-green-800 mb-2">
+        <div className="rounded-xl border border-success/30 bg-success/10 p-4">
+          <h3 className="text-sm font-semibold text-success mb-2">
             {t('tokens.nowServing')}
           </h3>
           <div className="flex items-center gap-3">
@@ -285,28 +266,28 @@ export function PatientQueueManager() {
               </span>
               , {servingEntry.patientAge}
             </div>
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              className="ms-auto"
               onClick={() => servingEntry.id != null && handleComplete(servingEntry.id)}
-              className="ms-auto rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700"
             >
               {t('tokens.complete')}
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {/* Waiting list */}
-      <div>
-        <h3 className="font-semibold text-foreground mb-2">
+      <div className="flex flex-col gap-2">
+        <h3 className="font-semibold text-foreground">
           {t('tokens.waiting')} ({waitingCount})
         </h3>
         {waitingCount === 0 ? (
-          <p className="text-sm text-muted-foreground py-4">
-            {t('tokens.emptyQueue')}
-          </p>
+          <div className="flex min-h-[12rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+            <EmptyState icon={Users} title={t('tokens.emptyQueue')} />
+          </div>
         ) : (
-          <div className="divide-y divide-border/50 rounded-lg border border-border bg-card">
+          <div className="divide-y divide-border overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
             {waitingEntries.map((entry, index) => (
               <div
                 key={entry.id}
@@ -332,21 +313,21 @@ export function PatientQueueManager() {
                   <button
                     type="button"
                     onClick={() => entry.id != null && handleCall(entry.id)}
-                    className="rounded px-2 py-1 text-xs font-medium bg-primary/10 text-primary hover:bg-blue-200"
+                    className="rounded px-2 py-1 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20"
                   >
                     {t('tokens.call')}
                   </button>
                   <button
                     type="button"
                     onClick={() => entry.id != null && handleComplete(entry.id)}
-                    className="rounded px-2 py-1 text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200"
+                    className="rounded px-2 py-1 text-xs font-medium bg-success/10 text-success hover:bg-success/20"
                   >
                     {t('tokens.complete')}
                   </button>
                   <button
                     type="button"
                     onClick={() => entry.id != null && handleNoShow(entry.id)}
-                    className="rounded px-2 py-1 text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200"
+                    className="rounded px-2 py-1 text-xs font-medium bg-destructive/10 text-destructive hover:bg-destructive/20"
                   >
                     {t('tokens.noShow')}
                   </button>

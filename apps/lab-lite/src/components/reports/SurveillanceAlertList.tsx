@@ -9,7 +9,9 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { AlertTriangle, CircleCheck, Clock, AlertCircle } from '@ultranos/ui-kit/icons'
+import { AlertTriangle, CircleCheck, Clock, AlertCircle, ChevronDown, ShieldAlert } from '@ultranos/ui-kit/icons'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import type { SurveillanceAlert } from '@/lib/surveillance-types'
 import { useSurveillanceAlerts } from '@/hooks/useSurveillanceAlerts'
 
@@ -31,66 +33,76 @@ export function SurveillanceAlertList({ highlightAlertId }: SurveillanceAlertLis
   })
 
   return (
-    <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 rounded-lg border border-border bg-muted/30 p-3">
-        <input
+    <div className="flex flex-col gap-4">
+      {/* Toolbar: search + filters — one row, always visible */}
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
           type="text"
+          dir="auto"
           placeholder={t('filterByDisease')}
           value={diseaseFilter}
           onChange={(e) => setDiseaseFilter(e.target.value.toLowerCase())}
-          className="rounded border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
           aria-label={t('filterByDisease')}
         />
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value as 'spike' | 'cluster' | '')}
-          className="rounded border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-          aria-label={t('filterByType')}
-        >
-          <option value="">{t('filterByType')}</option>
-          <option value="spike">{t('spikeDetected')}</option>
-          <option value="cluster">{t('clusterDetected')}</option>
-        </select>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as SurveillanceAlert['transmissionStatus'] | '')}
-          className="rounded border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-          aria-label={t('transmissionStatus')}
-        >
-          <option value="">{t('transmissionStatus')}</option>
-          <option value="pending">{t('pending')}</option>
-          <option value="transmitted">{t('transmitted')}</option>
-          <option value="failed">{t('failed')}</option>
-        </select>
+        <div className="relative">
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value as 'spike' | 'cluster' | '')}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label={t('filterByType')}
+          >
+            <option value="">{t('filterByType')}</option>
+            <option value="spike">{t('spikeDetected')}</option>
+            <option value="cluster">{t('clusterDetected')}</option>
+          </select>
+          <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
+        <div className="relative">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as SurveillanceAlert['transmissionStatus'] | '')}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label={t('transmissionStatus')}
+          >
+            <option value="">{t('transmissionStatus')}</option>
+            <option value="pending">{t('pending')}</option>
+            <option value="transmitted">{t('transmitted')}</option>
+            <option value="failed">{t('failed')}</option>
+          </select>
+          <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
       </div>
 
-      {/* Loading / error */}
-      {loading && (
-        <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-          {t('loading', { defaultMessage: 'Loading...' })}
-        </div>
-      )}
+      {/* Error banner (retryable) */}
       {!loading && error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
           <button type="button" onClick={reload} className="ms-2 underline">{t('retry', { defaultMessage: 'Retry' })}</button>
         </div>
       )}
-      {!loading && !error && alerts.length === 0 && (
-        <div className="rounded-lg border border-border bg-muted/30 px-4 py-12 text-center text-sm text-muted-foreground">
-          {t('noAlerts')}
+
+      {/* Content: loading / empty go inside a box; alert cards stack below */}
+      {loading ? (
+        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card text-sm text-muted-foreground shadow-card ring-[0.65px] ring-border/50" aria-busy="true">
+          {t('loading', { defaultMessage: 'Loading...' })}
+        </div>
+      ) : !error && alerts.length === 0 ? (
+        <div className="flex min-h-[16rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+          <EmptyState icon={ShieldAlert} title={t('noAlerts')} />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {!error && alerts.map((alert) => (
+            <SurveillanceAlertCard
+              key={alert.id}
+              alert={alert}
+              highlighted={alert.id === highlightAlertId}
+            />
+          ))}
         </div>
       )}
-
-      {/* Alert cards */}
-      {!loading && !error && alerts.map((alert) => (
-        <SurveillanceAlertCard
-          key={alert.id}
-          alert={alert}
-          highlighted={alert.id === highlightAlertId}
-        />
-      ))}
     </div>
   )
 }
@@ -109,23 +121,23 @@ function SurveillanceAlertCard({
   const t = useTranslations('surveillance')
 
   const severityClasses = alert.severity === 'critical'
-    ? 'border-red-300 bg-red-50'
-    : 'border-amber-300 bg-amber-50'
+    ? 'border-destructive/30 bg-destructive/10'
+    : 'border-warning/30 bg-warning/10'
 
   const severityBadgeClasses = alert.severity === 'critical'
-    ? 'bg-red-100 text-red-800'
-    : 'bg-amber-100 text-amber-800'
+    ? 'bg-destructive/15 text-destructive'
+    : 'bg-warning/15 text-warning'
 
   return (
     <div
       id={`alert-${alert.id}`}
-      className={`rounded-lg border p-4 transition-all ${severityClasses} ${highlighted ? 'ring-2 ring-primary-500' : ''}`}
+      className={`rounded-lg border p-4 transition-all ${severityClasses} ${highlighted ? 'ring-2 ring-ring' : ''}`}
       role="article"
       aria-label={`${alert.diseaseLabel} ${alert.alertType} alert`}
     >
       {/* Header row */}
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <AlertTriangle size={16} className={alert.severity === 'critical' ? 'text-red-600' : 'text-amber-600'} aria-hidden />
+        <AlertTriangle size={16} className={alert.severity === 'critical' ? 'text-destructive' : 'text-warning'} aria-hidden />
         <span className="font-semibold text-foreground text-sm">{alert.diseaseLabel}</span>
 
         {/* Alert type badge */}
@@ -189,7 +201,7 @@ function TransmissionStatusBadge({
 }) {
   if (status === 'transmitted') {
     return (
-      <span className="flex items-center gap-1 text-xs text-green-700">
+      <span className="flex items-center gap-1 text-xs text-success">
         <CircleCheck size={12} aria-hidden />
         {t('transmitted')}
       </span>
@@ -197,7 +209,7 @@ function TransmissionStatusBadge({
   }
   if (status === 'failed') {
     return (
-      <span className="flex items-center gap-1 text-xs text-red-600">
+      <span className="flex items-center gap-1 text-xs text-destructive">
         <AlertCircle size={12} aria-hidden />
         {t('failed')}
       </span>

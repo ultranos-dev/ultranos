@@ -12,6 +12,9 @@ export type CustodyEventType =
   | 'rejection'
   | 'transport-pickup'
   | 'transport-delivery'
+  // Worklist archive lifecycle — sample moved off / back onto the active worklist.
+  | 'archive'
+  | 'unarchive'
   // Sample-lock lifecycle (Story 49.x) — written by sample-lock-service.
   | 'lock-acquired'
   | 'lock-released'

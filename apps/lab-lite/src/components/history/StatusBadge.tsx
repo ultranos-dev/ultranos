@@ -7,10 +7,10 @@ interface StatusBadgeProps {
 }
 
 const STATUS_CONFIG: Record<HistoryStatus, { label: string; className: string }> = {
-  completed: { label: 'Completed', className: 'bg-green-50 text-green-700' },
-  pending: { label: 'Pending', className: 'bg-yellow-50 text-yellow-700' },
-  uploading: { label: 'Uploading', className: 'bg-orange-50 text-orange-700' },
-  failed: { label: 'Failed', className: 'bg-red-50 text-red-700' },
+  completed: { label: 'Completed', className: 'bg-success/10 text-success' },
+  pending: { label: 'Pending', className: 'bg-warning/10 text-warning' },
+  uploading: { label: 'Uploading', className: 'bg-warning/10 text-warning' },
+  failed: { label: 'Failed', className: 'bg-destructive/10 text-destructive' },
   expired: { label: 'Expired', className: 'bg-muted text-muted-foreground' },
 }
 

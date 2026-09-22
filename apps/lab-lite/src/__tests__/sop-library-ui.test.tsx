@@ -55,6 +55,7 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
   BookOpen: () => <svg data-testid="icon-book-open" />,
   AlertTriangle: () => <svg data-testid="icon-alert-triangle" />,
   Search: () => <svg data-testid="icon-search" />,
+  ChevronDown: () => <svg data-testid="icon-chevron-down" />,
 }))
 
 vi.mock('@ultranos/ui-kit', () => ({

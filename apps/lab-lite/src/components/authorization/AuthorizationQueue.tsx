@@ -12,7 +12,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
-import { CircleCheck, FileSearch } from '@ultranos/ui-kit/icons'
+import { CircleCheck, ChevronDown, FileSearch } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import { useRouter } from 'next/navigation'
 import { getDb } from '@/lib/db'
@@ -187,45 +187,55 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
           aria-label={t('searchPlaceholder')}
         />
-        <select
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-          value={sortKey}
-          onChange={(e) => setSortKey(e.target.value as SortKey)}
-          aria-label={t('sortBy')}
-        >
-          <option value="severity">{t('sortSeverity')}</option>
-          <option value="timestamp">{t('sortTimestamp')}</option>
-          <option value="urgency">{t('sortUrgency')}</option>
-        </select>
+        <div className="relative">
+          <select
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
+            aria-label={t('sortBy')}
+          >
+            <option value="severity">{t('sortSeverity')}</option>
+            <option value="timestamp">{t('sortTimestamp')}</option>
+            <option value="urgency">{t('sortUrgency')}</option>
+          </select>
+          <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        </div>
 
         {categories.length > 0 && (
-          <select
-            className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-            value={categoryFilter ?? ''}
-            onChange={(e) => setCategoryFilter(e.target.value || null)}
-            aria-label={t('filterCategory')}
-          >
-            <option value="">{t('allCategories')}</option>
-            {categories.map((c) => (
-              <option key={c} value={c ?? ''}>{c}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+              value={categoryFilter ?? ''}
+              onChange={(e) => setCategoryFilter(e.target.value || null)}
+              aria-label={t('filterCategory')}
+            >
+              <option value="">{t('allCategories')}</option>
+              {categories.map((c) => (
+                <option key={c} value={c ?? ''}>{c}</option>
+              ))}
+            </select>
+            <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          </div>
         )}
 
         {technicians.length > 0 && (
-          <select
-            className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-            value={techFilter ?? ''}
-            onChange={(e) => setTechFilter(e.target.value || null)}
-            aria-label={t('filterTechnician')}
-          >
-            <option value="">{t('allTechnicians')}</option>
-            {technicians.map((tech) => (
-              <option key={tech} value={tech ?? ''}>{tech}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+              value={techFilter ?? ''}
+              onChange={(e) => setTechFilter(e.target.value || null)}
+              aria-label={t('filterTechnician')}
+            >
+              <option value="">{t('allTechnicians')}</option>
+              {technicians.map((tech) => (
+                <option key={tech} value={tech ?? ''}>{tech}</option>
+              ))}
+            </select>
+            <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          </div>
         )}
       </div>
 

@@ -1,17 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { getDb, type PaymentEntry } from '@/lib/db'
 import { ReceiptView } from '@/components/finance/ReceiptView'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { Receipt } from '@ultranos/ui-kit/icons'
+import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
+import { Receipt, FileSearch } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 
 export default function ReceiptsPage() {
   const t = useTranslations('finance.receipt')
   const [payments, setPayments] = useState<PaymentEntry[]>([])
   const [selected, setSelected] = useState<PaymentEntry | null>(null)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -21,6 +23,15 @@ export default function ReceiptsPage() {
     }
     load()
   }, [])
+
+  const query = search.trim().toLowerCase()
+  const filtered = useMemo(
+    () =>
+      query
+        ? payments.filter((p) => (p.receiptNumber ?? '').toLowerCase().includes(query))
+        : payments,
+    [payments, query],
+  )
 
   if (selected) {
     return (
@@ -39,13 +50,31 @@ export default function ReceiptsPage() {
         {t('title')}
       </h1>
 
-      {payments.length === 0 ? (
+      {/* Toolbar: search — one row, always visible */}
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
+          type="text"
+          dir="auto"
+          placeholder={t('searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
+          aria-label={t('searchPlaceholder')}
+        />
+      </div>
+
+      {filtered.length === 0 ? (
         <div className="flex min-h-[18rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
-          <EmptyState icon={Receipt} title={t('empty')} description={t('emptyHint')} />
+          <EmptyState
+            icon={query ? FileSearch : Receipt}
+            title={query ? t('noResults') : t('empty')}
+            description={query ? undefined : t('emptyHint')}
+          />
         </div>
       ) : (
         <div className="divide-y divide-border overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
-          {payments.map((p) => (
+          {filtered.map((p) => (
             <button
               key={p.paymentId}
               type="button"

@@ -39,10 +39,15 @@ export default function ReagentDetailPage() {
   if (!reagent) {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-red-700">{t('notFound')}</p>
-        <Button variant="secondary" onClick={() => router.push('/finance/reagents')}>
-          {t('backToList')}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-fit px-0"
+          onClick={() => router.push('/finance/reagents')}
+        >
+          ← {t('backToList')}
         </Button>
+        <p className="text-sm text-destructive">{t('notFound')}</p>
       </div>
     )
   }
@@ -53,17 +58,17 @@ export default function ReagentDetailPage() {
     <div className="flex flex-col gap-4">
       {view === 'detail' && (
         <>
-          <div className="flex items-center justify-between">
-            <h1 className="text-lg font-semibold">{reagent.name}</h1>
-            <Button
-              variant="secondary"
-              onClick={() => router.push('/finance/reagents')}
-            >
-              {t('backToList')}
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-fit px-0"
+            onClick={() => router.push('/finance/reagents')}
+          >
+            ← {t('backToList')}
+          </Button>
+          <h1 className="text-2xl font-semibold text-foreground">{reagent.name}</h1>
 
-          <dl className="grid grid-cols-2 gap-2 text-sm">
+          <dl className="grid grid-cols-2 gap-2 rounded-xl bg-card p-5 text-sm shadow-card ring-[0.65px] ring-border/50">
             <dt className="text-muted-foreground">{t('detail.lot')}</dt>
             <dd>{reagent.lotNumber}</dd>
             <dt className="text-muted-foreground">{t('detail.status')}</dt>
@@ -96,7 +101,7 @@ export default function ReagentDetailPage() {
 
       {view === 'consume' && (
         <>
-          <Button variant="secondary" onClick={() => setView('detail')}>
+          <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => setView('detail')}>
             ← {t('back')}
           </Button>
           <ConsumptionLogForm
@@ -113,7 +118,7 @@ export default function ReagentDetailPage() {
 
       {view === 'dispose' && (
         <>
-          <Button variant="secondary" onClick={() => setView('detail')}>
+          <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => setView('detail')}>
             ← {t('back')}
           </Button>
           <ReagentDisposalForm
@@ -125,7 +130,7 @@ export default function ReagentDetailPage() {
 
       {view === 'edit' && (
         <>
-          <Button variant="secondary" onClick={() => setView('detail')}>
+          <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => setView('detail')}>
             ← {t('back')}
           </Button>
           <ReagentRegistrationForm

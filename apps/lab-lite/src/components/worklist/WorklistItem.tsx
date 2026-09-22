@@ -8,17 +8,13 @@ import type { SampleLock, LabOrderEntry } from '@/lib/db'
 import { getSampleById, getDb } from '@/lib/db'
 import { UrgencyBadge } from './UrgencyBadge'
 import { StabilityBadge } from './StabilityBadge'
-import { BatchGroupIndicator } from './BatchGroupIndicator'
 import { LockIndicator } from '@/components/samples/LockIndicator'
 import { ReceiveSampleModal } from '@/components/samples/ReceiveSampleModal'
-import { RefreshCw } from '@ultranos/ui-kit/icons'
+import { RefreshCw, Archive, ArchiveRestore } from '@ultranos/ui-kit/icons'
 
 interface WorklistItemProps {
   sample: PrioritizedSample
   rank: number
-  /** Whether this item shares a batch group with the previous item. */
-  isInBatch: boolean
-  isBatchStart: boolean
   isDragging: boolean
   onDragStart: (index: number) => void
   onDragOver: (e: React.DragEvent, index: number) => void
@@ -36,6 +32,10 @@ interface WorklistItemProps {
    * explicit early-refresh hook.
    */
   onRecollected?: () => void
+  /** True when rendering inside the Archived shelf — swaps Archive→Unarchive and hides workflow actions. */
+  isArchivedView?: boolean
+  /** Archive (true) or unarchive (false) this sample. */
+  onArchiveToggle?: (sampleId: string, archived: boolean) => void | Promise<void>
 }
 
 /**
@@ -50,8 +50,6 @@ interface WorklistItemProps {
 export function WorklistItem({
   sample,
   rank,
-  isInBatch,
-  isBatchStart,
   isDragging,
   onDragStart,
   onDragOver,
@@ -62,6 +60,8 @@ export function WorklistItem({
   activeLock,
   currentTechId,
   onRecollected,
+  isArchivedView = false,
+  onArchiveToggle,
 }: WorklistItemProps) {
   const router = useRouter()
   const t = useTranslations('worklist')
@@ -116,9 +116,6 @@ export function WorklistItem({
       aria-label={`Sample ${rank}: ${sample.loincDisplay} for ${sample.patientRef.firstName}`}
       role="listitem"
     >
-      {/* Batch group left-border indicator */}
-      <BatchGroupIndicator isInBatch={isInBatch} isBatchStart={isBatchStart} />
-
       {/* Rank number */}
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
         {rank}
@@ -152,8 +149,8 @@ export function WorklistItem({
       {/* AC 6: Lock indicator — shown when another tech holds the lock */}
       {activeLock && <LockIndicator lock={activeLock} />}
 
-      {/* Manual override chip */}
-      {sample.isManualOverride && (
+      {/* Manual override chip — active shelf only */}
+      {!isArchivedView && sample.isManualOverride && (
         <div className="flex items-center gap-1">
           <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
             Manual
@@ -169,31 +166,57 @@ export function WorklistItem({
         </div>
       )}
 
-      {/* Re-collect sample — secondary action, opens ReceiveSampleModal for replacement */}
+      {/* Archive / Unarchive — secondary action, always available on both shelves */}
       <button
         type="button"
         onMouseDown={(e) => e.stopPropagation()}
-        onClick={handleRecollect}
+        onClick={(e) => {
+          e.stopPropagation()
+          void onArchiveToggle?.(sample.sampleId, !isArchivedView)
+        }}
         disabled={isLockedByOther}
         className="shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
-        aria-label={`${t('recollect')} — ${sample.patientRef.firstName}`}
-        title={t('recollect')}
+        aria-label={`${isArchivedView ? t('unarchive') : t('archive')} — ${sample.patientRef.firstName}`}
+        title={isArchivedView ? t('unarchive') : t('archive')}
       >
-        <RefreshCw size={12} aria-hidden="true" className="inline-block me-1" />
-        {t('recollect')}
+        {isArchivedView ? (
+          <ArchiveRestore size={12} aria-hidden="true" className="inline-block me-1" />
+        ) : (
+          <Archive size={12} aria-hidden="true" className="inline-block me-1" />
+        )}
+        {isArchivedView ? t('unarchive') : t('archive')}
       </button>
 
-      {/* Enter results for this sample — primary action (guarded when locked by another tech) */}
-      <button
-        type="button"
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={() => router.push(`/results/${sample.sampleId}/enter`)}
-        disabled={isLockedByOther}
-        className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
-        aria-label={`${t('enterResult')} — ${sample.patientRef.firstName}`}
-      >
-        {t('enterResult')}
-      </button>
+      {/* Workflow actions — active shelf only; the archived shelf is a read-mostly holding area */}
+      {!isArchivedView && (
+        <>
+          {/* Re-collect sample — secondary action, opens ReceiveSampleModal for replacement */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={handleRecollect}
+            disabled={isLockedByOther}
+            className="shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+            aria-label={`${t('recollect')} — ${sample.patientRef.firstName}`}
+            title={t('recollect')}
+          >
+            <RefreshCw size={12} aria-hidden="true" className="inline-block me-1" />
+            {t('recollect')}
+          </button>
+
+          {/* Enter results for this sample — primary action (guarded when locked by another tech) */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => router.push(`/results/${sample.sampleId}/enter`)}
+            disabled={isLockedByOther}
+            className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+            aria-label={`${t('enterResult')} — ${sample.patientRef.firstName}`}
+          >
+            {t('enterResult')}
+          </button>
+        </>
+      )}
     </div>
 
     {recollectProps && (

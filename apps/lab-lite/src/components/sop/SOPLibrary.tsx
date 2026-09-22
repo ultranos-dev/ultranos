@@ -7,7 +7,7 @@ import { SOPCategory, type SOP } from '@/lib/sop-types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
-import { BookOpen, FileSearch } from '@ultranos/ui-kit/icons'
+import { BookOpen, FileSearch, ChevronDown } from '@ultranos/ui-kit/icons'
 import { Badge } from '@/components/ui/badge'
 import { SOPDetailView } from './SOPDetailView'
 
@@ -114,18 +114,26 @@ export function SOPLibrary() {
           placeholder={t('searchPlaceholder')}
           aria-label={t('searchPlaceholder')}
           className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
         />
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value as SOPCategory | 'ALL')}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-          aria-label={t('categoryFilter')}
-        >
-          <option value="ALL">{t('allCategories')}</option>
-          {CATEGORY_ORDER.map((cat) => (
-            <option key={cat} value={cat}>{categoryLabel(cat)}</option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value as SOPCategory | 'ALL')}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label={t('categoryFilter')}
+          >
+            <option value="ALL">{t('allCategories')}</option>
+            {CATEGORY_ORDER.map((cat) => (
+              <option key={cat} value={cat}>{categoryLabel(cat)}</option>
+            ))}
+          </select>
+          <ChevronDown
+            size={16}
+            aria-hidden="true"
+            className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+        </div>
       </div>
 
       {/* Content box — single cohesive box (loading / empty / list) */}

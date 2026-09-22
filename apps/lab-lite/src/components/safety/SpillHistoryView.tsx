@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Droplets } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/Button'
 import { getAllSpillIncidents } from '@/lib/safety/spill-service'
 import { RiskTier } from '@/types/spill-protocol'
 import type { SpillIncident } from '@/types/spill-protocol'
@@ -15,11 +18,29 @@ import type { SpillIncident } from '@/types/spill-protocol'
  * No PHI: displays spillType, riskTier, location, date, completion status only.
  */
 
-const RISK_COLORS: Record<RiskTier, { bg: string; text: string; border: string }> = {
-  [RiskTier.LOW]:      { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' },
-  [RiskTier.MODERATE]: { bg: '#fffbeb', text: '#b45309', border: '#fde68a' },
-  [RiskTier.HIGH]:     { bg: '#fff7ed', text: '#c2410c', border: '#fed7aa' },
-  [RiskTier.CRITICAL]: { bg: '#fef2f2', text: '#b91c1c', border: '#fecaca' },
+// Risk-tier prominence via semantic tokens. CRITICAL stays red (destructive);
+// HIGH/MODERATE keep warning (amber) prominence; LOW is a calm muted/primary tone.
+const RISK_TIER_CLASSES: Record<RiskTier, { badge: string; accent: string; border: string }> = {
+  [RiskTier.LOW]: {
+    badge: 'bg-primary/10 text-primary',
+    accent: 'border-s-primary',
+    border: 'ring-primary/30',
+  },
+  [RiskTier.MODERATE]: {
+    badge: 'bg-warning/10 text-warning',
+    accent: 'border-s-warning',
+    border: 'ring-warning/30',
+  },
+  [RiskTier.HIGH]: {
+    badge: 'bg-warning/15 text-warning',
+    accent: 'border-s-warning',
+    border: 'ring-warning/40',
+  },
+  [RiskTier.CRITICAL]: {
+    badge: 'bg-destructive/10 text-destructive',
+    accent: 'border-s-destructive',
+    border: 'ring-destructive/40',
+  },
 }
 
 export function SpillHistoryView() {
@@ -34,14 +55,6 @@ export function SpillHistoryView() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-        {t('safety.spill.history.loading')}
-      </div>
-    )
-  }
-
   if (selected) {
     return (
       <SpillIncidentDetail
@@ -52,89 +65,62 @@ export function SpillHistoryView() {
     )
   }
 
-  if (incidents.length === 0) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-        <p style={{ fontSize: '1.125rem', margin: 0 }}>{t('safety.spill.history.empty')}</p>
-      </div>
-    )
-  }
-
   return (
-    <div style={{ padding: '1rem' }} dir="auto">
-      <h2
-        style={{ fontSize: '1.375rem', fontWeight: 700, color: '#111827', marginBottom: '1rem' }}
-      >
+    <div className="flex flex-col gap-4" dir="auto">
+      <h2 className="text-2xl font-semibold text-foreground">
         {t('safety.spill.history.title')}
       </h2>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        {incidents.map((incident) => {
-          const riskColor = RISK_COLORS[incident.riskTier]
-          const dateStr = new Date(incident.occurredAt).toLocaleDateString()
-          const isComplete = incident.completedAt !== null
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        {loading ? (
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground" aria-busy="true">
+            {t('safety.spill.history.loading')}
+          </div>
+        ) : incidents.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState icon={Droplets} title={t('safety.spill.history.empty')} />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3 p-3">
+            {incidents.map((incident) => {
+              const risk = RISK_TIER_CLASSES[incident.riskTier]
+              const dateStr = new Date(incident.occurredAt).toLocaleDateString()
+              const isComplete = incident.completedAt !== null
 
-          return (
-            <button
-              key={incident.id}
-              type="button"
-              onClick={() => setSelected(incident)}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                padding: '1rem',
-                backgroundColor: 'white',
-                border: `1px solid ${riskColor.border}`,
-                borderInlineStart: `4px solid ${riskColor.text}`,
-                borderRadius: '0.5rem',
-                cursor: 'pointer',
-                textAlign: 'start',
-                minHeight: '56px',
-                gap: '0.5rem',
-              }}
-            >
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <span style={{ fontWeight: 700, fontSize: '1rem', color: '#111827' }}>
-                    {t(`safety.spill.types.${incident.spillType.toLowerCase().replace(/_/g, '')}` as any)}
-                  </span>
+              return (
+                <button
+                  key={incident.id}
+                  type="button"
+                  onClick={() => setSelected(incident)}
+                  className={`flex min-h-[56px] items-start justify-between gap-2 rounded-lg border-s-4 bg-card p-4 text-start shadow-card ring-[0.65px] transition-colors hover:bg-muted/50 ${risk.accent} ${risk.border}`}
+                >
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-base font-bold text-foreground">
+                        {t(`safety.spill.types.${incident.spillType.toLowerCase().replace(/_/g, '')}` as any)}
+                      </span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase ${risk.badge}`}>
+                        {t(`safety.spill.riskTiers.${incident.riskTier.toLowerCase()}` as any)}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-sm text-muted-foreground">
+                      {incident.location} · {dateStr}
+                    </div>
+                  </div>
                   <span
-                    style={{
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      color: riskColor.text,
-                      backgroundColor: riskColor.bg,
-                      padding: '0.125rem 0.5rem',
-                      borderRadius: '9999px',
-                    }}
+                    className={`shrink-0 rounded-md px-2 py-1 text-xs font-bold ${
+                      isComplete ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
+                    }`}
                   >
-                    {t(`safety.spill.riskTiers.${incident.riskTier.toLowerCase()}` as any)}
+                    {isComplete
+                      ? t('safety.spill.history.completed')
+                      : t('safety.spill.history.inProgress')}
                   </span>
-                </div>
-                <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                  {incident.location} · {dateStr}
-                </div>
-              </div>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  color: isComplete ? '#16a34a' : '#d97706',
-                  backgroundColor: isComplete ? '#f0fdf4' : '#fffbeb',
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: '0.375rem',
-                  flexShrink: 0,
-                }}
-              >
-                {isComplete
-                  ? t('safety.spill.history.completed')
-                  : t('safety.spill.history.inProgress')}
-              </span>
-            </button>
-          )
-        })}
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -151,70 +137,37 @@ interface SpillIncidentDetailProps {
 }
 
 function SpillIncidentDetail({ incident, onBack, t }: SpillIncidentDetailProps) {
-  const riskColor = RISK_COLORS[incident.riskTier]
+  const risk = RISK_TIER_CLASSES[incident.riskTier]
 
   return (
-    <div style={{ padding: '1rem' }} dir="auto">
-      <button
-        type="button"
-        onClick={onBack}
-        style={{
-          backgroundColor: 'transparent',
-          border: 'none',
-          color: '#1d4ed8',
-          fontSize: '1rem',
-          cursor: 'pointer',
-          padding: '0',
-          marginBottom: '1rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.25rem',
-        }}
-      >
+    <div className="flex flex-col gap-4" dir="auto">
+      <Button variant="ghost" size="sm" className="w-fit px-0" onClick={onBack}>
         ← {t('safety.spill.history.back')}
-      </button>
+      </Button>
 
-      <h2 style={{ fontSize: '1.375rem', fontWeight: 700, color: '#111827', marginBottom: '1rem' }}>
+      <h2 className="text-2xl font-semibold text-foreground">
         {t(`safety.spill.types.${incident.spillType.toLowerCase().replace(/_/g, '')}` as any)}
       </h2>
 
       {/* Meta */}
-      <dl
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'auto 1fr',
-          gap: '0.5rem 1rem',
-          marginBottom: '1.5rem',
-          fontSize: '0.9375rem',
-        }}
-      >
-        <dt style={{ color: '#6b7280', fontWeight: 600 }}>{t('safety.spill.history.riskTier')}</dt>
-        <dd style={{ margin: 0 }}>
-          <span
-            style={{
-              color: riskColor.text,
-              backgroundColor: riskColor.bg,
-              padding: '0.125rem 0.5rem',
-              borderRadius: '9999px',
-              fontWeight: 700,
-              fontSize: '0.875rem',
-              textTransform: 'uppercase',
-            }}
-          >
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-xl bg-card p-5 text-[0.9375rem] shadow-card ring-[0.65px] ring-border/50">
+        <dt className="font-semibold text-muted-foreground">{t('safety.spill.history.riskTier')}</dt>
+        <dd className="m-0">
+          <span className={`rounded-full px-2 py-0.5 text-sm font-bold uppercase ${risk.badge}`}>
             {t(`safety.spill.riskTiers.${incident.riskTier.toLowerCase()}` as any)}
           </span>
         </dd>
 
-        <dt style={{ color: '#6b7280', fontWeight: 600 }}>{t('safety.spill.history.location')}</dt>
-        <dd style={{ margin: 0, color: '#111827' }}>{incident.location}</dd>
+        <dt className="font-semibold text-muted-foreground">{t('safety.spill.history.location')}</dt>
+        <dd className="m-0 text-foreground">{incident.location}</dd>
 
-        <dt style={{ color: '#6b7280', fontWeight: 600 }}>{t('safety.spill.history.date')}</dt>
-        <dd style={{ margin: 0, color: '#111827' }}>
+        <dt className="font-semibold text-muted-foreground">{t('safety.spill.history.date')}</dt>
+        <dd className="m-0 text-foreground">
           {new Date(incident.occurredAt).toLocaleString()}
         </dd>
 
-        <dt style={{ color: '#6b7280', fontWeight: 600 }}>{t('safety.spill.history.status')}</dt>
-        <dd style={{ margin: 0, color: incident.completedAt ? '#16a34a' : '#d97706', fontWeight: 600 }}>
+        <dt className="font-semibold text-muted-foreground">{t('safety.spill.history.status')}</dt>
+        <dd className={`m-0 font-semibold ${incident.completedAt ? 'text-success' : 'text-warning'}`}>
           {incident.completedAt
             ? t('safety.spill.history.completed')
             : t('safety.spill.history.inProgress')}
@@ -222,8 +175,8 @@ function SpillIncidentDetail({ incident, onBack, t }: SpillIncidentDetailProps) 
 
         {incident.completedAt && (
           <>
-            <dt style={{ color: '#6b7280', fontWeight: 600 }}>{t('safety.spill.history.completedAt')}</dt>
-            <dd style={{ margin: 0, color: '#111827' }}>
+            <dt className="font-semibold text-muted-foreground">{t('safety.spill.history.completedAt')}</dt>
+            <dd className="m-0 text-foreground">
               {new Date(incident.completedAt).toLocaleString()}
             </dd>
           </>
@@ -231,29 +184,21 @@ function SpillIncidentDetail({ incident, onBack, t }: SpillIncidentDetailProps) 
 
         {incident.notes && (
           <>
-            <dt style={{ color: '#6b7280', fontWeight: 600 }}>{t('safety.spill.history.notes')}</dt>
-            <dd style={{ margin: 0, color: '#111827' }}>{incident.notes}</dd>
+            <dt className="font-semibold text-muted-foreground">{t('safety.spill.history.notes')}</dt>
+            <dd className="m-0 text-foreground">{incident.notes}</dd>
           </>
         )}
       </dl>
 
       {/* Steps completed */}
-      <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827', marginBottom: '0.75rem' }}>
+      <h3 className="text-lg font-bold text-foreground">
         {t('safety.spill.history.stepsCompleted', { count: incident.stepsCompleted.length })}
       </h3>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-        {incident.stepsCompleted.sort((a, b) => a - b).map((step) => (
+      <div className="flex flex-wrap gap-2">
+        {incident.stepsCompleted.slice().sort((a, b) => a - b).map((step) => (
           <span
             key={step}
-            style={{
-              backgroundColor: '#f0fdf4',
-              color: '#16a34a',
-              border: '1px solid #bbf7d0',
-              borderRadius: '0.375rem',
-              padding: '0.25rem 0.625rem',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-            }}
+            className="rounded-md border border-success/30 bg-success/10 px-2.5 py-1 text-sm font-semibold text-success"
           >
             ✓ {t('safety.spill.history.stepN', { n: step })}
           </span>

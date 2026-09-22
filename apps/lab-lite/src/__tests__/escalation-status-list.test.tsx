@@ -45,7 +45,16 @@ vi.mock('@ultranos/ui-kit/components/ui/empty-state', () => ({
 }))
 
 vi.mock('@ultranos/ui-kit/components/ui/search-input', () => ({
-  SearchInput: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
+  SearchInput: ({
+    inputClassName: _inputClassName,
+    searchLabel: _searchLabel,
+    onSearch: _onSearch,
+    ...props
+  }: React.InputHTMLAttributes<HTMLInputElement> & {
+    inputClassName?: string
+    searchLabel?: string
+    onSearch?: () => void
+  }) => <input {...props} />,
 }))
 
 vi.mock('@ultranos/ui-kit/icons', () => ({

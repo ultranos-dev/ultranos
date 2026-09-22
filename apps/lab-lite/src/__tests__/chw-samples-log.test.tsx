@@ -33,6 +33,7 @@ vi.mock('next-intl', () => ({
 vi.mock('@ultranos/ui-kit/icons', () => ({
   Clock: () => <svg data-testid="clock-icon" aria-hidden />,
   TriangleAlert: () => <svg data-testid="triangle-alert-icon" aria-hidden />,
+  FlaskConical: () => <svg data-testid="flask-conical-icon" aria-hidden />,
 }))
 
 vi.mock('@ultranos/ui-kit/components/ui/empty-state', () => ({

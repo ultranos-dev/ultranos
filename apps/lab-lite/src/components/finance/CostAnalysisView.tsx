@@ -116,7 +116,7 @@ export function CostAnalysisView() {
 
   if (!isManager) {
     return (
-      <div className="p-6 text-sm text-red-600" role="alert">
+      <div className="p-6 text-sm text-destructive" role="alert">
         Access restricted to Lab Managers.
       </div>
     )
@@ -129,14 +129,14 @@ export function CostAnalysisView() {
   if (analyses.length === 0) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-semibold">{t('title')}</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
         <p className="text-sm text-muted-foreground">{t('emptyState')}</p>
       </div>
     )
   }
 
   const SortIcon = ({ col }: { col: SortKey }) => {
-    if (col !== sortKey) return <span className="ms-1 text-gray-300">↕</span>
+    if (col !== sortKey) return <span className="ms-1 text-muted-foreground/50">↕</span>
     return (
       <span className="ms-1 text-primary" aria-hidden="true">
         {sortDir === 'asc' ? '↑' : '↓'}
@@ -146,11 +146,11 @@ export function CostAnalysisView() {
 
   return (
     <div className="flex flex-col gap-4 print:p-0">
-      <h1 className="text-xl font-semibold print:text-2xl">{t('title')}</h1>
+      <h1 className="text-2xl font-semibold text-foreground print:text-2xl">{t('title')}</h1>
 
       {/* Stale data warning */}
       {staleWarningDays !== null && (
-        <div className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-700" role="alert">
+        <div className="rounded-md bg-warning/10 border border-warning/30 px-4 py-3 text-sm text-warning" role="alert">
           {/* t('staleWarning') is in settings namespace, use inline string here */}
           Cost data last updated {staleWarningDays} days ago — may not reflect current costs.
         </div>
@@ -230,7 +230,7 @@ export function CostAnalysisView() {
             {sorted.map((a) => (
               <tr
                 key={a.testCode}
-                className={a.isProfitable ? undefined : 'bg-red-50'}
+                className={a.isProfitable ? undefined : 'bg-destructive/10'}
               >
                 <td className="px-4 py-2 font-medium text-foreground whitespace-nowrap">{a.testName}</td>
                 <td className="px-4 py-2 text-muted-foreground font-numeric">{formatAFN(a.reagentCostPerTest)}</td>
@@ -239,18 +239,18 @@ export function CostAnalysisView() {
                 <td className="px-4 py-2 text-muted-foreground font-numeric">{formatAFN(a.overheadAllocation)}</td>
                 <td className="px-4 py-2 font-medium text-foreground font-numeric">{formatAFN(a.totalCost)}</td>
                 <td className="px-4 py-2 text-muted-foreground font-numeric">{formatAFN(a.currentPrice)}</td>
-                <td className={`px-4 py-2 font-medium font-numeric ${a.margin >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                <td className={`px-4 py-2 font-medium font-numeric ${a.margin >= 0 ? 'text-success' : 'text-destructive'}`}>
                   {formatAFN(a.margin)}
                 </td>
-                <td className={`px-4 py-2 ${a.marginPercent === null ? 'text-muted-foreground' : a.marginPercent >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                <td className={`px-4 py-2 ${a.marginPercent === null ? 'text-muted-foreground' : a.marginPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
                   {a.marginPercent === null ? t('noPriceSet') : `${a.marginPercent.toFixed(1)}%`}
                 </td>
                 <td className="px-4 py-2">
                   <span
                     className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                       a.isProfitable
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-success/15 text-success'
+                        : 'bg-destructive/15 text-destructive'
                     }`}
                   >
                     {a.isProfitable ? t('statusProfitable') : t('statusSubsidized')}
@@ -264,13 +264,13 @@ export function CostAnalysisView() {
 
       {/* Recommendations panel */}
       {subsidizedWithRecs.length > 0 && (
-        <section aria-labelledby="recommendations-heading" className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2 print:border-border print:bg-card">
-          <h2 id="recommendations-heading" className="text-base font-medium text-amber-800">
+        <section aria-labelledby="recommendations-heading" className="rounded-lg border border-warning/30 bg-warning/10 p-4 space-y-2 print:border-border print:bg-card">
+          <h2 id="recommendations-heading" className="text-base font-medium text-warning">
             {t('recommendationsTitle')}
           </h2>
           <ul className="space-y-1">
             {subsidizedWithRecs.map(({ analysis, recommendation }) => (
-              <li key={analysis.testCode} className="text-sm text-amber-700">
+              <li key={analysis.testCode} className="text-sm text-warning">
                 <span className="font-medium">{analysis.testName}:</span>{' '}
                 {recommendation}
               </li>
@@ -293,8 +293,8 @@ function SummaryCard({
 }) {
   const colorClasses = {
     gray: 'bg-muted text-foreground',
-    green: 'bg-green-50 text-green-800',
-    red: 'bg-red-50 text-red-800',
+    green: 'bg-success/10 text-success',
+    red: 'bg-destructive/10 text-destructive',
   }
   return (
     <div className={`rounded-lg border p-4 ${colorClasses[color]}`}>

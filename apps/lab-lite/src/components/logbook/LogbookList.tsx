@@ -5,7 +5,7 @@ import type { LabLogbookEntry, LogbookFilter } from '@/lib/db'
 import { LOINC_CATEGORIES } from '@/lib/loinc-categories'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
-import { BookOpen, FileSearch } from '@ultranos/ui-kit/icons'
+import { BookOpen, FileSearch, ChevronDown } from '@ultranos/ui-kit/icons'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/Button'
 
@@ -72,44 +72,59 @@ export function LogbookList({
           value={filter.patientRef ?? ''}
           onChange={(e) => onFilterChange({ patientRef: e.target.value || undefined })}
           className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
           aria-label={t('filterByPatient')}
         />
         <input
           type="date"
           value={filter.dateFrom ?? ''}
           onChange={(e) => onFilterChange({ dateFrom: e.target.value || undefined })}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+          className="h-9 rounded-full border border-border bg-background px-3 text-sm text-foreground"
           aria-label={`${t('filterByDate')} (from)`}
         />
         <input
           type="date"
           value={filter.dateTo ?? ''}
           onChange={(e) => onFilterChange({ dateTo: e.target.value || undefined })}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+          className="h-9 rounded-full border border-border bg-background px-3 text-sm text-foreground"
           aria-label={`${t('filterByDate')} (to)`}
         />
-        <select
-          value={filter.testType ?? ''}
-          onChange={(e) => onFilterChange({ testType: e.target.value || undefined })}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-          aria-label={t('filterByTestType')}
-        >
-          <option value="">{t('filterByTestType')}</option>
-          {testTypes.map((tt) => (
-            <option key={tt} value={tt}>{tt}</option>
-          ))}
-        </select>
-        <select
-          value={filter.technicianId ?? ''}
-          onChange={(e) => onFilterChange({ technicianId: e.target.value || undefined })}
-          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
-          aria-label={t('filterByTechnician')}
-        >
-          <option value="">{t('filterByTechnician')}</option>
-          {technicianIds.map((id) => (
-            <option key={id} value={id}>{id}</option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={filter.testType ?? ''}
+            onChange={(e) => onFilterChange({ testType: e.target.value || undefined })}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label={t('filterByTestType')}
+          >
+            <option value="">{t('filterByTestType')}</option>
+            {testTypes.map((tt) => (
+              <option key={tt} value={tt}>{tt}</option>
+            ))}
+          </select>
+          <ChevronDown
+            size={16}
+            aria-hidden="true"
+            className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+        </div>
+        <div className="relative">
+          <select
+            value={filter.technicianId ?? ''}
+            onChange={(e) => onFilterChange({ technicianId: e.target.value || undefined })}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label={t('filterByTechnician')}
+          >
+            <option value="">{t('filterByTechnician')}</option>
+            {technicianIds.map((id) => (
+              <option key={id} value={id}>{id}</option>
+            ))}
+          </select>
+          <ChevronDown
+            size={16}
+            aria-hidden="true"
+            className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+        </div>
         <Button
           variant="primary"
           onClick={onExportPdf}

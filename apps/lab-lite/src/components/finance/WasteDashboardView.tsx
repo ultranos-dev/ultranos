@@ -50,9 +50,9 @@ function getRowColorClass(entry: ReagentInventoryEntry, today: string): string {
     (new Date(entry.expiryDate).getTime() - new Date(today).getTime()) /
       86_400_000,
   )
-  if (efficiency >= 0.8 && daysUntilExpiry > 14) return 'text-green-700'
-  if (efficiency >= 0.5 && daysUntilExpiry > 7) return 'text-amber-700'
-  return 'text-red-700'
+  if (efficiency >= 0.8 && daysUntilExpiry > 14) return 'text-success'
+  if (efficiency >= 0.5 && daysUntilExpiry > 7) return 'text-warning'
+  return 'text-destructive'
 }
 
 export function WasteDashboardView() {
@@ -144,21 +144,34 @@ export function WasteDashboardView() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Period selector */}
-      <div className="flex gap-2 flex-wrap">
-        {(['this-month', 'last-month', '3-months', '6-months'] as Period[]).map((p) => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            className={`rounded-full px-3 py-1 text-sm font-medium border transition-colors ${
-              period === p
-                ? 'bg-primary text-white border-primary'
-                : 'bg-card text-foreground border-border hover:border-primary'
-            }`}
-          >
-            {t(`period.${p.replace('-', '_')}`)}
-          </button>
-        ))}
+      <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
+
+      {/* Toolbar: period pills + add reagent — one row, always visible */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div role="tablist" className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {(['this-month', 'last-month', '3-months', '6-months'] as Period[]).map((p) => (
+            <button
+              key={p}
+              type="button"
+              role="tab"
+              aria-pressed={period === p}
+              onClick={() => setPeriod(p)}
+              className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
+                period === p
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t(`period.${p.replace('-', '_')}`)}
+            </button>
+          ))}
+        </div>
+        <Button
+          variant="primary"
+          onClick={() => router.push('/finance/reagents/new')}
+        >
+          {t('addReagent')}
+        </Button>
       </div>
 
       {/* Summary cards */}
@@ -172,10 +185,10 @@ export function WasteDashboardView() {
           value={`${overallEfficiency}%`}
           colorClass={
             overallEfficiency >= 80
-              ? 'text-green-700'
+              ? 'text-success'
               : overallEfficiency >= 50
-                ? 'text-amber-700'
-                : 'text-red-700'
+                ? 'text-warning'
+                : 'text-destructive'
           }
         />
         <SummaryCard
@@ -183,23 +196,23 @@ export function WasteDashboardView() {
           value={`${wasteRate}%`}
           colorClass={
             wasteRate <= 10
-              ? 'text-green-700'
+              ? 'text-success'
               : wasteRate <= 25
-                ? 'text-amber-700'
-                : 'text-red-700'
+                ? 'text-warning'
+                : 'text-destructive'
           }
         />
         <SummaryCard
           label={t('financialLoss')}
           value={`${financialLoss.toFixed(0)} AFN`}
-          colorClass={financialLoss > 0 ? 'text-red-700' : 'text-green-700'}
+          colorClass={financialLoss > 0 ? 'text-destructive' : 'text-success'}
         />
       </div>
 
       {/* Expiry alerts panel — show unavailable on error, alerts on success */}
       {expiryLoadError && (
         <div
-          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+          className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning"
           role="alert"
           aria-live="polite"
           data-testid="expiry-alerts-unavailable"
@@ -211,7 +224,7 @@ export function WasteDashboardView() {
         <section aria-labelledby="expiry-alerts-heading">
           <h2
             id="expiry-alerts-heading"
-            className="text-base font-semibold mb-2 text-amber-800"
+            className="text-base font-semibold mb-2 text-warning"
           >
             {t('expiryAlertsHeading')} ({expiryAlerts.length})
           </h2>
@@ -221,8 +234,8 @@ export function WasteDashboardView() {
                 key={alert.reagentId}
                 className={`rounded border p-3 text-sm ${
                   alert.severity === 'critical'
-                    ? 'border-red-300 bg-red-50 text-red-800'
-                    : 'border-amber-300 bg-amber-50 text-amber-800'
+                    ? 'border-destructive/30 bg-destructive/10 text-destructive'
+                    : 'border-warning/30 bg-warning/10 text-warning'
                 }`}
               >
                 <strong>{alert.reagentName}</strong>{' '}
@@ -239,37 +252,31 @@ export function WasteDashboardView() {
       )}
 
       {/* Active reagents table */}
-      <section aria-labelledby="active-reagents-heading">
-        <div className="flex items-center justify-between mb-2">
-          <h2 id="active-reagents-heading" className="text-base font-semibold">
-            {t('activeReagentsHeading')}
-          </h2>
-          <Button
-            variant="primary"
-            onClick={() => router.push('/finance/reagents/new')}
-          >
-            {t('addReagent')}
-          </Button>
-        </div>
+      <section aria-labelledby="active-reagents-heading" className="flex flex-col gap-2">
+        <h2 id="active-reagents-heading" className="text-base font-semibold">
+          {t('activeReagentsHeading')}
+        </h2>
 
         {activeReagents.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4">{t('noActiveReagents')}</p>
+          <div className="flex min-h-[8rem] items-center justify-center rounded-xl bg-card text-sm text-muted-foreground shadow-card ring-[0.65px] ring-border/50">
+            {t('noActiveReagents')}
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-border text-start">
-                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.name')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.lot')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.openDate')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.expiryDate')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.progress')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.efficiency')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.daysLeft')}</th>
-                  <th className="py-2 text-start font-medium text-muted-foreground">{t('col.alert')}</th>
+          <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+            <table className="w-full text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.name')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.lot')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.openDate')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.expiryDate')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.progress')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.efficiency')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.daysLeft')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.alert')}</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border">
                 {activeReagents.map((entry) => {
                   const eff = Math.round(calculateConsumptionEfficiency(entry) * 100)
                   const daysLeft = Math.round(
@@ -283,35 +290,35 @@ export function WasteDashboardView() {
                   return (
                     <tr
                       key={entry.reagentId}
-                      className="border-b border-border hover:bg-muted cursor-pointer"
+                      className="cursor-pointer transition-colors hover:bg-muted/50"
                       onClick={() => router.push(`/finance/reagents/${entry.reagentId}`)}
                     >
-                      <td className={`py-2 pe-3 ${colorClass}`}>{entry.name}</td>
-                      <td className="py-2 pe-3 text-foreground">{entry.lotNumber}</td>
-                      <td className="py-2 pe-3 text-foreground">{entry.openDate}</td>
-                      <td className="py-2 pe-3 text-foreground">{entry.expiryDate}</td>
-                      <td className="py-2 pe-3 text-foreground">
+                      <td className={`px-4 py-3 ${colorClass}`}>{entry.name}</td>
+                      <td className="px-4 py-3 text-foreground">{entry.lotNumber}</td>
+                      <td className="px-4 py-3 text-foreground">{entry.openDate}</td>
+                      <td className="px-4 py-3 text-foreground">{entry.expiryDate}</td>
+                      <td className="px-4 py-3 text-foreground">
                         {entry.testsPerformed}/{entry.expectedTests}
                       </td>
-                      <td className={`py-2 pe-3 font-medium ${colorClass}`}>
+                      <td className={`px-4 py-3 font-medium ${colorClass}`}>
                         {eff}%
                       </td>
                       <td
-                        className={`py-2 pe-3 ${
+                        className={`px-4 py-3 ${
                           daysLeft <= 7
-                            ? 'text-red-700 font-medium'
+                            ? 'text-destructive font-medium'
                             : daysLeft <= 14
-                              ? 'text-amber-700'
+                              ? 'text-warning'
                               : 'text-foreground'
                         }`}
                       >
                         {daysLeft}
                       </td>
-                      <td className="py-2">
+                      <td className="px-4 py-3">
                         {hasAlert && (
                           <span
                             aria-label={t('expiryAlertIcon')}
-                            className="inline-block w-2 h-2 rounded-full bg-amber-500"
+                            className="inline-block w-2 h-2 rounded-full bg-warning"
                           />
                         )}
                       </td>
@@ -326,29 +333,29 @@ export function WasteDashboardView() {
 
       {/* Waste history table */}
       {disposedReagents.length > 0 && (
-        <section aria-labelledby="waste-history-heading">
-          <h2 id="waste-history-heading" className="text-base font-semibold mb-2">
+        <section aria-labelledby="waste-history-heading" className="flex flex-col gap-2">
+          <h2 id="waste-history-heading" className="text-base font-semibold">
             {t('wasteHistoryHeading')}
           </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.name')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.lot')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.openDate')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.disposalDate')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.progress')}</th>
-                  <th className="py-2 pe-3 text-start font-medium text-muted-foreground">{t('col.wasteReason')}</th>
+          <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+            <table className="w-full text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.name')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.lot')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.openDate')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.disposalDate')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.progress')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('col.wasteReason')}</th>
                   <th
-                    className="py-2 text-start font-medium text-muted-foreground cursor-pointer select-none"
+                    className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide cursor-pointer select-none"
                     onClick={() => setSortWasteDesc((p) => !p)}
                   >
                     {t('col.financialLoss')} {sortWasteDesc ? '↓' : '↑'}
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border">
                 {sortedDisposed.map((entry) => {
                   const loss =
                     entry.remainingAtDisposal != null && entry.remainingAtDisposal > 0
@@ -358,18 +365,18 @@ export function WasteDashboardView() {
                         ).toFixed(0)
                       : '0'
                   return (
-                    <tr key={entry.reagentId} className="border-b border-border">
-                      <td className="py-2 pe-3 text-foreground">{entry.name}</td>
-                      <td className="py-2 pe-3 text-foreground">{entry.lotNumber}</td>
-                      <td className="py-2 pe-3 text-foreground">{entry.openDate}</td>
-                      <td className="py-2 pe-3 text-foreground">{entry.disposalDate ?? '—'}</td>
-                      <td className="py-2 pe-3 text-foreground">
+                    <tr key={entry.reagentId} className="transition-colors hover:bg-muted/50">
+                      <td className="px-4 py-3 text-foreground">{entry.name}</td>
+                      <td className="px-4 py-3 text-foreground">{entry.lotNumber}</td>
+                      <td className="px-4 py-3 text-foreground">{entry.openDate}</td>
+                      <td className="px-4 py-3 text-foreground">{entry.disposalDate ?? '—'}</td>
+                      <td className="px-4 py-3 text-foreground">
                         {entry.testsPerformed}/{entry.expectedTests}
                       </td>
-                      <td className="py-2 pe-3 text-foreground">{entry.disposalReason ?? '—'}</td>
+                      <td className="px-4 py-3 text-foreground">{entry.disposalReason ?? '—'}</td>
                       <td
-                        className={`py-2 font-medium font-numeric ${
-                          Number(loss) > 0 ? 'text-red-700' : 'text-foreground'
+                        className={`px-4 py-3 font-medium font-numeric ${
+                          Number(loss) > 0 ? 'text-destructive' : 'text-foreground'
                         }`}
                       >
                         {loss} AFN
@@ -396,7 +403,7 @@ function SummaryCard({
   colorClass?: string
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <div className="rounded-xl bg-card p-4 shadow-card ring-[0.65px] ring-border/50">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className={`text-2xl font-bold font-numeric ${colorClass}`}>{value}</p>
     </div>

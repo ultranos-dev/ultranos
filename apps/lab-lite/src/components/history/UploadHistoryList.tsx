@@ -51,6 +51,18 @@ export function UploadHistoryList({
   const router = useRouter()
   const session = useAuthSessionStore((s) => s.session)
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'completed' | 'pending' | 'failed' | 'expired'>('ALL')
+
+  const STATUS_PILLS: Array<{ key: typeof statusFilter; label: string }> = [
+    { key: 'ALL', label: t('filterAll') },
+    { key: 'completed', label: t('statusCompleted') },
+    { key: 'pending', label: t('statusPending') },
+    { key: 'failed', label: t('statusFailed') },
+    { key: 'expired', label: t('statusExpired') },
+  ]
+
+  const visibleItems =
+    statusFilter === 'ALL' ? items : items.filter((i) => i.status === statusFilter)
 
   async function handleReupload(item: UploadHistoryItem) {
     if (!item.localQueueId) return
@@ -78,7 +90,7 @@ export function UploadHistoryList({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Toolbar: search — one row, always visible */}
+      {/* Toolbar: search + status pills — one row, always visible */}
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput
           type="text"
@@ -87,22 +99,41 @@ export function UploadHistoryList({
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={t('searchPlaceholder')}
           className="min-w-[200px] flex-1"
+          inputClassName="h-9 rounded-full"
           aria-label={t('searchAriaLabel')}
         />
+        <div role="tablist" className="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          {STATUS_PILLS.map((pill) => (
+            <button
+              key={pill.key}
+              type="button"
+              role="tab"
+              aria-pressed={statusFilter === pill.key}
+              onClick={() => setStatusFilter(pill.key)}
+              className={`flex items-center rounded-full px-4 text-sm font-medium transition-colors ${
+                statusFilter === pill.key
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {pill.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Content box — single cohesive box (empty / list) */}
       <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
-      {items.length === 0 ? (
+      {visibleItems.length === 0 ? (
         <div className="flex min-h-[16rem] items-center justify-center">
           <EmptyState
-            icon={searchQuery ? FileSearch : History}
-            title={searchQuery ? t('noResults') : t('empty')}
+            icon={searchQuery || statusFilter !== 'ALL' ? FileSearch : History}
+            title={searchQuery || statusFilter !== 'ALL' ? t('noResults') : t('empty')}
           />
         </div>
       ) : (
           <ul className="divide-y divide-border" role="list">
-            {items.map((item) => (
+            {visibleItems.map((item) => (
               <li
                 key={item.id}
                 className={`px-4 py-3 ${item.status === 'expired' ? 'bg-warning/10' : ''}`}

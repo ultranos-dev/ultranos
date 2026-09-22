@@ -15,13 +15,15 @@ import {
 import { getSafetyReports } from '@/lib/db'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useRequireLabRole } from '@/hooks/useLabPermission'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { ChevronDown, ClipboardList, FileSearch } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 
 const STATUS_COLORS: Record<ReportStatus, string> = {
-  [ReportStatus.SUBMITTED]: 'bg-amber-100 text-amber-800',
+  [ReportStatus.SUBMITTED]: 'bg-warning/10 text-warning',
   [ReportStatus.ACKNOWLEDGED]: 'bg-primary/10 text-primary',
-  [ReportStatus.INVESTIGATING]: 'bg-purple-100 text-purple-800',
-  [ReportStatus.CLOSED]: 'bg-green-100 text-green-800',
+  [ReportStatus.INVESTIGATING]: 'bg-secondary text-secondary-foreground',
+  [ReportStatus.CLOSED]: 'bg-success/10 text-success',
 }
 
 const CATEGORY_ICONS: Record<SafetyConcernCategory, string> = {
@@ -111,15 +113,11 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
   if (selectedReport) {
     return (
       <div className="flex flex-col gap-4">
-        <button
-          type="button"
-          onClick={() => setSelectedReport(null)}
-          className="text-sm text-primary-600 hover:underline"
-        >
+        <Button variant="ghost" size="sm" className="w-fit px-0" onClick={() => setSelectedReport(null)}>
           ← {t('backToList')}
-        </button>
+        </Button>
 
-        <div className="rounded-lg border border-border p-6">
+        <div className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50">
           <div className="mb-4 flex items-center gap-3">
             <span className="text-2xl">{CATEGORY_ICONS[selectedReport.category]}</span>
             <div>
@@ -145,7 +143,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
               <h3 className="mb-1 text-sm font-medium text-foreground">
                 {t('investigationNotes')}
               </h3>
-              <p className="rounded bg-purple-50 p-3 text-sm whitespace-pre-wrap">
+              <p className="rounded bg-muted/40 p-3 text-sm whitespace-pre-wrap">
                 {selectedReport.investigatorNotes}
               </p>
             </div>
@@ -156,7 +154,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
               <h3 className="mb-1 text-sm font-medium text-foreground">
                 {t('resolutionLabel')}
               </h3>
-              <p className="rounded bg-green-50 p-3 text-sm whitespace-pre-wrap">
+              <p className="rounded bg-success/10 p-3 text-sm whitespace-pre-wrap">
                 {selectedReport.resolution}
               </p>
             </div>
@@ -189,7 +187,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
                 onChange={(e) => setInvestigationNotes(e.target.value)}
                 placeholder={t('investigationNotesPlaceholder')}
                 rows={3}
-                className="w-full rounded-lg border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
+                className="w-full rounded-lg border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <Button
                 onClick={() => handleInvestigate(selectedReport.id)}
@@ -211,7 +209,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
                 onChange={(e) => setResolutionText(e.target.value)}
                 placeholder={t('resolutionPlaceholder')}
                 rows={3}
-                className="w-full rounded-lg border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
+                className="w-full rounded-lg border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <Button
                 variant="warning"
@@ -228,10 +226,50 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
   }
 
   // List view
+  const filtersActive = statusFilter !== 'ALL' || categoryFilter !== 'ALL'
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">{t('managementTitle')}</h1>
+      <h1 className="text-2xl font-semibold text-foreground">{t('managementTitle')}</h1>
+
+      {/* Toolbar: filters + view trends — one row, always visible */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as ReportStatus | 'ALL')}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label={t('filterAllStatuses')}
+          >
+            <option value="ALL">{t('filterAllStatuses')}</option>
+            {Object.values(ReportStatus).map((s) => (
+              <option key={s} value={s}>{t(`status.${s}`)}</option>
+            ))}
+          </select>
+          <ChevronDown
+            size={16}
+            aria-hidden="true"
+            className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+        </div>
+        <div className="relative">
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value as SafetyConcernCategory | 'ALL')}
+            className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
+            aria-label={t('filterAllCategories')}
+          >
+            <option value="ALL">{t('filterAllCategories')}</option>
+            {Object.values(SafetyConcernCategory).map((c) => (
+              <option key={c} value={c}>{t(`category.${c}`)}</option>
+            ))}
+          </select>
+          <ChevronDown
+            size={16}
+            aria-hidden="true"
+            className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+        </div>
         {onViewTrends && (
           <Button variant="outline" onClick={onViewTrends}>
             {t('viewTrends')}
@@ -239,67 +277,52 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
         )}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as ReportStatus | 'ALL')}
-          className="rounded-lg border border-border px-3 py-2 text-sm"
-        >
-          <option value="ALL">{t('filterAllStatuses')}</option>
-          {Object.values(ReportStatus).map((s) => (
-            <option key={s} value={s}>{t(`status.${s}`)}</option>
-          ))}
-        </select>
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value as SafetyConcernCategory | 'ALL')}
-          className="rounded-lg border border-border px-3 py-2 text-sm"
-        >
-          <option value="ALL">{t('filterAllCategories')}</option>
-          {Object.values(SafetyConcernCategory).map((c) => (
-            <option key={c} value={c}>{t(`category.${c}`)}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Report list */}
-      {loading ? (
-        <p className="text-sm text-muted-foreground">{t('loading')}</p>
-      ) : filteredReports.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t('noReports')}</p>
-      ) : (
-        <div className="space-y-3">
-          {filteredReports.map((report) => (
-            <button
-              key={report.id}
-              type="button"
-              onClick={() => setSelectedReport(report)}
-              className="w-full rounded-lg border border-border p-4 text-start transition-colors hover:bg-muted/30"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xl">{CATEGORY_ICONS[report.category]}</span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">
-                      {t(`category.${report.category}`)}
-                    </span>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[report.status]}`}>
-                      {t(`status.${report.status}`)}
-                    </span>
+      {/* Report list — single cohesive box (loading / empty / list) */}
+      <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+        {loading ? (
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground" aria-busy="true">
+            {t('loading')}
+          </div>
+        ) : filteredReports.length === 0 ? (
+          <div className="flex min-h-[16rem] items-center justify-center">
+            <EmptyState
+              icon={filtersActive ? FileSearch : ClipboardList}
+              title={t('noReports')}
+            />
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {filteredReports.map((report) => (
+              <button
+                key={report.id}
+                type="button"
+                onClick={() => setSelectedReport(report)}
+                className="w-full p-4 text-start transition-colors hover:bg-muted/50"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{CATEGORY_ICONS[report.category]}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">
+                        {t(`category.${report.category}`)}
+                      </span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[report.status]}`}>
+                        {t(`status.${report.status}`)}
+                      </span>
+                    </div>
+                    <p className="mt-1 truncate text-sm text-muted-foreground">
+                      {report.details}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {new Date(report.submittedAt).toLocaleDateString()}
+                    </p>
                   </div>
-                  <p className="mt-1 truncate text-sm text-muted-foreground">
-                    {report.details}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {new Date(report.submittedAt).toLocaleDateString()}
-                  </p>
                 </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

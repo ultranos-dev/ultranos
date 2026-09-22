@@ -19,60 +19,75 @@ exports[`SendOutsPage — RTL layout (Task 14.9) > renders correctly in RTL layo
         aria-label="Search…"
         class="min-w-[200px] flex-1"
         dir="auto"
+        inputclassname="h-9 rounded-full"
         placeholder="Search…"
         type="text"
         value=""
       />
-      <select
-        aria-label="Filter by status"
-        class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+      <div
+        class="relative"
       >
-        <option
-          value="all"
+        <select
+          aria-label="Filter by status"
+          class="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
         >
-          All
-        </option>
-        <option
-          value="sent"
-        >
-          Sent
-        </option>
-        <option
-          value="received"
-        >
-          Received
-        </option>
-        <option
-          value="processing"
-        >
-          Processing
-        </option>
-        <option
-          value="results-available"
-        >
-          Results Available
-        </option>
-        <option
-          value="cancelled"
-        >
-          Cancelled
-        </option>
-      </select>
-      <select
-        aria-label="Filter by lab"
-        class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+          <option
+            value="all"
+          >
+            All
+          </option>
+          <option
+            value="sent"
+          >
+            Sent
+          </option>
+          <option
+            value="received"
+          >
+            Received
+          </option>
+          <option
+            value="processing"
+          >
+            Processing
+          </option>
+          <option
+            value="results-available"
+          >
+            Results Available
+          </option>
+          <option
+            value="cancelled"
+          >
+            Cancelled
+          </option>
+        </select>
+        <span
+          data-testid="chevron-down-icon"
+        />
+      </div>
+      <div
+        class="relative"
       >
-        <option
-          value=""
+        <select
+          aria-label="Filter by lab"
+          class="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
         >
-          All labs
-        </option>
-        <option
-          value="lab-001"
-        >
-          Kabul Reference Lab
-        </option>
-      </select>
+          <option
+            value=""
+          >
+            All labs
+          </option>
+          <option
+            value="lab-001"
+          >
+            Kabul Reference Lab
+          </option>
+        </select>
+        <span
+          data-testid="chevron-down-icon"
+        />
+      </div>
     </div>
     <div
       class="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50"

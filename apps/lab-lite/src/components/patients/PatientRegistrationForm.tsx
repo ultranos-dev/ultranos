@@ -17,7 +17,7 @@ import { CulturalFlagsEditor } from './CulturalFlagsEditor'
 import type { PatientCulturalPreferences } from '@/lib/cultural-flags'
 
 const INPUT_CLASS =
-  'w-full rounded-lg border border-border px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500'
+  'w-full rounded-lg border border-border px-4 py-2.5 text-sm focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring'
 
 const currentYear = new Date().getFullYear()
 
@@ -189,9 +189,9 @@ export function PatientRegistrationForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Errors */}
         {errors.length > 0 && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
             {errors.map((err) => (
-              <p key={err} className="text-sm text-red-700">
+              <p key={err} className="text-sm text-destructive">
                 {err}
               </p>
             ))}
@@ -341,7 +341,7 @@ export function PatientRegistrationForm() {
           onToggle={(e) => setShowCulturalPrefs((e.target as HTMLDetailsElement).open)}
           data-testid="cultural-prefs-section"
         >
-          <summary className="cursor-pointer text-sm font-medium text-indigo-700 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+          <summary className="cursor-pointer text-sm font-medium text-primary hover:text-primary/80">
             {t('culturalPreferences', { defaultMessage: 'Cultural Preferences (optional)' })}
           </summary>
           <div className="mt-3">

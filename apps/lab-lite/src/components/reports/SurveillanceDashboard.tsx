@@ -23,10 +23,10 @@ export function SurveillanceDashboard({ highlightAlertId }: SurveillanceDashboar
   return (
     <div className="flex flex-col gap-4">
       {/* Page header */}
-      <div className="mb-6 flex items-center gap-3">
-        <Shield size={24} className="text-primary-600 shrink-0" aria-hidden />
+      <div className="flex items-center gap-3">
+        <Shield size={24} className="text-primary shrink-0" aria-hidden />
         <div>
-          <h1 className="text-xl font-semibold text-foreground">{t('title')}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{t('alertHistory')}</p>
         </div>
       </div>

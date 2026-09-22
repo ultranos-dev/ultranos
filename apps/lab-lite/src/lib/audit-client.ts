@@ -975,7 +975,13 @@ export function reportLabResultAuditEvent(payload: {
  * Metadata uses opaque IDs only — never patient name (CLAUDE.md Rule #7).
  */
 export function reportSampleAuditEvent(payload: {
-  action: 'SAMPLE_ACCESSIONED' | 'SAMPLE_STATUS_CHANGED' | 'SAMPLE_REJECTED' | 'SAMPLE_HANDOFF'
+  action:
+    | 'SAMPLE_ACCESSIONED'
+    | 'SAMPLE_STATUS_CHANGED'
+    | 'SAMPLE_REJECTED'
+    | 'SAMPLE_HANDOFF'
+    | 'SAMPLE_ARCHIVED'
+    | 'SAMPLE_UNARCHIVED'
   sampleId: string
   labSampleId: string
   actorId: string
@@ -990,6 +996,8 @@ export function reportSampleAuditEvent(payload: {
     SAMPLE_STATUS_CHANGED: AuditAction.UPDATE,
     SAMPLE_REJECTED: AuditAction.UPDATE,
     SAMPLE_HANDOFF: AuditAction.UPDATE,
+    SAMPLE_ARCHIVED: AuditAction.UPDATE,
+    SAMPLE_UNARCHIVED: AuditAction.UPDATE,
   }
 
   const input: ClientAuditEventInput = {

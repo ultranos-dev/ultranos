@@ -25,6 +25,7 @@ import {
   transitionSampleStatus,
   rejectSample,
   recordHandoff,
+  setSampleArchived,
 } from '../lib/sample-service'
 import { reportSampleAuditEvent } from '../lib/audit-client'
 import { getCustodyEventsForSample, getReceivedSampleForOrder, putOrders, getOrders, type LabOrderEntry } from '../lib/db'
@@ -142,6 +143,94 @@ describe('accessionSample', () => {
     expect(allSamples).toHaveLength(1)
     expect(allSamples[0]!._ultranos.pipelineStatus).toBe('received')
     expect(allSamples[0]!.id).toBe(specimen.id)
+  })
+})
+
+describe('setSampleArchived', () => {
+  beforeEach(async () => {
+    const db = getDb()
+    await db.samples.clear()
+    await db.custody_events.clear()
+    await db.syncQueue.clear()
+    vi.clearAllMocks()
+  })
+
+  it('sets archived=true on the specimen', async () => {
+    const specimen = await accessionSample(BASE_INPUT)
+    await setSampleArchived(specimen.id, true, 'tech-001')
+
+    const stored = await getDb().samples.get(specimen.id)
+    expect(stored!._ultranos.archived).toBe(true)
+  })
+
+  it('reverses archived back to false (unarchive)', async () => {
+    const specimen = await accessionSample(BASE_INPUT)
+    await setSampleArchived(specimen.id, true, 'tech-001')
+    await setSampleArchived(specimen.id, false, 'tech-001')
+
+    const stored = await getDb().samples.get(specimen.id)
+    expect(stored!._ultranos.archived).toBe(false)
+  })
+
+  it('does NOT change pipelineStatus when archiving', async () => {
+    const specimen = await accessionSample(BASE_INPUT)
+    await setSampleArchived(specimen.id, true, 'tech-001')
+
+    const stored = await getDb().samples.get(specimen.id)
+    expect(stored!._ultranos.pipelineStatus).toBe('received')
+  })
+
+  it('emits a SAMPLE_ARCHIVED audit event on archive', async () => {
+    const specimen = await accessionSample(BASE_INPUT)
+    vi.clearAllMocks()
+    await setSampleArchived(specimen.id, true, 'tech-001')
+
+    expect(reportSampleAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'SAMPLE_ARCHIVED', sampleId: specimen.id }),
+    )
+  })
+
+  it('emits a SAMPLE_UNARCHIVED audit event on unarchive', async () => {
+    const specimen = await accessionSample(BASE_INPUT)
+    await setSampleArchived(specimen.id, true, 'tech-001')
+    vi.clearAllMocks()
+    await setSampleArchived(specimen.id, false, 'tech-001')
+
+    expect(reportSampleAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'SAMPLE_UNARCHIVED', sampleId: specimen.id }),
+    )
+  })
+
+  it('writes an append-only custody event for the archive action', async () => {
+    const specimen = await accessionSample(BASE_INPUT)
+    await setSampleArchived(specimen.id, true, 'tech-001')
+
+    const events = await getCustodyEventsForSample(specimen.id)
+    expect(events.some((e) => e.eventType === 'archive')).toBe(true)
+  })
+
+  it('enqueues a Specimen sync event on archive', async () => {
+    const specimen = await accessionSample(BASE_INPUT)
+    await getDb().syncQueue.clear()
+    await setSampleArchived(specimen.id, true, 'tech-001')
+
+    const queue = await getDb().syncQueue.toArray()
+    expect(queue.some((q) => q.resourceType === 'Specimen' && q.resourceId === specimen.id)).toBe(true)
+  })
+
+  it('is a no-op (no audit) when archiving an already-archived sample', async () => {
+    const specimen = await accessionSample(BASE_INPUT)
+    await setSampleArchived(specimen.id, true, 'tech-001')
+    vi.clearAllMocks()
+    await setSampleArchived(specimen.id, true, 'tech-001')
+
+    expect(reportSampleAuditEvent).not.toHaveBeenCalled()
+  })
+
+  it('throws when the sample does not exist', async () => {
+    await expect(setSampleArchived('nonexistent-id', true, 'tech-001')).rejects.toThrow(
+      /Sample not found/,
+    )
   })
 })
 

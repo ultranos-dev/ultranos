@@ -82,6 +82,7 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
   Upload: () => <span data-testid="upload-icon" />,
   FileText: () => <span data-testid="filetext-icon" />,
   ChevronRight: () => <span data-testid="chevron-icon" />,
+  ChevronDown: () => <span data-testid="chevron-down-icon" />,
   FileSearch: () => <span data-testid="filesearch-icon" />,
 }))
 

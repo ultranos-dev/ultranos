@@ -34,8 +34,8 @@ function StepIndicatorBar({ currentStep }: { currentStep: Step }) {
           <div
             className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
               i <= currentIndex
-                ? 'bg-primary text-white'
-                : 'bg-muted text-muted-foreground dark:text-muted-foreground'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
             }`}
           >
             {i + 1}
@@ -140,8 +140,8 @@ export default function ConsentPage() {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-            <Check size={32} className="text-green-600 dark:text-green-400" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/15">
+            <Check size={32} className="text-success" />
           </div>
           <p className="text-lg font-medium">{t('review.success')}</p>
         </div>
@@ -151,7 +151,7 @@ export default function ConsentPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">{t('title')}</h1>
+      <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
       <StepIndicatorBar currentStep={step} />
 
       <div>
@@ -184,7 +184,7 @@ export default function ConsentPage() {
                 type="button"
                 onClick={() => handlePatientSelect(patientRef, patientName)}
                 disabled={!patientRef}
-                className="rounded-md bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90 disabled:opacity-50"
+                className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 {t('common.next', { ns: 'common' })}
                 Next
@@ -200,7 +200,7 @@ export default function ConsentPage() {
             <div className="rounded-lg border bg-muted p-4">
               <h3 className="mb-2 font-medium">{t('labCollection.title')}</h3>
               <p className="mb-3 text-sm">{t('labCollection.bodyText')}</p>
-              <p className="text-sm font-medium text-red-600 dark:text-red-400">{t('labCollection.rightToRefuse')}</p>
+              <p className="text-sm font-medium text-destructive">{t('labCollection.rightToRefuse')}</p>
               <p className="mt-2 text-xs text-muted-foreground">{t('labCollection.version', { version: CURRENT_CONSENT_VERSION })}</p>
             </div>
 
@@ -213,7 +213,7 @@ export default function ConsentPage() {
               type="button"
               onClick={() => setStep('capture')}
               disabled={!canProceedToCapture}
-              className="mt-4 rounded-md bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90 disabled:opacity-50"
+              className="mt-4 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               Next
             </button>
@@ -271,7 +271,7 @@ export default function ConsentPage() {
                 type="button"
                 onClick={() => setStep('review')}
                 disabled={!canProceedToReview}
-                className="rounded-md bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90 disabled:opacity-50"
+                className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 Next
               </button>
@@ -329,7 +329,7 @@ export default function ConsentPage() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={!witnessConfirmed || submitting}
-                className="rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 disabled:opacity-50"
+                className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 {submitting ? t('review.submitting') : t('review.submit')}
               </button>

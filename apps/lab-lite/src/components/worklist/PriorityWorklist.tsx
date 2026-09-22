@@ -13,6 +13,10 @@ interface PriorityWorklistProps {
   error: string | null
   onReorder: (sampleId: string, newPosition: number) => Promise<void>
   onResetOverride: (sampleId: string) => Promise<void>
+  /** True when showing the Archived shelf — swaps row actions to Unarchive. */
+  isArchivedView?: boolean
+  /** Archive (true) or unarchive (false) a sample. */
+  onArchiveToggle?: (sampleId: string, archived: boolean) => void | Promise<void>
 }
 
 /**
@@ -32,6 +36,8 @@ export function PriorityWorklist({
   error,
   onReorder,
   onResetOverride,
+  isArchivedView = false,
+  onArchiveToggle,
 }: PriorityWorklistProps) {
   const t = useTranslations('worklist')
   const [dragIndex, setDragIndex] = useState<number | null>(null)
@@ -108,26 +114,6 @@ export function PriorityWorklist({
   }
 
   // ---------------------------------------------------------------------------
-  // Batch group detection
-  // ---------------------------------------------------------------------------
-
-  function isBatchGrouped(index: number): { isInBatch: boolean; isBatchStart: boolean } {
-    if (index === 0) return { isInBatch: false, isBatchStart: false }
-    const prev = samples[index - 1]
-    const curr = samples[index]
-    if (!prev || !curr) return { isInBatch: false, isBatchStart: false }
-
-    const sameGroup = prev.batchGroup === curr.batchGroup
-    if (!sameGroup) return { isInBatch: false, isBatchStart: false }
-
-    // Check if the item before prev also had the same group (then we're mid-batch)
-    const prevPrev = samples[index - 2]
-    const isBatchStart = !prevPrev || prevPrev.batchGroup !== curr.batchGroup
-
-    return { isInBatch: true, isBatchStart }
-  }
-
-  // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
 
@@ -147,7 +133,7 @@ export function PriorityWorklist({
 
   if (error) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+      <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive" role="alert">
         {error}
       </div>
     )
@@ -170,7 +156,6 @@ export function PriorityWorklist({
       onTouchEnd={handleTouchEnd}
     >
       {samples.map((sample, index) => {
-        const { isInBatch, isBatchStart } = isBatchGrouped(index)
         const isDropTarget = dropTargetIndex === index && dragIndex !== index
 
         return (
@@ -183,14 +168,14 @@ export function PriorityWorklist({
               sample={sample}
               rank={index + 1}
               index={index}
-              isInBatch={isInBatch}
-              isBatchStart={isBatchStart}
               isDragging={dragIndex === index}
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               onTouchStart={handleTouchStart}
               onResetOverride={onResetOverride}
+              isArchivedView={isArchivedView}
+              onArchiveToggle={onArchiveToggle}
             />
           </div>
         )

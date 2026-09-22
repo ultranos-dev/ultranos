@@ -13,7 +13,7 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
       >
         <input
           aria-label="searchPlaceholder"
-          class="flex h-10 rounded-xl border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11"
+          class="flex border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11 h-9 rounded-full"
           data-slot="input"
           dir="auto"
           placeholder="searchPlaceholder"
@@ -21,16 +21,16 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
           value=""
         />
         <button
-          aria-label="searchPlaceholder"
-          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 size-8 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 absolute end-1.5 top-1/2 -translate-y-1/2"
-          data-size="icon-sm"
+          aria-label="Search"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 size-6 [&_svg:not([class*='size-'])]:size-3 absolute end-1.5 top-1/2 -translate-y-1/2"
+          data-size="icon-xs"
           data-slot="button"
           data-variant="default"
           type="button"
         >
           <svg
             aria-hidden="true"
-            class="lucide lucide-search size-4"
+            class="lucide lucide-search size-3"
             fill="none"
             height="24"
             stroke="currentColor"
@@ -56,12 +56,12 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
         class="contents"
       >
         <div
-          class="flex gap-1 rounded-full border border-border bg-card p-1 w-fit"
+          class="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit"
           role="tablist"
         >
           <button
             aria-pressed="true"
-            class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-primary text-primary-foreground"
+            class="flex items-center rounded-full px-4 text-sm font-medium transition-colors bg-primary text-primary-foreground"
             role="tab"
             type="button"
           >
@@ -69,7 +69,7 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
           </button>
           <button
             aria-pressed="false"
-            class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
+            class="flex items-center rounded-full px-4 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
             role="tab"
             type="button"
           >
@@ -77,7 +77,7 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
           </button>
           <button
             aria-pressed="false"
-            class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
+            class="flex items-center rounded-full px-4 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
             role="tab"
             type="button"
           >
@@ -85,43 +85,64 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
           </button>
           <button
             aria-pressed="false"
-            class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
+            class="flex items-center rounded-full px-4 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
             role="tab"
             type="button"
           >
             Completed
           </button>
         </div>
-        <select
-          aria-label="All"
-          class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+        <div
+          class="relative"
         >
-          <option
-            value="ALL"
+          <select
+            aria-label="All"
+            class="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
           >
-            All
-          </option>
-          <option
-            value="stat"
+            <option
+              value="ALL"
+            >
+              All
+            </option>
+            <option
+              value="stat"
+            >
+              STAT
+            </option>
+            <option
+              value="asap"
+            >
+              ASAP
+            </option>
+            <option
+              value="urgent"
+            >
+              Urgent
+            </option>
+            <option
+              value="routine"
+            >
+              Routine
+            </option>
+          </select>
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-chevron-down pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            STAT
-          </option>
-          <option
-            value="asap"
-          >
-            ASAP
-          </option>
-          <option
-            value="urgent"
-          >
-            Urgent
-          </option>
-          <option
-            value="routine"
-          >
-            Routine
-          </option>
-        </select>
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
+        </div>
       </div>
     </div>
     <div
@@ -265,7 +286,7 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
       >
         <input
           aria-label="searchPlaceholder"
-          class="flex h-10 rounded-xl border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11"
+          class="flex border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50 w-full pe-11 h-9 rounded-full"
           data-slot="input"
           dir="auto"
           placeholder="searchPlaceholder"
@@ -273,16 +294,16 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
           value=""
         />
         <button
-          aria-label="searchPlaceholder"
-          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 size-8 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 absolute end-1.5 top-1/2 -translate-y-1/2"
-          data-size="icon-sm"
+          aria-label="Search"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 size-6 [&_svg:not([class*='size-'])]:size-3 absolute end-1.5 top-1/2 -translate-y-1/2"
+          data-size="icon-xs"
           data-slot="button"
           data-variant="default"
           type="button"
         >
           <svg
             aria-hidden="true"
-            class="lucide lucide-search size-4"
+            class="lucide lucide-search size-3"
             fill="none"
             height="24"
             stroke="currentColor"
@@ -308,12 +329,12 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
         class="contents"
       >
         <div
-          class="flex gap-1 rounded-full border border-border bg-card p-1 w-fit"
+          class="flex h-9 items-stretch gap-1 rounded-full border border-border bg-card p-1 w-fit"
           role="tablist"
         >
           <button
             aria-pressed="true"
-            class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-primary text-primary-foreground"
+            class="flex items-center rounded-full px-4 text-sm font-medium transition-colors bg-primary text-primary-foreground"
             role="tab"
             type="button"
           >
@@ -321,7 +342,7 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
           </button>
           <button
             aria-pressed="false"
-            class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
+            class="flex items-center rounded-full px-4 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
             role="tab"
             type="button"
           >
@@ -329,7 +350,7 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
           </button>
           <button
             aria-pressed="false"
-            class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
+            class="flex items-center rounded-full px-4 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
             role="tab"
             type="button"
           >
@@ -337,43 +358,64 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
           </button>
           <button
             aria-pressed="false"
-            class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
+            class="flex items-center rounded-full px-4 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
             role="tab"
             type="button"
           >
             Completed
           </button>
         </div>
-        <select
-          aria-label="All"
-          class="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
+        <div
+          class="relative"
         >
-          <option
-            value="ALL"
+          <select
+            aria-label="All"
+            class="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm"
           >
-            All
-          </option>
-          <option
-            value="stat"
+            <option
+              value="ALL"
+            >
+              All
+            </option>
+            <option
+              value="stat"
+            >
+              STAT
+            </option>
+            <option
+              value="asap"
+            >
+              ASAP
+            </option>
+            <option
+              value="urgent"
+            >
+              Urgent
+            </option>
+            <option
+              value="routine"
+            >
+              Routine
+            </option>
+          </select>
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-chevron-down pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            STAT
-          </option>
-          <option
-            value="asap"
-          >
-            ASAP
-          </option>
-          <option
-            value="urgent"
-          >
-            Urgent
-          </option>
-          <option
-            value="routine"
-          >
-            Routine
-          </option>
-        </select>
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
+        </div>
       </div>
     </div>
     <div

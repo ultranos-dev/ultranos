@@ -14,9 +14,9 @@ export default function CompetencyPage() {
   return (
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <GraduationCap size={28} className="text-primary dark:text-primary" />
+          <GraduationCap size={28} className="text-primary" />
           <div>
-            <h1 className="text-xl font-bold text-foreground">
+            <h1 className="text-2xl font-semibold text-foreground">
               {t('pageTitle')}
             </h1>
             <p className="text-sm text-muted-foreground">
