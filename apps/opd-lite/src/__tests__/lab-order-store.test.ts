@@ -98,6 +98,10 @@ describe('useLabOrderStore', () => {
     it('enqueues the revoke with a fresh HLC strictly newer than the create (so the cancellation syncs)', async () => {
       const result = await useLabOrderStore.getState().addLabOrder(baseInput, encounterId, patientId, practitionerRef)
       const createHlc = result._ultranos.hlcTimestamp
+      // Wait for the create to land, then mark it synced so the cancellation enqueues as its own
+      // update entry (a still-pending create would coalesce per the sync-queue dedup, Story 60.2).
+      await pendingEntry(result.id, 'create')
+      await db.syncQueue.toCollection().modify({ status: 'synced' })
 
       await useLabOrderStore.getState().cancelLabOrder(result.id)
 

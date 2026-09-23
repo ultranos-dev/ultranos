@@ -160,6 +160,11 @@ describe('useDiagnosisStore', () => {
       .getState()
       .addDiagnosis(testItem, encounterId, patientId, 'primary')
     const createHlc = condition._ultranos.hlcTimestamp
+    // Wait for the create to land, then mark it synced so the deactivation enqueues as its
+    // own update entry. A still-pending create would coalesce to a single create per the
+    // sync-queue dedup (Story 60.2) — correct offline behavior, covered in sync-engine tests.
+    await pendingEntry(condition.id, 'create')
+    await db.syncQueue.toCollection().modify({ status: 'synced' })
 
     await useDiagnosisStore.getState().removeDiagnosis(condition.id)
 
@@ -173,6 +178,10 @@ describe('useDiagnosisStore', () => {
       .getState()
       .addDiagnosis(testItem, encounterId, patientId, 'primary')
     const createHlc = condition._ultranos.hlcTimestamp
+    // Wait for the create to land, then mark it synced so the rank change enqueues as its own
+    // update entry (a still-pending create would coalesce per the sync-queue dedup, Story 60.2).
+    await pendingEntry(condition.id, 'create')
+    await db.syncQueue.toCollection().modify({ status: 'synced' })
 
     await useDiagnosisStore.getState().updateRank(condition.id, 'secondary')
 

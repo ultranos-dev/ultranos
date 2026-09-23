@@ -28,6 +28,7 @@ exports[`SendOutModal — RTL layout (Task 14.9) > renders correctly in RTL layo
           <button
             aria-label="Close"
             class="rounded p-1 transition-colors focus:outline-none focus-visible:ring-2 text-current hover:bg-white/20 focus-visible:ring-white/70"
+            data-slot="modal-header-close"
             type="button"
           >
             <span

@@ -262,6 +262,15 @@ describe('usePrescriptionStore', () => {
     it('enqueues the pharmacy update with a serialized HLC timestamp (not an ISO date)', async () => {
       const store = usePrescriptionStore.getState()
       const result = await store.addPrescription(baseForm, encounterId, patientId, practitionerRef)
+      // Wait for the create to land, then mark it synced so the pharmacy update enqueues as its
+      // own update entry (a still-pending create would coalesce per the sync-queue dedup, Story 60.2).
+      await vi.waitFor(async () => {
+        const all = await db.syncQueue.toArray()
+        if (!all.find((x) => x.resourceId === result.id && x.action === 'create')) {
+          throw new Error('create not enqueued yet')
+        }
+      })
+      await db.syncQueue.toCollection().modify({ status: 'synced' })
       await usePrescriptionStore.getState().applyPharmacyToPending({ id: 'ph1', name: 'X' })
 
       const entry = await waitForQueuedUpdate(result.id)
