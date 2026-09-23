@@ -47,7 +47,6 @@ const SEED_ROWS = [
     dispensing_event_id: 'de-aaa',
     patient_id: RAW_PATIENT_UUID_1,
     atc_code: 'N02AA01',
-    medication_display: 'Morphine 10mg',
     dispensed_at: '2026-09-10T08:00:00.000Z',
     ordering_practitioner_ref: 'Practitioner/doc-1',
     hlc_timestamp: 'hlc-1',
@@ -60,7 +59,6 @@ const SEED_ROWS = [
     dispensing_event_id: 'de-bbb',
     patient_id: RAW_PATIENT_UUID_2,
     atc_code: 'N02AA59',
-    medication_display: 'Oxycodone 5mg',
     dispensed_at: '2026-09-11T09:00:00.000Z',
     ordering_practitioner_ref: 'Practitioner/doc-2',
     hlc_timestamp: 'hlc-2',
@@ -69,11 +67,29 @@ const SEED_ROWS = [
   },
 ]
 
+// medication_lab_mappings — the hub resolves required tests server-side from the
+// ATC code. atc_code is the internal join key only; it never reaches the DTO.
+const MAPPING_ROWS = [
+  {
+    atc_code: 'N02AA01',
+    required_tests: [
+      { loincCode: '2276-4', testDisplay: 'Ferritin', initialDelayDays: 7, frequencyDays: 90, priority: 'routine' },
+    ],
+  },
+  {
+    atc_code: 'N02AA59',
+    required_tests: [
+      { loincCode: '14682-9', testDisplay: 'Serum Creatinine', initialDelayDays: 14, frequencyDays: 30, priority: 'urgent' },
+    ],
+  },
+]
+
 // Chainable Supabase query builder that returns rows matching the requested limit/cursor.
 function makeQueryBuilder(seed: typeof SEED_ROWS) {
   let _cursor: number | undefined
   let _limit: number = 200
   let _since: string | undefined
+  let _inPatientIds: string[] | undefined
 
   const builder: any = {
     select: vi.fn(() => builder),
@@ -81,13 +97,35 @@ function makeQueryBuilder(seed: typeof SEED_ROWS) {
     limit: vi.fn((n: number) => { _limit = n; return builder }),
     gte: vi.fn((_col: string, val: string) => { _since = val; return builder }),
     gt: vi.fn((_col: string, val: number) => { _cursor = val; return builder }),
+    in: vi.fn((_col: string, vals: string[]) => { _inPatientIds = vals; return builder }),
     then: (resolve: (v: { data: any; error: null }) => void) => {
       let rows = seed
+      if (_inPatientIds != null) rows = rows.filter(r => _inPatientIds!.includes(r.patient_id))
       if (_since != null) rows = rows.filter(r => r.created_at >= _since!)
       if (_cursor != null) rows = rows.filter(r => r.seq > _cursor!)
       rows = rows.slice(0, _limit)
       return resolve({ data: rows, error: null })
     },
+  }
+  return builder
+}
+
+// service_requests scope lookup: .from('service_requests').select('patient_id').eq('received_by_lab_id', labId)
+// The lab (lab-x) has claimed orders for BOTH seeded patients.
+function makeScopeBuilder(patientIds: string[]) {
+  const builder: any = {
+    select: vi.fn(() => builder),
+    eq: vi.fn(() => Promise.resolve({ data: patientIds.map((id) => ({ patient_id: id })), error: null })),
+  }
+  return builder
+}
+
+// medication_lab_mappings lookup: .select('atc_code, required_tests').in('atc_code', [...])
+function makeMappingBuilder(rows: typeof MAPPING_ROWS) {
+  const builder: any = {
+    select: vi.fn(() => builder),
+    in: vi.fn((_col: string, vals: string[]) =>
+      Promise.resolve({ data: rows.filter((m) => vals.includes(m.atc_code)), error: null })),
   }
   return builder
 }
@@ -113,6 +151,13 @@ const mockFrom = vi.fn((table: string) => {
   }
   if (table === 'dispense_monitoring_events') {
     return makeQueryBuilder(SEED_ROWS)
+  }
+  if (table === 'service_requests') {
+    // Lab-x has claimed orders for both seeded patients → both in scope.
+    return makeScopeBuilder([RAW_PATIENT_UUID_1, RAW_PATIENT_UUID_2])
+  }
+  if (table === 'medication_lab_mappings') {
+    return makeMappingBuilder(MAPPING_ROWS)
   }
   // enforceVerifiedOrg — org check
   if (table === 'organizations') {
@@ -264,20 +309,58 @@ describe('lab.pullDispenseMonitoringEvents', () => {
     expect(JSON.stringify(meta)).not.toContain('Ahmad')
   })
 
-  it('event fields match DispenseMonitoringEventDTO shape', async () => {
+  it('event fields match DispenseMonitoringEventDTO shape — requirements, NO medication identity', async () => {
     const caller = makeCaller()
     const res = await caller.lab.pullDispenseMonitoringEvents({ limit: 100 })
 
-    const ev = res.events[0]!
+    const ev = res.events[0]! as Record<string, unknown>
     expect(ev).toHaveProperty('dispensingEventId', 'de-aaa')
     expect(ev).toHaveProperty('patientRef')
     expect(ev).toHaveProperty('patientFirstName', 'Ahmad')
     expect(ev).toHaveProperty('patientAge')
     expect(typeof ev.patientAge).toBe('number')
-    expect(ev).toHaveProperty('atcCode', 'N02AA01')
-    expect(ev).toHaveProperty('medicationDisplay', 'Morphine 10mg')
     expect(ev).toHaveProperty('dispensedAt', '2026-09-10T08:00:00.000Z')
     expect(ev).toHaveProperty('orderingPractitionerRef', 'Practitioner/doc-1')
     expect(ev).toHaveProperty('hlcTimestamp', 'hlc-1')
+
+    // Medication identity is stripped server-side (audit C-LAB-1) — never on the DTO.
+    expect('atcCode' in ev).toBe(false)
+    expect('medicationDisplay' in ev).toBe(false)
+    expect(JSON.stringify(ev)).not.toContain('N02AA01')
+
+    // The resolved monitoring requirement is delivered instead.
+    const requirements = ev.requirements as Array<Record<string, unknown>>
+    expect(Array.isArray(requirements)).toBe(true)
+    expect(requirements[0]).toMatchObject({
+      loincCode: '2276-4',
+      testDisplay: 'Ferritin',
+      initialDelayDays: 7,
+      frequencyDays: 90,
+      priority: 'routine',
+    })
+  })
+
+  it('lab-scoping: a lab with no claimed orders sees an empty feed (H-HUB-3)', async () => {
+    // Override service_requests to return no claimed patients for this lab.
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'lab_technicians') {
+        return { select: vi.fn(() => ({ eq: vi.fn(() => ({ single: mockTechSingle })) })) }
+      }
+      if (table === 'service_requests') return makeScopeBuilder([])
+      if (table === 'dispense_monitoring_events') return makeQueryBuilder(SEED_ROWS)
+      if (table === 'medication_lab_mappings') return makeMappingBuilder(MAPPING_ROWS)
+      if (table === 'organizations') {
+        return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: 'org-1', status: 'ACTIVE', cancelled_at: null }, error: null }) }) }) }
+      }
+      if (table === 'org_subscriptions') {
+        return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
+      }
+      return { select: vi.fn(() => ({ eq: vi.fn(() => ({ single: vi.fn().mockResolvedValue({ data: null, error: null }) })) })) }
+    })
+
+    const caller = makeCaller()
+    const res = await caller.lab.pullDispenseMonitoringEvents({ limit: 100 })
+    expect(res.events).toHaveLength(0)
+    expect(res.nextCursor).toBeNull()
   })
 })

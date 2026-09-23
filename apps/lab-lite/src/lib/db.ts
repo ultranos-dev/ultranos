@@ -669,9 +669,10 @@ export interface MonitoringFlag {
   patientRef: string               // opaque HMAC blind-index ref
   patientFirstName: string         // first name only — CLAUDE.md Rule #7
   patientAge: number               // computed age, NOT DOB — CLAUDE.md Rule #7
-  medicationCode: string           // canonical ATC code
-  medicationDisplay: string
-  dispensedAt: string              // YYYY-MM-DD
+  // Medication identity (ATC code / drug display) is NOT stored: it exceeds every
+  // documented lab tier (audit C-LAB-1 / Story 58.2). The Hub resolves the required
+  // monitoring test server-side; the lab only ever knows the LOINC test to run.
+  dispensedAt: string              // YYYY-MM-DD — clock anchor for the due date only
   dispensingEventId: string
   testRequired: string             // LOINC code
   testDisplay: string
@@ -2033,6 +2034,22 @@ class LabLiteDatabase extends Dexie {
         .toCollection()
         .modify((order: Record<string, unknown>) => {
           if ('patientPhotoUrl' in order) delete order.patientPhotoUrl
+        })
+    })
+    // v57 — Story 58.2 / audit C-LAB-1: medication identity is stripped from
+    // dispense-monitoring events server-side, so monitoringFlags no longer stores
+    // medicationCode / medicationDisplay. Re-index the dedup key from
+    // [patientRef+medicationCode+testRequired] → [patientRef+testRequired] and
+    // purge the now-forbidden medication fields from any locally cached flags.
+    this.version(57).stores({
+      monitoringFlags: '++id, [patientRef+testRequired], status, dueDate, patientRef',
+    }).upgrade(async (tx) => {
+      await tx
+        .table('monitoringFlags')
+        .toCollection()
+        .modify((flag: Record<string, unknown>) => {
+          delete flag.medicationCode
+          delete flag.medicationDisplay
         })
     })
   }

@@ -132,18 +132,24 @@ export interface VerifyPatientResult {
  * Verify patient identity via Hub API.
  * Returns ONLY firstName, age, and opaque patientRef (data minimization).
  * Requires valid LAB_TECH JWT in the Authorization header.
+ *
+ * POST, never GET (Story 58.2 / audit H-LAB-5): the National ID travels in the
+ * request BODY, never a URL query string — so it cannot leak into server access
+ * logs, proxy logs, or browser history. The hub procedure is a tRPC mutation for
+ * exactly this reason (it remains read-only despite the verb).
  */
 export async function verifyPatient(
   query: string,
   method: 'NATIONAL_ID' | 'QR_SCAN',
   token: string,
 ): Promise<VerifyPatientResult> {
-  const input = encodeURIComponent(JSON.stringify({ json: { query, method } }))
-  const res = await fetch(`${getHubApiUrl()}/lab.verifyPatient?input=${input}`, {
-    method: 'GET',
+  const res = await fetch(`${getHubApiUrl()}/lab.verifyPatient`, {
+    method: 'POST',
     headers: {
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
+    body: JSON.stringify({ json: { query, method } }),
   })
 
   if (!res.ok) {
@@ -778,12 +784,15 @@ export async function pullMonitoringMappings(
 
 /**
  * Detail-view PHI for the patient behind an order (CLAUDE.md Rule #7 detail-view
- * scope): full name + blood group + latest basic vitals. Order-scoped — the Hub
- * resolves orderId → patient_id server-side. NEVER carries National ID or the raw
- * patient UUID. Returns null on any failure (offline / unauthorized).
+ * scope): full name + gender + blood group + latest basic vitals. Order-scoped —
+ * the Hub resolves orderId → patient_id server-side and only for orders THIS lab
+ * has claimed. NEVER carries National ID or the raw patient UUID. Gender is here
+ * (not on the list tier) because lab reference ranges are sex-specific (Story 58.2).
+ * Returns null on any failure (offline / unauthorized / unclaimed order).
  */
 export interface LabOrderPatientDetails {
   fullName: { given: string | null; father: string | null; grandfather: string | null }
+  gender: string | null
   bloodGroup: string | null
   photoUrl: string | null
   vitals: {

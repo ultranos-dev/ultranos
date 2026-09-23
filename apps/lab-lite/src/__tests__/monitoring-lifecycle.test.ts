@@ -105,8 +105,7 @@ function makeFlag(overrides: Partial<MonitoringFlag> = {}): MonitoringFlag {
     patientRef: 'Patient/opaque-1',
     patientFirstName: 'Ahmad',
     patientAge: 45,
-    medicationCode: 'B01AA03',  // ATC for Warfarin (was RxNorm:11289)
-    medicationDisplay: 'Warfarin',
+    // No medication identity on the flag (Story 58.2 / audit C-LAB-1).
     dispensedAt: '2026-04-01T00:00:00Z',
     dispensingEventId: 'dispense-001',
     testRequired: '6301-6',
@@ -334,14 +333,16 @@ describe('dispense receiver integration (processDispenseEvent)', () => {
       patientRef: 'Patient/opaque-2',
       patientFirstName: 'Layla',
       patientAge: 32,
-      medicationCode: 'B01AA03',  // ATC for Warfarin (was RxNorm:11289)
-      medicationDisplay: 'Warfarin',
+      // Hub resolved 1 required test (INR) — no medication identity (Story 58.2).
+      requirements: [
+        { loincCode: '6301-6', testDisplay: 'INR', initialDelayDays: 3, frequencyDays: 14, priority: 'routine' },
+      ],
       dispensedAt: '2026-06-01T08:00:00Z',
       orderingPractitionerRef: 'Practitioner/opaque-99',
       hlcTimestamp: '2026-06-01T08:00:00Z:0:test',
     })
 
-    // Warfarin has 1 required test (INR)
+    // 1 required test → 1 flag
     expect(ids).toHaveLength(1)
     expect(mockDb.monitoringFlags.add).toHaveBeenCalledOnce()
   })
@@ -365,26 +366,30 @@ describe('dispense receiver integration (processDispenseEvent)', () => {
       patientRef: 'Patient/opaque-3',
       patientFirstName: 'Miriam',
       patientAge: 28,
-      medicationCode: 'N05AN01',  // ATC for Lithium (was RxNorm:6448)
-      medicationDisplay: 'Lithium',
+      // Hub resolved 3 required tests for this dispense (Story 58.2).
+      requirements: [
+        { loincCode: '14334-7', testDisplay: 'Lithium level', initialDelayDays: 5, frequencyDays: 30, priority: 'urgent' },
+        { loincCode: '3016-3', testDisplay: 'TSH', initialDelayDays: 30, frequencyDays: 180, priority: 'routine' },
+        { loincCode: '14682-9', testDisplay: 'Serum Creatinine', initialDelayDays: 30, frequencyDays: 180, priority: 'routine' },
+      ],
       dispensedAt: '2026-06-01T09:00:00Z',
       orderingPractitionerRef: 'Practitioner/opaque-88',
       hlcTimestamp: '2026-06-01T09:00:00Z:0:test',
     })
 
-    // Lithium has 3 required tests
+    // 3 required tests → 3 flags
     expect(ids).toHaveLength(3)
     expect(mockDb.monitoringFlags.add).toHaveBeenCalledTimes(3)
   })
 
-  it('does not create flags for unmonitored medication', async () => {
+  it('does not create flags when the Hub resolved no monitoring requirement', async () => {
     const ids = await processDispenseEvent({
       dispensingEventId: 'dispense-paracetamol',
       patientRef: 'Patient/opaque-4',
       patientFirstName: 'Omar',
       patientAge: 55,
-      medicationCode: 'Z99ZZ99',  // unknown / unmonitored ATC code
-      medicationDisplay: 'Paracetamol',
+      // Hub resolved no requirement (non-monitored drug) → empty requirements.
+      requirements: [],
       dispensedAt: '2026-06-01T10:00:00Z',
       orderingPractitionerRef: 'Practitioner/opaque-77',
       hlcTimestamp: '2026-06-01T10:00:00Z:0:test',
@@ -394,10 +399,9 @@ describe('dispense receiver integration (processDispenseEvent)', () => {
     expect(mockDb.monitoringFlags.add).not.toHaveBeenCalled()
   })
 
-  it('deduplicates: does not create duplicate for same patient-medication-test', async () => {
+  it('deduplicates: does not create duplicate for same patient-test', async () => {
     const existingFlag = makeFlag({
       patientRef: 'Patient/opaque-5',
-      medicationCode: 'B01AA03',  // ATC for Warfarin (was RxNorm:11289)
       testRequired: '6301-6',
       status: 'upcoming',
       dispensedAt: '2026-05-01T00:00:00Z',
@@ -422,8 +426,9 @@ describe('dispense receiver integration (processDispenseEvent)', () => {
       patientRef: 'Patient/opaque-5',
       patientFirstName: 'Zahra',
       patientAge: 40,
-      medicationCode: 'B01AA03',  // ATC for Warfarin (was RxNorm:11289)
-      medicationDisplay: 'Warfarin',
+      requirements: [
+        { loincCode: '6301-6', testDisplay: 'INR', initialDelayDays: 3, frequencyDays: 14, priority: 'routine' },
+      ],
       dispensedAt: '2026-06-01T10:00:00Z',  // newer dispense
       orderingPractitionerRef: 'Practitioner/opaque-66',
       hlcTimestamp: '2026-06-01T10:00:00Z:0:test',
@@ -440,14 +445,17 @@ describe('dispense receiver integration (processDispenseEvent)', () => {
       patientRef: 'Patient/opaque-x',
       patientFirstName: 'Ali',
       patientAge: 60,
-      medicationCode: 'B01AA03',  // ATC for Warfarin (was RxNorm:11289)
-      medicationDisplay: 'Warfarin',
+      requirements: [
+        { loincCode: '6301-6', testDisplay: 'INR', initialDelayDays: 3, frequencyDays: 14, priority: 'routine' as const },
+      ],
       dispensedAt: '2026-06-01T00:00:00Z',
       orderingPractitionerRef: 'Practitioner/opaque-y',
       hlcTimestamp: '2026-06-01T00:00:00Z:0:test',
     }
 
-    // No forbidden fields
+    // No forbidden fields — including no medication identity (Story 58.2 / C-LAB-1)
+    expect('medicationCode' in payload).toBe(false)
+    expect('medicationDisplay' in payload).toBe(false)
     expect('diagnosis' in payload).toBe(false)
     expect('indication' in payload).toBe(false)
     expect('dateOfBirth' in payload).toBe(false)

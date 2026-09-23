@@ -24,6 +24,7 @@ import { getDb } from './db'
  *   amendments         — originalValues, amendedValues (clinical result snapshots)
  *   labLogbook         — patientRef, patientFirstName, patientAge
  *   chw_samples        — patientRef (Community Health Worker collection data)
+ *   monitoringFlags    — patientRef, patientFirstName, patientAge (TDM monitoring; Story 58.2)
  */
 export const PHI_TABLES = [
   'uploadQueue',
@@ -42,6 +43,7 @@ export const PHI_TABLES = [
   'amendments',
   'labLogbook',
   'chw_samples',
+  'monitoringFlags',
 ] as const
 
 /**

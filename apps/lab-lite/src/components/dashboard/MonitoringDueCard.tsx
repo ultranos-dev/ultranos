@@ -58,7 +58,7 @@ function MonitoringRow({ flag, onRowClick }: MonitoringRowProps) {
             </span>
           </p>
           <p className="mt-0.5 truncate text-xs text-muted-foreground">
-            {flag.medicationDisplay} — {flag.testDisplay}
+            {flag.testDisplay}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {t('monitoringDueSoon')}: {flag.dueDate}
@@ -179,7 +179,7 @@ export function MonitoringDueCard({ onFlagSelected }: MonitoringDueCardProps) {
           })
           .map((flag) => (
             <MonitoringRow
-              key={`${flag.patientRef}-${flag.medicationCode}-${flag.testRequired}`}
+              key={`${flag.patientRef}-${flag.testRequired}-${flag.id ?? 0}`}
               flag={flag}
               onRowClick={onFlagSelected}
             />

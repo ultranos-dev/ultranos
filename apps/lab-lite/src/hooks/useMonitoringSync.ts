@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { pullDispenseMonitoringEvents, pullMonitoringMappings } from '@/lib/trpc'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
-import { putMedicationLabMappings, getMedicationLabMappingsMap } from '@/lib/db'
+import { putMedicationLabMappings } from '@/lib/db'
 import { processBatchDispenseEvents } from '@/lib/monitoring/dispense-receiver'
 import type { DispenseMonitoringPayload } from '@/lib/monitoring/dispense-receiver'
 
@@ -49,9 +49,9 @@ export async function runMonitoringSyncOnce(): Promise<void> {
     // Offline — use existing overrides + bundled fallback; continue to events
   }
 
-  const overrides = await getMedicationLabMappingsMap()
-
-  // 2. Page monitoring events by cursor
+  // 2. Page monitoring events by cursor. Requirements are resolved server-side now
+  // (Story 58.2), so the local mapping is no longer consulted to create flags — the
+  // mapping cache above is kept only for the settings/override reference UI.
   let cursor = cursorCache
   while (true) {
     const { events, nextCursor } = await pullDispenseMonitoringEvents(token, undefined, cursor)
@@ -61,13 +61,14 @@ export async function runMonitoringSyncOnce(): Promise<void> {
         patientRef: e.patientRef.replace(/^Patient\//, ''), // R1: store bare blind index
         patientFirstName: e.patientFirstName,
         patientAge: e.patientAge ?? 0,      // DTO age is nullable, payload is number
-        medicationCode: e.atcCode,          // ATC is the map lookup key (Task 8)
-        medicationDisplay: e.medicationDisplay,
+        // Requirements are resolved server-side; no medication identity crosses to
+        // the lab (audit C-LAB-1 / Story 58.2).
+        requirements: e.requirements,
         dispensedAt: e.dispensedAt,
         orderingPractitionerRef: e.orderingPractitionerRef,
         hlcTimestamp: e.hlcTimestamp,
       }))
-      await processBatchDispenseEvents(payloads, overrides)
+      await processBatchDispenseEvents(payloads)
     }
     if (nextCursor == null) break
     cursor = nextCursor

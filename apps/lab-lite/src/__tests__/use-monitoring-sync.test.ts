@@ -83,8 +83,7 @@ function makeEvent(overrides: Partial<{
   patientRef: string
   patientFirstName: string
   patientAge: number | null
-  atcCode: string
-  medicationDisplay: string
+  requirements: Array<{ loincCode: string; testDisplay: string; initialDelayDays: number; frequencyDays: number; priority: 'routine' | 'urgent' }>
   dispensedAt: string
   orderingPractitionerRef: string
   hlcTimestamp: string
@@ -94,8 +93,10 @@ function makeEvent(overrides: Partial<{
     patientRef: 'Patient/blindHash123',
     patientFirstName: 'Ali',
     patientAge: 35,
-    atcCode: 'B01AA03',
-    medicationDisplay: 'Warfarin',
+    // Story 58.2: the Hub delivers resolved requirements — no medication identity.
+    requirements: [
+      { loincCode: '6301-6', testDisplay: 'INR', initialDelayDays: 3, frequencyDays: 14, priority: 'routine' as const },
+    ],
     dispensedAt: '2026-09-15T10:00:00Z',
     orderingPractitionerRef: 'Practitioner/prac-1',
     hlcTimestamp: '1-0',
@@ -147,9 +148,14 @@ describe('useMonitoringSync — sync logic', () => {
     expect(mockProcessBatch).toHaveBeenCalledTimes(2)
   })
 
-  it('(c) maps atcCode → medicationCode and strips Patient/ prefix from patientRef', async () => {
+  it('(c) passes through Hub-resolved requirements and strips Patient/ prefix from patientRef', async () => {
     mockPullMonitoringMappings.mockResolvedValue({ mappings: [] })
-    const event = makeEvent({ patientRef: 'Patient/blindHash456', atcCode: 'C03CA01' })
+    const event = makeEvent({
+      patientRef: 'Patient/blindHash456',
+      requirements: [
+        { loincCode: '14682-9', testDisplay: 'Serum Creatinine', initialDelayDays: 7, frequencyDays: 30, priority: 'urgent' },
+      ],
+    })
     mockPullDispenseMonitoringEvents.mockResolvedValue({ events: [event], nextCursor: null })
 
     const { runMonitoringSyncOnce } = await import('../hooks/useMonitoringSync')
@@ -157,13 +163,15 @@ describe('useMonitoringSync — sync logic', () => {
 
     expect(mockProcessBatch).toHaveBeenCalledTimes(1)
     const [payloads] = mockProcessBatch.mock.calls[0] as [Array<{
-      medicationCode: string
+      requirements: Array<{ loincCode: string }>
       patientRef: string
       patientAge: number
     }>]
     expect(payloads).toHaveLength(1)
-    expect(payloads[0]!.medicationCode).toBe('C03CA01')  // ATC carried as medicationCode
+    // Requirements are passed straight through — no medication identity (Story 58.2).
+    expect(payloads[0]!.requirements[0]!.loincCode).toBe('14682-9')
     expect(payloads[0]!.patientRef).toBe('blindHash456') // Patient/ prefix stripped
+    expect('medicationCode' in payloads[0]!).toBe(false)
   })
 
   it('(c) patientAge defaults to 0 when DTO age is null', async () => {

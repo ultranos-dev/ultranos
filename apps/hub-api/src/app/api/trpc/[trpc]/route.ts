@@ -35,6 +35,15 @@ const handler = async (req: Request) => {
     router: appRouter,
     createContext: () => createTRPCContext({ headers: req.headers }),
     onError({ error, path }) {
+      // Story 58.2 / audit H-LAB-5: lab.verifyPatient input carries a raw National
+      // ID. Redact its error detail from logs entirely — a Zod validation error's
+      // `cause` can echo the offending input value, and the National ID must never
+      // appear in server logs (Safety Rule #1 — no PHI in logs). Log only that the
+      // procedure errored, with the error code, never the message or cause.
+      if (path === 'lab.verifyPatient') {
+        console.error(`[tRPC ERROR] ${path}: [redacted — verification input may contain a National ID] code=${error.code}`)
+        return
+      }
       console.error(`[tRPC ERROR] ${path}:`, error.message)
       if (error.cause) console.error(`[tRPC ERROR] cause:`, error.cause)
     },

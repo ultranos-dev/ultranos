@@ -62,8 +62,6 @@ exports[`MonitoringDueCard > RTL snapshot: MonitoringDueCard renders correctly i
               <p
                 class="mt-0.5 truncate text-xs text-muted-foreground"
               >
-                Warfarin
-                 — 
                 INR (Prothrombin Time)
               </p>
               <p
@@ -110,8 +108,6 @@ exports[`MonitoringDueCard > RTL snapshot: MonitoringDueCard renders correctly i
               <p
                 class="mt-0.5 truncate text-xs text-muted-foreground"
               >
-                Warfarin
-                 — 
                 INR (Prothrombin Time)
               </p>
               <p

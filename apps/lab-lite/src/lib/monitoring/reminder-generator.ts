@@ -10,8 +10,9 @@
  *  6. Audit-logs every reminder sent
  *
  * No PHI in the outbound payload — uses opaque practitioner ref and opaque
- * patient ref only. medicationDisplay and testDisplay are operational data
- * (not clinical context) and are included for the physician's routing.
+ * patient ref only. testDisplay (the LOINC test the physician must re-order) is
+ * operational routing data. Medication identity is intentionally NOT carried
+ * (audit C-LAB-1 / Story 58.2) — the lab never learns which drug triggered the test.
  */
 
 import { getDb, type MonitoringFlag } from '@/lib/db'
@@ -23,7 +24,7 @@ export interface MonitoringReminderPayload {
   type: 'MONITORING_OVERDUE'
   patientRef: string                 // opaque patient ID
   orderingPractitionerRef: string   // opaque practitioner ID
-  medicationDisplay: string
+  // No medicationDisplay — medication identity never leaves/enters the lab (C-LAB-1).
   testDisplay: string
   dueDate: string
   daysOverdue: number
@@ -75,7 +76,6 @@ export async function generateReminder(
     type: 'MONITORING_OVERDUE',
     patientRef: flag.patientRef,
     orderingPractitionerRef: flag.orderingPractitionerRef,
-    medicationDisplay: flag.medicationDisplay,
     testDisplay: flag.testDisplay,
     dueDate: flag.dueDate,
     daysOverdue,

@@ -63,8 +63,7 @@ function makeFlag(overrides: Partial<MonitoringFlag> = {}): MonitoringFlag {
     patientRef: 'Patient/opaque-1',
     patientFirstName: 'Ahmad',
     patientAge: 45,
-    medicationCode: 'RxNorm:11289',
-    medicationDisplay: 'Warfarin',
+    // No medication identity on the flag (Story 58.2 / audit C-LAB-1).
     dispensedAt: '2026-04-01T00:00:00Z',
     dispensingEventId: 'dispense-001',
     testRequired: '6301-6',
@@ -126,13 +125,15 @@ describe('MonitoringDueCard', () => {
     expect(screen.getByText(/45 yr/)).toBeInTheDocument()
   })
 
-  it('renders medication name and test name in each row', async () => {
-    mockReturnedFlags = [makeFlag({ status: 'due', medicationDisplay: 'Warfarin', testDisplay: 'INR (Prothrombin Time)' })]
+  it('renders the required test name in each row (no medication identity — Story 58.2)', async () => {
+    mockReturnedFlags = [makeFlag({ status: 'due', testDisplay: 'INR (Prothrombin Time)' })]
     await renderMonitoringCard()
 
     await waitFor(() => {
-      expect(screen.getByText(/Warfarin.*INR/)).toBeInTheDocument()
+      // The row shows only the LOINC test; medication identity is never on the lab.
+      expect(screen.getByText(/INR/)).toBeInTheDocument()
     })
+    expect(screen.queryByText(/Warfarin/)).not.toBeInTheDocument()
   })
 
   it('shows overdue badge for overdue flags', async () => {

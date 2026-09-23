@@ -64,27 +64,29 @@ import { getDb } from '../lib/db'
  *   all other fields: passthrough
  */
 function makeWarfarinPayload(): DispenseMonitoringPayload {
-  // Simulated DispenseMonitoringEventDTO as Hub would return:
+  // Simulated DispenseMonitoringEventDTO as Hub would return (Story 58.2): the Hub
+  // resolves the medication→required-test mapping SERVER-SIDE and delivers only the
+  // LOINC test + due window. No atcCode / medicationDisplay crosses to the lab.
   const e = {
     dispensingEventId: 'dispense-evt-warfarin-001',
     patientRef: 'Patient/blindhash-abc123',
     patientFirstName: 'Ali',
     patientAge: 40,
-    atcCode: 'B01AA03',
-    medicationDisplay: 'Warfarin',
+    requirements: [
+      { loincCode: '6301-6', testDisplay: 'INR', initialDelayDays: 3, frequencyDays: 30, priority: 'routine' as const },
+    ],
     dispensedAt: '2026-09-15',
     orderingPractitionerRef: 'Practitioner/opaque-ref-dr-001',
     hlcTimestamp: '1',
   }
 
-  // Apply the exact mapping from useMonitoringSync hook
+  // Apply the exact mapping from the useMonitoringSync hook (bare blind index).
   return {
     dispensingEventId: e.dispensingEventId,
     patientRef: e.patientRef.replace(/^Patient\//, ''),   // → 'blindhash-abc123'
     patientFirstName: e.patientFirstName,
     patientAge: e.patientAge ?? 0,
-    medicationCode: e.atcCode,                            // → 'B01AA03'
-    medicationDisplay: e.medicationDisplay,
+    requirements: e.requirements,
     dispensedAt: e.dispensedAt,
     orderingPractitionerRef: e.orderingPractitionerRef,
     hlcTimestamp: e.hlcTimestamp,
@@ -92,14 +94,14 @@ function makeWarfarinPayload(): DispenseMonitoringPayload {
 }
 
 function makeNonMonitoredPayload(): DispenseMonitoringPayload {
-  // A10AB01 = Insulin aspart — not in the bundled ATC map → should produce 0 flags
+  // Hub resolved NO monitoring requirement for this dispense (non-monitored drug)
+  // → empty requirements → the receiver produces 0 flags.
   const e = {
     dispensingEventId: 'dispense-evt-insulin-001',
     patientRef: 'Patient/blindhash-xyz789',
     patientFirstName: 'Sara',
     patientAge: 30,
-    atcCode: 'A10AB01',
-    medicationDisplay: 'Insulin Aspart',
+    requirements: [] as DispenseMonitoringPayload['requirements'],
     dispensedAt: '2026-09-15',
     orderingPractitionerRef: 'Practitioner/opaque-ref-dr-002',
     hlcTimestamp: '2',
@@ -110,8 +112,7 @@ function makeNonMonitoredPayload(): DispenseMonitoringPayload {
     patientRef: e.patientRef.replace(/^Patient\//, ''),
     patientFirstName: e.patientFirstName,
     patientAge: e.patientAge ?? 0,
-    medicationCode: e.atcCode,
-    medicationDisplay: e.medicationDisplay,
+    requirements: e.requirements,
     dispensedAt: e.dispensedAt,
     orderingPractitionerRef: e.orderingPractitionerRef,
     hlcTimestamp: e.hlcTimestamp,
@@ -132,9 +133,8 @@ describe('TDM E2E: pharmacy dispense → lab monitoring flag', () => {
   it('warfarin (B01AA03) dispense → exactly one INR (6301-6) flag with correct fields', async () => {
     const payload = makeWarfarinPayload()
 
-    // Feed through the REAL processBatchDispenseEvents with NO overrides —
-    // the receiver will fall through to the bundled ATC map (getMedicationMapping
-    // checks hubOverrides first, then BUNDLED_INDEX).
+    // Feed through the REAL processBatchDispenseEvents — the receiver now uses the
+    // requirements the Hub resolved (Story 58.2); no local ATC-map lookup.
     await processBatchDispenseEvents([payload])
 
     const db = getDb()
@@ -143,13 +143,14 @@ describe('TDM E2E: pharmacy dispense → lab monitoring flag', () => {
     // ASSERTION 1: exactly one flag created
     expect(flags).toHaveLength(1)
 
-    const flag = flags[0]!
+    const flag = flags[0]! as unknown as Record<string, unknown>
 
     // ASSERTION 2: correct LOINC code (INR)
     expect(flag.testRequired).toBe('6301-6')
 
-    // ASSERTION 3: correct ATC medication code
-    expect(flag.medicationCode).toBe('B01AA03')
+    // ASSERTION 3: medication identity is NOT stored on the flag (audit C-LAB-1).
+    expect('medicationCode' in flag).toBe(false)
+    expect('medicationDisplay' in flag).toBe(false)
 
     // ASSERTION 4: patientRef is bare (no 'Patient/' prefix) — R1 convention
     expect(flag.patientRef).toBe('blindhash-abc123')

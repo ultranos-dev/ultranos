@@ -1,35 +1,44 @@
 /**
- * Dispensing Event Receiver — Story 52.1 Task 3
+ * Dispensing Event Receiver — Story 52.1 Task 3 / Story 58.2
  *
- * Processes inbound MedicationDispense events from the Hub.
- * When a pharmacy dispenses a monitored medication, this module:
- *  1. Looks up monitoring requirements from the mapping table
- *  2. Creates MonitoringFlag entries in Dexie for each required test
- *  3. Deduplicates flags (same patient-medication-test combination)
- *  4. Emits audit events for every flag created or updated
+ * Processes inbound dispense-monitoring events from the Hub.
+ * When a pharmacy dispenses a monitored medication, the Hub resolves the required
+ * monitoring test(s) server-side and pushes only those requirements. This module:
+ *  1. Creates MonitoringFlag entries in Dexie for each required test the Hub sent
+ *  2. Deduplicates flags (same patient-test combination)
+ *  3. Emits audit events for every flag created or updated
  *
- * Data minimization (CLAUDE.md Rule #7):
+ * Data minimization (CLAUDE.md Rule #7 / audit C-LAB-1):
  *  The payload from Hub contains ONLY:
  *    - patientFirstName (first name only, no surname)
  *    - patientAge (computed age, NOT date of birth)
- *    - medicationCode + medicationDisplay
+ *    - the required monitoring test(s) — LOINC + due window (NO medication identity:
+ *      atcCode / medicationDisplay are stripped server-side and never reach the lab)
  *    - Opaque practitioner ref (no prescriber name)
- *  No diagnosis, no dosage instructions, no clinical context.
+ *  No diagnosis, no dosage instructions, no clinical context, no drug name.
  */
 
 import { getDb, type MonitoringFlag } from '@/lib/db'
 import { hlc, serializeHlc } from '@/lib/hlc'
-import { getMedicationMapping, type MedicationLabMapping } from './medication-lab-map'
 import { emitMonitoringAuditEvent } from './monitoring-audit'
 
-/** Data-minimized projection of MedicationDispense pushed by Hub. */
+/** A single monitoring test requirement resolved by the Hub (no medication identity). */
+export interface MonitoringRequirement {
+  loincCode: string
+  testDisplay: string
+  initialDelayDays: number
+  frequencyDays: number
+  priority: 'routine' | 'urgent'
+}
+
+/** Data-minimized projection of a dispense-monitoring event pushed by Hub. */
 export interface DispenseMonitoringPayload {
   dispensingEventId: string
   patientRef: string
   patientFirstName: string           // first name only — CLAUDE.md Rule #7
   patientAge: number                 // computed age, NOT DOB — CLAUDE.md Rule #7
-  medicationCode: string
-  medicationDisplay: string
+  /** Required monitoring test(s) — resolved server-side, NO drug identity (C-LAB-1). */
+  requirements: MonitoringRequirement[]
   dispensedAt: string                // ISO 8601
   orderingPractitionerRef: string   // opaque ID — no prescriber name
   hlcTimestamp: string
@@ -43,17 +52,17 @@ function addDays(isoDate: string, days: number): string {
 
 /**
  * Process a single dispensing event from Hub.
- * Creates or updates MonitoringFlag entries for each required lab test.
+ * Creates or updates MonitoringFlag entries for each required lab test that the
+ * Hub resolved server-side (`payload.requirements`). The lab no longer performs a
+ * medication→test lookup — the drug identity never crosses to the lab (C-LAB-1).
  *
  * Returns the list of flag IDs created or updated.
  */
 export async function processDispenseEvent(
   payload: DispenseMonitoringPayload,
-  hubOverrides?: Map<string, MedicationLabMapping>,
 ): Promise<number[]> {
-  const mapping = getMedicationMapping(payload.medicationCode, hubOverrides)
-  if (!mapping) {
-    // No monitoring required for this medication — nothing to do
+  if (!payload.requirements || payload.requirements.length === 0) {
+    // Hub resolved no monitoring requirement for this dispense — nothing to do.
     return []
   }
 
@@ -61,15 +70,16 @@ export async function processDispenseEvent(
   const now = new Date().toISOString()
   const processedIds: number[] = []
 
-  for (const testSpec of mapping.requiredTests) {
+  for (const testSpec of payload.requirements) {
     const dueDate = addDays(payload.dispensedAt, testSpec.initialDelayDays)
     const hlcTs = serializeHlc(hlc.now())
 
     await db.transaction('rw', db.monitoringFlags, async () => {
-      // Dedup check: find existing flag for same patient-medication-test
+      // Dedup check: find existing flag for same patient-test (medication identity
+      // is no longer stored, so the dedup key is patientRef+testRequired).
       const existing = await db.monitoringFlags
-        .where('[patientRef+medicationCode+testRequired]')
-        .equals([payload.patientRef, payload.medicationCode, testSpec.loincCode])
+        .where('[patientRef+testRequired]')
+        .equals([payload.patientRef, testSpec.loincCode])
         .first()
 
       if (existing) {
@@ -97,8 +107,6 @@ export async function processDispenseEvent(
         patientRef: payload.patientRef,
         patientFirstName: payload.patientFirstName,
         patientAge: payload.patientAge,
-        medicationCode: payload.medicationCode,
-        medicationDisplay: payload.medicationDisplay,
         dispensedAt: payload.dispensedAt,
         dispensingEventId: payload.dispensingEventId,
         testRequired: testSpec.loincCode,
@@ -120,11 +128,11 @@ export async function processDispenseEvent(
     })
   }
 
-  // Audit-log: MONITORING_FLAG_CREATED per test
-  for (const testSpec of mapping.requiredTests) {
+  // Audit-log: MONITORING_FLAG_CREATED per test. No medication identity in the
+  // audit metadata — only opaque refs + the LOINC test (Rule #1 / Rule #6).
+  for (const testSpec of payload.requirements) {
     emitMonitoringAuditEvent('MONITORING_FLAG_CREATED', {
       patientRef: payload.patientRef,     // opaque ID only — Rule #6
-      medicationCode: payload.medicationCode,
       testRequired: testSpec.loincCode,
       dispensingEventId: payload.dispensingEventId,
     })
@@ -138,9 +146,8 @@ export async function processDispenseEvent(
  */
 export async function processBatchDispenseEvents(
   payloads: DispenseMonitoringPayload[],
-  hubOverrides?: Map<string, MedicationLabMapping>,
 ): Promise<void> {
   for (const payload of payloads) {
-    await processDispenseEvent(payload, hubOverrides)
+    await processDispenseEvent(payload)
   }
 }

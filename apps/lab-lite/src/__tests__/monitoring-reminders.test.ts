@@ -83,8 +83,7 @@ function makeOverdueFlag(overrides: Partial<MonitoringFlag> = {}): MonitoringFla
     patientRef: 'Patient/opaque-r1',
     patientFirstName: 'Khalid',
     patientAge: 58,
-    medicationCode: 'RxNorm:11289',
-    medicationDisplay: 'Warfarin',
+    // No medication identity on the flag (Story 58.2 / audit C-LAB-1).
     dispensedAt: '2026-04-01T00:00:00Z',
     dispensingEventId: `dispense-r-${id}`,
     testRequired: '6301-6',
@@ -234,7 +233,8 @@ describe('generateReminder', () => {
     expect(payload.type).toBe('MONITORING_OVERDUE')
     expect(payload.patientRef).toBe(flag.patientRef)
     expect(payload.orderingPractitionerRef).toBe(flag.orderingPractitionerRef)
-    expect(payload.medicationDisplay).toBe(flag.medicationDisplay)
+    // No medication identity in the reminder payload (Story 58.2 / audit C-LAB-1).
+    expect('medicationDisplay' in payload).toBe(false)
     expect(payload.testDisplay).toBe(flag.testDisplay)
     expect(payload.dueDate).toBe(flag.dueDate)
     expect(typeof payload.daysOverdue).toBe('number')

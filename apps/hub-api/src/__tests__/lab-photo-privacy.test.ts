@@ -173,7 +173,8 @@ describe('lab.getOrderPatientDetails photo privacy', () => {
 
   it('returns a null photo when the patient has none, without touching storage', async () => {
     setupLab()
-    srMaybeSingle.mockResolvedValue({ data: { id: ORDER_ID, patient_id: PATIENT_ID, received_by_lab_id: null }, error: null })
+    // Claim-before-details (Story 58.2): the order must be claimed by this lab.
+    srMaybeSingle.mockResolvedValue({ data: { id: ORDER_ID, patient_id: PATIENT_ID, received_by_lab_id: 'lab-1' }, error: null })
     detailPatMaybeSingle.mockResolvedValue({ data: { name_given: 'A', name_father: 'B', name_grandfather: 'C', blood_group: 'O+', photo_url: null }, error: null })
     obsLimit.mockResolvedValue({ data: [], error: null })
 

@@ -80,7 +80,6 @@ export async function recalculateAllStatuses(): Promise<number> {
       if (newStatus === 'overdue') {
         emitMonitoringAuditEvent('MONITORING_FLAG_OVERDUE', {
           patientRef: flag.patientRef,
-          medicationCode: flag.medicationCode,
           testRequired: flag.testRequired,
           dueDate: flag.dueDate,
         })
@@ -142,7 +141,6 @@ export async function markTestCompleted(
 
     emitMonitoringAuditEvent('MONITORING_FLAG_COMPLETED', {
       patientRef: flag.patientRef,
-      medicationCode: flag.medicationCode,
       testRequired: flag.testRequired,
       completedAt,
       nextDueDate,
@@ -179,8 +177,6 @@ export async function scheduleNextCycle(
     patientRef: completedFlag.patientRef,
     patientFirstName: completedFlag.patientFirstName,
     patientAge: completedFlag.patientAge,
-    medicationCode: completedFlag.medicationCode,
-    medicationDisplay: completedFlag.medicationDisplay,
     dispensedAt: completedFlag.dispensedAt,
     dispensingEventId: completedFlag.dispensingEventId,
     testRequired: completedFlag.testRequired,

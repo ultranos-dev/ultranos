@@ -35,6 +35,8 @@ import type { RangeResolutionContext } from '@/lib/result-templates'
 import { ResultEntryForm } from '@/components/ResultEntryForm'
 import { mapResultToFhirBundle } from '@/lib/result-to-fhir'
 import { reportLabResultAuditEvent, reportAnomalyDetection } from '@/lib/audit-client'
+import { fetchOrderPatientDetails } from '@/lib/trpc'
+import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { detectAnomalies, ANOMALY_MODEL_VERSION } from '@/lib/anomaly-engine'
 import type { AnomalyFlag } from '@/lib/anomaly-engine'
 import { getPriorResult } from '@/lib/prior-results'
@@ -85,8 +87,8 @@ export default function ResultEntryPage({ params }: PageProps) {
         // (LOINC) and a patient name/age fallback. Best-effort: a lookup failure
         // must never block result entry.
         let order: { testsRequested?: Array<{ loincCode?: string }>; patientFirstName?: string; patientAge?: number | null } | undefined
+        const linkedOrderId = (s.request?.[0]?.reference ?? '').replace('ServiceRequest/', '')
         try {
-          const linkedOrderId = (s.request?.[0]?.reference ?? '').replace('ServiceRequest/', '')
           if (linkedOrderId) {
             order = await db.table('orders').where('orderId').equals(linkedOrderId).first()
           }
@@ -111,11 +113,25 @@ export default function ResultEntryPage({ params }: PageProps) {
         )
         setPatientAge(order?.patientAge ?? stamp.patientAge ?? cached?.age ?? 0)
 
-        // Resolve gender from the full patient record (used for reference ranges only)
-        const fullPatient = patientId
-          ? await db.table('patients').get(patientId)
-          : undefined
-        setPatientGender(fullPatient?.gender ?? 'unknown')
+        // Resolve gender for sex-specific reference ranges from the SANCTIONED
+        // detail tier (CLAUDE.md Rule #7 / Story 58.2) — an explicit, order-scoped,
+        // claim-gated fetch — NOT from a locally cached full patient record. Best-
+        // effort + online-adjacent: offline/unclaimed → 'unknown' (ranges fall back
+        // to the template's inline ranges). No local `patients` table read here.
+        let resolvedGender = 'unknown'
+        try {
+          if (linkedOrderId) {
+            const { data } = await getSupabaseBrowserClient().auth.getSession()
+            const token = data.session?.access_token
+            if (token) {
+              const details = await fetchOrderPatientDetails(linkedOrderId, token)
+              if (details?.gender) resolvedGender = details.gender
+            }
+          }
+        } catch {
+          // Detail fetch unavailable (offline / unclaimed order) — gender stays 'unknown'.
+        }
+        setPatientGender(resolvedGender)
 
         // Mark the sample in-processing when the tech opens the entry form
         // (received → in-processing). Guarded + non-fatal — a blocked transition
@@ -146,7 +162,7 @@ export default function ResultEntryPage({ params }: PageProps) {
 
           setRangeContext({
             patientAge: cached?.age ?? 0,
-            patientGender: fullPatient?.gender ?? 'unknown',
+            patientGender: resolvedGender,
             labAltitude,
             customRanges: activeCustom,
           })

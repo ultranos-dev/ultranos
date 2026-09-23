@@ -580,6 +580,11 @@ export const labRouter = createTRPCRouter({
    * 3. RBAC: LAB_TECH only (via labRestrictedProcedure)
    * 4. Lab status: must be ACTIVE (via enforceLabActive)
    */
+  // MUTATION, not query (Story 58.2 / audit H-LAB-5): identity verification carries
+  // a raw National ID. A tRPC .query() puts its input in the GET URL query string,
+  // where the ID lands in server access logs, proxy logs, and browser history. As a
+  // .mutation() the input travels in the POST request body instead — never in a URL.
+  // The procedure is still read-only (no writes) despite the mutation verb.
   verifyPatient: labRestrictedProcedure
     .use(enforceVerifiedOrg())
     .use(enforceEntitlement('LAB_LITE'))
@@ -598,7 +603,7 @@ export const labRouter = createTRPCRouter({
         photoUrl: z.string().nullable(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
 
@@ -716,9 +721,17 @@ export const labRouter = createTRPCRouter({
    * orders the caller's lab may see.
    *
    * PHI scope (CLAUDE.md Rule #7, detail-view exception): returns full name
-   * (given/father/grandfather), blood group, and basic vitals ONLY — shown on an
-   * explicit detail view for sample handling + identity verification. NEVER returns
-   * the National ID (hash-only) or the raw patient UUID (blind-indexed by design).
+   * (given/father/grandfather), gender, blood group, and basic vitals ONLY — shown
+   * on an explicit detail view for sample handling + identity verification. NEVER
+   * returns the National ID (hash-only) or the raw patient UUID (blind-indexed by
+   * design). Gender is in the sanctioned detail tier (Story 58.2) because lab
+   * reference ranges are sex-specific.
+   *
+   * CLAIM-BEFORE-DETAILS (Story 58.2 / audit H-HUB-4): patient details unlock ONLY
+   * for orders THIS lab has claimed (`received_by_lab_id === labId`). An unclaimed
+   * (broadcast) order appears in `pullOrders` at the minimal list tier only; the lab
+   * must acknowledge/claim it (`acknowledgeOrder`) before any detail-tier PHI is
+   * readable. Previously any lab could read details for any unclaimed order.
    */
   getOrderPatientDetails: labRestrictedProcedure
     .use(enforceLabActive())
@@ -730,6 +743,7 @@ export const labRouter = createTRPCRouter({
           father: z.string().nullable(),
           grandfather: z.string().nullable(),
         }),
+        gender: z.string().nullable(),
         bloodGroup: z.string().nullable(),
         photoUrl: z.string().nullable(),
         vitals: z.object({
@@ -748,8 +762,11 @@ export const labRouter = createTRPCRouter({
       const labId = ctx.lab?.labId
       const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
 
-      // Resolve the order → patient_id, restricted to orders this lab may see
-      // (assigned to it, or unassigned) — mirrors the pullOrders visibility scope.
+      // Resolve the order → patient_id. CLAIM-BEFORE-DETAILS (H-HUB-4): details
+      // unlock ONLY for orders THIS lab has claimed. An unclaimed order
+      // (received_by_lab_id IS NULL) is broadcast at the LIST tier via pullOrders,
+      // but its patient details stay locked until the lab acknowledges/claims it.
+      // Admin callers (no labId) are unrestricted.
       const { data: order, error: orderErr } = await ctx.supabase
         .from('service_requests')
         .select('id, patient_id, received_by_lab_id')
@@ -758,14 +775,14 @@ export const labRouter = createTRPCRouter({
       if (orderErr) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to load order' })
       }
-      if (!order || (labId && order.received_by_lab_id && order.received_by_lab_id !== labId)) {
+      if (!order || (labId && order.received_by_lab_id !== labId)) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' })
       }
       const patientId = order.patient_id as string
 
       const { data: patient } = await ctx.supabase
         .from('patients')
-        .select('name_given, name_father, name_grandfather, blood_group, photo_url')
+        .select('name_given, name_father, name_grandfather, gender, blood_group, photo_url')
         .eq('id', patientId)
         .maybeSingle()
 
@@ -805,6 +822,7 @@ export const labRouter = createTRPCRouter({
           father: (patient?.name_father as string) ?? null,
           grandfather: (patient?.name_grandfather as string) ?? null,
         },
+        gender: (patient?.gender as string) ?? null,
         bloodGroup: (patient?.blood_group as string) ?? null,
         photoUrl,
         vitals,
@@ -2083,9 +2101,21 @@ export const labRouter = createTRPCRouter({
     }),
 
   /**
-   * Task 5: Pull data-minimized dispense-monitoring events for Therapeutic Drug
-   * Monitoring (TDM). Serves ONLY: first name + age + opaque blind ref + ATC +
-   * drug display + timestamps. Raw patient UUID is never returned (Rule #7 + data-min).
+   * Pull data-minimized dispense-monitoring events for Therapeutic Drug
+   * Monitoring (TDM).
+   *
+   * SCOPING (Story 58.2 / audit H-HUB-3): events are lab-scoped — a lab only sees
+   * monitoring events for patients it already handles, i.e. patients with at least
+   * one order this lab has claimed (`service_requests.received_by_lab_id = labId`).
+   * This reuses the existing order-claim relationship as the assignment model (no
+   * new schema): a lab that has never touched a patient never sees that patient's
+   * dispense events. Admin callers (no labId) see the full feed.
+   *
+   * DATA-MIN (audit C-LAB-1): medication identity (ATC / drug display) is stripped
+   * server-side. The hub resolves the medication→required-tests mapping and delivers
+   * ONLY the LOINC test(s) the lab must run + the due window. Payload = first name +
+   * age + opaque blind ref + required monitoring test(s) + timestamps. Raw patient
+   * UUID is never returned (Rule #7).
    *
    * Keyset cursor on `seq` (ascending bigint identity column) for stable pagination.
    * Audit emitted best-effort (Rule #6). No PHI in audit metadata (Rule #1).
@@ -2107,8 +2137,17 @@ export const labRouter = createTRPCRouter({
             patientRef: z.string(),
             patientFirstName: z.string(),
             patientAge: z.number().nullable(),
-            atcCode: z.string(),
-            medicationDisplay: z.string(),
+            // Required monitoring test(s), resolved server-side — NO medication
+            // identity (atcCode / medicationDisplay) crosses to the lab (C-LAB-1).
+            requirements: z.array(
+              z.object({
+                loincCode: z.string(),
+                testDisplay: z.string(),
+                initialDelayDays: z.number(),
+                frequencyDays: z.number(),
+                priority: z.enum(['routine', 'urgent']),
+              }),
+            ),
             dispensedAt: z.string(),
             orderingPractitionerRef: z.string(),
             hlcTimestamp: z.string(),
@@ -2122,14 +2161,39 @@ export const labRouter = createTRPCRouter({
       const labId = ctx.lab?.labId
       const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
 
+      // Lab scoping (H-HUB-3): resolve the set of patients this lab handles from
+      // the orders it has claimed. A non-admin lab with no claimed orders sees no
+      // monitoring events. Admin (no labId) is unscoped.
+      let scopedPatientIds: string[] | null = null
+      if (labId) {
+        const { data: claimedOrders, error: scopeErr } = await ctx.supabase
+          .from('service_requests')
+          .select('patient_id')
+          .eq('received_by_lab_id', labId)
+        if (scopeErr) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to resolve monitoring scope',
+          })
+        }
+        scopedPatientIds = Array.from(
+          new Set((claimedOrders ?? []).map((o: any) => o.patient_id).filter(Boolean)),
+        ) as string[]
+        // No patients handled by this lab → empty feed, no query needed.
+        if (scopedPatientIds.length === 0) {
+          return { events: [], nextCursor: null }
+        }
+      }
+
       let query = ctx.supabase
         .from('dispense_monitoring_events')
         .select(
-          'id, seq, dispensing_event_id, patient_id, atc_code, medication_display, dispensed_at, ordering_practitioner_ref, hlc_timestamp, created_at, patients!inner(name_given, birth_date, birth_year)',
+          'id, seq, dispensing_event_id, patient_id, atc_code, dispensed_at, ordering_practitioner_ref, hlc_timestamp, created_at, patients!inner(name_given, birth_date, birth_year)',
         )
         .order('seq', { ascending: true })
         .limit(input.limit)
 
+      if (scopedPatientIds) query = query.in('patient_id', scopedPatientIds)
       if (input.since) query = query.gte('created_at', input.since)
       if (input.cursor != null) query = query.gt('seq', input.cursor)
 
@@ -2167,13 +2231,49 @@ export const labRouter = createTRPCRouter({
       // patientRef is an opaque blind index: "Patient/<HMAC(patient_id, hmacKey)>".
       const { hmacKey } = await getFieldEncryptionKeys()
 
+      // Resolve medication→required-tests mappings server-side (C-LAB-1). The ATC
+      // code is used ONLY as the internal join key here; it is NEVER placed on the
+      // outgoing DTO. Only the resolved LOINC test(s) + due window reach the lab.
+      const atcCodes = Array.from(
+        new Set((rows ?? []).map((r: any) => r.atc_code).filter(Boolean)),
+      ) as string[]
+      const requirementsByAtc = new Map<
+        string,
+        Array<{
+          loincCode: string
+          testDisplay: string
+          initialDelayDays: number
+          frequencyDays: number
+          priority: 'routine' | 'urgent'
+        }>
+      >()
+      if (atcCodes.length) {
+        const { data: mappings } = await ctx.supabase
+          .from('medication_lab_mappings')
+          .select('atc_code, required_tests')
+          .in('atc_code', atcCodes)
+        for (const m of mappings ?? []) {
+          const specs = Array.isArray((m as any).required_tests) ? (m as any).required_tests : []
+          requirementsByAtc.set(
+            (m as any).atc_code,
+            specs.map((s: any) => ({
+              loincCode: s.loincCode,
+              testDisplay: s.testDisplay,
+              initialDelayDays: s.initialDelayDays ?? 0,
+              frequencyDays: s.frequencyDays ?? 0,
+              priority: s.priority === 'urgent' ? 'urgent' : 'routine',
+            })),
+          )
+        }
+      }
+
       const events = (rows ?? []).map((r: any) => ({
         dispensingEventId: r.dispensing_event_id,
         patientRef: `Patient/${generateBlindIndex(r.patient_id, hmacKey)}`,
         patientFirstName: r.patients?.name_given ?? '',
         patientAge: computeAge(r.patients?.birth_date, r.patients?.birth_year),
-        atcCode: r.atc_code,
-        medicationDisplay: r.medication_display,
+        // Only the resolved monitoring requirement(s) — medication identity stripped.
+        requirements: requirementsByAtc.get(r.atc_code) ?? [],
         dispensedAt: r.dispensed_at,
         orderingPractitionerRef: r.ordering_practitioner_ref ?? '',
         hlcTimestamp: r.hlc_timestamp,

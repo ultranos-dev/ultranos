@@ -4,12 +4,16 @@ import { useState, useCallback, useRef } from 'react'
 import { getDb } from '@/lib/db'
 import { searchPatients } from '@/lib/trpc'
 
+/**
+ * List-tier patient search result (CLAUDE.md Rule #7 / Story 58.2).
+ * ONLY first name + age + the opaque blind-index ref. gender / phone are NOT on
+ * the list tier — gender (for sex-specific reference ranges) is fetched from the
+ * sanctioned detail tier (getOrderPatientDetails), never from the list surface.
+ */
 export interface PatientSearchItem {
   id: string
   firstName: string
   age: number
-  gender?: string
-  phone?: string
   source: 'local' | 'remote'
 }
 
@@ -64,8 +68,8 @@ export function usePatientSearch(token: string): UsePatientSearchReturn {
           id: p.id,
           firstName: p._ultranos?.nameGiven ?? p.name?.[0]?.given?.[0] ?? '',
           age,
-          gender: p.gender,
-          phone: p.telecom?.find((t: any) => t.system === 'phone')?.value,
+          // gender / phone deliberately omitted — list tier is firstName+age+ref only
+          // (Rule #7 / Story 58.2). Gender for ranges comes from the detail tier.
           source: 'local' as const,
         }
       })

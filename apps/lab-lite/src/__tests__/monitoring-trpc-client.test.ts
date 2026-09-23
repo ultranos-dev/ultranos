@@ -19,8 +19,10 @@ describe('monitoring tRPC client wrappers', () => {
                   patientRef: 'Patient/p1-hash',
                   patientFirstName: 'Ahmed',
                   patientAge: 45,
-                  atcCode: 'C03CA01',
-                  medicationDisplay: 'Lisinopril',
+                  // Story 58.2: resolved requirements, no medication identity.
+                  requirements: [
+                    { loincCode: '2160-0', testDisplay: 'Creatinine', initialDelayDays: 7, frequencyDays: 90, priority: 'routine' },
+                  ],
                   dispensedAt: '2026-09-15T10:00:00Z',
                   orderingPractitionerRef: 'Practitioner/doc1',
                   hlcTimestamp: '1-0',
@@ -61,8 +63,9 @@ describe('monitoring tRPC client wrappers', () => {
             patientRef: 'Patient/p1-hash',
             patientFirstName: 'Ahmed',
             patientAge: 45,
-            atcCode: 'C03CA01',
-            medicationDisplay: 'Lisinopril',
+            requirements: [
+              { loincCode: '2160-0', testDisplay: 'Creatinine', initialDelayDays: 7, frequencyDays: 90, priority: 'routine' },
+            ],
             dispensedAt: '2026-09-15T10:00:00Z',
             orderingPractitionerRef: 'Practitioner/doc1',
             hlcTimestamp: '1-0',

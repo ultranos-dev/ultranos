@@ -28,7 +28,7 @@ vi.mock('@/lib/db', () => {
     'uploadQueue', 'verified_patients', 'patientVerifications', 'samples',
     'orders', 'queueEntries', 'consentRecords', 'payments', 'culturalPreferences',
     'familyDelegates', 'smsQueue', 'lab_results', 'lab_observations',
-    'amendments', 'labLogbook', 'chw_samples',
+    'amendments', 'labLogbook', 'chw_samples', 'monitoringFlags',
     'syncQueue', 'clientAuditLog', 'practitioner_keys',
     'reagent_inventory', 'reagent_consumption_log',
     'sops', 'sop_acknowledgments', 'micro_learning_modules', 'module_completions',

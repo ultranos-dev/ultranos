@@ -212,8 +212,7 @@ function makeFlag(overrides: Partial<MonitoringFlag> = {}): MonitoringFlag {
     patientRef: 'Patient/opaque-1',
     patientFirstName: 'Ahmad',
     patientAge: 45,
-    medicationCode: 'B01AA03',  // ATC for Warfarin (was RxNorm:11289)
-    medicationDisplay: 'Warfarin',
+    // No medication identity on the flag (Story 58.2 / audit C-LAB-1).
     dispensedAt: '2026-04-01T00:00:00Z',
     dispensingEventId: 'dispense-001',
     testRequired: '6301-6',

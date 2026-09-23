@@ -79,11 +79,11 @@ const VITALS = [
 describe('lab.getOrderPatientDetails', () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it('returns full name + blood group + latest vitals for a visible order', async () => {
+  it('returns full name + gender + blood group + latest vitals for a claimed order', async () => {
     setupLab()
     srMaybeSingle.mockResolvedValue({ data: { id: ORDER_ID, patient_id: PATIENT_ID, received_by_lab_id: 'lab-1' }, error: null })
     patMaybeSingle.mockResolvedValue({
-      data: { name_given: 'احمد منگل', name_father: 'مرجان خان', name_grandfather: 'قمرجان', blood_group: 'A+' },
+      data: { name_given: 'احمد منگل', name_father: 'مرجان خان', name_grandfather: 'قمرجان', gender: 'male', blood_group: 'A+' },
       error: null,
     })
     obsLimit.mockResolvedValue({ data: VITALS, error: null })
@@ -93,6 +93,8 @@ describe('lab.getOrderPatientDetails', () => {
     const res = await caller.lab.getOrderPatientDetails({ orderId: ORDER_ID })
 
     expect(res.fullName).toEqual({ given: 'احمد منگل', father: 'مرجان خان', grandfather: 'قمرجان' })
+    // Gender is in the sanctioned detail tier (Story 58.2) for sex-specific ranges.
+    expect(res.gender).toBe('male')
     expect(res.bloodGroup).toBe('A+')
     expect(res.vitals).toMatchObject({
       weightKg: 77,
@@ -108,8 +110,8 @@ describe('lab.getOrderPatientDetails', () => {
 
   it('does not expose National ID or the raw patient UUID in the response', async () => {
     setupLab()
-    srMaybeSingle.mockResolvedValue({ data: { id: ORDER_ID, patient_id: PATIENT_ID, received_by_lab_id: null }, error: null })
-    patMaybeSingle.mockResolvedValue({ data: { name_given: 'A', name_father: 'B', name_grandfather: 'C', blood_group: 'O+' }, error: null })
+    srMaybeSingle.mockResolvedValue({ data: { id: ORDER_ID, patient_id: PATIENT_ID, received_by_lab_id: 'lab-1' }, error: null })
+    patMaybeSingle.mockResolvedValue({ data: { name_given: 'A', name_father: 'B', name_grandfather: 'C', gender: 'female', blood_group: 'O+' }, error: null })
     obsLimit.mockResolvedValue({ data: [], error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
@@ -124,6 +126,16 @@ describe('lab.getOrderPatientDetails', () => {
   it('rejects an order assigned to a different lab', async () => {
     setupLab()
     srMaybeSingle.mockResolvedValue({ data: { id: ORDER_ID, patient_id: PATIENT_ID, received_by_lab_id: 'other-lab' }, error: null })
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
+    await expect(caller.lab.getOrderPatientDetails({ orderId: ORDER_ID })).rejects.toMatchObject({ code: 'NOT_FOUND' })
+  })
+
+  it('rejects an UNCLAIMED order — claim-before-details (Story 58.2 / H-HUB-4)', async () => {
+    setupLab()
+    // received_by_lab_id IS NULL → broadcast order, appears in pullOrders at the LIST
+    // tier only. Detail-tier PHI must NOT be readable until the lab claims it.
+    srMaybeSingle.mockResolvedValue({ data: { id: ORDER_ID, patient_id: PATIENT_ID, received_by_lab_id: null }, error: null })
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     await expect(caller.lab.getOrderPatientDetails({ orderId: ORDER_ID })).rejects.toMatchObject({ code: 'NOT_FOUND' })

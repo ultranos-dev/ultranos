@@ -1,14 +1,15 @@
 'use client'
 
 /**
- * MonitoringHistory — Story 52.1 Task 7
+ * MonitoringHistory — Story 52.1 Task 7 / Story 58.2
  *
  * Patient monitoring detail view showing all monitoring flags grouped by
- * medication, with status, last completed date, and next due date.
+ * REQUIRED TEST, with status, last completed date, and next due date.
  *
  * RTL-ready: uses logical CSS properties throughout.
  * Data-minimized: displays only what is stored in MonitoringFlag
- * (first name + age, no diagnosis, no prescriber name).
+ * (first name + age + the LOINC test — NO medication identity, no diagnosis,
+ * no prescriber name; audit C-LAB-1).
  */
 
 import { useState, useEffect } from 'react'
@@ -16,22 +17,22 @@ import { FlaskConical, CheckCircle, AlertCircle, Clock } from '@ultranos/ui-kit/
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { getDb, type MonitoringFlag, type MonitoringFlagStatus } from '@/lib/db'
 
-interface GroupedMedication {
-  medicationCode: string
-  medicationDisplay: string
+interface GroupedTest {
+  testRequired: string
+  testDisplay: string
   flags: MonitoringFlag[]
 }
 
-function groupByMedication(flags: MonitoringFlag[]): GroupedMedication[] {
-  const map = new Map<string, GroupedMedication>()
+function groupByTest(flags: MonitoringFlag[]): GroupedTest[] {
+  const map = new Map<string, GroupedTest>()
   for (const flag of flags) {
-    const existing = map.get(flag.medicationCode)
+    const existing = map.get(flag.testRequired)
     if (existing) {
       existing.flags.push(flag)
     } else {
-      map.set(flag.medicationCode, {
-        medicationCode: flag.medicationCode,
-        medicationDisplay: flag.medicationDisplay,
+      map.set(flag.testRequired, {
+        testRequired: flag.testRequired,
+        testDisplay: flag.testDisplay,
         flags: [flag],
       })
     }
@@ -113,7 +114,7 @@ interface MonitoringHistoryProps {
 }
 
 export function MonitoringHistory({ patientRef, patientFirstName, patientAge }: MonitoringHistoryProps) {
-  const [groups, setGroups] = useState<GroupedMedication[]>([])
+  const [groups, setGroups] = useState<GroupedTest[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -126,7 +127,7 @@ export function MonitoringHistory({ patientRef, patientFirstName, patientAge }: 
           .where('patientRef')
           .equals(patientRef)
           .sortBy('dueDate')
-        if (mounted) setGroups(groupByMedication(flags))
+        if (mounted) setGroups(groupByTest(flags))
       } catch {
         // Fail silently
       } finally {
@@ -173,15 +174,15 @@ export function MonitoringHistory({ patientRef, patientFirstName, patientAge }: 
       )}
 
       {groups.map((group) => (
-        <div key={group.medicationCode} className="rounded-lg border border-border bg-muted/30 p-3">
+        <div key={group.testRequired} className="rounded-lg border border-border bg-muted/30 p-3">
           <div className="mb-2 flex items-center gap-2">
             <FlaskConical size={14} className="text-muted-foreground shrink-0" aria-hidden="true" />
-            <h3 className="text-sm font-semibold text-foreground">{group.medicationDisplay}</h3>
+            <h3 className="text-sm font-semibold text-foreground">{group.testDisplay}</h3>
           </div>
           <div className="space-y-2">
             {group.flags.map((flag) => (
               <MonitoringFlagRow
-                key={`${flag.patientRef}-${flag.medicationCode}-${flag.testRequired}-${flag.id ?? 0}`}
+                key={`${flag.patientRef}-${flag.testRequired}-${flag.id ?? 0}`}
                 flag={flag}
               />
             ))}
