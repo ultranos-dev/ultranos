@@ -14,6 +14,11 @@ const RESOURCE_TO_SCOPE: Record<string, ConsentScope> = {
   MedicationRequest: ConsentScope.PRESCRIPTIONS,
   DiagnosticReport: ConsentScope.LABS,
   Observation: ConsentScope.VITALS,
+  // Story 57.1: allergy reads for the pharmacy dispense-time safety gate are
+  // treatment-scoped under PRESCRIPTIONS — the same consent that authorizes a
+  // pharmacy to handle a patient's prescription authorizes the safety data
+  // needed to dispense it (a FULL_RECORD grant also satisfies it, per below).
+  AllergyIntolerance: ConsentScope.PRESCRIPTIONS,
 }
 
 export interface ConsentCheckInput {

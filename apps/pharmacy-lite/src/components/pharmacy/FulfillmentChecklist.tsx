@@ -9,7 +9,6 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { DispensingConfirmationModal } from './DispensingConfirmationModal'
 import { BrandSubstitutionPicker } from './BrandSubstitutionPicker'
 import { AllergyBanner } from './AllergyBanner'
-import { usePatientStore } from '@/stores/patient-store'
 import { usePosStore } from '@/stores/pos-store'
 
 interface FulfillmentChecklistProps {
@@ -25,12 +24,20 @@ function formatFrequency(freqN?: number, perU?: string): string {
 export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
   const t = useTranslations('fulfillment')
   const tD = useTranslations('dispensing')
-  const { phase, items, practitionerName, patientName, patientAge, toggleItem, selectAll, deselectAll, setBrandSelection, setBatchLot } =
+  const { phase, items, practitionerName, patientName, patientAge, patientAllergies, allergyStatusUnknown, toggleItem, selectAll, deselectAll, setBrandSelection, setBatchLot } =
     useFulfillmentStore()
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [dispensingComplete, setDispensingComplete] = useState(false)
-  const activePatient = usePatientStore((s) => s.activePatient)
   const activeInvoice = usePosStore((s) => s.activeInvoice)
+
+  // Story 57.1 (AC 1-3): allergies come from the fulfillment store's resolved
+  // patient context, which is keyed to the scanned prescription's `pat` ref —
+  // never from a possibly-stale activePatient search selection. When the
+  // status is unknown, the banner input is undefined (amber state, never NKA);
+  // any partially-known substances are still shown/checked (red card).
+  const bannerAllergies = allergyStatusUnknown
+    ? (patientAllergies && patientAllergies.length > 0 ? patientAllergies : undefined)
+    : (patientAllergies ?? undefined)
 
   if (phase === 'empty' || items.length === 0) {
     return (
@@ -76,7 +83,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
       </div>
 
       {/* Allergy banner — SAFETY-CRITICAL: highest display prominence */}
-      <AllergyBanner allergies={activePatient?.allergies} patientName={activePatient?.nameGiven} />
+      <AllergyBanner allergies={bannerAllergies} patientName={patientName ?? undefined} />
 
       {/* Medication items */}
       <ul className="space-y-3" role="list">
@@ -185,8 +192,9 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
       {showConfirmModal && (
         <DispensingConfirmationModal
           items={items.filter((i) => i.selected)}
-          patientName={activePatient?.nameGiven ?? patientName ?? undefined}
-          patientAllergies={activePatient?.allergies}
+          patientName={patientName ?? undefined}
+          patientAllergies={patientAllergies ?? undefined}
+          allergyStatusUnknown={allergyStatusUnknown}
           onConfirm={(override) => {
             setShowConfirmModal(false)
             const selected = items.filter((i) => i.selected)

@@ -12,6 +12,8 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { createInvoiceFromDispense } from '@/lib/pos/invoice-service'
 import { hlc, serializeHlc } from '@/lib/hlc'
 import { usePosStore } from '@/stores/pos-store'
+import { usePatientStore } from '@/stores/patient-store'
+import { normalizePatientRef, type ResolvedPatientContext } from '@/lib/patient-resolution'
 import type { InvoiceLineItem } from '@/lib/pos/types'
 
 export type FulfillmentPhase =
@@ -47,12 +49,23 @@ interface FulfillmentState {
   patientAge: number | null
   scannedAt: string | null
   syncStatus: DispenseSyncStatus
+  /**
+   * Story 57.1 — dispense-time allergy gate (C-SYS-3).
+   * `patientRef` is the normalized `pat` ref of the loaded prescriptions; the
+   * allergy fields below are ONLY ever set via setResolvedPatient, which
+   * asserts the resolution's source patient matches this ref.
+   * `patientAllergies === null` means "status unknown" — NEVER render as NKA.
+   */
+  patientRef: string | null
+  patientAllergies: string[] | null
+  allergyStatusUnknown: boolean
 
   loadPrescriptions: (
     prescriptions: VerifiedPrescription[],
     practitionerName?: string,
     patient?: { name: string; age: number },
   ) => void
+  setResolvedPatient: (ctx: ResolvedPatientContext) => void
   toggleItem: (prescriptionId: string) => void
   selectAll: () => void
   deselectAll: () => void
@@ -76,6 +89,9 @@ export const useFulfillmentStore = create<FulfillmentState>()(
     patientAge: null,
     scannedAt: null,
     syncStatus: { isPending: false, pendingCount: 0, lastSyncResult: null },
+    patientRef: null,
+    patientAllergies: null,
+    allergyStatusUnknown: true,
 
     loadPrescriptions: (prescriptions, practitionerName, patient) => {
       // Guard: do not overwrite state during active dispensing
@@ -93,6 +109,14 @@ export const useFulfillmentStore = create<FulfillmentState>()(
         state.patientName = patient?.name ?? null
         state.patientAge = patient?.age ?? null
         state.scannedAt = new Date().toISOString()
+        // Story 57.1: key the fulfillment to the prescription's patient and
+        // reset the allergy context to UNKNOWN until setResolvedPatient runs.
+        // A previous scan's allergies must never leak into this fulfillment.
+        state.patientRef = prescriptions[0]?.pat
+          ? normalizePatientRef(prescriptions[0].pat)
+          : null
+        state.patientAllergies = null
+        state.allergyStatusUnknown = true
       })
 
       // Audit: PHI access when patient demographics are loaded for fulfillment view
@@ -107,6 +131,32 @@ export const useFulfillmentStore = create<FulfillmentState>()(
           { phiAccess: 'fulfillment_view', prescriptionCount: prescriptions.length },
         )
       }
+    },
+
+    /**
+     * Story 57.1 — identity assertion (AC 3): allergies are consumed ONLY when
+     * the resolution's source patient ref matches the loaded prescriptions'
+     * `pat` ref. On mismatch the context stays UNKNOWN (amber banner +
+     * override required) instead of silently using another patient's record.
+     */
+    setResolvedPatient: (ctx) => {
+      const currentRef = get().patientRef
+      if (!currentRef || normalizePatientRef(ctx.ref) !== currentRef) {
+        // Stale/mismatched resolution — never apply. Keep the fail-safe
+        // unknown state set by loadPrescriptions.
+        return
+      }
+      set((state) => {
+        state.patientAllergies = ctx.allergies
+        state.allergyStatusUnknown = ctx.allergyStatusUnknown
+        // Prefer resolved identity for display when the local record has it.
+        if (ctx.patient) {
+          state.patientName = ctx.patient.nameGiven ?? state.patientName
+          if (state.patientAge == null && ctx.patient.birthYear) {
+            state.patientAge = Math.max(0, new Date().getFullYear() - ctx.patient.birthYear)
+          }
+        }
+      })
     },
 
     toggleItem: (prescriptionId) => {
@@ -259,6 +309,10 @@ export const useFulfillmentStore = create<FulfillmentState>()(
         set((state) => {
           state.phase = 'completed'
         })
+
+        // Story 57.1 (AC 4): fulfillment complete — clear the active patient
+        // so a stale record can never feed the next scan's allergy gate.
+        usePatientStore.getState().clearPatient()
       } catch (err) {
         // Partial failure — some items may have been persisted locally.
         // Transition to error-aware completed state so the pharmacist is warned.
@@ -270,6 +324,9 @@ export const useFulfillmentStore = create<FulfillmentState>()(
             error: err instanceof Error ? err.message : 'Dispensing failed — some items may not have been recorded. Check each medication before handing over.',
           }
         })
+        // Story 57.1 (AC 4): even error-completed fulfillments end the
+        // patient session — never carry the patient into the next scan.
+        usePatientStore.getState().clearPatient()
       } finally {
         set((state) => {
           state.syncStatus.isPending = false
@@ -336,7 +393,12 @@ export const useFulfillmentStore = create<FulfillmentState>()(
         state.patientAge = null
         state.scannedAt = null
         state.syncStatus = { isPending: false, pendingCount: 0, lastSyncResult: null }
+        state.patientRef = null
+        state.patientAllergies = null
+        state.allergyStatusUnknown = true
       })
+      // Story 57.1 (AC 4): cancellation/reset also clears the active patient.
+      usePatientStore.getState().clearPatient()
     },
   })),
 )

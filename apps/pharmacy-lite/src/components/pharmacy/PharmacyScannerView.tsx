@@ -10,9 +10,11 @@ import {
   type VerifiedPrescription,
 } from '@/lib/prescription-verify'
 import { useFulfillmentStore } from '@/stores/fulfillment-store'
+import { usePatientStore } from '@/stores/patient-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getHubApiUrl } from '@/lib/trpc'
 import { checkPrescriptionStatus, type SignedBundleInput } from '@/lib/prescription-status-client'
+import { resolvePatientForDispense, normalizePatientRef } from '@/lib/patient-resolution'
 
 type ViewPhase =
   | { step: 'idle' }
@@ -43,7 +45,7 @@ export function PharmacyScannerView({
   const scannerRef = useRef<HTMLDivElement>(null)
   const html5QrRef = useRef<unknown>(null)
   const processingRef = useRef(false)
-  const { loadPrescriptions } = useFulfillmentStore()
+  const { loadPrescriptions, setResolvedPatient } = useFulfillmentStore()
 
   // Verify QR data (from camera or paste)
   const handleVerify = useCallback(async (qrData: string) => {
@@ -129,13 +131,36 @@ export function PharmacyScannerView({
     handleVerify(rawQr)
   }, [handleVerify])
 
-  // Load into fulfillment store and navigate
+  // Load into fulfillment store, resolve the patient behind the QR's `pat`
+  // ref (Story 57.1 / C-SYS-3), then navigate.
   const finishProceed = useCallback(
-    (prescriptions: VerifiedPrescription[], practitionerName?: string) => {
+    async (prescriptions: VerifiedPrescription[], practitionerName?: string) => {
       loadPrescriptions(prescriptions, practitionerName)
+
+      const patRef = prescriptions[0]?.pat
+      if (patRef) {
+        // AC 3: a stale activePatient from a previous search must never feed
+        // this fulfillment — on ref mismatch, clear and re-resolve from the
+        // prescription itself.
+        const { activePatient, clearPatient } = usePatientStore.getState()
+        if (activePatient && activePatient.id !== normalizePatientRef(patRef)) {
+          clearPatient()
+        }
+
+        try {
+          // Local db.patients lookup + hub allergy fetch (merged, cached).
+          // Resolution failure leaves the store in the fail-safe UNKNOWN
+          // state set by loadPrescriptions (amber banner + override).
+          const ctx = await resolvePatientForDispense(patRef)
+          setResolvedPatient(ctx)
+        } catch {
+          // resolvePatientForDispense never throws — belt and braces only.
+        }
+      }
+
       onNavigateToReview?.()
     },
-    [loadPrescriptions, onNavigateToReview],
+    [loadPrescriptions, setResolvedPatient, onNavigateToReview],
   )
 
   // Story 3.4: Global Prescription Invalidation Check. Before dispensing, confirm
@@ -192,6 +217,9 @@ export function PharmacyScannerView({
     setPhase({ step: 'idle' })
     setPasteInput('')
     setProceed({ kind: 'idle' })
+    // Story 57.1 (AC 4): a new scan starts a new patient context — drop any
+    // previously active patient so their allergies can never carry over.
+    usePatientStore.getState().clearPatient()
   }, [])
 
   return (

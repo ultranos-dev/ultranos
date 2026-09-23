@@ -15,16 +15,31 @@ vi.mock('@/lib/prescription-verify', () => ({
 
 // Mock fulfillment store
 const mockLoadPrescriptions = vi.fn()
+const mockSetResolvedPatient = vi.fn()
 vi.mock('@/stores/fulfillment-store', () => ({
   useFulfillmentStore: Object.assign(
     vi.fn(() => ({
       phase: 'empty',
       items: [],
       loadPrescriptions: mockLoadPrescriptions,
+      setResolvedPatient: mockSetResolvedPatient,
       reset: vi.fn(),
     })),
-    { getState: vi.fn(() => ({ loadPrescriptions: mockLoadPrescriptions, reset: vi.fn() })) },
+    { getState: vi.fn(() => ({ loadPrescriptions: mockLoadPrescriptions, setResolvedPatient: mockSetResolvedPatient, reset: vi.fn() })) },
   ),
+}))
+
+// Story 57.1: patient resolution runs inside finishProceed — mock it so the
+// scanner tests stay hermetic (no fake network / IndexedDB resolution).
+vi.mock('@/lib/patient-resolution', () => ({
+  normalizePatientRef: (ref: string) => ref.replace(/^Patient\//, ''),
+  resolvePatientForDispense: vi.fn().mockResolvedValue({
+    ref: 'pat-001',
+    patient: null,
+    allergies: [],
+    allergyStatusUnknown: true,
+    sources: { local: false, hub: false, cache: 'none' },
+  }),
 }))
 
 // Mock auth session store

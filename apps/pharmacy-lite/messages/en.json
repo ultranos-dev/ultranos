@@ -1245,7 +1245,15 @@
     "overrideReasonLabel": "Reason for Override (min 10 characters)",
     "overrideReasonPlaceholder": "Describe the clinical justification for proceeding past this warning...",
     "overrideSupervisorLabel": "Supervising Physician / Pharmacist Name",
-    "overrideSupervisorPlaceholder": "e.g. Dr. Ahmad"
+    "overrideSupervisorPlaceholder": "e.g. Dr. Ahmad",
+    "overrideAllergyUnknownNotice": "Allergy status unknown — dispensing requires a documented override after verbal verification with the patient."
+  },
+  "allergyBanner": {
+    "knownTitle": "Known Allergies",
+    "knownTitleWithName": "Known Allergies — {name}",
+    "nka": "No Known Allergies (NKA)",
+    "unknownTitle": "Allergy Status Unknown",
+    "unknownBody": "No allergy record could be obtained for this patient. Verify allergies verbally with the patient before dispensing."
   },
   "patientSearch": {
     "placeholder": "Search patient by name or phone...",

@@ -6,6 +6,7 @@ import { db } from '@/lib/supabase'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { enforceEntitlement } from '../middleware/enforceEntitlement'
 import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
+import { enforceConsentMiddleware } from '../middleware/enforceConsent'
 import { AuditLogger } from '@ultranos/audit-logger'
 
 /**
@@ -75,6 +76,84 @@ export const allergyRouter = createTRPCRouter({
       }
 
       return { allergies: rows }
+    }),
+
+  /**
+   * Story 57.1: Active allergies for the pharmacy dispense-time safety gate.
+   * PHARMACIST-scoped and data-minimized: returns ONLY the substance
+   * (display text + code/system) and criticality — nothing else. The patient
+   * is resolved from the scanned prescription's `pat` reference (bare UUID or
+   * "Patient/"-prefixed both accepted).
+   *
+   * Access chain (CLAUDE.md Rules #4/#6 + Story 58.4 coordination):
+   *   role (PHARMACIST) → verified org → PHARMACY_LITE entitlement →
+   *   active consent (PRESCRIPTIONS scope via enforceConsentMiddleware) →
+   *   PHI_READ audit event.
+   *
+   * Deliberately does NOT use enforceResourceAccess('AllergyIntolerance'):
+   * adding AllergyIntolerance to the PHARMACIST rbac set would also widen
+   * sync.pull's role→resource surface (C-SYS-2). This read-only, minimized
+   * endpoint is scoped here instead — same pattern as
+   * medicationStatement.listActiveForPharmacist.
+   */
+  listForDispense: roleRestrictedProcedure(['PHARMACIST', 'ADMIN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('PHARMACY_LITE'))
+    .input(z.object({ patientRef: z.string().min(1) }))
+    .use(enforceConsentMiddleware('AllergyIntolerance'))
+    .query(async ({ ctx, input }) => {
+      // patient_ref is stored as a BARE UUID (see allergy.list above).
+      const patientId = input.patientRef.replace(/^Patient\//, '')
+
+      const { data, error } = await ctx.supabase
+        .from('allergy_intolerances')
+        .select('id, substance_text, substance_code, substance_system, substance_free_text, criticality')
+        .eq('patient_ref', patientId)
+        .eq('clinical_status_code', 'active')
+
+      if (error) {
+        console.error('Allergy listForDispense error:', { code: error.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to retrieve allergy records',
+        })
+      }
+
+      const rows = (data ?? []).map((row) => db.fromRow(row)) as Array<{
+        substanceText?: string | null
+        substanceCode?: string | null
+        substanceSystem?: string | null
+        substanceFreeText?: string | null
+        criticality?: string | null
+      }>
+
+      // Data minimization: substance identity + criticality only.
+      const allergies = rows.map((r) => ({
+        substanceText: r.substanceText ?? r.substanceFreeText ?? null,
+        substanceCode: r.substanceCode ?? null,
+        substanceSystem: r.substanceSystem ?? null,
+        criticality: r.criticality ?? null,
+      }))
+
+      // Audit PHI access (CLAUDE.md Rule #6)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'ALLERGY',
+          resourceId: `dispense-allergies:${patientId}`,
+          patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { allergyCount: allergies.length, via: 'pharmacist_dispense' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'AllergyIntolerance', via: 'pharmacist_dispense' })
+      }
+
+      return { allergies, count: allergies.length }
     }),
 
   /**

@@ -50,18 +50,18 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
         </div>
       </div>
       <div
-        aria-live="polite"
-        class="rounded-xl bg-muted/70 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-border"
-        data-banner-state="nka"
+        aria-live="assertive"
+        class="rounded-xl bg-warning/10 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-warning/40"
+        data-banner-state="unknown"
         data-testid="allergy-banner"
         role="alert"
       >
         <div
-          class="flex items-center gap-2"
+          class="flex items-center gap-2 mb-1"
         >
           <svg
             aria-hidden="true"
-            class="lucide lucide-circle-check text-muted-foreground shrink-0"
+            class="lucide lucide-triangle-alert text-warning shrink-0"
             fill="none"
             height="20"
             stroke="currentColor"
@@ -72,21 +72,27 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
             width="20"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <circle
-              cx="12"
-              cy="12"
-              r="10"
+            <path
+              d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
             />
             <path
-              d="m9 12 2 2 4-4"
+              d="M12 9v4"
+            />
+            <path
+              d="M12 17h.01"
             />
           </svg>
           <span
-            class="text-sm font-semibold text-muted-foreground"
+            class="text-sm font-bold text-warning uppercase tracking-wide"
           >
-            No Known Allergies (NKA)
+            unknownTitle
           </span>
         </div>
+        <p
+          class="text-sm font-semibold text-warning"
+        >
+          unknownBody
+        </p>
       </div>
       <ul
         class="space-y-3"
@@ -328,18 +334,18 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
         </div>
       </div>
       <div
-        aria-live="polite"
-        class="rounded-xl bg-muted/70 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-border"
-        data-banner-state="nka"
+        aria-live="assertive"
+        class="rounded-xl bg-warning/10 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-warning/40"
+        data-banner-state="unknown"
         data-testid="allergy-banner"
         role="alert"
       >
         <div
-          class="flex items-center gap-2"
+          class="flex items-center gap-2 mb-1"
         >
           <svg
             aria-hidden="true"
-            class="lucide lucide-circle-check text-muted-foreground shrink-0"
+            class="lucide lucide-triangle-alert text-warning shrink-0"
             fill="none"
             height="20"
             stroke="currentColor"
@@ -350,21 +356,27 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
             width="20"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <circle
-              cx="12"
-              cy="12"
-              r="10"
+            <path
+              d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
             />
             <path
-              d="m9 12 2 2 4-4"
+              d="M12 9v4"
+            />
+            <path
+              d="M12 17h.01"
             />
           </svg>
           <span
-            class="text-sm font-semibold text-muted-foreground"
+            class="text-sm font-bold text-warning uppercase tracking-wide"
           >
-            No Known Allergies (NKA)
+            unknownTitle
           </span>
         </div>
+        <p
+          class="text-sm font-semibold text-warning"
+        >
+          unknownBody
+        </p>
       </div>
       <ul
         class="space-y-3"

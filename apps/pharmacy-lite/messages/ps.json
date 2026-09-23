@@ -1245,7 +1245,15 @@
     "overrideReasonLabel": "د رد کولو دلیل (لږترلږه ۱۰ توري)",
     "overrideReasonPlaceholder": "د دې خبرداري سره سره د ادامې ورکولو کلیني توجیه بیان کړئ...",
     "overrideSupervisorLabel": "د ناظر ډاکتر یا دواساز نوم",
-    "overrideSupervisorPlaceholder": "مثال: ډاکتر احمد"
+    "overrideSupervisorPlaceholder": "مثال: ډاکتر احمد",
+    "overrideAllergyUnknownNotice": "د حساسیت حالت نامعلوم دی — د درملو ورکول د ناروغ له شفاهي تایید وروسته مستند رد کولو ته اړتیا لري."
+  },
+  "allergyBanner": {
+    "knownTitle": "پېژندل شوي حساسیتونه",
+    "knownTitleWithName": "پېژندل شوي حساسیتونه — {name}",
+    "nka": "هېڅ پېژندل شوی حساسیت نشته (NKA)",
+    "unknownTitle": "د حساسیت حالت نامعلوم دی",
+    "unknownBody": "د دې ناروغ د حساسیت ریکارډ ترلاسه نه شو. د درملو له ورکولو مخکې له ناروغ سره په شفاهي توګه حساسیتونه تایید کړئ."
   },
   "patientSearch": {
     "placeholder": "د نوم یا تلیفون له مخې ناروغ ولټوئ...",

@@ -1,6 +1,6 @@
 # Story 57.1: Dispense Allergy Gate Restoration (Pharmacy ← Hub Allergy Wiring)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -21,22 +21,22 @@ so that the dispense-time ALLERGY_MATCH block actually protects patients instead
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Hub allergy endpoint for dispensing** (AC: 5, 6)
-  - [ ] 1.1 Add `allergy.listForDispense` (or extend `allergy.list` authz) in `apps/hub-api/src/trpc/routers/allergy.ts`: pharmacist role, patient resolved from prescription ref, consent-gated via `enforceConsentMiddleware`, audit event emitted, `enforceEntitlement('PHARMACY_LITE')`.
-- [ ] **Task 2: Patient resolution in the scan flow** (AC: 1, 3)
-  - [ ] 2.1 In `apps/pharmacy-lite/src/components/pharmacy/PharmacyScannerView.tsx` (`loadPrescriptions` call at `:135`): resolve patient by `prescription.pat` — local `db.patients` lookup + Hub allergy fetch (Task 1) merged; set into the fulfillment context explicitly keyed to the prescription.
-  - [ ] 2.2 Add identity assertion in `FulfillmentChecklist.tsx:79` / `fulfillment-store.ts:80-110`: allergies are only consumed when their source patient ref matches `prescription.pat`; on mismatch, clear and re-resolve.
-  - [ ] 2.3 Call `clearPatient()` (defined `stores/patient-store.ts:13`, currently never called) on fulfillment completion, cancellation, and new-scan.
-- [ ] **Task 3: Unknown-allergy-state UI** (AC: 2, 7)
-  - [ ] 3.1 Extend `AllergyBanner.tsx:20-68` with a third state: `unknown` (amber, `bg-destructive/10`-style semantics but warning-toned, never collapsed, i18n'd in en/ar/prs/ps) distinct from `none` (NKA) and `present`. `undefined` allergies map to `unknown`, never NKA.
-  - [ ] 3.2 Wire `DispensingConfirmationModal.tsx:52` so `unknown` state requires the override-with-reason path (mirror the UNAVAILABLE interaction-check flow in `dispense-interaction-check.ts`).
-- [ ] **Task 4: Navigation fix** (AC: 4)
-  - [ ] 4.1 `DashboardActionHub.tsx:17-24`: replace `window.location.href = '/scan'` with locale-aware `router.push` (note the current call also drops the locale prefix).
-- [ ] **Task 5: Tests** (AC: 5, 7, 8)
-  - [ ] 5.1 Snapshot: allergy-first/red/uncollapsed, LTR+RTL, all three states (currently zero AllergyBanner tests exist — audit-verified).
-  - [ ] 5.2 Integration: scan → patient resolution → OPD-sourced allergy blocks dispense; stale-patient mismatch cleared; offline+no-local-record → unknown banner + override required.
-- [ ] **Task 6: Regression verification** (AC: 8)
-  - [ ] 6.1 Full pharmacy-lite suite (179 files) + hub allergy router tests; manual: QR happy path, offline dispense, override flow unchanged; `pnpm typecheck`.
+- [x] **Task 1: Hub allergy endpoint for dispensing** (AC: 5, 6)
+  - [x] 1.1 Add `allergy.listForDispense` (or extend `allergy.list` authz) in `apps/hub-api/src/trpc/routers/allergy.ts`: pharmacist role, patient resolved from prescription ref, consent-gated via `enforceConsentMiddleware`, audit event emitted, `enforceEntitlement('PHARMACY_LITE')`.
+- [x] **Task 2: Patient resolution in the scan flow** (AC: 1, 3)
+  - [x] 2.1 In `apps/pharmacy-lite/src/components/pharmacy/PharmacyScannerView.tsx` (`loadPrescriptions` call at `:135`): resolve patient by `prescription.pat` — local `db.patients` lookup + Hub allergy fetch (Task 1) merged; set into the fulfillment context explicitly keyed to the prescription.
+  - [x] 2.2 Add identity assertion in `FulfillmentChecklist.tsx:79` / `fulfillment-store.ts:80-110`: allergies are only consumed when their source patient ref matches `prescription.pat`; on mismatch, clear and re-resolve.
+  - [x] 2.3 Call `clearPatient()` (defined `stores/patient-store.ts:13`, currently never called) on fulfillment completion, cancellation, and new-scan.
+- [x] **Task 3: Unknown-allergy-state UI** (AC: 2, 7)
+  - [x] 3.1 Extend `AllergyBanner.tsx:20-68` with a third state: `unknown` (amber, `bg-destructive/10`-style semantics but warning-toned, never collapsed, i18n'd in en/ar/prs/ps) distinct from `none` (NKA) and `present`. `undefined` allergies map to `unknown`, never NKA.
+  - [x] 3.2 Wire `DispensingConfirmationModal.tsx:52` so `unknown` state requires the override-with-reason path (mirror the UNAVAILABLE interaction-check flow in `dispense-interaction-check.ts`).
+- [x] **Task 4: Navigation fix** (AC: 4)
+  - [x] 4.1 `DashboardActionHub.tsx:17-24`: replace `window.location.href = '/scan'` with locale-aware `router.push` (note the current call also drops the locale prefix).
+- [x] **Task 5: Tests** (AC: 5, 7, 8)
+  - [x] 5.1 Snapshot: allergy-first/red/uncollapsed, LTR+RTL, all three states (currently zero AllergyBanner tests exist — audit-verified).
+  - [x] 5.2 Integration: scan → patient resolution → OPD-sourced allergy blocks dispense; stale-patient mismatch cleared; offline+no-local-record → unknown banner + override required.
+- [x] **Task 6: Regression verification** (AC: 8)
+  - [x] 6.1 Full pharmacy-lite suite (179 files) + hub allergy router tests; manual: QR happy path, offline dispense, override flow unchanged; `pnpm typecheck`.
 
 ## Dev Notes
 
@@ -71,11 +71,27 @@ This story must introduce **zero regression in existing features and functionali
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Fable 5 (1M) — implementation; Claude Opus 4.8 (1M) — completion & combined verification.
 
 ### Debug Log References
+None. (Account spend-limit interrupted the first pass post-implementation; resumed in the same worktree for verification.)
 
 ### Completion Notes List
+- **Task 1:** New hub procedure `allergy.listForDispense` (`allergy.ts`) — PHARMACIST/ADMIN, `enforceVerifiedOrg`, `PHARMACY_LITE` entitlement, `enforceConsentMiddleware('AllergyIntolerance')`, PHI_READ audit; returns only `substanceText/Code/System` + `criticality`. `enforceConsent.ts` gained the `AllergyIntolerance → PRESCRIPTIONS` scope mapping (coordinate with Story 58.4).
+- **Task 2:** `patient-resolution.ts` resolves by `prescription.pat` (local `db.patients` + hub `allergy.listForDispense`, merged, with an encrypted staleness-marked cache); `PharmacyScannerView` sets the resolved patient explicitly; `fulfillment-store` asserts the ref matches `prescription.pat`; `clearPatient()` now called on complete/error/reset/new-scan (was never called).
+- **Task 3:** `AllergyBanner` has three states — active (red/destructive), **unknown** (`undefined`/`null` → amber `bg-warning`, `role=alert`, never NKA), NKA (`[]` only). `DispensingConfirmationModal` folds the unknown state into the existing override path (≥10-char reason + supervisor), same as an UNAVAILABLE interaction check.
+- **Task 4:** `DashboardActionHub` uses locale-aware `router.push('/${locale}/scan')` (was `window.location.href`, which wiped the in-memory store and dropped the locale).
+- **Task 5/6:** New tests — `allergy-banner.test.tsx` (allergy-first/red/uncollapsed, LTR+RTL, all three states), `scan-fulfillment-allergy.test.tsx` (OPD-sourced allergy blocks; stale-patient mismatch cleared; offline+no-record → unknown + override), hub `allergy-dispense-endpoint.test.ts`. Regression fixes exposed by verification: DB bumped to **v22** (encrypted `patientAllergyCache` table, added to `phi-cleanup` PHI_TABLES); 4 pre-existing tests updated for the verno bump; 2 stale FulfillmentChecklist RTL snapshots regenerated to show the amber banner (the spec-mandated change: 0 "NKA" / 4 "unknown").
+- **Note:** the hub allergy query relies on the consent gate for authz (mirrors existing `allergy.list`); flagged for the contract test.
+
+### Verification (combined tree)
+- `pnpm -F pharmacy-lite typecheck` + `pnpm -F hub-api typecheck` → clean.
+- `pnpm -F pharmacy-lite test` → 179 files, 1096 pass, 0 fail (co-resident with 56.1 auth changes).
+- hub `allergy-dispense-endpoint.test.ts` (10) + new pharmacy allergy tests → pass; hub full suite 1679 pass.
 
 ### File List
+Modified — `apps/hub-api/src/trpc/routers/allergy.ts`, `src/trpc/middleware/enforceConsent.ts`; `apps/pharmacy-lite/src/components/pharmacy/{AllergyBanner,DashboardActionHub,DispensingConfirmationModal,FulfillmentChecklist,PharmacyScannerView}.tsx`, `src/lib/db.ts`, `src/lib/phi-cleanup.ts`, `src/stores/fulfillment-store.ts`, `messages/{en,ar,prs,ps}.json`, `src/__tests__/PharmacyScannerView.test.tsx`, `src/__tests__/__snapshots__/FulfillmentChecklist.test.tsx.snap`, plus phi-cleanup/schema test verno fixes.
+New — `apps/pharmacy-lite/src/lib/patient-resolution.ts`, `src/__tests__/allergy-banner.test.tsx` (+ snapshot), `src/__tests__/scan-fulfillment-allergy.test.tsx`, `apps/hub-api/src/__tests__/allergy-dispense-endpoint.test.ts`.
 
 ### Change Log
+- 2026-09-23: Story 57.1 implemented (Wave 1). All 6 tasks complete + combined-tree verified. New `allergy.listForDispense`; pharmacy DB → v22. Status → review.

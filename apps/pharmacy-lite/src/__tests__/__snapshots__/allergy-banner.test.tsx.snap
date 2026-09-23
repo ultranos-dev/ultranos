@@ -1,0 +1,331 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AllergyBanner (pharmacy) > NKA state — confirmed empty allergy record > matches snapshot in LTR 1`] = `
+<div>
+  <div
+    dir="ltr"
+  >
+    <div
+      aria-live="polite"
+      class="rounded-xl bg-muted/70 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-border"
+      data-banner-state="nka"
+      data-testid="allergy-banner"
+      role="alert"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-check text-muted-foreground shrink-0"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m9 12 2 2 4-4"
+          />
+        </svg>
+        <span
+          class="text-sm font-semibold text-muted-foreground"
+        >
+          nka
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`AllergyBanner (pharmacy) > NKA state — confirmed empty allergy record > matches snapshot in RTL 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      aria-live="polite"
+      class="rounded-xl bg-muted/70 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-border"
+      data-banner-state="nka"
+      data-testid="allergy-banner"
+      role="alert"
+    >
+      <div
+        class="flex items-center gap-2"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-check text-muted-foreground shrink-0"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m9 12 2 2 4-4"
+          />
+        </svg>
+        <span
+          class="text-sm font-semibold text-muted-foreground"
+        >
+          nka
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`AllergyBanner (pharmacy) > active state — allergies present > matches snapshot in LTR 1`] = `
+<div>
+  <div
+    dir="ltr"
+  >
+    <div
+      aria-live="assertive"
+      class="rounded-xl bg-destructive/10 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-destructive/40"
+      data-banner-state="active"
+      data-testid="allergy-banner"
+      role="alert"
+    >
+      <div
+        class="flex items-center gap-2 mb-2"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-triangle-alert text-destructive shrink-0"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+          />
+          <path
+            d="M12 9v4"
+          />
+          <path
+            d="M12 17h.01"
+          />
+        </svg>
+        <span
+          class="text-sm font-bold text-destructive uppercase tracking-wide"
+        >
+          knownTitleWithName {"name":"Fatima"}
+        </span>
+      </div>
+      <div
+        class="flex flex-wrap gap-2"
+      >
+        <span
+          class="inline-flex items-center rounded-full bg-destructive/20 px-3 py-1 text-sm font-bold text-destructive"
+        >
+          Penicillin
+        </span>
+        <span
+          class="inline-flex items-center rounded-full bg-destructive/20 px-3 py-1 text-sm font-bold text-destructive"
+        >
+          Peanuts
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`AllergyBanner (pharmacy) > active state — allergies present > matches snapshot in RTL 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      aria-live="assertive"
+      class="rounded-xl bg-destructive/10 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-destructive/40"
+      data-banner-state="active"
+      data-testid="allergy-banner"
+      role="alert"
+    >
+      <div
+        class="flex items-center gap-2 mb-2"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-triangle-alert text-destructive shrink-0"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+          />
+          <path
+            d="M12 9v4"
+          />
+          <path
+            d="M12 17h.01"
+          />
+        </svg>
+        <span
+          class="text-sm font-bold text-destructive uppercase tracking-wide"
+        >
+          knownTitleWithName {"name":"Fatima"}
+        </span>
+      </div>
+      <div
+        class="flex flex-wrap gap-2"
+      >
+        <span
+          class="inline-flex items-center rounded-full bg-destructive/20 px-3 py-1 text-sm font-bold text-destructive"
+        >
+          Penicillin
+        </span>
+        <span
+          class="inline-flex items-center rounded-full bg-destructive/20 px-3 py-1 text-sm font-bold text-destructive"
+        >
+          Peanuts
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`AllergyBanner (pharmacy) > unknown state — allergy record could not be obtained (AC 2) > matches snapshot in LTR 1`] = `
+<div>
+  <div
+    dir="ltr"
+  >
+    <div
+      aria-live="assertive"
+      class="rounded-xl bg-warning/10 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-warning/40"
+      data-banner-state="unknown"
+      data-testid="allergy-banner"
+      role="alert"
+    >
+      <div
+        class="flex items-center gap-2 mb-1"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-triangle-alert text-warning shrink-0"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+          />
+          <path
+            d="M12 9v4"
+          />
+          <path
+            d="M12 17h.01"
+          />
+        </svg>
+        <span
+          class="text-sm font-bold text-warning uppercase tracking-wide"
+        >
+          unknownTitle
+        </span>
+      </div>
+      <p
+        class="text-sm font-semibold text-warning"
+      >
+        unknownBody
+      </p>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`AllergyBanner (pharmacy) > unknown state — allergy record could not be obtained (AC 2) > matches snapshot in RTL 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      aria-live="assertive"
+      class="rounded-xl bg-warning/10 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-warning/40"
+      data-banner-state="unknown"
+      data-testid="allergy-banner"
+      role="alert"
+    >
+      <div
+        class="flex items-center gap-2 mb-1"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-triangle-alert text-warning shrink-0"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+          />
+          <path
+            d="M12 9v4"
+          />
+          <path
+            d="M12 17h.01"
+          />
+        </svg>
+        <span
+          class="text-sm font-bold text-warning uppercase tracking-wide"
+        >
+          unknownTitle
+        </span>
+      </div>
+      <p
+        class="text-sm font-semibold text-warning"
+      >
+        unknownBody
+      </p>
+    </div>
+  </div>
+</div>
+`;

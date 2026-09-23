@@ -6,14 +6,16 @@ import { db } from './db'
  * but clearing them provides defence-in-depth beyond key-wipe alone.
  *
  * Determined from db.ts PHI_TABLE_CONFIGS:
- *   dispenses          — medication dispense records (subject reference + clinical content)
- *   dispenseAuditLog   — references patientRef and medicationDisplay (clinical content)
- *   patients           — local patient registry (name, phone, allergies)
+ *   dispenses           — medication dispense records (subject reference + clinical content)
+ *   dispenseAuditLog    — references patientRef and medicationDisplay (clinical content)
+ *   patients            — local patient registry (name, phone, allergies)
+ *   patientAllergyCache — cached hub allergy fetch (allergy substances — Story 57.1)
  */
 export const PHI_TABLES = [
   'dispenses',
   'dispenseAuditLog',
   'patients',
+  'patientAllergyCache',
 ] as const
 
 /**

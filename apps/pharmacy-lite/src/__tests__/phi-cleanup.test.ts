@@ -31,7 +31,7 @@ vi.mock('@/lib/db', () => {
   // Build a mock db with all tables from the real schema
   const tables: Record<string, ReturnType<typeof makeFakeTable>> = {}
   const allTableNames = [
-    'dispenses', 'dispenseAuditLog', 'patients',
+    'dispenses', 'dispenseAuditLog', 'patients', 'patientAllergyCache',
     'syncQueue', 'practitionerKeys', 'revokedKeys',
     'pendingAuditEvents', 'clientAuditLog', 'catalogItems',
     'stockBatches', 'stockMovements', 'goodsReceipts',

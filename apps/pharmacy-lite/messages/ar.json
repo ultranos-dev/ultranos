@@ -1245,7 +1245,15 @@
     "overrideReasonLabel": "سبب التجاوز (10 أحرف على الأقل)",
     "overrideReasonPlaceholder": "صِف المبرر السريري للمضي رغم هذا التحذير...",
     "overrideSupervisorLabel": "اسم الطبيب أو الصيدلاني المشرف",
-    "overrideSupervisorPlaceholder": "مثال: د. أحمد"
+    "overrideSupervisorPlaceholder": "مثال: د. أحمد",
+    "overrideAllergyUnknownNotice": "حالة الحساسية غير معروفة — يتطلب الصرف تجاوزاً موثقاً بعد التحقق الشفهي من المريض."
+  },
+  "allergyBanner": {
+    "knownTitle": "حساسية معروفة",
+    "knownTitleWithName": "حساسية معروفة — {name}",
+    "nka": "لا توجد حساسية معروفة (NKA)",
+    "unknownTitle": "حالة الحساسية غير معروفة",
+    "unknownBody": "تعذر الحصول على سجل الحساسية لهذا المريض. تحقق من الحساسية شفهياً من المريض قبل صرف الدواء."
   },
   "patientSearch": {
     "placeholder": "البحث عن مريض بالاسم أو الهاتف...",

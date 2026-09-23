@@ -113,6 +113,18 @@ export interface LocalPatient {
   source: 'registered' | 'qr-verified' | 'hub-synced'
 }
 
+/**
+ * Story 57.1: Cached hub allergy fetch for dispense-time safety (C-SYS-3).
+ * Keyed by BARE patient ref with a `fetchedAt` staleness marker so a recently
+ * fetched record still protects an offline re-dispense. PHI (allergy
+ * substances) — encrypted via PHI_TABLE_CONFIGS and cleared on session end.
+ */
+export interface PatientAllergyCacheEntry {
+  patientRef: string
+  allergies: string[]
+  fetchedAt: string
+}
+
 export interface CatalogSyncMetaEntry {
   key: string
   value: string
@@ -175,6 +187,7 @@ class PharmacyLiteDatabase extends Dexie {
   contractPrices!: EntityTable<ContractPrice, 'id'>
   wholesalePullMeta!: EntityTable<{ key: string; lastPulledHlc: string }, 'key'>
   stockLocations!: EntityTable<StockLocation, 'id'>
+  patientAllergyCache!: EntityTable<PatientAllergyCacheEntry, 'patientRef'>
 
   constructor() {
     super('pharmacy-lite')
@@ -325,6 +338,14 @@ class PharmacyLiteDatabase extends Dexie {
     this.version(21).stores({
       stockLocations: 'id, isPrimary, isActive',
     })
+
+    // v22: Story 57.1 — dispense-time allergy cache (C-SYS-3 remediation).
+    // PHI (allergy substances): encrypted via PHI_TABLE_CONFIGS below and
+    // cleared on session end (phi-cleanup). Keyed by bare patient ref with a
+    // fetchedAt staleness marker for offline re-dispense protection.
+    this.version(22).stores({
+      patientAllergyCache: 'patientRef, fetchedAt',
+    })
   }
 }
 
@@ -366,6 +387,12 @@ const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
     // See adr-028-search-encryption-strategy.
     tableName: 'patients',
     indexedFields: ['id', 'createdAt'],
+  },
+  {
+    // Story 57.1: cached hub allergy fetch — substances are PHI; only the
+    // opaque patient ref + staleness marker stay cleartext for queries.
+    tableName: 'patientAllergyCache',
+    indexedFields: ['patientRef', 'fetchedAt'],
   },
 ]
 

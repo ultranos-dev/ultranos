@@ -1245,7 +1245,15 @@
     "overrideReasonLabel": "دلیل نادیده‌گرفتن (حداقل ۱۰ حرف)",
     "overrideReasonPlaceholder": "توجیه بالینی برای ادامه دادن علی‌رغم این هشدار را توضیح دهید...",
     "overrideSupervisorLabel": "نام طبیب یا دواساز ناظر",
-    "overrideSupervisorPlaceholder": "مثال: داکتر احمد"
+    "overrideSupervisorPlaceholder": "مثال: داکتر احمد",
+    "overrideAllergyUnknownNotice": "وضعیت حساسیت نامعلوم است — تحویل دوا نیازمند نادیده‌گرفتن مستند پس از تایید شفاهی از مریض است."
+  },
+  "allergyBanner": {
+    "knownTitle": "حساسیت‌های شناخته‌شده",
+    "knownTitleWithName": "حساسیت‌های شناخته‌شده — {name}",
+    "nka": "حساسیت شناخته‌شده‌ای وجود ندارد (NKA)",
+    "unknownTitle": "وضعیت حساسیت نامعلوم است",
+    "unknownBody": "سابقه حساسیت این مریض به دست نیامد. پیش از تحویل دوا، حساسیت‌ها را به صورت شفاهی از مریض تایید کنید."
   },
   "patientSearch": {
     "placeholder": "جستجوی مریض بر اساس نام یا تلفن...",

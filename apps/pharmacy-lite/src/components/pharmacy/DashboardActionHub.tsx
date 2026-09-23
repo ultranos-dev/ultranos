@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { PatientSearchBar } from './PatientSearchBar'
 import { usePatientStore } from '@/stores/patient-store'
@@ -10,18 +11,23 @@ import { Scan, FileText, UserPlus } from '@ultranos/ui-kit/icons'
 
 export function DashboardActionHub() {
   const locale = useLocale()
+  const router = useRouter()
   const t = useTranslations('dashboard')
   const setActivePatient = usePatientStore((s) => s.setActivePatient)
 
+  // Story 57.1 (AC 4): locale-aware SPA navigation. The previous
+  // `window.location.href = '/scan'` full reload wiped the in-memory zustand
+  // patient store (making setActivePatient a no-op) AND dropped the locale
+  // prefix (C-SYS-3 evidence chain).
   const handleSelectPatient = useCallback((patient: LocalPatient) => {
     setActivePatient(patient)
-    window.location.href = '/scan'
-  }, [setActivePatient])
+    router.push(`/${locale}/scan`)
+  }, [setActivePatient, router, locale])
 
   const handleRegisterNew = useCallback((name?: string) => {
     const params = name ? `?nameGiven=${encodeURIComponent(name)}` : ''
-    window.location.href = `/${locale}/register-patient${params}`
-  }, [locale])
+    router.push(`/${locale}/register-patient${params}`)
+  }, [router, locale])
 
   return (
     <div className="space-y-4" data-testid="dashboard-action-hub">

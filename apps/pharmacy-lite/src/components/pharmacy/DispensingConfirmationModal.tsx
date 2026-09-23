@@ -17,6 +17,13 @@ interface DispensingConfirmationModalProps {
   items: FulfillmentItem[]
   patientName?: string
   patientAllergies?: string[]
+  /**
+   * Story 57.1 (AC 2): true when the patient's allergy record could not be
+   * obtained (offline with no local record, hub error). Requires the same
+   * override-with-reason path as an UNAVAILABLE interaction check — the
+   * existing `_ultranos.reviewOverride` machinery is reused, not forked.
+   */
+  allergyStatusUnknown?: boolean
   onConfirm: (override?: { reason: string; supervisorName: string }) => void
   onCancel: () => void
 }
@@ -25,6 +32,7 @@ export function DispensingConfirmationModal({
   items,
   patientName,
   patientAllergies,
+  allergyStatusUnknown = false,
   onConfirm,
   onCancel,
 }: DispensingConfirmationModalProps) {
@@ -61,7 +69,12 @@ export function DispensingConfirmationModal({
 
   // Override is required for warning or unavailable states — the pharmacist must
   // provide a reason and supervisor name before proceeding.
-  const needsOverride = interaction.state === 'warning' || interaction.state === 'unavailable'
+  // Story 57.1 (AC 2): an UNKNOWN allergy status is treated exactly like an
+  // unavailable interaction check — dispensing requires override-with-reason.
+  const needsOverride =
+    interaction.state === 'warning' ||
+    interaction.state === 'unavailable' ||
+    allergyStatusUnknown
 
   const overrideValid =
     !needsOverride || (overrideReason.trim().length >= 10 && supervisorName.trim().length > 0)
@@ -93,6 +106,11 @@ export function DispensingConfirmationModal({
         {needsOverride && (
           <div className="mb-4 rounded-xl border border-warning/40 bg-warning/10 p-4 space-y-3">
             <p className="text-sm font-semibold text-warning">{t('overrideRequiredTitle')}</p>
+            {allergyStatusUnknown && (
+              <p className="text-xs font-semibold text-warning" data-testid="override-allergy-unknown-notice">
+                {t('overrideAllergyUnknownNotice')}
+              </p>
+            )}
             <p className="text-xs text-warning">{t('overrideReviewNotice')}</p>
 
             <div>
