@@ -77,6 +77,17 @@ const SpecimenUltranosExtSchema = z.object({
   // worklist into the Archived shelf. Orthogonal to pipelineStatus (a sample
   // of any pipeline state may be archived) and reversible via unarchive.
   archived: z.boolean().optional(),
+  // Data-minimized patient display copy stamped at accession (CLAUDE.md Rule #7:
+  // first name + age only). Lets the worklist / detail views render the patient
+  // even when the originating order row has been pruned or synced elsewhere —
+  // never depend on a join surviving. NEVER add more identifying fields here.
+  patientFirstName: z.string().optional(),
+  patientAge: z.number().nullable().optional(),
+  // Ordered test(s) copied from the paired order at accession, so the worklist
+  // and result template resolve correctly without the order row.
+  orderedTests: z
+    .array(z.object({ loincCode: z.string(), loincDisplay: z.string() }))
+    .optional(),
 })
 
 const AnnotationSchema = z.object({
