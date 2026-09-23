@@ -7,8 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -74,11 +73,9 @@ export function EscalationModal({ alertId, open, onOpenChange, onSuccess }: Esca
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Escalate Alert</DialogTitle>
-          <DialogDescription className="sr-only">Escalate this alert to an admin for further investigation.</DialogDescription>
-        </DialogHeader>
+      <DialogContent hideClose>
+        <ModalHeader title="Escalate Alert" tone="primary" inset dialog />
+        <DialogDescription className="sr-only">Escalate this alert to an admin for further investigation.</DialogDescription>
 
         {error && (
           <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>

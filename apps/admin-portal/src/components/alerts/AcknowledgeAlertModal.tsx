@@ -7,8 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -59,13 +58,11 @@ export function AcknowledgeAlertModal({
 
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next && submitting) return; onOpenChange(next) }}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Acknowledge Alert</DialogTitle>
-          <DialogDescription>
-            {testCategory} alert for <span className="font-medium">{labName}</span>
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent hideClose>
+        <ModalHeader title="Acknowledge Alert" tone="primary" inset dialog />
+        <DialogDescription>
+          {testCategory} alert for <span className="font-medium">{labName}</span>
+        </DialogDescription>
 
         {error && (
           <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>

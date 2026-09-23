@@ -7,7 +7,7 @@ import { SearchInput } from '@/components/ui/search-input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, ModalHeader } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Warehouse, FileSearch } from '@ultranos/ui-kit/icons'
@@ -233,10 +233,8 @@ export function FacilityLocationsManager({ facilityId }: { facilityId: string })
 
       {/* Create / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog() }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editing !== null ? t('edit') : t('add')}</DialogTitle>
-          </DialogHeader>
+        <DialogContent hideClose>
+          <ModalHeader title={editing !== null ? t('edit') : t('add')} inset dialog />
 
           <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-1.5">

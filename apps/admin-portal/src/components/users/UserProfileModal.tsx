@@ -10,8 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
 } from '@/components/ui/dialog'
 import { StaffAvatar } from './StaffAvatar'
@@ -181,11 +180,9 @@ export function UserProfileModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>{user?.name ?? t('detailLoading')}</DialogTitle>
-          <DialogDescription className="sr-only">User profile and management actions</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl" hideClose>
+        <ModalHeader title={user?.name ?? t('detailLoading')} tone="primary" inset dialog />
+        <DialogDescription className="sr-only">User profile and management actions</DialogDescription>
 
         {loading || !form ? (
           <div className="py-8 text-center text-sm text-muted-foreground">{t('detailLoading')}</div>

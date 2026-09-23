@@ -4,8 +4,7 @@ import { useTranslations } from 'next-intl'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog'
@@ -126,10 +125,10 @@ export function FacilityProfileModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {loading || !profile ? (
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" hideClose>
+          <ModalHeader
+            title={
+              loading || !profile ? (
                 <span className="text-muted-foreground">{t('common.loading') ?? 'Loading…'}</span>
               ) : (
                 <div className="flex items-center gap-3">
@@ -156,10 +155,13 @@ export function FacilityProfileModal({
                     </div>
                   </div>
                 </div>
-              )}
-            </DialogTitle>
-            <DialogDescription className="sr-only">Facility profile and management actions</DialogDescription>
-          </DialogHeader>
+              )
+            }
+            tone="primary"
+            inset
+            dialog
+          />
+          <DialogDescription className="sr-only">Facility profile and management actions</DialogDescription>
 
           {loading && (
             <div className="flex min-h-[12rem] items-center justify-center text-sm text-muted-foreground">
@@ -274,13 +276,11 @@ export function FacilityProfileModal({
 
       {/* Archive confirmation dialog */}
       <Dialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('facilities.archiveConfirmTitle') ?? 'Archive facility?'}</DialogTitle>
-            <DialogDescription>
-              {t('facilities.archiveConfirmDesc') ?? 'This facility will be hidden from active lists. You can restore it later.'}
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-sm" hideClose>
+          <ModalHeader title={t('facilities.archiveConfirmTitle') ?? 'Archive facility?'} tone="destructive" inset dialog />
+          <DialogDescription>
+            {t('facilities.archiveConfirmDesc') ?? 'This facility will be hidden from active lists. You can restore it later.'}
+          </DialogDescription>
           <DialogFooter>
             <Button variant="outline" onClick={() => setArchiveConfirmOpen(false)} disabled={actionPending}>
               {t('common.cancel') ?? 'Cancel'}

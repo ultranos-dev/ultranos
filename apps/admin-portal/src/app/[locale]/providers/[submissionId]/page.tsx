@@ -12,8 +12,7 @@ import { FileText, Search } from '@ultranos/ui-kit/icons'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -153,11 +152,9 @@ function ConfirmationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{c.title}</DialogTitle>
-          <DialogDescription>{c.description}</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-md" hideClose>
+        <ModalHeader title={c.title} tone="primary" inset dialog />
+        <DialogDescription>{c.description}</DialogDescription>
 
         <div>
           <label htmlFor="reason" className="block text-sm font-medium text-muted-foreground">

@@ -9,8 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -67,11 +66,9 @@ export function OutbreakActivationModal({ labs, open, onOpenChange, onSuccess }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Activate Outbreak Mode</DialogTitle>
-          <DialogDescription className="sr-only">Activate outbreak mode for a pathogen across selected labs.</DialogDescription>
-        </DialogHeader>
+      <DialogContent hideClose>
+        <ModalHeader title="Activate Outbreak Mode" tone="primary" inset dialog />
+        <DialogDescription className="sr-only">Activate outbreak mode for a pathogen across selected labs.</DialogDescription>
 
         {error && (
           <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>

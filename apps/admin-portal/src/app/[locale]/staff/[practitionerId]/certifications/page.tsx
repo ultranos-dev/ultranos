@@ -13,8 +13,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogFooter,
 } from '@/components/ui/dialog'
 
@@ -265,10 +264,8 @@ export default function PractitionerCertificationsPage() {
 
       {/* Assign Pathway Modal */}
       <Dialog open={showAssignModal} onOpenChange={setShowAssignModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('certAssignTitle')}</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-md" hideClose>
+          <ModalHeader title={t('certAssignTitle')} tone="primary" inset dialog />
           <select
             value={assigningPathwayId}
             onChange={(e) => setAssigningPathwayId(e.target.value)}

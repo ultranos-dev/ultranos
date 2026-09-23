@@ -7,8 +7,7 @@ import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -168,11 +167,9 @@ export function UserFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Create Staff User</DialogTitle>
-          <DialogDescription>Assign roles based on your organization&apos;s active module subscriptions.</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" hideClose>
+        <ModalHeader title="Create Staff User" tone="primary" inset dialog />
+        <DialogDescription>Assign roles based on your organization&apos;s active module subscriptions.</DialogDescription>
 
         {loading ? (
           <div className="py-8 text-center text-sm text-muted-foreground">Loading available roles…</div>

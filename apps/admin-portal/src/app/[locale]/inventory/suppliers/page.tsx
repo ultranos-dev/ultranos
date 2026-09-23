@@ -12,8 +12,7 @@ import { Truck, FileSearch } from '@ultranos/ui-kit/icons'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -261,15 +260,11 @@ export default function SuppliersPage() {
 
         {/* Add/Edit Supplier Modal */}
         <Dialog open={showModal} onOpenChange={setShowModal}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {editingSupplier ? t('editSupplier') : t('addSupplier')}
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                {editingSupplier ? 'Edit supplier details.' : 'Add a new supplier.'}
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="max-w-lg" hideClose>
+            <ModalHeader title={editingSupplier ? t('editSupplier') : t('addSupplier')} tone="primary" inset dialog />
+            <DialogDescription className="sr-only">
+              {editingSupplier ? 'Edit supplier details.' : 'Add a new supplier.'}
+            </DialogDescription>
 
             <div className="space-y-4">
               <div>

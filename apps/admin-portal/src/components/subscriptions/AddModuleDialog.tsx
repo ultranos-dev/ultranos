@@ -7,8 +7,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
 } from '@/components/ui/dialog'
 
@@ -72,11 +71,9 @@ export function AddModuleDialog({ open, onOpenChange, onModuleAdded }: AddModule
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Add Module</DialogTitle>
-          <DialogDescription className="sr-only">Select a module to add to your subscription</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-lg" hideClose>
+        <ModalHeader title="Add Module" tone="primary" inset dialog />
+        <DialogDescription className="sr-only">Select a module to add to your subscription</DialogDescription>
 
         {error && (
           <div className="mt-3 rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>

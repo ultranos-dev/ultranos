@@ -7,8 +7,7 @@ import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -57,11 +56,9 @@ export function ChwEnrollmentModal({ labs, open, onOpenChange, onSuccess }: ChwE
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Enroll Community Health Worker</DialogTitle>
-          <DialogDescription className="sr-only">Enroll a new community health worker and assign them to a collection point.</DialogDescription>
-        </DialogHeader>
+      <DialogContent hideClose>
+        <ModalHeader title="Enroll Community Health Worker" tone="primary" inset dialog />
+        <DialogDescription className="sr-only">Enroll a new community health worker and assign them to a collection point.</DialogDescription>
 
         {error && (
           <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>

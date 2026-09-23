@@ -8,8 +8,7 @@ import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -89,11 +88,9 @@ export function PathwayCreateModal({ open, onOpenChange, onCreated }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create Certification Pathway</DialogTitle>
-          <DialogDescription className="sr-only">Create a new certification pathway with milestones.</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" hideClose>
+        <ModalHeader title="Create Certification Pathway" tone="primary" inset dialog />
+        <DialogDescription className="sr-only">Create a new certification pathway with milestones.</DialogDescription>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}

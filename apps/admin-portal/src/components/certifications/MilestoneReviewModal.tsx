@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -62,11 +61,9 @@ export function MilestoneReviewModal({ milestone, open, onOpenChange, onReviewed
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Review Milestone</DialogTitle>
-          <DialogDescription className="sr-only">Review and approve or reject this milestone submission.</DialogDescription>
-        </DialogHeader>
+      <DialogContent hideClose>
+        <ModalHeader title="Review Milestone" tone="primary" inset dialog />
+        <DialogDescription className="sr-only">Review and approve or reject this milestone submission.</DialogDescription>
 
         {/* Milestone details */}
         <div className="space-y-2 text-sm">

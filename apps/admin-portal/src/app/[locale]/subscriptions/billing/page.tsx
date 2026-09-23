@@ -9,8 +9,7 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -103,13 +102,11 @@ export default function BillingPage() {
 
         {/* Remove Confirmation Modal */}
         <Dialog open={showRemoveModal} onOpenChange={setShowRemoveModal}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>{t('billingRemoveTitle')}</DialogTitle>
-              <DialogDescription>
-                {t('billingRemoveDesc')}
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="max-w-md" hideClose>
+            <ModalHeader title={t('billingRemoveTitle')} tone="destructive" inset dialog />
+            <DialogDescription>
+              {t('billingRemoveDesc')}
+            </DialogDescription>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowRemoveModal(false)}>
                 Cancel

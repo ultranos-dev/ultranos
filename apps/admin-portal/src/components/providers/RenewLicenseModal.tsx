@@ -7,8 +7,7 @@ import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -68,13 +67,11 @@ export function RenewLicenseModal({ provider, open, onOpenChange, onRenewed }: R
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Renew License</DialogTitle>
-          <DialogDescription>
-            {provider.name} — {provider.licenseNumber}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-md" hideClose>
+        <ModalHeader title="Renew License" tone="primary" inset dialog />
+        <DialogDescription>
+          {provider.name} — {provider.licenseNumber}
+        </DialogDescription>
 
         <div className="pt-4 space-y-4">
           {error && (

@@ -13,8 +13,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -142,11 +141,9 @@ function ReviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{c.title}</DialogTitle>
-          <DialogDescription>{c.description}</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-md" hideClose>
+        <ModalHeader title={c.title} tone="primary" inset dialog />
+        <DialogDescription>{c.description}</DialogDescription>
 
         {action === 'SUSPEND_PROVIDER' && (
           <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">

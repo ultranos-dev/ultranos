@@ -8,8 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -90,11 +89,9 @@ export function CreatePurchaseOrderModal({ suppliers, labs, open, onOpenChange, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create Purchase Order</DialogTitle>
-          <DialogDescription className="sr-only">Create a new purchase order for reagents</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" hideClose>
+        <ModalHeader title="Create Purchase Order" tone="primary" inset dialog />
+        <DialogDescription className="sr-only">Create a new purchase order for reagents</DialogDescription>
 
         {error && (
           <div className="mt-3 rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>

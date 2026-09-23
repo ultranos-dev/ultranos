@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -100,11 +99,9 @@ export default function AssignStaffModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Assign Staff to Lab</DialogTitle>
-          <DialogDescription className="sr-only">Assign a practitioner to a lab with an initial role</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-md" hideClose>
+        <ModalHeader title="Assign Staff to Lab" tone="primary" inset dialog />
+        <DialogDescription className="sr-only">Assign a practitioner to a lab with an initial role</DialogDescription>
 
         <div className="mt-4 space-y-4">
           {/* Lab selector — only shown in org-wide context */}

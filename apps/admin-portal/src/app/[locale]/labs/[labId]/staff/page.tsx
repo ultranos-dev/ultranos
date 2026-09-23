@@ -14,8 +14,7 @@ import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -70,13 +69,11 @@ function RoleChangeModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel() }}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('staffChangeRoleTitle')}</DialogTitle>
-          <DialogDescription>
-            {t('staffChangeRoleDesc')}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-md" hideClose>
+        <ModalHeader title={t('staffChangeRoleTitle')} tone="primary" inset dialog />
+        <DialogDescription>
+          {t('staffChangeRoleDesc')}
+        </DialogDescription>
 
         {isDemotingManager && (
           <div className="mt-1 rounded-xl border border-warning/20 bg-warning/10 p-3 text-sm text-warning">
@@ -114,13 +111,11 @@ function RemoveStaffModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel() }}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('staffRemoveTitle')}</DialogTitle>
-          <DialogDescription>
-            {t('staffRemoveDesc')}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-md" hideClose>
+        <ModalHeader title={t('staffRemoveTitle')} tone="destructive" inset dialog />
+        <DialogDescription>
+          {t('staffRemoveDesc')}
+        </DialogDescription>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>
             {tCommon('cancel')}

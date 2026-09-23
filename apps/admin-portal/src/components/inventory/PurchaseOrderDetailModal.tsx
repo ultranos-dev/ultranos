@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -40,11 +39,9 @@ function formatDate(iso: string): string {
 export function PurchaseOrderDetailModal({ order, labNames, open, onOpenChange }: PurchaseOrderDetailModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Purchase Order Details</DialogTitle>
-          <DialogDescription className="font-mono text-xs text-muted-foreground">{order.id}</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" hideClose>
+        <ModalHeader title="Purchase Order Details" tone="primary" inset dialog />
+        <DialogDescription className="font-mono text-xs text-muted-foreground">{order.id}</DialogDescription>
 
         <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
           <div>

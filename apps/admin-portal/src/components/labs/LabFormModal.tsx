@@ -4,8 +4,7 @@ import { useTranslations } from 'next-intl'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog'
@@ -147,13 +146,9 @@ export function LabFormModal({ open, onOpenChange, initial, onSaved }: LabFormMo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
-            {initial ? (t('labs.editLab') ?? 'Edit Lab') : (t('labs.createLab') ?? 'Create Lab')}
-          </DialogTitle>
-          <DialogDescription className="sr-only">Create or edit lab details</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" hideClose>
+        <ModalHeader title={initial ? (t('labs.editLab') ?? 'Edit Lab') : (t('labs.createLab') ?? 'Create Lab')} tone="primary" inset dialog />
+        <DialogDescription className="sr-only">Create or edit lab details</DialogDescription>
 
         <div className="flex flex-col gap-4">
           {/* Identity */}

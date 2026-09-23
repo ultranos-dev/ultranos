@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -66,11 +65,9 @@ export function RemoveModuleDialog({ subscription, isLastActive, open, onOpenCha
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Remove Module</DialogTitle>
-          <DialogDescription className="sr-only">Confirm removal of this subscription module</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-md" hideClose>
+        <ModalHeader title="Remove Module" tone="destructive" inset dialog />
+        <DialogDescription className="sr-only">Confirm removal of this subscription module</DialogDescription>
 
         {error && (
           <div className="mt-3 rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>

@@ -5,8 +5,7 @@ import { useTranslations } from 'next-intl'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog'
@@ -150,10 +149,10 @@ export function LabProfileModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {loading || !lab ? (
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" hideClose>
+          <ModalHeader
+            title={
+              loading || !lab ? (
                 <span className="text-muted-foreground">{t('common.loading') ?? 'Loading…'}</span>
               ) : (
                 <div className="flex items-center gap-3">
@@ -173,10 +172,13 @@ export function LabProfileModal({
                     </div>
                   </div>
                 </div>
-              )}
-            </DialogTitle>
-            <DialogDescription className="sr-only">Lab profile and management actions</DialogDescription>
-          </DialogHeader>
+              )
+            }
+            tone="primary"
+            inset
+            dialog
+          />
+          <DialogDescription className="sr-only">Lab profile and management actions</DialogDescription>
 
           {loading && (
             <div className="flex min-h-[12rem] items-center justify-center text-sm text-muted-foreground">
@@ -367,13 +369,11 @@ export function LabProfileModal({
 
       {/* Archive confirmation dialog */}
       <Dialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('labs.archiveConfirmTitle') ?? 'Archive lab?'}</DialogTitle>
-            <DialogDescription>
-              {t('labs.archiveConfirmDesc') ?? 'This lab will be hidden from active lists. You can restore it later.'}
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-sm" hideClose>
+          <ModalHeader title={t('labs.archiveConfirmTitle') ?? 'Archive lab?'} tone="destructive" inset dialog />
+          <DialogDescription>
+            {t('labs.archiveConfirmDesc') ?? 'This lab will be hidden from active lists. You can restore it later.'}
+          </DialogDescription>
           <DialogFooter>
             <Button variant="outline" onClick={() => setArchiveConfirmOpen(false)} disabled={actionPending}>
               {t('common.cancel') ?? 'Cancel'}
@@ -387,13 +387,11 @@ export function LabProfileModal({
 
       {/* Suspend confirmation dialog */}
       <Dialog open={suspendConfirmOpen} onOpenChange={setSuspendConfirmOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('labs.suspendConfirmTitle') ?? 'Suspend lab?'}</DialogTitle>
-            <DialogDescription>
-              {t('labs.suspendConfirmDesc') ?? 'This lab will be suspended and cannot operate until reactivated.'}
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-sm" hideClose>
+          <ModalHeader title={t('labs.suspendConfirmTitle') ?? 'Suspend lab?'} tone="destructive" inset dialog />
+          <DialogDescription>
+            {t('labs.suspendConfirmDesc') ?? 'This lab will be suspended and cannot operate until reactivated.'}
+          </DialogDescription>
           <div className="flex flex-col gap-2">
             <label htmlFor="suspend-reason" className="text-sm text-muted-foreground">
               {t('labs.suspendReason') ?? 'Reason (optional)'}

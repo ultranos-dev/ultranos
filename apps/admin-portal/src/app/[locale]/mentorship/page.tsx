@@ -13,8 +13,7 @@ import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
@@ -249,11 +248,9 @@ function CreatePairingModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{t('createTitle')}</DialogTitle>
-          <DialogDescription className="sr-only">Create a new mentorship pairing between a mentor and mentee.</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-lg" hideClose>
+        <ModalHeader title={t('createTitle')} tone="primary" inset dialog />
+        <DialogDescription className="sr-only">Create a new mentorship pairing between a mentor and mentee.</DialogDescription>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Mentor selector */}
@@ -390,13 +387,11 @@ function DissolveModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('dissolveTitle')}</DialogTitle>
-          <DialogDescription>
-            {t('dissolveDesc')}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-md" hideClose>
+        <ModalHeader title={t('dissolveTitle')} tone="destructive" inset dialog />
+        <DialogDescription>
+          {t('dissolveDesc')}
+        </DialogDescription>
 
         <div className="space-y-4">
           <div>

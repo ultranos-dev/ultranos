@@ -4,8 +4,7 @@ import { useTranslations } from 'next-intl'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -167,12 +166,8 @@ export function FacilityFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
-            {initial ? t('editFacility') : t('createFacility')}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" hideClose>
+        <ModalHeader title={initial ? t('editFacility') : t('createFacility')} tone="primary" inset dialog />
 
         <div className="flex flex-col gap-4">
           {/* Identity */}
