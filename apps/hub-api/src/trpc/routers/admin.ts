@@ -82,29 +82,49 @@ const DEFAULT_MODULE_SETTINGS: Record<string, Record<string, unknown>> = {
 // ================================================================
 
 /**
- * PHI keys that must be redacted from audit metadata before returning to the client.
- * CLAUDE.md rule 1: PHI must never appear in logs, error messages, or output.
+ * Substrings that mark a metadata KEY as potentially PHI-bearing. Matched
+ * case-insensitively against the key (contains), mirroring — and exceeding — the
+ * previous CLIENT-side EventBrowser redaction (which matched patient/diagnosis/
+ * medication/allergy/note). Redaction now lives HERE (server-side) so it is the single
+ * authoritative source for BOTH the audit viewer and the CSV export path — the client
+ * no longer performs cosmetic redaction, and the export no longer bypasses it.
+ * CLAUDE.md Rule #1: PHI must never appear in logs, error messages, or output.
  */
-const PHI_METADATA_KEYS = new Set([
-  'patient_name', 'diagnosis', 'medication_name', 'allergy',
-  'note_content', 'clinical_note', 'prescription_content',
-])
+const PHI_METADATA_KEY_SUBSTRINGS = [
+  'patient', 'diagnosis', 'medication', 'allergy', 'note',
+  'name', 'clinical', 'prescription_content', 'symptom', 'complaint',
+]
 
 /**
- * Sanitize audit event metadata by redacting PHI keys and truncating long freeform text.
+ * Sanitize audit event metadata by redacting PHI-bearing keys and truncating long
+ * freeform text. Recurses into shallow nested objects (e.g. `filters: {...}`) so PHI
+ * cannot hide one level down. Authoritative server-side redactor — see EventBrowser.
  */
-function sanitizeMetadata(metadata: Record<string, unknown> | null): Record<string, unknown> | null {
+export function sanitizeMetadata(metadata: Record<string, unknown> | null): Record<string, unknown> | null {
   if (!metadata) return null
+
+  const keyIsPhi = (key: string): boolean => {
+    const lower = key.toLowerCase()
+    return PHI_METADATA_KEY_SUBSTRINGS.some((s) => lower.includes(s))
+  }
+
+  const redact = (value: unknown): unknown => {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const nested: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+        nested[k] = keyIsPhi(k) ? '[REDACTED]' : redact(v)
+      }
+      return nested
+    }
+    if (typeof value === 'string' && value.length > 100) {
+      return '[REDACTED — freeform text]'
+    }
+    return value
+  }
 
   const sanitized: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(metadata)) {
-    if (PHI_METADATA_KEYS.has(key)) {
-      sanitized[key] = '[REDACTED]'
-    } else if (typeof value === 'string' && value.length > 100) {
-      sanitized[key] = '[REDACTED — freeform text]'
-    } else {
-      sanitized[key] = value
-    }
+    sanitized[key] = keyIsPhi(key) ? '[REDACTED]' : redact(value)
   }
   return sanitized
 }
@@ -4013,18 +4033,18 @@ export const adminRouter = createTRPCRouter({
         practitionerNameMap.set(pr.id as string, name)
       }
 
+      const EXPORT_HEADERS = ['ID', 'Timestamp', 'Actor', 'Role', 'Action', 'Resource Type', 'Resource ID', 'Outcome', 'Metadata']
+
       if (practitionerIds.length === 0) {
-        return buildCsvExport(
-          ['ID', 'Timestamp', 'Actor', 'Role', 'Action', 'Resource Type', 'Resource ID', 'Outcome'],
-          [],
-          'audit-events',
-        )
+        return buildCsvExport(EXPORT_HEADERS, [], 'audit-events')
       }
 
-      // Build query — max 10,000 rows
+      // Build query — max 10,000 rows. Include metadata so the export can carry the SAME
+      // server-redacted context the viewer shows (previously the export omitted metadata
+      // entirely, so it "bypassed" redaction — now it applies sanitizeMetadata below).
       let query = ctx.supabase
         .from('audit_log')
-        .select('id, timestamp, actor_id, actor_role, action, resource_type, resource_id, outcome')
+        .select('id, timestamp, actor_id, actor_role, action, resource_type, resource_id, outcome, metadata')
         .in('actor_id', practitionerIds)
         .gte('timestamp', input.startDate)
         .lte('timestamp', input.endDate)
@@ -4066,17 +4086,20 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      const headers = ['ID', 'Timestamp', 'Actor', 'Role', 'Action', 'Resource Type', 'Resource ID', 'Outcome']
-      const csvRows = (rows ?? []).map((row: Record<string, unknown>) => [
-        row.id as string,
-        row.timestamp as string,
-        practitionerNameMap.get(row.actor_id as string) ?? 'Unknown',
-        row.actor_role as string,
-        row.action as string,
-        row.resource_type as string,
-        row.resource_id as string,
-        row.outcome as string,
-      ])
+      const csvRows = (rows ?? []).map((row: Record<string, unknown>) => {
+        const redacted = sanitizeMetadata(row.metadata as Record<string, unknown> | null)
+        return [
+          row.id as string,
+          row.timestamp as string,
+          practitionerNameMap.get(row.actor_id as string) ?? 'Unknown',
+          row.actor_role as string,
+          row.action as string,
+          row.resource_type as string,
+          row.resource_id as string,
+          row.outcome as string,
+          redacted ? JSON.stringify(redacted) : '',
+        ]
+      })
 
       // Emit export audit event
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
@@ -4099,7 +4122,7 @@ export const adminRouter = createTRPCRouter({
         console.warn('[AUDIT_FAILURE]', { action: 'AUDIT_EVENTS_EXPORTED' })
       }
 
-      return buildCsvExport(headers, csvRows, 'audit-events')
+      return buildCsvExport(EXPORT_HEADERS, csvRows, 'audit-events')
     }),
 
   // ================================================================

@@ -17,6 +17,7 @@ import {
   type AgingBuckets,
 } from '@/lib/pos/patient-account-service'
 import { recordCreditPayment } from '@/lib/pos/payment-service'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import type { PatientAccount, LedgerEntry } from '@/lib/pos/types'
 
 const CURRENCY = 'AFN'
@@ -72,7 +73,20 @@ export function PatientAccountsPage() {
     )
     setAccounts(enriched)
     setLoading(false)
-  }, [t])
+
+    // Audit: reading patient names for the accounts list is a PHI read (Rule #6).
+    // Only emit when records were actually read; opaque counts only in metadata (Rule #1).
+    if (enriched.length > 0) {
+      auditPhiAccess(
+        session?.userId ?? 'unknown',
+        AuditAction.READ,
+        AuditResourceType.PATIENT,
+        'patient-accounts-list',
+        undefined,
+        { phiAccess: 'patient_accounts_list', accountCount: enriched.length },
+      )
+    }
+  }, [t, session])
 
   useEffect(() => {
     loadAccounts()
@@ -90,7 +104,17 @@ export function PatientAccountsPage() {
     ])
     setLedger(entries)
     setAging(buckets)
-  }, [])
+
+    // Audit: opening a patient's account/ledger detail is a per-patient PHI read.
+    auditPhiAccess(
+      session?.userId ?? 'unknown',
+      AuditAction.READ,
+      AuditResourceType.PATIENT,
+      patientId,
+      patientId,
+      { phiAccess: 'patient_account_detail', ledgerEntryCount: entries.length },
+    )
+  }, [session])
 
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault()

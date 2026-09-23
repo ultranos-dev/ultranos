@@ -1,5 +1,7 @@
 import { db, type LocalPatient } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 export interface PatientRegistrationData {
   nameGiven: string
@@ -29,6 +31,17 @@ export async function registerPatientLocally(data: PatientRegistrationData): Pro
   }
 
   await db.patients.put(patient)
+
+  // Audit: writing a new patient record is a PHI write (Rule #6). Opaque IDs only —
+  // never the patient name or any demographic value in metadata (Rule #1).
+  auditPhiAccess(
+    useAuthSessionStore.getState().session?.userId ?? 'unknown',
+    AuditAction.CREATE,
+    AuditResourceType.PATIENT,
+    id,
+    id,
+    { phiAccess: 'patient_register', hasAllergies: (patient.allergies?.length ?? 0) > 0 },
+  )
 
   // Enqueue sync to Hub — payload contains PHI (patient name), encrypted at rest.
   await enqueuePharmacySyncEntry({

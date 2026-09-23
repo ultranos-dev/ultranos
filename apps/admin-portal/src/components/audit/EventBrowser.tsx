@@ -42,8 +42,6 @@ const ACTION_GROUP_LABELS: Record<ActionGroup, string> = {
   AUTH_EVENTS: 'Auth Events',
   SETTINGS_CHANGES: 'Settings Changes',
 }
-const REDACTED_KEYS = ['patient', 'diagnosis', 'medication', 'allergy', 'note']
-
 const PAGE_SIZE = 50
 
 function formatTimestamp(iso: string): string {
@@ -67,9 +65,14 @@ function getDefaultDateTo(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-function shouldRedact(key: string): boolean {
-  const lower = key.toLowerCase()
-  return REDACTED_KEYS.some((k) => lower.includes(k))
+/**
+ * Render a metadata value for display. Redaction is performed SERVER-side
+ * (admin.sanitizeMetadata) for both this viewer and the CSV export, so values arrive
+ * already redacted — the client renders them verbatim (nested objects are stringified).
+ */
+function renderMetadataValue(value: unknown): string {
+  if (value !== null && typeof value === 'object') return JSON.stringify(value)
+  return String(value)
 }
 
 function OutcomeBadge({ outcome }: { outcome: string }) {
@@ -346,7 +349,7 @@ function EventRow({
                 <div key={key} className="flex gap-2">
                   <span className="font-medium text-muted-foreground">{key}:</span>
                   <span className="text-foreground">
-                    {shouldRedact(key) ? '[redacted]' : String(value)}
+                    {renderMetadataValue(value)}
                   </span>
                 </div>
               ))}

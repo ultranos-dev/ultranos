@@ -43,6 +43,12 @@ export const patientAdminRouter = createTRPCRouter({
 
       const photoUrl = await signPhotoUrl(ctx.supabase, 'patient-photos', (data as any).photo_url ?? null)
 
+      // FAIL-CLOSED (Story 61.1 decision): on the highest-privilege PHI surface, a PHI
+      // read must NOT be served if it cannot be audited (Rule #6 — no exceptions). The
+      // emit happens BEFORE the PHI is returned; an emit failure aborts the read so no
+      // un-audited PHI ever leaves the Hub. (Contrast the merge/unmerge WRITES below,
+      // where the row change has already committed and cannot be un-done, so those emit
+      // post-commit and surface the failure without falsely signalling a failed merge.)
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
@@ -57,6 +63,10 @@ export const patientAdminRouter = createTRPCRouter({
         })
       } catch {
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceId: input.patientId })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Audit log unavailable — PHI read blocked',
+        })
       }
 
       // Untyped SupabaseClient widens data to include GenericStringError; narrow
@@ -127,6 +137,8 @@ export const patientAdminRouter = createTRPCRouter({
         photoUrl: p.photo_url ? patientPhotoMap[p.photo_url] ?? null : null,
       }))
 
+      // FAIL-CLOSED (Story 61.1 decision): audit the PHI read BEFORE returning results;
+      // if the audit cannot be written, block the read rather than serve un-audited PHI.
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
@@ -141,6 +153,10 @@ export const patientAdminRouter = createTRPCRouter({
         })
       } catch {
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceId: 'admin-search' })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Audit log unavailable — PHI search blocked',
+        })
       }
 
       return { patients: patientsWithPhotos }
@@ -278,7 +294,12 @@ export const patientAdminRouter = createTRPCRouter({
           .eq('id', input.survivorId)
       }
 
-      // Audit PHI write
+      // Audit PHI write.
+      // Story 61.1 decision — WRITE exception to the fail-closed rule: the merge rows have
+      // already committed above and cannot be un-done here, so throwing on an audit-emit
+      // failure would falsely signal a failed merge to the admin. We therefore emit
+      // post-commit and log the failure loudly ([AUDIT_FAILURE]) rather than fail-closed.
+      // (Reads — getById/adminSearch — DO fail-closed, since PHI has not yet left the Hub.)
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
@@ -402,7 +423,9 @@ export const patientAdminRouter = createTRPCRouter({
         .update({ mpi_warn: true })
         .eq('id', mergeAudit.duplicate_id)
 
-      // Audit PHI write
+      // Audit PHI write (unmerge). Same Story 61.1 WRITE exception as merge above: the
+      // reversal has already committed, so emit post-commit and log loudly on failure
+      // rather than fail-closed (which would falsely signal a failed unmerge).
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({

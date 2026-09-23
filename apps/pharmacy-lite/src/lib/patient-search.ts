@@ -1,5 +1,7 @@
 import { db, type LocalPatient } from '@/lib/db'
 import { encryptionKeyStore } from '@/lib/encryption-key-store'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 const SEARCH_LIMIT = 20
 
@@ -34,6 +36,20 @@ export async function searchPatientsLocal(query: string): Promise<LocalPatient[]
       return nameMatch || phoneMatch
     })
     .slice(0, SEARCH_LIMIT)
+
+  // Audit: local patient search decrypts and reads patient PHI (name/phone) — Rule #6.
+  // Only emit when the search actually surfaced records. Metadata carries opaque
+  // counts only, never the query text or any matched name/phone (Rule #1).
+  if (results.length > 0) {
+    auditPhiAccess(
+      useAuthSessionStore.getState().session?.userId ?? 'unknown',
+      AuditAction.READ,
+      AuditResourceType.PATIENT,
+      'patient-search-local',
+      undefined,
+      { phiAccess: 'patient_search', scope: 'local', resultCount: results.length },
+    )
+  }
 
   return results
 }
