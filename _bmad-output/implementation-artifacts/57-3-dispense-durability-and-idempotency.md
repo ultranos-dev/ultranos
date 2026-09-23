@@ -1,6 +1,6 @@
 # Story 57.3: Dispense Record Durability & Offline Double-Dispense Protection
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -19,18 +19,18 @@ so that no dispense record is ever silently lost and no prescription is dispense
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Always-enqueue** (AC: 1)
-  - [ ] 1.1 `apps/pharmacy-lite/src/lib/dispense-sync.ts:72-76` (`auth-unavailable` → "do not queue") and `:100-103` (no token → return without enqueue): remove token-dependence from enqueue; `drain-sync-fn.ts:23` already fetches the token at drain time.
-- [ ] **Task 2: Cleanup safety** (AC: 2)
-  - [ ] 2.1 `apps/pharmacy-lite/src/lib/phi-cleanup.ts:13-17` clears `dispenses`: add an unsynced-guard — records without a synced marker are preserved (with a compile-time/test guard like lab-lite's phi-cleanup pattern).
-- [ ] **Task 3: Local idempotency check wiring** (AC: 3)
-  - [ ] 3.1 `apps/pharmacy-lite/src/lib/idempotency-check.ts` (`checkPrescriptionAlreadyDispensed` — currently ZERO callers, audit-verified): invoke in `PharmacyScannerView.handleProceedToReview` before the Hub check (`:146-188`); blocking modal with an explicit supervisor-override escape hatch for legitimate re-dispense scenarios.
-- [ ] **Task 4: Retry classification + sweep** (AC: 4, 5)
-  - [ ] 4.1 `dispense-sync.ts:115-117`: stop enqueueing permanent 4xx for infinite retry — dead-letter with status surfaced on the `/sync` page.
-  - [ ] 4.2 Startup/reconnect sweep re-enqueueing orphaned unsynced dispenses.
-- [ ] **Task 5: Tests + regression verification** (AC: all)
-  - [ ] 5.1 Tests: no-token dispense → queued and drains after re-auth; logout with unsynced dispense → preserved; offline double-scan → blocked; 4xx → dead-letter not retry; sweep re-enqueues.
-  - [ ] 5.2 Full pharmacy suite passes; online dispense happy path unchanged; `pnpm typecheck`.
+- [x] **Task 1: Always-enqueue** (AC: 1)
+  - [x] 1.1 `apps/pharmacy-lite/src/lib/dispense-sync.ts:72-76` (`auth-unavailable` → "do not queue") and `:100-103` (no token → return without enqueue): remove token-dependence from enqueue; `drain-sync-fn.ts:23` already fetches the token at drain time.
+- [x] **Task 2: Cleanup safety** (AC: 2)
+  - [x] 2.1 `apps/pharmacy-lite/src/lib/phi-cleanup.ts:13-17` clears `dispenses`: add an unsynced-guard — records without a synced marker are preserved (with a compile-time/test guard like lab-lite's phi-cleanup pattern).
+- [x] **Task 3: Local idempotency check wiring** (AC: 3)
+  - [x] 3.1 `apps/pharmacy-lite/src/lib/idempotency-check.ts` (`checkPrescriptionAlreadyDispensed` — currently ZERO callers, audit-verified): invoke in `PharmacyScannerView.handleProceedToReview` before the Hub check (`:146-188`); blocking modal with an explicit supervisor-override escape hatch for legitimate re-dispense scenarios.
+- [x] **Task 4: Retry classification + sweep** (AC: 4, 5)
+  - [x] 4.1 `dispense-sync.ts:115-117`: stop enqueueing permanent 4xx for infinite retry — dead-letter with status surfaced on the `/sync` page.
+  - [x] 4.2 Startup/reconnect sweep re-enqueueing orphaned unsynced dispenses.
+- [x] **Task 5: Tests + regression verification** (AC: all)
+  - [x] 5.1 Tests: no-token dispense → queued and drains after re-auth; logout with unsynced dispense → preserved; offline double-scan → blocked; 4xx → dead-letter not retry; sweep re-enqueues.
+  - [x] 5.2 Full pharmacy suite passes; online dispense happy path unchanged; `pnpm typecheck`.
 
 ## Dev Notes
 
@@ -62,11 +62,25 @@ This story must introduce **zero regression in existing features and functionali
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Fable 5 (1M) — implementation; Claude Opus 4.8 (1M) — rebase onto Wave-1 (reconciled conflicts with 57.1 + 60.2), integration & combined verification.
 
 ### Debug Log References
+Rebased onto Wave-1 HEAD; reconciled conflicts in `phi-cleanup.ts`/`PharmacyScannerView.tsx` (vs 57.1) and verified the auto-merged sync-engine `queue.ts`/`drain-worker.ts` (vs 60.2) preserve both feature sets.
 
 ### Completion Notes List
+- **Task 1 (always-enqueue):** removed both token-dependent "do not queue" paths; enqueue no longer requires a token (drain fetches it).
+- **Task 2 (cleanup safety):** `preserveUnsyncedDispenses()` — dispenses/dispenseAuditLog moved to a SELECTIVE_CLEAR set (only synced rows purged) with a compile-time `AssertNotBlanket` guard; coexists with 57.1's `patientAllergyCache` blanket-clear.
+- **Task 3 (local idempotency):** `checkPrescriptionAlreadyDispensed` wired at the START of `handleProceedToReview` (before the Hub check, works offline) with a supervisor-override escape.
+- **Task 4:** permanent 4xx (excl. 408/429) dead-letter via new `queue.markDeadLetter()` — coexists with 60.2's `markFailed(terminal)`; new `dispense-sweep.ts` re-enqueues orphaned unsynced dispenses on login + reconnect.
+- **Task 5:** new `dispense-durability` + `offline-double-dispense` tests; +11 i18n keys × 4 locales (parity maintained). No new Dexie version needed (reuses existing schema).
+- Added backward-compatible sync-engine API: `SyncResult.permanent`, `queue.markDeadLetter()`.
+
+### Verification (combined tree)
+`pnpm -F pharmacy-lite typecheck` + `pnpm -F @ultranos/sync-engine typecheck` clean; sync-engine **191 pass**; pharmacy full suite **1109 pass, 0 fail**.
 
 ### File List
+Modified — `apps/pharmacy-lite/src/lib/{dispense-sync,drain-sync-fn,phi-cleanup,sync-drain-init}.ts`, `src/components/pharmacy/PharmacyScannerView.tsx`, `messages/{en,ar,prs,ps}.json`, tests; `packages/sync-engine/src/{queue,drain-worker}.ts` + tests.
+New — `apps/pharmacy-lite/src/lib/dispense-sweep.ts`, `src/__tests__/{dispense-durability.test.ts,offline-double-dispense.test.tsx}`.
 
 ### Change Log
+- 2026-09-23: Story 57.3 implemented (Wave 2), rebased/reconciled onto Wave-1, verified, integrated. Status → review.

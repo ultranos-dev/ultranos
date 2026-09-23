@@ -1,6 +1,6 @@
 # Story 56.2: Object-Level Authorization & Consent on sync.pull/push + Patient Directory Restriction
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,22 +20,22 @@ so that no caller can read another patient's record, overwrite another org's dat
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: sync.pull caller scoping** (AC: 1, 2)
-  - [ ] 1.1 In `apps/hub-api/src/trpc/routers/sync.ts:593-720`: add role-specific ownership resolution — PATIENT → own patient id only; GUARDIAN → linked wards via guardian links; clinical roles → org/consent policy.
-  - [ ] 1.2 Add consent gating consistent with `enforceConsentMiddleware` usage in `encounter.ts:196` / `diagnostic-report.ts:37`.
-  - [ ] 1.3 Emit audit events for denials (opaque IDs only).
-- [ ] **Task 2: sync.push existing-row ownership** (AC: 3)
-  - [ ] 2.1 Before the upsert at `sync.ts:472-479`, fetch the existing row's `org_id`/patient linkage; reject cross-org/cross-patient overwrites with CONFLICT/FORBIDDEN.
-  - [ ] 2.2 Remove the org re-stamp behavior at `sync.ts:422-432` for existing rows (creates keep caller org).
-- [ ] **Task 3: patient.list / patient.search restriction** (AC: 4, 5)
-  - [ ] 3.1 In `apps/hub-api/src/trpc/routers/patient.ts:37-337`: reject PATIENT/GUARDIAN; keep clinician access per tenancy decision; strip `national_id_hash` and raw `photo_url` path from output schemas.
-  - [ ] 3.2 Verify opd-lite/pharmacy-lite patient search UIs still function (they authenticate as clinicians).
-- [ ] **Task 4: Tests** (AC: 1-6)
-  - [ ] 4.1 Extend `sync-pull-scoping.test.ts` (currently column-filtering only, `:100-146`): PATIENT pulls other patient → FORBIDDEN; GUARDIAN ward vs non-ward; consent-withdrawn exclusion.
-  - [ ] 4.2 Push tests: cross-org overwrite rejected even with newer HLC; org_id not re-stamped; legitimate same-org update still succeeds.
-  - [ ] 4.3 Directory tests: PATIENT role rejected on list/search; response shape excludes forbidden fields.
-- [ ] **Task 5: Regression verification** (AC: 7)
-  - [ ] 5.1 Run full hub-api suite + opd-lite sync tests; verify OPD SyncProvider round-trip (push→pull) still succeeds for a clinician fixture; `pnpm typecheck`.
+- [x] **Task 1: sync.pull caller scoping** (AC: 1, 2)
+  - [x] 1.1 In `apps/hub-api/src/trpc/routers/sync.ts:593-720`: add role-specific ownership resolution — PATIENT → own patient id only; GUARDIAN → linked wards via guardian links; clinical roles → org/consent policy.
+  - [x] 1.2 Add consent gating consistent with `enforceConsentMiddleware` usage in `encounter.ts:196` / `diagnostic-report.ts:37`.
+  - [x] 1.3 Emit audit events for denials (opaque IDs only).
+- [x] **Task 2: sync.push existing-row ownership** (AC: 3)
+  - [x] 2.1 Before the upsert at `sync.ts:472-479`, fetch the existing row's `org_id`/patient linkage; reject cross-org/cross-patient overwrites with CONFLICT/FORBIDDEN.
+  - [x] 2.2 Remove the org re-stamp behavior at `sync.ts:422-432` for existing rows (creates keep caller org).
+- [x] **Task 3: patient.list / patient.search restriction** (AC: 4, 5)
+  - [x] 3.1 In `apps/hub-api/src/trpc/routers/patient.ts:37-337`: reject PATIENT/GUARDIAN; keep clinician access per tenancy decision; strip `national_id_hash` and raw `photo_url` path from output schemas.
+  - [x] 3.2 Verify opd-lite/pharmacy-lite patient search UIs still function (they authenticate as clinicians).
+- [x] **Task 4: Tests** (AC: 1-6)
+  - [x] 4.1 Extend `sync-pull-scoping.test.ts` (currently column-filtering only, `:100-146`): PATIENT pulls other patient → FORBIDDEN; GUARDIAN ward vs non-ward; consent-withdrawn exclusion.
+  - [x] 4.2 Push tests: cross-org overwrite rejected even with newer HLC; org_id not re-stamped; legitimate same-org update still succeeds.
+  - [x] 4.3 Directory tests: PATIENT role rejected on list/search; response shape excludes forbidden fields.
+- [x] **Task 5: Regression verification** (AC: 7)
+  - [x] 5.1 Run full hub-api suite + opd-lite sync tests; verify OPD SyncProvider round-trip (push→pull) still succeeds for a clinician fixture; `pnpm typecheck`.
 
 ## Dev Notes
 
@@ -70,11 +70,25 @@ This story must introduce **zero regression in existing features and functionali
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Fable 5 (1M) — implementation; Claude Opus 4.8 (1M) — rebase onto Wave-1, integration & combined verification.
 
 ### Debug Log References
+Implemented on a pre-Wave-1 worktree base, then rebased onto Wave-1 HEAD (clean, no conflicts) and squash-merged.
 
 ### Completion Notes List
+- **Task 1 (sync.pull scoping):** ownership resolution — PATIENT → own id only (`ctx.user.sub === patients.id`), GUARDIAN → active `guardian_links` ward, clinical/admin → open per free-floating-patient tenancy; consent gating reuses `checkConsent` for consent-gated resource types; owner roles bypass their own consent gate; all denials emit `outcome:'DENIED'` audit events (opaque IDs).
+- **Task 2 (sync.push ownership):** single existing-row fetch feeds both ownership and conflict detection; cross-org/cross-patient overwrites rejected with FORBIDDEN (distinguishable from a sync conflict → spoke drain dead-letters, not retry-loops); `org_id` stamped only on creates, never re-homed on existing rows; **60.2's Tier-1-window logic preserved** (my authz check sits before the conflict block).
+- **Task 3 (patient directory):** PATIENT/GUARDIAN rejected on list/search; clinician scope documented (Epic 27); `national_id_hash` + raw `photo_url` removed from output (national-ID-hash retained only as a WHERE-clause lookup, never returned).
+- **Task 4:** dead `enforceResourceAccess` import removed, replaced by the applied `enforceOwnership` helper.
+- **Task 5:** extended `sync-pull-scoping.test.ts`; new `sync-push-ownership.test.ts` + `patient-directory-access.test.ts`; inverted the `rbac-security-audit` test that previously asserted the C-HUB-4 vuln.
+- rbac.ts NOT edited (owned by 59.4 this wave — verified).
+
+### Verification (combined tree)
+`pnpm -F hub-api typecheck` clean; hub full suite **1713 pass, 0 fail** co-resident with 57.3/58.1/59.4/61.1.
 
 ### File List
+Modified — `apps/hub-api/src/trpc/routers/sync.ts`, `patient.ts`, `src/__tests__/{sync-pull-scoping,sync,rbac-security-audit}.test.ts`.
+New — `apps/hub-api/src/trpc/middleware/enforceOwnership.ts`, `src/__tests__/{sync-push-ownership,patient-directory-access}.test.ts`.
 
 ### Change Log
+- 2026-09-23: Story 56.2 implemented (Wave 2), rebased onto Wave-1, verified, integrated. Status → review.

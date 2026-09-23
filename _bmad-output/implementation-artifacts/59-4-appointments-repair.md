@@ -1,6 +1,6 @@
 # Story 59.4: Appointments Repair (RBAC Entry, Sync-Queue Routing, Orphaned Procedures)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -19,11 +19,11 @@ so that offline-created appointments are never lost and the feature's hub surfac
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: RBAC + scoping** (AC: 1) — add `Appointment` to `rbac.ts:15-70` role sets; ownership check in `appointment.ts:283-296`; tests per role.
-- [ ] **Task 2: HLC + queue routing** (AC: 2, 5) — `apps/opd-lite/src/hooks/useAppointments.ts:116,182,228` (fake HLC) and the LWW merge at `:372`: stamp real HLCs; route mutations through `enqueueSyncAction` (pattern: `stores/lab-order-store.ts:94-100`); migration handling for locally-stored appointments carrying ms-string stamps (normalize on read or re-stamp).
-- [ ] **Task 3: Failure surfacing** (AC: 3) — `lib/trpc.ts:66-71` `syncAppointmentBatch`: propagate failure to the sync status store; retry via the queue's backoff instead of page-mount luck.
-- [ ] **Task 4: Orphan disposition** (AC: 4) — wire or remove the four procedures; update `_app.ts`; record decision in this story file.
-- [ ] **Task 5: Tests + regression verification** (AC: 6) — offline-create → reconnect → drained; mixed-format merge test; role matrix; full OPD + hub appointment suites (note: `appointment.ts` is the ONLY hub router with zero tests — this story adds its first real coverage); `pnpm typecheck`.
+- [x] **Task 1: RBAC + scoping** (AC: 1) — add `Appointment` to `rbac.ts:15-70` role sets; ownership check in `appointment.ts:283-296`; tests per role.
+- [x] **Task 2: HLC + queue routing** (AC: 2, 5) — `apps/opd-lite/src/hooks/useAppointments.ts:116,182,228` (fake HLC) and the LWW merge at `:372`: stamp real HLCs; route mutations through `enqueueSyncAction` (pattern: `stores/lab-order-store.ts:94-100`); migration handling for locally-stored appointments carrying ms-string stamps (normalize on read or re-stamp).
+- [x] **Task 3: Failure surfacing** (AC: 3) — `lib/trpc.ts:66-71` `syncAppointmentBatch`: propagate failure to the sync status store; retry via the queue's backoff instead of page-mount luck.
+- [x] **Task 4: Orphan disposition** (AC: 4) — wire or remove the four procedures; update `_app.ts`; record decision in this story file.
+- [x] **Task 5: Tests + regression verification** (AC: 6) — offline-create → reconnect → drained; mixed-format merge test; role matrix; full OPD + hub appointment suites (note: `appointment.ts` is the ONLY hub router with zero tests — this story adds its first real coverage); `pnpm typecheck`.
 
 ## Dev Notes
 

@@ -1,6 +1,6 @@
 # Story 61.1: Audit Trail Completeness & Tamper Evidence
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,12 +20,12 @@ so that the audit ledger is complete, tamper-evident end-to-end, and PHI-free.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Pharmacy audit gaps** (AC: 1) — `patient-register.ts`, `patient-search.ts`, `PatientAccountsPage.tsx` reads → `auditPhiAccess`; tests asserting emission (CLAUDE.md testing rule).
-- [ ] **Task 2: OPD no-session buffering** (AC: 2) — `apps/opd-lite/src/lib/audit.ts:59-62`: buffer with null actor + backfill on hydration; drains via the (now-wired, Story 59.3) audit drain.
-- [ ] **Task 3: Chain vNext** (AC: 3, 4) — `packages/audit-logger/src/logger.ts:60-71` + new migration (follow migration 045's pattern via Supabase MCP): full-row canonical hash under a `chain_version` bump; `verifyChain` windows by `chain_seq` (`logger.ts:163-186`) and validates both versions across the boundary; concurrency test suite extended.
-- [ ] **Task 4: Metadata whitelist** (AC: 5) — `packages/audit-logger/src/client.ts:20-48,90-103` → schema whitelist + array recursion; server `emit` validation; sweep existing emit call sites for newly-invalid metadata (fix at source — e.g., `medication.ts:1848-1856`).
-- [ ] **Task 5: Admin decisions + redaction** (AC: 6) — decision point (fail-open vs fail-closed) presented per project rule, then implemented; server-side redaction endpoint shaping; `EventBrowser.tsx` CSV export (`:226-237` → `ExportButton.tsx`) uses the redacted server output.
-- [ ] **Task 6: Package test debt + regression verification** (AC: 7) — tests for client guard, drain, dexie/sqlite adapters, verifyChain legacy path; full suites; chain verification against a seeded legacy+vNext dataset; `pnpm typecheck`.
+- [x] **Task 1: Pharmacy audit gaps** (AC: 1) — `patient-register.ts`, `patient-search.ts`, `PatientAccountsPage.tsx` reads → `auditPhiAccess`; tests asserting emission (CLAUDE.md testing rule).
+- [x] **Task 2: OPD no-session buffering** (AC: 2) — `apps/opd-lite/src/lib/audit.ts:59-62`: buffer with null actor + backfill on hydration; drains via the (now-wired, Story 59.3) audit drain.
+- [x] **Task 3: Chain vNext** (AC: 3, 4) — `packages/audit-logger/src/logger.ts:60-71` + new migration (follow migration 045's pattern via Supabase MCP): full-row canonical hash under a `chain_version` bump; `verifyChain` windows by `chain_seq` (`logger.ts:163-186`) and validates both versions across the boundary; concurrency test suite extended.
+- [x] **Task 4: Metadata whitelist** (AC: 5) — `packages/audit-logger/src/client.ts:20-48,90-103` → schema whitelist + array recursion; server `emit` validation; sweep existing emit call sites for newly-invalid metadata (fix at source — e.g., `medication.ts:1848-1856`).
+- [x] **Task 5: Admin decisions + redaction** (AC: 6) — decision point (fail-open vs fail-closed) presented per project rule, then implemented; server-side redaction endpoint shaping; `EventBrowser.tsx` CSV export (`:226-237` → `ExportButton.tsx`) uses the redacted server output.
+- [x] **Task 6: Package test debt + regression verification** (AC: 7) — tests for client guard, drain, dexie/sqlite adapters, verifyChain legacy path; full suites; chain verification against a seeded legacy+vNext dataset; `pnpm typecheck`.
 
 ## Dev Notes
 
@@ -57,11 +57,21 @@ This story must introduce **zero regression in existing features and functionali
 ## Dev Agent Record
 
 ### Agent Model Used
-
-### Debug Log References
+Claude Fable 5 (1M) — implementation; Claude Opus 4.8 (1M) — rebase onto Wave-1, integration, and a post-integration fix.
 
 ### Completion Notes List
+- **Task 1 (pharmacy audit gaps):** `auditPhiAccess` added to patient register, local patient search, and patient-account reads.
+- **Task 2 (OPD no-session buffering):** buffers no-session PHI reads with a null actor + backfills on hydration. **Post-integration fix (commit `5caeb562`):** the buffering path called `useAuthSessionStore.subscribe()`, which could throw and violate `auditPhiAccess`'s "never throws" contract (surfaced when clinical stores calling it un-awaited lost their Dexie write); wrapped in try/catch — production hardening.
+- **Task 3 (chain vNext):** version-aware chain hash covering the full row (metadata/session/device/ip/denialReason/org); `verifyChain` windows by `chain_seq DESC` and dispatches per-row on `chain_version` so legacy rows still verify. Migration `063` authored, **NOT applied** (deploy-ordered; the extended RPC must ship before this code). **Post-integration fix:** updated the two existing hub audit test mocks (`audit-logger`/`audit-integration`) to a self-chaining `.order()` for the new double-order query.
+- **Task 4 (metadata whitelist):** shape-based whitelist (scalars/scalar-arrays/one-level objects, 256-char cap, array recursion fixed), applied client + server. **M-HUB-8 (medication.ts metadata) DEFERRED to Story 57.2** — medication.ts untouched this wave.
+- **Task 5 (admin):** fail-closed on PHI-read audit failure (getById/adminSearch); server-side redaction now authoritative and applied to the CSV export.
+
+### Verification (combined tree)
+audit-logger + hub-api + opd + pharmacy + admin typecheck clean; audit-logger package **24 pass**; hub full suite **1713 pass, 0 fail** (incl. the mock fix); legacy chain rows still verify (mixed v1/v2 dataset test).
 
 ### File List
+Modified — `packages/audit-logger/src/{logger,client}.ts`; `apps/hub-api/src/trpc/routers/{admin,patient-admin}.ts`, `src/__tests__/{audit-logger,audit-integration}.test.ts`; `apps/opd-lite/src/lib/audit.ts`; `apps/pharmacy-lite/src/lib/{patient-register,patient-search}.ts`, `src/components/pharmacy/pos/PatientAccountsPage.tsx`; `apps/admin-portal/src/components/audit/EventBrowser.tsx`.
+New — `supabase/migrations/063_audit_log_chain_version_full_row.sql`; test files in audit-logger/hub-api/opd-lite/pharmacy-lite.
 
 ### Change Log
+- 2026-09-23: Story 61.1 implemented (Wave 2), rebased onto Wave-1, verified, integrated (+ post-integration never-throw + chain-mock fixes). M-HUB-8 deferred to 57.2. Status → review.
