@@ -1,0 +1,140 @@
+{
+  "$comment": "Known-dead spoke→hub procedure paths (audit C-SYS-5 class), quarantined so the contract guard passes on current source while Story 59.1 repairs or formally defers them. THIS LIST MUST ONLY SHRINK — never add an entry to silence a new failure; fix the call or the router instead. When a procedure lands on the hub (or the spoke call is removed), delete its entry here (the test warns about stale entries). Verified dead against apps/hub-api/src/trpc/routers/_app.ts on 2026-09-23 by an actual run of spoke-contract.test.ts.",
+  "entries": [
+    {
+      "spoke": "lab-lite",
+      "path": "lab.searchPatients",
+      "reason": "Audit C-SYS-5: procedure absent on hub — patient search dead online. Being added in Story 59.1."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "lab.checkDuplicates",
+      "reason": "Audit C-SYS-5: absent (exists as patient.checkDuplicates) — registration dead. Being fixed in Story 59.1."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "lab.createPatient",
+      "reason": "Audit C-SYS-5: absent (exists as patient.create) — registration dead. Being fixed in Story 59.1."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "lab.authorizeResult",
+      "reason": "Audit C-SYS-5: absent — result authorization sign-off silently syncs nothing. Story 59.1 repair/defer."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "lab.createNotification",
+      "reason": "Audit C-SYS-5: absent — authorization/result-release notifications silently dropped. Story 59.1 repair/defer."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "lab.escalateAiResult",
+      "reason": "Audit C-SYS-5: absent — AI confidence escalation silently does nothing. Story 59.1 repair/defer."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "lab.reportQueueEvent",
+      "reason": "Audit C-SYS-5: absent — queue audit events silently dropped. Story 59.1 repair/defer."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "peerNetwork.pushPosts",
+      "reason": "Audit C-SYS-5: peerNetwork router not registered on hub. Story 59.1-deferred."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "peerNetwork.pushResponses",
+      "reason": "Audit C-SYS-5: peerNetwork router not registered on hub. Story 59.1-deferred."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "peerNetwork.pushFlags",
+      "reason": "Audit C-SYS-5: peerNetwork router not registered on hub. Story 59.1-deferred."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "peerNetwork.pullPosts",
+      "reason": "Audit C-SYS-5: peerNetwork router not registered on hub. Story 59.1-deferred."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "peerNetwork.pullResponses",
+      "reason": "Audit C-SYS-5: peerNetwork router not registered on hub. Story 59.1-deferred."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "ai-provenance.sync",
+      "reason": "Audit C-SYS-5: absent (source comment admits future story). Story 59.1-deferred."
+    },
+    {
+      "spoke": "pharmacy-lite",
+      "path": "inventory.networkStock",
+      "reason": "Audit C-SYS-5: inventory router absent on hub — network stock query dead. Story 59.1 repair/defer."
+    },
+    {
+      "spoke": "pharmacy-lite",
+      "path": "inventory.networkStockBulk",
+      "reason": "Audit C-SYS-5: inventory router absent on hub — network stock query dead. Story 59.1 repair/defer."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "lab.syncQualityProfile",
+      "reason": "Scan-discovered pre-existing dead path (not in audit C-SYS-5 table); verified absent from lab router. Triage under Story 59.1 follow-up."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "lab.listLearningModules",
+      "reason": "Scan-discovered pre-existing dead path (micro-learning module sync); verified absent from lab router. Triage under Story 59.1 follow-up."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "lab.syncModuleCompletions",
+      "reason": "Scan-discovered pre-existing dead path (micro-learning module sync); verified absent from lab router. Triage under Story 59.1 follow-up."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "lab.listSOPs",
+      "reason": "Scan-discovered pre-existing dead path (SOP sync); verified absent from lab router. Triage under Story 59.1 follow-up."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "lab.syncSOPAcknowledgments",
+      "reason": "Scan-discovered pre-existing dead path (SOP sync); verified absent from lab router. Triage under Story 59.1 follow-up."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "mentorship.listPairings",
+      "reason": "Scan-discovered pre-existing dead path — no mentorship router on hub (admin.ts only touches mentorship_pairings tables). Triage under Story 59.1 follow-up."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "mentorship.pushJournalEntries",
+      "reason": "Scan-discovered pre-existing dead path — no mentorship router on hub. Triage under Story 59.1 follow-up."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "mentorship.pushCheckIns",
+      "reason": "Scan-discovered pre-existing dead path — no mentorship router on hub. Triage under Story 59.1 follow-up."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "mentorship.pullPartnerContent",
+      "reason": "Scan-discovered pre-existing dead path — no mentorship router on hub. Triage under Story 59.1 follow-up."
+    },
+    {
+      "spoke": "lab-lite",
+      "path": "sms.confirmations",
+      "reason": "Scan-discovered pre-existing dead path — no sms router on hub; SMS confirmation polling silently returns 0. Triage under Story 59.1 follow-up."
+    },
+    {
+      "spoke": "pharmacy-lite",
+      "path": "catalog.list",
+      "reason": "Scan-discovered pre-existing dead path — no catalog router on hub (drugCatalog exists); catalog-sync soft-breaks on 404. Triage under Story 59.1 follow-up."
+    },
+    {
+      "spoke": "pharmacy-lite",
+      "path": "medication.getPrescription",
+      "reason": "Scan-discovered pre-existing dead path — procedure absent from medication router (ManualRxEntry). Triage under Story 59.1 follow-up."
+    }
+  ]
+}
