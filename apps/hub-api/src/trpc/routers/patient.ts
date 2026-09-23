@@ -27,6 +27,24 @@ function hashNationalId(rawId: string): string {
 }
 
 /**
+ * Roles barred from enumerating the patient directory (patient.list / patient.search).
+ * PATIENT and GUARDIAN hold `Patient` in ROLE_PERMISSIONS (so enforceResourceAccess
+ * lets them through) but must NEVER browse the registry — they use their own-record
+ * (users.ts) and guardian-scoped endpoints instead (audit C-HUB-4 / AC 4).
+ */
+const DIRECTORY_FORBIDDEN_ROLES = new Set(['PATIENT', 'GUARDIAN'])
+
+/** Throw FORBIDDEN when a non-clinical role attempts a directory enumeration. */
+function rejectDirectoryEnumerationRole(role: string): void {
+  if (DIRECTORY_FORBIDDEN_ROLES.has(role)) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Access denied — patient directory is restricted to clinical staff',
+    })
+  }
+}
+
+/**
  * Patient domain router.
  * Provides patient search for spoke apps (OPD Lite PWA, etc.).
  */
@@ -44,15 +62,27 @@ export const patientRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      // Directory access is CLINICAL/ADMIN only (audit C-HUB-4 / AC 4). PATIENT and
+      // GUARDIAN roles must never enumerate the patient registry — they use their own
+      // record endpoints (users.ts) and guardian-scoped reads instead. enforceResourceAccess
+      // alone is insufficient because those roles hold `Patient` in ROLE_PERMISSIONS.
+      // Clinician scope: per Epic 27 tenancy (shared-schema RLS, free-floating patients
+      // that are NOT org-scoped), any verified clinician may search the shared registry;
+      // patients are intentionally provider-agnostic, so there is no org filter here.
+      rejectDirectoryEnumerationRole(ctx.user.role)
+
       let query = ctx.supabase
         .from('patients')
         .select(
+          // national_id_hash and photo_url (raw storage path) are intentionally NOT
+          // selected — directory surfaces must not leak the ID blind-index or the raw
+          // photo path (audit C-HUB-4 / AC 5). Photos are served via signed URLs elsewhere.
           'id, gender, birth_date, birth_year_only, birth_year, ' +
-          'name_local, name_latin, national_id_hash, is_active, created_at, updated_at, ' +
+          'name_local, name_latin, is_active, created_at, updated_at, ' +
           'name_given, name_father, name_grandfather, name_family, ' +
           'address_province_origin, address_district_origin, address_village_origin, ' +
           'address_province_current, address_district_current, address_village_current, ' +
-          'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
+          'is_nomadic, telecom_phone, blood_group, preferred_language, ' +
           'mpi_score, mpi_warn, ' +
           'marital_status, displacement_category, nationality, occupation, ' +
           'education_level, disability, telecom_phone_use, emergency_contacts'
@@ -147,7 +177,9 @@ export const patientRouter = createTRPCRouter({
           _ultranos: {
             nameLocal:    row.name_local,
             nameLatin:    row.name_latin,
-            nationalIdHash: row.national_id_hash,
+            // nationalIdHash and photoUrl deliberately omitted from directory output
+            // (audit C-HUB-4 / AC 5): the ID blind-index and raw photo storage path
+            // are never returned by list/search.
             isActive:     row.is_active,
             createdAt:    row.created_at,
             nameGiven:           row.name_given,
@@ -171,7 +203,6 @@ export const patientRouter = createTRPCRouter({
               : undefined,
             isNomadic:   (row.is_nomadic as boolean) ?? false,
             bloodGroup:  (row.blood_group as string) ?? undefined,
-            photoUrl:    (row.photo_url as string) ?? undefined,
             preferredLanguage: (row.preferred_language as string) ?? undefined,
             mpiScore:    row.mpi_score,
             mpiWarn:     (row.mpi_warn as boolean) ?? false,
@@ -201,9 +232,17 @@ export const patientRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      // Directory search is CLINICAL/ADMIN only (audit C-HUB-4 / AC 4). PATIENT and
+      // GUARDIAN roles are rejected — they use own-record/guardian-scoped endpoints.
+      // Clinician scope: free-floating patients per Epic 27 (shared-schema RLS, not
+      // org-scoped) — any verified clinician may search the shared registry, so no
+      // org filter is applied here.
+      rejectDirectoryEnumerationRole(ctx.user.role)
+
       // Search patients by name or national ID hash in the Hub database.
       // Uses Supabase RPC or direct query — returns FHIR-aligned patient records.
-      // PHI safety: only returns data needed for identity verification.
+      // PHI safety: only returns data needed for identity verification. The national
+      // ID hash may be used as a WHERE-clause lookup (below) but is never returned.
       const sanitized = sanitizeFilterValue(input.query)
 
       if (!sanitized.replace(/\\[%_]/g, '').trim()) {
@@ -229,12 +268,14 @@ export const patientRouter = createTRPCRouter({
       const { data, error } = await ctx.supabase
         .from('patients')
         .select(
+          // national_id_hash and photo_url (raw storage path) intentionally NOT
+          // selected — never returned by search (audit C-HUB-4 / AC 5).
           'id, gender, birth_date, birth_year_only, birth_year, ' +
-          'name_local, name_latin, national_id_hash, is_active, created_at, updated_at, ' +
+          'name_local, name_latin, is_active, created_at, updated_at, ' +
           'name_given, name_father, name_grandfather, name_family, ' +
           'address_province_origin, address_district_origin, address_village_origin, ' +
           'address_province_current, address_district_current, address_village_current, ' +
-          'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
+          'is_nomadic, telecom_phone, blood_group, preferred_language, ' +
           'mpi_score, mpi_warn, ' +
           'marital_status, displacement_category, nationality, occupation, ' +
           'education_level, disability, telecom_phone_use, emergency_contacts'
@@ -295,7 +336,9 @@ export const patientRouter = createTRPCRouter({
           _ultranos: {
             nameLocal:    row.name_local,
             nameLatin:    row.name_latin,
-            nationalIdHash: row.national_id_hash,
+            // nationalIdHash and photoUrl deliberately omitted from search output
+            // (audit C-HUB-4 / AC 5): the ID blind-index and raw photo storage path
+            // are never returned by list/search.
             isActive:     row.is_active,
             createdAt:    row.created_at,
             nameGiven:           row.name_given,
@@ -319,7 +362,6 @@ export const patientRouter = createTRPCRouter({
               : undefined,
             isNomadic:   (row.is_nomadic as boolean) ?? false,
             bloodGroup:  (row.blood_group as string) ?? undefined,
-            photoUrl:    (row.photo_url as string) ?? undefined,
             preferredLanguage: (row.preferred_language as string) ?? undefined,
             mpiScore:    row.mpi_score,
             mpiWarn:     (row.mpi_warn as boolean) ?? false,

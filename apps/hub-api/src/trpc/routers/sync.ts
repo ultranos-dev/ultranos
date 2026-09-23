@@ -1,7 +1,11 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
-import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
+import {
+  resolvePullScope,
+  hasPullConsent,
+  resolvePushRowOwnership,
+} from '../middleware/enforceOwnership'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
 import { compareHlc, deserializeHlc, resolveConflict, getConflictTier } from '@ultranos/sync-engine'
@@ -225,16 +229,68 @@ export const syncRouter = createTRPCRouter({
 
           const payload = JSON.parse(op.payload) as Record<string, unknown>
 
-          // Check for conflict: compare incoming HLC with stored HLC.
-          // Skip for tables without an hlc_timestamp column (e.g. consent_records,
-          // which syncs via its dedicated append-only ledger).
-          const existing = NO_HLC_TABLES.has(tableName)
-            ? null
-            : (await ctx.supabase
-                .from(tableName)
-                .select('id, hlc_timestamp')
-                .eq('id', op.resourceId)
-                .maybeSingle()).data
+          // Single existing-row fetch, reused for BOTH object-level ownership
+          // (audit C-SYS-2 / AC 3) and HLC conflict detection. We select the
+          // ownership columns (org_id, patient linkage) alongside id + hlc_timestamp
+          // so one round-trip serves both checks. NO_HLC tables (consent_records —
+          // the append-only ledger) omit hlc_timestamp from the select.
+          const isOrgScoped = ORG_SCOPED_TABLES.has(tableName)
+          const patientColumn = PATIENT_COLUMN_MAP[tableName] ?? null
+          const selectCols = ['id']
+          if (!NO_HLC_TABLES.has(tableName)) selectCols.push('hlc_timestamp')
+          if (isOrgScoped) selectCols.push('org_id')
+          if (patientColumn && patientColumn !== 'id') selectCols.push(patientColumn)
+          const { data: existingRaw } = await ctx.supabase
+            .from(tableName)
+            .select(selectCols.join(', '))
+            .eq('id', op.resourceId)
+            .maybeSingle()
+          const existingRow = existingRaw as Record<string, unknown> | null
+
+          // Object-level ownership on an EXISTING row (AC 3). An HLC comparison
+          // decides which version wins — it must NEVER authorize the write itself.
+          // A cross-org or cross-patient overwrite is rejected here with a
+          // distinguishable `error` (not a `conflict`), so the spoke drain worker
+          // dead-letters (markFailed) rather than looping on conflict resolution.
+          if (existingRow) {
+            const ownership = await resolvePushRowOwnership({
+              supabase: ctx.supabase,
+              user: ctx.user,
+              tableName,
+              isOrgScoped,
+              patientColumn,
+              existingRow,
+            })
+            if (!ownership.allowed) {
+              try {
+                await audit.emit({
+                  actorId: ctx.user.sub,
+                  actorRole: ctx.user.role as Parameters<typeof audit.emit>[0]['actorRole'],
+                  action: 'SYNC' as Parameters<typeof audit.emit>[0]['action'],
+                  resourceType: op.resourceType as Parameters<typeof audit.emit>[0]['resourceType'],
+                  resourceId: op.resourceId,
+                  sessionId: ctx.user.sessionId,
+                  outcome: 'DENIED' as const,
+                  metadata: { source: 'sync.push', reason: ownership.reason },
+                })
+              } catch {
+                // Audit failure must not change the authorization decision.
+              }
+              // FORBIDDEN — a permanent, non-conflict rejection (dead-lettered by the
+              // drain worker), never retried and never resolved as a sync conflict.
+              results.push({
+                resourceId: op.resourceId,
+                success: false,
+                error: 'FORBIDDEN',
+              })
+              continue
+            }
+          }
+
+          // Conflict detection: compare incoming HLC with stored HLC. Reuses the
+          // existingRow fetched above. NO_HLC tables (consent_records) never carry
+          // hlc_timestamp, so they never enter the conflict path (existing is null).
+          const existing = NO_HLC_TABLES.has(tableName) ? null : existingRow
 
           if (existing && existing.hlc_timestamp) {
             const incomingHlc = deserializeHlc(op.hlcTimestamp)
@@ -427,6 +483,12 @@ export const syncRouter = createTRPCRouter({
           // Stamp org_id from the authenticated context for org-scoped tables.
           // These columns are NOT NULL with no default, so a missing org context
           // is a hard error rather than a silent NULL write.
+          //
+          // AC 3: only stamp org_id on a CREATE (no existing row). An existing row's
+          // org is authoritative and must NEVER be re-stamped to the caller's org —
+          // the ownership check above already rejected cross-org overwrites, so a
+          // surviving existing row is same-org; preserve its stored org_id rather than
+          // overwriting it (defense in depth against a caller mutating org membership).
           if (ORG_SCOPED_TABLES.has(tableName)) {
             if (!ctx.user.orgId) {
               results.push({
@@ -436,7 +498,12 @@ export const syncRouter = createTRPCRouter({
               })
               continue
             }
-            flat.orgId = ctx.user.orgId
+            if (existingRow) {
+              // Preserve the stored org_id; do not re-home the row to the caller.
+              flat.orgId = (existingRow.org_id as string | null) ?? ctx.user.orgId
+            } else {
+              flat.orgId = ctx.user.orgId
+            }
           }
 
           // allergy_intolerances carries sync provenance: synced_by is NOT NULL
@@ -625,9 +692,65 @@ export const syncRouter = createTRPCRouter({
 
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
 
+      // Object-level ownership (audit C-SYS-2 / AC 1). enforceResourceAccess only
+      // proves the ROLE may touch a resource TYPE — never that THIS caller may read
+      // THIS patient's rows. PATIENT → own id only; GUARDIAN → active linked ward;
+      // clinical/admin roles → open per free-floating-patient tenancy (consent gate
+      // below still applies). Fail-safe: any patient-scoped pull with a denied owner
+      // is rejected with FORBIDDEN and audited (no PHI in the audit metadata).
+      if (input.patientId) {
+        const scope = await resolvePullScope(ctx.supabase, ctx.user, input.patientId)
+        if (!scope.allowed) {
+          try {
+            await audit.emit({
+              actorId: ctx.user.sub,
+              actorRole: ctx.user.role as Parameters<typeof audit.emit>[0]['actorRole'],
+              action: 'READ' as Parameters<typeof audit.emit>[0]['action'],
+              resourceType: 'Patient' as Parameters<typeof audit.emit>[0]['resourceType'],
+              resourceId: input.patientId,
+              sessionId: ctx.user.sessionId,
+              outcome: 'DENIED' as const,
+              metadata: { source: 'sync.pull', reason: scope.reason },
+            })
+          } catch {
+            // Audit failure must not change the authorization decision.
+          }
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Access denied — not authorized to read this patient',
+          })
+        }
+      }
+
       for (const { type, table } of targetTables) {
         // RBAC: skip resource types the user cannot access
         if (!hasResourceAccess(userRole, type)) continue
+
+        // Consent gate (audit C-SYS-2 / AC 2): for consent-gated resource types,
+        // a clinical caller may read only when the patient's consent is active and
+        // unexpired at the matching scope (same checkConsent the read endpoints use).
+        // Owners (patient/guardian) bypass their own/ward record. On withdrawal the
+        // gated types are EXCLUDED from the pull and the exclusion is audited.
+        if (input.patientId) {
+          const consentOk = await hasPullConsent(ctx.supabase, userRole, type, input.patientId)
+          if (!consentOk) {
+            try {
+              await audit.emit({
+                actorId: ctx.user.sub,
+                actorRole: ctx.user.role as Parameters<typeof audit.emit>[0]['actorRole'],
+                action: 'READ' as Parameters<typeof audit.emit>[0]['action'],
+                resourceType: 'Patient' as Parameters<typeof audit.emit>[0]['resourceType'],
+                resourceId: input.patientId,
+                sessionId: ctx.user.sessionId,
+                outcome: 'DENIED' as const,
+                metadata: { source: 'sync.pull', reason: 'consent_withdrawn', resourceType: type },
+              })
+            } catch {
+              // Audit failure must not change the exclusion decision.
+            }
+            continue
+          }
+        }
 
         // Skip tables without an hlc_timestamp column — they don't participate
         // in the generic HLC pull (consent syncs via its dedicated ledger path).

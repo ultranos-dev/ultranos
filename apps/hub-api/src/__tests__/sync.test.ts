@@ -570,7 +570,14 @@ describe('sync.pull', () => {
   })
 
   it('filters by resource types when specified', async () => {
-    const mockFrom = vi.fn().mockReturnValue(chainableQuery([]))
+    // Encounter is a consent-gated pull type (Story 56.2 / AC 2): a clinician pull
+    // now checks patient consent first. Return an ACTIVE FULL_RECORD consent so the
+    // gate passes and the resource-type filter (the behavior under test) is exercised.
+    const mockFrom = vi.fn((table: string) =>
+      table === 'consents'
+        ? chainableQuery([{ id: 'c-1', status: 'ACTIVE', category: ['FULL_RECORD'], date_time: '2026-01-01T00:00:00Z', provision_end: null }])
+        : chainableQuery([]),
+    )
 
     mockSupabaseClient.from = mockFrom
 
@@ -583,7 +590,7 @@ describe('sync.pull', () => {
     })
 
     expect(result.changes).toEqual([])
-    // Should only query the encounters table
+    // Should only query the encounters table (plus the consent gate check).
     expect(mockFrom).toHaveBeenCalledWith('encounters')
   })
 

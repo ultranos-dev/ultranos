@@ -107,13 +107,15 @@ describe('RBAC Security Audit — AC 3: Role-based access enforcement', () => {
       ).rejects.toMatchObject({ code: 'FORBIDDEN' })
     })
 
-    it('Patient CAN access patient search (Patient resource)', async () => {
+    it('Patient CANNOT enumerate the patient directory (Story 56.2 / audit C-HUB-4)', async () => {
+      // Previously PATIENT could search the directory (the C-HUB-4 vulnerability):
+      // holding `Patient` in ROLE_PERMISSIONS let enforceResourceAccess through.
+      // Story 56.2 restricts patient.list/search to clinical/admin roles — a PATIENT
+      // must use own-record endpoints instead.
       const caller = createCallerFactory(patientRouter)(
         makeCtx({ sub: 'patient-1', role: 'PATIENT' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }),
       )
-      // Will not throw FORBIDDEN — Patient has Patient resource access
-      const result = await caller.search({ query: 'self' })
-      expect(result).toHaveProperty('patients')
+      await expect(caller.search({ query: 'self' })).rejects.toMatchObject({ code: 'FORBIDDEN' })
     })
   })
 
