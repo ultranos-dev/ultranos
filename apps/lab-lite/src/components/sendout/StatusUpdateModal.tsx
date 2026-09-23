@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { X, ChevronRight } from '@ultranos/ui-kit/icons'
+import { ChevronRight } from '@ultranos/ui-kit/icons'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { updateSendOutStatus } from '@/lib/sendout-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -76,15 +77,13 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
       aria-labelledby="status-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
     >
-      <div className="w-full max-w-md rounded-lg bg-card shadow-xl">
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 id="status-modal-title" className="text-base font-semibold text-foreground">
-            {t('statusModalTitle')}
-          </h2>
-          <button type="button" onClick={onClose} aria-label={t('statusCloseAriaLabel')} className="rounded p-1 text-muted-foreground hover:bg-muted">
-            <X size={20} />
-          </button>
-        </div>
+      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-lg bg-card shadow-xl">
+        <ModalHeader
+          title={t('statusModalTitle')}
+          titleId="status-modal-title"
+          onClose={onClose}
+          closeLabel={t('statusCloseAriaLabel')}
+        />
 
         <div className="px-5 py-4 space-y-4">
           {/* Pipeline visualizer */}

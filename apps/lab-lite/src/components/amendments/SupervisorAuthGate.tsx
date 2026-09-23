@@ -15,6 +15,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { LabRole } from '@ultranos/shared-types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
@@ -105,12 +106,7 @@ export function SupervisorAuthGate({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     >
       <div className="bg-card rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
-        <h2
-          id="supervisor-auth-title"
-          className="text-lg font-semibold text-foreground mb-4"
-        >
-          {t('title')}
-        </h2>
+        <ModalHeader title={t('title')} titleId="supervisor-auth-title" inset />
 
         <p className="text-sm text-muted-foreground mb-6">
           {isSupervisor ? t('bodySelf') : t('bodyCross')}

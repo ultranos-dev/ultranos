@@ -11,6 +11,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import type { DriftAlert, DriftAlertResolution } from '@/lib/qc/types'
 import { acknowledgeDriftAlert } from '@/lib/qc/drift-detector'
 import { reportQcDriftEvent } from '@/lib/audit-client'
@@ -89,14 +90,16 @@ export function DriftAlertAcknowledgment({
       aria-modal="true"
       aria-labelledby="ack-dialog-title"
     >
-      <div className="w-full max-w-md rounded-xl bg-card shadow-xl">
-        {/* Header */}
-        <div className="border-b border-border px-5 py-4">
-          <h2 id="ack-dialog-title" className="text-base font-semibold text-foreground">
-            {t('acknowledgeAlertTitle')}
-          </h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">{alert.analyte}</p>
-        </div>
+      <div className="w-full max-w-md overflow-hidden rounded-xl bg-card shadow-xl">
+        <ModalHeader
+          titleId="ack-dialog-title"
+          title={
+            <span className="flex flex-col">
+              <span>{t('acknowledgeAlertTitle')}</span>
+              <span className="text-xs font-normal opacity-90">{alert.analyte}</span>
+            </span>
+          }
+        />
 
         {/* Alert summary */}
         <div className="px-5 py-4">

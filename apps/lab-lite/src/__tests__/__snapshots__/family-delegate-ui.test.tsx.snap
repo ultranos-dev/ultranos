@@ -258,12 +258,11 @@ exports[`9.5 RevokeDelegateDialog > renders correctly in RTL direction 1`] = `
       <div
         class="mx-4 w-full max-w-md rounded-lg bg-card p-6 shadow-xl dark:bg-card"
       >
-        <h2
-          class="mb-4 text-lg font-semibold text-red-600 dark:text-red-400"
-          id="revoke-dialog-title"
-        >
-          revokeDelegate
-        </h2>
+        <div>
+          <h2>
+            revokeDelegate
+          </h2>
+        </div>
         <p
           class="mb-4 text-sm text-foreground dark:text-muted-foreground"
         >

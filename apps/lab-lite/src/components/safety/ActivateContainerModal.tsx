@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { ContainerType } from '@/types/waste-tracking'
 import { activateContainer } from '@/lib/safety/waste-tracking-service'
 import { Button } from '@/components/ui/Button'
@@ -51,12 +52,7 @@ export function ActivateContainerModal({
       aria-labelledby="activate-container-title"
     >
       <div className="mx-4 w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
-        <h2
-          id="activate-container-title"
-          className="text-lg font-semibold mb-4"
-        >
-          {t('activateNew')}
-        </h2>
+        <ModalHeader title={t('activateNew')} titleId="activate-container-title" inset />
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>

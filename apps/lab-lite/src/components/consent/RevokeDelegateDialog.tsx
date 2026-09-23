@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { revokeDelegate } from '@/lib/db'
 import { reportDelegateAuditEvent } from '@/lib/audit-client'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -64,12 +65,12 @@ export function RevokeDelegateDialog({
       aria-labelledby="revoke-dialog-title"
     >
       <div className="mx-4 w-full max-w-md rounded-lg bg-card p-6 shadow-xl dark:bg-card">
-        <h2
-          id="revoke-dialog-title"
-          className="mb-4 text-lg font-semibold text-red-600 dark:text-red-400"
-        >
-          {t('revokeDelegate')}
-        </h2>
+        <ModalHeader
+          title={t('revokeDelegate')}
+          titleId="revoke-dialog-title"
+          tone="destructive"
+          inset
+        />
 
         <p className="mb-4 text-sm text-foreground dark:text-muted-foreground">
           {t('revokeConfirm')}

@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { ChevronLeft } from '@ultranos/ui-kit/icons'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
@@ -111,9 +112,7 @@ function OutOfServiceModal({
       aria-label={t('setOutOfService') ?? 'Set Out of Service'}
     >
       <div className="w-full max-w-sm rounded-xl bg-card shadow-xl p-6 space-y-4">
-        <h2 className="text-base font-semibold text-foreground">
-          {t('setOutOfService') ?? 'Set Out of Service'}
-        </h2>
+        <ModalHeader title={t('setOutOfService') ?? 'Set Out of Service'} inset />
         <p className="text-sm text-muted-foreground">{instrumentName}</p>
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">

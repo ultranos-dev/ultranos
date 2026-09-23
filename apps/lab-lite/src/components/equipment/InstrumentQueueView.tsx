@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { LabRole } from '@ultranos/shared-types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import {
@@ -49,9 +50,7 @@ function CancelBatchModal({
       aria-label={t('cancelBatch') ?? 'Cancel Batch'}
     >
       <div className="w-full max-w-sm rounded-xl bg-card shadow-xl p-6 space-y-4">
-        <h2 className="text-base font-semibold text-foreground">
-          {t('cancelBatch') ?? 'Cancel Batch'}
-        </h2>
+        <ModalHeader title={t('cancelBatch') ?? 'Cancel Batch'} inset />
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">
             {t('cancelReasonPrompt') ?? 'Reason for cancelling:'}

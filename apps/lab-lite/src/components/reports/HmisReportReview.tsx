@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { useLocale } from 'next-intl'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { saveHmisReport, finalizeHmisReport } from '@/lib/db'
@@ -674,7 +675,7 @@ export function HmisReportReview({ report, onUpdate, onBack }: HmisReportReviewP
           onKeyDown={(e) => { if (e.key === 'Escape') setShowDhis2Dialog(null) }}
         >
           <div className="rounded-lg bg-background border border-border p-6 max-w-sm w-full mx-4 shadow-lg">
-            <h2 id="dhis2-dialog-title" className="font-semibold text-lg mb-3">{t('dhis2OrgUnitTitle')}</h2>
+            <ModalHeader title={t('dhis2OrgUnitTitle')} titleId="dhis2-dialog-title" inset />
             <p className="text-sm text-muted-foreground mb-4">{t('dhis2OrgUnitDescription')}</p>
             <input
               type="text"
@@ -714,7 +715,7 @@ export function HmisReportReview({ report, onUpdate, onBack }: HmisReportReviewP
           onKeyDown={(e) => { if (e.key === 'Escape') setConfirmFinalize(false) }}
         >
           <div className="rounded-lg bg-background border border-border p-6 max-w-sm w-full mx-4 shadow-lg">
-            <h2 id="finalize-dialog-title" className="font-semibold text-lg mb-3">{t('finalizeConfirm')}</h2>
+            <ModalHeader title={t('finalizeConfirm')} titleId="finalize-dialog-title" inset />
             <p className="text-sm text-muted-foreground mb-6">{t('finalizeConfirmBody')}</p>
             <div className="flex gap-3 justify-end">
               <button

@@ -15,6 +15,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { AmendmentReasonCode } from '@ultranos/shared-types'
 import type { LabResultForAuthorization } from '@/types/authorization'
 import { initiateAmendment, authorizeAmendment, commitAmendment } from '@/lib/amendment-service'
@@ -146,20 +147,16 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
         className="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
         data-testid="amend-result-modal"
       >
-        <div className="bg-card rounded-lg shadow-xl w-full max-w-2xl mx-4 flex flex-col max-h-[90vh]">
-          {/* Header */}
-          <div className="px-6 py-4 border-b border-border">
-            <h2 id="amend-modal-title" className="text-lg font-semibold text-foreground">
-              {t('title', { step })}
-            </h2>
-            <div className="mt-2 flex gap-2" aria-hidden="true">
-              {([1, 2, 3, 4] as Step[]).map((s) => (
-                <div
-                  key={s}
-                  className={`h-1.5 flex-1 rounded-full ${s <= step ? 'bg-primary' : 'bg-muted'}`}
-                />
-              ))}
-            </div>
+        <div className="bg-card rounded-lg shadow-xl w-full max-w-2xl mx-4 flex flex-col max-h-[90vh] overflow-hidden">
+          <ModalHeader title={t('title', { step })} titleId="amend-modal-title" />
+          {/* Step progress */}
+          <div className="flex gap-2 px-6 pt-4" aria-hidden="true">
+            {([1, 2, 3, 4] as Step[]).map((s) => (
+              <div
+                key={s}
+                className={`h-1.5 flex-1 rounded-full ${s <= step ? 'bg-primary' : 'bg-muted'}`}
+              />
+            ))}
           </div>
 
           {/* Body — scrollable */}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { X } from '@ultranos/ui-kit/icons'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import type { PatientVerificationRecord, SampleCondition } from '@ultranos/shared-types'
 import { accessionSample, rejectSample } from '@/lib/sample-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -91,6 +91,12 @@ export function ReceiveSampleModal({
   const isNonAcceptable = condition !== 'acceptable'
   const rejectionOptions = isNonAcceptable ? REJECTION_REASONS[condition] : []
 
+  // Ordered tests for THIS order — stamped onto the specimen at accession so the
+  // worklist / detail views can resolve the test without the order row (Rule #7 safe).
+  const orderedTests = (orders?.find((o) => o.orderId === orderId)?.testsRequested ?? []).map(
+    (tr) => ({ loincCode: tr.loincCode ?? '', loincDisplay: tr.loincDisplay ?? '' }),
+  )
+
   function handleVerificationComplete(record: PatientVerificationRecord) {
     setVerificationRecord(record)
     setStep('sampleDetails')
@@ -111,6 +117,9 @@ export function ReceiveSampleModal({
           notes: notes || undefined,
           patientRef,
           idPrefix: undefined, // uses lab default 'LAB'
+          patientFirstName,
+          patientAge,
+          orderedTests,
         })
         // Link verification record to the actual specimen ID (3.3 — sampleId linkage)
         if (verificationRecord) {
@@ -166,6 +175,9 @@ export function ReceiveSampleModal({
           notes: notes || undefined,
           patientRef,
           idPrefix: undefined,
+          patientFirstName,
+          patientAge,
+          orderedTests,
         })
         // Link verification record to the actual specimen ID
         if (verificationRecord) {
@@ -220,20 +232,13 @@ export function ReceiveSampleModal({
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
         data-testid="verification-step"
       >
-        <div className="w-full max-w-lg rounded-xl bg-card shadow-xl">
-          <div className="flex items-center justify-between border-b border-border px-6 py-4">
-            <h2 id="verification-step-title" className="text-lg font-semibold text-foreground">
-              {t('modal.patientVerification')}
-            </h2>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label={t('modal.close')}
-              className="rounded p-1 text-muted-foreground hover:text-muted-foreground"
-            >
-              <X size={20} aria-hidden="true" />
-            </button>
-          </div>
+        <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-card shadow-xl">
+          <ModalHeader
+            title={t('modal.patientVerification')}
+            titleId="verification-step-title"
+            onClose={onClose}
+            closeLabel={t('modal.close')}
+          />
           <div className="px-2 py-2">
             <PatientVerificationForm
               sampleId={orderId}
@@ -318,21 +323,13 @@ export function ReceiveSampleModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       data-testid="receive-sample-modal"
     >
-      <div className="w-full max-w-lg rounded-xl bg-card shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h2 id="receive-sample-title" className="text-lg font-semibold text-foreground">
-            {t('modal.receiveTitle')}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t('modal.close')}
-            className="rounded p-1 text-muted-foreground hover:text-muted-foreground"
-          >
-            <X size={20} />
-          </button>
-        </div>
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-card shadow-xl">
+        <ModalHeader
+          title={t('modal.receiveTitle')}
+          titleId="receive-sample-title"
+          onClose={onClose}
+          closeLabel={t('modal.close')}
+        />
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">

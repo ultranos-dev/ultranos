@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { recordHandoff } from '@/lib/sample-service'
-import { X } from '@ultranos/ui-kit/icons'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 
 /**
  * RecordHandoffModal — log a custody transfer between lab staff.
@@ -55,20 +55,13 @@ export function RecordHandoffModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       data-testid="record-handoff-modal"
     >
-      <div className="w-full max-w-md rounded-xl bg-card shadow-xl">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h2 id="handoff-modal-title" className="text-lg font-semibold text-foreground">
-            {t('handoff.title')}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t('modal.close')}
-            className="rounded p-1 text-muted-foreground hover:text-muted-foreground"
-          >
-            <X size={20} aria-hidden="true" />
-          </button>
-        </div>
+      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl bg-card shadow-xl">
+        <ModalHeader
+          title={t('handoff.title')}
+          titleId="handoff-modal-title"
+          onClose={onClose}
+          closeLabel={t('modal.close')}
+        />
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           {/* From (read-only — current user) */}

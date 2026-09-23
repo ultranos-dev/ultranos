@@ -22,12 +22,19 @@ exports[`SupervisorAuthGate > RTL Snapshots > renders correctly in LTR 1`] = `
     <div
       class="bg-card rounded-lg shadow-xl w-full max-w-md mx-4 p-6"
     >
-      <h2
-        class="text-lg font-semibold text-foreground mb-4"
-        id="supervisor-auth-title"
+      <div
+        class="flex items-center justify-between gap-3 px-6 py-4 -mx-6 -mt-6 mb-4 [border-top-left-radius:inherit] [border-top-right-radius:inherit] bg-primary text-primary-foreground"
       >
-        Supervisor Authorization Required
-      </h2>
+        <h2
+          class="text-lg font-semibold"
+          id="supervisor-auth-title"
+        >
+          Supervisor Authorization Required
+        </h2>
+        <div
+          class="flex items-center gap-2"
+        />
+      </div>
       <p
         class="text-sm text-muted-foreground mb-6"
       >
@@ -89,12 +96,19 @@ exports[`SupervisorAuthGate > RTL Snapshots > renders correctly in RTL 1`] = `
     <div
       class="bg-card rounded-lg shadow-xl w-full max-w-md mx-4 p-6"
     >
-      <h2
-        class="text-lg font-semibold text-foreground mb-4"
-        id="supervisor-auth-title"
+      <div
+        class="flex items-center justify-between gap-3 px-6 py-4 -mx-6 -mt-6 mb-4 [border-top-left-radius:inherit] [border-top-right-radius:inherit] bg-primary text-primary-foreground"
       >
-        Supervisor Authorization Required
-      </h2>
+        <h2
+          class="text-lg font-semibold"
+          id="supervisor-auth-title"
+        >
+          Supervisor Authorization Required
+        </h2>
+        <div
+          class="flex items-center gap-2"
+        />
+      </div>
       <p
         class="text-sm text-muted-foreground mb-6"
       >

@@ -94,6 +94,16 @@ vi.mock('@ultranos/ui-kit/components/ui/dialog', () => ({
   DialogContent: ({ children }: any) => <div>{children}</div>,
   DialogHeader: ({ children }: any) => <div>{children}</div>,
   DialogTitle: ({ children }: any) => <h2>{children}</h2>,
+  ModalHeader: ({ title, onClose, closeLabel }: any) => (
+    <div>
+      <h2>{title}</h2>
+      {onClose ? (
+        <button type="button" aria-label={closeLabel} onClick={onClose}>
+          ×
+        </button>
+      ) : null}
+    </div>
+  ),
 }))
 
 // Mock ShadCN Select — radix portals don't work in jsdom

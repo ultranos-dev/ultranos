@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import type { EmployeeHealthRecord } from '@/types/employee-health'
 import {
   VaccinationStatus,
@@ -112,18 +113,12 @@ export function HealthRecordEditModal({
       aria-label={isNew ? t('createRecord') : t('editRecord')}
     >
       <div className="bg-card rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
-            {isNew ? t('createRecord') : t('editRecord')}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-muted-foreground text-2xl"
-            aria-label={t('close')}
-          >
-            ×
-          </button>
-        </div>
+        <ModalHeader
+          title={isNew ? t('createRecord') : t('editRecord')}
+          onClose={onClose}
+          closeLabel={t('close')}
+          inset
+        />
 
         {error && (
           <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm" role="alert">

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import type { TemperatureLocation } from '@/types/temperature-monitoring'
 import { TemperatureSource } from '@/types/temperature-monitoring'
 import { logReading } from '@/lib/safety/temperature-service'
@@ -115,9 +116,7 @@ export function LogTemperatureModal({
         aria-modal="true"
         aria-label={t('logReadingTitle')}
       >
-        <h2 className="text-lg font-semibold text-foreground mb-4">
-          {t('logReadingTitle')}
-        </h2>
+        <ModalHeader title={t('logReadingTitle')} inset />
 
         {/* Location (pre-selected) */}
         <div className="mb-4">

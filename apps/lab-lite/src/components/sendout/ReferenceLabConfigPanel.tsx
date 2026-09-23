@@ -6,9 +6,8 @@ import { Plus, Edit, X, CheckCircle } from '@ultranos/ui-kit/icons'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogFooter,
+  ModalHeader,
 } from '@ultranos/ui-kit/components/ui/dialog'
 import { getActiveReferenceLabs, addReferenceLab, updateReferenceLab, deactivateReferenceLab } from '@/lib/reference-lab-config'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -244,10 +243,13 @@ export function ReferenceLabConfigPanel() {
 
       {/* Deactivation confirmation dialog — replaces browser confirm() (M16) */}
       <Dialog open={deactivateTarget !== null} onOpenChange={(open) => { if (!open) setDeactivateTarget(null) }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('refLabDeactivateDialogTitle')}</DialogTitle>
-          </DialogHeader>
+        <DialogContent hideClose>
+          <ModalHeader
+            title={t('refLabDeactivateDialogTitle')}
+            tone="destructive"
+            onClose={() => setDeactivateTarget(null)}
+            inset
+          />
           <p className="text-sm text-foreground">
             {t('refLabDeactivateConfirm', { name: deactivateTargetName })}
           </p>

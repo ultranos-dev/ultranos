@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import {
   generateHandoverReport,
   finalizeHandover,
@@ -83,13 +84,11 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
       aria-labelledby="end-shift-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     >
-      <div className="mx-4 w-full max-w-lg rounded-lg border border-border bg-card shadow-xl">
-        {/* Header */}
-        <div className="border-b border-border px-6 py-4">
-          <h2 id="end-shift-title" className="text-lg font-semibold text-foreground">
-            {step === 'preview' ? t('endShiftDialogTitle') : t('endShiftConfirm')}
-          </h2>
-        </div>
+      <div className="mx-4 w-full max-w-lg overflow-hidden rounded-lg border border-border bg-card shadow-xl">
+        <ModalHeader
+          title={step === 'preview' ? t('endShiftDialogTitle') : t('endShiftConfirm')}
+          titleId="end-shift-title"
+        />
 
         {/* Body */}
         <div className="max-h-[60vh] overflow-y-auto px-6 py-4">

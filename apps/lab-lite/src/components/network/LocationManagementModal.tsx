@@ -6,8 +6,7 @@ import { X } from '@ultranos/ui-kit/icons'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
 } from '@ultranos/ui-kit/components/ui/dialog'
 import type { LabLocation, CreateLocationInput } from '@/types/lab-network'
 import {
@@ -149,12 +148,12 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isEdit ? t('editLocation') : t('addLocation')}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-md" hideClose>
+        <ModalHeader
+          title={isEdit ? t('editLocation') : t('addLocation')}
+          onClose={onClose}
+          inset
+        />
 
         {/* Form */}
         <form onSubmit={(e) => void handleSave(e)} className="flex flex-col gap-4">

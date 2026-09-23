@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import {
   getInstruments,
   getInstrumentQueue,
@@ -133,16 +134,7 @@ export function QueueBatchDialog({
       aria-label={t('queueBatch')}
     >
       <div className="w-full max-w-md rounded-xl bg-card shadow-xl p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">{t('queueBatch')}</h2>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-muted-foreground"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-        </div>
+        <ModalHeader title={t('queueBatch')} onClose={onClose} inset />
 
         {/* Instrument selector */}
         <div>

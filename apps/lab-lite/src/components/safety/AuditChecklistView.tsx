@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import {
   ChecklistItemStatus,
   type InfectionControlAudit,
@@ -314,9 +315,7 @@ export function AuditChecklistView({
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
         >
           <div className="w-full max-w-sm rounded-xl bg-card p-6 shadow-xl">
-            <h3 id="confirm-complete-title" className="mb-2 text-base font-semibold">
-              {t('confirmCompleteTitle')}
-            </h3>
+            <ModalHeader title={t('confirmCompleteTitle')} titleId="confirm-complete-title" inset />
 
             <p className="mb-4 text-sm text-muted-foreground">
               {t('confirmCompleteBody')}

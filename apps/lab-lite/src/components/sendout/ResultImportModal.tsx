@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { X, Upload, FileText } from '@ultranos/ui-kit/icons'
+import { Upload, FileText } from '@ultranos/ui-kit/icons'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { importSendOutResult } from '@/lib/sendout-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import type { SendOut, ReferenceLab } from '@/types/reference-lab'
@@ -95,15 +96,13 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
       aria-labelledby="result-import-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
     >
-      <div className="w-full max-w-md rounded-lg bg-card shadow-xl">
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 id="result-import-title" className="text-base font-semibold text-foreground">
-            {t('importModalTitle')}
-          </h2>
-          <button type="button" onClick={onClose} aria-label={t('importCloseAriaLabel')} className="rounded p-1 text-muted-foreground hover:bg-muted">
-            <X size={20} />
-          </button>
-        </div>
+      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-lg bg-card shadow-xl">
+        <ModalHeader
+          title={t('importModalTitle')}
+          titleId="result-import-title"
+          onClose={onClose}
+          closeLabel={t('importCloseAriaLabel')}
+        />
 
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
           {/* Attribution (non-editable) */}

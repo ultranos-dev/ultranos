@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { X, Send, ExternalLink } from '@ultranos/ui-kit/icons'
+import { Send, ExternalLink } from '@ultranos/ui-kit/icons'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { getLabsForTest } from '@/lib/reference-lab-config'
 import { initiateSendOut } from '@/lib/sendout-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -73,21 +74,13 @@ export function SendOutModal({
       aria-labelledby="sendout-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
     >
-      <div className="w-full max-w-lg rounded-lg bg-card shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 id="sendout-modal-title" className="text-base font-semibold text-foreground">
-            {t('sendOutModalTitle')}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground"
-            aria-label={t('sendOutCloseAriaLabel')}
-          >
-            <X size={20} />
-          </button>
-        </div>
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-card shadow-xl">
+        <ModalHeader
+          title={t('sendOutModalTitle')}
+          titleId="sendout-modal-title"
+          onClose={onClose}
+          closeLabel={t('sendOutCloseAriaLabel')}
+        />
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">

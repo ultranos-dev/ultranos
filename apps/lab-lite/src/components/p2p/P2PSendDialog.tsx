@@ -18,7 +18,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { CheckCircle, Loader2, WifiOff, X } from '@ultranos/ui-kit/icons'
+import { CheckCircle, Loader2, WifiOff } from '@ultranos/ui-kit/icons'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { ChevronRight } from '@ultranos/ui-kit/icons'
 import { LocalNetworkTransport } from '@/lib/p2p/local-network-transport'
@@ -348,18 +349,7 @@ export function P2PSendDialog({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     >
       <div className="relative w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl dark:bg-card">
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          aria-label={t('close')}
-          className="absolute end-4 top-4 rounded-full p-1 text-muted-foreground hover:bg-muted dark:hover:bg-card"
-        >
-          <X size={18} />
-        </button>
-
-        <h2 className="mb-4 text-lg font-semibold text-foreground dark:text-foreground">
-          {t('dialogTitle')}
-        </h2>
+        <ModalHeader title={t('dialogTitle')} onClose={onClose} closeLabel={t('close')} inset />
 
         {/* PHASE: discovering */}
         {phase === 'discovering' && (

@@ -13,6 +13,7 @@
 
 import { useState, useId } from 'react'
 import { useTranslations } from 'next-intl'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { db } from '@/lib/db'
 import { hlc, serializeHlc } from '@/lib/hlc'
 import { reportPlausibilityEvent } from '@/lib/audit-client'
@@ -89,16 +90,8 @@ export function FlagAcknowledgmentDialog({ flag, resultId, patientRef, onConfirm
       aria-labelledby="ack-dialog-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
     >
-      <div className="w-full max-w-md rounded-lg bg-card shadow-xl">
-        {/* Header */}
-        <div className="border-b border-border px-5 py-4">
-          <h2
-            id="ack-dialog-title"
-            className="text-base font-semibold text-foreground"
-          >
-            {t('dialogTitle')}
-          </h2>
-        </div>
+      <div className="w-full max-w-md overflow-hidden rounded-lg bg-card shadow-xl">
+        <ModalHeader title={t('dialogTitle')} titleId="ack-dialog-title" />
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
