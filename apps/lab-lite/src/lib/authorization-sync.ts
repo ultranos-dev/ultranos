@@ -14,11 +14,24 @@
 import { getDb, markAuthorizationActionsSynced, getUnsyncedAuthorizationActions } from './db'
 import { getHubApiUrl } from './trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { useSyncStore } from '@/stores/sync-store'
 
 interface SyncResult {
   synced: number
   failed: number
   conflicts: number
+}
+
+/**
+ * Story 59.1 (AC 4): surface sync failures on the sync-status store instead of
+ * swallowing them. Never throws — surfacing must not break the drain loop.
+ */
+function surfaceSyncFailure(reason: string): void {
+  try {
+    useSyncStore.getState().setSyncError(reason)
+  } catch {
+    // Store unavailable (e.g. non-browser test context) — nothing to surface to.
+  }
 }
 
 /**
@@ -83,6 +96,12 @@ export async function drainAuthorizationActions(
     }
   } catch {
     // Non-fatal — sync will be retried on next connectivity event
+    surfaceSyncFailure('AUTHORIZATION_SYNC_FAILED')
+  }
+
+  // Story 59.1 (AC 4): failed authorization pushes are surfaced, not silent.
+  if (result.failed > 0) {
+    surfaceSyncFailure('AUTHORIZATION_SYNC_FAILED')
   }
 
   return result
@@ -106,6 +125,7 @@ export async function drainAuthorizationNotifications(
     if (pendingNotifications.length === 0) return
 
     const token = await getToken()
+    let failed = 0
 
     for (const entry of pendingNotifications) {
       try {
@@ -121,13 +141,22 @@ export async function drainAuthorizationNotifications(
 
         if (res.ok) {
           await db.syncQueue.update(entry.id, { status: 'synced' })
+        } else {
+          // Failed entries remain in the queue for the next drain cycle
+          failed++
         }
-        // Failed entries remain in the queue for the next drain cycle
       } catch {
         // Non-fatal — retry on next cycle
+        failed++
       }
+    }
+
+    // Story 59.1 (AC 4): failed notification dispatches are surfaced, not silent.
+    if (failed > 0) {
+      surfaceSyncFailure('NOTIFICATION_SYNC_FAILED')
     }
   } catch {
     // Non-fatal
+    surfaceSyncFailure('NOTIFICATION_SYNC_FAILED')
   }
 }

@@ -1,46 +1,26 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import 'fake-indexeddb/auto'
-import { getDb, addToQueue, type UploadQueueEntry } from '../lib/db'
-import { reportQueueAuditEvent, type QueueAuditEventType } from '../lib/queue-audit'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-function makeEntry(overrides: Partial<UploadQueueEntry> = {}): Omit<UploadQueueEntry, 'id'> {
-  return {
-    file: new Blob(['data'], { type: 'application/pdf' }),
-    fileName: 'result.pdf',
-    fileType: 'application/pdf',
-    metadata: {
-      loincCode: '58410-2',
-      loincDisplay: 'Blood Work — CBC',
-      collectionDate: '2026-04-30',
-    },
-    patientRef: 'pat-ref-123',
-    patientFirstName: 'Ahmad',
-    queuedAt: new Date().toISOString(),
-    status: 'pending' as const,
-    retryCount: 0,
-    lastAttemptAt: null,
-    ...overrides,
-  }
-}
+/**
+ * Story 59.1 disposition (C-SYS-5): `lib/queue-audit.ts` previously POSTed to
+ * `lab.reportQueueEvent` — a Hub procedure that never existed, so every queue
+ * audit event was silently lost. It now records through the client Dexie audit
+ * ledger (audit-client.reportQueueAuditEvent), whose drain worker syncs to the
+ * Hub's real `audit.sync` endpoint. These tests assert the delegation.
+ */
 
-// Mock fetch globally
-const mockFetch = vi.fn().mockResolvedValue({ ok: true })
+const mockLedgerReport = vi.fn()
+vi.mock('../lib/audit-client', () => ({
+  reportQueueAuditEvent: (...args: unknown[]) => mockLedgerReport(...args),
+}))
 
-describe('Queue Audit Events', () => {
-  beforeEach(async () => {
-    const db = getDb()
-    await db.uploadQueue.clear()
-    vi.stubGlobal('fetch', mockFetch)
-    mockFetch.mockClear()
+const { reportQueueAuditEvent } = await import('../lib/queue-audit')
+
+describe('Queue Audit Events (Story 59.1 — local ledger disposition)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
   })
 
-  afterEach(async () => {
-    const db = getDb()
-    await db.uploadQueue.clear()
-    vi.unstubAllGlobals()
-  })
-
-  it('reports QUEUE_ENTRY_CREATED audit event', async () => {
+  it('records QUEUE_ENTRY_CREATED through the client audit ledger', async () => {
     await reportQueueAuditEvent({
       action: 'QUEUE_ENTRY_CREATED',
       queueEntryId: 1,
@@ -49,62 +29,72 @@ describe('Queue Audit Events', () => {
       timestamp: '2026-04-30T10:00:00Z',
     })
 
-    expect(mockFetch).toHaveBeenCalledTimes(1)
-    const [url, opts] = mockFetch.mock.calls[0]
-    expect(url).toContain('lab.reportQueueEvent')
-    const body = JSON.parse(opts.body)
-    expect(body.json.event).toBe('QUEUE_ENTRY_CREATED')
-    expect(body.json.queueEntryId).toBe(1)
-    expect(body.json.testCategory).toBe('Blood Work — CBC')
-    expect(body.json.patientRef).toBe('ref-123')
+    expect(mockLedgerReport).toHaveBeenCalledTimes(1)
+    const [payload] = mockLedgerReport.mock.calls[0]
+    expect(payload.action).toBe('QUEUE_ENTRY_CREATED')
+    expect(payload.queueEntryId).toBe(1)
+    expect(payload.testCategory).toBe('Blood Work — CBC')
+    expect(payload.patientRef).toBe('ref-123')
+    expect(payload.timestamp).toBe('2026-04-30T10:00:00Z')
   })
 
-  it('reports QUEUE_DRAIN_SUCCESS audit event', async () => {
+  it.each([
+    'QUEUE_DRAIN_SUCCESS',
+    'QUEUE_ITEM_EXPIRED',
+    'QUEUE_ITEM_DISCARDED',
+  ] as const)('records %s through the client audit ledger', async (action) => {
     await reportQueueAuditEvent({
-      action: 'QUEUE_DRAIN_SUCCESS',
-      queueEntryId: 2,
+      action,
+      queueEntryId: 7,
       testCategory: 'HbA1c',
       patientRef: 'ref-456',
       timestamp: '2026-04-30T11:00:00Z',
     })
 
-    expect(mockFetch).toHaveBeenCalledTimes(1)
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body)
-    expect(body.json.event).toBe('QUEUE_DRAIN_SUCCESS')
+    expect(mockLedgerReport).toHaveBeenCalledTimes(1)
+    expect(mockLedgerReport.mock.calls[0][0].action).toBe(action)
   })
 
-  it('reports QUEUE_ITEM_EXPIRED audit event', async () => {
-    await reportQueueAuditEvent({
-      action: 'QUEUE_ITEM_EXPIRED',
-      queueEntryId: 3,
-      testCategory: 'Lipid Panel',
-      patientRef: 'ref-789',
-      timestamp: '2026-04-30T12:00:00Z',
+  it('never performs a network fetch (no dead lab.reportQueueEvent call)', async () => {
+    const mockFetch = vi.fn()
+    vi.stubGlobal('fetch', mockFetch)
+    try {
+      await reportQueueAuditEvent({
+        action: 'QUEUE_ENTRY_CREATED',
+        queueEntryId: 2,
+        testCategory: 'CBC',
+        patientRef: 'ref-123',
+        timestamp: '2026-04-30T10:00:00Z',
+      })
+      expect(mockFetch).not.toHaveBeenCalled()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('includes technicianId when provided', async () => {
+    await reportQueueAuditEvent(
+      {
+        action: 'QUEUE_DRAIN_SUCCESS',
+        queueEntryId: 42,
+        testCategory: 'Thyroid Function — TSH',
+        patientRef: 'ref-full',
+        timestamp: '2026-04-30T14:00:00Z',
+        technicianId: 'tech-001',
+      },
+      'ignored-token',
+    )
+
+    const [payload] = mockLedgerReport.mock.calls[0]
+    expect(payload.queueEntryId).toBe(42)
+    expect(payload.technicianId).toBe('tech-001')
+  })
+
+  it('never throws when the ledger write fails (fire-and-forget)', async () => {
+    mockLedgerReport.mockImplementationOnce(() => {
+      throw new Error('ledger unavailable')
     })
 
-    expect(mockFetch).toHaveBeenCalledTimes(1)
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body)
-    expect(body.json.event).toBe('QUEUE_ITEM_EXPIRED')
-  })
-
-  it('reports QUEUE_ITEM_DISCARDED audit event', async () => {
-    await reportQueueAuditEvent({
-      action: 'QUEUE_ITEM_DISCARDED',
-      queueEntryId: 4,
-      testCategory: 'Urinalysis',
-      patientRef: 'ref-xyz',
-      timestamp: '2026-04-30T13:00:00Z',
-    })
-
-    expect(mockFetch).toHaveBeenCalledTimes(1)
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body)
-    expect(body.json.event).toBe('QUEUE_ITEM_DISCARDED')
-  })
-
-  it('never throws on audit failure (fire-and-forget)', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-    // Should not throw
     await expect(
       reportQueueAuditEvent({
         action: 'QUEUE_ENTRY_CREATED',
@@ -114,23 +104,5 @@ describe('Queue Audit Events', () => {
         timestamp: '2026-04-30T10:00:00Z',
       }),
     ).resolves.toBeUndefined()
-  })
-
-  it('includes all required fields: queue entry ID, test category, patient ref, timestamp', async () => {
-    await reportQueueAuditEvent({
-      action: 'QUEUE_DRAIN_SUCCESS',
-      queueEntryId: 42,
-      testCategory: 'Thyroid Function — TSH',
-      patientRef: 'ref-full',
-      timestamp: '2026-04-30T14:00:00Z',
-      technicianId: 'tech-001',
-    })
-
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body)
-    expect(body.json.queueEntryId).toBe(42)
-    expect(body.json.testCategory).toBe('Thyroid Function — TSH')
-    expect(body.json.patientRef).toBe('ref-full')
-    expect(body.json.timestamp).toBe('2026-04-30T14:00:00Z')
-    expect(body.json.technicianId).toBe('tech-001')
   })
 })

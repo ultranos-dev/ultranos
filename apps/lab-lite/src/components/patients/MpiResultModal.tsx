@@ -1,14 +1,14 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import type { CheckDuplicatesResult } from '@/lib/trpc'
 
 interface MpiResultModalProps {
   result: CheckDuplicatesResult
   onProceed: (token?: string) => void
-  onSelectExisting: (patientId: string) => void
+  /** Receives the candidate's OPAQUE blind-index ref (never a real patient UUID). */
+  onSelectExisting: (patientRef: string) => void
   onCancel: () => void
 }
 
@@ -24,6 +24,10 @@ function scoreBadgeClass(score: number): string {
  *
  * WARN: user can "Add Anyway" with proceedToken or select existing.
  * BLOCK: user must select existing or cancel.
+ *
+ * Rule #7 (Story 59.1): candidates carry ONLY firstName + age + score keyed by
+ * the opaque blind-index ref — father name / gender / district / real UUID are
+ * clinician-tier fields the lab surface never receives.
  */
 export function MpiResultModal({
   result,
@@ -47,36 +51,15 @@ export function MpiResultModal({
         <ul className="mt-4 space-y-3">
           {result.candidates.map((c) => (
             <li
-              key={c.id}
+              key={c.ref}
               className="flex items-center justify-between rounded-lg border border-border p-3"
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-foreground">
-                  {(() => {
-                    const parts = [c.nameGiven, c.nameFather].filter(Boolean) as string[]
-                    return parts.length > 0
-                      ? parts.map((seg, i) => (
-                          <span key={i}>
-                            {i > 0 && (
-                              <span
-                                className="mx-2 inline-block h-2 w-2 rounded-full border-2 border-muted-foreground/40 align-middle select-none"
-                                aria-hidden="true"
-                              />
-                            )}
-                            {seg}
-                          </span>
-                        ))
-                      : '---'
-                  })()}
+                  {c.firstName ?? '---'}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {[
-                    c.gender,
-                    c.birthYear ? String(c.birthYear) : null,
-                    c.districtOrigin,
-                  ]
-                    .filter(Boolean)
-                    .join(' \u00B7 ')}
+                  {c.age != null ? t('yearsOld', { age: c.age }) : '---'}
                 </p>
               </div>
               <span
@@ -88,16 +71,10 @@ export function MpiResultModal({
                 <Button
                   variant="outline"
                   className="text-xs"
-                  onClick={() => onSelectExisting(c.id)}
+                  onClick={() => onSelectExisting(c.ref)}
                 >
                   {t('useExisting')}
                 </Button>
-                <Link
-                  href={`/patients/${c.id}`}
-                  className="text-xs font-medium text-primary underline underline-offset-2 hover:text-primary/80"
-                >
-                  {t('viewRecord')}
-                </Link>
               </div>
             </li>
           ))}

@@ -31,12 +31,34 @@ function unwrapTrpcData(data: unknown): unknown {
   return inner ?? data
 }
 
+/**
+ * Resolve the Supabase access token for Authorization headers.
+ * Story 59.1 (H-LAB-4): makeTrpcProcedure previously sent NO auth header, so
+ * every push 401'd forever. Threads the token exactly like the other helpers
+ * in this file (which receive it as a parameter from the session).
+ */
+async function getAccessToken(): Promise<string | null> {
+  if (typeof window === 'undefined') return null
+  try {
+    const supabase = (await import('@/lib/supabase')).getSupabaseBrowserClient()
+    const { data } = await supabase.auth.getSession()
+    return data.session?.access_token ?? null
+  } catch {
+    return null
+  }
+}
+
+async function buildAuthHeaders(): Promise<Record<string, string>> {
+  const token = await getAccessToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 function makeTrpcProcedure(path: string): TrpcProcedure {
   return {
     async mutate(input?: unknown) {
       const res = await fetch(`${getHubApiUrl()}/${path}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await buildAuthHeaders()) },
         body: JSON.stringify({ json: input ?? null }),
       })
       if (!res.ok) throw new Error(`tRPC ${path} failed: ${res.status}`)
@@ -45,7 +67,7 @@ function makeTrpcProcedure(path: string): TrpcProcedure {
     async query(input?: unknown) {
       const url = new URL(`${getHubApiUrl()}/${path}`)
       if (input !== undefined) url.searchParams.set('input', JSON.stringify({ json: input }))
-      const res = await fetch(url.toString())
+      const res = await fetch(url.toString(), { headers: await buildAuthHeaders() })
       if (!res.ok) throw new Error(`tRPC ${path} failed: ${res.status}`)
       return unwrapTrpcData(await res.json())
     },
@@ -479,17 +501,21 @@ export async function acknowledgeAllNotifications(token: string): Promise<void> 
 
 // ── Patient Search (Task 7) ─────────────────────────────────
 
+/**
+ * Rule #7 list-tier DTO: ONLY firstName + age + the opaque blind-index ref.
+ * (The earlier DTO declared gender/phone — a data-minimization violation the
+ * hub never actually served; trimmed in Story 59.1.)
+ */
 export interface PatientSearchResult {
-  id: string
+  /** Opaque blind-index ref (`Patient/<hmac>`) — never the real patient UUID. */
+  ref: string
   firstName: string
-  age: number
-  gender?: string
-  phone?: string
+  age: number | null
 }
 
 /**
- * Search patients by name query via Hub API.
- * Returns ONLY firstName, age, and opaque identifiers (data minimization).
+ * Search patients by name query via Hub API (`lab.searchPatients`).
+ * Returns ONLY firstName, age, and the opaque blind-index ref (Rule #7).
  * Requires valid LAB_TECH JWT in the Authorization header.
  */
 export async function searchPatients(
@@ -508,15 +534,19 @@ export async function searchPatients(
 
 // ── MPI Duplicate Detection & Patient Registration (Task 10) ──
 
+/**
+ * Rule #7 tier-compliant MPI candidate shape (Story 59.1): the lab sees ONLY
+ * first name + age + score per candidate, keyed by the opaque blind-index ref.
+ * Father name / gender / district / real UUID are clinician-tier fields the
+ * lab surface must never receive.
+ */
 export interface CheckDuplicatesResult {
   decision: 'ALLOW' | 'WARN' | 'BLOCK'
   candidates: Array<{
-    id: string
-    nameGiven?: string
-    nameFather?: string
-    birthYear?: number
-    gender?: string
-    districtOrigin?: string
+    /** Opaque blind-index ref (`Patient/<hmac>`) — never the real patient UUID. */
+    ref: string
+    firstName: string | null
+    age: number | null
     mpiScore: number
   }>
   proceedToken?: string
@@ -542,7 +572,13 @@ export interface CreatePatientInput {
 }
 
 export interface CreatePatientResult {
-  id: string
+  /**
+   * Opaque blind-index ref (`Patient/<hmac>`) issued by the Hub on registration.
+   * Rule #7: the lab NEVER receives the real patient UUID — this ref is the
+   * lab's only identifier for the patient (local store key + upload patientRef).
+   */
+  ref: string
+  mpiWarn: boolean
 }
 
 /**
@@ -582,8 +618,9 @@ export async function checkDuplicates(
 }
 
 /**
- * Create a new patient via Hub API after MPI check.
- * Requires valid LAB_TECH JWT.
+ * Register a new patient via Hub API (`lab.registerPatient`) after MPI check.
+ * (Earlier client versions pointed at `lab.createPatient`, which never existed
+ * on the hub — Story 59.1.) Requires valid LAB_TECH JWT.
  */
 export async function createPatient(
   input: CreatePatientInput,
@@ -593,7 +630,7 @@ export async function createPatient(
   const timeout = setTimeout(() => controller.abort(), 15_000)
 
   try {
-    const res = await fetch(`${getHubApiUrl()}/lab.createPatient`, {
+    const res = await fetch(`${getHubApiUrl()}/lab.registerPatient`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

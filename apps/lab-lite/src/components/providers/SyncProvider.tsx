@@ -11,6 +11,7 @@ import { reportQueueAuditEvent } from '@/lib/queue-audit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { drainResultSyncQueue } from '@/lib/result-sync'
 import { drainSpecimenSyncQueue } from '@/lib/specimen-sync'
+import { drainAuthorizationActions, drainAuthorizationNotifications } from '@/lib/authorization-sync'
 import { hydrateSamplesFromHub } from '@/lib/specimen-hydrate'
 
 /**
@@ -75,11 +76,16 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // Start audit drain (AuditDrainInit component was never mounted, absorb it here)
     startAuditDrain()
 
-    // Drain structured lab results (DiagnosticReport) AND collected specimens
-    // (Specimen) to the Hub. Reuses the same triggers as the upload drain.
+    // Drain structured lab results (DiagnosticReport), collected specimens
+    // (Specimen), authorization sign-offs, and release notifications to the Hub.
+    // Reuses the same triggers as the upload drain. (Story 59.1: the
+    // authorization drains existed but were never wired to any trigger — the
+    // queues sat pending forever.)
     const runResultDrain = () => {
       void drainResultSyncQueue(getToken)
       void drainSpecimenSyncQueue(getToken)
+      void drainAuthorizationActions(getToken)
+      void drainAuthorizationNotifications(getToken)
     }
     if (typeof navigator !== 'undefined' && navigator.onLine) runResultDrain()
 

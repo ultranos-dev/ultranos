@@ -17,6 +17,8 @@ interface UsePatientSearchReturn {
   query: string
   results: PatientSearchItem[]
   isSearching: boolean
+  /** Non-null when the Hub search failed (offline / server error). Local results are still shown. */
+  hubError: string | null
   search: (query: string) => Promise<void>
   clear: () => void
 }
@@ -25,6 +27,7 @@ export function usePatientSearch(token: string): UsePatientSearchReturn {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<PatientSearchItem[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const [hubError, setHubError] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
   const search = useCallback(async (q: string) => {
@@ -33,6 +36,7 @@ export function usePatientSearch(token: string): UsePatientSearchReturn {
 
     if (trimmed.length < 2) {
       setResults([])
+      setHubError(null)
       return
     }
 
@@ -78,7 +82,10 @@ export function usePatientSearch(token: string): UsePatientSearchReturn {
       try {
         const hubResults = await searchPatients(trimmed, token)
         const hubItems: PatientSearchItem[] = hubResults.map((r) => ({
-          ...r,
+          // Rule #7: the hub returns the opaque blind-index ref, never a UUID.
+          id: r.ref,
+          firstName: r.firstName,
+          age: r.age ?? 0,
           source: 'remote' as const,
         }))
 
@@ -89,8 +96,12 @@ export function usePatientSearch(token: string): UsePatientSearchReturn {
           for (const item of hubItems) merged.set(item.id, item)
           return Array.from(merged.values())
         })
-      } catch {
-        // Offline-safe: keep local results
+        setHubError(null)
+      } catch (err) {
+        // Story 59.1 (AC 4): the Hub failure is SURFACED — local results remain
+        // usable, but the caller can tell the user the online search failed
+        // (previously a silent catch masked every 404/network error).
+        setHubError(err instanceof Error ? err.message : 'Hub search failed')
       }
     }
 
@@ -100,8 +111,9 @@ export function usePatientSearch(token: string): UsePatientSearchReturn {
   const clear = useCallback(() => {
     setQuery('')
     setResults([])
+    setHubError(null)
     abortRef.current?.abort()
   }, [])
 
-  return { query, results, isSearching, search, clear }
+  return { query, results, isSearching, hubError, search, clear }
 }

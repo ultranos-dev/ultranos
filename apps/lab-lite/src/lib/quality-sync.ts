@@ -103,7 +103,15 @@ export async function syncQualityProfile(technicianId: string): Promise<number> 
 
     return streaks.length + allMetrics.length + pendingBadges.length
   } catch {
-    // Network unavailable — data stays pending, will retry next sync cycle
+    // Network unavailable — data stays pending, will retry next sync cycle.
+    // Story 59.1 (AC 4): the failure is surfaced on the sync-status store
+    // instead of being fully silent.
+    try {
+      const { useSyncStore } = await import('@/stores/sync-store')
+      useSyncStore.getState().setSyncError('QUALITY_SYNC_FAILED')
+    } catch {
+      // Store unavailable (non-browser test context) — nothing to surface to.
+    }
     return 0
   }
 }

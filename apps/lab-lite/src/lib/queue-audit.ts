@@ -1,4 +1,4 @@
-import { getHubApiUrl } from './trpc'
+import { reportQueueAuditEvent as emitQueueAuditToLedger } from './audit-client'
 
 export type QueueAuditEventType =
   | 'QUEUE_ENTRY_CREATED'
@@ -16,31 +16,31 @@ export interface QueueAuditPayload {
 }
 
 /**
- * Fire-and-forget audit event reporting for upload queue operations.
+ * Queue audit event reporting for upload queue operations.
  * Never throws — queue operations must not be blocked by audit failures.
- * Reports to Hub API via the lab.reportQueueEvent tRPC endpoint.
+ *
+ * Story 59.1 disposition (C-SYS-5): this module previously POSTed to
+ * `lab.reportQueueEvent`, a Hub procedure that never existed — every event was
+ * silently lost. It now records through the client Dexie audit ledger
+ * (`audit-client.reportQueueAuditEvent`), whose drain worker syncs to the Hub's
+ * real, authenticated `audit.sync` endpoint. This is DURABLE (survives offline)
+ * and avoids adding another spoofable fire-and-forget audit sink on the Hub.
+ *
+ * The `token` parameter is retained for call-site compatibility; the ledger
+ * drain resolves its own token at sync time.
  */
-export async function reportQueueAuditEvent(payload: QueueAuditPayload, token?: string): Promise<void> {
+export async function reportQueueAuditEvent(payload: QueueAuditPayload, _token?: string): Promise<void> {
   try {
-    await fetch(`${getHubApiUrl()}/lab.reportQueueEvent`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({
-        json: {
-          event: payload.action,
-          queueEntryId: payload.queueEntryId,
-          testCategory: payload.testCategory,
-          patientRef: payload.patientRef,
-          timestamp: payload.timestamp,
-          ...(payload.technicianId ? { technicianId: payload.technicianId } : {}),
-        },
-      }),
+    emitQueueAuditToLedger({
+      action: payload.action,
+      queueEntryId: payload.queueEntryId,
+      testCategory: payload.testCategory,
+      patientRef: payload.patientRef,
+      timestamp: payload.timestamp,
+      ...(payload.technicianId ? { technicianId: payload.technicianId } : {}),
     })
   } catch {
-    // Audit reporting is best-effort from the client.
-    // Server-side capture is the long-term solution.
+    // Audit reporting is best-effort from the client — the ledger write itself
+    // is local and durable; only unexpected synchronous errors land here.
   }
 }

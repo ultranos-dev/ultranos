@@ -101,18 +101,19 @@ export function PatientRegistrationForm() {
     }
   }
 
-  async function saveAndRedirect(patientId: string) {
+  async function saveAndRedirect(patientRef: string) {
     // Rule #7 data minimization: the FULL demographics (father's name, exact DOB,
     // phone) go to the Hub via createPatient, but the lab only RETAINS what it
     // needs locally — first name, gender (required for lab reference ranges), and
     // birth YEAR (for age). Father's name, exact date of birth, and phone are
-    // never persisted in the lab's local store.
+    // never persisted in the lab's local store. The local key is the OPAQUE
+    // blind-index ref the Hub issued — the lab never holds the real patient UUID.
     const birthYearValue = yearOnly
       ? Number(birthYear)
       : (birthDate ? new Date(birthDate).getFullYear() : undefined)
 
     const patient = {
-      id: patientId,
+      id: patientRef,
       resourceType: 'Patient',
       name: [{ given: [nameGiven.trim()] }],
       gender,
@@ -124,7 +125,20 @@ export function PatientRegistrationForm() {
       meta: { lastUpdated: new Date().toISOString(), versionId: '1' },
     }
     await putPatient(patient)
-    router.push(`/upload?patientId=${patientId}`)
+    router.push(`/upload?patientId=${encodeURIComponent(patientRef)}`)
+  }
+
+  /**
+   * Story 59.1 (AC 4): surface the ACTUAL failure instead of a generic message.
+   * Hub tRPC errors carry safe, non-PHI messages (e.g. duplicate detected,
+   * validation failure); network failures fall back to the generic string.
+   */
+  function surfaceError(err: unknown) {
+    const message =
+      err instanceof Error && err.message.trim().length > 0
+        ? err.message
+        : t('errorUnexpected')
+    setErrors([message])
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -152,14 +166,14 @@ export function PatientRegistrationForm() {
 
       if (result.decision === 'ALLOW') {
         const created = await createPatient(buildInput(), token)
-        await saveAndRedirect(created.id)
+        await saveAndRedirect(created.ref)
         return
       }
 
       // WARN or BLOCK — show modal
       setMpiResult(result)
-    } catch {
-      setErrors([t('errorUnexpected')])
+    } catch (err) {
+      surfaceError(err)
     } finally {
       setSubmitting(false)
     }
@@ -171,17 +185,18 @@ export function PatientRegistrationForm() {
     try {
       const token = await getToken()
       const created = await createPatient(buildInput(proceedToken), token)
-      await saveAndRedirect(created.id)
-    } catch {
-      setErrors([t('errorUnexpected')])
+      await saveAndRedirect(created.ref)
+    } catch (err) {
+      surfaceError(err)
     } finally {
       setSubmitting(false)
     }
   }
 
-  function handleSelectExisting(patientId: string) {
+  function handleSelectExisting(patientRef: string) {
+    // patientRef is the opaque blind-index ref from the MPI candidate (Rule #7).
     setMpiResult(null)
-    router.push(`/upload?patientId=${patientId}`)
+    router.push(`/upload?patientId=${encodeURIComponent(patientRef)}`)
   }
 
   return (

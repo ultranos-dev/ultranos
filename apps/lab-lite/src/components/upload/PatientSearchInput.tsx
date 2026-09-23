@@ -12,7 +12,7 @@ interface PatientSearchInputProps {
 
 export function PatientSearchInput({ token, onSelect }: PatientSearchInputProps) {
   const t = useTranslations('verification')
-  const { query, results, isSearching, search, clear } = usePatientSearch(token)
+  const { query, results, isSearching, hubError, search, clear } = usePatientSearch(token)
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -85,6 +85,15 @@ export function PatientSearchInput({ token, onSelect }: PatientSearchInputProps)
               </button>
             </li>
           ))}
+          {/* Story 59.1 (AC 4): surface Hub search failure instead of masking it */}
+          {hubError && (
+            <li
+              role="status"
+              className="border-t border-border bg-destructive/10 px-4 py-2 text-xs text-destructive"
+            >
+              {t('hubSearchUnavailable')}
+            </li>
+          )}
         </ul>
       )}
     </div>

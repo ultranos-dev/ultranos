@@ -72,9 +72,12 @@ async function _postEscalationToHub(
     const supabase = (await import('@/lib/supabase')).getSupabaseBrowserClient()
     const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token
-    if (!token) return
+    if (!token) {
+      _surfaceEscalationFailure(payload, 'NO_TOKEN')
+      return
+    }
 
-    await fetch(`${getHubApiUrl()}/lab.escalateAiResult`, {
+    const res = await fetch(`${getHubApiUrl()}/lab.escalateAiResult`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -94,8 +97,47 @@ async function _postEscalationToHub(
       }),
       signal: AbortSignal.timeout(10_000),
     })
+    if (!res.ok) {
+      _surfaceEscalationFailure(payload, `HTTP_${res.status}`)
+    }
   } catch {
-    // Escalation notification is best-effort — network/auth failures are silent.
-    // The audit event above is the primary record.
+    // Story 59.1 (AC 4): escalation delivery failure is SURFACED (sync-status
+    // store + FAILURE audit event) instead of vanishing silently. The local
+    // AI_AUTO_ESCALATION audit event above remains the primary record.
+    _surfaceEscalationFailure(payload, 'NETWORK_ERROR')
+  }
+}
+
+/**
+ * Surface a failed hub escalation dispatch: sync-status store banner + a
+ * FAILURE-outcome client audit event (no PHI — opaque sample id only).
+ * Never throws.
+ */
+function _surfaceEscalationFailure(payload: EscalationPayload, reason: string): void {
+  try {
+    // Lazy import avoids a hard store dependency in non-browser test contexts.
+    void import('@/stores/sync-store').then(({ useSyncStore }) => {
+      useSyncStore.getState().setSyncError('AI_ESCALATION_SYNC_FAILED')
+    }).catch(() => { /* store unavailable */ })
+
+    const session = useAuthSessionStore.getState().session
+    void emitClientAudit({
+      actorId: session?.userId ?? 'unknown',
+      actorRole: (session?.role as UserRole) ?? UserRole.LAB_TECH,
+      action: AuditAction.AI_AUTO_ESCALATION,
+      resourceType: AuditResourceType.LAB_RESULT,
+      resourceId: payload.sampleId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        escalationEvent: 'AI_AUTO_ESCALATION_HUB_DISPATCH',
+        outcome: 'FAILURE',
+        failureReason: reason,
+        sourceFeature: payload.sourceFeature,
+        sampleId: payload.sampleId,
+        source: 'lab-lite',
+      },
+    })
+  } catch {
+    // Surfacing must never block the clinical UI.
   }
 }

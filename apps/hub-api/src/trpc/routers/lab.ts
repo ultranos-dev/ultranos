@@ -17,6 +17,9 @@ import { compareHlc, deserializeHlc } from '@ultranos/sync-engine'
 import { monitoringPullEventsTotal } from '@/lib/clinical-safety-metrics'
 import { buildNotificationContent } from '@/lib/notification-content'
 import { signPhotoUrl, signPhotoUrls, photoKey } from '@/lib/photo-urls'
+import { normalizeNameComponent, computePhoneticTokens, computeMpiResult } from '@ultranos/mpi-engine'
+import { signProceedToken, verifyProceedToken, consumeProceedToken } from '@/lib/mpi-proceed-token'
+import { fetchMpiCandidates } from '@/lib/mpi-candidate-query'
 
 /**
  * Dispatch lab result notifications to the ordering doctor and patient.
@@ -305,6 +308,52 @@ const submitSpecimenSchema = z.object({
   note: z.string().max(2000).optional(),
   hlcTimestamp: z.string().min(1),
 }).strict()   // .strict() = data-minimization: reject unknown fields (Rule #7)
+
+// ── Story 59.1: lab-scoped registration & search schemas ───────────────────
+
+/** Escape ILIKE wildcards + strip PostgREST filter metacharacters (mirrors patient.ts). */
+function sanitizeIlikeValue(value: string): string {
+  return value
+    .replace(/[,.*()\\]/g, '')
+    .replace(/%/g, '\\%')
+    .replace(/_/g, '\\_')
+}
+
+const currentYear = new Date().getFullYear()
+
+const labRegisterConsentSchema = z.object({
+  method: z.enum(['WRITTEN', 'VERBAL_WITNESSED']),
+  witnessedBy: z.string().min(1).max(200).optional(),
+  language: z.string().min(1).max(10),
+  version: z.string().min(1).max(20),
+}).strict()
+
+/**
+ * Lab registration input — a deliberate SUBSET of CreatePatientMpiInputSchema.
+ * The lab captures minimal demographics + consent only; .strict() rejects any
+ * field beyond this subset (Rule #7 — the lab never handles national IDs,
+ * addresses, biometrics, or guardianship).
+ */
+const labRegisterPatientSchema = z.object({
+  nameLocal: z.string().min(1).max(500),
+  nameGiven: z.string().min(1).max(200).optional(),
+  nameFather: z.string().min(1).max(200).optional(),
+  nameGrandfather: z.string().min(1).max(200).optional(),
+  gender: z.enum(['male', 'female', 'other', 'unknown']),
+  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  birthYearOnly: z.boolean().default(false),
+  birthYear: z.number().int().min(1900).max(currentYear).optional(),
+  phone: z.string().max(50).optional(),
+  consent: labRegisterConsentSchema,
+  mpiProceedToken: z.string().optional(),
+}).strict().superRefine((val, ctx) => {
+  if (!val.birthDate && !val.birthYear) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthYear'], message: 'Either birthDate or birthYear is required' })
+  }
+  if (val.consent.method === 'VERBAL_WITNESSED' && !val.consent.witnessedBy) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['consent', 'witnessedBy'], message: 'witnessedBy is required for VERBAL_WITNESSED consent' })
+  }
+})
 
 export const labRouter = createTRPCRouter({
   /**
@@ -2559,5 +2608,752 @@ export const labRouter = createTRPCRouter({
         tetanusStatus: data.tetanus_status as string,
         covidStatus: data.covid_status as string,
       }
+    }),
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Story 59.1 — Lab-scoped registration, search & orphaned-endpoint repair
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /**
+   * Data-minimized patient search for the lab registration flow (Rule #7 list
+   * tier): returns ONLY firstName + age + the opaque blind-index ref per match.
+   * The real patient UUID is NEVER returned — the ref is `Patient/<HMAC blind
+   * index>`, consistent with pullOrders / verifyPatient.
+   */
+  searchPatients: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
+    .use(enforceLabActive())
+    .input(z.object({ query: z.string().min(2).max(200) }).strict())
+    .output(
+      z.object({
+        patients: z.array(
+          z.object({
+            ref: z.string(),
+            firstName: z.string(),
+            age: z.number().nullable(),
+          }).strict(),
+        ),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
+
+      let hmacKey: string
+      try {
+        hmacKey = getFieldEncryptionKeys().hmacKey
+      } catch {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Encryption configuration unavailable' })
+      }
+
+      const safeQ = sanitizeIlikeValue(input.query.trim())
+      if (!safeQ) return { patients: [] }
+
+      const { data: rows, error } = await ctx.supabase
+        .from('patients')
+        .select('id, name_given, name_local, birth_date, birth_year')
+        .or(`name_given.ilike.%${safeQ}%,name_local.ilike.%${safeQ}%`)
+        .eq('is_active', true)
+        .limit(10)
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Patient search failed' })
+      }
+
+      // Audit the PHI read (Rule #6). No PHI in metadata — never log the query text.
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'PATIENT',
+          resourceId: 'lab-patient-search',
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'lab_patient_search', resultCount: rows?.length ?? 0 },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'PATIENT', resourceId: 'lab-patient-search' })
+      }
+
+      return {
+        patients: (rows ?? []).map((row) => ({
+          ref: `Patient/${generateBlindIndex(row.id as string, hmacKey)}`,
+          firstName: (row.name_given as string) ?? (row.name_local as string) ?? '',
+          age: computeAge(row.birth_date as string | null, row.birth_year as number | null),
+        })),
+      }
+    }),
+
+  /**
+   * Lab-scoped MPI duplicate check (wraps the patient.checkDuplicates engine).
+   * Rule-#7 tier compliance: candidates return ONLY firstName + age + the opaque
+   * blind-index ref + score — never the real patient UUID, father name, gender,
+   * or district (which the clinician-facing patient.checkDuplicates does return).
+   */
+  checkDuplicates: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
+    .use(enforceLabActive())
+    .input(
+      z.object({
+        nameGiven: z.string().min(1).max(200).optional(),
+        nameFather: z.string().min(1).max(200).optional(),
+        nameGrandfather: z.string().min(1).max(200).optional(),
+        gender: z.enum(['male', 'female', 'other', 'unknown']).optional(),
+        birthYear: z.number().int().min(1900).max(currentYear).optional(),
+        birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        phone: z.string().max(50).optional(),
+      }).strict().refine((val) => val.nameGiven || val.nameFather, {
+        message: 'At least one name field is required',
+      }),
+    )
+    .output(
+      z.object({
+        decision: z.enum(['ALLOW', 'WARN', 'BLOCK']),
+        proceedToken: z.string().optional(),
+        candidates: z.array(
+          z.object({
+            ref: z.string(),
+            firstName: z.string().nullable(),
+            age: z.number().nullable(),
+            mpiScore: z.number(),
+          }).strict(),
+        ),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
+
+      let hmacKey: string
+      try {
+        hmacKey = getFieldEncryptionKeys().hmacKey
+      } catch {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Encryption configuration unavailable' })
+      }
+
+      const birthYear = input.birthYear
+        ?? (input.birthDate ? parseInt(input.birthDate.slice(0, 4), 10) : undefined)
+
+      const candidates = await fetchMpiCandidates(ctx.supabase, {
+        nameGiven: input.nameGiven,
+        nameFather: input.nameFather,
+        birthYear,
+        phone: input.phone,
+      })
+
+      const mpiResult = computeMpiResult(candidates, {
+        nameGiven: input.nameGiven,
+        nameFather: input.nameFather,
+        nameGrandfather: input.nameGrandfather,
+        birthYear,
+        gender: input.gender,
+        phone: input.phone,
+      })
+
+      // Issue a proceedToken on WARN so the technician can pass it to registerPatient
+      let proceedToken: string | undefined
+      if (mpiResult.decision === 'WARN') {
+        proceedToken = await signProceedToken({
+          candidateIds: mpiResult.candidates.map((c) => c.candidate.id),
+          maxScore: mpiResult.topScore,
+          issuedTo: ctx.user.sub,
+        })
+      }
+
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'PATIENT',
+          resourceId: 'lab-mpi-check',
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'lab_mpi_check', decision: mpiResult.decision, topScore: mpiResult.topScore },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'PATIENT', resourceId: 'lab-mpi-check' })
+      }
+
+      return {
+        decision: mpiResult.decision,
+        proceedToken,
+        candidates: mpiResult.candidates.map((c) => ({
+          ref: `Patient/${generateBlindIndex(c.candidate.id, hmacKey)}`,
+          firstName: c.candidate.nameGiven ?? null,
+          age: c.candidate.birthYear != null ? currentYear - c.candidate.birthYear : null,
+          mpiScore: c.score,
+        })),
+      }
+    }),
+
+  /**
+   * Lab-scoped patient registration (wraps the patient.create MPI + atomic-RPC
+   * flow with a minimal input subset). Rule-#7 tier compliance: the response
+   * returns the opaque blind-index ref — NEVER the real patient UUID. The full
+   * demographics reach the Hub; the lab retains only what its local store needs.
+   */
+  registerPatient: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
+    .use(enforceLabActive())
+    .input(labRegisterPatientSchema)
+    .output(z.object({ ref: z.string(), mpiWarn: z.boolean() }).strict())
+    .mutation(async ({ ctx, input }) => {
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
+
+      let hmacKey: string
+      try {
+        hmacKey = getFieldEncryptionKeys().hmacKey
+      } catch {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Encryption configuration unavailable' })
+      }
+
+      const now = new Date().toISOString()
+      const patientId = crypto.randomUUID()
+
+      const nameGiven = input.nameGiven ?? null
+      const nameFather = input.nameFather ?? null
+      const nameGrandfather = input.nameGrandfather ?? null
+
+      const phoneticGiven       = nameGiven       ? computePhoneticTokens(normalizeNameComponent(nameGiven))       : []
+      const phoneticFather      = nameFather      ? computePhoneticTokens(normalizeNameComponent(nameFather))      : []
+      const phoneticGrandfather = nameGrandfather ? computePhoneticTokens(normalizeNameComponent(nameGrandfather)) : []
+
+      // MPI candidate retrieval and scoring (same engine as patient.create)
+      const candidates = await fetchMpiCandidates(ctx.supabase, {
+        nameGiven: nameGiven ?? undefined,
+        nameFather: nameFather ?? undefined,
+        birthYear: input.birthYear,
+        phone: input.phone,
+      })
+      const mpiResult = computeMpiResult(candidates, {
+        nameGiven: nameGiven ?? undefined,
+        nameFather: nameFather ?? undefined,
+        nameGrandfather: nameGrandfather ?? undefined,
+        birthYear: input.birthYear,
+        gender: input.gender,
+        phone: input.phone,
+      })
+
+      let mpiWarn = false
+      let consumeJti: string | null = null
+
+      // Mirrors patient.create: BLOCK treated as WARN until MPI scoring is
+      // production-ready — both require a proceedToken to continue.
+      if (mpiResult.decision === 'BLOCK' || mpiResult.decision === 'WARN') {
+        if (!input.mpiProceedToken) {
+          const proceedToken = await signProceedToken({
+            candidateIds: mpiResult.candidates.map((c) => c.candidate.id),
+            maxScore: mpiResult.topScore,
+            issuedTo: ctx.user.sub,
+          })
+          throw new TRPCError({
+            code: 'PRECONDITION_FAILED',
+            message: 'Possible duplicate detected. Include mpiProceedToken to confirm creation.',
+            cause: { proceedToken, topScore: mpiResult.topScore },
+          })
+        }
+        try {
+          const tokenPayload = await verifyProceedToken(input.mpiProceedToken)
+          if (tokenPayload.issuedTo !== ctx.user.sub) {
+            throw new TRPCError({ code: 'FORBIDDEN', message: 'Proceed token was not issued to the current user.' })
+          }
+          consumeJti = tokenPayload.jti
+        } catch (err) {
+          if (err instanceof TRPCError) throw err
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Proceed token is invalid, expired, or already used.' })
+        }
+        mpiWarn = true
+      }
+
+      const birthYear = input.birthYear
+        ?? (input.birthDate ? parseInt(input.birthDate.slice(0, 4), 10) : null)
+
+      const row = db.toRow({
+        id: patientId,
+        nameLocal:        input.nameLocal,
+        nameLocalEnc:     input.nameLocal,
+        name_given:           nameGiven,
+        name_father:          nameFather,
+        name_grandfather:     nameGrandfather,
+        name_given_enc:       nameGiven ?? null,
+        name_father_enc:      nameFather ?? null,
+        name_grandfather_enc: nameGrandfather ?? null,
+        name_phonetic_given:       phoneticGiven,
+        name_phonetic_father:      phoneticFather,
+        name_phonetic_grandfather: phoneticGrandfather,
+        gender:          input.gender,
+        birth_date:      input.birthDate ?? null,
+        birth_date_enc:  input.birthDate ?? null,
+        birth_year:      birthYear,
+        birth_year_only: input.birthYearOnly ?? false,
+        telecom_phone:   input.phone ?? null,
+        mpi_warn:  mpiWarn,
+        mpi_score: mpiResult.topScore,
+        is_active:    true,
+        patient_tier: 'FREE',
+        created_by:   ctx.user.sub,
+        created_at:   now,
+        updated_at:   now,
+        emergency_contacts: JSON.stringify([]),
+      })
+
+      const consentRow = {
+        consent_method:   input.consent.method,
+        witnessed_by:     input.consent.witnessedBy ?? null,
+        consent_language: input.consent.language,
+        consent_version:  input.consent.version,
+        grantor_id:       ctx.user.sub,
+        grantor_role:     'SELF',
+      }
+
+      // Consume proceedToken before insert (same replay-window rationale as patient.create)
+      if (consumeJti) {
+        await consumeProceedToken(consumeJti)
+      }
+
+      // Atomic insert via the same RPC patient.create uses
+      const { data: rpcData, error: rpcError } = await ctx.supabase.rpc(
+        'create_patient_with_consent',
+        { p_patient: row, p_consent: consentRow },
+      )
+      if (rpcError || !rpcData) {
+        console.error('[LAB_REGISTER_PATIENT] RPC error:', { code: rpcError?.code })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to register patient' })
+      }
+
+      const confirmedPatientId: string =
+        ((rpcData as Record<string, unknown>)['patientId'] as string) ?? patientId
+
+      try {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'PATIENT',
+          resourceId: confirmedPatientId,
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            operation: 'lab_register_patient',
+            mpiDecision: mpiResult.decision,
+            mpiScore: mpiResult.topScore,
+            consentMethod: input.consent.method,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PATIENT', resourceId: confirmedPatientId })
+      }
+
+      // Rule #7: the lab NEVER receives the real patient UUID — return the
+      // blind-index ref (prefixed, consistent with pullOrders/search).
+      return {
+        ref: `Patient/${generateBlindIndex(confirmedPatientId, hmacKey)}`,
+        mpiWarn,
+      }
+    }),
+
+  /**
+   * Story 59.1 (repairs H-LAB-4 / C-SYS-5): technician quality-profile sync.
+   * Upserts the caller's professional-development record (streaks, monthly
+   * metrics, earned badges — no PHI) into technician_quality_profiles.
+   * technician identity is SERVER-STAMPED from ctx.lab — the client-claimed
+   * technicianId is accepted for wire-compat but never trusted.
+   */
+  syncQualityProfile: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
+    .use(enforceLabActive())
+    .input(
+      z.object({
+        technicianId: z.string().min(1).max(100),
+        streaks: z.array(
+          z.object({
+            streakType: z.string().min(1).max(100),
+            currentStreak: z.number().int().min(0),
+            longestStreak: z.number().int().min(0),
+            updatedAt: z.string().max(64),
+          }).strict(),
+        ).max(50),
+        metrics: z.array(
+          z.object({
+            metricType: z.string().min(1).max(100),
+            period: z.string().min(1).max(50),
+            value: z.number(),
+            unit: z.string().max(50),
+            trend: z.string().max(50),
+          }).strict(),
+        ).max(200),
+        earnedBadges: z.array(
+          z.object({
+            badgeId: z.string().min(1).max(100),
+            earnedAt: z.string().max(64),
+          }).strict(),
+        ).max(200),
+      }).strict(),
+    )
+    .output(z.object({ recorded: z.boolean() }).strict())
+    .mutation(async ({ ctx, input }) => {
+      const technicianRowId = ctx.lab?.technicianId
+      if (!technicianRowId) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Lab affiliation required' })
+      }
+
+      // Merge earned badges with any previously synced set (append-only union by badgeId).
+      const { data: existing } = await ctx.supabase
+        .from('technician_quality_profiles')
+        .select('earned_badges')
+        .eq('technician_id', technicianRowId)
+        .maybeSingle()
+
+      const badgeMap = new Map<string, { badgeId: string; earnedAt: string }>()
+      const existingBadges = (existing?.earned_badges ?? []) as Array<{ badgeId: string; earnedAt: string }>
+      for (const b of existingBadges) {
+        if (b?.badgeId) badgeMap.set(b.badgeId, b)
+      }
+      for (const b of input.earnedBadges) badgeMap.set(b.badgeId, b)
+
+      const { error: upsertError } = await ctx.supabase
+        .from('technician_quality_profiles')
+        .upsert(
+          {
+            technician_id: technicianRowId,
+            streaks: input.streaks,
+            metrics: input.metrics,
+            earned_badges: Array.from(badgeMap.values()),
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'technician_id' },
+        )
+      if (upsertError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to record quality profile' })
+      }
+
+      // Audit (non-PHI professional development record; Rule #6 discipline kept anyway)
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'UPDATE',
+          resourceType: 'PRACTITIONER',
+          resourceId: technicianRowId,
+          actorId: technicianRowId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            operation: 'quality_profile_sync',
+            streakCount: input.streaks.length,
+            metricCount: input.metrics.length,
+            badgeCount: input.earnedBadges.length,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'PRACTITIONER', resourceId: technicianRowId })
+      }
+
+      return { recorded: true }
+    }),
+
+  /**
+   * Story 59.1 (repairs C-SYS-5): result authorization sign-off sync.
+   * Transitions the diagnostic report status on the Hub to mirror the lab's
+   * offline authorization decision:
+   *   APPROVE / AUTO_VERIFY → 'final';  REJECT → 'cancelled';  HOLD → no change.
+   * Tier-2 conflict handling: a second APPROVE on an already-final report
+   * returns CONFLICT (HTTP 409) — the client records it as a conflict and both
+   * authorization records are preserved in the audit trail.
+   * Actor identity is SERVER-STAMPED from ctx — client-claimed actorId/actorRole
+   * are accepted for wire-compat but recorded only as claimed metadata.
+   */
+  authorizeResult: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
+    .use(enforceLabActive())
+    .input(
+      z.object({
+        resultId: z.string().uuid(),
+        action: z.enum(['APPROVE', 'REJECT', 'HOLD', 'AUTO_VERIFY']),
+        timestamp: z.string().min(1).max(128),
+        comments: z.string().max(2000).optional(),
+        criticalValueAcknowledged: z.boolean().optional(),
+        autoVerifyCriteria: z.object({
+          noAbnormalFlags: z.boolean(),
+          qcPassing: z.boolean(),
+          roleEligible: z.boolean(),
+          noCriticalValues: z.boolean(),
+        }).strict().optional(),
+        actorId: z.string().max(100).optional(),
+        actorRole: z.string().max(50).optional(),
+      }).strict(),
+    )
+    .output(z.object({ status: z.string() }).strict())
+    .mutation(async ({ ctx, input }) => {
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
+      const labId = ctx.lab?.labId
+      if (!labId) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Lab affiliation required' })
+      }
+
+      const { data: report, error: lookupError } = await ctx.supabase
+        .from('diagnostic_reports')
+        .select('id, status, lab_id')
+        .eq('id', input.resultId)
+        .maybeSingle()
+      if (lookupError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to look up report' })
+      }
+      if (!report) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Report not found' })
+      }
+      if (report.lab_id !== labId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Report belongs to another lab' })
+      }
+
+      const isRelease = input.action === 'APPROVE' || input.action === 'AUTO_VERIFY'
+      let newStatus = report.status as string
+
+      if (isRelease || input.action === 'REJECT') {
+        if (report.status === 'final') {
+          // Tier-2 conflict: already authorized (e.g. by another supervisor offline).
+          // Record the duplicate attempt in the audit trail, then 409 so the
+          // client counts it as a conflict (both records kept as addenda).
+          try {
+            await audit.emit({
+              action: 'UPDATE',
+              resourceType: 'LAB_RESULT',
+              resourceId: input.resultId,
+              actorId: technicianId,
+              actorRole: ctx.user.role,
+              outcome: 'FAILURE',
+              sessionId: ctx.user.sessionId,
+              metadata: {
+                authorizationAction: input.action,
+                conflict: 'already_final',
+                claimedHlcTimestamp: input.timestamp,
+              },
+            })
+          } catch {
+            console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'LAB_RESULT', resourceId: input.resultId })
+          }
+          throw new TRPCError({ code: 'CONFLICT', message: 'Report already authorized' })
+        }
+        newStatus = isRelease ? 'final' : 'cancelled'
+        const { error: updateError } = await ctx.supabase
+          .from('diagnostic_reports')
+          .update({ status: newStatus, updated_at: new Date().toISOString() })
+          .eq('id', input.resultId)
+        if (updateError) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update report status' })
+        }
+      }
+      // HOLD: no status transition on the Hub — recorded in the audit trail only.
+
+      // Audit the authorization (Rule #6). Free-text comments are NEVER placed in
+      // audit metadata (Rule #1) — only their presence is recorded.
+      try {
+        await audit.emit({
+          action: 'UPDATE',
+          resourceType: 'LAB_RESULT',
+          resourceId: input.resultId,
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            authorizationAction: input.action,
+            newStatus,
+            hasComments: Boolean(input.comments),
+            criticalValueAcknowledged: input.criticalValueAcknowledged ?? false,
+            claimedActorId: input.actorId ?? null,
+            claimedHlcTimestamp: input.timestamp,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'LAB_RESULT', resourceId: input.resultId })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Audit write failed' })
+      }
+
+      return { status: newStatus }
+    }),
+
+  /**
+   * Story 59.1 (repairs C-SYS-5): result-release notification dispatch.
+   * Called by the lab on result release (online path) and by the offline
+   * notification drain. Inserts a LAB_RESULT_AVAILABLE notification for the
+   * patient via the same notifications-table pattern as uploadResult/submitResult.
+   * The ordering doctor is notified by submitResult's own dispatch (which holds
+   * the orderId); this endpoint carries no order linkage so it targets the
+   * patient record only. Payload is data-minimized — no result values.
+   */
+  createNotification: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
+    .use(enforceLabActive())
+    .input(
+      z.object({
+        type: z.literal('LAB_RESULT_AVAILABLE'),
+        payload: z.object({
+          testCategory: z.string().min(1).max(200),
+          loincCode: z.string().min(1).max(50),
+          diagnosticReportId: z.string().uuid(),
+          resultStatus: z.literal('FINAL'),
+          labName: z.string().min(1).max(200),
+          guidanceContentIds: z.array(z.string().max(100)).max(20).optional(),
+        }).strict(),
+      }).strict(),
+    )
+    .output(z.object({ notificationId: z.string().nullable() }).strict())
+    .mutation(async ({ ctx, input }) => {
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
+      const labId = ctx.lab?.labId
+      if (!labId) {
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Lab affiliation required' })
+      }
+
+      // Ownership guard: the report must exist and belong to the caller's lab.
+      const { data: report, error: lookupError } = await ctx.supabase
+        .from('diagnostic_reports')
+        .select('id, lab_id, patient_ref')
+        .eq('id', input.payload.diagnosticReportId)
+        .maybeSingle()
+      if (lookupError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to look up report' })
+      }
+      if (!report) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Report not found' })
+      }
+      if (report.lab_id !== labId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Report belongs to another lab' })
+      }
+
+      const content = buildNotificationContent('LAB_RESULT_AVAILABLE', input.payload as unknown as Record<string, unknown>)
+      const { data: inserted, error: insertError } = await ctx.supabase
+        .from('notifications')
+        .insert(db.toRowRaw({
+          recipientRef: `Patient/${report.patient_ref}`,
+          recipientRole: 'PATIENT',
+          type: 'LAB_RESULT_AVAILABLE',
+          payload: JSON.stringify(input.payload),
+          status: 'QUEUED',
+          nextRetryAt: new Date(Date.now() + 60_000).toISOString(),
+          sourceApp: content.sourceApp,
+          subjectKey: content.subjectKey,
+          bodyKey: content.bodyKey,
+          bodyParams: content.bodyParams,
+          notesKey: content.notesKey,
+        }, 'non-PHI: notifications'))
+        .select('id')
+        .single()
+      if (insertError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create notification' })
+      }
+
+      try {
+        await audit.emit({
+          action: 'CREATE',
+          resourceType: 'NOTIFICATION',
+          resourceId: inserted?.id ?? 'unknown',
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            notificationAction: 'dispatched_on_release',
+            diagnosticReportId: input.payload.diagnosticReportId,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'NOTIFICATION', resourceId: inserted?.id ?? 'unknown' })
+      }
+
+      return { notificationId: (inserted?.id as string) ?? null }
+    }),
+
+  /**
+   * Story 59.1 (repairs C-SYS-5): AI confidence auto-escalation sink.
+   * Routes low-confidence AI output through the existing LAB_RESULT_ESCALATION
+   * notification path (same type/content the escalation cron uses) targeted at
+   * the back-office review queue. retry_count=2 prevents the escalation cron
+   * from re-escalating this notification. No PHI in the payload — the client
+   * sends opaque sample IDs and a PHI-free summary only.
+   */
+  escalateAiResult: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
+    .use(enforceLabActive())
+    .input(
+      z.object({
+        type: z.literal('AI_ESCALATION'),
+        priority: z.literal('critical'),
+        sourceFeature: z.string().min(1).max(100),
+        confidence: z.string().min(1).max(20),
+        sampleId: z.string().min(1).max(100),
+        aiOutputSummary: z.string().min(1).max(500),
+        escalationReason: z.string().min(1).max(200),
+        actorId: z.string().max(100).optional(),
+      }).strict(),
+    )
+    .output(z.object({ notificationId: z.string().nullable() }).strict())
+    .mutation(async ({ ctx, input }) => {
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
+
+      const payload = {
+        sourceFeature: input.sourceFeature,
+        confidence: input.confidence,
+        sampleId: input.sampleId,
+        aiOutputSummary: input.aiOutputSummary,
+        escalationReason: input.escalationReason,
+      }
+      const content = buildNotificationContent('LAB_RESULT_ESCALATION', payload as unknown as Record<string, unknown>)
+
+      // Same insert shape as the notification-escalation service's back-office path.
+      const { data: inserted, error: insertError } = await ctx.supabase
+        .from('notifications')
+        .insert({
+          recipient_ref: 'BACKOFFICE',
+          recipient_role: 'CLINICIAN',
+          type: 'LAB_RESULT_ESCALATION',
+          payload: JSON.stringify(payload),
+          status: 'QUEUED',
+          retry_count: 2, // prevent the escalation cron from re-escalating
+          source_app: content.sourceApp,
+          subject_key: content.subjectKey,
+          body_key: content.bodyKey,
+          body_params: content.bodyParams,
+          notes_key: content.notesKey,
+        })
+        .select('id')
+        .single()
+      if (insertError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create escalation' })
+      }
+
+      try {
+        await audit.emit({
+          action: 'CREATE',
+          resourceType: 'NOTIFICATION',
+          resourceId: inserted?.id ?? 'unknown',
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            notificationAction: 'ai_auto_escalation',
+            sourceFeature: input.sourceFeature,
+            confidence: input.confidence,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'NOTIFICATION', resourceId: inserted?.id ?? 'unknown' })
+      }
+
+      return { notificationId: (inserted?.id as string) ?? null }
     }),
 })
