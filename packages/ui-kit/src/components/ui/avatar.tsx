@@ -41,10 +41,19 @@ export interface AvatarProps {
   name?: string | null
   /** Pixel diameter (default 32). */
   size?: number
+  /**
+   * Double concentric brand ring: a 1px primary stroke @100% with a 1px primary
+   * stroke @50% just outside it. Used on profile/detail avatars.
+   */
+  ring?: boolean
   className?: string
 }
 
-export function Avatar({ src, name, size = 32, className }: AvatarProps) {
+/** Double concentric primary ring (1px @100% + 1px @50%), token-driven for theming. */
+const AVATAR_RING =
+  'shadow-[0_0_0_1px_oklch(var(--primary)),0_0_0_2px_oklch(var(--primary)/0.5)]'
+
+export function Avatar({ src, name, size = 32, ring = false, className }: AvatarProps) {
   const [errored, setErrored] = useState(false)
   const label = (name ?? '').trim()
   const showImg = !!src && !errored
@@ -56,6 +65,7 @@ export function Avatar({ src, name, size = 32, className }: AvatarProps) {
       className={cn(
         'inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full',
         showImg ? 'bg-muted' : colorClass,
+        ring && AVATAR_RING,
         className,
       )}
       style={{ width: size, height: size }}
