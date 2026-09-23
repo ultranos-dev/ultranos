@@ -9,6 +9,14 @@ import { createHash, randomUUID } from 'crypto'
 
 const GENESIS_HASH = '0000000000000000000000000000000000000000000000000000000000000000'
 
+// verifyChain chains `.order('chain_seq').order('timestamp').limit()` (Story 61.1
+// chain_seq windowing). Self-chaining on `.order`, terminates on `.limit`.
+function chainOrder(resolved: { data: unknown; error: unknown }) {
+  const node: any = { limit: vi.fn().mockResolvedValue(resolved) }
+  node.order = vi.fn().mockReturnValue(node)
+  return node
+}
+
 // Track all audit.emit() calls across routers
 const auditEmitCalls: Array<Record<string, unknown>> = []
 let emitShouldFail = false
@@ -295,9 +303,7 @@ describe('Audit Integration — Chain Verification', () => {
     const mockDb = {
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({ data: chain, error: null }),
-          }),
+          order: vi.fn().mockReturnValue(chainOrder({ data: chain, error: null })),
         }),
       }),
     }
@@ -338,9 +344,7 @@ describe('Audit Integration — Chain Verification', () => {
     const mockDb = {
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({ data: chain, error: null }),
-          }),
+          order: vi.fn().mockReturnValue(chainOrder({ data: chain, error: null })),
         }),
       }),
     }

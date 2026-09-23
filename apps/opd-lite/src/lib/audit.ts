@@ -113,20 +113,28 @@ export function auditPhiAccess(
 
   if (!session) {
     // Buffer with a null actor; backfill on hydration. Do NOT drop.
-    ensureBackfillSubscription()
-    if (pendingAuditEvents.length < MAX_PENDING_AUDIT) {
-      pendingAuditEvents.push({
-        action,
-        resourceType,
-        resourceId,
-        patientId,
-        hlcTimestamp,
-        metadata: { ...metadata, source: 'opd-lite', bufferedNoSession: true },
-      })
-    } else {
-      // Extremely defensive: if a session never arrives and the buffer fills, we log the
-      // shape only (no PHI) so the drop is at least observable — not silent.
-      console.warn('[audit] pending no-session buffer full — event not buffered for action:', action)
+    // This path MUST NOT throw (auditPhiAccess is documented "never throws" and is called
+    // un-awaited from clinical write paths). Guard the subscription/buffer so a
+    // non-standard session-store host (e.g. a partial test mock without .subscribe) can
+    // never abort the caller's workflow.
+    try {
+      ensureBackfillSubscription()
+      if (pendingAuditEvents.length < MAX_PENDING_AUDIT) {
+        pendingAuditEvents.push({
+          action,
+          resourceType,
+          resourceId,
+          patientId,
+          hlcTimestamp,
+          metadata: { ...metadata, source: 'opd-lite', bufferedNoSession: true },
+        })
+      } else {
+        // Extremely defensive: if a session never arrives and the buffer fills, we log the
+        // shape only (no PHI) so the drop is at least observable — not silent.
+        console.warn('[audit] pending no-session buffer full — event not buffered for action:', action)
+      }
+    } catch {
+      console.warn('[audit] no-session audit buffering unavailable — event not buffered for action:', action)
     }
     return
   }

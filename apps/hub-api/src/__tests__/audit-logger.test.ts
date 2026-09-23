@@ -67,12 +67,10 @@ function createMockSupabase(overrides?: {
     }),
     from: vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
-        order: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue({
-            data: overrides?.selectRows ?? [],
-            error: overrides?.selectError ?? null,
-          }),
-        }),
+        order: vi.fn().mockReturnValue(chainOrder({
+          data: overrides?.selectRows ?? [],
+          error: overrides?.selectError ?? null,
+        })),
       }),
     }),
   }
@@ -88,6 +86,14 @@ vi.mock('@/lib/supabase', () => ({
     fromRows: (data: any[]) => data,
   },
 }))
+
+// verifyChain chains `.order('chain_seq').order('timestamp').limit()` (Story 61.1
+// chain_seq windowing). This mock node is self-chaining on `.order` and terminates on `.limit`.
+function chainOrder(resolved: { data: unknown; error: unknown }) {
+  const node: any = { limit: vi.fn().mockResolvedValue(resolved) }
+  node.order = vi.fn().mockReturnValue(node)
+  return node
+}
 
 const { AuditLogger } = await import('@ultranos/audit-logger')
 
@@ -210,9 +216,7 @@ describe('AuditLogger', () => {
       const mockDb = {
         from: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue({ data: entries, error: null }),
-            }),
+            order: vi.fn().mockReturnValue(chainOrder({ data: entries, error: null })),
           }),
         }),
       }
@@ -254,9 +258,7 @@ describe('AuditLogger', () => {
       const mockDb = {
         from: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue({ data: entries, error: null }),
-            }),
+            order: vi.fn().mockReturnValue(chainOrder({ data: entries, error: null })),
           }),
         }),
       }
@@ -273,12 +275,10 @@ describe('AuditLogger', () => {
       const mockDb = {
         from: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue({
-                data: null,
-                error: { message: 'connection failed' },
-              }),
-            }),
+            order: vi.fn().mockReturnValue(chainOrder({
+              data: null,
+              error: { message: 'connection failed' },
+            })),
           }),
         }),
       }
@@ -295,9 +295,7 @@ describe('AuditLogger', () => {
       const mockDb = {
         from: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-            }),
+            order: vi.fn().mockReturnValue(chainOrder({ data: [], error: null })),
           }),
         }),
       }
@@ -332,9 +330,7 @@ describe('AuditLogger', () => {
       const mockDb = {
         from: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            order: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue({ data: entries, error: null }),
-            }),
+            order: vi.fn().mockReturnValue(chainOrder({ data: entries, error: null })),
           }),
         }),
       }
