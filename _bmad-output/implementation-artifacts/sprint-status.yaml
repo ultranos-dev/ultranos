@@ -712,3 +712,86 @@ development_status:
   53-4-tele-consultation-request-builder: done
   53-5-confidence-inversion-principle: done
   53-7-patient-public-health-guidance: done
+
+  # ============================================================
+  # AUDIT REMEDIATION EPICS 56-63 (2026-09-23)
+  # Source: docs/system-audit-2026-09-23.md
+  # Map/sequencing: audit-remediation-overview-2026-09-23.md
+  # Every story carries a Zero-Regression Mandate.
+  # ============================================================
+
+  # ============================================================
+  # EPIC 56: Security & Trust Boundary Hardening (2026-09-23)
+  # app_metadata claims, object-level authz, MFA, auth perimeter
+  # ============================================================
+  epic-56: backlog
+  56-1-server-authoritative-authorization-claims: ready-for-dev
+  56-2-object-level-authorization-sync-and-patient-directory: ready-for-dev
+  56-3-platform-mfa-enforcement: ready-for-dev
+  56-4-auth-perimeter-hardening: ready-for-dev
+
+  # ============================================================
+  # EPIC 57: Medication Safety Chain Integrity (2026-09-23)
+  # Allergy gate, server interaction gate, dispense durability
+  # ============================================================
+  epic-57: backlog
+  57-1-dispense-allergy-gate-restoration: ready-for-dev
+  57-2-server-side-interaction-gate-and-supervisor-override: ready-for-dev
+  57-3-dispense-durability-and-idempotency: ready-for-dev
+  57-4-inventory-deduction-integrity-and-check-degradation-surfacing: ready-for-dev
+
+  # ============================================================
+  # EPIC 58: Lab Privacy & Data Minimization (2026-09-23)
+  # UUID/photo leak, surface scoping, PHI-at-rest, consent
+  # ============================================================
+  epic-58: backlog
+  58-1-patient-uuid-photo-leak-remediation: ready-for-dev
+  58-2-lab-surface-scoping-and-data-minimization: ready-for-dev
+  58-3-spoke-phi-at-rest-completeness: ready-for-dev
+  58-4-consent-enforcement-completeness: ready-for-dev
+
+  # ============================================================
+  # EPIC 59: Client-Hub Contract Integrity & Dead Wiring (2026-09-23)
+  # Dead endpoints, contract CI, unwired components, appointments
+  # ============================================================
+  epic-59: backlog
+  59-1-lab-lite-dead-endpoint-repair: ready-for-dev
+  59-2-hub-contract-ci-guard-and-typed-clients: ready-for-dev
+  59-3-opd-unwired-components-and-hub-call-consolidation: ready-for-dev
+  59-4-appointments-repair: ready-for-dev
+
+  # ============================================================
+  # EPIC 60: Sync & Offline Integrity (2026-09-23)
+  # HLC discipline, fail-safe hardening, offline registration, visibility
+  # ============================================================
+  epic-60: backlog
+  60-1-hlc-discipline-platform-wide: ready-for-dev
+  60-2-sync-engine-fail-safe-hardening: ready-for-dev
+  60-3-offline-patient-registration: ready-for-dev
+  60-4-sync-failure-visibility-and-cross-app-notifications: ready-for-dev
+
+  # ============================================================
+  # EPIC 61: Audit, Encryption & Transaction Integrity (2026-09-23)
+  # Audit completeness, KDF hardening, atomic multi-writes
+  # ============================================================
+  epic-61: backlog
+  61-1-audit-trail-completeness-and-tamper-evidence: ready-for-dev
+  61-2-encryption-key-derivation-hardening: ready-for-dev
+  61-3-atomic-multi-write-operations: ready-for-dev
+
+  # ============================================================
+  # EPIC 62: Business & Enterprise Correctness (2026-09-23)
+  # Pharmacy financials (taxRate 100x), hub/admin hardening
+  # ============================================================
+  epic-62: backlog
+  62-1-pharmacy-financial-correctness: ready-for-dev
+  62-2-hub-and-admin-enterprise-hardening: ready-for-dev
+
+  # ============================================================
+  # EPIC 63: UX, i18n & Platform Consistency (2026-09-23)
+  # Safety-critical i18n, content gating, ui-kit/doc truth
+  # ============================================================
+  epic-63: backlog
+  63-1-safety-critical-i18n-sweep: ready-for-dev
+  63-2-lab-lite-content-gating-and-ui-standards-sweep: ready-for-dev
+  63-3-platform-consistency-and-doc-truth: ready-for-dev

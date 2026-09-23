@@ -313,7 +313,7 @@ Arabic and Dari are RTL languages. Every UI component must work in both LTR and 
 ### Auth & Sessions
 - Access tokens: JWT RS256, 15-min expiry, stored in memory only (never localStorage)
 - Refresh tokens: opaque, server-side Redis, single-use rotation
-- MFA: TOTP required for all clinical staff roles. Patient auth is OTP-only (no password).
+- MFA: org-level feature toggle (TOTP), managed by the org Admin in the Admin Portal, **disabled by default**. When an org enables it, enforcement is server-side at the Hub (`aal2` check for staff-role tokens), not client-only. Patient auth is OTP-only (no password, never MFA).
 - Desktop PWA: 30-min inactivity → re-auth required on clinical views. Tab close → encrypted cache cleared.
 
 ## Sync Engine — Conflict Resolution Tiers
