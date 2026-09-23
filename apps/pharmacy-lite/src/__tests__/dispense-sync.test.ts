@@ -187,18 +187,44 @@ describe('syncDispenseToHub', () => {
     expect(body.json.pharmacistRef).toBe('Practitioner/practitioner-abc-123')
   })
 
-  it('aborts sync when auth store is unavailable (session expired)', async () => {
+  it('still QUEUES the dispense (does not lose it) when the auth identity throws but a token exists — Story 57.3 H-PHARM-1', async () => {
+    // Session identity unavailable at sync time. A token IS present (fetch is
+    // attempted); with no mocked response the push errors and falls back to the
+    // durable queue — the record is never dropped. Falls back to the stored
+    // performer ref for the queued payload.
     mockGetPractitionerRef.mockImplementationOnce(() => {
       throw new Error('No authenticated session')
     })
+    fetchMock.mockRejectedValueOnce(new Error('Network error'))
 
     const dispense = makeSampleDispense()
     const result = await syncDispenseToHub(dispense)
 
     expect(result.synced).toBe(false)
-    expect(result.queued).toBe(false)
-    expect(result.error).toBe('auth-unavailable')
+    expect(result.queued).toBe(true)
+
+    const queued = await db.syncQueue.toArray()
+    expect(queued).toHaveLength(1)
+    expect(queued[0]!.resourceId).toBe('dispense-001')
+    const { decryptPharmacyEntryPayload } = await import('@/lib/dexie-sync-adapter')
+    const payload = JSON.parse(await decryptPharmacyEntryPayload(queued[0]!.payload))
+    expect(payload.pharmacistRef).toBe('Practitioner/practitioner-abc-123')
+  })
+
+  it('QUEUES the dispense WITHOUT any fetch when the access token is null (no live token) — Story 57.3 H-PHARM-1', async () => {
+    mockGetAccessToken.mockResolvedValueOnce(null)
+
+    const dispense = makeSampleDispense()
+    const result = await syncDispenseToHub(dispense)
+
+    expect(result.synced).toBe(false)
+    expect(result.queued).toBe(true)
+    // No token → we do not even attempt the network push; go straight to the queue.
     expect(fetchMock).not.toHaveBeenCalled()
+
+    const queued = await db.syncQueue.toArray()
+    expect(queued).toHaveLength(1)
+    expect(queued[0]!.status).toBe('pending')
   })
 
   it('forwards batchLot to Hub payload when _ultranos.batchLot is set', async () => {

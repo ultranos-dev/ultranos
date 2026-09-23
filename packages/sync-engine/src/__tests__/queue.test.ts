@@ -223,6 +223,30 @@ describe('sync queue', () => {
     })
   })
 
+  describe('markDeadLetter (Story 57.3 — permanent failures)', () => {
+    it('forces status to failed on the FIRST attempt (no retries)', async () => {
+      await queue.enqueue({
+        resourceType: 'MedicationDispense',
+        resourceId: 'disp-1',
+        action: 'create',
+        payload: '{}',
+        hlcTimestamp: '000001700000000:00000:node-1',
+      })
+
+      const pending = await queue.getPending()
+      await queue.markDeadLetter(pending[0]!.id, 'HTTP 422')
+
+      const stillPending = await queue.getPending()
+      expect(stillPending).toHaveLength(0)
+
+      const counts = await queue.getCounts()
+      expect(counts.failedCount).toBe(1)
+
+      const failed = await storage.getByStatus('failed')
+      expect(failed[0]!.failureReason).toBe('HTTP 422')
+    })
+  })
+
   describe('getPending', () => {
     it('returns entries sorted by sync priority', async () => {
       await queue.enqueue({

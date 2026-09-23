@@ -247,7 +247,18 @@
     "offlineWarning": "شما آفلاین هستید یا هاب قابل دسترس نیست. وضعیت نسخه به صورت جهانی قابل تایید نیست. با احتیاط ادامه دهید — این نسخه ممکن است در جای دیگر تحویل شده باشد.",
     "cancel": "لغو",
     "dismiss": "بستن",
-    "tryAgain": "تلاش مجدد"
+    "tryAgain": "تلاش مجدد",
+    "localDuplicateTitle": "قبلاً در همین دستگاه تحویل شده",
+    "localDuplicateDescription": "برای این نسخه از قبل یک سابقهٔ تحویل در این دستگاه وجود دارد. تحویل دوبارهٔ آن تکراری است. بدون اجازهٔ سرپرست دوباره تحویل ندهید.",
+    "localDuplicateDescriptionDated": "این نسخه قبلاً در همین دستگاه در تاریخ {date} تحویل شده است. تحویل دوبارهٔ آن تکراری است. بدون اجازهٔ سرپرست دوباره تحویل ندهید.",
+    "localDuplicateOverride": "نادیده‌گیری سرپرست",
+    "localDuplicateOverrideTitle": "اجازهٔ سرپرست لازم است",
+    "localDuplicateOverrideNotice": "سرپرست باید این تحویل دوباره را اجازه دهد. نام سرپرست و یک دلیل را وارد کنید. این نادیده‌گیری برای بازبینی ثبت می‌شود.",
+    "localDuplicateReasonPlaceholder": "دلیل تحویل دوباره (حداقل ۱۰ نویسه)",
+    "localDuplicateOverrideConfirm": "اجازهٔ تحویل دوباره",
+    "overrideSupervisorLabel": "نام سرپرست",
+    "overrideSupervisorPlaceholder": "سرپرست اجازه‌دهنده",
+    "overrideReasonLabel": "دلیل"
   },
   "scanner": {
     "title": "تایید نسخه",

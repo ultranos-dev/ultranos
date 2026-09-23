@@ -15,6 +15,7 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getHubApiUrl } from '@/lib/trpc'
 import { checkPrescriptionStatus, type SignedBundleInput } from '@/lib/prescription-status-client'
 import { resolvePatientForDispense, normalizePatientRef } from '@/lib/patient-resolution'
+import { checkPrescriptionAlreadyDispensed } from '@/lib/idempotency-check'
 
 type ViewPhase =
   | { step: 'idle' }
@@ -30,6 +31,16 @@ type ProceedState =
   | { kind: 'checking' }
   | { kind: 'blocked'; medName: string; status: 'FULFILLED' | 'VOIDED'; dispensedAt: string | null }
   | { kind: 'offline'; prescriptions: VerifiedPrescription[]; practitionerName?: string }
+  // Story 57.3 (H-PHARM-2): this device already has a local dispense record for
+  // this prescription. Blocking — works fully offline. An explicit supervisor
+  // override is the only escape for a legitimate re-dispense.
+  | {
+      kind: 'local-duplicate'
+      prescriptions: VerifiedPrescription[]
+      rawQr: string
+      practitionerName?: string
+      dispensedAt?: string
+    }
 
 interface PharmacyScannerViewProps {
   onNavigateToReview?: () => void
@@ -169,8 +180,37 @@ export function PharmacyScannerView({
   // an unreachable Hub (warn + allow) — dispensing must work offline; the Hub's
   // TOCTOU guard on recordDispense is the backstop against a true double-dispense.
   const handleProceedToReview = useCallback(
-    async (prescriptions: VerifiedPrescription[], rawQr: string, practitionerName?: string) => {
+    async (
+      prescriptions: VerifiedPrescription[],
+      rawQr: string,
+      practitionerName?: string,
+      overrideLocalDuplicate?: boolean,
+    ) => {
       setProceed({ kind: 'checking' })
+
+      // Story 57.3 (H-PHARM-2): local double-dispense guard FIRST — before the Hub
+      // check — so a re-scan of an already-dispensed prescription is caught even
+      // fully offline (the Hub check below is explicitly fail-open when offline).
+      // A supervisor override (overrideLocalDuplicate) bypasses this for a
+      // legitimate re-dispense.
+      if (!overrideLocalDuplicate) {
+        try {
+          const dup = await checkPrescriptionAlreadyDispensed(prescriptions.map((rx) => rx.id))
+          if (dup.alreadyDispensed) {
+            setProceed({
+              kind: 'local-duplicate',
+              prescriptions,
+              rawQr,
+              practitionerName,
+              ...(dup.dispensedAt ? { dispensedAt: dup.dispensedAt } : {}),
+            })
+            return
+          }
+        } catch {
+          // Local check failed to run — do not silently pass. Fall through to the
+          // Hub check; a local-store read error is not evidence of "not dispensed".
+        }
+      }
 
       let bundle: SignedBundleInput
       try {
@@ -384,6 +424,18 @@ export function PharmacyScannerView({
         </div>
       )}
 
+      {/* Story 57.3: Already dispensed on THIS device — blocking, offline-capable.
+          Supervisor override is the only escape for a legitimate re-dispense. */}
+      {proceed.kind === 'local-duplicate' && (
+        <LocalDuplicateBlock
+          dispensedAt={proceed.dispensedAt}
+          onOverride={() =>
+            handleProceedToReview(proceed.prescriptions, proceed.rawQr, proceed.practitionerName, true)
+          }
+          onCancel={handleReset}
+        />
+      )}
+
       {/* Error state */}
       {phase.step === 'error' && (
         <div
@@ -400,6 +452,112 @@ export function PharmacyScannerView({
           >
             Try Again
           </Button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Story 57.3 (H-PHARM-2): blocking "already dispensed on this device" panel.
+ * Renders in red (destructive) prominence. The pharmacist cannot proceed without
+ * a supervisor override (name + reason ≥ 10 chars), mirroring the interaction /
+ * allergy override gate — this is the only legitimate re-dispense escape hatch.
+ */
+function LocalDuplicateBlock({
+  dispensedAt,
+  onOverride,
+  onCancel,
+}: {
+  dispensedAt?: string
+  onOverride: () => void
+  onCancel: () => void
+}) {
+  const t = useTranslations('prescription')
+  const [showOverride, setShowOverride] = useState(false)
+  const [supervisorName, setSupervisorName] = useState('')
+  const [reason, setReason] = useState('')
+
+  const overrideValid = supervisorName.trim().length > 0 && reason.trim().length >= 10
+
+  return (
+    <div
+      className="rounded-xl border-2 border-destructive/20 bg-destructive/10 p-6"
+      role="alert"
+      data-testid="local-duplicate-warning"
+    >
+      <p className="text-lg font-bold text-destructive">{t('localDuplicateTitle')}</p>
+      <p className="mt-2 text-sm font-semibold text-destructive">
+        {dispensedAt
+          ? t('localDuplicateDescriptionDated', { date: new Date(dispensedAt).toLocaleString() })
+          : t('localDuplicateDescription')}
+      </p>
+
+      {!showOverride && (
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Button variant="destructive" type="button" onClick={onCancel} data-testid="local-duplicate-dismiss-btn">
+            {t('dismiss')}
+          </Button>
+          <Button
+            variant="outline"
+            className="border-destructive text-destructive hover:bg-destructive/10"
+            type="button"
+            onClick={() => setShowOverride(true)}
+            data-testid="local-duplicate-override-btn"
+          >
+            {t('localDuplicateOverride')}
+          </Button>
+        </div>
+      )}
+
+      {showOverride && (
+        <div className="mt-4 space-y-3 rounded-xl border border-destructive/40 bg-card p-4">
+          <p className="text-sm font-semibold text-destructive">{t('localDuplicateOverrideTitle')}</p>
+          <p className="text-xs text-destructive">{t('localDuplicateOverrideNotice')}</p>
+          <div>
+            <label htmlFor="dup-override-supervisor" className="mb-1 block text-xs font-medium text-destructive">
+              {t('overrideSupervisorLabel')}
+            </label>
+            <input
+              id="dup-override-supervisor"
+              data-testid="local-duplicate-supervisor"
+              dir="auto"
+              type="text"
+              value={supervisorName}
+              onChange={(e) => setSupervisorName(e.target.value)}
+              placeholder={t('overrideSupervisorPlaceholder')}
+              className="w-full rounded-lg border border-destructive/40 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-destructive focus:outline-none focus:ring-1 focus:ring-destructive"
+            />
+          </div>
+          <div>
+            <label htmlFor="dup-override-reason" className="mb-1 block text-xs font-medium text-destructive">
+              {t('overrideReasonLabel')}
+            </label>
+            <textarea
+              id="dup-override-reason"
+              data-testid="local-duplicate-reason"
+              dir="auto"
+              rows={3}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder={t('localDuplicateReasonPlaceholder')}
+              className="w-full resize-none rounded-lg border border-destructive/40 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-destructive focus:outline-none focus:ring-1 focus:ring-destructive"
+            />
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="destructive"
+              type="button"
+              disabled={!overrideValid}
+              onClick={onOverride}
+              data-testid="local-duplicate-override-confirm-btn"
+            >
+              {t('localDuplicateOverrideConfirm')}
+            </Button>
+            <Button variant="secondary" type="button" onClick={onCancel}>
+              {t('cancel')}
+            </Button>
+          </div>
         </div>
       )}
     </div>

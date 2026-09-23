@@ -247,7 +247,18 @@
     "offlineWarning": "You are offline or the Hub is unreachable. The prescription status cannot be verified globally. Proceed with caution — this prescription may have already been fulfilled elsewhere.",
     "cancel": "Cancel",
     "dismiss": "Dismiss",
-    "tryAgain": "Try Again"
+    "tryAgain": "Try Again",
+    "localDuplicateTitle": "Already Dispensed on This Device",
+    "localDuplicateDescription": "This prescription already has a dispense record on this device. Dispensing it again would be a duplicate. DO NOT dispense again without supervisor authorization.",
+    "localDuplicateDescriptionDated": "This prescription was already dispensed on this device on {date}. Dispensing it again would be a duplicate. DO NOT dispense again without supervisor authorization.",
+    "localDuplicateOverride": "Supervisor Override",
+    "localDuplicateOverrideTitle": "Supervisor Authorization Required",
+    "localDuplicateOverrideNotice": "A supervisor must authorize this re-dispense. Enter the supervisor name and a reason. This override is recorded for review.",
+    "localDuplicateReasonPlaceholder": "Reason for re-dispensing (minimum 10 characters)",
+    "localDuplicateOverrideConfirm": "Authorize Re-Dispense",
+    "overrideSupervisorLabel": "Supervisor Name",
+    "overrideSupervisorPlaceholder": "Authorizing supervisor",
+    "overrideReasonLabel": "Reason"
   },
   "scanner": {
     "title": "Prescription Verification",

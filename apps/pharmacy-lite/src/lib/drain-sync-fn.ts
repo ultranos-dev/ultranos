@@ -89,7 +89,13 @@ export async function drainSyncFn(entry: SyncQueueEntry): Promise<SyncResult> {
   }
 
   if (!res.ok) {
-    return { success: false, error: `Hub sync failed: ${res.status}` }
+    // Story 57.3 (Low #24): a permanent client-side rejection (4xx) will never
+    // succeed on a blind retry — dead-letter it immediately instead of burning
+    // maxRetries cycles. 408 (timeout) and 429 (rate-limit) are transient 4xx and
+    // stay retryable; 401/403/409 are handled above with their own semantics.
+    const isPermanent4xx =
+      res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429
+    return { success: false, error: `Hub sync failed: ${res.status}`, permanent: isPermanent4xx }
   }
 
   // Parse success response depending on branch

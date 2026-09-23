@@ -66,22 +66,35 @@ export async function syncDispenseToHub(
   const medicationCode = dispense.medicationCodeableConcept.coding?.[0]?.code ?? ''
   const medicationDisplay = dispense.medicationCodeableConcept.text ?? ''
 
-  // Belt-and-suspenders: derive pharmacistRef from auth store, not from dispense record
-  let pharmacistRef: string
-  try {
-    pharmacistRef = useAuthSessionStore.getState().getPractitionerRef()
-  } catch {
-    // Auth store unavailable — cannot construct valid payload without identity, do not queue
-    return { synced: false, queued: false, error: 'auth-unavailable' }
-  }
-
-  // Log warning if stored performer differs from auth store (no PHI)
+  // Story 57.3 (H-PHARM-1): the enqueue path must NOT depend on auth-token/identity
+  // state. A dispense record is safety-critical and must be durably queued even when
+  // the session identity is unavailable at sync time (expired token on an offline
+  // shift). The drain worker (drain-sync-fn) re-fetches a fresh token at drain time,
+  // so the queued payload never needs a live token here.
+  //
+  // For security we STILL prefer the auth-store identity as pharmacistRef when it is
+  // available (belt-and-suspenders against a forged stored performer). When the auth
+  // store is unavailable we fall back to the performer ref stamped on the dispense at
+  // creation time (which came from the authenticated session in confirmDispense) so
+  // the queued payload remains valid and the record is preserved.
   const storedPerformerRef = dispense.performer?.[0]?.actor.reference ?? ''
-  if (storedPerformerRef && storedPerformerRef !== pharmacistRef) {
-    console.warn('[dispense-sync] Performer ref mismatch: stored performer differs from auth session identity')
+  let pharmacistRef = storedPerformerRef
+  try {
+    const authRef = useAuthSessionStore.getState().getPractitionerRef()
+    if (authRef) {
+      // Log warning if stored performer differs from auth store (no PHI)
+      if (storedPerformerRef && storedPerformerRef !== authRef) {
+        console.warn('[dispense-sync] Performer ref mismatch: stored performer differs from auth session identity')
+      }
+      pharmacistRef = authRef
+    }
+  } catch {
+    // Auth store unavailable — keep the stored performer ref so we can still enqueue.
   }
 
-  // Validate required fields — empty strings will fail Hub Zod validation forever
+  // Validate required fields — empty strings will fail Hub Zod validation forever.
+  // These are intrinsic to the dispense record (not auth state); if they are missing
+  // the payload can never sync, so there is nothing durable to preserve here.
   if (!prescriptionId || !medicationCode || !medicationDisplay || !pharmacistRef) {
     return { synced: false, queued: false, error: 'Missing required fields for Hub sync' }
   }
@@ -90,17 +103,25 @@ export async function syncDispenseToHub(
     return { synced: false, queued: false, error: 'whenHandedOver is required for Hub sync' }
   }
 
-  // Build payload from dispense, then override pharmacistRef with auth-store value for security.
+  // Build payload from dispense, then override pharmacistRef with the resolved value.
   const mutationPayload = { ...buildRecordDispensePayload(dispense), pharmacistRef }
+
+  // No live token → cannot push now, but MUST still enqueue for durable retry.
+  let token: string | null = null
+  try {
+    token = await useAuthSessionStore.getState().getAccessToken()
+  } catch {
+    token = null
+  }
+  if (!token) {
+    await enqueueForRetry(dispense, mutationPayload)
+    return { synced: false, queued: true }
+  }
 
   try {
     const url = new URL(getHubApiUrl())
     url.pathname = url.pathname.replace(/\/$/, '') + '/medication.recordDispense'
 
-    const token = await useAuthSessionStore.getState().getAccessToken()
-    if (!token) {
-      return { synced: false, queued: false, error: 'Authentication required for Hub sync' }
-    }
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,

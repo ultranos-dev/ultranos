@@ -178,6 +178,27 @@ export function createSyncQueue(
     },
 
     /**
+     * Dead-letter an entry: force status → 'failed' regardless of retryCount.
+     * Used for permanent (non-retryable) failures — e.g. a Hub 4xx validation
+     * error that a blind retry can never resolve. Unlike markFailed, this does
+     * not schedule another retry; the entry stays 'failed' and visible on the
+     * sync page for manual intervention.
+     */
+    async markDeadLetter(id: string, reason?: string): Promise<void> {
+      const pending = await storage.getByStatus('pending')
+      const syncing = await storage.getByStatus('syncing')
+      const entry = [...pending, ...syncing].find((e) => e.id === id)
+      if (!entry) return
+      await storage.put({
+        ...entry,
+        status: 'failed',
+        retryCount: entry.retryCount + 1,
+        lastAttemptAt: new Date().toISOString(),
+        failureReason: reason,
+      })
+    },
+
+    /**
      * Mark an entry as awaiting-key — payload is encrypted but the session key
      * is unavailable. Accepts entries in either 'pending' or 'syncing' status,
      * allowing a direct pending→awaiting-key transition without an intermediate

@@ -247,7 +247,18 @@
     "offlineWarning": "تاسو آفلاین یاست یا هب ته لاسرسی نشته. د نسخې حالت په نړیواله کچه نشي تایید کیدی. په احتیاط سره پرمخ لاړ شئ — دا نسخه ممکن بل ځای ورکړل شوې وي.",
     "cancel": "لغوه کول",
     "dismiss": "تړل",
-    "tryAgain": "بیا هڅه وکړئ"
+    "tryAgain": "بیا هڅه وکړئ",
+    "localDuplicateTitle": "دمخه پدې وسیله ورکړل شوی",
+    "localDuplicateDescription": "د دې نسخې لپاره دمخه پدې وسیله د ورکړې ریکارډ شتون لري. بیا ورکول به یې تکرار وي. د څارونکي له اجازې پرته یې بیا مه ورکوئ.",
+    "localDuplicateDescriptionDated": "دا نسخه دمخه پدې وسیله د {date} په نیټه ورکړل شوې ده. بیا ورکول به یې تکرار وي. د څارونکي له اجازې پرته یې بیا مه ورکوئ.",
+    "localDuplicateOverride": "د څارونکي له‌خوا لغوه",
+    "localDuplicateOverrideTitle": "د څارونکي اجازه اړینه ده",
+    "localDuplicateOverrideNotice": "څارونکی باید دې بیا‌ورکړې ته اجازه ورکړي. د څارونکي نوم او یو دلیل دننه کړئ. دا لغوه د بیاکتنې لپاره ثبتیږي.",
+    "localDuplicateReasonPlaceholder": "د بیا ورکولو دلیل (لږ تر لږه ۱۰ توري)",
+    "localDuplicateOverrideConfirm": "د بیا ورکړې اجازه",
+    "overrideSupervisorLabel": "د څارونکي نوم",
+    "overrideSupervisorPlaceholder": "اجازه‌ورکوونکی څارونکی",
+    "overrideReasonLabel": "دلیل"
   },
   "scanner": {
     "title": "د نسخې تایید",

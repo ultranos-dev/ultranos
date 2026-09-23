@@ -87,6 +87,46 @@ describe('DrainWorker', () => {
     expect(counts.failedCount).toBe(0)
   })
 
+  it('DEAD-LETTERS immediately when syncFn returns permanent failure (Story 57.3)', async () => {
+    await queue.enqueue({
+      resourceType: 'MedicationDispense',
+      resourceId: 'disp-1',
+      action: 'create',
+      payload: '{}',
+      hlcTimestamp: '000001700000000:00000:node-1',
+    })
+
+    // A permanent (4xx-class) failure must NOT go back to pending for retry.
+    syncFn.mockResolvedValue({ success: false, error: 'Hub sync failed: 422', permanent: true })
+
+    const worker = new DrainWorker({ queue, syncFn })
+    await worker.drain()
+
+    const counts = await queue.getCounts()
+    expect(counts.pendingCount).toBe(0)
+    expect(counts.failedCount).toBe(1) // dead-lettered on first attempt
+    expect(syncFn).toHaveBeenCalledOnce()
+  })
+
+  it('a transient failure still retries (does NOT dead-letter) — regression guard', async () => {
+    await queue.enqueue({
+      resourceType: 'MedicationDispense',
+      resourceId: 'disp-2',
+      action: 'create',
+      payload: '{}',
+      hlcTimestamp: '000001700000000:00000:node-1',
+    })
+
+    syncFn.mockResolvedValue({ success: false, error: 'Hub sync failed: 503' /* permanent omitted */ })
+
+    const worker = new DrainWorker({ queue, syncFn })
+    await worker.drain()
+
+    const counts = await queue.getCounts()
+    expect(counts.pendingCount).toBe(1) // still retrying
+    expect(counts.failedCount).toBe(0)
+  })
+
   it('marks items as failed when syncFn throws', async () => {
     await queue.enqueue({
       resourceType: 'Encounter',

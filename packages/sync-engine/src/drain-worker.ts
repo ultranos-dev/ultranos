@@ -20,6 +20,15 @@ export interface SyncResult {
     remoteVersion: SyncRecord
   }
   error?: string
+  /**
+   * Permanent (non-retryable) failure. When true, the drain worker dead-letters
+   * the entry immediately (status → 'failed') instead of counting it as one of
+   * the bounded retries. Use for validation-class errors (e.g. a Hub 4xx that a
+   * blind retry can never resolve) so a single bad payload does not churn the
+   * queue for maxRetries cycles. Transient failures (network/5xx) omit this and
+   * follow the normal backoff-and-retry path.
+   */
+  permanent?: boolean
 }
 
 export interface DrainWorkerConfig {
@@ -247,7 +256,14 @@ export class DrainWorker {
       }
       return
     }
-    await this.config.queue.markFailed(entry.id, result.error ?? 'Sync failed')
+    if (result.permanent) {
+      // Non-retryable (validation-class) failure — dead-letter immediately so a bad
+      // payload doesn't churn the queue for maxRetries cycles. Remains visible on the
+      // sync page as 'failed' for manual intervention.
+      await this.config.queue.markDeadLetter(entry.id, result.error ?? 'Permanent sync failure')
+    } else {
+      await this.config.queue.markFailed(entry.id, result.error ?? 'Sync failed')
+    }
     this.config.onAudit?.(entry, 'failure')
   }
 

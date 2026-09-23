@@ -76,13 +76,84 @@ type AssertNotInPhi<T extends string> = T extends (typeof PHI_TABLES)[number] ? 
 type _SyncQueueSafe = AssertNotInPhi<'syncQueue'>
 
 /**
- * Clear all PHI tables from IndexedDB.
- * Fires all clears in parallel for speed (important for beforeunload).
+ * Story 57.3 (H-PHARM-1, AC #2): tables that must be cleared SELECTIVELY, never
+ * blanket-cleared, because they may hold the only durable copy of an unsynced
+ * safety-critical record. `dispenses` (and its `dispenseAuditLog`) are cleared
+ * only for records already confirmed on the Hub (a 'synced' sync-queue entry);
+ * unsynced dispenses are preserved so an offline shift + expired token never
+ * destroys the record. These are handled by preserveUnsyncedDispenses(), NOT the
+ * blanket loop in clearPhiTables().
+ *
+ * Compile-time guard: the selective-clear tables MUST NOT also appear in the
+ * blanket-clear list (BLANKET_CLEAR_PHI_TABLES) below, or the blanket loop would
+ * destroy the unsynced records the selective clear is meant to preserve.
+ */
+export const SELECTIVE_CLEAR_TABLES = ['dispenses', 'dispenseAuditLog'] as const
+type SelectiveClearTable = (typeof SELECTIVE_CLEAR_TABLES)[number]
+
+/** PHI tables that are safe to blanket-clear (everything except the selective ones). */
+export const BLANKET_CLEAR_PHI_TABLES = PHI_TABLES.filter(
+  (t): t is Exclude<(typeof PHI_TABLES)[number], SelectiveClearTable> =>
+    !(SELECTIVE_CLEAR_TABLES as readonly string[]).includes(t),
+)
+
+// Compile-time safety: a selective-clear table must never be blanket-cleared.
+type AssertNotBlanket<T extends string> =
+  T extends (typeof BLANKET_CLEAR_PHI_TABLES)[number] ? never : T
+type _DispensesNotBlanket = AssertNotBlanket<'dispenses'>
+type _DispenseAuditNotBlanket = AssertNotBlanket<'dispenseAuditLog'>
+
+/**
+ * Clear only the dispenses (and their audit-log entries) that are confirmed synced
+ * to the Hub, preserving unsynced records. A dispense is "synced" when a sync-queue
+ * entry with status 'synced' exists for it (matched by resourceId === dispense.id;
+ * the id is stored in cleartext, the payload is encrypted).
+ *
  * Never throws — swallows errors to avoid blocking logout/tab-close.
  */
+export async function preserveUnsyncedDispenses(): Promise<void> {
+  try {
+    // Ids the Hub has confirmed (a 'synced' queue entry) — safe to purge locally.
+    const syncedEntries = await db.syncQueue
+      .where('status')
+      .equals('synced')
+      .toArray()
+    const syncedDispenseIds = new Set(
+      syncedEntries
+        .filter((e) => e.resourceType === 'MedicationDispense')
+        .map((e) => e.resourceId),
+    )
+
+    if (syncedDispenseIds.size === 0) return // nothing confirmed → preserve all
+
+    // Delete only confirmed-synced dispenses; unsynced ones remain for the drain.
+    await db.dispenses.bulkDelete(Array.from(syncedDispenseIds))
+
+    // Purge audit-log rows for the deleted dispenses; keep rows for preserved ones.
+    const auditRows = await db.dispenseAuditLog
+      .where('dispenseId')
+      .anyOf(Array.from(syncedDispenseIds))
+      .primaryKeys()
+    if (auditRows.length > 0) {
+      await db.dispenseAuditLog.bulkDelete(auditRows)
+    }
+  } catch {
+    // Non-fatal — on failure we preserve (do not destroy) the records.
+  }
+}
+
+/**
+ * Clear PHI tables from IndexedDB.
+ * Fires all clears in parallel for speed (important for beforeunload).
+ * Never throws — swallows errors to avoid blocking logout/tab-close.
+ *
+ * Story 57.3 (AC #2): `dispenses` / `dispenseAuditLog` are NOT blanket-cleared —
+ * they are cleared selectively via preserveUnsyncedDispenses() so an unsynced
+ * dispense (offline shift + expired token) is never destroyed as the only copy.
+ */
 export async function clearPhiTables(): Promise<void> {
-  await Promise.allSettled(
-    PHI_TABLES.map((tableName) => {
+  await Promise.allSettled([
+    ...BLANKET_CLEAR_PHI_TABLES.map((tableName) => {
       try {
         const table = db.table(tableName)
         return table.clear()
@@ -91,7 +162,9 @@ export async function clearPhiTables(): Promise<void> {
         return Promise.resolve()
       }
     }),
-  )
+    // Selective clear: only synced dispenses are purged; unsynced ones preserved.
+    preserveUnsyncedDispenses(),
+  ])
 }
 
 /**
@@ -112,14 +185,19 @@ export async function purgeSyncedQueueEntries(): Promise<void> {
 }
 
 /**
- * Verify that all PHI tables are empty.
+ * Verify that blanket-clear PHI tables are empty.
  * Used on session start to detect incomplete cleanup from a previous session.
- * Returns true if all PHI tables are empty, false if stale data exists.
+ * Returns true if all blanket-clear PHI tables are empty, false if stale data exists.
+ *
+ * Story 57.3 (AC #2): `dispenses` / `dispenseAuditLog` are EXCLUDED from this check
+ * — they are cleared selectively and may legitimately retain unsynced records after
+ * cleanup. Including them would report "dirty" and could trigger a force-clear that
+ * destroys the very records preserveUnsyncedDispenses() protected.
  */
 export async function verifyPhiCleanup(): Promise<boolean> {
   try {
     const counts = await Promise.all(
-      PHI_TABLES.map((tableName) => db.table(tableName).count()),
+      BLANKET_CLEAR_PHI_TABLES.map((tableName) => db.table(tableName).count()),
     )
     return counts.every((c) => c === 0)
   } catch {

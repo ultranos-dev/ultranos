@@ -19,6 +19,7 @@ import {
   decryptPharmacyEntryPayload,
 } from './dexie-sync-adapter'
 import { drainSyncFn } from './drain-sync-fn'
+import { sweepOrphanedDispenses } from './dispense-sweep'
 import { recordSyncConflict } from './sync-conflict-observer'
 import { encryptionKeyStore } from './encryption-key-store'
 import { useSyncStore } from '@/stores/sync-store'
@@ -91,14 +92,25 @@ export function startSyncDrain(): void {
     pollIntervalMs: 30_000,
   })
 
+  // Story 57.3 (AC #5): recover any orphaned dispenses (in db.dispenses but never
+  // queued) before the worker's initial drain, then start. Fire-and-forget — the
+  // worker still starts immediately; a re-enqueued entry is picked up on the next
+  // (or triggered) drain cycle.
+  void sweepOrphanedDispenses().then((n) => {
+    if (n > 0) drainWorker?.drain()
+  })
+
   drainWorker.start()
 }
 
 /**
  * Trigger an immediate drain cycle. No-op if worker is not running.
+ * Runs the orphaned-dispense sweep first (AC #5) so reconnect/manual-sync
+ * recovers any un-queued dispense before pushing.
  */
 export function triggerDrain(): void {
-  drainWorker?.drain()
+  if (!drainWorker) return
+  void sweepOrphanedDispenses().then(() => drainWorker?.drain())
 }
 
 /**

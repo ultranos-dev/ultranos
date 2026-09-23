@@ -247,7 +247,18 @@
     "offlineWarning": "أنت غير متصل أو المركز غير متاح. لا يمكن التحقق من حالة الوصفة عالميًا. تابع بحذر — قد تكون هذه الوصفة قد صُرفت في مكان آخر.",
     "cancel": "إلغاء",
     "dismiss": "إخفاء",
-    "tryAgain": "حاول مرة أخرى"
+    "tryAgain": "حاول مرة أخرى",
+    "localDuplicateTitle": "تم الصرف على هذا الجهاز بالفعل",
+    "localDuplicateDescription": "توجد بالفعل سجل صرف لهذه الوصفة على هذا الجهاز. صرفها مرة أخرى يُعد تكرارًا. لا تصرف مرة أخرى دون إذن المشرف.",
+    "localDuplicateDescriptionDated": "تم صرف هذه الوصفة بالفعل على هذا الجهاز في {date}. صرفها مرة أخرى يُعد تكرارًا. لا تصرف مرة أخرى دون إذن المشرف.",
+    "localDuplicateOverride": "تجاوز المشرف",
+    "localDuplicateOverrideTitle": "يلزم إذن المشرف",
+    "localDuplicateOverrideNotice": "يجب أن يأذن المشرف بإعادة الصرف. أدخل اسم المشرف وسببًا. يُسجَّل هذا التجاوز للمراجعة.",
+    "localDuplicateReasonPlaceholder": "سبب إعادة الصرف (10 أحرف على الأقل)",
+    "localDuplicateOverrideConfirm": "الإذن بإعادة الصرف",
+    "overrideSupervisorLabel": "اسم المشرف",
+    "overrideSupervisorPlaceholder": "المشرف المُصرِّح",
+    "overrideReasonLabel": "السبب"
   },
   "scanner": {
     "title": "التحقق من الوصفة",

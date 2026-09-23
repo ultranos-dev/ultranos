@@ -107,7 +107,7 @@ describe('drainSyncFn', () => {
     expect(result).toEqual({ success: false, error: 'Hub rejected with 409 Conflict' })
   })
 
-  it('returns error on other HTTP failure codes', async () => {
+  it('returns error on other HTTP failure codes (5xx is transient — not permanent)', async () => {
     fetchMock.mockResolvedValue({
       ok: false,
       status: 500,
@@ -116,7 +116,14 @@ describe('drainSyncFn', () => {
 
     const result = await drainSyncFn(makeEntry())
 
-    expect(result).toEqual({ success: false, error: 'Hub sync failed: 500' })
+    // Story 57.3: 5xx is transient → permanent: false so it keeps retrying.
+    expect(result).toEqual({ success: false, error: 'Hub sync failed: 500', permanent: false })
+  })
+
+  it('flags a permanent 4xx as non-retryable (Story 57.3 Low #24)', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 422, json: async () => ({}) })
+    const result = await drainSyncFn(makeEntry())
+    expect(result).toEqual({ success: false, error: 'Hub sync failed: 422', permanent: true })
   })
 
   it('surfaces the tRPC gate reason on 403 (e.g. KYC_REQUIRED)', async () => {
