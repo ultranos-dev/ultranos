@@ -30,6 +30,69 @@ const meteredFetch = createMeterFetch(
   (entry) => recordDataUsage({ date: entry.date, category: entry.category, bytesOut: entry.bytesOut, bytesIn: entry.bytesIn, requestCount: entry.requestCount }).catch(() => {}),
 )
 
+/**
+ * Appointments do NOT flow through the generic `sync.push` handler: the Hub's
+ * RESOURCE_TABLE_MAP has no `Appointment` entry, so `sync.push` would reject them
+ * as "Unknown resource type". Appointments have a dedicated Tier-3 LWW endpoint,
+ * `appointment.syncBatch`. This helper drains any `Appointment` queue entries to
+ * that endpoint and maps the per-id result back into the DrainWorker's SyncResult
+ * shape so failures are marked failed (→ queue backoff retry + sync-store
+ * failedCount), never silently dropped. Non-appointment entries are returned
+ * untouched for the caller to push via `sync.push`.
+ */
+async function pushAppointmentEntries(
+  entries: SyncQueueEntry[],
+  hubBaseUrl: string,
+  token: string,
+): Promise<Map<string, SyncResult>> {
+  const out = new Map<string, SyncResult>()
+  if (entries.length === 0) return out
+
+  // The worker hands us decrypted entries whose payload is the FhirAppointment JSON.
+  // Reshape each to the appointment.syncBatch input (drops meta; keeps _ultranos).
+  const appointments: Array<Record<string, unknown>> = []
+  for (const entry of entries) {
+    try {
+      appointments.push(JSON.parse(entry.payload) as Record<string, unknown>)
+    } catch {
+      out.set(entry.resourceId, { success: false, error: 'Malformed appointment payload' })
+    }
+  }
+  if (appointments.length === 0) return out
+
+  let res: Response
+  try {
+    res = await meteredFetch(`${hubBaseUrl}/api/trpc/appointment.syncBatch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ json: { appointments } }),
+    })
+  } catch {
+    for (const e of entries) out.set(e.resourceId, { success: false, error: 'Network error' })
+    return out
+  }
+
+  if (!res.ok) {
+    for (const e of entries) out.set(e.resourceId, { success: false, error: `HTTP ${res.status}` })
+    return out
+  }
+
+  const data = (await res.json()) as {
+    result?: { data?: { json?: { results?: Array<{ id: string; action: string }> } } }
+  }
+  const results = data.result?.data?.json?.results ?? []
+  const byId = new Map(results.map((r) => [r.id, r]))
+  for (const entry of entries) {
+    if (out.has(entry.resourceId)) continue // malformed payload already recorded
+    // A returned action (inserted/updated/skipped) is terminal success: 'skipped'
+    // means the Hub already holds an equal-or-newer LWW version — nothing to retry.
+    out.set(entry.resourceId, byId.has(entry.resourceId)
+      ? { success: true }
+      : { success: false, error: 'Appointment not acknowledged by Hub' })
+  }
+  return out
+}
+
 export interface SyncWorkerConfig {
   hubBaseUrl: string
   getAuthToken: () => string
@@ -56,12 +119,22 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
 
     syncBatchFn: async (entries) => {
       const token = config.getAuthToken()
+
+      // Appointments use their own Tier-3 endpoint (see pushAppointmentEntries):
+      // sync.push cannot persist them. Split them out and merge both result maps.
+      const appointmentEntries = entries.filter((e) => e.resourceType === 'Appointment')
+      const genericEntries = entries.filter((e) => e.resourceType !== 'Appointment')
+
+      const appointmentResults = await pushAppointmentEntries(appointmentEntries, config.hubBaseUrl, token)
+
+      if (genericEntries.length === 0) return appointmentResults
+
       const res = await meteredFetch(`${config.hubBaseUrl}/api/trpc/sync.push`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           json: {
-            operations: entries.map((entry) => ({
+            operations: genericEntries.map((entry) => ({
               resourceType: entry.resourceType,
               resourceId: entry.resourceId,
               action: entry.action,
@@ -71,9 +144,9 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
           },
         }),
       })
-      const out = new Map<string, SyncResult>()
+      const out = new Map<string, SyncResult>(appointmentResults)
       if (!res.ok) {
-        for (const e of entries) out.set(e.resourceId, { success: false, error: `HTTP ${res.status}` })
+        for (const e of genericEntries) out.set(e.resourceId, { success: false, error: `HTTP ${res.status}` })
         return out
       }
       const data = await res.json() as {
@@ -84,7 +157,7 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
       }
       const results = data.result?.data?.json?.results ?? []
       const byId = new Map(results.map((r) => [r.resourceId, r]))
-      for (const entry of entries) {
+      for (const entry of genericEntries) {
         const r = byId.get(entry.resourceId)
         if (!r) { out.set(entry.resourceId, { success: false, error: 'Empty response from Hub' }); continue }
         if (r.conflict) { out.set(entry.resourceId, { success: false, conflict: r.conflict }); continue }
@@ -109,6 +182,15 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
 
     syncFn: async (entry: SyncQueueEntry): Promise<SyncResult> => {
       const token = config.getAuthToken()
+
+      // Appointments have no sync.push table mapping — route to their dedicated
+      // Tier-3 endpoint. A failure returns { success:false } so the entry is marked
+      // failed and retried with backoff (surfaces via sync-store failedCount).
+      if (entry.resourceType === 'Appointment') {
+        const results = await pushAppointmentEntries([entry], config.hubBaseUrl, token)
+        return results.get(entry.resourceId) ?? { success: false, error: 'No appointment result' }
+      }
+
       const res = await meteredFetch(`${config.hubBaseUrl}/api/trpc/sync.push`, {
         method: 'POST',
         headers: {

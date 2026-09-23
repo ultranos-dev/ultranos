@@ -4,11 +4,7 @@ import { createTRPCRouter, protectedProcedure } from '../init'
 import { db } from '@/lib/supabase'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { AuditLogger } from '@ultranos/audit-logger'
-import {
-  AppointmentStatusSchema,
-  AppointmentServiceTypeSchema,
-  SlotStatusSchema,
-} from '@ultranos/shared-types'
+import { AppointmentStatusSchema } from '@ultranos/shared-types'
 
 /**
  * Appointment domain router.
@@ -87,132 +83,14 @@ function assertPractitionerOrAdmin(
   })
 }
 
-// --- Slot sub-router ---
-
-const slotRouter = createTRPCRouter({
-  /**
-   * List slots for a practitioner on a specific date.
-   * No audit needed — slots don't reference patients.
-   */
-  listByPractitioner: protectedProcedure
-    .use(enforceResourceAccess('Slot'))
-    .input(
-      z.object({
-        practitionerId: z.string().uuid(),
-        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be ISO date YYYY-MM-DD'),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      assertPractitionerOrAdmin(ctx.user.role, ctx.user.sub, input.practitionerId)
-
-      const dayStart = `${input.date}T00:00:00.000Z`
-      const dayEnd = `${input.date}T23:59:59.999Z`
-
-      const { data, error } = await ctx.supabase
-        .from('slots')
-        .select('*')
-        .eq('schedule_reference', `Practitioner/${input.practitionerId}`)
-        .gte('start', dayStart)
-        .lte('start', dayEnd)
-        .order('start', { ascending: true })
-
-      if (error) {
-        console.error('[SLOT_LIST] query error:', { code: error.code })
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to fetch slots',
-        })
-      }
-
-      return { slots: data ?? [] }
-    }),
-
-  /**
-   * Generate daily slot entries for a practitioner.
-   * Defaults: 08:00–17:00, 30-minute slots.
-   * Skips if slots already exist for that date.
-   * No audit needed — slots don't reference patients.
-   */
-  generateDaily: protectedProcedure
-    .use(enforceResourceAccess('Slot'))
-    .input(
-      z.object({
-        practitionerId: z.string().uuid(),
-        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be ISO date YYYY-MM-DD'),
-        startHour: z.number().int().min(0).max(23).default(8),
-        endHour: z.number().int().min(1).max(24).default(17),
-        slotDurationMinutes: z.number().int().min(5).max(120).default(30),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      assertPractitionerOrAdmin(ctx.user.role, ctx.user.sub, input.practitionerId)
-
-      // Check if slots already exist for this date
-      const dayStart = `${input.date}T00:00:00.000Z`
-      const dayEnd = `${input.date}T23:59:59.999Z`
-
-      const { count, error: countError } = await ctx.supabase
-        .from('slots')
-        .select('*', { count: 'exact', head: true })
-        .eq('schedule_reference', `Practitioner/${input.practitionerId}`)
-        .gte('start', dayStart)
-        .lte('start', dayEnd)
-
-      if (countError) {
-        console.error('[SLOT_GENERATE] count error:', { code: countError.code })
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to check existing slots',
-        })
-      }
-
-      if ((count ?? 0) > 0) {
-        return { generated: 0, message: 'Slots already exist for this date' }
-      }
-
-      // Generate slots
-      const slots: Array<Record<string, unknown>> = []
-      const durationMs = input.slotDurationMinutes * 60 * 1000
-      const startMs = new Date(`${input.date}T${String(input.startHour).padStart(2, '0')}:00:00.000Z`).getTime()
-      const endMs = new Date(`${input.date}T${String(input.endHour).padStart(2, '0')}:00:00.000Z`).getTime()
-      const now = new Date().toISOString()
-
-      for (let t = startMs; t < endMs; t += durationMs) {
-        const slotStart = new Date(t).toISOString()
-        const slotEnd = new Date(t + durationMs).toISOString()
-        slots.push(
-          db.toRowRaw(
-            {
-              id: crypto.randomUUID(),
-              resourceType: 'Slot',
-              scheduleReference: `Practitioner/${input.practitionerId}`,
-              status: 'free',
-              start: slotStart,
-              end: slotEnd,
-              slotDurationMinutes: input.slotDurationMinutes,
-              hlcTimestamp: now,
-              lastUpdated: now,
-            },
-            'non-PHI: slots',
-          ),
-        )
-      }
-
-      const { error: insertError } = await ctx.supabase.from('slots').insert(slots)
-
-      if (insertError) {
-        console.error('[SLOT_GENERATE] insert error:', { code: insertError.code })
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to generate slots',
-        })
-      }
-
-      return { generated: slots.length }
-    }),
-})
-
 // --- Main appointment router ---
+//
+// NOTE (Story 59.4 — orphan disposition): the former `slot` sub-router
+// (`slot.listByPractitioner`, `slot.generateDaily`) was removed. Both had zero
+// frontend callers across all apps (verified by grep) and no client scheduling
+// flow exists yet. Practitioner slot/availability management is deferred to a
+// future scheduling epic; re-introduce a `Slot` sync path there rather than
+// leaving dead, untested endpoints on the public surface.
 
 export const appointmentRouter = createTRPCRouter({
   /**
@@ -290,10 +168,24 @@ export const appointmentRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      // Ownership / facility scoping (M-HUB-6): a non-ADMIN caller may only see a
+      // patient's appointments they are themselves a participant in. RBAC opens the
+      // Appointment resource type to clinicians, but without this an authorized
+      // clinician could enumerate ANY patient's full appointment history. We require
+      // BOTH the patient ref AND the caller's own practitioner ref to be present in
+      // participant_refs. ADMIN bypasses (already unrestricted elsewhere).
+      // ADMIN sees all appointments for the patient; a clinician must also be a
+      // participant, so we require the array to contain BOTH refs (PostgREST `cs`
+      // = "contains all of"). A single containment argument keeps it one filter.
+      const requiredRefs =
+        ctx.user.role === 'ADMIN'
+          ? [input.patientId]
+          : [input.patientId, ctx.user.sub]
+
       const { data, error } = await ctx.supabase
         .from('appointments')
         .select('*')
-        .contains('participant_refs', [input.patientId])
+        .contains('participant_refs', requiredRefs)
         .order('start', { ascending: true })
         .range(input.offset, input.offset + input.limit - 1)
 
@@ -333,216 +225,16 @@ export const appointmentRouter = createTRPCRouter({
       return { appointments: data ?? [] }
     }),
 
-  /**
-   * Create a new appointment with double-booking validation.
-   */
-  create: protectedProcedure
-    .use(enforceResourceAccess('Appointment'))
-    .input(AppointmentInputSchema)
-    .mutation(async ({ ctx, input }) => {
-      const practitionerIds = extractPractitionerIds(input.participant)
-      const patientIds = extractPatientIds(input.participant)
-
-      // RBAC: user must be a participating practitioner or ADMIN
-      if (ctx.user.role !== 'ADMIN' && !practitionerIds.includes(ctx.user.sub)) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Only participating practitioners or admins can create appointments',
-        })
-      }
-
-      // Double-booking check: for each practitioner, check for overlapping booked/arrived appointments
-      for (const practId of practitionerIds) {
-        const { data: conflicts, error: conflictError } = await ctx.supabase
-          .from('appointments')
-          .select('id, start, end, status')
-          .contains('participant_refs', [practId])
-          .in('status', ['booked', 'arrived'])
-          .lt('start', input.end)
-          .gt('end', input.start)
-
-        if (conflictError) {
-          console.error('[APPOINTMENT_CREATE] conflict check error:', { code: conflictError.code })
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Failed to check for double-booking',
-          })
-        }
-
-        if (conflicts && conflicts.length > 0) {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: 'Double-booking detected — practitioner has an overlapping appointment',
-          })
-        }
-      }
-
-      // Insert appointment
-      const now = new Date().toISOString()
-      const row = db.toRowRaw(
-        {
-          id: input.id,
-          resourceType: 'Appointment',
-          status: input.status,
-          serviceType: input.serviceType,
-          start: input.start,
-          end: input.end,
-          participant: input.participant,
-          participantRefs: [...practitionerIds, ...patientIds],
-          description: input.description ?? null,
-          walkIn: input._ultranos.walkIn,
-          queuePosition: input._ultranos.queuePosition,
-          isOfflineCreated: input._ultranos.isOfflineCreated,
-          hlcTimestamp: input._ultranos.hlcTimestamp,
-          createdAt: input._ultranos.createdAt,
-          clinicId: input._ultranos.clinicId ?? null,
-          lastUpdated: now,
-        },
-        'non-PHI: appointments',
-      )
-
-      const { data, error } = await ctx.supabase
-        .from('appointments')
-        .insert(row)
-        .select('id')
-        .single()
-
-      if (error) {
-        // Duplicate key = already synced — idempotent success
-        if (error.code === '23505') {
-          return { success: true, appointmentId: input.id, alreadyExists: true }
-        }
-        console.error('[APPOINTMENT_CREATE] insert error:', { code: error.code })
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to create appointment',
-        })
-      }
-
-      // Audit: PHI_WRITE
-      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
-      try {
-        await audit.emit({
-          action: 'PHI_WRITE',
-          resourceType: 'APPOINTMENT',
-          resourceId: data.id,
-          patientId: patientIds[0] ?? undefined,
-          actorId: ctx.user.sub,
-          actorRole: ctx.user.role,
-          outcome: 'SUCCESS',
-          sessionId: ctx.user.sessionId,
-          metadata: { operation: 'create', serviceType: input.serviceType[0]?.code },
-        })
-      } catch {
-        console.warn('[AUDIT_FAILURE]', {
-          action: 'PHI_WRITE',
-          resourceType: 'Appointment',
-          resourceId: data.id,
-        })
-      }
-
-      return { success: true, appointmentId: data.id, alreadyExists: false }
-    }),
-
-  /**
-   * Update appointment status. If cancelling, also frees the associated slot.
-   */
-  updateStatus: protectedProcedure
-    .use(enforceResourceAccess('Appointment'))
-    .input(
-      z.object({
-        id: z.string().uuid(),
-        status: AppointmentStatusSchema,
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      // Fetch existing appointment to validate ownership
-      const { data: existing, error: fetchError } = await ctx.supabase
-        .from('appointments')
-        .select('id, participant_refs, status, start, end')
-        .eq('id', input.id)
-        .single()
-
-      if (fetchError || !existing) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Appointment not found',
-        })
-      }
-
-      // RBAC: user must be a participant or ADMIN
-      const refs: string[] = existing.participant_refs ?? []
-      if (ctx.user.role !== 'ADMIN' && !refs.includes(ctx.user.sub)) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Only participants or admins can update appointment status',
-        })
-      }
-
-      // Update status
-      const now = new Date().toISOString()
-      const { error: updateError } = await ctx.supabase
-        .from('appointments')
-        .update({ status: input.status, last_updated: now })
-        .eq('id', input.id)
-
-      if (updateError) {
-        console.error('[APPOINTMENT_UPDATE_STATUS] update error:', { code: updateError.code })
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to update appointment status',
-        })
-      }
-
-      // If cancelling, free the associated slot
-      if (input.status === 'cancelled') {
-        const { error: slotError } = await ctx.supabase
-          .from('slots')
-          .update({ status: 'free' })
-          .gte('start', existing.start)
-          .lte('end', existing.end)
-          .eq('status', 'busy')
-          // Match slots that belong to any practitioner in this appointment
-          .in(
-            'schedule_reference',
-            refs
-              .filter((r: string) => !r.startsWith?.('Patient'))
-              .map((r: string) => `Practitioner/${r}`),
-          )
-
-        if (slotError) {
-          // Non-fatal: log but don't fail the status update
-          console.warn('[APPOINTMENT_UPDATE_STATUS] slot release error:', { code: slotError.code })
-        }
-      }
-
-      // Audit: PHI_WRITE
-      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
-      try {
-        await audit.emit({
-          action: 'PHI_WRITE',
-          resourceType: 'APPOINTMENT',
-          resourceId: input.id,
-          actorId: ctx.user.sub,
-          actorRole: ctx.user.role,
-          outcome: 'SUCCESS',
-          sessionId: ctx.user.sessionId,
-          metadata: {
-            operation: 'update_status',
-            previousStatus: existing.status,
-            newStatus: input.status,
-          },
-        })
-      } catch {
-        console.warn('[AUDIT_FAILURE]', {
-          action: 'PHI_WRITE',
-          resourceType: 'Appointment',
-          resourceId: input.id,
-        })
-      }
-
-      return { success: true }
-    }),
+  // NOTE (Story 59.4 — orphan disposition): the former `create` and `updateStatus`
+  // mutations were removed. Both had zero frontend callers (verified by grep across
+  // all apps). The real OPD flow writes appointments to the local encrypted store
+  // and syncs them through the durable queue → `appointment.syncBatch`, which is the
+  // single, idempotent, offline-first write path (upsert + Tier-3 LWW + double-booking
+  // FLAG). A synchronous, hard-blocking `create` is incompatible with offline-first
+  // creation (you cannot server-validate a booking made with the ethernet cable pulled);
+  // client-side `SLOT_BUSY` guards the immediate case and syncBatch flags cross-device
+  // overlaps for physician review. Status changes likewise flow through syncBatch as a
+  // higher-HLC upsert of the same appointment id.
 
   /**
    * Batch sync appointments using Tier 3 LWW (Last-Write-Wins by hlcTimestamp).
@@ -672,7 +364,4 @@ export const appointmentRouter = createTRPCRouter({
 
       return { results }
     }),
-
-  // Nested slot router
-  slot: slotRouter,
 })

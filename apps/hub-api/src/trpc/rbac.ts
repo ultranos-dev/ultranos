@@ -25,6 +25,14 @@ const CLINICIAN_RESOURCES = new Set([
   'ServiceRequest',
   'Consent',
   'AllergyIntolerance',
+  // Appointment scheduling — clinicians book/manage their own appointments and
+  // (via slot management) their availability. Without this, every non-ADMIN
+  // caller of appointment.* was FORBIDDEN by enforceResourceAccess('Appointment'),
+  // so the whole scheduling surface (create/list/status/sync) was hub-inaccessible.
+  // Ownership scoping (participant / practitioner match) is enforced per-procedure
+  // in appointment.ts — RBAC only opens the resource type to the role.
+  'Appointment',
+  'Slot',
 ])
 
 export const ROLE_PERMISSIONS: Record<string, Set<string>> = {

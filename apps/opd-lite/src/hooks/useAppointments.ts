@@ -4,11 +4,85 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { db } from '@/lib/db'
 import { syncAppointmentBatch, fetchPractitionerAppointments } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { hlc, serializeHlc } from '@/lib/hlc'
+import { compareHlc, deserializeHlc, type HlcTimestamp } from '@ultranos/sync-engine'
+import { enqueueSyncAction } from '@ultranos/sync-engine'
+import { syncQueue } from '@/lib/sync-queue'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import type {
   FhirAppointmentZod,
   FhirSlotZod,
   AppointmentServiceType,
 } from '@ultranos/shared-types'
+
+/** Fresh serialized HLC for a local write — NEVER Date.now().toString(). */
+function nowHlc(): string {
+  return serializeHlc(hlc.now())
+}
+
+/** Matches a serialized HLC "<15d>:<5d>:<nodeId>" (see serializeHlc). */
+const SERIALIZED_HLC_RE = /^\d{15}:\d{5}:.+/
+/** Matches a legacy millisecond-epoch string (old Date.now().toString() stamp). */
+const LEGACY_MS_RE = /^\d{1,15}$/
+
+/**
+ * Coerce any appointment hlcTimestamp — a serialized HLC OR a legacy ms-epoch
+ * string (from the pre-59.4 `Date.now().toString()` code) — into a comparable
+ * HlcTimestamp. Merges then compare HOMOGENEOUS values only (AC5): never a raw
+ * 13-digit ms string vs a 20-char serialized HLC lexicographically, which the
+ * old merge did (a legacy "1737…" always sorted BELOW any zero-padded serialized
+ * clock, so remote updates silently lost to stale local rows and vice-versa).
+ */
+export function toComparableHlc(ts: string | undefined | null): HlcTimestamp {
+  if (!ts) return { wallMs: 0, counter: 0, nodeId: '' }
+  if (SERIALIZED_HLC_RE.test(ts)) {
+    try {
+      return deserializeHlc(ts)
+    } catch {
+      return { wallMs: 0, counter: 0, nodeId: '' }
+    }
+  }
+  if (LEGACY_MS_RE.test(ts)) {
+    return { wallMs: parseInt(ts, 10), counter: 0, nodeId: 'legacy' }
+  }
+  return { wallMs: 0, counter: 0, nodeId: '' }
+}
+
+/** True when the stamp is NOT already a serialized HLC (i.e. a legacy ms string). */
+export function isLegacyStamp(ts: string | undefined | null): boolean {
+  return !ts || !SERIALIZED_HLC_RE.test(ts)
+}
+
+/**
+ * Tier-3 LWW merge decision, format-agnostic: returns true iff `remoteStamp`
+ * should overwrite the local record (either no local, or remote's normalized HLC
+ * is strictly greater). Exported for direct unit coverage of AC5 (homogeneous
+ * comparison — no legacy-ms vs serialized-HLC lexicographic mismatch).
+ */
+export function remoteWinsLww(
+  remoteStamp: string | undefined | null,
+  localStamp: string | undefined | null,
+  hasLocal: boolean,
+): boolean {
+  if (!hasLocal) return true
+  return compareHlc(toComparableHlc(remoteStamp), toComparableHlc(localStamp)) > 0
+}
+
+/**
+ * Enqueue an appointment onto the durable sync queue. Routed by the sync worker
+ * to `appointment.syncBatch` (Tier-3 LWW upsert). Drains on reconnect via the
+ * queue's backoff — independent of whether the appointments page is mounted, so
+ * an offline create/cancel is never lost. Never throws (best-effort enqueue).
+ */
+function enqueueAppointment(appt: FhirAppointmentZod, action: 'create' | 'update'): void {
+  void enqueueSyncAction(syncQueue, {
+    resourceType: 'Appointment',
+    resourceId: appt.id,
+    action,
+    payload: appt as unknown as Record<string, unknown>,
+    hlcTimestamp: appt._ultranos.hlcTimestamp,
+  })
+}
 
 interface UseAppointmentsReturn {
   appointments: FhirAppointmentZod[]
@@ -113,7 +187,7 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
       }
 
       const nowIso = new Date().toISOString()
-      const hlcTimestamp = Date.now().toString()
+      const hlcTimestamp = nowHlc()
 
       const appointment: FhirAppointmentZod = {
         id: crypto.randomUUID(),
@@ -162,6 +236,15 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
       }
 
       await db.appointments.put(appointment)
+      // Durable, offline-first sync: queued even with no network; drains on reconnect.
+      enqueueAppointment(appointment, 'create')
+      auditPhiAccess(
+        AuditAction.CREATE,
+        AuditResourceType.APPOINTMENT,
+        appointment.id,
+        data.patientRef,
+        { phiAccess: 'appointment_create' },
+      )
       await loadData()
       return appointment
     },
@@ -179,7 +262,7 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
       if (!existing) throw new Error('APPOINTMENT_NOT_FOUND')
 
       const nowIso = new Date().toISOString()
-      const hlcTimestamp = Date.now().toString()
+      const hlcTimestamp = nowHlc()
       const currentVersion = parseInt(
         existing.meta.versionId ?? '0',
         10,
@@ -200,6 +283,15 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
       }
 
       await db.appointments.put(updated)
+      // Status changes flow to the Hub as a higher-HLC upsert of the same id.
+      enqueueAppointment(updated, 'update')
+      auditPhiAccess(
+        AuditAction.UPDATE,
+        AuditResourceType.APPOINTMENT,
+        updated.id,
+        undefined,
+        { phiAccess: 'appointment_update_status', newStatus },
+      )
 
       // If cancelled, free the associated slot
       if (newStatus === 'cancelled') {
@@ -225,7 +317,7 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
       type: AppointmentServiceType,
     ): Promise<FhirAppointmentZod> => {
       const nowIso = new Date().toISOString()
-      const hlcTimestamp = Date.now().toString()
+      const hlcTimestamp = nowHlc()
 
       // Auto-assign next queue position from today's walk-ins
       const dayStart = startOfDay(new Date()).toISOString()
@@ -280,6 +372,14 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
       }
 
       await db.appointments.put(appointment)
+      enqueueAppointment(appointment, 'create')
+      auditPhiAccess(
+        AuditAction.CREATE,
+        AuditResourceType.APPOINTMENT,
+        appointment.id,
+        patientRef,
+        { phiAccess: 'appointment_walkin_create' },
+      )
       await loadData()
       return appointment
     },
@@ -337,7 +437,27 @@ async function syncAppointmentsImpl(
   // 1. Get all local appointments that might need syncing
   const allLocal = await db.appointments.toArray()
 
-  // 2. Push local appointments to Hub
+  // 1a. Migration: any appointment still carrying a legacy ms-epoch stamp (from the
+  // pre-59.4 Date.now().toString() code) gets re-stamped with a fresh serialized HLC
+  // BEFORE it is pushed or merged, so the Hub and the LWW merge only ever see the
+  // canonical "<15d>:<5d>:<node>" format. Re-stamping (rather than fabricating a
+  // synthetic clock from the old ms value) keeps the migrated write monotonically
+  // ordered after every prior local write. Persisted so it runs at most once per row.
+  for (const appt of allLocal as unknown as FhirAppointmentZod[]) {
+    const stamp = appt._ultranos?.hlcTimestamp
+    if (isLegacyStamp(stamp)) {
+      const migrated = nowHlc()
+      await db.appointments.update(appt.id, {
+        '_ultranos.hlcTimestamp': migrated,
+      })
+      if (appt._ultranos) appt._ultranos.hlcTimestamp = migrated
+    }
+  }
+
+  // 2. Push local appointments to Hub. This is a redundant safety net alongside the
+  // durable sync queue (which now owns the primary offline-first push per write);
+  // it opportunistically flushes anything created before the queue existed and pulls
+  // the practitioner's remote schedule below.
   if (allLocal.length > 0) {
     const result = await syncAppointmentBatch(
       allLocal as unknown as Array<Record<string, unknown>>,
@@ -361,15 +481,21 @@ async function syncAppointmentsImpl(
     weekEnd.toISOString(),
   )
 
-  // 4. Merge remote into local (Tier 3 LWW: newer hlcTimestamp wins)
+  // 4. Merge remote into local (Tier 3 LWW: newer hlcTimestamp wins).
+  // Compare via toComparableHlc so BOTH sides are normalized to an HlcTimestamp
+  // first (AC5) — never a raw string > string that mixes legacy ms and serialized
+  // HLC formats. A remote row with no local counterpart is always adopted.
   for (const remote of remoteAppointments) {
     const remoteId = remote.id as string
     const local = (await db.appointments.get(remoteId)) as
       | FhirAppointmentZod
       | undefined
     if (
-      !local ||
-      (remote.hlc_timestamp as string) > (local._ultranos?.hlcTimestamp ?? '')
+      remoteWinsLww(
+        remote.hlc_timestamp as string | undefined,
+        local?._ultranos?.hlcTimestamp,
+        Boolean(local),
+      )
     ) {
       // Remote is newer or doesn't exist locally — upsert
       await db.appointments.put({

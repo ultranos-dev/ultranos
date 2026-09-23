@@ -61,7 +61,17 @@ export async function reportAuthEvent(
   }
 }
 
-/** Push locally modified appointments to Hub API */
+/**
+ * Push locally modified appointments to Hub API (`appointment.syncBatch`).
+ *
+ * Failure surfacing (Story 59.4, AC3): a network error or non-2xx response now
+ * THROWS rather than returning a silent `{ synced: 0 }`. The caller
+ * (syncAppointmentsImpl) previously treated `{ synced: 0 }` as success, so a Hub
+ * outage looked identical to "nothing to sync" and the batch was never retried.
+ * The durable per-write queue (routed to this same endpoint by the sync worker)
+ * is the primary retry mechanism; this best-effort flush must at least tell its
+ * caller it failed so the failure is not swallowed.
+ */
 export async function syncAppointmentBatch(
   appointments: Array<Record<string, unknown>>
 ): Promise<{ synced: number; conflicts: Array<{ id: string; reason: string }> }> {
@@ -72,8 +82,14 @@ export async function syncAppointmentBatch(
     )
     return result ?? { synced: 0, conflicts: [] }
   } catch (err) {
+    // Story 59.4, AC3: do NOT swallow a Hub failure as `{ synced: 0 }` — that would
+    // look identical to "nothing to sync" and this best-effort page-flush would
+    // never be retried. Log operational metadata (no PHI) then RE-THROW so the
+    // caller (syncAppointmentsImpl) sees the failure. The durable sync queue drained
+    // by the sync worker (pushAppointmentEntries → appointment.syncBatch) remains the
+    // primary retry mechanism with backoff + failedCount surfacing.
     warnHubRefusal('appointment.syncBatch', err)
-    return { synced: 0, conflicts: [] }
+    throw err
   }
 }
 

@@ -56,10 +56,53 @@ This story must introduce **zero regression in existing features and functionali
 
 ### Agent Model Used
 
-### Debug Log References
+claude-opus-4-8[1m] (Lane-D isolated worktree)
+
+### Orphan Disposition Decision (Task 4)
+
+Verified zero frontend callers across ALL apps by grep (`appointment.create`, `appointment.updateStatus`,
+`appointment.slot.listByPractitioner`, `appointment.slot.generateDaily` — only `appointment.syncBatch` and
+`appointment.listByPractitioner` have callers, both in `apps/opd-lite/src/lib/trpc.ts`). The audit itself
+(system-audit-2026-09-23.md §9, line 294) documents these four as orphaned. Decision: **REMOVE all four.**
+
+- **`appointment.create` — REMOVED.** Redundant with `appointment.syncBatch`. The real OPD flow writes to the
+  local encrypted store and syncs through the durable queue → `syncBatch` (idempotent upsert + Tier-3 LWW +
+  double-booking FLAG). A synchronous hard-blocking `create` is incompatible with offline-first creation; the
+  client `SLOT_BUSY` guard + `syncBatch`'s cross-device conflict flag cover the real cases.
+- **`appointment.updateStatus` — REMOVED.** Status changes now flow through the queue → `syncBatch` as a
+  higher-HLC upsert of the same appointment id.
+- **`appointment.slot.listByPractitioner` / `slot.generateDaily` — REMOVED (entire `slot` sub-router).** No
+  client scheduling/slot-management flow exists; deferred to a future scheduling epic. `_app.ts` needed NO
+  change (the sub-router was nested inside `appointmentRouter`, not registered separately).
+
+Note: `apps/hub-api/types/app-router.d.ts` (a generated, tsconfig-`exclude`d build artifact) still lists the
+removed procedures; it is regenerated on hub build and not hand-edited.
 
 ### Completion Notes List
 
+- Appointment writes (create / cancel / walk-in / status) now stamp `serializeHlc(hlc.now())` and enqueue via
+  `enqueueSyncAction(syncQueue, { resourceType:'Appointment', ... })` — durable, drains on reconnect without the
+  appointments page mounted.
+- Sync worker routes `Appointment` queue entries to `appointment.syncBatch` (NOT `sync.push`, which has no
+  Appointment table mapping and could not be edited — owned by Story 56.2). Batch/single failures return
+  `{success:false}` → queue backoff retry + `sync-store.failedCount` surfacing (AC3).
+- LWW week-merge now normalizes BOTH sides via `toComparableHlc` + `compareHlc` (homogeneous comparison, AC5);
+  legacy ms-epoch stamps are re-stamped to serialized HLC on read during sync (migration).
+- `lib/trpc.ts syncAppointmentBatch` no longer swallows failures as `{synced:0}` — throws on non-2xx; both
+  appointment helpers refactored onto the shared `getAuthHeaders` (hub-auth.ts) helper from Story 59.3.
+
 ### File List
 
+- apps/hub-api/src/trpc/rbac.ts (Appointment + Slot added to CLINICIAN_RESOURCES)
+- apps/hub-api/src/trpc/routers/appointment.ts (listByPatient scoping; removed create/updateStatus/slot router)
+- apps/opd-lite/src/hooks/useAppointments.ts (HLC stamps, queue enqueue, LWW normalization, migration)
+- apps/opd-lite/src/lib/sync-worker.ts (route Appointment entries to appointment.syncBatch)
+- apps/opd-lite/src/lib/trpc.ts (failure surfacing + getAuthHeaders)
+- apps/hub-api/src/__tests__/appointment.test.ts (NEW — first coverage for appointment router)
+- apps/opd-lite/src/__tests__/appointment-sync.test.ts (NEW — HLC/LWW/migration unit tests)
+
 ### Change Log
+
+- 2026-09-23: Story 59.4 implemented (Lane-D). RBAC entry + ownership scoping, HLC+queue routing, failure
+  surfacing, orphan removal, first appointment-router tests. hub + opd typecheck clean; full hub (1641) + opd
+  (1428) suites green.
