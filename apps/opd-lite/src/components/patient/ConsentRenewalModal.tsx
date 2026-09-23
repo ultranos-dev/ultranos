@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { getHubTrpcUrl } from '@/lib/hub-url'
 
 interface ConsentRenewalModalProps {
@@ -71,10 +72,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
         aria-modal="true"
         aria-labelledby="consent-renewal-title"
       >
-        <h2 id="consent-renewal-title" className="text-lg font-bold text-foreground mb-4">
-          {/* TODO: t('consent.renewTitle') */}
-          Renew Patient Consent
-        </h2>
+        <ModalHeader title="Renew Patient Consent" titleId="consent-renewal-title" inset />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Method */}

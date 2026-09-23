@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/Button'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
 } from '@ultranos/ui-kit/components/ui/dialog'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { useAppointments } from '@/hooks/useAppointments'
@@ -299,13 +298,9 @@ export function BookingModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" hideClose>
         {/* Header */}
-        <DialogHeader className="mb-5">
-          <DialogTitle className="text-lg font-bold text-foreground">
-            {t('bookAppointment')}
-          </DialogTitle>
-        </DialogHeader>
+        <ModalHeader title={t('bookAppointment')} tone="primary" dialog inset />
 
         {/* Safety Rule 4: Allergy banner at highest prominence */}
         {hasAllergies && (

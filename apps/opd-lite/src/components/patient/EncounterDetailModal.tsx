@@ -6,8 +6,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
 } from '@ultranos/ui-kit/components/ui/dialog'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import {
@@ -158,41 +157,44 @@ export function EncounterDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[90vh] gap-0 overflow-y-auto" data-testid="encounter-detail">
+      <DialogContent className="max-w-xl max-h-[90vh] gap-0 overflow-y-auto" data-testid="encounter-detail" hideClose>
         {/* ── Header ─────────────────────────────────────────── */}
-        <DialogHeader className="space-y-0 border-b border-border pb-4">
-          <div className="flex items-center gap-3 pe-6">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <Stethoscope className="size-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <DialogTitle className="flex flex-wrap items-baseline gap-x-1.5 text-base" dir="auto">
-                <span className="font-bold text-foreground font-numeric">{dateLabel}</span>
+        <ModalHeader
+          dialog
+          inset
+          className="mb-0 border-b border-border"
+          title={
+            <span className="flex items-center gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-white/20">
+                <Stethoscope className="size-5" />
+              </span>
+              <span className="flex flex-wrap items-baseline gap-x-1.5 text-base" dir="auto">
+                <span className="font-bold font-numeric">{dateLabel}</span>
                 {timeLabel && (
                   <>
-                    <span className="text-muted-foreground" aria-hidden="true">·</span>
-                    <span className="font-normal text-muted-foreground">{timeLabel}</span>
+                    <span className="opacity-70" aria-hidden="true">·</span>
+                    <span className="font-normal opacity-80">{timeLabel}</span>
                   </>
                 )}
-              </DialogTitle>
-              <DialogDescription className="mt-1 flex flex-wrap items-center gap-2">
-                {doctorName && (
-                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
-                    <Avatar name={doctorName} size={24} />
-                    <span dir="auto">{doctorName}</span>
-                  </span>
-                )}
-                {status && (
-                  <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${status.classes}`}
-                  >
-                    {status.label}
-                  </span>
-                )}
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
+              </span>
+            </span>
+          }
+        />
+        <DialogDescription className="mb-2 mt-4 flex flex-wrap items-center gap-2">
+          {doctorName && (
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
+              <Avatar name={doctorName} size={24} />
+              <span dir="auto">{doctorName}</span>
+            </span>
+          )}
+          {status && (
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${status.classes}`}
+            >
+              {status.label}
+            </span>
+          )}
+        </DialogDescription>
 
         {/* ── Body ───────────────────────────────────────────── */}
         <div className="pt-4">

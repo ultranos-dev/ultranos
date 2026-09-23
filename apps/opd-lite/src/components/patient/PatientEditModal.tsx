@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import { X } from '@ultranos/ui-kit/icons'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { z } from 'zod'
 import { AdministrativeGender } from '@ultranos/shared-types'
 import type { FhirPatient, AfghanProvince } from '@ultranos/shared-types'
@@ -455,22 +455,13 @@ export function PatientEditModal({
     >
       <div className="flex w-full max-w-lg max-h-[90vh] flex-col rounded-xl bg-background shadow-xl sm:mx-4">
         {/* ── Sticky header ── */}
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2
-            id="edit-patient-title"
-            className="text-lg font-bold text-foreground"
-          >
-            {t('editPatientProfile')}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            aria-label={t('close')}
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
+        <ModalHeader
+          title={t('editPatientProfile')}
+          titleId="edit-patient-title"
+          onClose={onClose}
+          closeLabel={t('close')}
+          className="rounded-t-xl"
+        />
 
         {/* ── Scrollable body ── */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">

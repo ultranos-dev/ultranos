@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/Button'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
 } from '@ultranos/ui-kit/components/ui/dialog'
 
 interface ConsentTextModalProps {
@@ -40,13 +39,9 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-2xl p-0">
+      <DialogContent className="max-w-2xl p-0" hideClose>
         {/* Header */}
-        <DialogHeader className="flex-row items-center justify-between rounded-t-xl border-b border-border bg-muted px-6 py-4">
-          <DialogTitle className="text-xl font-semibold text-foreground">
-            {t('consentDocumentTitle')}
-          </DialogTitle>
-        </DialogHeader>
+        <ModalHeader title={t('consentDocumentTitle')} tone="primary" dialog className="rounded-t-xl" />
 
         {/* Language tabs */}
         <div className="flex border-b border-border" role="tablist" aria-label={t('consentLanguage')}>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@ultranos/ui-kit/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, ModalHeader, DialogTrigger } from '@ultranos/ui-kit/components/ui/dialog'
 import { Info } from '@ultranos/ui-kit/icons'
 import { isTier2 } from '@ultranos/drug-catalog-sync'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
@@ -54,11 +54,9 @@ export function DrugMonographSheet({ atcCode, label }: { atcCode: string; label:
           <Info size={14} aria-hidden className="inline-block me-1" />{t('drugInfoTrigger')}
         </button>
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{label}</DialogTitle>
-          <DialogDescription className="sr-only">{t('drugInfoTrigger')}</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-h-[85vh] overflow-y-auto" hideClose>
+        <ModalHeader title={label} tone="primary" dialog inset />
+        <DialogDescription className="sr-only">{t('drugInfoTrigger')}</DialogDescription>
         <div className="mt-4 space-y-4">
           {!loaded && <p className="text-sm text-muted-foreground">{t('monographLoading')}</p>}
           {loaded && !entry && <p className="text-sm text-muted-foreground">{t('limitedDataAvailable')}</p>}

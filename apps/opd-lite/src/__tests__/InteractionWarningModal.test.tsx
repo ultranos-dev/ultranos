@@ -183,7 +183,8 @@ describe('InteractionWarningModal', () => {
       />,
     )
     const heading = screen.getByText('contraindicationDetected')
-    expect(heading.className).toMatch(/destructive|danger/i)
+    // Title sits inside the destructive-toned ModalHeader bar (solid red danger theme).
+    expect(heading.closest('[class*="bg-destructive"]')).not.toBeNull()
   })
 
   it('has role=dialog for accessibility', () => {

@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/Button'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
 } from '@ultranos/ui-kit/components/ui/dialog'
 
 interface InteractionWarningModalProps {
@@ -95,16 +94,13 @@ export function InteractionWarningModal({
         onInteractOutside={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         className="max-w-lg p-0 gap-0 overflow-hidden border-2 border-destructive"
+        hideClose
       >
         {/* Header */}
-        <DialogHeader className="border-b border-destructive/20 bg-destructive/10 px-6 py-4">
-          <DialogTitle className="text-xl font-semibold text-destructive">
-            {modalTitle}
-          </DialogTitle>
-          <p className="mt-1 text-sm font-semibold text-destructive">
-            {t('reviewInstructions')}
-          </p>
-        </DialogHeader>
+        <ModalHeader title={modalTitle} tone="destructive" dialog className="rounded-t-xl" />
+        <p className="px-6 pt-4 text-sm font-semibold text-destructive">
+          {t('reviewInstructions')}
+        </p>
 
         {/* Interaction list */}
         <div className="max-h-64 overflow-y-auto px-6 py-4">

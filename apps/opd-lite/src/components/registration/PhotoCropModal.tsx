@@ -6,8 +6,7 @@ import { Info } from '@ultranos/ui-kit/icons'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
 } from '@ultranos/ui-kit/components/ui/dialog'
 import { Button } from '@/components/ui/Button'
 import { PhotoCropper, type PhotoCropperHandle } from '@/components/patient/PhotoCropper'
@@ -25,10 +24,8 @@ export function PhotoCropModal({ open, rawDataUrl, onConfirm, onCancel }: PhotoC
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel() }}>
-      <DialogContent className="max-w-sm w-full gap-0 p-0 overflow-hidden">
-        <DialogHeader className="px-5 pt-5 pb-3">
-          <DialogTitle>{t('photoCropTitle')}</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-sm w-full gap-0 p-0 overflow-hidden" hideClose>
+        <ModalHeader title={t('photoCropTitle')} tone="primary" dialog className="rounded-t-xl" />
 
         <div className="px-5 pb-3">
           <div className="flex gap-2.5 rounded-xl bg-primary/10 border border-primary/20 px-3 py-2.5">

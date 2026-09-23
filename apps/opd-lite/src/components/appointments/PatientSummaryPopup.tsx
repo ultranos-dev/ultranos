@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/Button'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
 } from '@ultranos/ui-kit/components/ui/dialog'
 import {
   DropdownMenu,
@@ -64,13 +63,9 @@ export function PatientSummaryPopup({
 
   return (
     <Dialog open={true} onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm" hideClose>
         {/* Header */}
-        <DialogHeader className="mb-4">
-          <DialogTitle className="text-lg font-semibold text-foreground">
-            {patientName}
-          </DialogTitle>
-        </DialogHeader>
+        <ModalHeader title={patientName} tone="primary" dialog inset />
 
         {/* Patient info */}
         <div className="space-y-2 text-sm">
