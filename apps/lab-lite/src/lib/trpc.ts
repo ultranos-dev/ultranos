@@ -665,7 +665,8 @@ export interface LabOrderResponse {
   patientFirstName: string
   patientAge: number | null
   patientRef: string
-  patientPhotoUrl: string | null
+  // No patient photo on the list tier (Rule #7 / audit C-SYS-4, Story 58.1) — the
+  // photo is fetched on demand via getOrderPatientDetails (detail/verification tier).
   testsRequested: Array<{ loincCode: string; loincDisplay: string }>
   urgency: 'routine' | 'urgent' | 'asap' | 'stat'
   orderingPhysicianName: string

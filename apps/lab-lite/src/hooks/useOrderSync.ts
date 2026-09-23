@@ -129,7 +129,6 @@ export function useOrderSync(): OrderSyncState {
         patientFirstName: o.patientFirstName,
         patientAge: o.patientAge,
         patientRef: o.patientRef,
-        patientPhotoUrl: o.patientPhotoUrl ?? null,
         testsRequested: o.testsRequested,
         urgency: o.urgency,
         orderingPhysicianName: o.orderingPhysicianName,

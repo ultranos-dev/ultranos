@@ -71,18 +71,26 @@ describe('POST /api/patient-photo', () => {
     expect(res.status).toBe(403)
   })
 
-  it('re-encodes to WebP ≤512px, uploads, sets photo_url, audits', async () => {
+  it('re-encodes to WebP ≤512px, uploads under an OPAQUE key (not <uuid>.webp), sets photo_url, audits', async () => {
     const res = await POST(req(await pngFile()) as never)
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body.photoUrl).toBe(`${PID}.webp`)
+    // Story 58.1 / audit C-SYS-4: the storage key is an OPAQUE random <uuid>.webp,
+    // NEVER the patient UUID — so a signed URL cannot leak the patient id to the lab.
+    expect(body.photoUrl).toMatch(/^[0-9a-f-]{36}\.webp$/i)
+    expect(body.photoUrl).not.toBe(`${PID}.webp`)
+    expect(body.photoUrl).not.toContain(PID)
+    // photo_url persisted equals the uploaded key.
+    expect(body.photoUrl).toBe(storageUpload.mock.calls[0][0])
 
     // The uploaded buffer is a valid WebP, ≤512px, metadata stripped
     const uploadedBuf: Buffer = storageUpload.mock.calls[0][1]
     const meta = await sharp(uploadedBuf).metadata()
     expect(meta.format).toBe('webp')
     expect(Math.max(meta.width ?? 0, meta.height ?? 0)).toBeLessThanOrEqual(512)
-    expect(storageUpload.mock.calls[0][0]).toBe(`${PID}.webp`)
+    // Uploaded key is opaque, not UUID-derived.
+    expect(storageUpload.mock.calls[0][0]).not.toBe(`${PID}.webp`)
+    expect(storageUpload.mock.calls[0][0]).not.toContain(PID)
     expect(auditEmit).toHaveBeenCalledWith(expect.objectContaining({
       action: 'PHI_WRITE', resourceType: 'PATIENT', resourceId: PID,
     }))

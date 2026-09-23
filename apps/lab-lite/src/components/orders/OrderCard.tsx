@@ -112,7 +112,9 @@ export function OrderCard({ order }: { order: LabOrderEntry }) {
             {/* Patient: avatar + first name + age — <bdi> isolates an RTL name from the LTR age
                 so the two fields don't visually jumble together. */}
             <p className="flex items-center gap-2 text-base font-semibold text-foreground">
-              <Avatar src={order.patientPhotoUrl} name={order.patientFirstName} size={24} />
+              {/* Initials only on the list tier — no patient photo here (Rule #7 /
+                  audit C-SYS-4). The photo appears in the Patient/Sample Details modal. */}
+              <Avatar name={order.patientFirstName} size={24} />
               <bdi className="truncate">{order.patientFirstName}</bdi>
               <span className="mx-1.5 text-muted-foreground" aria-hidden="true">·</span>
               <span className="whitespace-nowrap font-numeric font-normal text-muted-foreground">

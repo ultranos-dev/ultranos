@@ -334,8 +334,9 @@ export interface LabOrderEntry {
   patientFirstName: string // first name ONLY — CLAUDE.md Rule #7
   patientAge: number | null // computed age, NOT DOB
   patientRef: string // opaque Patient/{uuid}
-  /** Short-lived signed photo URL from hub (server-signed; lab never receives UUID/key). Null = no photo. */
-  patientPhotoUrl?: string | null
+  // No patient photo on the order list (Rule #7 list tier / audit C-SYS-4, Story 58.1).
+  // The photo is loaded on demand from getOrderPatientDetails when the tech opens the
+  // Patient Details / Sample Details modal (detail/verification tier).
   testsRequested: Array<{ loincCode: string; loincDisplay: string }>
   urgency: OrderUrgency
   orderingPhysicianName: string
@@ -2020,6 +2021,19 @@ class LabLiteDatabase extends Dexie {
     // sessions so archive state is stable.
     this.version(55).stores({
       archived_samples: '&sampleId, archivedAt',
+    })
+    // v56 — Story 58.1 / audit C-SYS-4: patient photos are no longer returned on the
+    // order list tier. patientPhotoUrl was never an index (plain property), so the
+    // store schema is unchanged; this upgrade strips the now-stale (and expired) URL
+    // from any orders cached before the change. The photo is fetched on demand from
+    // getOrderPatientDetails in the detail/verification modals.
+    this.version(56).stores({}).upgrade(async (tx) => {
+      await tx
+        .table('orders')
+        .toCollection()
+        .modify((order: Record<string, unknown>) => {
+          if ('patientPhotoUrl' in order) delete order.patientPhotoUrl
+        })
     })
   }
 }

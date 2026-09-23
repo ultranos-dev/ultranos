@@ -1380,7 +1380,6 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     authoredOn: string | null;
                     patientFirstName: string;
                     patientAge: number | null;
-                    patientPhotoUrl: string | null;
                     testsRequested: {
                         loincCode: string;
                         loincDisplay: string;
@@ -1491,6 +1490,146 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 tetanusStatus: string;
                 covidStatus: string;
             } | null;
+            meta: object;
+        }>;
+        searchPatients: import("@trpc/server").TRPCQueryProcedure<{
+            input: {
+                query: string;
+            };
+            output: {
+                patients: {
+                    ref: string;
+                    firstName: string;
+                    age: number | null;
+                }[];
+            };
+            meta: object;
+        }>;
+        checkDuplicates: import("@trpc/server").TRPCQueryProcedure<{
+            input: {
+                gender?: "unknown" | "male" | "female" | "other" | undefined;
+                phone?: string | undefined;
+                nameGiven?: string | undefined;
+                nameFather?: string | undefined;
+                nameGrandfather?: string | undefined;
+                birthYear?: number | undefined;
+                birthDate?: string | undefined;
+            };
+            output: {
+                decision: "BLOCK" | "WARN" | "ALLOW";
+                candidates: {
+                    mpiScore: number;
+                    ref: string;
+                    firstName: string | null;
+                    age: number | null;
+                }[];
+                proceedToken?: string | undefined;
+            };
+            meta: object;
+        }>;
+        registerPatient: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+                gender: "unknown" | "male" | "female" | "other";
+                nameLocal: string;
+                consent: {
+                    version: string;
+                    method: "WRITTEN" | "VERBAL_WITNESSED";
+                    language: string;
+                    witnessedBy?: string | undefined;
+                };
+                phone?: string | undefined;
+                nameGiven?: string | undefined;
+                nameFather?: string | undefined;
+                nameGrandfather?: string | undefined;
+                birthYear?: number | undefined;
+                birthDate?: string | undefined;
+                birthYearOnly?: boolean | undefined;
+                mpiProceedToken?: string | undefined;
+            };
+            output: {
+                mpiWarn: boolean;
+                ref: string;
+            };
+            meta: object;
+        }>;
+        syncQualityProfile: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+                technicianId: string;
+                streaks: {
+                    updatedAt: string;
+                    streakType: string;
+                    currentStreak: number;
+                    longestStreak: number;
+                }[];
+                metrics: {
+                    value: number;
+                    period: string;
+                    unit: string;
+                    metricType: string;
+                    trend: string;
+                }[];
+                earnedBadges: {
+                    badgeId: string;
+                    earnedAt: string;
+                }[];
+            };
+            output: {
+                recorded: boolean;
+            };
+            meta: object;
+        }>;
+        authorizeResult: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+                timestamp: string;
+                action: "APPROVE" | "REJECT" | "HOLD" | "AUTO_VERIFY";
+                resultId: string;
+                actorRole?: string | undefined;
+                actorId?: string | undefined;
+                comments?: string | undefined;
+                criticalValueAcknowledged?: boolean | undefined;
+                autoVerifyCriteria?: {
+                    noAbnormalFlags: boolean;
+                    qcPassing: boolean;
+                    roleEligible: boolean;
+                    noCriticalValues: boolean;
+                } | undefined;
+            };
+            output: {
+                status: string;
+            };
+            meta: object;
+        }>;
+        createNotification: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+                payload: {
+                    testCategory: string;
+                    labName: string;
+                    diagnosticReportId: string;
+                    loincCode: string;
+                    resultStatus: "FINAL";
+                    guidanceContentIds?: string[] | undefined;
+                };
+                type: "LAB_RESULT_AVAILABLE";
+            };
+            output: {
+                notificationId: string | null;
+            };
+            meta: object;
+        }>;
+        escalateAiResult: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+                type: "AI_ESCALATION";
+                confidence: string;
+                priority: "critical";
+                sourceFeature: string;
+                sampleId: string;
+                aiOutputSummary: string;
+                escalationReason: string;
+                actorId?: string | undefined;
+            };
+            output: {
+                notificationId: string | null;
+            };
             meta: object;
         }>;
     }>>;
@@ -1736,6 +1875,21 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             };
             output: {
                 allergies: any[];
+            };
+            meta: object;
+        }>;
+        listForDispense: import("@trpc/server").TRPCQueryProcedure<{
+            input: {
+                patientRef: string;
+            };
+            output: {
+                allergies: {
+                    substanceText: string | null;
+                    substanceCode: string | null;
+                    substanceSystem: string | null;
+                    criticality: string | null;
+                }[];
+                count: number;
             };
             meta: object;
         }>;
@@ -2634,14 +2788,14 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
         }>;
         reviewKycSubmission: import("@trpc/server").TRPCMutationProcedure<{
             input: {
-                action: "REQUEST_MORE_INFO" | "APPROVE" | "REJECT";
+                action: "APPROVE" | "REJECT" | "REQUEST_MORE_INFO";
                 submissionId: string;
                 reason?: string | undefined;
             };
             output: {
                 success: boolean;
                 submissionId: string;
-                action: "REQUEST_MORE_INFO" | "APPROVE" | "REJECT";
+                action: "APPROVE" | "REJECT" | "REQUEST_MORE_INFO";
                 newKycStatus: string;
             };
             meta: object;
@@ -2819,8 +2973,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
         listUsers: import("@trpc/server").TRPCQueryProcedure<{
             input: {
                 search?: string | undefined;
-                status?: "SUSPENDED" | "ACTIVE" | "ALL" | "ARCHIVED" | "PENDING_INVITE" | undefined;
                 role?: string | undefined;
+                status?: "SUSPENDED" | "ACTIVE" | "ALL" | "ARCHIVED" | "PENDING_INVITE" | undefined;
                 limit?: number | undefined;
                 cursor?: number | undefined;
             };
@@ -4653,8 +4807,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
         }>;
         setPrice: import("@trpc/server").TRPCMutationProcedure<{
             input: {
-                atcCode: string;
                 facilityId: string;
+                atcCode: string;
                 retailPrice: number;
                 stockSignal: "in_stock" | "low_stock" | "out_of_stock";
                 quantity?: number | undefined;
@@ -4952,8 +5106,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
         }>;
         create: import("@trpc/server").TRPCMutationProcedure<{
             input: {
-                name: string;
                 facilityId: string;
+                name: string;
                 kind?: "other" | "store" | "room" | "fridge" | "cabinet" | undefined;
                 isPrimary?: boolean | undefined;
             };

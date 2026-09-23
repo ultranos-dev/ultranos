@@ -16,7 +16,7 @@ import { analyzeFile } from '@/services/ocr'
 import { compareHlc, deserializeHlc } from '@ultranos/sync-engine'
 import { monitoringPullEventsTotal } from '@/lib/clinical-safety-metrics'
 import { buildNotificationContent } from '@/lib/notification-content'
-import { signPhotoUrl, signPhotoUrls, photoKey } from '@/lib/photo-urls'
+import { signPhotoUrl } from '@/lib/photo-urls'
 import { normalizeNameComponent, computePhoneticTokens, computeMpiResult } from '@ultranos/mpi-engine'
 import { signProceedToken, verifyProceedToken, consumeProceedToken } from '@/lib/mpi-proceed-token'
 import { fetchMpiCandidates } from '@/lib/mpi-candidate-query'
@@ -694,12 +694,11 @@ export const labRouter = createTRPCRouter({
         console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'PATIENT', resourceId: 'patient-verify' })
       }
 
-      // Sign the photo URL server-side — never expose the patient UUID or storage key to the lab
-      const photoUrl = await signPhotoUrl(
-        ctx.supabase,
-        'patient-photos',
-        patient.photo_url ? photoKey(patient.id) : null,
-      )
+      // Sign the STORED opaque photo key (patients.photo_url) server-side. The key is
+      // random per-upload (audit C-SYS-4) so the signed URL exposes no patient UUID and
+      // is non-correlating. Photo on this identity-verification surface is intentional
+      // (confirm the right patient before drawing a sample) — see CLAUDE.md Rule #7.
+      const photoUrl = await signPhotoUrl(ctx.supabase, 'patient-photos', patient.photo_url ?? null)
 
       return {
         firstName: patient.name_given,
@@ -795,12 +794,10 @@ export const labRouter = createTRPCRouter({
         console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'PATIENT', resourceId: input.orderId })
       }
 
-      // Sign the photo URL server-side — never expose the patient UUID or storage key to the lab
-      const photoUrl = await signPhotoUrl(
-        ctx.supabase,
-        'patient-photos',
-        patient?.photo_url ? photoKey(patientId) : null,
-      )
+      // Sign the STORED opaque photo key (patients.photo_url) server-side. The key is
+      // random per-upload (audit C-SYS-4) so the signed URL carries no patient UUID and
+      // cannot be correlated across orders — the lab only ever holds the blind-index ref.
+      const photoUrl = await signPhotoUrl(ctx.supabase, 'patient-photos', patient?.photo_url ?? null)
 
       return {
         fullName: {
@@ -1937,7 +1934,6 @@ export const labRouter = createTRPCRouter({
             patientFirstName: z.string(),
             patientAge: z.number().nullable(),
             patientRef: z.string(),
-            patientPhotoUrl: z.string().nullable(),
             testsRequested: z.array(z.object({ loincCode: z.string(), loincDisplay: z.string() })),
             urgency: z.string(),
             orderingPhysicianName: z.string(),
@@ -1973,7 +1969,7 @@ export const labRouter = createTRPCRouter({
           special_instructions,
           meta_last_updated,
           received_by_lab_id,
-          patients!inner(id, name_given, birth_date, birth_year, photo_url),
+          patients!inner(id, name_given, birth_date, birth_year),
           practitioners!service_requests_requester_id_fkey(id, given_name, family_name)
         `)
         .in('status', ['active', 'on-hold'])
@@ -2032,14 +2028,10 @@ export const labRouter = createTRPCRouter({
       // P4: Use blind index for patientRef — never expose raw patient UUID
       const { hmacKey } = await getFieldEncryptionKeys()
 
-      // Batch-sign patient photo URLs — one storage round-trip for the whole page.
-      // Key = patient ID (server-side only) — never returned to the lab client.
-      const photoKeys = (orders ?? []).map((order: any) =>
-        order.patients?.photo_url ? photoKey(order.patient_id) : null,
-      )
-      const signedPhotoMap = await signPhotoUrls(ctx.supabase, 'patient-photos', photoKeys)
-
-      // Data minimization projection: return ONLY first name + age + signed photo URL
+      // Data minimization projection: return ONLY first name + age (Rule #7 list tier).
+      // NO patient photo on this list surface (audit C-SYS-4 / H-HUB-5, Story 58.1):
+      // the photo lives on the order-scoped detail/verification tier
+      // (getOrderPatientDetails / verifyPatient) only.
       const mapped = (orders ?? []).map((order: any) => {
         const patient = order.patients
         const practitioner = order.practitioners
@@ -2047,16 +2039,10 @@ export const labRouter = createTRPCRouter({
         // P8: Age from DOB, falling back to birth year — never expose the DOB.
         const patientAge = computeAge(patient?.birth_date, patient?.birth_year)
 
-        // Resolve the signed photo URL from the batch map (by the storage key, not
-        // the patient UUID — the lab client only ever receives the signed URL).
-        const pKey = patient?.photo_url && order.patient_id ? photoKey(order.patient_id) : null
-        const patientPhotoUrl = pKey ? (signedPhotoMap[pKey] ?? null) : null
-
         return {
           orderId: order.id,
           patientFirstName: patient?.name_given ?? '',
           patientAge,
-          patientPhotoUrl,
           // Matching key: the blind index is derived from the order's own
           // patient_id (a NOT NULL FK), NOT the demographics join — so the
           // order↔patient linkage never depends on the join succeeding, and the

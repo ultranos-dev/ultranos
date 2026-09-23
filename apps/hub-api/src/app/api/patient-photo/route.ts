@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import sharp from 'sharp'
 import { getSupabaseClient, db } from '@/lib/supabase'
+import { opaquePhotoKey } from '@/lib/photo-urls'
 import { verifySupabaseJwt, getSupabaseJwk, resolveAuthzClaims } from '@/lib/jwt'
 import { hasResourceAccess } from '@/trpc/rbac'
 import { isOriginAllowed, corsHeaders } from '@/lib/cors'
@@ -41,15 +42,15 @@ async function authenticate(req: Request): Promise<AuthedUser | null> {
   }
 }
 
-/** Fetch patient + guard optimistic concurrency. Returns key or an error response. */
+/** Fetch patient + guard optimistic concurrency. Returns the existing storage key or an error response. */
 async function loadAndGuard(
   supabase: ReturnType<typeof getSupabaseClient>,
   patientId: string,
   lastKnownUpdate: string,
-): Promise<{ error: NextResponse } | { ok: true }> {
+): Promise<{ error: NextResponse } | { ok: true; existingKey: string | null }> {
   const { data: current, error } = await supabase
     .from('patients')
-    .select('id, updated_at')
+    .select('id, updated_at, photo_url')
     .eq('id', patientId)
     .eq('is_active', true)
     .single()
@@ -57,7 +58,7 @@ async function loadAndGuard(
   if (current.updated_at && new Date(lastKnownUpdate) < new Date(current.updated_at)) {
     return { error: NextResponse.json({ error: 'Stale update' }, { status: 409 }) }
   }
-  return { ok: true }
+  return { ok: true, existingKey: (current.photo_url as string | null) ?? null }
 }
 
 async function setPhotoUrl(
@@ -117,13 +118,24 @@ async function handlePost(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unsupported or corrupt image' }, { status: 400 })
   }
 
-  const key = `${patientId}.webp`
+  // Opaque, non-correlating storage key (audit C-SYS-4): never derive the key from
+  // the patient UUID. The random key is the value persisted in photo_url and the
+  // only thing a lab-facing signed URL exposes.
+  const key = opaquePhotoKey()
   const { error: uploadError } = await supabase.storage
     .from(BUCKET).upload(key, webp, { upsert: true, contentType: 'image/webp' })
   if (uploadError) return NextResponse.json({ error: 'Storage upload failed' }, { status: 500 })
 
   const result = await setPhotoUrl(supabase, user, patientId, key)
   if ('error' in result) return result.error
+
+  // Best-effort cleanup of the previous object (opaque or legacy <uuid>.webp) so
+  // re-uploads don't orphan storage. Never fatal to the request.
+  const prevKey = guard.existingKey
+  if (prevKey && prevKey !== key) {
+    await supabase.storage.from(BUCKET).remove([prevKey]).catch(() => {})
+  }
+
   return NextResponse.json({ photoUrl: key, lastUpdated: result.lastUpdated }, { status: 200 })
 }
 
@@ -143,7 +155,11 @@ async function handleDelete(req: Request): Promise<NextResponse> {
   const guard = await loadAndGuard(supabase, patientId, lastKnownUpdate)
   if ('error' in guard) return guard.error
 
-  await supabase.storage.from(BUCKET).remove([`${patientId}.webp`, `${patientId}.jpg`]).catch(() => {})
+  // Remove the current (opaque) object plus any legacy UUID-keyed objects that may
+  // still exist during the C-SYS-4 re-key rollback window.
+  const toRemove = [`${patientId}.webp`, `${patientId}.jpg`]
+  if (guard.existingKey) toRemove.push(guard.existingKey)
+  await supabase.storage.from(BUCKET).remove([...new Set(toRemove)]).catch(() => {})
 
   const result = await setPhotoUrl(supabase, user, patientId, null)
   if ('error' in result) return result.error

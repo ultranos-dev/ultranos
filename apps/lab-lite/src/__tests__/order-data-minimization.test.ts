@@ -9,7 +9,6 @@ describe('Order Data Minimization (CLAUDE.md Rule #7)', () => {
       patientFirstName: 'Ahmad',
       patientAge: 45,
       patientRef: 'Patient/123',
-      patientPhotoUrl: null,
       testsRequested: [{ loincCode: '58410-2', loincDisplay: 'CBC' }],
       urgency: 'stat',
       orderingPhysicianName: 'Dr. Karimi',
@@ -35,6 +34,9 @@ describe('Order Data Minimization (CLAUDE.md Rule #7)', () => {
     ]))
 
     // Verify NO PHI fields are present
+    // Story 58.1 / audit C-SYS-4: no patient photo on the list tier (photo lives on
+    // the order-scoped detail/verification tier only).
+    expect(response).not.toHaveProperty('patientPhotoUrl')
     expect(response).not.toHaveProperty('birthDate')
     expect(response).not.toHaveProperty('gender')
     expect(response).not.toHaveProperty('telecom')
@@ -69,6 +71,8 @@ describe('Order Data Minimization (CLAUDE.md Rule #7)', () => {
 
     const keys = Object.keys(entry)
     // Verify no PHI beyond first name + age
+    // Story 58.1 / audit C-SYS-4: patient photo removed from the cached order list tier.
+    expect(keys).not.toContain('patientPhotoUrl')
     expect(keys).not.toContain('birthDate')
     expect(keys).not.toContain('gender')
     expect(keys).not.toContain('telecom')

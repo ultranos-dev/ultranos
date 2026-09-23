@@ -166,7 +166,7 @@ export function SampleDetailsModal({
           <section>
             <div className="mb-2 flex justify-center">
               <Avatar
-                src={details?.photoUrl ?? order?.patientPhotoUrl}
+                src={details?.photoUrl}
                 name={details?.fullName.given ?? sample.patientRef.firstName}
                 size={72}
                 ring
