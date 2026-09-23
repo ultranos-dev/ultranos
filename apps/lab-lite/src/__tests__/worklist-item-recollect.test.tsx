@@ -83,6 +83,13 @@ vi.mock('@/components/worklist/UrgencyBadge', () => ({
 vi.mock('@/components/worklist/StabilityBadge', () => ({
   StabilityBadge: () => null,
 }))
+vi.mock('@/components/worklist/SampleDetailsModal', () => ({
+  SampleDetailsModal: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="sample-details-modal" onClick={onClose}>
+      SampleDetailsModal
+    </div>
+  ),
+}))
 vi.mock('@/components/samples/LockIndicator', () => ({
   LockIndicator: () => null,
 }))
@@ -223,5 +230,53 @@ describe('WorklistItem — Re-collect button (Change 4)', () => {
     const recollectBtn = Array.from(buttons).find((b) => b.textContent?.includes('Re-collect'))
     expect(recollectBtn).toBeDefined()
     expect(recollectBtn!.hasAttribute('disabled')).toBe(false)
+  })
+
+  // --- Enter Result gating (expired / archived) ---
+  function enterButton(container: HTMLElement): HTMLButtonElement | undefined {
+    return Array.from(container.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Enter Result'),
+    ) as HTMLButtonElement | undefined
+  }
+
+  it('Enter Result is present but disabled for an EXPIRED sample', () => {
+    const { container } = render(
+      <WorklistItem sample={makeSample({ stabilityStatus: 'expired' })} {...defaultProps} />,
+    )
+    const btn = enterButton(container)
+    expect(btn).toBeDefined()
+    expect(btn!.hasAttribute('disabled')).toBe(true)
+  })
+
+  it('Enter Result is present but disabled in the ARCHIVED view', () => {
+    const { container } = render(
+      <WorklistItem sample={makeSample()} {...defaultProps} isArchivedView />,
+    )
+    const btn = enterButton(container)
+    expect(btn).toBeDefined()
+    expect(btn!.hasAttribute('disabled')).toBe(true)
+  })
+
+  it('Enter Result is enabled for an active, non-expired sample', () => {
+    const { container } = render(<WorklistItem sample={makeSample()} {...defaultProps} />)
+    const btn = enterButton(container)
+    expect(btn).toBeDefined()
+    expect(btn!.hasAttribute('disabled')).toBe(false)
+  })
+
+  it('formats a long queue duration as days/hours/minutes', () => {
+    // 6140 min = 4d 6h 20m
+    render(<WorklistItem sample={makeSample({ timeInQueueMinutes: 6140 })} {...defaultProps} />)
+    expect(screen.getByText('4d 6h 20m')).toBeDefined()
+  })
+
+  it('clicking the card opens the SampleDetailsModal', async () => {
+    const user = userEvent.setup()
+    render(<WorklistItem sample={makeSample()} {...defaultProps} />)
+    expect(screen.queryByTestId('sample-details-modal')).toBeNull()
+
+    // Click the row itself (not a button)
+    await user.click(screen.getByText('Cholesterol'))
+    expect(screen.queryByTestId('sample-details-modal')).not.toBeNull()
   })
 })

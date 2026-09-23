@@ -560,13 +560,29 @@
     "emptyTitle": "No samples in queue",
     "emptyHint": "Received samples will appear here automatically.",
     "enterResult": "Enter Result",
+    "enterResultExpired": "Sample expired — re-collect required",
+    "enterResultArchived": "Archived sample — unarchive to enter results",
     "recollect": "Re-collect",
     "archive": "Archive",
     "unarchive": "Unarchive",
+    "ageYears": "{age}y",
+    "unknownTest": "Unknown test",
+    "viewSampleDetails": "View sample details for {name}",
     "statusFilter": {
       "label": "Sample status",
       "active": "Active",
       "archived": "Archived"
+    },
+    "details": {
+      "title": "Sample Details",
+      "collectionSection": "Collection",
+      "labSampleId": "Lab sample ID",
+      "receivedAt": "Received",
+      "sampleType": "Sample type",
+      "condition": "Condition",
+      "collectedBy": "Collected by",
+      "status": "Status",
+      "expired": "Expired"
     },
     "searchPlaceholder": "Search by sample or order ID…"
   },

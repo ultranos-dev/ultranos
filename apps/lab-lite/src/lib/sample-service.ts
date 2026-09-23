@@ -21,6 +21,8 @@ import {
   updateOrderStatus,
   getDb,
   getReceivedSampleForOrder,
+  isSampleArchived,
+  setArchivedFlag,
 } from './db'
 import { generateSampleId } from './sample-id'
 import { hlc, serializeHlc } from './hlc'
@@ -46,6 +48,14 @@ export interface AccessionInput {
   patientRef: string
   /** Lab-configurable ID prefix (defaults to 'LAB') */
   idPrefix?: string
+  /**
+   * Data-minimized patient display copy (first name + age ONLY — CLAUDE.md Rule #7)
+   * stamped onto the specimen so the worklist can render it without the order row.
+   */
+  patientFirstName?: string
+  patientAge?: number | null
+  /** Ordered test(s) copied from the paired order — used for worklist + template resolution. */
+  orderedTests?: Array<{ loincCode: string; loincDisplay: string }>
 }
 
 // ---------------------------------------------------------------------------
@@ -119,6 +129,12 @@ export async function accessionSample(input: AccessionInput): Promise<FhirSpecim
       isOfflineCreated: !navigator.onLine,
       pipelineStatus: 'received',
       sampleCondition: input.condition,
+      // Data-minimized display copy so the worklist survives loss of the order row.
+      ...(input.patientFirstName ? { patientFirstName: input.patientFirstName } : {}),
+      ...(input.patientAge != null ? { patientAge: input.patientAge } : {}),
+      ...(input.orderedTests && input.orderedTests.length > 0
+        ? { orderedTests: input.orderedTests }
+        : {}),
     },
   }
 
@@ -306,12 +322,20 @@ export async function setSampleArchived(
   const specimen = await getSampleById(sampleId)
   if (!specimen) throw new Error(`Sample not found: ${sampleId}`)
 
-  // No-op if already in the requested state — avoids redundant custody/audit noise.
-  if ((specimen._ultranos.archived ?? false) === archived) return
+  // Archive state is authoritative in the dedicated archived_samples table — it
+  // survives the samples-table wipe + hub re-hydration that happens every boot
+  // (a row-level _ultranos.archived flag does NOT). No-op if already in state.
+  const currentlyArchived = await isSampleArchived(sampleId)
+  if (currentlyArchived === archived) return
 
   const now = new Date().toISOString()
   const hlcTs = serializeHlc(hlc.now())
 
+  // 1. Authoritative write — the durable marker table.
+  await setArchivedFlag(sampleId, archived)
+
+  // 2. Mirror onto the specimen row for immediate display + the sync payload.
+  //    (This copy is transient — re-hydration may drop it — hence step 1.)
   const updated: FhirSpecimen = {
     ...specimen,
     meta: {

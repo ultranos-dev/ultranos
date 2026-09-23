@@ -183,7 +183,7 @@ describe('OrderCard', () => {
     expect(modal.textContent).toContain('Ahmad · Marjan · Qamar') // full name
     expect(modal.textContent).toContain('A+') // blood group
     expect(modal.textContent).toContain('77 kg') // weight
-    expect(modal.textContent).toContain('45y') // age (from order)
+    expect(modal.textContent).toMatch(/Age\s*45/) // age field (from order)
     expect(modal.textContent).toContain('CBC (58410-2)') // order test
   })
 

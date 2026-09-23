@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import {
@@ -8,6 +8,7 @@ import {
   type WorklistMode,
   type WorklistStatusFilter,
 } from '@/hooks/usePrioritizedWorklist'
+import { useOrderSync } from '@/hooks/useOrderSync'
 import { PriorityWorklist } from '@/components/worklist/PriorityWorklist'
 import { IncompleteVerificationsAlert } from '@/components/verification/IncompleteVerificationsAlert'
 
@@ -36,9 +37,18 @@ export default function WorklistPage() {
     reorder,
     resetOverride,
     setArchived,
+    refresh,
   } = usePrioritizedWorklist()
   const [search, setSearch] = useState('')
   const isArchivedView = statusFilter === 'archived'
+
+  // Pull orders from the Hub into Dexie while the worklist is open, so patient
+  // name/age/test resolve for samples whose order isn't cached yet. When orders
+  // land, re-run the worklist pipeline (which also backfills the specimen stamp).
+  const { orders: syncedOrders } = useOrderSync()
+  useEffect(() => {
+    void refresh()
+  }, [syncedOrders, refresh])
 
   const query = search.trim().toLowerCase()
   const filteredSamples = useMemo(

@@ -560,13 +560,29 @@
     "emptyTitle": "لا توجد عينات في قائمة الانتظار",
     "emptyHint": "ستظهر العينات المستلمة هنا تلقائيًا.",
     "enterResult": "إدخال النتيجة",
+    "enterResultExpired": "انتهت صلاحية العينة — يلزم إعادة التجميع",
+    "enterResultArchived": "عينة مؤرشفة — ألغِ الأرشفة لإدخال النتائج",
     "recollect": "إعادة التجميع",
     "archive": "أرشفة",
     "unarchive": "إلغاء الأرشفة",
+    "ageYears": "{age} سنة",
+    "unknownTest": "فحص غير معروف",
+    "viewSampleDetails": "عرض تفاصيل عينة {name}",
     "statusFilter": {
       "label": "حالة العينة",
       "active": "نشطة",
       "archived": "مؤرشفة"
+    },
+    "details": {
+      "title": "تفاصيل العينة",
+      "collectionSection": "التجميع",
+      "labSampleId": "معرّف عينة المختبر",
+      "receivedAt": "الاستلام",
+      "sampleType": "نوع العينة",
+      "condition": "الحالة",
+      "collectedBy": "جُمعت بواسطة",
+      "status": "الحالة",
+      "expired": "منتهية الصلاحية"
     },
     "searchPlaceholder": "البحث برقم العينة أو الطلب…"
   },

@@ -91,7 +91,9 @@ describe('usePrioritizedWorklist — lab-samples-hydrated event listener', () =>
       await new Promise((r) => setTimeout(r, 50))
     })
 
-    expect(result.current.loading).toBe(false)
+    // Empty local read while hub hydration is still pending must stay in the
+    // loading state — never flash a false "no samples" empty state.
+    expect(result.current.loading).toBe(true)
     expect(result.current.samples).toHaveLength(0)
 
     // Simulate SyncProvider finishing hydration: seed DB then dispatch event

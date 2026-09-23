@@ -8,9 +8,27 @@ import type { SampleLock, LabOrderEntry } from '@/lib/db'
 import { getSampleById, getDb } from '@/lib/db'
 import { UrgencyBadge } from './UrgencyBadge'
 import { StabilityBadge } from './StabilityBadge'
+import { PatientNameAge } from './PatientNameAge'
+import { SampleDetailsModal } from './SampleDetailsModal'
 import { LockIndicator } from '@/components/samples/LockIndicator'
 import { ReceiveSampleModal } from '@/components/samples/ReceiveSampleModal'
 import { RefreshCw, Archive, ArchiveRestore } from '@ultranos/ui-kit/icons'
+
+/**
+ * Format a queue duration as "Nd Nh Nm", dropping leading zero units.
+ * A long-standing sample reads e.g. "4d 4h 20m" instead of "100h 20m".
+ */
+function formatDuration(totalMinutes: number): string {
+  const m = Math.max(0, Math.floor(totalMinutes))
+  const days = Math.floor(m / 1440)
+  const hours = Math.floor((m % 1440) / 60)
+  const mins = m % 60
+  const parts: string[] = []
+  if (days) parts.push(`${days}d`)
+  if (hours) parts.push(`${hours}h`)
+  if (mins || parts.length === 0) parts.push(`${mins}m`)
+  return parts.join(' ')
+}
 
 interface WorklistItemProps {
   sample: PrioritizedSample
@@ -66,7 +84,14 @@ export function WorklistItem({
   const router = useRouter()
   const t = useTranslations('worklist')
   const isLockedByOther = activeLock?.status === 'ACTIVE' && activeLock.techId !== currentTechId
+  const isExpired = sample.stabilityStatus === 'expired'
+  // Enter Result is blocked for expired samples (unstable — must re-collect) and
+  // for anything on the Archived shelf, and while another tech holds the lock.
+  const enterDisabled = isLockedByOther || isExpired || isArchivedView
   const rowRef = useRef<HTMLDivElement>(null)
+
+  // Detail modal — opens on card click regardless of sample status.
+  const [showDetails, setShowDetails] = useState(false)
 
   // Re-collect modal state — resolved lazily on click to avoid stale closures
   const [recollectProps, setRecollectProps] = useState<{
@@ -94,18 +119,17 @@ export function WorklistItem({
     })
   }
 
-  const timeInQueueLabel =
-    sample.timeInQueueMinutes < 60
-      ? `${sample.timeInQueueMinutes}m`
-      : `${Math.floor(sample.timeInQueueMinutes / 60)}h ${sample.timeInQueueMinutes % 60}m`
+  const timeInQueueLabel = formatDuration(sample.timeInQueueMinutes)
+  const ageLabel =
+    sample.patientRef.age > 0 ? t('ageYears', { age: sample.patientRef.age }) : undefined
 
   return (
     <>
     <div
       ref={rowRef}
-      className={`relative flex items-center gap-3 rounded-lg border bg-card px-4 py-3 shadow-sm transition-opacity select-none
-        ${isDragging ? 'opacity-50 border-dashed border-primary' : 'border-border hover:border-border'}
-        ${sample.stabilityStatus === 'expired' ? 'border-red-300 bg-red-50' : ''}
+      className={`relative flex cursor-pointer items-center gap-3 rounded-lg border bg-card px-4 py-3 shadow-sm transition-colors select-none hover:border-primary/50 hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring
+        ${isDragging ? 'opacity-50 border-dashed border-primary' : 'border-border'}
+        ${isExpired ? 'border-red-300 bg-red-50' : ''}
         ${isLockedByOther ? 'opacity-60' : ''}
       `}
       draggable
@@ -113,7 +137,15 @@ export function WorklistItem({
       onDragOver={(e) => { e.preventDefault(); onDragOver(e, index) }}
       onDrop={(e) => { e.preventDefault(); onDrop(index) }}
       onTouchStart={(e) => onTouchStart(e, index)}
-      aria-label={`Sample ${rank}: ${sample.loincDisplay} for ${sample.patientRef.firstName}`}
+      onClick={() => setShowDetails(true)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          setShowDetails(true)
+        }
+      }}
+      tabIndex={0}
+      aria-label={t('viewSampleDetails', { name: sample.patientRef.firstName || '—' })}
       role="listitem"
     >
       {/* Rank number */}
@@ -126,13 +158,14 @@ export function WorklistItem({
 
       {/* Patient + test info — grows to fill space */}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-foreground">
-          {sample.patientRef.firstName}
-          <span className="ms-1 text-xs font-normal text-muted-foreground">
-            {sample.patientRef.age}y
-          </span>
+        <PatientNameAge
+          firstName={sample.patientRef.firstName}
+          ageLabel={ageLabel}
+          className="text-sm font-medium text-foreground"
+        />
+        <p className="truncate text-xs text-muted-foreground">
+          {sample.loincDisplay || sample.loincCode || t('unknownTest')}
         </p>
-        <p className="truncate text-xs text-muted-foreground">{sample.loincDisplay}</p>
       </div>
 
       {/* Stability badge */}
@@ -157,7 +190,7 @@ export function WorklistItem({
           </span>
           <button
             type="button"
-            onClick={() => onResetOverride(sample.sampleId)}
+            onClick={(e) => { e.stopPropagation(); void onResetOverride(sample.sampleId) }}
             className="text-xs text-primary underline hover:text-primary/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
             aria-label={`Reset manual override for ${sample.patientRef.firstName}`}
           >
@@ -187,37 +220,39 @@ export function WorklistItem({
         {isArchivedView ? t('unarchive') : t('archive')}
       </button>
 
-      {/* Workflow actions — active shelf only; the archived shelf is a read-mostly holding area */}
-      {!isArchivedView && (
-        <>
-          {/* Re-collect sample — secondary action, opens ReceiveSampleModal for replacement */}
-          <button
-            type="button"
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={handleRecollect}
-            disabled={isLockedByOther}
-            className="shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
-            aria-label={`${t('recollect')} — ${sample.patientRef.firstName}`}
-            title={t('recollect')}
-          >
-            <RefreshCw size={12} aria-hidden="true" className="inline-block me-1" />
-            {t('recollect')}
-          </button>
+      {/* Re-collect sample — secondary action, opens ReceiveSampleModal for replacement */}
+      <button
+        type="button"
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={handleRecollect}
+        disabled={isLockedByOther}
+        className="shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+        aria-label={`${t('recollect')} — ${sample.patientRef.firstName}`}
+        title={t('recollect')}
+      >
+        <RefreshCw size={12} aria-hidden="true" className="inline-block me-1" />
+        {t('recollect')}
+      </button>
 
-          {/* Enter results for this sample — primary action (guarded when locked by another tech) */}
-          <button
-            type="button"
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={() => router.push(`/results/${sample.sampleId}/enter`)}
-            disabled={isLockedByOther}
-            className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
-            aria-label={`${t('enterResult')} — ${sample.patientRef.firstName}`}
-          >
-            {t('enterResult')}
-          </button>
-        </>
-      )}
+      {/* Enter results — always shown; disabled for expired / archived / locked samples. */}
+      <button
+        type="button"
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); router.push(`/results/${sample.sampleId}/enter`) }}
+        disabled={enterDisabled}
+        className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+        aria-label={`${t('enterResult')} — ${sample.patientRef.firstName}`}
+        title={
+          isExpired ? t('enterResultExpired') : isArchivedView ? t('enterResultArchived') : t('enterResult')
+        }
+      >
+        {t('enterResult')}
+      </button>
     </div>
+
+    {showDetails && (
+      <SampleDetailsModal sample={sample} onClose={() => setShowDetails(false)} />
+    )}
 
     {recollectProps && (
       <ReceiveSampleModal

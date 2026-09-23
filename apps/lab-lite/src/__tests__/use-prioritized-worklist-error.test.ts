@@ -14,12 +14,20 @@ import { getDb } from '../lib/db'
 
 vi.mock('next/navigation', () => ({ useRouter: vi.fn(), usePathname: vi.fn() }))
 
+// Control the hydration-settled gate: empty worklist only stops "loading" once
+// the initial hub hydration has settled. Default settled=true for legacy tests.
+let hydrationSettled = true
+vi.mock('@/lib/specimen-hydrate', () => ({
+  isSpecimenHydrationSettled: () => hydrationSettled,
+}))
+
 let uuidSeq = 0
 vi.stubGlobal('crypto', { randomUUID: () => `test-uuid-${++uuidSeq}` })
 
 describe('usePrioritizedWorklist — real Dexie error vs. legitimate empty', () => {
   beforeEach(async () => {
     uuidSeq = 0
+    hydrationSettled = true
     const db = getDb()
     await db.samples.clear()
     await db.orders.clear()
@@ -75,6 +83,26 @@ describe('usePrioritizedWorklist — real Dexie error vs. legitimate empty', () 
     // Must be genuine empty — no error
     expect(result.current.error).toBeNull()
     expect(result.current.samples).toHaveLength(0)
+  })
+
+  // -------------------------------------------------------------------------
+  // No false "empty": while the initial hub hydration is still pending, an
+  // empty local read must keep loading=true (never flash "no samples").
+  // -------------------------------------------------------------------------
+  it('keeps loading=true on an empty read while hub hydration is still pending', async () => {
+    hydrationSettled = false // hub pull not settled yet
+
+    const { usePrioritizedWorklist } = await import('../hooks/usePrioritizedWorklist')
+    const { result } = renderHook(() => usePrioritizedWorklist())
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50))
+    })
+
+    // Empty + not settled → still loading (skeleton), NOT a false empty state
+    expect(result.current.samples).toHaveLength(0)
+    expect(result.current.error).toBeNull()
+    expect(result.current.loading).toBe(true)
   })
 
   // -------------------------------------------------------------------------

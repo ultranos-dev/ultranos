@@ -212,6 +212,48 @@ describe('hydrateSamplesFromHub', () => {
     expect(result).toEqual({ hydrated: 0 })
   })
 
+  // ── Local-only field preservation on overwrite ─────────────────────────────
+
+  it('preserves the local archived flag when overwriting with newer hub data', async () => {
+    // Local sample is archived with an OLDER hlc; hub sends newer data (no archived).
+    mockSamplesGet.mockResolvedValue({
+      id: SPEC_ID,
+      _ultranos: { hlcTimestamp: HLC_OLDER, archived: true },
+    })
+    mockPullSpecimens.mockResolvedValue({ specimens: [{ ...baseDto, hlcTimestamp: HLC_BASE }] })
+
+    await hydrateSamplesFromHub(getToken)
+
+    const putArg = mockSamplesPut.mock.calls[0]?.[0]
+    expect(putArg._ultranos.archived).toBe(true) // NOT wiped by hub overwrite
+  })
+
+  it('preserves the local display stamp (name/age/tests) when overwriting', async () => {
+    mockSamplesGet.mockResolvedValue({
+      id: SPEC_ID,
+      _ultranos: {
+        hlcTimestamp: HLC_OLDER,
+        patientFirstName: 'Layla',
+        patientAge: 29,
+        orderedTests: [{ loincCode: '718-7', loincDisplay: 'Hemoglobin' }],
+      },
+    })
+    mockPullSpecimens.mockResolvedValue({ specimens: [{ ...baseDto, hlcTimestamp: HLC_BASE }] })
+
+    await hydrateSamplesFromHub(getToken)
+
+    const putArg = mockSamplesPut.mock.calls[0]?.[0]
+    expect(putArg._ultranos.patientFirstName).toBe('Layla')
+    expect(putArg._ultranos.patientAge).toBe(29)
+    expect(putArg._ultranos.orderedTests?.[0]?.loincDisplay).toBe('Hemoglobin')
+  })
+
+  it('marks hydration settled after running (used to gate the worklist loading state)', async () => {
+    const { isSpecimenHydrationSettled } = await import('../lib/specimen-hydrate')
+    await hydrateSamplesFromHub(getToken)
+    expect(isSpecimenHydrationSettled()).toBe(true)
+  })
+
   // ── Unparseable HLC guard ──────────────────────────────────────────────────
 
   it('still upserts when local hlc is unparseable (guard against bad stored data)', async () => {

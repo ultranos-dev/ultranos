@@ -23,6 +23,17 @@ import type { SpecimenPullDto } from './trpc'
 import type { FhirSpecimen } from '@ultranos/shared-types'
 
 /**
+ * True once the initial hub specimen hydration has been ATTEMPTED this session
+ * (success, empty, or failure). Consumers (e.g. the worklist) use this to avoid
+ * flashing a false "no samples" empty state while the hub pull is still pending —
+ * they keep showing a loading state until hydration settles.
+ */
+let hydrationSettled = false
+export function isSpecimenHydrationSettled(): boolean {
+  return hydrationSettled
+}
+
+/**
  * Map a `SpecimenPullDto` (Hub wire format) back into a `FhirSpecimen` for
  * local storage in `db.samples`. This is the inverse of specimen-sync's `toDto`.
  */
@@ -114,6 +125,25 @@ export async function hydrateSamplesFromHub(
         const local = await db.samples.get(dto.id) as FhirSpecimen | undefined
         if (shouldUpsert(local, dto.hlcTimestamp)) {
           const specimen = fromDto(dto)
+          // Preserve lab-local worklist fields the hub does NOT model. The hub
+          // DTO carries no `archived` flag or data-min display stamp, so a naive
+          // overwrite would silently un-archive a sample and blank its name/test
+          // on every boot. Carry these forward from the local row.
+          if (local) {
+            const localExt = local._ultranos as {
+              archived?: boolean
+              patientFirstName?: string
+              patientAge?: number | null
+              orderedTests?: FhirSpecimen['_ultranos']['orderedTests']
+            }
+            specimen._ultranos = {
+              ...specimen._ultranos,
+              ...(localExt.archived !== undefined ? { archived: localExt.archived } : {}),
+              ...(localExt.patientFirstName ? { patientFirstName: localExt.patientFirstName } : {}),
+              ...(localExt.patientAge != null ? { patientAge: localExt.patientAge } : {}),
+              ...(localExt.orderedTests ? { orderedTests: localExt.orderedTests } : {}),
+            }
+          }
           await db.samples.put(specimen)
           hydrated++
         }
@@ -128,5 +158,9 @@ export async function hydrateSamplesFromHub(
   } catch {
     // Fetch failure, token failure, or unexpected error — offline-safe, never throws.
     return { hydrated: 0 }
+  } finally {
+    // Mark settled in ALL paths (success / empty / failure) so the worklist stops
+    // showing a loading state and can render the genuine result.
+    hydrationSettled = true
   }
 }

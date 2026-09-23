@@ -560,13 +560,29 @@
     "emptyTitle": "هیچ نمونه‌ای در صف نیست",
     "emptyHint": "نمونه‌های دریافت‌شده به‌طور خودکار در اینجا نمایش داده می‌شوند.",
     "enterResult": "ثبت نتیجه",
+    "enterResultExpired": "نمونه منقضی شده — جمع‌آوری مجدد لازم است",
+    "enterResultArchived": "نمونه بایگانی‌شده — برای ثبت نتایج از بایگانی خارج کنید",
     "recollect": "جمع‌آوری مجدد",
     "archive": "بایگانی",
     "unarchive": "خروج از بایگانی",
+    "ageYears": "{age} ساله",
+    "unknownTest": "آزمایش نامشخص",
+    "viewSampleDetails": "مشاهده جزئیات نمونه {name}",
     "statusFilter": {
       "label": "وضعیت نمونه",
       "active": "فعال",
       "archived": "بایگانی‌شده"
+    },
+    "details": {
+      "title": "جزئیات نمونه",
+      "collectionSection": "جمع‌آوری",
+      "labSampleId": "شناسه نمونه آزمایشگاه",
+      "receivedAt": "دریافت",
+      "sampleType": "نوع نمونه",
+      "condition": "وضعیت",
+      "collectedBy": "جمع‌آوری‌شده توسط",
+      "status": "وضعیت",
+      "expired": "منقضی‌شده"
     },
     "searchPlaceholder": "جستجو بر اساس شناسه نمونه یا سفارش…"
   },

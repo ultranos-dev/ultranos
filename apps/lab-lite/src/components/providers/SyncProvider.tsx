@@ -90,10 +90,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // at most once per login. After resolving, dispatch an event so the worklist
     // can refresh and show restored samples immediately.
     if (typeof navigator !== 'undefined' && navigator.onLine) {
-      void hydrateSamplesFromHub(getToken).then(({ hydrated }) => {
-        if (hydrated > 0) {
-          window.dispatchEvent(new Event('lab-samples-hydrated'))
-        }
+      void hydrateSamplesFromHub(getToken).finally(() => {
+        // Always signal that the hub pull settled — even when nothing was
+        // hydrated — so the worklist can replace its loading state with the
+        // genuine result instead of a premature "no samples" empty state.
+        window.dispatchEvent(new Event('lab-samples-hydrated'))
       })
     }
 

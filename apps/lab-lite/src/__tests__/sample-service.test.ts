@@ -114,6 +114,25 @@ describe('accessionSample', () => {
     expect(specimen.note?.[0]?.text).toBe('Tech note')
   })
 
+  it('stamps data-minimized patient + ordered test onto the specimen when provided', async () => {
+    const specimen = await accessionSample({
+      ...BASE_INPUT,
+      patientFirstName: 'Ahmad',
+      patientAge: 30,
+      orderedTests: [{ loincCode: '58410-2', loincDisplay: 'CBC' }],
+    })
+    expect(specimen._ultranos.patientFirstName).toBe('Ahmad')
+    expect(specimen._ultranos.patientAge).toBe(30)
+    expect(specimen._ultranos.orderedTests?.[0]?.loincCode).toBe('58410-2')
+    expect(specimen._ultranos.orderedTests?.[0]?.loincDisplay).toBe('CBC')
+  })
+
+  it('omits stamp fields when not provided (backward compatible)', async () => {
+    const specimen = await accessionSample(BASE_INPUT)
+    expect(specimen._ultranos.patientFirstName).toBeUndefined()
+    expect(specimen._ultranos.orderedTests).toBeUndefined()
+  })
+
   it('advances linked order from RECEIVED to IN_PROGRESS after accessioning', async () => {
     // Seed a local RECEIVED order for the same orderId
     await putOrders([makeLabOrder({ orderId: BASE_INPUT.orderId, status: 'RECEIVED' })])
@@ -152,7 +171,23 @@ describe('setSampleArchived', () => {
     await db.samples.clear()
     await db.custody_events.clear()
     await db.syncQueue.clear()
+    await db.archived_samples.clear()
     vi.clearAllMocks()
+  })
+
+  it('records the sample in the durable archived_samples table', async () => {
+    const specimen = await accessionSample(BASE_INPUT)
+    await setSampleArchived(specimen.id, true, 'tech-001')
+    const row = await getDb().archived_samples.get(specimen.id)
+    expect(row).toBeDefined()
+  })
+
+  it('removes the archived_samples row on unarchive', async () => {
+    const specimen = await accessionSample(BASE_INPUT)
+    await setSampleArchived(specimen.id, true, 'tech-001')
+    await setSampleArchived(specimen.id, false, 'tech-001')
+    const row = await getDb().archived_samples.get(specimen.id)
+    expect(row).toBeUndefined()
   })
 
   it('sets archived=true on the specimen', async () => {

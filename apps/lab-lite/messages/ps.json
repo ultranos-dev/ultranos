@@ -560,13 +560,29 @@
     "emptyTitle": "په قطار کې هیڅ نمونه نشته",
     "emptyHint": "ترلاسه شوې نمونې به په اتوماتيک ډول دلته ښکاره شي.",
     "enterResult": "پایله دننه کړئ",
+    "enterResultExpired": "نمونه پای ته رسیدلې — بیا ټولول اړین دي",
+    "enterResultArchived": "آرشیف شوې نمونه — د پایلو د دننه کولو لپاره یې له آرشیفه وباسئ",
     "recollect": "بیا ټولول",
     "archive": "آرشیف",
     "unarchive": "له آرشیف ویستل",
+    "ageYears": "{age} کلن",
+    "unknownTest": "ناڅرګنده ازموینه",
+    "viewSampleDetails": "د {name} د نمونې جزئیات وګورئ",
     "statusFilter": {
       "label": "د نمونې حالت",
       "active": "فعال",
       "archived": "آرشیف شوی"
+    },
+    "details": {
+      "title": "د نمونې جزئیات",
+      "collectionSection": "ټولول",
+      "labSampleId": "د لابراتوار د نمونې پېژندنه",
+      "receivedAt": "ترلاسه شوه",
+      "sampleType": "د نمونې ډول",
+      "condition": "حالت",
+      "collectedBy": "ټولوونکی",
+      "status": "حالت",
+      "expired": "پای ته رسیدلې"
     },
     "searchPlaceholder": "د نمونې یا امر پیژندنې له مخې لټون…"
   },

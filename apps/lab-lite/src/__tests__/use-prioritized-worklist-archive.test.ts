@@ -16,9 +16,15 @@ vi.mock('next/navigation', () => ({ useRouter: vi.fn(), usePathname: vi.fn() }))
 
 function makeSpecimen(
   id: string,
-  opts: { pipelineStatus?: FhirSpecimen['_ultranos']['pipelineStatus']; archived?: boolean } = {},
+  opts: {
+    pipelineStatus?: FhirSpecimen['_ultranos']['pipelineStatus']
+    archived?: boolean
+    patientFirstName?: string
+    patientAge?: number
+    orderedTests?: Array<{ loincCode: string; loincDisplay: string }>
+  } = {},
 ): FhirSpecimen {
-  const { pipelineStatus = 'received', archived } = opts
+  const { pipelineStatus = 'received', archived, patientFirstName, patientAge, orderedTests } = opts
   return {
     id,
     resourceType: 'Specimen',
@@ -35,6 +41,9 @@ function makeSpecimen(
       pipelineStatus,
       sampleCondition: 'acceptable',
       ...(archived !== undefined ? { archived } : {}),
+      ...(patientFirstName ? { patientFirstName } : {}),
+      ...(patientAge !== undefined ? { patientAge } : {}),
+      ...(orderedTests ? { orderedTests } : {}),
     },
   } as FhirSpecimen
 }
@@ -46,13 +55,12 @@ describe('usePrioritizedWorklist — Active/Archived filter', () => {
     await db.orders.clear()
     await db.verified_patients.clear()
     await db.priorityOverrides.clear()
+    await db.archived_samples.clear()
     vi.restoreAllMocks()
 
-    await db.samples.bulkPut([
-      makeSpecimen('1'), // active, not archived
-      makeSpecimen('2', { archived: false }), // active, explicitly not archived
-      makeSpecimen('3', { archived: true }), // archived
-    ])
+    await db.samples.bulkPut([makeSpecimen('1'), makeSpecimen('2'), makeSpecimen('3')])
+    // Archive state is authoritative in the dedicated table (survives re-hydration).
+    await db.archived_samples.put({ sampleId: '3', archivedAt: '2026-09-20T08:00:00.000Z' })
   })
 
   afterEach(() => {
@@ -98,7 +106,61 @@ describe('usePrioritizedWorklist — Active/Archived filter', () => {
     await waitFor(() => expect(result.current.samples).toHaveLength(1))
     expect(result.current.samples.map((s) => s.sampleId)).toEqual(['2'])
 
-    const stored = await getDb().samples.get('1')
-    expect(stored!._ultranos.archived).toBe(true)
+    // Authoritative archive state is the dedicated table (durable across re-hydration).
+    const archivedRow = await getDb().archived_samples.get('1')
+    expect(archivedRow).toBeDefined()
+  })
+
+  it('archive state persists even when the specimen row is re-hydrated without the flag', async () => {
+    const { usePrioritizedWorklist } = await import('../hooks/usePrioritizedWorklist')
+    const { result } = renderHook(() => usePrioritizedWorklist())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    await act(async () => {
+      await result.current.setArchived('1', true)
+    })
+    await waitFor(() => expect(result.current.samples.map((s) => s.sampleId)).toEqual(['2']))
+
+    // Simulate a boot re-hydration overwriting the specimen row WITHOUT archived.
+    await getDb().samples.put(makeSpecimen('1'))
+
+    act(() => result.current.setStatusFilter('archived'))
+    // '1' and '3' are archived (per the table), regardless of the wiped row flag.
+    await waitFor(() => expect(result.current.samples.map((s) => s.sampleId).sort()).toEqual(['1', '3']))
+  })
+})
+
+describe('usePrioritizedWorklist — patient/test resolution from specimen stamp', () => {
+  beforeEach(async () => {
+    const db = getDb()
+    await db.samples.clear()
+    await db.orders.clear()
+    await db.verified_patients.clear()
+    await db.priorityOverrides.clear()
+    vi.restoreAllMocks()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('resolves name/age/test from the specimen stamp when the order row is gone', async () => {
+    // No order row seeded — the stamp is the only source (durable offline-first path).
+    await getDb().samples.put(
+      makeSpecimen('99', {
+        patientFirstName: 'Layla',
+        patientAge: 29,
+        orderedTests: [{ loincCode: '58410-2', loincDisplay: 'CBC' }],
+      }),
+    )
+
+    const { usePrioritizedWorklist } = await import('../hooks/usePrioritizedWorklist')
+    const { result } = renderHook(() => usePrioritizedWorklist())
+
+    await waitFor(() => expect(result.current.samples).toHaveLength(1))
+    const s = result.current.samples[0]!
+    expect(s.patientRef.firstName).toBe('Layla')
+    expect(s.patientRef.age).toBe(29)
+    expect(s.loincDisplay).toBe('CBC')
   })
 })

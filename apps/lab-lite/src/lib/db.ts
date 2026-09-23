@@ -816,10 +816,26 @@ export interface RedistributionRecommendation {
   dismissedUntil: string | null    // ISO 8601 — null = active
 }
 
+/**
+ * Archived-sample marker for the worklist "Archived" shelf.
+ *
+ * Stored in a DEDICATED table (not on the specimen row) because the `samples`
+ * table is wiped on session end and RE-HYDRATED from the Hub on every boot —
+ * which overwrites every specimen and would drop a row-level flag. Holds only
+ * the opaque specimen id (no PHI) and intentionally persists across sessions so
+ * an archived sample stays archived after re-hydration.
+ */
+export interface ArchivedSampleEntry {
+  sampleId: string
+  archivedAt: string // ISO 8601
+}
+
 class LabLiteDatabase extends Dexie {
   uploadQueue!: Dexie.Table<UploadQueueEntry, number>
   practitioner_keys!: Dexie.Table<PractitionerKeyCache, string>
   verified_patients!: Dexie.Table<VerifiedPatientCache, string>
+  /** v55 — worklist archive shelf markers (opaque specimen ids only). */
+  archived_samples!: Dexie.Table<ArchivedSampleEntry, string>
   patients!: Dexie.Table<any, string>
   syncQueue!: Dexie.Table<any, string>
   // v4 — Reagent Waste & Expiry Tracking (Story 44.3)
@@ -1998,6 +2014,13 @@ class LabLiteDatabase extends Dexie {
       competency_snapshots: '&id, technicianId, [technicianId+snapshotDate]',
       decay_notifications: '&id, technicianId, procedureRef, dismissed',
     })
+    // v55 — Worklist archive shelf. Dedicated marker table so an archived sample
+    // survives the PHI-clear + hub-rehydrate cycle that rewrites the specimen row
+    // on every boot. NOT a PHI table (opaque specimen ids only); persists across
+    // sessions so archive state is stable.
+    this.version(55).stores({
+      archived_samples: '&sampleId, archivedAt',
+    })
   }
 }
 
@@ -2633,6 +2656,35 @@ export async function getCachedPatient(patientId: string): Promise<VerifiedPatie
 export async function putVerifiedPatient(patient: VerifiedPatientCache): Promise<void> {
   const db = getDb()
   await db.verified_patients.put(patient)
+}
+
+// ---------------------------------------------------------------------------
+// Worklist archive shelf (v55)
+// Archive state lives in its OWN table so it survives the samples-table wipe +
+// hub re-hydration that happens on every boot. See ArchivedSampleEntry.
+// ---------------------------------------------------------------------------
+
+/** Return the set of currently-archived sample ids. */
+export async function getArchivedSampleIds(): Promise<Set<string>> {
+  const db = getDb()
+  const rows = await db.archived_samples.toArray()
+  return new Set(rows.map((r) => r.sampleId))
+}
+
+/** True if the given sample is archived. */
+export async function isSampleArchived(sampleId: string): Promise<boolean> {
+  const db = getDb()
+  return (await db.archived_samples.get(sampleId)) !== undefined
+}
+
+/** Archive (true) or unarchive (false) a sample by opaque id. */
+export async function setArchivedFlag(sampleId: string, archived: boolean): Promise<void> {
+  const db = getDb()
+  if (archived) {
+    await db.archived_samples.put({ sampleId, archivedAt: new Date().toISOString() })
+  } else {
+    await db.archived_samples.delete(sampleId)
+  }
 }
 
 // ---------------------------------------------------------------------------

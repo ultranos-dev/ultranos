@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { X } from '@ultranos/ui-kit/icons'
 import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
+import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import type { LabOrderEntry } from '@/lib/db'
 import { getPatientCulturalPreferences } from '@/lib/db'
 import type { CulturalFlag } from '@/lib/cultural-flags'
@@ -74,41 +74,32 @@ export function PatientDetailsModal({
         className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-xl bg-card shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 flex items-center justify-between border-b border-border bg-card px-6 py-4">
-          <h2 id="patient-details-title" className="text-lg font-semibold text-foreground">
-            {t('details.title')}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t('details.close')}
-            className="rounded p-1 text-muted-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <X size={20} aria-hidden="true" />
-          </button>
-        </div>
+        <ModalHeader
+          title={t('details.title')}
+          titleId="patient-details-title"
+          onClose={onClose}
+          closeLabel={t('details.close')}
+        />
 
         <div className="space-y-4 px-6 py-4">
-          {/* Patient — identity + clinical (fetched on demand, Rule #7 detail scope) */}
+          {/* Patient — avatar centered on its own row, name below, age is a field. */}
           <section>
-            <h3 className="mb-2 text-sm font-semibold text-foreground">{t('details.patientSection')}</h3>
-            {/* Avatar header — shows photo when available (signed URL from hub), else initials */}
-            <div className="mb-3 flex items-center gap-3">
+            <div className="mb-2 flex justify-center">
               <Avatar
                 src={details?.photoUrl}
                 name={details?.fullName.given ?? order.patientFirstName}
                 size={72}
+                ring
               />
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  {order.patientFirstName}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {order.patientAge != null ? t('card.ageYears', { age: order.patientAge }) : '—'}
-                </p>
-              </div>
             </div>
-            <PatientEnrichedDetails details={details} loading={loading} />
+            <p className="mb-3 text-center text-base font-bold text-foreground">
+              <bdi>{order.patientFirstName || '—'}</bdi>
+            </p>
+            <PatientEnrichedDetails
+              details={details}
+              loading={loading}
+              age={order.patientAge ?? undefined}
+            />
           </section>
 
           {/* Order context */}

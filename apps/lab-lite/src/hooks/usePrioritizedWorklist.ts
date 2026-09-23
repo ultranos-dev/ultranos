@@ -12,8 +12,9 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getDb, getPriorityOverrides, setPriorityOverride, clearPriorityOverride } from '@/lib/db'
+import { getDb, getPriorityOverrides, setPriorityOverride, clearPriorityOverride, getArchivedSampleIds } from '@/lib/db'
 import { setSampleArchived } from '@/lib/sample-service'
+import { isSpecimenHydrationSettled } from '@/lib/specimen-hydrate'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import {
   prioritizeSamples,
@@ -56,6 +57,8 @@ export interface UsePrioritizedWorklistResult {
    * Archive (true) or unarchive (false) a sample, then refresh the list.
    */
   setArchived: (sampleId: string, archived: boolean) => Promise<void>
+  /** Re-run the fetch/sort pipeline (e.g. after orders sync into Dexie). */
+  refresh: () => Promise<void>
 }
 
 /** Extract the orderId from a FHIR Reference string like "ServiceRequest/<id>". */
@@ -90,41 +93,37 @@ function buildSampleInput(
   order?: LabOrderEntry,
   verifiedPatient?: VerifiedPatientCache,
 ): SampleInput {
-  if (order) {
-    return {
-      sampleId: specimen.id,
-      orderId: order.orderId,
-      patientRef: {
-        firstName: order.patientFirstName,
-        age: order.patientAge ?? 0,
-      },
-      loincCode: order.testsRequested[0]?.loincCode ?? '',
-      loincDisplay: order.testsRequested[0]?.loincDisplay ?? '',
-      urgency: mapUrgency(order.urgency),
-      receivedAt: specimen.receivedTime,
-    }
+  // Resolution priority (never depend on any single source surviving):
+  //   patient name/age : order row → specimen stamp → verified_patients cache
+  //   ordered test     : order row → specimen stamp
+  // The specimen stamp (written at accession) is the durable offline-first source.
+  const ext = specimen._ultranos as {
+    patientFirstName?: string
+    patientAge?: number | null
+    orderedTests?: Array<{ loincCode?: string; loincDisplay?: string }>
+    orderedLoincCode?: string
   }
 
-  // Orphan path: order row is missing — use best-effort fallbacks.
-  const ext = (specimen._ultranos as any)
-  const loincCode: string =
-    ext?.orderedLoincCode ??
-    ext?.orderedTests?.[0]?.loincCode ??
+  const firstName =
+    order?.patientFirstName ?? ext.patientFirstName ?? verifiedPatient?.firstName ?? ''
+  const age =
+    order?.patientAge ?? ext.patientAge ?? verifiedPatient?.age ?? 0
+
+  const loincCode =
+    order?.testsRequested?.[0]?.loincCode ??
+    ext.orderedTests?.[0]?.loincCode ??
+    ext.orderedLoincCode ??
     ''
-  const loincDisplay: string =
-    ext?.orderedTests?.[0]?.loincDisplay ??
-    ''
+  const loincDisplay =
+    order?.testsRequested?.[0]?.loincDisplay ?? ext.orderedTests?.[0]?.loincDisplay ?? ''
 
   return {
     sampleId: specimen.id,
-    orderId,
-    patientRef: {
-      firstName: verifiedPatient?.firstName ?? '',
-      age: verifiedPatient?.age ?? 0,
-    },
+    orderId: order?.orderId ?? orderId,
+    patientRef: { firstName, age: age ?? 0 },
     loincCode,
     loincDisplay,
-    urgency: 'routine',
+    urgency: order ? mapUrgency(order.urgency) : 'routine',
     receivedAt: specimen.receivedTime,
   }
 }
@@ -155,14 +154,17 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
       // to an empty worklist — that would be a false-negative (Bug 3).
       let samplesReadError: unknown = null
       try {
+        // Archive state comes from the dedicated archived_samples table (durable
+        // across re-hydration), NOT the specimen row.
+        const archivedIds = await getArchivedSampleIds()
         // Attempt to use the samples table (may be empty if 42.3 not yet synced).
         // Active shelf: pipeline-active AND not archived.
-        // Archived shelf: any sample flagged archived (regardless of pipeline state).
+        // Archived shelf: any archived sample (regardless of pipeline state).
         const activeSamples = await db.samples
           .filter((s) =>
             statusFilter === 'archived'
-              ? s._ultranos.archived === true
-              : ACTIVE_STATUSES.has(s._ultranos.pipelineStatus) && s._ultranos.archived !== true,
+              ? archivedIds.has(s.id)
+              : ACTIVE_STATUSES.has(s._ultranos.pipelineStatus) && !archivedIds.has(s.id),
           )
           .toArray()
 
@@ -179,6 +181,10 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
             .anyOf(orderIds)
             .toArray()
           const orderMap = new Map(orders.map((o) => [o.orderId, o]))
+
+          // Specimens missing their display stamp but whose order is now known —
+          // backfilled below so pre-stamp samples become durable/offline-safe.
+          const backfills: FhirSpecimen[] = []
 
           for (const specimen of activeSamples) {
             const orderId = extractOrderId(specimen.request?.[0]?.reference ?? '')
@@ -197,6 +203,27 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
             }
 
             sampleInputs.push(buildSampleInput(specimen, orderId ?? '', order, verifiedPatient))
+
+            // Self-healing backfill: stamp the specimen from its order when the
+            // stamp is absent (samples accessioned before stamping shipped). One-time
+            // per specimen — once stamped, this branch is skipped.
+            const ext = specimen._ultranos as { patientFirstName?: string }
+            if (order && !ext.patientFirstName) {
+              backfills.push({
+                ...specimen,
+                _ultranos: {
+                  ...specimen._ultranos,
+                  patientFirstName: order.patientFirstName,
+                  patientAge: order.patientAge,
+                  orderedTests: order.testsRequested,
+                },
+              })
+            }
+          }
+
+          // Persist backfills best-effort — never block or fail the worklist render.
+          if (backfills.length > 0) {
+            void db.samples.bulkPut(backfills).catch(() => {})
           }
         }
         // else: legitimate empty — 42.3 not yet synced; sampleInputs stays []
@@ -233,7 +260,13 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
       if (!cancelledRef.current) {
         setSamples(finalList)
         setError(null)
-        setLoading(false)
+        // Never flash a false "no samples" empty state while the initial hub
+        // hydration is still pending: keep loading until it settles when the
+        // local result is empty. Offline → treat as settled (nothing to wait for).
+        const offline = typeof navigator !== 'undefined' && !navigator.onLine
+        const hydrationPending =
+          finalList.length === 0 && !isSpecimenHydrationSettled() && !offline
+        setLoading(hydrationPending)
       }
     } catch (err) {
       if (!cancelledRef.current) {
@@ -307,5 +340,6 @@ export function usePrioritizedWorklist(): UsePrioritizedWorklistResult {
     reorder,
     resetOverride,
     setArchived,
+    refresh: fetchAndSort,
   }
 }

@@ -89,18 +89,27 @@ export default function ResultEntryPage({ params }: PageProps) {
           const linkedOrderId = (s.request?.[0]?.reference ?? '').replace('ServiceRequest/', '')
           if (linkedOrderId) {
             order = await db.table('orders').where('orderId').equals(linkedOrderId).first()
-            const loinc = order?.testsRequested?.[0]?.loincCode
-            if (loinc) setOrderedLoincCode(loinc)
           }
+          // LOINC: order row → specimen stamp (accession copy). Ensures the correct
+          // template loads even when the order row is gone.
+          const stampedLoinc = (s._ultranos as { orderedTests?: Array<{ loincCode?: string }> })
+            .orderedTests?.[0]?.loincCode
+          const loinc = order?.testsRequested?.[0]?.loincCode ?? stampedLoinc
+          if (loinc) setOrderedLoincCode(loinc)
         } catch {
           // Orders table unavailable/cleared — fall back to the generic template.
         }
         const patientRef = s.subject?.reference ?? ''
         const patientId = patientRef.replace('Patient/', '')
         const cached = patientId ? await db.verified_patients.get(patientId) : undefined
-        // Prefer the verified-patient cache; fall back to the order (name + age only).
-        setPatientFirstName(cached?.firstName ?? order?.patientFirstName ?? t('unknownPatient'))
-        setPatientAge(cached?.age ?? order?.patientAge ?? 0)
+        // Data-minimized display copy stamped on the specimen at accession — the
+        // durable fallback when neither the order row nor the verified cache is present.
+        const stamp = s._ultranos as { patientFirstName?: string; patientAge?: number | null }
+        // Resolution priority: order → specimen stamp → verified cache → unknown.
+        setPatientFirstName(
+          order?.patientFirstName ?? stamp.patientFirstName ?? cached?.firstName ?? t('unknownPatient'),
+        )
+        setPatientAge(order?.patientAge ?? stamp.patientAge ?? cached?.age ?? 0)
 
         // Resolve gender from the full patient record (used for reference ranges only)
         const fullPatient = patientId

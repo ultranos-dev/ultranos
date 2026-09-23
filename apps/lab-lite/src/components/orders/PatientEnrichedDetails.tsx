@@ -25,28 +25,31 @@ export function PatientEnrichedDetails({
   details,
   loading,
   variant = 'full',
+  age,
 }: {
   details: LabOrderPatientDetails | null
   loading: boolean
   variant?: 'full' | 'compact'
+  /** Data-minimized age (years). When provided, renders as its own field after Full name. */
+  age?: number | null
 }) {
   const t = useTranslations('orders')
 
   if (loading) return <p className="text-sm text-muted-foreground">{t('details.loading')}</p>
-  if (!details) return <p className="text-sm text-muted-foreground">{t('details.unavailable')}</p>
 
-  const v = details.vitals
+  const v = details?.vitals
   const rows: Row[] = []
-  const fn = fullNameStr(details.fullName)
+  const fn = details ? fullNameStr(details.fullName) : ''
   if (fn) rows.push({ label: t('details.fullName'), value: <bdi>{fn}</bdi> })
-  if (details.bloodGroup) rows.push({ label: t('details.bloodGroup'), value: details.bloodGroup, numeric: true })
-  if (v.weightKg != null) rows.push({ label: t('details.weight'), value: `${v.weightKg} kg`, numeric: true })
-  if (v.heightCm != null) rows.push({ label: t('details.height'), value: `${v.heightCm} cm`, numeric: true })
-  if (v.bmi != null) rows.push({ label: t('details.bmi'), value: `${v.bmi}`, numeric: true })
-  if (v.bpSystolic != null && v.bpDiastolic != null) {
+  if (age != null) rows.push({ label: t('details.age'), value: String(age), numeric: true })
+  if (details?.bloodGroup) rows.push({ label: t('details.bloodGroup'), value: details.bloodGroup, numeric: true })
+  if (v?.weightKg != null) rows.push({ label: t('details.weight'), value: `${v.weightKg} kg`, numeric: true })
+  if (v?.heightCm != null) rows.push({ label: t('details.height'), value: `${v.heightCm} cm`, numeric: true })
+  if (v?.bmi != null) rows.push({ label: t('details.bmi'), value: `${v.bmi}`, numeric: true })
+  if (v?.bpSystolic != null && v?.bpDiastolic != null) {
     rows.push({ label: t('details.bloodPressure'), value: `${v.bpSystolic}/${v.bpDiastolic} mmHg`, numeric: true })
   }
-  if (v.temperatureC != null) rows.push({ label: t('details.temperature'), value: `${v.temperatureC} °C`, numeric: true })
+  if (v?.temperatureC != null) rows.push({ label: t('details.temperature'), value: `${v.temperatureC} °C`, numeric: true })
 
   if (rows.length === 0) return <p className="text-sm text-muted-foreground">{t('details.unavailable')}</p>
 
