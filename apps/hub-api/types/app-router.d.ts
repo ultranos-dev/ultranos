@@ -1112,7 +1112,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             };
             meta: object;
         }>;
-        verifyPatient: import("@trpc/server").TRPCQueryProcedure<{
+        verifyPatient: import("@trpc/server").TRPCMutationProcedure<{
             input: {
                 query: string;
                 method: "NATIONAL_ID" | "QR_SCAN";
@@ -1130,6 +1130,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 orderId: string;
             };
             output: {
+                gender: string | null;
                 photoUrl: string | null;
                 bloodGroup: string | null;
                 fullName: {
@@ -1400,12 +1401,17 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 events: {
                     patientRef: string;
                     hlcTimestamp: string;
-                    medicationDisplay: string;
                     dispensedAt: string;
-                    atcCode: string;
                     patientFirstName: string;
                     patientAge: number | null;
                     dispensingEventId: string;
+                    requirements: {
+                        loincCode: string;
+                        testDisplay: string;
+                        initialDelayDays: number;
+                        frequencyDays: number;
+                        priority: "routine" | "urgent";
+                    }[];
                     orderingPractitionerRef: string;
                 }[];
             };
@@ -1423,8 +1429,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     requiredTests: {
                         loincCode: string;
                         testDisplay: string;
-                        frequencyDays: number;
                         initialDelayDays: number;
+                        frequencyDays: number;
                         priority: "routine" | "urgent";
                     }[];
                 }[];
