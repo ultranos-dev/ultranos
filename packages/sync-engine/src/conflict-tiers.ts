@@ -35,9 +35,31 @@ const CONFLICT_TIER_MAP: Record<string, ConflictTier> = {
 }
 
 /**
+ * Resource types we have already warned about, so the unmapped-type warning
+ * fires exactly once per type per session (not once per conflict check).
+ */
+const warnedUnmappedTypes = new Set<string>()
+
+/**
  * Get the conflict resolution tier for a FHIR resource type.
- * Unknown resource types default to TIER_3 (LWW).
+ *
+ * Unknown resource types default to TIER_2 (timestamp-based, both versions
+ * kept as addenda) — NOT TIER_3 (LWW). Defaulting an unmapped clinical type
+ * to LWW would silently discard one version of potentially clinical data;
+ * TIER_2 is the fail-safe default because both versions are retained.
+ * A one-time console warning names the unmapped type (type name only — never
+ * resource contents) so the missing mapping gets noticed and added.
  */
 export function getConflictTier(resourceType: string): ConflictTier {
-  return CONFLICT_TIER_MAP[resourceType] ?? 'TIER_3'
+  const mapped = CONFLICT_TIER_MAP[resourceType]
+  if (mapped) return mapped
+
+  if (!warnedUnmappedTypes.has(resourceType)) {
+    warnedUnmappedTypes.add(resourceType)
+    console.warn(
+      `[sync-engine] Resource type "${resourceType}" has no entry in CONFLICT_TIER_MAP — ` +
+        'defaulting to TIER_2 (both versions kept). Add an explicit tier mapping.',
+    )
+  }
+  return 'TIER_2'
 }

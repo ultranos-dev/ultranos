@@ -291,7 +291,9 @@ describe('Tier 3 — Operational (Last-Write-Wins)', () => {
     expect(result.kept[0]).toBe(local)
   })
 
-  it('unknown resource types default to Tier 3 LWW', () => {
+  it('unknown resource types default to Tier 2 timestamp-wins (fail-safe: both versions kept)', () => {
+    // Story 60.2 (AC 4): unmapped types no longer fall to Tier 3 LWW —
+    // LWW would silently discard one version of potentially clinical data.
     const local = makeSyncRecord({
       data: { value: 'old' },
       hlcTimestamp: hlc(baseTime, 0, 'node-A'),
@@ -303,9 +305,9 @@ describe('Tier 3 — Operational (Last-Write-Wins)', () => {
 
     const result = resolveConflict(local, remote, 'CustomResource')
 
-    expect(result.strategy).toBe('LWW')
+    expect(result.strategy).toBe('TIMESTAMP_WINS')
     expect(result.winner).toBe('remote')
-    expect(result.kept).toHaveLength(1)
+    expect(result.kept).toHaveLength(2)
   })
 })
 

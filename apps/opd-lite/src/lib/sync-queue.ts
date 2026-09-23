@@ -4,15 +4,20 @@
  * Wires the generic sync-engine queue to the Dexie syncQueue table.
  * Imported by stores to enqueue sync operations on local writes.
  *
- * Encryption (Story 28.3):
+ * Encryption (Story 28.3, hardened in Story 60.2):
  * - Payloads are encrypted with the session key before IndexedDB storage.
  * - Stored format: enc:<version>:<base64> (ENCRYPTED_PAYLOAD_PREFIX + versioned AES-GCM payload).
- * - If the session key is unavailable at enqueue time, payload is stored as plaintext
- *   and encrypted in-place on next startup by the migration utility.
+ * - If the session key is unavailable (or encryption throws) at enqueue time,
+ *   the payload is NEVER stored as plaintext. It is held in memory only and
+ *   flushed (encrypted + enqueued) once re-authentication restores the key —
+ *   see flushHeldEnqueues(), wired in key-lifecycle-hooks.ts.
+ * - The startup migration (sync-queue-migration.ts) still encrypts any LEGACY
+ *   plaintext rows written before this hardening.
  */
 
 import {
   createSyncQueue,
+  runRetentionPass,
   ENCRYPTED_PAYLOAD_PREFIX,
   type SyncQueueStorage,
   type SyncQueueEntry,
@@ -22,6 +27,9 @@ import {
 import { encryptPayload, decryptPayload } from '@ultranos/crypto'
 import { db } from './db'
 import { encryptionKeyStore } from './encryption-key-store'
+import { auditPhiAccess, AuditAction } from './audit'
+import type { AuditResourceType } from './audit'
+import { useSyncStore } from '@/stores/sync-store'
 
 /** Dexie-backed storage adapter for the sync queue. */
 const dexieStorage: SyncQueueStorage = {
@@ -92,29 +100,158 @@ const rawQueue = createSyncQueue(dexieStorage, undefined, {
 })
 
 /**
+ * Plaintext sync inputs held in MEMORY ONLY because they could not be
+ * encrypted at enqueue time (session key unavailable / encryption threw).
+ * Never persisted — persisting them anywhere would put plaintext PHI at
+ * rest in IndexedDB, the exact fail-open this hardening removes (P-CRYPTO-1).
+ * Flushed by flushHeldEnqueues() once the key is restored. Like the session
+ * key itself, held entries do not survive a tab close; the underlying
+ * clinical record write is the durable source of truth.
+ */
+const heldForEncryption: EnqueueInput[] = []
+
+/** Number of sync inputs currently held awaiting an encryption key. */
+export function getHeldForEncryptionCount(): number {
+  return heldForEncryption.length
+}
+
+/**
+ * Encrypt + enqueue every held input. Called on re-authentication once the
+ * session key is restored (key-lifecycle-hooks.ts), mirroring how persisted
+ * 'awaiting-key' entries are drained after key restore. Never throws.
+ */
+export async function flushHeldEnqueues(): Promise<void> {
+  if (heldForEncryption.length === 0) return
+  const snapshot = heldForEncryption.splice(0, heldForEncryption.length)
+  for (const input of snapshot) {
+    try {
+      await syncQueue.enqueue(input)
+    } catch {
+      // enqueue() already surfaced/re-held the failure — never throw upstream.
+    }
+  }
+}
+
+/** Extract an error class name from Error OR DOMException (which is not an Error instance in every runtime). */
+function getErrorName(err: unknown): string {
+  if (typeof err === 'object' && err !== null && 'name' in err) {
+    const name = (err as { name?: unknown }).name
+    if (typeof name === 'string' && name.length > 0) return name
+  }
+  return 'UnknownError'
+}
+
+/** Classify + surface an enqueue failure to the UI and the audit log. No PHI. */
+function surfaceEnqueueFailure(input: EnqueueInput, err: unknown): void {
+  const errorName = getErrorName(err)
+  const message =
+    typeof err === 'object' && err !== null && 'message' in err
+      ? String((err as { message?: unknown }).message ?? '')
+      : ''
+  const isQuota = errorName === 'QuotaExceededError' || message.includes('QuotaExceeded')
+  try {
+    useSyncStore
+      .getState()
+      .setSyncError(isQuota ? 'STORAGE_QUOTA_EXCEEDED' : 'SYNC_ENQUEUE_FAILED')
+  } catch {
+    // Store unavailable (e.g. unit tests) — the audit event below still fires.
+  }
+  auditPhiAccess(
+    AuditAction.SYNC,
+    input.resourceType as AuditResourceType,
+    input.resourceId,
+    undefined,
+    { syncOutcome: 'failure', reason: 'enqueue_failed', errorName, action: input.action },
+  )
+}
+
+/** Hold an input in memory (never plaintext at rest) + surface why. No PHI. */
+function holdForEncryption(input: EnqueueInput, reason: 'key_unavailable' | 'encrypt_failed'): void {
+  heldForEncryption.push(input)
+  try {
+    useSyncStore.getState().setSyncError('SYNC_ENCRYPTION_UNAVAILABLE')
+  } catch {
+    // Store unavailable (e.g. unit tests) — the audit event below still fires.
+  }
+  auditPhiAccess(
+    AuditAction.SYNC,
+    input.resourceType as AuditResourceType,
+    input.resourceId,
+    undefined,
+    { syncOutcome: 'failure', reason, action: input.action, held: true },
+  )
+  console.warn(`[sync-queue] payload held in memory (${reason}) — will encrypt + enqueue after key restore`)
+}
+
+/**
  * Queue proxy that transparently encrypts payloads on enqueue.
  * All other queue operations delegate to the underlying queue unchanged.
+ *
+ * FAIL-SAFE (Story 60.2 / P-CRYPTO-1): a plaintext payload is NEVER written
+ * to IndexedDB. If it cannot be encrypted right now, it is held in memory
+ * and flushed after key restore. Storage failures (quota, corruption) are
+ * surfaced to the sync UI + audit log, then re-thrown so callers keep the
+ * pre-existing propagation semantics (enqueueSyncAction never throws).
  */
 export const syncQueue: SyncQueue = {
   ...rawQueue,
   async enqueue(input) {
     assertSerializedHlc(input.hlcTimestamp)
-    const key = encryptionKeyStore.getKey()
-    if (key && !input.payload.startsWith(ENCRYPTED_PAYLOAD_PREFIX)) {
+
+    // Already-encrypted payloads pass straight through.
+    if (input.payload.startsWith(ENCRYPTED_PAYLOAD_PREFIX)) {
       try {
-        const encryptedBase64 = await encryptPayload(key, input.payload)
-        return rawQueue.enqueue({
-          ...input,
-          payload: `${ENCRYPTED_PAYLOAD_PREFIX}${encryptedBase64}`,
-        })
-      } catch {
-        // Encryption failed (e.g. SubtleCrypto unavailable, key revoked mid-call).
-        // Fall through to store plaintext — startup migration will encrypt on next login.
-        console.warn('[sync-queue] encryptPayload failed; storing plaintext for migration')
+        return await rawQueue.enqueue(input)
+      } catch (err) {
+        surfaceEnqueueFailure(input, err)
+        throw err
       }
     }
-    return rawQueue.enqueue(input)
+
+    const key = encryptionKeyStore.getKey()
+    if (!key) {
+      // No session key: never store plaintext — hold in memory until restore.
+      holdForEncryption(input, 'key_unavailable')
+      return
+    }
+
+    let encryptedBase64: string
+    try {
+      encryptedBase64 = await encryptPayload(key, input.payload)
+    } catch {
+      // Encryption failed (SubtleCrypto unavailable, key revoked mid-call).
+      // NEVER fall back to storing plaintext — hold in memory instead.
+      holdForEncryption(input, 'encrypt_failed')
+      return
+    }
+
+    try {
+      return await rawQueue.enqueue({
+        ...input,
+        payload: `${ENCRYPTED_PAYLOAD_PREFIX}${encryptedBase64}`,
+      })
+    } catch (err) {
+      // Storage failure (QuotaExceededError, IndexedDB corruption) — surface
+      // to UI + audit instead of letting it vanish into a console.warn.
+      surfaceEnqueueFailure(input, err)
+      throw err
+    }
   },
+}
+
+/**
+ * Retention pass over synced queue rows (Story 60.2): delete synced entries
+ * older than the default 30-day window (keeping the newest, payload-stripped,
+ * so lastSyncedAt survives). Never touches pending/failed/awaiting-key/
+ * conflict entries — that invariant lives in runRetentionPass itself.
+ * Best-effort: never throws.
+ */
+export async function runSyncQueueRetention(): Promise<void> {
+  try {
+    await runRetentionPass(dexieStorage)
+  } catch {
+    // Retention is housekeeping — never let it break sync startup.
+  }
 }
 
 /**

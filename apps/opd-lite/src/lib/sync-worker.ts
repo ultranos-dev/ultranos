@@ -9,7 +9,7 @@
 import { DrainWorker, ConnectivityManager, isImmediateSyncTier, type SyncResult, type SyncQueueEntry, type ConflictResolution, type SyncRecord } from '@ultranos/sync-engine'
 import { createMeterFetch } from '@ultranos/sync-engine'
 import { recordDataUsage } from './db'
-import { syncQueue, decryptEntryPayload, setOnEnqueuedBridge } from './sync-queue'
+import { syncQueue, decryptEntryPayload, setOnEnqueuedBridge, runSyncQueueRetention } from './sync-queue'
 import { encryptionKeyStore } from './encryption-key-store'
 import { auditPhiAccess, AuditAction } from './audit'
 import type { AuditResourceType } from './audit'
@@ -195,6 +195,10 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
   })
 
   worker.start()
+
+  // Housekeeping: bound synced-row PHI payload retention (Story 60.2).
+  // Fire-and-forget on worker start; never blocks or fails sync startup.
+  void runSyncQueueRetention()
 
   // Bridge browser connectivity events into the manager for prompt state flips.
   // Use stable named refs so listeners can be removed on stop, preventing

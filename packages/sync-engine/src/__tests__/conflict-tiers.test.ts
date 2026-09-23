@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { getConflictTier } from '../conflict-tiers.js'
 
 describe('getConflictTier', () => {
@@ -46,7 +46,23 @@ describe('getConflictTier', () => {
     expect(getConflictTier('Consent')).toBe('CONSENT')
   })
 
-  it('defaults unknown resource types to TIER_3', () => {
-    expect(getConflictTier('UnknownResource')).toBe('TIER_3')
+  it('defaults unknown resource types to TIER_2 (fail-safe: both versions kept, never LWW)', () => {
+    // Story 60.2 (AC 4): an unmapped type must never silently fall to LWW.
+    expect(getConflictTier('UnknownResource')).toBe('TIER_2')
+  })
+
+  it('warns exactly once per unmapped resource type (type name only)', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      getConflictTier('NeverMappedTypeA')
+      getConflictTier('NeverMappedTypeA')
+      getConflictTier('NeverMappedTypeA')
+      const callsForType = warnSpy.mock.calls.filter((c) =>
+        String(c[0]).includes('NeverMappedTypeA'),
+      )
+      expect(callsForType).toHaveLength(1)
+    } finally {
+      warnSpy.mockRestore()
+    }
   })
 })

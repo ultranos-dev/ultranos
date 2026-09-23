@@ -21,6 +21,15 @@ function describeSyncError(reason: string): string {
   if (reason.includes('HUB_REFRESH_FAILED')) {
     return 'Couldn’t reach the Hub to refresh data. Showing the last synced copy. It may be temporarily unreachable.'
   }
+  if (reason.includes('STORAGE_QUOTA_EXCEEDED')) {
+    return 'Local storage is full — the latest change could not be queued for sync. Free up device storage, then retry the change.'
+  }
+  if (reason.includes('SYNC_ENQUEUE_FAILED')) {
+    return 'A change could not be queued for sync due to a local storage error. Retry the change; contact support if this persists.'
+  }
+  if (reason.includes('SYNC_ENCRYPTION_UNAVAILABLE')) {
+    return 'A change is waiting for your session key before it can be queued for sync. It will be queued automatically after you sign in again.'
+  }
   return `Couldn’t refresh encounters (${reason}). Push and the patient directory are unaffected.`
 }
 

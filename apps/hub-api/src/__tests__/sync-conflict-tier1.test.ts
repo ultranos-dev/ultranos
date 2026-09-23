@@ -227,15 +227,21 @@ describe('sync.push — Tier-1 append-only conflict pipeline', () => {
     expect(sink.upserts[0]!.table).toBe('allergy_intolerances')
   })
 
-  it('does NOT flag a clearly-later edit from another device outside the 60s window (applies the update)', async () => {
+  it('flags a cross-device Tier-1 edit even outside the 60s window (Rule #5 has no time window)', async () => {
+    // Story 60.2 / H-HUB-6: previously a divergent Tier-1 write arriving >60s
+    // after the stored write silently overwrote it. Append-only has no window:
+    // both versions must be retained and flagged for physician review.
     const sink: Sink = { upserts: [], conflicts: [] }
     const caller = createCaller({ supabase: makeSupabase(sink), user: TEST_USER, headers: new Headers() })
 
     const { results } = await caller.sync.push({ operations: [allergyOp(HLC_LATER_OTHER_OUTSIDE)] })
 
-    expect(results[0]!.success).toBe(true)
-    expect(sink.conflicts).toHaveLength(0)
-    expect(sink.upserts).toHaveLength(1)
+    expect(results[0]!.success).toBe(false)
+    expect(results[0]!.conflict).toBeDefined()
+    expect(sink.conflicts).toHaveLength(1)
+    expect(sink.conflicts[0]!.status).toBe('UNRESOLVED')
+    // Never overwrote the stored Tier-1 row.
+    expect(sink.upserts).toHaveLength(0)
   })
 
   it('does NOT create a Tier-1 conflict row for a non-Tier-1 resource (Encounter uses timestamp-wins)', async () => {

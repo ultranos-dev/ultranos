@@ -39,7 +39,14 @@ export type {
 
 export { createSyncQueue, getBackoffMs, ENCRYPTED_PAYLOAD_PREFIX } from './queue.js'
 export { enqueueSyncAction } from './enqueue.js'
-export type { EnqueueSyncActionInput, EnqueueEncryptFn } from './enqueue.js'
+export type {
+  EnqueueSyncActionInput,
+  EnqueueEncryptFn,
+  EnqueueSyncHooks,
+  EnqueueErrorInfo,
+} from './enqueue.js'
+export { runRetentionPass, DEFAULT_RETENTION_DAYS } from './retention.js'
+export type { RetentionOptions, RetentionResult } from './retention.js'
 export { DrainWorker, isImmediateSyncTier } from './drain-worker.js'
 export type { SyncResult, DrainWorkerConfig } from './drain-worker.js'
 export type {

@@ -91,7 +91,10 @@ describe('sync queue', () => {
       const pending = await queue.getPending()
       expect(pending).toHaveLength(1)
       expect(pending[0]!.payload).toBe('{"version":2}')
-      expect(pending[0]!.action).toBe('update')
+      // Story 60.2 (AC 6): a pending 'create' merged with a subsequent
+      // 'update' PRESERVES create semantics — the resource never reached
+      // the Hub, so the merged operation must still create it there.
+      expect(pending[0]!.action).toBe('create')
     })
 
     it('does not deduplicate entries with different resourceIds', async () => {

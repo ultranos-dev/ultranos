@@ -4,7 +4,7 @@ import { createTRPCRouter, protectedProcedure } from '../init'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
-import { compareHlc, deserializeHlc, resolveConflict } from '@ultranos/sync-engine'
+import { compareHlc, deserializeHlc, resolveConflict, getConflictTier } from '@ultranos/sync-engine'
 import { flattenForDb } from '@/lib/resource-mappers'
 import { encryptJsonbValue } from '@/lib/field-encryption'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -242,13 +242,23 @@ export const syncRouter = createTRPCRouter({
             const cmp = compareHlc(incomingHlc, storedHlc)
             const withinWindow =
               Math.abs(incomingHlc.wallMs - storedHlc.wallMs) <= TIER1_CONFLICT_WINDOW_MS
+            const differentNode = incomingHlc.nodeId !== storedHlc.nodeId
+
+            // Tier-1 resource types (append-only, Rule #5) have NO time window:
+            // any cross-device write onto an existing Tier-1 row is a potential
+            // divergence and must go through conflict resolution, even when it
+            // arrives long after the stored write. The 60s window remains the
+            // concurrency heuristic for the other tiers (Tier-4 semantics).
+            const tier1CrossNodePotential =
+              differentNode && getConflictTier(op.resourceType) === 'TIER_1'
 
             // Only fetch the stored row + resolve when there is a *potential* conflict:
-            // the incoming write is older/equal (optimistic concurrency) OR concurrent
-            // with the stored write (within the 60s window). A clearly-later write
-            // (strictly newer AND outside the window) is a clean sequential update —
-            // fall straight through to the upsert below with no extra query.
-            if (cmp <= 0 || withinWindow) {
+            // the incoming write is older/equal (optimistic concurrency), concurrent
+            // with the stored write (within the 60s window), or a cross-device write
+            // to a Tier-1 resource (no window — see above). A clearly-later same-node
+            // write (or non-Tier-1 cross-node write outside the window) is a clean
+            // sequential update — fall straight through to the upsert below.
+            if (cmp <= 0 || withinWindow || tier1CrossNodePotential) {
               const { data: fullRow } = await ctx.supabase
                 .from(tableName)
                 .select('*')
@@ -277,17 +287,15 @@ export const syncRouter = createTRPCRouter({
                 )
 
                 // Tier-1 safety-critical data (allergies, active meds/conditions)
-                // resolves APPEND_ONLY — never LWW-overwrite. Treat as a conflict
-                // for physician review only when the incoming write genuinely
-                // diverged on another device: a different HLC node AND either a
-                // stale write (cmp <= 0) or a concurrent one (within the 60s window).
-                // Same-device linear edits and clearly-later cross-device updates
-                // are legitimate updates, not conflicts.
-                const differentNode = incomingHlc.nodeId !== storedHlc.nodeId
+                // resolves APPEND_ONLY — never LWW-overwrite. Rule #5 has NO time
+                // window: ANY cross-device (different HLC node) write onto an
+                // existing Tier-1 row is treated as divergence and flagged for
+                // physician review, even when it arrives more than 60s after the
+                // stored write (previously such writes silently overwrote —
+                // audit finding H-HUB-6). Same-device linear edits remain
+                // legitimate sequential updates, not conflicts.
                 const isTier1Conflict =
-                  resolution.strategy === 'APPEND_ONLY' &&
-                  differentNode &&
-                  (cmp <= 0 || withinWindow)
+                  resolution.strategy === 'APPEND_ONLY' && differentNode
 
                 if (isTier1Conflict) {
                   // Persist BOTH versions (encrypted at rest) as an UNRESOLVED

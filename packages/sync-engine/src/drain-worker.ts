@@ -233,7 +233,17 @@ export class DrainWorker {
           this.config.onAudit?.(entry, 'failure')
         }
       } else {
-        await this.config.queue.markSynced(entry.id)
+        // No onConflict handler configured: NEVER mark synced — that would
+        // silently discard the conflict (the local version would appear
+        // synced while the Hub kept its divergent copy). Terminal-fail the
+        // entry so it surfaces in failedCount / the sync error UI; retrying
+        // is pointless because no handler exists to ever resolve it.
+        await this.config.queue.markFailed(
+          entry.id,
+          'CONFLICT_UNHANDLED -- no onConflict handler configured',
+          { terminal: true },
+        )
+        this.config.onAudit?.(entry, 'failure')
       }
       return
     }

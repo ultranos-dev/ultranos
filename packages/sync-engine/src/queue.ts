@@ -71,9 +71,18 @@ export function createSyncQueue(
       const existingPending = await storage.getByResourceId(input.resourceId, 'pending')
 
       if (existingPending) {
+        // Dedup-merge: a pending 'create' followed by an 'update' for the same
+        // resource must PRESERVE create semantics — the resource has never
+        // reached the Hub, so the merged operation still creates it there.
+        // Any other action combination takes the incoming action (e.g. a
+        // 'delete' after a 'create' must remain a 'delete').
+        const mergedAction =
+          existingPending.action === 'create' && input.action === 'update'
+            ? 'create'
+            : input.action
         await storage.put({
           ...existingPending,
-          action: input.action,
+          action: mergedAction,
           payload: input.payload,
           hlcTimestamp: input.hlcTimestamp,
           createdAt: new Date().toISOString(),
@@ -134,7 +143,13 @@ export function createSyncQueue(
       })
     },
 
-    async markFailed(id: string, reason?: string): Promise<void> {
+    /**
+     * Mark an entry as failed. Retries with backoff until maxRetries, then
+     * terminal 'failed'. Pass `opts.terminal` to skip retries entirely and go
+     * straight to 'failed' — used for non-retryable outcomes (e.g. a conflict
+     * with no conflict handler configured, where retrying can never succeed).
+     */
+    async markFailed(id: string, reason?: string, opts?: { terminal?: boolean }): Promise<void> {
       const pending = await storage.getByStatus('pending')
       const syncing = await storage.getByStatus('syncing')
       const entry = [...pending, ...syncing].find((e) => e.id === id)
@@ -143,7 +158,7 @@ export function createSyncQueue(
       const newRetryCount = entry.retryCount + 1
       const nowIso = new Date().toISOString()
 
-      if (newRetryCount >= maxRetries) {
+      if (opts?.terminal || newRetryCount >= maxRetries) {
         await storage.put({
           ...entry,
           status: 'failed',
@@ -189,7 +204,7 @@ export function createSyncQueue(
 
     /**
      * Recover stale entries stuck in 'syncing' status (e.g., after a crash).
-     * Does NOT touch 'awaiting-key' entries � those require key restoration.
+     * Does NOT touch 'awaiting-key' entries — those require key restoration.
      */
     async recoverStale(staleThresholdMs = 120_000): Promise<void> {
       const syncing = await storage.getByStatus('syncing')
