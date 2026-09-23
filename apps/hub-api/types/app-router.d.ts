@@ -81,7 +81,6 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     _ultranos: {
                         nameLocal: unknown;
                         nameLatin: unknown;
-                        nationalIdHash: unknown;
                         isActive: unknown;
                         createdAt: unknown;
                         nameGiven: unknown;
@@ -101,7 +100,6 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                         } | undefined;
                         isNomadic: boolean;
                         bloodGroup: string;
-                        photoUrl: string;
                         preferredLanguage: string;
                         mpiScore: unknown;
                         mpiWarn: boolean;
@@ -150,7 +148,6 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     _ultranos: {
                         nameLocal: unknown;
                         nameLatin: unknown;
-                        nationalIdHash: unknown;
                         isActive: unknown;
                         createdAt: unknown;
                         nameGiven: unknown;
@@ -170,7 +167,6 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                         } | undefined;
                         isNomadic: boolean;
                         bloodGroup: string;
-                        photoUrl: string;
                         preferredLanguage: string;
                         mpiScore: unknown;
                         mpiWarn: boolean;
@@ -1044,8 +1040,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
         }>;
         renew: import("@trpc/server").TRPCMutationProcedure<{
             input: {
-                version: string;
                 patientId: string;
+                version: string;
                 method: "WRITTEN" | "VERBAL_WITNESSED";
                 language: "en" | "ar" | "prs";
                 witnessedBy?: string | undefined;
@@ -1057,8 +1053,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
         }>;
         check: import("@trpc/server").TRPCQueryProcedure<{
             input: {
-                patientId: string;
                 resourceType: string;
+                patientId: string;
             };
             output: {
                 permitted: boolean;
@@ -1184,6 +1180,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 diagnosticReport: {
                     id: string;
                     status: "preliminary" | "registered";
+                    resourceType: "DiagnosticReport";
                     code: {
                         text?: string | undefined;
                         coding?: {
@@ -1202,7 +1199,6 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     subject: {
                         reference: string;
                     };
-                    resourceType: "DiagnosticReport";
                     issued: string;
                     result?: {
                         reference: string;
@@ -1212,6 +1208,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 observations: {
                     id: string;
                     status: "preliminary" | "registered";
+                    resourceType: "Observation";
                     code: {
                         text?: string | undefined;
                         coding?: {
@@ -1238,7 +1235,6 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     } & {
                         [k: string]: unknown;
                     };
-                    resourceType: "Observation";
                     subject?: {
                         reference: string;
                     } | undefined;
@@ -1769,8 +1765,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             input: {
                 events: {
                     id: string;
-                    action: string;
                     actorRole: string;
+                    action: string;
                     resourceType: string;
                     actorId: string;
                     resourceId: string;
@@ -2884,12 +2880,12 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             input: void;
             output: {
                 interactionCheckCompletionRate: number;
-                completionRateStatus: "OK" | "ALERT";
+                completionRateStatus: "ALERT" | "OK";
                 contraindicatedOverrideRate: number;
-                overrideRateStatus: "OK" | "ALERT";
+                overrideRateStatus: "ALERT" | "OK";
                 unresolvedTier1Conflicts: number;
                 oldestTier1AgeHours: number | null;
-                tier1Status: "OK" | "ALERT" | "WARNING";
+                tier1Status: "ALERT" | "OK" | "WARNING";
                 totalPrescriptions24h: number;
                 totalChecks7d: number;
                 overrides7d: number;
@@ -3221,6 +3217,28 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             };
             meta: object;
         }>;
+        getSecurityPolicy: import("@trpc/server").TRPCQueryProcedure<{
+            input: void;
+            output: {
+                mfaRequired: boolean;
+                mfaGracePeriodDays: number;
+                mfaEnabledAt: string;
+                updatedAt: string;
+            };
+            meta: object;
+        }>;
+        updateSecurityPolicy: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+                mfaRequired: boolean;
+                mfaGracePeriodDays?: number | undefined;
+            };
+            output: {
+                mfaRequired: boolean;
+                mfaGracePeriodDays: number;
+                mfaEnabledAt: string | null;
+            };
+            meta: object;
+        }>;
         getNotificationPreferences: import("@trpc/server").TRPCQueryProcedure<{
             input: void;
             output: {
@@ -3280,10 +3298,10 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             input: {
                 startDate: string;
                 endDate: string;
-                limit?: number | undefined;
-                cursor?: number | undefined;
                 action?: string | undefined;
                 outcome?: "SUCCESS" | "FAILURE" | "ALL" | undefined;
+                limit?: number | undefined;
+                cursor?: number | undefined;
                 actionGroup?: "ALL" | "KYC_ACTIONS" | "LAB_ACTIONS" | "USER_ACTIONS" | "ALERT_ACTIONS" | "AUTH_EVENTS" | "SETTINGS_CHANGES" | undefined;
                 actorSearch?: string | undefined;
             };
@@ -3801,8 +3819,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             input: {
                 id: string;
                 status?: "ACTIVE" | "ARCHIVED" | undefined;
-                description?: string | undefined;
                 name?: string | undefined;
+                description?: string | undefined;
                 milestones?: {
                     type: "MODULE_COMPLETION" | "SUPERVISED_PROCEDURE" | "ASSESSMENT_PASS" | "CONTINUING_ED_HOURS";
                     title: string;
@@ -4600,51 +4618,6 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             };
             meta: object;
         }>;
-        create: import("@trpc/server").TRPCMutationProcedure<{
-            input: {
-                id: string;
-                status: "cancelled" | "pending" | "proposed" | "booked" | "arrived" | "fulfilled" | "noshow" | "entered-in-error";
-                end: string;
-                _ultranos: {
-                    createdAt: string;
-                    hlcTimestamp: string;
-                    isOfflineCreated: boolean;
-                    walkIn: boolean;
-                    queuePosition: number | null;
-                    clinicId?: string | undefined;
-                };
-                start: string;
-                participant: {
-                    status: "accepted" | "declined" | "tentative" | "needs-action";
-                    actor: {
-                        reference: string;
-                        display?: string | undefined;
-                    };
-                }[];
-                serviceType: {
-                    code: string;
-                    system?: string | undefined;
-                    display?: string | undefined;
-                }[];
-                description?: string | undefined;
-            };
-            output: {
-                success: boolean;
-                appointmentId: any;
-                alreadyExists: boolean;
-            };
-            meta: object;
-        }>;
-        updateStatus: import("@trpc/server").TRPCMutationProcedure<{
-            input: {
-                id: string;
-                status: "cancelled" | "pending" | "proposed" | "booked" | "arrived" | "fulfilled" | "noshow" | "entered-in-error";
-            };
-            output: {
-                success: boolean;
-            };
-            meta: object;
-        }>;
         syncBatch: import("@trpc/server").TRPCMutationProcedure<{
             input: {
                 appointments: {
@@ -4684,40 +4657,6 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             };
             meta: object;
         }>;
-        slot: import("@trpc/server").TRPCBuiltRouter<{
-            ctx: import("../init").TRPCContext;
-            meta: object;
-            errorShape: import("@trpc/server").TRPCDefaultErrorShape;
-            transformer: true;
-        }, import("@trpc/server").TRPCDecorateCreateRouterOptions<{
-            listByPractitioner: import("@trpc/server").TRPCQueryProcedure<{
-                input: {
-                    date: string;
-                    practitionerId: string;
-                };
-                output: {
-                    slots: any[];
-                };
-                meta: object;
-            }>;
-            generateDaily: import("@trpc/server").TRPCMutationProcedure<{
-                input: {
-                    date: string;
-                    practitionerId: string;
-                    startHour?: number | undefined;
-                    endHour?: number | undefined;
-                    slotDurationMinutes?: number | undefined;
-                };
-                output: {
-                    generated: number;
-                    message: string;
-                } | {
-                    generated: number;
-                    message?: undefined;
-                };
-                meta: object;
-            }>;
-        }>>;
     }>>;
     drugCatalog: import("@trpc/server").TRPCBuiltRouter<{
         ctx: import("../init").TRPCContext;
@@ -4889,7 +4828,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 readonly displayName: "";
                 readonly givenName: "";
                 readonly familyName: "";
-                readonly role: "DOCTOR" | "PHARMACIST" | "LAB_TECH" | "GUARDIAN" | "SYSTEM" | "ADMIN" | "PLATFORM_ADMIN";
+                readonly role: "GUARDIAN" | "DOCTOR" | "PHARMACIST" | "LAB_TECH" | "SYSTEM" | "ADMIN" | "PLATFORM_ADMIN";
                 readonly status: string;
                 readonly avatarUrl: null;
                 readonly updatedAt: null;
@@ -5106,8 +5045,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
         }>;
         create: import("@trpc/server").TRPCMutationProcedure<{
             input: {
-                facilityId: string;
                 name: string;
+                facilityId: string;
                 kind?: "other" | "store" | "room" | "fridge" | "cabinet" | undefined;
                 isPrimary?: boolean | undefined;
             };

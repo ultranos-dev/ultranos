@@ -133,6 +133,11 @@ export enum AuditAction {
   ORG_STATUS_TRANSITION = 'ORG_STATUS_TRANSITION',
   ORG_THRESHOLDS_UPDATED = 'ORG_THRESHOLDS_UPDATED',
   MODULE_SETTINGS_UPDATED = 'MODULE_SETTINGS_UPDATED',
+  // Story 56.3 — org-level MFA feature toggle (admin-controlled, default OFF)
+  ORG_MFA_POLICY_CHANGED = 'ORG_MFA_POLICY_CHANGED',
+  // Story 56.3 — grace-period telemetry: staff signed in at aal1 while MFA is
+  // enabled but still within the rollout grace window (log-only, not blocked).
+  MFA_GRACE_PERIOD_WARNING = 'MFA_GRACE_PERIOD_WARNING',
   // Billing / payment setup
   PAYMENT_SETUP_INITIATED = 'PAYMENT_SETUP_INITIATED',
   PAYMENT_METHOD_REMOVED = 'PAYMENT_METHOD_REMOVED',

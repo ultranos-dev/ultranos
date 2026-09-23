@@ -373,7 +373,17 @@
     "poNumberPrefixLabel": "د پیرودلو امر شمیرې پیشوند",
     "procurementSettings": "د تدارکاتو ترتیبات",
     "invoiceMatchToleranceLabel": "د بیل د بیې د سمون زغم سلنه (%)",
-    "poApprovalThresholdLabel": "د پیرودلو امر د تایید حد (کوچني واحدونه، 0 = غیرفعال)"
+    "poApprovalThresholdLabel": "د پیرودلو امر د تایید حد (کوچني واحدونه، 0 = غیرفعال)",
+    "enrollTotp": "د تصدیق کوونکي اپ تنظیمول",
+    "scanQrPrompt": "د QR کوډ د خپل تصدیق کوونکي اپ سره سکین کړئ، بیا ۶ عددي کوډ دننه کړئ.",
+    "totpQrAlt": "د تصدیق کوونکي اپ نوملیکنې لپاره د QR کوډ",
+    "totpVerifyAriaLabel": "د خپل تصدیق کوونکي اپ ۶ عددي کوډ دننه کړئ",
+    "verify": "تایید",
+    "cancel": "لغوه",
+    "mfaOffline": "د MFA تنظیم اتصال ته اړتیا لري. د نوملیکنې لپاره بیا وصل شئ.",
+    "failedEnrollment": "نوملیکنه ناکامه شوه — مهرباني وکړئ بیا هڅه وکړئ",
+    "verificationFailed": "ناسم کوډ — مهرباني وکړئ بیا هڅه وکړئ",
+    "verificationError": "ناڅاپي تېروتنه رامنځته شوه"
   },
   "history": {
     "title": "د ورکولو تاریخچه",

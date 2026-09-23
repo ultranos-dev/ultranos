@@ -373,7 +373,17 @@
     "poNumberPrefixLabel": "بادئة رقم أمر الشراء",
     "procurementSettings": "إعدادات المشتريات",
     "invoiceMatchToleranceLabel": "نسبة تحمّل مطابقة سعر الفاتورة (%)",
-    "poApprovalThresholdLabel": "حد موافقة أمر الشراء (وحدات صغيرة، 0 = معطّل)"
+    "poApprovalThresholdLabel": "حد موافقة أمر الشراء (وحدات صغيرة، 0 = معطّل)",
+    "enrollTotp": "إعداد تطبيق المصادقة",
+    "scanQrPrompt": "امسح رمز الاستجابة السريعة بتطبيق المصادقة ثم أدخل الرمز المكوّن من 6 أرقام.",
+    "totpQrAlt": "رمز الاستجابة السريعة لتسجيل تطبيق المصادقة",
+    "totpVerifyAriaLabel": "أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة",
+    "verify": "تحقّق",
+    "cancel": "إلغاء",
+    "mfaOffline": "يتطلب إعداد المصادقة اتصالًا. أعد الاتصال للتسجيل.",
+    "failedEnrollment": "فشل التسجيل — يُرجى المحاولة مرة أخرى",
+    "verificationFailed": "رمز غير صالح — يُرجى المحاولة مرة أخرى",
+    "verificationError": "حدث خطأ غير متوقع"
   },
   "history": {
     "title": "سجل الصرف",

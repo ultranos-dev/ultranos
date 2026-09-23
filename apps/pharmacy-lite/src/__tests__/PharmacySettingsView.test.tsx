@@ -223,27 +223,33 @@ describe('PharmacySettingsView', () => {
     expect(screen.getByText('loadingMfa')).toBeDefined()
   })
 
-  it('shows error message when MFA check fails', async () => {
+  // Story 56.3: the status card was replaced by the enrollment card, which handles
+  // listFactors failures gracefully (best-effort, no error banner) rather than
+  // surfacing a dedicated error state. It must not crash and must not show a status
+  // badge when the check could not resolve.
+  it('handles an MFA check failure gracefully (no crash, no status badge)', async () => {
     mockListFactors.mockRejectedValue(new Error('Network error'))
 
-    render(<PharmacySettingsView />)
+    const { container } = render(<PharmacySettingsView />)
 
     await waitFor(() => {
-      // Component uses t('mfaCheckError') — i18n mock returns key string
-      expect(screen.getByTestId('mfa-error').textContent).toBe('mfaCheckError')
+      expect(screen.queryByText('loadingMfa')).toBeNull()
     })
+    expect(container.querySelector('[data-testid="mfa-status"]')).toBeNull()
   })
 
-  it('shows error message when MFA returns error response', async () => {
+  it('treats an MFA error response as not-enrolled (no crash)', async () => {
     mockListFactors.mockResolvedValue({
       data: null,
       error: { message: 'Unauthorized' },
     })
 
-    render(<PharmacySettingsView />)
+    const { container } = render(<PharmacySettingsView />)
 
     await waitFor(() => {
-      expect(screen.getByTestId('mfa-error').textContent).toBe('mfaCheckError')
+      const badge = container.querySelector('[data-testid="mfa-status"]')
+      expect(badge).not.toBeNull()
+      expect(badge!.textContent).toBe('totpNotConfigured')
     })
   })
 })

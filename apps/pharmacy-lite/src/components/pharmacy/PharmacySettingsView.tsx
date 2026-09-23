@@ -13,6 +13,7 @@ import { DEFAULT_PHARMACY_SETTINGS } from '@/lib/inventory/types'
 import { uploadStaffPhoto, removeStaffPhoto } from '@/lib/staff-photo-api'
 import { getHubApiUrl } from '@/lib/trpc'
 import { PhotoAvatarField } from '@ultranos/ui-kit/components/photo/photo-avatar-field'
+import { MfaEnrollmentCard } from '@/components/settings/MfaEnrollmentCard'
 
 function formatRole(role: string): string {
   if (!role) return 'Pharmacist'
@@ -218,73 +219,6 @@ function SessionInfoCard() {
           )}
         </div>
       </div>
-    </section>
-  )
-}
-
-// --- MFA Status Card ---
-function MfaStatusCard() {
-  const t = useTranslations('settings')
-  const [isEnrolled, setIsEnrolled] = useState<boolean | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    let active = true
-    async function checkMfa() {
-      try {
-        const supabase = getSupabaseBrowserClient()
-        const { data, error: mfaError } = await supabase.auth.mfa.listFactors()
-        if (active) {
-          if (mfaError || !data?.totp) {
-            setError(true)
-          } else {
-            const verifiedFactors = data.totp.filter(
-              (f: { status: string }) => f.status === 'verified',
-            )
-            setIsEnrolled(verifiedFactors.length > 0)
-          }
-        }
-      } catch {
-        if (active) setError(true)
-      } finally {
-        if (active) setLoading(false)
-      }
-    }
-    checkMfa()
-    return () => { active = false }
-  }, [])
-
-  return (
-    <section className="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50" aria-labelledby="mfa-heading">
-      <h2 id="mfa-heading" className="mb-4 text-sm font-semibold text-foreground">{t('mfaStatus')}</h2>
-
-      {loading && <p className="text-sm text-muted-foreground">{t('loadingMfa')}</p>}
-
-      {!loading && error && (
-        <p className="text-sm text-warning" data-testid="mfa-error">{t('mfaCheckError')}</p>
-      )}
-
-      {!loading && !error && isEnrolled !== null && (
-        <div className="flex items-center gap-2">
-          <p className="text-xs font-medium text-muted-foreground">{t('totpStatus')}</p>
-          {isEnrolled ? (
-            <span
-              className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success"
-              data-testid="mfa-status"
-            >
-              {t('totpEnabled')}
-            </span>
-          ) : (
-            <span
-              className="rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning"
-              data-testid="mfa-status"
-            >
-              {t('totpNotConfigured')}
-            </span>
-          )}
-        </div>
-      )}
     </section>
   )
 }
@@ -518,7 +452,7 @@ export function PharmacySettingsView() {
       <ProfileCard />
       <PharmacyInfoCard />
       <SessionInfoCard />
-      <MfaStatusCard />
+      <MfaEnrollmentCard />
       <WholesaleModeCard />
       <ProcurementSettingsCard />
       <DataBudgetCard />

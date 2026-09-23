@@ -373,7 +373,17 @@
     "poNumberPrefixLabel": "PO number prefix",
     "procurementSettings": "Procurement Settings",
     "invoiceMatchToleranceLabel": "Invoice price-match tolerance (%)",
-    "poApprovalThresholdLabel": "PO approval threshold (minor units, 0 = off)"
+    "poApprovalThresholdLabel": "PO approval threshold (minor units, 0 = off)",
+    "enrollTotp": "Set up authenticator app",
+    "scanQrPrompt": "Scan the QR code with your authenticator app, then enter the 6-digit code.",
+    "totpQrAlt": "QR code for authenticator app enrollment",
+    "totpVerifyAriaLabel": "Enter the 6-digit code from your authenticator app",
+    "verify": "Verify",
+    "cancel": "Cancel",
+    "mfaOffline": "MFA setup requires a connection. Reconnect to enroll.",
+    "failedEnrollment": "Enrollment failed — please try again",
+    "verificationFailed": "Invalid code — please try again",
+    "verificationError": "An unexpected error occurred"
   },
   "history": {
     "title": "Dispensing History",

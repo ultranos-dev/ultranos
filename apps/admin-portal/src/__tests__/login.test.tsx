@@ -123,7 +123,9 @@ describe('Admin Login Page', () => {
     )
   })
 
-  it('advances to FIDO2 MFA step when WebAuthn factor exists', async () => {
+  // Story 56.3: admin login now uses a real TOTP challenge (not the empty-code
+  // WebAuthn ceremony). A verified TOTP factor advances to the code-entry step.
+  it('advances to the TOTP MFA step when a verified TOTP factor exists', async () => {
     const user = userEvent.setup()
     mockSignInWithPassword.mockResolvedValue({
       data: { user: { id: 'u1' } },
@@ -131,8 +133,8 @@ describe('Admin Login Page', () => {
     })
     mockListFactors.mockResolvedValue({
       data: {
-        all: [{ id: 'f1', factor_type: 'webauthn', status: 'verified' }],
-        totp: [],
+        all: [{ id: 'f1', factor_type: 'totp', status: 'verified' }],
+        totp: [{ id: 'f1', status: 'verified' }],
       },
       error: null,
     })
@@ -147,7 +149,7 @@ describe('Admin Login Page', () => {
     await user.type(screen.getByLabelText('Password'), 'pass123')
     await user.click(screen.getByRole('button', { name: 'Sign In' }))
 
-    await screen.findByText(/hardware security key required/i)
-    expect(screen.getByRole('button', { name: 'Verify Security Key' })).toBeTruthy()
+    await screen.findByText(/two-factor authentication/i)
+    expect(screen.getByRole('button', { name: 'Verify Code' })).toBeTruthy()
   })
 })

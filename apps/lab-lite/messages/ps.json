@@ -711,7 +711,17 @@
     "smsTestSent": "د ازموینې SMS صف کې اضافه شو",
     "criticalValues": "بحراني ارزښتونه او لوړیدنه",
     "criticalValuesDesc": "د بحراني پایلو حدونه او د زیاتون اړیکې",
-    "backToSettings": "بیرته ترتیباتو ته"
+    "backToSettings": "بیرته ترتیباتو ته",
+    "mfaOffline": "د MFA تنظیم اتصال ته اړتیا لري. د نوملیکنې لپاره بیا وصل شئ.",
+    "mfaNotEnrolled": "نه دی ثبت شوی",
+    "mfaEnroll": "د تصدیق کوونکي اپ تنظیمول",
+    "mfaScanQr": "د QR کوډ د خپل تصدیق کوونکي اپ سره سکین کړئ، بیا ۶ عددي کوډ دننه کړئ.",
+    "mfaQrAlt": "د تصدیق کوونکي اپ نوملیکنې لپاره د QR کوډ",
+    "mfaVerifyAriaLabel": "د خپل تصدیق کوونکي اپ ۶ عددي کوډ دننه کړئ",
+    "mfaVerify": "تایید",
+    "mfaCancel": "لغوه",
+    "mfaFailedEnrollment": "نوملیکنه ناکامه شوه — مهرباني وکړئ بیا هڅه وکړئ",
+    "mfaVerificationFailed": "ناسم کوډ — مهرباني وکړئ بیا هڅه وکړئ"
   },
   "queuePage": {
     "title": "د پورته کولو لیست",

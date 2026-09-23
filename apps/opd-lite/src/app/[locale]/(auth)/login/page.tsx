@@ -56,8 +56,33 @@ export default function LoginPage() {
       reportAuthEvent('LOGIN_SUCCESS', { actorId: data.user?.id })
       setPassword('')
 
-      // TODO: MFA temporarily disabled — re-enable before production
-      await populateSessionAndRedirect()
+      // Story 56.3: MFA is an org-level toggle (default OFF). Run the TOTP
+      // challenge ONLY when this user has a verified authenticator factor — which
+      // exists only once their org enabled MFA and they enrolled. With no factor
+      // (the default), login completes password-only, exactly as before.
+      const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors()
+      const totpFactor = factorsError
+        ? undefined
+        : factors.totp?.find((f: { status: string }) => f.status === 'verified')
+
+      if (!totpFactor) {
+        await populateSessionAndRedirect()
+        return
+      }
+
+      const { data: challenge, error: challengeError } =
+        await supabase.auth.mfa.challenge({ factorId: totpFactor.id })
+      if (challengeError || !challenge) {
+        reportAuthEvent('MFA_VERIFY_FAILURE', { actorId: data.user?.id })
+        await supabase.auth.signOut()
+        setError(t('errorUnexpectedMfa'))
+        setLoading(false)
+        return
+      }
+
+      setFactorId(totpFactor.id)
+      setChallengeId(challenge.id)
+      setStep('mfa')
     } catch {
       setError(t('errorUnexpected'))
     } finally {

@@ -8,23 +8,17 @@ import { uploadStaffPhoto, removeStaffPhoto } from '@/lib/staff-photo-api'
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences'
 import { ThresholdSettings } from '@/components/settings/ThresholdSettings'
 import { ModuleSettingsCard } from '@/components/settings/ModuleSettingsCard'
+import { SecurityPolicySection } from '@/components/settings/SecurityPolicySection'
+import { TotpEnrollmentCard } from '@/components/settings/TotpEnrollmentCard'
 import { SurveillanceConfigForm } from '@/components/alerts/SurveillanceConfigForm'
 import { SurveillanceAlertHistory } from '@/components/alerts/SurveillanceAlertHistory'
-import { KeyRound, Package } from '@ultranos/ui-kit/icons'
+import { Package } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PhotoAvatarField } from '@ultranos/ui-kit/components/photo/photo-avatar-field'
 
 /* ─── Types ─── */
-
-type Factor = {
-  id: string
-  factor_type: string
-  status: string
-  friendly_name?: string
-  created_at?: string
-}
 
 interface AdminProfile {
   name: string
@@ -116,13 +110,6 @@ export default function SettingsPage() {
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
 
-  /* FIDO2 state */
-  const [factors, setFactors] = useState<Factor[]>([])
-  const [fidoLoading, setFidoLoading] = useState(true)
-  const [enrolling, setEnrolling] = useState(false)
-  const [fidoError, setFidoError] = useState<string | null>(null)
-  const [fidoSuccess, setFidoSuccess] = useState<string | null>(null)
-
   /* Sessions state */
   const [sessionsLoading, setSessionsLoading] = useState(false)
   const [sessionsMsg, setSessionsMsg] = useState<string | null>(null)
@@ -141,7 +128,6 @@ export default function SettingsPage() {
 
   useEffect(() => {
     loadProfile()
-    loadFactors()
     loadOrg()
     loadSubscribedModules()
   }, [])
@@ -237,102 +223,6 @@ export default function SettingsPage() {
     }
   }
 
-  /* ─── FIDO2 Security Keys ─── */
-
-  async function loadFactors() {
-    setFidoLoading(true)
-    try {
-      const { data, error: factorsError } = await supabase.auth.mfa.listFactors()
-      if (factorsError) {
-        setFidoError('Failed to load MFA factors')
-        return
-      }
-      setFactors(
-        (data.all ?? []).filter((f: Factor) => f.factor_type === 'webauthn') as Factor[],
-      )
-    } catch {
-      setFidoError('Failed to load MFA factors')
-    } finally {
-      setFidoLoading(false)
-    }
-  }
-
-  async function handleEnroll() {
-    setFidoError(null)
-    setFidoSuccess(null)
-    setEnrolling(true)
-
-    try {
-      if (typeof window !== 'undefined' && !window.PublicKeyCredential) {
-        setFidoError('WebAuthn is not supported in this browser. Use a modern browser with FIDO2 support.')
-        setEnrolling(false)
-        return
-      }
-
-      const { data, error: enrollError } = await supabase.auth.mfa.enroll({
-        factorType: 'webauthn',
-      })
-
-      if (enrollError) {
-        setFidoError(`Enrollment failed: ${enrollError.message}`)
-        setEnrolling(false)
-        return
-      }
-
-      // Challenge and verify the newly enrolled factor
-      const { data: challenge, error: challengeError } =
-        await supabase.auth.mfa.challenge({ factorId: data.id })
-
-      if (challengeError) {
-        setFidoError('Failed to initiate verification challenge')
-        setEnrolling(false)
-        return
-      }
-
-      const { error: verifyError } = await supabase.auth.mfa.verify({
-        factorId: data.id,
-        challengeId: challenge.id,
-        code: '',
-      })
-
-      if (verifyError) {
-        setFidoError('Key verification failed. Please try again.')
-        setEnrolling(false)
-        return
-      }
-
-      reportAdminAuthEvent('ADMIN_MFA_ENROLLED', { factorId: data.id })
-      setFidoSuccess('Security key enrolled successfully.')
-      await loadFactors()
-    } catch {
-      setFidoError('An unexpected error occurred during enrollment')
-    } finally {
-      setEnrolling(false)
-    }
-  }
-
-  async function handleUnenroll(factorId: string) {
-    setFidoError(null)
-    setFidoSuccess(null)
-
-    try {
-      const { error: unenrollError } = await supabase.auth.mfa.unenroll({
-        factorId,
-      })
-
-      if (unenrollError) {
-        setFidoError(`Failed to remove key: ${unenrollError.message}`)
-        return
-      }
-
-      reportAdminAuthEvent('ADMIN_MFA_UNENROLLED', { factorId })
-      setFidoSuccess('Security key removed.')
-      await loadFactors()
-    } catch {
-      setFidoError('An unexpected error occurred')
-    }
-  }
-
   /* ─── Active Sessions ─── */
 
   async function handleSignOutOtherSessions() {
@@ -397,8 +287,6 @@ export default function SettingsPage() {
       setOrgSaving(false)
     }
   }
-
-  const verifiedFactors = factors.filter((f) => f.status === 'verified')
 
   return (
     <div className="flex flex-col gap-4">
@@ -556,82 +444,8 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Security Keys (FIDO2) */}
-          <div className={CARD}>
-            <div className="space-y-4">
-              <h2 className={CARD_TITLE}>{t('securityKeysTitle')}</h2>
-              <p className="text-muted-foreground text-sm">
-                Register a hardware security key (e.g., YubiKey) to add an extra layer of protection to your account.
-                Once enrolled, you will be prompted for your key on every sign-in.
-              </p>
-
-              {fidoError && (
-                <div role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                  {fidoError}
-                </div>
-              )}
-
-              {fidoSuccess && (
-                <div role="status" className="rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                  {fidoSuccess}
-                </div>
-              )}
-
-              {fidoLoading ? (
-                <p className="text-sm text-muted-foreground">Loading...</p>
-              ) : (
-                <>
-                  {verifiedFactors.length > 0 && (
-                    <div className="space-y-3">
-                      {verifiedFactors.map((factor) => (
-                        <div
-                          key={factor.id}
-                          className="flex items-center justify-between rounded-xl border border-border px-4 py-3"
-                        >
-                          <div className="flex items-center gap-3">
-                            <KeyRound className="h-5 w-5 text-muted-foreground" />
-                            <div>
-                              <p className="text-sm font-medium text-foreground">
-                                {factor.friendly_name || 'Security Key'}
-                              </p>
-                              {factor.created_at && (
-                                <p className="text-xs text-muted-foreground">
-                                  Added {new Date(factor.created_at).toLocaleDateString()}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleUnenroll(factor.id)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            {t('securityKeyRemove')}
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {verifiedFactors.length === 0 && (
-                    <div className="rounded-2xl border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-warning">
-                      {t('securityKeysNoKeys')}
-                    </div>
-                  )}
-
-                  <Button
-                    type="button"
-                    onClick={handleEnroll}
-                    disabled={enrolling}
-                  >
-                    {enrolling ? t('profileSaving') : t('securityKeysAdd')}
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
+          {/* Multi-Factor Authentication — real TOTP enrollment (Story 56.3) */}
+          <TotpEnrollmentCard />
 
           {/* Active Sessions */}
           <div className={CARD}>
@@ -659,6 +473,7 @@ export default function SettingsPage() {
 
       {/* ═══ Organization ═══ */}
       {activeTab === 'organization' && (
+        <div className="flex flex-col gap-4">
         <div className={CARD}>
           <div className="space-y-4">
             <h2 className={CARD_TITLE}>{t('orgTitle')}</h2>
@@ -736,6 +551,10 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">{t('errorLoad')}</p>
             )}
           </div>
+        </div>
+
+        {/* Story 56.3 — org-level MFA feature toggle (admin-controlled). */}
+        <SecurityPolicySection />
         </div>
       )}
 

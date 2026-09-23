@@ -5,6 +5,11 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { ShieldCheck, KeyRound } from '@ultranos/ui-kit/icons'
+// Story 56.3: admin login uses a real Supabase TOTP challenge (not the former
+// empty-code WebAuthn ceremony). The challenge runs ONLY when the signed-in admin
+// has a verified TOTP factor — which only exists once their org enabled MFA and
+// they enrolled. With MFA off (the default) no factor exists → password-only login,
+// behaviorally identical to before (AC 2, AC 7).
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAdminAuthEvent } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -21,6 +26,7 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('')
   const [factorId, setFactorId] = useState('')
   const [challengeId, setChallengeId] = useState('')
+  const [totpCode, setTotpCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -59,12 +65,13 @@ export default function AdminLoginPage() {
         return
       }
 
-      const webauthnFactor = factors.all?.find(
-        (f: { factor_type: string; status: string }) =>
-          f.factor_type === 'webauthn' && f.status === 'verified',
+      // Story 56.3: look for a verified TOTP factor. Only present when the org
+      // enabled MFA and this admin enrolled; otherwise login proceeds password-only.
+      const totpFactor = factors.totp?.find(
+        (f: { status: string }) => f.status === 'verified',
       )
 
-      if (!webauthnFactor) {
+      if (!totpFactor) {
         const session = data.session
         if (!session) {
           setError(t('errorRetrieveSession'))
@@ -111,17 +118,17 @@ export default function AdminLoginPage() {
       }
 
       const { data: challenge, error: challengeError } =
-        await supabase.auth.mfa.challenge({ factorId: webauthnFactor.id })
+        await supabase.auth.mfa.challenge({ factorId: totpFactor.id })
 
       if (challengeError) {
         reportAdminAuthEvent('ADMIN_LOGIN_FAILURE', { actorId: data.user?.id })
         await supabase.auth.signOut()
-        setError(t('errorFidoChallenge'))
+        setError(t('errorMfaChallenge'))
         setLoading(false)
         return
       }
 
-      setFactorId(webauthnFactor.id)
+      setFactorId(totpFactor.id)
       setChallengeId(challenge.id)
       setStep('mfa')
     } catch {
@@ -131,26 +138,23 @@ export default function AdminLoginPage() {
     }
   }
 
-  async function handleMfaVerify() {
+  async function handleMfaVerify(e: React.FormEvent) {
+    e.preventDefault()
     setError(null)
     setLoading(true)
 
     try {
-      if (typeof window !== 'undefined' && !window.PublicKeyCredential) {
-        setError(t('errorWebAuthnUnsupported'))
-        setLoading(false)
-        return
-      }
-
+      // Story 56.3: real TOTP verification with the user-entered 6-digit code.
       const { error: verifyError } = await supabase.auth.mfa.verify({
         factorId,
         challengeId,
-        code: '',
+        code: totpCode,
       })
 
       if (verifyError) {
         reportAdminAuthEvent('ADMIN_LOGIN_FAILURE')
-        setError(t('errorFidoFailed'))
+        setError(t('errorMfaInvalidCode'))
+        setTotpCode('')
         setLoading(false)
         return
       }
@@ -211,6 +215,7 @@ export default function AdminLoginPage() {
     setStep('credentials')
     setFactorId('')
     setChallengeId('')
+    setTotpCode('')
     setEmail('')
     setError(null)
   }
@@ -259,7 +264,7 @@ export default function AdminLoginPage() {
                 {step === 'credentials' ? t('signIn') : t('verifyIdentity')}
               </h1>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                {step === 'credentials' ? t('signInSubtitle') : t('fidoSubtitle')}
+                {step === 'credentials' ? t('signInSubtitle') : t('mfaSubtitle')}
               </p>
             </div>
 
@@ -316,25 +321,38 @@ export default function AdminLoginPage() {
             )}
 
             {step === 'mfa' && (
-              <div className="space-y-4">
+              <form onSubmit={handleMfaVerify} className="space-y-4">
                 <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
                   <KeyRound className="mt-0.5 size-4 shrink-0 text-primary" />
                   <div>
                     <p className="font-medium text-foreground">
-                      {t('fidoTitle')}
+                      {t('mfaTitle')}
                     </p>
                     <p className="mt-0.5 text-muted-foreground">
-                      {t('fidoBody')}
+                      {t('mfaBody')}
                     </p>
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="totp">{t('mfaCodeLabel')}</Label>
+                  <Input
+                    id="totp"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    required
+                    value={totpCode}
+                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="123456"
+                    autoFocus
+                  />
+                </div>
                 <Button
-                  type="button"
-                  onClick={handleMfaVerify}
-                  disabled={loading}
+                  type="submit"
+                  disabled={loading || totpCode.length < 6}
                   className="w-full"
                 >
-                  {loading ? t('verifying') : t('verifySecurityKey')}
+                  {loading ? t('verifying') : t('verifyCode')}
                 </Button>
                 <Button
                   type="button"
@@ -344,7 +362,7 @@ export default function AdminLoginPage() {
                 >
                   {t('backToSignIn')}
                 </Button>
-              </div>
+              </form>
             )}
 
             <p className="text-center text-xs text-muted-foreground">

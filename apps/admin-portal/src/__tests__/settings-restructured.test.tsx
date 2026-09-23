@@ -84,6 +84,9 @@ vi.mock('@/lib/trpc', () => ({
       updateOrganization: { mutate: vi.fn() },
       getNotificationPreferences: { query: vi.fn().mockResolvedValue({}) },
       updateNotificationPreferences: { mutate: vi.fn() },
+      // Story 56.3 — org MFA policy toggle (SecurityPolicySection, Organization tab).
+      getSecurityPolicy: { query: vi.fn().mockResolvedValue({ mfaRequired: false, mfaGracePeriodDays: 7, mfaEnabledAt: null, updatedAt: null }) },
+      updateSecurityPolicy: { mutate: vi.fn() },
     },
     subscription: {
       getOrgSubscriptions: { query: vi.fn().mockResolvedValue({ subscriptions: [] }) },
@@ -103,7 +106,8 @@ describe('Settings Page — Restructured', () => {
     // Subsections within My Account tab (default active)
     expect(screen.getByText('Profile')).toBeTruthy()
     expect(screen.getAllByText('Change Password').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText('Security Keys (FIDO2)')).toBeTruthy()
+    // Story 56.3: FIDO2 security-keys card replaced by real TOTP enrollment.
+    expect(screen.getByText('Authenticator App')).toBeTruthy()
     expect(screen.getByText('Active Sessions')).toBeTruthy()
   })
 

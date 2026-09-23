@@ -3,6 +3,7 @@ import superjson from 'superjson'
 import { getSupabaseClient } from '@/lib/supabase'
 import { verifySupabaseJwt, getSupabaseJwk, resolveAuthzClaims } from '@/lib/jwt'
 import { recordRequestMetrics } from '@/trpc/middleware/metrics'
+import { enforceMfaPolicy } from '@/trpc/middleware/enforceMfaPolicy'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { UserRole } from '@ultranos/shared-types'
 
@@ -32,6 +33,14 @@ export interface TRPCContext {
     orgId: string | null
     facilityId: string | null
     status: string | null
+    /**
+     * Authenticator Assurance Level from the verified JWT (`aal` top-level claim,
+     * minted by Supabase GoTrue): 'aal1' = single factor, 'aal2' = a second factor
+     * was verified this session. Story 56.3 conditional MFA enforcement reads this.
+     * Optional so pre-existing test contexts (which omit it) still construct;
+     * an absent claim is treated as under-assured (aal1) by the enforcement path.
+     */
+    aal?: string | null
   } | null
   headers: Headers
 }
@@ -82,6 +91,9 @@ export const createTRPCContext = async (opts: {
             orgId: claims.orgId,
             facilityId: claims.facilityId,
             status: claims.status,
+            // Story 56.3: `aal` is a top-level GoTrue claim ('aal1' | 'aal2').
+            // Used by conditional MFA enforcement; null when the token omits it.
+            aal: (payload.aal as string) ?? null,
           }
         }
       } catch {
@@ -138,6 +150,15 @@ export const protectedProcedure = baseProcedure.use(async (opts) => {
       message: 'ACCOUNT_SUSPENDED',
     })
   }
+
+  // Story 56.3: conditional, org-level MFA enforcement. No-op unless the caller's
+  // org has explicitly enabled MFA (default OFF) and is past its grace window;
+  // patient/guardian roles and recovery endpoints are exempt. This is placed AFTER
+  // the auth + suspension checks so it only ever runs for a verified staff user.
+  await enforceMfaPolicy({
+    ctx: opts.ctx as AuthedTRPCContext,
+    path: opts.path,
+  })
 
   return opts.next({
     ctx: { ...opts.ctx, user: opts.ctx.user },

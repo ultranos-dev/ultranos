@@ -22,6 +22,7 @@ import { BadgeShowcase } from '@/components/quality/BadgeShowcase'
 import { SurveillanceConfigCard } from '@/components/settings/SurveillanceConfig'
 import { ProgramRegistration } from '@/components/settings/ProgramRegistration'
 import { SmsGatewayConfig } from '@/components/settings/SmsGatewayConfig'
+import { MfaEnrollmentCard } from '@/components/settings/MfaEnrollmentCard'
 import { PhotoAvatarField } from '@ultranos/ui-kit/components/photo/photo-avatar-field'
 
 /** Map LabRole enum to i18n key under settings namespace */
@@ -375,6 +376,9 @@ export function LabSettingsView() {
             </div>
           </dl>
         </div>
+
+        {/* Multi-Factor Authentication — TOTP enrollment (Story 56.3) */}
+        <MfaEnrollmentCard />
 
         {/* Data & Connectivity */}
         <div className="rounded-lg border border-border bg-card p-4">

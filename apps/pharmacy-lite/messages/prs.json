@@ -373,7 +373,17 @@
     "poNumberPrefixLabel": "پیشوند شماره سفارش خرید",
     "procurementSettings": "تنظیمات تدارکات",
     "invoiceMatchToleranceLabel": "درصد تحمل مطابقت قیمت فاکتور (%)",
-    "poApprovalThresholdLabel": "حد آستانه تأیید سفارش خرید (واحدهای کوچک، 0 = غیرفعال)"
+    "poApprovalThresholdLabel": "حد آستانه تأیید سفارش خرید (واحدهای کوچک، 0 = غیرفعال)",
+    "enrollTotp": "راه‌اندازی برنامه تأیید هویت",
+    "scanQrPrompt": "کد QR را با برنامه تأیید هویت خود اسکن کنید، سپس کد ۶ رقمی را وارد کنید.",
+    "totpQrAlt": "کد QR برای ثبت برنامه تأیید هویت",
+    "totpVerifyAriaLabel": "کد ۶ رقمی برنامه تأیید هویت را وارد کنید",
+    "verify": "تأیید",
+    "cancel": "انصراف",
+    "mfaOffline": "راه‌اندازی MFA به اتصال نیاز دارد. برای ثبت‌نام دوباره متصل شوید.",
+    "failedEnrollment": "ثبت‌نام ناموفق بود — لطفاً دوباره تلاش کنید",
+    "verificationFailed": "کد نامعتبر است — لطفاً دوباره تلاش کنید",
+    "verificationError": "خطای غیرمنتظره‌ای رخ داد"
   },
   "history": {
     "title": "تاریخچه تحویل",

@@ -11,6 +11,7 @@ import { getCachedEncryptionKey, getFieldEncryptionKeys } from '@/lib/field-encr
 import { computeScreeningReminders } from '@/lib/screening-reminders'
 import { buildNotificationContent } from '@/lib/notification-content'
 import { signPhotoUrls } from '@/lib/photo-urls'
+import { invalidateOrgSecurityPolicy, DEFAULT_ORG_SECURITY_POLICY } from '@/lib/mfa-policy'
 
 /**
  * ADMIN-role-only middleware guard.
@@ -3730,6 +3731,136 @@ export const adminRouter = createTRPCRouter({
       }
 
       return { success: true }
+    }),
+
+  /**
+   * Story 56.3 — read this org's security policy (MFA feature toggle).
+   * Admin-gated, org-scoped. Returns the default (MFA disabled) posture when no
+   * row exists yet, so a fresh org renders the toggle in its OFF default state.
+   */
+  getSecurityPolicy: adminProcedure.query(async ({ ctx }) => {
+    if (!ctx.user.orgId) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'org_id not available from JWT' })
+    }
+
+    const { data, error } = await ctx.supabase
+      .from('org_security_policies')
+      .select('mfa_required, mfa_grace_period_days, mfa_enabled_at, updated_at')
+      .eq('org_id', ctx.user.orgId)
+      .maybeSingle()
+
+    if (error) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to load security policy' })
+    }
+
+    const row = data as Record<string, unknown> | null
+    return {
+      mfaRequired: row ? Boolean(row.mfa_required) : DEFAULT_ORG_SECURITY_POLICY.mfaRequired,
+      mfaGracePeriodDays: row
+        ? Number(row.mfa_grace_period_days ?? DEFAULT_ORG_SECURITY_POLICY.mfaGracePeriodDays)
+        : DEFAULT_ORG_SECURITY_POLICY.mfaGracePeriodDays,
+      mfaEnabledAt: (row?.mfa_enabled_at as string) ?? null,
+      updatedAt: (row?.updated_at as string) ?? null,
+    }
+  }),
+
+  /**
+   * Story 56.3 — update this org's security policy (MFA feature toggle).
+   * Admin-gated, org-scoped. Validates grace period 0..30. Emits an
+   * ORG_MFA_POLICY_CHANGED audit event with old→new values (no PHI). Invalidates
+   * the Hub's short-TTL policy cache so a toggle change propagates immediately.
+   *
+   * Enabling stamps mfa_enabled_at (starting the grace clock); re-enabling after a
+   * disable restamps it. Disabling clears mfa_enabled_at but keeps the row — and
+   * crucially keeps any Supabase-side enrolled factors, which live in GoTrue, so
+   * re-enabling never forces re-enrollment (AC 6).
+   */
+  updateSecurityPolicy: adminProcedure
+    .input(
+      z.object({
+        mfaRequired: z.boolean(),
+        mfaGracePeriodDays: z.number().int().min(0).max(30).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user.orgId) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'org_id not available from JWT' })
+      }
+
+      // Read the current row to compute old→new for the audit and to decide the
+      // mfa_enabled_at transition.
+      const { data: existing } = await ctx.supabase
+        .from('org_security_policies')
+        .select('mfa_required, mfa_grace_period_days, mfa_enabled_at')
+        .eq('org_id', ctx.user.orgId)
+        .maybeSingle()
+
+      const prev = existing as Record<string, unknown> | null
+      const prevRequired = prev ? Boolean(prev.mfa_required) : false
+      const prevGrace = prev
+        ? Number(prev.mfa_grace_period_days ?? DEFAULT_ORG_SECURITY_POLICY.mfaGracePeriodDays)
+        : DEFAULT_ORG_SECURITY_POLICY.mfaGracePeriodDays
+
+      const nextGrace = input.mfaGracePeriodDays ?? prevGrace
+      const nowIso = new Date().toISOString()
+
+      // Transition mfa_enabled_at: set on an OFF→ON edge; clear on ON→OFF; leave
+      // untouched (preserve the original enable time) when it was already ON.
+      let mfaEnabledAt: string | null
+      if (input.mfaRequired && !prevRequired) {
+        mfaEnabledAt = nowIso
+      } else if (!input.mfaRequired) {
+        mfaEnabledAt = null
+      } else {
+        mfaEnabledAt = (prev?.mfa_enabled_at as string) ?? nowIso
+      }
+
+      const { error } = await ctx.supabase
+        .from('org_security_policies')
+        .upsert(
+          {
+            org_id: ctx.user.orgId,
+            mfa_required: input.mfaRequired,
+            mfa_grace_period_days: nextGrace,
+            mfa_enabled_at: mfaEnabledAt,
+            updated_by: ctx.user.sub,
+            updated_at: nowIso,
+          },
+          { onConflict: 'org_id' },
+        )
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update security policy' })
+      }
+
+      // Toggle-off must propagate within one refresh cycle (AC 6): drop the cache
+      // so the next protected call re-reads the fresh policy.
+      invalidateOrgSecurityPolicy(ctx.user.orgId)
+
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'ORG_MFA_POLICY_CHANGED',
+          resourceType: 'ORGANIZATION',
+          resourceId: ctx.user.orgId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            old: { mfaRequired: prevRequired, mfaGracePeriodDays: prevGrace },
+            new: { mfaRequired: input.mfaRequired, mfaGracePeriodDays: nextGrace },
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'ORG_MFA_POLICY_CHANGED', resourceType: 'ORGANIZATION', resourceId: ctx.user.orgId })
+      }
+
+      return {
+        mfaRequired: input.mfaRequired,
+        mfaGracePeriodDays: nextGrace,
+        mfaEnabledAt,
+      }
     }),
 
   /**

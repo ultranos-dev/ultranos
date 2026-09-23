@@ -3,9 +3,11 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useAuthSessionStore } from '../stores/auth-session-store'
 
-// MFA is currently disabled in the login page (credentials → session → redirect),
-// so these tests cover that flow plus the deterministic encryption-key derivation
-// (Story 28.4) that must match AuthGuard so data survives a refresh.
+// Story 56.3: MFA is an org-level toggle (default OFF). The login page checks for a
+// verified TOTP factor after password auth; with none (the default, mocked here) it
+// completes password-only → session → redirect. These tests cover that default flow
+// plus the deterministic encryption-key derivation (Story 28.4) that must match
+// AuthGuard so data survives a refresh.
 
 // Hoisted so the vi.mock factories below (which vitest lifts to the top of the
 // file) can safely reference these spies without a temporal-dead-zone error.
@@ -17,6 +19,9 @@ const { mockDeriveSessionKey, mockSetKey } = vi.hoisted(() => ({
 const mockSignInWithPassword = vi.fn()
 const mockSignOut = vi.fn()
 const mockGetSession = vi.fn()
+// Default: no enrolled TOTP factor (org MFA OFF) → password-only login.
+const mockListFactors = vi.fn().mockResolvedValue({ data: { totp: [] }, error: null })
+const mockChallenge = vi.fn()
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseBrowserClient: () => ({
@@ -24,6 +29,10 @@ vi.mock('@/lib/supabase', () => ({
       signInWithPassword: mockSignInWithPassword,
       signOut: mockSignOut,
       getSession: mockGetSession,
+      mfa: {
+        listFactors: mockListFactors,
+        challenge: mockChallenge,
+      },
     },
   }),
 }))

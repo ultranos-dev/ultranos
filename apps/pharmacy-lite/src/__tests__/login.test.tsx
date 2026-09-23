@@ -17,6 +17,9 @@ const { mockDeriveSessionKey, mockSetKey } = vi.hoisted(() => ({
 const mockSignInWithPassword = vi.fn()
 const mockSignOut = vi.fn()
 const mockGetSession = vi.fn()
+// Story 56.3: default to no enrolled TOTP factor (org MFA OFF) → password-only login.
+const mockListFactors = vi.fn().mockResolvedValue({ data: { totp: [] }, error: null })
+const mockChallenge = vi.fn()
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseBrowserClient: () => ({
@@ -24,6 +27,10 @@ vi.mock('@/lib/supabase', () => ({
       signInWithPassword: mockSignInWithPassword,
       signOut: mockSignOut,
       getSession: mockGetSession,
+      mfa: {
+        listFactors: mockListFactors,
+        challenge: mockChallenge,
+      },
     },
   }),
 }))

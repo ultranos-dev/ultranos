@@ -711,7 +711,17 @@
     "criticalValues": "Critical Values & Escalation",
     "loading": "Loading…",
     "criticalValuesDesc": "Critical result thresholds and escalation contacts",
-    "backToSettings": "Back to Settings"
+    "backToSettings": "Back to Settings",
+    "mfaOffline": "MFA setup requires a connection. Reconnect to enroll.",
+    "mfaNotEnrolled": "Not enrolled",
+    "mfaEnroll": "Set up authenticator app",
+    "mfaScanQr": "Scan the QR code with your authenticator app, then enter the 6-digit code.",
+    "mfaQrAlt": "QR code for authenticator app enrollment",
+    "mfaVerifyAriaLabel": "Enter the 6-digit code from your authenticator app",
+    "mfaVerify": "Verify",
+    "mfaCancel": "Cancel",
+    "mfaFailedEnrollment": "Enrollment failed — please try again",
+    "mfaVerificationFailed": "Invalid code — please try again"
   },
   "queuePage": {
     "title": "Upload Queue",
