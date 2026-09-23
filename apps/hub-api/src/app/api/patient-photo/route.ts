@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import sharp from 'sharp'
 import { getSupabaseClient, db } from '@/lib/supabase'
-import { verifySupabaseJwt, getSupabaseJwk } from '@/lib/jwt'
+import { verifySupabaseJwt, getSupabaseJwk, resolveAuthzClaims } from '@/lib/jwt'
 import { hasResourceAccess } from '@/trpc/rbac'
 import { isOriginAllowed, corsHeaders } from '@/lib/cors'
 import { AuditLogger } from '@ultranos/audit-logger'
@@ -31,12 +31,13 @@ async function authenticate(req: Request): Promise<AuthedUser | null> {
   if (!jwk) return null
   const payload = await verifySupabaseJwt(authHeader.slice(7), jwk)
   if (!payload?.sub) return null
-  const meta = (payload.user_metadata as Record<string, unknown>) ?? {}
+  // Story 56.1: authorization claims from app_metadata only — never user_metadata.
+  const claims = resolveAuthzClaims(payload)
   return {
     sub: payload.sub,
-    role: ((meta.role as string) ?? (payload.role as string) ?? '').toUpperCase() as `${UserRole}`,
+    role: claims.role as `${UserRole}`,
     sessionId: (payload.session_id as string) ?? '',
-    orgId: (meta.org_id as string) ?? (payload.org_id as string) ?? undefined,
+    orgId: claims.orgId ?? undefined,
   }
 }
 

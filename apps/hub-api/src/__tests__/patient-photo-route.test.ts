@@ -18,11 +18,14 @@ vi.mock('@/lib/supabase', () => ({
   }),
   db: { toRow: (o: Record<string, unknown>) => o },
 }))
-vi.mock('@/lib/jwt', () => ({
+// Story 56.1: authz claims live in app_metadata (server-authoritative) — the
+// route resolves them via the real resolveAuthzClaims, so pass it through.
+vi.mock('@/lib/jwt', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/jwt')>()),
   getSupabaseJwk: () => ({ _marker: true }),
   verifySupabaseJwt: vi.fn(async (token: string) => {
-    if (token === 'good') return { sub: 'user-1', session_id: 's1', user_metadata: { role: 'CLINICIAN', org_id: 'org-1' } }
-    if (token === 'badrole') return { sub: 'user-2', session_id: 's2', user_metadata: { role: 'RECEPTIONIST', org_id: 'org-1' } }
+    if (token === 'good') return { sub: 'user-1', session_id: 's1', app_metadata: { role: 'CLINICIAN', org_id: 'org-1' } }
+    if (token === 'badrole') return { sub: 'user-2', session_id: 's2', app_metadata: { role: 'RECEPTIONIST', org_id: 'org-1' } }
     return null // any other token (incl. '') → unverified
   }),
 }))

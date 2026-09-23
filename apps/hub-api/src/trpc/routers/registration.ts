@@ -133,6 +133,12 @@ export const registrationRouter = createTRPCRouter({
             email: input.adminEmail,
             password: input.adminPassword,
             email_confirm: true,
+            // Story 56.1: authorization claims live in app_metadata (server-
+            // authoritative). user_metadata keeps display copies only.
+            app_metadata: {
+              role: 'ADMIN',
+              org_id: org.id,
+            },
             user_metadata: {
               name: input.adminName,
               role: 'ADMIN',

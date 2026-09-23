@@ -53,9 +53,13 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         const jwt = data.session.access_token
         const base64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
         const payload = JSON.parse(atob(base64))
-        // App-level role is in user_metadata (Supabase top-level `role` is always "authenticated")
+        // Story 56.1: app-level role lives in app_metadata (server-authoritative;
+        // Supabase top-level `role` is always "authenticated"). user_metadata is a
+        // TEMPORARY fallback for sessions minted before the claim migration —
+        // client reads are display/routing only; enforcement is hub-side.
+        const appMeta = payload.app_metadata ?? {}
         const userMeta = payload.user_metadata ?? {}
-        const role = ((userMeta.role as string) ?? '').toUpperCase()
+        const role = (((appMeta.role ?? userMeta.role) as string) ?? '').toUpperCase()
 
         // Enforce 4h session max age (NFR9)
         const iat = payload.iat as number | undefined

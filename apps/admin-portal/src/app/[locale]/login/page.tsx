@@ -74,8 +74,12 @@ export default function AdminLoginPage() {
 
         const base64 = session.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
         const payload = JSON.parse(atob(base64))
+        // Story 56.1: role from app_metadata (server-authoritative); user_metadata
+        // is a temporary fallback for pre-migration sessions. Display/routing only —
+        // enforcement is hub-side.
+        const appMeta = payload.app_metadata ?? {}
         const userMeta = payload.user_metadata ?? {}
-        const role = ((userMeta.role as string) ?? '').toUpperCase()
+        const role = (((appMeta.role ?? userMeta.role) as string) ?? '').toUpperCase()
 
         if (role !== 'ADMIN') {
           reportAdminAuthEvent('ADMIN_LOGIN_FAILURE', { actorId: payload.sub })
@@ -161,7 +165,9 @@ export default function AdminLoginPage() {
 
       const base64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
       const payload = JSON.parse(atob(base64))
-      const role = ((payload.role as string) ?? '').toUpperCase()
+      // Story 56.1: prefer app_metadata role (server-authoritative), then the
+      // temporary user_metadata fallback, then the legacy top-level claim.
+      const role = (((payload.app_metadata?.role ?? payload.user_metadata?.role ?? payload.role) as string) ?? '').toUpperCase()
 
       if (role !== 'ADMIN') {
         reportAdminAuthEvent('ADMIN_LOGIN_FAILURE', { actorId: payload.sub })

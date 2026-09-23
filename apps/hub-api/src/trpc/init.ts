@@ -1,7 +1,7 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
 import { getSupabaseClient } from '@/lib/supabase'
-import { verifySupabaseJwt, getSupabaseJwk } from '@/lib/jwt'
+import { verifySupabaseJwt, getSupabaseJwk, resolveAuthzClaims } from '@/lib/jwt'
 import { recordRequestMetrics } from '@/trpc/middleware/metrics'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { UserRole } from '@ultranos/shared-types'
@@ -65,20 +65,23 @@ export const createTRPCContext = async (opts: {
       try {
         const payload = await verifySupabaseJwt(token, jwk)
         if (payload?.sub) {
-          // App-level role/org_id are in user_metadata (set at createUser time).
-          // Supabase's top-level `role` is always "authenticated" — not our app role.
-          const userMeta = (payload.user_metadata as Record<string, unknown>) ?? {}
+          // Story 56.1 (audit C-SYS-1): authorization claims (role/org/facility/
+          // status) are server-authoritative — read from `app_metadata` (service-
+          // role writable only) plus top-level GoTrue claims. `user_metadata` is
+          // end-user writable and is NEVER consulted for authorization; a forged
+          // user_metadata role is logged and ignored (see resolveAuthzClaims).
+          const claims = resolveAuthzClaims(payload)
           user = {
             sub: payload.sub,
             // Mirror the client's practitioner-ref derivation exactly (top-level
             // `practitioner_id` claim, falling back to sub) so participant-scoped
             // queries match whatever the spoke stored.
             practitionerId: (payload.practitioner_id as string) ?? payload.sub,
-            role: ((userMeta.role as string) ?? (payload.role as string) ?? '').toUpperCase() as `${UserRole}`,
+            role: claims.role as `${UserRole}`,
             sessionId: (payload.session_id as string) ?? '',
-            orgId: (userMeta.org_id as string) ?? (payload.org_id as string) ?? null,
-            facilityId: (userMeta.facility_id as string) ?? (payload.facility_id as string) ?? null,
-            status: (userMeta.status as string) ?? null,
+            orgId: claims.orgId,
+            facilityId: claims.facilityId,
+            status: claims.status,
           }
         }
       } catch {

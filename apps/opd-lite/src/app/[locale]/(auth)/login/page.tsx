@@ -79,7 +79,9 @@ export default function LoginPage() {
     useAuthSessionStore.getState().setSession({
       userId: payload.sub,
       practitionerId: payload.practitioner_id ?? payload.sub,
-      role: (payload.role !== 'authenticated' ? payload.role : null) ?? sessionData.session?.user?.user_metadata?.role ?? '',
+      // Story 56.1: app_metadata first (server-authoritative); user_metadata is a
+      // temporary pre-migration fallback. Display/routing only — enforcement is hub-side.
+      role: (payload.role !== 'authenticated' ? payload.role : null) ?? sessionData.session?.user?.app_metadata?.role ?? sessionData.session?.user?.user_metadata?.role ?? '',
       sessionId: payload.session_id ?? '',
       email: sessionData.session?.user?.email ?? '',
       name: (() => {

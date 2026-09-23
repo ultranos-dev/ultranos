@@ -272,6 +272,12 @@ export const patientRegistrationRouter = createTRPCRouter({
       // Step 4: Update Supabase Auth user metadata to link patient record
       try {
         await ctx.supabase.auth.admin.updateUserById(userId, {
+          // Story 56.1: authorization claims live in app_metadata (server-
+          // authoritative). user_metadata keeps display copies only.
+          app_metadata: {
+            role: 'PATIENT',
+            patient_id: createdPatientId,
+          },
           user_metadata: {
             role: 'PATIENT',
             patient_id: createdPatientId,
@@ -504,6 +510,8 @@ export const patientRegistrationRouter = createTRPCRouter({
 
       try {
         await ctx.supabase.auth.admin.updateUserById(ctx.user.sub, {
+          // Story 56.1: app_metadata is the server-authoritative authz source.
+          app_metadata: { role: 'PATIENT', patient_id: p.id },
           user_metadata: { role: 'PATIENT', patient_id: p.id },
         })
       } catch {
@@ -638,6 +646,12 @@ export const patientRegistrationRouter = createTRPCRouter({
 
       try {
         await ctx.supabase.auth.admin.updateUserById(userId, {
+          // Story 56.1: authorization claims live in app_metadata (server-
+          // authoritative). user_metadata keeps display copies only.
+          app_metadata: {
+            role: 'PATIENT',
+            patient_id: createdPatientId,
+          },
           user_metadata: {
             role: 'PATIENT',
             patient_id: createdPatientId,

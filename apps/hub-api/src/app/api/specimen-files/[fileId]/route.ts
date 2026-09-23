@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseClient } from '@/lib/supabase'
-import { verifySupabaseJwt, getSupabaseJwk } from '@/lib/jwt'
+import { verifySupabaseJwt, getSupabaseJwk, resolveAuthzClaims } from '@/lib/jwt'
 import { hasResourceAccess } from '@/trpc/rbac'
 import { checkConsent } from '@/trpc/middleware/enforceConsent'
 import { decryptField } from '@ultranos/crypto/server'
@@ -47,12 +47,13 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const userMeta = (payload.user_metadata as Record<string, unknown>) ?? {}
+  // Story 56.1: authorization claims from app_metadata only — never user_metadata.
+  const claims = resolveAuthzClaims(payload)
   const user = {
     sub: payload.sub,
-    role: ((userMeta.role as string) ?? (payload.role as string) ?? '').toUpperCase() as `${UserRole}`,
+    role: claims.role as `${UserRole}`,
     sessionId: (payload.session_id as string) ?? '',
-    orgId: (userMeta.org_id as string) ?? (payload.org_id as string) ?? undefined,
+    orgId: claims.orgId ?? undefined,
   }
 
   // RBAC check — labs hold DiagnosticReport access (same as lab-files route)

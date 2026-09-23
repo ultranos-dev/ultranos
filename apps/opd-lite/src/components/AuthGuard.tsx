@@ -49,7 +49,9 @@ export function AuthGuard({ children }: { children: ReactNode }) {
             useAuthSessionStore.getState().setSession({
               userId: payload.sub,
               practitionerId: payload.practitioner_id ?? payload.sub,
-              role: (payload.role !== 'authenticated' ? payload.role : null) ?? data.session.user?.user_metadata?.role ?? '',
+              // Story 56.1: app_metadata first (server-authoritative); user_metadata is a
+              // temporary pre-migration fallback. Display/routing only — enforcement is hub-side.
+              role: (payload.role !== 'authenticated' ? payload.role : null) ?? data.session.user?.app_metadata?.role ?? data.session.user?.user_metadata?.role ?? '',
               sessionId: payload.session_id ?? '',
               email: data.session.user?.email ?? '',
               name: (() => {

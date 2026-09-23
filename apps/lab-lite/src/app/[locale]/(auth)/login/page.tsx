@@ -102,7 +102,10 @@ export default function LoginPage() {
         return m?.full_name ?? m?.name ??
           ((m?.given_name || m?.family_name) ? `${m?.given_name ?? ''} ${m?.family_name ?? ''}`.trim() : '')
       })(),
-      labRole: user.user_metadata?.lab_role ?? null,
+      // Story 56.1: app_metadata first (server-authoritative); user_metadata is a
+      // temporary pre-migration fallback. Authoritative lab role comes from the Hub
+      // (lab.getMyRole, DB-resolved) once online — this is a display-only seed.
+      labRole: user.app_metadata?.lab_role ?? user.user_metadata?.lab_role ?? null,
     })
 
     const params = new URLSearchParams(window.location.search)

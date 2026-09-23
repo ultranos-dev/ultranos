@@ -2730,11 +2730,19 @@ export const adminRouter = createTRPCRouter({
         }
       }
 
-      // Create Supabase Auth user with admin-provided password
+      // Create Supabase Auth user with admin-provided password.
+      // Story 56.1: authorization claims (role/org_id) live in app_metadata —
+      // server-authoritative, only writable via the service-role Admin API.
+      // user_metadata keeps display copies (name fields + legacy role/org_id)
+      // for client display compatibility; the Hub never reads them for authz.
       const { data: authResult, error: authError } = await ctx.supabase.auth.admin.createUser({
         email: input.email,
         password: input.password,
         email_confirm: true,
+        app_metadata: {
+          role: input.role,
+          org_id: ctx.user.orgId,
+        },
         user_metadata: {
           role: input.role,
           org_id: ctx.user.orgId,
@@ -2926,10 +2934,13 @@ export const adminRouter = createTRPCRouter({
 
         updateData.role = input.role
 
-        // Update auth user metadata if auth_user_id exists
+        // Update auth user metadata if auth_user_id exists.
+        // Story 56.1: app_metadata is the server-authoritative authz source;
+        // user_metadata keeps a display copy only.
         if (existing.auth_user_id) {
           try {
             await ctx.supabase.auth.admin.updateUserById(existing.auth_user_id as string, {
+              app_metadata: { role: input.role },
               user_metadata: { role: input.role },
             })
           } catch {
@@ -3015,6 +3026,8 @@ export const adminRouter = createTRPCRouter({
         try {
           await ctx.supabase.auth.admin.updateUserById(existing.auth_user_id as string, {
             ban_duration: '876000h',
+            // Story 56.1: status is server-authoritative in app_metadata.
+            app_metadata: { status: 'ARCHIVED' },
             user_metadata: { status: 'ARCHIVED' },
           })
         } catch {
@@ -3081,6 +3094,8 @@ export const adminRouter = createTRPCRouter({
         try {
           await ctx.supabase.auth.admin.updateUserById(existing.auth_user_id as string, {
             ban_duration: 'none',
+            // Story 56.1: status is server-authoritative in app_metadata.
+            app_metadata: { status: 'ACTIVE' },
             user_metadata: { status: 'ACTIVE' },
           })
         } catch {
@@ -3175,6 +3190,9 @@ export const adminRouter = createTRPCRouter({
         try {
           await ctx.supabase.auth.admin.updateUserById(existing.auth_user_id as string, {
             ban_duration: '876000h',
+            // Story 56.1: status is server-authoritative in app_metadata —
+            // a user cannot clear their own suspension via auth.updateUser().
+            app_metadata: { status: 'SUSPENDED' },
             user_metadata: { status: 'SUSPENDED' },
           })
         } catch {
@@ -3295,6 +3313,8 @@ export const adminRouter = createTRPCRouter({
         try {
           await ctx.supabase.auth.admin.updateUserById(existing.auth_user_id as string, {
             ban_duration: 'none',
+            // Story 56.1: status is server-authoritative in app_metadata.
+            app_metadata: { status: 'ACTIVE' },
             user_metadata: { status: 'ACTIVE' },
           })
         } catch {

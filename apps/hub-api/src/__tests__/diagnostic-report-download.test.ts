@@ -23,7 +23,9 @@ vi.mock('@/lib/supabase', () => ({
   },
 }))
 
-vi.mock('@/lib/jwt', () => ({
+// Story 56.1: the route also imports resolveAuthzClaims — keep the real one.
+vi.mock('@/lib/jwt', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/jwt')>()),
   verifySupabaseJwt: (...args: unknown[]) => mockVerifyJwt(...args),
   getSupabaseJwk: () => mockGetJwk(),
 }))
