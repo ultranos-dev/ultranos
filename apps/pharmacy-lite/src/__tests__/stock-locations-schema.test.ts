@@ -7,7 +7,7 @@ beforeEach(async () => { await db.delete(); await db.open() })
 
 describe('stockLocations schema (Dexie v21)', () => {
   it('is at version 21 with a stockLocations store', async () => {
-    expect(db.verno).toBe(22)
+    expect(db.verno).toBe(23)
     const row: StockLocation = { id: 'l1', facilityId: 'f1', name: 'Main', kind: 'store', isPrimary: true, isActive: true, lastSyncedAt: '2026-09-13T00:00:00.000Z' }
     await db.stockLocations.put(row)
     expect((await db.stockLocations.get('l1'))?.name).toBe('Main')

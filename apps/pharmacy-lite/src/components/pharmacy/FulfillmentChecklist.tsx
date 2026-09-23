@@ -24,7 +24,7 @@ function formatFrequency(freqN?: number, perU?: string): string {
 export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
   const t = useTranslations('fulfillment')
   const tD = useTranslations('dispensing')
-  const { phase, items, practitionerName, patientName, patientAge, patientAllergies, allergyStatusUnknown, toggleItem, selectAll, deselectAll, setBrandSelection, setBatchLot } =
+  const { phase, items, practitionerName, patientName, patientAge, patientAllergies, allergyStatusUnknown, stockDeductionWarning, toggleItem, selectAll, deselectAll, setBrandSelection, setBatchLot } =
     useFulfillmentStore()
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [dispensingComplete, setDispensingComplete] = useState(false)
@@ -108,13 +108,25 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
               <div className="min-w-0 flex-1">
                 {/* Medication info */}
                 <p className="font-medium text-foreground">{item.prescription.medT}</p>
-                <p className="text-sm text-muted-foreground">
-                  {item.prescription.dos.qty} {item.prescription.dos.unit}
-                  {item.prescription.dos.freqN && (
-                    <span> &middot; {formatFrequency(item.prescription.dos.freqN, item.prescription.dos.perU)}</span>
-                  )}
-                  <span> &middot; {item.prescription.dur} days</span>
-                </p>
+                {item.prescription.dosageUnknown ? (
+                  // Story 57.4 (M-PHARM-6): dosage could not be recovered — show an
+                  // explicit unknown state requiring pharmacist confirmation, never
+                  // the fabricated placeholder values as if authoritative.
+                  <p
+                    className="text-sm font-semibold text-warning"
+                    data-testid={`dosage-unknown-${item.prescription.id}`}
+                  >
+                    {t('dosageUnknown')}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {item.prescription.dos.qty} {item.prescription.dos.unit}
+                    {item.prescription.dos.freqN && (
+                      <span> &middot; {formatFrequency(item.prescription.dos.freqN, item.prescription.dos.perU)}</span>
+                    )}
+                    <span> &middot; {item.prescription.dur} days</span>
+                  </p>
+                )}
 
                 {/* Brand / Batch inputs — only for selected items */}
                 {item.selected && (
@@ -175,6 +187,22 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
       >
         {t('confirmDispensing')}
       </Button>
+
+      {/* Story 57.4 (M-PHARM-2, AC 3): persistent stock-deduction warning. The
+          dispense itself is NOT blocked, but a failure to decrement the on-hand
+          ledger must be visible so the pharmacist can manually adjust it. */}
+      {dispensingComplete && stockDeductionWarning && (
+        <div
+          role="alert"
+          className="rounded-2xl border-2 border-warning/40 bg-warning/10 p-4 space-y-1"
+          data-testid="stock-deduction-warning"
+        >
+          <p className="text-sm font-bold text-warning">{tD('stockNotDecrementedTitle')}</p>
+          <p className="text-xs text-warning">
+            {tD('stockNotDecrementedBody', { count: stockDeductionWarning.failedCount })}
+          </p>
+        </div>
+      )}
 
       {dispensingComplete && (
         <div className="rounded-2xl border-2 border-success/20 bg-success/10 p-4 space-y-3" data-testid="dispensing-complete-card">

@@ -7,7 +7,8 @@ import { logDispenseEvent } from '@/services/dispenseAuditService'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { db } from '@/lib/db'
 import { selectFefoBatch } from '@/lib/inventory/fefo'
-import { deductStock } from '@/lib/inventory/stock-service'
+import { deductStock, InsufficientStockError } from '@/lib/inventory/stock-service'
+import { recordStockReconciliationTask } from '@/lib/inventory/reconciliation-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { createInvoiceFromDispense } from '@/lib/pos/invoice-service'
 import { hlc, serializeHlc } from '@/lib/hlc'
@@ -60,6 +61,16 @@ interface FulfillmentState {
   patientAllergies: string[] | null
   allergyStatusUnknown: boolean
 
+  /**
+   * Story 57.4 (M-PHARM-2, AC 3): set when one or more stock deductions FAILED
+   * during dispensing (batch missing, insufficient on-hand, or an error).
+   * Dispensing is NOT blocked (clinical priority) — but the failure is surfaced
+   * as a persistent warning ("stock not decremented — manual adjustment
+   * required") and a reconciliation task is written for the inventory page.
+   * `null` = no deduction problem this fulfillment.
+   */
+  stockDeductionWarning: { failedCount: number } | null
+
   loadPrescriptions: (
     prescriptions: VerifiedPrescription[],
     practitionerName?: string,
@@ -92,6 +103,7 @@ export const useFulfillmentStore = create<FulfillmentState>()(
     patientRef: null,
     patientAllergies: null,
     allergyStatusUnknown: true,
+    stockDeductionWarning: null,
 
     loadPrescriptions: (prescriptions, practitionerName, patient) => {
       // Guard: do not overwrite state during active dispensing
@@ -117,6 +129,8 @@ export const useFulfillmentStore = create<FulfillmentState>()(
           : null
         state.patientAllergies = null
         state.allergyStatusUnknown = true
+        // New fulfillment — clear any prior deduction warning.
+        state.stockDeductionWarning = null
       })
 
       // Audit: PHI access when patient demographics are loaded for fulfillment view
@@ -235,25 +249,65 @@ export const useFulfillmentStore = create<FulfillmentState>()(
 
     deductStockOnDispense: async (practitionerId: string) => {
       const items = get().items
+      // Story 57.4 (M-PHARM-2, AC 3): a stock-deduction failure must NEVER be
+      // silently swallowed. Dispensing is still not blocked (clinical priority),
+      // but every failure is captured as a durable reconciliation task and
+      // aggregated into a persistent warning so the pharmacist knows the ledger
+      // was not decremented and can manually adjust it.
+      let failedCount = 0
       for (const item of items) {
         if (!item.selected || !item.fefoBatchId) continue
+        const qty = item.prescription.dos.qty
         try {
           const catalogItem = await db.catalogItems
             .filter((c) => c.name === item.prescription.medN || c.barcode === item.prescription.med)
             .first()
-          if (!catalogItem) continue
+          if (!catalogItem) {
+            failedCount++
+            await recordStockReconciliationTask({
+              stockBatchId: item.fefoBatchId,
+              quantity: qty,
+              reason: 'batch_not_found',
+              referenceId: item.prescription.id,
+            })
+            continue
+          }
           await deductStock({
             stockBatchId: item.fefoBatchId,
             catalogItemId: catalogItem.id,
-            quantity: item.prescription.dos.qty,
+            quantity: qty,
             type: 'dispensed',
             referenceId: item.prescription.id,
             referenceType: 'dispense',
             performedBy: practitionerId,
           })
-        } catch {
-          // Stock deduction failure should not block dispensing
+        } catch (err) {
+          failedCount++
+          // Look up the catalog id again best-effort for the reconciliation record;
+          // never let this lookup throw and mask the original failure.
+          let catalogItemId: string | undefined
+          try {
+            const c = await db.catalogItems
+              .filter((ci) => ci.name === item.prescription.medN || ci.barcode === item.prescription.med)
+              .first()
+            catalogItemId = c?.id
+          } catch {
+            catalogItemId = undefined
+          }
+          await recordStockReconciliationTask({
+            catalogItemId,
+            stockBatchId: item.fefoBatchId,
+            quantity: qty,
+            reason: err instanceof InsufficientStockError ? 'insufficient_stock' : 'deduction_error',
+            referenceId: item.prescription.id,
+          })
         }
+      }
+
+      if (failedCount > 0) {
+        set((state) => {
+          state.stockDeductionWarning = { failedCount }
+        })
       }
     },
 
@@ -396,6 +450,7 @@ export const useFulfillmentStore = create<FulfillmentState>()(
         state.patientRef = null
         state.patientAllergies = null
         state.allergyStatusUnknown = true
+        state.stockDeductionWarning = null
       })
       // Story 57.1 (AC 4): cancellation/reset also clears the active patient.
       usePatientStore.getState().clearPatient()

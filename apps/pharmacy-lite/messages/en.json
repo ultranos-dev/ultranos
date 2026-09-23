@@ -188,7 +188,8 @@
       "daily": "{count}× daily",
       "hourly": "{count}× hourly",
       "other": "{count}×"
-    }
+    },
+    "dosageUnknown": "Dosage unknown — confirm before dispensing"
   },
   "prescription": {
     "scanTitle": "Scan Prescription",
@@ -317,7 +318,9 @@
     "collectPayment": "Collect Payment — {invoiceNumber}",
     "noActivityDescription": "Dispensed medications will appear here as you fill prescriptions throughout your shift.",
     "startScanning": "Start Scanning",
-    "loading": "Loading recent dispensing…"
+    "loading": "Loading recent dispensing…",
+    "stockNotDecrementedTitle": "Stock not decremented — manual adjustment required",
+    "stockNotDecrementedBody": "{count, plural, =1 {# item was} other {# items were}} dispensed but stock could not be decremented. Adjust the inventory ledger manually. Reconciliation tasks are listed on the Inventory page."
   },
   "queue": {
     "active": "Active",
@@ -1017,7 +1020,14 @@
     "supplierItemSetPreferred": "Set preferred",
     "supplierItemAdd": "Add supplier",
     "supplierItemRemove": "Remove",
-    "supplierItemSaveError": "Could not save the supplier link."
+    "supplierItemSaveError": "Could not save the supplier link.",
+    "reconTitle": "Stock reconciliation required ({count})",
+    "reconDescription": "These dispenses completed but stock was not decremented. Adjust the ledger, then mark resolved.",
+    "reconRow": "{reason} — {qty} unit(s), batch {batch}",
+    "reconResolve": "Mark resolved",
+    "reconReason_insufficient_stock": "Insufficient stock",
+    "reconReason_batch_not_found": "Batch not found",
+    "reconReason_deduction_error": "Deduction error"
   },
   "locations": {
     "selectorLabel": "Sub-location",
@@ -1267,7 +1277,9 @@
     "overrideReasonPlaceholder": "Describe the clinical justification for proceeding past this warning...",
     "overrideSupervisorLabel": "Supervising Physician / Pharmacist Name",
     "overrideSupervisorPlaceholder": "e.g. Dr. Ahmad",
-    "overrideAllergyUnknownNotice": "Allergy status unknown — dispensing requires a documented override after verbal verification with the patient."
+    "overrideAllergyUnknownNotice": "Allergy status unknown — dispensing requires a documented override after verbal verification with the patient.",
+    "activeMedUnavailableTitle": "Active-medication check unavailable",
+    "activeMedUnavailableCaution": "Could not load the patient's active medications. Manually confirm current medications before dispensing."
   },
   "allergyBanner": {
     "knownTitle": "Known Allergies",

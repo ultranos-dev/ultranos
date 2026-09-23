@@ -188,7 +188,8 @@
       "daily": "{count}× روزانه",
       "hourly": "{count}× هر ساعت",
       "other": "{count}×"
-    }
+    },
+    "dosageUnknown": "مقدار مصرف نامعلوم است — پیش از توزیع تأیید کنید"
   },
   "prescription": {
     "scanTitle": "اسکن نسخه",
@@ -317,7 +318,9 @@
     "collectPayment": "دریافت پرداخت — {invoiceNumber}",
     "noActivityDescription": "ادویه‌های تحویل داده شده در اینجا نمایش داده می‌شوند وقتی نسخه‌ها را در طول شیفت انجام می‌دهید.",
     "startScanning": "شروع اسکن",
-    "loading": "در حال بارگذاری توزیع اخیر…"
+    "loading": "در حال بارگذاری توزیع اخیر…",
+    "stockNotDecrementedTitle": "موجودی کاهش نیافت — تنظیم دستی لازم است",
+    "stockNotDecrementedBody": "{count, plural, =1 {یک قلم} other {# قلم}} توزیع شد اما موجودی کاهش نیافت. دفتر موجودی را به‌صورت دستی تنظیم کنید. وظایف تطبیق در صفحه موجودی فهرست شده‌اند."
   },
   "queue": {
     "active": "فعال",
@@ -1017,7 +1020,14 @@
     "supplierItemSetPreferred": "تنظیم به عنوان ترجیحی",
     "supplierItemAdd": "تامین‌کننده اضافه کنید",
     "supplierItemRemove": "حذف",
-    "supplierItemSaveError": "لینک تامین‌کننده ذخیره نشد."
+    "supplierItemSaveError": "لینک تامین‌کننده ذخیره نشد.",
+    "reconTitle": "تطبیق موجودی لازم است ({count})",
+    "reconDescription": "این توزیع‌ها تکمیل شد اما موجودی کاهش نیافت. دفتر را تنظیم کنید سپس حل‌شده علامت بزنید.",
+    "reconRow": "{reason} — {qty} واحد، دسته {batch}",
+    "reconResolve": "حل‌شده",
+    "reconReason_insufficient_stock": "موجودی ناکافی",
+    "reconReason_batch_not_found": "دسته یافت نشد",
+    "reconReason_deduction_error": "خطای کاهش"
   },
   "locations": {
     "selectorLabel": "موقعیت فرعی",
@@ -1267,7 +1277,9 @@
     "overrideReasonPlaceholder": "توجیه بالینی برای ادامه دادن علی‌رغم این هشدار را توضیح دهید...",
     "overrideSupervisorLabel": "نام طبیب یا دواساز ناظر",
     "overrideSupervisorPlaceholder": "مثال: داکتر احمد",
-    "overrideAllergyUnknownNotice": "وضعیت حساسیت نامعلوم است — تحویل دوا نیازمند نادیده‌گرفتن مستند پس از تایید شفاهی از مریض است."
+    "overrideAllergyUnknownNotice": "وضعیت حساسیت نامعلوم است — تحویل دوا نیازمند نادیده‌گرفتن مستند پس از تایید شفاهی از مریض است.",
+    "activeMedUnavailableTitle": "بررسی داروهای فعال در دسترس نیست",
+    "activeMedUnavailableCaution": "داروهای فعال بیمار بارگیری نشد. پیش از توزیع، داروهای فعلی را به‌صورت دستی تأیید کنید."
   },
   "allergyBanner": {
     "knownTitle": "حساسیت‌های شناخته‌شده",

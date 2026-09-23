@@ -64,6 +64,9 @@ export const PRESERVE_TABLES = [
   'stockTransfers',
   'dataBudgetConfig',
   'dataUsage',
+  // Story 57.4: stock reconciliation tasks — non-PHI ledger-drift records that
+  // must survive logout until resolved by a manual adjustment.
+  'stockReconciliationTasks',
   // Phase 2: enriched drug-catalog mirror + brands (non-PHI reference data)
   'drugCatalogMirror',
   'drugBrandsMirror',

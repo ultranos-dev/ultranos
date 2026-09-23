@@ -4,24 +4,55 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 interface ActiveStatement { medicationDisplay?: string }
 
 /**
- * Fetch a patient's active medication display names from the Hub (PHARMACIST-scoped).
- * Best-effort: returns [] on no-token / offline / error — never throws. Online only.
+ * Story 57.4 (M-PHARM-1, AC 4): the result of loading the active-medication
+ * dimension of the dispense interaction check.
+ *
+ * `complete: false` means the active-medication list could NOT be loaded
+ * (offline, no token, hub error) — it is NOT an assertion that the patient has no
+ * active meds. Callers MUST treat an incomplete result as a DEGRADED check
+ * (surface "active-medication check unavailable" + require override), never as an
+ * implicit clear from an empty list. `meds` is always safe to feed into the
+ * interaction check (empty when incomplete).
  */
-export async function fetchActiveMedicationDisplays(patientId: string): Promise<string[]> {
+export interface ActiveMedicationResult {
+  meds: string[]
+  complete: boolean
+}
+
+/**
+ * Fetch a patient's active medication display names from the Hub (PHARMACIST-scoped).
+ * Best-effort: never throws. Returns `{ meds: [], complete: false }` on no-token /
+ * offline / non-OK response / error so the caller can distinguish "check could not
+ * run" from "checked, none found". Online only.
+ */
+export async function fetchActiveMedications(patientId: string): Promise<ActiveMedicationResult> {
   try {
-    if (typeof window !== 'undefined' && !navigator.onLine) return []
+    if (typeof window !== 'undefined' && !navigator.onLine) return { meds: [], complete: false }
     const token = await useAuthSessionStore.getState().getAccessToken()
-    if (!token) return []
+    if (!token) return { meds: [], complete: false }
 
     const url = new URL(getHubApiUrl())
     url.pathname = url.pathname.replace(/\/$/, '') + '/medicationStatement.listActiveForPharmacist'
     url.searchParams.set('input', JSON.stringify({ json: { patientRef: `Patient/${patientId}` } }))
 
     const res = await fetch(url.toString(), { method: 'GET', headers: { Authorization: `Bearer ${token}` } })
-    if (!res.ok) return []
+    if (!res.ok) return { meds: [], complete: false }
     const body = (await res.json()) as { result: { data: { json: { statements: ActiveStatement[] } } } }
-    return body.result.data.json.statements.map((s) => s.medicationDisplay ?? '').filter((d) => d.length > 0)
+    const meds = body.result.data.json.statements
+      .map((s) => s.medicationDisplay ?? '')
+      .filter((d) => d.length > 0)
+    return { meds, complete: true }
   } catch {
-    return []
+    return { meds: [], complete: false }
   }
+}
+
+/**
+ * @deprecated Story 57.4: use {@link fetchActiveMedications} which distinguishes
+ * "check could not run" (`complete: false`) from "checked, none found". This
+ * thin wrapper discards the completeness signal and is retained only for callers
+ * that do not surface degradation.
+ */
+export async function fetchActiveMedicationDisplays(patientId: string): Promise<string[]> {
+  return (await fetchActiveMedications(patientId)).meds
 }

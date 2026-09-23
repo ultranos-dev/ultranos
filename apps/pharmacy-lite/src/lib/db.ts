@@ -130,6 +130,38 @@ export interface CatalogSyncMetaEntry {
   value: string
 }
 
+/**
+ * Story 57.4 (M-PHARM-2, AC 3): a durable record that a stock deduction FAILED
+ * during dispensing (batch missing, insufficient on-hand, or an infrastructure
+ * error). Dispensing is a clinical priority and is NOT blocked by inventory
+ * problems — instead the failure is captured here so it is never silently
+ * swallowed: the pharmacist sees a persistent warning and a reconciliation task
+ * on the inventory page, and can manually adjust the ledger.
+ *
+ * Non-PHI: contains only opaque inventory ids, quantities, and an error category
+ * — never a patient name, patient ref, or medication name. Preserved across
+ * session end (NOT in PHI_TABLE_CONFIGS) because the ledger drift it records must
+ * survive logout until an adjustment resolves it.
+ */
+export interface StockReconciliationTask {
+  id: string
+  /** Opaque catalog item id whose deduction failed (may be undefined if the
+   *  catalog lookup itself failed). */
+  catalogItemId?: string
+  /** Opaque FEFO batch id the deduction targeted. */
+  stockBatchId?: string
+  /** Quantity that should have been deducted but was not. */
+  quantity: number
+  /** Why the deduction failed — a coarse category, never raw PHI/error text. */
+  reason: 'insufficient_stock' | 'batch_not_found' | 'deduction_error'
+  /** Opaque dispense reference id (a prescription/dispense id — not patient data). */
+  referenceId?: string
+  status: 'open' | 'resolved'
+  createdAt: string
+  hlcTimestamp: string
+  resolvedAt?: string
+}
+
 // Data Budget types — Story 48.x / Data Connectivity
 // ---------------------------------------------------------------------------
 export interface DataBudgetConfig {
@@ -188,6 +220,7 @@ class PharmacyLiteDatabase extends Dexie {
   wholesalePullMeta!: EntityTable<{ key: string; lastPulledHlc: string }, 'key'>
   stockLocations!: EntityTable<StockLocation, 'id'>
   patientAllergyCache!: EntityTable<PatientAllergyCacheEntry, 'patientRef'>
+  stockReconciliationTasks!: EntityTable<StockReconciliationTask, 'id'>
 
   constructor() {
     super('pharmacy-lite')
@@ -345,6 +378,15 @@ class PharmacyLiteDatabase extends Dexie {
     // fetchedAt staleness marker for offline re-dispense protection.
     this.version(22).stores({
       patientAllergyCache: 'patientRef, fetchedAt',
+    })
+
+    // v23: Story 57.4 — stock reconciliation tasks (M-PHARM-2, AC 3).
+    // Records a failed stock deduction during dispensing so it is never silently
+    // swallowed. Non-PHI (opaque inventory ids + quantities only) — NOT added to
+    // PHI_TABLE_CONFIGS and PRESERVED across session end so ledger drift survives
+    // logout until resolved by a manual adjustment.
+    this.version(23).stores({
+      stockReconciliationTasks: 'id, status, catalogItemId, createdAt, [status+createdAt]',
     })
   }
 }

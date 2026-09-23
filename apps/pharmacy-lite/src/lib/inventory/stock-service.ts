@@ -3,6 +3,27 @@ import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { enqueueStockBatchSync } from './stock-batch-sync'
 import type { StockBatch, StockMovement, StockMovementType, StockMovementReason } from './types'
 
+/**
+ * Story 57.4 (M-PHARM-2, AC 1): thrown when a deduction cannot proceed because
+ * the current on-hand quantity does not cover the requested amount. A distinct
+ * error class so callers (fulfillment) can distinguish an insufficient-stock
+ * failure from an infrastructure failure and surface the correct warning +
+ * reconciliation record without ever silently swallowing it.
+ */
+export class InsufficientStockError extends Error {
+  readonly stockBatchId: string
+  readonly available: number
+  readonly requested: number
+  constructor(stockBatchId: string, available: number, requested: number) {
+    // No PHI in message — batch id is an opaque inventory id, not patient data.
+    super(`Insufficient stock for batch ${stockBatchId}: have ${available}, need ${requested}`)
+    this.name = 'InsufficientStockError'
+    this.stockBatchId = stockBatchId
+    this.available = available
+    this.requested = requested
+  }
+}
+
 export async function deductStock(params: {
   stockBatchId: string
   catalogItemId: string
@@ -15,12 +36,6 @@ export async function deductStock(params: {
   performedBy: string
 }): Promise<StockBatch> {
   const { stockBatchId, catalogItemId, quantity, type, reason, reasonCode, referenceId, referenceType, performedBy } = params
-
-  const batch = await db.stockBatches.get(stockBatchId)
-  if (!batch) throw new Error(`StockBatch not found: ${stockBatchId}`)
-  if (batch.quantityOnHand < quantity) {
-    throw new Error(`Insufficient stock: have ${batch.quantityOnHand}, need ${quantity}`)
-  }
 
   const now = new Date().toISOString()
   const movementId = crypto.randomUUID()
@@ -40,16 +55,33 @@ export async function deductStock(params: {
     hlcTimestamp: now,
   }
 
-  const newQty = batch.quantityOnHand - quantity
-  const newStatus = newQty <= 0 ? 'depleted' as const : batch.status
+  // Story 57.4 (M-PHARM-2, AC 1): the read → quantity-check → newQty compute →
+  // write ALL happen inside a single rw transaction. Previously the batch was
+  // read and validated OUTSIDE the transaction, so two tabs dispensing the same
+  // batch concurrently could both pass the check against the same stale on-hand
+  // value and produce a lost update (or drive stock negative unnoticed). Reading
+  // inside the tx serialises the check-and-decrement; a negative result is
+  // rejected before any write is committed.
+  const updatedBatch = await db.transaction('rw', [db.stockMovements, db.stockBatches], async () => {
+    const batch = await db.stockBatches.get(stockBatchId)
+    if (!batch) throw new Error(`StockBatch not found: ${stockBatchId}`)
 
-  await db.transaction('rw', [db.stockMovements, db.stockBatches], async () => {
+    const newQty = batch.quantityOnHand - quantity
+    if (newQty < 0) {
+      // Guard: never write a negative on-hand. Abort the tx (no movement, no
+      // batch update) so the ledger stays consistent and the caller can surface
+      // an explicit reconciliation warning.
+      throw new InsufficientStockError(stockBatchId, batch.quantityOnHand, quantity)
+    }
+    const newStatus = newQty <= 0 ? 'depleted' as const : batch.status
+
     await db.stockMovements.put(movement)
     await db.stockBatches.update(stockBatchId, {
       quantityOnHand: newQty,
       status: newStatus,
       hlcTimestamp: now,
     })
+    return { ...batch, quantityOnHand: newQty, status: newStatus, hlcTimestamp: now }
   })
 
   await enqueuePharmacySyncEntry({
@@ -62,9 +94,9 @@ export async function deductStock(params: {
   })
 
   // Site #1: enqueue the full updated StockBatch after the txn (LWW snapshot)
-  await enqueueStockBatchSync({ ...batch, quantityOnHand: newQty, status: newStatus, hlcTimestamp: now })
+  await enqueueStockBatchSync(updatedBatch)
 
-  return { ...batch, quantityOnHand: newQty, status: newStatus }
+  return updatedBatch
 }
 
 export async function addStock(params: {

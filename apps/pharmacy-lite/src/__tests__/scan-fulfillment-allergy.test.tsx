@@ -44,7 +44,10 @@ vi.mock('@/lib/dispense-interaction-check', () => ({
 vi.mock('@/lib/drug-catalog-queries', () => ({
   getRecallAlertsForAtc: vi.fn().mockResolvedValue([]),
 }))
+// Story 57.4: modal now consumes fetchActiveMedications; default to COMPLETE so
+// the active-med dimension does not force an override in these allergy tests.
 vi.mock('@/lib/active-medications', () => ({
+  fetchActiveMedications: vi.fn().mockResolvedValue({ meds: [], complete: true }),
   fetchActiveMedicationDisplays: vi.fn().mockResolvedValue([]),
 }))
 

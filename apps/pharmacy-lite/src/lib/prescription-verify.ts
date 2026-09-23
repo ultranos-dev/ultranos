@@ -27,6 +27,15 @@ export interface VerifiedPrescription {
   req: string
   pat: string
   at: string
+  /**
+   * Story 57.4 (M-PHARM-6): true when the dosage (`dos`/`dur`) could NOT be
+   * recovered from the source (e.g. a legacy dispense with no stored original
+   * prescription) and was placeholder-reconstructed. The values must NOT be
+   * presented as authoritative — the fulfillment UI requires the pharmacist to
+   * confirm/enter the real dosage. Absent/false = dosage came from a signed QR or
+   * a stored original prescription and is trustworthy.
+   */
+  dosageUnknown?: boolean
 }
 
 export type VerificationResult =

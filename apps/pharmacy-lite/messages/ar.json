@@ -188,7 +188,8 @@
       "daily": "{count}× يوميًا",
       "hourly": "{count}× كل ساعة",
       "other": "{count}×"
-    }
+    },
+    "dosageUnknown": "الجرعة غير معروفة — تأكّد قبل الصرف"
   },
   "prescription": {
     "scanTitle": "مسح الوصفة",
@@ -317,7 +318,9 @@
     "collectPayment": "تحصيل الدفع — {invoiceNumber}",
     "noActivityDescription": "ستظهر الأدوية التي تم صرفها هنا أثناء تنفيذ الوصفات خلال وردیتك.",
     "startScanning": "ابدأ المسح",
-    "loading": "جاري تحميل الصرف الأخير…"
+    "loading": "جاري تحميل الصرف الأخير…",
+    "stockNotDecrementedTitle": "لم يُخصم المخزون — يلزم تعديل يدوي",
+    "stockNotDecrementedBody": "تم صرف {count, plural, =1 {عنصر واحد} other {# عناصر}} لكن تعذّر خصم المخزون. عدّل سجل المخزون يدويًا. تظهر مهام التسوية في صفحة المخزون."
   },
   "queue": {
     "active": "نشطة",
@@ -1017,7 +1020,14 @@
     "supplierItemSetPreferred": "تعيين كمفضل",
     "supplierItemAdd": "إضافة مورد",
     "supplierItemRemove": "إزالة",
-    "supplierItemSaveError": "تعذّر حفظ ارتباط المورد."
+    "supplierItemSaveError": "تعذّر حفظ ارتباط المورد.",
+    "reconTitle": "تسوية المخزون مطلوبة ({count})",
+    "reconDescription": "اكتملت عمليات الصرف هذه لكن لم يُخصم المخزون. عدّل السجل ثم ضع علامة تم الحل.",
+    "reconRow": "{reason} — {qty} وحدة، الدفعة {batch}",
+    "reconResolve": "تم الحل",
+    "reconReason_insufficient_stock": "مخزون غير كافٍ",
+    "reconReason_batch_not_found": "الدفعة غير موجودة",
+    "reconReason_deduction_error": "خطأ في الخصم"
   },
   "locations": {
     "selectorLabel": "الموقع الفرعي",
@@ -1267,7 +1277,9 @@
     "overrideReasonPlaceholder": "صِف المبرر السريري للمضي رغم هذا التحذير...",
     "overrideSupervisorLabel": "اسم الطبيب أو الصيدلاني المشرف",
     "overrideSupervisorPlaceholder": "مثال: د. أحمد",
-    "overrideAllergyUnknownNotice": "حالة الحساسية غير معروفة — يتطلب الصرف تجاوزاً موثقاً بعد التحقق الشفهي من المريض."
+    "overrideAllergyUnknownNotice": "حالة الحساسية غير معروفة — يتطلب الصرف تجاوزاً موثقاً بعد التحقق الشفهي من المريض.",
+    "activeMedUnavailableTitle": "فحص الأدوية النشطة غير متاح",
+    "activeMedUnavailableCaution": "تعذّر تحميل الأدوية النشطة للمريض. تأكّد يدويًا من الأدوية الحالية قبل الصرف."
   },
   "allergyBanner": {
     "knownTitle": "حساسية معروفة",

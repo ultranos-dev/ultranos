@@ -9,7 +9,7 @@ import { RecallAlertBanner } from './RecallAlertBanner'
 import { InteractionCheckBanner, type InteractionStatus } from './InteractionCheckBanner'
 import { getRecallAlertsForAtc } from '@/lib/drug-catalog-queries'
 import { runDispenseInteractionCheck } from '@/lib/dispense-interaction-check'
-import { fetchActiveMedicationDisplays } from '@/lib/active-medications'
+import { fetchActiveMedications } from '@/lib/active-medications'
 import type { RecallAlert } from '@ultranos/shared-types'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
 
@@ -39,6 +39,10 @@ export function DispensingConfirmationModal({
   const [acknowledged, setAcknowledged] = useState(false)
   const [recalls, setRecalls] = useState<RecallAlert[]>([])
   const [interaction, setInteraction] = useState<InteractionStatus>({ state: 'checking' })
+  // Story 57.4 (M-PHARM-1): true when the active-medication dimension could not
+  // be loaded (offline/no-token/error). `null` while still loading — never
+  // treated as an implicit "no active meds" clear.
+  const [activeMedIncomplete, setActiveMedIncomplete] = useState<boolean | null>(null)
   const [overrideReason, setOverrideReason] = useState('')
   const [supervisorName, setSupervisorName] = useState('')
   const t = useTranslations('dispensingConfirmation')
@@ -56,25 +60,40 @@ export function DispensingConfirmationModal({
     const meds = items.map((i) => i.prescription.medN)
     const patientId = items[0]?.prescription.pat
     void (async () => {
-      const active = patientId ? await fetchActiveMedicationDisplays(patientId) : []
-      const status = await runDispenseInteractionCheck(meds, patientAllergies ?? [], active)
-      if (!cancelled) setInteraction(status)
+      // Story 57.4 (M-PHARM-1, AC 4): distinguish "active-med check could not run"
+      // from "checked, none found". When there is no patient id at all we also
+      // treat the dimension as incomplete (cannot have run) rather than clear.
+      const activeResult = patientId
+        ? await fetchActiveMedications(patientId)
+        : { meds: [] as string[], complete: false }
+      const status = await runDispenseInteractionCheck(meds, patientAllergies ?? [], activeResult.meds)
+      if (!cancelled) {
+        setInteraction(status)
+        setActiveMedIncomplete(!activeResult.complete)
+      }
     })()
     return () => { cancelled = true }
   }, [items, patientAllergies])
 
-  // Block on a contraindication AND while the check is still running —
-  // never allow dispense before the interaction check has resolved (safety race).
-  const blockedByInteraction = interaction.state === 'contraindicated' || interaction.state === 'checking'
+  // Block on a contraindication AND while any dimension is still running —
+  // never allow dispense before the checks have resolved (safety race). The
+  // active-med dimension is still loading while `activeMedIncomplete === null`.
+  const blockedByInteraction =
+    interaction.state === 'contraindicated' ||
+    interaction.state === 'checking' ||
+    activeMedIncomplete === null
 
   // Override is required for warning or unavailable states — the pharmacist must
   // provide a reason and supervisor name before proceeding.
   // Story 57.1 (AC 2): an UNKNOWN allergy status is treated exactly like an
   // unavailable interaction check — dispensing requires override-with-reason.
+  // Story 57.4 (M-PHARM-1, AC 4): an INCOMPLETE active-medication dimension is
+  // treated the same way — a degraded check, never an implicit clear.
   const needsOverride =
     interaction.state === 'warning' ||
     interaction.state === 'unavailable' ||
-    allergyStatusUnknown
+    allergyStatusUnknown ||
+    activeMedIncomplete === true
 
   const overrideValid =
     !needsOverride || (overrideReason.trim().length >= 10 && supervisorName.trim().length > 0)
@@ -101,6 +120,20 @@ export function DispensingConfirmationModal({
         <div className="mb-4">
           <InteractionCheckBanner status={interaction} />
         </div>
+
+        {/* Story 57.4 (M-PHARM-1, AC 4): active-medication dimension degraded —
+            surface explicitly as a warning, mirroring the UNAVAILABLE interaction
+            pattern. Never let an empty active-med list read as an implicit clear. */}
+        {activeMedIncomplete === true && (
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border-2 border-warning bg-warning/10 p-4"
+            data-testid="active-med-unavailable"
+          >
+            <p className="text-sm font-bold text-warning">{t('activeMedUnavailableTitle')}</p>
+            <p className="text-xs font-semibold text-warning mt-2">{t('activeMedUnavailableCaution')}</p>
+          </div>
+        )}
 
         {/* Override sub-form — rendered only for warning/unavailable states */}
         {needsOverride && (

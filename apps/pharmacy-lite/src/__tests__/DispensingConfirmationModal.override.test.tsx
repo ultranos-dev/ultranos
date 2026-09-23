@@ -25,12 +25,19 @@ vi.mock('@/lib/drug-catalog-queries', () => ({
   getRecallAlertsForAtc: vi.fn().mockResolvedValue([]),
 }))
 
+// Story 57.4: the modal now consumes fetchActiveMedications (with a completeness
+// signal). Default to a COMPLETE empty result so these interaction-focused tests
+// are unaffected (no active-med override is forced).
 vi.mock('@/lib/active-medications', () => ({
+  fetchActiveMedications: vi.fn().mockResolvedValue({ meds: [], complete: true }),
   fetchActiveMedicationDisplays: vi.fn().mockResolvedValue([]),
 }))
 
 import { DispensingConfirmationModal } from '@/components/pharmacy/DispensingConfirmationModal'
+import { fetchActiveMedications } from '@/lib/active-medications'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
+
+const mockFetchActiveMeds = vi.mocked(fetchActiveMedications)
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 const baseItem: FulfillmentItem = {
@@ -64,6 +71,9 @@ function renderModal(onConfirm: (override?: { reason: string; supervisorName: st
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // Default: active-med dimension loads successfully (complete). Individual
+  // suites override this to simulate a degraded load.
+  mockFetchActiveMeds.mockResolvedValue({ meds: [], complete: true })
 })
 
 // ── Test suite ────────────────────────────────────────────────────────────────
@@ -231,5 +241,49 @@ describe('DispensingConfirmationModal — override sub-form', () => {
       expect(screen.queryByTestId('override-reason')).not.toBeInTheDocument()
       expect(screen.queryByTestId('override-supervisor')).not.toBeInTheDocument()
     })
+  })
+
+  // ── ACTIVE-MED INCOMPLETE (Story 57.4, M-PHARM-1, AC 4) ──────────────────────
+  describe('active-medication check incomplete (override required)', () => {
+    beforeEach(() => {
+      // Interaction check itself is clear, but the active-med dimension is degraded.
+      mockRunCheck.mockResolvedValue({ state: 'clear' })
+      mockFetchActiveMeds.mockResolvedValue({ meds: [], complete: false })
+    })
+
+    it('renders the active-med-unavailable warning', async () => {
+      renderModal(vi.fn())
+      await waitFor(() => expect(screen.getByTestId('active-med-unavailable')).toBeInTheDocument())
+    })
+
+    it('requires an override (renders the override form) even though interactions are clear', async () => {
+      renderModal(vi.fn())
+      await waitFor(() => expect(screen.getByTestId('active-med-unavailable')).toBeInTheDocument())
+      expect(screen.getByTestId('override-reason')).toBeInTheDocument()
+      expect(screen.getByTestId('override-supervisor')).toBeInTheDocument()
+    })
+
+    it('confirm stays disabled after ack alone (override reason + supervisor needed)', async () => {
+      const user = userEvent.setup()
+      renderModal(vi.fn())
+      await waitFor(() => expect(screen.getByTestId('active-med-unavailable')).toBeInTheDocument())
+
+      const confirmBtn = screen.getByTestId('modal-confirm-dispensing-btn')
+      await user.click(screen.getByTestId('dispensing-ack-checkbox'))
+      expect(confirmBtn).toBeDisabled()
+
+      await user.type(screen.getByTestId('override-reason'), 'verified current meds verbally')
+      await user.type(screen.getByTestId('override-supervisor'), 'Dr. Sahar')
+      expect(confirmBtn).not.toBeDisabled()
+    })
+  })
+
+  it('does NOT show the active-med warning when the dimension loaded completely', async () => {
+    mockRunCheck.mockResolvedValue({ state: 'clear' })
+    mockFetchActiveMeds.mockResolvedValue({ meds: [], complete: true })
+    renderModal(vi.fn())
+    await waitFor(() => expect(screen.queryByTestId('interaction-checking')).not.toBeInTheDocument())
+    expect(screen.queryByTestId('active-med-unavailable')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('override-reason')).not.toBeInTheDocument()
   })
 })

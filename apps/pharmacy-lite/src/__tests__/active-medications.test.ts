@@ -9,14 +9,14 @@ vi.mock('@/stores/auth-session-store', () => ({
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-const { fetchActiveMedicationDisplays } = await import('@/lib/active-medications')
+const { fetchActiveMedicationDisplays, fetchActiveMedications } = await import('@/lib/active-medications')
 
 beforeEach(() => {
   mockFetch.mockReset()
   mockGetAccessToken.mockResolvedValue('tok')
 })
 
-describe('fetchActiveMedicationDisplays', () => {
+describe('fetchActiveMedicationDisplays (legacy wrapper)', () => {
   it('returns medication display names from the hub', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -36,5 +36,43 @@ describe('fetchActiveMedicationDisplays', () => {
   it('returns [] on a network error', async () => {
     mockFetch.mockRejectedValueOnce(new Error('offline'))
     expect(await fetchActiveMedicationDisplays('pat-1')).toEqual([])
+  })
+})
+
+// Story 57.4 (M-PHARM-1, AC 4): distinguish "check ran, none found" from
+// "check could not run" via the `complete` flag.
+describe('fetchActiveMedications (completeness signal)', () => {
+  it('returns complete:true with meds when the hub responds OK', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        result: { data: { json: { statements: [{ medicationDisplay: 'Warfarin 5mg' }], count: 1 } } },
+      }),
+    })
+    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: ['Warfarin 5mg'], complete: true })
+  })
+
+  it('returns complete:true with empty meds when the hub reports none (a real clear)', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ result: { data: { json: { statements: [], count: 0 } } } }),
+    })
+    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: [], complete: true })
+  })
+
+  it('returns complete:false with no token (degraded, not a clear)', async () => {
+    mockGetAccessToken.mockResolvedValueOnce(null)
+    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: [], complete: false })
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('returns complete:false on a network error (degraded, not a clear)', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('offline'))
+    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: [], complete: false })
+  })
+
+  it('returns complete:false on a non-OK response (degraded, not a clear)', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, json: async () => ({}) })
+    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: [], complete: false })
   })
 })

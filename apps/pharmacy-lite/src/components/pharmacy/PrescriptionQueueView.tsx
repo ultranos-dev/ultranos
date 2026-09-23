@@ -69,7 +69,13 @@ export function PrescriptionQueueView() {
       if (ext?.originalPrescription && typeof ext.originalPrescription === 'object') {
         verifiedPrescription = ext.originalPrescription as VerifiedPrescription
       } else {
-        // Fallback reconstruction for dispenses created before this patch
+        // Fallback reconstruction for dispenses created before this patch.
+        // Story 57.4 (M-PHARM-6): the medication identity is recoverable, but the
+        // dosage/duration are NOT stored on the dispense — they cannot be honestly
+        // reconstructed. Flag `dosageUnknown` so the fulfillment UI presents them
+        // as placeholders requiring pharmacist confirmation, NOT as authoritative
+        // values (previously a fabricated qty:1/unit:'tablet'/dur:7 was shown as
+        // if it came from the prescriber).
         const rx = dispense.authorizingPrescription?.[0]?.reference?.replace('MedicationRequest/', '') ?? ''
         const coding = dispense.medicationCodeableConcept?.coding?.[0]
         const patientRef = dispense.subject?.reference?.replace('Patient/', '') ?? ''
@@ -83,6 +89,7 @@ export function PrescriptionQueueView() {
           req: rx,
           pat: patientRef,
           at: dispense._ultranos?.createdAt ?? '',
+          dosageUnknown: true,
         }
       }
 

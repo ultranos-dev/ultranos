@@ -203,6 +203,37 @@ describe('PrescriptionQueueView', () => {
     expect(mockRouterPush).toHaveBeenCalledWith('/fulfillment')
   })
 
+  it('legacy item without originalPrescription reconstructs dosage flagged dosageUnknown (M-PHARM-6)', async () => {
+    // A dispense created before originalPrescription was stored: the dosage cannot
+    // be honestly recovered, so the reconstructed prescription MUST carry
+    // dosageUnknown:true rather than presenting qty:1/tablet/dur:7 as authoritative.
+    const legacy = makeQueueItem({ id: 'legacy-1' })
+    // Strip the stored original prescription → forces the fallback path.
+    delete (legacy.dispense._ultranos as Record<string, unknown>).originalPrescription
+    mockGetActiveItems.mockResolvedValue([legacy])
+
+    await renderQueue()
+    await waitFor(() => expect(screen.getByTestId('queue-item-legacy-1')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByTestId('queue-item-legacy-1'))
+    expect(mockLoadPrescriptions).toHaveBeenCalledWith(
+      [expect.objectContaining({ dosageUnknown: true })],
+      undefined,
+      expect.any(Object),
+    )
+  })
+
+  it('item WITH originalPrescription is trustworthy — no dosageUnknown flag (regression)', async () => {
+    mockGetActiveItems.mockResolvedValue([makeQueueItem({ id: 'trusted-1' })])
+
+    await renderQueue()
+    await waitFor(() => expect(screen.getByTestId('queue-item-trusted-1')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByTestId('queue-item-trusted-1'))
+    const call = mockLoadPrescriptions.mock.calls[0]!
+    expect((call[0] as Array<Record<string, unknown>>)[0]!.dosageUnknown).toBeUndefined()
+  })
+
   it('switches to Completed tab and shows completed items with sync badges (AC #4)', async () => {
     mockGetCompletedItems.mockResolvedValue([
       makeQueueItem({ id: 'c1', phase: 'completed', syncStatus: 'synced' }),
