@@ -1,6 +1,6 @@
 # Story 57.4: Inventory Deduction Integrity & Silent Check-Degradation Surfacing
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -19,19 +19,19 @@ so that the inventory ledger matches reality and I always know when a check ran 
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Transactional deduction** (AC: 1)
-  - [ ] 1.1 `apps/pharmacy-lite/src/lib/inventory/stock-service.ts:19-53`: move the quantity check + `newQty` computation inside the transaction; use relative decrement semantics; guard negative results with an explicit error state.
-- [ ] **Task 2: FEFO correctness** (AC: 2)
-  - [ ] 2.1 `lib/inventory/fefo.ts:8-21`: add `expiryDate > today` to the predicate; replace the >0-units fallback with a typed `insufficientCoverage` result the caller must handle (partial-batch dispensing UX decision documented in code).
-- [ ] **Task 3: Unswallow deduction failure** (AC: 3)
-  - [ ] 3.1 `stores/fulfillment-store.ts:204-206` (`catch { /* should not block */ }`): keep dispensing unblocked (clinical priority) but surface a persistent warning and write a reconciliation record (new small Dexie table or flag on the dispense) listed on the inventory page.
-- [ ] **Task 4: Active-med degradation surfacing** (AC: 4)
-  - [ ] 4.1 `lib/active-medications.ts:10-27`: return `{ meds, complete: boolean }`; `DispensingConfirmationModal.tsx:50-53` renders the incomplete state as a warning requiring acknowledgment/override, mirroring the UNAVAILABLE pattern.
-- [ ] **Task 5: No fabricated dosage** (AC: 5)
-  - [ ] 5.1 `components/pharmacy/PrescriptionQueueView.tsx:76-86`: mark reconstructed dosage `unknown: true`; fulfillment UI renders it as requiring pharmacist confirmation/entry.
-- [ ] **Task 6: Tests + regression verification** (AC: all)
-  - [ ] 6.1 Tests: concurrent deduction (two tx) → no lost update; expired batch never selected; insufficient coverage → typed result; deduction failure → warning + reconciliation record; active-med incomplete → warning state; legacy dosage → unknown flag.
-  - [ ] 6.2 Full pharmacy suite; manual dispense happy path; `pnpm typecheck`.
+- [x] **Task 1: Transactional deduction** (AC: 1)
+  - [x] 1.1 `apps/pharmacy-lite/src/lib/inventory/stock-service.ts:19-53`: move the quantity check + `newQty` computation inside the transaction; use relative decrement semantics; guard negative results with an explicit error state.
+- [x] **Task 2: FEFO correctness** (AC: 2)
+  - [x] 2.1 `lib/inventory/fefo.ts:8-21`: add `expiryDate > today` to the predicate; replace the >0-units fallback with a typed `insufficientCoverage` result the caller must handle (partial-batch dispensing UX decision documented in code).
+- [x] **Task 3: Unswallow deduction failure** (AC: 3)
+  - [x] 3.1 `stores/fulfillment-store.ts:204-206` (`catch { /* should not block */ }`): keep dispensing unblocked (clinical priority) but surface a persistent warning and write a reconciliation record (new small Dexie table or flag on the dispense) listed on the inventory page.
+- [x] **Task 4: Active-med degradation surfacing** (AC: 4)
+  - [x] 4.1 `lib/active-medications.ts:10-27`: return `{ meds, complete: boolean }`; `DispensingConfirmationModal.tsx:50-53` renders the incomplete state as a warning requiring acknowledgment/override, mirroring the UNAVAILABLE pattern.
+- [x] **Task 5: No fabricated dosage** (AC: 5)
+  - [x] 5.1 `components/pharmacy/PrescriptionQueueView.tsx:76-86`: mark reconstructed dosage `unknown: true`; fulfillment UI renders it as requiring pharmacist confirmation/entry.
+- [x] **Task 6: Tests + regression verification** (AC: all)
+  - [x] 6.1 Tests: concurrent deduction (two tx) → no lost update; expired batch never selected; insufficient coverage → typed result; deduction failure → warning + reconciliation record; active-med incomplete → warning state; legacy dosage → unknown flag.
+  - [x] 6.2 Full pharmacy suite; manual dispense happy path; `pnpm typecheck`.
 
 ## Dev Notes
 
@@ -62,11 +62,22 @@ This story must introduce **zero regression in existing features and functionali
 ## Dev Agent Record
 
 ### Agent Model Used
-
-### Debug Log References
+Claude Fable 5 (1M) — implementation; Claude Opus 4.8 (1M) — integration & combined verification.
 
 ### Completion Notes List
+- **Task 1:** `deductStock` reads/checks/computes/writes inside one Dexie `rw` transaction (fixes TOCTOU + lost-update); `InsufficientStockError`; negative results abort the tx.
+- **Task 2:** FEFO selection excludes expired batches (`expiryDate > today`, independent of the watchdog); typed `selectFefoCoverage` → `{ kind: 'ok' | 'insufficientCoverage' }`; silent >0-units fallback removed. `getFefoBatches` intentionally unchanged (stock-count needs all batches).
+- **Task 3:** deduction failure no longer swallowed — dispensing stays unblocked (clinical priority) but writes a durable non-PHI `stockReconciliationTasks` record (Dexie **v23**, in PRESERVE_TABLES) + a persistent completion-screen warning; open tasks listed on Stock Overview with resolve action.
+- **Task 4:** `fetchActiveMedications` returns `{ meds, complete }`; the modal treats `complete === false` as a degraded check requiring override (reuses the existing `_ultranos.reviewOverride` machinery); still-loading blocks confirm.
+- **Task 5:** legacy dosage reconstruction marked `dosageUnknown: true` (no fabricated `qty:1/tablet/dur:7`); UI requires pharmacist confirmation.
+- **Task 6:** 21 new tests (concurrency, FEFO-expiry, reconciliation) + i18n keys × 4 locales (parity kept).
+
+### Verification (combined tree)
+`pnpm -F pharmacy-lite typecheck` clean; pharmacy full suite **1133 pass, 0 fail**. Dexie v22→v23 (3 version-pinned schema tests updated to 23).
 
 ### File List
+Modified — `apps/pharmacy-lite/src/lib/inventory/{stock-service,fefo}.ts`, `src/stores/fulfillment-store.ts`, `src/lib/active-medications.ts`, `src/components/pharmacy/{DispensingConfirmationModal,PrescriptionQueueView,FulfillmentChecklist}.tsx`, `src/components/pharmacy/inventory/StockOverviewPage.tsx`, `src/lib/{db,phi-cleanup,prescription-verify}.ts`, `messages/{en,ar,prs,ps}.json`, tests.
+New — `apps/pharmacy-lite/src/lib/inventory/reconciliation-service.ts`, `src/__tests__/{stock-deduction-concurrency,fefo-expiry,deduction-reconciliation}.test.ts`.
 
 ### Change Log
+- 2026-09-23: Story 57.4 implemented (Wave 3), verified, integrated. Dexie → v23. Status → review.
