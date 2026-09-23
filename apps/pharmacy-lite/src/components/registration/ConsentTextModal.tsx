@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
-import { X } from '@ultranos/ui-kit/icons'
+import { ModalHeader } from '@/components/ui/dialog'
 
 interface ConsentTextModalProps {
   open: boolean
@@ -87,24 +87,13 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
 
       <div className="relative mx-4 w-full max-w-2xl rounded-xl bg-background ring-[0.65px] ring-gray-400/40 shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between rounded-t-xl border-b border-border bg-background px-6 py-4">
-          <h2
-            id="consent-text-title"
-            className="text-xl font-black text-foreground"
-          >
-            {t('consentDocumentTitle')}
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            type="button"
-            className="min-h-[44px] min-w-[44px]"
-            onClick={onClose}
-            aria-label={t('cancel')}
-          >
-            <X className="h-6 w-6 mx-auto" />
-          </Button>
-        </div>
+        <ModalHeader
+          title={t('consentDocumentTitle')}
+          titleId="consent-text-title"
+          onClose={onClose}
+          closeLabel={t('cancel')}
+          className="rounded-t-xl"
+        />
 
         {/* Language tabs */}
         <div className="flex border-b border-border" role="tablist" aria-label={t('consentLanguage')}>

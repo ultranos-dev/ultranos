@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
+import { ModalHeader } from '@/components/ui/dialog'
 import { getShiftSummary, type ShiftSummaryStats } from '@/lib/history-data'
 
 interface ShiftSummaryProps {
@@ -43,17 +44,12 @@ export function ShiftSummary({ onClose }: ShiftSummaryProps) {
       aria-label={t('shiftSummaryTitle')}
     >
       <div className="w-full max-w-md rounded-2xl bg-card p-6 shadow-card mx-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-foreground">{t('shiftSummaryTitle')}</h3>
-          <button
-            data-testid="shift-summary-close"
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground text-xl leading-none"
-            aria-label={t('close')}
-          >
-            &times;
-          </button>
-        </div>
+        <ModalHeader
+          title={t('shiftSummaryTitle')}
+          onClose={onClose}
+          closeLabel={t('close')}
+          inset
+        />
 
         <p className="text-xs text-muted-foreground mb-4">
           {t('shiftSummaryDescription')}

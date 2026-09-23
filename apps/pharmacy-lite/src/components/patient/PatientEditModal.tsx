@@ -13,8 +13,8 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/Card'
-import { X } from '@ultranos/ui-kit/icons'
 import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
+import { ModalHeader } from '@/components/ui/dialog'
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -470,25 +470,18 @@ export function PatientEditModal({
     >
       <div className="flex w-full max-w-lg max-h-[90vh] flex-col rounded-xl bg-background shadow-xl sm:mx-4">
         {/* ── Sticky header ── */}
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <div className="flex items-center gap-3">
-            <Avatar name={nameGiven || undefined} size={56} />
-            <h2
-              id="edit-patient-title"
-              className="text-lg font-bold text-foreground"
-            >
+        <ModalHeader
+          titleId="edit-patient-title"
+          onClose={onClose}
+          closeLabel={t('close')}
+          className="rounded-t-xl"
+          title={
+            <span className="flex items-center gap-3">
+              <Avatar name={nameGiven || undefined} size={40} />
               {t('editPatientProfile')}
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary-300"
-            aria-label={t('close')}
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
+            </span>
+          }
+        />
 
         {/* ── Scrollable body ── */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">

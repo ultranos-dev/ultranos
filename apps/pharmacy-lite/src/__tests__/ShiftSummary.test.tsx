@@ -103,11 +103,13 @@ describe('ShiftSummary', () => {
 
   it('calls onClose when close button clicked', async () => {
     render(<ShiftSummary onClose={onClose} />)
-    await waitFor(() => {
-      expect(screen.getByTestId('shift-summary-close')).toBeInTheDocument()
+    const closeBtn = await waitFor(() => {
+      const el = document.querySelector('[data-slot="modal-header-close"]')
+      if (!el) throw new Error('close button not found')
+      return el as HTMLElement
     })
 
-    fireEvent.click(screen.getByTestId('shift-summary-close'))
+    fireEvent.click(closeBtn)
     expect(onClose).toHaveBeenCalledOnce()
   })
 

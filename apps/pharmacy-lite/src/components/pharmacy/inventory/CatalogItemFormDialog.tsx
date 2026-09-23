@@ -13,8 +13,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
-  DialogTitle,
+  ModalHeader,
   DialogFooter,
 } from '@/components/ui/dialog'
 import {
@@ -172,13 +171,14 @@ export function CatalogItemFormDialog({ open, onOpenChange, item, onSaved }: Pro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
-            {isEdit ? t('catalogFormTitleEdit') : t('catalogFormTitleCreate')}
-          </DialogTitle>
-          <DialogDescription className="sr-only">{t('catalogFormDescription')}</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-lg" hideClose>
+        <ModalHeader
+          title={isEdit ? t('catalogFormTitleEdit') : t('catalogFormTitleCreate')}
+          tone="primary"
+          inset
+          dialog
+        />
+        <DialogDescription className="sr-only">{t('catalogFormDescription')}</DialogDescription>
 
         <form onSubmit={handleSubmit}>
           {error && (

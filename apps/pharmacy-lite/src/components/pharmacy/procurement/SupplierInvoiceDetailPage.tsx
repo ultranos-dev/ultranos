@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, ModalHeader, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
@@ -597,10 +597,8 @@ export function SupplierInvoiceDetailPage() {
       {/* Payment dialog                                                        */}
       {/* ------------------------------------------------------------------ */}
       <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('recordPayment')}</DialogTitle>
-          </DialogHeader>
+        <DialogContent hideClose>
+          <ModalHeader title={t('recordPayment')} tone="primary" inset dialog />
           <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="invoice-payment-amount-input">{t('paymentAmountLabel')}</Label>

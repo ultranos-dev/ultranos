@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, ModalHeader, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
@@ -229,12 +229,13 @@ export function AccountsPage() {
 
       {/* Payment dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {t('paymentDialogTitle')} — {selectedAccount?.customerName}
-            </DialogTitle>
-          </DialogHeader>
+        <DialogContent hideClose>
+          <ModalHeader
+            title={<>{t('paymentDialogTitle')} — {selectedAccount?.customerName}</>}
+            tone="primary"
+            inset
+            dialog
+          />
 
           <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-1.5">

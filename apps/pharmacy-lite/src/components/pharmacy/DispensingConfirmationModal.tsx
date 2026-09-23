@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { ModalHeader } from '@/components/ui/dialog'
 import { AllergyBanner } from './AllergyBanner'
 import { RecallAlertBanner } from './RecallAlertBanner'
 import { InteractionCheckBanner, type InteractionStatus } from './InteractionCheckBanner'
@@ -74,7 +75,7 @@ export function DispensingConfirmationModal({
       onClick={(e) => { if (e.target === e.currentTarget) onCancel() }}
     >
       <div className="w-full max-w-lg rounded-2xl bg-card p-6 shadow-card mx-4 max-h-[80vh] overflow-y-auto">
-        <h3 className="text-lg font-bold text-foreground mb-4">{t('title')}</h3>
+        <ModalHeader title={t('title')} inset />
 
         {recalls.length > 0 && (
           <div className="mb-4">

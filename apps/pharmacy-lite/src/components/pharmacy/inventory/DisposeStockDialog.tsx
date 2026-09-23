@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, ModalHeader,
 } from '@/components/ui/dialog'
 
 const DISPOSE_REASONS: StockDisposalReason[] = [
@@ -59,11 +59,9 @@ export function DisposeStockDialog({ open, onOpenChange, batch, performedBy, onS
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('disposeTitle')}</DialogTitle>
-          <DialogDescription className="sr-only">{t('disposeTitle')}</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-md" hideClose>
+        <ModalHeader title={t('disposeTitle')} tone="destructive" inset dialog />
+        <DialogDescription className="sr-only">{t('disposeTitle')}</DialogDescription>
         <form onSubmit={handleSubmit}>
           {error && (
             <div role="alert" className="mb-3 rounded-lg bg-destructive/5 px-4 py-3 text-sm text-destructive">{error}</div>

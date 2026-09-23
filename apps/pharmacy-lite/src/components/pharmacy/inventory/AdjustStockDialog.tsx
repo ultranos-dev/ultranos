@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, ModalHeader,
 } from '@/components/ui/dialog'
 
 const ADJUST_REASONS: StockAdjustmentReason[] = [
@@ -60,11 +60,9 @@ export function AdjustStockDialog({ open, onOpenChange, batch, catalogItem, perf
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('adjustTitle')}</DialogTitle>
-          <DialogDescription className="sr-only">{t('adjustTitle')}</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-md" hideClose>
+        <ModalHeader title={t('adjustTitle')} tone="primary" inset dialog />
+        <DialogDescription className="sr-only">{t('adjustTitle')}</DialogDescription>
         <form onSubmit={handleSubmit}>
           {error && (
             <div role="alert" className="mb-3 rounded-lg bg-destructive/5 px-4 py-3 text-sm text-destructive">{error}</div>
