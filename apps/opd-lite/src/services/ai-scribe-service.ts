@@ -4,31 +4,18 @@
  * PHI safety: never logs clinical text.
  */
 
-import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getHubTrpcUrl } from '@/lib/hub-url'
+import { getAuthHeaders } from '@/lib/hub-auth'
 
 function getHubApiUrl(): string {
   return getHubTrpcUrl()
 }
 
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const session = useAuthSessionStore.getState().session
-    return (session as typeof session & { token?: string })?.token ?? null
-  } catch {
-    return null
-  }
-}
-
-function makeHeaders(): Record<string, string> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const token = getAuthToken()
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
-  return headers
-}
+// Auth headers come from the canonical hub-auth helper (Supabase access token).
+// Historically this file read a nonexistent `token` field off the auth-session
+// store, so every request went out tokenless, the consent check 401'd, and the
+// AI Assist feature could never activate (Story 59.3, H-OPD-1 — the same bug
+// documented and fixed in lib/consent-check.ts).
 
 export interface AISOAPResult {
   subjective: string
@@ -64,7 +51,7 @@ export async function parseSOAPWithAI(
 
     const res = await fetch(url.toString(), {
       method: 'POST',
-      headers: makeHeaders(),
+      headers: await getAuthHeaders(),
       body: JSON.stringify({
         json: { encounterId, freeformText },
       }),
@@ -105,7 +92,7 @@ export async function commitAISOAPNote(params: {
 
     const res = await fetch(url.toString(), {
       method: 'POST',
-      headers: makeHeaders(),
+      headers: await getAuthHeaders(),
       body: JSON.stringify({ json: params }),
     })
 
@@ -142,7 +129,7 @@ export async function checkAIProcessingConsent(patientId: string): Promise<boole
 
     const res = await fetch(url.toString(), {
       method: 'GET',
-      headers: makeHeaders(),
+      headers: await getAuthHeaders(),
     })
 
     if (!res.ok) {

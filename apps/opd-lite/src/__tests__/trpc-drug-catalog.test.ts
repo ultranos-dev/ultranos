@@ -91,10 +91,16 @@ describe('enrichDrug', () => {
     expect(body.json.fields.localNames.prs).toBe('آموکسیسیلین')
   })
 
-  it('does nothing (no throw) when session is missing', async () => {
-    mockGetSession.mockResolvedValueOnce({ data: { session: null } })
-    await expect(enrichDrug('J01CA04', { localNames: { en: 'test' } })).resolves.toBeUndefined()
-    expect(mockFetch).not.toHaveBeenCalled()
+  it('surfaces a Hub 401 when session is missing instead of silently "succeeding"', async () => {
+    // Story 59.3 (audit Low finding): the old code silently returned success
+    // when the session was missing — the clinician saw "saved" while nothing
+    // reached the Hub. Now the request is attempted (tokenless), the Hub's 401
+    // triggers the one-refresh-one-retry path, and a definitive refusal throws
+    // so the caller shows a real error.
+    mockGetSession.mockResolvedValue({ data: { session: null } })
+    mockFetch.mockResolvedValue({ ok: false, status: 401 })
+    await expect(enrichDrug('J01CA04', { localNames: { en: 'test' } })).rejects.toThrow('401')
+    expect(mockFetch).toHaveBeenCalled()
   })
 
   it('throws on network failure so caller can display error', async () => {

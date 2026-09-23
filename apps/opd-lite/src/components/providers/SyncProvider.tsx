@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react'
 import '@/lib/key-lifecycle-hooks' // registers re-auth listener for awaiting-key queue restoration
 import { startSyncWorker, stopSyncWorker, triggerDrain } from '@/lib/sync-worker'
+import { startAuditDrain, stopAuditDrain } from '@/lib/audit'
+import { useBackgroundSync } from '@/hooks/useBackgroundSync'
 import { syncDrugCatalog } from '@/lib/drug-catalog-sync'
 import { syncPharmacyDirectory } from '@/lib/pharmacy-sync'
 import { syncLabDirectory } from '@/lib/lab-sync'
@@ -11,7 +13,7 @@ import { syncAllPatientsToDb } from '@/lib/use-patient-list-sync'
 import { useSyncStore } from '@/stores/sync-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
-import { getHubBaseUrl } from '@/lib/hub-url'
+import { getHubBaseUrl, getHubTrpcUrl } from '@/lib/hub-url'
 import { db } from '@/lib/db'
 import type { SyncQueueEntry, ConflictResolution } from '@ultranos/sync-engine'
 
@@ -114,10 +116,17 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const setConflictCount = useSyncStore((s) => s.setConflictCount)
   const startedRef = useRef(false)
 
+  // Register SW Background Sync / Periodic Background Sync tags and attach the
+  // SW → client ULTRANOS_SYNC_TRIGGER message listener (Story 59.3, H-OPD-4 —
+  // the hook existed but was never mounted, so drain-on-reconnect relied solely
+  // on the in-page 'online' event + 30s poll).
+  useBackgroundSync()
+
   useEffect(() => {
     if (!isAuthenticated) {
       if (startedRef.current) {
         stopSyncWorker()
+        stopAuditDrain()
         startedRef.current = false
         cachedToken = ''
       }
@@ -163,16 +172,19 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         },
       })
 
-      // Mark synced on initial startup when online — the worker is running
-      // and will push any pending changes, so the app is in a "synced" state
-      if (navigator.onLine) {
-        markSynced()
-      }
+      // Rule #6: drain locally-queued client audit events to the Hub's
+      // hash-chained ledger (Story 59.3, C-OPD-1 — startAuditDrain existed but
+      // had zero production callers, so 93 auditPhiAccess sites accumulated
+      // events in Dexie forever). The drain posts to `<url>/audit.sync`, a tRPC
+      // procedure, so it needs the /api/trpc base — the bare origin would 404.
+      startAuditDrain(getHubTrpcUrl(), () => cachedToken)
 
       // Initial login pull: refresh the local patient directory AND all of the
       // clinician's active-status encounters (paged fully) so the dashboard and
       // lists aren't stale on sign-in (previously nothing pulled until you opened
       // a chart/directory). Online-gated and best-effort — offline keeps cache.
+      // markSynced() runs ONLY in the pull's success continuation below — never
+      // pre-emptively on startup — so "synced" always reflects a real round-trip.
       if (navigator.onLine && cachedToken) {
         void syncAllPatientsToDb()
         void pullPractitionerEncounters(() => cachedToken).then((r) => {
@@ -185,7 +197,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
             store.setSyncError(r.errors[0]!)
           } else {
             store.setSyncError(null)
-            if (r.changesApplied > 0) markSynced()
+            // A clean pull is a genuine Hub round-trip even when zero changes
+            // came back — mark synced on success, not on changesApplied > 0.
+            markSynced()
           }
         })
       }
@@ -203,11 +217,15 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     }
     window.addEventListener('ultranos:sync-now', handleSyncNow)
 
-    // On reconnect: push drain + pull active patient
+    // On reconnect: push drain + pull. markSynced() is NOT called here — it runs
+    // inside backgroundPull's success continuation only, after a pull actually
+    // completes (M-OPD-4: calling it synchronously before any round-trip produced
+    // a false "in sync" banner the moment connectivity flapped back). Resetting
+    // the directory heartbeat forces a genuine pull even if one ran recently.
     function handleOnline() {
       triggerDrain()
-      backgroundPull()
-      markSynced()
+      lastDirectoryHeartbeat = 0
+      void backgroundPull()
     }
     window.addEventListener('online', handleOnline)
 
@@ -232,6 +250,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener('visibilitychange', handleResume)
       window.removeEventListener('focus', handleResume)
       stopSyncWorker()
+      stopAuditDrain()
       startedRef.current = false
       cachedToken = ''
     }

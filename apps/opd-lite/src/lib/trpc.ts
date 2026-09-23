@@ -1,5 +1,6 @@
 import type { DrugSearchResult, FhirPatient, FhirAllergyIntolerance, PharmacyDirectoryEntry, LabDirectoryEntry, LabOrderStatus } from '@ultranos/shared-types'
 import { getHubTrpcUrl, getHubBaseUrl } from '@/lib/hub-url'
+import { hubTrpcRequest, HubRequestError, getAuthHeaders } from '@/lib/hub-auth'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
 import { toFhirAllergyIntolerance, toFhirMedicationStatement } from '@/lib/sync-pull'
 
@@ -9,6 +10,22 @@ export interface PatientSearchResult {
 
 function getHubApiUrl(): string {
   return getHubTrpcUrl()
+}
+
+/**
+ * Surface a Hub-refused failure (auth/authorization/server error) for helpers
+ * whose contract is an offline-first fallback (`null`/`[]`/default). Keeps the
+ * failure DISTINCT from offline: a HubRequestError means the Hub was reachable
+ * and rejected the call — that must be observable, never silently identical to
+ * "no network". Logs operational metadata only (procedure + status/tRPC code),
+ * never PHI.
+ */
+function warnHubRefusal(procedure: string, err: unknown): void {
+  if (err instanceof HubRequestError) {
+    console.warn(`[hub] ${procedure} refused: ${err.message}`)
+  }
+  // Network-level failures (offline/abort) stay quiet — that is the normal
+  // offline-first fallback path, not an error condition.
 }
 
 type AuthEventType =
@@ -48,25 +65,14 @@ export async function reportAuthEvent(
 export async function syncAppointmentBatch(
   appointments: Array<Record<string, unknown>>
 ): Promise<{ synced: number; conflicts: Array<{ id: string; reason: string }> }> {
-  const hubUrl = getHubApiUrl()
   try {
-    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-    const { data: { session } } = await getSupabaseBrowserClient().auth.getSession()
-    if (!session?.access_token) return { synced: 0, conflicts: [] }
-
-    const res = await fetch(`${hubUrl}/appointment.syncBatch`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ json: { appointments } }),
-    })
-
-    if (!res.ok) return { synced: 0, conflicts: [] }
-    const json = await res.json()
-    return json?.result?.data?.json ?? { synced: 0, conflicts: [] }
-  } catch {
+    const result = await hubTrpcRequest<{ synced: number; conflicts: Array<{ id: string; reason: string }> }>(
+      'appointment.syncBatch',
+      { method: 'POST', input: { appointments } },
+    )
+    return result ?? { synced: 0, conflicts: [] }
+  } catch (err) {
+    warnHubRefusal('appointment.syncBatch', err)
     return { synced: 0, conflicts: [] }
   }
 }
@@ -77,22 +83,14 @@ export async function fetchPractitionerAppointments(
   startDate: string,
   endDate: string,
 ): Promise<Array<Record<string, unknown>>> {
-  const hubUrl = getHubApiUrl()
   try {
-    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-    const { data: { session } } = await getSupabaseBrowserClient().auth.getSession()
-    if (!session?.access_token) return []
-
-    const input = encodeURIComponent(JSON.stringify({ json: { practitionerId, startDate, endDate } }))
-    const res = await fetch(`${hubUrl}/appointment.listByPractitioner?input=${input}`, {
-      method: 'GET',
-      headers: { 'Authorization': `Bearer ${session.access_token}` },
-    })
-
-    if (!res.ok) return []
-    const json = await res.json()
-    return json?.result?.data?.json?.appointments ?? []
-  } catch {
+    const result = await hubTrpcRequest<{ appointments?: Array<Record<string, unknown>> }>(
+      'appointment.listByPractitioner',
+      { input: { practitionerId, startDate, endDate } },
+    )
+    return result?.appointments ?? []
+  } catch (err) {
+    warnHubRefusal('appointment.listByPractitioner', err)
     return []
   }
 }
@@ -110,26 +108,17 @@ export async function fetchPractitionerAppointments(
 export async function fetchPatientAllergiesFromHub(
   patientId: string,
 ): Promise<FhirAllergyIntolerance[] | null> {
-  const hubUrl = getHubApiUrl()
   try {
-    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-    const { data: { session } } = await getSupabaseBrowserClient().auth.getSession()
-    if (!session?.access_token) return null
-
-    const input = encodeURIComponent(JSON.stringify({ json: { patientId } }))
-    const res = await fetch(`${hubUrl}/allergy.list?input=${input}`, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${session.access_token}` },
+    const result = await hubTrpcRequest<{ allergies?: unknown }>('allergy.list', {
+      input: { patientId },
     })
-    if (!res.ok) return null
-
-    const json = await res.json()
-    const rows = json?.result?.data?.json?.allergies
+    const rows = result?.allergies
     if (!Array.isArray(rows)) return null
     return rows.map(
       (r) => toFhirAllergyIntolerance(r as Record<string, unknown>) as unknown as FhirAllergyIntolerance,
     )
-  } catch {
+  } catch (err) {
+    warnHubRefusal('allergy.list', err)
     return null
   }
 }
@@ -156,59 +145,15 @@ export async function listPatientsFromHub(
   limit = 50,
   signal?: AbortSignal,
 ): Promise<PatientListResult> {
-  const url = new URL(getHubApiUrl())
-  url.pathname = url.pathname.replace(/\/$/, '') + '/patient.list'
   const input: Record<string, unknown> = { limit }
   if (cursor) input.cursor = cursor
-  url.searchParams.set('input', JSON.stringify({ json: input }))
-
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (typeof window !== 'undefined') {
-    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-    const { data } = await getSupabaseBrowserClient().auth.getSession()
-    const token = data.session?.access_token
-    if (token) headers['Authorization'] = `Bearer ${token}`
-  }
-
-  const res = await fetch(url.toString(), {
-    method: 'GET',
-    headers,
-    signal,
-  })
-
-  if (!res.ok) {
-    throw new Error(`Hub API error: ${res.status}`)
-  }
-
-  const body = await res.json() as { result: { data: { json: PatientListResult } } }
-  return body.result.data.json
+  // Throw-through contract: callers (directory sync) handle failures themselves.
+  // HubRequestError (Hub refused) stays distinct from a fetch rejection (offline).
+  return hubTrpcRequest<PatientListResult>('patient.list', { input, signal })
 }
 
 export async function searchPatientsOnHub(query: string, signal?: AbortSignal): Promise<PatientSearchResult> {
-  const url = new URL(getHubApiUrl())
-  url.pathname = url.pathname.replace(/\/$/, '') + '/patient.search'
-  url.searchParams.set('input', JSON.stringify({ json: { query } }))
-
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (typeof window !== 'undefined') {
-    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-    const { data } = await getSupabaseBrowserClient().auth.getSession()
-    const token = data.session?.access_token
-    if (token) headers['Authorization'] = `Bearer ${token}`
-  }
-
-  const res = await fetch(url.toString(), {
-    method: 'GET',
-    headers,
-    signal,
-  })
-
-  if (!res.ok) {
-    throw new Error(`Hub API error: ${res.status}`)
-  }
-
-  const body = await res.json() as { result: { data: { json: PatientSearchResult } } }
-  return body.result.data.json
+  return hubTrpcRequest<PatientSearchResult>('patient.search', { input: { query }, signal })
 }
 
 export interface EncounterListResult {
@@ -277,49 +222,31 @@ export async function searchDrugCatalog(
   lang: 'en' | 'prs' | 'ps' = 'en',
   signal?: AbortSignal,
 ): Promise<DrugSearchResult[]> {
-  const url = new URL(getHubApiUrl())
-  url.pathname = url.pathname.replace(/\/$/, '') + '/drugCatalog.search'
-  url.searchParams.set('input', JSON.stringify({ json: { q, lang, limit: 20 } }))
-
-  const headers: Record<string, string> = {}
-  if (typeof window !== 'undefined') {
-    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-    const { data } = await getSupabaseBrowserClient().auth.getSession()
-    if (data.session?.access_token) {
-      headers['Authorization'] = `Bearer ${data.session.access_token}`
-    }
-  }
-
-  const res = await fetch(url.toString(), { method: 'GET', headers, signal })
-  if (!res.ok) throw new Error(`Drug catalog search failed: ${res.status}`)
-  const body = await res.json() as { result: { data: { json: DrugSearchResult[] } } }
-  return body.result.data.json
+  return hubTrpcRequest<DrugSearchResult[]>('drugCatalog.search', {
+    input: { q, lang, limit: 20 },
+    signal,
+  })
 }
 
 /**
  * Write local-name enrichment to the Hub drug catalog.
  * Clinician tier: localNames only. Pharmacist tier: all fields.
- * No-op (silent return) when session is missing. Throws on network failure
- * so the caller can display an error message.
+ *
+ * Throws on ANY failure (network, auth, server) so the caller can display an
+ * error message. Historically a missing session silently returned success —
+ * the clinician saw "saved" while nothing reached the Hub (Story 59.3); now a
+ * missing/expired token goes through the shared 401 refresh-retry path and a
+ * definitive refusal surfaces as HubRequestError.
  */
 export async function enrichDrug(
   atcCode: string,
   fields: EnrichDrugFields,
 ): Promise<void> {
   if (typeof window === 'undefined') return
-  const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-  const { data: { session } } = await getSupabaseBrowserClient().auth.getSession()
-  if (!session?.access_token) return
-
-  const res = await fetch(`${getHubApiUrl()}/drugCatalog.enrich`, {
+  await hubTrpcRequest<unknown>('drugCatalog.enrich', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-    },
-    body: JSON.stringify({ json: { atcCode, fields } }),
+    input: { atcCode, fields },
   })
-  if (!res.ok) throw new Error(`Drug enrichment failed: ${res.status}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -419,29 +346,17 @@ export async function fetchDiagnosticReportsForPatient(patientId: string): Promi
 
   const task = (async () => {
     try {
-      // Auth token comes from the Supabase session (matches patient.list/search
-      // above) — the auth-session store holds no access token.
-      const headers: Record<string, string> = {}
-      if (typeof window !== 'undefined') {
-        const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-        const { data } = await getSupabaseBrowserClient().auth.getSession()
-        const token = data.session?.access_token
-        if (token) headers['Authorization'] = `Bearer ${token}`
-      }
-      const input = encodeURIComponent(JSON.stringify({ json: { patientRef: `Patient/${patientId}` } }))
-      const res = await fetch(`${getHubApiUrl()}/diagnosticReport.listByPatient?input=${input}`, {
-        method: 'GET',
-        headers,
-      })
-      if (!res.ok) return
-      const body = (await res.json()) as {
-        result?: { data?: { json?: { reports?: HubDiagnosticReportItem[] } } }
-      }
-      const reports = body?.result?.data?.json?.reports ?? []
+      const result = await hubTrpcRequest<{ reports?: HubDiagnosticReportItem[] }>(
+        'diagnosticReport.listByPatient',
+        { input: { patientRef: `Patient/${patientId}` } },
+      )
+      const reports = result?.reports ?? []
       if (reports.length === 0) return
       await db.diagnosticReports.bulkPut(reports.map(mapHubReportToFhir) as never)
-    } catch {
-      // Network/parse failure — keep the existing Dexie cache (offline-first).
+    } catch (err) {
+      // Hub refusal is surfaced (distinct from offline); either way the existing
+      // Dexie cache is kept intact (offline-first).
+      warnHubRefusal('diagnosticReport.listByPatient', err)
     }
   })()
 
@@ -471,28 +386,13 @@ interface HubLabFile {
  */
 export async function fetchDiagnosticReportDetail(reportId: string, patientId: string): Promise<void> {
   try {
-    const headers: Record<string, string> = {}
-    let token: string | undefined
-    if (typeof window !== 'undefined') {
-      const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-      const { data } = await getSupabaseBrowserClient().auth.getSession()
-      token = data.session?.access_token ?? undefined
-      if (token) headers['Authorization'] = `Bearer ${token}`
-    }
-    const input = encodeURIComponent(JSON.stringify({ json: { id: reportId, patientRef: `Patient/${patientId}` } }))
-    const res = await fetch(`${getHubApiUrl()}/diagnosticReport.read?input=${input}`, { method: 'GET', headers })
-    if (!res.ok) return
-    const body = (await res.json()) as {
-      result?: {
-        data?: {
-          json?: {
-            observations?: Array<Record<string, unknown>>
-            files?: HubLabFile[]
-          }
-        }
-      }
-    }
-    const observations = body?.result?.data?.json?.observations ?? []
+    const detail = await hubTrpcRequest<{
+      observations?: Array<Record<string, unknown>>
+      files?: HubLabFile[]
+    }>('diagnosticReport.read', {
+      input: { id: reportId, patientRef: `Patient/${patientId}` },
+    })
+    const observations = detail?.observations ?? []
     const rows = observations.map((o) => ({
       id: o.id as string,
       diagnosticReportId: reportId,
@@ -510,10 +410,13 @@ export async function fetchDiagnosticReportDetail(reportId: string, patientId: s
     // Fetch attachment photo bytes and cache them in presentedForm.
     // Each file is fetched independently; non-OK responses (e.g. 403 virus-scan
     // hold, 404) are skipped so they never block the others.
-    const files: HubLabFile[] = body?.result?.data?.json?.files ?? []
-    if (files.length > 0 && token) {
+    const files: HubLabFile[] = detail?.files ?? []
+    // File downloads are plain HTTP endpoints (not tRPC) but still Bearer-authed;
+    // reuse the canonical auth headers rather than a hand-rolled session read.
+    const bearer = (await getAuthHeaders())['Authorization']
+    if (files.length > 0 && bearer) {
       const hubOrigin = getHubBaseUrl()
-      const fileAuthHeaders = { Authorization: `Bearer ${token}` }
+      const fileAuthHeaders = { Authorization: bearer }
 
       const presentedForm: LocalDiagnosticReport['presentedForm'] = (
         await Promise.all(
@@ -564,8 +467,10 @@ export async function fetchDiagnosticReportDetail(reportId: string, patientId: s
         await db.diagnosticReports.put({ ...existing, presentedForm: merged })
       }
     }
-  } catch {
-    // Network/parse failure — keep the existing cache (offline-first).
+  } catch (err) {
+    // Hub refusal is surfaced (distinct from offline); either way the existing
+    // cache is kept intact (offline-first).
+    warnHubRefusal('diagnosticReport.read', err)
   }
 }
 
@@ -578,23 +483,10 @@ export async function searchPharmaciesHub(
   q: string,
   signal?: AbortSignal,
 ): Promise<PharmacyDirectoryEntry[]> {
-  const url = new URL(getHubApiUrl())
-  url.pathname = url.pathname.replace(/\/$/, '') + '/pharmacy.search'
-  url.searchParams.set('input', JSON.stringify({ json: { q, limit: 20 } }))
-
-  const headers: Record<string, string> = {}
-  if (typeof window !== 'undefined') {
-    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-    const { data } = await getSupabaseBrowserClient().auth.getSession()
-    if (data.session?.access_token) {
-      headers['Authorization'] = `Bearer ${data.session.access_token}`
-    }
-  }
-
-  const res = await fetch(url.toString(), { method: 'GET', headers, signal })
-  if (!res.ok) throw new Error(`Pharmacy search failed: ${res.status}`)
-  const body = await res.json() as { result: { data: { json: PharmacyDirectoryEntry[] } } }
-  return body.result.data.json
+  return hubTrpcRequest<PharmacyDirectoryEntry[]>('pharmacy.search', {
+    input: { q, limit: 20 },
+    signal,
+  })
 }
 
 /**
@@ -606,23 +498,10 @@ export async function searchLabsHub(
   q: string,
   signal?: AbortSignal,
 ): Promise<LabDirectoryEntry[]> {
-  const url = new URL(getHubApiUrl())
-  url.pathname = url.pathname.replace(/\/$/, '') + '/lab.searchDirectory'
-  url.searchParams.set('input', JSON.stringify({ json: { q, limit: 20 } }))
-
-  const headers: Record<string, string> = {}
-  if (typeof window !== 'undefined') {
-    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-    const { data } = await getSupabaseBrowserClient().auth.getSession()
-    if (data.session?.access_token) {
-      headers['Authorization'] = `Bearer ${data.session.access_token}`
-    }
-  }
-
-  const res = await fetch(url.toString(), { method: 'GET', headers, signal })
-  if (!res.ok) throw new Error(`Lab directory search failed: ${res.status}`)
-  const body = await res.json() as { result: { data: { json: LabDirectoryEntry[] } } }
-  return body.result.data.json
+  return hubTrpcRequest<LabDirectoryEntry[]>('lab.searchDirectory', {
+    input: { q, limit: 20 },
+    signal,
+  })
 }
 
 /**
@@ -636,24 +515,13 @@ export async function searchLabsHub(
  */
 export async function fetchOrderPatientRef(orderId: string, signal?: AbortSignal): Promise<string | null> {
   try {
-    const url = new URL(getHubApiUrl())
-    url.pathname = url.pathname.replace(/\/$/, '') + '/serviceRequest.getOrderPatientRef'
-    url.searchParams.set('input', JSON.stringify({ json: { orderId } }))
-
-    const headers: Record<string, string> = {}
-    if (typeof window !== 'undefined') {
-      const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-      const { data } = await getSupabaseBrowserClient().auth.getSession()
-      if (data.session?.access_token) {
-        headers['Authorization'] = `Bearer ${data.session.access_token}`
-      }
-    }
-
-    const res = await fetch(url.toString(), { method: 'GET', headers, signal })
-    if (!res.ok) return null
-    const body = (await res.json()) as { result?: { data?: { json?: { patientRef: string | null } } } }
-    return body.result?.data?.json?.patientRef ?? null
-  } catch {
+    const result = await hubTrpcRequest<{ patientRef: string | null }>(
+      'serviceRequest.getOrderPatientRef',
+      { input: { orderId }, signal },
+    )
+    return result?.patientRef ?? null
+  } catch (err) {
+    warnHubRefusal('serviceRequest.getOrderPatientRef', err)
     return null
   }
 }
@@ -668,24 +536,12 @@ export async function fetchOrderPatientRef(orderId: string, signal?: AbortSignal
 export async function fetchLabOrderStatuses(ids: string[]): Promise<LabOrderStatus[]> {
   if (!ids.length) return []
   try {
-    const url = new URL(getHubApiUrl())
-    url.pathname = url.pathname.replace(/\/$/, '') + '/serviceRequest.getOrderStatus'
-    url.searchParams.set('input', JSON.stringify({ json: { ids } }))
-
-    const headers: Record<string, string> = {}
-    if (typeof window !== 'undefined') {
-      const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-      const { data } = await getSupabaseBrowserClient().auth.getSession()
-      if (data.session?.access_token) {
-        headers['Authorization'] = `Bearer ${data.session.access_token}`
-      }
-    }
-
-    const res = await fetch(url.toString(), { method: 'GET', headers })
-    if (!res.ok) return []
-    const body = (await res.json()) as { result?: { data?: { json?: LabOrderStatus[] } } }
-    return body.result?.data?.json ?? []
-  } catch {
+    const result = await hubTrpcRequest<LabOrderStatus[]>('serviceRequest.getOrderStatus', {
+      input: { ids },
+    })
+    return result ?? []
+  } catch (err) {
+    warnHubRefusal('serviceRequest.getOrderStatus', err)
     return []
   }
 }
@@ -703,27 +559,19 @@ export async function fetchLabOrderStatuses(ids: string[]): Promise<LabOrderStat
 export async function fetchActiveMedicationsFromHub(
   patientId: string,
 ): Promise<Array<Record<string, unknown>> | null> {
-  const hubUrl = getHubApiUrl()
   try {
-    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-    const { data: { session } } = await getSupabaseBrowserClient().auth.getSession()
-    if (!session?.access_token) return null
-
-    const input = encodeURIComponent(JSON.stringify({ json: { patientRef: `Patient/${patientId}` } }))
-    const res = await fetch(`${hubUrl}/medicationStatement.listActive?input=${input}`, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
-    if (!res.ok) return null
-
-    const body = await res.json() as { result?: { data?: { json?: { statements: Array<Record<string, unknown>>; count: number } } } }
-    const statements = body?.result?.data?.json?.statements
+    const result = await hubTrpcRequest<{ statements?: unknown; count?: number }>(
+      'medicationStatement.listActive',
+      { input: { patientRef: `Patient/${patientId}` } },
+    )
+    const statements = result?.statements
     if (!Array.isArray(statements)) return null
 
     // Re-shape Hub camelCase rows into nested FHIR MedicationStatement objects,
     // the same format that ActiveMedicationsList reads from Dexie.
-    return statements.map((row) => toFhirMedicationStatement(row))
-  } catch {
+    return statements.map((row) => toFhirMedicationStatement(row as Record<string, unknown>))
+  } catch (err) {
+    warnHubRefusal('medicationStatement.listActive', err)
     return null
   }
 }

@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('@/stores/auth-session-store', () => ({
-  useAuthSessionStore: {
-    getState: () => ({
-      session: { token: 'test-token-abc' },
-    }),
-  },
+// The service now gets its token from the canonical hub-auth helper (Supabase
+// session), NOT the auth-session store — AuthSession never had a `token` field,
+// so the old code sent no Authorization header and every call 401'd (H-OPD-1).
+vi.mock('@/lib/hub-auth', () => ({
+  getAuthHeaders: async () => ({
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer test-token-abc',
+  }),
 }))
 
 // Must import after mock setup
@@ -24,6 +26,32 @@ describe('AI Scribe Service', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     clearAIConsentCache()
+  })
+
+  describe('auth transport (H-OPD-1 regression guard)', () => {
+    it('parseSOAPWithAI sends the bearer token from hub-auth', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ result: { data: { json: { subjective: 'S', objective: 'O', assessment: 'A', plan: 'P', modelVersion: 'v1' } } } }),
+      })
+
+      await parseSOAPWithAI('enc-001', 'Some text')
+
+      const init = mockFetch.mock.calls[0]![1] as RequestInit
+      expect((init.headers as Record<string, string>)['Authorization']).toBe('Bearer test-token-abc')
+    })
+
+    it('checkAIProcessingConsent sends the bearer token from hub-auth', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ result: { data: { json: { permitted: true } } } }),
+      })
+
+      await checkAIProcessingConsent('patient-auth-check')
+
+      const init = mockFetch.mock.calls[0]![1] as RequestInit
+      expect((init.headers as Record<string, string>)['Authorization']).toBe('Bearer test-token-abc')
+    })
   })
 
   describe('parseSOAPWithAI', () => {
