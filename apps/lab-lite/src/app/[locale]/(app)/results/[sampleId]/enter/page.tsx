@@ -64,6 +64,9 @@ export default function ResultEntryPage({ params }: PageProps) {
   const [patientFirstName, setPatientFirstName] = useState('')
   const [patientAge, setPatientAge] = useState(0)
   const [patientGender, setPatientGender] = useState('unknown')
+  // Rule #7 (revised): patient photo on the result-entry header. Read from the cached
+  // order's signed URL (opaque key); initials fallback when absent/expired.
+  const [patientPhotoUrl, setPatientPhotoUrl] = useState<string | null>(null)
   const [existingDraft, setExistingDraft] = useState<
     { result: LabResult; observations: LabObservation[] } | undefined
   >(undefined)
@@ -91,7 +94,7 @@ export default function ResultEntryPage({ params }: PageProps) {
         // Resolve the linked order — used for BOTH the correct result template
         // (LOINC) and a patient name/age fallback. Best-effort: a lookup failure
         // must never block result entry.
-        let order: { testsRequested?: Array<{ loincCode?: string }>; patientFirstName?: string; patientAge?: number | null } | undefined
+        let order: { testsRequested?: Array<{ loincCode?: string }>; patientFirstName?: string; patientAge?: number | null; patientPhotoUrl?: string | null } | undefined
         const linkedOrderId = (s.request?.[0]?.reference ?? '').replace('ServiceRequest/', '')
         try {
           if (linkedOrderId) {
@@ -117,6 +120,7 @@ export default function ResultEntryPage({ params }: PageProps) {
           order?.patientFirstName ?? stamp.patientFirstName ?? cached?.firstName ?? t('unknownPatient'),
         )
         setPatientAge(order?.patientAge ?? stamp.patientAge ?? cached?.age ?? 0)
+        setPatientPhotoUrl(order?.patientPhotoUrl ?? null)
 
         // Resolve gender for sex-specific reference ranges from the SANCTIONED
         // detail tier (CLAUDE.md Rule #7 / Story 58.2) — an explicit, order-scoped,
@@ -489,6 +493,7 @@ export default function ResultEntryPage({ params }: PageProps) {
         patientFirstName={patientFirstName}
         patientAge={patientAge}
         patientGender={patientGender}
+        patientPhotoUrl={patientPhotoUrl}
         onSave={handleSave}
         onSaveDraft={handleSaveDraft}
         enteredBy={session?.practitionerId ?? 'unknown'}

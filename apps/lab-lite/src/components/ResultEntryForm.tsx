@@ -35,6 +35,8 @@ export interface ResultEntryFormProps {
   patientFirstName: string
   patientAge: number
   patientGender: string
+  /** Rule #7 (revised): signed patient-photo URL (opaque key). Optional — initials fallback. */
+  patientPhotoUrl?: string | null
   onSave: (result: Omit<LabResult, 'id'>, observations: Omit<LabObservation, 'id'>[], rangeSnapshots?: Map<string, RangeSnapshot>) => Promise<void>
   onSaveDraft: (result: Omit<LabResult, 'id'>, observations: Omit<LabObservation, 'id'>[]) => Promise<void>
   enteredBy: string
@@ -89,6 +91,7 @@ export function ResultEntryForm({
   patientFirstName,
   patientAge,
   patientGender,
+  patientPhotoUrl,
   onSave,
   onSaveDraft,
   enteredBy,
@@ -480,7 +483,7 @@ export function ResultEntryForm({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {/* Initials-only avatar — no photo for result entry header (staff context) */}
-            <Avatar name={patientFirstName} size={24} />
+            <Avatar src={patientPhotoUrl ?? null} name={patientFirstName} size={24} />
             <div>
               <p className="text-base font-semibold text-foreground dark:text-foreground">
                 {patientFirstName}

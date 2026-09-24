@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { db } from '@/lib/db'
+import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
 import { useEncounterStore } from '@/stores/encounter-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { Card } from '@/components/Card'
@@ -71,6 +72,27 @@ export function RecentEncountersList() {
   const [encounters, setEncounters] = useState<RecentEncounter[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
+  // Rule #7 (revised): patient photos here too — signed URLs by patient id (Hub
+  // resolves the opaque key server-side); initials fallback on miss/offline.
+  const [photoUrls, setPhotoUrls] = useState<Map<string, string>>(new Map())
+
+  useEffect(() => {
+    const ids = [...new Set(encounters.map((e) => e.patientId).filter(Boolean))]
+    if (ids.length === 0) { setPhotoUrls(new Map()); return }
+    let cancelled = false
+    const controller = new AbortController()
+    ;(async () => {
+      const entries = await Promise.all(
+        ids.map(async (id) => [id, await getPatientPhotoUrl(id, controller.signal)] as const),
+      )
+      if (cancelled) return
+      const map = new Map<string, string>()
+      for (const [id, url] of entries) if (url) map.set(id, url)
+      setPhotoUrls(map)
+    })()
+    return () => { cancelled = true; controller.abort() }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [encounters.map((e) => e.patientId).join(',')])
   const activeEncounter = useEncounterStore((s) => s.activeEncounter)
 
   useEffect(() => {
@@ -183,6 +205,7 @@ export function RecentEncountersList() {
             >
               <div className="min-w-0 flex-1 flex items-center gap-2">
                 <Avatar
+                  src={photoUrls.get(enc.patientId) ?? null}
                   name={enc.nameSegments.length > 0 ? enc.nameSegments.join(' ') : enc.patientName}
                   size={24}
                 />

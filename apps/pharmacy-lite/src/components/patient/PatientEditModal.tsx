@@ -8,6 +8,7 @@ import type { FhirPatient, AfghanProvince } from '@ultranos/shared-types'
 import { NameInputSection } from '@/components/registration/NameInputSection'
 import { GeographySection } from '@/components/registration/GeographySection'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
 import { db, type LocalPatient } from '@/lib/db'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
@@ -97,6 +98,19 @@ export function PatientEditModal({
 }: PatientEditModalProps) {
   const t = useTranslations('registration')
   const actorId = useAuthSessionStore((s) => s.session?.userId ?? 'unknown')
+
+  // Rule #7 (revised): patient photo — signed URL by patient id (Hub resolves the
+  // opaque key server-side); initials fallback on miss/offline.
+  const [photoSrc, setPhotoSrc] = useState<string | null>(null)
+  useEffect(() => {
+    if (!patientId) return
+    let cancelled = false
+    const controller = new AbortController()
+    void getPatientPhotoUrl(patientId, controller.signal).then((url) => {
+      if (!cancelled) setPhotoSrc(url)
+    })
+    return () => { cancelled = true; controller.abort() }
+  }, [patientId])
 
   // ── Form state ──
   const [nameGiven, setNameGiven] = useState('')
@@ -477,7 +491,7 @@ export function PatientEditModal({
           className="rounded-t-xl"
           title={
             <span className="flex items-center gap-3">
-              <Avatar name={nameGiven || undefined} size={40} />
+              <Avatar src={photoSrc} name={nameGiven || undefined} size={40} />
               {t('editPatientProfile')}
             </span>
           }
