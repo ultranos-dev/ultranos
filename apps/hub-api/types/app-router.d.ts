@@ -813,9 +813,9 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 alreadySynced: boolean;
             } | {
                 success: boolean;
-                dispenseId: any;
+                dispenseId: string;
                 prescriptionStatus: string;
-                dispensedAt: any;
+                dispensedAt: string | null;
                 conflictDetected: boolean;
                 alreadySynced?: undefined;
             };
@@ -1105,7 +1105,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             };
             output: {
                 success: boolean;
-                labId: any;
+                labId: string;
                 status: string;
             };
             meta: object;
