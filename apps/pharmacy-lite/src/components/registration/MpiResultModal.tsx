@@ -289,7 +289,11 @@ export function MpiResultModal({
             {t('cancel')}
           </Button>
 
-          {decision === 'WARN' && proceedToken && (
+          {/* The override shows iff the Hub issued a proceedToken. The Hub issues
+              one for WARN always, and for BLOCK only in MPI_BLOCK_MODE=warn
+              (Story 60.3, Decision #5) — so an enforced BLOCK (no token) offers
+              no override, while a warn-mode BLOCK stays overridable + flagged. */}
+          {proceedToken && (
             <Button
               variant="outline"
               className="border-warning text-warning hover:bg-warning/10"

@@ -14,6 +14,7 @@ import { fetchMpiCandidates } from '@/lib/mpi-candidate-query'
 import { CreatePatientMpiInputSchema, PatientContactSchema } from '@ultranos/shared-types'
 import { sanitizeFilterValue } from '@/lib/filter-sanitize'
 import { isAdminRole } from '../rbac'
+import { getMpiBlockMode } from '@/lib/mpi-block-mode'
 
 function hashNationalId(rawId: string): string {
   const { hmacKey } = getFieldEncryptionKeys()
@@ -426,9 +427,13 @@ export const patientRouter = createTRPCRouter({
         biometricFingerprintHash: input.biometricFingerprintHash,
       })
 
-      // Issue a proceedToken on WARN so the clinician can pass it directly to patient.create
+      // Issue a proceedToken when the decision is overridable so the clinician
+      // can pass it directly to patient.create. WARN is always overridable. BLOCK
+      // is overridable ONLY in MPI_BLOCK_MODE=warn (Decision #5) — in 'enforce'
+      // mode a BLOCK is hard-blocked, so no token is issued (mirrors create).
       let proceedToken: string | undefined
-      if (mpiResult.decision === 'WARN') {
+      const blockOverridable = mpiResult.decision === 'BLOCK' && getMpiBlockMode() === 'warn'
+      if (mpiResult.decision === 'WARN' || blockOverridable) {
         proceedToken = await signProceedToken({
           candidateIds: mpiResult.candidates.map(c => c.candidate.id),
           maxScore: mpiResult.topScore,
@@ -527,8 +532,27 @@ export const patientRouter = createTRPCRouter({
       let mpiWarn = false
       let consumeJti: string | null = null
 
-      // TODO: Restore BLOCK enforcement once MPI scoring algorithm is production-ready
-      // Currently treating BLOCK same as WARN — all duplicates can be overridden with proceedToken
+      // MPI BLOCK enforcement (Story 60.3, Task 2 — Decision #5), staged via
+      // MPI_BLOCK_MODE (DEFAULT 'warn'). In 'enforce' mode a BLOCK-level score
+      // HARD-BLOCKS an online create — no proceedToken override — because the
+      // duplicate confidence is high enough that a merge/resolution is required
+      // first. In 'warn' mode (default while the scorer is not production-ready)
+      // BLOCK behaves like WARN: overridable with a token, flagged for review.
+      // Offline-queued registrations cannot be pre-blocked; a BLOCK at drain
+      // always becomes a duplicate-review item (see patient.syncCreate).
+      if (mpiResult.decision === 'BLOCK' && getMpiBlockMode() === 'enforce') {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Blocking duplicate detected. Resolve or merge the existing record before creating.',
+          cause: {
+            candidateIds: mpiResult.candidates.slice(0, 5).map(c => c.candidate.id),
+            topScore: mpiResult.topScore,
+            mpiDecision: 'BLOCK',
+            enforced: true,
+          },
+        })
+      }
+
       if (mpiResult.decision === 'BLOCK' || mpiResult.decision === 'WARN') {
         if (!input.mpiProceedToken) {
           const proceedToken = await signProceedToken({

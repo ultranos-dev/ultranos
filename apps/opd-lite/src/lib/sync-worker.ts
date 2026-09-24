@@ -93,6 +93,83 @@ async function pushAppointmentEntries(
   return out
 }
 
+/**
+ * Offline-registered patients do NOT flow through the generic `sync.push`
+ * upsert (Story 60.3): that path would write a consent-less patient under the
+ * provisional client id and skip the Hub-side MPI duplicate check entirely.
+ * Instead each `Patient` `create` entry is drained to `patient.syncCreate`,
+ * which atomically inserts patient + consent via the RPC and fires async MPI
+ * scoring (WARN/BLOCK → a duplicate_reviews entry). syncCreate mints the
+ * authoritative Hub id, so on ack we reconcile the provisional id: re-key the
+ * local patient row and re-point every locally-linked record onto the Hub id.
+ * A failure returns { success:false } so the entry is retried with backoff
+ * (surfaces via sync-store failedCount) — never silently dropped.
+ *
+ * Non-`Patient`-create entries are returned untouched for the caller to push
+ * via `sync.push`.
+ */
+async function pushPatientCreateEntries(
+  entries: SyncQueueEntry[],
+  hubBaseUrl: string,
+  token: string,
+): Promise<Map<string, SyncResult>> {
+  const out = new Map<string, SyncResult>()
+  for (const entry of entries) {
+    // The worker hands us decrypted entries; the payload is the full
+    // patient.syncCreate input (CreatePatientMpiInputSchema + offlineCreatedAt).
+    let payload: Record<string, unknown>
+    try {
+      payload = JSON.parse(entry.payload) as Record<string, unknown>
+    } catch {
+      out.set(entry.resourceId, { success: false, error: 'Malformed patient payload', permanent: true })
+      continue
+    }
+
+    let res: Response
+    try {
+      res = await meteredFetch(`${hubBaseUrl}/api/trpc/patient.syncCreate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ json: payload }),
+      })
+    } catch {
+      out.set(entry.resourceId, { success: false, error: 'Network error' })
+      continue
+    }
+
+    if (!res.ok) {
+      out.set(entry.resourceId, { success: false, error: `HTTP ${res.status}` })
+      continue
+    }
+
+    let hubId: string | undefined
+    try {
+      const data = (await res.json()) as { result?: { data?: { json?: { id?: string } } } }
+      hubId = data.result?.data?.json?.id
+    } catch {
+      out.set(entry.resourceId, { success: false, error: 'Malformed syncCreate response' })
+      continue
+    }
+    if (!hubId) {
+      out.set(entry.resourceId, { success: false, error: 'syncCreate returned no id' })
+      continue
+    }
+
+    // Reconcile the provisional id → Hub id across all locally-linked records.
+    // On reconcile failure, treat the whole op as failed so it retries (the
+    // reconcile itself is idempotent; a re-run finds the provisional row gone
+    // or re-points the residue). Never leave records stranded silently.
+    try {
+      const { reconcileProvisionalPatient } = await import('./reconcile-provisional-patient')
+      await reconcileProvisionalPatient(entry.resourceId, hubId)
+      out.set(entry.resourceId, { success: true })
+    } catch {
+      out.set(entry.resourceId, { success: false, error: 'PROVISIONAL_PATIENT_RECONCILE_FAILED' })
+    }
+  }
+  return out
+}
+
 export interface SyncWorkerConfig {
   hubBaseUrl: string
   getAuthToken: () => string
@@ -121,13 +198,25 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
       const token = config.getAuthToken()
 
       // Appointments use their own Tier-3 endpoint (see pushAppointmentEntries):
-      // sync.push cannot persist them. Split them out and merge both result maps.
+      // sync.push cannot persist them. Patient creates use patient.syncCreate
+      // (MPI-at-drain + provisional-id reconciliation, see pushPatientCreateEntries):
+      // sync.push would write them consent-less and skip MPI. Split both out and
+      // merge all result maps.
       const appointmentEntries = entries.filter((e) => e.resourceType === 'Appointment')
-      const genericEntries = entries.filter((e) => e.resourceType !== 'Appointment')
+      const patientCreateEntries = entries.filter(
+        (e) => e.resourceType === 'Patient' && e.action === 'create',
+      )
+      const genericEntries = entries.filter(
+        (e) =>
+          e.resourceType !== 'Appointment' &&
+          !(e.resourceType === 'Patient' && e.action === 'create'),
+      )
 
       const appointmentResults = await pushAppointmentEntries(appointmentEntries, config.hubBaseUrl, token)
+      const patientCreateResults = await pushPatientCreateEntries(patientCreateEntries, config.hubBaseUrl, token)
 
-      if (genericEntries.length === 0) return appointmentResults
+      const preGeneric = new Map<string, SyncResult>([...appointmentResults, ...patientCreateResults])
+      if (genericEntries.length === 0) return preGeneric
 
       const res = await meteredFetch(`${config.hubBaseUrl}/api/trpc/sync.push`, {
         method: 'POST',
@@ -144,7 +233,7 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
           },
         }),
       })
-      const out = new Map<string, SyncResult>(appointmentResults)
+      const out = new Map<string, SyncResult>(preGeneric)
       if (!res.ok) {
         for (const e of genericEntries) out.set(e.resourceId, { success: false, error: `HTTP ${res.status}` })
         return out
@@ -189,6 +278,13 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
       if (entry.resourceType === 'Appointment') {
         const results = await pushAppointmentEntries([entry], config.hubBaseUrl, token)
         return results.get(entry.resourceId) ?? { success: false, error: 'No appointment result' }
+      }
+
+      // Patient creates → patient.syncCreate (MPI-at-drain + provisional-id
+      // reconciliation). sync.push would write them consent-less and skip MPI.
+      if (entry.resourceType === 'Patient' && entry.action === 'create') {
+        const results = await pushPatientCreateEntries([entry], config.hubBaseUrl, token)
+        return results.get(entry.resourceId) ?? { success: false, error: 'No patient create result' }
       }
 
       const res = await meteredFetch(`${config.hubBaseUrl}/api/trpc/sync.push`, {

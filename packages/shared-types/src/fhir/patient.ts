@@ -182,6 +182,17 @@ export interface FhirPatient {
     /** ISO 8601 instant of the patient's most recent encounter (period.start),
      *  or absent if none. Derived for the directory's Last Visit column. */
     lastVisitAt?: string
+    // ── Offline registration (Story 60.3) ────────────────────────
+    /** True when this patient row was created offline in a spoke with a
+     *  provisional client-minted id, before it reached the Hub. Cleared on
+     *  provisional→hub id reconciliation at drain. Local-only flag. */
+    isOfflineCreated?: boolean
+    /** True while a spoke-created patient is awaiting the Hub-side MPI
+     *  duplicate check that runs at sync-drain (patient.syncCreate → async MPI).
+     *  Set on offline create; cleared when the Hub confirms the create and the
+     *  provisional id is reconciled. Drives the "will verify for duplicates when
+     *  online" UI hint. Local-only flag, never sent to the Hub. */
+    mpiPending?: boolean
   }
 
   // FHIR R4 Meta — canonical field names

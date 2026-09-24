@@ -15,6 +15,20 @@ import {
 import { MpiResultModal } from './MpiResultModal'
 import { CulturalFlagsEditor } from './CulturalFlagsEditor'
 import type { PatientCulturalPreferences } from '@/lib/cultural-flags'
+import { registerPatientOfflineLab } from '@/lib/patient-register-offline'
+
+/**
+ * True for a connectivity failure (Hub unreachable), not an application-level
+ * rejection. `fetch` rejects with TypeError / AbortError on network failure or
+ * timeout; a reachable Hub returning an error throws with a real message that
+ * must surface (e.g. an enforced BLOCK), never be silently queued.
+ */
+function isNetworkError(err: unknown): boolean {
+  if (err instanceof TypeError) return true
+  if (err instanceof DOMException && err.name === 'AbortError') return true
+  if (err instanceof Error) return /fetch|network|Failed to fetch/i.test(err.message)
+  return false
+}
 
 const INPUT_CLASS =
   'w-full rounded-lg border border-border px-4 py-2.5 text-sm focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring'
@@ -141,6 +155,23 @@ export function PatientRegistrationForm() {
     setErrors([message])
   }
 
+  /**
+   * Offline registration fallback (Story 60.3, M-LAB-3): register the patient
+   * locally with a provisional ref + enqueue the Hub `lab.registerPatient`
+   * create, then navigate to upload. The tech continues immediately; MPI runs
+   * at drain and the provisional ref reconciles to the Hub blind-ref.
+   */
+  async function registerOfflineAndGo(input: CreatePatientInput) {
+    const provisionalRef = await registerPatientOfflineLab(input, {
+      firstName: nameGiven.trim(),
+      gender,
+      birthYear: yearOnly
+        ? Number(birthYear)
+        : (birthDate ? new Date(birthDate).getFullYear() : undefined),
+    })
+    router.push(`/upload?patientId=${encodeURIComponent(provisionalRef)}`)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const validationErrors = validate()
@@ -150,6 +181,19 @@ export function PatientRegistrationForm() {
     }
     setErrors([])
     setSubmitting(true)
+
+    // Offline-first: if the device is offline, skip the doomed Hub round-trip
+    // and register locally + enqueue. MPI runs at drain.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      try {
+        await registerOfflineAndGo(buildInput())
+      } catch (err) {
+        surfaceError(err)
+      } finally {
+        setSubmitting(false)
+      }
+      return
+    }
 
     try {
       const token = await getToken()
@@ -173,6 +217,17 @@ export function PatientRegistrationForm() {
       // WARN or BLOCK — show modal
       setMpiResult(result)
     } catch (err) {
+      // Connectivity failure mid-submit → offline fallback. A reachable Hub
+      // returning an error surfaces its message (never silently queued).
+      if (isNetworkError(err)) {
+        try {
+          await registerOfflineAndGo(buildInput())
+          return
+        } catch (offlineErr) {
+          surfaceError(offlineErr)
+          return
+        }
+      }
       surfaceError(err)
     } finally {
       setSubmitting(false)
@@ -187,6 +242,15 @@ export function PatientRegistrationForm() {
       const created = await createPatient(buildInput(proceedToken), token)
       await saveAndRedirect(created.ref)
     } catch (err) {
+      if (isNetworkError(err)) {
+        try {
+          await registerOfflineAndGo(buildInput(proceedToken))
+          return
+        } catch (offlineErr) {
+          surfaceError(offlineErr)
+          return
+        }
+      }
       surfaceError(err)
     } finally {
       setSubmitting(false)

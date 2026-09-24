@@ -12,6 +12,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { drainResultSyncQueue } from '@/lib/result-sync'
 import { drainSpecimenSyncQueue } from '@/lib/specimen-sync'
 import { drainAuthorizationActions, drainAuthorizationNotifications } from '@/lib/authorization-sync'
+import { drainPatientRegistrationQueue } from '@/lib/patient-register-offline'
 import { hydrateSamplesFromHub } from '@/lib/specimen-hydrate'
 
 /**
@@ -86,6 +87,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       void drainSpecimenSyncQueue(getToken)
       void drainAuthorizationActions(getToken)
       void drainAuthorizationNotifications(getToken)
+      // Offline patient registrations (Story 60.3): drain to lab.registerPatient,
+      // then reconcile the provisional ref → the Hub blind-index ref.
+      void drainPatientRegistrationQueue(getToken)
     }
     if (typeof navigator !== 'undefined' && navigator.onLine) runResultDrain()
 

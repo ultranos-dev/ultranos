@@ -710,7 +710,27 @@ describe('patient.checkDuplicates', () => {
     expect(result.candidates[0]!.scoreBreakdown).toHaveProperty('givenName', 30)
   })
 
-  it('returns BLOCK without proceedToken (clinician must dismiss)', async () => {
+  it('returns BLOCK WITH a proceedToken in default warn mode (overridable + flagged, Story 60.3 Decision #5)', async () => {
+    mockFetchMpiCandidates.mockResolvedValue([{ id: 'p2', nameGiven: 'Ahmad' }])
+    mockComputeMpiResult.mockReturnValue({
+      decision: 'BLOCK',
+      topScore: 95,
+      candidates: [{ candidate: { id: 'p2' }, score: 95, breakdown: {} as any, hardIdMatch: false }],
+    })
+
+    const mockFrom = createMockFrom()
+    const ctx = { ...createTestContext(mockFrom), supabase: { from: mockFrom, rpc: vi.fn().mockResolvedValue({ data: null, error: null }) } as never }
+    const caller = createCaller(ctx)
+
+    // MPI_BLOCK_MODE defaults to 'warn' → BLOCK is overridable, so a proceedToken
+    // IS issued (Story 60.3, Task 2). Enforcement is opt-in via MPI_BLOCK_MODE=enforce.
+    const result = await caller.patient.checkDuplicates({ nameGiven: 'Ahmad', nameFather: 'Mohammad', birthYear: 1985 })
+    expect(result.decision).toBe('BLOCK')
+    expect(result.proceedToken).toBe('signed-token')
+  })
+
+  it('returns BLOCK WITHOUT a proceedToken in enforce mode (hard-block, Story 60.3 Decision #5)', async () => {
+    vi.stubEnv('MPI_BLOCK_MODE', 'enforce')
     mockFetchMpiCandidates.mockResolvedValue([{ id: 'p2', nameGiven: 'Ahmad' }])
     mockComputeMpiResult.mockReturnValue({
       decision: 'BLOCK',
@@ -725,6 +745,10 @@ describe('patient.checkDuplicates', () => {
     const result = await caller.patient.checkDuplicates({ nameGiven: 'Ahmad', nameFather: 'Mohammad', birthYear: 1985 })
     expect(result.decision).toBe('BLOCK')
     expect(result.proceedToken).toBeUndefined()
+    vi.unstubAllEnvs()
+    // Restore the field-encryption keys unstubbed above so later tests in this file pass.
+    vi.stubEnv('FIELD_ENCRYPTION_KEY', TEST_ENCRYPTION_KEY)
+    vi.stubEnv('FIELD_ENCRYPTION_HMAC_KEY', TEST_HMAC_KEY)
   })
 
   it('emits PHI_READ audit for mpi_check', async () => {

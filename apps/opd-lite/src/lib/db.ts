@@ -94,6 +94,27 @@ export interface SyncMetaEntry {
   lastPulledAt: string
 }
 
+/**
+ * Provisional→Hub patient id mapping (Story 60.3).
+ *
+ * When a patient is registered offline, the spoke mints a provisional
+ * `crypto.randomUUID()` id. On sync-drain the Hub's `patient.syncCreate`
+ * mints the authoritative id; this table records the mapping so the
+ * post-drain reconciliation sweep can re-key the local patient row and
+ * re-point every locally-linked record (encounters, vitals, orders,
+ * prescriptions, allergies, …) at the Hub id. Non-PHI: opaque ids only.
+ */
+export interface ProvisionalIdMapEntry {
+  /** Provisional client-minted patient id (primary key). */
+  provisionalId: string
+  /** Authoritative Hub patient id assigned at syncCreate. */
+  hubId: string
+  /** ISO 8601 instant the mapping was recorded (at drain ack). */
+  reconciledAt: string
+  /** Number of local records re-pointed by the reconciliation sweep. */
+  reParentedCount?: number
+}
+
 export interface PractitionerKeyEntry {
   publicKey: string          // base64-encoded Ed25519 public key (primary key)
   practitionerId: string
@@ -264,6 +285,7 @@ class OpdLiteDatabase extends Dexie {
   drugCatalogSyncMeta!: EntityTable<CatalogSyncMetaEntry, 'key'>
   pharmaciesMirror!: EntityTable<PharmacyDirectoryEntry, 'id'>
   labsMirror!: EntityTable<LabDirectoryEntry, 'id'>
+  provisionalIdMap!: EntityTable<ProvisionalIdMapEntry, 'provisionalId'>
 
   constructor() {
     super('opd-lite')
@@ -719,6 +741,13 @@ class OpdLiteDatabase extends Dexie {
     // Indexed by diagnosticReportId for efficient per-report queries.
     this.version(28).stores({
       diagnosticReportObservations: 'id, diagnosticReportId',
+    })
+
+    // v29: Provisional→Hub patient id map for offline registration (Story 60.3).
+    // Non-PHI operational table (opaque ids only) — NOT in PHI_TABLE_CONFIGS.
+    // Indexed by hubId so reconciliation can look up either direction.
+    this.version(29).stores({
+      provisionalIdMap: 'provisionalId, hubId, reconciledAt',
     })
   }
 }

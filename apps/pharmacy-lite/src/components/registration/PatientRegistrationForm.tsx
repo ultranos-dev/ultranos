@@ -15,7 +15,40 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { Card } from '@/components/Card'
 import { db, type LocalPatient } from '@/lib/db'
 import { EncryptionKeyNotAvailableError } from '@/lib/encryption-key-store'
+import { registerPatientLocally } from '@/lib/patient-register'
 import type { FhirPatient } from '@ultranos/shared-types'
+
+/**
+ * True for a connectivity failure (Hub unreachable), not an application-level
+ * rejection. `fetch` rejects with TypeError on network failure; a reachable Hub
+ * returning 4xx/5xx throws our `Error("Hub API error: <status>")` — that is NOT
+ * a network error and must surface (e.g. an enforced BLOCK), never be queued.
+ */
+function isNetworkError(err: unknown): boolean {
+  if (err instanceof TypeError) return true
+  if (err instanceof Error) return /Hub API error/.test(err.message) === false && /fetch|network/i.test(err.message)
+  return false
+}
+
+/**
+ * Offline registration fallback (Story 60.3): degrade to the sanctioned
+ * pharmacy offline-first primitive `registerPatientLocally` — it writes the
+ * patient to the encrypted local registry, emits the M-PHARM-4 PHI-write audit
+ * (Story 61.1), and enqueues the Hub sync (preserved across logout per Story
+ * 57.3). Returns the provisional local id so the caller can navigate to the
+ * patient. `preferredLanguage`/`allergies` degrade gracefully when absent.
+ */
+async function registerPharmacyPatientOffline(payload: Record<string, unknown>): Promise<string> {
+  const patient = await registerPatientLocally({
+    nameGiven: String(payload.nameGiven ?? ''),
+    nameFather: (payload.nameFather as string | undefined) || undefined,
+    gender: (payload.gender as 'male' | 'female' | 'other' | 'unknown' | undefined) ?? 'unknown',
+    birthYear: payload.birthYear as number | undefined,
+    phone: (payload.phone as string | undefined) || undefined,
+    preferredLanguage: (payload.preferredLanguage as string | undefined) || undefined,
+  })
+  return patient.id
+}
 
 // ── Hub API helpers ──────────────────────────────────────────────────────────
 // Raw fetch wrappers matching the existing pattern in @/lib/trpc.ts.
@@ -401,14 +434,36 @@ export function PatientRegistrationForm({
           }
           router.push(`/${locale}/patient/${created.id}`)
         } else {
-          // Step 2b: Possible duplicates — always treat as WARN until scoring algorithm is refined
-          // TODO: Restore BLOCK handling once MPI scoring is production-ready
-          setMpiDecision('WARN')
+          // Step 2b: Possible duplicates — present the real MPI decision (Story
+          // 60.3, Task 2). BLOCK vs WARN is now driven by the server's
+          // MPI_BLOCK_MODE: in 'warn' mode a BLOCK still carries a proceedToken
+          // (overridable, flagged for review); in 'enforce' mode a BLOCK carries
+          // no token and patient.create hard-blocks it. The modal shows the
+          // "Add anyway" override iff a proceedToken is present.
+          setMpiDecision(dupeResult.decision as 'WARN' | 'BLOCK')
           setMpiCandidates(dupeResult.candidates)
           setMpiProceedToken(dupeResult.proceedToken)
           setMpiModalOpen(true)
         }
       } catch (err) {
+        // Offline-first fallback (Story 60.3, C-OPD-2 counterpart): a connectivity
+        // failure registers the patient locally + enqueues for sync instead of
+        // stranding the clinician. A reachable Hub returning 4xx/5xx (e.g. an
+        // enforced BLOCK) surfaces its message and is NOT queued.
+        if (isNetworkError(err)) {
+          try {
+            const provisionalId = await registerPharmacyPatientOffline(buildPayload())
+            router.push(`/${locale}/patient/${provisionalId}`)
+            return
+          } catch (offlineErr) {
+            if (offlineErr instanceof EncryptionKeyNotAvailableError) {
+              window.location.href = `/${locale}/login?returnUrl=${encodeURIComponent(`/${locale}/register`)}`
+              return
+            }
+            setSubmitError(offlineErr instanceof Error ? offlineErr.message : t('submitError'))
+            return
+          }
+        }
         setSubmitError(
           err instanceof Error ? err.message : t('submitError'),
         )
@@ -427,8 +482,8 @@ export function PatientRegistrationForm({
       setSubmitting(true)
       setSubmitError('')
 
+      const payload = buildPayload(token)
       try {
-        const payload = buildPayload(token)
         const created = await createPatient(payload)
         try {
           await savePatientLocally(created.id, new Date().toISOString())
@@ -441,6 +496,20 @@ export function PatientRegistrationForm({
         }
         router.push(`/${locale}/patient/${created.id}`)
       } catch (err) {
+        if (isNetworkError(err)) {
+          try {
+            const provisionalId = await registerPharmacyPatientOffline(payload)
+            router.push(`/${locale}/patient/${provisionalId}`)
+            return
+          } catch (offlineErr) {
+            if (offlineErr instanceof EncryptionKeyNotAvailableError) {
+              window.location.href = `/${locale}/login?returnUrl=${encodeURIComponent(`/${locale}/register`)}`
+              return
+            }
+            setSubmitError(offlineErr instanceof Error ? offlineErr.message : t('submitError'))
+            return
+          }
+        }
         setSubmitError(
           err instanceof Error ? err.message : t('submitError'),
         )

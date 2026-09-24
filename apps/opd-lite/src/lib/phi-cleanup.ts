@@ -90,6 +90,10 @@ export const PRESERVE_TABLES = [
   'drugCatalogSyncMeta',
   'pharmaciesMirror', // pharmacy directory — non-PHI reference data
   'labsMirror',       // lab directory — non-PHI reference data
+  // Provisional→Hub patient id map (Story 60.3) — opaque ids only, no PHI.
+  // Preserved so a reconciliation that lands after a re-auth can still map an
+  // offline-created patient's provisional id to its Hub id.
+  'provisionalIdMap',
 ] as const
 
 // Compile-time safety: ensure syncQueue is never in the PHI list
