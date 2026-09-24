@@ -95,11 +95,16 @@ export const DOCUMENTED_RETENTION_TABLES = [
  * syncQueue          — pending/failed entries contain unsynced data; must survive for drain
  * clientAuditLog     — append-only audit trail (opaque IDs, no PHI); regulatory requirement
  * practitioner_keys  — Ed25519 public key cache; not patient PHI
+ * orderAckQueue      — Story 60.4: durable order-ack retry queue; holds only the opaque
+ *                      orderId + retry state (no PHI). Must survive logout/restart so a
+ *                      failed acknowledgement still retries (AC 2) — same durability
+ *                      rationale as syncQueue.
  */
 export const PRESERVE_TABLES = [
   'syncQueue',
   'clientAuditLog',
   'practitioner_keys',
+  'orderAckQueue',
 ] as const
 
 /**

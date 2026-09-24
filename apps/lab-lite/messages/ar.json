@@ -3752,6 +3752,8 @@
     "statusExpired": "منتهي الصلاحية",
     "recordsSectionLabel": "السجلات",
     "filesSectionLabel": "الملفات",
+    "orderAckSectionLabel": "إقرارات الطلبات",
+    "orderAckLabel": "إقرار الطلب",
     "resourceTypeSpecimen": "سجل عيّنة",
     "resourceTypeDiagnosticReport": "نتيجة مختبرية",
     "failure": {
@@ -3769,6 +3771,26 @@
       "syncFailed": "فشل الرفع — ستتم إعادة المحاولة",
       "unknown": "خطأ غير معروف"
     }
+  },
+  "failedSync": {
+    "title": "إخفاقات المزامنة",
+    "badge": "{count} إخفاق مزامنة",
+    "badgePlural": "{count} إخفاقات مزامنة",
+    "empty": "لا توجد إخفاقات مزامنة",
+    "resultLabel": "نتيجة مختبر",
+    "specimenLabel": "سجل عينة",
+    "orderAckLabel": "إقرار الطلب",
+    "fileLabel": "ملف النتيجة",
+    "reference": "مرجع {ref}",
+    "retryCount": "{count} محاولات",
+    "retry": "إعادة المحاولة",
+    "retryAll": "إعادة محاولة الكل",
+    "details": "التفاصيل",
+    "hideDetails": "إخفاء التفاصيل",
+    "deadLettered": "فشل دائم — يحتاج إلى انتباه",
+    "sectionRecords": "السجلات المنظمة",
+    "sectionOrderAcks": "إقرارات الطلبات",
+    "sectionFiles": "ملفات النتائج"
   },
   "knowledgeCards": {
     "panelTitle": "مرجع سريري",

@@ -6,9 +6,11 @@ import {
   putOrders,
   updateOrderStatus,
   getReceivedSampleForOrder,
+  enqueueOrderAck,
   type LabOrderEntry,
 } from '@/lib/db'
-import { pullOrders, acknowledgeOrder } from '@/lib/trpc'
+import { pullOrders } from '@/lib/trpc'
+import { drainOrderAckQueue } from '@/lib/order-ack-sync'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useDataBudgetStore } from '@/stores/data-budget-store'
 
@@ -144,16 +146,18 @@ export function useOrderSync(): OrderSyncState {
         await putOrders(entries)
       }
 
-      // P1: Only acknowledge orders NOT previously in Dexie
+      // P1 / Story 60.4 (AC 2): enqueue a DURABLE ack for orders NOT previously
+      // in Dexie, then drain the ack queue. Previously the ack was fired one-shot
+      // here and, on failure, swallowed — so it only ever retried if the order
+      // re-appeared as NEW, leaving the OPD-side order editable forever. Now the
+      // ack is a durable, retryable unit that survives app restart.
       for (const entry of entries) {
         if (!existingIds.has(entry.orderId)) {
-          try {
-            await acknowledgeOrder(entry.orderId, token)
-          } catch {
-            // Ack is best-effort — will retry on next cycle
-          }
+          await enqueueOrderAck(entry.orderId)
         }
       }
+      // Drain queued acks (new + any previously-failed transient ones).
+      await drainOrderAckQueue(async () => token)
 
       // P7: On full sync, mark local orders absent from server as CANCELLED,
       // but skip any order that has a collected specimen (tombstoneAbsentOrders

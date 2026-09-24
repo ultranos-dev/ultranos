@@ -14,6 +14,18 @@ vi.mock('@/lib/mpi-candidate-query', () => ({
   fetchMpiCandidates: (...args: unknown[]) => mockFetchMpiCandidates(...args),
 }))
 
+// Story 60.4 (Task 3): audit + admin-notification producer for stranded MPI reviews.
+const mockAuditEmit = vi.fn().mockResolvedValue({ id: 'audit-1' })
+vi.mock('@ultranos/audit-logger', () => ({
+  AuditLogger: vi.fn().mockImplementation(() => ({ emit: mockAuditEmit })),
+}))
+const mockProduceNotifications = vi.fn().mockResolvedValue({ inserted: 1, recipients: 1 })
+const mockResolveOrgAdmins = vi.fn().mockResolvedValue(['prac-admin-1'])
+vi.mock('@/lib/notification-producers', () => ({
+  produceNotifications: (...args: unknown[]) => mockProduceNotifications(...args),
+  resolveOrgAdmins: (...args: unknown[]) => mockResolveOrgAdmins(...args),
+}))
+
 const { runAsyncMpiScoring } = await import('../lib/async-mpi-scoring')
 
 describe('runAsyncMpiScoring', () => {
@@ -75,7 +87,14 @@ describe('runAsyncMpiScoring', () => {
         }
       }
       if (table === 'duplicate_reviews') {
-        return { insert: vi.fn().mockResolvedValue({ error: null }) }
+        // Story 60.4: the insert now .select('id').single()s to capture the review id.
+        return {
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { id: 'review-1' }, error: null }),
+            }),
+          }),
+        }
       }
       return { insert: vi.fn().mockResolvedValue({ error: null }) }
     })
@@ -103,6 +122,15 @@ describe('runAsyncMpiScoring', () => {
           update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
         }
       }
+      if (table === 'duplicate_reviews') {
+        return {
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { id: 'review-2' }, error: null }),
+            }),
+          }),
+        }
+      }
       return { insert: vi.fn().mockResolvedValue({ error: null }) }
     })
 
@@ -110,6 +138,49 @@ describe('runAsyncMpiScoring', () => {
 
     const calls = mockSupabase.from.mock.calls.map((c: unknown[]) => c[0])
     expect(calls).toContain('duplicate_reviews')
+  })
+
+  it('emits an audit event AND notifies org admins when a PENDING review is created (Story 60.4 Task 3)', async () => {
+    mockFetchMpiCandidates.mockResolvedValue([{ id: 'candidate-1' }])
+    mockComputeMpiResult.mockReturnValue({
+      decision: 'WARN',
+      topScore: 80,
+      candidates: [{ candidate: { id: 'candidate-1' }, score: 80, breakdown: {}, hardIdMatch: false }],
+    })
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'patients') {
+        return { update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) }
+      }
+      if (table === 'duplicate_reviews') {
+        return {
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { id: 'review-3' }, error: null }),
+            }),
+          }),
+        }
+      }
+      return { insert: vi.fn().mockResolvedValue({ error: null }) }
+    })
+
+    await runAsyncMpiScoring(PATIENT_ID, PATIENT_FIELDS, mockSupabase as never, 'org-1')
+
+    // Audit event for the created review (patient-scoped, non-PHI metadata).
+    expect(mockAuditEmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'CREATE',
+        metadata: expect.objectContaining({ operation: 'mpi_duplicate_review_created', reviewId: 'review-3' }),
+      }),
+    )
+    // Admin notification produced — MPI_REVIEW_PENDING, ADMIN role, non-PHI payload.
+    expect(mockResolveOrgAdmins).toHaveBeenCalledWith(expect.anything(), 'org-1')
+    expect(mockProduceNotifications).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'MPI_REVIEW_PENDING', recipientRole: 'ADMIN' }),
+    )
+    const notifyArg = mockProduceNotifications.mock.calls[0]![0] as { payload: Record<string, unknown> }
+    // PHI-free: payload carries only the opaque reviewId + decision enum.
+    expect(JSON.stringify(notifyArg.payload)).not.toContain('Ahmad')
+    expect(notifyArg.payload).toMatchObject({ reviewId: 'review-3', status: 'WARN' })
   })
 
   it('logs error but does not throw on failure', async () => {

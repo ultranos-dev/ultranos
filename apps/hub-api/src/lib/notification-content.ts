@@ -12,6 +12,11 @@ export interface NotificationContent {
 export const NON_PHI_PARAM_KEYS = [
   'testCategory', 'labName', 'status', 'orderId', 'prescriptionId',
   'diagnosticReportId', 'reviewId', 'count', 'pathogen',
+  // Story 60.4 producers — all non-PHI operational descriptors:
+  //   criticality   → allergy severity enum ('low'|'high'|'unable-to-assess'), NOT the substance
+  //   consentStatus → consent lifecycle enum ('ACTIVE'|'WITHDRAWN'|...), NOT any clinical content
+  //   resourceType  → FHIR resource type of a Tier-1 sync conflict ('AllergyIntolerance', etc.)
+  'criticality', 'consentStatus', 'resourceType',
 ] as const
 
 interface Entry { sourceApp: SourceApp; subjectKey: string; bodyKey: string; notesKey: string | null }
@@ -20,6 +25,11 @@ const TYPE_CONTENT: Record<string, Entry> = {
   LAB_RESULT_AVAILABLE:     { sourceApp: 'LAB_LITE',      subjectKey: 'LAB_RESULT_AVAILABLE',   bodyKey: 'labResultBody',        notesKey: 'labResultNotes' },
   LAB_RESULT_ESCALATION:    { sourceApp: 'LAB_LITE',      subjectKey: 'LAB_RESULT_ESCALATION',  bodyKey: 'labResultBody',        notesKey: 'labResultUrgentNotes' },
   ORDER_RECEIVED:           { sourceApp: 'LAB_LITE',      subjectKey: 'ORDER_RECEIVED',         bodyKey: 'orderReceivedBody',    notesKey: 'orderReceivedNotes' },
+  // PRESCRIPTION_READY: RESERVED (Story 60.4 disposition). No pharmacy workflow
+  // currently produces a "ready for pickup" transition — the pharmacy flow goes
+  // ACTIVE → DISPENSED directly (PRESCRIPTION_DISPENSED). Kept in the map (not
+  // removed) so the type + client i18n keys stay stable for a future
+  // ready-for-pickup state; it has no producer by design until that state exists.
   PRESCRIPTION_READY:       { sourceApp: 'PHARMACY_LITE', subjectKey: 'PRESCRIPTION_READY',     bodyKey: 'prescriptionReadyBody',notesKey: null },
   PRESCRIPTION_DISPENSED:   { sourceApp: 'PHARMACY_LITE', subjectKey: 'PRESCRIPTION_DISPENSED', bodyKey: 'prescriptionDispensedBody', notesKey: null },
   DISPENSE_REVIEW_RESOLVED: { sourceApp: 'PHARMACY_LITE', subjectKey: 'DISPENSE_REVIEW_RESOLVED', bodyKey: 'dispenseReviewBody', notesKey: null },
@@ -28,6 +38,8 @@ const TYPE_CONTENT: Record<string, Entry> = {
   CONSENT_CHANGE:           { sourceApp: 'OPD_LITE',      subjectKey: 'CONSENT_CHANGE',         bodyKey: 'consentChangeBody',    notesKey: null },
   ALLERGY_UPDATE:           { sourceApp: 'OPD_LITE',      subjectKey: 'ALLERGY_UPDATE',         bodyKey: 'allergyUpdateBody',    notesKey: 'allergyUpdateNotes' },
   SYNC_CONFLICT:            { sourceApp: 'SYSTEM',        subjectKey: 'SYNC_CONFLICT',          bodyKey: 'syncConflictBody',     notesKey: null },
+  // Story 60.4 (Task 3): stranded MPI duplicate review surfaced to org admins.
+  MPI_REVIEW_PENDING:       { sourceApp: 'ADMIN',         subjectKey: 'MPI_REVIEW_PENDING',     bodyKey: 'mpiReviewPendingBody', notesKey: null },
   LICENSE_EXPIRED:          { sourceApp: 'ADMIN',         subjectKey: 'LICENSE_EXPIRED',        bodyKey: 'licenseExpiredBody',   notesKey: 'licenseExpiredNotes' },
   LICENSE_EXPIRY_WARNING:   { sourceApp: 'ADMIN',         subjectKey: 'LICENSE_EXPIRY_WARNING', bodyKey: 'licenseExpiryWarningBody', notesKey: 'licenseExpiryWarningNotes' },
   PROVIDER_SUSPENDED:       { sourceApp: 'ADMIN',         subjectKey: 'PROVIDER_SUSPENDED',     bodyKey: 'providerSuspendedBody',notesKey: 'providerSuspendedNotes' },

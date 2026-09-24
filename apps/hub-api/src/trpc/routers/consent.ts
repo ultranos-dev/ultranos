@@ -6,6 +6,7 @@ import { db } from '@/lib/supabase'
 import { checkConsent } from '../middleware/enforceConsent'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { AuditLogger } from '@ultranos/audit-logger'
+import { produceConsentChangeNotification } from '@/lib/notification-producers'
 
 /**
  * Consent domain router.
@@ -146,6 +147,19 @@ export const consentRouter = createTRPCRouter({
       } catch {
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'Consent', resourceId: data.id })
       }
+
+      // Story 60.4 (Task 2 / AC 4): CONSENT_CHANGE producer. A consent change —
+      // especially a WITHDRAWN — alters what data treating clinicians may access
+      // at the Hub, so notify them. PHI-safe: consentStatus enum + opaque
+      // patientRef only. Fire-and-forget: never blocks/fails the consent sync.
+      await produceConsentChangeNotification(ctx.supabase, {
+        patientId: input.patientRef,
+        consentStatus: input.status,
+        actorId: ctx.user.sub,
+        actorRole: ctx.user.role,
+        sessionId: ctx.user.sessionId,
+        orgId: ctx.user?.orgId ?? undefined,
+      })
 
       return { success: true, consentId: data.id, alreadySynced: false }
     }),

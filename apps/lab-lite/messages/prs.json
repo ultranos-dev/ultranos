@@ -3752,6 +3752,8 @@
     "statusExpired": "منقضی شده",
     "recordsSectionLabel": "ریکاردها",
     "filesSectionLabel": "فایل‌ها",
+    "orderAckSectionLabel": "تأییدهای سفارش",
+    "orderAckLabel": "تأیید سفارش",
     "resourceTypeSpecimen": "ریکارد نمونه",
     "resourceTypeDiagnosticReport": "نتیجه آزمایشگاه",
     "failure": {
@@ -3769,6 +3771,26 @@
       "syncFailed": "بارگذاری ناکام شد — دوباره تلاش خواهد شد",
       "unknown": "خطای نامعلوم"
     }
+  },
+  "failedSync": {
+    "title": "ناکامی‌های همگام‌سازی",
+    "badge": "{count} ناکامی همگام‌سازی",
+    "badgePlural": "{count} ناکامی همگام‌سازی",
+    "empty": "هیچ ناکامی همگام‌سازی وجود ندارد",
+    "resultLabel": "نتیجه لابراتوار",
+    "specimenLabel": "سابقه نمونه",
+    "orderAckLabel": "تأیید سفارش",
+    "fileLabel": "فایل نتیجه",
+    "reference": "مرجع {ref}",
+    "retryCount": "{count} تلاش",
+    "retry": "تلاش دوباره",
+    "retryAll": "تلاش دوباره همه",
+    "details": "جزئیات",
+    "hideDetails": "پنهان کردن جزئیات",
+    "deadLettered": "ناکامی دائمی — نیاز به توجه دارد",
+    "sectionRecords": "سوابق ساختاریافته",
+    "sectionOrderAcks": "تأییدهای سفارش",
+    "sectionFiles": "فایل‌های نتیجه"
   },
   "knowledgeCards": {
     "panelTitle": "مرجع بالینی",

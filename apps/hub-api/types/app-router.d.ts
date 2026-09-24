@@ -694,8 +694,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 medicationDisplay: string;
                 medicationCode: string;
                 interactionCheck: "CLEAR" | "WARNING" | "BLOCKED" | "UNAVAILABLE";
-                encounterId?: string | undefined;
                 prescriptionId?: string | undefined;
+                encounterId?: string | undefined;
                 isOfflineCreated?: boolean | undefined;
                 medicationText?: string | undefined;
                 dosageInstruction?: Record<string, unknown> | undefined;
@@ -786,10 +786,10 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
         }>;
         recordDispense: import("@trpc/server").TRPCMutationProcedure<{
             input: {
-                status: "in-progress" | "completed";
+                status: "completed" | "in-progress";
                 patientRef: string;
-                hlcTimestamp: string;
                 prescriptionId: string;
+                hlcTimestamp: string;
                 medicationDisplay: string;
                 medicationCode: string;
                 dispenseId: string;
@@ -836,9 +836,9 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
         }>;
         voidPrescription: import("@trpc/server").TRPCMutationProcedure<{
             input: {
+                prescriptionId: string;
                 reason: string;
                 hlcTimestamp: string;
-                prescriptionId: string;
             };
             output: {
                 success: boolean;
@@ -984,11 +984,11 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             input: {
                 id: string;
                 hlcTimestamp: string;
-                newStatus: "stopped" | "completed";
+                newStatus: "completed" | "stopped";
             };
             output: {
                 id: any;
-                newStatus: "stopped" | "completed";
+                newStatus: "completed" | "stopped";
             };
             meta: object;
         }>;
@@ -1913,11 +1913,11 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 id: string;
                 type: "allergy" | "intolerance";
                 patientRef: string;
+                criticality: "unable-to-assess" | "low" | "high";
                 hlcTimestamp: string;
                 substanceText: string;
                 clinicalStatusCode: "active" | "inactive" | "resolved";
                 verificationStatusCode: "confirmed" | "unconfirmed";
-                criticality: "low" | "high" | "unable-to-assess";
                 recordedDate: string;
                 substanceFreeText?: string | undefined;
                 substanceCode?: string | undefined;
@@ -2098,7 +2098,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
         getOrgSubscription: import("@trpc/server").TRPCQueryProcedure<{
             input: {
                 orgId: string;
-                moduleCode: "OPD_LITE" | "LAB_LITE" | "PHARMACY_LITE";
+                moduleCode: "LAB_LITE" | "PHARMACY_LITE" | "OPD_LITE";
             };
             output: {
                 subscription: null;
@@ -2285,7 +2285,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
     }, import("@trpc/server").TRPCDecorateCreateRouterOptions<{
         check: import("@trpc/server").TRPCQueryProcedure<{
             input: {
-                moduleCode: "OPD_LITE" | "LAB_LITE" | "PHARMACY_LITE";
+                moduleCode: "LAB_LITE" | "PHARMACY_LITE" | "OPD_LITE";
             };
             output: {
                 status: "inactive";
@@ -2630,9 +2630,9 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 labId: string;
                 description?: string | undefined;
                 phone?: string | undefined;
+                labName?: string | undefined;
                 district?: string | undefined;
                 province?: string | undefined;
-                labName?: string | undefined;
                 accreditationRef?: string | undefined;
                 email?: string | undefined;
                 address?: string | undefined;

@@ -830,7 +830,7 @@ export const patientRouter = createTRPCRouter({
         biometricFingerprintHash: input.biometricFingerprintHash ?? undefined,
         addressDistrictOrigin: input.addressOrigin?.district,
         addressProvinceOrigin: input.addressOrigin?.province,
-      }, ctx.supabase).catch(() => {
+      }, ctx.supabase, ctx.user?.orgId ?? undefined).catch(() => {
         console.error('[ASYNC_MPI] Fire-and-forget failed:', { patientId: confirmedPatientId })
       })
 

@@ -3752,6 +3752,8 @@
     "statusExpired": "Expired",
     "recordsSectionLabel": "Records",
     "filesSectionLabel": "Files",
+    "orderAckSectionLabel": "Order acknowledgements",
+    "orderAckLabel": "Order acknowledgement",
     "resourceTypeSpecimen": "Sample record",
     "resourceTypeDiagnosticReport": "Lab result",
     "failure": {
@@ -3769,6 +3771,26 @@
       "syncFailed": "Upload failed — will retry",
       "unknown": "Unknown error"
     }
+  },
+  "failedSync": {
+    "title": "Sync failures",
+    "badge": "{count} sync failure",
+    "badgePlural": "{count} sync failures",
+    "empty": "No failed syncs",
+    "resultLabel": "Lab result",
+    "specimenLabel": "Sample record",
+    "orderAckLabel": "Order acknowledgement",
+    "fileLabel": "Result file",
+    "reference": "Ref {ref}",
+    "retryCount": "{count} attempts",
+    "retry": "Retry",
+    "retryAll": "Retry all",
+    "details": "Details",
+    "hideDetails": "Hide details",
+    "deadLettered": "Permanently failed — needs attention",
+    "sectionRecords": "Structured records",
+    "sectionOrderAcks": "Order acknowledgements",
+    "sectionFiles": "Result files"
   },
   "knowledgeCards": {
     "panelTitle": "Clinical Reference",

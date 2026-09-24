@@ -3752,6 +3752,8 @@
     "statusExpired": "پای ته رسیدلی",
     "recordsSectionLabel": "ریکارډونه",
     "filesSectionLabel": "فایلونه",
+    "orderAckSectionLabel": "د امر تصدیقونه",
+    "orderAckLabel": "د امر تصدیق",
     "resourceTypeSpecimen": "د نمونې ریکارډ",
     "resourceTypeDiagnosticReport": "د لابراتوار نتیجه",
     "failure": {
@@ -3769,6 +3771,26 @@
       "syncFailed": "اپلوډ ناکام شو — بیا هڅه به وشي",
       "unknown": "نامعلومه تېروتنه"
     }
+  },
+  "failedSync": {
+    "title": "د همغږۍ ناکامۍ",
+    "badge": "{count} د همغږۍ ناکامي",
+    "badgePlural": "{count} د همغږۍ ناکامۍ",
+    "empty": "د همغږۍ هیڅ ناکامي نشته",
+    "resultLabel": "د لابراتوار پایله",
+    "specimenLabel": "د نمونې ریکارډ",
+    "orderAckLabel": "د امر تصدیق",
+    "fileLabel": "د پایلې دوتنه",
+    "reference": "حواله {ref}",
+    "retryCount": "{count} هڅې",
+    "retry": "بیا هڅه",
+    "retryAll": "ټول بیا هڅه کړئ",
+    "details": "تفصيلات",
+    "hideDetails": "تفصيلات پټ کړئ",
+    "deadLettered": "دايمي ناکامي — پاملرنې ته اړتیا لري",
+    "sectionRecords": "جوړښتي ریکارډونه",
+    "sectionOrderAcks": "د امر تصدیقونه",
+    "sectionFiles": "د پایلې دوتنې"
   },
   "knowledgeCards": {
     "panelTitle": "کلینیکي مرجع",

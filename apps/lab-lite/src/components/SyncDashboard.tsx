@@ -6,11 +6,12 @@ import { classifySyncFailure } from '@ultranos/sync-engine'
 import { X, RefreshCw, CircleX } from '@ultranos/ui-kit/icons'
 import { Button } from '@ultranos/ui-kit/components/ui/button'
 import { useSyncStore } from '@/stores/sync-store'
-import { getDb, type UploadQueueEntry } from '@/lib/db'
+import { getDb, getFailedOrderAcks, retryOrderAck, type UploadQueueEntry, type OrderAckQueueEntry } from '@/lib/db'
 import { triggerUploadDrain } from '@/lib/upload-drain-init'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { drainResultSyncQueue } from '@/lib/result-sync'
 import { drainSpecimenSyncQueue } from '@/lib/specimen-sync'
+import { drainOrderAckQueue } from '@/lib/order-ack-sync'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -129,6 +130,9 @@ export function SyncDashboard() {
   const [syncRecords, setSyncRecords] = useState<SyncQueueDisplayEntry[]>([])
   const [discardingSyncId, setDiscardingSyncId] = useState<string | null>(null)
 
+  // Story 60.4 (AC 2): dead-lettered order acknowledgements
+  const [failedAcks, setFailedAcks] = useState<OrderAckQueueEntry[]>([])
+
   const [isDraining, setIsDraining] = useState(false)
   const [phase, setPhase] = useState<'idle' | 'syncing' | 'complete' | 'error'>('idle')
 
@@ -138,6 +142,7 @@ export function SyncDashboard() {
     setEntries(all)
     const records = await loadSyncQueueRecords()
     setSyncRecords(records)
+    setFailedAcks(await getFailedOrderAcks())
   }, [])
 
   useEffect(() => {
@@ -159,10 +164,10 @@ export function SyncDashboard() {
     const syncFailed = syncRecords.filter((r) => r.status === 'failed').length
     return {
       totalPending: uploadPending + syncPending,
-      totalFailed: uploadFailed + syncFailed,
+      totalFailed: uploadFailed + syncFailed + failedAcks.length,
       totalExpired,
     }
-  }, [entries, syncRecords])
+  }, [entries, syncRecords, failedAcks])
 
   // ── uploadQueue handlers ──────────────────────────────────────────────────
 
@@ -243,6 +248,20 @@ export function SyncDashboard() {
       const db = getDb()
       await db.syncQueue.delete(id)
       setDiscardingSyncId(null)
+      void loadEntries()
+    },
+    [loadEntries],
+  )
+
+  // Story 60.4 (AC 2): retry a dead-lettered order acknowledgement.
+  const handleRetryAck = useCallback(
+    async (orderId: string) => {
+      await retryOrderAck(orderId)
+      const getToken = async (): Promise<string> => {
+        const { data } = await getSupabaseBrowserClient().auth.getSession()
+        return data.session?.access_token ?? ''
+      }
+      await drainOrderAckQueue(getToken)
       void loadEntries()
     },
     [loadEntries],
@@ -410,12 +429,61 @@ export function SyncDashboard() {
 
         {/* Queue items */}
         <div className="max-h-[60vh] overflow-y-auto" data-testid="sync-item-list">
-          {activeEntries.length === 0 && syncRecords.length === 0 ? (
+          {activeEntries.length === 0 && syncRecords.length === 0 && failedAcks.length === 0 ? (
             <div className="px-5 py-12 text-center text-sm text-muted-foreground">
               {t('allSynced')}
             </div>
           ) : (
             <>
+              {/* ── Order-ack dead-letters (Story 60.4 AC 2) ── */}
+              {failedAcks.length > 0 && (
+                <div>
+                  <div className="border-b border-border bg-muted/30 px-5 py-1.5">
+                    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {t('orderAckSectionLabel')}
+                    </span>
+                  </div>
+                  {failedAcks.map((ack) => (
+                    <div
+                      key={`ack-${ack.orderId}`}
+                      className="flex items-start gap-3 border-b border-border px-5 py-3 last:border-b-0"
+                      data-testid="sync-ack-item"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-foreground" data-testid="sync-ack-label">
+                          {t('orderAckLabel')}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <StatusBadge status="failed" />
+                          {ack.lastAttemptAt && (
+                            <span className="text-xs text-muted-foreground">{formatTimeAgo(ack.lastAttemptAt)}</span>
+                          )}
+                          {ack.retryCount > 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              {ack.retryCount} retr{ack.retryCount === 1 ? 'y' : 'ies'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs text-destructive" data-testid="sync-ack-failure-reason">
+                          {tf(ack.failureReason ?? 'unknown')}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          type="button"
+                          onClick={() => handleRetryAck(ack.orderId)}
+                          data-testid="sync-ack-retry-btn"
+                        >
+                          {t('retry')}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* ── Records section (syncQueue: Specimen + DiagnosticReport) ── */}
               {syncRecords.length > 0 && (
                 <div>

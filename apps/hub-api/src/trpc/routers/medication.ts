@@ -10,6 +10,10 @@ import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
 import { buildNotificationContent } from '@/lib/notification-content'
 import {
+  writeMedicationStatementFromPrescription,
+  enqueueMedicationStatementRetry,
+} from '@/lib/medication-statement-outbox'
+import {
   drugInteractionChecksTotal,
   drugInteractionOverridesTotal,
   prescriptionsWithoutInteractionCheckTotal,
@@ -61,8 +65,12 @@ async function hasUnresolvedTier1Conflict(
 }
 
 /**
- * Story 10.1: Create or update a MedicationStatement when a prescription is dispensed.
- * Best-effort — does not fail the parent operation on error.
+ * Story 10.1 / 60.4 (AC 6): Create or update a MedicationStatement when a
+ * prescription is dispensed. Still best-effort w.r.t. the parent dispense op
+ * (never throws to the caller — the dispense already committed), BUT the failure
+ * is no longer swallowed: on any error the intent is enqueued to the DURABLE
+ * medication_statement_outbox for retry by the drain cron, so the active-med
+ * list can no longer silently diverge from the dispense ledger.
  */
 async function createMedicationStatementOnDispense(
   supabase: SupabaseClient,
@@ -72,63 +80,21 @@ async function createMedicationStatementOnDispense(
   hlcTimestamp: string,
 ): Promise<void> {
   try {
-    // Fetch medication details from the prescription
-    const { data: rx } = await supabase
-      .from('medication_requests')
-      .select('id, medication_codeable_concept, medication_display, subject_reference, encounter_reference')
-      .eq('id', prescriptionId)
-      .single()
-
-    if (!rx) return
-
-    const now = new Date().toISOString()
-
-    // Check if a MedicationStatement already exists for this prescription
-    const { data: existing } = await supabase
-      .from('medication_statements')
-      .select('id')
-      .eq('source_prescription_id', prescriptionId)
-      .eq('status', 'active')
-      .limit(1)
-
-    const existingRow = existing?.[0]
-    if (existingRow) {
-      // Update effective period
-      await supabase
-        .from('medication_statements')
-        .update(db.toRow({
-          effectivePeriodStart: now,
-          metaLastUpdated: now,
-          hlcTimestamp,
-        }))
-        .eq('id', existingRow.id)
-      return
-    }
-
-    // Create new MedicationStatement
-    const row = db.toRow({
-      id: crypto.randomUUID(),
-      resourceType: 'MedicationStatement',
-      status: 'active',
-      medicationCodeableConcept: rx.medication_codeable_concept,
-      medicationDisplay: rx.medication_display,
-      subjectReference: rx.subject_reference ?? patientRef,
-      effectivePeriodStart: now,
-      dateAsserted: now,
-      informationSourceReference: `Practitioner/${actorId}`,
-      sourceEncounterId: rx.encounter_reference?.replace('Encounter/', '') ?? null,
-      sourcePrescriptionId: prescriptionId,
-      isOfflineCreated: false,
+    await writeMedicationStatementFromPrescription(supabase, {
+      prescriptionId,
+      patientRef,
+      actorId,
       hlcTimestamp,
-      createdAt: now,
-      metaLastUpdated: now,
-      metaVersionId: '1',
     })
-
-    await supabase.from('medication_statements').insert(row)
-  } catch {
-    // Best-effort: log but don't fail the parent operation
-    console.warn('[MedicationStatement] Failed to create on dispense', { prescriptionId })
+  } catch (err) {
+    // Durable retry instead of a swallowed console.warn (Story 60.4 AC 6).
+    const reason = err instanceof Error ? err.message : 'unknown error'
+    console.warn('[MedicationStatement] Deferred to outbox after failure', { prescriptionId })
+    await enqueueMedicationStatementRetry(
+      supabase,
+      { prescriptionId, patientRef, actorId, hlcTimestamp },
+      reason,
+    )
   }
 }
 

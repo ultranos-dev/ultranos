@@ -837,6 +837,31 @@ export interface ArchivedSampleEntry {
   archivedAt: string // ISO 8601
 }
 
+// ---------------------------------------------------------------------------
+// Order-Ack Retry Queue (v58) — Story 60.4 (Task 1 / AC 2)
+//
+// lab.acknowledgeOrder was previously fired one-shot inside the order-pull loop
+// and, on failure, swallowed with only a comment ("will retry on next cycle").
+// But the retry only happened if the order re-appeared as NEW on a later pull —
+// once acknowledged locally it never retried, so a failed ack left the OPD-side
+// order editable forever (the "editable forever in OPD" gap). This durable queue
+// makes the ack a first-class retryable unit that survives app restart.
+//
+// No PHI — holds only the opaque orderId and retry bookkeeping (Rule #1).
+// ---------------------------------------------------------------------------
+
+export type OrderAckStatus = 'pending' | 'acked' | 'failed'
+
+export interface OrderAckQueueEntry {
+  orderId: string          // primary key — one ack attempt-record per order
+  status: OrderAckStatus
+  retryCount: number
+  createdAt: string        // ISO 8601
+  lastAttemptAt: string | null
+  /** Categorized failure reason (never raw server text) — for the dead-letter UI. */
+  failureReason?: string
+}
+
 class LabLiteDatabase extends Dexie {
   uploadQueue!: Dexie.Table<UploadQueueEntry, number>
   practitioner_keys!: Dexie.Table<PractitionerKeyCache, string>
@@ -1046,6 +1071,8 @@ class LabLiteDatabase extends Dexie {
   // PHI note: patientRef is opaque blind-index ref; only first name + age stored per Rule #7.
   monitoringFlags!: Dexie.Table<MonitoringFlag, number>
   medicationLabMappings!: Dexie.Table<{ atcCode: string; medicationDisplay: string; version: number; requiredTests: unknown[] }, string>
+  // v58 — Order-Ack Retry Queue (Story 60.4). No PHI — opaque orderId + retry state.
+  orderAckQueue!: Dexie.Table<OrderAckQueueEntry, string>
 
   constructor() {
     super('lab-lite-db')
@@ -2056,6 +2083,10 @@ class LabLiteDatabase extends Dexie {
           delete flag.medicationCode
           delete flag.medicationDisplay
         })
+    })
+    // v58 — Order-Ack Retry Queue (Story 60.4). Durable, survives restart.
+    this.version(58).stores({
+      orderAckQueue: '&orderId, status, createdAt',
     })
   }
 }
@@ -3202,6 +3233,80 @@ export async function getOrderById(orderId: string): Promise<LabOrderEntry | und
 export async function updateOrderStatus(orderId: string, status: LabOrderStatus): Promise<void> {
   const db = getDb()
   await db.orders.update(orderId, { status })
+}
+
+// ---------------------------------------------------------------------------
+// Order-Ack Retry Queue helpers (v58) — Story 60.4 (Task 1 / AC 2)
+// ---------------------------------------------------------------------------
+
+/**
+ * Enqueue a durable order-ack for `orderId` if one is not already tracked.
+ * Idempotent: an already-'acked' entry is left untouched; a 'failed'/'pending'
+ * entry is reset to 'pending' so the drain retries it. Survives app restart.
+ */
+export async function enqueueOrderAck(orderId: string): Promise<void> {
+  const db = getDb()
+  const existing = await db.orderAckQueue.get(orderId)
+  if (existing?.status === 'acked') return
+  await db.orderAckQueue.put({
+    orderId,
+    status: 'pending',
+    retryCount: existing?.retryCount ?? 0,
+    createdAt: existing?.createdAt ?? new Date().toISOString(),
+    lastAttemptAt: existing?.lastAttemptAt ?? null,
+    failureReason: undefined,
+  })
+}
+
+/** All ack entries that still need delivery (pending OR failed/dead-lettered). */
+export async function getPendingOrderAcks(): Promise<OrderAckQueueEntry[]> {
+  const db = getDb()
+  return db.orderAckQueue
+    .where('status')
+    .anyOf(['pending', 'failed'])
+    .toArray()
+}
+
+/** All failed/dead-lettered ack entries — for the dead-letter UI. */
+export async function getFailedOrderAcks(): Promise<OrderAckQueueEntry[]> {
+  const db = getDb()
+  return db.orderAckQueue.where('status').equals('failed').toArray()
+}
+
+/** Mark an order-ack delivered. */
+export async function markOrderAckDone(orderId: string): Promise<void> {
+  const db = getDb()
+  await db.orderAckQueue.update(orderId, {
+    status: 'acked',
+    failureReason: undefined,
+    lastAttemptAt: new Date().toISOString(),
+  })
+}
+
+/**
+ * Record an ack attempt outcome. `permanent` dead-letters the entry ('failed');
+ * otherwise it stays 'pending' for the next drain cycle. `reason` is an already
+ * categorized token (never raw server text).
+ */
+export async function recordOrderAckFailure(
+  orderId: string,
+  reason: string,
+  permanent: boolean,
+): Promise<void> {
+  const db = getDb()
+  const existing = await db.orderAckQueue.get(orderId)
+  await db.orderAckQueue.update(orderId, {
+    status: permanent ? 'failed' : 'pending',
+    retryCount: (existing?.retryCount ?? 0) + 1,
+    lastAttemptAt: new Date().toISOString(),
+    failureReason: reason,
+  })
+}
+
+/** Reset a dead-lettered ack back to pending for a manual retry (UI action). */
+export async function retryOrderAck(orderId: string): Promise<void> {
+  const db = getDb()
+  await db.orderAckQueue.update(orderId, { status: 'pending', failureReason: undefined, lastAttemptAt: null })
 }
 
 // ---------------------------------------------------------------------------

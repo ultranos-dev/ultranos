@@ -11,6 +11,7 @@ import {
 import { useOrderSync } from '@/hooks/useOrderSync'
 import { PriorityWorklist } from '@/components/worklist/PriorityWorklist'
 import { IncompleteVerificationsAlert } from '@/components/verification/IncompleteVerificationsAlert'
+import { FailedSyncPanel } from '@/components/sync/FailedSyncPanel'
 
 /**
  * Smart Sample Prioritization Worklist page.
@@ -127,6 +128,11 @@ export default function WorklistPage() {
           </div>
         )}
       </div>
+
+      {/* Story 60.4 (AC 1, 2): persistent failed-sync badge — renders only when
+          there are dead-lettered results / failed uploads / failed order-acks, so
+          a structured result or order-ack can no longer be silently lost. */}
+      <FailedSyncPanel compact />
 
       {/* Supervisor filter: samples with incomplete identity verification (AC 4.4) */}
       <IncompleteVerificationsAlert />

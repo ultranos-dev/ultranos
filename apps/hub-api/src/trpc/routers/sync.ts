@@ -12,6 +12,7 @@ import { compareHlc, deserializeHlc, resolveConflict, getConflictTier } from '@u
 import { flattenForDb } from '@/lib/resource-mappers'
 import { encryptJsonbValue } from '@/lib/field-encryption'
 import { hlcTimestampSchema } from '@/lib/hlc-format'
+import { produceSyncConflictNotification } from '@/lib/notification-producers'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const SyncOperationSchema = z.object({
@@ -407,6 +408,23 @@ export const syncRouter = createTRPCRouter({
                     })
                   } catch {
                     // Audit failure should not block the conflict response.
+                  }
+
+                  // Story 60.4 (Task 2 / AC 3): SYNC_CONFLICT producer. A Tier-1
+                  // conflict blocks new prescribing until a physician resolves it,
+                  // so notify the patient's treating clinicians (active prescribers)
+                  // — otherwise the conflict sits UNRESOLVED until someone happens to
+                  // look. PHI-safe: resourceType enum + opaque patientRef only.
+                  // Fire-and-forget: never blocks the conflict response.
+                  if (patientRef) {
+                    await produceSyncConflictNotification(ctx.supabase, {
+                      patientId: patientRef,
+                      resourceType: op.resourceType,
+                      actorId: ctx.user.sub,
+                      actorRole: ctx.user.role,
+                      sessionId: ctx.user.sessionId,
+                      orgId: ctx.user?.orgId ?? undefined,
+                    })
                   }
 
                   results.push({

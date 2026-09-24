@@ -116,6 +116,9 @@ describe('patient.syncCreate', () => {
       expect.any(String),
       expect.objectContaining({ nameGiven: 'Ahmad' }),
       expect.anything(),
+      // Story 60.4: orgId is now passed so the MPI-review admin notification can
+      // be scoped to the org (undefined here — the test ctx has no orgId).
+      undefined,
     )
   })
 

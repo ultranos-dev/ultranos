@@ -8,6 +8,7 @@ import { enforceEntitlement } from '../middleware/enforceEntitlement'
 import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
 import { enforceConsentMiddleware } from '../middleware/enforceConsent'
 import { AuditLogger } from '@ultranos/audit-logger'
+import { produceAllergyUpdateNotification } from '@/lib/notification-producers'
 
 /**
  * Allergy domain router.
@@ -269,6 +270,20 @@ export const allergyRouter = createTRPCRouter({
       } catch {
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'AllergyIntolerance', resourceId: data.id })
       }
+
+      // Story 60.4 (Task 2 / AC 4): ALLERGY_UPDATE producer. Notify the patient's
+      // treating clinicians (active prescribers) so a new/changed Tier-1 allergy
+      // is surfaced — the audience whose prescribing it may invalidate. PHI-safe:
+      // criticality enum + opaque patientRef only, NEVER the substance. Fire-and-
+      // forget: never blocks or fails the allergy write.
+      await produceAllergyUpdateNotification(ctx.supabase, {
+        patientId,
+        criticality: input.criticality,
+        actorId: ctx.user.sub,
+        actorRole: ctx.user.role,
+        sessionId: ctx.user.sessionId,
+        orgId: ctx.user?.orgId ?? undefined,
+      })
 
       return { success: true, allergyId: data.id, alreadySynced: false }
     }),
