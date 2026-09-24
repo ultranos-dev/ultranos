@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Camera, Upload, X, User, AlertCircle } from '@ultranos/ui-kit/icons'
+import { AVATAR_RING } from '@ultranos/ui-kit/components/ui/avatar'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/Card'
 import { PhotoCropModal } from './PhotoCropModal'
@@ -72,7 +73,7 @@ export function PatientPhotoSection({ photoDataUrl, onPhotoChange }: PatientPhot
         <div className="flex items-start gap-5">
           {/* Photo preview */}
           <div className="shrink-0">
-            <div className="h-24 w-24 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
+            <div className={`h-24 w-24 rounded-full overflow-hidden bg-muted flex items-center justify-center ${AVATAR_RING}`}>
               {photoDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={photoDataUrl} alt={t('patientPhotoSection')} className="h-full w-full object-cover" />

@@ -24,20 +24,37 @@ export function Avatar({ name, photoUri, size = 46, testID }: AvatarProps) {
   const colors = useThemeColors()
   const rtl = useRtl()
   const dim = { width: size, height: size, borderRadius: size / 2 }
-  if (photoUri) {
-    return <Image testID={testID ?? 'avatar-image'} source={{ uri: photoUri }} accessibilityRole="image" accessibilityLabel={name} style={dim} />
-  }
-  const text = initials(name)
-  return (
+  const inner = photoUri ? (
+    <Image testID={testID ?? 'avatar-image'} source={{ uri: photoUri }} accessibilityRole="image" accessibilityLabel={name} style={dim} />
+  ) : (
     <View testID={testID} accessibilityLabel={name} style={[styles.fallback, dim, { backgroundColor: colors.primary500 }]}>
-      {text ? (
-        <Text style={[styles.initials, { color: colors.white, fontSize: size * 0.38 }, rtl && styles.arabic]}>{text}</Text>
+      {initials(name) ? (
+        <Text style={[styles.initials, { color: colors.white, fontSize: size * 0.38 }, rtl && styles.arabic]}>{initials(name)}</Text>
       ) : (
         <User size={size * 0.5} color={colors.white} />
       )}
     </View>
   )
+  // Brand ring: a real 2px transparent gap (the padding shows the surface behind) then a
+  // 1px primary stroke @50%. Mirrors the web Avatar `ring`; `+ '80'` ≈ 50% alpha (6-digit hex).
+  return (
+    <View
+      style={{
+        padding: RING_GAP,
+        borderWidth: RING_WIDTH,
+        borderColor: colors.primary500 + '80',
+        borderRadius: size / 2 + RING_GAP + RING_WIDTH,
+        backgroundColor: 'transparent',
+        alignSelf: 'flex-start',
+      }}
+    >
+      {inner}
+    </View>
+  )
 }
+
+const RING_GAP = 2
+const RING_WIDTH = 1
 
 const styles = StyleSheet.create({
   fallback: { alignItems: 'center', justifyContent: 'center' },

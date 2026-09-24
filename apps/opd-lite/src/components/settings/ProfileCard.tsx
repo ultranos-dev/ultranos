@@ -7,6 +7,7 @@ import { getHubTrpcUrl } from '@/lib/hub-url'
 import { uploadStaffPhoto, removeStaffPhoto } from '@/lib/staff-photo-api'
 import { Card } from '@/components/Card'
 import { PhotoAvatarField } from '@ultranos/ui-kit/components/photo/photo-avatar-field'
+import { AVATAR_RING } from '@ultranos/ui-kit/components/ui/avatar'
 
 function getInitials(name: string): string {
   return name
@@ -101,7 +102,7 @@ export function ProfileCard() {
           />
         ) : (
           /* Initials fallback — shown while loading or when no practitioner row */
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
+          <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground ${AVATAR_RING}`}>
             {initials}
           </div>
         )}

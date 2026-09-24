@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { PhotoUploadModal } from '@ultranos/ui-kit/components/photo/photo-upload-modal'
+import { AVATAR_RING } from '@ultranos/ui-kit/components/ui/avatar'
 import { Camera, User } from '@ultranos/ui-kit/icons'
 import { uploadStaffPhoto, removeStaffPhoto } from '@/lib/staff-photo-api'
 
@@ -50,7 +51,7 @@ export function StaffAvatar({
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Change staff photo"
-        className="group relative shrink-0 overflow-hidden rounded-full bg-muted ring-2 ring-border/50 transition"
+        className={`group relative shrink-0 overflow-hidden rounded-full bg-muted transition ${AVATAR_RING}`}
         style={{ width: size, height: size }}
       >
         {src ? (

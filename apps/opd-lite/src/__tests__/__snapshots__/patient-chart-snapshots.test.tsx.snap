@@ -111,7 +111,7 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
             >
               <div
                 aria-label="Upload patient photo"
-                class="group relative cursor-pointer overflow-hidden rounded-full"
+                class="group relative cursor-pointer overflow-hidden rounded-full [outline-style:solid] outline-1 outline-offset-2 outline-[color:oklch(var(--primary)/0.5)]"
                 role="button"
                 style="width: 80px; height: 80px;"
                 tabindex="0"
@@ -495,7 +495,7 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
             >
               <div
                 aria-label="Upload patient photo"
-                class="group relative cursor-pointer overflow-hidden rounded-full"
+                class="group relative cursor-pointer overflow-hidden rounded-full [outline-style:solid] outline-1 outline-offset-2 outline-[color:oklch(var(--primary)/0.5)]"
                 role="button"
                 style="width: 80px; height: 80px;"
                 tabindex="0"

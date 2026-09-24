@@ -25,17 +25,21 @@ export function PhotoPicker({ value, onChange }: { value: string | null; onChang
 
   return (
     <View style={styles.wrap}>
-      <View style={[styles.preview, { backgroundColor: colors.primary50, borderColor: colors.border }]}>
-        {value ? (
-          <Image testID="photo-preview" source={{ uri: value }} style={styles.previewImg} />
-        ) : (
-          <ImagePlus size={36} color={colors.primary600} />
-        )}
-        {value ? (
-          <Pressable testID="photo-remove" onPress={() => onChange(null)} accessibilityRole="button" accessibilityLabel={t('signup.removePhoto')} style={[styles.removeBadge, { backgroundColor: colors.surface }]}>
-            <X size={16} color={colors.textPrimary} />
-          </Pressable>
-        ) : null}
+      {/* Brand ring: a real 2px transparent gap (the padding shows the surface behind) then a
+          1px primary stroke @50%. Mirrors the ui-kit Avatar ring; `+ '80'` ≈ 50% alpha. */}
+      <View style={[styles.ring, { borderColor: colors.primary500 + '80' }]}>
+        <View style={[styles.preview, { backgroundColor: colors.primary50 }]}>
+          {value ? (
+            <Image testID="photo-preview" source={{ uri: value }} style={styles.previewImg} />
+          ) : (
+            <ImagePlus size={36} color={colors.primary600} />
+          )}
+          {value ? (
+            <Pressable testID="photo-remove" onPress={() => onChange(null)} accessibilityRole="button" accessibilityLabel={t('signup.removePhoto')} style={[styles.removeBadge, { backgroundColor: colors.surface }]}>
+              <X size={16} color={colors.textPrimary} />
+            </Pressable>
+          ) : null}
+        </View>
       </View>
       <View style={styles.actions}>
         <Pressable testID="photo-choose" onPress={() => void pick('library')} accessibilityRole="button" accessibilityLabel={t('signup.choosePhoto')} style={[styles.action, { borderColor: colors.primary500 }]}>
@@ -53,7 +57,8 @@ export function PhotoPicker({ value, onChange }: { value: string | null; onChang
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', gap: Spacing[4] },
-  preview: { width: 120, height: 120, borderRadius: Radius.full, borderWidth: 1, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  ring: { padding: 2, borderWidth: 1, borderRadius: Radius.full, backgroundColor: 'transparent' },
+  preview: { width: 120, height: 120, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   previewImg: { width: '100%', height: '100%' },
   removeBadge: { position: 'absolute', top: 4, right: 4, width: 28, height: 28, borderRadius: Radius.full, alignItems: 'center', justifyContent: 'center' },
   actions: { flexDirection: 'row', gap: Spacing[3] },

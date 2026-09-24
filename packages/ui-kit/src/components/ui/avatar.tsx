@@ -42,18 +42,32 @@ export interface AvatarProps {
   /** Pixel diameter (default 32). */
   size?: number
   /**
-   * Double concentric brand ring: a 1px primary stroke @100% with a 1px primary
-   * stroke @50% just outside it. Used on profile/detail avatars.
+   * Brand ring: a real 2px transparent gap (shows whatever surface is behind) then a
+   * 1px primary stroke @50% just outside it. On by default for every patient/staff
+   * avatar; pass `ring={false}` to opt out.
    */
   ring?: boolean
   className?: string
 }
 
-/** Double concentric primary ring (1px @100% + 1px @50%), token-driven for theming. */
-const AVATAR_RING =
-  'shadow-[0_0_0_1px_oklch(var(--primary)),0_0_0_2px_oklch(var(--primary)/0.5)]'
+/**
+ * Offset primary ring: a genuine 2px transparent gap around the photo (via
+ * `outline-offset`, so it reads as empty space on ANY surface), then a 1px primary
+ * stroke @50%. Token-driven for theming.
+ */
+/**
+ * Shared brand-ring class for avatar/photo surfaces: a real 2px transparent gap (via
+ * `outline-offset`, so it reads as empty space on ANY surface) then a 1px primary
+ * stroke @50%. Exported so custom photo/avatar components that don't render the shared
+ * `Avatar` (e.g. interactive upload buttons) apply the exact same ring — one source of truth.
+ *
+ * `[outline-style:solid]` (not the bare `outline` utility) because tailwind-merge in
+ * cn() drops bare `outline`, which would leave no outline-style and render nothing.
+ */
+export const AVATAR_RING =
+  '[outline-style:solid] outline-1 outline-offset-2 outline-[color:oklch(var(--primary)/0.5)]'
 
-export function Avatar({ src, name, size = 32, ring = false, className }: AvatarProps) {
+export function Avatar({ src, name, size = 32, ring = true, className }: AvatarProps) {
   const [errored, setErrored] = useState(false)
   const label = (name ?? '').trim()
   const showImg = !!src && !errored
