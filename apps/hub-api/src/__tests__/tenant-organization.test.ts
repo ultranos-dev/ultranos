@@ -234,6 +234,9 @@ describe('AC #7: TRPCContext org_id extraction', () => {
     const secret = new TextEncoder().encode(TEST_JWT_SECRET)
     return new SignJWT(payload)
       .setProtectedHeader({ alg: 'HS256' })
+      // Story 56.4: JWT verification now pins issuer to `${SUPABASE_URL}/auth/v1`
+      // (real Supabase tokens carry this iss). Mirror it so the mock token verifies.
+      .setIssuer('https://test.supabase.co/auth/v1')
       .setIssuedAt()
       .setExpirationTime('15m')
       .sign(secret)
