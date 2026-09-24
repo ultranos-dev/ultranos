@@ -245,6 +245,26 @@ async function resolvePerformerId(
   return data.practitioner_id as string
 }
 
+/**
+ * Story 61.3 (M-HUB-7): resolve the caller's practitioners.id from their auth
+ * user id (JWT sub). Self-service reads that filter practitioner columns
+ * (mentorship pairings, certification progress) MUST match on practitioners.id,
+ * NOT on ctx.user.sub (the auth id) — the two differ and matching on sub returns
+ * nothing for every real practitioner. Returns null when the caller has no
+ * practitioner profile (then the self-service read yields its empty result).
+ */
+async function resolveMyPractitionerId(
+  supabase: { from: (t: string) => any },
+  authUserId: string,
+): Promise<string | null> {
+  const { data } = await supabase
+    .from('practitioners')
+    .select('id')
+    .eq('auth_user_id', authUserId)
+    .maybeSingle()
+  return (data?.id as string | undefined) ?? null
+}
+
 const submitCodeSchema = z.object({
   coding: z.array(z.object({ system: z.string().optional(), code: z.string(), display: z.string().optional() })).optional(),
   text: z.string().optional(),
@@ -405,47 +425,46 @@ export const labRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Insert lab record with PENDING status
-      const { data: lab, error: labError } = await ctx.supabase
-        .from('labs')
-        .insert(db.toRowRaw({
-          name: input.labName,
-          licenseRef: input.licenseRef,
-          accreditationRef: input.accreditationRef ?? null,
-          status: 'PENDING',
-        }, 'non-PHI: labs'))
-        .select('id')
-        .single()
+      // Story 61.3 (M-HUB-4 + M-HUB-7): the labs insert + lab_technicians insert
+      // are now ONE transaction (previously two calls with a compensating delete
+      // of the lab on technician-insert failure — a crash between them orphaned
+      // the lab). The RPC also resolves the REAL practitioners.id from the auth
+      // user id (auth_user_id), fixing the prior bug where ctx.user.sub (the auth
+      // id) was written into lab_technicians.practitioner_id (a practitioners.id
+      // FK) — which made the affiliation unfindable by labRestrictedProcedure
+      // (rbac.ts joins practitioners.auth_user_id = ctx.user.sub).
+      const { data: rpcData, error: rpcError } = await ctx.supabase.rpc('register_lab_atomic', {
+        p_auth_user_id: ctx.user.sub,
+        p_lab_name: input.labName,
+        p_license_ref: input.licenseRef,
+        p_accreditation_ref: input.accreditationRef ?? null,
+        p_credential_ref: input.technicianCredentialRef,
+      })
 
-      if (labError) {
+      if (rpcError) {
+        if (rpcError.code === '23505') {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'Technician is already registered to a lab',
+          })
+        }
+        if (rpcError.message?.includes('PRACTITIONER_NOT_FOUND')) {
+          throw new TRPCError({
+            code: 'PRECONDITION_FAILED',
+            message: 'No practitioner profile found for this account',
+          })
+        }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to register lab',
         })
       }
 
-      // Bind the registering practitioner as a technician of this lab
-      const { error: techError } = await ctx.supabase
-        .from('lab_technicians')
-        .insert(db.toRowRaw({
-          practitionerId: ctx.user.sub,
-          labId: lab.id,
-          credentialRef: input.technicianCredentialRef,
-        }, 'non-PHI: labs'))
-
-      if (techError) {
-        // Compensating delete: remove orphaned lab record
-        await ctx.supabase.from('labs').delete().eq('id', lab.id)
-
-        if (techError.code === '23505') {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: 'Technician is already registered to a lab',
-          })
-        }
+      const labId = (rpcData as Record<string, string> | null)?.['labId']
+      if (!labId) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to bind technician to lab',
+          message: 'Failed to register lab',
         })
       }
 
@@ -455,7 +474,7 @@ export const labRouter = createTRPCRouter({
         await audit.emit({
           action: 'CREATE',
           resourceType: 'ORGANIZATION',
-          resourceId: lab.id,
+          resourceId: labId,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
@@ -463,12 +482,12 @@ export const labRouter = createTRPCRouter({
           metadata: { registrationAction: 'lab_registered' },
         })
       } catch {
-        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'Organization', resourceId: lab.id })
+        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'Organization', resourceId: labId })
       }
 
       return {
         success: true,
-        labId: lab.id,
+        labId: labId,
         status: 'PENDING',
       }
     }),
@@ -1339,10 +1358,14 @@ export const labRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to write diagnostic report' })
       }
 
-      // Replace-then-insert analytes (idempotent re-delivery).
-      await ctx.supabase.from('diagnostic_report_observations').delete().eq('diagnostic_report_id', reportId)
+      // Replace analytes atomically (Story 61.3 / M-HUB-4): the prior
+      // delete-then-insert as two separate calls could lose a report's
+      // observations permanently if a crash landed between them. The RPC does
+      // DELETE + INSERT in ONE transaction, so an interrupted resubmit rolls
+      // back to the prior set instead of leaving the report empty. Idempotent
+      // re-delivery is preserved (the full authoritative set is passed each time;
+      // an empty set clears the analytes, matching the previous behavior).
       const analyteRows = input.observations.map((o) => ({
-        diagnostic_report_id: reportId,
         observation_id: o.id,
         loinc_code: o.code.coding?.[0]?.code ?? o.code.text ?? 'UNKNOWN',
         loinc_display: o.code.coding?.[0]?.display ?? o.code.text ?? null,
@@ -1353,11 +1376,12 @@ export const labRouter = createTRPCRouter({
         note: o.note ?? null,
         effective_date_time: (o._ultranos as { effectiveDateTime?: string })?.effectiveDateTime ?? dr.issued,
       }))
-      if (analyteRows.length > 0) {
-        const { error: obsError } = await ctx.supabase.from('diagnostic_report_observations').insert(analyteRows)
-        if (obsError) {
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to write analytes' })
-        }
+      const { error: obsError } = await ctx.supabase.rpc('replace_report_observations', {
+        p_report_id: reportId,
+        p_observations: analyteRows,
+      })
+      if (obsError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to write analytes' })
       }
 
       // Audit the PHI write (Rule #6). Throw on failure — write is idempotent (upsert),
@@ -1832,10 +1856,14 @@ export const labRouter = createTRPCRouter({
    */
   getMyRole: protectedProcedure
     .query(async ({ ctx }) => {
+      // Story 61.3 (M-HUB-7): lab_technicians.practitioner_id is a practitioners.id
+      // FK, NOT the auth user id. Filtering by ctx.user.sub (the auth id) matched
+      // nothing for every real technician. Resolve through the joined practitioner
+      // on auth_user_id — the same contract labRestrictedProcedure uses (rbac.ts).
       const { data } = await ctx.supabase
         .from('lab_technicians')
-        .select('lab_role, labs!inner(status)')
-        .eq('practitioner_id', ctx.user.sub)
+        .select('lab_role, labs!inner(status), practitioners!inner(auth_user_id)')
+        .eq('practitioners.auth_user_id', ctx.user.sub)
         .maybeSingle()
 
       if (!data) {
@@ -2553,7 +2581,12 @@ export const labRouter = createTRPCRouter({
    */
   getMyMentorship: labRestrictedProcedure
     .query(async ({ ctx }) => {
-      const practitionerId = ctx.user.sub
+      // Story 61.3 (M-HUB-7): mentorship_pairings.{mentor,mentee}_practitioner_id
+      // are practitioners.id FKs — resolve from the auth user id, not ctx.user.sub.
+      const practitionerId = await resolveMyPractitionerId(ctx.supabase, ctx.user.sub)
+      if (!practitionerId) {
+        return null
+      }
 
       // Find active pairing where user is mentor or mentee
       const { data: pairing, error } = await ctx.supabase
@@ -2582,7 +2615,7 @@ export const labRouter = createTRPCRouter({
           action: 'READ',
           resourceType: 'MENTORSHIP',
           resourceId: pairing?.id ?? 'none',
-          actorId: practitionerId,
+          actorId: ctx.user.sub,
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
@@ -2632,7 +2665,14 @@ export const labRouter = createTRPCRouter({
    */
   getMyCertifications: labRestrictedProcedure
     .query(async ({ ctx }) => {
-      const practitionerId = ctx.user.sub
+      // Story 61.3 (M-HUB-7): certification_progress.practitioner_id is a
+      // practitioners.id FK — resolve from the auth user id, not ctx.user.sub.
+      // A caller with no practitioner profile has no progress: short-circuit to
+      // the same empty shape the prior (never-matching) query produced.
+      const practitionerId = await resolveMyPractitionerId(ctx.supabase, ctx.user.sub)
+      if (!practitionerId) {
+        return { pathways: [] }
+      }
 
       // Fetch all progress records for this practitioner
       const { data: rows, error } = await ctx.supabase
@@ -2660,7 +2700,7 @@ export const labRouter = createTRPCRouter({
           action: 'CERTIFICATION_PROGRESS_VIEWED',
           resourceType: 'CERTIFICATION_PROGRESS',
           resourceId: practitionerId,
-          actorId: practitionerId,
+          actorId: ctx.user.sub,
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,

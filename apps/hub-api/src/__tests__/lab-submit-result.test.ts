@@ -18,9 +18,9 @@ const mockTechSelect = vi.fn(() => ({ eq: vi.fn(() => ({ single: mockTechSingle 
 const drMaybeSingle = vi.fn()
 const drUpsert = vi.fn(() => ({ error: null }))
 const drSelect = vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: drMaybeSingle })) }))
-// diagnostic_report_observations: delete().eq() + insert()
-const droDeleteEq = vi.fn(() => ({ error: null }))
-const droInsert = vi.fn(() => ({ error: null }))
+// diagnostic_report_observations: Story 61.3 — analytes now replaced atomically
+// via the replace_report_observations RPC (delete + insert in one tx).
+const mockRpc = vi.fn().mockResolvedValue({ data: { observationCount: 1 }, error: null })
 // labs: name lookup
 const labsSingle = vi.fn().mockResolvedValue({ data: { name: 'Central Lab' }, error: null })
 const labsSelect = vi.fn(() => ({ eq: vi.fn(() => ({ single: labsSingle })) }))
@@ -33,7 +33,6 @@ const notifInsert = vi.fn(() => ({ select: vi.fn().mockResolvedValue({ data: [{ 
 const mockFrom = vi.fn((table: string) => {
   if (table === 'lab_technicians') return { select: mockTechSelect }
   if (table === 'diagnostic_reports') return { select: drSelect, upsert: drUpsert }
-  if (table === 'diagnostic_report_observations') return { delete: vi.fn(() => ({ eq: droDeleteEq })), insert: droInsert }
   if (table === 'labs') return { select: labsSelect }
   if (table === 'service_requests') return { select: svcReqSelect }
   if (table === 'notifications') return { insert: notifInsert }
@@ -61,7 +60,7 @@ const mockFrom = vi.fn((table: string) => {
 })
 
 vi.mock('@/lib/supabase', () => ({
-  getSupabaseClient: vi.fn(() => ({ from: mockFrom })),
+  getSupabaseClient: vi.fn(() => ({ from: mockFrom, rpc: mockRpc })),
   db: { toRow: (d: any) => d, toRowRaw: (d: any) => d, fromRow: (d: any) => d, fromRowRaw: (d: any) => d, fromRows: (d: any[]) => d },
 }))
 vi.mock('@ultranos/crypto/server', () => ({
@@ -76,7 +75,7 @@ const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRouter } = await import('../trpc/routers/lab')
 
 function makeCtx(user: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null) {
-  return { supabase: { from: mockFrom } as never, user, headers: new Headers() }
+  return { supabase: { from: mockFrom, rpc: mockRpc } as never, user, headers: new Headers() }
 }
 function setupLab(status = 'ACTIVE') {
   mockTechSingle.mockResolvedValue({
@@ -112,6 +111,8 @@ describe('lab.submitResult', () => {
     vi.clearAllMocks()
     drMaybeSingle.mockResolvedValue({ data: null, error: null })
     svcReqMaybeSingle.mockResolvedValue({ data: { requester_id: 'doc-1', code_display: 'CBC' }, error: null })
+    // Re-arm the atomic analyte-replace RPC after clearAllMocks.
+    mockRpc.mockResolvedValue({ data: { observationCount: 1 }, error: null })
   })
 
   it('writes the report with status preliminary and patient_ref as the BARE blind index (R1)', async () => {
@@ -128,15 +129,19 @@ describe('lab.submitResult', () => {
     expect(upserted).toMatchObject({ id: REPORT_ID, status: 'preliminary', patient_ref: 'hmac-abc123', loinc_code: '58410-2', lab_id: 'lab-1' })
   })
 
-  it('fans analytes into diagnostic_report_observations (replace-then-insert)', async () => {
+  it('replaces analytes atomically via replace_report_observations (delete+insert in one tx)', async () => {
     setupLab()
     const caller = createCallerFactory(createTRPCRouter({ lab: labRouter }))(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
     await caller.lab.submitResult(makeBundle())
-    expect(droDeleteEq).toHaveBeenCalled() // idempotent: clears prior analytes for this report
-    const rows = (droInsert.mock.calls[0] as any[])[0]
-    expect(rows).toHaveLength(1)
-    expect(rows[0]).toMatchObject({
-      diagnostic_report_id: REPORT_ID, observation_id: '44444444-4444-4444-4444-444444444444',
+
+    // The atomic RPC gets the report id + the full authoritative analyte set.
+    const rpcCall = mockRpc.mock.calls.find((c) => c[0] === 'replace_report_observations')
+    expect(rpcCall).toBeDefined()
+    const args = rpcCall![1] as { p_report_id: string; p_observations: any[] }
+    expect(args.p_report_id).toBe(REPORT_ID)
+    expect(args.p_observations).toHaveLength(1)
+    expect(args.p_observations[0]).toMatchObject({
+      observation_id: '44444444-4444-4444-4444-444444444444',
       loinc_code: '718-7', value_quantity: { value: 12.5, unit: 'g/dL' }, reference_range: { low: 13, high: 17 },
     })
   })

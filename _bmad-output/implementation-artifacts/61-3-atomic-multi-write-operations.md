@@ -56,10 +56,33 @@ This story must introduce **zero regression in existing features and functionali
 
 ### Agent Model Used
 
+Lane-E agent (Opus 4.8 1M) — worktree `wave5-61-3`.
+
 ### Debug Log References
+
+`pnpm -F hub-api typecheck` → clean. `pnpm -F hub-api test` → 174 files, 1808 passed, 3 todo, 0 failed.
 
 ### Completion Notes List
 
+- **Migrations authored as FILES only, NOT applied** (per instructions, consistent with 063/064) — 066–069. All are `SECURITY DEFINER` JSONB-payload RPCs modelled on `create_patient_with_consent` (023b). Tests MOCK the RPC calls (no live DB writes).
+- **Task 1 — merge/unmerge:** `merge_patient_atomic` / `unmerge_patient_atomic` (066). Survivor update + duplicate deactivation + `merge_audits` insert + `duplicate_reviews`→MERGED + survivor `mpi_warn` clear are one tx; the 72h-undo reversal record is always present when a merge takes effect. Router keeps the pre-fetch (snapshots/resolutions + unmerge deadline check) then delegates all writes to the RPC; error messages (`SURVIVOR_NOT_ACTIVE`/`DUPLICATE_NOT_ACTIVE`/`MERGE_AUDIT_NOT_ACTIVE`/`UNMERGE_WINDOW_EXPIRED`) map to the same 404/403 as before. Post-commit audit unchanged. Tier-1 respected: survivor update touches only admin-resolved columns (no LWW on allergies/meds/dx).
+- **Task 2 — submitResult analytes:** `replace_report_observations` (067) does DELETE+INSERT in one tx; idempotent-resubmit preserved (full authoritative set passed each call; empty set clears). Router return shape + audit `observationCount` unchanged.
+- **Task 3 — recordDispense:** `record_dispense_atomic` (068) commits dispense insert + conditional prescription-status update (TOCTOU guard) + `dispense_reviews` row atomically; the old compensating orphan-delete is gone (a STATUS_CONFLICT rolls the insert back). Preserved: 57.2 server interaction gate + supervisor-override verification + `pharmacistRef` server-override + `ALREADY_DISPENSED` idempotency (RPC returns `ALREADY_SYNCED` on 23505). Review-insert failure is captured (`reviewError`) and remains non-fatal. **MedicationStatement disposition:** LEFT OUTSIDE the tx (unchanged, best-effort, post-commit) — it is 60.4 territory and its multi-query upsert + JS case-transform is not straightforward to inline in SQL; the atomic unit is dispense+status+review per the story. Older-HLC `dispense_conflicts` branch also left in the caller (distinct, non-orphaning single write).
+- **Task 4 — lab.register + id mismatch:** `register_lab_atomic` (069) inserts `labs` + `lab_technicians` in one tx and **resolves the real `practitioners.id` from `auth_user_id`** (M-HUB-7) instead of inserting `ctx.user.sub`. Also fixed the self-service reads that filtered practitioner columns by `sub`: `getMyRole` now joins `practitioners.auth_user_id`; `getMyMentorship` + `getMyCertifications` resolve `practitioners.id` via a new `resolveMyPractitionerId` helper (audit `actorId` kept as `ctx.user.sub`; empty-profile short-circuits to the prior empty shape). Seeded-user integration tests prove the reads return data (`atomic-operations.test.ts` M-HUB-7 block).
+- **Task 5 — tests:** new `atomic-operations.test.ts` (19 tests): per-RPC failure-injection (RPC error = rolled-back mid-tx crash → correct tRPC error, no partial follow-on write), response-shape parity, dispense idempotency + override, and M-HUB-7 self-service reads. Updated pre-existing tests to the RPC contract: `lab-register`, `patient-merge`, `lab-submit-result`, `medication`, `record-dispense-review`, `pharmacist-identity-trust`, `certification`, `mentorship`, `service-request-column-alignment` (added `auth_user_id` to the real-practitioners-columns allowlist).
+
 ### File List
 
+- `supabase/migrations/066_fn_merge_unmerge_patient_atomic.sql` (new)
+- `supabase/migrations/067_fn_replace_report_observations.sql` (new)
+- `supabase/migrations/068_fn_record_dispense_atomic.sql` (new)
+- `supabase/migrations/069_fn_register_lab_atomic.sql` (new)
+- `apps/hub-api/src/trpc/routers/patient-admin.ts` (merge/unmerge → RPC)
+- `apps/hub-api/src/trpc/routers/lab.ts` (register → RPC; analytes → RPC; getMyRole/getMyMentorship/getMyCertifications id fix; `resolveMyPractitionerId` helper)
+- `apps/hub-api/src/trpc/routers/medication.ts` (recordDispense → RPC)
+- `apps/hub-api/src/__tests__/atomic-operations.test.ts` (new)
+- Updated tests: `lab-register`, `patient-merge`, `lab-submit-result`, `medication`, `record-dispense-review`, `pharmacist-identity-trust`, `certification`, `mentorship`, `service-request-column-alignment`
+
 ### Change Log
+
+- 2026-09-23: Converted the four non-transactional multi-write flows to atomic RPCs (migrations authored, not applied). Fixed M-HUB-7 practitioner-id-vs-auth-id family. Full hub suite green; typecheck clean.

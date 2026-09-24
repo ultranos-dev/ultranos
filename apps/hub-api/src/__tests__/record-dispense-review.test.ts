@@ -252,12 +252,38 @@ function buildMockFrom(inserts: Record<string, unknown[]>) {
   })
 }
 
-function createTestContext(mockFrom: ReturnType<typeof vi.fn>, user = PHARMACIST_USER) {
+// Story 61.3: recordDispense now writes the dispense + status update + review via
+// the record_dispense_atomic RPC. This rpc mock discriminates by function name:
+//   - record_dispense_atomic -> captures p_review, returns a DISPENSED outcome.
+//   - anything else (audit chain) -> the prior chain-hash shape.
+// `capturedReviews` lets the tests assert the review row the RPC would insert.
+function createTestContext(
+  mockFrom: ReturnType<typeof vi.fn>,
+  user = PHARMACIST_USER,
+  opts: { reviewError?: string; capturedReviews?: Record<string, unknown>[] } = {},
+) {
+  const rpc = vi.fn().mockImplementation((fn: string, args: Record<string, unknown>) => {
+    if (fn === 'record_dispense_atomic') {
+      if (args['p_has_override'] && opts.capturedReviews) {
+        opts.capturedReviews.push(args['p_review'] as Record<string, unknown>)
+      }
+      const dispense = args['p_dispense'] as Record<string, unknown>
+      return Promise.resolve({
+        data: {
+          outcome: 'DISPENSED',
+          dispenseId: dispense['id'],
+          prescriptionStatus: 'DISPENSED',
+          status: 'completed',
+          dispensedAt: '2026-09-08T10:00:00.000Z',
+          reviewError: opts.reviewError ?? null,
+        },
+        error: null,
+      })
+    }
+    return Promise.resolve({ data: [{ chain_hash: 'abc123' }], error: null })
+  })
   return {
-    supabase: {
-      from: mockFrom,
-      rpc: vi.fn().mockResolvedValue({ data: [{ chain_hash: 'abc123' }], error: null }),
-    } as never,
+    supabase: { from: mockFrom, rpc } as never,
     user,
     headers: new Headers(),
   }
@@ -272,11 +298,11 @@ beforeEach(() => {
 describe('medication.recordDispense — dispense_reviews on override', () => {
   it('creates a PENDING dispense_reviews row when overrideReason is provided', async () => {
     const inserts: Record<string, unknown[]> = {}
+    const capturedReviews: Record<string, unknown>[] = []
 
     /*
-     * This mockFrom uses a simpler table-keyed approach: every table that
-     * recordDispense queries returns the happy-path data it needs.  We
-     * intercept inserts into dispense_reviews to assert the review row.
+     * Story 61.3: the review row is inserted ATOMICALLY inside record_dispense_atomic.
+     * We capture the p_review payload the router hands the RPC to assert its shape.
      */
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'practitioners') return supervisorMock()
@@ -374,7 +400,7 @@ describe('medication.recordDispense — dispense_reviews on override', () => {
       }
     })
 
-    const ctx = createTestContext(mockFrom)
+    const ctx = createTestContext(mockFrom, PHARMACIST_USER, { capturedReviews })
     const caller = createCaller(ctx)
 
     await caller.medication.recordDispense({
@@ -382,7 +408,7 @@ describe('medication.recordDispense — dispense_reviews on override', () => {
       ...STRUCTURED_OVERRIDE,
     })
 
-    const review = (inserts['dispense_reviews'] ?? [])[0] as Record<string, unknown>
+    const review = capturedReviews[0] as Record<string, unknown>
     expect(review).toBeTruthy()
     // Story 57.2: a VERIFIED supervisor override is recorded PENDING with the
     // REAL supervisor id (H-HUB-2 — never the pharmacist's own), the structured
@@ -398,7 +424,7 @@ describe('medication.recordDispense — dispense_reviews on override', () => {
   })
 
   it('does NOT create a dispense_reviews row when no overrideReason is provided', async () => {
-    const inserts: Record<string, unknown[]> = {}
+    const capturedReviews: Record<string, unknown>[] = []
 
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'practitioners') return supervisorMock()
@@ -449,15 +475,6 @@ describe('medication.recordDispense — dispense_reviews on override', () => {
         }
       }
 
-      if (table === 'dispense_reviews') {
-        return {
-          insert: (row: unknown) => {
-            ;(inserts[table] ??= []).push(row)
-            return Promise.resolve({ error: null })
-          },
-        }
-      }
-
       if (table === 'medication_statements') {
         return {
           select: vi.fn().mockReturnValue({
@@ -493,13 +510,13 @@ describe('medication.recordDispense — dispense_reviews on override', () => {
       }
     })
 
-    const ctx = createTestContext(mockFrom)
+    const ctx = createTestContext(mockFrom, PHARMACIST_USER, { capturedReviews })
     const caller = createCaller(ctx)
 
     await caller.medication.recordDispense(VALID_DISPENSE_INPUT)
 
-    // No dispense_reviews insert should have occurred
-    expect(inserts['dispense_reviews']).toBeUndefined()
+    // No override -> the RPC is called with p_has_override false -> no review row.
+    expect(capturedReviews).toHaveLength(0)
 
     // Story 57.2: a free-text-only overrideReason (no structured code + supervisor
     // credential) is NOT a valid override — it must NOT create a review either.
@@ -508,7 +525,7 @@ describe('medication.recordDispense — dispense_reviews on override', () => {
       dispenseId: '00000000-0000-4000-8000-0000000000ff',
       overrideReason: 'free text only, no structured override',
     })
-    expect(inserts['dispense_reviews']).toBeUndefined()
+    expect(capturedReviews).toHaveLength(0)
   })
 
   it('does NOT throw if dispense_reviews insert fails (best-effort)', async () => {
@@ -561,13 +578,6 @@ describe('medication.recordDispense — dispense_reviews on override', () => {
         }
       }
 
-      if (table === 'dispense_reviews') {
-        // Simulate a DB error on review insert
-        return {
-          insert: () => Promise.resolve({ error: { code: '42P01', message: 'relation does not exist' } }),
-        }
-      }
-
       if (table === 'medication_statements') {
         return {
           select: vi.fn().mockReturnValue({
@@ -603,10 +613,14 @@ describe('medication.recordDispense — dispense_reviews on override', () => {
       }
     })
 
-    const ctx = createTestContext(mockFrom)
+    // Story 61.3: the review insert now happens inside record_dispense_atomic and
+    // is non-fatal there — the RPC returns reviewError but still commits the
+    // dispense. The router must NOT throw (dispense committed, review best-effort).
+    const ctx = createTestContext(mockFrom, PHARMACIST_USER, {
+      reviewError: 'relation "dispense_reviews" does not exist',
+    })
     const caller = createCaller(ctx)
 
-    // Must NOT throw — the dispense is committed and the review insert failure is best-effort
     await expect(
       caller.medication.recordDispense({
         ...VALID_DISPENSE_INPUT,

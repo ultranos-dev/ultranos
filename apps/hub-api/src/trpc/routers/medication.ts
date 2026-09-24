@@ -1056,46 +1056,8 @@ export const medicationRouter = createTRPCRouter({
         }
       }
 
-      // 4. Insert the medication_dispense record (now safe — prescription validated)
-      const { data: dispenseRow, error: insertError } = await ctx.supabase
-        .from('medication_dispenses')
-        .insert({
-          id: input.dispenseId,
-          prescription_id: input.prescriptionId,
-          medication_code: input.medicationCode,
-          medication_display: input.medicationDisplay,
-          patient_ref: input.patientRef,
-          pharmacist_ref: verifiedPharmacistRef,
-          when_handed_over: input.whenHandedOver,
-          hlc_timestamp: input.hlcTimestamp,
-          status: input.status,
-          batch_lot: input.batchLot ?? null,
-          synced_by: ctx.user.sub,
-          synced_at: now,
-        })
-        .select('id')
-        .single()
-
-      if (insertError || !dispenseRow) {
-        // Duplicate dispenseId = idempotent replay (offline-first sync delivers same event twice)
-        if (insertError?.code === '23505') {
-          return {
-            success: true,
-            dispenseId: input.dispenseId,
-            prescriptionStatus: input.status === 'completed' ? 'completed' : 'partial',
-            dispensedAt: null,
-            conflictDetected: false,
-            alreadySynced: true,
-          }
-        }
-        console.error('Dispense insert error:', { code: insertError?.code })
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to record dispense event',
-        })
-      }
-
-      // AC 5: If prescription already completed with newer HLC, ignore update but log conflict
+      // AC 5: If prescription already completed with newer HLC, ignore update but log conflict.
+      // (Older-HLC branch is a distinct, non-orphaning single write — kept in the caller.)
       const alreadyCompleted = currentRx.prescription_status === 'DISPENSED'
       const existingHlc = currentRx.hlc_timestamp as string | null
       const incomingIsOlder = existingHlc != null && input.hlcTimestamp < existingHlc
@@ -1126,56 +1088,104 @@ export const medicationRouter = createTRPCRouter({
 
         return {
           success: true,
-          dispenseId: dispenseRow.id,
+          dispenseId: input.dispenseId,
           prescriptionStatus: 'already_completed',
           dispensedAt: null,
           conflictDetected: true,
         }
       }
 
-      // 3. Update the parent medication_request status
-      // Conditional guard on prescription_status prevents TOCTOU double-dispense race
+      // Story 61.3 (M-HUB-4): dispense insert + conditional prescription-status
+      // update + dispense_reviews row are now ONE Postgres transaction. Previously
+      // an UPDATE failure triggered a COMPENSATING DELETE of the dispense row; a
+      // crash between the insert and the delete left an orphaned dispense. The RPC
+      // rolls back the insert automatically on a status conflict — no orphan
+      // cleanup needed. The interaction gate, supervisor verification, and
+      // pharmacistRef override above are unchanged and already decided; the RPC
+      // only performs the coordinated writes with server-authoritative values.
       const newPrescriptionStatus = input.status === 'completed' ? 'DISPENSED' : 'PARTIALLY_DISPENSED'
       const newStatus = input.status === 'completed' ? 'completed' : 'active'
 
-      const { data: updatedRx, error: updateError } = await ctx.supabase
-        .from('medication_requests')
-        .update({
-          prescription_status: newPrescriptionStatus,
-          status: newStatus,
-          dispensed_at: input.status === 'completed' ? now : null,
-          dispensed_by: input.status === 'completed' ? ctx.user.sub : null,
+      // Story 57.2 review row (only when an override was presented). Built here so
+      // it commits atomically with the dispense; the audit + metric below fire
+      // post-commit exactly as before.
+      const reviewStatus = overrideVerified ? 'PENDING' : 'FLAGGED'
+      const reviewPayload = hasOverride
+        ? {
+            dispense_id: input.dispenseId,
+            prescription_id: input.prescriptionId,
+            override_reason: input.overrideReason ?? input.overrideReasonCode ?? 'OVERRIDE',
+            override_reason_code: input.overrideReasonCode ?? null,
+            override_supervisor: overrideSupervisorId,
+            override_supervisor_verified: overrideVerified,
+            status: reviewStatus,
+          }
+        : null
+
+      const { data: dispenseResult, error: dispenseRpcError } = await ctx.supabase.rpc('record_dispense_atomic', {
+        p_dispense: {
+          id: input.dispenseId,
+          prescription_id: input.prescriptionId,
+          medication_code: input.medicationCode,
+          medication_display: input.medicationDisplay,
+          patient_ref: input.patientRef,
+          pharmacist_ref: verifiedPharmacistRef,
+          when_handed_over: input.whenHandedOver,
           hlc_timestamp: input.hlcTimestamp,
-          meta_last_updated: now,
-        })
-        .eq('id', input.prescriptionId)
-        .eq('prescription_status', currentRx.prescription_status)
-        .select('id, prescription_status, status, dispensed_at')
-        .single()
+          status: input.status,
+          batch_lot: input.batchLot ?? null,
+          synced_by: ctx.user.sub,
+          synced_at: now,
+        },
+        p_prescription_id: input.prescriptionId,
+        p_new_prescription_status: newPrescriptionStatus,
+        p_new_status: newStatus,
+        p_dispensed_at: input.status === 'completed' ? now : null,
+        p_dispensed_by: input.status === 'completed' ? ctx.user.sub : null,
+        p_hlc_timestamp: input.hlcTimestamp,
+        p_meta_last_updated: now,
+        p_expected_status: currentRx.prescription_status,
+        p_has_override: hasOverride,
+        p_review: reviewPayload,
+      })
 
-      if (updateError || !updatedRx) {
-        // Clean up orphaned dispense row — insert succeeded but update failed
-        try {
-          await ctx.supabase
-            .from('medication_dispenses')
-            .delete()
-            .eq('id', input.dispenseId)
-        } catch {
-          console.warn('[ORPHAN_CLEANUP_FAILED]', { dispenseId: input.dispenseId })
-        }
-
-        if (updateError?.code === 'PGRST116') {
+      if (dispenseRpcError) {
+        // Conditional-update guard failed inside the tx (whole op rolled back) —
+        // the prescription status changed under us. Same CONFLICT as before.
+        if (dispenseRpcError.message?.includes('STATUS_CONFLICT')) {
           throw new TRPCError({
             code: 'CONFLICT',
             message: 'Prescription status changed — another pharmacist may have fulfilled it. Please re-scan.',
           })
         }
-        console.error('Medication request update error:', { code: updateError?.code })
+        console.error('Dispense RPC error:', { code: dispenseRpcError.code })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to update prescription status',
+          message: 'Failed to record dispense event',
         })
       }
+
+      const dispenseOutcome = (dispenseResult as Record<string, unknown> | null)?.['outcome'] as string | undefined
+
+      // Duplicate dispenseId = idempotent replay (offline-first sync delivers same event twice)
+      if (dispenseOutcome === 'ALREADY_SYNCED') {
+        return {
+          success: true,
+          dispenseId: input.dispenseId,
+          prescriptionStatus: input.status === 'completed' ? 'completed' : 'partial',
+          dispensedAt: null,
+          conflictDetected: false,
+          alreadySynced: true,
+        }
+      }
+
+      const resultRow = dispenseResult as Record<string, unknown>
+      const dispenseRow = { id: resultRow['dispenseId'] as string }
+      const updatedRx = { dispensed_at: (resultRow['dispensedAt'] as string | null) ?? null }
+      // The dispense_reviews insert (when an override was presented) committed
+      // atomically inside the RPC. A capture-and-log review error is surfaced via
+      // reviewError below (non-fatal, matching the prior behavior).
+      const reviewError = (resultRow['reviewError'] as string | null) ?? null
 
       // Story 10.1: Create MedicationStatement when prescription is fully dispensed
       if (input.status === 'completed') {
@@ -1222,16 +1232,10 @@ export const medicationRouter = createTRPCRouter({
       //     drain-time verification (or a verified override that nonetheless
       //     warrants review). FLAGGED surfaces for pharmacy-manager escalation.
       if (hasOverride) {
-        const reviewStatus = overrideVerified ? 'PENDING' : 'FLAGGED'
-        const { error: reviewError } = await ctx.supabase.from('dispense_reviews').insert({
-          dispense_id: input.dispenseId,
-          prescription_id: input.prescriptionId,
-          override_reason: input.overrideReason ?? input.overrideReasonCode ?? 'OVERRIDE',
-          override_reason_code: input.overrideReasonCode ?? null,
-          override_supervisor: overrideSupervisorId,
-          override_supervisor_verified: overrideVerified,
-          status: reviewStatus,
-        })
+        // Story 61.3: the dispense_reviews row was inserted ATOMICALLY inside
+        // record_dispense_atomic above (committed with the dispense). Here we only
+        // emit the review metric + audit and surface any non-fatal review-insert
+        // error (reviewError, captured from the RPC) — behavior unchanged.
         // Story 23.2 / 57.2: record the override severity metric from the
         // structured reason code + server status (not a free-text prefix).
         try {
@@ -1266,7 +1270,7 @@ export const medicationRouter = createTRPCRouter({
           console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceId: input.dispenseId })
         }
         if (reviewError) {
-          console.error('[DISPENSE_REVIEW] Create-on-override failed:', { code: reviewError.code })
+          console.error('[DISPENSE_REVIEW] Create-on-override failed (non-fatal, dispense committed)')
           // do NOT throw — the dispense is committed; a missing review is logged + audited
         }
       }

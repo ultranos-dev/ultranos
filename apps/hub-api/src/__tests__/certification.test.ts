@@ -446,6 +446,11 @@ describe('Story 55.5: Certification & Credential Management', () => {
             }),
           }
         }
+        if (table === 'practitioners') {
+          // Story 61.3 (M-HUB-7): getMyCertifications resolves practitioners.id
+          // from the auth user id (sub) before filtering certification_progress.
+          return chainMock({ data: { id: PRACTITIONER_ID }, error: null })
+        }
         if (table === 'certification_progress') {
           return chainMock({ data: certProgressData, error: null })
         }
@@ -575,6 +580,9 @@ describe('Story 55.5: Certification & Credential Management', () => {
               }),
             }),
           }
+        }
+        if (table === 'practitioners') {
+          return chainMock({ data: { id: PRACTITIONER_ID }, error: null })
         }
         if (table === 'certification_progress') {
           return chainMock({ data: [], error: null })

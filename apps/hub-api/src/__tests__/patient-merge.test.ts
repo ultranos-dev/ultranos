@@ -94,12 +94,11 @@ describe('patientAdmin.merge', () => {
   const createCaller = createCallerFactory(appRouter)
 
   it('sets merged_into, is_active=false on duplicate, creates merge_audit', async () => {
+    // Story 61.3: the merge writes are now ONE atomic RPC (merge_patient_atomic).
+    // The router still pre-fetches both patients (for the snapshots + resolutions),
+    // then delegates every write to the RPC, which returns the new mergeAuditId.
     const survivorRow = makePatientRow(SURVIVOR_ID)
     const duplicateRow = makePatientRow(DUPLICATE_ID, { name_given: 'DupName' })
-
-    // Track update and insert calls
-    const updateCalls: Array<{ table: string; data: any }> = []
-    const insertCalls: Array<{ table: string; data: any }> = []
 
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'patients') {
@@ -114,49 +113,14 @@ describe('patientAdmin.merge', () => {
               }),
             })),
           }),
-          update: vi.fn().mockImplementation((data: any) => {
-            updateCalls.push({ table: 'patients', data })
-            return {
-              eq: vi.fn().mockReturnValue({
-                eq: vi.fn().mockResolvedValue({ error: null }),
-              }),
-            }
-          }),
-        }
-      }
-      if (table === 'merge_audits') {
-        return {
-          insert: vi.fn().mockImplementation((data: any) => {
-            insertCalls.push({ table: 'merge_audits', data })
-            return {
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: MERGE_AUDIT_ID },
-                  error: null,
-                }),
-              }),
-            }
-          }),
-        }
-      }
-      if (table === 'duplicate_reviews') {
-        return {
-          update: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ error: null }),
-            }),
-          }),
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: [], error: null }),
-            }),
-          }),
         }
       }
       return {}
     })
 
-    const ctx = { supabase: { from: mockFrom } as never, user: ADMIN_USER, headers: new Headers() }
+    const mockRpc = vi.fn().mockResolvedValue({ data: { mergeAuditId: MERGE_AUDIT_ID }, error: null })
+
+    const ctx = { supabase: { from: mockFrom, rpc: mockRpc } as never, user: ADMIN_USER, headers: new Headers() }
     const caller = createCaller(ctx)
 
     const result = await caller.patientAdmin.merge({
@@ -168,17 +132,23 @@ describe('patientAdmin.merge', () => {
     expect(result.success).toBe(true)
     expect(result.mergeAuditId).toBe(MERGE_AUDIT_ID)
 
-    // Verify duplicate was marked inactive
-    const duplicateUpdate = updateCalls.find(
-      (c) => c.data.is_active === false && c.data.ultranos_is_active === false,
+    // Verify the atomic RPC carried the correct ids, the resolved survivor update
+    // (name_given sourced from the duplicate), and the pre-merge snapshots.
+    expect(mockRpc).toHaveBeenCalledWith(
+      'merge_patient_atomic',
+      expect.objectContaining({
+        p_survivor_id: SURVIVOR_ID,
+        p_duplicate_id: DUPLICATE_ID,
+        p_field_resolutions: { name_given: 'duplicate' },
+        p_merged_by: 'admin-001',
+      }),
     )
-    expect(duplicateUpdate).toBeDefined()
-    expect(duplicateUpdate!.data.merged_into).toBe(SURVIVOR_ID)
+    const rpcArgs = mockRpc.mock.calls[0]![1] as Record<string, any>
+    expect(rpcArgs.p_survivor_updates.name_given).toBe('DupName')
+    expect(rpcArgs.p_original_survivor.id).toBe(SURVIVOR_ID)
+    expect(rpcArgs.p_original_duplicate.id).toBe(DUPLICATE_ID)
 
-    // Verify merge_audit was inserted
-    expect(insertCalls.some((c) => c.table === 'merge_audits')).toBe(true)
-
-    // Verify audit event emitted
+    // Verify audit event emitted (post-commit, unchanged)
     expect(mockAuditEmit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'PHI_WRITE',
@@ -221,8 +191,9 @@ describe('patientAdmin.unmerge', () => {
       status: 'ACTIVE',
     }
 
-    const updateCalls: Array<{ table: string; data: any }> = []
-
+    // Story 61.3: the reversal writes are now ONE atomic RPC (unmerge_patient_atomic).
+    // The router still pre-fetches the merge_audit (deadline check + restore
+    // computation), then delegates the writes to the RPC.
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'merge_audits') {
         return {
@@ -233,46 +204,31 @@ describe('patientAdmin.unmerge', () => {
               }),
             }),
           }),
-          update: vi.fn().mockImplementation((data: any) => {
-            updateCalls.push({ table: 'merge_audits', data })
-            return {
-              eq: vi.fn().mockResolvedValue({ error: null }),
-            }
-          }),
-        }
-      }
-      if (table === 'patients') {
-        return {
-          update: vi.fn().mockImplementation((data: any) => {
-            updateCalls.push({ table: 'patients', data })
-            return {
-              eq: vi.fn().mockResolvedValue({ error: null }),
-            }
-          }),
         }
       }
       return {}
     })
 
-    const ctx = { supabase: { from: mockFrom } as never, user: ADMIN_USER, headers: new Headers() }
+    const mockRpc = vi.fn().mockResolvedValue({ data: { success: true }, error: null })
+
+    const ctx = { supabase: { from: mockFrom, rpc: mockRpc } as never, user: ADMIN_USER, headers: new Headers() }
     const caller = createCaller(ctx)
 
     const result = await caller.patientAdmin.unmerge({ mergeAuditId: MERGE_AUDIT_ID })
 
     expect(result.success).toBe(true)
 
-    // Verify duplicate was restored to active
-    const duplicateRestore = updateCalls.find(
-      (c) => c.table === 'patients' && c.data.is_active === true && c.data.ultranos_is_active === true,
+    // Verify the atomic RPC was invoked with the audit id, computed survivor
+    // restores (name_given restored to the ORIGINAL survivor value), and reverser.
+    expect(mockRpc).toHaveBeenCalledWith(
+      'unmerge_patient_atomic',
+      expect.objectContaining({
+        p_merge_audit_id: MERGE_AUDIT_ID,
+        p_reversed_by: 'admin-001',
+      }),
     )
-    expect(duplicateRestore).toBeDefined()
-    expect(duplicateRestore!.data.merged_into).toBeNull()
-
-    // Verify merge_audit updated to REVERSED
-    const auditUpdate = updateCalls.find(
-      (c) => c.table === 'merge_audits' && c.data.status === 'REVERSED',
-    )
-    expect(auditUpdate).toBeDefined()
+    const rpcArgs = mockRpc.mock.calls[0]![1] as Record<string, any>
+    expect(rpcArgs.p_survivor_restores.name_given).toBe('OrigSurvivor')
   })
 
   // ── Test 4: after 72h throws FORBIDDEN ──
@@ -305,12 +261,15 @@ describe('patientAdmin.unmerge', () => {
       return {}
     })
 
-    const ctx = { supabase: { from: mockFrom } as never, user: ADMIN_USER, headers: new Headers() }
+    // .rpc must never be reached — the deadline check throws first.
+    const mockRpc = vi.fn().mockResolvedValue({ data: null, error: null })
+    const ctx = { supabase: { from: mockFrom, rpc: mockRpc } as never, user: ADMIN_USER, headers: new Headers() }
     const caller = createCaller(ctx)
 
     await expect(
       caller.patientAdmin.unmerge({ mergeAuditId: MERGE_AUDIT_ID }),
     ).rejects.toThrow(/72 hours/)
+    expect(mockRpc).not.toHaveBeenCalled()
   })
 })
 

@@ -98,7 +98,10 @@ const PATIENTS_COLUMNS = new Set([
   // URL for lab identity verification; never the raw key/UUID (Rule #7).
   'photo_url',
 ])
-const PRACTITIONERS_COLUMNS = new Set(['id', 'given_name', 'family_name'])
+// auth_user_id is a real practitioners column (rbac.ts labRestrictedProcedure and
+// lab.listStaff both select it; Story 61.3 getMyRole embeds it to resolve the
+// technician from the auth id — M-HUB-7).
+const PRACTITIONERS_COLUMNS = new Set(['id', 'given_name', 'family_name', 'auth_user_id'])
 
 function embeddedColumns(src: string, resource: string): string[] {
   const re = new RegExp(resource + '![^(]*\\(([^)]*)\\)', 'g')

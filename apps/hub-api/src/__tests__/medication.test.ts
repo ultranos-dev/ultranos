@@ -26,10 +26,43 @@ const createCaller = createCallerFactory(appRouter)
 function createTestContext(overrides?: {
   supabaseFrom?: any
   user?: { sub: string; practitionerId?: string; role: `${import('@ultranos/shared-types').UserRole}`; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
+  // Story 61.3: recordDispense delegates the dispense/status/review writes to the
+  // record_dispense_atomic RPC. Tests configure that RPC's result here. A capture
+  // sink lets tests inspect the p_dispense payload (e.g. batch_lot parity).
+  dispenseRpc?: {
+    outcome?: string
+    error?: { code?: string; message?: string } | null
+    capture?: (args: Record<string, unknown>) => void
+  }
 }) {
+  const rpc = vi.fn().mockImplementation((fn: string, args: Record<string, unknown>) => {
+    if (fn === 'record_dispense_atomic') {
+      overrides?.dispenseRpc?.capture?.(args)
+      if (overrides?.dispenseRpc?.error) {
+        return Promise.resolve({ data: null, error: overrides.dispenseRpc.error })
+      }
+      const dispense = (args['p_dispense'] as Record<string, unknown>) ?? {}
+      const outcome = overrides?.dispenseRpc?.outcome ?? 'DISPENSED'
+      if (outcome === 'ALREADY_SYNCED') {
+        return Promise.resolve({ data: { outcome: 'ALREADY_SYNCED' }, error: null })
+      }
+      return Promise.resolve({
+        data: {
+          outcome,
+          dispenseId: dispense['id'],
+          prescriptionStatus: args['p_new_prescription_status'],
+          status: args['p_new_status'],
+          dispensedAt: args['p_dispensed_at'] ?? null,
+          reviewError: null,
+        },
+        error: null,
+      })
+    }
+    return Promise.resolve({ data: [{ chain_hash: 'abc123' }], error: null })
+  })
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
-    rpc: vi.fn().mockResolvedValue({ data: [{ chain_hash: 'abc123' }], error: null }),
+    rpc,
   }
   return {
     supabase: supabase as never,
@@ -767,13 +800,19 @@ describe('medication.recordDispense', () => {
   })
 
   it('throws INTERNAL_SERVER_ERROR when dispense insert fails', async () => {
+    // Story 61.3: the dispense write is inside record_dispense_atomic; a DB error
+    // there surfaces as an RPC error and maps to the same 'Failed to record
+    // dispense event' INTERNAL_SERVER_ERROR.
     const mockFrom = createDispenseMockFrom({
       rxLookupData: { data: ACTIVE_RX, error: null },
       idempotencyData: [],
-      dispenseInsertResult: { data: null, error: { code: 'PGRST500', message: 'insert failed' } },
     })
 
-    const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
+    const ctx = createTestContext({
+      supabaseFrom: mockFrom,
+      user: TEST_USER,
+      dispenseRpc: { error: { code: 'PGRST500', message: 'insert failed' } },
+    })
     const caller = createCaller(ctx)
 
     await expect(
@@ -960,7 +999,6 @@ describe('medication.recordDispense', () => {
   it('stores batch_lot in insert row when batchLot is supplied', async () => {
     let capturedInsertArg: any = null
 
-    const dispenseCallCount = { n: 0 }
     const rxCallCount = { n: 0 }
 
     const mockFrom = vi.fn().mockImplementation((table: string) => {
@@ -997,35 +1035,28 @@ describe('medication.recordDispense', () => {
       }
 
       if (table === 'medication_dispenses') {
-        dispenseCallCount.n++
-        if (dispenseCallCount.n === 1) {
-          // Idempotency check
-          return {
-            select: vi.fn().mockReturnValue({
+        // Only the idempotency-check SELECT still hits .from(); the insert is now
+        // inside record_dispense_atomic (captured via the RPC sink below).
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-                }),
+                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
               }),
             }),
-          }
+          }),
         }
-        // Insert — capture the argument
-        const insertFn = vi.fn().mockImplementation((row: any) => {
-          capturedInsertArg = row
-          return {
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({ data: { id: DISPENSE_UUID }, error: null }),
-            }),
-          }
-        })
-        return { insert: insertFn }
       }
 
       return passthrough()
     })
 
-    const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
+    const ctx = createTestContext({
+      supabaseFrom: mockFrom,
+      user: TEST_USER,
+      // Capture the p_dispense row the router hands the atomic RPC.
+      dispenseRpc: { capture: (args) => { capturedInsertArg = args['p_dispense'] } },
+    })
     const caller = createCaller(ctx)
 
     const result = await caller.medication.recordDispense({
@@ -1041,7 +1072,6 @@ describe('medication.recordDispense', () => {
   it('inserts batch_lot as null when batchLot is omitted (backward compat)', async () => {
     let capturedInsertArg: any = null
 
-    const dispenseCallCount = { n: 0 }
     const rxCallCount = { n: 0 }
 
     const mockFrom = vi.fn().mockImplementation((table: string) => {
@@ -1078,33 +1108,26 @@ describe('medication.recordDispense', () => {
       }
 
       if (table === 'medication_dispenses') {
-        dispenseCallCount.n++
-        if (dispenseCallCount.n === 1) {
-          return {
-            select: vi.fn().mockReturnValue({
+        // Idempotency-check SELECT only; insert is inside the atomic RPC.
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-                }),
+                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
               }),
             }),
-          }
+          }),
         }
-        const insertFn = vi.fn().mockImplementation((row: any) => {
-          capturedInsertArg = row
-          return {
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({ data: { id: DISPENSE_UUID }, error: null }),
-            }),
-          }
-        })
-        return { insert: insertFn }
       }
 
       return passthrough()
     })
 
-    const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
+    const ctx = createTestContext({
+      supabaseFrom: mockFrom,
+      user: TEST_USER,
+      dispenseRpc: { capture: (args) => { capturedInsertArg = args['p_dispense'] } },
+    })
     const caller = createCaller(ctx)
 
     // validInput has NO batchLot

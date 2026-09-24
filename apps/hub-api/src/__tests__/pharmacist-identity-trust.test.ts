@@ -148,30 +148,47 @@ function createDispenseMockFrom() {
 
     if (table === 'medication_dispenses') {
       dispenseCallCount.n++
-      if (dispenseCallCount.n === 1) {
-        return {
-          select: vi.fn().mockReturnValue({
+      // Only the idempotency-check SELECT hits .from(); the dispense insert is now
+      // inside record_dispense_atomic (captured via the RPC mock below — Story 61.3).
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-              }),
+              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }),
-        }
+        }),
       }
-      // Capture the insert args to verify pharmacist_ref
-      const insertFn = vi.fn().mockImplementation((row: any) => {
-        capturedInsertArgs.push(row)
-        return {
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: { id: DISPENSE_UUID }, error: null }),
-          }),
-        }
-      })
-      return { insert: insertFn }
     }
 
     return passthrough()
+  })
+}
+
+/**
+ * Story 61.3: recordDispense hands the dispense row (with the server-overridden
+ * pharmacist_ref) to record_dispense_atomic. This rpc mock captures that
+ * p_dispense payload into capturedInsertArgs so the identity-trust assertions
+ * (pharmacist_ref parity) still hold, and returns a DISPENSED outcome. Other rpc
+ * calls (audit chain) return the prior chain-hash shape.
+ */
+function createDispenseRpc() {
+  return vi.fn().mockImplementation((fn: string, args: Record<string, any>) => {
+    if (fn === 'record_dispense_atomic') {
+      capturedInsertArgs.push(args['p_dispense'])
+      return Promise.resolve({
+        data: {
+          outcome: 'DISPENSED',
+          dispenseId: args['p_dispense']?.id ?? DISPENSE_UUID,
+          prescriptionStatus: 'DISPENSED',
+          status: 'completed',
+          dispensedAt: '2026-04-29T12:00:00Z',
+          reviewError: null,
+        },
+        error: null,
+      })
+    }
+    return Promise.resolve({ data: [{ chain_hash: 'abc123' }], error: null })
   })
 }
 
@@ -196,7 +213,7 @@ describe('medication.recordDispense — pharmacist identity trust (Story 21.3)',
   it('uses server-verified ctx.user.sub for pharmacist_ref, ignoring client-supplied value', async () => {
     const mockFrom = createDispenseMockFrom()
     const ctx = {
-      supabase: { from: mockFrom } as never,
+      supabase: { from: mockFrom, rpc: createDispenseRpc() } as never,
       user: TEST_USER,
       headers: new Headers(),
     }
@@ -212,7 +229,7 @@ describe('medication.recordDispense — pharmacist identity trust (Story 21.3)',
   it('overrides mismatched pharmacistRef with ctx.user.sub', async () => {
     const mockFrom = createDispenseMockFrom()
     const ctx = {
-      supabase: { from: mockFrom } as never,
+      supabase: { from: mockFrom, rpc: createDispenseRpc() } as never,
       user: TEST_USER,
       headers: new Headers(),
     }
@@ -232,7 +249,7 @@ describe('medication.recordDispense — pharmacist identity trust (Story 21.3)',
   it('emits SECURITY_VIOLATION audit when pharmacistRef does not match authenticated user', async () => {
     const mockFrom = createDispenseMockFrom()
     const ctx = {
-      supabase: { from: mockFrom } as never,
+      supabase: { from: mockFrom, rpc: createDispenseRpc() } as never,
       user: TEST_USER,
       headers: new Headers(),
     }
@@ -262,7 +279,7 @@ describe('medication.recordDispense — pharmacist identity trust (Story 21.3)',
   it('does NOT emit SECURITY_VIOLATION when pharmacistRef matches authenticated user', async () => {
     const mockFrom = createDispenseMockFrom()
     const ctx = {
-      supabase: { from: mockFrom } as never,
+      supabase: { from: mockFrom, rpc: createDispenseRpc() } as never,
       user: TEST_USER,
       headers: new Headers(),
     }
@@ -281,7 +298,7 @@ describe('medication.recordDispense — pharmacist identity trust (Story 21.3)',
 
     const mockFrom = createDispenseMockFrom()
     const ctx = {
-      supabase: { from: mockFrom } as never,
+      supabase: { from: mockFrom, rpc: createDispenseRpc() } as never,
       user: TEST_USER,
       headers: new Headers(),
     }

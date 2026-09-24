@@ -216,83 +216,41 @@ export const patientAdminRouter = createTRPCRouter({
         }
       }
 
-      // Update survivor with resolved fields (if any)
-      if (Object.keys(survivorUpdates).length > 0) {
-        survivorUpdates.updated_at = new Date().toISOString()
-        const { error: updateErr } = await ctx.supabase
-          .from('patients')
-          .update(survivorUpdates)
-          .eq('id', input.survivorId)
-          .eq('is_active', true)
+      // Story 61.3 (H-ADM-2): the entire merge — survivor update, duplicate
+      // deactivation, merge_audits insert, duplicate_reviews→MERGED, and the
+      // survivor mpi_warn clear — is now ONE Postgres transaction. Previously
+      // these were separate calls; a crash before the merge_audits insert left a
+      // merge with no reversal record, voiding the 72h-undo promise. The RPC
+      // adds updated_at itself, so we do not stamp it here.
+      const { data: rpcData, error: rpcError } = await ctx.supabase.rpc('merge_patient_atomic', {
+        p_survivor_id: input.survivorId,
+        p_duplicate_id: input.duplicateId,
+        p_survivor_updates: survivorUpdates,
+        p_field_resolutions: input.fieldResolutions,
+        p_original_survivor: originalSurvivor,
+        p_original_duplicate: originalDuplicate,
+        p_merged_by: ctx.user.sub,
+      })
 
-        if (updateErr) {
-          console.error('[PATIENT_ADMIN] Survivor update error:', { code: updateErr.code })
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update survivor' })
+      if (rpcError) {
+        // Map the RPC's re-validation failures back to the same 404s callers saw
+        // when the pre-fetch guards failed (a patient was deactivated concurrently).
+        if (rpcError.message?.includes('SURVIVOR_NOT_ACTIVE')) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Survivor patient not found or inactive' })
         }
+        if (rpcError.message?.includes('DUPLICATE_NOT_ACTIVE')) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Duplicate patient not found or inactive' })
+        }
+        console.error('[PATIENT_ADMIN] Merge RPC error:', { code: rpcError.code })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to merge patients' })
       }
 
-      // Mark duplicate as merged (inactive)
-      const { error: deactivateErr } = await ctx.supabase
-        .from('patients')
-        .update({
-          merged_into: input.survivorId,
-          is_active: false,
-          ultranos_is_active: false,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', input.duplicateId)
-
-      if (deactivateErr) {
-        console.error('[PATIENT_ADMIN] Duplicate deactivation error:', { code: deactivateErr.code })
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to deactivate duplicate' })
-      }
-
-      // Create merge_audit record
-      const unmergeDeadline = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString()
-      const { data: auditRow, error: auditInsertErr } = await ctx.supabase
-        .from('merge_audits')
-        .insert({
-          survivor_id: input.survivorId,
-          duplicate_id: input.duplicateId,
-          field_resolutions: input.fieldResolutions,
-          original_survivor: originalSurvivor,
-          original_duplicate: originalDuplicate,
-          merged_by: ctx.user.sub,
-          unmerge_deadline: unmergeDeadline,
-          status: 'ACTIVE',
-        })
-        .select('id')
-        .single()
-
-      if (auditInsertErr || !auditRow) {
-        console.error('[PATIENT_ADMIN] Merge audit insert error:', { code: auditInsertErr?.code })
+      const mergeAuditId = (rpcData as Record<string, string> | null)?.['mergeAuditId']
+      if (!mergeAuditId) {
+        console.error('[PATIENT_ADMIN] Merge RPC returned no mergeAuditId')
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create merge audit' })
       }
-
-      // Update duplicate_reviews for the duplicate to MERGED status
-      await ctx.supabase
-        .from('duplicate_reviews')
-        .update({
-          status: 'MERGED',
-          reviewed_by: ctx.user.sub,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq('patient_id', input.duplicateId)
-        .eq('status', 'PENDING')
-
-      // Clear mpi_warn on survivor if no remaining PENDING reviews
-      const { data: pendingReviews } = await ctx.supabase
-        .from('duplicate_reviews')
-        .select('id')
-        .eq('patient_id', input.survivorId)
-        .eq('status', 'PENDING')
-
-      if (!pendingReviews || pendingReviews.length === 0) {
-        await ctx.supabase
-          .from('patients')
-          .update({ mpi_warn: false })
-          .eq('id', input.survivorId)
-      }
+      const auditRow = { id: mergeAuditId }
 
       // Audit PHI write.
       // Story 61.1 decision — WRITE exception to the fail-closed rule: the merge rows have
@@ -368,60 +326,27 @@ export const patientAdminRouter = createTRPCRouter({
         }
       }
 
-      if (Object.keys(survivorRestores).length > 0) {
-        survivorRestores.updated_at = new Date().toISOString()
-        const { error: restoreErr } = await ctx.supabase
-          .from('patients')
-          .update(survivorRestores)
-          .eq('id', mergeAudit.survivor_id)
+      // Story 61.3 (H-ADM-2): the whole reversal — survivor restore, duplicate
+      // re-activation, merge_audits→REVERSED, and both mpi_warn flags — is ONE
+      // transaction. The RPC re-locks + re-validates the merge_audit is ACTIVE
+      // and inside its 72h window (defence in depth over the pre-fetch above) and
+      // stamps updated_at itself, so we do not stamp it here.
+      const { error: rpcError } = await ctx.supabase.rpc('unmerge_patient_atomic', {
+        p_merge_audit_id: input.mergeAuditId,
+        p_survivor_restores: survivorRestores,
+        p_reversed_by: ctx.user.sub,
+      })
 
-        if (restoreErr) {
-          console.error('[PATIENT_ADMIN] Survivor restore error:', { code: restoreErr.code })
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to restore survivor' })
+      if (rpcError) {
+        if (rpcError.message?.includes('MERGE_AUDIT_NOT_ACTIVE')) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Merge audit not found or already reversed' })
         }
+        if (rpcError.message?.includes('UNMERGE_WINDOW_EXPIRED')) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Unmerge window (72 hours) has expired' })
+        }
+        console.error('[PATIENT_ADMIN] Unmerge RPC error:', { code: rpcError.code })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to unmerge patients' })
       }
-
-      // Restore duplicate: clear merged_into, re-activate
-      const { error: duplicateRestoreErr } = await ctx.supabase
-        .from('patients')
-        .update({
-          merged_into: null,
-          is_active: true,
-          ultranos_is_active: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', mergeAudit.duplicate_id)
-
-      if (duplicateRestoreErr) {
-        console.error('[PATIENT_ADMIN] Duplicate restore error:', { code: duplicateRestoreErr.code })
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to restore duplicate' })
-      }
-
-      // Update merge_audit: status REVERSED
-      const { error: auditUpdateErr } = await ctx.supabase
-        .from('merge_audits')
-        .update({
-          status: 'REVERSED',
-          reversed_by: ctx.user.sub,
-          reversed_at: new Date().toISOString(),
-        })
-        .eq('id', input.mergeAuditId)
-
-      if (auditUpdateErr) {
-        console.error('[PATIENT_ADMIN] Merge audit update error:', { code: auditUpdateErr.code })
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update merge audit' })
-      }
-
-      // Set mpi_warn = true on both patients (post-unmerge safety flag)
-      await ctx.supabase
-        .from('patients')
-        .update({ mpi_warn: true })
-        .eq('id', mergeAudit.survivor_id)
-
-      await ctx.supabase
-        .from('patients')
-        .update({ mpi_warn: true })
-        .eq('id', mergeAudit.duplicate_id)
 
       // Audit PHI write (unmerge). Same Story 61.1 WRITE exception as merge above: the
       // reversal has already committed, so emit post-commit and log loudly on failure

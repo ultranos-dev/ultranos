@@ -333,11 +333,12 @@ describe('Story 55.4: Mentorship Pairing Management', () => {
 
   describe('lab.getMyMentorship', () => {
     it('returns pairing for current user as mentee', async () => {
-      let callCount = 0
-      const fromImpl = vi.fn().mockImplementation(() => {
-        callCount++
-        if (callCount === 1) {
-          // labRestrictedProcedure: lab_technicians lookup
+      // Story 61.3 (M-HUB-7): getMyMentorship resolves practitioners.id from the
+      // auth user id first, then filters mentorship_pairings by that id. Dispatch
+      // by table name (the resolve adds a practitioners query between the RBAC
+      // lab_technicians lookup and the pairing query).
+      const fromImpl = vi.fn().mockImplementation((table: string) => {
+        if (table === 'lab_technicians') {
           return chainMock({
             data: {
               id: 'tech-1',
@@ -348,8 +349,10 @@ describe('Story 55.4: Mentorship Pairing Management', () => {
             error: null,
           })
         }
-        if (callCount === 2) {
-          // mentorship_pairings query
+        if (table === 'practitioners') {
+          return chainMock({ data: { id: MENTEE_ID }, error: null })
+        }
+        if (table === 'mentorship_pairings') {
           return chainMock({
             data: {
               id: PAIRING_ID,
@@ -365,8 +368,7 @@ describe('Story 55.4: Mentorship Pairing Management', () => {
             error: null,
           })
         }
-        if (callCount === 3) {
-          // mentorship_checkins query
+        if (table === 'mentorship_checkins') {
           const chain = chainMock({ data: null, error: null })
           chain.order = vi.fn().mockResolvedValue({
             data: [{ month: '2026-05', status: 'COMPLETED' }],
@@ -389,10 +391,8 @@ describe('Story 55.4: Mentorship Pairing Management', () => {
     })
 
     it('returns null when no active pairing', async () => {
-      let callCount = 0
-      const fromImpl = vi.fn().mockImplementation(() => {
-        callCount++
-        if (callCount === 1) {
+      const fromImpl = vi.fn().mockImplementation((table: string) => {
+        if (table === 'lab_technicians') {
           return chainMock({
             data: {
               id: 'tech-2',
@@ -402,6 +402,9 @@ describe('Story 55.4: Mentorship Pairing Management', () => {
             },
             error: null,
           })
+        }
+        if (table === 'practitioners') {
+          return chainMock({ data: { id: MENTEE_ID }, error: null })
         }
         // pairing query returns null
         return chainMock({ data: null, error: null })
