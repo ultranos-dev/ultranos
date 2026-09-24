@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-09-24T00:00:00.000000'
+last_updated: '2026-09-24T12:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -791,7 +791,7 @@ development_status:
   # EPIC 63: UX, i18n & Platform Consistency (2026-09-23)
   # Safety-critical i18n, content gating, ui-kit/doc truth
   # ============================================================
-  epic-63: backlog
+  epic-63: in-progress
   63-1-safety-critical-i18n-sweep: review  # Wave 6 batch 2 done+verified (safety strings keyed ×4 all apps, consent modal→ui-kit Dialog, custom ratcheting no-hardcoded-ui-string eslint rule, RTL safety snapshots; pharmacy 1159/opd 1472/admin 334/lab 3970); ar/prs/ps flagged for native-speaker review
-  63-2-lab-lite-content-gating-and-ui-standards-sweep: ready-for-dev
+  63-2-lab-lite-content-gating-and-ui-standards-sweep: review  # Wave 6 batch 3 done+verified (atlas/guidance content gates flag-reversible hide-not-fallback, escalate→escalateAiResult, readiness honest-state; ~1705 palette tokens + 117 invalid primary-NNN→semantic; 16 RTL fixes; lab 3977, all 5 apps typecheck clean)
   63-3-platform-consistency-and-doc-truth: review  # Wave 6 batch 2 done+verified (ui-kit build model documented [dist gitignored — audit premise corrected] + check:dist, CLAUDE.md pointers fixed, supabase opd+pharmacy→0.10.2, hygiene sweep; opd 1472/pharmacy 1159/admin 334/ui-kit 444); DTO consolidation done by 59.2, admin Patient dedup deferred

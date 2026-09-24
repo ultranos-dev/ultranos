@@ -1,6 +1,6 @@
 # Story 63.2: Lab-Lite Placeholder Content Gating & UI Standards Sweep
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -19,10 +19,10 @@ so that clinicians never mistake scaffolding for clinical truth and the UI meets
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Content gates** (AC: 1, 2, 3) — feature flags (settings-driven or env) for atlas/guidance-locales; per-entry pending states; escalate/readiness honest-state fixes; decision points (hide vs fallback) presented before implementing.
-- [ ] **Task 2: Palette sweep** (AC: 4) — mechanical conversion by file cluster; verify invalid `primary-*` classes were rendering as no-ops (confirming visual QA needs); keep documented exceptions intact.
-- [ ] **Task 3: RTL + layout fixes** (AC: 5) — logical-property conversion; back-button standardization; kiosk exception doc; `sms/message-formatter` `Math.random()` → `crypto.randomUUID()` and `enqueueSyncEvent` same-ms ID collision if not already fixed by Story 60.1 (check).
-- [ ] **Task 4: Regression verification** (AC: 6) — full lab-lite suite; RTL snapshot run; visual pass (en + ar) over the ~15 most-touched pages; `pnpm typecheck`.
+- [x] **Task 1: Content gates** (AC: 1, 2, 3) — new `lib/feature-flags.ts`; atlas placeholder entries hidden with "content pending" EmptyState (default hidden until real photomicrographs); `[TRANSLATE]`/empty-audio guidance hidden per-locale with "translation pending" (**decision: hide, NO English fallback** — patient-facing; raw marker can never render; reversible via `NEXT_PUBLIC_LAB_SHOW_UNTRANSLATED_GUIDANCE`); readiness equipment stub → honest "not available" (additive `unavailable` flag, excluded from RAG rollup); escalate no-op → **wired to real `lab.escalateAiResult`** via the existing `confidence-escalation.ts` client wrapper (PHI-free payload), not disabled.
+- [x] **Task 2: Palette sweep** (AC: 4) — ~1705 palette-shade tokens + 117 invalid `primary-500/600` across ~184 files → semantic tokens (shade-aware two-tone mapping: light shades→`/10`/`/30` tints; red→destructive, amber/yellow/orange→warning, green/emerald/teal→success, blue/indigo→primary, neutrals→muted/border). Invalid `primary-NNN` **confirmed no-op** (preset has only `primary.DEFAULT`/`.foreground`) → conversion is a real visual fix. Documented inline-SVG exceptions + `cultural-flags.ts` registry preserved.
+- [x] **Task 3: RTL + layout fixes** (AC: 5) — 16 physical-direction classes across the 9 files → logical (`ms/me/ps/pe/text-start/end`); result-entry back button → `Button variant="ghost" size="sm" className="w-fit px-0"` + `DirectionalIcon`; finance/payment h1 layout fix; kiosk exception comment; `generateMessageId` `Math.random()`→`crypto.randomUUID()` (verified: `enqueueSyncEvent` same-ms collision already fixed by 60.1; `generateConfirmCode` already uses `crypto.getRandomValues`).
+- [x] **Task 4: Regression verification** (AC: 6) — lab-lite 3977 passed (13 skipped), 0 failures; all 5 apps typecheck clean; 41 snapshots updated (palette class-strings only; RTL logical positioning preserved; no blanket `-u`).
 
 ## Dev Notes
 
@@ -53,11 +53,21 @@ This story must introduce **zero regression in existing features and functionali
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Fable 5 (1M) — implementation; Claude Opus 4.8 (1M) — integration & combined verification.
 
 ### Debug Log References
+`pnpm -F lab-lite typecheck` clean; all 5 apps typecheck clean; `pnpm -F lab-lite test` → 304 files, 3977 passed, 13 skipped, 0 failures (combined tree).
 
 ### Completion Notes List
+- **Guidance decision (recorded): HIDE per-locale, no English fallback.** A misleading English block to a patient expecting their language is worse than an honest "translation pending" state; a raw `[TRANSLATE]` token can never reach the UI (defensive strip even when revealed). Reversible flag.
+- **Escalate WIRED (not disabled):** a tested client wrapper (`confidence-escalation.ts` → `triggerAutoEscalation` → `POST lab.escalateAiResult`, landed by 59.1) already existed; the former `router.push('/worklist')` no-op now fires it with a PHI-free payload then navigates.
+- **Palette scale ~8× the story estimate** (~1705 tokens + 117 invalid `primary-NNN` across ~184 files vs "~210 in ~90"). Handled via a reviewed shade-aware conversion (each file reconstructed from HEAD so two-tone light/dark pairs map to legible `/10`+solid tints, not red-on-red); conversions confined to className strings (0 false positives). Invalid `primary-500/600` verified no-op → real visual fix.
+- **60.1 collision checks (verified at source):** `enqueueSyncEvent` id already collision-safe (`...-${Date.now()}-${crypto.randomUUID()}`); `generateMessageId` still used `Math.random()` (60.1 didn't touch that file) → fixed.
+- **Exceptions preserved:** documented inline-SVG list + `cultural-flags.ts` registry (kept intentional `indigo-*`, feeds the "blue/purple NOT red" cultural-distinction test). `EmergencyButton` inline `style rgb(220,38,38)` left as-is (inline style, outside mechanical class scope). Readiness used an additive `unavailable?` flag rather than widening the strict `RAGStatus` union (lower blast radius).
 
 ### File List
+New — `apps/lab-lite/src/lib/feature-flags.ts`, `src/__tests__/content-gates.test.ts`.
+Modified — ~216 lab-lite files: content gates (`lib/visual-atlas.ts`, `components/atlas/AtlasBrowser.tsx`, `lib/public-health-guidance.ts`, `lib/readiness-engine.ts`, `components/dashboard/ReadinessBriefingCard.tsx`, `results/[sampleId]/enter/page.tsx`, `messages/{en,ar,prs,ps}.json`); ~178 palette-swept components/lib; 9 RTL/layout files; `sms/message-formatter`; 16 `.snap` files (41 snapshots) + ~8 assertion tests.
 
 ### Change Log
+- 2026-09-24: Story 63.2 implemented (Wave 6 batch 3), verified, integrated. Placeholder atlas/guidance gated (flag-reversible, hide-not-fallback), escalate wired to escalateAiResult, readiness honest-state; ~1705 palette tokens + 117 invalid primary-NNN → semantic tokens; 16 RTL fixes. Status → review.
