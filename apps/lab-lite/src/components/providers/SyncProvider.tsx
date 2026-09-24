@@ -1,8 +1,9 @@
 'use client'
 
 import '@/lib/key-lifecycle-hooks'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import { useSyncStore } from '@/stores/sync-store'
 import { startUploadDrain, stopUploadDrain, triggerUploadDrain } from '@/lib/upload-drain-init'
 import { startAuditDrain, stopAuditDrain } from '@/lib/audit-client'
@@ -32,6 +33,24 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const startedRef = useRef(false)
 
+  // Story 58.3 regression fix: the AES session key is memory-only (wiped on tab
+  // close), while `isAuthenticated` is persisted. On a page reload the auth flag
+  // rehydrates true BEFORE AuthGuard re-establishes the key (async — possibly a
+  // network unlock). Starting sync here would run encrypted Dexie I/O (queue
+  // drains + sample hydration) with no key → EncryptionKeyNotAvailableError.
+  // Gate sync startup on key readiness; AuthGuard dispatches `ultranos:lab-key-ready`
+  // once the key is installed.
+  const [keyReady, setKeyReady] = useState(() => encryptionKeyStore.isReady())
+  useEffect(() => {
+    if (keyReady) return
+    const onReady = () => setKeyReady(true)
+    window.addEventListener('ultranos:lab-key-ready', onReady)
+    // Cover the race where the key became ready between initial render and the
+    // listener attaching (no event would fire in that window otherwise).
+    if (encryptionKeyStore.isReady()) setKeyReady(true)
+    return () => window.removeEventListener('ultranos:lab-key-ready', onReady)
+  }, [keyReady])
+
   useEffect(() => {
     if (!isAuthenticated) {
       if (startedRef.current) {
@@ -41,6 +60,10 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       }
       return
     }
+
+    // Wait for the memory-only encryption key before starting any encrypted
+    // Dexie I/O. Re-runs when `keyReady` flips (via the key-ready listener above).
+    if (!keyReady) return
 
     if (startedRef.current) return
     startedRef.current = true
@@ -147,7 +170,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       stopAuditDrain()
       startedRef.current = false
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, keyReady])
 
   return <>{children}</>
 }

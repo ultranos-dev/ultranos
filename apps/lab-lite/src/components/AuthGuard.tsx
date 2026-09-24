@@ -61,6 +61,14 @@ export function AuthGuard({ children }: { children: ReactNode }) {
           }
         }
 
+        // Story 58.3 fix: the memory-only session key is now installed. Signal
+        // deferred sync startup (SyncProvider) so it can safely begin encrypted
+        // Dexie I/O. Fires on both the freshly-established and already-ready paths;
+        // harmless to dispatch more than once.
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('ultranos:lab-key-ready'))
+        }
+
         // Story 58.3 (H-LAB-1): once the session key is available, encrypt any
         // pre-existing plaintext PHI rows in place. Resumable + idempotent; runs
         // in the background so it never blocks rendering the app.
