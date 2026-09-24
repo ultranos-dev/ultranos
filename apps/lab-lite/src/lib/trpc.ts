@@ -1,9 +1,29 @@
 /**
  * Minimal tRPC client configuration for Lab Lite.
  *
- * Uses raw fetch to the Hub API tRPC endpoint — avoids importing
- * hub-api's AppRouter type (and its runtime dependencies) into the PWA build.
+ * Uses raw fetch to the Hub API tRPC endpoint. Request construction is unchanged
+ * (byte-equivalent — Story 59.2 AC6); what is shared now is the COMPILE-TIME
+ * contract: the Hub wire DTOs below are defined once in @ultranos/hub-client
+ * (type-only, no runtime dependency on hub-api) and re-exported here under their
+ * historical names so every consumer (hooks, stores, useOrderSync) is untouched.
  */
+// Type-only Hub contract — see @ultranos/hub-client (Story 59.2, Task 2).
+import type {
+  VerifyPatientResult,
+  PatientSearchResult,
+  LabOrderResponse,
+  PullOrdersResult,
+  LabOrderPatientDetails,
+} from '@ultranos/hub-client'
+
+// Re-export the canonical Hub DTOs under the names lab-lite consumers already import.
+export type {
+  VerifyPatientResult,
+  PatientSearchResult,
+  LabOrderResponse,
+  PullOrdersResult,
+  LabOrderPatientDetails,
+}
 
 export function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
@@ -141,12 +161,7 @@ export async function reportAuthEvent(
   }
 }
 
-export interface VerifyPatientResult {
-  firstName: string
-  age: number
-  patientRef: string
-  photoUrl: string | null
-}
+// `VerifyPatientResult` is defined once in @ultranos/hub-client and re-exported above.
 
 /**
  * Verify patient identity via Hub API.
@@ -527,17 +542,8 @@ export async function acknowledgeAllNotifications(token: string): Promise<void> 
 
 // ── Patient Search (Task 7) ─────────────────────────────────
 
-/**
- * Rule #7 list-tier DTO: ONLY firstName + age + the opaque blind-index ref.
- * (The earlier DTO declared gender/phone — a data-minimization violation the
- * hub never actually served; trimmed in Story 59.1.)
- */
-export interface PatientSearchResult {
-  /** Opaque blind-index ref (`Patient/<hmac>`) — never the real patient UUID. */
-  ref: string
-  firstName: string
-  age: number | null
-}
+// `PatientSearchResult` (Rule #7 list-tier: firstName + age + opaque ref) is
+// defined once in @ultranos/hub-client and re-exported above.
 
 /**
  * Search patients by name query via Hub API (`lab.searchPatients`).
@@ -686,29 +692,8 @@ export async function createPatient(
 // Order sync (Story 42.2)
 // ---------------------------------------------------------------------------
 
-export interface LabOrderResponse {
-  orderId: string
-  patientFirstName: string
-  patientAge: number | null
-  patientRef: string
-  // No patient photo on the list tier (Rule #7 / audit C-SYS-4, Story 58.1) — the
-  // photo is fetched on demand via getOrderPatientDetails (detail/verification tier).
-  testsRequested: Array<{ loincCode: string; loincDisplay: string }>
-  urgency: 'routine' | 'urgent' | 'asap' | 'stat'
-  orderingPhysicianName: string
-  specialInstructions: string | null
-  status: string
-  authoredOn: string
-  /** True = claimed by this lab; false = unassigned/available. */
-  assignedToLab: boolean
-}
-
-export interface PullOrdersResult {
-  orders: LabOrderResponse[]
-  syncTimestamp: string | null
-  /** Keyset cursor for the next page, or null when the last page has been reached. */
-  nextCursor: string | null
-}
+// `LabOrderResponse` and `PullOrdersResult` (data-minimized order summaries,
+// Rule #7) are defined once in @ultranos/hub-client and re-exported above.
 
 /**
  * Pull one page of pending test orders from the Hub API.
@@ -802,30 +787,10 @@ export async function pullMonitoringMappings(
   }
 }
 
-/**
- * Detail-view PHI for the patient behind an order (CLAUDE.md Rule #7 detail-view
- * scope): full name + gender + blood group + latest basic vitals. Order-scoped —
- * the Hub resolves orderId → patient_id server-side and only for orders THIS lab
- * has claimed. NEVER carries National ID or the raw patient UUID. Gender is here
- * (not on the list tier) because lab reference ranges are sex-specific (Story 58.2).
- * Returns null on any failure (offline / unauthorized / unclaimed order).
- */
-export interface LabOrderPatientDetails {
-  fullName: { given: string | null; father: string | null; grandfather: string | null }
-  gender: string | null
-  bloodGroup: string | null
-  photoUrl: string | null
-  vitals: {
-    weightKg: number | null
-    heightCm: number | null
-    bmi: number | null
-    temperatureC: number | null
-    bpSystolic: number | null
-    bpDiastolic: number | null
-    recordedAt: string | null
-  }
-}
-
+// `LabOrderPatientDetails` (Rule #7 detail-view tier: full name + gender + blood
+// group + vitals, order-scoped, claimed orders only, never National ID / raw UUID)
+// is defined once in @ultranos/hub-client and re-exported above. Returns null on any
+// failure (offline / unauthorized / unclaimed order).
 export async function fetchOrderPatientDetails(
   orderId: string,
   token: string,

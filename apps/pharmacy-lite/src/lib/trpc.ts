@@ -1,5 +1,12 @@
 import type { DrugSearchResult } from '@ultranos/shared-types'
+// Type-only Hub contract (Story 59.2, Task 2): the prescription wire DTO is defined
+// once in @ultranos/hub-client (no runtime dependency on hub-api) and re-exported
+// below under its historical name. Requests are unchanged (byte-equivalent, AC6).
+import type { PharmacyPrescriptionItem } from '@ultranos/hub-client'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+
+// Re-export the canonical Hub DTO under the name pharmacy-lite consumers already import.
+export type { PharmacyPrescriptionItem }
 
 export function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
@@ -91,16 +98,8 @@ export async function searchDrugCatalog(
   return body.result.data.json
 }
 
-/** A patient's un-dispensed prescription, data-minimized for the pharmacy. */
-export interface PharmacyPrescriptionItem {
-  id: string
-  prescriptionStatus: string | null
-  medicationDisplay: string | null
-  medicationText: string | null
-  dosageInstruction: unknown
-  authoredOn: string | null
-  requesterId: string | null
-}
+// `PharmacyPrescriptionItem` (a patient's un-dispensed prescription, data-minimized
+// for the pharmacy) is defined once in @ultranos/hub-client and re-exported above.
 
 /**
  * Pull a patient's un-dispensed prescriptions from the Hub — the no-QR lookup

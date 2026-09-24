@@ -1,8 +1,17 @@
 import type { DrugSearchResult, FhirPatient, FhirAllergyIntolerance, PharmacyDirectoryEntry, LabDirectoryEntry, LabOrderStatus } from '@ultranos/shared-types'
+// Compile-time Hub contract (Story 59.2, Task 2): the wire DTO for
+// diagnosticReport.list*/read is defined once in @ultranos/hub-client (type-only,
+// no runtime import) and re-exported below under its historical name so existing
+// consumers are untouched. The transport itself stays hubTrpcRequest — this is a
+// typing consolidation, not a request-shape change (byte-equivalent).
+import type { HubDiagnosticReportItem } from '@ultranos/hub-client'
 import { getHubTrpcUrl, getHubBaseUrl } from '@/lib/hub-url'
 import { hubTrpcRequest, HubRequestError, getAuthHeaders } from '@/lib/hub-auth'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
 import { toFhirAllergyIntolerance, toFhirMedicationStatement } from '@/lib/sync-pull'
+
+// Re-export the canonical Hub DTO under the name opd-lite consumers already import.
+export type { HubDiagnosticReportItem }
 
 export interface PatientSearchResult {
   patients: FhirPatient[]
@@ -269,31 +278,9 @@ export async function enrichDrug(
 // Diagnostic reports (lab results) — Hub -> FHIR R4 -> local Dexie cache.
 // ---------------------------------------------------------------------------
 
-/**
- * Flat lab-report row as returned by the Hub `diagnosticReport.listByPatient`
- * procedure. The list projection is data-minimized: `performerDisplay`,
- * `conclusion`, and `presentedForm` (PHI / file content) are only returned by
- * `diagnosticReport.read` for a single report, so they are optional here.
- */
-export interface HubDiagnosticReportItem {
-  id: string
-  resourceType: 'DiagnosticReport'
-  status: string
-  loincCode: string | null
-  loincDisplay: string | null
-  patientRef: string
-  performerId: string | null
-  performerDisplay?: string | null
-  labId: string | null
-  issued: string | null
-  collectionDate: string | null
-  virusScanStatus: string
-  createdAt: string | null
-  conclusion?: string | null
-  presentedForm?:
-    | Array<{ contentType?: string; data?: string; title?: string; url?: string }>
-    | null
-}
+// `HubDiagnosticReportItem` (the flat lab-report row from
+// diagnosticReport.listByPatient / .read) is now defined once in
+// @ultranos/hub-client and re-exported at the top of this file.
 
 /** Mapped local report — FHIR R4 DiagnosticReport plus the Ultranos extension block. */
 export type MappedDiagnosticReport = LocalDiagnosticReport & {

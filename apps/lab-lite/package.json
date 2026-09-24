@@ -18,6 +18,7 @@
     "@supabase/supabase-js": "^2.49.0",
     "@ultranos/audit-logger": "workspace:*",
     "@ultranos/crypto": "workspace:*",
+    "@ultranos/hub-client": "workspace:*",
     "@ultranos/shared-types": "workspace:*",
     "@ultranos/sync-engine": "workspace:^",
     "@ultranos/ui-kit": "workspace:*",

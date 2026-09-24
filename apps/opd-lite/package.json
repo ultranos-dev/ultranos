@@ -19,6 +19,7 @@
     "@ultranos/crypto": "workspace:*",
     "@ultranos/drug-catalog-sync": "workspace:*",
     "@ultranos/drug-db": "workspace:*",
+    "@ultranos/hub-client": "workspace:*",
     "@ultranos/shared-types": "workspace:*",
     "@ultranos/sync-engine": "workspace:^",
     "@ultranos/ui-kit": "workspace:*",

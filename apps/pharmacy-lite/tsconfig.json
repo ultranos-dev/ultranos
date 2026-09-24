@@ -19,8 +19,10 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"],
+      "@ultranos/hub-client": ["../../packages/hub-client/src/index.ts"],
       "@ultranos/shared-types": ["../../packages/shared-types/src/index.ts"],
-      "@ultranos/ui-kit": ["../../packages/ui-kit/src/index.ts"]
+      "@ultranos/ui-kit": ["../../packages/ui-kit/src/index.ts"],
+      "hub-api/*": ["../hub-api/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
