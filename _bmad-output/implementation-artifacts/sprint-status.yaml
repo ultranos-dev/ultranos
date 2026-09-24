@@ -776,7 +776,7 @@ development_status:
   # ============================================================
   epic-61: in-progress
   61-1-audit-trail-completeness-and-tamper-evidence: review  # Wave 2 done+verified (chain vNext, whitelist); M-HUB-8 deferred to 57.2; migration 063 authored-not-applied
-  61-2-encryption-key-derivation-hardening: ready-for-dev
+  61-2-encryption-key-derivation-hardening: review  # Wave 3 done+verified (dual-wrap KDF, tamper signaling; crypto 109, all apps green); needs HUB_KEY_WRAPPING_MASTER_SECRET at deploy
   61-3-atomic-multi-write-operations: ready-for-dev
 
   # ============================================================

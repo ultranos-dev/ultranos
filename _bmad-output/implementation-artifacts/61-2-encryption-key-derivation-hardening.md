@@ -1,6 +1,6 @@
 # Story 61.2: Encryption Key-Derivation Hardening & Tamper Signaling
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -18,13 +18,13 @@ so that "encryption at rest" and "tamper detection" are real properties, not nom
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: KDF design + hub secret issuance** (AC: 1)
-  - [ ] 1.1 Design doc in-code: hub issues a per-user wrapping secret at login (new endpoint or login response extension), held in memory only; session key = HKDF(server secret ‖ sub ‖ device salt). Present the offline-relogin tradeoff as a decision point (see Dev Notes) before implementation.
-  - [ ] 1.2 Implement in `packages/crypto/src/browser-crypto.ts:21-58` (new versioned derivation alongside the old); wire opd-lite (`AuthGuard.tsx:76`, `login/page.tsx:99`), pharmacy-lite, lab-lite (per Story 58.3's adoption) key establishment.
-- [ ] **Task 2: Field-data migration** (AC: 2) — per-app startup migration: detect old-scheme data, decrypt with legacy derivation, re-encrypt vNext; resumable; test with populated fixtures.
-- [ ] **Task 3: Tamper signaling** (AC: 3) — `packages/crypto/src/server-crypto.ts:38-68`: discriminated result + audit hook; update hub read paths to log integrity failures; keep a safe display fallback for UI.
-- [ ] **Task 4: Identity QR** (AC: 4) — add `exp` enforcement + canonical JSON to `packages/crypto/src/ecdsa.ts:96-112`; grep confirms zero production callers today [V] — disposition (wire vs formal gap) recorded; KRL-wrapped verify required when wired.
-- [ ] **Task 5: Tests + regression verification** (AC: 5) — crypto package suite + per-app unlock/read/write integration; migration fixture test; tamper-injection test (bit-flipped ciphertext → signaled); `pnpm typecheck`.
+- [x] **Task 1: KDF design + hub secret issuance** (AC: 1)
+  - [x] 1.1 Design doc in-code: hub issues a per-user wrapping secret at login (new endpoint or login response extension), held in memory only; session key = HKDF(server secret ‖ sub ‖ device salt). Present the offline-relogin tradeoff as a decision point (see Dev Notes) before implementation.
+  - [x] 1.2 Implement in `packages/crypto/src/browser-crypto.ts:21-58` (new versioned derivation alongside the old); wire opd-lite (`AuthGuard.tsx:76`, `login/page.tsx:99`), pharmacy-lite, lab-lite (per Story 58.3's adoption) key establishment.
+- [x] **Task 2: Field-data migration** (AC: 2) — per-app startup migration: detect old-scheme data, decrypt with legacy derivation, re-encrypt vNext; resumable; test with populated fixtures.
+- [x] **Task 3: Tamper signaling** (AC: 3) — `packages/crypto/src/server-crypto.ts:38-68`: discriminated result + audit hook; update hub read paths to log integrity failures; keep a safe display fallback for UI.
+- [x] **Task 4: Identity QR** (AC: 4) — add `exp` enforcement + canonical JSON to `packages/crypto/src/ecdsa.ts:96-112`; grep confirms zero production callers today [V] — disposition (wire vs formal gap) recorded; KRL-wrapped verify required when wired.
+- [x] **Task 5: Tests + regression verification** (AC: 5) — crypto package suite + per-app unlock/read/write integration; migration fixture test; tamper-injection test (bit-flipped ciphertext → signaled); `pnpm typecheck`.
 
 ## Dev Notes
 
