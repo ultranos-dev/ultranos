@@ -9,6 +9,7 @@ import { Wallet, FileSearch } from '@ultranos/ui-kit/icons'
 import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { db } from '@/lib/db'
+import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
 import {
   getAccountsWithBalance,
   getPatientLedger,
@@ -60,6 +61,9 @@ export function PatientAccountsPage() {
   const [limitError, setLimitError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  // Rule #7 (revised): signed patient-photo URLs keyed by patient id (Hub resolves the
+  // opaque key server-side); initials fallback on miss/offline.
+  const [photoUrls, setPhotoUrls] = useState<Map<string, string>>(new Map())
 
   const loadAccounts = useCallback(async () => {
     const raw = await getAccountsWithBalance()
@@ -92,6 +96,25 @@ export function PatientAccountsPage() {
   useEffect(() => {
     loadAccounts()
   }, [loadAccounts])
+
+  // Fetch signed photo URLs for the loaded accounts (by patient id).
+  useEffect(() => {
+    const ids = accounts.map((a) => a.patientId)
+    if (ids.length === 0) { setPhotoUrls(new Map()); return }
+    let cancelled = false
+    const controller = new AbortController()
+    ;(async () => {
+      const entries = await Promise.all(
+        ids.map(async (id) => [id, await getPatientPhotoUrl(id, controller.signal)] as const),
+      )
+      if (cancelled) return
+      const map = new Map<string, string>()
+      for (const [id, url] of entries) if (url) map.set(id, url)
+      setPhotoUrls(map)
+    })()
+    return () => { cancelled = true; controller.abort() }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accounts.map((a) => a.patientId).join(',')])
 
   const selectPatient = useCallback(async (patientId: string) => {
     setSelectedPatientId(patientId)
@@ -358,7 +381,7 @@ export function PatientAccountsPage() {
                   className="flex w-full items-center justify-between px-4 py-3 text-start transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500"
                 >
                   <div className="flex items-center gap-2">
-                    <Avatar name={account.patientName} size={24} />
+                    <Avatar src={photoUrls.get(account.patientId) ?? null} name={account.patientName} size={24} />
                     <div>
                       <p className="text-sm font-medium text-foreground">{account.patientName}</p>
                       <p className="text-xs text-muted-foreground">

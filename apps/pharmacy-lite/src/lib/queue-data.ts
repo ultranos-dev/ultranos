@@ -10,6 +10,8 @@ export type FulfillmentPhaseBadge = 'loaded' | 'reviewing' | 'dispensing' | 'com
 export interface QueueItem {
   id: string
   patientFirstName: string
+  /** Real patient UUID (from the dispense subject ref) — used to fetch a signed photo. */
+  patientId?: string
   /** Server-generated signed URL for the patient photo. Null if no photo or offline. */
   patientPhotoUrl?: string | null
   medicationCount: number
@@ -60,6 +62,7 @@ function toQueueItem(
   return {
     id: dispense.id,
     patientFirstName: extractFirstName(dispense.subject?.display),
+    patientId: dispense.subject?.reference?.replace(/^Patient\//, '') || undefined,
     medicationCount: 1, // FHIR MedicationDispense is one medication per resource
     phase: mapPhase(dispense),
     timestamp: dispense.meta?.lastUpdated ?? dispense._ultranos?.createdAt ?? '',

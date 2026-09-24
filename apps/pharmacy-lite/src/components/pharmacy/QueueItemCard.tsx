@@ -1,9 +1,11 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import type { QueueItem, FulfillmentPhaseBadge, SyncStatus } from '@/lib/queue-data'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
+import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
 
 interface QueueItemCardProps {
   item: QueueItem
@@ -63,6 +65,19 @@ export function QueueItemCard({
 }: QueueItemCardProps) {
   const isInteractive = !!onSelect
 
+  // Rule #7 (revised): show the patient photo. Fetch a signed URL by patient id (Hub
+  // resolves the opaque key server-side); falls back to any prebuilt URL, else initials.
+  const [photoSrc, setPhotoSrc] = useState<string | null>(item.patientPhotoUrl ?? null)
+  useEffect(() => {
+    if (!item.patientId) return
+    let cancelled = false
+    const controller = new AbortController()
+    void getPatientPhotoUrl(item.patientId, controller.signal).then((url) => {
+      if (!cancelled && url) setPhotoSrc(url)
+    })
+    return () => { cancelled = true; controller.abort() }
+  }, [item.patientId])
+
   return (
     <li
       data-testid={`queue-item-${item.id}`}
@@ -84,7 +99,7 @@ export function QueueItemCard({
       }
     >
       <div className="flex items-center gap-2 min-w-0 flex-1">
-        <Avatar src={item.patientPhotoUrl} name={item.patientFirstName} size={24} />
+        <Avatar src={photoSrc} name={item.patientFirstName} size={24} />
         <div className="min-w-0 flex-1">
           <div className="text-sm font-medium text-foreground truncate">
             {item.patientFirstName}
