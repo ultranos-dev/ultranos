@@ -748,7 +748,7 @@ development_status:
   58-1-patient-uuid-photo-leak-remediation: review  # Wave 2 done+verified (opaque photo keys, detail-tier; lab 3947); migration authored-not-applied
   58-2-lab-surface-scoping-and-data-minimization: review  # Wave 3 done+verified (monitoring scope+strip, claim-before-details; lab 3947; Dexie v57)
   58-3-spoke-phi-at-rest-completeness: ready-for-dev
-  58-4-consent-enforcement-completeness: ready-for-dev
+  58-4-consent-enforcement-completeness: review  # Wave 4 done+verified (consent matrix; result-delivery+MPI+bulk exempt, listActiveForPharmacist surfaced; hub 1788)
 
   # ============================================================
   # EPIC 59: Client-Hub Contract Integrity & Dead Wiring (2026-09-23)
