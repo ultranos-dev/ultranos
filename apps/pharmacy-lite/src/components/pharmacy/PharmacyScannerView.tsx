@@ -50,6 +50,7 @@ export function PharmacyScannerView({
   onNavigateToReview,
 }: PharmacyScannerViewProps) {
   const t = useTranslations('prescription')
+  const tCommon = useTranslations('common')
   const [phase, setPhase] = useState<ViewPhase>({ step: 'idle' })
   const [pasteInput, setPasteInput] = useState('')
   const [proceed, setProceed] = useState<ProceedState>({ kind: 'idle' })
@@ -96,10 +97,10 @@ export function PharmacyScannerView({
     } catch {
       setPhase({
         step: 'error',
-        message: 'Camera access denied or unavailable. Use manual entry below.',
+        message: t('cameraError'),
       })
     }
-  }, [handleVerify])
+  }, [handleVerify, t])
 
   // Cleanup scanner on unmount
   useEffect(() => {
@@ -132,9 +133,9 @@ export function PharmacyScannerView({
       // Re-verify now that key is cached
       handleVerify(rawQr)
     } catch {
-      setPhase({ step: 'error', message: 'Failed to fetch clinician key from Hub.' })
+      setPhase({ step: 'error', message: t('fetchKeyFailed') })
     }
-  }, [handleVerify])
+  }, [handleVerify, t])
 
   // Re-run full verification (used for key_untrusted_offline retry — triggers revalidation path)
   const handleRetryVerify = useCallback((rawQr: string) => {
@@ -289,7 +290,7 @@ export function PharmacyScannerView({
               setPhase({ step: 'idle' })
             }}
           >
-            Stop Scanner
+            {t('stopScanner')}
           </Button>
         </div>
       )}
@@ -303,12 +304,12 @@ export function PharmacyScannerView({
             onClick={startCameraScanner}
             data-testid="start-scanner-btn"
           >
-            Scan Prescription QR
+            {t('scanQr')}
           </Button>
 
           <div className="flex items-center gap-2">
             <span className="h-px flex-1 bg-border" />
-            <span className="text-xs text-muted-foreground">or paste QR data</span>
+            <span className="text-xs text-muted-foreground">{t('orPasteQr')}</span>
             <span className="h-px flex-1 bg-border" />
           </div>
 
@@ -331,7 +332,7 @@ export function PharmacyScannerView({
               disabled={!pasteInput.trim()}
               data-testid="verify-btn"
             >
-              Verify
+              {tCommon('verify')}
             </Button>
           </div>
         </>
@@ -345,7 +346,7 @@ export function PharmacyScannerView({
           data-testid="verifying-status"
         >
           <p className="text-sm font-semibold text-muted-foreground">
-            Verifying prescription signature...
+            {t('verifyingSignature')}
           </p>
         </div>
       )}
@@ -370,7 +371,7 @@ export function PharmacyScannerView({
           data-testid="status-checking"
         >
           <p className="text-sm font-semibold text-muted-foreground">
-            Checking global fulfillment status…
+            {t('checkingGlobalStatus')}
           </p>
         </div>
       )}
@@ -383,15 +384,27 @@ export function PharmacyScannerView({
           data-testid="already-dispensed-warning"
         >
           <p className="text-lg font-bold text-destructive">
-            Already {proceed.status === 'VOIDED' ? 'Voided' : 'Dispensed'} Elsewhere
+            {proceed.status === 'VOIDED'
+              ? t('alreadyVoidedElsewhere')
+              : t('alreadyDispensedElsewhere')}
           </p>
           <p className="mt-2 text-sm font-semibold text-destructive">
-            {proceed.medName} was already {proceed.status === 'VOIDED' ? 'voided' : 'dispensed'}
-            {proceed.dispensedAt ? ` on ${new Date(proceed.dispensedAt).toLocaleDateString()}` : ''} at
-            another location. DO NOT dispense this prescription again.
+            {proceed.status === 'VOIDED'
+              ? t('voidedElsewhereBody', {
+                  medName: proceed.medName,
+                  dateClause: proceed.dispensedAt
+                    ? t('elsewhereDateClause', { date: new Date(proceed.dispensedAt).toLocaleDateString() })
+                    : '',
+                })
+              : t('dispensedElsewhereBody', {
+                  medName: proceed.medName,
+                  dateClause: proceed.dispensedAt
+                    ? t('elsewhereDateClause', { date: new Date(proceed.dispensedAt).toLocaleDateString() })
+                    : '',
+                })}
           </p>
           <Button variant="destructive" className="mt-4" type="button" onClick={handleReset}>
-            Dismiss
+            {t('dismiss')}
           </Button>
         </div>
       )}
@@ -403,10 +416,9 @@ export function PharmacyScannerView({
           role="alert"
           data-testid="status-check-unavailable"
         >
-          <p className="text-lg font-bold text-warning">Global fulfillment check unavailable</p>
+          <p className="text-lg font-bold text-warning">{t('globalCheckUnavailable')}</p>
           <p className="mt-2 text-sm text-warning">
-            The Hub is offline, so we could not confirm this prescription has not already been
-            dispensed at another pharmacy. The signature is valid — proceed with caution.
+            {t('globalCheckUnavailableBody')}
           </p>
           <div className="mt-4 flex gap-3">
             <Button
@@ -415,10 +427,10 @@ export function PharmacyScannerView({
               data-testid="proceed-anyway-btn"
               onClick={() => finishProceed(proceed.prescriptions, proceed.practitionerName)}
             >
-              Proceed to Fulfillment
+              {t('proceedToFulfillment')}
             </Button>
             <Button variant="secondary" type="button" onClick={handleReset}>
-              Cancel
+              {t('cancel')}
             </Button>
           </div>
         </div>
@@ -450,7 +462,7 @@ export function PharmacyScannerView({
             type="button"
             onClick={handleReset}
           >
-            Try Again
+            {t('tryAgain')}
           </Button>
         </div>
       )}
@@ -579,6 +591,8 @@ function ResultDisplay({
   onRetryVerify: (rawQr: string) => void
   onReset: () => void
 }) {
+  const t = useTranslations('prescription')
+  const tCommon = useTranslations('common')
   const isAuthenticated = useAuthSessionStore((s) => s.session !== null)
   switch (result.status) {
     case 'verified':
@@ -589,11 +603,11 @@ function ResultDisplay({
           data-testid="verification-success"
         >
           <p className="text-lg font-bold text-success">
-            Verification Successful
+            {t('verificationSuccessful')}
           </p>
           {result.practitionerName && (
             <p className="mt-1 text-sm text-success">
-              Prescribed by: {result.practitionerName}
+              {t('prescribedBy', { name: result.practitionerName })}
             </p>
           )}
           <div className="mt-4 space-y-2">
@@ -608,7 +622,7 @@ function ResultDisplay({
                   {rx.dos.qty} {rx.dos.unit}
                   {rx.dos.freqN ? ` × ${rx.dos.freqN}` : rx.dos.freq ? ` ${rx.dos.freq}` : ''}
                   {rx.dos.perU ? `/${rx.dos.perU}` : ''}
-                  {' — '}{rx.dur} days
+                  {' — '}{tCommon('days', { count: rx.dur })}
                 </p>
               </div>
             ))}
@@ -620,14 +634,14 @@ function ResultDisplay({
               onClick={() => onProceedToReview(result.prescriptions, rawQr, result.practitionerName)}
               data-testid="proceed-to-review-btn"
             >
-              Proceed to Fulfillment
+              {t('proceedToFulfillment')}
             </Button>
             <Button
               variant="secondary"
               type="button"
               onClick={onReset}
             >
-              Scan Another
+              {t('scanAnother')}
             </Button>
           </div>
         </div>
@@ -641,15 +655,13 @@ function ResultDisplay({
           data-testid="fraud-warning"
         >
           <p className="text-lg font-bold text-destructive">
-            ⚠ Fraud Warning
+            {t('fraudWarningHeading')}
           </p>
           <p className="mt-2 text-sm font-semibold text-destructive">
-            This prescription has an INVALID cryptographic signature. It may have
-            been tampered with or was not issued by an authorized clinician.
+            {t('fraudDescription')}
           </p>
           <p className="mt-2 text-sm text-destructive">
-            DO NOT dispense medication based on this prescription.
-            Report this incident to your supervisor immediately.
+            {t('fraudAction')}
           </p>
           <Button
             variant="destructive"
@@ -657,7 +669,7 @@ function ResultDisplay({
             type="button"
             onClick={onReset}
           >
-            Dismiss
+            {t('dismiss')}
           </Button>
         </div>
       )
@@ -670,12 +682,10 @@ function ResultDisplay({
           data-testid="expired-warning"
         >
           <p className="text-lg font-bold text-warning">
-            Prescription Expired
+            {t('expired')}
           </p>
           <p className="mt-2 text-sm text-warning">
-            This prescription expired on{' '}
-            {new Date(result.expiry).toLocaleDateString()}.
-            It cannot be fulfilled.
+            {t('expiredDescription', { date: new Date(result.expiry).toLocaleDateString() })}
           </p>
           <Button
             variant="outline"
@@ -683,7 +693,7 @@ function ResultDisplay({
             type="button"
             onClick={onReset}
           >
-            Scan Another
+            {t('scanAnother')}
           </Button>
         </div>
       )
@@ -696,11 +706,10 @@ function ResultDisplay({
           data-testid="unknown-clinician-warning"
         >
           <p className="text-lg font-bold text-warning">
-            Unknown Clinician
+            {t('unknownClinician')}
           </p>
           <p className="mt-2 text-sm text-warning">
-            The prescription signature is valid, but the signing clinician is not
-            in the local trusted registry.
+            {t('unknownClinicianDescription')}
           </p>
           {result.fallbackAvailable && isAuthenticated && (
             <Button
@@ -710,7 +719,7 @@ function ResultDisplay({
               onClick={() => onFetchKey(rawQr)}
               data-testid="fetch-key-btn"
             >
-              Look Up on Hub
+              {t('lookUpOnHub')}
             </Button>
           )}
           <Button
@@ -719,7 +728,7 @@ function ResultDisplay({
             type="button"
             onClick={onReset}
           >
-            Cancel
+            {t('cancel')}
           </Button>
         </div>
       )
@@ -732,14 +741,13 @@ function ResultDisplay({
           data-testid="key-revoked-warning"
         >
           <p className="text-lg font-bold text-destructive">
-            Prescriber Key Revoked
+            {t('keyRevoked')}
           </p>
           <p className="mt-2 text-sm font-semibold text-destructive">
-            The prescriber&apos;s signing key has been revoked. This prescription
-            cannot be verified and MUST NOT be dispensed.
+            {t('keyRevokedDescription')}
           </p>
           <p className="mt-2 text-sm text-destructive">
-            Contact the prescribing clinician or your supervisor for a new prescription.
+            {t('keyRevokedAction')}
           </p>
           <Button
             variant="destructive"
@@ -747,7 +755,7 @@ function ResultDisplay({
             type="button"
             onClick={onReset}
           >
-            Dismiss
+            {t('dismiss')}
           </Button>
         </div>
       )
@@ -760,14 +768,13 @@ function ResultDisplay({
           data-testid="key-untrusted-offline-warning"
         >
           <p className="text-lg font-bold text-warning">
-            Prescriber Verification Unavailable
+            {t('verificationUnavailable')}
           </p>
           <p className="mt-2 text-sm font-semibold text-warning">
-            Prescriber verification unavailable — Hub offline. Key was previously
-            valid but has expired. Cannot verify current status.
+            {t('verificationUnavailableDescription')}
           </p>
           <p className="mt-2 text-sm text-warning">
-            Dispensing is blocked until the prescriber key can be re-verified.
+            {t('dispensingBlocked')}
           </p>
           <div className="mt-4 flex gap-3">
             <Button
@@ -777,7 +784,7 @@ function ResultDisplay({
               onClick={() => onRetryVerify(rawQr)}
               data-testid="retry-revalidation-btn"
             >
-              Wait and Retry
+              {t('waitAndRetry')}
             </Button>
             <Button
               variant="secondary"
@@ -785,7 +792,7 @@ function ResultDisplay({
               onClick={onReset}
               data-testid="cancel-offline-btn"
             >
-              Cancel
+              {t('cancel')}
             </Button>
           </div>
         </div>
@@ -799,7 +806,7 @@ function ResultDisplay({
           data-testid="untrusted-warning"
         >
           <p className="text-lg font-bold text-destructive">
-            Verification Blocked
+            {t('verificationBlocked')}
           </p>
           <p className="mt-2 text-sm text-destructive">{result.reason}</p>
           <Button
@@ -808,7 +815,7 @@ function ResultDisplay({
             type="button"
             onClick={onReset}
           >
-            Dismiss
+            {t('dismiss')}
           </Button>
         </div>
       )
@@ -827,7 +834,7 @@ function ResultDisplay({
             type="button"
             onClick={onReset}
           >
-            Try Again
+            {t('tryAgain')}
           </Button>
         </div>
       )

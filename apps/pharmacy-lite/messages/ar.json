@@ -189,7 +189,8 @@
       "hourly": "{count}× كل ساعة",
       "other": "{count}×"
     },
-    "dosageUnknown": "الجرعة غير معروفة — تأكّد قبل الصرف"
+    "dosageUnknown": "الجرعة غير معروفة — تأكّد قبل الصرف",
+    "prescribedBrandLabel": "العلامة التجارية الموصوفة:"
   },
   "prescription": {
     "scanTitle": "مسح الوصفة",
@@ -259,7 +260,16 @@
     "localDuplicateOverrideConfirm": "الإذن بإعادة الصرف",
     "overrideSupervisorLabel": "اسم المشرف",
     "overrideSupervisorPlaceholder": "المشرف المُصرِّح",
-    "overrideReasonLabel": "السبب"
+    "overrideReasonLabel": "السبب",
+    "fraudWarningHeading": "⚠ تحذير احتيال",
+    "checkingGlobalStatus": "جارٍ التحقق من حالة الصرف على المستوى العام…",
+    "alreadyDispensedElsewhere": "تم الصرف في مكان آخر",
+    "alreadyVoidedElsewhere": "تم الإلغاء في مكان آخر",
+    "dispensedElsewhereBody": "تم صرف {medName} بالفعل{dateClause} في موقع آخر. لا تصرف هذه الوصفة مرة أخرى.",
+    "voidedElsewhereBody": "تم إلغاء {medName} بالفعل{dateClause} في موقع آخر. لا تصرف هذه الوصفة مرة أخرى.",
+    "elsewhereDateClause": " بتاريخ {date}",
+    "globalCheckUnavailable": "التحقق العام من الصرف غير متاح",
+    "globalCheckUnavailableBody": "المركز غير متصل، لذا تعذّر علينا تأكيد أن هذه الوصفة لم تُصرف بالفعل في صيدلية أخرى. التوقيع صالح — تابع بحذر."
   },
   "scanner": {
     "title": "التحقق من الوصفة",
@@ -433,7 +443,8 @@
     "pageOf": "صفحة {page} من {totalPages}",
     "welcome": "مرحبًا، {name}",
     "pharmacyDashboard": "لوحة تحكم الصيدلية",
-    "lot": "الدفعة: {lot}"
+    "lot": "الدفعة: {lot}",
+    "skipToContent": "تخطَّ إلى المحتوى"
   },
   "errors": {
     "allFieldsRequired": "جميع الحقول مطلوبة.",

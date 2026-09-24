@@ -94,7 +94,7 @@ export function PaymentForm() {
       setSuccessPayment({ receiptNumber: payment.receiptNumber })
       setShowConfirm(false)
     } catch {
-      setErrors(['Failed to record payment. Please try again.'])
+      setErrors([t('recordPaymentError')])
       setShowConfirm(false)
     } finally {
       setSubmitting(false)
@@ -152,7 +152,7 @@ export function PaymentForm() {
               setPatientDisplay(e.target.value)
               setPatientRef(e.target.value)
             }}
-            placeholder="Ahmad, 45"
+            placeholder={t('patientRefPlaceholder')}
             className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>

@@ -34,21 +34,23 @@ function formatDate(iso: string): string {
   })
 }
 
-function timeAgo(iso: string): string {
+/** Locale-aware relative "time ago" using next-intl's translator (ICU plurals). */
+function timeAgo(iso: string, t: (k: string, v?: Record<string, string | number | Date>) => string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const hours = Math.floor(diff / 3_600_000)
-  if (hours < 1) return 'Less than 1 hour ago'
-  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`
+  if (hours < 1) return t('timeAgoLessThanHour')
+  if (hours < 24) return t('timeAgoHours', { hours })
   const days = Math.floor(hours / 24)
-  return `${days} day${days === 1 ? '' : 's'} ago`
+  return t('timeAgoDays', { days })
 }
 
 function ChainStatusBadge({ valid }: { valid: boolean | null }) {
+  const tc = useTranslations('common')
   if (valid === true) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-sm font-medium text-success">
         <span className="h-2 w-2 rounded-full bg-success" />
-        Healthy
+        {tc('healthy')}
       </span>
     )
   }
@@ -56,28 +58,30 @@ function ChainStatusBadge({ valid }: { valid: boolean | null }) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-3 py-1 text-sm font-medium text-destructive">
         <span className="h-2 w-2 rounded-full bg-destructive" />
-        Broken
+        {tc('broken')}
       </span>
     )
   }
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1 text-sm font-medium text-muted-foreground">
       <span className="h-2 w-2 rounded-full bg-muted-foreground" />
-      Unknown
+      {tc('unknown')}
     </span>
   )
 }
 
 function ResultIcon({ valid }: { valid: boolean | null }) {
-  if (valid === true) return <span className="text-success" title="Pass">&#10003;</span>
-  if (valid === false) return <span className="text-destructive" title="Fail">&#10007;</span>
-  return <span className="text-muted-foreground" title="Job failed">&#8212;</span>
+  const t = useTranslations('audit')
+  if (valid === true) return <span className="text-success" title={t('resultPass')}>&#10003;</span>
+  if (valid === false) return <span className="text-destructive" title={t('resultFail')}>&#10007;</span>
+  return <span className="text-muted-foreground" title={t('resultJobFailed')}>&#8212;</span>
 }
 
 const PAGE_SIZE = 30
 
 export default function AuditChainPage() {
   const t = useTranslations('audit')
+  const tp = useTranslations('pagination')
   const [tab, setTab] = useState<'integrity' | 'events'>('integrity')
   const [status, setStatus] = useState<ChainStatus | null>(null)
   const [verifications, setVerifications] = useState<Verification[]>([])
@@ -201,7 +205,7 @@ export default function AuditChainPage() {
               <div className="rounded-xl bg-card p-4 shadow-card ring-[0.65px] ring-border/50">
                 <p className="text-sm font-medium text-muted-foreground">{t('lastVerified')}</p>
                 <p className="mt-1 text-lg font-semibold">
-                  {status?.lastVerifiedAt ? timeAgo(status.lastVerifiedAt) : 'Never'}
+                  {status?.lastVerifiedAt ? timeAgo(status.lastVerifiedAt, t) : t('never')}
                 </p>
                 {status?.lastVerifiedAt && (
                   <p className="text-xs text-muted-foreground font-numeric">{formatDate(status.lastVerifiedAt)}</p>
@@ -252,10 +256,10 @@ export default function AuditChainPage() {
                   </div>
                 </div>
                 <div className="mt-1 flex gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-success" /> Pass</span>
-                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-destructive" /> Fail</span>
-                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-warning" /> Error</span>
-                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-border" /> No data</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-success" /> {t('legendPass')}</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-destructive" /> {t('legendFail')}</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-warning" /> {t('legendError')}</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-border" /> {t('legendNoData')}</span>
                 </div>
               </div>
             )}
@@ -280,9 +284,9 @@ export default function AuditChainPage() {
                       <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
                       <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colEntriesChecked')}</th>
                       <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDuration')}</th>
-                      <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Type</th>
-                      <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Triggered By</th>
-                      <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Broken Event ID</th>
+                      <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colType')}</th>
+                      <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colTriggeredBy')}</th>
+                      <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colBrokenEventId')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -291,9 +295,9 @@ export default function AuditChainPage() {
                         <td className="px-4 py-3 font-numeric">{formatDate(v.verifiedAt)}</td>
                         <td className="px-4 py-3"><ResultIcon valid={v.valid} /></td>
                         <td className="px-4 py-3 text-muted-foreground">{v.checkedCount.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{v.jobDurationMs}ms</td>
-                        <td className="px-4 py-3 text-muted-foreground">{v.isFullVerification ? 'Full' : 'Daily'}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{v.triggeredBy === 'CRON' ? 'Scheduled' : 'Manual'}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{t('durationMs', { ms: v.jobDurationMs })}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{v.isFullVerification ? t('typeFull') : t('typeDaily')}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{v.triggeredBy === 'CRON' ? t('triggeredScheduled') : t('triggeredManual')}</td>
                         <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
                           {v.brokenAtEventId ? v.brokenAtEventId.slice(0, 8) + '...' : ''}
                         </td>
@@ -310,7 +314,7 @@ export default function AuditChainPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <span>
-                  Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
+                  {tp('showing', { from: cursor + 1, to: Math.min(cursor + PAGE_SIZE, total), total })}
                 </span>
                 <div className="flex gap-2">
                   <Button
@@ -319,16 +323,16 @@ export default function AuditChainPage() {
                     onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                     disabled={cursor === 0}
                   >
-                    Previous
+                    {tp('previous')}
                   </Button>
-                  <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
+                  <span className="flex items-center px-2">{tp('pageOf', { page: currentPage, totalPages })}</span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCursor(cursor + PAGE_SIZE)}
                     disabled={cursor + PAGE_SIZE >= total}
                   >
-                    Next
+                    {tp('next')}
                   </Button>
                 </div>
               </div>

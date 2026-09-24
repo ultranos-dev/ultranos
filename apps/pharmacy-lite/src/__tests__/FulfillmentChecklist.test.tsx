@@ -107,7 +107,9 @@ describe('FulfillmentChecklist', () => {
       // Dosage info
       expect(screen.getByText(/1 capsule/)).toBeInTheDocument()
       expect(screen.getByText(/3× daily/)).toBeInTheDocument()
-      expect(screen.getByText(/7 days/)).toBeInTheDocument()
+      // Story 63.1: duration is now keyed via common `days` ({count}). The test
+      // harness mock echoes `days {"count":7}`, so assert on the count.
+      expect(screen.getByText(/days.*7/)).toBeInTheDocument()
     })
 
     it('shows practitioner name', () => {

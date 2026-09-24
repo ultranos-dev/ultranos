@@ -1,15 +1,17 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { FieldResolutionRow } from '@/components/patients/FieldResolutionRow'
 
-const FIELD_LABELS: Record<string, string> = {
-  name_given: 'Name Given',
-  name_father: 'Name Father',
-  name_grandfather: 'Name Grandfather',
-  gender: 'Gender',
-  birth_year: 'Birth Year',
-  address_district_origin: 'District Origin',
-  address_province_origin: 'Province Origin',
+/** i18n key suffix for each mergeable patient field (patients.mergeField*). */
+const FIELD_LABEL_KEY: Record<string, string> = {
+  name_given: 'mergeFieldNameGiven',
+  name_father: 'mergeFieldNameFather',
+  name_grandfather: 'mergeFieldNameGrandfather',
+  gender: 'mergeFieldGender',
+  birth_year: 'mergeFieldBirthYear',
+  address_district_origin: 'mergeFieldDistrictOrigin',
+  address_province_origin: 'mergeFieldProvinceOrigin',
 }
 
 interface PatientComparisonTableProps {
@@ -27,15 +29,16 @@ export function PatientComparisonTable({
   resolutions,
   onResolve,
 }: PatientComparisonTableProps) {
+  const t = useTranslations('patients')
   return (
     <div className="overflow-hidden rounded-2xl border border-border">
       <table className="w-full text-sm">
         <thead className="bg-muted">
           <tr>
-            <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Field</th>
-            <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Survivor Value</th>
-            <th className="px-4 py-3 text-center font-medium text-muted-foreground text-xs uppercase tracking-wide">Source</th>
-            <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Duplicate Value</th>
+            <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('mergeColField')}</th>
+            <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('mergeColSurvivorValue')}</th>
+            <th className="px-4 py-3 text-center font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('mergeColSource')}</th>
+            <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('mergeColDuplicateValue')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -43,7 +46,7 @@ export function PatientComparisonTable({
             <FieldResolutionRow
               key={field}
               field={field}
-              label={FIELD_LABELS[field] ?? field}
+              label={FIELD_LABEL_KEY[field] ? t(FIELD_LABEL_KEY[field]) : field}
               survivorValue={survivor[field]}
               duplicateValue={duplicate[field]}
               resolution={resolutions[field]}

@@ -103,7 +103,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                 checked={item.selected}
                 onChange={() => toggleItem(item.prescription.id)}
                 className="mt-1 h-5 w-5 rounded border-border text-primary-600 focus:ring-primary-500"
-                aria-label={`Fulfill ${item.prescription.medN}`}
+                aria-label={t('fulfillAriaLabel', { medication: item.prescription.medN })}
               />
 
               <div className="min-w-0 flex-1">
@@ -125,7 +125,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                     {item.prescription.dos.freqN && (
                       <span> &middot; {formatFrequency(item.prescription.dos.freqN, item.prescription.dos.perU)}</span>
                     )}
-                    <span> &middot; {item.prescription.dur} days</span>
+                    <span> &middot; {t('days', { count: item.prescription.dur })}</span>
                   </p>
                 )}
 
@@ -134,7 +134,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                   <div className="mt-3 space-y-2">
                     {item.prescription.brand && (
                       <p className="text-xs text-muted-foreground">
-                        Prescribed brand: <span className="font-semibold text-foreground">{item.prescription.brand}</span>
+                        {t('prescribedBrandLabel')} <span className="font-semibold text-foreground">{item.prescription.brand}</span>
                       </p>
                     )}
                     <div className="grid grid-cols-2 gap-3">

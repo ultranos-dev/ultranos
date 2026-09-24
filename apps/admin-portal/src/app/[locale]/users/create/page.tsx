@@ -22,6 +22,7 @@ interface UnavailableRole {
 
 export default function CreateUserPage() {
   const t = useTranslations('users')
+  const tc = useTranslations('common')
   const [availableRoles, setAvailableRoles] = useState<AvailableRole[]>([])
   const [unavailableRoles, setUnavailableRoles] = useState<UnavailableRole[]>([])
   const [loading, setLoading] = useState(true)
@@ -46,7 +47,7 @@ export default function CreateUserPage() {
         setAvailableRoles(result.availableRoles)
         setUnavailableRoles(result.unavailableRoles)
       } catch (err: unknown) {
-        setError((err as Error)?.message ?? 'Failed to load available roles')
+        setError((err as Error)?.message ?? t('createLoadRolesError'))
       } finally {
         setLoading(false)
       }
@@ -65,7 +66,7 @@ export default function CreateUserPage() {
     // Client-side guard: prevent submission of unavailable role
     const isAvailable = availableRoles.some((r) => r.role === selectedRole)
     if (!isAvailable) {
-      setSubmitError('Selected role is not available for your subscription.')
+      setSubmitError(t('createRoleUnavailableError'))
       return
     }
 
@@ -74,7 +75,7 @@ export default function CreateUserPage() {
       setSubmitting(true)
       const validation = await trpc.subscription.validateRoleForOrg.query({ role: selectedRole })
       if (!validation.allowed) {
-        setSubmitError(validation.reason ?? 'Role not permitted for your subscription.')
+        setSubmitError(validation.reason ?? t('createRoleNotPermittedError'))
         return
       }
 
@@ -82,26 +83,26 @@ export default function CreateUserPage() {
       setCreatedUser(result)
       setSubmitSuccess(true)
     } catch (err: unknown) {
-      setSubmitError((err as Error)?.message ?? 'Failed to validate role')
+      setSubmitError((err as Error)?.message ?? t('createValidateRoleError'))
     } finally {
       setSubmitting(false)
     }
   }
 
   if (loading) {
-    return <div className="text-muted-foreground">Loading available roles...</div>
+    return <div className="text-muted-foreground">{t('createLoadingRoles')}</div>
   }
 
   if (error) {
-    return <div className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">Error: {error}</div>
+    return <div className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{t('createErrorPrefix', { error })}</div>
   }
 
   return (
     <div className="flex flex-col gap-4">
       <Button asChild variant="ghost" size="sm" className="w-fit px-0"><a href="/users">{t('detailBackToUsers')}</a></Button>
-      <h1 className="text-2xl font-semibold text-foreground">Create Staff User</h1>
+      <h1 className="text-2xl font-semibold text-foreground">{t('createTitle')}</h1>
       <p className="text-muted-foreground">
-        Assign roles based on your organization&apos;s active module subscriptions.
+        {t('createDescription')}
       </p>
 
       <form onSubmit={handleSubmit}>
@@ -109,7 +110,7 @@ export default function CreateUserPage() {
           {/* Given Name Field */}
           <div>
             <label htmlFor="givenName" className="block text-sm font-medium text-muted-foreground">
-              Given Name
+              {t('createGivenName')}
             </label>
             <Input
               id="givenName"
@@ -124,7 +125,7 @@ export default function CreateUserPage() {
           {/* Family Name Field */}
           <div>
             <label htmlFor="familyName" className="block text-sm font-medium text-muted-foreground">
-              Family Name / Last Name
+              {t('createFamilyName')}
             </label>
             <Input
               id="familyName"
@@ -138,7 +139,7 @@ export default function CreateUserPage() {
           {/* Email Field */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-muted-foreground">
-              Email
+              {tc('email')}
             </label>
             <Input
               id="email"
@@ -154,13 +155,12 @@ export default function CreateUserPage() {
               invitee receives a setup link (shown on success) to set their own
               credential. */}
           <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-            The new user will receive a secure setup link to create their own
-            password. Administrators no longer set initial passwords.
+            {t('createInviteNotice')}
           </div>
 
           {/* Role Selector */}
           <div>
-            <p className="text-sm font-medium text-muted-foreground mb-2">Role</p>
+            <p className="text-sm font-medium text-muted-foreground mb-2">{tc('role')}</p>
             <div className="space-y-2">
               {/* Available roles — selectable */}
               {availableRoles.map((r) => (
@@ -204,7 +204,7 @@ export default function CreateUserPage() {
                         href="/subscriptions"
                         className="text-primary hover:underline"
                       >
-                        Subscribe to {r.moduleName} to add {r.role} users
+                        {t('createSubscribePrompt', { moduleName: r.moduleName, role: r.role })}
                       </a>
                     </span>
                   </div>
@@ -223,16 +223,16 @@ export default function CreateUserPage() {
 
         {submitSuccess && createdUser && (
           <div className="rounded-2xl bg-success/10 border border-success/20 px-4 py-3 text-sm text-success">
-            <p className="font-semibold text-base mb-2">User created successfully</p>
-            <p><span className="font-medium">Name:</span> {createdUser.givenName} {createdUser.familyName}</p>
-            <p><span className="font-medium">Email:</span> {createdUser.email}</p>
-            <p><span className="font-medium">Role:</span> {createdUser.role}</p>
+            <p className="font-semibold text-base mb-2">{t('createSuccessTitle')}</p>
+            <p><span className="font-medium">{t('createSuccessNameLabel')}</span> {createdUser.givenName} {createdUser.familyName}</p>
+            <p><span className="font-medium">{t('createSuccessEmailLabel')}</span> {createdUser.email}</p>
+            <p><span className="font-medium">{t('createSuccessRoleLabel')}</span> {createdUser.role}</p>
             {createdUser.emailSent && (
-              <p className="mt-2">An invitation email has been sent to {createdUser.email}.</p>
+              <p className="mt-2">{t('createInvitationSent', { email: createdUser.email })}</p>
             )}
             {!createdUser.emailSent && createdUser.setupLink && (
               <div className="mt-2">
-                <p>Email delivery is not configured. Share this setup link manually:</p>
+                <p>{t('createEmailNotConfigured')}</p>
                 <code className="mt-1 block break-all rounded-lg bg-success/15 px-3 py-2 font-mono text-xs text-success">
                   {createdUser.setupLink}
                 </code>
@@ -251,10 +251,10 @@ export default function CreateUserPage() {
                   setSubmitError(null)
                 }}
               >
-                Create Another User
+                {t('createAnotherUser')}
               </Button>
               <Button variant="outline" asChild>
-                <a href="/users">View All Users</a>
+                <a href="/users">{t('createViewAllUsers')}</a>
               </Button>
             </div>
           </div>
@@ -266,10 +266,10 @@ export default function CreateUserPage() {
               type="submit"
               disabled={submitting || !selectedRole || !givenName || !email}
             >
-              {submitting ? 'Creating...' : 'Create User'}
+              {submitting ? t('createSubmitting') : t('createUser')}
             </Button>
             <Button variant="outline" asChild>
-              <a href="/users">Cancel</a>
+              <a href="/users">{tc('cancel')}</a>
             </Button>
           </div>
         )}

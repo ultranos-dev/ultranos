@@ -23,6 +23,22 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
   Package: () => null,
 }))
 
+// Story 63.1: the card is keyed under transport.card. Resolve the real English
+// messages so status/sample-count assertions still see the rendered strings.
+import enMessages from '../../messages/en.json'
+vi.mock('next-intl', () => ({
+  useTranslations: (ns: string) => (key: string, values?: Record<string, unknown>) => {
+    const table = ns.split('.').reduce<Record<string, unknown> | undefined>(
+      (acc, part) => (acc?.[part] as Record<string, unknown> | undefined),
+      enMessages as unknown as Record<string, unknown>,
+    )
+    let str = (table?.[key] as string) ?? `${ns}.${key}`
+    if (values) for (const [k, v] of Object.entries(values)) str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
+    // Collapse trivial ICU plural for the test's needs ({count} samples path).
+    return str
+  },
+}))
+
 import { ActiveTransportCard } from '@/components/transport/ActiveTransportCard'
 import type { TransportSession } from '@/types/transport'
 

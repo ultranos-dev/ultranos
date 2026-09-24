@@ -33,14 +33,24 @@ type ActionGroup =
 
 type OutcomeFilter = 'ALL' | 'SUCCESS' | 'FAILURE'
 
-const ACTION_GROUP_LABELS: Record<ActionGroup, string> = {
-  ALL: 'All Actions',
-  KYC_ACTIONS: 'KYC Actions',
-  LAB_ACTIONS: 'Lab Actions',
-  USER_ACTIONS: 'User Actions',
-  ALERT_ACTIONS: 'Alert Actions',
-  AUTH_EVENTS: 'Auth Events',
-  SETTINGS_CHANGES: 'Settings Changes',
+const ACTION_GROUPS: ActionGroup[] = [
+  'ALL',
+  'KYC_ACTIONS',
+  'LAB_ACTIONS',
+  'USER_ACTIONS',
+  'ALERT_ACTIONS',
+  'AUTH_EVENTS',
+  'SETTINGS_CHANGES',
+]
+/** i18n key suffix for each action group (audit.actionGroup*). */
+const ACTION_GROUP_KEY: Record<ActionGroup, string> = {
+  ALL: 'actionGroupAll',
+  KYC_ACTIONS: 'actionGroupKyc',
+  LAB_ACTIONS: 'actionGroupLab',
+  USER_ACTIONS: 'actionGroupUser',
+  ALERT_ACTIONS: 'actionGroupAlert',
+  AUTH_EVENTS: 'actionGroupAuth',
+  SETTINGS_CHANGES: 'actionGroupSettings',
 }
 const PAGE_SIZE = 50
 
@@ -76,16 +86,17 @@ function renderMetadataValue(value: unknown): string {
 }
 
 function OutcomeBadge({ outcome }: { outcome: string }) {
+  const t = useTranslations('audit')
   if (outcome === 'SUCCESS') {
     return (
       <span className="inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
-        SUCCESS
+        {t('outcomeSuccess')}
       </span>
     )
   }
   return (
     <span className="inline-block rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
-      DENIED
+      {t('outcomeDenied')}
     </span>
   )
 }
@@ -100,6 +111,7 @@ function RoleBadge({ role }: { role: string }) {
 
 export function EventBrowser() {
   const t = useTranslations('audit')
+  const tp = useTranslations('pagination')
   const [events, setEvents] = useState<AuditEvent[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [page, setPage] = useState(1)
@@ -133,7 +145,7 @@ export function EventBrowser() {
       setEvents(result.events as AuditEvent[])
       setTotalCount(result.total)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load audit events')
+      setError((err as Error)?.message ?? t('loadEventsError'))
     } finally {
       setLoading(false)
     }
@@ -185,15 +197,15 @@ export function EventBrowser() {
             value={dateFrom}
             onChange={(e) => handleFilterChange(setDateFrom)(e.target.value)}
             className="h-9 rounded-full border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Date from"
+            aria-label={t('dateFrom')}
           />
-          <span className="text-sm text-muted-foreground">to</span>
+          <span className="text-sm text-muted-foreground">{t('dateRangeTo')}</span>
           <input
             type="date"
             value={dateTo}
             onChange={(e) => handleFilterChange(setDateTo)(e.target.value)}
             className="h-9 rounded-full border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Date to"
+            aria-label={t('dateTo')}
           />
 
           <div className="relative">
@@ -201,11 +213,11 @@ export function EventBrowser() {
               value={actionGroup}
               onChange={(e) => handleFilterChange(setActionGroup)(e.target.value as ActionGroup)}
               className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-              aria-label="Filter by action type"
+              aria-label={t('filterByActionType')}
             >
-              {(Object.keys(ACTION_GROUP_LABELS) as ActionGroup[]).map((g) => (
+              {ACTION_GROUPS.map((g) => (
                 <option key={g} value={g}>
-                  {ACTION_GROUP_LABELS[g]}
+                  {t(ACTION_GROUP_KEY[g])}
                 </option>
               ))}
             </select>
@@ -217,11 +229,11 @@ export function EventBrowser() {
               value={outcomeFilter}
               onChange={(e) => handleFilterChange(setOutcomeFilter)(e.target.value as OutcomeFilter)}
               className="h-9 w-full appearance-none rounded-full border border-border bg-background text-foreground ps-3 pe-9 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-              aria-label="Filter by outcome"
+              aria-label={t('filterByOutcome')}
             >
-              <option value="ALL">All Outcomes</option>
-              <option value="SUCCESS">SUCCESS</option>
-              <option value="FAILURE">FAILURE</option>
+              <option value="ALL">{t('allOutcomes')}</option>
+              <option value="SUCCESS">{t('outcomeSuccess')}</option>
+              <option value="FAILURE">{t('outcomeFilterFailure')}</option>
             </select>
             <ChevronDown size={16} aria-hidden className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           </div>
@@ -246,7 +258,7 @@ export function EventBrowser() {
 
       <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
       {loading ? (
-        <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">Loading audit events...</div>
+        <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">{t('loadingEvents')}</div>
       ) : events.length === 0 ? (
         <div className="flex min-h-[16rem] items-center justify-center">
           <EmptyState
@@ -260,11 +272,11 @@ export function EventBrowser() {
             <table className="w-full text-sm">
               <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Timestamp</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Action</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Actor</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Resource</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Outcome</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colTimestamp')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colAction')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colActor')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colResource')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colOutcome')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -285,7 +297,7 @@ export function EventBrowser() {
       {!loading && events.length > 0 && totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
-              Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
+              {tp('showing', { from: (page - 1) * PAGE_SIZE + 1, to: Math.min(page * PAGE_SIZE, totalCount), total: totalCount })}
             </span>
             <div className="flex gap-2">
               <Button
@@ -294,16 +306,16 @@ export function EventBrowser() {
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
               >
-                Previous
+                {tp('previous')}
               </Button>
-              <span className="flex items-center px-2">Page {page} of {totalPages}</span>
+              <span className="flex items-center px-2">{tp('pageOf', { page, totalPages })}</span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setPage(page + 1)}
                 disabled={page >= totalPages}
               >
-                Next
+                {tp('next')}
               </Button>
             </div>
           </div>

@@ -9,11 +9,11 @@
 //   Rule #1: No PHI in logs or displayed data — only opaque IDs and label numbers.
 //   Rule #7: Lab Portal sees only name + age — transport records must not carry demographics.
 //
-// i18n TODO: All strings are hardcoded English. Wire up useTranslations('transport.pickup')
-//            when the i18n JSON keys are added (tracked separately).
+// Story 63.1: strings keyed under the transport.pickup namespace.
 // ---------------------------------------------------------------------------
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Truck, Scan, Thermometer, CheckCircle, AlertCircle, Package, ClipboardList } from '@ultranos/ui-kit/icons'
 import { startTransport } from '@/lib/transport-service'
 import { generateManifest, renderManifestText } from '@/lib/transport-manifest'
@@ -33,7 +33,7 @@ export function CourierPickupScreen({
   destinationLocationId,
   onDone,
 }: CourierPickupScreenProps) {
-  // TODO i18n: const t = useTranslations('transport.pickup')
+  const t = useTranslations('transport.pickup')
 
   const [step, setStep] = useState<Step>('courier-id')
   const [courierId, setCourierId] = useState('')
@@ -51,10 +51,10 @@ export function CourierPickupScreen({
   if (step === 'courier-id') {
     return (
       <div className="flex flex-col gap-4 p-4" data-testid="courier-pickup-screen">
-        <StepHeader icon={<Truck size={32} aria-hidden />} title="Enter Courier ID" step={1} total={5} />
+        <StepHeader icon={<Truck size={32} aria-hidden />} title={t('step1Title')} step={1} total={5} />
         <div className="flex flex-col gap-1">
           <label className="text-lg font-medium text-foreground" htmlFor="courier-id-input">
-            Courier ID
+            {t('courierIdLabel')}
           </label>
           <input
             id="courier-id-input"
@@ -62,13 +62,13 @@ export function CourierPickupScreen({
             type="text"
             value={courierId}
             onChange={(e) => setCourierId(e.target.value)}
-            placeholder="e.g. CRR-001"
+            placeholder={t('courierIdPlaceholder')}
             className="min-h-[56px] rounded-xl border border-border px-4 py-3 text-xl focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
             autoFocus
           />
         </div>
         <LargeButton disabled={!courierId.trim()} onClick={() => setStep('destination')}>
-          Next
+          {t('next')}
         </LargeButton>
       </div>
     )
@@ -79,7 +79,7 @@ export function CourierPickupScreen({
   if (step === 'destination') {
     return (
       <div className="flex flex-col gap-4 p-4" data-testid="courier-pickup-screen">
-        <StepHeader icon={<Package size={32} aria-hidden />} title="Select Destination" step={2} total={5} />
+        <StepHeader icon={<Package size={32} aria-hidden />} title={t('step2Title')} step={2} total={5} />
 
         {/* Single-option radio — extensible to multi-location in future */}
         <div className="flex flex-col gap-3">
@@ -93,8 +93,8 @@ export function CourierPickupScreen({
               className="h-5 w-5 accent-blue-600"
             />
             <div>
-              <p className="text-lg font-semibold text-foreground">Main Laboratory</p>
-              <p className="text-sm text-muted-foreground">ID: {destinationLocationId}</p>
+              <p className="text-lg font-semibold text-foreground">{t('mainLaboratory')}</p>
+              <p className="text-sm text-muted-foreground">{t('idLabel', { id: destinationLocationId })}</p>
             </div>
           </label>
         </div>
@@ -102,7 +102,7 @@ export function CourierPickupScreen({
         <div className="flex gap-3">
           <BackButton onClick={() => setStep('courier-id')} />
           <LargeButton onClick={() => setStep('scan-samples')} className="flex-1">
-            Next
+            {t('next')}
           </LargeButton>
         </div>
       </div>
@@ -133,7 +133,7 @@ export function CourierPickupScreen({
   if (step === 'scan-samples') {
     return (
       <div className="flex flex-col gap-4 p-4" data-testid="courier-pickup-screen">
-        <StepHeader icon={<Scan size={32} aria-hidden />} title="Scan Samples" step={3} total={5} />
+        <StepHeader icon={<Scan size={32} aria-hidden />} title={t('step3Title')} step={3} total={5} />
 
         {/* Camera viewfinder placeholder */}
         <div className="flex h-36 items-center justify-center rounded-2xl border-4 border-dashed border-primary bg-primary/10">
@@ -147,9 +147,9 @@ export function CourierPickupScreen({
             value={scanInput}
             onChange={(e) => { setScanInput(e.target.value); setScanError(null) }}
             onKeyDown={handleScanKeyDown}
-            placeholder="Scan or type label number"
+            placeholder={t('scanPlaceholder')}
             className="min-h-[56px] flex-1 rounded-xl border border-border px-4 py-3 text-xl focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
-            aria-label="Sample label number"
+            aria-label={t('sampleLabelAria')}
           />
           <button
             type="button"
@@ -157,7 +157,7 @@ export function CourierPickupScreen({
             onClick={handleAddSample}
             disabled={!scanInput.trim()}
             className="flex h-[56px] w-[56px] items-center justify-center rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
-            aria-label="Add sample"
+            aria-label={t('addSampleAria')}
           >
             +
           </button>
@@ -165,14 +165,14 @@ export function CourierPickupScreen({
 
         {scanError === 'duplicate' && (
           <p className="flex items-center gap-2 text-amber-600" role="alert">
-            <AlertCircle size={16} aria-hidden /> Label already added
+            <AlertCircle size={16} aria-hidden /> {t('labelAlreadyAdded')}
           </p>
         )}
 
         {scannedLabels.length > 0 && (
           <div className="rounded-xl bg-muted p-3">
             <p className="mb-2 text-base font-semibold text-foreground">
-              {scannedLabels.length} sample{scannedLabels.length !== 1 ? 's' : ''} added
+              {t('samplesAdded', { count: scannedLabels.length })}
             </p>
             <ul className="flex flex-col gap-1">
               {scannedLabels.map((label) => (
@@ -192,7 +192,7 @@ export function CourierPickupScreen({
             onClick={() => setStep('temperature')}
             className="flex-1"
           >
-            Next
+            {t('next')}
           </LargeButton>
         </div>
       </div>
@@ -204,11 +204,11 @@ export function CourierPickupScreen({
   if (step === 'temperature') {
     return (
       <div className="flex flex-col gap-4 p-4" data-testid="courier-pickup-screen">
-        <StepHeader icon={<Thermometer size={32} aria-hidden />} title="Temperature at Pickup" step={4} total={5} />
+        <StepHeader icon={<Thermometer size={32} aria-hidden />} title={t('step4Title')} step={4} total={5} />
 
         <div className="flex flex-col gap-1">
           <label className="text-lg font-medium text-foreground" htmlFor="temperature-input">
-            Temperature (°C) — optional
+            {t('temperatureLabel')}
           </label>
           <input
             id="temperature-input"
@@ -216,7 +216,7 @@ export function CourierPickupScreen({
             type="number"
             value={temperature}
             onChange={(e) => setTemperature(e.target.value)}
-            placeholder="e.g. 22"
+            placeholder={t('temperaturePlaceholder')}
             className="min-h-[56px] rounded-xl border border-border px-4 py-3 text-xl focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
             inputMode="decimal"
           />
@@ -230,10 +230,10 @@ export function CourierPickupScreen({
             onClick={() => { setTemperature(''); setStep('summary') }}
             className="min-h-[56px] rounded-xl border border-border px-5 py-4 text-xl font-semibold text-foreground hover:bg-muted"
           >
-            Skip
+            {t('skip')}
           </button>
           <LargeButton onClick={() => setStep('summary')} className="flex-1">
-            Next
+            {t('next')}
           </LargeButton>
         </div>
       </div>
@@ -291,20 +291,20 @@ export function CourierPickupScreen({
 
     return (
       <div className="flex flex-col gap-4 p-4" data-testid="courier-pickup-screen">
-        <StepHeader icon={<ClipboardList size={32} aria-hidden />} title="Confirm Transport" step={5} total={5} />
+        <StepHeader icon={<ClipboardList size={32} aria-hidden />} title={t('step5Title')} step={5} total={5} />
 
         <div className="rounded-2xl bg-muted p-5 flex flex-col gap-3">
-          <SummaryRow label="Courier ID" value={courierId} />
-          <SummaryRow label="Destination" value="Main Laboratory" />
-          <SummaryRow label="Samples" value={String(scannedLabels.length)} />
+          <SummaryRow label={t('summaryCourierId')} value={courierId} />
+          <SummaryRow label={t('summaryDestination')} value={t('mainLaboratory')} />
+          <SummaryRow label={t('summarySamples')} value={String(scannedLabels.length)} />
           {tempC != null && (
-            <SummaryRow label="Temperature" value={`${tempC}°C`} />
+            <SummaryRow label={t('summaryTemperature')} value={`${tempC}°C`} />
           )}
         </div>
 
         {submitError && (
           <p className="flex items-center gap-2 text-red-600" role="alert">
-            <AlertCircle size={16} aria-hidden /> Failed to start transport. Please try again.
+            <AlertCircle size={16} aria-hidden /> {t('startTransportError')}
           </p>
         )}
 
@@ -316,7 +316,7 @@ export function CourierPickupScreen({
             disabled={submitting}
             className="flex-1 bg-green-600 hover:bg-green-700"
           >
-            {submitting ? 'Starting…' : 'Start Transport'}
+            {submitting ? t('starting') : t('startTransport')}
           </LargeButton>
         </div>
       </div>
@@ -331,9 +331,9 @@ export function CourierPickupScreen({
         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
           <CheckCircle size={48} className="text-green-700" aria-hidden />
         </div>
-        <h2 className="text-center text-2xl font-bold text-foreground">Transport Started</h2>
+        <h2 className="text-center text-2xl font-bold text-foreground">{t('successTitle')}</h2>
         <p className="text-center text-xl text-muted-foreground">
-          {scannedLabels.length} sample{scannedLabels.length !== 1 ? 's' : ''} logged for transport
+          {t('successSamplesLogged', { count: scannedLabels.length })}
         </p>
       </div>
 
@@ -351,7 +351,7 @@ export function CourierPickupScreen({
         onClick={onDone}
         className="min-h-[56px] rounded-xl bg-primary px-6 py-4 text-xl font-semibold text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
-        Done
+        {t('done')}
       </button>
     </div>
   )
@@ -372,6 +372,7 @@ function StepHeader({
   step: number
   total: number
 }) {
+  const t = useTranslations('transport.pickup')
   return (
     <div className="flex items-center gap-3">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -379,7 +380,7 @@ function StepHeader({
       </div>
       <div>
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Step {step} of {total}
+          {t('stepIndicator', { step, total })}
         </p>
         <h2 className="text-xl font-bold text-foreground">{title}</h2>
       </div>
@@ -423,12 +424,13 @@ function LargeButton({
 }
 
 function BackButton({ onClick }: { onClick: () => void }) {
+  const t = useTranslations('transport.pickup')
   return (
     <button
       type="button"
       onClick={onClick}
       className="min-h-[56px] rounded-xl border border-border px-5 py-4 text-xl font-semibold text-foreground hover:bg-muted"
-      aria-label="Back"
+      aria-label={t('back')}
     >
       ←
     </button>

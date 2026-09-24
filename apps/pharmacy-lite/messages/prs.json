@@ -189,7 +189,8 @@
       "hourly": "{count}× هر ساعت",
       "other": "{count}×"
     },
-    "dosageUnknown": "مقدار مصرف نامعلوم است — پیش از توزیع تأیید کنید"
+    "dosageUnknown": "مقدار مصرف نامعلوم است — پیش از توزیع تأیید کنید",
+    "prescribedBrandLabel": "برند تجویزشده:"
   },
   "prescription": {
     "scanTitle": "اسکن نسخه",
@@ -259,7 +260,16 @@
     "localDuplicateOverrideConfirm": "اجازهٔ تحویل دوباره",
     "overrideSupervisorLabel": "نام سرپرست",
     "overrideSupervisorPlaceholder": "سرپرست اجازه‌دهنده",
-    "overrideReasonLabel": "دلیل"
+    "overrideReasonLabel": "دلیل",
+    "fraudWarningHeading": "⚠ هشدار تقلب",
+    "checkingGlobalStatus": "در حال بررسی وضعیت صرف در سطح عمومی…",
+    "alreadyDispensedElsewhere": "قبلاً در جای دیگر صرف شده",
+    "alreadyVoidedElsewhere": "قبلاً در جای دیگر باطل شده",
+    "dispensedElsewhereBody": "{medName} قبلاً{dateClause} در محل دیگری صرف شده است. این نسخه را دوباره صرف نکنید.",
+    "voidedElsewhereBody": "{medName} قبلاً{dateClause} در محل دیگری باطل شده است. این نسخه را دوباره صرف نکنید.",
+    "elsewhereDateClause": " در تاریخ {date}",
+    "globalCheckUnavailable": "بررسی عمومی صرف در دسترس نیست",
+    "globalCheckUnavailableBody": "مرکز آفلاین است، بنابراین نتوانستیم تأیید کنیم که این نسخه قبلاً در داروخانه دیگری صرف نشده است. امضا معتبر است — با احتیاط ادامه دهید."
   },
   "scanner": {
     "title": "تایید نسخه",
@@ -433,7 +443,8 @@
     "pageOf": "صفحه {page} از {totalPages}",
     "welcome": "خوش آمدید، {name}",
     "pharmacyDashboard": "داشبورد دواخانه",
-    "lot": "لات: {lot}"
+    "lot": "لات: {lot}",
+    "skipToContent": "پرش به محتوا"
   },
   "errors": {
     "allFieldsRequired": "تمام فیلدها ضروری است.",

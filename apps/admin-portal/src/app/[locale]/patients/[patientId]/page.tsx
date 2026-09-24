@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { formatDateTime } from '@/lib/date-locale'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { ConsentTimeline } from '@/components/patients/ConsentTimeline'
@@ -28,24 +29,15 @@ interface PatientDetail {
 }
 
 function MpiWarnBadge({ warn }: { warn: boolean | null }) {
-  if (!warn) return <Badge variant="success">Clear</Badge>
-  return <Badge variant="warning">Warning</Badge>
+  const t = useTranslations('patients')
+  if (!warn) return <Badge variant="success">{t('mpiClear')}</Badge>
+  return <Badge variant="warning">{t('mpiWarning')}</Badge>
 }
 
 function StatusBadge({ active }: { active: boolean }) {
-  if (active) return <Badge variant="success">Active</Badge>
-  return <Badge variant="destructive">Inactive</Badge>
-}
-
-function formatDateTime(iso: string | null): string {
-  if (!iso) return '-'
-  return new Date(iso).toLocaleString('en-GB', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const tc = useTranslations('common')
+  if (active) return <Badge variant="success">{tc('active')}</Badge>
+  return <Badge variant="destructive">{tc('inactive')}</Badge>
 }
 
 function DetailRow({ label, value }: { label: string; value: string | React.ReactNode }) {
@@ -59,6 +51,8 @@ function DetailRow({ label, value }: { label: string; value: string | React.Reac
 
 export default function PatientDetailPage() {
   const t = useTranslations('patients')
+  const tc = useTranslations('common')
+  const locale = useLocale()
   const params = useParams()
   const patientId = params.patientId as string
 
@@ -84,7 +78,7 @@ export default function PatientDetailPage() {
   }, [fetchPatient])
 
   function formatName(p: PatientDetail): string {
-    return [p.name_given, p.name_father].filter(Boolean).join(' ') || 'Unknown'
+    return [p.name_given, p.name_father].filter(Boolean).join(' ') || tc('unknown')
   }
 
   if (loading) {
@@ -151,7 +145,7 @@ export default function PatientDetailPage() {
                 <dt className="text-sm font-medium text-muted-foreground">{t('detailStatus')}</dt>
                 <dd className="mt-1"><StatusBadge active={patient.is_active} /></dd>
               </div>
-              <DetailRow label={t('detailCreatedAt')} value={<span className="font-numeric">{formatDateTime(patient.created_at)}</span>} />
+              <DetailRow label={t('detailCreatedAt')} value={<span className="font-numeric">{formatDateTime(patient.created_at, locale)}</span>} />
             </div>
 
             {/* Actions */}

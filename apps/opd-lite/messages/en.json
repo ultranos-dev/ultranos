@@ -660,7 +660,8 @@
     "next": "Next",
     "unknown": "Unknown",
     "search": "Search",
-    "emDash": "·"
+    "emDash": "·",
+    "skipToContent": "Skip to content"
   },
   "errors": {
     "unexpected": "An unexpected error occurred",
@@ -1363,7 +1364,23 @@
     "window60": "≤60 days",
     "window90": "≤90 days",
     "noResultsFiltered": "No consents match your filters",
-    "fetchError": "Failed to load expiring consents. Please try again."
+    "fetchError": "Failed to load expiring consents. Please try again.",
+    "renewTitle": "Renew Patient Consent",
+    "methodLabel": "Method",
+    "methodWritten": "Written",
+    "methodVerbal": "Verbal (Witnessed)",
+    "witnessLabel": "Witness ID",
+    "witnessPlaceholder": "UUID of witnessing practitioner",
+    "languageLabel": "Language",
+    "languageEnglish": "English",
+    "languageArabic": "Arabic",
+    "languageDari": "Dari",
+    "versionLabel": "Version",
+    "versionPlaceholder": "e.g. 2.0",
+    "renewing": "Renewing...",
+    "renewError": "Failed to renew consent. Please try again.",
+    "cancel": "Cancel",
+    "close": "Close"
   },
   "patientPhoto": {
     "title": "Update patient photo",

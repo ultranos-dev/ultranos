@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
+import { useTranslations } from 'next-intl'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -49,6 +50,7 @@ function forceSignOut(): void {
 }
 
 export function AuthGuard({ children }: { children: ReactNode }) {
+  const t = useTranslations('auth')
   const [state, setState] = useState<GuardState>('loading')
   const [trialExpired, setTrialExpired] = useState(false)
 
@@ -226,16 +228,16 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="w-full max-w-md rounded-2xl border border-danger-subtle bg-destructive/10 p-8 text-center">
-          <h1 className="text-xl font-bold text-destructive">Access Denied</h1>
+          <h1 className="text-xl font-bold text-destructive">{t('accessDeniedTitle')}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            You do not have admin privileges. This portal is restricted to administrator roles.
+            {t('accessDeniedBody')}
           </p>
           <Button
             variant="destructive"
             className="mt-4"
             onClick={forceSignOut}
           >
-            Sign Out
+            {t('signOut')}
           </Button>
         </div>
       </div>
@@ -257,18 +259,19 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 }
 
 function TrialExpiredInterstitial() {
+  const t = useTranslations('auth')
   return (
     <div className="flex min-h-screen items-center justify-center bg-card">
       <div className="w-full max-w-md rounded-2xl border border-border bg-popover p-8 text-center shadow-card">
-        <h1 className="text-xl font-bold text-foreground">Your free trial has expired</h1>
+        <h1 className="text-xl font-bold text-foreground">{t('trialExpiredTitle')}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Add a payment method to continue using Ultranos.
+          {t('trialExpiredBody')}
         </p>
         <Button
           asChild
           className="mt-6"
         >
-          <a href="/subscriptions/billing">Set Up Billing</a>
+          <a href="/subscriptions/billing">{t('setUpBilling')}</a>
         </Button>
         <div className="mt-3">
           <Button
@@ -276,7 +279,7 @@ function TrialExpiredInterstitial() {
             className="text-muted-foreground"
             onClick={forceSignOut}
           >
-            Sign Out
+            {t('signOut')}
           </Button>
         </div>
       </div>

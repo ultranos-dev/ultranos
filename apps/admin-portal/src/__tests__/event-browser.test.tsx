@@ -90,10 +90,12 @@ describe('EventBrowser', () => {
     expect(screen.getByText('Dr. Alice Smith')).toBeTruthy()
     expect(screen.getByText('Bob Admin')).toBeTruthy()
     expect(screen.getByText('LOGIN')).toBeTruthy()
-    // SUCCESS and DENIED appear in both filter dropdown and badges
-    const successElements = screen.getAllByText('SUCCESS')
+    // Keyed (Story 63.1): the key-echo next-intl mock renders keys. The SUCCESS
+    // outcome badge + the dropdown's SUCCESS option both render 'outcomeSuccess';
+    // the DENIED badges render 'outcomeDenied'.
+    const successElements = screen.getAllByText('outcomeSuccess')
     expect(successElements.length).toBeGreaterThanOrEqual(2)
-    const deniedElements = screen.getAllByText('DENIED')
+    const deniedElements = screen.getAllByText('outcomeDenied')
     expect(deniedElements.length).toBeGreaterThanOrEqual(2)
   })
 
@@ -116,7 +118,7 @@ describe('EventBrowser', () => {
     render(<EventBrowser />)
     await waitFor(() => expect(screen.getByText('KYC_APPROVED')).toBeTruthy())
 
-    fireEvent.change(screen.getByLabelText('Filter by action type'), {
+    fireEvent.change(screen.getByLabelText('filterByActionType'), {
       target: { value: 'KYC_ACTIONS' },
     })
 

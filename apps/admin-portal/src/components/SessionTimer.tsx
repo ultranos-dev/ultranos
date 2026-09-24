@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 
 const SESSION_MAX_MS = 4 * 60 * 60 * 1000 // 4 hours
 const WARNING_THRESHOLD_MS = 15 * 60 * 1000 // 15 minutes
 
 export function SessionTimer() {
+  const t = useTranslations('common')
   const [remainingMs, setRemainingMs] = useState<number | null>(null)
 
   useEffect(() => {
@@ -70,7 +72,7 @@ export function SessionTimer() {
           : 'text-primary-foreground/40'
       }`}
     >
-      Session: {hours}h {minutes}m
+      {t('sessionRemaining', { hours, minutes })}
     </p>
   )
 }

@@ -1,0 +1,189 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Scanner safety warnings — Already Dispensed Elsewhere (LTR/RTL) > renders already-dispensed block in LTR (en) 1`] = `
+<div
+  class="rounded-xl border-2 border-destructive/20 bg-destructive/10 p-6"
+  data-testid="already-dispensed-warning"
+  role="alert"
+>
+  <p
+    class="text-lg font-bold text-destructive"
+  >
+    Already Dispensed Elsewhere
+  </p>
+  <p
+    class="mt-2 text-sm font-semibold text-destructive"
+  >
+    Amoxicillin was already dispensed on 5/1/2026 at another location. DO NOT dispense this prescription again.
+  </p>
+  <button
+    class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:ring-2 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 mt-4"
+    data-size="default"
+    data-slot="button"
+    data-variant="destructive"
+    type="button"
+  >
+    Dismiss
+  </button>
+</div>
+`;
+
+exports[`Scanner safety warnings — Already Dispensed Elsewhere (LTR/RTL) > renders already-dispensed block in RTL (ar) 1`] = `
+<div
+  class="rounded-xl border-2 border-destructive/20 bg-destructive/10 p-6"
+  data-testid="already-dispensed-warning"
+  role="alert"
+>
+  <p
+    class="text-lg font-bold text-destructive"
+  >
+    تم الصرف في مكان آخر
+  </p>
+  <p
+    class="mt-2 text-sm font-semibold text-destructive"
+  >
+    تم صرف Amoxicillin بالفعل بتاريخ 5/1/2026 في موقع آخر. لا تصرف هذه الوصفة مرة أخرى.
+  </p>
+  <button
+    class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:ring-2 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 mt-4"
+    data-size="default"
+    data-slot="button"
+    data-variant="destructive"
+    type="button"
+  >
+    إخفاء
+  </button>
+</div>
+`;
+
+exports[`Scanner safety warnings — Fraud Warning (LTR/RTL) > renders fraud warning in LTR (en) 1`] = `
+<div
+  class="rounded-xl border-2 border-destructive/20 bg-destructive/10 p-6"
+  data-testid="fraud-warning"
+  role="alert"
+>
+  <p
+    class="text-lg font-bold text-destructive"
+  >
+    ⚠ Fraud Warning
+  </p>
+  <p
+    class="mt-2 text-sm font-semibold text-destructive"
+  >
+    This prescription has an INVALID cryptographic signature. It may have been tampered with or was not issued by an authorized clinician.
+  </p>
+  <p
+    class="mt-2 text-sm text-destructive"
+  >
+    DO NOT dispense medication based on this prescription. Report this incident to your supervisor immediately.
+  </p>
+  <button
+    class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:ring-2 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 mt-4"
+    data-size="default"
+    data-slot="button"
+    data-variant="destructive"
+    type="button"
+  >
+    Dismiss
+  </button>
+</div>
+`;
+
+exports[`Scanner safety warnings — Fraud Warning (LTR/RTL) > renders fraud warning in RTL (ar) 1`] = `
+<div
+  class="rounded-xl border-2 border-destructive/20 bg-destructive/10 p-6"
+  data-testid="fraud-warning"
+  role="alert"
+>
+  <p
+    class="text-lg font-bold text-destructive"
+  >
+    ⚠ تحذير احتيال
+  </p>
+  <p
+    class="mt-2 text-sm font-semibold text-destructive"
+  >
+    هذه الوصفة تحمل توقيعًا رقميًا غير صالح. قد تكون مُعدّلة أو لم تُصدر من طبيب مُعتمد.
+  </p>
+  <p
+    class="mt-2 text-sm text-destructive"
+  >
+    لا تصرف الدواء بناءً على هذه الوصفة. أبلغ مشرفك فورًا.
+  </p>
+  <button
+    class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:ring-2 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 mt-4"
+    data-size="default"
+    data-slot="button"
+    data-variant="destructive"
+    type="button"
+  >
+    إخفاء
+  </button>
+</div>
+`;
+
+exports[`Scanner safety warnings — Prescriber Key Revoked (LTR/RTL) > renders key-revoked warning in LTR (en) 1`] = `
+<div
+  class="rounded-xl border-2 border-destructive/20 bg-destructive/10 p-6"
+  data-testid="key-revoked-warning"
+  role="alert"
+>
+  <p
+    class="text-lg font-bold text-destructive"
+  >
+    Prescriber Key Revoked
+  </p>
+  <p
+    class="mt-2 text-sm font-semibold text-destructive"
+  >
+    The prescriber's signing key has been revoked. This prescription cannot be verified and MUST NOT be dispensed.
+  </p>
+  <p
+    class="mt-2 text-sm text-destructive"
+  >
+    Contact the prescribing clinician or your supervisor for a new prescription.
+  </p>
+  <button
+    class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:ring-2 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 mt-4"
+    data-size="default"
+    data-slot="button"
+    data-variant="destructive"
+    type="button"
+  >
+    Dismiss
+  </button>
+</div>
+`;
+
+exports[`Scanner safety warnings — Prescriber Key Revoked (LTR/RTL) > renders key-revoked warning in RTL (ar) 1`] = `
+<div
+  class="rounded-xl border-2 border-destructive/20 bg-destructive/10 p-6"
+  data-testid="key-revoked-warning"
+  role="alert"
+>
+  <p
+    class="text-lg font-bold text-destructive"
+  >
+    مفتاح الطبيب الموصّف مُلغى
+  </p>
+  <p
+    class="mt-2 text-sm font-semibold text-destructive"
+  >
+    تم إلغاء مفتاح التوقيع الخاص بالطبيب الموصّف. لا يمكن التحقق من هذه الوصفة ويجب عدم صرفها.
+  </p>
+  <p
+    class="mt-2 text-sm text-destructive"
+  >
+    تواصل مع الطبيب الموصّف أو مشرفك للحصول على وصفة جديدة.
+  </p>
+  <button
+    class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:ring-2 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 mt-4"
+    data-size="default"
+    data-slot="button"
+    data-variant="destructive"
+    type="button"
+  >
+    إخفاء
+  </button>
+</div>
+`;

@@ -189,7 +189,8 @@
       "hourly": "{count}× هره ساعت",
       "other": "{count}×"
     },
-    "dosageUnknown": "اندازه نامعلومه ده — د ویش نه مخکې یې تایید کړئ"
+    "dosageUnknown": "اندازه نامعلومه ده — د ویش نه مخکې یې تایید کړئ",
+    "prescribedBrandLabel": "تجویز شوی برند:"
   },
   "prescription": {
     "scanTitle": "نسخه سکن کړئ",
@@ -259,7 +260,16 @@
     "localDuplicateOverrideConfirm": "د بیا ورکړې اجازه",
     "overrideSupervisorLabel": "د څارونکي نوم",
     "overrideSupervisorPlaceholder": "اجازه‌ورکوونکی څارونکی",
-    "overrideReasonLabel": "دلیل"
+    "overrideReasonLabel": "دلیل",
+    "fraudWarningHeading": "⚠ د درغلۍ خبرداری",
+    "checkingGlobalStatus": "د عمومي صرف حالت بررسي کیږي…",
+    "alreadyDispensedElsewhere": "مخکې له مخکې په بل ځای کې صرف شوی",
+    "alreadyVoidedElsewhere": "مخکې له مخکې په بل ځای کې باطل شوی",
+    "dispensedElsewhereBody": "{medName} دمخه{dateClause} په بل ځای کې صرف شوی دی. دا نسخه بیا مه صرف کوئ.",
+    "voidedElsewhereBody": "{medName} دمخه{dateClause} په بل ځای کې باطل شوی دی. دا نسخه بیا مه صرف کوئ.",
+    "elsewhereDateClause": " په {date} نېټه",
+    "globalCheckUnavailable": "د عمومي صرف بررسي شتون نلري",
+    "globalCheckUnavailableBody": "مرکز آفلاین دی، نو موږ ونه توانیدو چې تایید کړو چې دا نسخه دمخه په بله درملتون کې نه ده صرف شوې. لاسلیک اعتبار لري — په احتیاط سره دوام ورکړئ."
   },
   "scanner": {
     "title": "د نسخې تایید",
@@ -433,7 +443,8 @@
     "pageOf": "مخ {page} له {totalPages}",
     "welcome": "ښه راغلاست، {name}",
     "pharmacyDashboard": "د دواخانې ډشبورډ",
-    "lot": "لات: {lot}"
+    "lot": "لات: {lot}",
+    "skipToContent": "محتوا ته ورټوپ کړئ"
   },
   "errors": {
     "allFieldsRequired": "ټولې ساحې اړینې دي.",

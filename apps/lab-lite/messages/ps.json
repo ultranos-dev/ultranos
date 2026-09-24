@@ -6,7 +6,8 @@
     "portalTitle": "د لابراتوار تشخیصي پورتال — Ultranos",
     "description": "د تشخیصي نتیجو پورته کولو لپاره Ultranos Lab Lite PWA",
     "comingSoon": "د لابراتوار تشخیصي پورتال — ډیر ژر",
-    "poweredBy": "د Ultranos لخوا چمتو شوی"
+    "poweredBy": "د Ultranos لخوا چمتو شوی",
+    "tagline": "لابراتوار"
   },
   "nav": {
     "uploadProgress": "د پورته کولو پرمختګ"
@@ -770,7 +771,9 @@
       "errorInsuranceRefRequired": "د بیمې پالیسي شمېره اړینه ده.",
       "errorNoTests": "لږ تر لږه یوه ازموینه غوره کړئ.",
       "totalDue": "ټول مبلغ",
-      "amountPaid": "تادیه شوی مبلغ"
+      "amountPaid": "تادیه شوی مبلغ",
+      "recordPaymentError": "د تادیې ثبتول ناکام شو. مهرباني وکړئ بیا هڅه وکړئ.",
+      "patientRefPlaceholder": "احمد، ۴۵"
     },
     "receipt": {
       "title": "رسید",
@@ -3000,7 +3003,9 @@
     "invalidPeriod": "د پای نیټه باید د پیل نیټې وروسته وي",
     "existingDraft": "د دې پروګرام او دورې لپاره یو مسوده راپور شتون لري.",
     "overwriteDraft": "نوی جوړ کړئ",
-    "loadError": "راپورونه بارول ناکام شول. بیا هڅه وکړئ."
+    "loadError": "راپورونه بارول ناکام شول. بیا هڅه وکړئ.",
+    "generatedLabel": "جوړ شوی",
+    "fieldsCorrected": "{count, plural, one {# ساحه سمه شوه} other {# ساحې سمې شوې}}"
   },
   "certification": {
     "pageTitle": "زما د تصدیق لار",
@@ -4028,5 +4033,67 @@
     "errorPdfType": "د اسناد لپاره یوازې PDF فایلونه منل کیږي.",
     "errorGeneric": "د فایل د پروسس کولو پر مهال ستونزه رامنځته شوه. بیا هڅه وکړئ.",
     "maxReached": "د {max} ضمیمو اعظمي حد ته ورسیدل."
+  },
+  "transport": {
+    "card": {
+      "courierLabel": "پیک: {courierId}",
+      "statusStable": "ثابت",
+      "statusWarning": "خبرداری",
+      "statusCritical": "بحراني",
+      "statusFlagged": "نښه شوی",
+      "sampleCount": "{count} نمونې"
+    },
+    "pickup": {
+      "step1Title": "د پیک پیژندنه دننه کړئ",
+      "step2Title": "منزل وټاکئ",
+      "step3Title": "نمونې سکن کړئ",
+      "step4Title": "د اخیستنې پر مهال تودوخه",
+      "step5Title": "د لیږد تصدیق",
+      "courierIdLabel": "د پیک پیژندنه",
+      "courierIdPlaceholder": "بېلګه: CRR-001",
+      "next": "راتلونکی",
+      "back": "شاته",
+      "skip": "پرېښودل",
+      "done": "ترسره شو",
+      "mainLaboratory": "اصلي لابراتوار",
+      "idLabel": "پیژندنه: {id}",
+      "scanPlaceholder": "د لیبل شمیره سکن یا ولیکئ",
+      "sampleLabelAria": "د نمونې د لیبل شمیره",
+      "addSampleAria": "نمونه اضافه کړئ",
+      "labelAlreadyAdded": "لیبل دمخه اضافه شوی",
+      "samplesAdded": "{count, plural, one {# نمونه اضافه شوه} other {# نمونې اضافه شوې}}",
+      "temperatureLabel": "تودوخه (°C) — اختیاري",
+      "temperaturePlaceholder": "بېلګه: 22",
+      "summaryCourierId": "د پیک پیژندنه",
+      "summaryDestination": "منزل",
+      "summarySamples": "نمونې",
+      "summaryTemperature": "تودوخه",
+      "startTransportError": "د لیږد پیل ناکام شو. مهرباني وکړئ بیا هڅه وکړئ.",
+      "starting": "د پیل په حال کې…",
+      "startTransport": "لیږد پیل کړئ",
+      "successTitle": "لیږد پیل شو",
+      "successSamplesLogged": "{count, plural, one {# نمونه د لیږد لپاره ثبت شوه} other {# نمونې د لیږد لپاره ثبت شوې}}",
+      "stepIndicator": "مرحله {step} د {total} څخه"
+    },
+    "delivery": {
+      "deliveryRecorded": "تحویلي ثبت شوه",
+      "flagSummary": "د {flagCount} د {sampleCount, plural, one {# نمونې} other {# نمونو}} څخه د تحلیل نه مخکې بیاکتنې لپاره نښه شوې",
+      "recordDeliveryHeading": "د تحویلۍ ثبتول",
+      "transportSession": "لیږد {id}",
+      "samplesLabel": "نمونې",
+      "routeLabel": "لار",
+      "elapsedLabel": "تیر شوی",
+      "stabilityWarningRed": "د لیږد وخت له ۶ ساعتونو زیات دی — نمونې ممکن د ثبات له کړکۍ بهر وي",
+      "stabilityWarningAmber": "د لیږد وخت ۴ ساعتونو ته نږدې کیږي — د نمونې بشپړتیا تایید کړئ",
+      "temperatureLabel": "د رسیدو پر مهال تودوخه (°C) — اختیاري",
+      "temperaturePlaceholder": "بېلګه: 24",
+      "sampleConditionLabel": "د نمونې حالت",
+      "conditionAcceptable": "د منلو وړ",
+      "conditionDamaged": "زیانمن شوی",
+      "conditionTemperatureExcursion": "د تودوخې انحراف",
+      "recordDeliveryError": "د تحویلۍ ثبتول ناکام شو. مهرباني وکړئ بیا هڅه وکړئ.",
+      "recording": "د ثبتولو په حال کې…",
+      "recordDeliveryButton": "د تحویلۍ ثبتول"
+    }
   }
 }

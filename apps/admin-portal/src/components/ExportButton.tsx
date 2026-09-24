@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Download } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/button'
 
@@ -10,7 +11,8 @@ interface ExportButtonProps {
   label?: string
 }
 
-export function ExportButton({ exportFn, filters, label = 'Export CSV' }: ExportButtonProps) {
+export function ExportButton({ exportFn, filters, label }: ExportButtonProps) {
+  const t = useTranslations('common')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -32,7 +34,7 @@ export function ExportButton({ exportFn, filters, label = 'Export CSV' }: Export
       anchor.click()
       URL.revokeObjectURL(url)
     } catch {
-      setError('Export failed. Try again.')
+      setError(t('exportFailed'))
     } finally {
       setLoading(false)
     }
@@ -42,7 +44,7 @@ export function ExportButton({ exportFn, filters, label = 'Export CSV' }: Export
     <div className="inline-flex flex-col items-start gap-1">
       <Button variant="outline" onClick={handleClick} disabled={loading}>
         <Download className="h-4 w-4 shrink-0" />
-        {loading ? 'Exporting...' : label}
+        {loading ? t('exporting') : (label ?? t('exportCsv'))}
       </Button>
       {error && (
         <p className="text-xs text-destructive">{error}</p>

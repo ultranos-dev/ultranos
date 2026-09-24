@@ -137,7 +137,9 @@ describe('PharmacyScannerView', () => {
       expect(screen.getByTestId('fraud-warning')).toBeInTheDocument()
     })
 
-    expect(screen.getByText(/fraud warning/i)).toBeInTheDocument()
+    // Keyed (Story 63.1): the global next-intl mock renders the key, so assert
+    // on the key rather than the English string.
+    expect(screen.getByText('fraudWarningHeading')).toBeInTheDocument()
   })
 
   it('shows verified prescriptions on successful verification (AC 2, 4)', async () => {
@@ -307,9 +309,9 @@ describe('PharmacyScannerView', () => {
       expect(screen.getByTestId('key-untrusted-offline-warning')).toBeInTheDocument()
     })
 
-    // AC 4: Verify the warning message is shown
-    expect(screen.getByText(/hub offline/i)).toBeInTheDocument()
-    expect(screen.getByText(/dispensing is blocked/i)).toBeInTheDocument()
+    // AC 4: Verify the warning message is shown (keyed — Story 63.1)
+    expect(screen.getByText('verificationUnavailableDescription')).toBeInTheDocument()
+    expect(screen.getByText('dispensingBlocked')).toBeInTheDocument()
 
     // AC 3.4: No "Proceed Anyway" button — fail-closed mandatory
     expect(screen.queryByText(/proceed anyway/i)).not.toBeInTheDocument()
@@ -332,8 +334,9 @@ describe('PharmacyScannerView', () => {
       expect(screen.getByTestId('key-revoked-warning')).toBeInTheDocument()
     })
 
-    expect(screen.getByText(/key has been revoked/i)).toBeInTheDocument()
-    expect(screen.getByText(/must not be dispensed/i)).toBeInTheDocument()
+    // Keyed (Story 63.1): assert on the keys the global next-intl mock renders.
+    expect(screen.getByText('keyRevoked')).toBeInTheDocument()
+    expect(screen.getByText('keyRevokedDescription')).toBeInTheDocument()
   })
 
   it('shows parse error for malformed QR data', async () => {

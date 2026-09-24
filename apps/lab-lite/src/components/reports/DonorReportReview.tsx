@@ -27,6 +27,7 @@ interface Props {
 
 export function DonorReportReview({ report, onUpdate, onBack }: Props) {
   const t = useTranslations('donorReport')
+  const tc = useTranslations('common')
   const locale = useLocale()
   const session = useAuthSessionStore((s) => s.session)
   const [finalizing, setFinalizing] = useState(false)
@@ -167,7 +168,7 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
       <div className="rounded-lg border border-border bg-muted p-3 text-sm space-y-1">
         <p><span className="font-medium">{t('programName')}:</span> {report.programName}</p>
         <p><span className="font-medium">{t('selectPeriod')}:</span> {report.periodStart} — {report.periodEnd}</p>
-        <p><span className="font-medium">Generated:</span> {new Date(report.generatedAt).toLocaleDateString()}</p>
+        <p><span className="font-medium">{t('generatedLabel')}:</span> {new Date(report.generatedAt).toLocaleDateString()}</p>
         {report.warnings.includes('no_data') && (
           <p className="text-amber-700">⚠ {t('noDataForPeriod')}</p>
         )}
@@ -247,7 +248,7 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
       {/* Corrections note */}
       {report.corrections.length > 0 && (
         <p className="text-xs text-muted-foreground italic">
-          {t('corrections')}: {report.corrections.length} field(s) corrected
+          {t('corrections')}: {t('fieldsCorrected', { count: report.corrections.length })}
         </p>
       )}
 
@@ -265,7 +266,7 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
                 <Button onClick={handleFinalize} disabled={finalizing}>
                   {finalizing ? '…' : t('finalize')}
                 </Button>
-                <Button variant="secondary" onClick={() => setConfirmFinalize(false)}>Cancel</Button>
+                <Button variant="secondary" onClick={() => setConfirmFinalize(false)}>{tc('cancel')}</Button>
               </>
             ) : (
               <Button onClick={() => setConfirmFinalize(true)}>{t('finalize')}</Button>

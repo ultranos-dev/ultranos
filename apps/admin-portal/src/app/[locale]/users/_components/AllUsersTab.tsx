@@ -34,60 +34,74 @@ interface User {
   createdAt: string
 }
 
+const STATUS_VARIANT: Record<string, 'success' | 'destructive' | 'warning' | 'secondary'> = {
+  ACTIVE: 'success',
+  SUSPENDED: 'destructive',
+  PENDING_INVITE: 'warning',
+  ARCHIVED: 'secondary',
+}
+/** i18n key suffix for each user status (users.status*). */
+const STATUS_KEY: Record<string, string> = {
+  ACTIVE: 'statusActive',
+  SUSPENDED: 'statusSuspended',
+  PENDING_INVITE: 'statusPendingInvite',
+  ARCHIVED: 'statusArchived',
+}
+
 function StatusBadge({ status }: { status: string }) {
-  const variantMap: Record<string, 'success' | 'destructive' | 'warning' | 'secondary'> = {
-    ACTIVE: 'success',
-    SUSPENDED: 'destructive',
-    PENDING_INVITE: 'warning',
-    ARCHIVED: 'secondary',
-  }
-
-  const labelMap: Record<string, string> = {
-    ACTIVE: 'Active',
-    SUSPENDED: 'Suspended',
-    PENDING_INVITE: 'Pending Invite',
-    ARCHIVED: 'Archived',
-  }
-
+  const t = useTranslations('users')
+  const key = STATUS_KEY[status]
   return (
-    <Badge variant={variantMap[status] ?? 'secondary'}>
-      {labelMap[status] ?? status}
+    <Badge variant={STATUS_VARIANT[status] ?? 'secondary'}>
+      {key ? t(key) : status}
     </Badge>
   )
 }
 
 function MfaBadge({ enrolled }: { enrolled: boolean }) {
+  const t = useTranslations('users')
   if (enrolled) {
-    return <Badge variant="success">Enrolled</Badge>
+    return <Badge variant="success">{t('mfaEnrolled')}</Badge>
   }
-  return <Badge variant="warning">&#x26A0; Not Enrolled</Badge>
+  return <Badge variant="warning">{t('mfaNotEnrolled')}</Badge>
 }
 
-export function formatRelativeTime(iso: string | null): string {
-  if (!iso) return 'Never'
+/**
+ * Relative "time ago". When a next-intl translator is provided the strings are
+ * localized; without one (e.g. unit tests) it falls back to English so the
+ * pure-function contract stays testable.
+ */
+export function formatRelativeTime(
+  iso: string | null,
+  t?: (k: string, v?: Record<string, string | number | Date>) => string,
+): string {
+  if (!iso) return t ? t('relativeNever') : 'Never'
   const diff = Date.now() - new Date(iso).getTime()
   const minutes = Math.floor(diff / 60_000)
-  if (minutes < 1) return 'Just now'
-  if (minutes < 60) return `${minutes}m ago`
+  if (minutes < 1) return t ? t('relativeJustNow') : 'Just now'
+  if (minutes < 60) return t ? t('relativeMinutesAgo', { minutes }) : `${minutes}m ago`
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return t ? t('relativeHoursAgo', { hours }) : `${hours}h ago`
   const days = Math.floor(hours / 24)
-  return `${days}d ago`
+  return t ? t('relativeDaysAgo', { days }) : `${days}d ago`
 }
 
 const ROLE_FILTERS: RoleFilter[] = ['ALL', 'ADMIN', 'CLINICIAN', 'DOCTOR', 'PHARMACIST', 'LAB_TECH']
 const STATUS_FILTERS: StatusFilter[] = ['ALL', 'ACTIVE', 'SUSPENDED', 'PENDING_INVITE', 'ARCHIVED']
-const STATUS_LABELS: Record<StatusFilter, string> = {
-  ALL: 'All',
-  ACTIVE: 'Active',
-  SUSPENDED: 'Suspended',
-  PENDING_INVITE: 'Pending Invite',
-  ARCHIVED: 'Archived',
+/** i18n key suffix for the status filter dropdown (users.statusFilter*). */
+const STATUS_FILTER_KEY: Record<StatusFilter, string> = {
+  ALL: 'statusFilterAll',
+  ACTIVE: 'statusActive',
+  SUSPENDED: 'statusSuspended',
+  PENDING_INVITE: 'statusPendingInvite',
+  ARCHIVED: 'statusArchived',
 }
 const PAGE_SIZE = 20
 
 export default function AllUsersTab() {
   const t = useTranslations('users')
+  const tc = useTranslations('common')
+  const tp = useTranslations('pagination')
   const [users, setUsers] = useState<User[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [page, setPage] = useState(1)
@@ -116,7 +130,7 @@ export default function AllUsersTab() {
       setUsers(result.users)
       setTotalCount(result.total)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load users')
+      setError((err as Error)?.message ?? t('loadUsersError'))
     } finally {
       setLoading(false)
     }
@@ -181,7 +195,7 @@ export default function AllUsersTab() {
               }`}
               aria-pressed={statusFilter === s}
             >
-              {STATUS_LABELS[s]}
+              {t(STATUS_FILTER_KEY[s])}
             </button>
           ))}
         </div>
@@ -196,7 +210,7 @@ export default function AllUsersTab() {
           >
             {ROLE_FILTERS.map((r) => (
               <option key={r} value={r}>
-                {r === 'ALL' ? 'All Roles' : r.replace('_', ' ')}
+                {r === 'ALL' ? t('filterAllRoles') : r.replace('_', ' ')}
               </option>
             ))}
           </select>
@@ -215,9 +229,9 @@ export default function AllUsersTab() {
       {/* Suspended users banner */}
       {hasSuspendedUsers && (
         <div className="rounded-2xl bg-warning/10 p-3 text-sm text-warning">
-          Some users are suspended.{' '}
+          {t('suspendedBanner')}{' '}
           <Link href="/subscriptions" className="underline font-medium hover:text-warning/80">
-            Review subscriptions
+            {t('reviewSubscriptions')}
           </Link>
         </div>
       )}
@@ -225,7 +239,7 @@ export default function AllUsersTab() {
       {/* Content panel — single cohesive box */}
       <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
         {loading ? (
-          <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">Loading users...</div>
+          <div className="flex min-h-[16rem] items-center justify-center text-sm text-muted-foreground">{t('loadingUsers')}</div>
         ) : users.length === 0 && !filtersActive ? (
           <div className="flex min-h-[16rem] items-center justify-center">
             <EmptyState
@@ -249,14 +263,14 @@ export default function AllUsersTab() {
             <table className="min-w-full divide-y divide-border text-sm">
               <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Email</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Role</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Department</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Phone</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">MFA</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Last Login</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{tc('name')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{tc('email')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{tc('role')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDepartment')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colPhone')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{tc('status')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colMfa')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colLastLogin')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -283,7 +297,7 @@ export default function AllUsersTab() {
                     <td className="px-4 py-3 text-muted-foreground">{user.phone ?? '—'}</td>
                     <td className="px-4 py-3"><StatusBadge status={user.status} /></td>
                     <td className="px-4 py-3"><MfaBadge enrolled={user.mfaEnrolled ?? false} /></td>
-                    <td className="px-4 py-3 text-muted-foreground">{formatRelativeTime(user.lastLoginAt)}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{formatRelativeTime(user.lastLoginAt, t)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -296,7 +310,7 @@ export default function AllUsersTab() {
       {!loading && users.length > 0 && totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
+            {tp('showing', { from: (page - 1) * PAGE_SIZE + 1, to: Math.min(page * PAGE_SIZE, totalCount), total: totalCount })}
           </span>
           <div className="flex gap-2">
             <Button
@@ -304,15 +318,15 @@ export default function AllUsersTab() {
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
             >
-              Previous
+              {tp('previous')}
             </Button>
-            <span className="flex items-center px-2">Page {page} of {totalPages}</span>
+            <span className="flex items-center px-2">{tp('pageOf', { page, totalPages })}</span>
             <Button
               variant="outline"
               onClick={() => setPage(page + 1)}
               disabled={page >= totalPages}
             >
-              Next
+              {tp('next')}
             </Button>
           </div>
         </div>

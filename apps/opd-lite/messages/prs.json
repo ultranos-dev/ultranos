@@ -660,7 +660,8 @@
     "next": "بعدی",
     "unknown": "نامعلوم",
     "search": "جستجو",
-    "emDash": "·"
+    "emDash": "·",
+    "skipToContent": "پرش به محتوا"
   },
   "errors": {
     "unexpected": "یک خطای غیرمنتظره رخ داد",
@@ -1363,7 +1364,23 @@
     "window60": "≤۶۰ روز",
     "window90": "≤۹۰ روز",
     "noResultsFiltered": "هیچ رضایتی با فیلترهای شما مطابقت ندارد",
-    "fetchError": "بارگیری رضایت‌های در حال انقضا ناکام شد. لطفاً دوباره تلاش کنید."
+    "fetchError": "بارگیری رضایت‌های در حال انقضا ناکام شد. لطفاً دوباره تلاش کنید.",
+    "renewTitle": "تجدید رضایت بیمار",
+    "methodLabel": "روش",
+    "methodWritten": "کتبی",
+    "methodVerbal": "شفاهی (با شاهد)",
+    "witnessLabel": "شناسه شاهد",
+    "witnessPlaceholder": "شناسه یکتای پرکتیشنر شاهد",
+    "languageLabel": "زبان",
+    "languageEnglish": "انگلیسی",
+    "languageArabic": "عربی",
+    "languageDari": "دری",
+    "versionLabel": "نسخه",
+    "versionPlaceholder": "مثال: 2.0",
+    "renewing": "در حال تجدید...",
+    "renewError": "تجدید رضایت ناموفق بود. لطفاً دوباره تلاش کنید.",
+    "cancel": "لغو",
+    "close": "بستن"
   },
   "patientPhoto": {
     "title": "تصویر مریض را بروز کنید",

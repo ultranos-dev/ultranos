@@ -42,7 +42,9 @@ const MERGE_FIELDS = [
 ]
 
 function PatientCard({ patient, label }: { patient: Patient; label: string }) {
-  const displayName = [patient.name_given, patient.name_father].filter(Boolean).join(' ') || 'Unknown'
+  const t = useTranslations('patients')
+  const tc = useTranslations('common')
+  const displayName = [patient.name_given, patient.name_father].filter(Boolean).join(' ') || tc('unknown')
   return (
     <div className="rounded-xl bg-card p-5 border border-border">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
@@ -51,11 +53,11 @@ function PatientCard({ patient, label }: { patient: Patient; label: string }) {
         <p className="text-lg font-semibold text-foreground">{displayName}</p>
       </div>
       <div className="mt-3 space-y-1 text-sm text-muted-foreground">
-        <p>Gender: {patient.gender ?? '-'}</p>
-        <p>Birth Year: {patient.birth_year ?? '-'}</p>
-        <p>District: {patient.address_district_origin ?? '-'}</p>
-        <p>Province: {patient.address_province_origin ?? '-'}</p>
-        <p>MPI Score: {patient.mpi_score ?? '-'}</p>
+        <p>{t('mergeFieldGender')}: {patient.gender ?? '-'}</p>
+        <p>{t('mergeFieldBirthYear')}: {patient.birth_year ?? '-'}</p>
+        <p>{t('mergeCardDistrict')}: {patient.address_district_origin ?? '-'}</p>
+        <p>{t('mergeCardProvince')}: {patient.address_province_origin ?? '-'}</p>
+        <p>{t('mergeCardMpiScore')}: {patient.mpi_score ?? '-'}</p>
       </div>
     </div>
   )
@@ -67,6 +69,7 @@ function formatName(p: Patient): string {
 
 export default function MergeWizardPage() {
   const t = useTranslations('patients')
+  const tc = useTranslations('common')
   const _router = useRouter()
   const searchParams = useSearchParams()
   const survivorIdParam = searchParams.get('survivor')
@@ -194,17 +197,17 @@ export default function MergeWizardPage() {
             </div>
             <p className="mt-4 text-lg font-semibold text-foreground">{t('mergeSuccess')}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Merge audit ID: {mergeResult.mergeAuditId}
+              {t('mergeAuditId', { id: mergeResult.mergeAuditId })}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              This merge can be reversed within 72 hours.
+              {t('mergeReversible72h')}
             </p>
             <div className="mt-6 flex items-center justify-center gap-3">
               <Button asChild>
-                <Link href={`/patients/${survivor.id}`}>View Survivor Record</Link>
+                <Link href={`/patients/${survivor.id}`}>{t('mergeViewSurvivorRecord')}</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link href="/patients">Back to Patients</Link>
+                <Link href="/patients">{t('mergeBackToPatients')}</Link>
               </Button>
             </div>
           </div>
@@ -215,7 +218,7 @@ export default function MergeWizardPage() {
   return (
     <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-3">
-          <Button asChild variant="ghost" size="sm" className="w-fit px-0"><Link href="/patients">&larr; Back to Patients</Link></Button>
+          <Button asChild variant="ghost" size="sm" className="w-fit px-0"><Link href="/patients">&larr; {t('mergeBackToPatients')}</Link></Button>
           <h1 className="text-2xl font-semibold text-foreground">{t('mergePageTitle')}</h1>
         </div>
 
@@ -257,9 +260,9 @@ export default function MergeWizardPage() {
             <div>
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">{t('mergeSurvivorPatient')}</h3>
               {loadingSurvivor ? (
-                <div className="text-sm text-muted-foreground">Loading survivor...</div>
+                <div className="text-sm text-muted-foreground">{t('mergeLoadingSurvivor')}</div>
               ) : survivor ? (
-                <PatientCard patient={survivor} label="Survivor (will be kept)" />
+                <PatientCard patient={survivor} label={t('mergeSurvivorKept')} />
               ) : (
                 <div className="flex min-h-[12rem] items-center justify-center rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
                   <EmptyState
@@ -280,11 +283,11 @@ export default function MergeWizardPage() {
                   value={duplicateSearch}
                   onChange={(e) => setDuplicateSearch(e.target.value)}
                   className="w-full max-w-md"
-                  aria-label="Search for duplicate patient"
+                  aria-label={t('mergeSearchDuplicateAria')}
                 />
 
                 {searchLoading && (
-                  <div className="mt-2 text-sm text-muted-foreground">Searching...</div>
+                  <div className="mt-2 text-sm text-muted-foreground">{t('mergeSearching')}</div>
                 )}
 
                 {/* Story 62.2 (M-ADM-6): explicit, retryable error state — never a
@@ -292,11 +295,10 @@ export default function MergeWizardPage() {
                 {!searchLoading && searchError && (
                   <div className="mt-3 rounded-xl border border-danger-subtle bg-destructive/10 p-4">
                     <p className="text-sm font-medium text-destructive">
-                      Duplicate search failed
+                      {t('mergeSearchFailed')}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      The search could not be completed. This does NOT mean there are no
-                      duplicates. Check your connection and retry.
+                      {t('mergeSearchFailedDescription')}
                     </p>
                     <Button
                       variant="destructive"
@@ -304,13 +306,13 @@ export default function MergeWizardPage() {
                       className="mt-3"
                       onClick={() => void searchDuplicates()}
                     >
-                      Retry search
+                      {t('mergeRetrySearch')}
                     </Button>
                   </div>
                 )}
 
                 {!searchLoading && !searchError && duplicateSearch.trim().length > 0 && duplicateResults.length === 0 && !duplicate && (
-                  <div className="mt-2 text-sm text-muted-foreground">No duplicates found.</div>
+                  <div className="mt-2 text-sm text-muted-foreground">{t('mergeNoDuplicatesFound')}</div>
                 )}
 
                 {duplicateResults.length > 0 && !duplicate && (
@@ -323,7 +325,11 @@ export default function MergeWizardPage() {
                       >
                         <p className="text-sm font-medium text-foreground">{formatName(p)}</p>
                         <p className="text-xs text-muted-foreground">
-                          {p.gender ?? '-'} | Birth: {p.birth_year ?? '-'} | District: {p.address_district_origin ?? '-'}
+                          {t('mergeCandidateMeta', {
+                            gender: p.gender ?? '-',
+                            birthYear: p.birth_year ?? '-',
+                            district: p.address_district_origin ?? '-',
+                          })}
                         </p>
                       </button>
                     ))}
@@ -332,14 +338,14 @@ export default function MergeWizardPage() {
 
                 {duplicate && (
                   <div className="mt-3">
-                    <PatientCard patient={duplicate} label="Duplicate (will be deactivated)" />
+                    <PatientCard patient={duplicate} label={t('mergeDuplicateDeactivated')} />
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setDuplicate(null)}
                       className="mt-2"
                     >
-                      Change selection
+                      {t('mergeChangeSelection')}
                     </Button>
                   </div>
                 )}
@@ -361,8 +367,7 @@ export default function MergeWizardPage() {
         {step === 2 && survivor && duplicate && (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              For each field, choose whether to keep the survivor&apos;s value or use the duplicate&apos;s value.
-              Fields with different values are highlighted.
+              {t('mergeFieldInstruction')}
             </p>
 
             <PatientComparisonTable
@@ -375,7 +380,7 @@ export default function MergeWizardPage() {
 
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep(1)}>
-                Back
+                {tc('back')}
               </Button>
               <Button onClick={() => setStep(3)} disabled={!allResolved}>
                 {t('mergeContinueToPreview')}
@@ -397,7 +402,9 @@ export default function MergeWizardPage() {
             {/* Confirmation input */}
             <div className="rounded-xl bg-card p-5 border border-border">
               <p className="text-sm text-muted-foreground">
-                Type <span className="font-mono font-semibold text-foreground">MERGE</span> below to confirm this operation.
+                {t.rich('mergeTypeToConfirmInstruction', {
+                  token: (chunks) => <span className="font-mono font-semibold text-foreground">{chunks}</span>,
+                })}
               </p>
               <Input
                 type="text"
@@ -405,20 +412,20 @@ export default function MergeWizardPage() {
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder={t('mergeTypeToConfirm')}
                 className="mt-3 w-full max-w-xs"
-                aria-label="Type MERGE to confirm"
+                aria-label={t('mergeTypeToConfirmAria')}
               />
             </div>
 
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep(2)}>
-                Back
+                {tc('back')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleMerge}
                 disabled={confirmText !== 'MERGE' || merging}
               >
-                {merging ? '…' : t('mergeConfirmButton')}
+                {merging ? t('mergeMerging') : t('mergeConfirmButton')}
               </Button>
             </div>
           </div>

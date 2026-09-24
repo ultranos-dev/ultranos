@@ -660,7 +660,8 @@
     "next": "التالي",
     "unknown": "غير معروف",
     "search": "بحث",
-    "emDash": "·"
+    "emDash": "·",
+    "skipToContent": "تخطَّ إلى المحتوى"
   },
   "errors": {
     "unexpected": "حدث خطأ غير متوقع",
@@ -1363,7 +1364,23 @@
     "window60": "≤60 يوم",
     "window90": "≤90 يوم",
     "noResultsFiltered": "لا توجد موافقات تطابق الفلاتر",
-    "fetchError": "تعذّر تحميل الموافقات المنتهية قريبًا. يرجى المحاولة مرة أخرى."
+    "fetchError": "تعذّر تحميل الموافقات المنتهية قريبًا. يرجى المحاولة مرة أخرى.",
+    "renewTitle": "تجديد موافقة المريض",
+    "methodLabel": "الطريقة",
+    "methodWritten": "كتابية",
+    "methodVerbal": "شفهية (بشاهد)",
+    "witnessLabel": "معرّف الشاهد",
+    "witnessPlaceholder": "المعرّف الفريد للممارس الشاهد",
+    "languageLabel": "اللغة",
+    "languageEnglish": "الإنجليزية",
+    "languageArabic": "العربية",
+    "languageDari": "الدرية",
+    "versionLabel": "الإصدار",
+    "versionPlaceholder": "مثال: 2.0",
+    "renewing": "جارٍ التجديد...",
+    "renewError": "تعذّر تجديد الموافقة. يرجى المحاولة مرة أخرى.",
+    "cancel": "إلغاء",
+    "close": "إغلاق"
   },
   "patientPhoto": {
     "title": "تحديث صورة المريض",

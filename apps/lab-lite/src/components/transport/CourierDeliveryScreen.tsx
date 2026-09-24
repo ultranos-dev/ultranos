@@ -8,11 +8,11 @@
 //   Rule #1: No PHI displayed — only opaque session IDs, sample counts, location IDs.
 //   Rule #7: No patient demographics, names, or diagnoses appear in transport records.
 //
-// i18n TODO: All strings are hardcoded English. Wire up useTranslations('transport.delivery')
-//            when the i18n JSON keys are added (tracked separately).
+// Story 63.1: strings keyed under the transport.delivery namespace.
 // ---------------------------------------------------------------------------
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Truck, Thermometer, CheckCircle, AlertCircle, Clock } from '@ultranos/ui-kit/icons'
 import { recordDelivery } from '@/lib/transport-service'
 import type { TransportSession, DeliveryInput } from '@/types/transport'
@@ -46,7 +46,7 @@ function formatElapsedTime(hours: number): string {
 }
 
 export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryScreenProps) {
-  // TODO i18n: const t = useTranslations('transport.delivery')
+  const t = useTranslations('transport.delivery')
 
   const [deliveryTemp, setDeliveryTemp] = useState('')
   const [condition, setCondition] = useState<ConditionValue | null>(null)
@@ -106,7 +106,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
           <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
             <CheckCircle size={48} className="text-green-700" aria-hidden />
           </div>
-          <h2 className="text-center text-2xl font-bold text-foreground">Delivery Recorded</h2>
+          <h2 className="text-center text-2xl font-bold text-foreground">{t('deliveryRecorded')}</h2>
         </div>
 
         {flagCount > 0 && (
@@ -117,7 +117,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
           >
             <AlertCircle size={20} className="text-red-600 shrink-0 mt-0.5" aria-hidden />
             <p className="text-lg font-semibold text-red-800">
-              {flagCount} of {sampleCount} sample{sampleCount !== 1 ? 's' : ''} flagged for pre-analytical review
+              {t('flagSummary', { flagCount, sampleCount })}
             </p>
           </div>
         )}
@@ -135,26 +135,26 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
           <Truck size={28} aria-hidden />
         </div>
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Record Delivery</p>
-          <h2 className="text-xl font-bold text-foreground">Transport {shortSessionId}</h2>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('recordDeliveryHeading')}</p>
+          <h2 className="text-xl font-bold text-foreground">{t('transportSession', { id: shortSessionId })}</h2>
         </div>
       </div>
 
       {/* Session details */}
       <div className="rounded-xl bg-muted p-4 flex flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-base text-muted-foreground">Samples</span>
+          <span className="text-base text-muted-foreground">{t('samplesLabel')}</span>
           <span className="text-base font-semibold text-foreground">{session.sampleCount}</span>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <span className="text-base text-muted-foreground">Route</span>
+          <span className="text-base text-muted-foreground">{t('routeLabel')}</span>
           <span className="text-base font-semibold text-foreground text-end">
             {session.originLocationId} → {session.destinationLocationId}
           </span>
         </div>
         <div className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-1 text-base text-muted-foreground">
-            <Clock size={14} aria-hidden /> Elapsed
+            <Clock size={14} aria-hidden /> {t('elapsedLabel')}
           </span>
           <span className="text-base font-semibold text-foreground" data-testid="elapsed-time">
             {formatElapsedTime(elapsedHours)}
@@ -180,8 +180,8 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
           />
           <p className={`text-base font-semibold ${stabilityWarningLevel === 'red' ? 'text-red-800' : 'text-amber-800'}`}>
             {stabilityWarningLevel === 'red'
-              ? 'Transit time exceeds 6 hours — samples may be outside stability window'
-              : 'Transit time approaching 4 hours — verify sample integrity'}
+              ? t('stabilityWarningRed')
+              : t('stabilityWarningAmber')}
           </p>
         </div>
       )}
@@ -189,7 +189,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
       {/* Temperature at arrival */}
       <div className="flex flex-col gap-1">
         <label className="flex items-center gap-2 text-lg font-medium text-foreground" htmlFor="delivery-temp-input">
-          <Thermometer size={18} aria-hidden /> Temperature at Arrival (°C) — optional
+          <Thermometer size={18} aria-hidden /> {t('temperatureLabel')}
         </label>
         <input
           id="delivery-temp-input"
@@ -197,7 +197,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
           type="number"
           value={deliveryTemp}
           onChange={(e) => setDeliveryTemp(e.target.value)}
-          placeholder="e.g. 24"
+          placeholder={t('temperaturePlaceholder')}
           className="min-h-[56px] rounded-xl border border-border px-4 py-3 text-xl focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring"
           inputMode="decimal"
         />
@@ -205,7 +205,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
 
       {/* Condition assessment */}
       <div className="flex flex-col gap-2">
-        <p className="text-lg font-medium text-foreground">Sample Condition</p>
+        <p className="text-lg font-medium text-foreground">{t('sampleConditionLabel')}</p>
         <div className="flex flex-col gap-2">
           <label className={`flex items-center gap-3 rounded-xl border-2 p-4 cursor-pointer transition-colors ${
             condition === 'acceptable' ? 'border-green-500 bg-green-50' : 'border-border bg-card hover:bg-muted'
@@ -219,7 +219,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
               onChange={() => setCondition('acceptable')}
               className="h-5 w-5 accent-green-600"
             />
-            <span className="text-lg font-semibold text-foreground">Acceptable</span>
+            <span className="text-lg font-semibold text-foreground">{t('conditionAcceptable')}</span>
           </label>
 
           <label className={`flex items-center gap-3 rounded-xl border-2 p-4 cursor-pointer transition-colors ${
@@ -234,7 +234,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
               onChange={() => setCondition('damaged')}
               className="h-5 w-5 accent-red-600"
             />
-            <span className="text-lg font-semibold text-foreground">Damaged</span>
+            <span className="text-lg font-semibold text-foreground">{t('conditionDamaged')}</span>
           </label>
 
           <label className={`flex items-center gap-3 rounded-xl border-2 p-4 cursor-pointer transition-colors ${
@@ -249,14 +249,14 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
               onChange={() => setCondition('temperature-excursion')}
               className="h-5 w-5 accent-amber-600"
             />
-            <span className="text-lg font-semibold text-foreground">Temperature Excursion</span>
+            <span className="text-lg font-semibold text-foreground">{t('conditionTemperatureExcursion')}</span>
           </label>
         </div>
       </div>
 
       {submitError && (
         <p className="flex items-center gap-2 text-red-600" role="alert">
-          <AlertCircle size={16} aria-hidden /> Failed to record delivery. Please try again.
+          <AlertCircle size={16} aria-hidden /> {t('recordDeliveryError')}
         </p>
       )}
 
@@ -267,7 +267,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
         disabled={!condition || submitting}
         className="min-h-[56px] rounded-xl bg-green-600 px-6 py-4 text-xl font-semibold text-white hover:bg-green-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500"
       >
-        {submitting ? 'Recording…' : 'Record Delivery'}
+        {submitting ? t('recording') : t('recordDeliveryButton')}
       </button>
     </div>
   )

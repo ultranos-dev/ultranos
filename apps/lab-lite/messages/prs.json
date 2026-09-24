@@ -6,7 +6,8 @@
     "portalTitle": "پورتال تشخیصی لابراتوار — Ultranos",
     "description": "لابراتوار Ultranos برای بارگذاری نتایج تشخیصی",
     "comingSoon": "پورتال تشخیصی لابراتوار — به زودی",
-    "poweredBy": "قدرت یافته از Ultranos"
+    "poweredBy": "قدرت یافته از Ultranos",
+    "tagline": "آزمایشگاه"
   },
   "nav": {
     "uploadProgress": "پیشرفت بارگذاری"
@@ -770,7 +771,9 @@
       "errorInsuranceRefRequired": "شماره بیمه نامه لازم است.",
       "errorNoTests": "حداقل یک آزمایش را انتخاب کنید.",
       "totalDue": "مبلغ کل",
-      "amountPaid": "مبلغ پرداخت شده"
+      "amountPaid": "مبلغ پرداخت شده",
+      "recordPaymentError": "ثبت پرداخت ناکام شد. لطفاً دوباره تلاش کنید.",
+      "patientRefPlaceholder": "احمد، ۴۵"
     },
     "receipt": {
       "title": "رسید",
@@ -3000,7 +3003,9 @@
     "invalidPeriod": "تاریخ پایان باید بعد از تاریخ شروع باشد",
     "existingDraft": "یک گزارش پیش‌نویس برای این برنامه و دوره وجود دارد.",
     "overwriteDraft": "ایجاد جدید",
-    "loadError": "بارگذاری گزارش‌ها ناموفق بود. دوباره تلاش کنید."
+    "loadError": "بارگذاری گزارش‌ها ناموفق بود. دوباره تلاش کنید.",
+    "generatedLabel": "ایجاد شده",
+    "fieldsCorrected": "{count, plural, one {# فیلد اصلاح شد} other {# فیلد اصلاح شد}}"
   },
   "certification": {
     "pageTitle": "مسیر تصدیق‌نامه من",
@@ -4028,5 +4033,67 @@
     "errorPdfType": "تنها فایل‌های PDF برای اسناد پذیرفته می‌شوند.",
     "errorGeneric": "خطایی هنگام پردازش فایل رخ داد. لطفاً دوباره امتحان کنید.",
     "maxReached": "حداکثر {max} پیوست مجاز است."
+  },
+  "transport": {
+    "card": {
+      "courierLabel": "پیک: {courierId}",
+      "statusStable": "پایدار",
+      "statusWarning": "هشدار",
+      "statusCritical": "بحرانی",
+      "statusFlagged": "نشان‌دار",
+      "sampleCount": "{count} نمونه"
+    },
+    "pickup": {
+      "step1Title": "شناسه پیک را وارد کنید",
+      "step2Title": "مقصد را انتخاب کنید",
+      "step3Title": "اسکن نمونه‌ها",
+      "step4Title": "دمای هنگام تحویل‌گیری",
+      "step5Title": "تأیید انتقال",
+      "courierIdLabel": "شناسه پیک",
+      "courierIdPlaceholder": "مثال: CRR-001",
+      "next": "بعدی",
+      "back": "بازگشت",
+      "skip": "رد کردن",
+      "done": "انجام شد",
+      "mainLaboratory": "آزمایشگاه اصلی",
+      "idLabel": "شناسه: {id}",
+      "scanPlaceholder": "شماره برچسب را اسکن یا تایپ کنید",
+      "sampleLabelAria": "شماره برچسب نمونه",
+      "addSampleAria": "افزودن نمونه",
+      "labelAlreadyAdded": "برچسب قبلاً اضافه شده",
+      "samplesAdded": "{count, plural, one {# نمونه اضافه شد} other {# نمونه اضافه شد}}",
+      "temperatureLabel": "دما (°C) — اختیاری",
+      "temperaturePlaceholder": "مثال: 22",
+      "summaryCourierId": "شناسه پیک",
+      "summaryDestination": "مقصد",
+      "summarySamples": "نمونه‌ها",
+      "summaryTemperature": "دما",
+      "startTransportError": "شروع انتقال ناکام شد. لطفاً دوباره تلاش کنید.",
+      "starting": "در حال شروع…",
+      "startTransport": "شروع انتقال",
+      "successTitle": "انتقال آغاز شد",
+      "successSamplesLogged": "{count, plural, one {# نمونه برای انتقال ثبت شد} other {# نمونه برای انتقال ثبت شد}}",
+      "stepIndicator": "مرحله {step} از {total}"
+    },
+    "delivery": {
+      "deliveryRecorded": "تحویل ثبت شد",
+      "flagSummary": "{flagCount} از {sampleCount, plural, one {# نمونه} other {# نمونه}} برای بازبینی پیش‌تحلیلی نشان‌دار شد",
+      "recordDeliveryHeading": "ثبت تحویل",
+      "transportSession": "انتقال {id}",
+      "samplesLabel": "نمونه‌ها",
+      "routeLabel": "مسیر",
+      "elapsedLabel": "سپری‌شده",
+      "stabilityWarningRed": "زمان انتقال از ۶ ساعت بیشتر است — نمونه‌ها ممکن است خارج از پنجره پایداری باشند",
+      "stabilityWarningAmber": "زمان انتقال به ۴ ساعت نزدیک می‌شود — سلامت نمونه را بررسی کنید",
+      "temperatureLabel": "دمای هنگام رسیدن (°C) — اختیاری",
+      "temperaturePlaceholder": "مثال: 24",
+      "sampleConditionLabel": "وضعیت نمونه",
+      "conditionAcceptable": "قابل قبول",
+      "conditionDamaged": "آسیب‌دیده",
+      "conditionTemperatureExcursion": "انحراف دمایی",
+      "recordDeliveryError": "ثبت تحویل ناکام شد. لطفاً دوباره تلاش کنید.",
+      "recording": "در حال ثبت…",
+      "recordDeliveryButton": "ثبت تحویل"
+    }
   }
 }

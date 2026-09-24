@@ -660,7 +660,8 @@
     "next": "راتلونکی",
     "unknown": "نامعلوم",
     "search": "لټون",
-    "emDash": "·"
+    "emDash": "·",
+    "skipToContent": "محتوا ته ورټوپ کړئ"
   },
   "errors": {
     "unexpected": "یوه غیرمتوقعه ستونزه رامنځته شوه",
@@ -1363,7 +1364,23 @@
     "window60": "≤۶۰ ورځې",
     "window90": "≤۹۰ ورځې",
     "noResultsFiltered": "ستاسو فلترونو سره هیڅ رضایت سمون نه خوري",
-    "fetchError": "د پای ته رسیدونکو رضایتونو بارول ناکام شول. مهرباني وکړئ بیا هڅه وکړئ."
+    "fetchError": "د پای ته رسیدونکو رضایتونو بارول ناکام شول. مهرباني وکړئ بیا هڅه وکړئ.",
+    "renewTitle": "د ناروغ رضایت نوی کول",
+    "methodLabel": "طریقه",
+    "methodWritten": "لیکلی",
+    "methodVerbal": "شفاهي (د شاهد سره)",
+    "witnessLabel": "د شاهد پیژندنه",
+    "witnessPlaceholder": "د شاهد پرکتیشنر یوازینۍ پیژندنه",
+    "languageLabel": "ژبه",
+    "languageEnglish": "انګلیسي",
+    "languageArabic": "عربي",
+    "languageDari": "دري",
+    "versionLabel": "نسخه",
+    "versionPlaceholder": "بېلګه: 2.0",
+    "renewing": "د نوي کولو په حال کې...",
+    "renewError": "د رضایت نوي کول ناکام شول. مهرباني وکړئ بیا هڅه وکړئ.",
+    "cancel": "لغوه کول",
+    "close": "بندول"
   },
   "patientPhoto": {
     "title": "د ناروغ عکس تازه کړئ",

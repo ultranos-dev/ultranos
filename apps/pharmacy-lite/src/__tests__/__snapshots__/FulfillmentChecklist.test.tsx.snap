@@ -105,7 +105,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
             class="flex items-start gap-3"
           >
             <input
-              aria-label="Fulfill Amoxicillin"
+              aria-label="fulfillAriaLabel {"medication":"Amoxicillin"}"
               checked=""
               class="mt-1 h-5 w-5 rounded border-border text-primary-600 focus:ring-primary-500"
               data-testid="fulfill-checkbox-rx-001"
@@ -131,8 +131,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
                 </span>
                 <span>
                    · 
-                  7
-                   days
+                  days {"count":7}
                 </span>
               </p>
               <div
@@ -190,7 +189,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
             class="flex items-start gap-3"
           >
             <input
-              aria-label="Fulfill Ibuprofen"
+              aria-label="fulfillAriaLabel {"medication":"Ibuprofen"}"
               checked=""
               class="mt-1 h-5 w-5 rounded border-border text-primary-600 focus:ring-primary-500"
               data-testid="fulfill-checkbox-rx-002"
@@ -216,8 +215,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
                 </span>
                 <span>
                    · 
-                  5
-                   days
+                  days {"count":5}
                 </span>
               </p>
               <div
@@ -389,7 +387,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
             class="flex items-start gap-3"
           >
             <input
-              aria-label="Fulfill Amoxicillin"
+              aria-label="fulfillAriaLabel {"medication":"Amoxicillin"}"
               checked=""
               class="mt-1 h-5 w-5 rounded border-border text-primary-600 focus:ring-primary-500"
               data-testid="fulfill-checkbox-rx-001"
@@ -415,8 +413,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
                 </span>
                 <span>
                    · 
-                  7
-                   days
+                  days {"count":7}
                 </span>
               </p>
               <div
@@ -474,7 +471,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
             class="flex items-start gap-3"
           >
             <input
-              aria-label="Fulfill Ibuprofen"
+              aria-label="fulfillAriaLabel {"medication":"Ibuprofen"}"
               checked=""
               class="mt-1 h-5 w-5 rounded border-border text-primary-600 focus:ring-primary-500"
               data-testid="fulfill-checkbox-rx-002"
@@ -500,8 +497,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
                 </span>
                 <span>
                    · 
-                  5
-                   days
+                  days {"count":5}
                 </span>
               </p>
               <div

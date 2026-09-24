@@ -6,7 +6,8 @@
     "portalTitle": "بوابة التشخيص المخبري — ألترانوس",
     "description": "تطبيق ألترانوس المخبري لرفع نتائج التشخيص",
     "comingSoon": "بوابة التشخيص المخبري — قريباً",
-    "poweredBy": "مدعوم من ألترانوس"
+    "poweredBy": "مدعوم من ألترانوس",
+    "tagline": "المختبر"
   },
   "nav": {
     "uploadProgress": "تقدّم الرفع"
@@ -770,7 +771,9 @@
       "errorInsuranceRefRequired": "رقم وثيقة التأمين مطلوب.",
       "errorNoTests": "اختر فحصاً واحداً على الأقل.",
       "totalDue": "المبلغ الإجمالي",
-      "amountPaid": "المبلغ المدفوع"
+      "amountPaid": "المبلغ المدفوع",
+      "recordPaymentError": "فشل تسجيل الدفعة. يرجى المحاولة مرة أخرى.",
+      "patientRefPlaceholder": "أحمد، 45"
     },
     "receipt": {
       "title": "الإيصال",
@@ -3000,7 +3003,9 @@
     "invalidPeriod": "يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء",
     "existingDraft": "يوجد تقرير مسودة بالفعل لهذا البرنامج والفترة.",
     "overwriteDraft": "إنشاء جديد",
-    "loadError": "تعذّر تحميل التقارير. حاول مجدداً."
+    "loadError": "تعذّر تحميل التقارير. حاول مجدداً.",
+    "generatedLabel": "أُنشئ في",
+    "fieldsCorrected": "{count, plural, one {تم تصحيح حقل واحد} other {تم تصحيح # حقول}}"
   },
   "certification": {
     "pageTitle": "مسیر گواهینامه من",
@@ -4028,5 +4033,67 @@
     "errorPdfType": "يُقبل فقط ملفات PDF للمستندات.",
     "errorGeneric": "حدث خطأ أثناء معالجة الملف. يرجى المحاولة مرة أخرى.",
     "maxReached": "تم بلوغ الحد الأقصى البالغ {max} مرفق."
+  },
+  "transport": {
+    "card": {
+      "courierLabel": "الساعي: {courierId}",
+      "statusStable": "مستقر",
+      "statusWarning": "تحذير",
+      "statusCritical": "حرج",
+      "statusFlagged": "موسوم",
+      "sampleCount": "{count} عينات"
+    },
+    "pickup": {
+      "step1Title": "أدخل معرّف الساعي",
+      "step2Title": "اختر الوجهة",
+      "step3Title": "مسح العينات",
+      "step4Title": "درجة الحرارة عند الاستلام",
+      "step5Title": "تأكيد النقل",
+      "courierIdLabel": "معرّف الساعي",
+      "courierIdPlaceholder": "مثال: CRR-001",
+      "next": "التالي",
+      "back": "رجوع",
+      "skip": "تخطّي",
+      "done": "تم",
+      "mainLaboratory": "المختبر الرئيسي",
+      "idLabel": "المعرّف: {id}",
+      "scanPlaceholder": "امسح أو اكتب رقم الملصق",
+      "sampleLabelAria": "رقم ملصق العينة",
+      "addSampleAria": "إضافة عينة",
+      "labelAlreadyAdded": "الملصق مضاف بالفعل",
+      "samplesAdded": "{count, plural, one {تمت إضافة عينة} other {تمت إضافة # عينات}}",
+      "temperatureLabel": "درجة الحرارة (°م) — اختياري",
+      "temperaturePlaceholder": "مثال: 22",
+      "summaryCourierId": "معرّف الساعي",
+      "summaryDestination": "الوجهة",
+      "summarySamples": "العينات",
+      "summaryTemperature": "درجة الحرارة",
+      "startTransportError": "فشل بدء النقل. يرجى المحاولة مرة أخرى.",
+      "starting": "جارٍ البدء…",
+      "startTransport": "بدء النقل",
+      "successTitle": "بدأ النقل",
+      "successSamplesLogged": "{count, plural, one {تم تسجيل عينة للنقل} other {تم تسجيل # عينات للنقل}}",
+      "stepIndicator": "الخطوة {step} من {total}"
+    },
+    "delivery": {
+      "deliveryRecorded": "تم تسجيل التسليم",
+      "flagSummary": "تم وسم {flagCount} من {sampleCount, plural, one {# عينة} other {# عينات}} للمراجعة قبل التحليل",
+      "recordDeliveryHeading": "تسجيل التسليم",
+      "transportSession": "النقل {id}",
+      "samplesLabel": "العينات",
+      "routeLabel": "المسار",
+      "elapsedLabel": "المنقضي",
+      "stabilityWarningRed": "وقت النقل يتجاوز 6 ساعات — قد تكون العينات خارج نافذة الاستقرار",
+      "stabilityWarningAmber": "وقت النقل يقترب من 4 ساعات — تحقق من سلامة العينة",
+      "temperatureLabel": "درجة الحرارة عند الوصول (°م) — اختياري",
+      "temperaturePlaceholder": "مثال: 24",
+      "sampleConditionLabel": "حالة العينة",
+      "conditionAcceptable": "مقبولة",
+      "conditionDamaged": "تالفة",
+      "conditionTemperatureExcursion": "انحراف في درجة الحرارة",
+      "recordDeliveryError": "فشل تسجيل التسليم. يرجى المحاولة مرة أخرى.",
+      "recording": "جارٍ التسجيل…",
+      "recordDeliveryButton": "تسجيل التسليم"
+    }
   }
 }

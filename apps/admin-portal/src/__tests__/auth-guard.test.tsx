@@ -126,10 +126,9 @@ describe('AuthGuard', () => {
       </AuthGuard>,
     )
 
-    await screen.findByText('Access Denied')
-    expect(
-      screen.getByText(/you do not have admin privileges/i),
-    ).toBeTruthy()
+    // Keyed (Story 63.1): the key-echo next-intl mock renders the key.
+    await screen.findByText('accessDeniedTitle')
+    expect(screen.getByText('accessDeniedBody')).toBeTruthy()
   })
 
   it('renders children for authenticated ADMIN users', async () => {

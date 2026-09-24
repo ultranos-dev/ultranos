@@ -10,10 +10,10 @@
 //   Rule #1: No PHI in logs or displayed data — only opaque IDs.
 //   Rule #7: Lab Portal sees only name + age — transport records must not carry demographics.
 //
-// i18n TODO: All strings are hardcoded English. Wire up useTranslations('transport.card')
-//            when the i18n JSON keys are added (tracked separately).
+// Story 63.1: strings keyed under the transport.card namespace.
 // ---------------------------------------------------------------------------
 
+import { useTranslations } from 'next-intl'
 import { Truck, Clock, Package } from '@ultranos/ui-kit/icons'
 import type { TransportSession } from '@/types/transport'
 
@@ -77,7 +77,7 @@ export interface ActiveTransportCardProps {
 }
 
 export function ActiveTransportCard({ session, onClick }: ActiveTransportCardProps) {
-  // TODO i18n: const t = useTranslations('transport.card')
+  const t = useTranslations('transport.card')
 
   const elapsedHours = getElapsedHours(session.pickupTimestamp)
   const color = getStabilityColor(elapsedHours, session.status)
@@ -101,9 +101,8 @@ export function ActiveTransportCard({ session, onClick }: ActiveTransportCardPro
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <Truck size={18} className="shrink-0 text-muted-foreground" aria-hidden="true" />
-          {/* TODO i18n: t('courierLabel') */}
           <span className="truncate text-sm font-medium text-foreground">
-            Courier: {session.courierId}
+            {t('courierLabel', { courierId: session.courierId })}
           </span>
         </div>
 
@@ -113,14 +112,18 @@ export function ActiveTransportCard({ session, onClick }: ActiveTransportCardPro
           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${badgeClasses}`}
         >
           <span className={`h-2 w-2 rounded-full ${dotClass}`} aria-hidden="true" />
-          {/* TODO i18n: t('stable') / t('warning') / t('critical') / t('flagged') */}
-          {isFlagged ? 'FLAGGED' : color === 'green' ? 'Stable' : color === 'amber' ? 'Warning' : 'Critical'}
+          {isFlagged
+            ? t('statusFlagged')
+            : color === 'green'
+              ? t('statusStable')
+              : color === 'amber'
+                ? t('statusWarning')
+                : t('statusCritical')}
         </span>
       </div>
 
-      {/* Origin → Destination */}
+      {/* Origin → Destination — raw IDs replaced with resolved names when API provides them */}
       <div className="mt-2 text-sm text-muted-foreground">
-        {/* TODO i18n: t('routeLabel') — replace raw IDs with resolved names when API provides them */}
         <span className="font-mono text-xs">{session.originLocationId}</span>
         {' → '}
         <span className="font-mono text-xs">{session.destinationLocationId}</span>
@@ -130,13 +133,11 @@ export function ActiveTransportCard({ session, onClick }: ActiveTransportCardPro
       <div className="mt-3 flex items-center gap-4">
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Package size={15} className="shrink-0" aria-hidden="true" />
-          {/* TODO i18n: t('sampleCount', { count: session.sampleCount }) */}
-          <span data-testid="sample-count">{session.sampleCount} samples</span>
+          <span data-testid="sample-count">{t('sampleCount', { count: session.sampleCount })}</span>
         </div>
 
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Clock size={15} className="shrink-0" aria-hidden="true" />
-          {/* TODO i18n: t('elapsed') */}
           <span data-testid="elapsed-time">{formatElapsed(elapsedHours)}</span>
         </div>
       </div>

@@ -1,8 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
-import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  ModalHeader,
+} from '@ultranos/ui-kit/components/ui/dialog'
 import { getHubTrpcUrl } from '@/lib/hub-url'
 
 interface ConsentRenewalModalProps {
@@ -15,11 +20,14 @@ interface ConsentRenewalModalProps {
  * Modal form for renewing a patient's consent.
  * Calls the Hub API consent.renew mutation on submit.
  *
- * TODO i18n: add keys under "consent" namespace:
- *   renewTitle, methodLabel, methodWritten, methodVerbal, witnessLabel,
- *   languageLabel, versionLabel, submitRenew, cancel, renewSuccess, renewError
+ * Story 63.1: fully keyed under the "consent" namespace and rebuilt on the
+ * shared ui-kit radix `Dialog` (was a hand-rolled `fixed inset-0` overlay).
+ * Behavior-identical — same fields, validation, and submit path. The banner
+ * mounts this only when open, so `open` is always true here; closing routes
+ * through `onClose` (X button, Escape, overlay click, or Cancel).
  */
 export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRenewalModalProps) {
+  const t = useTranslations('consent')
   const [method, setMethod] = useState<'WRITTEN' | 'VERBAL_WITNESSED'>('WRITTEN')
   const [witnessedBy, setWitnessedBy] = useState('')
   const [language, setLanguage] = useState<'en' | 'ar' | 'prs'>('en')
@@ -58,28 +66,28 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
       onRenewed()
       onClose()
     } catch {
-      setError('Failed to renew consent. Please try again.')
+      setError(t('renewError'))
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div
-        className="rounded-xl bg-background p-6 max-w-md w-full shadow-xl"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="consent-renewal-title"
-      >
-        <ModalHeader title="Renew Patient Consent" titleId="consent-renewal-title" inset />
+    <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
+      <DialogContent className="max-w-md" hideClose>
+        <ModalHeader
+          title={t('renewTitle')}
+          titleId="consent-renewal-title"
+          closeLabel={t('close')}
+          dialog
+          inset
+        />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Method */}
           <div>
             <label htmlFor="consent-method" className="block text-sm font-medium text-foreground mb-1">
-              {/* TODO: t('consent.methodLabel') */}
-              Method
+              {t('methodLabel')}
             </label>
             <select
               id="consent-method"
@@ -87,8 +95,8 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
               onChange={(e) => setMethod(e.target.value as 'WRITTEN' | 'VERBAL_WITNESSED')}
               className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
             >
-              <option value="WRITTEN">Written</option>
-              <option value="VERBAL_WITNESSED">Verbal (Witnessed)</option>
+              <option value="WRITTEN">{t('methodWritten')}</option>
+              <option value="VERBAL_WITNESSED">{t('methodVerbal')}</option>
             </select>
           </div>
 
@@ -96,8 +104,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
           {method === 'VERBAL_WITNESSED' && (
             <div>
               <label htmlFor="consent-witness" className="block text-sm font-medium text-foreground mb-1">
-                {/* TODO: t('consent.witnessLabel') */}
-                Witness ID
+                {t('witnessLabel')}
               </label>
               <input
                 id="consent-witness"
@@ -105,7 +112,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
                 required
                 value={witnessedBy}
                 onChange={(e) => setWitnessedBy(e.target.value)}
-                placeholder="UUID of witnessing practitioner"
+                placeholder={t('witnessPlaceholder')}
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
               />
             </div>
@@ -114,8 +121,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
           {/* Language */}
           <div>
             <label htmlFor="consent-language" className="block text-sm font-medium text-foreground mb-1">
-              {/* TODO: t('consent.languageLabel') */}
-              Language
+              {t('languageLabel')}
             </label>
             <select
               id="consent-language"
@@ -123,17 +129,16 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
               onChange={(e) => setLanguage(e.target.value as 'en' | 'ar' | 'prs')}
               className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
             >
-              <option value="en">English</option>
-              <option value="ar">Arabic</option>
-              <option value="prs">Dari</option>
+              <option value="en">{t('languageEnglish')}</option>
+              <option value="ar">{t('languageArabic')}</option>
+              <option value="prs">{t('languageDari')}</option>
             </select>
           </div>
 
           {/* Version */}
           <div>
             <label htmlFor="consent-version" className="block text-sm font-medium text-foreground mb-1">
-              {/* TODO: t('consent.versionLabel') */}
-              Version
+              {t('versionLabel')}
             </label>
             <input
               id="consent-version"
@@ -141,7 +146,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
               required
               value={version}
               onChange={(e) => setVersion(e.target.value)}
-              placeholder="e.g. 2.0"
+              placeholder={t('versionPlaceholder')}
               className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
             />
           </div>
@@ -159,19 +164,18 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
               onClick={onClose}
               disabled={submitting}
             >
-              {/* TODO: t('consent.cancel') */}
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               variant="warning"
               type="submit"
               disabled={submitting || !version.trim()}
             >
-              {submitting ? 'Renewing...' : 'Renew Consent'}
+              {submitting ? t('renewing') : t('renewConsent')}
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

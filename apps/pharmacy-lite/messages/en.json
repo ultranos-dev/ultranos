@@ -189,7 +189,8 @@
       "hourly": "{count}× hourly",
       "other": "{count}×"
     },
-    "dosageUnknown": "Dosage unknown — confirm before dispensing"
+    "dosageUnknown": "Dosage unknown — confirm before dispensing",
+    "prescribedBrandLabel": "Prescribed brand:"
   },
   "prescription": {
     "scanTitle": "Scan Prescription",
@@ -259,7 +260,16 @@
     "localDuplicateOverrideConfirm": "Authorize Re-Dispense",
     "overrideSupervisorLabel": "Supervisor Name",
     "overrideSupervisorPlaceholder": "Authorizing supervisor",
-    "overrideReasonLabel": "Reason"
+    "overrideReasonLabel": "Reason",
+    "fraudWarningHeading": "⚠ Fraud Warning",
+    "checkingGlobalStatus": "Checking global fulfillment status…",
+    "alreadyDispensedElsewhere": "Already Dispensed Elsewhere",
+    "alreadyVoidedElsewhere": "Already Voided Elsewhere",
+    "dispensedElsewhereBody": "{medName} was already dispensed{dateClause} at another location. DO NOT dispense this prescription again.",
+    "voidedElsewhereBody": "{medName} was already voided{dateClause} at another location. DO NOT dispense this prescription again.",
+    "elsewhereDateClause": " on {date}",
+    "globalCheckUnavailable": "Global fulfillment check unavailable",
+    "globalCheckUnavailableBody": "The Hub is offline, so we could not confirm this prescription has not already been dispensed at another pharmacy. The signature is valid — proceed with caution."
   },
   "scanner": {
     "title": "Prescription Verification",
@@ -433,7 +443,8 @@
     "pageOf": "Page {page} of {totalPages}",
     "welcome": "Welcome, {name}",
     "pharmacyDashboard": "Pharmacy Dashboard",
-    "lot": "Lot: {lot}"
+    "lot": "Lot: {lot}",
+    "skipToContent": "Skip to content"
   },
   "errors": {
     "allFieldsRequired": "All fields are required.",

@@ -68,6 +68,8 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
 
 // ─── Imports (after mocks) ────────────────────────────────────────────────────
 
+import { NextIntlClientProvider } from 'next-intl'
+import enMessages from '../../messages/en.json'
 import { CourierPickupScreen } from '@/components/transport/CourierPickupScreen'
 import { CourierDeliveryScreen } from '@/components/transport/CourierDeliveryScreen'
 import { startTransport } from '@/lib/transport-service'
@@ -75,6 +77,22 @@ import { recordDelivery } from '@/lib/transport-service'
 import type { TransportSession } from '@/types/transport'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+// Story 63.1: the transport screens are keyed. Render inside a real
+// NextIntlClientProvider (en) so ICU strings (e.g. "1 sample added",
+// "Step 1 of 5") resolve exactly as in production.
+function renderIntl(
+  ui: React.ReactElement,
+  options?: { wrapper?: React.ComponentType<{ children: React.ReactNode }> },
+) {
+  const Inner = options?.wrapper
+  const wrapped = Inner ? <Inner>{ui}</Inner> : ui
+  return render(
+    <NextIntlClientProvider locale="en" messages={enMessages as never}>
+      {wrapped}
+    </NextIntlClientProvider>,
+  )
+}
 
 const DEFAULT_PICKUP_PROPS = {
   originLocationId: 'loc-origin-001',
@@ -140,7 +158,7 @@ describe('CourierPickupScreen', () => {
   })
 
   it('1. renders step 1 with courier ID input', () => {
-    render(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />)
+    renderIntl(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />)
 
     expect(screen.getByTestId('courier-pickup-screen')).toBeInTheDocument()
     expect(screen.getByTestId('courier-id-input')).toBeInTheDocument()
@@ -149,7 +167,7 @@ describe('CourierPickupScreen', () => {
   })
 
   it('2. cannot proceed to step 2 without entering a courier ID', () => {
-    render(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />)
+    renderIntl(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />)
 
     const nextBtn = screen.getByRole('button', { name: /next/i })
     expect(nextBtn).toBeDisabled()
@@ -160,7 +178,7 @@ describe('CourierPickupScreen', () => {
   })
 
   it('3. can navigate through all steps with valid data', async () => {
-    render(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />)
+    renderIntl(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />)
 
     // Step 1 → 2
     fireEvent.change(screen.getByTestId('courier-id-input'), { target: { value: 'CRR-001' } })
@@ -189,7 +207,7 @@ describe('CourierPickupScreen', () => {
   })
 
   it('4. adds a sample label to the list when typed and button clicked', async () => {
-    render(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />)
+    renderIntl(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />)
 
     // Navigate to step 3
     fireEvent.change(screen.getByTestId('courier-id-input'), { target: { value: 'CRR-001' } })
@@ -222,7 +240,7 @@ describe('CourierPickupScreen', () => {
     const mockSession = makeSession({ id: 'sess-new', courierId: 'CRR-001' })
     vi.mocked(startTransport).mockResolvedValue(mockSession)
 
-    render(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />)
+    renderIntl(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />)
     await navigatePickupToSummary('CRR-001')
 
     await act(async () => {
@@ -244,7 +262,7 @@ describe('CourierPickupScreen', () => {
     const mockSession = makeSession({ id: 'sess-new' })
     vi.mocked(startTransport).mockResolvedValue(mockSession)
 
-    render(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />)
+    renderIntl(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />)
     await navigatePickupToSummary()
 
     await act(async () => {
@@ -267,7 +285,7 @@ describe('CourierDeliveryScreen', () => {
 
   it('7. renders session details including sample count and elapsed time', () => {
     const session = makeSession()
-    render(<CourierDeliveryScreen session={session} onDelivered={vi.fn()} />)
+    renderIntl(<CourierDeliveryScreen session={session} onDelivered={vi.fn()} />)
 
     expect(screen.getByTestId('courier-delivery-screen')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()         // sampleCount
@@ -280,7 +298,7 @@ describe('CourierDeliveryScreen', () => {
   it('8. shows red stability warning when elapsed > 6 hours', () => {
     const oldPickup = new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString()
     const session = makeSession({ pickupTimestamp: oldPickup })
-    render(<CourierDeliveryScreen session={session} onDelivered={vi.fn()} />)
+    renderIntl(<CourierDeliveryScreen session={session} onDelivered={vi.fn()} />)
 
     const warning = screen.getByTestId('stability-warning')
     expect(warning).toBeInTheDocument()
@@ -291,7 +309,7 @@ describe('CourierDeliveryScreen', () => {
   it('9. shows amber stability warning when elapsed between 4 and 6 hours', () => {
     const oldPickup = new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
     const session = makeSession({ pickupTimestamp: oldPickup })
-    render(<CourierDeliveryScreen session={session} onDelivered={vi.fn()} />)
+    renderIntl(<CourierDeliveryScreen session={session} onDelivered={vi.fn()} />)
 
     const warning = screen.getByTestId('stability-warning')
     expect(warning).toBeInTheDocument()
@@ -301,7 +319,7 @@ describe('CourierDeliveryScreen', () => {
 
   it('10. Record Delivery button is disabled until a condition is selected', () => {
     const session = makeSession()
-    render(<CourierDeliveryScreen session={session} onDelivered={vi.fn()} />)
+    renderIntl(<CourierDeliveryScreen session={session} onDelivered={vi.fn()} />)
 
     const btn = screen.getByTestId('record-delivery-button')
     expect(btn).toBeDisabled()
@@ -317,7 +335,7 @@ describe('CourierDeliveryScreen', () => {
     vi.mocked(recordDelivery).mockResolvedValue(updatedSession)
 
     const onDelivered = vi.fn()
-    render(<CourierDeliveryScreen session={session} onDelivered={onDelivered} />)
+    renderIntl(<CourierDeliveryScreen session={session} onDelivered={onDelivered} />)
 
     // Set temperature and select condition
     fireEvent.change(screen.getByTestId('delivery-temp-input'), { target: { value: '25' } })
@@ -355,7 +373,7 @@ describe('CourierDeliveryScreen', () => {
     })
     vi.mocked(recordDelivery).mockResolvedValue(updatedSession)
 
-    render(<CourierDeliveryScreen session={session} onDelivered={vi.fn()} />)
+    renderIntl(<CourierDeliveryScreen session={session} onDelivered={vi.fn()} />)
     fireEvent.click(screen.getByTestId('condition-damaged'))
 
     await act(async () => {
@@ -371,7 +389,7 @@ describe('CourierDeliveryScreen', () => {
 
 describe('RTL layout', () => {
   it('13. pickup screen renders without errors in RTL context', () => {
-    const { container } = render(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />, {
+    const { container } = renderIntl(<CourierPickupScreen {...DEFAULT_PICKUP_PROPS} />, {
       wrapper: ({ children }) => <div dir="rtl">{children}</div>,
     })
     // Basic smoke test — component must mount and show primary content
@@ -381,7 +399,7 @@ describe('RTL layout', () => {
 
   it('14. delivery screen renders without errors in RTL context', () => {
     const session = makeSession()
-    const { container } = render(
+    const { container } = renderIntl(
       <CourierDeliveryScreen session={session} onDelivered={vi.fn()} />,
       {
         wrapper: ({ children }) => <div dir="rtl">{children}</div>,

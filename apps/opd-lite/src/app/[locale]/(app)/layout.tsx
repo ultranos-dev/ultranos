@@ -10,8 +10,10 @@ import {
   SidebarProvider,
 } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { getTranslations } from 'next-intl/server'
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const t = await getTranslations('common')
   return (
     <TooltipProvider>
       <SidebarProvider>
@@ -21,7 +23,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             href="#main-content"
             className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-[100] focus:rounded focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-lg focus:outline-2 focus:outline-offset-2 focus:outline-ring"
           >
-            Skip to content
+            {t('skipToContent')}
           </a>
           <SyncAwareStaleDataBanner />
           <BreadcrumbHeader />
