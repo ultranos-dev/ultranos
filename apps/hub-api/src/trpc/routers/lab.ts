@@ -20,6 +20,9 @@ import { signPhotoUrl } from '@/lib/photo-urls'
 import { normalizeNameComponent, computePhoneticTokens, computeMpiResult } from '@ultranos/mpi-engine'
 import { signProceedToken, verifyProceedToken, consumeProceedToken } from '@/lib/mpi-proceed-token'
 import { fetchMpiCandidates } from '@/lib/mpi-candidate-query'
+// Story 56.4 (M-HUB-3): shared Redis rate limiter for lab.reportAuthEvent
+// (replaces the former per-instance in-memory Map). Scoped to reportAuthEvent.
+import { checkRateLimit } from '../middleware/rateLimit'
 
 /**
  * Dispatch lab result notifications to the ordering doctor and patient.
@@ -138,28 +141,12 @@ async function dispatchResultNotifications(
 }
 
 /**
- * In-memory rate limiter for unauthenticated reportAuthEvent endpoint.
- * Keyed by IP hash, limits to MAX_REQUESTS per WINDOW_MS.
+ * Rate-limit config for the unauthenticated reportAuthEvent endpoint.
+ * Story 56.4 (M-HUB-3): the former per-instance in-memory Map (which also leaked
+ * — it never evicted expired keys) is replaced by the shared Redis limiter so the
+ * cap holds across all Hub instances. Keyed by hashed source IP.
  */
-const AUTH_EVENT_RATE_LIMIT = {
-  MAX_REQUESTS: 20,
-  WINDOW_MS: 60_000,
-}
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-
-function checkRateLimit(key: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(key)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(key, { count: 1, resetAt: now + AUTH_EVENT_RATE_LIMIT.WINDOW_MS })
-    return true
-  }
-  if (entry.count >= AUTH_EVENT_RATE_LIMIT.MAX_REQUESTS) {
-    return false
-  }
-  entry.count++
-  return true
-}
+const AUTH_EVENT_RATE_LIMIT = { limit: 20, windowSec: 60 } as const
 
 /**
  * Lab domain router.
@@ -500,13 +487,23 @@ export const labRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Rate limit by IP hash
+      // Rate limit by IP hash — shared Redis limiter (Story 56.4 / M-HUB-3),
+      // replacing the leaky per-instance in-memory Map. Fail-open (non-critical):
+      // this endpoint protects against audit-trail FLOODING, not credential
+      // brute-force, so a Redis blip must not deny legitimate best-effort auth-
+      // event reporting — matching the prior in-memory limiter's behavior.
       const forwarded = ctx.headers.get('x-forwarded-for')
       const ip = forwarded?.split(',')[0]?.trim() ?? 'unknown'
       const { createHash } = await import('crypto')
       const ipHash = createHash('sha256').update(ip).digest('hex')
 
-      if (!checkRateLimit(ipHash)) {
+      const rl = await checkRateLimit(
+        { scope: 'ip', id: ipHash },
+        'lab.reportAuthEvent',
+        AUTH_EVENT_RATE_LIMIT,
+        'authEvent',
+      )
+      if (!rl.allowed) {
         throw new TRPCError({
           code: 'TOO_MANY_REQUESTS',
           message: 'Too many auth event reports — try again later',

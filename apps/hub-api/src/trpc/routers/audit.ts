@@ -1,11 +1,63 @@
 import { z } from 'zod'
+import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { AuditAction, AuditResourceType, UserRole } from '@ultranos/shared-types'
+import { checkRateLimit, deriveIdentifier } from '../middleware/rateLimit'
 
-const auditActionValues = Object.values(AuditAction) as [string, ...string[]]
-const auditResourceTypeValues = Object.values(AuditResourceType) as [string, ...string[]]
 const userRoleValues = Object.values(UserRole) as [string, ...string[]]
+
+/**
+ * Story 56.4 (M-HUB-3): audit.sync accepts CLIENT-submitted events, so the
+ * claimable `action` / `resourceType` are restricted to an allowlist rather than
+ * the full server enums. Anything a spoke can legitimately record while offline
+ * (clinical reads/writes, consent changes, session lifecycle, sync bookkeeping)
+ * is claimable; server-authoritative events — lab approval/suspension, KYC
+ * decisions, anomaly moderation, license lifecycle, security violations,
+ * break-glass, MFA_FAIL, etc. — are NOT, so a compromised client cannot forge
+ * privileged audit entries. This is the superset of what the OPD/pharmacy/lab
+ * spokes actually emit (verified against their client audit-logger call sites).
+ */
+const CLIENT_CLAIMABLE_ACTIONS = [
+  AuditAction.READ,
+  AuditAction.CREATE,
+  AuditAction.UPDATE,
+  AuditAction.DELETE_REQUEST,
+  AuditAction.CONSENT_GRANT,
+  AuditAction.CONSENT_REVOKE,
+  AuditAction.SYNC,
+  AuditAction.LOGIN,
+  AuditAction.LOGOUT,
+  AuditAction.EXPORT,
+  AuditAction.PHI_READ,
+  AuditAction.PHI_WRITE,
+  AuditAction.PHI_CLEANUP,
+] as const
+
+const CLIENT_CLAIMABLE_RESOURCE_TYPES = [
+  AuditResourceType.PATIENT,
+  AuditResourceType.PRESCRIPTION,
+  AuditResourceType.LAB_RESULT,
+  AuditResourceType.CLINICAL_NOTE,
+  AuditResourceType.OBSERVATION,
+  AuditResourceType.ENCOUNTER,
+  AuditResourceType.CONSENT,
+  AuditResourceType.USER_ACCOUNT,
+  AuditResourceType.NOTIFICATION,
+  AuditResourceType.ALLERGY,
+  AuditResourceType.MEDICATION_STATEMENT,
+  AuditResourceType.MEDICATION_DISPENSE,
+  AuditResourceType.APPOINTMENT,
+  AuditResourceType.SERVICE_REQUEST,
+  AuditResourceType.DIAGNOSTIC_REPORT,
+  AuditResourceType.SYSTEM,
+] as const
+
+const clientClaimableActionValues = CLIENT_CLAIMABLE_ACTIONS as unknown as [string, ...string[]]
+const clientClaimableResourceTypeValues = CLIENT_CLAIMABLE_RESOURCE_TYPES as unknown as [string, ...string[]]
+
+/** Rate limit for client audit drains: generous, non-auth-critical (fail-open). */
+const AUDIT_SYNC_RATE_LIMIT = { limit: 120, windowSec: 60 } as const
 
 /**
  * Audit domain router.
@@ -30,8 +82,9 @@ export const auditRouter = createTRPCRouter({
               id: z.string().uuid(),
               actorId: z.string().min(1),
               actorRole: z.enum(userRoleValues),
-              action: z.enum(auditActionValues),
-              resourceType: z.enum(auditResourceTypeValues),
+              // Story 56.4 (M-HUB-3): only client-claimable actions/resource types.
+              action: z.enum(clientClaimableActionValues),
+              resourceType: z.enum(clientClaimableResourceTypeValues),
               resourceId: z.string().min(1),
               patientId: z.string().optional(),
               hlcTimestamp: z.string().min(1),
@@ -44,6 +97,18 @@ export const auditRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Story 56.4 (M-HUB-3): rate limit the client drain (keyed by the
+      // authenticated user). Non-auth-critical → fail-open so a Redis blip never
+      // blocks a legitimate offline-audit drain.
+      const identifier = deriveIdentifier(ctx)
+      const rl = await checkRateLimit(identifier, 'audit.sync', AUDIT_SYNC_RATE_LIMIT, 'auditSync')
+      if (!rl.allowed) {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: 'Audit sync rate limit exceeded — try again later',
+        })
+      }
+
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       const results: Array<{ id: string; success: boolean }> = []
       const serverActorId = ctx.user.sub

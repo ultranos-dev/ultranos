@@ -114,6 +114,11 @@ export const patientRegistrationRouter = createTRPCRouter({
    * Rate limited: max 3 requests per phone per 10 minutes.
    */
   requestOtp: baseProcedure
+    // Story 56.4 (M-HUB-2): the IP-based middleware stays fail-OPEN so a Redis
+    // blip never surfaces a 429 (which would both break the UX and leak an
+    // enumeration signal). The auth-critical fail-CLOSED guard is the per-phone
+    // check inside the handler: on a Redis outage it suppresses the actual OTP
+    // send while still returning the generic { sent: true } (anti-enumeration).
     .use(rateLimitMiddleware(OTP_RATE_LIMIT, 'patientOtp'))
     .input(
       z.object({
@@ -128,9 +133,13 @@ export const patientRegistrationRouter = createTRPCRouter({
         'patientRegistration.requestOtp',
         OTP_RATE_LIMIT,
         'perPhone',
+        // Story 56.4 (M-HUB-2): per-phone OTP cap is auth-critical — fail CLOSED
+        // on a Redis outage rather than allow unlimited per-phone OTP sends.
+        { critical: true },
       )
       if (!phoneLimit.allowed) {
         // Anti-enumeration: still return { sent: true } even when rate-limited
+        // (or when failing closed during a Redis outage).
         return { sent: true }
       }
 

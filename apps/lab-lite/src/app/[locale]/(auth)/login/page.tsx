@@ -135,7 +135,13 @@ export default function LoginPage() {
 
     const params = new URLSearchParams(window.location.search)
     const returnUrl = params.get('returnUrl') ?? '/'
-    const safeUrl = returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/'
+    // Story 56.4 (H-ADM-1): same-origin path only — reject //host and /\host.
+    const safeUrl =
+      returnUrl.startsWith('/') &&
+      !returnUrl.startsWith('//') &&
+      !returnUrl.startsWith('/\\')
+        ? returnUrl
+        : '/'
     router.push(safeUrl)
   }
 

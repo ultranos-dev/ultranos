@@ -12,6 +12,7 @@ import { ShieldCheck, KeyRound } from '@ultranos/ui-kit/icons'
 // behaviorally identical to before (AC 2, AC 7).
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAdminAuthEvent } from '@/lib/trpc'
+import { safeReturnUrl } from '@/lib/safe-redirect'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -111,9 +112,9 @@ export default function AdminLoginPage() {
         reportAdminAuthEvent('ADMIN_LOGIN_SUCCESS', { actorId: payload.sub })
 
         const params = new URLSearchParams(window.location.search)
-        const returnUrl = params.get('returnUrl')
-        window.location.href =
-          returnUrl && returnUrl.startsWith('/') ? returnUrl : '/dashboard'
+        // Story 56.4 (H-ADM-1): only honor same-origin path redirects — blocks
+        // //evil.com and /\evil.com open-redirect payloads.
+        window.location.href = safeReturnUrl(params.get('returnUrl'), '/dashboard')
         return
       }
 
@@ -196,9 +197,8 @@ export default function AdminLoginPage() {
       reportAdminAuthEvent('ADMIN_LOGIN_SUCCESS', { actorId: payload.sub })
 
       const params = new URLSearchParams(window.location.search)
-      const returnUrl = params.get('returnUrl')
-      window.location.href =
-        returnUrl && returnUrl.startsWith('/') ? returnUrl : '/dashboard'
+      // Story 56.4 (H-ADM-1): only honor same-origin path redirects.
+      window.location.href = safeReturnUrl(params.get('returnUrl'), '/dashboard')
     } catch {
       setError(t('errorUnexpectedMfa'))
     } finally {

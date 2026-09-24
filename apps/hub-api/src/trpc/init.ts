@@ -69,6 +69,9 @@ export const createTRPCContext = async (opts: {
   const authHeader = opts.headers.get('authorization')
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.slice(7)
+    // Presence gate: skip verification entirely when no key material is
+    // configured (returns null). verifySupabaseJwt resolves its own ES256/HS256
+    // key and pins the algorithm allowlist internally (Story 56.4 / H-HUB-8).
     const jwk = getSupabaseJwk()
     if (jwk) {
       try {

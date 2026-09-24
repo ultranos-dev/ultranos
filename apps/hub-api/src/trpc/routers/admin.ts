@@ -12,6 +12,7 @@ import { computeScreeningReminders } from '@/lib/screening-reminders'
 import { buildNotificationContent } from '@/lib/notification-content'
 import { signPhotoUrls } from '@/lib/photo-urls'
 import { invalidateOrgSecurityPolicy, DEFAULT_ORG_SECURITY_POLICY } from '@/lib/mfa-policy'
+import { checkRateLimit } from '../middleware/rateLimit'
 
 /**
  * ADMIN-role-only middleware guard.
@@ -28,30 +29,12 @@ const adminProcedure = protectedProcedure.use(async (opts) => {
 })
 
 /**
- * In-memory rate limiter for unauthenticated admin auth event endpoint.
+ * Rate-limit config for the unauthenticated admin auth-event endpoint.
+ * Story 56.4 (M-HUB-3): the former per-instance in-memory Map has been replaced
+ * by the shared Redis limiter (`checkRateLimit`) so the cap holds across all Hub
+ * instances and no unbounded map can accumulate keys. Keyed by hashed source IP.
  */
-const RATE_LIMIT = { MAX_REQUESTS: 20, WINDOW_MS: 60_000, MAX_ENTRIES: 10_000 }
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-
-function evictExpiredEntries(now: number): void {
-  if (rateLimitMap.size <= RATE_LIMIT.MAX_ENTRIES) return
-  for (const [k, v] of rateLimitMap) {
-    if (now > v.resetAt) rateLimitMap.delete(k)
-  }
-}
-
-function checkRateLimit(key: string): boolean {
-  const now = Date.now()
-  evictExpiredEntries(now)
-  const entry = rateLimitMap.get(key)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_LIMIT.WINDOW_MS })
-    return true
-  }
-  if (entry.count >= RATE_LIMIT.MAX_REQUESTS) return false
-  entry.count++
-  return true
-}
+const AUTH_EVENT_RATE_LIMIT = { limit: 20, windowSec: 60 } as const
 
 // ================================================================
 // EPIC C: Default Thresholds & Module Settings
@@ -361,7 +344,17 @@ export const adminRouter = createTRPCRouter({
       const { createHash } = await import('crypto')
       const ipHash = createHash('sha256').update(ip).digest('hex')
 
-      if (!checkRateLimit(ipHash)) {
+      // Story 56.4 (M-HUB-3): shared Redis limiter, keyed by hashed IP, replacing
+      // the per-instance in-memory Map. Fail-open (non-critical): this guards
+      // against audit-trail FLOODING, not credential brute-force, so a Redis blip
+      // must not deny best-effort auth-event reporting (prior in-memory behavior).
+      const rl = await checkRateLimit(
+        { scope: 'ip', id: ipHash },
+        'admin.reportAuthEvent',
+        AUTH_EVENT_RATE_LIMIT,
+        'authEvent',
+      )
+      if (!rl.allowed) {
         throw new TRPCError({
           code: 'TOO_MANY_REQUESTS',
           message: 'Too many auth event reports — try again later',
