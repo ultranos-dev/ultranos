@@ -1,10 +1,14 @@
 import * as React from 'react'
 import { View, Text, Pressable, StyleSheet, I18nManager } from 'react-native'
+import { Colors, Spacing, Radius, FontSize, FontWeight } from '../../tokens.native.js'
 
 /**
  * Native (React Native) implementation of EmptyState.
  * Metro automatically prefers `.native.tsx` over `.tsx` for RN builds.
  * Props are intentionally identical to the web version so call-sites are portable.
+ *
+ * Colors/spacing/radius/type come from `tokens.native` (never hardcoded hex) —
+ * per the CLAUDE.md Native Design Tokens rule.
  */
 export interface EmptyStateProps {
   title: string
@@ -26,7 +30,7 @@ export function EmptyState({
       <View style={[styles.smContainer, I18nManager.isRTL && styles.smContainerRtl]}>
         {Icon !== undefined && (
           <View style={styles.smIconWrapper}>
-            <Icon size={16} color="#6b7280" />
+            <Icon size={16} color={Colors.textMuted} />
           </View>
         )}
         <View style={styles.smTextBlock}>
@@ -48,7 +52,7 @@ export function EmptyState({
     <View style={styles.mdContainer}>
       {Icon !== undefined && (
         <View style={styles.mdIconWrapper}>
-          <Icon size={24} color="#6b7280" />
+          <Icon size={24} color={Colors.textMuted} />
         </View>
       )}
       <Text style={styles.mdTitle}>{title}</Text>
@@ -69,47 +73,47 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 32,
-    gap: 8,
+    paddingHorizontal: Spacing[4],
+    paddingVertical: Spacing[8],
+    gap: Spacing[2],
   },
   mdIconWrapper: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: Colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
   mdTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#111827',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
     textAlign: 'center',
   },
   mdDescription: {
-    fontSize: 12,
-    color: '#6b7280',
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
     textAlign: 'center',
     maxWidth: 280,
   },
   mdAction: {
-    marginTop: 4,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
+    marginTop: Spacing[1],
+    paddingHorizontal: Spacing[4],
+    paddingVertical: Spacing[2],
+    borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: Colors.border,
   },
   mdActionText: {
-    fontSize: 14,
-    color: '#374151',
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
   },
   smContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    padding: 16,
+    padding: Spacing[4],
   },
   smContainerRtl: {
     flexDirection: 'row-reverse',
@@ -118,7 +122,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: Colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -128,24 +132,24 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   smTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#111827',
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.semibold,
+    color: Colors.textPrimary,
   },
   smDescription: {
-    fontSize: 12,
-    color: '#6b7280',
+    fontSize: FontSize.xs,
+    color: Colors.textMuted,
   },
   smAction: {
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: Colors.border,
     flexShrink: 0,
   },
   smActionText: {
-    fontSize: 12,
-    color: '#374151',
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
   },
 })

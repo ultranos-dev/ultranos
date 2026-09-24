@@ -45,7 +45,7 @@ export function useRealtimeDashboard({ practitionerId, onEvent }: UseRealtimeDas
       .on('broadcast', { event: 'notification' }, () => {
         onEvent('notification')
       })
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         if (status === 'CHANNEL_ERROR') {
           // Realtime unavailable — polling continues as fallback
           console.warn('[Realtime] Channel error — falling back to polling')

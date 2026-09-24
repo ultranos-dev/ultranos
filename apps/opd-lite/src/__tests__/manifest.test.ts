@@ -9,7 +9,7 @@ describe('PWA manifest', () => {
     expect(m.short_name).toBe('OPD Lite')
     expect(m.description).toBeDefined()
     expect(m.start_url).toBe('/')
-    expect(m.theme_color).toBe('#1e40af')
+    expect(m.theme_color).toBe('#2e9e71')
     expect(m.background_color).toBe('#f9fafb')
   })
 

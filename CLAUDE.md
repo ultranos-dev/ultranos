@@ -90,7 +90,7 @@ Every clinical workflow must complete without a network connection. When writing
 - Priority sync order: allergies/consent → prescriptions → lab notifications → notes → vitals → metadata
 
 ### Encryption
-- **Hub DB:** AES-256-GCM field-level encryption on PHI columns (diagnosis, prescription content, notes). See `packages/crypto/src/field-encrypt.ts`
+- **Hub DB:** AES-256-GCM field-level encryption on PHI columns (diagnosis, prescription content, notes). See `packages/crypto/src/server-crypto.ts` (`encryptField`/`decryptField`)
 - **Android local store:** SQLCipher. Key from Android Keystore. Never store the key in SharedPreferences or plaintext.
 - **Desktop PWA:** Web Crypto API AES-GCM wrapping IndexedDB. Encryption key lives in memory only — cleared on tab/browser close. Never use `localStorage` or `sessionStorage` for PHI.
 - **QR codes — Identity (Health Passport):** Contain `{ pid, iat, exp, v, sig? }` (JWT-standard short names for QR compactness: `pid` = patient_id, `iat` = issued_at, `exp` = expiry, `sig` = ECDSA-P256 signature) — never raw PHI.
@@ -108,13 +108,22 @@ All clinical data types in `packages/shared-types/` map to FHIR R4 resources. Wh
 All Next.js apps use **ShadCN** components from `packages/ui-kit/src/components/ui/`. The 15 canonical components are: `badge`, `breadcrumb`, `button`, `dialog`, `dropdown-menu`, `empty-state`, `input`, `label`, `select`, `separator`, `sheet`, `sidebar`, `skeleton`, `textarea`, `tooltip`.
 
 **⛔ Source-level changes only — no app-level duplication:**
-All changes to shared UI components (ShadCN components, tokens, language selector, sidebar layout, etc.) **MUST be made in `packages/ui-kit/src/`**, not duplicated or overridden at the app level. App-level overrides are only permitted when there is an explicit app-specific requirement that cannot be generalized. After any change to `packages/ui-kit/src/`, you MUST rebuild the package before apps can pick up the change:
+All changes to shared UI components (ShadCN components, tokens, language selector, sidebar layout, etc.) **MUST be made in `packages/ui-kit/src/`**, not duplicated or overridden at the app level. App-level overrides are only permitted when there is an explicit app-specific requirement that cannot be generalized. App-level `src/components/ui/` files are **thin re-export proxies only** — never put component logic or styling in them.
+
+**Build model — two resolution paths (this is intentional; do not "fix" it by routing everything through one):**
+The `exports` map in `packages/ui-kit/package.json` is the ground truth. It splits into:
+- **Compiled → `dist/` (needs a rebuild after a src edit):** the barrel (`.` / `@ultranos/ui-kit`), `./icons`, `./hooks/*`, and `./utils/format`. These resolve to `dist/*.js` (+ `.d.ts`), so a `src` edit to anything the barrel re-exports has **no effect on barrel importers until you rebuild**. `dist/` is a build artifact — it is **gitignored** (`.gitignore: dist/`) and **not committed**; each clone/worktree/CI job must build it.
+- **Source → `src/*.tsx` (live immediately, no rebuild):** every component subpath (`./components/ui/*`, `./components/photo/*`), `./tokens.css`, `./tailwind.preset`, `./tokens.native`, `./native*`, and the connected language selector. Editing e.g. `dialog.tsx` is picked up by `@ultranos/ui-kit/components/ui/dialog` consumers with no build step.
+
+So: after editing a **component**, no rebuild is needed for its subpath consumers; after editing anything re-exported through the **barrel/icons/hooks/utils**, you MUST rebuild:
 ```bash
 pnpm --filter @ultranos/ui-kit build
+# guard against forgetting: fails if newest src is newer than newest dist
+pnpm --filter @ultranos/ui-kit check:dist
 # Then clear app .next caches if needed
 rm -rf apps/<app-name>/.next
 ```
-The compiled output lives in `packages/ui-kit/dist/`. Apps resolve imports through `dist/`, not source `.tsx` files — a source edit without a rebuild will have no effect. App-level `src/components/ui/` files are **thin re-export proxies only** — never put component logic or styling in them.
+`check:dist` (`packages/ui-kit/scripts/check-dist-fresh.mjs`) is a standalone staleness guard; wiring it into CI is a documented follow-up.
 
 **Import rule — always import from `@ultranos/ui-kit/components/ui/<name>`:**
 ```typescript
@@ -425,7 +434,7 @@ This ensures all schema changes are tracked, reversible, and consistent with the
 - Full PRD with all requirements: `ultranos_master_prd_v3.md`
 - FHIR type definitions: `packages/shared-types/src/fhir/`
 - Sync engine conflict resolver: `packages/sync-engine/src/conflict-resolver.ts`
-- Audit event schema: `packages/audit-logger/src/schema.ts`
-- Drug interaction severity levels: `packages/drug-db/src/severity.ts`
+- Audit event schema: `packages/shared-types/src/fhir/audit-event.ts` (the `AuditEvent` interface); emitter: `packages/audit-logger/src/logger.ts`
+- Drug interaction severity levels: `packages/shared-types/src/enums.ts` (`DrugInteractionSeverity`); re-exported via `packages/drug-db/src/types.ts`
 - Encryption helpers: `packages/crypto/src/`
 - Consent data model: `packages/shared-types/src/fhir/consent.ts`

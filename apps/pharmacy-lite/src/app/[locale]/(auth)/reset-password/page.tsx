@@ -49,14 +49,23 @@ export default function ResetPasswordPage() {
       return
     }
 
-    supabase.auth.exchangeCodeForSession(code).then(({ data, error: exchErr }) => {
-      if (exchErr || !data.session) {
-        setState('invalid')
-        return
-      }
-      setActorId(data.session.user.id)
-      setState('form')
-    })
+    // Under @supabase/ssr ≥0.10, createBrowserClient is untyped, so
+    // exchangeCodeForSession resolves to `any`; annotate the fields we read to
+    // keep type-safety (mirrors lab-lite/admin-portal).
+    type ExchangeResult = {
+      data: { session: { user: { id: string } } | null }
+      error: unknown
+    }
+    supabase.auth
+      .exchangeCodeForSession(code)
+      .then(({ data, error: exchErr }: ExchangeResult) => {
+        if (exchErr || !data.session) {
+          setState('invalid')
+          return
+        }
+        setActorId(data.session.user.id)
+        setState('form')
+      })
   }, [searchParams, supabase])
 
   async function handleSubmit(e: React.FormEvent) {

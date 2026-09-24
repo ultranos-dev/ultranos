@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Offline-first clinical encounter management for outpatient departments',
     start_url: '/',
     display: 'standalone',
-    theme_color: '#1e40af',
+    theme_color: '#2e9e71',
     background_color: '#f9fafb',
     icons: [
       // W3C manifest spec allows space-separated purposes; Next.js types are too narrow

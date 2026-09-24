@@ -54,14 +54,19 @@
       "import": "./dist/hooks/use-async-data.js",
       "types": "./dist/hooks/use-async-data.d.ts"
     },
-    "./components/ui/async-states": "./src/components/ui/async-states.tsx"
+    "./components/ui/async-states": "./src/components/ui/async-states.tsx",
+    "./utils/format": {
+      "import": "./dist/utils/format.js",
+      "types": "./dist/utils/format.d.ts"
+    }
   },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "dev": "tsc --watch",
     "test": "vitest run",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "check:dist": "node scripts/check-dist-fresh.mjs"
   },
   "peerDependencies": {
     "next": "^14.0.0 || ^15.0.0",
