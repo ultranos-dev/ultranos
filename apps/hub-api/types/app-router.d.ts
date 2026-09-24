@@ -5239,5 +5239,19 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             meta: object;
         }>;
     }>>;
+    session: import("@trpc/server").TRPCBuiltRouter<{
+        ctx: import("../init").TRPCContext;
+        meta: object;
+        errorShape: import("@trpc/server").TRPCDefaultErrorShape;
+        transformer: true;
+    }, import("@trpc/server").TRPCDecorateCreateRouterOptions<{
+        getKeyWrappingSecret: import("@trpc/server").TRPCQueryProcedure<{
+            input: void;
+            output: {
+                secret: string;
+            };
+            meta: object;
+        }>;
+    }>>;
 }>>;
 export type AppRouter = typeof appRouter;
