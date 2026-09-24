@@ -792,6 +792,6 @@ development_status:
   # Safety-critical i18n, content gating, ui-kit/doc truth
   # ============================================================
   epic-63: backlog
-  63-1-safety-critical-i18n-sweep: ready-for-dev
+  63-1-safety-critical-i18n-sweep: review  # Wave 6 batch 2 done+verified (safety strings keyed ×4 all apps, consent modal→ui-kit Dialog, custom ratcheting no-hardcoded-ui-string eslint rule, RTL safety snapshots; pharmacy 1159/opd 1472/admin 334/lab 3970); ar/prs/ps flagged for native-speaker review
   63-2-lab-lite-content-gating-and-ui-standards-sweep: ready-for-dev
-  63-3-platform-consistency-and-doc-truth: ready-for-dev
+  63-3-platform-consistency-and-doc-truth: review  # Wave 6 batch 2 done+verified (ui-kit build model documented [dist gitignored — audit premise corrected] + check:dist, CLAUDE.md pointers fixed, supabase opd+pharmacy→0.10.2, hygiene sweep; opd 1472/pharmacy 1159/admin 334/ui-kit 444); DTO consolidation done by 59.2, admin Patient dedup deferred

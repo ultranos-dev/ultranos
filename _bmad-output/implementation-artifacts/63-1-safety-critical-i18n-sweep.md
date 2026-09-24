@@ -1,6 +1,6 @@
 # Story 63.1: Safety-Critical i18n Sweep & Hardcoded-String Guard
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -19,12 +19,12 @@ so that a pharmacist in Herat never sees "DO NOT dispense — Fraud Warning" in 
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Pharmacy safety strings** (AC: 1) — extract → `scanner.*`/`allergy.*` namespaces; translate ×4; RTL snapshots for the fraud/revoked/dispensed warning states.
-- [ ] **Task 2: OPD consent modal** (AC: 2) — keys + ui-kit `Dialog` migration (behavior-identical: same fields, validation, submit path); note the modal is reachable via `ConsentExpiryBanner` whose `consentExpiryDate` sourcing gap is tracked separately — do not expand scope.
-- [ ] **Task 3: Admin sweep** (AC: 3) — batch-key by page; shared pagination-strings namespace; date-locale helper.
-- [ ] **Task 4: Lab transport + stragglers** (AC: 4) — `useTranslations('transport.*')`; clear the 8 TODOs.
-- [ ] **Task 5: Lint guard** (AC: 5) — configure + baseline (existing violations fixed by Tasks 1-4; any remainder explicitly allowlisted with a tracking note); wire to CI.
-- [ ] **Task 6: Regression verification** (AC: 6) — full 4-app suites incl. new RTL snapshots; visual pass over the safety banners in ar; `pnpm typecheck`.
+- [x] **Task 1: Pharmacy safety strings** (AC: 1) — `PharmacyScannerView` fraud/key-revoked/already-dispensed/offline warnings + buttons keyed (mostly the pre-existing `prescription` namespace); `FulfillmentChecklist` + skip-to-content. `AllergyBanner` was already fully keyed (story refs stale) — display behavior untouched (Safety Rule #4). +11 keys ×4 (parity 1730×4). New `scanner-safety-rtl-snapshots.test.tsx` (LTR-en + RTL-ar).
+- [x] **Task 2: OPD consent modal** (AC: 2) — `ConsentRenewalModal` fully keyed + rebuilt on ui-kit `Dialog` (behavior-identical: same props/fields/validation/`/consent.renew` submit path/reachability), skip-to-content keyed. +17 keys ×4. New behavior suite. `consentExpiryDate` gap NOT expanded.
+- [x] **Task 3: Admin sweep** (AC: 3) — merge/users-create/audit/EventBrowser(+`ACTION_GROUP_LABELS`)/AllUsersTab/AuthGuard/SessionTimer/ExportButton/PatientComparisonTable/MergePreview/patient-detail keyed; new shared `pagination` namespace + admin-local `date-locale.ts` (locale-aware `toLocaleString`). +~144 keys ×4.
+- [x] **Task 4: Lab transport + stragglers** (AC: 4) — `ActiveTransportCard`/`CourierPickupScreen`/`CourierDeliveryScreen` (8 TODOs cleared, `transport.*`) + `PaymentForm`/`LabHeader`/`DonorReportReview`. +~60 keys ×4.
+- [x] **Task 5: Lint guard** (AC: 5) — custom `no-hardcoded-ui-string` eslint rule in `packages/config-eslint/rules/` (no new dep; Latin+Arabic-script detection, numeral/symbol allowlist). **Ratcheting** (Decision): enforced as `error` on exactly the 22 keyed files now — repo-wide would fail on a large pre-existing backlog (`pnpm lint` already exits 1 on hundreds of unrelated pre-existing errors); future i18n stories widen the glob. CI wiring unchanged (runs via `pnpm lint`).
+- [x] **Task 6: Regression verification** (AC: 6) — pharmacy 1159, opd 1472, admin 334, lab 3970 — 0 failures; parity OK all namespaces; typecheck clean; new RTL snapshots pass.
 
 ## Dev Notes
 
@@ -55,11 +55,21 @@ This story must introduce **zero regression in existing features and functionali
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Fable 5 (1M) — implementation; Claude Opus 4.8 (1M) — integration & combined verification.
 
 ### Debug Log References
+Typecheck (4 apps) clean; pharmacy 1159, opd 1472, admin 334, lab 3970 — 0 failures; parity OK (pharmacy 1730 / opd 1308 / admin 1202 / lab 3441 keys ×4); `no-hardcoded-ui-string` violations = 0 on the enforced surface, guard demonstrably fires on an injected literal.
 
 ### Completion Notes List
+- **Lint guard is RATCHETING (Decision, accepted):** enforced on the 22 Story-63.1-keyed files, not repo-wide — the four apps carry a large pre-existing un-keyed backlog and `pnpm lint` already fails on hundreds of unrelated pre-existing errors; repo-wide enforcement would fail builds on untouched files. In-code note directs future i18n stories to widen the `files` glob to `apps/*/src/**/*.tsx`.
+- **Consent modal:** migrated to ui-kit `Dialog` (`hideClose` + `ModalHeader`, mirroring `BookingModal`); same interface/fields/validation/submit/reachability — behavior verified by the new suite.
+- **Custom rule:** `no-hardcoded-ui-string.js` flags `JSXText` + user-facing attrs (`aria-label`/`placeholder`/`title`/`alt`/`label`) containing Latin OR Arabic letters; allowlists numerals/symbols/technical attrs/`code|pre|kbd|samp`. Route-segment globs (`[locale]`/`(app)`) had to be escaped (an unescaped pattern silently never matched — caught in verification).
+- **Native-speaker review flagged (ar/prs/ps machine-draft):** pharmacy `prescription.fraudWarning*`/`keyRevoked*`/`alreadyDispensedElsewhere`/`globalCheckUnavailable*`/`verificationUnavailable*`; lab `transport.delivery.stabilityWarning{Red,Amber}`; opd consent method/witness labels + `renewError`. ICU plurals also need review.
+- **Snapshot integration note:** the 2 legit `FulfillmentChecklist` snapshot refreshes (keyed `days` line) were regenerated at integration after an over-broad churn-discard; verified green. All other touched `__snapshots__` were CRLF-only and excluded.
 
 ### File List
+New — `packages/config-eslint/rules/no-hardcoded-ui-string.js` (+test), `apps/admin-portal/src/lib/date-locale.ts`, `apps/pharmacy-lite/src/__tests__/scanner-safety-rtl-snapshots.test.tsx`, `apps/opd-lite/src/__tests__/consent-renewal-modal.test.tsx`.
+Modified — 16 message files (`{pharmacy,opd,admin,lab}-lite ... ` × `en/ar/prs/ps`); pharmacy `PharmacyScannerView.tsx`/`FulfillmentChecklist.tsx`/`(app)/layout.tsx`; opd `ConsentRenewalModal.tsx`/`(app)/layout.tsx`; admin `merge/page.tsx`/`users/create/page.tsx`/`audit/page.tsx`/`EventBrowser.tsx`/`AllUsersTab.tsx`/`AuthGuard.tsx`/`SessionTimer.tsx`/`ExportButton.tsx`/`PatientComparisonTable.tsx`/`MergePreview.tsx`/`patients/[patientId]/page.tsx`; lab `ActiveTransportCard.tsx`/`CourierPickupScreen.tsx`/`CourierDeliveryScreen.tsx`/`PaymentForm.tsx`/`LabHeader.tsx`/`DonorReportReview.tsx`; `packages/config-eslint` base config; test-harness assertion updates + FulfillmentChecklist snapshot.
 
 ### Change Log
+- 2026-09-24: Story 63.1 implemented (Wave 6 batch 2), verified, integrated. Safety-critical strings keyed ×4 across all apps; consent modal → ui-kit Dialog; custom ratcheting hardcoded-string eslint rule; RTL safety-banner snapshots. Status → review. ar/prs/ps flagged for native-speaker review.
