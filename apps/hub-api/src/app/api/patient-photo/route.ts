@@ -87,6 +87,56 @@ async function setPhotoUrl(
   return { lastUpdated: updatedAt }
 }
 
+/**
+ * GET /api/patient-photo?patientId=<uuid>
+ *
+ * Returns a short-lived signed URL for the patient's photo, resolving the storage
+ * key SERVER-SIDE (Story 56.2: the raw photo path is never returned in bulk
+ * directory/search output — clients fetch a signed URL by patient id instead).
+ * The service-role client signs regardless of the key format (legacy <uuid>.webp
+ * or opaque), so callers never see or need the raw key. Role-gated + audited like
+ * the write paths. Returns { signedUrl: null } when the patient has no photo.
+ */
+async function handleGet(req: Request): Promise<NextResponse> {
+  const user = await authenticate(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!hasResourceAccess(user.role, 'Patient')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const patientId = new URL(req.url).searchParams.get('patientId') ?? ''
+  if (!UUID.test(patientId)) return NextResponse.json({ error: 'Invalid patientId' }, { status: 400 })
+
+  const supabase = getSupabaseClient()
+  const { data: patient, error } = await supabase
+    .from('patients')
+    .select('id, photo_url')
+    .eq('id', patientId)
+    .eq('is_active', true)
+    .single()
+  if (error || !patient) return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+
+  const key = (patient.photo_url as string | null) ?? null
+
+  // Audit the PHI read (Rule #6) — opaque ids only, no PHI in metadata.
+  const audit = new AuditLogger(supabase, user.orgId)
+  try {
+    await audit.emit({
+      action: 'PHI_READ', resourceType: 'PATIENT', resourceId: patientId,
+      actorId: user.sub, actorRole: user.role, outcome: 'SUCCESS', sessionId: user.sessionId,
+      metadata: { operation: 'photo_read', hasPhoto: key != null },
+    })
+  } catch {
+    console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'PATIENT', operation: 'photo_read' })
+  }
+
+  if (!key) return NextResponse.json({ signedUrl: null }, { status: 200 })
+
+  const { data: signed, error: signErr } = await supabase.storage
+    .from(BUCKET).createSignedUrl(key, 3600)
+  if (signErr || !signed?.signedUrl) return NextResponse.json({ signedUrl: null }, { status: 200 })
+
+  return NextResponse.json({ signedUrl: signed.signedUrl, expiresIn: 3600 }, { status: 200 })
+}
+
 async function handlePost(req: Request): Promise<NextResponse> {
   const user = await authenticate(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -169,6 +219,10 @@ async function handleDelete(req: Request): Promise<NextResponse> {
 // CORS-wrapped exports. The browser sends a preflight OPTIONS for the multipart
 // POST / JSON DELETE (both carry an Authorization header), so every response —
 // including the preflight — must advertise the allowed spoke origin.
+export async function GET(req: Request): Promise<NextResponse> {
+  return withCors(req, await handleGet(req))
+}
+
 export async function POST(req: Request): Promise<NextResponse> {
   return withCors(req, await handlePost(req))
 }

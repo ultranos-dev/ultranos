@@ -6,6 +6,7 @@ const single = vi.fn()
 const updateSelect = vi.fn()
 const storageUpload = vi.fn()
 const storageRemove = vi.fn().mockResolvedValue({ error: null })
+const storageSign = vi.fn()
 const auditEmit = vi.fn()
 
 vi.mock('@/lib/supabase', () => ({
@@ -14,7 +15,7 @@ vi.mock('@/lib/supabase', () => ({
       select: () => ({ eq: () => ({ eq: () => ({ single }) }) }),
       update: () => ({ eq: () => ({ eq: () => ({ select: updateSelect }) }) }),
     }),
-    storage: { from: () => ({ upload: storageUpload, remove: storageRemove }) },
+    storage: { from: () => ({ upload: storageUpload, remove: storageRemove, createSignedUrl: storageSign }) },
   }),
   db: { toRow: (o: Record<string, unknown>) => o },
 }))
@@ -32,7 +33,7 @@ vi.mock('@/lib/jwt', async (importOriginal) => ({
 vi.mock('@/trpc/rbac', () => ({ hasResourceAccess: (role: string) => role === 'CLINICIAN' }))
 vi.mock('@ultranos/audit-logger', () => ({ AuditLogger: class { emit = auditEmit } }))
 
-import { POST, DELETE, OPTIONS } from '@/app/api/patient-photo/route'
+import { GET, POST, DELETE, OPTIONS } from '@/app/api/patient-photo/route'
 
 const PID = '5d60f549-6fd0-4633-8746-2877d3f62abb'
 
@@ -51,6 +52,56 @@ function req(file: File, token = 'good', patientId = PID) {
     body: fd,
   })
 }
+
+function getReq(token = 'good', patientId = PID) {
+  return new Request(`http://x/api/patient-photo?patientId=${patientId}`, {
+    method: 'GET',
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+  })
+}
+
+describe('GET /api/patient-photo (Story 56.2 — server-signed photo URL)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    single.mockResolvedValue({ data: { id: PID, photo_url: 'opaque-key.webp' }, error: null })
+    storageSign.mockResolvedValue({ data: { signedUrl: 'https://signed.example/photo' }, error: null })
+    auditEmit.mockResolvedValue(undefined)
+  })
+
+  it('returns a signed URL for an authorized clinician and audits the read', async () => {
+    const res = await GET(getReq('good'))
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ signedUrl: 'https://signed.example/photo', expiresIn: 3600 })
+    // Signed by the resolved storage key, never exposing the raw key to the client.
+    expect(storageSign).toHaveBeenCalledWith('opaque-key.webp', 3600)
+    expect(auditEmit).toHaveBeenCalledWith(expect.objectContaining({ action: 'PHI_READ', resourceType: 'PATIENT', resourceId: PID }))
+  })
+
+  it('returns signedUrl:null when the patient has no photo (no sign attempt)', async () => {
+    single.mockResolvedValue({ data: { id: PID, photo_url: null }, error: null })
+    const res = await GET(getReq('good'))
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ signedUrl: null })
+    expect(storageSign).not.toHaveBeenCalled()
+  })
+
+  it('401 without a valid token', async () => {
+    expect((await GET(getReq(''))).status).toBe(401)
+  })
+
+  it('403 for a role without Patient access', async () => {
+    expect((await GET(getReq('badrole'))).status).toBe(403)
+  })
+
+  it('400 for a malformed patientId', async () => {
+    expect((await GET(getReq('good', 'not-a-uuid'))).status).toBe(400)
+  })
+
+  it('404 when the patient row is absent', async () => {
+    single.mockResolvedValue({ data: null, error: { message: 'no rows' } })
+    expect((await GET(getReq('good'))).status).toBe(404)
+  })
+})
 
 describe('POST /api/patient-photo', () => {
   beforeEach(() => {

@@ -1,11 +1,14 @@
 // apps/opd-lite/src/__tests__/patient-avatar-modal.test.tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import type { FhirPatient } from '@ultranos/shared-types'
 
-const createSignedUrl = vi.fn().mockResolvedValue({ data: { signedUrl: 'https://signed/x' }, error: null })
-vi.mock('@/lib/supabase', () => ({
-  getSupabaseBrowserClient: () => ({ storage: { from: () => ({ createSignedUrl }) } }),
+// Story 56.2 / audit C-HUB-4: PatientAvatar no longer signs a client-held storage
+// key. It fetches a short-lived signed URL from the Hub BY PATIENT ID (the key is
+// resolved + signed server-side and never returned to the client).
+const getPatientPhotoUrl = vi.fn().mockResolvedValue('https://signed/x')
+vi.mock('@/lib/patient-photo-api', () => ({
+  getPatientPhotoUrl: (...args: unknown[]) => getPatientPhotoUrl(...args),
 }))
 // Modal stub: render a marker + a button that fires onUpdated.
 vi.mock('@/components/patient/PatientPhotoUploadModal', () => ({
@@ -24,11 +27,15 @@ const patient = {
 describe('PatientAvatar → modal', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getPatientPhotoUrl.mockResolvedValue('https://signed/x')
   })
 
-  it('reads the STORED photo key for the signed URL (not a hardcoded .jpg)', () => {
-    render(<PatientAvatar patient={patient} patientId={PID} />)
-    expect(createSignedUrl).toHaveBeenCalledWith(`${PID}.webp`, 3600)
+  it('fetches the signed photo URL from the Hub by patient id (server-resolved key, not a client-held path)', async () => {
+    const { container } = render(<PatientAvatar patient={patient} patientId={PID} />)
+    // Requested by patient id — the client never holds/derives the raw storage key.
+    await waitFor(() => expect(getPatientPhotoUrl).toHaveBeenCalledWith(PID, expect.anything()))
+    // The returned signed URL is rendered as the avatar image.
+    await waitFor(() => expect(container.querySelector('img')?.getAttribute('src')).toBe('https://signed/x'))
   })
 
   it('opens the upload modal on click and forwards the new key', () => {

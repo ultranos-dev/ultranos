@@ -12,6 +12,27 @@ async function bearerOnly(): Promise<Record<string, string>> {
   return rest
 }
 
+/**
+ * Fetch a short-lived signed URL for a patient's photo by patient id (Story 56.2 /
+ * audit C-HUB-4: the raw storage path is no longer returned in directory/search
+ * output — the Hub resolves the key server-side and returns a signed URL). Returns
+ * null when the patient has no photo, or on any failure (caller shows initials).
+ */
+export async function getPatientPhotoUrl(
+  patientId: string,
+  signal?: AbortSignal,
+): Promise<string | null> {
+  try {
+    const url = `${photoEndpoint()}?patientId=${encodeURIComponent(patientId)}`
+    const res = await fetch(url, { method: 'GET', headers: await getAuthHeaders(), signal })
+    if (!res.ok) return null
+    const data = (await res.json()) as { signedUrl?: string | null }
+    return data.signedUrl ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function uploadPatientPhoto(
   patientId: string,
   blob: Blob,

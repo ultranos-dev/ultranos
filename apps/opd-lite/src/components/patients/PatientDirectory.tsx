@@ -13,6 +13,7 @@ import { formatDate, formatRelativeTime } from '@ultranos/ui-kit'
 import { db } from '@/lib/db'
 import type { LocalPatient } from '@/lib/db'
 import { usePatientListSync } from '@/lib/use-patient-list-sync'
+import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
 
 type SortField = 'name' | 'age' | 'gender' | 'phone' | 'lastVisit' | 'status' | 'lastUpdated'
 type SortDir = 'asc' | 'desc'
@@ -315,35 +316,33 @@ export function PatientDirectory() {
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
   const paginated = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  // Batch-sign photo URLs for the current page. One request covers all non-null
-  // keys on the page. Runs client-side only; wraps in try/catch so offline
-  // (network unavailable) degrades silently to initials fallback.
+  // Fetch short-lived signed photo URLs for the current page BY PATIENT ID. The
+  // Hub resolves the storage key server-side and returns a signed URL (Story 56.2 /
+  // audit C-HUB-4: the raw photo path is no longer returned in directory output, so
+  // the client can no longer sign it locally). Map is keyed by patient id. Failures
+  // (offline / no photo) degrade silently to the initials fallback.
   useEffect(() => {
-    const keys = paginated.map((r) => r.photoKey).filter((k): k is string => !!k)
-    if (keys.length === 0) {
+    const ids = paginated.map((r) => r.id)
+    if (ids.length === 0) {
       setPhotoUrlMap(new Map())
       return
     }
     let cancelled = false
+    const controller = new AbortController()
     ;(async () => {
-      try {
-        const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-        const { data, error } = await getSupabaseBrowserClient()
-          .storage.from('patient-photos')
-          .createSignedUrls(keys, 3600)
-        if (cancelled || error || !data) return
-        const map = new Map<string, string>()
-        for (const item of data) {
-          if (item.signedUrl && item.path) map.set(item.path, item.signedUrl)
-        }
-        setPhotoUrlMap(map)
-      } catch {
-        // Offline or storage unavailable — avatars show initials.
+      const entries = await Promise.all(
+        ids.map(async (id) => [id, await getPatientPhotoUrl(id, controller.signal)] as const),
+      )
+      if (cancelled) return
+      const map = new Map<string, string>()
+      for (const [id, url] of entries) {
+        if (url) map.set(id, url)
       }
+      setPhotoUrlMap(map)
     })()
-    return () => { cancelled = true }
+    return () => { cancelled = true; controller.abort() }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, paginated.map((r) => r.photoKey).join(',')])
+  }, [page, paginated.map((r) => r.id).join(',')])
 
   const handleSort = useCallback((field: SortField) => {
     setSortField((prev) => {
@@ -565,7 +564,7 @@ export function PatientDirectory() {
                     <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground">
                       <span className="flex items-center gap-2">
                         <Avatar
-                          src={row.photoKey ? (photoUrlMap.get(row.photoKey) ?? null) : null}
+                          src={photoUrlMap.get(row.id) ?? null}
                           name={row.nameSegments.length > 0 ? row.nameSegments.join(' ') : row.name}
                           size={28}
                         />

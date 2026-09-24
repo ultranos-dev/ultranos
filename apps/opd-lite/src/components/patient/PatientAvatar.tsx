@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import type { FhirPatient } from '@ultranos/shared-types'
 import { Camera } from '@ultranos/ui-kit/icons'
-import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { AVATAR_RING } from '@ultranos/ui-kit/components/ui/avatar'
+import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
 import { PatientPhotoUploadModal } from '@/components/patient/PatientPhotoUploadModal'
 
 interface PatientAvatarProps {
@@ -27,27 +28,28 @@ function getInitials(patient: FhirPatient): string {
 export function PatientAvatar({ patient, patientId, size = 80, onPhotoUpdated }: PatientAvatarProps) {
   const [photoSrc, setPhotoSrc] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
-  const photoKey = patient._ultranos.photoUrl ?? null
+  const [refresh, setRefresh] = useState(0)
 
+  // Story 56.2 / audit C-HUB-4: the raw photo storage path is no longer returned
+  // to clients. Fetch a short-lived signed URL from the Hub by patient id (the key
+  // is resolved and signed server-side). Refetched after an upload/remove via the
+  // `refresh` bump. Any failure / no-photo degrades to the initials fallback.
   useEffect(() => {
-    if (!photoKey) { setPhotoSrc(null); return }
     let cancelled = false
+    const controller = new AbortController()
     ;(async () => {
-      try {
-        const { data, error } = await getSupabaseBrowserClient().storage
-          .from('patient-photos').createSignedUrl(photoKey, 3600)
-        if (!cancelled && data?.signedUrl && !error) setPhotoSrc(data.signedUrl)
-      } catch { /* show initials fallback */ }
+      const url = await getPatientPhotoUrl(patientId, controller.signal)
+      if (!cancelled) setPhotoSrc(url)
     })()
-    return () => { cancelled = true }
-  }, [photoKey])
+    return () => { cancelled = true; controller.abort() }
+  }, [patientId, refresh])
 
   const initials = getInitials(patient)
 
   return (
     <div className="flex flex-col items-center gap-1">
       <div
-        className="group relative cursor-pointer overflow-hidden rounded-full"
+        className={`group relative cursor-pointer overflow-hidden rounded-full ${AVATAR_RING}`}
         style={{ width: size, height: size }}
         onClick={() => setModalOpen(true)}
         role="button" tabIndex={0} aria-label="Upload patient photo"
@@ -69,11 +71,18 @@ export function PatientAvatar({ patient, patientId, size = 80, onPhotoUpdated }:
       <PatientPhotoUploadModal
         open={modalOpen}
         patientId={patientId}
-        currentPhotoKey={photoKey}
+        // The client no longer holds the raw key (Story 56.2); a non-null sentinel
+        // when a photo is present just drives the modal's Remove affordance (removal
+        // is by patientId). Null → no photo → no Remove shown.
+        currentPhotoKey={photoSrc ? '__present__' : null}
         currentPhotoSrc={photoSrc}
         lastKnownUpdate={patient.meta.lastUpdated}
         onClose={() => setModalOpen(false)}
-        onUpdated={(key, lastUpdated) => { setModalOpen(false); onPhotoUpdated?.(key, lastUpdated) }}
+        onUpdated={(key, lastUpdated) => {
+          setModalOpen(false)
+          setRefresh((n) => n + 1) // refetch the signed URL after upload/remove
+          onPhotoUpdated?.(key, lastUpdated)
+        }}
       />
     </div>
   )
