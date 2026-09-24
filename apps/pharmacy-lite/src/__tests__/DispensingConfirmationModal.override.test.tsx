@@ -29,7 +29,7 @@ vi.mock('@/lib/drug-catalog-queries', () => ({
 // signal). Default to a COMPLETE empty result so these interaction-focused tests
 // are unaffected (no active-med override is forced).
 vi.mock('@/lib/active-medications', () => ({
-  fetchActiveMedications: vi.fn().mockResolvedValue({ meds: [], complete: true }),
+  fetchActiveMedications: vi.fn().mockResolvedValue({ meds: [], complete: true, consentLimited: false }),
   fetchActiveMedicationDisplays: vi.fn().mockResolvedValue([]),
 }))
 
@@ -75,7 +75,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   // Default: active-med dimension loads successfully (complete). Individual
   // suites override this to simulate a degraded load.
-  mockFetchActiveMeds.mockResolvedValue({ meds: [], complete: true })
+  mockFetchActiveMeds.mockResolvedValue({ meds: [], complete: true, consentLimited: false })
 })
 
 // ── Test suite ────────────────────────────────────────────────────────────────
@@ -257,7 +257,7 @@ describe('DispensingConfirmationModal — override sub-form', () => {
     beforeEach(() => {
       // Interaction check itself is clear, but the active-med dimension is degraded.
       mockRunCheck.mockResolvedValue({ state: 'clear' })
-      mockFetchActiveMeds.mockResolvedValue({ meds: [], complete: false })
+      mockFetchActiveMeds.mockResolvedValue({ meds: [], complete: false, consentLimited: false })
     })
 
     it('renders the active-med-unavailable warning', async () => {
@@ -292,7 +292,7 @@ describe('DispensingConfirmationModal — override sub-form', () => {
 
   it('does NOT show the active-med warning when the dimension loaded completely', async () => {
     mockRunCheck.mockResolvedValue({ state: 'clear' })
-    mockFetchActiveMeds.mockResolvedValue({ meds: [], complete: true })
+    mockFetchActiveMeds.mockResolvedValue({ meds: [], complete: true, consentLimited: false })
     renderModal(vi.fn())
     await waitFor(() => expect(screen.queryByTestId('interaction-checking')).not.toBeInTheDocument())
     expect(screen.queryByTestId('active-med-unavailable')).not.toBeInTheDocument()

@@ -947,6 +947,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             output: {
                 statements: any[];
                 count: number;
+                consentLimited: boolean;
             };
             meta: object;
         }>;

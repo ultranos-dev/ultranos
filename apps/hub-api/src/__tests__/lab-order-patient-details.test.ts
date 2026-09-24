@@ -27,7 +27,38 @@ const patSelect = vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: patMaybeSingle 
 const obsLimit = vi.fn()
 const obsSelect = vi.fn(() => ({ eq: vi.fn(() => ({ order: vi.fn(() => ({ limit: obsLimit })) })) }))
 
+// Story 58.4: middleware stack now unified (enforceVerifiedOrg + enforceEntitlement)
+// and consent is checked in-body. Default to a verified org + ACTIVE entitlement +
+// ACTIVE FULL_RECORD consent so the pre-existing tests stay byte-identical.
+const consentActive = { value: true }
+function mockOrganizationsTable() {
+  return { select: vi.fn(() => ({ eq: vi.fn(() => ({ single: vi.fn().mockResolvedValue({ data: { status: 'TRIAL' }, error: null }) })) })) }
+}
+function mockOrgSubscriptionsTable() {
+  return {
+    select: vi.fn(() => ({ eq: vi.fn(() => ({ eq: vi.fn(() => ({
+      in: vi.fn(() => ({
+        maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }),
+        limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }),
+      })),
+    })) })) })),
+  }
+}
+function mockConsentsTable() {
+  const rows = [{
+    id: 'consent-1',
+    status: consentActive.value ? 'ACTIVE' : 'WITHDRAWN',
+    category: ['FULL_RECORD'],
+    date_time: '2026-01-01T00:00:00.000Z',
+    provision_end: null,
+  }]
+  return { select: vi.fn(() => ({ eq: vi.fn(() => ({ order: vi.fn().mockResolvedValue({ data: rows, error: null }) })) })) }
+}
+
 const mockFrom = vi.fn((table: string) => {
+  if (table === 'organizations') return mockOrganizationsTable()
+  if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+  if (table === 'consents') return mockConsentsTable()
   if (table === 'lab_technicians') return { select: mockTechSelect }
   if (table === 'service_requests') return { select: srSelect }
   if (table === 'patients') return { select: patSelect }
@@ -77,7 +108,24 @@ const VITALS = [
 ]
 
 describe('lab.getOrderPatientDetails', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => { vi.clearAllMocks(); consentActive.value = true })
+
+  // ── Story 58.4 (H-HUB-7): consent gating ────────────────────
+  it('denies on withdrawn consent (FORBIDDEN) and does NOT read patient/vitals', async () => {
+    setupLab()
+    srMaybeSingle.mockResolvedValue({ data: { id: ORDER_ID, patient_id: PATIENT_ID, received_by_lab_id: 'lab-1' }, error: null })
+    consentActive.value = false
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }))
+    await expect(caller.lab.getOrderPatientDetails({ orderId: ORDER_ID })).rejects.toMatchObject({ code: 'FORBIDDEN' })
+
+    // No PHI fetched once consent is denied.
+    expect(patMaybeSingle).not.toHaveBeenCalled()
+    // Denial audited (FAILURE outcome).
+    const denialCall = mockAuditEmit.mock.calls.find((c) => c[0]?.outcome === 'FAILURE')
+    expect(denialCall?.[0]).toMatchObject({ action: 'READ', resourceType: 'PATIENT', outcome: 'FAILURE' })
+  })
 
   it('returns full name + gender + blood group + latest vitals for a claimed order', async () => {
     setupLab()

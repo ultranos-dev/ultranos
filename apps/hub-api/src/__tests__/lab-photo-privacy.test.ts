@@ -94,10 +94,18 @@ function mockOrgSubscriptionsTable() {
   }
 }
 
+// Story 58.4 (H-HUB-7): verifyPatient / getOrderPatientDetails check consent in-body.
+// ACTIVE FULL_RECORD grant keeps the photo-privacy behavior byte-identical.
+function mockConsentsTable() {
+  const rows = [{ id: 'consent-1', status: 'ACTIVE', category: ['FULL_RECORD'], date_time: '2026-01-01T00:00:00.000Z', provision_end: null }]
+  return { select: vi.fn(() => ({ eq: vi.fn(() => ({ order: vi.fn().mockResolvedValue({ data: rows, error: null }) })) })) }
+}
+
 const mockFrom = vi.fn((table: string) => {
   if (table === 'lab_technicians') return { select: mockTechSelect }
   if (table === 'organizations') return mockOrganizationsTable()
   if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+  if (table === 'consents') return mockConsentsTable()
   if (table === 'service_requests') return { select: srSelect }
   if (table === 'observations') return { select: obsSelect }
   if (table === 'patients') return { select: patientsMode === 'verify' ? verifyPatSelect : detailPatSelect }
@@ -235,6 +243,14 @@ describe('lab.pullOrders photo privacy (list tier)', () => {
       return builder
     }
     return (table: string) => {
+      // Story 58.4 (M-HUB-14): pullOrders now runs enforceVerifiedOrg +
+      // enforceEntitlement('LAB_LITE') — verified org + ACTIVE subscription.
+      if (table === 'organizations') {
+        return createBuilder({ id: 'org-1', status: 'TRIAL', cancelled_at: null })
+      }
+      if (table === 'org_subscriptions') {
+        return createBuilder({ id: 'sub-1', status: 'ACTIVE' })
+      }
       if (table === 'lab_technicians') {
         return createBuilder({ id: 'tech-rec', lab_id: 'lab-1', lab_role: 'LAB_TECH', labs: { id: 'lab-1', status: 'ACTIVE' } })
       }

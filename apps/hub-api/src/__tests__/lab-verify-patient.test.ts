@@ -40,8 +40,26 @@ function mockOrganizationsTable() {
   }
 }
 
+// Story 58.4: checkConsent reads `consents` — default to an ACTIVE FULL_RECORD grant
+// so the existing verifyPatient tests are byte-identical for a consented patient.
+// Toggle to withdrawn via `consentActive`.
+const consentActive = { value: true }
+function mockConsentsTable() {
+  const rows = [{
+    id: 'consent-1',
+    status: consentActive.value ? 'ACTIVE' : 'WITHDRAWN',
+    category: ['FULL_RECORD'],
+    date_time: '2026-01-01T00:00:00.000Z',
+    provision_end: null,
+  }]
+  return {
+    select: vi.fn(() => ({ eq: vi.fn(() => ({ order: vi.fn().mockResolvedValue({ data: rows, error: null }) })) })),
+  }
+}
+
 const mockFrom = vi.fn((table: string) => {
   if (table === 'organizations') return mockOrganizationsTable()
+  if (table === 'consents') return mockConsentsTable()
   if (table === 'org_subscriptions') {
     return {
       select: vi.fn().mockReturnValue({
@@ -150,6 +168,44 @@ function setupPatientNotFound() {
 describe('lab.verifyPatient', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    consentActive.value = true
+  })
+
+  // ── Story 58.4 (H-HUB-7): consent gating ────────────────────
+  it('denies verifyPatient on withdrawn consent (FORBIDDEN) and audits the denial', async () => {
+    setupLabAffiliation()
+    setupPatientFound()
+    consentActive.value = false
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }),
+    )
+
+    await expect(
+      caller.lab.verifyPatient({ query: 'NID-12345', method: 'NATIONAL_ID' }),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' })
+
+    // Denial is audited with a FAILURE outcome and no PHI (Rule #1, #6).
+    const denialCall = mockAuditEmit.mock.calls.find((c) => c[0]?.outcome === 'FAILURE')
+    expect(denialCall).toBeDefined()
+    expect(denialCall?.[0]).toMatchObject({ action: 'READ', resourceType: 'PATIENT', outcome: 'FAILURE' })
+    expect(JSON.stringify(denialCall?.[0])).not.toContain('Amir')
+  })
+
+  it('active consent → verifyPatient output is unchanged (byte-identical)', async () => {
+    setupLabAffiliation()
+    setupPatientFound()
+    consentActive.value = true
+
+    const router = createTRPCRouter({ lab: labRouter })
+    const caller = createCallerFactory(router)(
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH' as const, sessionId: 's1', orgId: 'org-test-001', facilityId: null, status: 'ACTIVE' }),
+    )
+
+    const result = await caller.lab.verifyPatient({ query: 'NID-12345', method: 'NATIONAL_ID' })
+    expect(Object.keys(result)).toEqual(['firstName', 'age', 'patientRef', 'photoUrl'])
+    expect(result.firstName).toBe('Amir')
   })
 
   // ── AC 1: Returns only firstName + age ──────────────────────

@@ -70,6 +70,25 @@ function mockOrgSubscriptionsTable() {
   }
 }
 
+/**
+ * Mock for the `consents` table read done by checkConsent / enforceConsentMiddleware.
+ * `active: true` → an ACTIVE FULL_RECORD consent (access allowed);
+ * `active: false` → a WITHDRAWN consent (access denied).
+ * The query shape is `.select(...).eq('patient_ref', ...).order('date_time', …)` → awaited.
+ */
+function mockConsentsTable(active: boolean) {
+  const rows = active
+    ? [{ id: 'consent-1', status: 'ACTIVE', category: ['FULL_RECORD'], date_time: '2026-01-01T00:00:00.000Z', provision_end: null }]
+    : [{ id: 'consent-1', status: 'WITHDRAWN', category: ['FULL_RECORD'], date_time: '2026-01-01T00:00:00.000Z', provision_end: null }]
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        order: vi.fn().mockResolvedValue({ data: rows, error: null }),
+      }),
+    }),
+  }
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
@@ -119,6 +138,7 @@ describe('medicationStatement.listActive', () => {
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
       if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+      if (table === 'consents') return mockConsentsTable(true)
       callCount.n++
       if (callCount.n === 1) return { select: mockSelect }
       return { insert: auditMock }
@@ -156,6 +176,7 @@ describe('medicationStatement.listActive', () => {
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
       if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+      if (table === 'consents') return mockConsentsTable(true)
       callCount.n++
       if (callCount.n === 1) return { select: mockSelect }
       return { insert: auditMock }
@@ -208,6 +229,7 @@ describe('medicationStatement.listActive', () => {
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
       if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+      if (table === 'consents') return mockConsentsTable(true)
       return { select: mockSelect }
     })
 
@@ -217,6 +239,21 @@ describe('medicationStatement.listActive', () => {
     await expect(
       caller.medicationStatement.listActive({ patientRef: 'Patient/pat-001' }),
     ).rejects.toThrow('Failed to retrieve active medication statements')
+  })
+
+  it('Story 58.4: denies listActive on withdrawn consent (FORBIDDEN)', async () => {
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+      if (table === 'consents') return mockConsentsTable(false)
+      // medication_statements must NOT be queried when consent is denied
+      return { select: vi.fn(() => { throw new Error('medication_statements queried despite denied consent') }) }
+    })
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
+    const caller = createCaller(ctx)
+    await expect(
+      caller.medicationStatement.listActive({ patientRef: 'Patient/pat-001' }),
+    ).rejects.toThrow('Access denied')
   })
 })
 
@@ -401,6 +438,7 @@ describe('medicationStatement.listActiveForPharmacist', () => {
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       if (table === 'organizations') return mockOrganizationsTable()
       if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+      if (table === 'consents') return mockConsentsTable(true)
       callCount.n++
       return callCount.n === 1 ? { select: mockSelect } : { insert: auditMock }
     })
@@ -408,7 +446,29 @@ describe('medicationStatement.listActiveForPharmacist', () => {
     const result = await caller.medicationStatement.listActiveForPharmacist({ patientRef: 'Patient/pat-001' })
     expect(result.count).toBe(1)
     expect(result.statements).toHaveLength(1)
+    expect(result.consentLimited).toBe(false)
     expect(mockFrom).toHaveBeenCalledWith('medication_statements')
+  })
+
+  it('Story 58.4: surfaces (does NOT block) withdrawn consent — consentLimited flag, no statements', async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: [{ chain_hash: 'test-hash' }], error: null })
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+      if (table === 'consents') return mockConsentsTable(false)
+      // medication_statements must NOT be queried when consent is withdrawn
+      if (table === 'medication_statements') throw new Error('medication_statements queried despite withdrawn consent')
+      return {}
+    })
+    const supabase = { from: mockFrom, rpc } as never
+    const caller = createCaller({ supabase, user: PHARMACIST_USER, headers: new Headers() })
+    const result = await caller.medicationStatement.listActiveForPharmacist({ patientRef: 'Patient/pat-001' })
+    // EXEMPT-BUT-SURFACED: no throw, empty meds, consent-limited flag set.
+    expect(result.consentLimited).toBe(true)
+    expect(result.count).toBe(0)
+    expect(result.statements).toHaveLength(0)
+    // Audit event still emitted (Rule #6) via the audit RPC
+    expect(rpc).toHaveBeenCalled()
   })
 
   it('denies a PATIENT role (FORBIDDEN)', async () => {

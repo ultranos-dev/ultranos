@@ -6,6 +6,7 @@ import { enforceLabActive } from '../middleware/enforceLabActive'
 import { enforceLabRole } from '../middleware/enforceLabRole'
 import { enforceEntitlement } from '../middleware/enforceEntitlement'
 import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
+import { checkConsent } from '../middleware/enforceConsent'
 import { db, selectExactCount } from '@/lib/supabase'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { LabRole, LabPermission, UserRole, AuditAction, AuditOutcome } from '@ultranos/shared-types'
@@ -677,6 +678,40 @@ export const labRouter = createTRPCRouter({
         })
       }
 
+      // Story 58.4 (H-HUB-7): CONSENT-GATED. This surface returns patient-derived PHI
+      // (first name + age + photo). The lab never passes a real patient UUID as input
+      // (Rule #7 — it only ever holds an opaque blind ref), so enforceConsentMiddleware
+      // (which reads input.patientId/patientRef) cannot apply here; we check consent
+      // in-body once the real patient.id is resolved — the SAME pattern used by the
+      // lab-files / specimen-files route handlers. FULL_RECORD scope: identity
+      // verification touches the whole demographic record. A withdrawn/expired consent
+      // denies with a 403 FORBIDDEN (same shape as enforceConsentMiddleware) and is
+      // audited with opaque IDs only (Rule #1, #6).
+      const hasConsent = await checkConsent(ctx.supabase, {
+        patientId: patient.id,
+        resourceType: 'Patient',
+      })
+      if (!hasConsent) {
+        try {
+          await audit.emit({
+            action: 'READ',
+            resourceType: 'PATIENT',
+            resourceId: 'patient-verify',
+            actorId: technicianId,
+            actorRole: ctx.user.role,
+            outcome: 'FAILURE',
+            sessionId: ctx.user.sessionId,
+            metadata: { lookupMethod: input.method, verificationAction: 'patient_verify', denyReason: 'consent' },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'PATIENT', resourceId: 'patient-verify' })
+        }
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Access denied — no active consent from patient for this data category',
+        })
+      }
+
       // Generate opaque patientRef via HMAC-SHA256 (never expose raw patient ID)
       const patientRef = generateBlindIndex(patient.id, hmacKey)
 
@@ -731,6 +766,11 @@ export const labRouter = createTRPCRouter({
    * readable. Previously any lab could read details for any unclaimed order.
    */
   getOrderPatientDetails: labRestrictedProcedure
+    // Story 58.4 (M-HUB-14): unify the middleware stack — this detail-view read now
+    // carries the same enforceVerifiedOrg + enforceEntitlement('LAB_LITE') guards its
+    // sibling patient-data reads (verifyPatient, pullSpecimens, …) already apply.
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
     .use(enforceLabActive())
     .input(z.object({ orderId: z.string().uuid() }))
     .output(
@@ -776,6 +816,38 @@ export const labRouter = createTRPCRouter({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' })
       }
       const patientId = order.patient_id as string
+
+      // Story 58.4 (H-HUB-7): CONSENT-GATED. This detail view returns the highest lab
+      // PHI tier (full name + blood group + vitals). The lab passes only an opaque
+      // orderId; the real patient UUID is resolved server-side (Rule #7), so
+      // enforceConsentMiddleware cannot apply — we check consent in-body once the
+      // order→patient_id linkage is resolved (same pattern as the file route handlers).
+      // FULL_RECORD scope: the detail view spans demographics + vitals. A withdrawn/
+      // expired consent denies with 403 FORBIDDEN and is audited (opaque IDs only).
+      const hasConsent = await checkConsent(ctx.supabase, {
+        patientId,
+        resourceType: 'Patient',
+      })
+      if (!hasConsent) {
+        try {
+          await audit.emit({
+            action: 'READ',
+            resourceType: 'PATIENT',
+            resourceId: input.orderId,
+            actorId: technicianId,
+            actorRole: ctx.user.role,
+            outcome: 'FAILURE',
+            sessionId: ctx.user.sessionId,
+            metadata: { verificationAction: 'order_patient_details', denyReason: 'consent' },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'PATIENT', resourceId: input.orderId })
+        }
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Access denied — no active consent from patient for this data category',
+        })
+      }
 
       const { data: patient } = await ctx.supabase
         .from('patients')
@@ -1926,6 +1998,13 @@ export const labRouter = createTRPCRouter({
    * Supports incremental sync via `since` parameter.
    */
   pullOrders: labRestrictedProcedure
+    // Story 58.4 (M-HUB-14): unify the middleware stack — this patient-data pull now
+    // carries the same enforceVerifiedOrg + enforceEntitlement('LAB_LITE') guards its
+    // sibling reads apply. (Per-patient consent is enforced on the order-scoped detail
+    // surface getOrderPatientDetails, not on this minimal name+age list tier — see the
+    // Story 58.4 matrix in CLAUDE.md for the bulk-list rationale.)
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
     .use(enforceLabActive())
     .input(
       z.object({
@@ -2118,6 +2197,13 @@ export const labRouter = createTRPCRouter({
    * Audit emitted best-effort (Rule #6). No PHI in audit metadata (Rule #1).
    */
   pullDispenseMonitoringEvents: labRestrictedProcedure
+    // Story 58.4 (M-HUB-14): unify the middleware stack — same enforceVerifiedOrg +
+    // enforceEntitlement('LAB_LITE') guards as sibling patient-data pulls. (This is a
+    // data-minimized multi-patient TDM feed already scoped to patients this lab
+    // handles; per-patient consent gating on the bulk feed is out of scope for this
+    // localized change — see the Story 58.4 matrix in CLAUDE.md.)
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
     .use(enforceLabActive())
     .input(
       z.object({

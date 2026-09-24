@@ -49,7 +49,7 @@ describe('fetchActiveMedications (completeness signal)', () => {
         result: { data: { json: { statements: [{ medicationDisplay: 'Warfarin 5mg' }], count: 1 } } },
       }),
     })
-    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: ['Warfarin 5mg'], complete: true })
+    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: ['Warfarin 5mg'], complete: true, consentLimited: false })
   })
 
   it('returns complete:true with empty meds when the hub reports none (a real clear)', async () => {
@@ -57,22 +57,32 @@ describe('fetchActiveMedications (completeness signal)', () => {
       ok: true,
       json: async () => ({ result: { data: { json: { statements: [], count: 0 } } } }),
     })
-    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: [], complete: true })
+    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: [], complete: true, consentLimited: false })
   })
 
   it('returns complete:false with no token (degraded, not a clear)', async () => {
     mockGetAccessToken.mockResolvedValueOnce(null)
-    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: [], complete: false })
+    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: [], complete: false, consentLimited: false })
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
   it('returns complete:false on a network error (degraded, not a clear)', async () => {
     mockFetch.mockRejectedValueOnce(new Error('offline'))
-    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: [], complete: false })
+    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: [], complete: false, consentLimited: false })
   })
 
   it('returns complete:false on a non-OK response (degraded, not a clear)', async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, json: async () => ({}) })
-    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: [], complete: false })
+    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: [], complete: false, consentLimited: false })
+  })
+
+  // Story 58.4 (H-HUB-7): a consent-limited read is complete (the hub responded)
+  // but consentLimited — the caller must treat it as degraded, not a clear.
+  it('returns consentLimited:true when the hub reports the read was consent-limited', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ result: { data: { json: { statements: [], count: 0, consentLimited: true } } } }),
+    })
+    expect(await fetchActiveMedications('pat-1')).toEqual({ meds: [], complete: true, consentLimited: true })
   })
 })

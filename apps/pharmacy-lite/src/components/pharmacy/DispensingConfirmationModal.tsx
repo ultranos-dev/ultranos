@@ -81,11 +81,14 @@ export function DispensingConfirmationModal({
       // treat the dimension as incomplete (cannot have run) rather than clear.
       const activeResult = patientId
         ? await fetchActiveMedications(patientId)
-        : { meds: [] as string[], complete: false }
+        : { meds: [] as string[], complete: false, consentLimited: false }
       const status = await runDispenseInteractionCheck(meds, patientAllergies ?? [], activeResult.meds)
       if (!cancelled) {
         setInteraction(status)
-        setActiveMedIncomplete(!activeResult.complete)
+        // Story 58.4 (H-HUB-7): a consent-limited active-med read is a DEGRADED
+        // dimension too — meds is empty by consent policy, not because none exist —
+        // so treat it exactly like an incomplete/unavailable check (require override).
+        setActiveMedIncomplete(!activeResult.complete || activeResult.consentLimited)
       }
     })()
     return () => { cancelled = true }

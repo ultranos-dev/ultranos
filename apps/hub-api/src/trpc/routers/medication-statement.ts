@@ -4,6 +4,7 @@ import { createTRPCRouter, protectedProcedure } from '../init'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { enforceEntitlement } from '../middleware/enforceEntitlement'
 import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
+import { enforceConsentMiddleware, checkConsent } from '../middleware/enforceConsent'
 import { roleRestrictedProcedure } from '../rbac'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
@@ -17,6 +18,14 @@ export const medicationStatementRouter = createTRPCRouter({
   /**
    * AC 2: List active MedicationStatements for a patient.
    * RBAC: CLINICIAN, ADMIN (via enforceResourceAccess).
+   *
+   * Story 58.4 (H-HUB-7): CONSENT-GATED. This is a clinician-facing read of a
+   * patient's active-medication list; a consent withdrawal must stop it, exactly
+   * as it does for encounter/medication/diagnostic-report reads. The middleware
+   * reads `input.patientRef` (Patient/<uuid>) and denies with a 403 FORBIDDEN when
+   * no active PRESCRIPTIONS (or FULL_RECORD) consent exists — the same error shape
+   * clients already handle. The pharmacist-scoped variant below is exempt-but-
+   * surfaced (safety-critical dispense check), NOT gated.
    */
   listActive: protectedProcedure
     .use(enforceVerifiedOrg())
@@ -27,6 +36,7 @@ export const medicationStatementRouter = createTRPCRouter({
         patientRef: z.string().min(1),
       }),
     )
+    .use(enforceConsentMiddleware('MedicationRequest'))
     .query(async ({ ctx, input }) => {
       const { data, error } = await ctx.supabase
         .from('medication_statements')
@@ -73,15 +83,60 @@ export const medicationStatementRouter = createTRPCRouter({
    * List active MedicationStatements for a patient — PHARMACIST-scoped.
    * Used by Pharmacy-Lite's dispense interaction recheck (treatment-essential).
    * Scoped to this read endpoint only (roleRestrictedProcedure) — does NOT grant
-   * pharmacists access to other MedicationStatement operations. No per-access
-   * consent gate (consistent with the clinician listActive); access is governed by
-   * org verification + PHARMACY_LITE entitlement + role + a PHI_READ audit event.
+   * pharmacists access to other MedicationStatement operations. Access is governed
+   * by org verification + PHARMACY_LITE entitlement + role + a PHI_READ audit event.
+   *
+   * Story 58.4 (H-HUB-7) — EXEMPT-BUT-SURFACED (safety-critical, not gated):
+   * Silently blocking this list on a consent withdrawal would degrade the dispense
+   * drug-interaction check (Story 57.2) into a false "no active meds" clear — the
+   * same false-negative class as a skipped interaction check (CLAUDE.md Safety Rule
+   * #3). So we do NOT throw on withdrawn consent. Instead we still run the check and
+   * return `consentLimited: true` when no active PRESCRIPTIONS/FULL_RECORD consent
+   * exists, so the pharmacy client can surface "active-medication data may be
+   * consent-limited" and require an explicit override — mirroring the UNAVAILABLE
+   * (`complete: false`) path in apps/pharmacy-lite/src/lib/active-medications.ts.
+   * When consent-limited we return NO statements (consentLimited flag stands in for
+   * the data) so no PHI beyond the flag crosses on a withdrawn grant. Both the
+   * consent-limited read and the normal read emit a PHI_READ audit event (Rule #6).
    */
   listActiveForPharmacist: roleRestrictedProcedure(['PHARMACIST', 'ADMIN'])
     .use(enforceVerifiedOrg())
     .use(enforceEntitlement('PHARMACY_LITE'))
     .input(z.object({ patientRef: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
+      const patientId = input.patientRef.replace('Patient/', '')
+
+      // Consent is checked but NEVER blocks (see the exempt-but-surfaced rationale
+      // above). PRESCRIPTIONS scope: the consent that authorizes a pharmacy to
+      // handle a prescription authorizes the meds list needed to dispense it safely.
+      const hasConsent = await checkConsent(ctx.supabase, {
+        patientId,
+        resourceType: 'MedicationRequest',
+      })
+
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+
+      if (!hasConsent) {
+        // Surface, don't block: return the flag with no statements. Audit the
+        // consent-limited read with opaque IDs only (no PHI, Rule #1).
+        try {
+          await audit.emit({
+            action: 'PHI_READ',
+            resourceType: 'MEDICATION_STATEMENT',
+            resourceId: input.patientRef,
+            patientId,
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'SUCCESS',
+            sessionId: ctx.user.sessionId,
+            metadata: { count: 0, via: 'pharmacist_dispense', consentLimited: true },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'MEDICATION_STATEMENT', patientRef: input.patientRef })
+        }
+        return { statements: [], count: 0, consentLimited: true }
+      }
+
       const { data, error } = await ctx.supabase
         .from('medication_statements')
         .select('*')
@@ -93,24 +148,23 @@ export const medicationStatementRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to retrieve active medication statements' })
       }
 
-      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
           action: 'PHI_READ',
           resourceType: 'MEDICATION_STATEMENT',
           resourceId: input.patientRef,
-          patientId: input.patientRef.replace('Patient/', ''),
+          patientId,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
-          metadata: { count: data.length, via: 'pharmacist_dispense' },
+          metadata: { count: data.length, via: 'pharmacist_dispense', consentLimited: false },
         })
       } catch {
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'MEDICATION_STATEMENT', patientRef: input.patientRef })
       }
 
-      return { statements: db.fromRows(data), count: data.length }
+      return { statements: db.fromRows(data), count: data.length, consentLimited: false }
     }),
 
   /**

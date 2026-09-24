@@ -197,10 +197,18 @@ function mappingsBuilder() {
 // Which "mode" we are testing selects the service_requests / patients builder.
 let mode: 'orders' | 'detail' | 'verify' | 'monitoring' = 'orders'
 
+// Story 58.4 (H-HUB-7): verifyPatient / getOrderPatientDetails now check consent
+// in-body. An ACTIVE FULL_RECORD grant keeps the data-min contract byte-identical.
+function consentsBuilder() {
+  const rows = [{ id: 'consent-1', status: 'ACTIVE', category: ['FULL_RECORD'], date_time: '2026-01-01T00:00:00.000Z', provision_end: null }]
+  return { select: vi.fn(() => ({ eq: vi.fn(() => ({ order: vi.fn().mockResolvedValue({ data: rows, error: null }) })) })) }
+}
+
 const mockFrom = vi.fn((table: string) => {
   if (table === 'lab_technicians') return labTechBuilder()
   if (table === 'organizations') return orgBuilder()
   if (table === 'org_subscriptions') return subBuilder()
+  if (table === 'consents') return consentsBuilder()
   if (table === 'service_requests') {
     if (mode === 'orders') return ordersBuilder()
     if (mode === 'detail') return detailSrBuilder()

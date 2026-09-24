@@ -40,6 +40,14 @@ function createMockQueryBuilder(data: any = null, error: any = null) {
 }
 
 const mockFrom = vi.fn((table: string) => {
+  // Story 58.4 (M-HUB-14): pullOrders now carries enforceVerifiedOrg +
+  // enforceEntitlement('LAB_LITE') — mock a verified org + ACTIVE subscription.
+  if (table === 'organizations') {
+    return createMockQueryBuilder({ id: 'org-1', status: 'TRIAL', cancelled_at: null })
+  }
+  if (table === 'org_subscriptions') {
+    return createMockQueryBuilder({ id: 'sub-1', status: 'ACTIVE' })
+  }
   if (table === 'lab_technicians') {
     return createMockQueryBuilder({
       id: 'tech-record-1',

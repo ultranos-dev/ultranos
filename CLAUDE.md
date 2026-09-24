@@ -331,6 +331,28 @@ When writing sync logic, use the correct tier:
 | **Consent — High-Priority Sync** | Consent grants/withdrawals | Append-only ledger. Syncs at priority 1 (same as allergies) because consent changes affect data access enforcement at the Hub API layer. |
 | **Tier 4 — Queue Events** | Multi-device offline events for same patient | Chronological replay by HLC. Events within 60s conflict window → flagged regardless of tier. |
 
+## Consent Enforcement at the Hub API Layer
+
+Consent is not just captured and synced — it is **enforced on every Hub procedure that returns patient-derived data.** A patient's consent withdrawal must actually stop data flow. Two mechanics exist; pick by whether the tRPC input carries a real patient reference:
+
+1. **`enforceConsentMiddleware('<ResourceType>')`** — use when the procedure input contains `patientId` or `patientRef` (`Patient/<uuid>`). It resolves the scope, checks the append-only consent ledger, and throws `403 FORBIDDEN` on withdrawn/expired consent. Applied on `patient.*`, `encounter.*`, `medication.*`, `diagnostic-report.*`, and `medicationStatement.listActive`.
+2. **In-body `checkConsent(supabase, { patientId, resourceType })`** — use when the real patient UUID is resolved **server-side** and never appears in the input. This is the case for **every lab-facing procedure** (Rule #7: the lab only ever holds an opaque HMAC blind ref, never the real UUID — it passes an `orderId`, a National-ID/QR `query`, or a blind ref, so the middleware would 400 on a missing `patientId`). Resolve the real `patient.id` (from the order, the ID hash, etc.), then call `checkConsent` and throw the same `403 FORBIDDEN` on failure, auditing the denial with opaque IDs only. Precedent: `apps/hub-api/src/app/api/lab-files/[fileId]/route.ts`, `getOrderPatientDetails`, `verifyPatient`.
+
+**Consent-enforcement matrix (Story 58.4 — `lab.*` + `medicationStatement.*`):**
+
+| Procedure | Decision | Rationale |
+|-----------|----------|-----------|
+| `lab.verifyPatient` | **GATED** (in-body, `Patient`/FULL_RECORD) | Returns first name + age + photo. Identity verification touches the whole demographic record. |
+| `lab.getOrderPatientDetails` | **GATED** (in-body, `Patient`/FULL_RECORD) | Highest lab PHI tier (full name + blood group + vitals). |
+| `medicationStatement.listActive` | **GATED** (middleware, `MedicationRequest`/PRESCRIPTIONS) | Clinician-facing active-meds read — mirrors the other clinician clinical reads. |
+| `lab.submitResult` | **EXEMPT** | Result **delivery** is safety-critical: blocking a completed lab result from reaching the ordering clinician on a withdrawn consent is clinically unsafe (a delivered result already left the lab). Governed by lab org/entitlement/role + audit. |
+| `lab.submitSpecimen`, `lab.uploadResult`, `lab.uploadSpecimenFile`, `lab.pullSpecimens` | **EXEMPT** | Part of the result-generation/delivery pipeline (same safety rationale) and/or hold only a bare blind ref with no server-resolvable UUID for a per-row check. |
+| `lab.pullOrders`, `lab.pullDispenseMonitoringEvents` | **EXEMPT (bulk)** | Data-minimized multi-patient sync feeds (name + age only) already scoped to patients the lab handles; per-patient consent gating on a bulk feed is a body rewrite deferred out of this localized change. Per-patient consent IS enforced when the lab drills into `getOrderPatientDetails`. |
+| `lab.searchPatients`, `lab.checkDuplicates`, `lab.registerPatient` | **EXEMPT (pre-consent MPI)** | Patient-registration / identity-matching happens **before** a consent grant exists; gating them would make registration impossible. |
+| `medicationStatement.listActiveForPharmacist` | **EXEMPT-BUT-SURFACED** | Dispense-time interaction check (Story 57.2). Silently blocking would degrade the check into a false "no active meds" clear — the same false-negative class as a skipped interaction check (Safety Rule #3). So it does **not** throw: it returns `consentLimited: true` with no statements, and the pharmacy client (`active-medications.ts` → `DispensingConfirmationModal`) surfaces "active-medication data may be consent-limited" and requires override, mirroring the UNAVAILABLE path. |
+
+**Exempt does not mean unaudited:** every lab-facing PHI read still emits an audit event (Rule #6), and result-delivery exemptions are governed by org verification + `LAB_LITE`/`PHARMACY_LITE` entitlement + role. Never silently drop a consent check for a *read of an existing consented clinical record* — only the documented safety/pre-consent/bulk cases above are exempt.
+
 ## Testing Requirements
 
 - Every drug interaction code path needs dedicated test cases including: CONTRAINDICATED blocking, ALLERGY_MATCH blocking, override-with-reason logging, and the "check unavailable" fallback warning
