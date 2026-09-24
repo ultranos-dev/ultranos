@@ -23,6 +23,7 @@ import {
   type LockReleaseReason,
 } from './db'
 import { reportSampleLockAuditEvent } from './audit-client'
+import { hlcNow } from './hlc'
 
 // ---------------------------------------------------------------------------
 // acquireLock
@@ -140,6 +141,7 @@ export async function releaseLock(
       resourceId: sampleId,
       status: 'pending',
       payload: { action: 'RELEASE', sampleId, techId, reason, releasedAt: now },
+      hlcTimestamp: hlcNow(),
       createdAt: now,
       lastAttemptAt: null,
       retryCount: 0,
@@ -215,6 +217,7 @@ export async function autoReleaseLock(lock: SampleLock): Promise<void> {
         durationHours,
         expiredAt: now,
       },
+      hlcTimestamp: hlcNow(),
       createdAt: now,
       lastAttemptAt: null,
       retryCount: 0,
@@ -264,6 +267,7 @@ export async function requestRelease(
       requestingTechId,
       requestedAt: now,
     },
+    hlcTimestamp: hlcNow(),
     createdAt: now,
     lastAttemptAt: null,
     retryCount: 0,

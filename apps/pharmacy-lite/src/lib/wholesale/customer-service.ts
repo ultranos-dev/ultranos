@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import type { WholesaleCustomer } from './types'
+import { hlcNow } from '@/lib/hlc'
 
 export async function createCustomer(params: {
   name: string
@@ -33,7 +34,7 @@ export async function createCustomer(params: {
     resourceId: id,
     action: 'create',
     payload: customer as unknown as Record<string, unknown>,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcNow(),
     createdAt: now,
   })
   return customer

@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import type { SupplierItem } from './types'
+import { hlcNow } from '@/lib/hlc'
 
 async function enqueue(item: SupplierItem, action: 'create' | 'update' | 'delete'): Promise<void> {
   await enqueuePharmacySyncEntry({
@@ -9,14 +10,15 @@ async function enqueue(item: SupplierItem, action: 'create' | 'update' | 'delete
   })
 }
 
-/** Clear isPreferred on every OTHER row for this item (call inside a tx). Returns the cleared rows. */
-async function clearOtherPreferred(catalogItemId: string, keepId: string, now: string): Promise<SupplierItem[]> {
+/** Clear isPreferred on every OTHER row for this item (call inside a tx). Returns the cleared rows.
+ *  `hlcTs` is a serialized HLC (Story 60.1) stamped onto the mutated rows. */
+async function clearOtherPreferred(catalogItemId: string, keepId: string, hlcTs: string): Promise<SupplierItem[]> {
   const others = await db.supplierItems.where('catalogItemId').equals(catalogItemId).toArray()
   const cleared: SupplierItem[] = []
   for (const o of others) {
     if (o.id !== keepId && o.isPreferred) {
-      await db.supplierItems.update(o.id, { isPreferred: false, hlcTimestamp: now })
-      cleared.push({ ...o, isPreferred: false, hlcTimestamp: now })
+      await db.supplierItems.update(o.id, { isPreferred: false, hlcTimestamp: hlcTs })
+      cleared.push({ ...o, isPreferred: false, hlcTimestamp: hlcTs })
     }
   }
   return cleared
@@ -34,6 +36,7 @@ export async function upsertSupplierItem(params: {
   createdBy: string
 }): Promise<SupplierItem> {
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   const existing = params.id
     ? await db.supplierItems.get(params.id)
     : await db.supplierItems.where('[supplierId+catalogItemId]').equals([params.supplierId, params.catalogItemId]).first()
@@ -49,12 +52,12 @@ export async function upsertSupplierItem(params: {
     isPreferred: params.isPreferred ?? existing?.isPreferred ?? false,
     createdBy: existing?.createdBy ?? params.createdBy,
     createdAt: existing?.createdAt ?? now,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
   }
 
   let cleared: SupplierItem[] = []
   await db.transaction('rw', db.supplierItems, async () => {
-    if (record.isPreferred) cleared = await clearOtherPreferred(record.catalogItemId, record.id, now)
+    if (record.isPreferred) cleared = await clearOtherPreferred(record.catalogItemId, record.id, hlcTs)
     await db.supplierItems.put(record)
   })
   await enqueue(record, existing ? 'update' : 'create')
@@ -63,15 +66,15 @@ export async function upsertSupplierItem(params: {
 }
 
 export async function setPreferredSupplier(catalogItemId: string, supplierItemId: string): Promise<void> {
-  const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   const target = await db.supplierItems.get(supplierItemId)
   if (!target || target.catalogItemId !== catalogItemId) throw new Error('Supplier item not found for this catalog item')
   let cleared: SupplierItem[] = []
   await db.transaction('rw', db.supplierItems, async () => {
-    cleared = await clearOtherPreferred(catalogItemId, supplierItemId, now)
-    await db.supplierItems.update(supplierItemId, { isPreferred: true, hlcTimestamp: now })
+    cleared = await clearOtherPreferred(catalogItemId, supplierItemId, hlcTs)
+    await db.supplierItems.update(supplierItemId, { isPreferred: true, hlcTimestamp: hlcTs })
   })
-  await enqueue({ ...target, isPreferred: true, hlcTimestamp: now }, 'update')
+  await enqueue({ ...target, isPreferred: true, hlcTimestamp: hlcTs }, 'update')
   for (const c of cleared) await enqueue(c, 'update')
 }
 

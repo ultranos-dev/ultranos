@@ -23,6 +23,7 @@ import { db } from '@/lib/db'
 import type { SupplierInvoice, SupplierInvoiceStatus, SupplierPayment, SupplierPaymentMethod } from '@/lib/procurement/types'
 import type { InvoiceMatchResult } from '@/lib/procurement/invoice-match'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { hlcNow } from '@/lib/hlc'
 
 // ---------------------------------------------------------------------------
 // Payment helpers
@@ -268,7 +269,7 @@ export function SupplierInvoiceDetailPage() {
         allocations: [{ supplierInvoiceId: invoice.id, amount }],
         method: paymentMethod,
         paidBy: performedBy,
-        hlcTimestamp: new Date().toISOString(),
+        hlcTimestamp: hlcNow(),
       })
       setPaymentDialogOpen(false)
       setLoading(true)

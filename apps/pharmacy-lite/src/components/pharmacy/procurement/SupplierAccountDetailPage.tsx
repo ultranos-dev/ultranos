@@ -17,6 +17,7 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import type { SupplierAccountDetail } from '@/lib/procurement/supplier-account-service'
 import type { SupplierPayment, SupplierPaymentMethod } from '@/lib/procurement/types'
 import type { AllocationLine } from '@/lib/procurement/ap-allocation'
+import { hlcNow } from '@/lib/hlc'
 
 // ---------------------------------------------------------------------------
 // Money helpers
@@ -146,7 +147,7 @@ export function SupplierAccountDetailPage() {
         method,
         reference: reference.trim() || undefined,
         paidBy,
-        hlcTimestamp: new Date().toISOString(),
+        hlcTimestamp: hlcNow(),
       })
       setDialogOpen(false)
       setLoading(true)
@@ -177,7 +178,7 @@ export function SupplierAccountDetailPage() {
 
     setVoiding(true)
     try {
-      await voidSupplierPayment(voidTargetId, voidedBy, voidReason, new Date().toISOString())
+      await voidSupplierPayment(voidTargetId, voidedBy, voidReason, hlcNow())
       setVoidDialogOpen(false)
       setLoading(true)
       await load()

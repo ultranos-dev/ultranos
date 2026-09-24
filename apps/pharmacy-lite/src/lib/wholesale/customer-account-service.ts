@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { computeAging, type AgingBuckets } from '@/lib/pos/aging'
 import type { CustomerAccount, CustomerLedgerEntry } from './types'
+import { hlcNow } from '@/lib/hlc'
 
 async function upsertBalanceDelta(customerId: string, delta: number): Promise<void> {
   const now = new Date().toISOString()
@@ -33,7 +34,7 @@ export async function postCharge(customerId: string, amount: number, salesOrderI
     resourceId: entry.id,
     action: 'create',
     payload: entry as unknown as Record<string, unknown>,
-    hlcTimestamp: entry.timestamp,
+    hlcTimestamp: hlcNow(),
     createdAt: entry.timestamp,
   })
 }
@@ -64,7 +65,7 @@ export async function recordPayment(params: { customerId: string; amount: number
     resourceId: entry.id,
     action: 'create',
     payload: entry as unknown as Record<string, unknown>,
-    hlcTimestamp: entry.timestamp,
+    hlcTimestamp: hlcNow(),
     createdAt: entry.timestamp,
   })
 }

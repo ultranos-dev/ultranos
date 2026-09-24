@@ -4,6 +4,7 @@ import { reverseReceiptFromPO } from '@/lib/procurement/po-receipt'
 import type { GoodsReceipt, StockBatch, StockMovement } from './types'
 import { auditProcurementEvent } from '@/lib/procurement/audit'
 import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
+import { hlcNow } from '@/lib/hlc'
 
 
 export class ReceiptNotReversibleError extends Error {
@@ -46,6 +47,7 @@ export async function reverseGoodsReceipt(receiptId: string, performedBy: string
   if (drawnDown.length > 0) throw new ReceiptNotReversibleError('stock_not_intact', drawnDown)
 
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   const reversalId = crypto.randomUUID()
 
   // Build reversing movements (append-only) + the reversing receipt record.
@@ -60,7 +62,7 @@ export async function reverseGoodsReceipt(receiptId: string, performedBy: string
     referenceType: 'void',
     performedBy,
     timestamp: now,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
   }))
 
   const reversalReceipt: GoodsReceipt = {
@@ -73,21 +75,21 @@ export async function reverseGoodsReceipt(receiptId: string, performedBy: string
     notes: undefined,
     reversalOf: receiptId,
     receivedAt: now,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
   }
 
   // Pre-build encrypted sync entries (encryption cannot run inside a tx zone).
   const movementSyncEntries = await Promise.all(movements.map((m) =>
-    buildEncryptedSyncEntry({ resourceType: 'StockMovement', resourceId: m.id, action: 'create', payload: m as unknown as Record<string, unknown>, hlcTimestamp: now, createdAt: now })))
+    buildEncryptedSyncEntry({ resourceType: 'StockMovement', resourceId: m.id, action: 'create', payload: m as unknown as Record<string, unknown>, hlcTimestamp: hlcTs, createdAt: now })))
   const batchSyncEntries = await Promise.all(batches.map((b) =>
-    buildEncryptedSyncEntry({ resourceType: 'StockBatch', resourceId: b.id, action: 'update', payload: { ...b, quantityOnHand: 0, status: 'depleted' as const, hlcTimestamp: now } as unknown as Record<string, unknown>, hlcTimestamp: now, createdAt: now })))
-  const reversalReceiptSyncEntry = await buildEncryptedSyncEntry({ resourceType: 'GoodsReceipt', resourceId: reversalId, action: 'create', payload: reversalReceipt as unknown as Record<string, unknown>, hlcTimestamp: now, createdAt: now })
-  const originalReceiptSyncEntry = await buildEncryptedSyncEntry({ resourceType: 'GoodsReceipt', resourceId: receiptId, action: 'update', payload: { ...receipt, reversedByReceiptId: reversalId } as unknown as Record<string, unknown>, hlcTimestamp: now, createdAt: now })
+    buildEncryptedSyncEntry({ resourceType: 'StockBatch', resourceId: b.id, action: 'update', payload: { ...b, quantityOnHand: 0, status: 'depleted' as const, hlcTimestamp: hlcTs } as unknown as Record<string, unknown>, hlcTimestamp: hlcTs, createdAt: now })))
+  const reversalReceiptSyncEntry = await buildEncryptedSyncEntry({ resourceType: 'GoodsReceipt', resourceId: reversalId, action: 'create', payload: reversalReceipt as unknown as Record<string, unknown>, hlcTimestamp: hlcTs, createdAt: now })
+  const originalReceiptSyncEntry = await buildEncryptedSyncEntry({ resourceType: 'GoodsReceipt', resourceId: receiptId, action: 'update', payload: { ...receipt, reversedByReceiptId: reversalId } as unknown as Record<string, unknown>, hlcTimestamp: hlcTs, createdAt: now })
 
   await db.transaction('rw', [db.stockBatches, db.stockMovements, db.goodsReceipts, db.purchaseOrders, db.syncQueue], async () => {
     for (let i = 0; i < batches.length; i++) {
       await db.stockMovements.put(movements[i]!)
-      await db.stockBatches.update(batches[i]!.id, { quantityOnHand: 0, status: 'depleted', hlcTimestamp: now })
+      await db.stockBatches.update(batches[i]!.id, { quantityOnHand: 0, status: 'depleted', hlcTimestamp: hlcTs })
       await db.syncQueue.put(movementSyncEntries[i]!)
       await db.syncQueue.put(batchSyncEntries[i]!)
     }
@@ -101,7 +103,7 @@ export async function reverseGoodsReceipt(receiptId: string, performedBy: string
       if (po) {
         const reversed = receipt.items.map((it) => ({ catalogItemId: it.catalogItemId, quantity: it.quantity }))
         const rolled = reverseReceiptFromPO(po, reversed)
-        await db.purchaseOrders.update(po.id, { items: rolled.items, status: rolled.status, closedAt: rolled.closedAt, hlcTimestamp: now })
+        await db.purchaseOrders.update(po.id, { items: rolled.items, status: rolled.status, closedAt: rolled.closedAt, hlcTimestamp: hlcTs })
       }
     }
   })
@@ -110,7 +112,7 @@ export async function reverseGoodsReceipt(receiptId: string, performedBy: string
   if (receipt.purchaseOrderId) {
     const updatedPO = await db.purchaseOrders.get(receipt.purchaseOrderId)
     if (updatedPO) {
-      await enqueuePharmacySyncEntry({ resourceType: 'PurchaseOrder', resourceId: updatedPO.id, action: 'update', payload: updatedPO as unknown as Record<string, unknown>, hlcTimestamp: now, createdAt: now })
+      await enqueuePharmacySyncEntry({ resourceType: 'PurchaseOrder', resourceId: updatedPO.id, action: 'update', payload: updatedPO as unknown as Record<string, unknown>, hlcTimestamp: hlcTs, createdAt: now })
     }
   }
 

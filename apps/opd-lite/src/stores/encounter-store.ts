@@ -1,24 +1,20 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import type { FhirEncounterZod, FhirMedicationStatementZod } from '@ultranos/shared-types'
-import { HybridLogicalClock, serializeHlc } from '@ultranos/sync-engine'
 import { db } from '@/lib/db'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { enqueueSyncAction } from '@ultranos/sync-engine'
 import { syncQueue } from '@/lib/sync-queue'
-
-const NODE_ID_KEY = 'ultranos_node_id'
-
-function getOrCreateNodeId(): string {
-  let nodeId = globalThis.sessionStorage?.getItem(NODE_ID_KEY)
-  if (!nodeId) {
-    nodeId = crypto.randomUUID()
-    globalThis.sessionStorage?.setItem(NODE_ID_KEY, nodeId)
-  }
-  return nodeId
-}
-
-const hlc = new HybridLogicalClock(getOrCreateNodeId())
+// Story 60.1: consolidated onto the single app HLC singleton (lib/hlc.ts).
+// This store previously constructed a SECOND HybridLogicalClock keyed off a
+// sessionStorage node id, so encounter events were ordered by a different clock
+// than every other opd-lite write — breaking cross-resource causal ordering.
+// It now shares the one persisted singleton (seeds monotonically across restart).
+// Migration: encounter events already queued under the old clock keep their
+// serialized stamps (already durable); only newly-issued stamps use the shared
+// clock. The shared clock's persisted state guarantees the new stamps are
+// strictly monotonic, so no in-flight event can be re-ordered behind a new one.
+import { hlc, serializeHlc } from '@/lib/hlc'
 
 /** The practitioner reference on an encounter (participant[0].individual.reference). */
 function encounterPractitionerRef(e: FhirEncounterZod): string | undefined {

@@ -1,6 +1,7 @@
 import Dexie from 'dexie'
 import type { DataUsageCategory } from '@ultranos/sync-engine'
 export type { DataUsageCategory }  // re-export for existing consumers
+import { hlcNow } from './hlc'
 import type { FhirSpecimen, PatientVerificationRecord, AmendmentRecord } from '@ultranos/shared-types'
 import type { ClientAuditEvent } from '@ultranos/audit-logger/client'
 import type { CustodyEvent } from '@/types/custody-event'
@@ -2322,22 +2323,29 @@ export interface SyncQueueEntry {
 
 /** Enqueue a resource change for sync to the Hub. Stamps queue-management
  * metadata (status/createdAt/retryCount/lastAttemptAt) when the caller omits
- * them so drains that filter on status:'pending' see the entry. */
+ * them so drains that filter on status:'pending' see the entry.
+ *
+ * Story 60.1: `hlcTimestamp` is REQUIRED — it must be a serialized HLC from the
+ * app clock (`hlcNow()`), never a wall-clock string. This is what the Hub uses
+ * to order events across offline devices with drifting clocks; an ISO date here
+ * mis-parses at the Hub and can silently drop the write. The queue-entry id also
+ * carries a random suffix so two events for the same resource enqueued within
+ * the same millisecond (double-submit) no longer collide and overwrite. */
 export async function enqueueSyncEvent(
   entry: {
     resourceType: string
     resourceId: string
     payload: unknown
+    hlcTimestamp: string
     status?: SyncQueueEntry['status']
     createdAt?: string
     lastAttemptAt?: string | null
     retryCount?: number
-    hlcTimestamp?: string
   },
 ): Promise<void> {
   const db = getDb()
   const now = new Date().toISOString()
-  const id = `${entry.resourceType}-${entry.resourceId}-${Date.now()}`
+  const id = `${entry.resourceType}-${entry.resourceId}-${Date.now()}-${crypto.randomUUID()}`
   await db.table('syncQueue').put({
     id,
     resourceType: entry.resourceType,
@@ -2347,7 +2355,7 @@ export async function enqueueSyncEvent(
     createdAt: entry.createdAt ?? now,
     lastAttemptAt: entry.lastAttemptAt ?? null,
     retryCount: entry.retryCount ?? 0,
-    ...(entry.hlcTimestamp ? { hlcTimestamp: entry.hlcTimestamp } : {}),
+    hlcTimestamp: entry.hlcTimestamp,
   })
 }
 
@@ -4415,6 +4423,7 @@ export async function finalizeHmisReport(id: string, finalizedBy: string): Promi
       resourceId: id,
       status: 'pending',
       payload: updated,
+      hlcTimestamp: hlcNow(),
       createdAt: now,
       lastAttemptAt: null,
       retryCount: 0,
@@ -4553,6 +4562,7 @@ export async function finalizeDonorReport(id: string, finalizedBy: string): Prom
       resourceId: id,
       status: 'pending',
       payload: finalized,
+      hlcTimestamp: hlcNow(),
       createdAt: now,
       lastAttemptAt: null,
       retryCount: 0,

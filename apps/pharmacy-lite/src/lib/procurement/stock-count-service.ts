@@ -3,6 +3,7 @@ import { buildEncryptedSyncEntry, enqueuePharmacySyncEntry } from '@/lib/dexie-s
 import { enqueueStockBatchSync } from '@/lib/inventory/stock-batch-sync'
 import type { StockCount, StockCountItem, StockCountType } from './types'
 import type { StockMovement } from '@/lib/inventory/types'
+import { hlcNow } from '@/lib/hlc'
 
 export async function startStockCount(params: {
   type: StockCountType
@@ -10,6 +11,7 @@ export async function startStockCount(params: {
 }): Promise<StockCount> {
   const id = crypto.randomUUID()
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   const count: StockCount = {
     id,
     type: params.type,
@@ -18,7 +20,7 @@ export async function startStockCount(params: {
     items: [],
     totalVarianceItems: 0,
     startedAt: now,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
   }
   await db.stockCounts.put(count)
   await enqueuePharmacySyncEntry({
@@ -44,7 +46,7 @@ export async function addCountItem(countId: string, item: StockCountItem): Promi
   } else {
     updatedItems = [...count.items, item]
   }
-  await db.stockCounts.update(countId, { items: updatedItems, hlcTimestamp: new Date().toISOString() })
+  await db.stockCounts.update(countId, { items: updatedItems, hlcTimestamp: hlcNow() })
 }
 
 export async function completeStockCount(countId: string): Promise<StockCount> {
@@ -52,6 +54,7 @@ export async function completeStockCount(countId: string): Promise<StockCount> {
   if (!count) throw new Error('Stock count not found')
   if (count.status !== 'in_progress') throw new Error('Stock count already completed')
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   const varianceItems = count.items.filter((item) => item.variance !== 0)
 
   // Build movements (with catalog lookups) and encrypt sync-queue entries BEFORE
@@ -73,7 +76,7 @@ export async function completeStockCount(countId: string): Promise<StockCount> {
       referenceType: 'count',
       performedBy: count.countedBy,
       timestamp: now,
-      hlcTimestamp: now,
+      hlcTimestamp: hlcTs,
     })
   }
 
@@ -84,7 +87,7 @@ export async function completeStockCount(countId: string): Promise<StockCount> {
         resourceId: movement.id,
         action: 'create',
         payload: movement as unknown as Record<string, unknown>,
-        hlcTimestamp: now,
+        hlcTimestamp: hlcTs,
         createdAt: now,
       }),
     ),
@@ -97,14 +100,14 @@ export async function completeStockCount(countId: string): Promise<StockCount> {
     status: 'completed' as const,
     completedAt: now,
     totalVarianceItems: varianceItems.length,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
   }
   const countSyncEntry = await buildEncryptedSyncEntry({
     resourceType: 'StockCount',
     resourceId: countId,
     action: 'update',
     payload: updatedCount as unknown as Record<string, unknown>,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
     createdAt: now,
   })
 
@@ -112,14 +115,14 @@ export async function completeStockCount(countId: string): Promise<StockCount> {
     for (let i = 0; i < varianceItems.length; i++) {
       const item = varianceItems[i]!
       await db.stockMovements.put(movements[i]!)
-      await db.stockBatches.update(item.stockBatchId, { quantityOnHand: item.actualQty, hlcTimestamp: now })
+      await db.stockBatches.update(item.stockBatchId, { quantityOnHand: item.actualQty, hlcTimestamp: hlcTs })
       await db.syncQueue.put(syncEntries[i]!)
     }
     await db.stockCounts.update(countId, {
       status: 'completed' as const,
       completedAt: now,
       totalVarianceItems: varianceItems.length,
-      hlcTimestamp: now,
+      hlcTimestamp: hlcTs,
     })
     await db.syncQueue.put(countSyncEntry)
   })

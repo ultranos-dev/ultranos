@@ -6,6 +6,7 @@ import type { PurchaseOrder, PurchaseOrderItem, PurchaseOrderStatus } from './ty
 import { auditProcurementEvent } from './audit'
 import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
 import { requiresApproval } from './po-approval'
+import { hlcNow } from '@/lib/hlc'
 
 export class SelfApprovalError extends Error {
   constructor() { super('You cannot approve or reject your own purchase order'); this.name = 'SelfApprovalError' }
@@ -44,6 +45,7 @@ export async function createPurchaseOrder(params: {
 }): Promise<PurchaseOrder> {
   const id = crypto.randomUUID()
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   const year = new Date().getFullYear()
 
   const settings = await db.pharmacySettings.toCollection().first()
@@ -81,7 +83,7 @@ export async function createPurchaseOrder(params: {
     notes: params.notes?.trim() || undefined,
     createdBy: params.createdBy,
     createdAt: now,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
   }
   await db.purchaseOrders.put(po)
   await enqueuePharmacySyncEntry({
@@ -89,7 +91,7 @@ export async function createPurchaseOrder(params: {
     resourceId: id,
     action: 'create',
     payload: po as unknown as Record<string, unknown>,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
     createdAt: now,
   })
   auditProcurementEvent(po.createdBy, AuditAction.PO_CREATED, AuditResourceType.PURCHASE_ORDER, po.id, {
@@ -105,8 +107,9 @@ export async function markPurchaseOrderSent(poId: string, sentBy?: string): Prom
     throw new ApprovalRequiredError()
   }
   const now = new Date().toISOString()
-  await db.purchaseOrders.update(poId, { status: 'sent' as PurchaseOrderStatus, sentAt: now, sentBy, hlcTimestamp: now })
-  await enqueuePOUpdate(poId, now)
+  const hlcTs = hlcNow()
+  await db.purchaseOrders.update(poId, { status: 'sent' as PurchaseOrderStatus, sentAt: now, sentBy, hlcTimestamp: hlcTs })
+  await enqueuePOUpdate(poId, hlcTs, now)
   const po = await db.purchaseOrders.get(poId)
   auditProcurementEvent(sentBy ?? 'unknown', AuditAction.PO_SENT, AuditResourceType.PURCHASE_ORDER, poId, {
     poNumber: po?.poNumber, supplierId: po?.supplierId,
@@ -115,13 +118,14 @@ export async function markPurchaseOrderSent(poId: string, sentBy?: string): Prom
 
 export async function cancelPurchaseOrder(poId: string, cancelledBy?: string, reason?: string): Promise<void> {
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   await db.purchaseOrders.update(poId, {
     status: 'cancelled' as PurchaseOrderStatus,
     cancelledBy,
     cancelledReason: reason?.trim() || undefined,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
   })
-  await enqueuePOUpdate(poId, now)
+  await enqueuePOUpdate(poId, hlcTs, now)
   const po = await db.purchaseOrders.get(poId)
   auditProcurementEvent(cancelledBy ?? 'unknown', AuditAction.PO_CANCELLED, AuditResourceType.PURCHASE_ORDER, poId, {
     poNumber: po?.poNumber, reason: reason?.trim() || undefined,
@@ -133,8 +137,9 @@ export async function submitPurchaseOrderForApproval(poId: string, submittedBy: 
   if (!po) throw new Error('Purchase order not found')
   if (po.status !== 'draft') throw new Error('Only a draft can be submitted for approval')
   const now = new Date().toISOString()
-  await db.purchaseOrders.update(poId, { status: 'pending_approval' as PurchaseOrderStatus, submittedBy, submittedAt: now, hlcTimestamp: now })
-  await enqueuePOUpdate(poId, now)
+  const hlcTs = hlcNow()
+  await db.purchaseOrders.update(poId, { status: 'pending_approval' as PurchaseOrderStatus, submittedBy, submittedAt: now, hlcTimestamp: hlcTs })
+  await enqueuePOUpdate(poId, hlcTs, now)
   auditProcurementEvent(submittedBy, AuditAction.PO_SUBMITTED_FOR_APPROVAL, AuditResourceType.PURCHASE_ORDER, poId, {
     poNumber: po.poNumber, totalCost: po.totalCost,
   })
@@ -146,10 +151,11 @@ export async function approvePurchaseOrder(poId: string, approvedBy: string): Pr
   if (po.status !== 'pending_approval') throw new Error('Only a pending purchase order can be approved')
   if (approvedBy === po.createdBy) throw new SelfApprovalError()
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   await db.purchaseOrders.update(poId, {
-    status: 'sent' as PurchaseOrderStatus, approvedBy, approvedAt: now, sentBy: approvedBy, sentAt: now, hlcTimestamp: now,
+    status: 'sent' as PurchaseOrderStatus, approvedBy, approvedAt: now, sentBy: approvedBy, sentAt: now, hlcTimestamp: hlcTs,
   })
-  await enqueuePOUpdate(poId, now)
+  await enqueuePOUpdate(poId, hlcTs, now)
   auditProcurementEvent(approvedBy, AuditAction.PO_APPROVED, AuditResourceType.PURCHASE_ORDER, poId, {
     poNumber: po.poNumber, totalCost: po.totalCost,
   })
@@ -161,16 +167,17 @@ export async function rejectPurchaseOrder(poId: string, rejectedBy: string, reas
   if (po.status !== 'pending_approval') throw new Error('Only a pending purchase order can be rejected')
   if (rejectedBy === po.createdBy) throw new SelfApprovalError()
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   await db.purchaseOrders.update(poId, {
-    status: 'draft' as PurchaseOrderStatus, rejectedBy, rejectedReason: reason.trim() || undefined, rejectedAt: now, hlcTimestamp: now,
+    status: 'draft' as PurchaseOrderStatus, rejectedBy, rejectedReason: reason.trim() || undefined, rejectedAt: now, hlcTimestamp: hlcTs,
   })
-  await enqueuePOUpdate(poId, now)
+  await enqueuePOUpdate(poId, hlcTs, now)
   auditProcurementEvent(rejectedBy, AuditAction.PO_REJECTED, AuditResourceType.PURCHASE_ORDER, poId, {
     poNumber: po.poNumber, reason: reason.trim() || undefined,
   })
 }
 
-async function enqueuePOUpdate(poId: string, now: string): Promise<void> {
+async function enqueuePOUpdate(poId: string, hlcTs: string, now: string): Promise<void> {
   const po = await db.purchaseOrders.get(poId)
   if (!po) return
   await enqueuePharmacySyncEntry({
@@ -178,7 +185,7 @@ async function enqueuePOUpdate(poId: string, now: string): Promise<void> {
     resourceId: poId,
     action: 'update',
     payload: po as unknown as Record<string, unknown>,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
     createdAt: now,
   })
 }

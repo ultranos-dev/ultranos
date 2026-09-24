@@ -6,6 +6,7 @@ import type { GoodsReceipt, GoodsReceiptItem, StockBatch, StockMovement } from '
 import { DEFAULT_PHARMACY_SETTINGS } from './types'
 import { auditProcurementEvent } from '@/lib/procurement/audit'
 import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
+import { hlcNow } from '@/lib/hlc'
 
 export async function processGoodsReceipt(params: {
   items: GoodsReceiptItem[]
@@ -19,6 +20,7 @@ export async function processGoodsReceipt(params: {
   const { items, supplierId, purchaseOrderId, receivedBy, locationId, notes, overReceiptReason } = params
 
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   const receiptId = crypto.randomUUID()
   const totalCost = items.reduce((sum, item) => sum + item.costPrice * item.quantity, 0)
 
@@ -48,7 +50,7 @@ export async function processGoodsReceipt(params: {
     notes,
     overReceiptReason,
     receivedAt: now,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
   }
 
   // Build batches + movements, then encrypt all sync-queue entries BEFORE
@@ -77,7 +79,7 @@ export async function processGoodsReceipt(params: {
       inspectedAt: now,
       heldReason: held ? (item.heldReason?.trim() || undefined) : undefined,
       locationId,
-      hlcTimestamp: now,
+      hlcTimestamp: hlcTs,
     })
 
     movements.push({
@@ -90,7 +92,7 @@ export async function processGoodsReceipt(params: {
       referenceType: 'goods_receipt',
       performedBy: receivedBy,
       timestamp: now,
-      hlcTimestamp: now,
+      hlcTimestamp: hlcTs,
     })
   }
 
@@ -101,7 +103,7 @@ export async function processGoodsReceipt(params: {
         resourceId: movement.id,
         action: 'create',
         payload: movement as unknown as Record<string, unknown>,
-        hlcTimestamp: now,
+        hlcTimestamp: hlcTs,
         createdAt: now,
       }),
     ),
@@ -126,7 +128,7 @@ export async function processGoodsReceipt(params: {
     resourceId: receiptId,
     action: 'create',
     payload: receipt as unknown as Record<string, unknown>,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
     createdAt: now,
   })
 
@@ -148,7 +150,7 @@ export async function processGoodsReceipt(params: {
       const received = items.map((i) => ({ catalogItemId: i.catalogItemId, quantity: i.quantity }))
       const applied = applyReceiptToPO(current, received, now)
       await db.purchaseOrders.update(purchaseOrderId, {
-        items: applied.items, status: applied.status, closedAt: applied.closedAt, hlcTimestamp: now,
+        items: applied.items, status: applied.status, closedAt: applied.closedAt, hlcTimestamp: hlcTs,
       })
     }
   })
@@ -158,7 +160,7 @@ export async function processGoodsReceipt(params: {
     if (updatedPO) {
       await enqueuePharmacySyncEntry({
         resourceType: 'PurchaseOrder', resourceId: purchaseOrderId, action: 'update',
-        payload: updatedPO as unknown as Record<string, unknown>, hlcTimestamp: now, createdAt: now,
+        payload: updatedPO as unknown as Record<string, unknown>, hlcTimestamp: hlcTs, createdAt: now,
       })
     }
   }

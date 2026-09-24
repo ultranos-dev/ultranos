@@ -3,9 +3,18 @@ export {
   serializeHlc,
   deserializeHlc,
   compareHlc,
+  hlcNow,
+  isSerializedHlc,
+  SERIALIZED_HLC_RE,
+  DEFAULT_MAX_DRIFT_MS,
 } from './hlc.js'
 
-export type { HlcTimestamp } from './hlc.js'
+export type {
+  HlcTimestamp,
+  HlcState,
+  HlcOptions,
+  HlcReceiveResult,
+} from './hlc.js'
 
 export {
   generateKeyPair,

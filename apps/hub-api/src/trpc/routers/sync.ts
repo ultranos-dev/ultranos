@@ -11,6 +11,7 @@ import { db } from '@/lib/supabase'
 import { compareHlc, deserializeHlc, resolveConflict, getConflictTier } from '@ultranos/sync-engine'
 import { flattenForDb } from '@/lib/resource-mappers'
 import { encryptJsonbValue } from '@/lib/field-encryption'
+import { hlcTimestampSchema } from '@/lib/hlc-format'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const SyncOperationSchema = z.object({
@@ -18,7 +19,8 @@ const SyncOperationSchema = z.object({
   resourceId: z.string().min(1),
   action: z.enum(['create', 'update', 'delete']),
   payload: z.string().min(1),
-  hlcTimestamp: z.string().min(1),
+  // Story 60.1: staged HLC-format validation (HLC_FORMAT_MODE, default log-only).
+  hlcTimestamp: hlcTimestampSchema('sync.push'),
 })
 
 /** Map FHIR resource types to Supabase table names. */

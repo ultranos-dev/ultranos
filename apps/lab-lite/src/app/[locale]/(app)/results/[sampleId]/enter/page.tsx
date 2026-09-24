@@ -38,6 +38,7 @@ import { reportLabResultAuditEvent, reportAnomalyDetection } from '@/lib/audit-c
 import { fetchOrderPatientDetails } from '@/lib/trpc'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { detectAnomalies, ANOMALY_MODEL_VERSION } from '@/lib/anomaly-engine'
+import { hlcNow } from '@/lib/hlc'
 import type { AnomalyFlag } from '@/lib/anomaly-engine'
 import { getPriorResult } from '@/lib/prior-results'
 import { AnomalyFlagDisplay } from '@/components/AnomalyFlagDisplay'
@@ -273,7 +274,7 @@ export default function ResultEntryPage({ params }: PageProps) {
       resourceType: 'DiagnosticReport',
       resourceId: bundle.diagnosticReport.id,
       payload: bundle,
-      hlcTimestamp: new Date().toISOString(),
+      hlcTimestamp: hlcNow(),
     })
 
     // Advance the sample to 'completed'. The pipeline only allows
@@ -410,7 +411,7 @@ export default function ResultEntryPage({ params }: PageProps) {
               confidence: flag.confidence,
               disclaimer: flag.disclaimer,
             },
-            hlcTimestamp: new Date().toISOString(),
+            hlcTimestamp: hlcNow(),
           })
         }
       }

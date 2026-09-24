@@ -5,6 +5,7 @@ import { enqueueStockBatchSync } from './stock-batch-sync'
 import { DEFAULT_LOCATION_ID } from './types'
 import type { StockLocation } from './types'
 import type { FacilityLocation } from '@ultranos/shared-types'
+import { hlcNow } from '@/lib/hlc'
 
 export interface LocationSyncResult { locationsSynced: number; lastSyncedAt: string }
 
@@ -13,10 +14,10 @@ export interface LocationSyncResult { locationsSynced: number; lastSyncedAt: str
 export async function reconcileLegacyLocations(primaryId: string): Promise<number> {
   const legacy = await db.stockBatches.where('locationId').anyOf([DEFAULT_LOCATION_ID, '']).toArray()
   if (legacy.length === 0) return 0
-  const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   const ids = legacy.map((b) => b.id)
   await db.transaction('rw', db.stockBatches, async () => {
-    for (const id of ids) await db.stockBatches.update(id, { locationId: primaryId, hlcTimestamp: now })
+    for (const id of ids) await db.stockBatches.update(id, { locationId: primaryId, hlcTimestamp: hlcTs })
   })
   // enqueue AFTER the tx (Web Crypto cannot run inside a Dexie tx zone)
   for (const id of ids) {

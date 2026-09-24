@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { recordPayment } from '@/lib/pos/payment-service'
 import type { Invoice, PaymentMethod } from '@/lib/pos/types'
+import { hlcNow } from '@/lib/hlc'
 
 interface PaymentFormProps {
   invoice: Invoice
@@ -83,7 +84,7 @@ export function PaymentForm({
         reference: method === 'card' ? cardReference || undefined : undefined,
         receivedBy: `Practitioner/${session.practitionerId}`,
         patientId: invoice.patientId,
-        hlcTimestamp: new Date().toISOString(),
+        hlcTimestamp: hlcNow(),
       })
       setAmountStr('')
       setCardReference('')

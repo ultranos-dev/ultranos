@@ -339,7 +339,13 @@ export function mapHubReportToFhir(item: HubDiagnosticReportItem): MappedDiagnos
       : {}),
     ...(item.presentedForm ? { presentedForm: item.presentedForm } : {}),
     meta: { versionId: '1', lastUpdated: createdAt },
-    _ultranos: { createdAt, hlcTimestamp: '', isOfflineCreated: false, virusScanStatus, labId: item.labId },
+    // Story 60.1: this is a Hub-PULLED, read-only cache row — not a device-local
+    // event, so it must NOT carry a spoke HLC (stamping it with the local clock
+    // would fabricate a causal position it never had). The Hub does not return an
+    // HLC for pulled reports, so we mirror the server createdAt as the stable
+    // ordering key instead of the meaningless empty string. This row is never
+    // re-enqueued to the Hub, so it never re-enters the HLC-stamped sync path.
+    _ultranos: { createdAt, hlcTimestamp: createdAt, isOfflineCreated: false, virusScanStatus, labId: item.labId },
   }
 }
 

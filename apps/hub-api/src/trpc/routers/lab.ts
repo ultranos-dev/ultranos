@@ -15,6 +15,7 @@ import { getFieldEncryptionKeys } from '@/lib/field-encryption'
 import { scanFile } from '@/lib/virus-scanner'
 import { analyzeFile } from '@/services/ocr'
 import { compareHlc, deserializeHlc } from '@ultranos/sync-engine'
+import { hlcTimestampSchema } from '@/lib/hlc-format'
 import { monitoringPullEventsTotal } from '@/lib/clinical-safety-metrics'
 import { buildNotificationContent } from '@/lib/notification-content'
 import { signPhotoUrl } from '@/lib/photo-urls'
@@ -260,7 +261,10 @@ const submitObservationSchema = z.object({
   note: z.array(z.object({ text: z.string() })).optional(),
   _ultranos: z.object({
     isOfflineCreated: z.boolean().optional(),
-    hlcTimestamp: z.string().optional(),
+    // Story 60.1: bundle HLC stamp on submitResult — staged format validation
+    // (HLC_FORMAT_MODE, default log-only). Optional: legacy/online-created
+    // observations may omit it, so only validate the format when present.
+    hlcTimestamp: hlcTimestampSchema('lab.submitResult.observation').optional(),
     createdAt: z.string().optional(),
     templateVersion: z.string().optional(),
     referenceRange: z.object({ low: z.number().optional(), high: z.number().optional(), text: z.string().optional() }).optional(),
@@ -294,7 +298,8 @@ const submitSpecimenSchema = z.object({
   condition: z.string().max(32).optional(),
   rejectionReason: z.string().max(256).optional(),
   note: z.string().max(2000).optional(),
-  hlcTimestamp: z.string().min(1),
+  // Story 60.1: staged HLC-format validation (HLC_FORMAT_MODE, default log-only).
+  hlcTimestamp: hlcTimestampSchema('lab.pushSpecimen'),
 }).strict()   // .strict() = data-minimization: reject unknown fields (Rule #7)
 
 // ── Story 59.1: lab-scoped registration & search schemas ───────────────────

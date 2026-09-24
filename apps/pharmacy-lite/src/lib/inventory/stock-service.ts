@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { enqueueStockBatchSync } from './stock-batch-sync'
+import { hlcNow } from '@/lib/hlc'
 import type { StockBatch, StockMovement, StockMovementType, StockMovementReason } from './types'
 
 /**
@@ -38,6 +39,7 @@ export async function deductStock(params: {
   const { stockBatchId, catalogItemId, quantity, type, reason, reasonCode, referenceId, referenceType, performedBy } = params
 
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   const movementId = crypto.randomUUID()
 
   const movement: StockMovement = {
@@ -52,7 +54,7 @@ export async function deductStock(params: {
     referenceType,
     performedBy,
     timestamp: now,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
   }
 
   // Story 57.4 (M-PHARM-2, AC 1): the read → quantity-check → newQty compute →
@@ -79,9 +81,9 @@ export async function deductStock(params: {
     await db.stockBatches.update(stockBatchId, {
       quantityOnHand: newQty,
       status: newStatus,
-      hlcTimestamp: now,
+      hlcTimestamp: hlcTs,
     })
-    return { ...batch, quantityOnHand: newQty, status: newStatus, hlcTimestamp: now }
+    return { ...batch, quantityOnHand: newQty, status: newStatus, hlcTimestamp: hlcTs }
   })
 
   await enqueuePharmacySyncEntry({
@@ -89,7 +91,7 @@ export async function deductStock(params: {
     resourceId: movementId,
     action: 'create',
     payload: movement as unknown as Record<string, unknown>,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
     createdAt: now,
   })
 
@@ -113,6 +115,7 @@ export async function addStock(params: {
   const { stockBatchId, catalogItemId, quantity, type, reason, reasonCode, referenceId, referenceType, performedBy } = params
 
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   const movementId = crypto.randomUUID()
 
   const movement: StockMovement = {
@@ -127,7 +130,7 @@ export async function addStock(params: {
     referenceType,
     performedBy,
     timestamp: now,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
   }
 
   await db.transaction('rw', [db.stockMovements, db.stockBatches], async () => {
@@ -138,7 +141,7 @@ export async function addStock(params: {
       await db.stockBatches.update(stockBatchId, {
         quantityOnHand: newQty,
         status: newQty > 0 && batch.status === 'depleted' ? 'active' as const : batch.status,
-        hlcTimestamp: now,
+        hlcTimestamp: hlcTs,
       })
     }
   })
@@ -148,7 +151,7 @@ export async function addStock(params: {
     resourceId: movementId,
     action: 'create',
     payload: movement as unknown as Record<string, unknown>,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
     createdAt: now,
   })
 

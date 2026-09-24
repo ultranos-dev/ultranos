@@ -17,6 +17,7 @@ import {
   type ShiftSession,
 } from './db'
 import { reportHandoverAuditEvent } from './audit-client'
+import { hlcNow } from './hlc'
 
 // ---------------------------------------------------------------------------
 // Report generation
@@ -206,6 +207,7 @@ export async function finalizeHandover(reportId: string, notes: string): Promise
     resourceId: reportId,
     status: 'pending',
     payload: updated,
+    hlcTimestamp: hlcNow(),
     createdAt: new Date().toISOString(),
     lastAttemptAt: null,
     retryCount: 0,
@@ -257,6 +259,7 @@ export async function acknowledgeHandover(
     resourceId: reportId,
     status: 'pending',
     payload: updated,
+    hlcTimestamp: hlcNow(),
     createdAt: now,
     lastAttemptAt: null,
     retryCount: 0,

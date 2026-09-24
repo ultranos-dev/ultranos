@@ -3,6 +3,7 @@ import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { deductStock, addStock } from '@/lib/inventory/stock-service'
 import { enqueueStockBatchSync } from '@/lib/inventory/stock-batch-sync'
 import type { StockTransfer, TransferItem } from './types'
+import { hlcNow } from '@/lib/hlc'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -15,14 +16,13 @@ function now(): string {
 async function enqueueSyncUpdate(transferId: string): Promise<void> {
   const transfer = await db.stockTransfers.get(transferId)
   if (!transfer) return
-  const ts = now()
   await enqueuePharmacySyncEntry({
     resourceType: 'StockTransfer',
     resourceId: transferId,
     action: 'update',
     payload: transfer as unknown as Record<string, unknown>,
-    hlcTimestamp: ts,
-    createdAt: ts,
+    hlcTimestamp: hlcNow(),
+    createdAt: now(),
   })
 }
 
@@ -40,6 +40,7 @@ export async function createTransferRequest(params: {
   requestedBy: string
 }): Promise<StockTransfer> {
   const ts = now()
+  const hts = hlcNow()
   const transfer: StockTransfer = {
     id: params.id ?? crypto.randomUUID(),
     fromLocationId: params.fromLocationId,
@@ -50,7 +51,7 @@ export async function createTransferRequest(params: {
     items: params.items,
     requestedBy: params.requestedBy,
     requestedAt: ts,
-    hlcTimestamp: ts,
+    hlcTimestamp: hts,
   }
 
   await db.stockTransfers.put(transfer)
@@ -60,7 +61,7 @@ export async function createTransferRequest(params: {
     resourceId: transfer.id,
     action: 'create',
     payload: transfer as unknown as Record<string, unknown>,
-    hlcTimestamp: ts,
+    hlcTimestamp: hts,
     createdAt: ts,
   })
 
@@ -76,7 +77,7 @@ export async function approveTransfer(
     status: 'approved',
     approvedBy,
     approvedAt: ts,
-    hlcTimestamp: ts,
+    hlcTimestamp: hlcNow(),
   })
   await enqueueSyncUpdate(transferId)
 }
@@ -104,7 +105,7 @@ export async function shipTransfer(
   await db.stockTransfers.update(transferId, {
     status: 'shipped',
     shippedAt: ts,
-    hlcTimestamp: ts,
+    hlcTimestamp: hlcNow(),
   })
   await enqueueSyncUpdate(transferId)
 }
@@ -140,7 +141,7 @@ export async function receiveTransfer(
       receivedAt: ts,
       status: 'active' as const,
       locationId,
-      hlcTimestamp: ts,
+      hlcTimestamp: hlcNow(),
     }
     await db.stockBatches.put(newBatch)
 
@@ -162,7 +163,7 @@ export async function receiveTransfer(
     status: 'received',
     receivedAt: ts,
     receivedBy,
-    hlcTimestamp: ts,
+    hlcTimestamp: hlcNow(),
   })
   await enqueueSyncUpdate(transferId)
 }
@@ -171,11 +172,10 @@ export async function cancelTransfer(
   transferId: string,
   reason: string,
 ): Promise<void> {
-  const ts = now()
   await db.stockTransfers.update(transferId, {
     status: 'cancelled',
     cancelledReason: reason,
-    hlcTimestamp: ts,
+    hlcTimestamp: hlcNow(),
   })
   await enqueueSyncUpdate(transferId)
 }

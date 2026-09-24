@@ -20,6 +20,7 @@ import {
 } from '@/lib/patient-queue'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Users } from '@ultranos/ui-kit/icons'
+import { hlcNow } from '@/lib/hlc'
 import { Button } from '@/components/ui/Button'
 import { TokenBadge } from './TokenBadge'
 import { TokenCard, PrintTokenButton } from './TokenCard'
@@ -81,7 +82,7 @@ export function PatientQueueManager() {
       tokenDisplayKey: token.displayKey,
       status: 'waiting',
       registeredAt: new Date().toISOString(),
-      hlcTimestamp: new Date().toISOString() + '_0000_local',
+      hlcTimestamp: hlcNow(),
       techId: 'current-tech', // populated from session in production
     })
 

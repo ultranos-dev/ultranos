@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import type { Supplier } from './types'
+import { hlcNow } from '@/lib/hlc'
 
 export async function createSupplier(params: {
   name: string
@@ -43,7 +44,7 @@ export async function createSupplier(params: {
     resourceId: id,
     action: 'create',
     payload: supplier as unknown as Record<string, unknown>,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcNow(),
     createdAt: now,
   })
   return supplier
@@ -58,7 +59,7 @@ export async function updateSupplier(id: string, updates: Partial<Omit<Supplier,
       resourceId: id,
       action: 'update',
       payload: supplier as unknown as Record<string, unknown>,
-      hlcTimestamp: new Date().toISOString(),
+      hlcTimestamp: hlcNow(),
       createdAt: new Date().toISOString(),
     })
   }
@@ -73,7 +74,7 @@ export async function deactivateSupplier(id: string): Promise<void> {
       resourceId: id,
       action: 'update',
       payload: supplier as unknown as Record<string, unknown>,
-      hlcTimestamp: new Date().toISOString(),
+      hlcTimestamp: hlcNow(),
       createdAt: new Date().toISOString(),
     })
   }

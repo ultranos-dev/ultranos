@@ -27,6 +27,7 @@ import {
   getDb,
 } from './db'
 import { detectPositivitySpike, detectDiseaseCluster } from './surveillance-engine'
+import { hlcNow } from './hlc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 // ---------------------------------------------------------------------------
@@ -149,6 +150,7 @@ async function generateAlert(
     resourceId: alert.id,
     status: 'pending',
     payload: alert,
+    hlcTimestamp: hlcNow(),
     createdAt: now,
     lastAttemptAt: null,
     retryCount: 0,

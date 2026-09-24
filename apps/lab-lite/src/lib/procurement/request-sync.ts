@@ -150,6 +150,7 @@ export async function submitResupplyRequest(
     resourceId: request.requestId,
     status: 'pending',
     payload: request,
+    hlcTimestamp: timestamp,
     createdAt: request.createdAt,
     lastAttemptAt: null,
     retryCount: 0,

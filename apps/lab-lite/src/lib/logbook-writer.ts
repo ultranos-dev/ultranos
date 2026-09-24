@@ -15,6 +15,7 @@ import { getDb, appendLogbookEntry, appendLogbookAmendment, getLogbookEntryByDia
 import type { LabLogbookEntry } from './db'
 import { getNextSequenceNumber, formatDisplayNumber } from './logbook-sequence'
 import { reportLogbookEvent } from './audit-client'
+import { hlcNow } from './hlc'
 
 /** Facility prefix used for display numbers. Can be overridden via lab config. */
 const DEFAULT_FACILITY_PREFIX = 'LAB'
@@ -94,6 +95,7 @@ export async function writeAuthorizedResultToLogbook(
       resourceId: entryId,
       status: 'pending',
       payload: { id: entryId, diagnosticReportId: result.diagnosticReportId },
+      hlcTimestamp: hlcNow(),
       createdAt: new Date().toISOString(),
       lastAttemptAt: null,
       retryCount: 0,
@@ -183,6 +185,7 @@ export async function createLogbookAmendment(input: AmendmentInput): Promise<str
       resourceId: amendmentId,
       status: 'pending',
       payload: { id: amendmentId, amendmentOf: input.originalEntryId, diagnosticReportId: input.diagnosticReportId },
+      hlcTimestamp: hlcNow(),
       createdAt: new Date().toISOString(),
       lastAttemptAt: null,
       retryCount: 0,

@@ -409,6 +409,7 @@ export async function reassignSample(
       reassignedBy,
       reassignedAt: hlcNow,
     },
+    hlcTimestamp: hlcNow,
     createdAt: hlcNow,
     lastAttemptAt: null,
     retryCount: 0,

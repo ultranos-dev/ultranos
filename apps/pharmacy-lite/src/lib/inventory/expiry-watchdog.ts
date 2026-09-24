@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { buildEncryptedSyncEntry } from '@/lib/dexie-sync-adapter'
+import { hlcNow } from '@/lib/hlc'
 import type { StockMovement } from './types'
 
 export async function quarantineExpiredBatches(performedBy: string): Promise<number> {
@@ -14,6 +15,9 @@ export async function quarantineExpiredBatches(performedBy: string): Promise<num
   if (expiredBatches.length === 0) return 0
 
   const now = new Date().toISOString()
+  // Story 60.1: hlcTimestamp fields carry a real HLC (causal ordering); the
+  // separate wall-clock `now` still stamps timestamp/createdAt display fields.
+  const hlcTs = hlcNow()
 
   // Build movements and encrypt sync-queue entries BEFORE opening the Dexie
   // transaction — encryption is async Web Crypto and cannot run inside a Dexie
@@ -27,7 +31,7 @@ export async function quarantineExpiredBatches(performedBy: string): Promise<num
     reason: `Auto-quarantined: expired on ${batch.expiryDate}`,
     performedBy,
     timestamp: now,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
   }))
 
   const syncEntries = await Promise.all(
@@ -37,7 +41,7 @@ export async function quarantineExpiredBatches(performedBy: string): Promise<num
         resourceId: movement.id,
         action: 'create',
         payload: movement as unknown as Record<string, unknown>,
-        hlcTimestamp: now,
+        hlcTimestamp: hlcTs,
         createdAt: now,
       }),
     ),
@@ -50,8 +54,8 @@ export async function quarantineExpiredBatches(performedBy: string): Promise<num
         resourceType: 'StockBatch',
         resourceId: batch.id,
         action: 'update',
-        payload: { ...batch, status: 'quarantined', hlcTimestamp: now } as unknown as Record<string, unknown>,
-        hlcTimestamp: now,
+        payload: { ...batch, status: 'quarantined', hlcTimestamp: hlcTs } as unknown as Record<string, unknown>,
+        hlcTimestamp: hlcTs,
         createdAt: now,
       }),
     ),
@@ -63,7 +67,7 @@ export async function quarantineExpiredBatches(performedBy: string): Promise<num
       await db.stockMovements.put(movements[i]!)
       await db.stockBatches.update(batch.id, {
         status: 'quarantined' as const,
-        hlcTimestamp: now,
+        hlcTimestamp: hlcTs,
       })
       await db.syncQueue.put(syncEntries[i]!)
       await db.syncQueue.put(batchSyncEntries[i]!)

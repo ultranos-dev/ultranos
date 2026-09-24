@@ -7,6 +7,7 @@ import { getSupplierById } from './supplier-service'
 import { computeInvoiceMatch } from './invoice-match'
 import { auditProcurementEvent } from './audit'
 import type { SupplierInvoice, SupplierInvoiceItem, SupplierInvoiceStatus } from './types'
+import { hlcNow } from '@/lib/hlc'
 
 export async function createSupplierInvoice(params: {
   purchaseOrderId: string
@@ -38,6 +39,7 @@ export async function createSupplierInvoice(params: {
   )
 
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   const supplier = await getSupplierById(po.supplierId)
   const termsDays = supplier?.paymentTermsDays ?? 0
   const dueDate = params.dueDate ?? new Date(new Date(now).getTime() + termsDays * 86_400_000).toISOString()
@@ -61,12 +63,12 @@ export async function createSupplierInvoice(params: {
     notes: params.notes?.trim() || undefined,
     createdBy: params.createdBy,
     createdAt: now,
-    hlcTimestamp: now,
+    hlcTimestamp: hlcTs,
   }
   await db.supplierInvoices.put(invoice)
   await enqueuePharmacySyncEntry({
     resourceType: 'SupplierInvoice', resourceId: invoice.id, action: 'create',
-    payload: invoice as unknown as Record<string, unknown>, hlcTimestamp: now, createdAt: now,
+    payload: invoice as unknown as Record<string, unknown>, hlcTimestamp: hlcTs, createdAt: now,
   })
   auditProcurementEvent(invoice.createdBy, AuditAction.SUPPLIER_INVOICE_CREATED, AuditResourceType.SUPPLIER_INVOICE, invoice.id, {
     invoiceNumber: invoice.invoiceNumber, supplierId: invoice.supplierId, purchaseOrderId: invoice.purchaseOrderId, total: invoice.total,
@@ -99,12 +101,12 @@ export class InvoiceVarianceUnresolvedError extends Error {
   }
 }
 
-async function enqueueInvoiceUpdate(invoiceId: string, now: string): Promise<void> {
+async function enqueueInvoiceUpdate(invoiceId: string, hlcTs: string, now: string): Promise<void> {
   const inv = await db.supplierInvoices.get(invoiceId)
   if (!inv) return
   await enqueuePharmacySyncEntry({
     resourceType: 'SupplierInvoice', resourceId: invoiceId, action: 'update',
-    payload: inv as unknown as Record<string, unknown>, hlcTimestamp: now, createdAt: now,
+    payload: inv as unknown as Record<string, unknown>, hlcTimestamp: hlcTs, createdAt: now,
   })
 }
 
@@ -118,10 +120,11 @@ export async function approveSupplierInvoice(invoiceId: string, approvedBy: stri
   const match = computeInvoiceMatch(inv, po, tolerance)
   if (match.status === 'variance' && !overrideReason?.trim()) throw new InvoiceVarianceUnresolvedError()
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   await db.supplierInvoices.update(invoiceId, {
-    status: 'approved', approvedBy, approvedReason: overrideReason?.trim() || undefined, hlcTimestamp: now,
+    status: 'approved', approvedBy, approvedReason: overrideReason?.trim() || undefined, hlcTimestamp: hlcTs,
   })
-  await enqueueInvoiceUpdate(invoiceId, now)
+  await enqueueInvoiceUpdate(invoiceId, hlcTs, now)
   auditProcurementEvent(approvedBy, AuditAction.SUPPLIER_INVOICE_APPROVED, AuditResourceType.SUPPLIER_INVOICE, invoiceId, {
     invoiceNumber: inv.invoiceNumber, overrideReason: overrideReason?.trim() || undefined,
   })
@@ -131,10 +134,11 @@ export async function disputeSupplierInvoice(invoiceId: string, disputedBy: stri
   const inv = await db.supplierInvoices.get(invoiceId)
   if (!inv) throw new Error('Supplier invoice not found')
   const now = new Date().toISOString()
+  const hlcTs = hlcNow()
   await db.supplierInvoices.update(invoiceId, {
-    status: 'disputed', disputedBy, disputeReason: reason.trim() || undefined, hlcTimestamp: now,
+    status: 'disputed', disputedBy, disputeReason: reason.trim() || undefined, hlcTimestamp: hlcTs,
   })
-  await enqueueInvoiceUpdate(invoiceId, now)
+  await enqueueInvoiceUpdate(invoiceId, hlcTs, now)
   auditProcurementEvent(disputedBy, AuditAction.SUPPLIER_INVOICE_DISPUTED, AuditResourceType.SUPPLIER_INVOICE, invoiceId, {
     invoiceNumber: inv.invoiceNumber, reason: reason.trim() || undefined,
   })

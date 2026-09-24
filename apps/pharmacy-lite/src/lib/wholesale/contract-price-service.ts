@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import type { ContractPrice, PriceBreak } from './types'
+import { hlcNow } from '@/lib/hlc'
 
 export async function setContractPrice(params: {
   customerId: string; catalogItemId: string; priceMinor: number; createdBy: string; tiers?: PriceBreak[]
@@ -17,7 +18,7 @@ export async function setContractPrice(params: {
   await db.contractPrices.put(row)
   await enqueuePharmacySyncEntry({
     resourceType: 'ContractPrice', resourceId: row.id, action: existing ? 'update' : 'create',
-    payload: row as unknown as Record<string, unknown>, hlcTimestamp: now, createdAt: now,
+    payload: row as unknown as Record<string, unknown>, hlcTimestamp: hlcNow(), createdAt: now,
   })
   return row
 }
@@ -31,7 +32,7 @@ export async function removeContractPrice(id: string): Promise<void> {
       resourceId: id,
       action: 'delete',
       payload: existing as unknown as Record<string, unknown>,
-      hlcTimestamp: now,
+      hlcTimestamp: hlcNow(),
       createdAt: now,
     })
   }

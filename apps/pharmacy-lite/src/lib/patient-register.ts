@@ -2,6 +2,7 @@ import { db, type LocalPatient } from '@/lib/db'
 import { enqueuePharmacySyncEntry } from '@/lib/dexie-sync-adapter'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { hlcNow } from '@/lib/hlc'
 
 export interface PatientRegistrationData {
   nameGiven: string
@@ -49,7 +50,7 @@ export async function registerPatientLocally(data: PatientRegistrationData): Pro
     resourceId: id,
     action: 'create',
     payload: patient as unknown as Record<string, unknown>,
-    hlcTimestamp: now, // Simplified — real HLC uses the hlcNow() helper
+    hlcTimestamp: hlcNow(),
     createdAt: now,
   })
 

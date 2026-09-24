@@ -128,6 +128,7 @@ export async function completeSpillIncident(
       resourceId: incidentId,
       status: 'pending',
       payload: { ...incident, completedAt: now, notes },
+      hlcTimestamp: serializeHlc(hlc.now()),
       createdAt: now,
       lastAttemptAt: null,
       retryCount: 0,

@@ -36,6 +36,7 @@ describe('enqueueSyncEvent', () => {
       resourceId: 'r-2',
       status: 'pending',
       payload: {},
+      hlcTimestamp: '000000000001000:00000:node-a',
       createdAt: '2026-01-01T00:00:00.000Z',
       lastAttemptAt: null,
       retryCount: 3,
@@ -43,6 +44,27 @@ describe('enqueueSyncEvent', () => {
     const row = (await getDb().table('syncQueue').toArray())[0]
     expect(row.retryCount).toBe(3)
     expect(row.createdAt).toBe('2026-01-01T00:00:00.000Z')
+  })
+
+  it('does not collide when the same resource is enqueued twice in the same ms (Story 60.1)', async () => {
+    // Two enqueues for the SAME resource; the collision-safe id (random suffix)
+    // must keep both rows rather than the second overwriting the first.
+    await enqueueSyncEvent({
+      resourceType: 'Specimen',
+      resourceId: 'spec-dup',
+      payload: { seq: 1 },
+      hlcTimestamp: '000000000001000:00000:node-a',
+    })
+    await enqueueSyncEvent({
+      resourceType: 'Specimen',
+      resourceId: 'spec-dup',
+      payload: { seq: 2 },
+      hlcTimestamp: '000000000001000:00001:node-a',
+    })
+    const rows = await getDb().table('syncQueue').toArray()
+    expect(rows).toHaveLength(2)
+    const ids = new Set(rows.map((r) => r.id))
+    expect(ids.size).toBe(2)
   })
 })
 

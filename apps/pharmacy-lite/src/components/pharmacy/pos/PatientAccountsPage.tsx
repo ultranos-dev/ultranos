@@ -19,6 +19,7 @@ import {
 import { recordCreditPayment } from '@/lib/pos/payment-service'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import type { PatientAccount, LedgerEntry } from '@/lib/pos/types'
+import { hlcNow } from '@/lib/hlc'
 
 const CURRENCY = 'AFN'
 const MINOR_UNITS = 2
@@ -133,7 +134,7 @@ export function PatientAccountsPage() {
         patientId: selectedPatientId,
         amount,
         receivedBy: `Practitioner/${session.practitionerId}`,
-        hlcTimestamp: new Date().toISOString(),
+        hlcTimestamp: hlcNow(),
       })
       setPaymentStr('')
       await selectPatient(selectedPatientId)

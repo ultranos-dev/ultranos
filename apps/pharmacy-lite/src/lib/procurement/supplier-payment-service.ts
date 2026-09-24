@@ -34,6 +34,11 @@ export async function recordSupplierPayment(params: {
   const clean = params.allocations.filter((a) => a.amount > 0)
   if (clean.length === 0) throw new Error('No allocations to record')
 
+  // Story 60.1: `params.hlcTimestamp` is the causal-ordering HLC. Wall-clock
+  // display fields (paidAt / createdAt) use a real timestamp so the payment
+  // history still sorts and reads as a date, never a serialized HLC string.
+  const now = new Date().toISOString()
+
   const payment: SupplierPayment = {
     id: crypto.randomUUID(),
     supplierId: params.supplierId,
@@ -45,7 +50,7 @@ export async function recordSupplierPayment(params: {
     status: 'active',
     notes: params.notes?.trim() || undefined,
     paidBy: params.paidBy,
-    paidAt: params.hlcTimestamp,
+    paidAt: now,
     hlcTimestamp: params.hlcTimestamp,
   }
 
@@ -71,14 +76,14 @@ export async function recordSupplierPayment(params: {
 
   await enqueuePharmacySyncEntry({
     resourceType: 'SupplierPayment', resourceId: payment.id, action: 'create',
-    payload: payment as unknown as Record<string, unknown>, hlcTimestamp: params.hlcTimestamp, createdAt: params.hlcTimestamp,
+    payload: payment as unknown as Record<string, unknown>, hlcTimestamp: params.hlcTimestamp, createdAt: now,
   })
   for (const a of built) {
     const inv = await db.supplierInvoices.get(a.supplierInvoiceId)
     if (inv) {
       await enqueuePharmacySyncEntry({
         resourceType: 'SupplierInvoice', resourceId: inv.id, action: 'update',
-        payload: inv as unknown as Record<string, unknown>, hlcTimestamp: params.hlcTimestamp, createdAt: params.hlcTimestamp,
+        payload: inv as unknown as Record<string, unknown>, hlcTimestamp: params.hlcTimestamp, createdAt: now,
       })
     }
   }
@@ -95,6 +100,10 @@ export async function voidSupplierPayment(
   if (!payment) throw new Error('Supplier payment not found')
   if (payment.status === 'void') throw new Error('Payment is already void')
 
+  // Story 60.1: `hlcTimestamp` is the causal-ordering HLC; `voidedAt`/`createdAt`
+  // stay wall-clock so the void time reads as a date, never a serialized HLC.
+  const now = new Date().toISOString()
+
   await db.transaction('rw', [db.supplierInvoices, db.supplierPayments], async () => {
     for (const a of payment.allocations) {
       const inv = await db.supplierInvoices.get(a.supplierInvoiceId)
@@ -107,7 +116,7 @@ export async function voidSupplierPayment(
       })
     }
     await db.supplierPayments.update(paymentId, {
-      status: 'void', voidedBy, voidReason: reason.trim() || undefined, voidedAt: hlcTimestamp, hlcTimestamp,
+      status: 'void', voidedBy, voidReason: reason.trim() || undefined, voidedAt: now, hlcTimestamp,
     })
   })
 
@@ -115,7 +124,7 @@ export async function voidSupplierPayment(
   if (updated) {
     await enqueuePharmacySyncEntry({
       resourceType: 'SupplierPayment', resourceId: paymentId, action: 'update',
-      payload: updated as unknown as Record<string, unknown>, hlcTimestamp, createdAt: hlcTimestamp,
+      payload: updated as unknown as Record<string, unknown>, hlcTimestamp, createdAt: now,
     })
   }
   for (const a of payment.allocations) {
@@ -123,7 +132,7 @@ export async function voidSupplierPayment(
     if (inv) {
       await enqueuePharmacySyncEntry({
         resourceType: 'SupplierInvoice', resourceId: inv.id, action: 'update',
-        payload: inv as unknown as Record<string, unknown>, hlcTimestamp, createdAt: hlcTimestamp,
+        payload: inv as unknown as Record<string, unknown>, hlcTimestamp, createdAt: now,
       })
     }
   }
