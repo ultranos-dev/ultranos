@@ -328,12 +328,22 @@ describe('medication.checkInteractions', () => {
         actorId: CLINICIAN_USER.sub,
         actorRole: CLINICIAN_USER.role,
         metadata: expect.objectContaining({
-          medicationDisplay: 'Warfarin 5mg',
           result: 'CLEAR',
           interactionCount: 0,
         }),
       }),
     )
+  })
+
+  it('M-HUB-8: audit metadata does NOT include the medication display (PHI)', async () => {
+    const mockFrom = emptyPatientMock()
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
+    const caller = createCaller(ctx)
+
+    await caller.medication.checkInteractions(DEFAULT_INPUT)
+
+    const call = mockAuditEmit.mock.calls[0]?.[0]
+    expect(call?.metadata).not.toHaveProperty('medicationDisplay')
   })
 
   it('audit failure does not block the response', async () => {
@@ -350,7 +360,9 @@ describe('medication.checkInteractions', () => {
 
   // --- DB query failure → INTERNAL_SERVER_ERROR (never silently CLEAR) ---
 
-  it('throws INTERNAL_SERVER_ERROR when medication_statements query fails', async () => {
+  // Story 57.2: the shared interaction-gate service is now FAIL-SAFE — a query
+  // error maps to UNAVAILABLE (Rule #3), never a thrown error and never CLEAR.
+  it('returns UNAVAILABLE when medication_statements query fails (Rule #3, never throws)', async () => {
     const mockFrom = buildMultiTableMock({
       medication_statements: { data: null, error: { code: 'PGRST000', message: 'connection error' } },
       medication_requests: { data: [], error: null },
@@ -359,12 +371,12 @@ describe('medication.checkInteractions', () => {
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
     const caller = createCaller(ctx)
 
-    await expect(
-      caller.medication.checkInteractions(DEFAULT_INPUT),
-    ).rejects.toThrow(/Failed to retrieve active medication statements/)
+    const result = await caller.medication.checkInteractions(DEFAULT_INPUT)
+    expect(result.result).toBe('UNAVAILABLE')
+    expect(result.reason).toBe('ADAPTER_ERROR')
   })
 
-  it('throws INTERNAL_SERVER_ERROR when allergy_intolerances query fails', async () => {
+  it('returns UNAVAILABLE when allergy_intolerances query fails (Rule #3, never throws)', async () => {
     const mockFrom = buildMultiTableMock({
       medication_statements: { data: [], error: null },
       medication_requests: { data: [], error: null },
@@ -373,9 +385,9 @@ describe('medication.checkInteractions', () => {
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
     const caller = createCaller(ctx)
 
-    await expect(
-      caller.medication.checkInteractions(DEFAULT_INPUT),
-    ).rejects.toThrow(/Failed to retrieve active allergies/)
+    const result = await caller.medication.checkInteractions(DEFAULT_INPUT)
+    expect(result.result).toBe('UNAVAILABLE')
+    expect(result.reason).toBe('ADAPTER_ERROR')
   })
 
   it('returns UNAVAILABLE when checkInteractions throws (Rule #3)', async () => {

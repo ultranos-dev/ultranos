@@ -5,6 +5,21 @@ import type { FhirMedicationDispense } from '@ultranos/shared-types'
 export type LocalMedicationDispense = FhirMedicationDispense
 
 /**
+ * Story 57.2: a supervisor override captured at dispense time. Carries a
+ * structured reason code and a real supervisor credential (id + PIN) the Hub
+ * verifies server-side. `reason`/`supervisorName` are supplementary. `attestedOffline`
+ * is set when captured offline (Hub verifies at drain, not point of care).
+ */
+export interface DispenseOverride {
+  reason: string
+  supervisorName: string
+  reasonCode: string
+  supervisorId: string
+  supervisorPin: string
+  attestedOffline?: boolean
+}
+
+/**
  * Maps a fulfilled prescription item to a FHIR R4 MedicationDispense resource.
  * Each selected FulfillmentItem becomes one MedicationDispense record.
  */
@@ -12,7 +27,7 @@ export function createMedicationDispense(
   item: FulfillmentItem,
   pharmacistRef: `Practitioner/${string}`,
   fulfillmentContext?: { fulfilledCount: number; totalCount: number },
-  options?: { controlledSubstanceSchedule?: string; override?: { reason: string; supervisorName: string } },
+  options?: { controlledSubstanceSchedule?: string; override?: DispenseOverride },
 ): FhirMedicationDispense {
   const { prescription, brandName, batchLot, brandId, presentationId } = item
   const now = new Date().toISOString()

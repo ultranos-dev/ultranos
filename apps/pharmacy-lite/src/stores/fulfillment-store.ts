@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import type { VerifiedPrescription } from '@/lib/prescription-verify'
-import { createMedicationDispense } from '@/lib/medication-dispense'
+import { createMedicationDispense, type DispenseOverride } from '@/lib/medication-dispense'
 import { syncDispenseToHub, type DispenseSyncResult } from '@/lib/dispense-sync'
 import { logDispenseEvent } from '@/services/dispenseAuditService'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
@@ -86,7 +86,7 @@ interface FulfillmentState {
   startReview: () => void
   assignFefoBatches: () => Promise<void>
   deductStockOnDispense: (practitionerId: string) => Promise<void>
-  confirmDispense: (override?: { reason: string; supervisorName: string }) => Promise<void>
+  confirmDispense: (override?: DispenseOverride) => Promise<void>
   createInvoiceAfterDispense: (practitionerId: string) => Promise<void>
   reset: () => void
 }
@@ -311,7 +311,7 @@ export const useFulfillmentStore = create<FulfillmentState>()(
       }
     },
 
-    confirmDispense: async (override?: { reason: string; supervisorName: string }) => {
+    confirmDispense: async (override?: DispenseOverride) => {
       // Guard: prevent double-invocation (e.g. double-tap)
       if (get().phase === 'dispensing') return
 

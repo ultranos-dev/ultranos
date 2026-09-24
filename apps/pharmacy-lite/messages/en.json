@@ -1279,7 +1279,22 @@
     "overrideSupervisorPlaceholder": "e.g. Dr. Ahmad",
     "overrideAllergyUnknownNotice": "Allergy status unknown — dispensing requires a documented override after verbal verification with the patient.",
     "activeMedUnavailableTitle": "Active-medication check unavailable",
-    "activeMedUnavailableCaution": "Could not load the patient's active medications. Manually confirm current medications before dispensing."
+    "activeMedUnavailableCaution": "Could not load the patient's active medications. Manually confirm current medications before dispensing.",
+    "overrideReasonCodeLabel": "Override Reason Code",
+    "overrideReasonCodePlaceholder": "Select a reason...",
+    "overrideReasonCode": {
+      "CONTRAINDICATED_CLINICALLY_INDICATED": "Contraindication clinically indicated by prescriber",
+      "ALLERGY_PREVIOUSLY_TOLERATED": "Documented allergy — previously tolerated",
+      "CHECK_UNAVAILABLE_CLINICAL_JUDGEMENT": "Check unavailable — proceeding on clinical judgement",
+      "BENEFIT_OUTWEIGHS_RISK": "Benefit outweighs risk",
+      "NO_ALTERNATIVE_AVAILABLE": "No suitable alternative available",
+      "OTHER": "Other (describe below)"
+    },
+    "overrideSupervisorIdLabel": "Supervisor Practitioner ID",
+    "overrideSupervisorIdPlaceholder": "Supervisor account ID",
+    "overrideSupervisorPinLabel": "Supervisor PIN",
+    "overrideSupervisorPinPlaceholder": "Enter supervisor PIN",
+    "overrideOfflineNotice": "Offline: the supervisor credential will be verified when this dispense syncs. A failed verification is flagged for review."
   },
   "allergyBanner": {
     "knownTitle": "Known Allergies",

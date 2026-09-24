@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { FulfillmentChecklist } from '@/components/pharmacy/FulfillmentChecklist'
 import { useFulfillmentStore, type FulfillmentItem } from '@/stores/fulfillment-store'
+import type { DispenseOverride } from '@/lib/medication-dispense'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 export default function FulfillmentPage() {
@@ -19,7 +20,7 @@ export default function FulfillmentPage() {
   // interaction / recall) have been acknowledged and confirmed.
   const handleConfirm = useCallback(async (
     _selected: FulfillmentItem[],
-    override?: { reason: string; supervisorName: string },
+    override?: DispenseOverride,
   ) => {
     const store = useFulfillmentStore.getState()
 

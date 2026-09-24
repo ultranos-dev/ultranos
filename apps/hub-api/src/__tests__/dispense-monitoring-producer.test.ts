@@ -111,6 +111,10 @@ function buildMockFrom(
                 status: 'active',
                 hlc_timestamp: null,
                 interaction_check: 'CLEAR',
+                // Story 57.2: dispense gate reads the authoritative server value.
+                interaction_check_server: 'CLEAR',
+                subject_reference: PATIENT_UUID,
+                medication_display: 'Warfarin',
                 requester_id: null,
               },
               error: null,

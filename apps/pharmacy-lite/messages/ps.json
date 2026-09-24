@@ -1279,7 +1279,22 @@
     "overrideSupervisorPlaceholder": "مثال: ډاکتر احمد",
     "overrideAllergyUnknownNotice": "د حساسیت حالت نامعلوم دی — د درملو ورکول د ناروغ له شفاهي تایید وروسته مستند رد کولو ته اړتیا لري.",
     "activeMedUnavailableTitle": "د فعالو درملو کتنه شتون نلري",
-    "activeMedUnavailableCaution": "د ناروغ فعال درمل ونه لوستل شول. د ویش نه مخکې اوسني درمل په لاسي ډول تایید کړئ."
+    "activeMedUnavailableCaution": "د ناروغ فعال درمل ونه لوستل شول. د ویش نه مخکې اوسني درمل په لاسي ډول تایید کړئ.",
+    "overrideReasonCodeLabel": "د پرېښودو د دلیل کوډ",
+    "overrideReasonCodePlaceholder": "یو دلیل وټاکئ...",
+    "overrideReasonCode": {
+      "CONTRAINDICATED_CLINICALLY_INDICATED": "منع مصرف د نسخه‌لیکونکي لخوا په کلینیکي توګه ټاکل شوی",
+      "ALLERGY_PREVIOUSLY_TOLERATED": "ثبت شوې حساسیت — پخوا زغمل شوی",
+      "CHECK_UNAVAILABLE_CLINICAL_JUDGEMENT": "کتنه شتون نلري — د کلینیکي قضاوت پر بنسټ دوام",
+      "BENEFIT_OUTWEIGHS_RISK": "ګټه له خطر څخه ډېره ده",
+      "NO_ALTERNATIVE_AVAILABLE": "مناسب بدیل شتون نلري",
+      "OTHER": "نور (لاندې یې تشریح کړئ)"
+    },
+    "overrideSupervisorIdLabel": "د ناظر د کارکوونکي پېژندنه",
+    "overrideSupervisorIdPlaceholder": "د ناظر د حساب پېژندنه",
+    "overrideSupervisorPinLabel": "د ناظر پین",
+    "overrideSupervisorPinPlaceholder": "د ناظر پین دننه کړئ",
+    "overrideOfflineNotice": "آفلاین: د ناظر اسناد به د دې صرف د همغږۍ پر مهال تایید شي. ناکامه تایید د بیاکتنې لپاره نښه کیږي."
   },
   "allergyBanner": {
     "knownTitle": "پېژندل شوي حساسیتونه",

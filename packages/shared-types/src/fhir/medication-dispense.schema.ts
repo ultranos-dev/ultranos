@@ -35,8 +35,22 @@ const MedicationDispenseUltranosExtSchema = z.object({
   // dispensed CatalogItem.controlledSchedule — powers the Controlled Substances register.
   controlledSubstanceSchedule: z.string().optional(),
   // Override details when a pharmacist dispensed past a surfaced interaction/allergy
-  // warning. Synced to Hub as overrideReason text; supervisor UUID is set server-side.
-  reviewOverride: z.object({ reason: z.string(), supervisorName: z.string() }).optional(),
+  // warning. Story 57.2: carries a STRUCTURED reason code + a real supervisor
+  // credential (supervisor practitioner id + PIN) the Hub verifies server-side.
+  // `supervisorName` is retained as supplementary display detail only. `reason`
+  // is supplementary free text. `attestedOffline` marks an override captured while
+  // offline — the Hub records it unverified (drain-time verification) rather than
+  // rejecting a committed dispense.
+  reviewOverride: z
+    .object({
+      reason: z.string(),
+      supervisorName: z.string(),
+      reasonCode: z.string(),
+      supervisorId: z.string(),
+      supervisorPin: z.string(),
+      attestedOffline: z.boolean().optional(),
+    })
+    .optional(),
   isOfflineCreated: z.boolean(),
   createdAt: z.string().datetime(),
   fulfillmentContext: z.string().optional(),

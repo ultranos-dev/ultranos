@@ -7,7 +7,6 @@ import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { enforceEntitlement } from '../middleware/enforceEntitlement'
 import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
 import { AuditLogger } from '@ultranos/audit-logger'
-import { checkInteractions, type InteractionCheckOptions } from '@ultranos/drug-db'
 import { db } from '@/lib/supabase'
 import { buildNotificationContent } from '@/lib/notification-content'
 import {
@@ -18,7 +17,13 @@ import {
   dispenseMonitoringUnresolvedCodeTotal,
 } from '@/lib/clinical-safety-metrics'
 import { resolveCanonicalAtc } from '@/lib/atc-resolver'
-import { createSupabaseDrugAdapter } from '@/lib/supabase-drug-adapter'
+import { computeServerInteractionStatus } from '@/services/interaction-gate'
+import {
+  verifySupervisorOverride,
+  deriveOverrideSeverity,
+  type SupervisorVerifyFailureCode,
+} from '@/services/supervisor-override'
+import { OverrideReasonCode } from '@ultranos/shared-types'
 import { verifyEd25519Signature } from '@/lib/ed25519-verify'
 import { isKeyRevoked } from '@/lib/krl-check'
 import { buildTTSPrompt, getDisclaimer } from '@/lib/tts-prompt-builder'
@@ -173,27 +178,6 @@ function toInvalidationStatus(prescriptionStatus: string): 'AVAILABLE' | 'FULFIL
 }
 
 /**
- * Story 23.2: Detect override severity from the interaction check result.
- * Maps the interactionCheck enum to clinical severity levels for metrics.
- */
-function detectOverrideSeverity(
-  interactionCheck: string,
-  overrideReason: string,
-): string {
-  // The interactionCheck tells us the severity level that was overridden
-  if (interactionCheck === 'BLOCKED') return 'CONTRAINDICATED'
-  if (interactionCheck === 'WARNING') {
-    // Differentiate WARNING sub-types via override reason prefix
-    const upper = overrideReason.toUpperCase()
-    if (upper.startsWith('ALLERGY')) return 'ALLERGY_MATCH'
-    if (upper.startsWith('MAJOR')) return 'MAJOR'
-    return 'MODERATE'
-  }
-  // UNAVAILABLE overrides are tracked separately, but label them for completeness
-  return 'MODERATE'
-}
-
-/**
  * Story 24.2: Check if a patient has AI_PROCESSING consent.
  * Queries the append-only consent ledger for the latest AI_PROCESSING record.
  * Privacy by Design: missing or expired consent = denied.
@@ -319,6 +303,17 @@ export const medicationRouter = createTRPCRouter({
       const prescriptionId = input.prescriptionId ?? crypto.randomUUID()
       const qrCodeId = crypto.randomUUID()
 
+      // Story 57.2 (AC 1, 3): run the AUTHORITATIVE server-side interaction check —
+      // never trust the client-attested `interactionCheck`. The shared service is
+      // fail-safe (Rule #3: UNAVAILABLE on any failure, never CLEAR) and consults
+      // the Hub's own allergy + active-med record. We store BOTH values: the
+      // server-computed one is the dispense-gate input; the client-attested one is
+      // kept for telemetry/drift monitoring only.
+      const serverCheck = await computeServerInteractionStatus(ctx.supabase, {
+        medicationDisplay: input.medicationDisplay,
+        patientId: input.patientId,
+      })
+
       const row = db.toRow({
         id: prescriptionId,
         resourceType: 'MedicationRequest',
@@ -337,7 +332,12 @@ export const medicationRouter = createTRPCRouter({
         requesterId: ctx.user.sub,
         dosageInstruction: input.dosageInstruction ?? null,
         dispenseRequest: input.dispenseRequest ?? null,
+        // interaction_check retains the client-attested value for backward
+        // compatibility (existing reads/telemetry). interaction_check_client
+        // mirrors it explicitly; interaction_check_server is authoritative.
         interactionCheck: input.interactionCheck,
+        interactionCheckClient: input.interactionCheck,
+        interactionCheckServer: serverCheck.result,
         interactionOverride: input.interactionOverride ?? null,
         qrCodeId,
         authoredOn: now,
@@ -421,15 +421,17 @@ export const medicationRouter = createTRPCRouter({
         })
       }
 
-      // Story 23.2: Increment Prometheus clinical safety metrics
-      drugInteractionChecksTotal.inc({ result: input.interactionCheck })
-      if (input.interactionCheck === 'UNAVAILABLE') {
+      // Story 23.2 / 57.2: Increment Prometheus clinical safety metrics on the
+      // AUTHORITATIVE server-computed result (the client value is advisory only).
+      drugInteractionChecksTotal.inc({ result: serverCheck.result })
+      if (serverCheck.result === 'UNAVAILABLE') {
         prescriptionsWithoutInteractionCheckTotal.inc()
       }
       if (input.interactionOverride) {
-        // Parse override severity from the override reason string prefix (e.g., "CONTRAINDICATED: ...")
-        // The severity is stored as the interactionCheck value when an override is provided
-        const overrideSeverity = detectOverrideSeverity(input.interactionCheck, input.interactionOverride)
+        // Story 57.2: severity is derived from the server-computed status, not a
+        // free-text prefix heuristic (create-time overrides carry no structured
+        // reason code; the enforced structured-code override happens at dispense).
+        const overrideSeverity = deriveOverrideSeverity(serverCheck.result, undefined)
         drugInteractionOverridesTotal.inc({ severity: overrideSeverity })
       }
 
@@ -445,7 +447,14 @@ export const medicationRouter = createTRPCRouter({
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
-          metadata: { operation: 'prescription_create', interactionCheck: input.interactionCheck },
+          metadata: {
+            operation: 'prescription_create',
+            // Both non-PHI status enums. Server value is authoritative; client
+            // value retained for drift visibility (a divergence = tampered/buggy client).
+            interactionCheckClient: input.interactionCheck,
+            interactionCheckServer: serverCheck.result,
+            ...(input.interactionCheck !== serverCheck.result ? { interactionCheckDrift: true } : {}),
+          },
         })
       } catch (auditError) {
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PRESCRIPTION', resourceId: prescriptionId })
@@ -455,6 +464,7 @@ export const medicationRouter = createTRPCRouter({
         prescriptionId,
         qrCodeId,
         status: 'active' as const,
+        interactionCheckServer: serverCheck.result,
       }
     }),
 
@@ -816,7 +826,23 @@ export const medicationRouter = createTRPCRouter({
         hlcTimestamp: z.string().min(1),
         status: z.enum(['completed', 'in-progress']),
         batchLot: z.string().min(1).optional(),
+        // Story 57.2: structured supervisor override. `overrideReason` (free text)
+        // is retained as supplementary detail; `overrideReasonCode` is the required
+        // structured classifier; `supervisorAuth` is the second credential the Hub
+        // verifies (distinct supervisor-capable practitioner, same org, valid PIN).
         overrideReason: z.string().min(1).optional(),
+        overrideReasonCode: z.nativeEnum(OverrideReasonCode).optional(),
+        supervisorAuth: z
+          .object({
+            supervisorId: z.string().uuid(),
+            supervisorPin: z.string().min(1),
+          })
+          .optional(),
+        // Story 57.2 offline trust model: an override created offline could not
+        // verify the supervisor PIN at the point of care. The spoke sets this flag
+        // so the Hub records the review as unverified (pending drain-time
+        // verification) rather than rejecting a committed, safety-critical dispense.
+        overrideAttestedOffline: z.boolean().optional(),
       })
     )
     .use(enforceConsentMiddleware('MedicationRequest'))
@@ -826,7 +852,7 @@ export const medicationRouter = createTRPCRouter({
       // 1. Lookup prescription FIRST — reject early if not found (fixes W9)
       const { data: currentRx, error: fetchError } = await ctx.supabase
         .from('medication_requests')
-        .select('id, prescription_status, status, hlc_timestamp, requester_id, interaction_check')
+        .select('id, prescription_status, status, hlc_timestamp, requester_id, interaction_check, interaction_check_server, subject_reference, medication_display')
         .eq('id', input.prescriptionId)
         .single()
 
@@ -920,12 +946,81 @@ export const medicationRouter = createTRPCRouter({
         }
       }
 
-      // CLAUDE.md Rule #3: mirror the `complete` gate — do not let the pharmacy dispense
-      // path bypass the interaction check the prescriber recorded. The legitimate
-      // override flow (supervisor reason captured client-side) is preserved via
-      // input.overrideReason, which already creates a PENDING dispense_reviews row below.
-      if (!input.overrideReason) {
-        if (currentRx.interaction_check === 'BLOCKED') {
+      // ── Story 57.2: SERVER-AUTHORITATIVE interaction gate ──────────────────
+      // H-HUB-1: block on the SERVER-computed status, never the client-attested
+      // `interaction_check`. A tampered/buggy client that wrote CLEAR can never
+      // pass this gate.
+      //
+      // Offline-created prescriptions (synced without ever hitting the create-time
+      // server check) may have a NULL interaction_check_server. Materialization
+      // point (documented): the server check is run HERE, at first dispense, and
+      // persisted back — so the gate always evaluates a real server result and
+      // never a NULL/absent one (Rule #3: absence is never treated as CLEAR).
+      let serverStatus = currentRx.interaction_check_server as string | null
+      if (serverStatus == null) {
+        const patientIdForCheck =
+          (currentRx.subject_reference as string | null)?.replace(/^Patient\//, '') ?? null
+        const medDisplayForCheck = currentRx.medication_display as string | null
+        if (patientIdForCheck && medDisplayForCheck) {
+          const materialized = await computeServerInteractionStatus(ctx.supabase, {
+            medicationDisplay: medDisplayForCheck,
+            patientId: patientIdForCheck,
+          })
+          serverStatus = materialized.result
+          // Persist best-effort — a write failure must not weaken the gate; we
+          // still evaluate the freshly-computed status this request.
+          await ctx.supabase
+            .from('medication_requests')
+            .update({ interaction_check_server: serverStatus })
+            .eq('id', input.prescriptionId)
+        } else {
+          // Cannot run the check (missing med/patient) — Rule #3: fail safe.
+          serverStatus = 'UNAVAILABLE'
+        }
+      }
+
+      // An override is present only when ALL structured pieces are supplied. A
+      // free-text reason alone (the old self-attested path) no longer bypasses.
+      const hasOverride = !!(input.overrideReasonCode && input.supervisorAuth)
+      const isGateBlocking = serverStatus === 'BLOCKED' || serverStatus === 'UNAVAILABLE'
+
+      // Verify the supervisor credential server-side whenever an override is
+      // presented (online). Offline-attested overrides defer verification to drain.
+      let overrideSupervisorId: string = ctx.user.sub
+      let overrideVerified = false
+      let overrideFailureCode: SupervisorVerifyFailureCode | null = null
+      if (hasOverride) {
+        if (input.overrideAttestedOffline) {
+          // Trust model: recorded locally with supervisor identity at the point of
+          // care; server verification is deferred. We still record the CLAIMED
+          // supervisor id (from supervisorAuth) so drain-time verification can run.
+          overrideSupervisorId = input.supervisorAuth!.supervisorId
+          overrideVerified = false
+        } else {
+          const verify = await verifySupervisorOverride(
+            ctx.supabase,
+            input.supervisorAuth!,
+            ctx.user.sub,
+            ctx.user.orgId,
+          )
+          if (verify.ok) {
+            overrideSupervisorId = verify.supervisorId
+            overrideVerified = true
+          } else {
+            overrideFailureCode = verify.code
+          }
+        }
+      }
+
+      // Gate enforcement: a BLOCKED/UNAVAILABLE server status requires a VALID
+      // (verified, or validly offline-attested) override to proceed.
+      if (isGateBlocking) {
+        const overrideAccepted = hasOverride && (overrideVerified || !!input.overrideAttestedOffline)
+        if (!overrideAccepted) {
+          const reason =
+            serverStatus === 'BLOCKED' ? 'interaction_check_blocked' : 'interaction_check_unavailable'
+          const denyMeta: Record<string, unknown> = { reason, serverStatus }
+          if (overrideFailureCode) denyMeta.overrideRejected = overrideFailureCode
           const blockedAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
           try {
             await blockedAudit.emit({
@@ -936,35 +1031,27 @@ export const medicationRouter = createTRPCRouter({
               actorRole: ctx.user.role,
               outcome: 'DENIED',
               sessionId: ctx.user.sessionId,
-              metadata: { reason: 'interaction_check_blocked' },
+              metadata: denyMeta,
             })
           } catch {
             console.warn('[AUDIT_FAILURE]', { action: 'DISPENSE_BLOCKED_INTERACTION', resourceId: input.prescriptionId })
           }
-          throw new TRPCError({
-            code: 'PRECONDITION_FAILED',
-            message: 'Prescription has a blocked drug interaction — dispense requires a supervisor override.',
-          })
-        }
-        if (currentRx.interaction_check === 'UNAVAILABLE') {
-          const unavailAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
-          try {
-            await unavailAudit.emit({
-              action: 'DISPENSE_BLOCKED_INTERACTION',
-              resourceType: 'PRESCRIPTION',
-              resourceId: input.prescriptionId,
-              actorId: ctx.user.sub,
-              actorRole: ctx.user.role,
-              outcome: 'DENIED',
-              sessionId: ctx.user.sessionId,
-              metadata: { reason: 'interaction_check_unavailable' },
+          // A supplied-but-invalid supervisor credential is a distinct, clearer error.
+          if (hasOverride && overrideFailureCode) {
+            throw new TRPCError({
+              code: overrideFailureCode === 'SELF_SUPERVISION' ? 'FORBIDDEN' : 'UNAUTHORIZED',
+              message:
+                overrideFailureCode === 'SELF_SUPERVISION'
+                  ? 'A pharmacist cannot supervise their own override — a distinct supervisor credential is required.'
+                  : 'Supervisor override could not be verified — dispense not permitted.',
             })
-          } catch {
-            console.warn('[AUDIT_FAILURE]', { action: 'DISPENSE_BLOCKED_INTERACTION', resourceId: input.prescriptionId })
           }
           throw new TRPCError({
             code: 'PRECONDITION_FAILED',
-            message: 'Drug interaction check was unavailable — dispense requires a supervisor override.',
+            message:
+              serverStatus === 'BLOCKED'
+                ? 'Prescription has a blocked drug interaction — dispense requires a verified supervisor override.'
+                : 'Drug interaction check was unavailable — dispense requires a verified supervisor override.',
           })
         }
       }
@@ -1124,19 +1211,36 @@ export const medicationRouter = createTRPCRouter({
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PRESCRIPTION', resourceId: input.prescriptionId })
       }
 
-      // Overridden dispense (pharmacist proceeded past an interaction/allergy
-      // warning): record a PENDING review for physician sign-off. Self-attested —
-      // override_supervisor is the pharmacist's own practitioner id; the typed
-      // supervisor name lives inside override_reason. Best-effort: the dispense is
-      // already committed and must not be rolled back if this insert fails.
-      if (input.overrideReason) {
+      // Story 57.2: Overridden dispense — record a review with the REAL supervisor
+      // identity (server-verified where possible), a structured reason code, and
+      // the free text as supplementary detail. `override_supervisor` is now the
+      // SUPERVISOR's practitioner id (H-HUB-2), never the pharmacist's own.
+      //
+      // status:
+      //   - PENDING  when the supervisor credential was verified server-side.
+      //   - FLAGGED  when this is an offline-attested override still awaiting
+      //     drain-time verification (or a verified override that nonetheless
+      //     warrants review). FLAGGED surfaces for pharmacy-manager escalation.
+      if (hasOverride) {
+        const reviewStatus = overrideVerified ? 'PENDING' : 'FLAGGED'
         const { error: reviewError } = await ctx.supabase.from('dispense_reviews').insert({
           dispense_id: input.dispenseId,
           prescription_id: input.prescriptionId,
-          override_reason: input.overrideReason,
-          override_supervisor: ctx.user.sub,
-          status: 'PENDING',
+          override_reason: input.overrideReason ?? input.overrideReasonCode ?? 'OVERRIDE',
+          override_reason_code: input.overrideReasonCode ?? null,
+          override_supervisor: overrideSupervisorId,
+          override_supervisor_verified: overrideVerified,
+          status: reviewStatus,
         })
+        // Story 23.2 / 57.2: record the override severity metric from the
+        // structured reason code + server status (not a free-text prefix).
+        try {
+          drugInteractionOverridesTotal.inc({
+            severity: deriveOverrideSeverity(serverStatus, input.overrideReasonCode),
+          })
+        } catch {
+          // metrics are best-effort
+        }
         const reviewAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
           await reviewAudit.emit({
@@ -1148,7 +1252,15 @@ export const medicationRouter = createTRPCRouter({
             actorRole: ctx.user.role,
             outcome: reviewError ? 'FAILURE' : 'SUCCESS',
             sessionId: ctx.user.sessionId,
-            metadata: { operation: 'dispense_review_created', dispenseId: input.dispenseId },
+            metadata: {
+              operation: 'dispense_review_created',
+              dispenseId: input.dispenseId,
+              // Non-PHI: verification state + structured code + review disposition.
+              supervisorVerified: overrideVerified,
+              attestedOffline: !!input.overrideAttestedOffline,
+              reasonCode: input.overrideReasonCode ?? null,
+              reviewStatus: overrideVerified ? 'PENDING' : 'FLAGGED',
+            },
           })
         } catch {
           console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceId: input.dispenseId })
@@ -1743,92 +1855,13 @@ export const medicationRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const patientRef = `Patient/${input.patientId}`
-
-      // 1. Query active MedicationStatements (select only fields needed by drug-db checker)
-      const { data: statements, error: stmtError } = await ctx.supabase
-        .from('medication_statements')
-        .select('id, medication_codeable_concept, medication_display, subject_reference, status')
-        .eq('subject_reference', patientRef)
-        .eq('status', 'active')
-
-      if (stmtError) {
-        console.error('MedicationStatement query error:', { code: stmtError.code })
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to retrieve active medication statements',
-        })
-      }
-
-      // 2. Query pending MedicationRequests (ACTIVE prescriptions — only need display name)
-      const { data: pendingRequests, error: rxError } = await ctx.supabase
-        .from('medication_requests')
-        .select('id, medication_display')
-        .eq('subject_reference', patientRef)
-        .eq('prescription_status', 'ACTIVE')
-
-      if (rxError) {
-        console.error('MedicationRequest query error:', { code: rxError.code })
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to retrieve pending medication requests',
-        })
-      }
-
-      // 3. Query active allergies (select fields needed by drug-db allergy matching).
-      // Columns are substance_*; patient_ref is stored as a BARE UUID. The
-      // substance text is field-encrypted — db.fromRow() decrypts it below.
-      const { data: allergies, error: allergyError } = await ctx.supabase
-        .from('allergy_intolerances')
-        .select('id, substance_code, substance_text, substance_free_text, clinical_status_code, patient_ref')
-        .eq('patient_ref', input.patientId)
-        .eq('clinical_status_code', 'active')
-
-      if (allergyError) {
-        console.error('AllergyIntolerance query error:', { code: allergyError.code })
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to retrieve active allergies',
-        })
-      }
-
-      // 4. Extract display names from pending MedicationRequests
-      const pendingRxNames = (pendingRequests ?? [])
-        .map((rx) => rx.medication_display as string | null)
-        .filter((name): name is string => !!name)
-
-      // 5. Build adapter and run interaction check
-      // CLAUDE.md Rule #3: Never return CLEAR on failure — catch any thrown error
-      const adapter = createSupabaseDrugAdapter(ctx.supabase)
-      const activeMedStatements = (statements ?? []).map((row) => db.fromRow(row))
-
-      let result
-      try {
-        result = await checkInteractions(
-          input.medicationDisplay,
-          pendingRxNames,
-          {
-            // db.fromRow() camelCases rows at runtime but its type signature keeps
-            // the snake_case input shape; cast to the FHIR statement shape the
-            // checker expects (mirrors the activeAllergies cast below).
-            activeMedications: activeMedStatements as unknown as InteractionCheckOptions['activeMedications'],
-            // Reshape the flat (decrypted) allergy rows into the FHIR shape the
-            // drug-db checker reads (allergy._ultranos.substanceFreeText / code.text).
-            activeAllergies: (allergies ?? []).map((row) => {
-              const a = db.fromRow(row) as Record<string, unknown>
-              return {
-                resourceType: 'AllergyIntolerance',
-                code: { text: (a.substanceText as string) ?? undefined },
-                _ultranos: { substanceFreeText: (a.substanceFreeText as string) ?? undefined },
-              }
-            }) as unknown as InteractionCheckOptions['activeAllergies'],
-          },
-          adapter,
-        )
-      } catch (checkError) {
-        console.error('Drug interaction check error:', { code: (checkError as { code?: string })?.code })
-        result = { result: 'UNAVAILABLE' as const, interactions: [], reason: 'ADAPTER_ERROR' as const }
-      }
+      // Story 57.2: share the SAME fail-safe check logic used by create/dispense
+      // (no forked implementation). The service never throws and never returns
+      // CLEAR on failure (Rule #3).
+      const result = await computeServerInteractionStatus(ctx.supabase, {
+        medicationDisplay: input.medicationDisplay,
+        patientId: input.patientId,
+      })
 
       // Story 23.2: Track interaction check completion vs failure
       drugInteractionChecksTotal.inc({ result: result.result })
@@ -1836,7 +1869,9 @@ export const medicationRouter = createTRPCRouter({
         prescriptionsWithoutInteractionCheckTotal.inc()
       }
 
-      // 6. Audit PHI read (CLAUDE.md Rule #6)
+      // Audit PHI read (CLAUDE.md Rule #6).
+      // M-HUB-8: do NOT put `medicationDisplay` (PHI — a medication name) in the
+      // audit metadata. Only non-PHI outcome fields are recorded.
       const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
       try {
         await audit.emit({
@@ -1849,7 +1884,6 @@ export const medicationRouter = createTRPCRouter({
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
           metadata: {
-            medicationDisplay: input.medicationDisplay,
             result: result.result,
             interactionCount: result.interactions.length,
             ...(result.reason ? { reason: result.reason } : {}),

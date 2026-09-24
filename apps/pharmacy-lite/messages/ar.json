@@ -1279,7 +1279,22 @@
     "overrideSupervisorPlaceholder": "مثال: د. أحمد",
     "overrideAllergyUnknownNotice": "حالة الحساسية غير معروفة — يتطلب الصرف تجاوزاً موثقاً بعد التحقق الشفهي من المريض.",
     "activeMedUnavailableTitle": "فحص الأدوية النشطة غير متاح",
-    "activeMedUnavailableCaution": "تعذّر تحميل الأدوية النشطة للمريض. تأكّد يدويًا من الأدوية الحالية قبل الصرف."
+    "activeMedUnavailableCaution": "تعذّر تحميل الأدوية النشطة للمريض. تأكّد يدويًا من الأدوية الحالية قبل الصرف.",
+    "overrideReasonCodeLabel": "رمز سبب التجاوز",
+    "overrideReasonCodePlaceholder": "اختر سبباً...",
+    "overrideReasonCode": {
+      "CONTRAINDICATED_CLINICALLY_INDICATED": "موانع الاستعمال محددة سريرياً من قبل الطبيب الواصف",
+      "ALLERGY_PREVIOUSLY_TOLERATED": "حساسية موثقة — تم تحملها سابقاً",
+      "CHECK_UNAVAILABLE_CLINICAL_JUDGEMENT": "الفحص غير متاح — المتابعة بناءً على الحكم السريري",
+      "BENEFIT_OUTWEIGHS_RISK": "الفائدة تفوق الخطر",
+      "NO_ALTERNATIVE_AVAILABLE": "لا يوجد بديل مناسب",
+      "OTHER": "أخرى (اذكر أدناه)"
+    },
+    "overrideSupervisorIdLabel": "معرّف الممارس المشرف",
+    "overrideSupervisorIdPlaceholder": "معرّف حساب المشرف",
+    "overrideSupervisorPinLabel": "رمز المشرف السري",
+    "overrideSupervisorPinPlaceholder": "أدخل رمز المشرف السري",
+    "overrideOfflineNotice": "غير متصل: سيتم التحقق من بيانات اعتماد المشرف عند مزامنة عملية الصرف. يُعلَّم أي تحقق فاشل للمراجعة."
   },
   "allergyBanner": {
     "knownTitle": "حساسية معروفة",

@@ -10,9 +10,10 @@ import { DispensingConfirmationModal } from './DispensingConfirmationModal'
 import { BrandSubstitutionPicker } from './BrandSubstitutionPicker'
 import { AllergyBanner } from './AllergyBanner'
 import { usePosStore } from '@/stores/pos-store'
+import type { DispenseOverride } from '@/lib/medication-dispense'
 
 interface FulfillmentChecklistProps {
-  onConfirm?: (selectedItems: FulfillmentItem[], override?: { reason: string; supervisorName: string }) => void
+  onConfirm?: (selectedItems: FulfillmentItem[], override?: DispenseOverride) => void
 }
 
 function formatFrequency(freqN?: number, perU?: string): string {

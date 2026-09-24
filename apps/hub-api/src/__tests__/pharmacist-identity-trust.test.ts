@@ -36,6 +36,11 @@ const ACTIVE_RX = {
   prescription_status: 'ACTIVE',
   status: 'active',
   hlc_timestamp: null,
+  // Story 57.2: dispense gate reads the authoritative server-computed status.
+  interaction_check: 'CLEAR',
+  interaction_check_server: 'CLEAR',
+  subject_reference: 'pat-001',
+  medication_display: 'Amoxicillin 500mg Capsule',
 }
 
 function consentMock() {

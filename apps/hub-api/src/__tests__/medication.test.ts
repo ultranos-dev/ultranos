@@ -494,12 +494,18 @@ describe('medication.recordDispense', () => {
     status: 'completed' as const,
   }
 
-  // Standard active-rx data for reuse
+  // Standard active-rx data for reuse.
+  // Story 57.2: the dispense gate now evaluates interaction_check_server (the
+  // authoritative Hub-computed value), so the happy-path fixture sets it to CLEAR.
   const ACTIVE_RX = {
     id: RX_UUID_1,
     prescription_status: 'ACTIVE',
     status: 'active',
     hlc_timestamp: null,
+    interaction_check: 'CLEAR',
+    interaction_check_server: 'CLEAR',
+    subject_reference: 'pat-001',
+    medication_display: 'Amoxicillin 500mg Capsule',
   }
 
   // Consent mock: returns active consent so middleware passes
@@ -895,7 +901,7 @@ describe('medication.recordDispense', () => {
 
     const baseMockFrom = createDispenseMockFrom({
       rxLookupData: {
-        data: { id: RX_UUID_1, prescription_status: 'DISPENSED', status: 'completed', hlc_timestamp: existingHlc },
+        data: { id: RX_UUID_1, prescription_status: 'DISPENSED', status: 'completed', hlc_timestamp: existingHlc, interaction_check: 'CLEAR', interaction_check_server: 'CLEAR', subject_reference: 'pat-001', medication_display: 'Amoxicillin 500mg Capsule' },
         error: null,
       },
       idempotencyData: [],

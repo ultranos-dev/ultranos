@@ -327,13 +327,18 @@ describe('DispensingConfirmationModal — unknown allergy status (AC 2)', () => 
     expect(screen.getByTestId('override-supervisor')).toBeInTheDocument()
     expect(screen.getByTestId('override-allergy-unknown-notice')).toBeInTheDocument()
 
-    // confirm stays disabled until ack + reason(≥10) + supervisor
+    // Story 57.2: confirm stays disabled until ack + reason code + reason(≥10) +
+    // supervisor name + supervisor id + PIN.
     const confirmBtn = screen.getByTestId('modal-confirm-dispensing-btn')
     expect(confirmBtn).toBeDisabled()
     await user.click(screen.getByTestId('dispensing-ack-checkbox'))
     expect(confirmBtn).toBeDisabled()
+    await user.selectOptions(screen.getByTestId('override-reason-code'), 'CHECK_UNAVAILABLE_CLINICAL_JUDGEMENT')
     await user.type(screen.getByTestId('override-reason'), 'verified verbally with patient')
     await user.type(screen.getByTestId('override-supervisor'), 'Dr. Sahar')
+    expect(confirmBtn).toBeDisabled() // still missing supervisor id + PIN
+    await user.type(screen.getByTestId('override-supervisor-id'), '11111111-1111-1111-1111-111111111111')
+    await user.type(screen.getByTestId('override-supervisor-pin'), '4321')
     expect(confirmBtn).not.toBeDisabled()
   })
 

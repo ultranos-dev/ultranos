@@ -414,3 +414,30 @@ export enum AmendmentReasonCode {
   TRANSCRIPTION_ERROR = 'TRANSCRIPTION_ERROR',
   OTHER = 'OTHER',
 }
+
+/**
+ * Story 57.2 AC #5: Structured reason codes for a supervisor override of a
+ * BLOCKED / UNAVAILABLE drug-interaction (or allergy) dispense gate.
+ *
+ * Replaces the previous string-prefix severity heuristic (`ALLERGY:`/`MAJOR:`
+ * scanned out of free text) with an explicit, auditable classification. Free
+ * text remains supplementary (`overrideReason`), never the classifier.
+ *
+ * The value is also used to derive the clinical-safety `severity` metric label
+ * (see hub `deriveOverrideSeverity`): CONTRAINDICATED_BENEFIT/ALLERGY_TOLERATED
+ * map to their severity, otherwise MODERATE.
+ */
+export enum OverrideReasonCode {
+  /** Prescriber confirmed the contraindicated combination is clinically intended. */
+  CONTRAINDICATED_CLINICALLY_INDICATED = 'CONTRAINDICATED_CLINICALLY_INDICATED',
+  /** Documented allergy but patient has tolerated this agent previously. */
+  ALLERGY_PREVIOUSLY_TOLERATED = 'ALLERGY_PREVIOUSLY_TOLERATED',
+  /** Interaction check unavailable/stale; supervisor authorises dispense on clinical judgement. */
+  CHECK_UNAVAILABLE_CLINICAL_JUDGEMENT = 'CHECK_UNAVAILABLE_CLINICAL_JUDGEMENT',
+  /** Benefit outweighs risk for this patient (documented rationale in free text). */
+  BENEFIT_OUTWEIGHS_RISK = 'BENEFIT_OUTWEIGHS_RISK',
+  /** No suitable therapeutic alternative available. */
+  NO_ALTERNATIVE_AVAILABLE = 'NO_ALTERNATIVE_AVAILABLE',
+  /** Any other supervisor-authorised reason — requires free-text detail. */
+  OTHER = 'OTHER',
+}

@@ -693,7 +693,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 hlcTimestamp: string;
                 medicationDisplay: string;
                 medicationCode: string;
-                interactionCheck: "BLOCKED" | "WARNING" | "CLEAR" | "UNAVAILABLE";
+                interactionCheck: "CLEAR" | "WARNING" | "BLOCKED" | "UNAVAILABLE";
                 encounterId?: string | undefined;
                 prescriptionId?: string | undefined;
                 isOfflineCreated?: boolean | undefined;
@@ -708,10 +708,12 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 qrCodeId: any;
                 status: "active";
                 alreadySynced: boolean;
+                interactionCheckServer?: undefined;
             } | {
                 prescriptionId: string;
                 qrCodeId: `${string}-${string}-${string}-${string}-${string}`;
                 status: "active";
+                interactionCheckServer: "CLEAR" | "WARNING" | "BLOCKED" | "UNAVAILABLE";
                 alreadySynced?: undefined;
             };
             meta: object;
@@ -795,6 +797,12 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 whenHandedOver: string;
                 batchLot?: string | undefined;
                 overrideReason?: string | undefined;
+                overrideReasonCode?: import("@ultranos/shared-types").OverrideReasonCode | undefined;
+                supervisorAuth?: {
+                    supervisorId: string;
+                    supervisorPin: string;
+                } | undefined;
+                overrideAttestedOffline?: boolean | undefined;
             };
             output: {
                 success: boolean;
@@ -4515,7 +4523,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
     }, import("@trpc/server").TRPCDecorateCreateRouterOptions<{
         list: import("@trpc/server").TRPCQueryProcedure<{
             input: {
-                statuses: ("PENDING" | "APPROVED" | "FLAGGED")[];
+                statuses: ("PENDING" | "FLAGGED" | "APPROVED")[];
             };
             output: {
                 id: any;
@@ -4532,7 +4540,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
         }>;
         updateStatus: import("@trpc/server").TRPCMutationProcedure<{
             input: {
-                status: "APPROVED" | "FLAGGED";
+                status: "FLAGGED" | "APPROVED";
                 reviewId: string;
             };
             output: {

@@ -1279,7 +1279,22 @@
     "overrideSupervisorPlaceholder": "مثال: داکتر احمد",
     "overrideAllergyUnknownNotice": "وضعیت حساسیت نامعلوم است — تحویل دوا نیازمند نادیده‌گرفتن مستند پس از تایید شفاهی از مریض است.",
     "activeMedUnavailableTitle": "بررسی داروهای فعال در دسترس نیست",
-    "activeMedUnavailableCaution": "داروهای فعال بیمار بارگیری نشد. پیش از توزیع، داروهای فعلی را به‌صورت دستی تأیید کنید."
+    "activeMedUnavailableCaution": "داروهای فعال بیمار بارگیری نشد. پیش از توزیع، داروهای فعلی را به‌صورت دستی تأیید کنید.",
+    "overrideReasonCodeLabel": "کد دلیل نادیده‌گیری",
+    "overrideReasonCodePlaceholder": "یک دلیل را انتخاب کنید...",
+    "overrideReasonCode": {
+      "CONTRAINDICATED_CLINICALLY_INDICATED": "منع مصرف به‌صورت بالینی توسط تجویزکننده مشخص شده",
+      "ALLERGY_PREVIOUSLY_TOLERATED": "حساسیت ثبت‌شده — قبلاً تحمل شده",
+      "CHECK_UNAVAILABLE_CLINICAL_JUDGEMENT": "بررسی در دسترس نیست — ادامه بر اساس قضاوت بالینی",
+      "BENEFIT_OUTWEIGHS_RISK": "فایده بیشتر از خطر است",
+      "NO_ALTERNATIVE_AVAILABLE": "جایگزین مناسب موجود نیست",
+      "OTHER": "دیگر (در زیر توضیح دهید)"
+    },
+    "overrideSupervisorIdLabel": "شناسه پزشک ناظر",
+    "overrideSupervisorIdPlaceholder": "شناسه حساب ناظر",
+    "overrideSupervisorPinLabel": "پین ناظر",
+    "overrideSupervisorPinPlaceholder": "پین ناظر را وارد کنید",
+    "overrideOfflineNotice": "آفلاین: اعتبارنامه ناظر هنگام همگام‌سازی این صرف تأیید می‌شود. تأیید ناموفق برای بررسی علامت‌گذاری می‌شود."
   },
   "allergyBanner": {
     "knownTitle": "حساسیت‌های شناخته‌شده",

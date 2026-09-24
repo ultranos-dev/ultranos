@@ -27,11 +27,15 @@ export function buildRecordDispensePayload(dispense: LocalMedicationDispense): {
   status: 'completed' | 'in-progress'
   batchLot?: string
   overrideReason?: string
+  overrideReasonCode?: string
+  supervisorAuth?: { supervisorId: string; supervisorPin: string }
+  overrideAttestedOffline?: boolean
 } {
   const prescriptionId = dispense.authorizingPrescription?.[0]?.reference?.replace('MedicationRequest/', '') ?? ''
   const medicationCode = dispense.medicationCodeableConcept.coding?.[0]?.code ?? ''
   const medicationDisplay = dispense.medicationCodeableConcept.text ?? ''
   const pharmacistRef = dispense.performer?.[0]?.actor.reference ?? ''
+  const override = dispense._ultranos?.reviewOverride
   return {
     dispenseId: dispense.id,
     prescriptionId,
@@ -43,9 +47,19 @@ export function buildRecordDispensePayload(dispense: LocalMedicationDispense): {
     hlcTimestamp: dispense._ultranos.hlcTimestamp,
     status: dispense.status === 'completed' ? 'completed' : 'in-progress',
     ...(dispense._ultranos?.batchLot ? { batchLot: dispense._ultranos.batchLot } : {}),
-    ...(dispense._ultranos?.reviewOverride
+    // Story 57.2: send the STRUCTURED override — supplementary free text
+    // (supervisor name kept for human context), the required reason code, and the
+    // real supervisor credential the Hub verifies. `overrideAttestedOffline` marks
+    // an override captured offline for drain-time verification.
+    ...(override
       ? {
-          overrideReason: `Dispensed past interaction/allergy warning. Supervisor: ${dispense._ultranos.reviewOverride.supervisorName}. Reason: ${dispense._ultranos.reviewOverride.reason}`,
+          overrideReason: `Supervisor: ${override.supervisorName}. Reason: ${override.reason}`,
+          overrideReasonCode: override.reasonCode,
+          supervisorAuth: {
+            supervisorId: override.supervisorId,
+            supervisorPin: override.supervisorPin,
+          },
+          ...(override.attestedOffline ? { overrideAttestedOffline: true } : {}),
         }
       : {}),
   }

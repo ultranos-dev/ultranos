@@ -10,8 +10,10 @@ import { InteractionCheckBanner, type InteractionStatus } from './InteractionChe
 import { getRecallAlertsForAtc } from '@/lib/drug-catalog-queries'
 import { runDispenseInteractionCheck } from '@/lib/dispense-interaction-check'
 import { fetchActiveMedications } from '@/lib/active-medications'
-import type { RecallAlert } from '@ultranos/shared-types'
+import { ChevronDown } from '@ultranos/ui-kit/icons'
+import { OverrideReasonCode, type RecallAlert } from '@ultranos/shared-types'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
+import type { DispenseOverride } from '@/lib/medication-dispense'
 
 interface DispensingConfirmationModalProps {
   items: FulfillmentItem[]
@@ -24,9 +26,19 @@ interface DispensingConfirmationModalProps {
    * existing `_ultranos.reviewOverride` machinery is reused, not forked.
    */
   allergyStatusUnknown?: boolean
-  onConfirm: (override?: { reason: string; supervisorName: string }) => void
+  onConfirm: (override?: DispenseOverride) => void
   onCancel: () => void
 }
+
+/** Ordered list of override reason codes surfaced in the modal select. */
+const OVERRIDE_REASON_CODES: OverrideReasonCode[] = [
+  OverrideReasonCode.CONTRAINDICATED_CLINICALLY_INDICATED,
+  OverrideReasonCode.ALLERGY_PREVIOUSLY_TOLERATED,
+  OverrideReasonCode.CHECK_UNAVAILABLE_CLINICAL_JUDGEMENT,
+  OverrideReasonCode.BENEFIT_OUTWEIGHS_RISK,
+  OverrideReasonCode.NO_ALTERNATIVE_AVAILABLE,
+  OverrideReasonCode.OTHER,
+]
 
 export function DispensingConfirmationModal({
   items,
@@ -45,6 +57,10 @@ export function DispensingConfirmationModal({
   const [activeMedIncomplete, setActiveMedIncomplete] = useState<boolean | null>(null)
   const [overrideReason, setOverrideReason] = useState('')
   const [supervisorName, setSupervisorName] = useState('')
+  // Story 57.2: structured reason code + real supervisor credential.
+  const [reasonCode, setReasonCode] = useState<OverrideReasonCode | ''>('')
+  const [supervisorId, setSupervisorId] = useState('')
+  const [supervisorPin, setSupervisorPin] = useState('')
   const t = useTranslations('dispensingConfirmation')
 
   useEffect(() => {
@@ -95,8 +111,31 @@ export function DispensingConfirmationModal({
     allergyStatusUnknown ||
     activeMedIncomplete === true
 
+  // Story 57.2: a valid override now requires a structured reason code AND a real
+  // supervisor credential (supervisor id + PIN), not just free text + a name.
   const overrideValid =
-    !needsOverride || (overrideReason.trim().length >= 10 && supervisorName.trim().length > 0)
+    !needsOverride ||
+    (reasonCode !== '' &&
+      overrideReason.trim().length >= 10 &&
+      supervisorName.trim().length > 0 &&
+      supervisorId.trim().length > 0 &&
+      supervisorPin.trim().length > 0)
+
+  // Story 57.2 offline trust model: when offline, the supervisor PIN cannot be
+  // verified at the point of care — the override is attested locally and the Hub
+  // verifies it at drain. Surfaced to the pharmacist so they know verification is deferred.
+  const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+
+  function buildOverride(): DispenseOverride {
+    return {
+      reason: overrideReason.trim(),
+      supervisorName: supervisorName.trim(),
+      reasonCode: reasonCode as OverrideReasonCode,
+      supervisorId: supervisorId.trim(),
+      supervisorPin: supervisorPin.trim(),
+      ...(isOffline ? { attestedOffline: true } : {}),
+    }
+  }
 
   return (
     <div
@@ -146,6 +185,37 @@ export function DispensingConfirmationModal({
             )}
             <p className="text-xs text-warning">{t('overrideReviewNotice')}</p>
 
+            {/* Story 57.2: structured reason code (required) */}
+            <div>
+              <label
+                htmlFor="override-reason-code"
+                className="mb-1 block text-xs font-medium text-warning"
+              >
+                {t('overrideReasonCodeLabel')}
+              </label>
+              <div className="relative">
+                <select
+                  id="override-reason-code"
+                  data-testid="override-reason-code"
+                  value={reasonCode}
+                  onChange={(e) => setReasonCode(e.target.value as OverrideReasonCode | '')}
+                  className="h-9 w-full appearance-none rounded-lg border border-warning/40 bg-card ps-3 pe-9 text-sm text-foreground focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
+                >
+                  <option value="">{t('overrideReasonCodePlaceholder')}</option>
+                  {OVERRIDE_REASON_CODES.map((code) => (
+                    <option key={code} value={code}>
+                      {t(`overrideReasonCode.${code}`)}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={16}
+                  aria-hidden
+                  className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-warning"
+                />
+              </div>
+            </div>
+
             <div>
               <label
                 htmlFor="override-reason-input"
@@ -183,6 +253,55 @@ export function DispensingConfirmationModal({
                 className="w-full rounded-lg border border-warning/40 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
               />
             </div>
+
+            {/* Story 57.2: real supervisor credential — the Hub verifies these
+                server-side (distinct supervisor-capable practitioner, same org,
+                valid PIN). A pharmacist cannot supervise their own override. */}
+            <div>
+              <label
+                htmlFor="override-supervisor-id"
+                className="mb-1 block text-xs font-medium text-warning"
+              >
+                {t('overrideSupervisorIdLabel')}
+              </label>
+              <input
+                id="override-supervisor-id"
+                data-testid="override-supervisor-id"
+                dir="auto"
+                type="text"
+                autoComplete="off"
+                value={supervisorId}
+                onChange={(e) => setSupervisorId(e.target.value)}
+                placeholder={t('overrideSupervisorIdPlaceholder')}
+                className="w-full rounded-lg border border-warning/40 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="override-supervisor-pin"
+                className="mb-1 block text-xs font-medium text-warning"
+              >
+                {t('overrideSupervisorPinLabel')}
+              </label>
+              <input
+                id="override-supervisor-pin"
+                data-testid="override-supervisor-pin"
+                type="password"
+                autoComplete="off"
+                inputMode="numeric"
+                value={supervisorPin}
+                onChange={(e) => setSupervisorPin(e.target.value)}
+                placeholder={t('overrideSupervisorPinPlaceholder')}
+                className="w-full rounded-lg border border-warning/40 bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
+              />
+            </div>
+
+            {isOffline && (
+              <p className="text-xs text-warning" data-testid="override-offline-notice">
+                {t('overrideOfflineNotice')}
+              </p>
+            )}
           </div>
         )}
 
@@ -228,7 +347,7 @@ export function DispensingConfirmationModal({
             type="button"
             className="w-full"
             disabled={!acknowledged || blockedByInteraction || !overrideValid}
-            onClick={() => onConfirm(needsOverride ? { reason: overrideReason.trim(), supervisorName: supervisorName.trim() } : undefined)}
+            onClick={() => onConfirm(needsOverride ? buildOverride() : undefined)}
             data-testid="modal-confirm-dispensing-btn"
           >
             {t('dispenseMedication')}
