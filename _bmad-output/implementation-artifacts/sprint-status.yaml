@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-06-13T18:00:00.000000'
+last_updated: '2026-09-24T00:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -767,7 +767,7 @@ development_status:
   epic-60: in-progress
   60-1-hlc-discipline-platform-wide: review  # Wave 4 done+verified (HLC everywhere, staged hub validation log-only, ESLint guard; sync-engine 202, all apps green)
   60-2-sync-engine-fail-safe-hardening: review  # Wave 1 done+verified (sync-engine 188 tests; plaintext fallback removed, Tier-1 window fix)
-  60-3-offline-patient-registration: ready-for-dev
+  60-3-offline-patient-registration: review  # Wave 5 done+verified (offline reg OPD/lab/pharmacy, provisional-ID reconcile at drain, MPI_BLOCK_MODE default warn; hub 1839, opd 1466, lab 3961, pharmacy 1153); opd Dexie v29, routed via patient.syncCreate
   60-4-sync-failure-visibility-and-cross-app-notifications: ready-for-dev
 
   # ============================================================
@@ -783,8 +783,8 @@ development_status:
   # EPIC 62: Business & Enterprise Correctness (2026-09-23)
   # Pharmacy financials (taxRate 100x), hub/admin hardening
   # ============================================================
-  epic-62: backlog
-  62-1-pharmacy-financial-correctness: ready-for-dev
+  epic-62: in-progress
+  62-1-pharmacy-financial-correctness: review  # Wave 5 done+verified (ONE percent taxRate convention, refund/void+cash-out, drawer race fix, atomic invoice numbering; pharmacy 1153); Dexie v24
   62-2-hub-and-admin-enterprise-hardening: review  # Wave 5 done+verified (RBAC SUPERADMIN/ORG_ADMIN, injection, pagination, KYC proxy, admin.ts split; hub 1835); GOOGLE_CLOUD_VISION_API_KEY env
 
   # ============================================================

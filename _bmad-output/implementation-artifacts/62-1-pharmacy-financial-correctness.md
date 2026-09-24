@@ -1,6 +1,6 @@
 # Story 62.1: Pharmacy Financial Correctness (taxRate Units, Refunds/Cash-Out, Drawer Integrity)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -18,11 +18,11 @@ so that retail totals are right (not off by 100×) and every drawer close reconc
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: taxRate standardization** (AC: 1) — audit every `taxRate` consumer (`invoice-service.ts`, `InvoiceSummary.tsx`, `fulfillment-store.ts:286-288`, `po-totals.ts:46`, `wholesale/NewOrderPage.tsx:254`, `NewPurchaseOrderPage.tsx:97`, `NewSupplierInvoicePage.tsx:90`); convert POS to percent; migrate settings + annotate historical rows with `taxRateConvention` (or normalize with recompute guard); cross-domain test: same settings value → consistent tax in all three domains.
-- [ ] **Task 2: Refund/void + cash-out** (AC: 2) — design the minimal flow (void same-day vs refund-with-reason); write `cashOut` on payouts; drawer expected-balance formula already reads it (`cash-drawer-service.ts:34` init-only today); stock re-entry per pharmacist choice; audit events; i18n'd UI on the POS page.
-- [ ] **Task 3: Drawer/payment races** (AC: 3) — single in-tx drawer resolution; sync entry from final object (or the existing two-phase `buildEncryptedSyncEntry` pattern post-tx); credit-payment method handling.
-- [ ] **Task 4: Invoice numbering** (AC: 4) — atomic counter table in Dexie tx (the `.reverse().sortBy()` read pattern was verified correct — the race is between read and write).
-- [ ] **Task 5: Tests + regression verification** (AC: 5) — money-math property tests (integer minor units respected); concurrent-tab simulation for numbering/drawer; full pharmacy suite; manual sale→refund→drawer-close reconciliation; `pnpm typecheck`.
+- [x] **Task 1: taxRate standardization** (AC: 1) — audit every `taxRate` consumer (`invoice-service.ts`, `InvoiceSummary.tsx`, `fulfillment-store.ts:286-288`, `po-totals.ts:46`, `wholesale/NewOrderPage.tsx:254`, `NewPurchaseOrderPage.tsx:97`, `NewSupplierInvoicePage.tsx:90`); convert POS to percent; migrate settings + annotate historical rows with `taxRateConvention` (or normalize with recompute guard); cross-domain test: same settings value → consistent tax in all three domains.
+- [x] **Task 2: Refund/void + cash-out** (AC: 2) — design the minimal flow (void same-day vs refund-with-reason); write `cashOut` on payouts; drawer expected-balance formula already reads it (`cash-drawer-service.ts:34` init-only today); stock re-entry per pharmacist choice; audit events; i18n'd UI on the POS page.
+- [x] **Task 3: Drawer/payment races** (AC: 3) — single in-tx drawer resolution; sync entry from final object (or the existing two-phase `buildEncryptedSyncEntry` pattern post-tx); credit-payment method handling.
+- [x] **Task 4: Invoice numbering** (AC: 4) — atomic counter table in Dexie tx (the `.reverse().sortBy()` read pattern was verified correct — the race is between read and write).
+- [x] **Task 5: Tests + regression verification** (AC: 5) — money-math property tests (integer minor units respected); concurrent-tab simulation for numbering/drawer; full pharmacy suite; manual sale→refund→drawer-close reconciliation; `pnpm typecheck`.
 
 ## Dev Notes
 
@@ -53,11 +53,22 @@ This story must introduce **zero regression in existing features and functionali
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Fable 5 (1M) — implementation; Claude Opus 4.8 (1M) — integration & combined verification.
 
 ### Debug Log References
+`pnpm -F pharmacy-lite typecheck` → clean. `pnpm -F pharmacy-lite test` → 189 files, 1153 passed, 0 failed (combined tree).
 
 ### Completion Notes List
+- **Task 1 (taxRate convention):** ONE percent convention across POS/procurement/wholesale. `invoice-service.ts` POS tax converted from fraction to percent (`subtotal * taxRate / 100`); `InvoiceSummary.tsx` display no longer double-scales. Idempotent settings-scale migration + historical rows annotated with `taxRateConvention` so stored documents render at their original amounts. `tax-convention.test.ts` locks same-settings-value → identical tax across all three domains.
+- **Task 2 (refund/void + cash-out):** new `lib/pos/refund-service.ts` (void same-day vs refund-with-reason) writes drawer `cashOut`, applies restock-vs-quarantine stock re-entry per pharmacist choice, emits audit events; `RefundVoidPanel.tsx` i18n'd POS UI (wired into `PosPage.tsx`). `cashOut` is now written (was init-only) so drawer close reconciles after payouts. Dexie **v24** adds the `refunds` store.
+- **Task 3 (drawer/payment races):** `recordPayment` resolves the cash drawer ONCE inside the tx and builds the sync payload from the final object — hub/local `cashDrawerId` can no longer drift; `recordCreditPayment` handles payment method + the no-account case explicitly (no unconditional cash assumption).
+- **Task 4 (invoice numbering):** atomic Dexie-tx counter — concurrent tabs can no longer collide on invoice numbers.
+- **Respects 58.3:** invoice-line descriptions stay stripped of patient-linked med-text (resolve via `catalogItemId` at render, never re-persisted).
+- New audit actions/resource types (`INVOICE_VOIDED`/`INVOICE_REFUNDED`/`CASH_DRAWER_PAYOUT`; `CASH_DRAWER`/`REFUND`) added to `packages/shared-types/src/enums.ts`.
 
 ### File List
+New — `apps/pharmacy-lite/src/lib/pos/refund-service.ts`, `src/lib/pos/audit.ts`, `src/components/pharmacy/pos/RefundVoidPanel.tsx`, `src/__tests__/{tax-convention,refund-flow,pos-concurrency}.test.ts`.
+Modified — pharmacy `lib/pos/{invoice-service,payment-service,types}.ts`, `lib/db.ts` (v24), `lib/pos-db.ts`, `lib/inventory/types.ts`, `lib/phi-cleanup.ts`, `components/pharmacy/pos/{InvoiceSummary,PosPage}.tsx`, `messages/{en,ar,prs,ps}.json`; `packages/shared-types/src/enums.ts`.
 
 ### Change Log
+- 2026-09-24: Story 62.1 implemented (Wave 5 batch 2), verified, integrated. ONE percent taxRate convention; refund/void + cash-out; drawer race fixed; atomic invoice numbering. Dexie v24. Status → review.
