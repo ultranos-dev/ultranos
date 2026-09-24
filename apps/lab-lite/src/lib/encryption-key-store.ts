@@ -58,6 +58,23 @@ export const encryptionKeyStore = {
   },
 
   /**
+   * Story 61.2: install a write key at a version. Lab-lite keeps no local
+   * encrypted PHI store and no version map, so this is equivalent to setKey —
+   * the `version` is accepted for API parity with the other spokes' key stores.
+   */
+  installWriteKey(_version: string, key: CryptoKey): void {
+    sessionKey = key
+  },
+
+  /**
+   * Story 61.2: no-op on lab-lite (no version map / no local PHI to migrate).
+   * Present for API parity so the shared vNext establishment module compiles.
+   */
+  addDecryptKey(_version: string, _key: CryptoKey): void {
+    /* lab-lite has no key map — nothing to register */
+  },
+
+  /**
    * Returns the key or throws if unavailable.
    * Use this in code paths that must not proceed without encryption.
    */

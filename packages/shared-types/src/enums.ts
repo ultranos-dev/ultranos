@@ -150,6 +150,9 @@ export enum AuditAction {
   // Data purge / retention
   DATA_PURGE_CONFIRMED = 'DATA_PURGE_CONFIRMED',
   DATA_PURGE_CANCELLED = 'DATA_PURGE_CANCELLED',
+  // Story 61.2 — field-encryption integrity: a GCM auth-tag failure on decrypt
+  // (possible tampering) or an unrecognised ciphertext version on a hub read path.
+  INTEGRITY_FAILURE = 'INTEGRITY_FAILURE',
 }
 
 export enum AuditResourceType {

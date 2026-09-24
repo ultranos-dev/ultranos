@@ -103,12 +103,33 @@ export async function GET(
     return NextResponse.json({ error: 'No active consent' }, { status: 403 })
   }
 
+  // Audit file access (CLAUDE.md Rule #6). Created before decrypt so the
+  // integrity-failure hook (Story 61.2) can emit an audit event on tamper.
+  const audit = new AuditLogger(supabase, user.orgId)
+
   // Decrypt file content
   const encryptionKey = getCachedEncryptionKey()
   let fileBuffer: Buffer
 
   if (file.encrypted_content && file.encrypted_content.startsWith('v1:')) {
-    const decrypted = decryptField(file.encrypted_content, encryptionKey)
+    const decrypted = decryptField(file.encrypted_content, encryptionKey, (reason) => {
+      // Story 61.2 / P-CRYPTO-4: a GCM auth-tag failure is no longer swallowed.
+      // Audit the integrity failure with opaque IDs only (no PHI, no ciphertext).
+      void audit
+        .emit({
+          action: 'INTEGRITY_FAILURE',
+          resourceType: 'DIAGNOSTIC_REPORT',
+          resourceId: file.diagnostic_report_id,
+          actorId: user.sub,
+          actorRole: user.role,
+          outcome: 'FAILURE',
+          sessionId: user.sessionId,
+          metadata: { operation: 'file_download', fileId, reason },
+        })
+        .catch(() => {
+          console.warn('[AUDIT_FAILURE]', { action: 'INTEGRITY_FAILURE', resourceType: 'DIAGNOSTIC_REPORT', fileId })
+        })
+    })
     if (decrypted === '[Encrypted Content]') {
       return NextResponse.json({ error: 'File decryption failed' }, { status: 500 })
     }
@@ -121,8 +142,6 @@ export async function GET(
     return NextResponse.json({ error: 'No file content' }, { status: 404 })
   }
 
-  // Audit file access (CLAUDE.md Rule #6)
-  const audit = new AuditLogger(supabase, user.orgId)
   try {
     await audit.emit({
       action: 'PHI_READ',

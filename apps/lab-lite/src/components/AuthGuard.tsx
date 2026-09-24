@@ -6,8 +6,9 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useEntitlementCheck } from '@/hooks/useEntitlementCheck'
 import { EntitlementGate } from '@ultranos/ui-kit'
-import { deriveSessionKey } from '@ultranos/crypto'
-import { encryptionKeyStore, getOrCreateDeviceSalt } from '@/lib/encryption-key-store'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
+import { establishSessionKey } from '@/lib/encryption-key-vnext'
+import { getDevicePin } from '@/lib/device-pin'
 import { clearPhiTables } from '@/lib/phi-cleanup'
 import { getMyRole } from '@/lib/trpc'
 import { getPendingHandoverReports, type HandoverReport } from '@/lib/db'
@@ -43,14 +44,18 @@ export function AuthGuard({ children }: { children: ReactNode }) {
           return
         }
 
-        // Derive or re-derive the encryption key from the JWT sub + device salt (Story 28.4).
+        // Establish the session encryption key (Story 61.2 vNext, dual-wrapped DEK).
+        // establishSessionKey tries hub-secret online unlock → PIN offline unlock →
+        // legacy deterministic key fallback (backward compat). Never plaintext.
         if (!encryptionKeyStore.isReady()) {
           try {
-            const derivedKey = await deriveSessionKey(data.session.user.id, getOrCreateDeviceSalt())
-            encryptionKeyStore.setKey(derivedKey)
+            await establishSessionKey({
+              sub: data.session.user.id,
+              getPin: getDevicePin,
+            })
           } catch {
-            // Derivation failed — SubtleCrypto unavailable (app must be served over HTTPS)
-            console.error('[auth] Encryption key derivation failed — ensure app is served over HTTPS')
+            // Establishment failed — SubtleCrypto unavailable (app must be served over HTTPS)
+            console.error('[auth] Encryption key establishment failed — ensure app is served over HTTPS')
             throw new Error('Key derivation unavailable')
           }
         }

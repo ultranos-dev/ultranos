@@ -7,6 +7,32 @@ const CURRENT_VERSION = 'v1'
 const PLACEHOLDER = '[Encrypted Content]'
 
 /**
+ * Reason a decrypt attempt failed. Distinguishes a genuine GCM authentication-tag
+ * failure (possible tampering) from a malformed/unknown-version input so callers
+ * can audit tampering specifically (Story 61.2 / P-CRYPTO-4).
+ */
+export type DecryptFailureReason =
+  | 'MALFORMED' // missing colon / empty payload / too short to hold IV+tag
+  | 'UNKNOWN_VERSION' // version prefix not recognised
+  | 'AUTH_TAG_FAILURE' // GCM authentication failed — ciphertext/tag/key mismatch (tamper signal)
+
+/**
+ * Discriminated result of {@link decryptFieldResult}.
+ * `ok: true` → `value` is the plaintext.
+ * `ok: false` → `reason` explains why (never carries plaintext or key material).
+ */
+export type DecryptFieldResult =
+  | { ok: true; value: string }
+  | { ok: false; reason: DecryptFailureReason }
+
+/**
+ * Optional hook invoked by {@link decryptField} on any decrypt failure. Callers
+ * (hub read paths) use this to emit an audit event for integrity failures.
+ * The hook receives only the opaque failure reason — never PHI, ciphertext, or keys.
+ */
+export type OnIntegrityFailure = (reason: DecryptFailureReason) => void
+
+/**
  * Encrypt a plaintext string using AES-256-GCM with a random IV.
  * Returns a versioned string: "v1:<base64(iv + authTag + ciphertext)>"
  *
@@ -30,28 +56,39 @@ export function encryptField(plaintext: string, keyHex: string): string {
 }
 
 /**
- * Decrypt a versioned ciphertext string back to plaintext.
- * Returns the "[Encrypted Content]" placeholder on any failure
- * (wrong key, tampered data, malformed input, unknown version)
- * rather than crashing the API response.
+ * Decrypt a versioned ciphertext string, returning a discriminated result.
+ *
+ * Unlike {@link decryptField}, this NEVER swallows a failure into a placeholder —
+ * it distinguishes a GCM authentication-tag failure (a tamper signal) from a
+ * malformed input or an unknown key version. Hub read paths use this (or the
+ * `onIntegrityFailure` hook on {@link decryptField}) to audit integrity failures
+ * with opaque reasons only (Story 61.2 / P-CRYPTO-4).
+ *
+ * The failure reason never carries plaintext, ciphertext, or key material.
  */
-export function decryptField(encrypted: string, keyHex: string): string {
+export function decryptFieldResult(
+  encrypted: string,
+  keyHex: string,
+): DecryptFieldResult {
+  const colonIndex = encrypted.indexOf(':')
+  if (colonIndex === -1) return { ok: false, reason: 'MALFORMED' }
+
+  const version = encrypted.slice(0, colonIndex)
+  const payload = encrypted.slice(colonIndex + 1)
+
+  if (version !== CURRENT_VERSION) return { ok: false, reason: 'UNKNOWN_VERSION' }
+  if (!payload) return { ok: false, reason: 'MALFORMED' }
+
+  const combined = Buffer.from(payload, 'base64')
+  if (combined.length < IV_BYTES + AUTH_TAG_BYTES + 1) {
+    return { ok: false, reason: 'MALFORMED' }
+  }
+
+  const iv = combined.subarray(0, IV_BYTES)
+  const authTag = combined.subarray(IV_BYTES, IV_BYTES + AUTH_TAG_BYTES)
+  const ciphertext = combined.subarray(IV_BYTES + AUTH_TAG_BYTES)
+
   try {
-    const colonIndex = encrypted.indexOf(':')
-    if (colonIndex === -1) return PLACEHOLDER
-
-    const version = encrypted.slice(0, colonIndex)
-    const payload = encrypted.slice(colonIndex + 1)
-
-    if (version !== CURRENT_VERSION || !payload) return PLACEHOLDER
-
-    const combined = Buffer.from(payload, 'base64')
-    if (combined.length < IV_BYTES + AUTH_TAG_BYTES + 1) return PLACEHOLDER
-
-    const iv = combined.subarray(0, IV_BYTES)
-    const authTag = combined.subarray(IV_BYTES, IV_BYTES + AUTH_TAG_BYTES)
-    const ciphertext = combined.subarray(IV_BYTES + AUTH_TAG_BYTES)
-
     const key = Buffer.from(keyHex, 'hex')
     const decipher = createDecipheriv(ALGORITHM, key, iv)
     decipher.setAuthTag(authTag)
@@ -61,10 +98,40 @@ export function decryptField(encrypted: string, keyHex: string): string {
       decipher.final(),
     ])
 
-    return decrypted.toString('utf8')
+    return { ok: true, value: decrypted.toString('utf8') }
   } catch {
-    return PLACEHOLDER
+    // createDecipheriv/decipher.final() throws on GCM auth-tag mismatch —
+    // ciphertext, tag, IV, or key don't agree. This is the tamper signal.
+    return { ok: false, reason: 'AUTH_TAG_FAILURE' }
   }
+}
+
+/**
+ * Decrypt a versioned ciphertext string back to plaintext.
+ *
+ * Returns the "[Encrypted Content]" placeholder on any failure (wrong key,
+ * tampered data, malformed input, unknown version) so the API response never
+ * crashes and no ciphertext leaks into the UI — BUT, unlike the pre-61.2
+ * behaviour, the failure is no longer silent: if an `onIntegrityFailure` hook is
+ * provided it is invoked with the opaque failure reason so the caller can audit
+ * the integrity failure (P-CRYPTO-4). The placeholder is preserved as a safe UI
+ * display fallback.
+ *
+ * Callers that need to branch on success/failure should prefer
+ * {@link decryptFieldResult} directly.
+ */
+export function decryptField(
+  encrypted: string,
+  keyHex: string,
+  onIntegrityFailure?: OnIntegrityFailure,
+): string {
+  const result = decryptFieldResult(encrypted, keyHex)
+  if (result.ok) return result.value
+  // Signal the failure (tamper / malformed / unknown version) to the caller.
+  // AUTH_TAG_FAILURE is the security-relevant case; the others are surfaced too
+  // so an audit trail can distinguish corruption from tampering.
+  onIntegrityFailure?.(result.reason)
+  return PLACEHOLDER
 }
 
 /**

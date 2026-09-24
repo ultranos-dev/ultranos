@@ -572,6 +572,22 @@ export async function fetchLabOrderStatuses(ids: string[]): Promise<LabOrderStat
  *
  * Note: the Hub endpoint accepts `patientRef` as the full "Patient/{id}" reference.
  */
+/**
+ * Story 61.2: fetch the caller's per-user key-wrapping secret from the Hub
+ * (`session.getKeyWrappingSecret`). Held in memory only by the caller — NEVER
+ * persisted client-side. Returns null on any failure (offline / refusal) so the
+ * caller can fall back to the offline PIN-unlock path. No PHI involved.
+ */
+export async function fetchKeyWrappingSecret(): Promise<string | null> {
+  try {
+    const result = await hubTrpcRequest<{ secret: string }>('session.getKeyWrappingSecret', {})
+    return result?.secret ?? null
+  } catch (err) {
+    warnHubRefusal('session.getKeyWrappingSecret', err)
+    return null
+  }
+}
+
 export async function fetchActiveMedicationsFromHub(
   patientId: string,
 ): Promise<Array<Record<string, unknown>> | null> {

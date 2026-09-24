@@ -55,10 +55,72 @@ This story must introduce **zero regression in existing features and functionali
 
 ### Agent Model Used
 
+Opus 4.8 (1M) — Lane-E (Story 61.2).
+
 ### Debug Log References
+
+- crypto suite: 109 passed (incl. new kdf-vnext 10, tamper-signal 12, ecdsa exp/canonical additions).
+- opd-lite encryption suite: 67 passed (incl. new encryption-vnext-migration 4).
+- opd/pharmacy/lab auth-guard + login: passed; hub file-download: 20 passed; hub session endpoint: 5 passed.
+- typecheck: @ultranos/crypto, hub-api, opd-lite, pharmacy-lite, lab-lite all clean.
 
 ### Completion Notes List
 
+- **Decision #6 → dual-wrap (option b), reversible.** Random DEK wrapped under BOTH a
+  hub-issued memory-only server secret (online arm) and a device-PIN-derived key
+  (offline cold-start arm); either unlocks. Implemented in
+  `packages/crypto/src/browser-crypto.ts` (KEY_SCHEME_VERSION 'k2', AES-KW wrap).
+  Legacy `deriveSessionKey` retained for migration. Per-app establishment layered
+  over 56.1 app_metadata reads and 56.3 MFA flow (both intact).
+- **Hub secret issuance:** new `session.getKeyWrappingSecret` protected query returns
+  HMAC-SHA256(`HUB_KEY_WRAPPING_MASTER_SECRET`, sub) hex. Master secret is env-only,
+  never returned. Requires the new env var to be set in hub deployments.
+- **Migration:** per-app startup re-encryption v1→v2 via the existing Dexie
+  rotation machinery (read decrypts under key map, write encrypts under current
+  write version). Resumable (per-table localStorage marker), idempotent, never
+  plaintext. lab-lite has no local PHI store → no migration module.
+- **Tamper signaling:** `decryptFieldResult` (discriminated) + `onIntegrityFailure`
+  hook on `decryptField`; hub file-download routes audit `INTEGRITY_FAILURE`
+  (new AuditAction) with opaque IDs. `decryptField` remains backward compatible
+  (placeholder fallback) for callers without a hook.
+- **Identity QR — FORMAL GAP (disposition (b)).** `verifyIdentityQrPayload` still has
+  ZERO production callers (grep-verified: only its own module + tests reference it;
+  no scanner UI consumes it). The identity/Health-Passport QR SCANNING feature is
+  UNBUILT. Per AC #4(b) we recorded this gap and hardened the verifier now so it is
+  safe when adopted: added `exp` enforcement + canonical-JSON (sorted-key)
+  signing/verification (`packages/crypto/src/ecdsa.ts`), exported from the crypto
+  barrel. When the scan feature is built it MUST call `verifyIdentityQrPayload`
+  (signature + exp) and sign payloads with `canonicalJsonStringify`.
+- **Prescription QR (Ed25519/KRL) — UNTOUCHED** (verified-correct; `verify-with-krl.ts`
+  and its exports unchanged).
+
 ### File List
 
+Modified:
+- packages/crypto/src/browser-crypto.ts (KDF vNext: dual-wrapped DEK)
+- packages/crypto/src/server-crypto.ts (decryptFieldResult + onIntegrityFailure hook)
+- packages/crypto/src/ecdsa.ts (exp enforcement + canonicalJsonStringify)
+- packages/crypto/src/index.ts (new exports)
+- packages/shared-types/src/enums.ts (AuditAction.INTEGRITY_FAILURE)
+- apps/hub-api/src/trpc/routers/_app.ts (register sessionRouter)
+- apps/hub-api/src/app/api/lab-files/[fileId]/route.ts (integrity-failure audit)
+- apps/hub-api/src/app/api/specimen-files/[fileId]/route.ts (integrity-failure audit)
+- apps/opd-lite: components/AuthGuard.tsx, app/[locale]/(auth)/login/page.tsx,
+  lib/encryption-key-store.ts, lib/trpc.ts
+- apps/pharmacy-lite: components/AuthGuard.tsx, app/[locale]/(auth)/login/page.tsx,
+  lib/encryption-key-store.ts, lib/trpc.ts
+- apps/lab-lite: components/AuthGuard.tsx, lib/encryption-key-store.ts, lib/trpc.ts
+
+New:
+- apps/hub-api/src/trpc/routers/session.ts
+- apps/{opd-lite,pharmacy-lite,lab-lite}/src/lib/encryption-key-vnext.ts
+- apps/{opd-lite,pharmacy-lite,lab-lite}/src/lib/device-pin.ts
+- apps/{opd-lite,pharmacy-lite}/src/lib/encryption-migration-vnext.ts
+- packages/crypto/src/__tests__/{kdf-vnext,tamper-signal}.test.ts
+- apps/opd-lite/src/__tests__/encryption-vnext-migration.test.ts
+- apps/hub-api/src/__tests__/session-key-wrapping-secret.test.ts
+
 ### Change Log
+
+- 2026-09-23: Story 61.2 implemented (KDF vNext dual-wrap, tamper signaling,
+  identity-QR exp+canonical-JSON hardening, per-app migration + offline PIN unlock).

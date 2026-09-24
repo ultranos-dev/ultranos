@@ -61,6 +61,26 @@ export const encryptionKeyStore = {
   },
 
   /**
+   * Story 61.2: install a write key AT a specific version, replacing the current
+   * write version. Used by the vNext DEK path to make 'v2' the write version while
+   * the legacy 'v1' key remains in the map for decrypt-only.
+   */
+  installWriteKey(version: string, key: CryptoKey): void {
+    currentWriteVersion = version
+    sessionKey = key
+    keyMap[version] = key
+  },
+
+  /**
+   * Story 61.2: add a decrypt-only key at a version WITHOUT changing the current
+   * write key. Keeps the legacy 'v1' key available for reading pre-migration data
+   * while new writes use the vNext DEK at 'v2'.
+   */
+  addDecryptKey(version: string, key: CryptoKey): void {
+    keyMap[version] = key
+  },
+
+  /**
    * Returns the key or throws if unavailable.
    * Use this in write paths that must not proceed without encryption.
    */

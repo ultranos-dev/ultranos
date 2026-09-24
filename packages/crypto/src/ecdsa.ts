@@ -85,30 +85,118 @@ export async function verifyEcdsaSignature(
 }
 
 /**
- * Verify an Identity QR payload (Health Passport).
- * Extracts and strips the `sig` field, then verifies the remaining payload.
- * This enforces the canonical signing contract: sign JSON.stringify({ pid, iat, exp, v }),
- * embed sig in the QR as { pid, iat, exp, v, sig }.
+ * Serialize an object to canonical JSON: keys sorted lexicographically at every
+ * level, so the byte string is independent of insertion order. This is the
+ * signing/verification contract for identity QR payloads (Story 61.2 /
+ * P-CRYPTO-17) — `JSON.stringify` alone is key-order sensitive, so a scanner
+ * that reconstructs `{ pid, iat, exp, v }` in a different order than the signer
+ * used would previously fail verification. Canonical JSON removes that brittleness.
  *
- * Returns true if signature is valid, false otherwise.
- * Returns false if no `sig` field is present.
+ * Only plain JSON values are expected in identity QR payloads (strings, numbers,
+ * booleans, null, and nested objects/arrays of those). Arrays keep their order.
+ */
+export function canonicalJsonStringify(value: unknown): string {
+  return JSON.stringify(sortDeep(value))
+}
+
+function sortDeep(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(sortDeep)
+  }
+  if (value !== null && typeof value === 'object') {
+    const obj = value as Record<string, unknown>
+    const sorted: Record<string, unknown> = {}
+    for (const key of Object.keys(obj).sort()) {
+      sorted[key] = sortDeep(obj[key])
+    }
+    return sorted
+  }
+  return value
+}
+
+/**
+ * Options for {@link verifyIdentityQrPayload}.
+ */
+export interface VerifyIdentityQrOptions {
+  /**
+   * Current time in ms since epoch for `exp` enforcement. Defaults to `Date.now()`.
+   * Injectable so tests can pin the clock.
+   */
+  now?: number
+  /**
+   * When true (default), a payload whose `exp` is in the past is rejected even
+   * if the signature is valid. Set false only for tooling that must inspect
+   * expired passports; production scanners MUST leave this true.
+   */
+  enforceExpiry?: boolean
+}
+
+/**
+ * Verify an Identity QR payload (Health Passport).
+ *
+ * Strips the `sig` field, re-serializes the remaining payload with
+ * {@link canonicalJsonStringify} (sorted keys — order-independent), verifies the
+ * ECDSA-P256 signature, AND enforces the `exp` expiry claim (Story 61.2 /
+ * P-CRYPTO-3). Returns true only when the signature is valid AND the passport is
+ * not expired.
+ *
+ * `exp` and `iat` are accepted as either an ISO-8601 instant string or a
+ * numeric epoch (seconds or milliseconds). A payload with no `exp` is treated as
+ * non-expiring for signature purposes (expiry cannot be enforced on a claim that
+ * isn't present) — issuers SHOULD always include `exp`.
+ *
+ * Returns false if: no `sig`, invalid signature, malformed JSON, or (when
+ * `enforceExpiry`) the passport is expired.
  */
 export async function verifyIdentityQrPayload(
   publicKeyBase64: string,
   qrJsonString: string,
+  options: VerifyIdentityQrOptions = {},
 ): Promise<boolean> {
+  const { now = Date.now(), enforceExpiry = true } = options
   try {
     const parsed = JSON.parse(qrJsonString)
+    if (!parsed || typeof parsed !== 'object') return false
     if (!parsed.sig || typeof parsed.sig !== 'string') {
       return false
     }
-    const sig = parsed.sig
-    const { sig: _removed, ...basePayload } = parsed
-    const basePayloadString = JSON.stringify(basePayload)
-    return await verifyEcdsaSignature(publicKeyBase64, basePayloadString, sig)
+    const sig = parsed.sig as string
+    const { sig: _removed, ...basePayload } = parsed as Record<string, unknown>
+
+    // Canonical (sorted-key) serialization — order-independent verification.
+    const basePayloadString = canonicalJsonStringify(basePayload)
+    const signatureValid = await verifyEcdsaSignature(publicKeyBase64, basePayloadString, sig)
+    if (!signatureValid) return false
+
+    // Expiry enforcement — a validly-signed but expired passport is rejected.
+    if (enforceExpiry && 'exp' in basePayload) {
+      const expMs = toEpochMs(basePayload.exp)
+      if (expMs !== null && now > expMs) {
+        return false
+      }
+    }
+
+    return true
   } catch {
     return false
   }
+}
+
+/**
+ * Normalise an `exp`/`iat` claim to epoch milliseconds.
+ * Accepts an ISO-8601 string, epoch seconds (< 1e12), or epoch milliseconds.
+ * Returns null for an unparseable value (expiry then cannot be enforced).
+ */
+function toEpochMs(claim: unknown): number | null {
+  if (typeof claim === 'number' && Number.isFinite(claim)) {
+    // Heuristic: values below 1e12 are seconds-since-epoch, otherwise ms.
+    return claim < 1e12 ? claim * 1000 : claim
+  }
+  if (typeof claim === 'string') {
+    const parsed = Date.parse(claim)
+    return Number.isNaN(parsed) ? null : parsed
+  }
+  return null
 }
 
 function uint8ToBase64(bytes: Uint8Array): string {

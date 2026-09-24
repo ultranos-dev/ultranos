@@ -12,8 +12,9 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
-import { deriveSessionKey } from '@ultranos/crypto'
-import { encryptionKeyStore, getOrCreateDeviceSalt } from '@/lib/encryption-key-store'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
+import { establishSessionKey } from '@/lib/encryption-key-vnext'
+import { getDevicePin } from '@/lib/device-pin'
 
 type AuthStep = 'credentials' | 'mfa'
 
@@ -105,12 +106,10 @@ export default function LoginPage() {
     const payload = JSON.parse(atob(base64))
 
     if (!encryptionKeyStore.isReady()) {
-      // Derive the SAME deterministic key AuthGuard re-derives on refresh
-      // (PBKDF2 over the Supabase user id + device salt). A random key here left
-      // data written this session undecryptable after reload. payload.sub ===
-      // session.user.id, matching AuthGuard's deriveSessionKey(...) input.
-      const derivedKey = await deriveSessionKey(payload.sub, getOrCreateDeviceSalt())
-      encryptionKeyStore.setKey(derivedKey)
+      // Story 61.2: establish the SAME key AuthGuard establishes on refresh
+      // (hub-secret online unlock → PIN offline unlock → legacy fallback).
+      // payload.sub === session.user.id, matching AuthGuard's input.
+      await establishSessionKey({ sub: payload.sub, getPin: getDevicePin })
     }
     useAuthSessionStore.getState().setSession({
       userId: payload.sub,

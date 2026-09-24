@@ -8,8 +8,9 @@ import { X } from '@ultranos/ui-kit/icons'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
-import { deriveSessionKey } from '@ultranos/crypto'
-import { encryptionKeyStore, getOrCreateDeviceSalt } from '@/lib/encryption-key-store'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
+import { establishSessionKey } from '@/lib/encryption-key-vnext'
+import { getDevicePin } from '@/lib/device-pin'
 import { Button } from '@ultranos/ui-kit/components/ui/button'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
@@ -118,13 +119,11 @@ export default function LoginPage() {
     })
 
     if (!encryptionKeyStore.isReady()) {
-      // Derive the SAME deterministic key AuthGuard re-derives on refresh
-      // (PBKDF2 over the Supabase user id + device salt). Using a random key
-      // here left data written this session undecryptable after a reload —
-      // AuthGuard would then wipe and re-pull it. payload.sub === session.user.id,
-      // so this matches AuthGuard's deriveSessionKey(data.session.user.id, …) input.
-      const derivedKey = await deriveSessionKey(payload.sub, getOrCreateDeviceSalt())
-      encryptionKeyStore.setKey(derivedKey)
+      // Story 61.2: establish the SAME key AuthGuard establishes on refresh.
+      // establishSessionKey tries hub-secret online unlock → PIN offline unlock →
+      // legacy deterministic fallback, so the key that opens data written this
+      // session is the one AuthGuard re-opens on reload (payload.sub === user.id).
+      await establishSessionKey({ sub: payload.sub, getPin: getDevicePin })
     }
 
     const params = new URLSearchParams(window.location.search)

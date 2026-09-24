@@ -42,6 +42,30 @@ export async function reportAuthEvent(
 }
 
 /**
+ * Story 61.2: fetch the caller's per-user key-wrapping secret from the Hub
+ * (`session.getKeyWrappingSecret`). Held in memory only — NEVER persisted
+ * client-side. Returns null on any failure (offline / no token / refusal) so the
+ * caller can fall back to the offline PIN-unlock path. No PHI involved.
+ */
+export async function fetchKeyWrappingSecret(): Promise<string | null> {
+  try {
+    const token = await useAuthSessionStore.getState().getAccessToken()
+    if (!token) return null
+    const url = new URL(getHubApiUrl())
+    url.pathname = url.pathname.replace(/\/$/, '') + '/session.getKeyWrappingSecret'
+    const res = await fetch(url.toString(), {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) return null
+    const body = (await res.json()) as { result?: { data?: { json?: { secret?: string } } } }
+    return body?.result?.data?.json?.secret ?? null
+  } catch {
+    return null
+  }
+}
+
+/**
  * Search the Hub drug catalog by INN name, ATC code, brand name, or local name.
  * Returns identity fields only (no tier content).
  */

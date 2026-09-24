@@ -53,6 +53,26 @@ async function buildAuthHeaders(): Promise<Record<string, string>> {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
+/**
+ * Story 61.2: fetch the caller's per-user key-wrapping secret from the Hub
+ * (`session.getKeyWrappingSecret`). Held in memory only — NEVER persisted
+ * client-side. Returns null on any failure (offline / no token / refusal) so the
+ * caller can fall back to the offline PIN-unlock path. No PHI involved.
+ */
+export async function fetchKeyWrappingSecret(): Promise<string | null> {
+  try {
+    const token = await getAccessToken()
+    if (!token) return null
+    const url = new URL(`${getHubApiUrl()}/session.getKeyWrappingSecret`)
+    const res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${token}` } })
+    if (!res.ok) return null
+    const body = (await res.json()) as { result?: { data?: { json?: { secret?: string } } } }
+    return body?.result?.data?.json?.secret ?? null
+  } catch {
+    return null
+  }
+}
+
 function makeTrpcProcedure(path: string): TrpcProcedure {
   return {
     async mutate(input?: unknown) {
