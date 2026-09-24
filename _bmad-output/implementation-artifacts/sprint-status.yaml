@@ -747,7 +747,7 @@ development_status:
   epic-58: in-progress
   58-1-patient-uuid-photo-leak-remediation: review  # Wave 2 done+verified (opaque photo keys, detail-tier; lab 3947); migration authored-not-applied
   58-2-lab-surface-scoping-and-data-minimization: review  # Wave 3 done+verified (monitoring scope+strip, claim-before-details; lab 3947; Dexie v57)
-  58-3-spoke-phi-at-rest-completeness: ready-for-dev
+  58-3-spoke-phi-at-rest-completeness: review  # Wave 5 done+verified (lab-lite PHI encryption, pharmacy financial strip; lab 3958, pharmacy 1138)
   58-4-consent-enforcement-completeness: review  # Wave 4 done+verified (consent matrix; result-delivery+MPI+bulk exempt, listActiveForPharmacist surfaced; hub 1788)
 
   # ============================================================
@@ -777,7 +777,7 @@ development_status:
   epic-61: in-progress
   61-1-audit-trail-completeness-and-tamper-evidence: review  # Wave 2 done+verified (chain vNext, whitelist); M-HUB-8 deferred to 57.2; migration 063 authored-not-applied
   61-2-encryption-key-derivation-hardening: review  # Wave 3 done+verified (dual-wrap KDF, tamper signaling; crypto 109, all apps green); needs HUB_KEY_WRAPPING_MASTER_SECRET at deploy
-  61-3-atomic-multi-write-operations: ready-for-dev
+  61-3-atomic-multi-write-operations: review  # Wave 5 done+verified (4 atomic RPCs 066-069 authored-not-applied, M-HUB-7 fix; hub 1835)
 
   # ============================================================
   # EPIC 62: Business & Enterprise Correctness (2026-09-23)
@@ -785,7 +785,7 @@ development_status:
   # ============================================================
   epic-62: backlog
   62-1-pharmacy-financial-correctness: ready-for-dev
-  62-2-hub-and-admin-enterprise-hardening: ready-for-dev
+  62-2-hub-and-admin-enterprise-hardening: review  # Wave 5 done+verified (RBAC SUPERADMIN/ORG_ADMIN, injection, pagination, KYC proxy, admin.ts split; hub 1835); GOOGLE_CLOUD_VISION_API_KEY env
 
   # ============================================================
   # EPIC 63: UX, i18n & Platform Consistency (2026-09-23)

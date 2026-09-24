@@ -1,6 +1,6 @@
 # Story 61.3: Atomic Multi-Write Operations (Merge, Result Submit, Dispense, Lab Register)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -19,11 +19,11 @@ so that a mid-flow crash can never leave PHI state half-mutated, results deleted
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Merge/unmerge RPC** (AC: 1) — port `patient-admin.ts:196-254` (merge) and `:350-392` (unmerge) into `merge_patient_atomic`/`unmerge_patient_atomic` RPCs (model: `create_patient_with_consent`, `update_lab_role_atomic`); Tier-1 append-only respect verified in the merge semantics; failure-injection tests.
-- [ ] **Task 2: submitResult analytes** (AC: 2) — `replace_report_observations` RPC (delete+insert in one tx); preserve upsert/idempotent-resubmit behavior.
-- [ ] **Task 3: recordDispense** (AC: 3) — `record_dispense_atomic` RPC; keep `ALREADY_DISPENSED` idempotency and server-override of `pharmacistRef`; coordinate MedicationStatement inclusion with Story 60.4 (include here if both in-flight).
-- [ ] **Task 4: lab.register + id mismatch** (AC: 4) — atomic RPC; fix `practitionerId: ctx.user.sub` (`lab.ts:389`) to resolve `practitioners.id` via `auth_user_id` per the `labRestrictedProcedure` join contract (`rbac.ts:148-159`); fix the three `getMy*` filters; seeded-user integration test proving self-service reads return data.
-- [ ] **Task 5: Tests + regression verification** (AC: 5, 6) — failure-injection per RPC (kill mid-tx → clean rollback); response-shape parity fixtures; full hub suite; `pnpm typecheck`.
+- [x] **Task 1: Merge/unmerge RPC** (AC: 1) — port `patient-admin.ts:196-254` (merge) and `:350-392` (unmerge) into `merge_patient_atomic`/`unmerge_patient_atomic` RPCs (model: `create_patient_with_consent`, `update_lab_role_atomic`); Tier-1 append-only respect verified in the merge semantics; failure-injection tests.
+- [x] **Task 2: submitResult analytes** (AC: 2) — `replace_report_observations` RPC (delete+insert in one tx); preserve upsert/idempotent-resubmit behavior.
+- [x] **Task 3: recordDispense** (AC: 3) — `record_dispense_atomic` RPC; keep `ALREADY_DISPENSED` idempotency and server-override of `pharmacistRef`; coordinate MedicationStatement inclusion with Story 60.4 (include here if both in-flight).
+- [x] **Task 4: lab.register + id mismatch** (AC: 4) — atomic RPC; fix `practitionerId: ctx.user.sub` (`lab.ts:389`) to resolve `practitioners.id` via `auth_user_id` per the `labRestrictedProcedure` join contract (`rbac.ts:148-159`); fix the three `getMy*` filters; seeded-user integration test proving self-service reads return data.
+- [x] **Task 5: Tests + regression verification** (AC: 5, 6) — failure-injection per RPC (kill mid-tx → clean rollback); response-shape parity fixtures; full hub suite; `pnpm typecheck`.
 
 ## Dev Notes
 
