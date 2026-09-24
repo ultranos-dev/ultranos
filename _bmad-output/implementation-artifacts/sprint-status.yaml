@@ -728,7 +728,7 @@ development_status:
   56-1-server-authoritative-authorization-claims: review  # Wave 1 done+verified (hub 1679 tests, 5 apps typecheck); migration script staged not run
   56-2-object-level-authorization-sync-and-patient-directory: review  # Wave 2 done+verified (object-level authz+consent; hub 1713)
   56-3-platform-mfa-enforcement: review  # Wave 3 done+verified (org MFA toggle default-OFF; hub 1741); migration 064 authored-not-applied
-  56-4-auth-perimeter-hardening: ready-for-dev
+  56-4-auth-perimeter-hardening: review  # Wave 4 done+verified (JWT pinning, open-redirect, fail-closed OTP limiter; hub 1783)
 
   # ============================================================
   # EPIC 57: Medication Safety Chain Integrity (2026-09-23)
@@ -736,7 +736,7 @@ development_status:
   # ============================================================
   epic-57: in-progress
   57-1-dispense-allergy-gate-restoration: review  # Wave 1 done+verified (pharmacy 1096 + hub tests); new allergy.listForDispense, DB v22
-  57-2-server-side-interaction-gate-and-supervisor-override: ready-for-dev
+  57-2-server-side-interaction-gate-and-supervisor-override: review  # Wave 4 done+verified (server interaction gate, supervisor override; hub 1783); migration 065 applied live; supervisor-PIN admin UI is a follow-up
   57-3-dispense-durability-and-idempotency: review  # Wave 2 done+verified (always-enqueue, idempotency; pharmacy 1109)
   57-4-inventory-deduction-integrity-and-check-degradation-surfacing: review  # Wave 3 done+verified (tx deduction, FEFO, reconciliation; pharmacy 1133; Dexie v23)
 
@@ -757,7 +757,7 @@ development_status:
   epic-59: in-progress
   59-1-lab-lite-dead-endpoint-repair: review  # Wave 1 done+verified (7 new lab.* procs, 196 tests); Task 3.4 peerNetwork/ai-provenance deferred pending Decision #8
   59-2-hub-contract-ci-guard-and-typed-clients: in-progress  # Wave 1: Task 1 (contract CI guard) done+verified 6/6; Tasks 2-3 (typed clients) scheduled Wave 6
-  59-3-opd-unwired-components-and-hub-call-consolidation: review  # Wave 1 done+verified (audit-drain/bg-sync mounted, ai-scribe auth, 401 handling); Task 3 PhiCleanupGuard deferred to post-61.2
+  59-3-opd-unwired-components-and-hub-call-consolidation: review  # FULLY complete (Task 3 PhiCleanupGuard resolved in Wave 4 — dead guard removed, key-wipe-on-close)
   59-4-appointments-repair: review  # Wave 2 done+verified (RBAC, HLC, durable queue; opd 1453)
 
   # ============================================================

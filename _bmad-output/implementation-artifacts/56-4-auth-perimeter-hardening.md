@@ -1,6 +1,6 @@
 # Story 56.4: Auth Perimeter Hardening (JWT, Open Redirect, Rate Limits, Spoofable Audit Endpoints)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -19,19 +19,19 @@ so that the perimeter matches the standard the rest of the security work assumes
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: JWT hardening** (AC: 1)
-  - [ ] 1.1 In `apps/hub-api/src/lib/jwt.ts:26-49`: stop selecting the algorithm from the unverified header; pass an explicit `algorithms` allowlist plus `issuer`/`audience` options to `jwtVerify`. Evaluate whether the HS256 fallback is still needed; if kept, restrict it to a dedicated code path with its own allowlist.
-  - [ ] 1.2 Remove the dead `getSupabaseJwk()` marker hack (`jwt.ts:59-62`) and the unused `SUPABASE_JWT_JWK` entry in `.env.example` if confirmed unused.
-- [ ] **Task 2: Open redirect fix** (AC: 2)
-  - [ ] 2.1 `apps/admin-portal/src/app/[locale]/login/page.tsx:104-105` and `:190-191`: replace `startsWith('/')` with a helper rejecting `//` and `/\` prefixes; add unit test. Sweep the other three apps' login pages for the same pattern.
-- [ ] **Task 3: Fail-closed rate limiting for auth endpoints** (AC: 3)
-  - [ ] 3.1 `apps/hub-api/src/middleware/rateLimit.ts:63-94`: add a `critical: boolean` option — critical limiters (OTP request `patient-registration.ts:116-117`, login-adjacent endpoints) deny on missing/errored Redis; non-critical limiters keep fail-open.
-- [ ] **Task 4: Spoofable event endpoints** (AC: 4, 5)
-  - [ ] 4.1 `admin.reportAuthEvent` (`admin.ts:29-31`) and `lab.reportAuthEvent` (`lab.ts:141-159`): move rate limiting to the shared Redis limiter; prune/remove the unbounded `rateLimitMap`; validate that reported practitioner/actor identifiers resolve to real accounts before attributing LOGIN_FAILURE events; consider namespacing OPD's auth events out of `lab.*` (OPD currently posts to `lab.reportAuthEvent` — `apps/opd-lite/src/lib/trpc.ts:26-45`).
-  - [ ] 4.2 `audit.sync` (`audit.ts:24-80`): restrict `action`/`resourceType` to a client-claimable allowlist; keep server-side actor override (already correct); add rate limit.
-- [ ] **Task 5: Tests + regression verification** (AC: 6)
-  - [ ] 5.1 Tests: alg-confusion token rejected; `//evil.com` redirect blocked while `/ar/dashboard` works; OTP endpoint denies when Redis down; spoofed actorEmail not attributed; audit.sync rejects non-allowlisted actions.
-  - [ ] 5.2 Full hub-api + admin-portal test suites pass; OPD/lab/pharmacy login-failure reporting still records events; `pnpm typecheck`.
+- [x] **Task 1: JWT hardening** (AC: 1)
+  - [x] 1.1 In `apps/hub-api/src/lib/jwt.ts:26-49`: stop selecting the algorithm from the unverified header; pass an explicit `algorithms` allowlist plus `issuer`/`audience` options to `jwtVerify`. Evaluate whether the HS256 fallback is still needed; if kept, restrict it to a dedicated code path with its own allowlist.
+  - [x] 1.2 Remove the dead `getSupabaseJwk()` marker hack (`jwt.ts:59-62`) and the unused `SUPABASE_JWT_JWK` entry in `.env.example` if confirmed unused.
+- [x] **Task 2: Open redirect fix** (AC: 2)
+  - [x] 2.1 `apps/admin-portal/src/app/[locale]/login/page.tsx:104-105` and `:190-191`: replace `startsWith('/')` with a helper rejecting `//` and `/\` prefixes; add unit test. Sweep the other three apps' login pages for the same pattern.
+- [x] **Task 3: Fail-closed rate limiting for auth endpoints** (AC: 3)
+  - [x] 3.1 `apps/hub-api/src/middleware/rateLimit.ts:63-94`: add a `critical: boolean` option — critical limiters (OTP request `patient-registration.ts:116-117`, login-adjacent endpoints) deny on missing/errored Redis; non-critical limiters keep fail-open.
+- [x] **Task 4: Spoofable event endpoints** (AC: 4, 5)
+  - [x] 4.1 `admin.reportAuthEvent` (`admin.ts:29-31`) and `lab.reportAuthEvent` (`lab.ts:141-159`): move rate limiting to the shared Redis limiter; prune/remove the unbounded `rateLimitMap`; validate that reported practitioner/actor identifiers resolve to real accounts before attributing LOGIN_FAILURE events; consider namespacing OPD's auth events out of `lab.*` (OPD currently posts to `lab.reportAuthEvent` — `apps/opd-lite/src/lib/trpc.ts:26-45`).
+  - [x] 4.2 `audit.sync` (`audit.ts:24-80`): restrict `action`/`resourceType` to a client-claimable allowlist; keep server-side actor override (already correct); add rate limit.
+- [x] **Task 5: Tests + regression verification** (AC: 6)
+  - [x] 5.1 Tests: alg-confusion token rejected; `//evil.com` redirect blocked while `/ar/dashboard` works; OTP endpoint denies when Redis down; spoofed actorEmail not attributed; audit.sync rejects non-allowlisted actions.
+  - [x] 5.2 Full hub-api + admin-portal test suites pass; OPD/lab/pharmacy login-failure reporting still records events; `pnpm typecheck`.
 
 ## Dev Notes
 
@@ -62,11 +62,23 @@ This story must introduce **zero regression in existing features and functionali
 ## Dev Agent Record
 
 ### Agent Model Used
-
-### Debug Log References
+Claude Fable 5 (1M) — implementation; Claude Opus 4.8 (1M) — integration & combined verification.
 
 ### Completion Notes List
+- **Task 1 (JWT hardening):** `jwt.ts` uses the header `alg` only to route to key material; each path passes a pinned `algorithms` allowlist (`['ES256']`/`['HS256']`) + `iss`/`aud` (via `buildVerifyOptions`, applied only when `SUPABASE_URL`/`SUPABASE_JWT_AUD` configured — issuer pinned to `${SUPABASE_URL}/auth/v1`, real Supabase token shape); `none`/RS256/HS512 rejected. 56.1's `resolveAuthzClaims` untouched.
+- **Task 2 (open redirect):** new `admin-portal/src/lib/safe-redirect.ts` rejects `//` and `/\`; wired into both admin login redirect sites; swept opd/lab/pharmacy (added `/\` rejection without disturbing 56.3 MFA logic).
+- **Task 3 (fail-closed rate limiting):** `rateLimit.ts` gains `critical` option — critical limiters (patient OTP) DENY on configured-but-unreachable Redis; non-critical stay fail-open; "no Redis configured" (dev/test) stays fail-open even when critical.
+- **Task 4 (spoofable endpoints):** `admin.reportAuthEvent`/`lab.reportAuthEvent` moved to the shared Redis limiter (in-memory map removed); `audit.sync` restricted to a client-claimable action/resource allowlist (server actor override preserved). **lab.ts diff limited to the reportAuthEvent region** (safe vs 58.4/60.1).
+- **Task 5:** new jwt-hardening (5), rate-limit-critical (7), audit-endpoint-hardening (5), safe-redirect (10) tests.
+- **Deviation:** `getSupabaseJwk()`/`SUPABASE_JWT_JWK` NOT removed — it's a live presence-gate used by 4 file routes (not dead); kept with a comment. `reportAuthEvent` limiters are fail-OPEN (flood protection, not brute-force); only patient OTP is `critical`.
+- **Integration fix:** aligned `tenant-organization.test.ts` mock tokens with the new issuer pinning (they lacked `iss`; combined-tree verification caught it).
+
+### Verification (combined tree)
+hub-api + admin-portal + all app typechecks clean; hub full suite **1783 pass, 0 fail**; admin 334; safe-redirect/jwt/rate-limit/audit-hardening suites pass.
 
 ### File List
+Modified — `apps/hub-api/src/lib/jwt.ts`, `src/trpc/{init,middleware/rateLimit}.ts`, `src/trpc/routers/{admin,audit,lab,patient-registration}.ts`, `types/app-router.d.ts`, `src/__tests__/tenant-organization.test.ts`; `apps/admin-portal/src/app/[locale]/login/page.tsx`; opd/lab/pharmacy login pages.
+New — `apps/admin-portal/src/lib/safe-redirect.ts` + test; hub `__tests__/{jwt-hardening,rate-limit-critical,audit-endpoint-hardening}.test.ts`.
 
 ### Change Log
+- 2026-09-23: Story 56.4 implemented (Wave 4), verified, integrated. Status → review.
