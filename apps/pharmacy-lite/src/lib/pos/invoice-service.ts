@@ -3,27 +3,42 @@ import { buildEncryptedSyncEntry } from '@/lib/dexie-sync-adapter'
 import type { Invoice, InvoiceLineItem, InvoiceStatus } from './types'
 
 /**
- * Generates the next invoice number with the given prefix.
- * Format: {prefix}{00001} (5-digit zero-padded sequential).
+ * Computes the next sequential invoice number for a prefix by scanning existing
+ * invoices. The `.reverse().sortBy()` read pattern is correct; the collision
+ * risk (Story 62.1, M-PHARM-5) is the read→write gap between concurrent tabs,
+ * which `getNextInvoiceNumber` closes by wrapping this in a Dexie transaction.
  */
-export async function getNextInvoiceNumber(prefix: string): Promise<string> {
-  const lastInvoice = await db.invoices
-    .where('invoiceNumber')
-    .startsWith(prefix)
-    .reverse()
-    .sortBy('invoiceNumber')
-    .then((invoices) => invoices[0])
-
+function computeNextInvoiceNumber(existing: Invoice[], prefix: string): string {
   let nextNumber = 1
-  if (lastInvoice) {
-    const numericPart = lastInvoice.invoiceNumber.slice(prefix.length)
-    const parsed = parseInt(numericPart, 10)
-    if (!isNaN(parsed)) {
+  for (const inv of existing) {
+    if (!inv.invoiceNumber.startsWith(prefix)) continue
+    const parsed = parseInt(inv.invoiceNumber.slice(prefix.length), 10)
+    if (!isNaN(parsed) && parsed + 1 > nextNumber) {
       nextNumber = parsed + 1
     }
   }
-
   return `${prefix}${String(nextNumber).padStart(5, '0')}`
+}
+
+/**
+ * Generates the next invoice number with the given prefix.
+ * Format: {prefix}{00001} (5-digit zero-padded sequential).
+ *
+ * Story 62.1 (Task 4): the read-then-compute runs INSIDE a Dexie `rw`
+ * transaction on `invoices`. Because IndexedDB serializes overlapping `rw`
+ * transactions on the same store, two tabs allocating a number concurrently are
+ * ordered — the second sees the first's committed invoice and cannot duplicate.
+ * When called within `createInvoiceFromDispense` the caller supplies its own tx
+ * scope, so the whole allocate+insert is one atomic unit (`ensureTx`).
+ */
+export async function getNextInvoiceNumber(prefix: string): Promise<string> {
+  return db.transaction('rw', db.invoices, async () => {
+    const existing = await db.invoices
+      .where('invoiceNumber')
+      .startsWith(prefix)
+      .toArray()
+    return computeNextInvoiceNumber(existing, prefix)
+  })
 }
 
 export interface CreateInvoiceParams {
@@ -52,19 +67,23 @@ export async function createInvoiceFromDispense(
     prefix = 'INV',
   } = params
 
-  const invoiceNumber = await getNextInvoiceNumber(prefix)
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0)
-  const taxAmount = Math.round(subtotal * taxRate)
+  // Story 62.1 (C-PHARM-2): taxRate is now a PERCENT (e.g. 10 = 10%), matching
+  // procurement (po-totals.ts) and wholesale (sales-order-service.ts). Integer
+  // minor-unit discipline preserved via Math.round.
+  const taxAmount = Math.round((subtotal * taxRate) / 100)
   const total = subtotal + taxAmount
 
   const invoice: Invoice = {
     id: crypto.randomUUID(),
-    invoiceNumber,
+    // invoiceNumber assigned inside the tx (Task 4 — no cross-tab collision).
+    invoiceNumber: '',
     patientId,
     dispenseIds,
     items,
     subtotal,
     taxRate,
+    taxRateConvention: 'percent',
     taxAmount,
     total,
     amountPaid: 0,
@@ -75,8 +94,20 @@ export async function createInvoiceFromDispense(
     hlcTimestamp,
   }
 
-  // Encrypt the sync entry before the transaction (Web Crypto cannot run in a
-  // Dexie tx zone); the payload carries PHI (patientId, line items).
+  // Allocate the invoice number and insert the row in ONE transaction so the
+  // number can't collide across tabs (Task 4). The encrypted sync entry cannot
+  // be built inside the tx (Web Crypto is unavailable in a Dexie tx zone), so we
+  // build it AFTER the number is known but enqueue it in a short second tx.
+  await db.transaction('rw', db.invoices, async () => {
+    const existing = await db.invoices
+      .where('invoiceNumber')
+      .startsWith(prefix)
+      .toArray()
+    invoice.invoiceNumber = computeNextInvoiceNumber(existing, prefix)
+    await db.invoices.add(invoice)
+  })
+
+  // The payload carries PHI (patientId, line items) — encrypt before enqueue.
   const syncEntry = await buildEncryptedSyncEntry({
     resourceType: 'Invoice',
     resourceId: invoice.id,
@@ -84,11 +115,7 @@ export async function createInvoiceFromDispense(
     payload: invoice as unknown as Record<string, unknown>,
     hlcTimestamp,
   })
-
-  await db.transaction('rw', [db.invoices, db.syncQueue], async () => {
-    await db.invoices.add(invoice)
-    await db.syncQueue.add(syncEntry)
-  })
+  await db.syncQueue.add(syncEntry)
 
   return invoice
 }
@@ -105,7 +132,7 @@ export async function updateInvoicePaymentStatus(
     throw new Error(`Invoice not found: ${invoiceId}`)
   }
 
-  if (invoice.status === 'voided') {
+  if (invoice.status === 'voided' || invoice.status === 'refunded') {
     return invoice
   }
 

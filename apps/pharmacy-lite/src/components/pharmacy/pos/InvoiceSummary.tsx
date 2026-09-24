@@ -13,8 +13,20 @@ const statusBadgeClasses: Record<InvoiceStatus, string> = {
   paid: 'bg-success/10 text-success',
   partial: 'bg-warning/10 text-warning',
   voided: 'bg-destructive/10 text-destructive',
+  refunded: 'bg-destructive/10 text-destructive',
   draft: 'bg-muted text-muted-foreground',
   finalized: 'bg-muted text-muted-foreground',
+}
+
+/**
+ * Display tax rate as a percent. Story 62.1 (C-PHARM-2): `taxRate` is now stored
+ * as a percent on new invoices (`taxRateConvention: 'percent'`), so it is shown
+ * directly. Legacy invoices stored it as a fraction (`'fraction'` / undefined),
+ * so those are scaled ×100 to render the same percent they were computed at —
+ * keeping historical documents' displayed rate unchanged.
+ */
+function taxRatePercent(invoice: Invoice): number {
+  return invoice.taxRateConvention === 'percent' ? invoice.taxRate : invoice.taxRate * 100
 }
 
 function formatAmount(amount: number, currency: string, minorUnits: number): string {
@@ -69,7 +81,7 @@ export function InvoiceSummary({ invoice, currencyMinorUnits, currency }: Invoic
           <span className="tabular-nums font-numeric">{fmt(invoice.subtotal)}</span>
         </div>
         <div className="flex justify-between text-muted-foreground">
-          <span>{t('tax', { rate: (invoice.taxRate * 100).toFixed(1) })}</span>
+          <span>{t('tax', { rate: taxRatePercent(invoice).toFixed(1) })}</span>
           <span className="tabular-nums font-numeric">{fmt(invoice.taxAmount)}</span>
         </div>
         <div className="flex justify-between font-semibold text-foreground">

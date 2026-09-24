@@ -167,6 +167,10 @@ export enum AuditAction {
   // Story 61.2 — field-encryption integrity: a GCM auth-tag failure on decrypt
   // (possible tampering) or an unrecognised ciphertext version on a hub read path.
   INTEGRITY_FAILURE = 'INTEGRITY_FAILURE',
+  // Story 62.1 — Pharmacy POS financial lifecycle (refund/void + cash-out)
+  INVOICE_VOIDED = 'INVOICE_VOIDED',
+  INVOICE_REFUNDED = 'INVOICE_REFUNDED',
+  CASH_DRAWER_PAYOUT = 'CASH_DRAWER_PAYOUT',
 }
 
 export enum AuditResourceType {
@@ -257,6 +261,9 @@ export enum AuditResourceType {
   // E2E key-custody resources (blind-index / encryption key management)
   PATIENT_KEY = 'PATIENT_KEY',
   PRACTITIONER_KEY = 'PRACTITIONER_KEY',
+  // Story 62.1 — Pharmacy POS financial resources
+  CASH_DRAWER = 'CASH_DRAWER',
+  REFUND = 'REFUND',
 }
 
 export enum AuditOutcome {

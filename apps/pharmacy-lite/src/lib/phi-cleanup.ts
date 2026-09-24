@@ -47,6 +47,9 @@ export const PHI_TABLES = [
  *   patientAccounts    — financial account records (patientId + balance); not
  *                        clinical PHI, no medication text.
  *   cashDrawers        — POS operational data; not PHI
+ *   refunds            — Story 62.1 refund/void cash-out records (ids + money +
+ *                        operational reason); financial, not clinical PHI —
+ *                        PRESERVED for financial durability like invoices/payments.
  *   suppliers          — procurement reference data; not PHI
  *   purchaseOrders     — procurement operational data; not PHI
  *   stockCounts        — inventory count records; not PHI
@@ -70,6 +73,7 @@ export const PRESERVE_TABLES = [
   'ledgerEntries',
   'patientAccounts',
   'cashDrawers',
+  'refunds',
   'suppliers',
   'purchaseOrders',
   'stockCounts',

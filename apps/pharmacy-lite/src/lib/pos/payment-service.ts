@@ -32,30 +32,17 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Paymen
     timestamp: new Date().toISOString(),
   }
 
-  // Resolve the open cash drawer before the transaction so the encrypted sync
-  // payload carries the correct cashDrawerId. Web Crypto cannot run inside a
-  // Dexie transaction zone, so the sync entry is built/encrypted up front.
-  // A cash payment with no open drawer is rejected atomically — nothing is
-  // persisted (sync entry is not yet built at this point).
-  if (method === 'cash') {
-    const openDrawer = await db.cashDrawers.where('status').equals('open').first()
-    if (!openDrawer) {
-      throw new Error('No open cash drawer — open a cash drawer before recording a cash payment')
-    }
-    payment.cashDrawerId = openDrawer.id
-  }
-
-  const syncEntry = await buildEncryptedSyncEntry({
-    resourceType: 'Payment',
-    resourceId: payment.id,
-    action: 'create',
-    payload: payment as unknown as Record<string, unknown>,
-    hlcTimestamp,
-  })
-
+  // Story 62.1 (Task 3): the cash drawer is resolved EXACTLY ONCE, inside the
+  // transaction, and `payment.cashDrawerId` is set from that single resolution.
+  // Previously the drawer was resolved once before the tx (to build the sync
+  // payload) and AGAIN inside the tx — two reads that could see different open
+  // drawers, so the enqueued sync payload (Hub copy) and the local record could
+  // disagree on cashDrawerId. The sync entry is now built AFTER the tx from the
+  // FINAL `payment` object (Web Crypto can't run inside a Dexie tx zone), so the
+  // Hub and local copies are guaranteed identical.
   await db.transaction(
     'rw',
-    [db.payments, db.cashDrawers, db.ledgerEntries, db.patientAccounts, db.syncQueue],
+    [db.payments, db.cashDrawers, db.ledgerEntries, db.patientAccounts],
     async () => {
       if (method === 'cash') {
         const openDrawer = await db.cashDrawers
@@ -63,12 +50,13 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Paymen
           .equals('open')
           .first()
 
-        if (openDrawer) {
-          payment.cashDrawerId = openDrawer.id
-          await db.cashDrawers.update(openDrawer.id, {
-            cashIn: openDrawer.cashIn + amount,
-          })
+        if (!openDrawer) {
+          throw new Error('No open cash drawer — open a cash drawer before recording a cash payment')
         }
+        payment.cashDrawerId = openDrawer.id
+        await db.cashDrawers.update(openDrawer.id, {
+          cashIn: openDrawer.cashIn + amount,
+        })
       }
 
       if (method === 'credit' && patientId) {
@@ -112,10 +100,20 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Paymen
       }
 
       await db.payments.add(payment)
-
-      await db.syncQueue.add(syncEntry)
     }
   )
+
+  // Build + enqueue the sync entry from the FINAL payment object (post-tx), so
+  // the Hub copy carries the same cashDrawerId that was committed locally. The
+  // payload carries PHI-adjacent references — encrypt before it touches IndexedDB.
+  const syncEntry = await buildEncryptedSyncEntry({
+    resourceType: 'Payment',
+    resourceId: payment.id,
+    action: 'create',
+    payload: payment as unknown as Record<string, unknown>,
+    hlcTimestamp,
+  })
+  await db.syncQueue.add(syncEntry)
 
   await updateInvoicePaymentStatus(invoiceId)
 
@@ -128,39 +126,57 @@ export interface RecordCreditPaymentParams {
   note?: string
   receivedBy: string
   hlcTimestamp: string
+  /**
+   * How the patient tendered this account payment. Story 62.1 (Task 3): only a
+   * CASH tender should touch the drawer. Defaults to 'cash' to preserve the
+   * prior behaviour, but 'card'/'credit' tenders no longer silently add to the
+   * drawer's cashIn (which caused a phantom over-count at drawer close).
+   */
+  method?: PaymentMethod
 }
 
 /**
  * Records a standalone credit payment from a patient (reduces their balance).
  * Creates a LedgerEntry(type:'payment', amount negative) and updates PatientAccount.
+ *
+ * Story 62.1 (Task 3):
+ *  - The drawer is credited ONLY for a cash tender (`method === 'cash'`). A card
+ *    or credit tender no longer unconditionally inflates the drawer.
+ *  - The no-account case is handled EXPLICITLY: previously a payment for a
+ *    patient with no `patientAccount` row silently dropped the balance reduction
+ *    (the ledger entry was written but no account reflected it). We now create
+ *    the account with a negative (credit) balance so the payment is not lost.
  */
 export async function recordCreditPayment(
   params: RecordCreditPaymentParams
 ): Promise<LedgerEntry> {
-  const { patientId, amount, note, receivedBy, hlcTimestamp } = params
+  const { patientId, amount, note, receivedBy, hlcTimestamp, method = 'cash' } = params
+  const magnitude = Math.abs(amount)
 
   const ledgerEntry: LedgerEntry = {
     id: crypto.randomUUID(),
     patientId,
     type: 'payment',
-    amount: -Math.abs(amount),
+    amount: -magnitude,
     note,
     createdBy: receivedBy,
     timestamp: new Date().toISOString(),
   }
 
-  const syncEntry = await buildEncryptedSyncEntry({
-    resourceType: 'LedgerEntry',
-    resourceId: ledgerEntry.id,
-    action: 'create',
-    payload: ledgerEntry as unknown as Record<string, unknown>,
-    hlcTimestamp,
-  })
-
   await db.transaction(
     'rw',
-    [db.ledgerEntries, db.patientAccounts, db.cashDrawers, db.syncQueue],
+    [db.ledgerEntries, db.patientAccounts, db.cashDrawers],
     async () => {
+      // A cash tender requires an open drawer to attribute the cash-in to; fail
+      // loudly rather than silently dropping the drawer effect.
+      let openDrawer
+      if (method === 'cash') {
+        openDrawer = await db.cashDrawers.where('status').equals('open').first()
+        if (!openDrawer) {
+          throw new Error('No open cash drawer — open a cash drawer before recording a cash account payment')
+        }
+      }
+
       await db.ledgerEntries.add(ledgerEntry)
 
       const account = await db.patientAccounts
@@ -170,26 +186,38 @@ export async function recordCreditPayment(
 
       if (account) {
         await db.patientAccounts.update(account.id, {
-          balance: account.balance - Math.abs(amount),
+          balance: account.balance - magnitude,
           lastActivityAt: new Date().toISOString(),
         })
+      } else {
+        // No account row yet — record the credit balance explicitly so the
+        // payment is reflected rather than silently lost.
+        const newAccount: PatientAccount = {
+          id: crypto.randomUUID(),
+          patientId,
+          balance: -magnitude,
+          lastActivityAt: new Date().toISOString(),
+        }
+        await db.patientAccounts.add(newAccount)
       }
 
-      // Credit payment received as cash goes into the drawer
-      const openDrawer = await db.cashDrawers
-        .where('status')
-        .equals('open')
-        .first()
-
+      // Only a cash tender goes into the drawer.
       if (openDrawer) {
         await db.cashDrawers.update(openDrawer.id, {
-          cashIn: openDrawer.cashIn + Math.abs(amount),
+          cashIn: openDrawer.cashIn + magnitude,
         })
       }
-
-      await db.syncQueue.add(syncEntry)
     }
   )
+
+  const syncEntry = await buildEncryptedSyncEntry({
+    resourceType: 'LedgerEntry',
+    resourceId: ledgerEntry.id,
+    action: 'create',
+    payload: ledgerEntry as unknown as Record<string, unknown>,
+    hlcTimestamp,
+  })
+  await db.syncQueue.add(syncEntry)
 
   return ledgerEntry
 }

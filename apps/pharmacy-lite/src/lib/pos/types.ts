@@ -3,7 +3,13 @@
  * e.g. 350 = 3.50 AFN (when currencyMinorUnits = 2)
  */
 
-export type InvoiceStatus = 'draft' | 'finalized' | 'paid' | 'partial' | 'voided'
+export type InvoiceStatus =
+  | 'draft'
+  | 'finalized'
+  | 'paid'
+  | 'partial'
+  | 'voided'
+  | 'refunded'
 
 export interface InvoiceLineItem {
   catalogItemId: string
@@ -14,6 +20,20 @@ export interface InvoiceLineItem {
   lineTotal: number
 }
 
+/**
+ * Which arithmetic convention a stored `taxRate` value follows.
+ * - `'percent'`  → `taxAmount = round(subtotal * taxRate / 100)` (e.g. 10 = 10%)
+ * - `'fraction'` → `taxAmount = round(subtotal * taxRate)`       (e.g. 0.1 = 10%)
+ *
+ * Story 62.1 (C-PHARM-2): the whole app standardizes on `'percent'` (matching
+ * procurement + wholesale). Invoices created BEFORE this fix used `'fraction'`.
+ * The v24 migration stamps every pre-existing invoice with `'fraction'` and all
+ * new invoices are written as `'percent'`, so historical documents keep
+ * rendering their originally-computed `taxAmount`/rate unchanged. Absent field
+ * on very old rows is treated as `'fraction'` (the pre-fix behaviour).
+ */
+export type TaxRateConvention = 'percent' | 'fraction'
+
 export interface Invoice {
   id: string
   invoiceNumber: string
@@ -22,6 +42,8 @@ export interface Invoice {
   items: InvoiceLineItem[]
   subtotal: number
   taxRate: number
+  /** Convention for `taxRate`. New invoices: 'percent'. Legacy/undefined: 'fraction'. */
+  taxRateConvention?: TaxRateConvention
   taxAmount: number
   total: number
   amountPaid: number
@@ -32,6 +54,39 @@ export interface Invoice {
   voidedBy?: string
   voidedAt?: string
   voidReason?: string
+  /** Total refunded against this invoice (minor units). Story 62.1. */
+  refundedAmount?: number
+  refundedBy?: string
+  refundedAt?: string
+  refundReason?: string
+  hlcTimestamp: string
+}
+
+/**
+ * How refunded stock is dispositioned. Story 62.1 (Task 2):
+ * - `'restock'`    → units returned to the original batch (resellable)
+ * - `'quarantine'` → units disposed as `patient_return_unusable` (not resellable)
+ */
+export type RefundStockDisposition = 'restock' | 'quarantine'
+
+/**
+ * A refund of an already-paid invoice (Story 62.1, minimal viable flow).
+ * Cash refunds write `cashOut` on the open drawer; credit refunds reverse the
+ * patient-account charge. Money is in integer minor units.
+ */
+export interface Refund {
+  id: string
+  invoiceId: string
+  /** Refunded amount in minor units (always positive). */
+  amount: number
+  method: PaymentMethod
+  reason: string
+  stockDisposition: RefundStockDisposition
+  /** Drawer the cash refund was paid out of (cash method only). */
+  cashDrawerId?: string
+  patientId?: string
+  refundedBy: string
+  timestamp: string
   hlcTimestamp: string
 }
 

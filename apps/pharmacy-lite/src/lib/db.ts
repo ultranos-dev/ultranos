@@ -7,7 +7,7 @@ import {
 } from './dexie-encryption-middleware'
 import type { CatalogItem, StockBatch, StockMovement, GoodsReceipt, PharmacyInventorySettings, StockLocation } from './inventory/types'
 import { INVENTORY_STORES } from './inventory-db'
-import type { Invoice, Payment, LedgerEntry, PatientAccount, CashDrawer } from './pos/types'
+import type { Invoice, Payment, LedgerEntry, PatientAccount, CashDrawer, Refund } from './pos/types'
 import { POS_STORES } from './pos-db'
 import type { Supplier, PurchaseOrder, StockCount, SupplierInvoice, SupplierPayment, SupplierItem } from './procurement/types'
 import type { StockTransfer } from './transfers/types'
@@ -221,6 +221,7 @@ class PharmacyLiteDatabase extends Dexie {
   stockLocations!: EntityTable<StockLocation, 'id'>
   patientAllergyCache!: EntityTable<PatientAllergyCacheEntry, 'patientRef'>
   stockReconciliationTasks!: EntityTable<StockReconciliationTask, 'id'>
+  refunds!: EntityTable<Refund, 'id'>
 
   constructor() {
     super('pharmacy-lite')
@@ -388,6 +389,43 @@ class PharmacyLiteDatabase extends Dexie {
     this.version(23).stores({
       stockReconciliationTasks: 'id, status, catalogItemId, createdAt, [status+createdAt]',
     })
+
+    // v24: Story 62.1 — Pharmacy financial correctness (C-PHARM-2, M-PHARM-5).
+    //  1. `refunds` store: refund/void cash-out records (ids + money + operational
+    //     reason only). NOT in PHI_TABLE_CONFIGS and PRESERVED across session end,
+    //     matching invoices/payments (financial, non-clinical). The sync-queue
+    //     entry it enqueues IS encrypted because it carries `patientId`.
+    //  2. taxRate convention normalization: POS previously computed tax as a
+    //     FRACTION (`subtotal * taxRate`) while procurement/wholesale used PERCENT.
+    //     We standardize on PERCENT. To keep HISTORICAL invoices rendering their
+    //     originally-computed amounts, every pre-existing invoice is stamped
+    //     `taxRateConvention: 'fraction'` (its stored taxAmount is left untouched);
+    //     the stored `pharmacySettings.taxRate` is converted from a fraction to a
+    //     percent ONCE (×100) and marked `taxRateConvention: 'percent'`. A settings
+    //     value already at the percent convention is left as-is (idempotent guard).
+    this.version(24)
+      .stores({
+        refunds: 'id, invoiceId, cashDrawerId, timestamp',
+      })
+      .upgrade(async (tx) => {
+        await tx.table('invoices').toCollection().modify((inv: Record<string, unknown>) => {
+          if (inv['taxRateConvention'] === undefined) {
+            inv['taxRateConvention'] = 'fraction'
+          }
+        })
+        await tx.table('pharmacySettings').toCollection().modify((s: Record<string, unknown>) => {
+          if (s['taxRateConvention'] === 'percent') return
+          const rate = typeof s['taxRate'] === 'number' ? (s['taxRate'] as number) : 0
+          // A stored fraction (e.g. 0.1 = 10%) becomes a percent (10). A value of
+          // 0 is convention-agnostic. Values already ≥ 1 that lack the marker are
+          // ambiguous but were almost certainly entered as percents by procurement
+          // prefill — do NOT ×100 those (would 100× them); just mark them percent.
+          if (rate > 0 && rate < 1) {
+            s['taxRate'] = Math.round(rate * 100 * 1e6) / 1e6
+          }
+          s['taxRateConvention'] = 'percent'
+        })
+      })
   }
 }
 

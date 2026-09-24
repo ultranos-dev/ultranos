@@ -177,7 +177,14 @@ export interface PharmacyInventorySettings {
   fefoEnforcement: 'suggest' | 'enforce'
   currency: string
   currencyMinorUnits: number
+  /**
+   * Sales-tax rate as a PERCENT (e.g. 10 = 10%). Story 62.1 (C-PHARM-2)
+   * standardized POS + procurement + wholesale on this single convention.
+   * The v24 migration stamps `taxRateConvention: 'percent'` once normalized.
+   */
   taxRate: number
+  /** Marks that `taxRate` has been normalized to the percent convention (v24+). */
+  taxRateConvention?: 'percent'
   invoicePrefix: string
   salesOrderPrefix: string
   overReceiptTolerancePercent: number
@@ -204,6 +211,7 @@ export const DEFAULT_PHARMACY_SETTINGS: PharmacyInventorySettings = {
   currency: 'AFN',
   currencyMinorUnits: 2,
   taxRate: 0,
+  taxRateConvention: 'percent',
   invoicePrefix: 'INV-',
   salesOrderPrefix: 'SO-',
   overReceiptTolerancePercent: 0,

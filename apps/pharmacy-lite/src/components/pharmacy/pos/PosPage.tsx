@@ -12,6 +12,7 @@ import { getOpenCashDrawer } from '@/lib/pos/cash-drawer-service'
 import type { Invoice } from '@/lib/pos/types'
 import { InvoiceSummary } from './InvoiceSummary'
 import { PaymentForm } from './PaymentForm'
+import { RefundVoidPanel } from './RefundVoidPanel'
 
 const CURRENCY = 'AFN'
 const CURRENCY_MINOR_UNITS = 2
@@ -60,6 +61,24 @@ export function PosPage() {
     setPendingInvoices(invoices)
   }
 
+  const handleRefundVoidDone = async () => {
+    // Reload the active invoice (now voided/refunded) and refresh the drawer so
+    // the header/warnings reflect the cash-out. Story 62.1 (Task 2).
+    if (activeInvoice) {
+      const updated = await db.invoices.get(activeInvoice.id)
+      if (updated) {
+        setActiveInvoice(updated)
+      }
+    }
+    const drawer = await getOpenCashDrawer()
+    setActiveCashDrawer(drawer)
+    const invoices = await db.invoices
+      .where('status')
+      .anyOf('draft', 'finalized', 'partial')
+      .toArray()
+    setPendingInvoices(invoices)
+  }
+
   // Active invoice mode
   if (activeInvoice) {
     const isPaidInFull = activeInvoice.amountDue <= 0
@@ -87,6 +106,12 @@ export function PosPage() {
             <div className="rounded-xl bg-card p-5 text-center shadow-card ring-[0.65px] ring-border/50">
               <p className="text-lg font-semibold text-success">{t('paidInFull')}</p>
             </div>
+            {/* Story 62.1 (Task 2): refund/void on a settled sale. */}
+            <RefundVoidPanel
+              invoice={activeInvoice}
+              enableCredit={ENABLE_CREDIT}
+              onDone={handleRefundVoidDone}
+            />
             <div className="flex gap-3">
               <Button variant="secondary" className="flex-1">
                 {t('printReceipt')}
