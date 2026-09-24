@@ -326,9 +326,9 @@ describe('ReadinessBriefingCard', () => {
     })
     const { container } = render(<ReadinessBriefingCard />)
     await waitFor(() => {
-      // Card should have red border classes
+      // Card should have destructive (red) border classes
       const card = container.firstElementChild
-      expect(card?.className).toContain('border-red')
+      expect(card?.className).toContain('border-destructive')
     })
   })
 })

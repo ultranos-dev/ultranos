@@ -138,7 +138,7 @@ export function PhotoCaptureButton({
             onClick={onRemove}
             disabled={disabled}
             aria-label={t('removePhoto')}
-            className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-600 hover:bg-red-100 disabled:opacity-50"
+            className="rounded-md border border-destructive/30 bg-destructive/10 px-2 py-1 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50"
           >
             {t('removePhoto')}
           </button>

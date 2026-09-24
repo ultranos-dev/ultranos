@@ -87,12 +87,12 @@ export function RevokeDelegateDialog({
             placeholder={t('revokeReasonPlaceholder')}
             rows={3}
             disabled={submitting}
-            className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 dark:border-border dark:bg-muted"
+            className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-destructive disabled:opacity-50 dark:border-border dark:bg-muted"
           />
         </label>
 
         {error && (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="mt-2 text-sm text-destructive dark:text-destructive">{error}</p>
         )}
 
         <div className="mt-6 flex justify-end gap-3">
@@ -108,7 +108,7 @@ export function RevokeDelegateDialog({
             type="button"
             onClick={handleRevoke}
             disabled={submitting}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+            className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive disabled:opacity-50"
           >
             {submitting ? t('revokeSubmitting') : t('revokeSubmit')}
           </button>

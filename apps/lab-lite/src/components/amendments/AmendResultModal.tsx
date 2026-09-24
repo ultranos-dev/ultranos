@@ -200,7 +200,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                 </p>
                 <div>
                   <label htmlFor="reason-code-select" className="block text-sm font-medium text-foreground mb-1">
-                    {t('step2ReasonCodeLabel')} <span className="text-red-600" aria-hidden="true">*</span>
+                    {t('step2ReasonCodeLabel')} <span className="text-destructive" aria-hidden="true">*</span>
                   </label>
                   <select
                     id="reason-code-select"
@@ -217,14 +217,14 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                 </div>
 
                 {reasonCode === AmendmentReasonCode.WRONG_PATIENT && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-md p-3 text-sm text-orange-800" role="alert">
+                  <div className="bg-warning/10 border border-warning/30 rounded-md p-3 text-sm text-warning" role="alert">
                     {t('step2WrongPatientWarning')}
                   </div>
                 )}
 
                 <div>
                   <label htmlFor="reason-text-input" className="block text-sm font-medium text-foreground mb-1">
-                    {t('step2ExplanationLabel')} <span className="text-red-600" aria-hidden="true">*</span>
+                    {t('step2ExplanationLabel')} <span className="text-destructive" aria-hidden="true">*</span>
                   </label>
                   <textarea
                     id="reason-text-input"
@@ -235,7 +235,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                     className="w-full border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     data-testid="reason-text-input"
                   />
-                  <p className={`text-xs mt-1 ${reasonText.trim().length < 10 ? 'text-red-500' : 'text-green-600'}`}>
+                  <p className={`text-xs mt-1 ${reasonText.trim().length < 10 ? 'text-destructive' : 'text-success'}`}>
                     {t('step2CharCount', { count: reasonText.trim().length })}
                   </p>
                 </div>
@@ -246,7 +246,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
             {step === 3 && (
               <div className="space-y-4 text-center py-8">
                 {supervisorAuth ? (
-                  <div className="text-green-600">
+                  <div className="text-success">
                     <p className="text-lg font-medium">{t('step3AuthorizedTitle')}</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       {t('step3AuthorizedBy', { supervisorId: supervisorAuth.supervisorId })}
@@ -300,13 +300,13 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">{t('step4OriginalLabel')}</p>
-                          <p className="bg-red-50 border border-red-200 rounded px-2 py-1 line-through text-red-700">
+                          <p className="bg-destructive/10 border border-destructive/30 rounded px-2 py-1 line-through text-destructive">
                             {result.conclusion ?? '—'}
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">{t('step4CorrectedLabel')}</p>
-                          <p className="bg-green-50 border border-green-200 rounded px-2 py-1 text-green-800">
+                          <p className="bg-success/10 border border-success/30 rounded px-2 py-1 text-success">
                             {correctedConclusion || '—'}
                           </p>
                         </div>
@@ -318,7 +318,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
             )}
 
             {error && (
-              <p role="alert" className="text-sm text-red-600 mt-4" data-testid="modal-error">
+              <p role="alert" className="text-sm text-destructive mt-4" data-testid="modal-error">
                 {error}
               </p>
             )}
@@ -360,7 +360,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                 type="button"
                 onClick={handleCommit}
                 disabled={loading || !allMandatoryFilled}
-                className="px-4 py-2 text-sm text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                className="px-4 py-2 text-sm text-white bg-destructive rounded-md hover:bg-destructive disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
                 data-testid="amend-commit-btn"
               >
                 {loading ? t('committingButton') : t('commitButton')}

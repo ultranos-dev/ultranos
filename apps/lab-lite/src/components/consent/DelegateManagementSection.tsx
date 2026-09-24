@@ -79,7 +79,7 @@ export function DelegateManagementSection({ patientRef }: DelegateManagementSect
       </div>
 
       {error ? (
-        <p className="mt-4 text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="mt-4 text-sm text-destructive dark:text-destructive" role="alert">
           {error}
         </p>
       ) : loading ? (
@@ -99,7 +99,7 @@ export function DelegateManagementSection({ patientRef }: DelegateManagementSect
                 <span className="font-medium text-foreground dark:text-foreground">
                   {t(`relationship.${REL_I18N[d.delegateRelationship] ?? 'other'}`)}
                 </span>
-                <span className="ms-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                <span className="ms-2 inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success dark:bg-success/30 dark:text-success">
                   {t('activeLabel')}
                 </span>
                 <p className="text-muted-foreground dark:text-muted-foreground">
@@ -109,7 +109,7 @@ export function DelegateManagementSection({ patientRef }: DelegateManagementSect
               <button
                 type="button"
                 onClick={() => setRevoking(d)}
-                className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
+                className="rounded-md border border-destructive/30 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10 dark:border-destructive dark:text-destructive dark:hover:bg-destructive/20"
               >
                 {t('revokeDelegate')}
               </button>

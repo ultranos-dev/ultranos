@@ -79,7 +79,7 @@ export function PostDetail({ post, onBack, onPostUpdated }: PostDetailProps) {
       <button
         type="button"
         onClick={onBack}
-        className="self-start text-sm text-primary-600 hover:text-primary-700"
+        className="self-start text-sm text-primary hover:text-primary"
       >
         &larr; {t('backToFeed')}
       </button>
@@ -88,7 +88,7 @@ export function PostDetail({ post, onBack, onPostUpdated }: PostDetailProps) {
       <article className="rounded-lg border border-border p-4">
         {/* Flagged warning overlay */}
         {currentPost.status === 'flagged' && (
-          <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-sm text-amber-700">
+          <div className="mb-3 rounded-lg border border-warning/30 bg-warning/10 p-2 text-sm text-warning">
             {t('flaggedWarning')}
           </div>
         )}
@@ -97,7 +97,7 @@ export function PostDetail({ post, onBack, onPostUpdated }: PostDetailProps) {
           <h2 className="text-lg font-semibold text-foreground">{currentPost.title}</h2>
           <div className="flex items-center gap-2">
             {currentPost.status === 'resolved' && (
-              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+              <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
                 {t('resolved')}
               </span>
             )}
@@ -160,7 +160,7 @@ export function PostDetail({ post, onBack, onPostUpdated }: PostDetailProps) {
             {currentPost.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full bg-primary-50 px-2 py-0.5 text-xs text-primary-700"
+                className="rounded-full bg-primary-50 px-2 py-0.5 text-xs text-primary"
               >
                 {tag}
               </span>
@@ -173,7 +173,7 @@ export function PostDetail({ post, onBack, onPostUpdated }: PostDetailProps) {
           <button
             type="button"
             onClick={handleMarkResolved}
-            className="mt-3 rounded-lg border border-green-300 px-4 py-1.5 text-sm font-medium text-green-700 hover:bg-green-50"
+            className="mt-3 rounded-lg border border-success/30 px-4 py-1.5 text-sm font-medium text-success hover:bg-success/10"
           >
             {t('markResolved')}
           </button>
@@ -190,7 +190,7 @@ export function PostDetail({ post, onBack, onPostUpdated }: PostDetailProps) {
             <button
               type="button"
               onClick={() => setShowResponseForm(true)}
-              className="rounded-lg bg-primary-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-primary-700"
+              className="rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-white hover:bg-primary"
             >
               {t('addResponse')}
             </button>
@@ -226,14 +226,14 @@ function ResponseCard({ response }: { response: PeerResponse }) {
     <div
       className={`rounded-lg border p-3 ${
         response.isFromMentor
-          ? 'border-primary-200 bg-primary-50'
+          ? 'border-primary bg-primary-50'
           : 'border-border'
       }`}
     >
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span className="font-medium text-foreground">{response.authorDisplayName}</span>
         {response.isFromMentor && (
-          <span className="rounded-full bg-primary-200 px-2 py-0.5 text-xs font-medium text-primary-800">
+          <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary">
             {t('mentor')}
           </span>
         )}

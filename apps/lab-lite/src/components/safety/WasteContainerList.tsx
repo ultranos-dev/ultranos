@@ -18,8 +18,8 @@ const FILL_PERCENT: Record<FillLevel, number> = {
 }
 
 const STATUS_COLORS: Record<ContainerStatus, string> = {
-  [ContainerStatus.ACTIVE]: 'bg-green-100 text-green-800',
-  [ContainerStatus.FULL]: 'bg-red-100 text-red-800',
+  [ContainerStatus.ACTIVE]: 'bg-success/10 text-success',
+  [ContainerStatus.FULL]: 'bg-destructive/10 text-destructive',
   [ContainerStatus.DISPOSED]: 'bg-muted text-muted-foreground',
 }
 
@@ -131,7 +131,7 @@ export function WasteContainerList({
               <li key={container.id}>
                 <button
                   type="button"
-                  className="w-full rounded-lg border border-border p-4 text-start hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary-300 transition-colors"
+                  className="w-full rounded-lg border border-border p-4 text-start hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
                   onClick={() => onSelectContainer(container)}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -146,8 +146,8 @@ export function WasteContainerList({
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs font-bold ${
                             alert.severity === 'URGENT'
-                              ? 'bg-red-500 text-white'
-                              : 'bg-amber-400 text-amber-900'
+                              ? 'bg-destructive text-white'
+                              : 'bg-warning text-warning'
                           }`}
                         >
                           {alert.severity}
@@ -173,10 +173,10 @@ export function WasteContainerList({
                         <div
                           className={`h-2 rounded-full transition-all ${
                             fillPct >= 75
-                              ? 'bg-red-500'
+                              ? 'bg-destructive'
                               : fillPct >= 50
-                                ? 'bg-amber-400'
-                                : 'bg-green-500'
+                                ? 'bg-warning'
+                                : 'bg-success'
                           }`}
                           style={{ width: `${fillPct}%` }}
                         />

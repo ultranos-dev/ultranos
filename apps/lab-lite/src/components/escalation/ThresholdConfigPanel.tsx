@@ -150,7 +150,7 @@ export function ThresholdConfigPanel() {
       </div>
 
       {error && (
-        <p role="alert" className="rounded-md bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-md bg-destructive/10 border border-destructive/30 px-4 py-2 text-sm text-destructive">
           {error}
         </p>
       )}
@@ -236,7 +236,7 @@ export function ThresholdConfigPanel() {
                     onClick={() => toggleActive(threshold)}
                     disabled={!canEdit}
                     className={`inline-flex h-5 w-10 items-center rounded-full transition ${
-                      threshold.isActive ? 'bg-green-500' : 'bg-muted'
+                      threshold.isActive ? 'bg-success' : 'bg-muted'
                     } disabled:opacity-50`}
                     aria-label={t('toggleActive', { analyte: threshold.analyte })}
                   >

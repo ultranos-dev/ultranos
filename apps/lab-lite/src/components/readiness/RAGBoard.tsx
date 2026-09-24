@@ -34,15 +34,15 @@ const AUTHORIZED_ROLES: ReadonlySet<LabRole> = new Set([
 ])
 
 const OVERALL_STATUS_BG: Record<string, string> = {
-  GREEN: 'bg-green-50 border-green-200 text-green-700',
-  AMBER: 'bg-amber-50 border-amber-300 text-amber-700',
-  RED: 'bg-red-50 border-red-300 text-red-700',
+  GREEN: 'bg-success/10 border-success/30 text-success',
+  AMBER: 'bg-warning/10 border-warning/30 text-warning',
+  RED: 'bg-destructive/10 border-destructive/30 text-destructive',
 }
 
 const OVERALL_DOT: Record<string, string> = {
-  GREEN: 'bg-green-500',
-  AMBER: 'bg-amber-500',
-  RED: 'bg-red-500',
+  GREEN: 'bg-success',
+  AMBER: 'bg-warning',
+  RED: 'bg-destructive',
 }
 
 // ---------------------------------------------------------------------------

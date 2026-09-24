@@ -61,10 +61,10 @@ export function DataBudgetDashboard() {
 
   const barColor =
     thresholdLevel === 'critical'
-      ? 'bg-red-500'
+      ? 'bg-destructive'
       : thresholdLevel === 'warning'
-        ? 'bg-yellow-500'
-        : 'bg-green-500'
+        ? 'bg-warning'
+        : 'bg-success'
 
   const maxDailyMB = Math.max(...dailyUsage.map((d) => d.totalMB), 0.01)
 
@@ -74,7 +74,7 @@ export function DataBudgetDashboard() {
       {thresholdLevel === 'warning' && (
         <div
           role="alert"
-          className="rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800"
+          className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning"
           data-testid="data-budget-warning"
         >
           {t('warningBanner')}
@@ -83,7 +83,7 @@ export function DataBudgetDashboard() {
       {thresholdLevel === 'critical' && (
         <div
           role="alert"
-          className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+          className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
           data-testid="data-budget-critical"
         >
           {t('criticalBanner')}
@@ -222,7 +222,7 @@ export function DataBudgetDashboard() {
 
           <div className="flex items-center gap-3">
             <Button onClick={handleSave} size="sm">{t('save')}</Button>
-            {saved && <span className="text-xs text-green-600">{t('saved')}</span>}
+            {saved && <span className="text-xs text-success">{t('saved')}</span>}
           </div>
         </div>
       </div>

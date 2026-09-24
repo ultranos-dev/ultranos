@@ -9,10 +9,10 @@ interface SampleStatusBadgeProps {
 
 const STATUS_CONFIG: Record<PipelineStatus, { labelKey: string; className: string }> = {
   received: { labelKey: 'received', className: 'bg-primary/10 text-primary' },
-  'in-processing': { labelKey: 'inProcessing', className: 'bg-amber-50 text-amber-700' },
-  completed: { labelKey: 'completed', className: 'bg-green-50 text-green-700' },
-  reported: { labelKey: 'reported', className: 'bg-indigo-50 text-indigo-700' },
-  rejected: { labelKey: 'rejected', className: 'bg-red-50 text-red-700' },
+  'in-processing': { labelKey: 'inProcessing', className: 'bg-warning/10 text-warning' },
+  completed: { labelKey: 'completed', className: 'bg-success/10 text-success' },
+  reported: { labelKey: 'reported', className: 'bg-primary/10 text-primary' },
+  rejected: { labelKey: 'rejected', className: 'bg-destructive/10 text-destructive' },
 }
 
 export function SampleStatusBadge({ status }: SampleStatusBadgeProps) {

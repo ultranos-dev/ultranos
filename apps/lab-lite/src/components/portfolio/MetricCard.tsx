@@ -27,7 +27,7 @@ function TrendBadge({ trend }: { trend: TrendDirection }) {
 
   if (trend === 'IMPROVING') {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-full px-2 py-0.5">
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-success bg-success/10 rounded-full px-2 py-0.5">
         <TrendingUp size={12} aria-hidden />
         {t('improving')}
       </span>
@@ -35,7 +35,7 @@ function TrendBadge({ trend }: { trend: TrendDirection }) {
   }
   if (trend === 'NEEDS_ATTENTION') {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 rounded-full px-2 py-0.5">
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-warning bg-warning/10 rounded-full px-2 py-0.5">
         <TrendingDown size={12} aria-hidden />
         {t('needsAttention')}
       </span>

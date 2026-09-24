@@ -159,7 +159,7 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
       <div className="flex items-center gap-2">
         <button onClick={onBack} className="text-sm text-muted-foreground hover:text-foreground">←</button>
         <h2 className="text-base font-semibold text-foreground">{t('reviewTitle')}</h2>
-        <span className={`ms-auto rounded-full px-2 py-0.5 text-xs font-medium ${isFinalized ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+        <span className={`ms-auto rounded-full px-2 py-0.5 text-xs font-medium ${isFinalized ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
           {isFinalized ? t('statusFinalized') : t('statusDraft')}
         </span>
       </div>
@@ -170,10 +170,10 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
         <p><span className="font-medium">{t('selectPeriod')}:</span> {report.periodStart} — {report.periodEnd}</p>
         <p><span className="font-medium">{t('generatedLabel')}:</span> {new Date(report.generatedAt).toLocaleDateString()}</p>
         {report.warnings.includes('no_data') && (
-          <p className="text-amber-700">⚠ {t('noDataForPeriod')}</p>
+          <p className="text-warning">⚠ {t('noDataForPeriod')}</p>
         )}
         {report.warnings.includes('partial_data') && (
-          <p className="text-amber-600">⚠ {t('partialData')}</p>
+          <p className="text-warning">⚠ {t('partialData')}</p>
         )}
       </div>
 
@@ -253,7 +253,7 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
       )}
 
       {error && (
-        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p className="rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
       )}
 
       {/* Actions */}
@@ -262,7 +262,7 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
           <>
             {confirmFinalize ? (
               <>
-                <p className="w-full text-sm text-amber-700">{t('finalizeConfirm')}</p>
+                <p className="w-full text-sm text-warning">{t('finalizeConfirm')}</p>
                 <Button onClick={handleFinalize} disabled={finalizing}>
                   {finalizing ? '…' : t('finalize')}
                 </Button>

@@ -79,8 +79,8 @@ export function DriftAlertAcknowledgment({
   }
 
   const isReject = alert.severity === 'REJECT'
-  const severityColor = isReject ? 'text-red-700' : 'text-amber-700'
-  const severityBadgeBg = isReject ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+  const severityColor = isReject ? 'text-destructive' : 'text-warning'
+  const severityBadgeBg = isReject ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
 
   return (
     /* Overlay */
@@ -118,7 +118,7 @@ export function DriftAlertAcknowledgment({
             <fieldset>
               <legend className="mb-2 text-sm font-medium text-foreground">
                 {t('resolutionActionLabel')}
-                <span className="ms-1 text-red-500" aria-hidden="true">*</span>
+                <span className="ms-1 text-destructive" aria-hidden="true">*</span>
               </legend>
               <div className="space-y-2">
                 {RESOLUTION_OPTIONS.map((opt) => (
@@ -164,7 +164,7 @@ export function DriftAlertAcknowledgment({
             </div>
 
             {error && (
-              <p className="mt-2 text-sm text-red-600" role="alert">
+              <p className="mt-2 text-sm text-destructive" role="alert">
                 {error}
               </p>
             )}

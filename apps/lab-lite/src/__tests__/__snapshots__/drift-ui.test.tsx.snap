@@ -5,7 +5,7 @@ exports[`WestgardHistoryView > RTL snapshots > DriftAlertBanner renders correctl
   <div
     aria-atomic="true"
     aria-live="assertive"
-    class="rounded-lg border p-3 bg-red-50 border-red-300"
+    class="rounded-lg border p-3 bg-destructive/10 border-destructive/30"
     data-severity="REJECT"
     data-testid="drift-alert-banner"
     role="alert"
@@ -15,7 +15,7 @@ exports[`WestgardHistoryView > RTL snapshots > DriftAlertBanner renders correctl
     >
       <div
         aria-hidden="true"
-        class="mt-0.5 shrink-0 text-red-500"
+        class="mt-0.5 shrink-0 text-destructive"
       >
         <svg
           aria-hidden="true"
@@ -47,12 +47,12 @@ exports[`WestgardHistoryView > RTL snapshots > DriftAlertBanner renders correctl
         class="min-w-0 flex-1"
       >
         <p
-          class="text-sm font-semibold text-red-800"
+          class="text-sm font-semibold text-destructive"
         >
           QC Out of Control
         </p>
         <p
-          class="mt-0.5 text-sm text-red-800"
+          class="mt-0.5 text-sm text-destructive"
         >
           REJECT: latest value (116.00) exceeds ±3SD limit. Stop testing and recalibrate.
         </p>
@@ -62,14 +62,14 @@ exports[`WestgardHistoryView > RTL snapshots > DriftAlertBanner renders correctl
       >
         <button
           aria-label="Acknowledge Alert"
-          class="rounded px-2.5 py-1 text-xs font-medium bg-red-100 hover:bg-red-200 text-red-800 transition-colors"
+          class="rounded px-2.5 py-1 text-xs font-medium bg-destructive/10 hover:bg-destructive/10 text-destructive transition-colors"
           type="button"
         >
           Acknowledge
         </button>
         <button
           aria-label="View QC History"
-          class="rounded px-2.5 py-1 text-xs font-medium bg-red-100 hover:bg-red-200 text-red-800 transition-colors"
+          class="rounded px-2.5 py-1 text-xs font-medium bg-destructive/10 hover:bg-destructive/10 text-destructive transition-colors"
           type="button"
         >
           View QC History
@@ -85,7 +85,7 @@ exports[`WestgardHistoryView > RTL snapshots > DriftAlertBanner renders correctl
   <div
     aria-atomic="true"
     aria-live="assertive"
-    class="rounded-lg border p-3 bg-red-50 border-red-300"
+    class="rounded-lg border p-3 bg-destructive/10 border-destructive/30"
     data-severity="REJECT"
     data-testid="drift-alert-banner"
     role="alert"
@@ -95,7 +95,7 @@ exports[`WestgardHistoryView > RTL snapshots > DriftAlertBanner renders correctl
     >
       <div
         aria-hidden="true"
-        class="mt-0.5 shrink-0 text-red-500"
+        class="mt-0.5 shrink-0 text-destructive"
       >
         <svg
           aria-hidden="true"
@@ -127,12 +127,12 @@ exports[`WestgardHistoryView > RTL snapshots > DriftAlertBanner renders correctl
         class="min-w-0 flex-1"
       >
         <p
-          class="text-sm font-semibold text-red-800"
+          class="text-sm font-semibold text-destructive"
         >
           QC Out of Control
         </p>
         <p
-          class="mt-0.5 text-sm text-red-800"
+          class="mt-0.5 text-sm text-destructive"
         >
           REJECT: latest value (116.00) exceeds ±3SD limit. Stop testing and recalibrate.
         </p>
@@ -142,14 +142,14 @@ exports[`WestgardHistoryView > RTL snapshots > DriftAlertBanner renders correctl
       >
         <button
           aria-label="Acknowledge Alert"
-          class="rounded px-2.5 py-1 text-xs font-medium bg-red-100 hover:bg-red-200 text-red-800 transition-colors"
+          class="rounded px-2.5 py-1 text-xs font-medium bg-destructive/10 hover:bg-destructive/10 text-destructive transition-colors"
           type="button"
         >
           Acknowledge
         </button>
         <button
           aria-label="View QC History"
-          class="rounded px-2.5 py-1 text-xs font-medium bg-red-100 hover:bg-red-200 text-red-800 transition-colors"
+          class="rounded px-2.5 py-1 text-xs font-medium bg-destructive/10 hover:bg-destructive/10 text-destructive transition-colors"
           type="button"
         >
           View QC History
@@ -262,7 +262,7 @@ exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders corre
               class="px-3 py-2.5"
             >
               <span
-                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold bg-green-100 text-green-700"
+                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold bg-success/10 text-success"
               >
                 PASS
               </span>
@@ -377,7 +377,7 @@ exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders corre
               class="px-3 py-2.5"
             >
               <span
-                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold bg-green-100 text-green-700"
+                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold bg-success/10 text-success"
               >
                 PASS
               </span>

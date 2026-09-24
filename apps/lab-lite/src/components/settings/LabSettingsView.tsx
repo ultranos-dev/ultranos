@@ -655,7 +655,7 @@ export function LabSettingsView() {
                       onClick={() => void handleToggleChecklistItemRequired(item.id)}
                       className={`rounded px-2 py-0.5 text-xs font-medium transition-colors ${
                         item.isRequired
-                          ? 'bg-red-50 text-red-700 hover:bg-red-100'
+                          ? 'bg-destructive/10 text-destructive hover:bg-destructive/10'
                           : 'bg-muted text-muted-foreground hover:bg-muted'
                       }`}
                       data-testid={`checklist-required-toggle-${item.id}`}
@@ -666,7 +666,7 @@ export function LabSettingsView() {
                       <button
                         type="button"
                         onClick={() => void handleRemoveChecklistItem(item.id)}
-                        className="text-xs text-red-500 hover:text-red-700"
+                        className="text-xs text-destructive hover:text-destructive"
                         data-testid={`checklist-remove-${item.id}`}
                         aria-label={`Remove ${item.label}`}
                       >
@@ -782,7 +782,7 @@ export function LabSettingsView() {
                   if (file.size > 102400) return // max 100KB
                   void handleDailySettingChange('logoBlob', file)
                 }}
-                className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary hover:file:bg-primary/10"
+                className="block w-full text-sm text-muted-foreground file:me-4 file:rounded file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary hover:file:bg-primary/10"
               />
             </div>
           </div>
@@ -801,17 +801,17 @@ export function LabSettingsView() {
             data-testid="security-alert-button"
             onClick={() => setShowSecurityAlert(true)}
             className="
-              w-full rounded-lg border-2 border-red-500 bg-red-50 p-4
+              w-full rounded-lg border-2 border-destructive bg-destructive/10 p-4
               flex items-center gap-3
-              hover:bg-red-100 transition-colors
+              hover:bg-destructive/10 transition-colors
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-              focus-visible:outline-red-600
+              focus-visible:outline-destructive
             "
           >
             <span className="text-2xl" aria-hidden="true">⚠️</span>
             <div className="text-start">
-              <p className="text-sm font-bold text-red-800">{tSecurity('settings.button')}</p>
-              <p className="text-xs text-red-600 mt-0.5">{tSecurity('settings.buttonDescription')}</p>
+              <p className="text-sm font-bold text-destructive">{tSecurity('settings.button')}</p>
+              <p className="text-xs text-destructive mt-0.5">{tSecurity('settings.buttonDescription')}</p>
             </div>
           </button>
         )}

@@ -43,21 +43,21 @@ export function SOPAcknowledgmentBanner() {
   if (unacked.length === 0) return null
 
   return (
-    <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-900/20">
+    <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 dark:border-warning dark:bg-warning/20">
       <div className="flex items-start gap-3">
-        <AlertTriangle size={20} className="mt-0.5 flex-shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+        <AlertTriangle size={20} className="mt-0.5 flex-shrink-0 text-warning dark:text-warning" aria-hidden="true" />
         <div className="flex-1">
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+          <p className="text-sm font-medium text-warning dark:text-warning">
             {t('bannerTitle', { count: unacked.length })}
           </p>
           <ul className="mt-1 space-y-1">
             {unacked.slice(0, 3).map((sop) => (
-              <li key={sop.id} className="text-sm text-amber-700 dark:text-amber-300">
+              <li key={sop.id} className="text-sm text-warning dark:text-warning">
                 {t('bannerItem', { title: sop.title })}
               </li>
             ))}
             {unacked.length > 3 && (
-              <li className="text-sm text-amber-600 dark:text-amber-400">
+              <li className="text-sm text-warning dark:text-warning">
                 {t('bannerMore', { count: unacked.length - 3 })}
               </li>
             )}

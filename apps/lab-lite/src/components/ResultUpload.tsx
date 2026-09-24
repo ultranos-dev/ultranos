@@ -83,21 +83,21 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
   // Upload progress state
   if (uploading) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-lg border border-primary-200 bg-primary-50 p-6">
-        <p className="text-sm font-medium text-primary-700">Uploading...</p>
+      <div className="flex flex-col items-center gap-3 rounded-lg border border-primary bg-primary-50 p-6">
+        <p className="text-sm font-medium text-primary">Uploading...</p>
         <div
           role="progressbar"
           aria-valuenow={progress ?? 0}
           aria-valuemin={0}
           aria-valuemax={100}
-          className="h-2 w-full overflow-hidden rounded-full bg-primary-100"
+          className="h-2 w-full overflow-hidden rounded-full bg-primary"
         >
           <div
-            className="h-full rounded-full bg-primary-600 transition-[width] duration-300 ease-out"
+            className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
             style={{ width: `${progress ?? 0}%` }}
           />
         </div>
-        <span className="text-xs text-primary-600">{progress ?? 0}%</span>
+        <span className="text-xs text-primary">{progress ?? 0}%</span>
       </div>
     )
   }
@@ -105,7 +105,7 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
   // File selected — show file info
   if (selectedFile) {
     return (
-      <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
+      <div className="flex items-center gap-3 rounded-lg border border-success/30 bg-success/10 p-4">
         <div className="flex-1">
           <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
           <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
@@ -131,8 +131,8 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
         onDragLeave={handleDragLeave}
         className={`flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
           dragOver
-            ? 'border-primary-500 bg-primary-50'
-            : 'border-border bg-muted/30 hover:border-primary-400'
+            ? 'border-primary bg-primary-50'
+            : 'border-border bg-muted/30 hover:border-primary'
         } ${disabled ? 'pointer-events-none opacity-50' : ''}`}
         onClick={() => !disabled && inputRef.current?.click()}
         role="button"
@@ -145,7 +145,7 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
         <Upload size={32} className="text-muted-foreground" aria-hidden="true" />
         <p className="text-sm text-muted-foreground">
           Drag and drop your lab result file here, or{' '}
-          <span className="font-semibold text-primary-600">browse files</span>
+          <span className="font-semibold text-primary">browse files</span>
         </p>
         <p className="text-xs text-muted-foreground">PDF, JPEG, PNG, or WebP (max 20 MB)</p>
         <input
@@ -158,7 +158,7 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
         />
       </div>
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700" role="alert">
+        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive" role="alert">
           {error}
         </div>
       )}

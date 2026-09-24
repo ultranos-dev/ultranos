@@ -37,9 +37,9 @@ const SAMPLE_TYPES: SampleTypeOption[] = [
         <rect x="24" y="44" width="8" height="6" rx="4" fill="#dc2626" />
       </svg>
     ),
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
-    selectedBg: 'bg-red-100 border-red-500',
+    bgColor: 'bg-destructive/10',
+    borderColor: 'border-destructive/30',
+    selectedBg: 'bg-destructive/10 border-destructive',
   },
   {
     type: 'urine',
@@ -52,9 +52,9 @@ const SAMPLE_TYPES: SampleTypeOption[] = [
         <rect x="22" y="6" width="12" height="8" rx="2" fill="#f59e0b" />
       </svg>
     ),
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-200',
-    selectedBg: 'bg-yellow-100 border-yellow-500',
+    bgColor: 'bg-warning/10',
+    borderColor: 'border-warning/30',
+    selectedBg: 'bg-warning/10 border-warning',
   },
   {
     type: 'swab',
@@ -68,7 +68,7 @@ const SAMPLE_TYPES: SampleTypeOption[] = [
     ),
     bgColor: 'bg-muted',
     borderColor: 'border-border',
-    selectedBg: 'bg-muted border-gray-500',
+    selectedBg: 'bg-muted border-border',
   },
   {
     type: 'stool',
@@ -81,9 +81,9 @@ const SAMPLE_TYPES: SampleTypeOption[] = [
         <circle cx="28" cy="14" r="4" fill="#a16207" />
       </svg>
     ),
-    bgColor: 'bg-amber-50',
-    borderColor: 'border-amber-200',
-    selectedBg: 'bg-amber-100 border-amber-500',
+    bgColor: 'bg-warning/10',
+    borderColor: 'border-warning/30',
+    selectedBg: 'bg-warning/10 border-warning',
   },
 ]
 

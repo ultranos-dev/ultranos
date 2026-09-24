@@ -104,7 +104,13 @@ export function generateConfirmCode(): string {
  */
 export function generateMessageId(): string {
   const ts = Date.now().toString(36)
-  const rand = Math.random().toString(36).substring(2, 8)
+  // crypto.randomUUID() avoids the Math.random() same-millisecond collision risk
+  // for IDs generated in a tight loop (Story 63.2). Fallback keeps test/older
+  // environments working.
+  const rand =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID().replace(/-/g, '').substring(0, 12)
+      : Math.random().toString(36).substring(2, 8)
   return `native-${ts}-${rand}`
 }
 

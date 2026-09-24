@@ -115,7 +115,7 @@ export function SelfAssessment({
                           return next
                         })
                       }
-                      className="accent-blue-600"
+                      className="accent-primary"
                       data-testid={`option-${qi}-${oi}`}
                     />
                     {option}
@@ -139,7 +139,7 @@ export function SelfAssessment({
             type="button"
             onClick={handleSubmit}
             disabled={!allAnswered}
-            className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 hover:bg-primary/90 dark:bg-primary dark:hover:bg-blue-400"
+            className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary"
             data-testid="quiz-submit"
           >
             {t('submitQuiz')}
@@ -156,15 +156,15 @@ export function SelfAssessment({
       <div
         className={`rounded-lg p-3 ${
           passed
-            ? 'border border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
-            : 'border border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20'
+            ? 'border border-success/30 bg-success/10 dark:border-success dark:bg-success/20'
+            : 'border border-warning/30 bg-warning/10 dark:border-warning dark:bg-warning/20'
         }`}
         data-testid="assessment-score-banner"
       >
-        <p className={`text-sm font-semibold ${passed ? 'text-green-800 dark:text-green-200' : 'text-amber-800 dark:text-amber-200'}`}>
+        <p className={`text-sm font-semibold ${passed ? 'text-success dark:text-success' : 'text-warning dark:text-warning'}`}>
           {passed ? t('assessmentPassed') : t('assessmentFailed')}
         </p>
-        <p className={`text-xs mt-0.5 ${passed ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
+        <p className={`text-xs mt-0.5 ${passed ? 'text-success dark:text-success' : 'text-warning dark:text-warning'}`}>
           {t('scoreLabel', { correct: correctCount, total: questions.length })}
         </p>
       </div>
@@ -182,8 +182,8 @@ export function SelfAssessment({
               <p
                 className={`text-xs ${
                   isCorrect
-                    ? 'text-green-700 dark:text-green-400'
-                    : 'text-red-700 dark:text-red-400'
+                    ? 'text-success dark:text-success'
+                    : 'text-destructive dark:text-destructive'
                 }`}
                 data-testid={`result-feedback-${qi}`}
               >
@@ -199,7 +199,7 @@ export function SelfAssessment({
       <button
         type="button"
         onClick={onComplete}
-        className="w-full rounded bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary/90 dark:bg-primary dark:hover:bg-blue-400"
+        className="w-full rounded bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary"
         data-testid="assessment-done"
       >
         {t('done')}

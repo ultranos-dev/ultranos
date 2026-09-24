@@ -70,7 +70,7 @@ function CancelBatchModal({
           </Button>
           <Button
             onClick={() => onConfirm(reason)}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-destructive hover:bg-destructive text-white"
             data-testid="confirm-cancel-btn"
           >
             {t('cancelBatch') ?? 'Confirm Cancel'}
@@ -310,8 +310,8 @@ export function InstrumentQueueView() {
           <span
             className={`rounded-full px-2 py-0.5 text-xs font-medium ${
               selectedInstrument.status === 'IN_SERVICE'
-                ? 'bg-green-100 text-green-700'
-                : 'bg-red-100 text-red-700'
+                ? 'bg-success/10 text-success'
+                : 'bg-destructive/10 text-destructive'
             }`}
           >
             {selectedInstrument.status === 'IN_SERVICE' ? t('inService') : t('outOfService')}
@@ -328,10 +328,10 @@ export function InstrumentQueueView() {
           {notifications.map((notif) => (
             <div
               key={notif.id}
-              className="flex items-start justify-between rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm"
+              className="flex items-start justify-between rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm"
               data-testid={`notif-${notif.id}`}
             >
-              <span className="text-amber-800">
+              <span className="text-warning">
                 🔔{' '}
                 {notif.type === 'BATCH_CANCELLED'
                   ? t('batchCancelledNotif', { instrument: notif.instrumentName }) ?? `Your batch for ${notif.instrumentName} was removed from the queue.`
@@ -343,7 +343,7 @@ export function InstrumentQueueView() {
                     setNotifications((prev) => prev.filter((n) => n.id !== notif.id))
                   })
                 }}
-                className="ms-2 shrink-0 text-amber-600 hover:text-amber-800"
+                className="ms-2 shrink-0 text-warning hover:text-warning"
                 aria-label="Dismiss"
               >
                 ✕
@@ -354,7 +354,7 @@ export function InstrumentQueueView() {
       )}
 
       {error && (
-        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+        <p className="rounded bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
           {error}
         </p>
       )}
@@ -379,11 +379,11 @@ export function InstrumentQueueView() {
         <div className="space-y-2" data-testid="queue-list">
           {/* Countdown banner for current running batch */}
           {currentBatch && countdownText && (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-center" data-testid="countdown-banner">
-              <p className="text-xs text-amber-600 font-medium">{t('currentBatch')} · {currentBatch.techName}</p>
-              <p className="text-2xl font-bold tabular-nums text-amber-700 mt-0.5">{countdownText}</p>
+            <div className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-center" data-testid="countdown-banner">
+              <p className="text-xs text-warning font-medium">{t('currentBatch')} · {currentBatch.techName}</p>
+              <p className="text-2xl font-bold tabular-nums text-warning mt-0.5">{countdownText}</p>
               <div
-                className="mt-1 h-1.5 w-full rounded-full bg-amber-200 overflow-hidden"
+                className="mt-1 h-1.5 w-full rounded-full bg-warning/10 overflow-hidden"
                 role="progressbar"
                 aria-label={t('progress') ?? 'Progress'}
               >
@@ -392,7 +392,7 @@ export function InstrumentQueueView() {
                   const total = currentBatch.estimatedCompletionTime.getTime() - new Date(currentBatch.startedAt).getTime()
                   const elapsed = now.getTime() - new Date(currentBatch.startedAt).getTime()
                   const pct = Math.min(100, Math.max(0, (elapsed / total) * 100))
-                  return <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: `${pct}%` }} />
+                  return <div className="h-full bg-warning transition-all duration-1000" style={{ width: `${pct}%` }} />
                 })()}
               </div>
             </div>

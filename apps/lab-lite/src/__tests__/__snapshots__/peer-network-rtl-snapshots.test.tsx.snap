@@ -4,7 +4,7 @@ exports[`FlagButton RTL snapshots > renders in LTR 1`] = `
 <div>
   <button
     aria-label="Flag"
-    class="text-xs text-muted-foreground hover:text-amber-600"
+    class="text-xs text-muted-foreground hover:text-warning"
     title="Flag"
     type="button"
   >
@@ -36,7 +36,7 @@ exports[`FlagButton RTL snapshots > renders in RTL 1`] = `
 <div>
   <button
     aria-label="Flag"
-    class="text-xs text-muted-foreground hover:text-amber-600"
+    class="text-xs text-muted-foreground hover:text-warning"
     title="Flag"
     type="button"
   >
@@ -104,7 +104,7 @@ exports[`PostFeed RTL snapshots > renders empty state in LTR 1`] = `
         value=""
       />
       <button
-        class="ms-auto rounded-lg bg-primary-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-primary-700"
+        class="ms-auto rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-white hover:bg-primary"
         type="button"
       >
         Ask Question
@@ -159,7 +159,7 @@ exports[`PostFeed RTL snapshots > renders empty state in RTL 1`] = `
         value=""
       />
       <button
-        class="ms-auto rounded-lg bg-primary-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-primary-700"
+        class="ms-auto rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-white hover:bg-primary"
         type="button"
       >
         Ask Question

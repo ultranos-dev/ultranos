@@ -134,7 +134,7 @@ export function ConsentAudioPlayer({
       )}
 
       {hasCompleted && (
-        <p className="text-sm font-medium text-green-600 dark:text-green-400">{t('audio.playbackComplete')}</p>
+        <p className="text-sm font-medium text-success dark:text-success">{t('audio.playbackComplete')}</p>
       )}
 
       {/* Tech override */}
@@ -143,7 +143,7 @@ export function ConsentAudioPlayer({
           <button
             type="button"
             onClick={handleTechOverride}
-            className="text-sm text-muted-foreground underline hover:text-foreground dark:text-muted-foreground dark:hover:text-gray-200"
+            className="text-sm text-muted-foreground underline hover:text-foreground dark:text-muted-foreground dark:hover:text-muted-foreground"
           >
             {t('audio.techOverride')}
           </button>

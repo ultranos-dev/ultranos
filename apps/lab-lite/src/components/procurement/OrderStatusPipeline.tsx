@@ -37,15 +37,15 @@ function StageIcon({ stage, state }: StageIconProps) {
 
   if (state === 'failed') {
     return (
-      <span className={`${base} bg-red-100`}>
-        <XCircle className="text-red-600" size={20} />
+      <span className={`${base} bg-destructive/10`}>
+        <XCircle className="text-destructive" size={20} />
       </span>
     )
   }
   if (state === 'completed') {
     return (
-      <span className={`${base} bg-green-100`}>
-        <CheckCircle className="text-green-600" size={20} />
+      <span className={`${base} bg-success/10`}>
+        <CheckCircle className="text-success" size={20} />
       </span>
     )
   }
@@ -56,7 +56,7 @@ function StageIcon({ stage, state }: StageIconProps) {
       approved: <CheckCircle className="text-primary" size={20} />,
       ordered: <ShoppingBag className="text-primary" size={20} />,
       shipped: <Truck className="text-primary" size={20} />,
-      delivered: <CheckCircle className="text-green-600" size={20} />,
+      delivered: <CheckCircle className="text-success" size={20} />,
     }
     return (
       <span className={`${base} bg-primary/10 ring-2 ring-primary`}>
@@ -88,7 +88,7 @@ function formatDate(isoDate: string): string {
 function StatusHistoryEntry({ entry }: { entry: StatusUpdate }) {
   return (
     <li className="flex items-start gap-3 py-2">
-      <div className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400" />
+      <div className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted" />
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium capitalize">{entry.status}</span>
@@ -158,9 +158,9 @@ export function OrderStatusPipeline({ request }: OrderStatusPipelineProps) {
                     state === 'current'
                       ? 'font-semibold text-primary'
                       : state === 'completed'
-                      ? 'text-green-700'
+                      ? 'text-success'
                       : state === 'failed'
-                      ? 'text-red-600'
+                      ? 'text-destructive'
                       : 'text-muted-foreground'
                   }`}
                 >
@@ -170,7 +170,7 @@ export function OrderStatusPipeline({ request }: OrderStatusPipelineProps) {
               {!isLast && (
                 <div
                   className={`mx-1 h-0.5 w-6 shrink-0 ${
-                    idx < currentStageIndex ? 'bg-green-400' : 'bg-muted'
+                    idx < currentStageIndex ? 'bg-success' : 'bg-muted'
                   }`}
                 />
               )}
@@ -181,12 +181,12 @@ export function OrderStatusPipeline({ request }: OrderStatusPipelineProps) {
 
       {/* Cancelled/rejected banner */}
       {isFailed && (
-        <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3">
-          <XCircle className="mt-0.5 shrink-0 text-red-600" size={16} />
+        <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3">
+          <XCircle className="mt-0.5 shrink-0 text-destructive" size={16} />
           <div>
-            <p className="text-sm font-medium text-red-800 capitalize">{currentStatus}</p>
+            <p className="text-sm font-medium text-destructive capitalize">{currentStatus}</p>
             {request.statusHistory.at(-1)?.note && (
-              <p className="text-xs text-red-600">{request.statusHistory.at(-1)!.note}</p>
+              <p className="text-xs text-destructive">{request.statusHistory.at(-1)!.note}</p>
             )}
           </div>
         </div>

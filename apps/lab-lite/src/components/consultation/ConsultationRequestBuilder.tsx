@@ -253,9 +253,9 @@ export function ConsultationRequestBuilder({
 
   if (step === 'submitted') {
     return (
-      <div className="rounded-xl border border-green-200 bg-green-50 p-6 text-center">
-        <p className="text-lg font-semibold text-green-800">{t('submittedTitle')}</p>
-        <p className="mt-2 text-sm text-green-700">{t('submittedMessage')}</p>
+      <div className="rounded-xl border border-success/30 bg-success/10 p-6 text-center">
+        <p className="text-lg font-semibold text-success">{t('submittedTitle')}</p>
+        <p className="mt-2 text-sm text-success">{t('submittedMessage')}</p>
       </div>
     )
   }
@@ -350,7 +350,7 @@ export function ConsultationRequestBuilder({
                     onChange={(e) => updatePhotoCaption(photo.id, e.target.value)}
                   />
                   <button
-                    className="text-xs text-red-600 hover:underline"
+                    className="text-xs text-destructive hover:underline"
                     onClick={() => removePhoto(photo.id)}
                   >
                     {t('removePhoto')}
@@ -373,7 +373,7 @@ export function ConsultationRequestBuilder({
                 onChange={handleFileSelect}
               />
               <button
-                className="flex items-center gap-2 self-start rounded-lg border border-dashed border-gray-400 px-4 py-2 text-sm text-muted-foreground hover:bg-muted"
+                className="flex items-center gap-2 self-start rounded-lg border border-dashed border-border px-4 py-2 text-sm text-muted-foreground hover:bg-muted"
                 onClick={() => fileInputRef.current?.click()}
               >
                 {t('addPhoto')}
@@ -436,7 +436,7 @@ export function ConsultationRequestBuilder({
           <h2 className="text-base font-semibold">{t('recipientTitle')}</h2>
 
           {recipients.length === 0 ? (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <p className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
               {t('noRecipientsAvailable')}
             </p>
           ) : (
@@ -535,7 +535,7 @@ export function ConsultationRequestBuilder({
           </label>
 
           {submitError && (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {submitError}
             </p>
           )}
@@ -607,8 +607,8 @@ function ResultSummaryView({
                   <span
                     className={`rounded px-1.5 py-0.5 text-xs font-bold ${
                       field.flag === 'LL' || field.flag === 'HH'
-                        ? 'bg-red-100 text-red-700'
-                        : 'bg-amber-100 text-amber-700'
+                        ? 'bg-destructive/10 text-destructive'
+                        : 'bg-warning/10 text-warning'
                     }`}
                   >
                     {field.flag}
@@ -651,7 +651,7 @@ function RecipientOption({
         <span className="text-sm font-medium">{recipient.name}</span>
         <span className="text-xs text-muted-foreground">{recipient.specialization}</span>
         {!recipient.isAvailable && (
-          <span className="text-xs text-amber-600">{t('recipientUnavailable')}</span>
+          <span className="text-xs text-warning">{t('recipientUnavailable')}</span>
         )}
       </div>
     </button>

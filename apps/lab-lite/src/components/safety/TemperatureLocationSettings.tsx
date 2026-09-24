@@ -170,7 +170,7 @@ export function TemperatureLocationSettings() {
             </Button>
             <Button
               variant="ghost"
-              className="text-xs text-red-600"
+              className="text-xs text-destructive"
               onClick={() => handleDelete(loc.id)}
             >
               {t('delete')}

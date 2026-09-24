@@ -86,7 +86,7 @@ export function ReconciliationView() {
       </div>
 
       {syncPending && (
-        <div className="mb-4 rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+        <div className="mb-4 rounded-md bg-warning/10 p-3 text-sm text-warning dark:bg-warning/20 dark:text-warning">
           {t('syncWarning')}
         </div>
       )}
@@ -110,11 +110,11 @@ export function ReconciliationView() {
               </div>
               <div>
                 <span className="text-xs text-muted-foreground">{t('outstanding')}</span>
-                <p className="text-lg font-bold text-amber-600 font-numeric">{formatAFN(stats.outstanding)}</p>
+                <p className="text-lg font-bold text-warning font-numeric">{formatAFN(stats.outstanding)}</p>
               </div>
               <div>
                 <span className="text-xs text-muted-foreground">{t('variance')}</span>
-                <p className={`text-lg font-bold font-numeric ${stats.variance < 0 ? 'text-red-600' : 'text-foreground'}`}>
+                <p className={`text-lg font-bold font-numeric ${stats.variance < 0 ? 'text-destructive' : 'text-foreground'}`}>
                   {formatAFN(stats.variance)}
                 </p>
               </div>
@@ -123,14 +123,14 @@ export function ReconciliationView() {
 
           {/* Variance Warning */}
           {Math.abs(stats.variance) > VARIANCE_THRESHOLD && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
               {t('varianceWarning', { threshold: String(VARIANCE_THRESHOLD) })}
             </div>
           )}
 
           {/* Waiver Count */}
           {stats.waiverCount > 0 && (
-            <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-700">
+            <div className="rounded-md bg-warning/10 p-3 text-sm text-warning">
               {t('waiverCount', { count: String(stats.waiverCount) })}
             </div>
           )}

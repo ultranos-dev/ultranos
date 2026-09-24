@@ -4,7 +4,7 @@ exports[`EmergencyButton > LTR snapshot 1`] = `
 <div>
   <button
     aria-label="Emergency Protocol"
-    class="hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+    class="hover:bg-destructive focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
     style="position: fixed; inset-inline-end: 1rem; bottom: 1rem; z-index: 9999; width: 56px; height: 56px; border-radius: 50%; background-color: rgb(220, 38, 38); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4);"
     type="button"
   >
@@ -44,7 +44,7 @@ exports[`EmergencyButton > RTL snapshot — button stays in inline-end position 
 <div>
   <button
     aria-label="Emergency Protocol"
-    class="hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+    class="hover:bg-destructive focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
     style="position: fixed; inset-inline-end: 1rem; bottom: 1rem; z-index: 9999; width: 56px; height: 56px; border-radius: 50%; background-color: rgb(220, 38, 38); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4);"
     type="button"
   >

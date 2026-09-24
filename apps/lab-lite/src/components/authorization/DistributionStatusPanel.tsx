@@ -42,10 +42,10 @@ function StatusBadge({ variant }: { variant: StatusBadgeVariant }) {
   }
 
   const classMap: Record<StatusBadgeVariant, string> = {
-    pending: 'bg-amber-100 text-amber-800 border border-amber-300',
+    pending: 'bg-warning/10 text-warning border border-warning/30',
     delivering: 'bg-primary/10 text-primary border border-primary',
-    delivered: 'bg-green-100 text-green-700 border border-green-300',
-    failed: 'bg-red-100 text-red-700 border border-red-300',
+    delivered: 'bg-success/10 text-success border border-success/30',
+    failed: 'bg-destructive/10 text-destructive border border-destructive/30',
     'not-queued': 'bg-muted text-muted-foreground border border-border',
   }
 

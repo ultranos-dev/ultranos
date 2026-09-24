@@ -103,8 +103,8 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
     return (
       <div className="flex flex-col gap-4 p-4" data-testid="courier-delivery-screen">
         <div className="flex flex-col items-center gap-4">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle size={48} className="text-green-700" aria-hidden />
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-success/10">
+            <CheckCircle size={48} className="text-success" aria-hidden />
           </div>
           <h2 className="text-center text-2xl font-bold text-foreground">{t('deliveryRecorded')}</h2>
         </div>
@@ -112,11 +112,11 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
         {flagCount > 0 && (
           <div
             data-testid="flag-summary-banner"
-            className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-300 p-4"
+            className="flex items-start gap-3 rounded-xl bg-destructive/10 border border-destructive/30 p-4"
             role="alert"
           >
-            <AlertCircle size={20} className="text-red-600 shrink-0 mt-0.5" aria-hidden />
-            <p className="text-lg font-semibold text-red-800">
+            <AlertCircle size={20} className="text-destructive shrink-0 mt-0.5" aria-hidden />
+            <p className="text-lg font-semibold text-destructive">
               {t('flagSummary', { flagCount, sampleCount })}
             </p>
           </div>
@@ -169,16 +169,16 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
           role="alert"
           className={`flex items-start gap-3 rounded-xl border p-4 ${
             stabilityWarningLevel === 'red'
-              ? 'bg-red-50 border-red-300'
-              : 'bg-amber-50 border-amber-300'
+              ? 'bg-destructive/10 border-destructive/30'
+              : 'bg-warning/10 border-warning/30'
           }`}
         >
           <AlertCircle
             size={20}
-            className={`shrink-0 mt-0.5 ${stabilityWarningLevel === 'red' ? 'text-red-600' : 'text-amber-600'}`}
+            className={`shrink-0 mt-0.5 ${stabilityWarningLevel === 'red' ? 'text-destructive' : 'text-warning'}`}
             aria-hidden
           />
-          <p className={`text-base font-semibold ${stabilityWarningLevel === 'red' ? 'text-red-800' : 'text-amber-800'}`}>
+          <p className={`text-base font-semibold ${stabilityWarningLevel === 'red' ? 'text-destructive' : 'text-warning'}`}>
             {stabilityWarningLevel === 'red'
               ? t('stabilityWarningRed')
               : t('stabilityWarningAmber')}
@@ -208,7 +208,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
         <p className="text-lg font-medium text-foreground">{t('sampleConditionLabel')}</p>
         <div className="flex flex-col gap-2">
           <label className={`flex items-center gap-3 rounded-xl border-2 p-4 cursor-pointer transition-colors ${
-            condition === 'acceptable' ? 'border-green-500 bg-green-50' : 'border-border bg-card hover:bg-muted'
+            condition === 'acceptable' ? 'border-success bg-success/10' : 'border-border bg-card hover:bg-muted'
           }`}>
             <input
               data-testid="condition-acceptable"
@@ -217,13 +217,13 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
               value="acceptable"
               checked={condition === 'acceptable'}
               onChange={() => setCondition('acceptable')}
-              className="h-5 w-5 accent-green-600"
+              className="h-5 w-5 accent-success"
             />
             <span className="text-lg font-semibold text-foreground">{t('conditionAcceptable')}</span>
           </label>
 
           <label className={`flex items-center gap-3 rounded-xl border-2 p-4 cursor-pointer transition-colors ${
-            condition === 'damaged' ? 'border-red-500 bg-red-50' : 'border-border bg-card hover:bg-muted'
+            condition === 'damaged' ? 'border-destructive bg-destructive/10' : 'border-border bg-card hover:bg-muted'
           }`}>
             <input
               data-testid="condition-damaged"
@@ -232,13 +232,13 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
               value="damaged"
               checked={condition === 'damaged'}
               onChange={() => setCondition('damaged')}
-              className="h-5 w-5 accent-red-600"
+              className="h-5 w-5 accent-destructive"
             />
             <span className="text-lg font-semibold text-foreground">{t('conditionDamaged')}</span>
           </label>
 
           <label className={`flex items-center gap-3 rounded-xl border-2 p-4 cursor-pointer transition-colors ${
-            condition === 'temperature-excursion' ? 'border-amber-500 bg-amber-50' : 'border-border bg-card hover:bg-muted'
+            condition === 'temperature-excursion' ? 'border-warning bg-warning/10' : 'border-border bg-card hover:bg-muted'
           }`}>
             <input
               data-testid="condition-temperature-excursion"
@@ -247,7 +247,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
               value="temperature-excursion"
               checked={condition === 'temperature-excursion'}
               onChange={() => setCondition('temperature-excursion')}
-              className="h-5 w-5 accent-amber-600"
+              className="h-5 w-5 accent-warning"
             />
             <span className="text-lg font-semibold text-foreground">{t('conditionTemperatureExcursion')}</span>
           </label>
@@ -255,7 +255,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
       </div>
 
       {submitError && (
-        <p className="flex items-center gap-2 text-red-600" role="alert">
+        <p className="flex items-center gap-2 text-destructive" role="alert">
           <AlertCircle size={16} aria-hidden /> {t('recordDeliveryError')}
         </p>
       )}
@@ -265,7 +265,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
         data-testid="record-delivery-button"
         onClick={() => void handleRecordDelivery()}
         disabled={!condition || submitting}
-        className="min-h-[56px] rounded-xl bg-green-600 px-6 py-4 text-xl font-semibold text-white hover:bg-green-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500"
+        className="min-h-[56px] rounded-xl bg-success px-6 py-4 text-xl font-semibold text-white hover:bg-success disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success"
       >
         {submitting ? t('recording') : t('recordDeliveryButton')}
       </button>

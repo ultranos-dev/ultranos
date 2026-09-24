@@ -53,20 +53,20 @@ export function IncompleteVerificationsAlert() {
   return (
     <div
       role="alert"
-      className="rounded-xl border border-yellow-300 bg-yellow-50 p-4 space-y-2"
+      className="rounded-xl border border-warning/30 bg-warning/10 p-4 space-y-2"
       data-testid="incomplete-verifications-alert"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span aria-hidden="true" className="text-yellow-600 text-lg leading-none">⚠</span>
-          <p className="text-sm font-semibold text-yellow-800">
+          <span aria-hidden="true" className="text-warning text-lg leading-none">⚠</span>
+          <p className="text-sm font-semibold text-warning">
             {t('verification.supervisor.incompleteCount', { count: records.length })}
           </p>
         </div>
         <button
           type="button"
           onClick={() => setExpanded((prev) => !prev)}
-          className="text-xs text-yellow-700 underline hover:text-yellow-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 rounded"
+          className="text-xs text-warning underline hover:text-warning focus:outline-none focus-visible:ring-2 focus-visible:ring-warning rounded"
           aria-expanded={expanded}
           aria-controls="incomplete-verifications-list"
           data-testid="incomplete-verifications-toggle"
@@ -82,10 +82,10 @@ export function IncompleteVerificationsAlert() {
           data-testid="incomplete-verifications-list"
         >
           {records.map((rec) => (
-            <li key={rec.id} className="text-xs text-yellow-800 font-mono">
+            <li key={rec.id} className="text-xs text-warning font-mono">
               {rec.sampleId}
               {rec.deviationReason && (
-                <span className="ms-2 font-sans font-normal text-yellow-700">
+                <span className="ms-2 font-sans font-normal text-warning">
                   — {rec.deviationReason}
                 </span>
               )}

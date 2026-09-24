@@ -20,10 +20,10 @@ const STATUS_KEYS: Record<UploadQueueStatus, string> = {
 }
 
 const STATUS_STYLES: Record<UploadQueueStatus, string> = {
-  pending: 'bg-amber-50 text-amber-700',
-  uploading: 'bg-amber-50 text-amber-700',
-  expired: 'bg-yellow-100 text-yellow-800',
-  failed: 'bg-red-100 text-red-700',
+  pending: 'bg-warning/10 text-warning',
+  uploading: 'bg-warning/10 text-warning',
+  expired: 'bg-warning/10 text-warning',
+  failed: 'bg-destructive/10 text-destructive',
 }
 
 function formatTimestamp(iso: string): string {
@@ -115,7 +115,7 @@ export function UploadQueue() {
         {items.map((item) => (
           <li
             key={item.id}
-            className={`px-4 py-3 ${item.status === 'expired' ? 'bg-yellow-50' : ''}`}
+            className={`px-4 py-3 ${item.status === 'expired' ? 'bg-warning/10' : ''}`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
@@ -171,7 +171,7 @@ export function UploadQueue() {
                     ) : (
                       <Button
                         variant="ghost"
-                        className="!text-red-600"
+                        className="!text-destructive"
                         type="button"
                         onClick={() => setConfirmingId(item.id!)}
                         aria-label={t('discardAriaLabel')}

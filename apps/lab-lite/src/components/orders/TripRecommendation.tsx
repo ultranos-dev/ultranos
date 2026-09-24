@@ -69,17 +69,17 @@ export function TripRecommendation({
         {remoteTests.length > 0 && (
           <section
             data-testid="trip-no-return-section"
-            className="rounded-lg border border-green-200 bg-green-50 p-4"
+            className="rounded-lg border border-success/30 bg-success/10 p-4"
             aria-label={t('noReturnSection')}
           >
             <div className="flex items-center gap-3">
               <span role="img" aria-label="checkmark" className="text-3xl">✅</span>
               <span role="img" aria-label="phone" className="text-2xl">📱</span>
-              <p className="text-base font-semibold text-green-900">
+              <p className="text-base font-semibold text-success">
                 {t('noReturnNeeded')}
               </p>
             </div>
-            <p className="mt-2 text-sm text-green-800">{t('doctorWillContact')}</p>
+            <p className="mt-2 text-sm text-success">{t('doctorWillContact')}</p>
           </section>
         )}
 
@@ -87,16 +87,16 @@ export function TripRecommendation({
         {returnTests.length > 0 && optimalReturnDate && (
           <section
             data-testid="trip-return-section"
-            className="rounded-lg border border-amber-200 bg-amber-50 p-4"
+            className="rounded-lg border border-warning/30 bg-warning/10 p-4"
             aria-label={t('returnSection')}
           >
             <div className="mb-2 flex items-center gap-2">
               <span role="img" aria-label="calendar" className="text-2xl">📅</span>
-              <p className="text-base font-semibold text-amber-900">
+              <p className="text-base font-semibold text-warning">
                 {t('returnOnDate')}
               </p>
             </div>
-            <p className="text-3xl font-bold text-amber-900">{optimalReturnDate}</p>
+            <p className="text-3xl font-bold text-warning">{optimalReturnDate}</p>
           </section>
         )}
       </div>
@@ -106,7 +106,7 @@ export function TripRecommendation({
         <button
           data-testid="trip-print-button"
           onClick={handlePrint}
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           type="button"
         >
           🖨️ {t('printSummary')}

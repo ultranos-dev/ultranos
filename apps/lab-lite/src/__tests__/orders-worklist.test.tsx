@@ -204,19 +204,19 @@ describe('OrderCard', () => {
 
   it('renders STAT badge with red styling', () => {
     const { container } = render(<OrderCard order={makeOrder({ urgency: 'stat' })} />)
-    const badge = container.querySelector('.bg-red-100')
+    const badge = container.querySelector('[class*="bg-destructive/10"]')
     expect(badge).not.toBeNull()
   })
 
   it('renders URGENT badge with amber styling', () => {
     const { container } = render(<OrderCard order={makeOrder({ urgency: 'urgent' })} />)
-    const badge = container.querySelector('.bg-amber-100')
+    const badge = container.querySelector('[class*="bg-warning/10"]')
     expect(badge).not.toBeNull()
   })
 
   it('renders ROUTINE badge with green styling', () => {
     const { container } = render(<OrderCard order={makeOrder({ urgency: 'routine' })} />)
-    const badge = container.querySelector('.bg-green-100')
+    const badge = container.querySelector('[class*="bg-success/10"]')
     expect(badge).not.toBeNull()
   })
 

@@ -25,27 +25,27 @@ export function StreakProgress({ streak }: StreakProgressProps) {
 
   return (
     <div
-      className="rounded-lg border border-green-200 bg-green-50 p-4"
+      className="rounded-lg border border-success/30 bg-success/10 p-4"
       data-testid="streak-progress"
       data-streak-days={currentDays}
     >
       {/* Header */}
       <div className="flex items-center gap-2">
-        <span className="shrink-0 text-green-700" aria-hidden="true">
+        <span className="shrink-0 text-success" aria-hidden="true">
           {currentDays >= 7 ? <Flame size={20} /> : <CircleCheck size={20} />}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-sm text-green-800">
+          <p className="font-semibold text-sm text-success">
             {isComplete
               ? 'Zero Rejection Week — Celebrate!'
               : `${currentDays}-Day Zero Rejection Streak`}
           </p>
-          <p className="text-xs text-green-700 mt-0.5">
+          <p className="text-xs text-success mt-0.5">
             The team is on a {currentDays}-day Zero Rejection streak!
           </p>
         </div>
         <span
-          className="shrink-0 text-lg font-bold text-green-700"
+          className="shrink-0 text-lg font-bold text-success"
           aria-label={`${currentDays} days`}
         >
           {currentDays}d
@@ -54,12 +54,12 @@ export function StreakProgress({ streak }: StreakProgressProps) {
 
       {/* Progress bar toward 7-day goal */}
       <div className="mt-3">
-        <div className="flex justify-between text-xs text-green-600 mb-1">
+        <div className="flex justify-between text-xs text-success mb-1">
           <span>Day 1</span>
           <span>Goal: 7 days</span>
         </div>
         <div
-          className="h-2.5 w-full rounded-full bg-green-200"
+          className="h-2.5 w-full rounded-full bg-success/10"
           role="progressbar"
           aria-valuenow={currentDays}
           aria-valuemin={0}
@@ -68,13 +68,13 @@ export function StreakProgress({ streak }: StreakProgressProps) {
         >
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              isComplete ? 'bg-green-500' : 'bg-green-400'
+              isComplete ? 'bg-success' : 'bg-success'
             }`}
             style={{ width: `${progressPct}%` }}
           />
         </div>
         {!isComplete && (
-          <p className="mt-1.5 text-xs text-green-600">
+          <p className="mt-1.5 text-xs text-success">
             {7 - currentDays} more day{7 - currentDays !== 1 ? 's' : ''} to earn Zero Rejection Week!
           </p>
         )}

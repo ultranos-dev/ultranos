@@ -94,10 +94,10 @@ export function SendOutModal({
           {/* Reference Lab selector */}
           <div>
             <label htmlFor="reflab-select" className="block text-sm font-medium text-foreground mb-1">
-              {t('sendOutReferenceLabLabel')} <span aria-hidden="true" className="text-red-500">*</span>
+              {t('sendOutReferenceLabLabel')} <span aria-hidden="true" className="text-destructive">*</span>
             </label>
             {labs.length === 0 ? (
-              <p className="text-sm text-amber-600">
+              <p className="text-sm text-warning">
                 {t('sendOutNoLabsConfigured')}
               </p>
             ) : (
@@ -161,7 +161,7 @@ export function SendOutModal({
           )}
 
           {error && (
-            <p role="alert" className="text-sm text-red-600">{error}</p>
+            <p role="alert" className="text-sm text-destructive">{error}</p>
           )}
 
           {/* Actions */}

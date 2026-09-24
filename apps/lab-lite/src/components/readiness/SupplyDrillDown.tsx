@@ -24,20 +24,20 @@ interface SupplyDrillDownProps {
 const RAG_ORDER: Record<RAGStatus, number> = { RED: 0, AMBER: 1, GREEN: 2 }
 
 const STOCK_BADGE: Record<RAGStatus, string> = {
-  RED: 'bg-red-50 text-red-700 border border-red-200',
-  AMBER: 'bg-amber-50 text-amber-700 border border-amber-200',
-  GREEN: 'bg-green-50 text-green-700 border border-green-200',
+  RED: 'bg-destructive/10 text-destructive border border-destructive/30',
+  AMBER: 'bg-warning/10 text-warning border border-warning/30',
+  GREEN: 'bg-success/10 text-success border border-success/30',
 }
 
 const STOCK_DOT: Record<RAGStatus, string> = {
-  RED: 'bg-red-500',
-  AMBER: 'bg-amber-500',
-  GREEN: 'bg-green-500',
+  RED: 'bg-destructive',
+  AMBER: 'bg-warning',
+  GREEN: 'bg-success',
 }
 
 function daysColor(days: number): string {
-  if (days <= 1) return 'text-red-600 font-semibold'
-  if (days <= 3) return 'text-amber-600 font-medium'
+  if (days <= 1) return 'text-destructive font-semibold'
+  if (days <= 3) return 'text-warning font-medium'
   return 'text-muted-foreground'
 }
 
@@ -74,13 +74,13 @@ function StockEditor({
         step="any"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="w-24 rounded-md border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+        className="w-24 rounded-md border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         aria-label={t('rag.drillDown.newStockValue')}
       />
       <button
         type="button"
         onClick={handleConfirm}
-        className="inline-flex items-center gap-1 rounded-md bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
+        className="inline-flex items-center gap-1 rounded-md bg-success px-2.5 py-1 text-xs font-medium text-white hover:bg-success focus:outline-none focus:ring-2 focus:ring-success"
         aria-label={t('rag.drillDown.confirmStock')}
       >
         <Check size={13} aria-hidden="true" />
@@ -158,7 +158,7 @@ function SupplyRow({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="mt-2 text-xs text-primary-600 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-300 rounded"
+              className="mt-2 text-xs text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
             >
               {t('rag.drillDown.updateStock')}
             </button>

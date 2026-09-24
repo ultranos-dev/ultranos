@@ -27,7 +27,7 @@ export function SecurityModeBanner() {
       aria-atomic="true"
       data-testid="security-mode-banner"
       className="
-        w-full bg-red-600 text-white
+        w-full bg-destructive text-white
         px-4 py-3
         flex items-center justify-center gap-3
         text-sm font-bold tracking-wide uppercase
@@ -36,7 +36,7 @@ export function SecurityModeBanner() {
     >
       <span aria-hidden="true" className="text-lg">⚠</span>
       <span>{t('banner.title')}</span>
-      <span className="font-normal normal-case text-red-100">
+      <span className="font-normal normal-case text-destructive">
         — {t('banner.subtitle')}
       </span>
     </div>

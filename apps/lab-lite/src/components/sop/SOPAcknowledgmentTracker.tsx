@@ -118,11 +118,11 @@ export function SOPAcknowledgmentTracker() {
                         </td>
                         <td className="py-2">
                           {ack.syncStatus === 'synced' ? (
-                            <span className="text-green-600 dark:text-green-400">
+                            <span className="text-success dark:text-success">
                               {t('synced')}
                             </span>
                           ) : (
-                            <span className="text-amber-600 dark:text-amber-400">
+                            <span className="text-warning dark:text-warning">
                               {t('pendingSync')}
                             </span>
                           )}

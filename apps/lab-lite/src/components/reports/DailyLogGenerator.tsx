@@ -170,14 +170,14 @@ export function DailyLogGenerator() {
 
       {/* Error message */}
       {state === 'error' && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 mb-4 text-sm text-red-700">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 mb-4 text-sm text-destructive">
           {errorMsg || 'An error occurred during generation.'}
         </div>
       )}
 
       {/* Limited data warning */}
       {hasLimitedData && state === 'done' && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 mb-4 text-sm text-amber-700">
+        <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 mb-4 text-sm text-warning">
           {t('limitedData')}
         </div>
       )}
@@ -197,7 +197,7 @@ export function DailyLogGenerator() {
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               onClick={handleShare}
-              className="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+              className="rounded-md bg-success px-4 py-2 text-sm font-semibold text-white hover:bg-success"
             >
               {t('share')}
             </button>
@@ -217,7 +217,7 @@ export function DailyLogGenerator() {
 
           {/* Share result feedback */}
           {shareResult === 'success' && (
-            <p className="mt-2 text-sm text-green-600">{t('shareSuccess')}</p>
+            <p className="mt-2 text-sm text-success">{t('shareSuccess')}</p>
           )}
           {shareResult === 'cancelled' && (
             <p className="mt-2 text-sm text-muted-foreground">{t('shareUnsupported')}</p>

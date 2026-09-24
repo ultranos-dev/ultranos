@@ -39,7 +39,7 @@ function BudgetBar({ used, total }: { used: number; total: number }) {
   const ratio = total > 0 ? used / total : 0
   const displayPct = Math.min(ratio * 100, 100)
   const color =
-    ratio > 1 ? 'bg-destructive' : ratio > 0.8 ? 'bg-amber-500' : 'bg-primary'
+    ratio > 1 ? 'bg-destructive' : ratio > 0.8 ? 'bg-warning' : 'bg-primary'
 
   return (
     <div
@@ -94,7 +94,7 @@ function WarningBanner({ warnings }: { warnings: TimeWarning[] }) {
           className={`rounded-md border p-2 text-sm ${
             w.severity === 'red'
               ? 'border-destructive/20 bg-destructive/5 text-destructive'
-              : 'border-amber-200 bg-amber-50 text-amber-800'
+              : 'border-warning/30 bg-warning/10 text-warning'
           }`}
           role="alert"
         >

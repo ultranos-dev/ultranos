@@ -99,7 +99,7 @@ export function ReceiptView({ payment }: ReceiptViewProps) {
           {receipt.outstandingBalance > 0 && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t('balance')}</span>
-              <span className="font-medium text-amber-600 font-numeric">{formatAFN(receipt.outstandingBalance)}</span>
+              <span className="font-medium text-warning font-numeric">{formatAFN(receipt.outstandingBalance)}</span>
             </div>
           )}
           <div className="flex justify-between text-sm">

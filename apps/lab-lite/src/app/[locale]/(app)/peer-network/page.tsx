@@ -65,7 +65,7 @@ function PeerNetworkContent() {
             if (e.key === 'Enter') handleSearch(searchQuery)
           }}
           placeholder={t('searchPlaceholder')}
-          className="flex-1 rounded-lg border border-border px-4 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="flex-1 rounded-lg border border-border px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
           aria-label={t('searchPlaceholder')}
         />
         <button
@@ -121,12 +121,12 @@ function PeerNetworkContent() {
                 key={post.id}
                 type="button"
                 onClick={() => handleSelectPost(post)}
-                className="w-full rounded-lg border border-border p-3 text-start hover:border-primary-300 hover:bg-muted/30"
+                className="w-full rounded-lg border border-border p-3 text-start hover:border-primary hover:bg-muted/30"
               >
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-semibold text-foreground">{post.title}</h3>
                   {hasVerifiedAnswer && (
-                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                    <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
                       {t('verifiedAnswer')}
                     </span>
                   )}

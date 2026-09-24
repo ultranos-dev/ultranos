@@ -28,9 +28,9 @@ type Tab = 'active' | 'history'
 type SortField = 'date' | 'urgency' | 'status'
 
 const URGENCY_BADGE: Record<string, string> = {
-  routine: 'bg-green-100 text-green-800',
-  urgent: 'bg-yellow-100 text-yellow-800',
-  critical: 'bg-red-100 text-red-800',
+  routine: 'bg-success/10 text-success',
+  urgent: 'bg-warning/10 text-warning',
+  critical: 'bg-destructive/10 text-destructive',
 }
 
 const ACTIVE_STATUSES: ResupplyRequest['status'][] = [
@@ -47,12 +47,12 @@ function StatusBadge({ status }: { status: ResupplyRequest['status'] }) {
   const colors: Record<string, string> = {
     submitted: 'bg-muted text-foreground',
     received: 'bg-primary/10 text-primary',
-    approved: 'bg-indigo-100 text-indigo-700',
-    ordered: 'bg-purple-100 text-purple-700',
-    shipped: 'bg-orange-100 text-orange-700',
-    delivered: 'bg-green-100 text-green-700',
+    approved: 'bg-primary/10 text-primary',
+    ordered: 'bg-primary/10 text-primary',
+    shipped: 'bg-warning/10 text-warning',
+    delivered: 'bg-success/10 text-success',
     cancelled: 'bg-muted text-muted-foreground',
-    rejected: 'bg-red-100 text-red-700',
+    rejected: 'bg-destructive/10 text-destructive',
     draft: 'bg-muted text-muted-foreground',
   }
   return (
@@ -108,7 +108,7 @@ function ActiveRequestCard({ request, onClick }: RequestCardProps) {
         <p className="mt-1 text-xs text-muted-foreground">Pending sync</p>
       )}
       {request.syncStatus === 'failed' && (
-        <p className="mt-1 text-xs text-red-500">Sync failed — tap to retry</p>
+        <p className="mt-1 text-xs text-destructive">Sync failed — tap to retry</p>
       )}
     </button>
   )

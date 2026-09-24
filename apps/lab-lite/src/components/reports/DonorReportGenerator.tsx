@@ -141,7 +141,7 @@ export function DonorReportGenerator() {
         <h2 className="text-sm font-semibold text-foreground">{t('generate')}</h2>
 
         {programs.length === 0 ? (
-          <div className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          <div className="rounded bg-warning/10 px-3 py-2 text-sm text-warning">
             {t('noPrograms')} <a className="underline" href="/settings">{t('noProgramsHint')}</a>
           </div>
         ) : (
@@ -185,11 +185,11 @@ export function DonorReportGenerator() {
             </div>
 
             {error && (
-              <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+              <p className="rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
             )}
 
             {existingDraft && (
-              <div className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-700 space-y-2">
+              <div className="rounded bg-warning/10 px-3 py-2 text-sm text-warning space-y-2">
                 <p>{t('existingDraft')}</p>
                 <div className="flex gap-2">
                   <Button variant="secondary" onClick={() => { setReport(existingDraft); setView('review'); setExistingDraft(null) }}>

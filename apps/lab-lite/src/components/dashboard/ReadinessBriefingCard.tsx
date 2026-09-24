@@ -31,31 +31,31 @@ const SESSION_KEY = 'readiness_briefing_expanded_date'
 
 const RAG_BADGE: Record<RAGStatus, { container: string; dot: string; labelKey: string }> = {
   green: {
-    container: 'bg-green-50 text-green-700 border border-green-200',
-    dot: 'bg-green-500',
+    container: 'bg-success/10 text-success border border-success/30',
+    dot: 'bg-success',
     labelKey: 'readiness.status.ready',
   },
   amber: {
-    container: 'bg-amber-50 text-amber-700 border border-amber-200',
-    dot: 'bg-amber-500',
+    container: 'bg-warning/10 text-warning border border-warning/30',
+    dot: 'bg-warning',
     labelKey: 'readiness.status.caution',
   },
   red: {
-    container: 'bg-red-50 text-red-700 border border-red-200',
-    dot: 'bg-red-500',
+    container: 'bg-destructive/10 text-destructive border border-destructive/30',
+    dot: 'bg-destructive',
     labelKey: 'readiness.status.actionNeeded',
   },
 }
 
 const OVERALL_CARD: Record<RAGStatus, string> = {
-  green: 'border-green-200 bg-green-50/20',
-  amber: 'border-amber-300 bg-amber-50/20',
-  red: 'border-red-300 bg-red-50/20',
+  green: 'border-success/30 bg-success/20',
+  amber: 'border-warning/30 bg-warning/20',
+  red: 'border-destructive/30 bg-destructive/20',
 }
 
 const RECOMMENDATION_STYLE: Record<'amber' | 'red', string> = {
-  amber: 'bg-amber-50 border border-amber-200 text-amber-800',
-  red: 'bg-red-50 border border-red-200 text-red-800',
+  amber: 'bg-warning/10 border border-warning/30 text-warning',
+  red: 'bg-destructive/10 border border-destructive/30 text-destructive',
 }
 
 // ---------------------------------------------------------------------------
@@ -161,7 +161,17 @@ function DimensionRow({ result }: { result: DimensionResult }) {
           )}
         </span>
 
-        <RAGBadge status={result.status} />
+        {result.unavailable ? (
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+            aria-label={t('readiness.status.notAvailable')}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
+            {t('readiness.status.notAvailable')}
+          </span>
+        ) : (
+          <RAGBadge status={result.status} />
+        )}
 
         {hasDetails && (
           <span className="text-muted-foreground shrink-0">
@@ -236,8 +246,11 @@ export function ReadinessBriefingCard() {
   }, [refresh])
 
   const overallStatus = briefing?.overallStatus ?? 'amber'
-  const readyCount = briefing?.dimensions.filter((d) => d.status === 'green').length ?? 0
-  const totalCount = briefing?.dimensions.length ?? 5
+  // "Not available" dimensions (Story 63.2) are excluded from the ready-count
+  // ratio so a not-yet-built dimension neither inflates nor deflates readiness.
+  const ratedDimensions = briefing?.dimensions.filter((d) => !d.unavailable) ?? []
+  const readyCount = ratedDimensions.filter((d) => d.status === 'green').length
+  const totalCount = ratedDimensions.length || (briefing ? briefing.dimensions.length : 5)
 
   return (
     <div

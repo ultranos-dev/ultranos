@@ -30,7 +30,7 @@ export function StabilityBadge({ status, remainingMinutes }: StabilityBadgeProps
   if (status === 'expired') {
     return (
       <span
-        className="inline-flex items-center rounded px-2 py-0.5 text-xs font-bold bg-red-600 text-white"
+        className="inline-flex items-center rounded px-2 py-0.5 text-xs font-bold bg-destructive text-white"
         role="status"
         aria-label="Sample expired"
       >
@@ -40,9 +40,9 @@ export function StabilityBadge({ status, remainingMinutes }: StabilityBadgeProps
   }
 
   const classMap: Record<Exclude<StabilityStatus, 'expired'>, string> = {
-    safe: 'bg-green-100 text-green-800',
-    warning: 'bg-amber-100 text-amber-800',
-    critical: 'bg-red-100 text-red-800 animate-pulse',
+    safe: 'bg-success/10 text-success',
+    warning: 'bg-warning/10 text-warning',
+    critical: 'bg-destructive/10 text-destructive animate-pulse',
   }
 
   const label = formatRemaining(remainingMinutes)

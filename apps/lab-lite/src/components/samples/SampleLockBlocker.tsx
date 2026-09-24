@@ -73,7 +73,7 @@ export function SampleLockBlocker({
         {/* Header */}
         <div className="flex items-start gap-3 border-b border-border/50 p-5">
           {/* Lock icon */}
-          <span className="shrink-0 text-yellow-500" aria-hidden="true">
+          <span className="shrink-0 text-warning" aria-hidden="true">
             <Lock size={24} />
           </span>
           <div>
@@ -93,7 +93,7 @@ export function SampleLockBlocker({
         <div className="flex flex-col gap-2 p-4">
           {requestError && (
             <p
-              className="text-center text-sm text-red-600 font-medium py-1"
+              className="text-center text-sm text-destructive font-medium py-1"
               data-testid="release-request-error"
               role="alert"
             >
@@ -118,7 +118,7 @@ export function SampleLockBlocker({
             </button>
           ) : (
             <p
-              className="text-center text-sm text-green-700 font-medium py-2"
+              className="text-center text-sm text-success font-medium py-2"
               data-testid="release-requested-confirmation"
             >
               ✓ {t('releaseRequested')}
@@ -133,7 +133,7 @@ export function SampleLockBlocker({
               w-full rounded-lg border border-border bg-card px-4 py-2.5
               text-sm font-medium text-foreground hover:bg-muted/30 transition-colors
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-              focus-visible:outline-neutral-500
+              focus-visible:outline-border
             "
           >
             {t('ok')}

@@ -129,7 +129,7 @@ export function WorklistItem({
       ref={rowRef}
       className={`relative flex cursor-pointer items-center gap-3 rounded-lg border bg-card px-4 py-3 shadow-sm transition-colors select-none hover:border-primary/50 hover:bg-muted/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring
         ${isDragging ? 'opacity-50 border-dashed border-primary' : 'border-border'}
-        ${isExpired ? 'border-red-300 bg-red-50' : ''}
+        ${isExpired ? 'border-destructive/30 bg-destructive/10' : ''}
         ${isLockedByOther ? 'opacity-60' : ''}
       `}
       draggable

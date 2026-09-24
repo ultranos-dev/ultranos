@@ -32,7 +32,7 @@ export function EmergencyButton() {
           justifyContent: 'center',
           boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
         }}
-        className="hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+        className="hover:bg-destructive focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
       >
         {/* Alert icon */}
         <AlertTriangle size={28} aria-hidden="true" strokeWidth={2.5} />

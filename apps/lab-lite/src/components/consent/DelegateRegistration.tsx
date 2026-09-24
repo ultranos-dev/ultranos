@@ -149,14 +149,14 @@ export function DelegateRegistration({
 
       {/* Consent linkage display */}
       {activeConsent ? (
-        <div className="mb-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-300">
+        <div className="mb-4 rounded-md bg-success/10 px-4 py-3 text-sm text-success dark:bg-success/20 dark:text-success">
           {t('consentLinked', {
             method: activeConsent.method,
             date: new Date(activeConsent.capturedAt).toLocaleDateString(),
           })}
         </div>
       ) : (
-        <div className="mb-4 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+        <div className="mb-4 rounded-md bg-warning/10 px-4 py-3 text-sm text-warning dark:bg-warning/20 dark:text-warning">
           {t('consentRequired')}
         </div>
       )}
@@ -178,7 +178,7 @@ export function DelegateRegistration({
           className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 dark:border-border dark:bg-muted"
         />
         {errors.phone && (
-          <p id="phone-error" className="mt-1 text-sm text-red-600 dark:text-red-400">
+          <p id="phone-error" className="mt-1 text-sm text-destructive dark:text-destructive">
             {errors.phone}
           </p>
         )}
@@ -205,7 +205,7 @@ export function DelegateRegistration({
           ))}
         </select>
         {errors.relationship && (
-          <p id="relationship-error" className="mt-1 text-sm text-red-600 dark:text-red-400">
+          <p id="relationship-error" className="mt-1 text-sm text-destructive dark:text-destructive">
             {errors.relationship}
           </p>
         )}
@@ -228,10 +228,10 @@ export function DelegateRegistration({
       </div>
 
       {errors.consent && (
-        <p className="mb-4 text-sm text-amber-600 dark:text-amber-400">{errors.consent}</p>
+        <p className="mb-4 text-sm text-warning dark:text-warning">{errors.consent}</p>
       )}
       {errors.general && (
-        <p className="mb-4 text-sm text-red-600 dark:text-red-400">{errors.general}</p>
+        <p className="mb-4 text-sm text-destructive dark:text-destructive">{errors.general}</p>
       )}
 
       <div className="flex justify-end gap-3">

@@ -100,7 +100,7 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
           )}
 
           {error && (
-            <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {error}
             </div>
           )}
@@ -113,17 +113,17 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
                   {t('pendingSamplesLabel')}
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-md bg-red-50 p-3 text-center">
-                    <p className="text-2xl font-bold text-red-700">
+                  <div className="rounded-md bg-destructive/10 p-3 text-center">
+                    <p className="text-2xl font-bold text-destructive">
                       {report.pendingSamples.stat}
                     </p>
-                    <p className="text-xs text-red-600">{t('statLabel')}</p>
+                    <p className="text-xs text-destructive">{t('statLabel')}</p>
                   </div>
-                  <div className="rounded-md bg-amber-50 p-3 text-center">
-                    <p className="text-2xl font-bold text-amber-700">
+                  <div className="rounded-md bg-warning/10 p-3 text-center">
+                    <p className="text-2xl font-bold text-warning">
                       {report.pendingSamples.routine}
                     </p>
-                    <p className="text-xs text-amber-600">{t('routineLabel')}</p>
+                    <p className="text-xs text-warning">{t('routineLabel')}</p>
                   </div>
                 </div>
               </section>
@@ -138,10 +138,10 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
                     {report.equipmentAlerts.map((alert) => (
                       <li
                         key={alert.instrumentId}
-                        className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+                        className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
                       >
                         <span className="font-medium">{alert.instrumentName}</span>
-                        <span className="text-red-600">— {alert.alertType}</span>
+                        <span className="text-destructive">— {alert.alertType}</span>
                       </li>
                     ))}
                   </ul>
@@ -161,9 +161,9 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
                         <span
                           className={
                             qc.status === 'PASS'
-                              ? 'rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700'
+                              ? 'rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success'
                               : qc.status === 'FAIL'
-                                ? 'rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700'
+                                ? 'rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive'
                                 : 'rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground'
                           }
                         >
@@ -231,7 +231,7 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
               type="button"
               onClick={handleConfirm}
               disabled={isSubmitting}
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive disabled:opacity-50"
             >
               {isSubmitting ? t('submittingHandover') : t('endShiftButton')}
             </button>

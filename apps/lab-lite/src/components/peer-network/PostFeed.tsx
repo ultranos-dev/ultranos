@@ -100,7 +100,7 @@ export function PostFeed({ onSelectPost, onCreatePost, searchQuery }: PostFeedPr
         <button
           type="button"
           onClick={onCreatePost}
-          className="ms-auto rounded-lg bg-primary-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-primary-700"
+          className="ms-auto rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-white hover:bg-primary"
         >
           {t('askQuestion')}
         </button>
@@ -129,7 +129,7 @@ function PostCard({ post, onClick }: { post: PeerPost; onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-lg border border-border p-4 text-start hover:border-primary-300 hover:bg-muted/30"
+      className="w-full rounded-lg border border-border p-4 text-start hover:border-primary hover:bg-muted/30"
     >
       <div className="flex items-start gap-3">
         {/* Photo thumbnail */}
@@ -146,12 +146,12 @@ function PostCard({ post, onClick }: { post: PeerPost; onClick: () => void }) {
           <div className="flex items-center gap-2">
             <h3 className="truncate text-sm font-semibold text-foreground">{post.title}</h3>
             {post.status === 'resolved' && (
-              <span className="flex-shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+              <span className="flex-shrink-0 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
                 {t('resolved')}
               </span>
             )}
             {post.status === 'flagged' && (
-              <span className="flex-shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+              <span className="flex-shrink-0 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
                 {t('flagged')}
               </span>
             )}
@@ -182,7 +182,7 @@ function PostCard({ post, onClick }: { post: PeerPost; onClick: () => void }) {
               {post.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full bg-primary-50 px-2 py-0.5 text-xs text-primary-700"
+                  className="rounded-full bg-primary-50 px-2 py-0.5 text-xs text-primary"
                 >
                   {tag}
                 </span>

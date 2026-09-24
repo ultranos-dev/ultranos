@@ -244,7 +244,7 @@ export function SmsGatewayConfig({ isManager }: SmsGatewayConfigProps) {
 
         {/* Saved confirmation */}
         {saved && (
-          <p className="text-xs text-green-600" data-testid="sms-config-saved">
+          <p className="text-xs text-success" data-testid="sms-config-saved">
             {t('smsConfigSaved')}
           </p>
         )}
@@ -274,7 +274,7 @@ export function SmsGatewayConfig({ isManager }: SmsGatewayConfigProps) {
 
         {/* Test sent confirmation */}
         {testSent && (
-          <p className="text-xs text-green-600" data-testid="sms-test-sent">
+          <p className="text-xs text-success" data-testid="sms-test-sent">
             {t('smsTestSent')}
           </p>
         )}

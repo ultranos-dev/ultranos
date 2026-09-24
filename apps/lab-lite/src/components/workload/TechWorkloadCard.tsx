@@ -10,17 +10,17 @@ import type { TechWorkload } from '@/lib/workload-service'
 
 function loadLevelBorderClass(level: TechWorkload['loadLevel']): string {
   switch (level) {
-    case 'RED':    return 'border-red-400 bg-red-50/30'
-    case 'AMBER':  return 'border-amber-400 bg-amber-50/20'
-    case 'GREEN':  return 'border-green-300 bg-card'
+    case 'RED':    return 'border-destructive bg-destructive/30'
+    case 'AMBER':  return 'border-warning bg-warning/20'
+    case 'GREEN':  return 'border-success/30 bg-card'
   }
 }
 
 function loadLevelBadgeClass(level: TechWorkload['loadLevel']): string {
   switch (level) {
-    case 'RED':    return 'bg-red-100 text-red-700'
-    case 'AMBER':  return 'bg-amber-100 text-amber-700'
-    case 'GREEN':  return 'bg-green-100 text-green-700'
+    case 'RED':    return 'bg-destructive/10 text-destructive'
+    case 'AMBER':  return 'bg-warning/10 text-warning'
+    case 'GREEN':  return 'bg-success/10 text-success'
   }
 }
 
@@ -125,7 +125,7 @@ export function TechWorkloadCard({
   }
 
   const borderClass = workload.isUnavailable
-    ? 'border-amber-400 bg-amber-50/10'
+    ? 'border-warning bg-warning/10'
     : loadLevelBorderClass(workload.loadLevel)
 
   const dropTargetClass = isDragOver && dragEnabled
@@ -143,12 +143,12 @@ export function TechWorkloadCard({
     >
       {/* Unavailable overlay */}
       {workload.isUnavailable && (
-        <div className="absolute inset-x-0 top-0 flex items-center justify-between rounded-t-lg bg-amber-100 px-3 py-1">
-          <span className="text-xs font-semibold text-amber-800" role="status">
+        <div className="absolute inset-x-0 top-0 flex items-center justify-between rounded-t-lg bg-warning/10 px-3 py-1">
+          <span className="text-xs font-semibold text-warning" role="status">
             {t('unavailable')}
             {workload.availabilityReason ? ` — ${workload.availabilityReason}` : ''}
           </span>
-          <span className="text-xs text-amber-700">{t('needsRedistribution')}</span>
+          <span className="text-xs text-warning">{t('needsRedistribution')}</span>
         </div>
       )}
 
@@ -172,7 +172,7 @@ export function TechWorkloadCard({
         <MetricPill
           label={t('pending')}
           value={workload.pendingCount}
-          colorClass="bg-amber-50 text-amber-700"
+          colorClass="bg-warning/10 text-warning"
         />
         <MetricPill
           label={t('inProgress')}
@@ -182,7 +182,7 @@ export function TechWorkloadCard({
         <MetricPill
           label={t('completedToday')}
           value={workload.completedCount}
-          colorClass="bg-green-50 text-green-700"
+          colorClass="bg-success/10 text-success"
         />
       </div>
 

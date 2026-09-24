@@ -34,7 +34,7 @@ function SafetyReportingContent() {
         <button
           type="button"
           onClick={() => setView('manage')}
-          className="text-sm text-primary-600 hover:underline"
+          className="text-sm text-primary hover:underline"
         >
           Manage Reports →
         </button>

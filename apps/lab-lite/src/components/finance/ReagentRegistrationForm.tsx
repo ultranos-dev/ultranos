@@ -147,7 +147,7 @@ export function ReagentRegistrationForm({
       {errors.length > 0 && (
         <ul
           role="alert"
-          className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700 space-y-1"
+          className="rounded border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive space-y-1"
         >
           {errors.map((err, i) => (
             <li key={i}>{err}</li>

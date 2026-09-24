@@ -151,14 +151,14 @@ export function LogTemperatureModal({
 
         {/* Validation error */}
         {error && (
-          <div className="mb-3 rounded bg-red-50 px-3 py-2 text-xs text-red-700">
+          <div className="mb-3 rounded bg-destructive/10 px-3 py-2 text-xs text-destructive">
             {error}
           </div>
         )}
 
         {/* Excursion warning before save */}
         {excursionWarning && !error && (
-          <div className="mb-3 rounded bg-amber-50 px-3 py-2 text-xs text-amber-700" role="alert">
+          <div className="mb-3 rounded bg-warning/10 px-3 py-2 text-xs text-warning" role="alert">
             {excursionWarning}
           </div>
         )}

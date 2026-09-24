@@ -61,19 +61,19 @@ export function AchievementNotification({ result, onDismiss }: AchievementNotifi
       role="status"
       aria-live="polite"
       data-testid="achievement-notification"
-      className="fixed bottom-4 start-4 z-50 flex max-w-sm items-start gap-3 rounded-xl border border-yellow-200 bg-yellow-50 p-4 shadow-lg"
+      className="fixed bottom-4 start-4 z-50 flex max-w-sm items-start gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4 shadow-lg"
     >
-      <Trophy size={20} className="shrink-0 mt-0.5 text-yellow-700" aria-hidden="true" />
+      <Trophy size={20} className="shrink-0 mt-0.5 text-warning" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-sm text-yellow-900">
+        <p className="font-semibold text-sm text-warning">
           {totalNew === 1 ? 'New Achievement!' : `${totalNew} New Achievements!`}
         </p>
-        <p className="mt-0.5 text-xs text-yellow-800">{message}</p>
+        <p className="mt-0.5 text-xs text-warning">{message}</p>
       </div>
       <button
         type="button"
         onClick={() => { setVisible(false); onDismiss() }}
-        className="shrink-0 text-yellow-600 hover:text-yellow-800"
+        className="shrink-0 text-warning hover:text-warning"
         aria-label="Dismiss notification"
       >
         <X size={16} aria-hidden="true" />

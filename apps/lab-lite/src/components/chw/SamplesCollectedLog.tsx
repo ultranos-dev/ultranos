@@ -17,10 +17,10 @@ import type { CHWSampleCollection, CHWSampleType } from '@/types/chw-mode'
 
 // Sample type icon colors (same palette as SampleTypeSelector)
 const SAMPLE_TYPE_COLORS: Record<CHWSampleType, string> = {
-  blood: 'bg-red-100 text-red-700',
-  urine: 'bg-yellow-100 text-yellow-700',
+  blood: 'bg-destructive/10 text-destructive',
+  urine: 'bg-warning/10 text-warning',
   swab: 'bg-muted text-foreground',
-  stool: 'bg-amber-100 text-amber-700',
+  stool: 'bg-warning/10 text-warning',
   other: 'bg-primary/10 text-primary',
 }
 

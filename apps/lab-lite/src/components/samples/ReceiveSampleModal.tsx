@@ -278,7 +278,7 @@ export function ReceiveSampleModal({
               {t('modal.sampleId')}: <span className="font-mono font-bold">{confirmedSampleId}</span>
             </p>
             {attachmentWarning && (
-              <p role="alert" className="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2" data-testid="attachment-warning">
+              <p role="alert" className="text-sm text-warning bg-warning/10 rounded-lg px-3 py-2" data-testid="attachment-warning">
                 {attachmentWarning}
               </p>
             )}
@@ -385,14 +385,14 @@ export function ReceiveSampleModal({
           {/* Rejection reason — shown only when condition is not acceptable */}
           {isNonAcceptable && (
             <div className="space-y-1" data-testid="rejection-reason-section">
-              <label htmlFor="rejection-reason" className="text-sm font-medium text-red-700">
+              <label htmlFor="rejection-reason" className="text-sm font-medium text-destructive">
                 {t('form.rejectionReason')}
               </label>
               <select
                 id="rejection-reason"
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                className="w-full rounded-lg border border-red-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="w-full rounded-lg border border-destructive/30 px-3 py-2 text-sm focus:border-destructive focus:outline-none focus:ring-1 focus:ring-destructive"
                 data-testid="rejection-reason-select"
               >
                 <option value="">{t('form.selectRejectionReason')}</option>
@@ -402,7 +402,7 @@ export function ReceiveSampleModal({
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-red-600 mt-1">{t('form.rejectionNotice')}</p>
+              <p className="text-xs text-destructive mt-1">{t('form.rejectionNotice')}</p>
             </div>
           )}
 
@@ -448,7 +448,7 @@ export function ReceiveSampleModal({
 
           {/* Error */}
           {error && (
-            <p role="alert" className="text-sm text-red-600" data-testid="form-error">
+            <p role="alert" className="text-sm text-destructive" data-testid="form-error">
               {error}
             </p>
           )}
@@ -468,7 +468,7 @@ export function ReceiveSampleModal({
               disabled={isSubmitting}
               className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${
                 isNonAcceptable
-                  ? 'bg-red-600 hover:bg-red-700'
+                  ? 'bg-destructive hover:bg-destructive'
                   : 'bg-primary hover:bg-primary/90'
               }`}
               data-testid="submit-button"

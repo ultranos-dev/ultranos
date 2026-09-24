@@ -79,7 +79,7 @@ export function ModuleViewer({
           type="button"
           onClick={onClose}
           aria-label={t('close')}
-          className="rounded p-1 text-muted-foreground hover:text-muted-foreground dark:hover:text-gray-200"
+          className="rounded p-1 text-muted-foreground hover:text-muted-foreground dark:hover:text-muted-foreground"
           data-testid="module-viewer-close"
         >
           <X size={18} aria-hidden="true" />
@@ -128,7 +128,7 @@ export function ModuleViewer({
             <button
               type="button"
               onClick={handleNext}
-              className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90 dark:bg-primary dark:hover:bg-blue-400"
+              className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary"
               data-testid="step-next"
             >
               {isLastStep ? t('viewTips') : t('next')}
@@ -164,7 +164,7 @@ export function ModuleViewer({
             <button
               type="button"
               onClick={() => setPhase('quiz')}
-              className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90 dark:bg-primary dark:hover:bg-blue-400"
+              className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary"
               data-testid="tips-start-quiz"
             >
               {t('startQuiz')}

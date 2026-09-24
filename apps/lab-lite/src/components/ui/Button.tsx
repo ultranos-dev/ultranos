@@ -30,7 +30,7 @@ const VARIANT_MAP: Record<LabButtonVariant, UiVariant> = {
 }
 
 const VARIANT_EXTRA_CLASSES: Partial<Record<LabButtonVariant, string>> = {
-  warning: 'border-amber-500 bg-amber-600 text-white hover:bg-amber-700 hover:brightness-100',
+  warning: 'border-warning bg-warning text-white hover:bg-warning hover:brightness-100',
   brand: 'bg-pill-green text-pill-text hover:bg-pill-green hover:brightness-105 hover:text-pill-text',
 }
 

@@ -174,19 +174,19 @@ export function SampleDetailView({
       {/* Pre-analytical transport flags (AC 4, Story 54.3) — must acknowledge before processing */}
       {specimen._ultranos.transportFlags && specimen._ultranos.transportFlags.length > 0 && !transportFlagsAcknowledged && (
         <div
-          className="rounded-xl border border-red-400 bg-red-50 p-5 space-y-3"
+          className="rounded-xl border border-destructive bg-destructive/10 p-5 space-y-3"
           role="alert"
           data-testid="pre-analytical-flag-banner"
         >
           <div className="flex items-start gap-3">
-            <span className="text-red-600 text-xl font-bold" aria-hidden>⚠</span>
+            <span className="text-destructive text-xl font-bold" aria-hidden>⚠</span>
             <div className="flex-1">
-              <p className="text-sm font-bold text-red-800">
+              <p className="text-sm font-bold text-destructive">
                 Pre-Analytical Concern — Transport Flag
               </p>
               <ul className="mt-2 space-y-1">
                 {specimen._ultranos.transportFlags.map((flag, i) => (
-                  <li key={i} className="text-sm text-red-700">
+                  <li key={i} className="text-sm text-destructive">
                     {flag.message}
                   </li>
                 ))}
@@ -205,7 +205,7 @@ export function SampleDetailView({
                 sampleCount: specimen._ultranos.transportFlags?.length ?? 0,
               })
             }}
-            className="w-full rounded-lg border border-red-300 bg-card px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
+            className="w-full rounded-lg border border-destructive/30 bg-card px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10"
             data-testid="acknowledge-transport-flag-button"
           >
             I acknowledge this sample has a pre-analytical concern
@@ -247,8 +247,8 @@ export function SampleDetailView({
               data-testid="verification-badge"
               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                 verificationRecord.isComplete
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-yellow-100 text-yellow-800'
+                  ? 'bg-success/10 text-success'
+                  : 'bg-warning/10 text-warning'
               }`}
             >
               <span aria-hidden="true">{verificationRecord.isComplete ? '✓' : '⚠'}</span>
@@ -302,7 +302,7 @@ export function SampleDetailView({
           </h3>
 
           {transitionError && (
-            <p role="alert" className="text-sm text-red-600" data-testid="transition-error">
+            <p role="alert" className="text-sm text-destructive" data-testid="transition-error">
               {transitionError}
             </p>
           )}
@@ -326,18 +326,18 @@ export function SampleDetailView({
                 <button
                   type="button"
                   onClick={() => setShowReleaseConfirm(true)}
-                  className="rounded-lg border border-yellow-400 bg-yellow-50 px-4 py-2 text-sm font-medium text-yellow-800 hover:bg-yellow-100"
+                  className="rounded-lg border border-warning bg-warning/10 px-4 py-2 text-sm font-medium text-warning hover:bg-warning/10"
                   data-testid="release-sample-button"
                 >
                   {t('actions.releaseSample')}
                 </button>
               ) : (
-                <div className="flex items-center gap-2 rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800" data-testid="release-confirm">
+                <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning" data-testid="release-confirm">
                   <span>{t('actions.confirmRelease', { sampleId: specimen._ultranos.labSampleId })}</span>
-                  <button type="button" onClick={handleManualRelease} className="rounded bg-yellow-600 px-3 py-1 text-xs font-medium text-white hover:bg-yellow-700">
+                  <button type="button" onClick={handleManualRelease} className="rounded bg-warning px-3 py-1 text-xs font-medium text-white hover:bg-warning">
                     {t('actions.confirm')}
                   </button>
-                  <button type="button" onClick={() => setShowReleaseConfirm(false)} className="text-xs text-yellow-700 underline">
+                  <button type="button" onClick={() => setShowReleaseConfirm(false)} className="text-xs text-warning underline">
                     {t('actions.cancel')}
                   </button>
                 </div>
@@ -349,7 +349,7 @@ export function SampleDetailView({
                 type="button"
                 onClick={() => handleTransition('completed')}
                 disabled={isTransitioning}
-                className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                className="rounded-lg bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success disabled:opacity-50"
                 data-testid="mark-complete-button"
               >
                 {t('actions.markComplete')}
@@ -378,15 +378,15 @@ export function SampleDetailView({
       {/* Incomplete verification deviation — yellow highlight (AC 4.2, 4.3) */}
       {verificationRecord !== undefined && verificationRecord !== null && !verificationRecord.isComplete && (
         <div
-          className="rounded-xl border border-yellow-300 bg-yellow-50 p-5 space-y-1"
+          className="rounded-xl border border-warning/30 bg-warning/10 p-5 space-y-1"
           data-testid="deviation-record"
           role="alert"
         >
-          <p className="text-sm font-semibold text-yellow-800">
+          <p className="text-sm font-semibold text-warning">
             {t('detail.verificationDeviation')}
           </p>
           {verificationRecord.deviationReason && (
-            <p className="text-xs text-yellow-700">
+            <p className="text-xs text-warning">
               {verificationRecord.deviationReason}
             </p>
           )}
@@ -404,8 +404,8 @@ export function SampleDetailView({
           <div
             className={`mb-4 flex gap-3 rounded-lg border p-3 text-xs ${
               verificationRecord.isComplete
-                ? 'border-green-200 bg-green-50 text-green-800'
-                : 'border-yellow-200 bg-yellow-50 text-yellow-800'
+                ? 'border-success/30 bg-success/10 text-success'
+                : 'border-warning/30 bg-warning/10 text-warning'
             }`}
             data-testid="verification-timeline-entry"
           >

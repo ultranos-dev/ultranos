@@ -35,16 +35,16 @@ interface ResupplyRequestFormProps {
 
 const URGENCY_CONFIG = {
   routine: {
-    color: 'text-green-700 border-green-300 bg-green-50',
-    badge: 'bg-green-100 text-green-800',
+    color: 'text-success border-success/30 bg-success/10',
+    badge: 'bg-success/10 text-success',
   },
   urgent: {
-    color: 'text-yellow-700 border-yellow-300 bg-yellow-50',
-    badge: 'bg-yellow-100 text-yellow-800',
+    color: 'text-warning border-warning/30 bg-warning/10',
+    badge: 'bg-warning/10 text-warning',
   },
   critical: {
-    color: 'text-red-700 border-red-300 bg-red-50',
-    badge: 'bg-red-100 text-red-800',
+    color: 'text-destructive border-destructive/30 bg-destructive/10',
+    badge: 'bg-destructive/10 text-destructive',
   },
 }
 
@@ -121,7 +121,7 @@ export function ResupplyRequestForm({
   if (step === 'success') {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
-        <CheckCircle className="text-green-600" size={48} />
+        <CheckCircle className="text-success" size={48} />
         <h2 className="text-xl font-semibold">{t('form.successTitle')}</h2>
         <p className="text-sm text-muted-foreground">{t('form.successBody')}</p>
         <p className="font-mono text-xs text-muted-foreground">{submittedRequestId}</p>
@@ -271,7 +271,7 @@ export function ResupplyRequestForm({
                 <button
                   type="button"
                   onClick={() => removeItem(i)}
-                  className="mt-1 text-muted-foreground hover:text-red-600"
+                  className="mt-1 text-muted-foreground hover:text-destructive"
                   aria-label={t('form.removeItem')}
                 >
                   <Trash2 size={16} />
@@ -307,7 +307,7 @@ export function ResupplyRequestForm({
 
       {/* Validation errors */}
       {errors.length > 0 && (
-        <ul className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <ul className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {errors.map((e, i) => (
             <li key={i} className="flex items-start gap-1">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />

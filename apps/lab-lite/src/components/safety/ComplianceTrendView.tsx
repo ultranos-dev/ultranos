@@ -19,16 +19,16 @@ const MAX_BARS = 12
 
 /** Returns Tailwind text colour class for a compliance score. */
 function scoreColorClass(score: number): string {
-  if (score >= 80) return 'text-green-600'
-  if (score >= 60) return 'text-yellow-500'
-  return 'text-red-600'
+  if (score >= 80) return 'text-success'
+  if (score >= 60) return 'text-warning'
+  return 'text-destructive'
 }
 
 /** Returns Tailwind bg colour class for a compliance score. */
 function scoreBgClass(score: number): string {
-  if (score >= 80) return 'bg-green-500'
-  if (score >= 60) return 'bg-yellow-400'
-  return 'bg-red-500'
+  if (score >= 80) return 'bg-success'
+  if (score >= 60) return 'bg-warning'
+  return 'bg-destructive'
 }
 
 export function ComplianceTrendView({
@@ -102,9 +102,9 @@ export function ComplianceTrendView({
             <div
               className={`mt-3 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
                 momDelta > 0
-                  ? 'bg-green-100 text-green-700'
+                  ? 'bg-success/10 text-success'
                   : momDelta < 0
-                    ? 'bg-red-100 text-red-700'
+                    ? 'bg-destructive/10 text-destructive'
                     : 'bg-muted text-muted-foreground'
               }`}
             >
@@ -167,14 +167,14 @@ export function ComplianceTrendView({
 
       {/* ── Failed items from latest audit ─────────────────────────────────── */}
       {failedDescriptions.length > 0 && (
-        <div className="rounded-xl border border-red-100 bg-red-50 p-4">
-          <h2 className="mb-3 text-sm font-semibold text-red-800">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4">
+          <h2 className="mb-3 text-sm font-semibold text-destructive">
             {t('failedItemsTitle')}
           </h2>
           <ul className="space-y-1">
             {failedDescriptions.map((desc, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-xs text-red-700">
-                <span className="mt-0.5 shrink-0 text-red-400" aria-hidden="true">
+              <li key={idx} className="flex items-start gap-2 text-xs text-destructive">
+                <span className="mt-0.5 shrink-0 text-destructive" aria-hidden="true">
                   ✕
                 </span>
                 {desc}

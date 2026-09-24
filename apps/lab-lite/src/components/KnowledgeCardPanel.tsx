@@ -38,7 +38,7 @@ function SeverityBadge({ severity }: { severity: KnowledgeCard['severity'] }) {
     critical:
       'bg-destructive/10 text-destructive border border-destructive/30',
     warning:
-      'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700',
+      'bg-warning/10 text-warning dark:bg-warning/40 dark:text-warning border border-warning/30 dark:border-warning',
     informational:
       'bg-primary/10 text-primary border border-primary dark:border-primary',
   }
@@ -52,7 +52,7 @@ function SeverityBadge({ severity }: { severity: KnowledgeCard['severity'] }) {
       {severity === 'critical' && (
         <span
           aria-hidden="true"
-          className="size-1.5 animate-pulse rounded-full bg-red-600 dark:bg-red-400"
+          className="size-1.5 animate-pulse rounded-full bg-destructive dark:bg-destructive"
         />
       )}
       {t(`severity.${severity}`)}
@@ -147,7 +147,7 @@ function KnowledgeCardItem({
           type="button"
           onClick={toggleContext}
           aria-expanded={contextOpen}
-          className="flex w-full items-center justify-between px-3 py-2 text-left text-xs font-medium text-muted-foreground hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring dark:hover:bg-card dark:text-muted-foreground"
+          className="flex w-full items-center justify-between px-3 py-2 text-start text-xs font-medium text-muted-foreground hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring dark:hover:bg-card dark:text-muted-foreground"
         >
           <span>{t('knowledgeCards.clinicalContext')}</span>
           <ChevronDown
@@ -200,7 +200,7 @@ export function KnowledgeCardPanel({
         // Positioned at inline-end for RTL/LTR compatibility (logical CSS)
         'flex w-80 shrink-0 flex-col rounded-lg border shadow-md',
         hasCritical
-          ? 'border-red-200 bg-red-50/60 dark:border-red-800 dark:bg-red-950/30'
+          ? 'border-destructive/30 bg-destructive/60 dark:border-destructive dark:bg-destructive/30'
           : 'border-border bg-muted/30 dark:border-border dark:bg-card/60',
         // Collapsed: show only the header row (~44px). Use a min-height on the
         // header itself rather than max-h on the aside so translated/long labels
@@ -213,7 +213,7 @@ export function KnowledgeCardPanel({
         className={[
           'flex items-center justify-between px-3 py-2.5',
           hasCritical
-            ? 'border-b border-red-200 dark:border-red-800'
+            ? 'border-b border-destructive/30 dark:border-destructive'
             : 'border-b border-border dark:border-border',
         ].join(' ')}
       >
@@ -221,7 +221,7 @@ export function KnowledgeCardPanel({
           {hasCritical && (
             <span
               aria-hidden="true"
-              className="size-2 animate-pulse rounded-full bg-red-500"
+              className="size-2 animate-pulse rounded-full bg-destructive"
             />
           )}
           <span className="text-xs font-semibold uppercase tracking-wide text-foreground dark:text-muted-foreground">

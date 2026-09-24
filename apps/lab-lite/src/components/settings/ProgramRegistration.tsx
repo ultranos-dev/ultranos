@@ -188,7 +188,7 @@ export function ProgramRegistration() {
                   <p className="text-xs text-muted-foreground">{p.donorOrganization} · {p.programCode}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${p.status === 'active' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
                     {p.status === 'active' ? t('active') : t('inactive')}
                   </span>
                   <button
@@ -294,7 +294,7 @@ export function ProgramRegistration() {
       </div>
 
       {error && (
-        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p className="rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
       )}
 
       <div className="flex justify-end gap-2">
@@ -311,7 +311,7 @@ function FormField({ label, required, children }: { label: string; required?: bo
   return (
     <div>
       <label className="block text-xs font-medium text-muted-foreground mb-1">
-        {label}{required && <span className="text-red-500 ms-0.5">*</span>}
+        {label}{required && <span className="text-destructive ms-0.5">*</span>}
       </label>
       {children}
     </div>

@@ -122,12 +122,12 @@ export function CourierHandoffScreen({ onDone }: Props) {
         </div>
 
         {scanError === 'not-found' && (
-          <p className="flex items-center gap-2 text-red-600" role="alert">
+          <p className="flex items-center gap-2 text-destructive" role="alert">
             <AlertCircle size={16} aria-hidden /> {t('notFound')}
           </p>
         )}
         {scanError === 'duplicate' && (
-          <p className="flex items-center gap-2 text-amber-600" role="alert">
+          <p className="flex items-center gap-2 text-warning" role="alert">
             <AlertCircle size={16} aria-hidden /> {t('alreadyScanned')}
           </p>
         )}
@@ -141,7 +141,7 @@ export function CourierHandoffScreen({ onDone }: Props) {
             <ul className="flex flex-col gap-1">
               {scannedIds.map((id) => (
                 <li key={id} className="flex items-center gap-2 text-base text-foreground">
-                  <CheckCircle size={14} className="text-green-600 shrink-0" aria-hidden />
+                  <CheckCircle size={14} className="text-success shrink-0" aria-hidden />
                   <span className="font-mono">{id}</span>
                 </li>
               ))}
@@ -263,7 +263,7 @@ export function CourierHandoffScreen({ onDone }: Props) {
         </div>
 
         {submitError && (
-          <p className="flex items-center gap-2 text-red-600" role="alert">
+          <p className="flex items-center gap-2 text-destructive" role="alert">
             <AlertCircle size={16} aria-hidden /> {t('submitError')}
           </p>
         )}
@@ -273,7 +273,7 @@ export function CourierHandoffScreen({ onDone }: Props) {
           <LargeButton
             onClick={() => void handleConfirm()}
             disabled={submitting}
-            className="flex-1 bg-green-600 hover:bg-green-700"
+            className="flex-1 bg-success hover:bg-success"
           >
             {submitting ? '…' : t('confirmButton')}
           </LargeButton>
@@ -286,8 +286,8 @@ export function CourierHandoffScreen({ onDone }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-6 p-4">
-      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
-        <CheckCircle size={48} className="text-green-700" aria-hidden />
+      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-success/10">
+        <CheckCircle size={48} className="text-success" aria-hidden />
       </div>
       <h2 className="text-center text-2xl font-bold text-foreground">{t('successTitle')}</h2>
       <p className="text-center text-xl text-muted-foreground">

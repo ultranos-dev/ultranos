@@ -57,7 +57,7 @@ export function ChecklistTemplateEditor() {
 
   if (!isManager) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+      <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
         {t('accessRestricted')}
       </div>
     )
@@ -177,7 +177,7 @@ export function ChecklistTemplateEditor() {
           <button
             type="button"
             onClick={() => setShowResetConfirm(true)}
-            className="rounded-md border border-red-300 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-400"
+            className="rounded-md border border-destructive/30 px-3 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/10 focus:outline-none focus:ring-2 focus:ring-destructive"
           >
             {t('resetToDefaults')}
           </button>
@@ -190,16 +190,16 @@ export function ChecklistTemplateEditor() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="reset-dialog-title"
-          className="rounded-lg border border-amber-300 bg-amber-50 p-4 flex flex-col gap-3"
+          className="rounded-lg border border-warning/30 bg-warning/10 p-4 flex flex-col gap-3"
         >
-          <p id="reset-dialog-title" className="text-sm font-medium text-amber-800">
+          <p id="reset-dialog-title" className="text-sm font-medium text-warning">
             {t('resetConfirmMessage')}
           </p>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={handleReset}
-              className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+              className="rounded-md bg-destructive px-3 py-1.5 text-sm font-medium text-white hover:bg-destructive"
             >
               {t('confirmReset')}
             </button>
@@ -220,7 +220,7 @@ export function ChecklistTemplateEditor() {
           <h3 className="text-sm font-semibold text-primary">{t('addItemTitle')}</h3>
 
           {addError && (
-            <p className="text-xs text-red-600" role="alert">
+            <p className="text-xs text-destructive" role="alert">
               {addError}
             </p>
           )}
@@ -417,7 +417,7 @@ export function ChecklistTemplateEditor() {
                           <p className="text-sm text-foreground break-words">{item.description}</p>
                           <div className="flex flex-wrap gap-1.5 mt-0.5">
                             {item.requiresPhoto && (
-                              <span className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700">
+                              <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                                 {t('badgeRequiresPhoto')}
                               </span>
                             )}
@@ -442,8 +442,8 @@ export function ChecklistTemplateEditor() {
                               onClick={() => handleToggleActive(item)}
                               className={`rounded px-2 py-1 text-xs font-medium ${
                                 item.isActive
-                                  ? 'border border-amber-300 text-amber-700 hover:bg-amber-50'
-                                  : 'border border-green-300 text-green-700 hover:bg-green-50'
+                                  ? 'border border-warning/30 text-warning hover:bg-warning/10'
+                                  : 'border border-success/30 text-success hover:bg-success/10'
                               }`}
                             >
                               {item.isActive ? t('deactivate') : t('activate')}
@@ -461,7 +461,7 @@ export function ChecklistTemplateEditor() {
                               <button
                                 type="button"
                                 onClick={() => handleDelete(item.id)}
-                                className="rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                                className="rounded border border-destructive/30 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
                               >
                                 {t('delete')}
                               </button>

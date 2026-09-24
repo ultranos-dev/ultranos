@@ -94,11 +94,11 @@ function SupplierForm({
         value={values[name]}
         onChange={(ev) => setValues((v) => ({ ...v, [name]: ev.target.value }))}
         className={`rounded border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
-          errors[name] ? 'border-red-400' : 'border-border'
+          errors[name] ? 'border-destructive' : 'border-border'
         }`}
         {...extra}
       />
-      {errors[name] && <p className="text-xs text-red-600">{errors[name]}</p>}
+      {errors[name] && <p className="text-xs text-destructive">{errors[name]}</p>}
     </div>
   )
 
@@ -321,7 +321,7 @@ export function SupplierConfigPanel() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDelete(supplier.supplierId, supplier.id!)}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-destructive hover:text-destructive"
                       data-testid={`delete-supplier-${supplier.id}`}
                     >
                       <Trash2 size={13} aria-hidden="true" />

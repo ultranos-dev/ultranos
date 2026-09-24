@@ -163,14 +163,14 @@ export function EscalationContactsPanel() {
             <div className="flex items-center gap-2">
               <h3 className="font-medium text-foreground">{t(`role.${role}`)}</h3>
               {form.saved && (
-                <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
                   {t('saved')}
                 </span>
               )}
             </div>
 
             {form.error && (
-              <p role="alert" className="text-sm text-red-600">
+              <p role="alert" className="text-sm text-destructive">
                 {form.error}
               </p>
             )}
@@ -183,7 +183,7 @@ export function EscalationContactsPanel() {
                   className="mb-1 block text-sm font-medium text-foreground"
                 >
                   {t('nameLabel')}
-                  <span className="ms-1 text-red-500" aria-hidden="true">*</span>
+                  <span className="ms-1 text-destructive" aria-hidden="true">*</span>
                 </label>
                 <input
                   id={`${role}-name`}

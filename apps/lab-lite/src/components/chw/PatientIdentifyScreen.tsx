@@ -119,7 +119,7 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
           icon={<Keyboard size={48} aria-hidden />}
           label={t('enterName')}
           onClick={() => setMode('name')}
-          color="bg-green-600 hover:bg-green-700"
+          color="bg-success hover:bg-success"
         />
       </div>
     )
@@ -145,7 +145,7 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
           aria-label="QR data"
         />
         {qrError && (
-          <p className="flex items-center gap-2 text-red-600" role="alert">
+          <p className="flex items-center gap-2 text-destructive" role="alert">
             <AlertCircle size={16} aria-hidden /> Invalid or expired QR code
           </p>
         )}
@@ -182,11 +182,11 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
           {searching ? '…' : t('searchButton')}
         </LargeButton>
         {notFound && (
-          <div className="rounded-xl bg-amber-50 p-4 text-amber-800">
+          <div className="rounded-xl bg-warning/10 p-4 text-warning">
             <p className="text-lg">{t('notFound')}</p>
             <LargeButton
               onClick={handleContinueWithoutMatch}
-              className="mt-3 bg-amber-600 hover:bg-amber-700"
+              className="mt-3 bg-warning hover:bg-warning"
             >
               {t('continue')}
             </LargeButton>
@@ -201,8 +201,8 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-6 p-4">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-        <User size={40} className="text-green-700" aria-hidden />
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-success/10">
+        <User size={40} className="text-success" aria-hidden />
       </div>
       <h2 className="text-2xl font-bold text-foreground">{t('confirmed')}</h2>
       {patient && (

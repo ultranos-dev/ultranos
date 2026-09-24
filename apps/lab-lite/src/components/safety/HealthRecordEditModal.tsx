@@ -121,7 +121,7 @@ export function HealthRecordEditModal({
         />
 
         {error && (
-          <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm" role="alert">
+          <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm" role="alert">
             {error}
           </div>
         )}

@@ -194,7 +194,7 @@ export function CriticalValueAlert({
       aria-modal="true"
       aria-labelledby="critical-alert-title"
       aria-describedby="critical-alert-desc"
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-red-950"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-destructive"
       onKeyDown={handleKeyDown}
       ref={containerRef}
     >
@@ -203,15 +203,15 @@ export function CriticalValueAlert({
         <source src="/sounds/critical-alert.mp3" type="audio/mpeg" />
       </audio>
 
-      <div className="w-full max-w-lg mx-4 rounded-2xl border-4 border-red-500 bg-card p-8 shadow-2xl">
+      <div className="w-full max-w-lg mx-4 rounded-2xl border-4 border-destructive bg-card p-8 shadow-2xl">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="text-red-600">
+          <span className="text-destructive">
             <WarningIcon />
           </span>
           <h1
             id="critical-alert-title"
-            className="text-3xl font-black text-red-700 uppercase tracking-wide"
+            className="text-3xl font-black text-destructive uppercase tracking-wide"
           >
             {t('title')}
           </h1>
@@ -222,7 +222,7 @@ export function CriticalValueAlert({
           <button
             ref={soundButtonRef}
             type="button"
-            className="mt-4 w-full rounded-lg border border-red-300 bg-red-50 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
+            className="mt-4 w-full rounded-lg border border-destructive/30 bg-destructive/10 py-2 text-sm font-medium text-destructive hover:bg-destructive/10"
             onClick={startAudio}
           >
             {t('enableSound')}
@@ -232,14 +232,14 @@ export function CriticalValueAlert({
         {/* Critical values */}
         <div id="critical-alert-desc" className="mt-6 space-y-3">
           {criticalValues.map((cv, i) => (
-            <div key={i} className="rounded-lg border-2 border-red-400 bg-red-50 px-4 py-3">
-              <p className="text-lg font-bold text-red-800">
+            <div key={i} className="rounded-lg border-2 border-destructive bg-destructive/10 px-4 py-3">
+              <p className="text-lg font-bold text-destructive">
                 {cv.analyte}:{' '}
                 <span className="font-black">
                   {cv.value} {cv.unit}
                 </span>
               </p>
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-destructive">
                 {cv.direction === 'high'
                   ? t('criticalHigh', { threshold: cv.threshold ?? '', unit: cv.unit ?? '' })
                   : t('criticalLow', { threshold: cv.threshold ?? '', unit: cv.unit ?? '' })}
@@ -274,7 +274,7 @@ export function CriticalValueAlert({
               type="checkbox"
               checked={checked}
               onChange={(e) => setChecked(e.target.checked)}
-              className="mt-1 h-5 w-5 flex-shrink-0 accent-red-600"
+              className="mt-1 h-5 w-5 flex-shrink-0 accent-destructive"
               aria-required="true"
             />
             <span className="text-sm font-medium text-foreground leading-snug">
@@ -287,7 +287,7 @@ export function CriticalValueAlert({
             type="button"
             disabled={!checked || acknowledging}
             onClick={handleAcknowledge}
-            className="w-full rounded-xl bg-red-600 py-3 text-base font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="w-full rounded-xl bg-destructive py-3 text-base font-bold text-white transition hover:bg-destructive disabled:cursor-not-allowed disabled:opacity-40"
             aria-disabled={!checked || acknowledging}
           >
             {acknowledging ? t('acknowledging') : t('acknowledgeButton')}

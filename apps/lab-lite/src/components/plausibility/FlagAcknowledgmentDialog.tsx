@@ -114,8 +114,8 @@ export function FlagAcknowledgmentDialog({ flag, resultId, patientRef, onConfirm
               <span
                 className={
                   flag.severity === 'CRITICAL'
-                    ? 'text-red-700 dark:text-red-400'
-                    : 'text-amber-700 dark:text-amber-400'
+                    ? 'text-destructive dark:text-destructive'
+                    : 'text-warning dark:text-warning'
                 }
               >
                 {flag.message}
@@ -141,14 +141,14 @@ export function FlagAcknowledgmentDialog({ flag, resultId, patientRef, onConfirm
               className="mt-1 block w-full rounded border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50 dark:placeholder:text-muted-foreground"
             />
             {explanation.length > 0 && !isValid && (
-              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+              <p className="mt-1 text-xs text-destructive dark:text-destructive">
                 {t('dialogExplanationMinLength')}
               </p>
             )}
           </div>
 
           {error && (
-            <p className="text-xs text-red-600 dark:text-red-400" role="alert">
+            <p className="text-xs text-destructive dark:text-destructive" role="alert">
               {error}
             </p>
           )}
@@ -159,7 +159,7 @@ export function FlagAcknowledgmentDialog({ flag, resultId, patientRef, onConfirm
               type="button"
               onClick={onCancel}
               disabled={submitting}
-              className="rounded px-4 py-2 text-sm font-medium text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 disabled:opacity-50"
+              className="rounded px-4 py-2 text-sm font-medium text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-border focus:ring-offset-1 disabled:opacity-50"
             >
               {t('dialogCancel')}
             </button>

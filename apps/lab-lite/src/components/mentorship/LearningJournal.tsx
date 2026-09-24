@@ -110,7 +110,7 @@ export function LearningJournal({
               className={
                 'rounded-xl border p-4 shadow-sm ' +
                 (entry.authorId === currentUserId
-                  ? 'border-primary-200 bg-primary-50'
+                  ? 'border-primary bg-primary-50'
                   : 'border-border bg-card')
               }
             >
@@ -122,7 +122,7 @@ export function LearningJournal({
                     'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' +
                     (entry.authorRole === 'mentor'
                       ? 'bg-primary/10 text-primary'
-                      : 'bg-emerald-100 text-emerald-800')
+                      : 'bg-success/10 text-success')
                   }
                 >
                   {entry.authorRole === 'mentor'

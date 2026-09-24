@@ -71,11 +71,11 @@ function LogEntry({ log, onViewImage, onStatusChange }: LogEntryProps) {
         <p className="text-xs text-muted-foreground mt-0.5">
           {totalTests} tests · {log.workflowMetrics.completionRate.toFixed(0)}% complete
           {log.status === 'shared' && (
-            <span className="ml-2 text-green-600">✓ {t('share')}</span>
+            <span className="ms-2 text-success">✓ {t('share')}</span>
           )}
         </p>
       </div>
-      <div className="flex items-center gap-2 ml-3">
+      <div className="flex items-center gap-2 ms-3">
         {log.imageBlob && (
           <>
             <button
@@ -96,7 +96,7 @@ function LogEntry({ log, onViewImage, onStatusChange }: LogEntryProps) {
                   reportDailyLogAuditEvent({ action: 'DAILY_LOG_DOWNLOADED', logId: log.id, logDate: log.logDate })
                 }
               }}
-              className="rounded bg-green-600 px-2 py-1 text-xs font-semibold text-white hover:bg-green-700"
+              className="rounded bg-success px-2 py-1 text-xs font-semibold text-white hover:bg-success"
             >
               {t('share')}
             </button>
@@ -167,7 +167,7 @@ function ImageModal({ log, onClose }: ImageModalProps) {
         <div className="flex gap-2">
           <button
             onClick={handleShare}
-            className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-700"
+            className="rounded-md bg-success px-3 py-1.5 text-sm font-semibold text-white hover:bg-success"
           >
             {t('share')}
           </button>
@@ -204,8 +204,8 @@ export function DailyLogHistory() {
 
   if (error) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-        <p className="text-sm text-red-700">{error}</p>
+      <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4">
+        <p className="text-sm text-destructive">{error}</p>
       </div>
     )
   }

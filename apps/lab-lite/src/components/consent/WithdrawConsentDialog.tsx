@@ -72,7 +72,7 @@ export function WithdrawConsentDialog({
           />
         </label>
 
-        {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && <p className="mt-2 text-sm text-destructive dark:text-destructive">{error}</p>}
 
         <div className="mt-6 flex justify-end gap-3">
           <button
@@ -88,7 +88,7 @@ export function WithdrawConsentDialog({
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50"
+            className="rounded-md bg-destructive px-4 py-2 text-sm text-white hover:bg-destructive disabled:opacity-50"
           >
             {submitting ? t('withdraw.submitting') : t('withdraw.submit')}
           </button>

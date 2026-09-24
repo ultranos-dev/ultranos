@@ -62,8 +62,8 @@ function FlagBadge({ flag }: { flag: string | null }) {
       className={[
         'inline-flex items-center rounded px-1.5 py-0.5 text-xs font-bold tabular-nums',
         isCritical
-          ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-          : 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+          ? 'bg-destructive/10 text-destructive dark:bg-destructive/30 dark:text-destructive'
+          : 'bg-warning/10 text-warning dark:bg-warning/30 dark:text-warning',
       ].join(' ')}
     >
       {flag}
@@ -503,20 +503,20 @@ export function ResultEntryForm({
       {hasCritical && (
         <div
           role="alert"
-          className="sticky top-[3.5rem] z-10 flex flex-col gap-2 border-b border-red-200 bg-red-50 px-4 py-3 dark:border-red-800 dark:bg-red-900/30"
+          className="sticky top-[3.5rem] z-10 flex flex-col gap-2 border-b border-destructive/30 bg-destructive/10 px-4 py-3 dark:border-destructive dark:bg-destructive/30"
         >
-          <p className="font-semibold text-red-800 dark:text-red-200">
+          <p className="font-semibold text-destructive dark:text-destructive">
             {t('criticalAlertTitle')}
           </p>
-          <p className="text-sm text-red-700 dark:text-red-300">
+          <p className="text-sm text-destructive dark:text-destructive">
             {t('criticalAlertBody')}
           </p>
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-red-700 dark:text-red-300">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-destructive dark:text-destructive">
             <input
               type="checkbox"
               checked={criticalAcknowledged}
               onChange={(e) => setCriticalAcknowledged(e.target.checked)}
-              className="h-4 w-4 rounded border-red-400 text-red-600 focus:ring-red-500"
+              className="h-4 w-4 rounded border-destructive text-destructive focus:ring-destructive"
             />
             {t('criticalAcknowledgeLabel')}
           </label>
@@ -527,7 +527,7 @@ export function ResultEntryForm({
       <div className="flex items-center justify-end border-b border-border/50 px-4 py-2 dark:border-border">
         <Link
           href="/atlas"
-          className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:text-primary dark:hover:text-blue-300"
+          className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:text-primary dark:hover:text-primary"
           aria-label={tAtlas('openAtlasAriaLabel')}
         >
           {tAtlas('openAtlas')}

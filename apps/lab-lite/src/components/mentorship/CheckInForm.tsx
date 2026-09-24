@@ -135,7 +135,7 @@ export function CheckInForm({
           className="text-sm font-medium text-foreground"
         >
           {t('checkInNotesLabel')}
-          <span className="ms-1 text-red-600" aria-hidden="true">*</span>
+          <span className="ms-1 text-destructive" aria-hidden="true">*</span>
         </label>
         <p className="text-xs text-muted-foreground">{t('checkInNotesHint')}</p>
         <textarea
@@ -150,12 +150,12 @@ export function CheckInForm({
           disabled={saving}
           required
           className="rounded-lg border border-border px-4 py-3 text-sm text-start
-            focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
+            focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary
             disabled:opacity-50"
           aria-describedby={notesError ? 'notes-error' : undefined}
         />
         {notesError && (
-          <p id="notes-error" role="alert" className="text-xs text-red-600">
+          <p id="notes-error" role="alert" className="text-xs text-destructive">
             {notesError}
           </p>
         )}
@@ -180,7 +180,7 @@ export function CheckInForm({
               disabled={saving}
               placeholder={t('checkInGoalPlaceholder', { number: index + 1 })}
               className="flex-1 rounded-lg border border-border px-4 py-2 text-sm text-start
-                focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
+                focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary
                 disabled:opacity-50"
               aria-label={t('checkInGoalAriaLabel', { number: index + 1 })}
             />
@@ -189,8 +189,8 @@ export function CheckInForm({
                 type="button"
                 onClick={() => handleRemoveGoal(index)}
                 disabled={saving}
-                className="rounded p-1 text-muted-foreground hover:text-red-500
-                  focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50"
+                className="rounded p-1 text-muted-foreground hover:text-destructive
+                  focus:outline-none focus:ring-2 focus:ring-destructive/30 disabled:opacity-50"
                 aria-label={t('checkInGoalRemove', { number: index + 1 })}
               >
                 <X size={16} aria-hidden="true" />
@@ -204,8 +204,8 @@ export function CheckInForm({
             type="button"
             onClick={handleAddGoal}
             disabled={saving}
-            className="self-start text-sm text-primary-600 underline-offset-2
-              hover:underline focus:outline-none focus:ring-2 focus:ring-primary-300
+            className="self-start text-sm text-primary underline-offset-2
+              hover:underline focus:outline-none focus:ring-2 focus:ring-primary
               disabled:opacity-50"
           >
             {t('checkInAddGoal')}

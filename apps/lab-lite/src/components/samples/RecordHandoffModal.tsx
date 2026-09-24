@@ -107,7 +107,7 @@ export function RecordHandoffModal({
           </div>
 
           {error && (
-            <p role="alert" className="text-sm text-red-600" data-testid="handoff-error">
+            <p role="alert" className="text-sm text-destructive" data-testid="handoff-error">
               {error}
             </p>
           )}

@@ -19,9 +19,9 @@ interface HealthRecordViewProps {
 }
 
 const STATUS_COLORS: Record<VaccinationStatus, string> = {
-  [VaccinationStatus.COMPLETE]: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  [VaccinationStatus.INCOMPLETE]: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-  [VaccinationStatus.NOT_STARTED]: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  [VaccinationStatus.COMPLETE]: 'bg-success/10 text-success dark:bg-success dark:text-success',
+  [VaccinationStatus.INCOMPLETE]: 'bg-warning/10 text-warning dark:bg-warning dark:text-warning',
+  [VaccinationStatus.NOT_STARTED]: 'bg-destructive/10 text-destructive dark:bg-destructive dark:text-destructive',
   [VaccinationStatus.UNKNOWN]: 'bg-muted text-foreground',
 }
 
@@ -79,7 +79,7 @@ export function HealthRecordView({
             {t('back')}
           </Button>
         )}
-        <p className="text-red-600 font-medium">{t('accessDenied')}</p>
+        <p className="text-destructive font-medium">{t('accessDenied')}</p>
       </div>
     )
   }
@@ -130,9 +130,9 @@ export function HealthRecordView({
               const state = getReminderState(r.daysUntilDue)
               const color =
                 state === 'OVERDUE'
-                  ? 'bg-red-50 border-red-200 text-red-800'
+                  ? 'bg-destructive/10 border-destructive/30 text-destructive'
                   : state === 'DUE'
-                    ? 'bg-amber-50 border-amber-200 text-amber-800'
+                    ? 'bg-warning/10 border-warning/30 text-warning'
                     : 'bg-primary/10 border-primary text-primary'
               return (
                 <div
@@ -213,9 +213,9 @@ export function HealthRecordView({
               <h4 className="font-medium">{t('tbScreening')}</h4>
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                 record.tbScreeningResult === TbScreeningResult.NEGATIVE
-                  ? 'bg-green-100 text-green-800'
+                  ? 'bg-success/10 text-success'
                   : record.tbScreeningResult === TbScreeningResult.POSITIVE
-                    ? 'bg-red-100 text-red-800'
+                    ? 'bg-destructive/10 text-destructive'
                     : 'bg-muted text-foreground'
               }`}>
                 {t(`tbResult.${record.tbScreeningResult}`)}
@@ -243,9 +243,9 @@ export function HealthRecordView({
                 <span className="text-sm">{entry.date}</span>
                 <span className={`text-sm font-medium ${
                   entry.result === TbScreeningResult.NEGATIVE
-                    ? 'text-green-700'
+                    ? 'text-success'
                     : entry.result === TbScreeningResult.POSITIVE
-                      ? 'text-red-700'
+                      ? 'text-destructive'
                       : 'text-foreground'
                 }`}>
                   {t(`tbResult.${entry.result}`)}
@@ -264,7 +264,7 @@ export function HealthRecordView({
             {record.exposureHistory.map((entry) => (
               <div
                 key={entry.id}
-                className="border-s-4 border-amber-400 ps-3 py-2 space-y-1"
+                className="border-s-4 border-warning ps-3 py-2 space-y-1"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-sm">{entry.date}</span>

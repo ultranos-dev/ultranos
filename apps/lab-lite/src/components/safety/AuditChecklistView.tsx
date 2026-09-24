@@ -31,16 +31,16 @@ interface AuditChecklistViewProps {
 
 /** Tailwind classes per status for a checklist item row. */
 const ROW_CLASSES: Record<ChecklistItemStatus, string> = {
-  [ChecklistItemStatus.PASS]: 'bg-green-50 border-green-200',
-  [ChecklistItemStatus.FAIL]: 'bg-red-50 border-red-200',
+  [ChecklistItemStatus.PASS]: 'bg-success/10 border-success/30',
+  [ChecklistItemStatus.FAIL]: 'bg-destructive/10 border-destructive/30',
   [ChecklistItemStatus.NOT_APPLICABLE]: 'bg-muted border-border',
 }
 
 /** Tailwind classes for the active status toggle button. */
 const ACTIVE_TOGGLE: Record<ChecklistItemStatus, string> = {
-  [ChecklistItemStatus.PASS]: 'bg-green-500 text-white border-green-500',
-  [ChecklistItemStatus.FAIL]: 'bg-red-500 text-white border-red-500',
-  [ChecklistItemStatus.NOT_APPLICABLE]: 'bg-gray-400 text-white border-gray-400',
+  [ChecklistItemStatus.PASS]: 'bg-success text-white border-success',
+  [ChecklistItemStatus.FAIL]: 'bg-destructive text-white border-destructive',
+  [ChecklistItemStatus.NOT_APPLICABLE]: 'bg-muted text-white border-border',
 }
 
 const INACTIVE_TOGGLE = 'bg-card text-muted-foreground border-border hover:bg-muted/30'
@@ -178,7 +178,7 @@ export function AuditChecklistView({
       {/* Progress bar */}
       <div className="h-2 overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full rounded-full bg-primary-500 transition-all"
+          className="h-full rounded-full bg-primary transition-all"
           style={{ width: totalCount > 0 ? `${(assessedCount / totalCount) * 100}%` : '0%' }}
         />
       </div>
@@ -268,7 +268,7 @@ export function AuditChecklistView({
                           onBlur={() => void handleNotesBlur(template.id)}
                           placeholder={t('notesPlaceholder')}
                           rows={2}
-                          className="mt-2 w-full rounded-md border border-border p-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary-400"
+                          className="mt-2 w-full rounded-md border border-border p-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                       )}
 
@@ -300,7 +300,7 @@ export function AuditChecklistView({
           type="button"
           onClick={handleCompleteClick}
           disabled={!allAssessed || isCompleting}
-          className="rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 disabled:opacity-40"
+          className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary disabled:opacity-40"
         >
           {isCompleting ? t('completing') : t('completeAudit')}
         </button>
@@ -340,7 +340,7 @@ export function AuditChecklistView({
               <button
                 type="button"
                 onClick={() => void handleConfirmComplete()}
-                className="rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary"
               >
                 {t('confirmComplete')}
               </button>

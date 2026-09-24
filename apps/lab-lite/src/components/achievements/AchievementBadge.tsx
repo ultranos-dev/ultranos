@@ -31,12 +31,12 @@ interface AchievementConfig {
 const ACHIEVEMENT_CONFIG: Record<AchievementType, AchievementConfig> = {
   [AchievementType.QC_CHAMPION]: {
     icon: <Trophy size={20} aria-hidden="true" />,
-    colorClass: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+    colorClass: 'bg-warning/10 border-warning/30 text-warning',
     nameKey: 'QC Champion',
   },
   [AchievementType.ZERO_REJECTION_WEEK]: {
     icon: <CircleCheck size={20} aria-hidden="true" />,
-    colorClass: 'bg-green-50 border-green-200 text-green-800',
+    colorClass: 'bg-success/10 border-success/30 text-success',
     nameKey: 'Zero Rejection Week',
   },
   [AchievementType.SPEED_STAR]: {
@@ -46,27 +46,27 @@ const ACHIEVEMENT_CONFIG: Record<AchievementType, AchievementConfig> = {
   },
   [AchievementType.CONSISTENCY_AWARD]: {
     icon: <Target size={20} aria-hidden="true" />,
-    colorClass: 'bg-purple-50 border-purple-200 text-purple-800',
+    colorClass: 'bg-primary/10 border-primary/30 text-primary',
     nameKey: 'Consistency Award',
   },
   [AchievementType.MENTORSHIP_BADGE]: {
     icon: <Handshake size={20} aria-hidden="true" />,
-    colorClass: 'bg-orange-50 border-orange-200 text-orange-800',
+    colorClass: 'bg-warning/10 border-warning/30 text-warning',
     nameKey: 'Mentorship Badge',
   },
   [AchievementType.TEAM_MILESTONE_1K]: {
     icon: <Star size={20} aria-hidden="true" />,
-    colorClass: 'bg-indigo-50 border-indigo-200 text-indigo-800',
+    colorClass: 'bg-primary/10 border-primary/30 text-primary',
     nameKey: 'Team Milestone: 1,000 Tests',
   },
   [AchievementType.TEAM_MILESTONE_5K]: {
     icon: <Star size={20} aria-hidden="true" />,
-    colorClass: 'bg-indigo-50 border-indigo-200 text-indigo-800',
+    colorClass: 'bg-primary/10 border-primary/30 text-primary',
     nameKey: 'Team Milestone: 5,000 Tests',
   },
   [AchievementType.TEAM_MILESTONE_10K]: {
     icon: <Star size={20} aria-hidden="true" />,
-    colorClass: 'bg-indigo-50 border-indigo-200 text-indigo-800',
+    colorClass: 'bg-primary/10 border-primary/30 text-primary',
     nameKey: 'Team Milestone: 10,000 Tests',
   },
 }

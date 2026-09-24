@@ -415,7 +415,7 @@ export function P2PSendDialog({
             </p>
             <div
               aria-label={t('pairingCode')}
-              className="rounded-xl bg-primary/10 px-6 py-4 text-center text-4xl font-bold tracking-widest text-primary dark:bg-blue-950"
+              className="rounded-xl bg-primary/10 px-6 py-4 text-center text-4xl font-bold tracking-widest text-primary dark:bg-primary"
             >
               {pairingCode}
             </div>
@@ -428,7 +428,7 @@ export function P2PSendDialog({
               </button>
               <button
                 onClick={handlePairingConfirmed}
-                className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                className="flex-1 rounded-lg bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success"
               >
                 {t('pairingConfirm')}
               </button>
@@ -468,7 +468,7 @@ export function P2PSendDialog({
         {/* PHASE: success */}
         {phase === 'success' && (
           <div className="flex flex-col items-center gap-4 py-4">
-            <CheckCircle size={48} className="text-green-600" />
+            <CheckCircle size={48} className="text-success" />
             <p className="text-center text-sm font-medium text-foreground dark:text-foreground">
               {t('successTitle')}
             </p>
@@ -477,7 +477,7 @@ export function P2PSendDialog({
             </p>
             <button
               onClick={onClose}
-              className="mt-2 rounded-lg bg-green-600 px-6 py-2 text-sm font-medium text-white hover:bg-green-700"
+              className="mt-2 rounded-lg bg-success px-6 py-2 text-sm font-medium text-white hover:bg-success"
             >
               {t('close')}
             </button>
@@ -487,7 +487,7 @@ export function P2PSendDialog({
         {/* PHASE: failure */}
         {phase === 'failure' && (
           <div className="flex flex-col items-center gap-4 py-4">
-            <WifiOff size={48} className="text-red-500" />
+            <WifiOff size={48} className="text-destructive" />
             <p className="text-center text-sm font-medium text-foreground dark:text-foreground">
               {t('failureTitle')}
             </p>

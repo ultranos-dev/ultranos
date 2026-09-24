@@ -93,8 +93,8 @@ describe('ActiveTransportCard', () => {
     render(<ActiveTransportCard session={session} />)
 
     const badge = screen.getByTestId('stability-indicator')
-    expect(badge.className).toContain('bg-green-100')
-    expect(badge.className).toContain('text-green-800')
+    expect(badge.className).toContain('bg-success/10')
+    expect(badge.className).toContain('text-success')
   })
 
   // ── Test 2: amber (elapsed 4–6 hours) ──────────────────────────────────────
@@ -106,8 +106,8 @@ describe('ActiveTransportCard', () => {
     render(<ActiveTransportCard session={session} />)
 
     const badge = screen.getByTestId('stability-indicator')
-    expect(badge.className).toContain('bg-amber-100')
-    expect(badge.className).toContain('text-amber-800')
+    expect(badge.className).toContain('bg-warning/10')
+    expect(badge.className).toContain('text-warning')
   })
 
   // ── Test 3: red (elapsed > 6 hours) ────────────────────────────────────────
@@ -119,8 +119,8 @@ describe('ActiveTransportCard', () => {
     render(<ActiveTransportCard session={session} />)
 
     const badge = screen.getByTestId('stability-indicator')
-    expect(badge.className).toContain('bg-red-100')
-    expect(badge.className).toContain('text-red-800')
+    expect(badge.className).toContain('bg-destructive/10')
+    expect(badge.className).toContain('text-destructive')
   })
 
   // ── Test 4: red (flagged overrides time) ───────────────────────────────────
@@ -132,8 +132,8 @@ describe('ActiveTransportCard', () => {
     render(<ActiveTransportCard session={session} />)
 
     const badge = screen.getByTestId('stability-indicator')
-    expect(badge.className).toContain('bg-red-100')
-    expect(badge.className).toContain('text-red-800')
+    expect(badge.className).toContain('bg-destructive/10')
+    expect(badge.className).toContain('text-destructive')
     expect(badge.textContent).toContain('FLAGGED')
   })
 

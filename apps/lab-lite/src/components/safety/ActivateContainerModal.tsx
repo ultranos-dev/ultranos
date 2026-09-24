@@ -69,7 +69,7 @@ export function ActivateContainerModal({
               onChange={(e) => setLocation(e.target.value)}
               placeholder={t('locationPlaceholder')}
               required
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
@@ -85,7 +85,7 @@ export function ActivateContainerModal({
                   onClick={() => setType(ct)}
                   className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                     type === ct
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      ? 'border-primary bg-primary-50 text-primary'
                       : 'border-border text-muted-foreground hover:bg-muted'
                   }`}
                 >
@@ -96,7 +96,7 @@ export function ActivateContainerModal({
           </div>
 
           {error && (
-            <p className="text-sm text-red-600" role="alert">{error}</p>
+            <p className="text-sm text-destructive" role="alert">{error}</p>
           )}
 
           <div className="flex gap-2 pt-2">

@@ -42,8 +42,8 @@ function MonitoringRow({ flag, onRowClick }: MonitoringRowProps) {
       type="button"
       className={`w-full rounded-md px-3 py-2 text-start transition-colors ${
         isOverdue
-          ? 'border border-red-200 bg-red-50 hover:bg-red-100'
-          : 'border border-amber-100 bg-amber-50 hover:bg-amber-100'
+          ? 'border border-destructive/30 bg-destructive/10 hover:bg-destructive/10'
+          : 'border border-warning/30 bg-warning/10 hover:bg-warning/10'
       }`}
       onClick={() => onRowClick?.(flag)}
       aria-label={`${flag.patientFirstName}, ${flag.testDisplay}`}
@@ -66,11 +66,11 @@ function MonitoringRow({ flag, onRowClick }: MonitoringRowProps) {
         </div>
         <div className="shrink-0">
           {isOverdue ? (
-            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-200">
+            <span className="inline-flex items-center rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive ring-1 ring-inset ring-destructive/30">
               {t('monitoringOverdueDays', { days: daysOverdue })}
             </span>
           ) : (
-            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+            <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
               {t('monitoringDueSoon')}
             </span>
           )}
@@ -148,18 +148,18 @@ export function MonitoringDueCard({ onFlagSelected }: MonitoringDueCardProps) {
 
   return (
     <div
-      className={`rounded-lg border p-4 ${overdueCount > 0 ? 'border-red-200 bg-red-50/30' : 'border-amber-200 bg-amber-50/30'}`}
+      className={`rounded-lg border p-4 ${overdueCount > 0 ? 'border-destructive/30 bg-destructive/30' : 'border-warning/30 bg-warning/30'}`}
       role="region"
       aria-label={t('monitoringDue')}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <FlaskConical size={16} className={overdueCount > 0 ? 'text-red-500' : 'text-amber-500'} aria-hidden="true" />
+          <FlaskConical size={16} className={overdueCount > 0 ? 'text-destructive' : 'text-warning'} aria-hidden="true" />
           <h2 className="text-sm font-medium text-foreground">{t('monitoringDue')}</h2>
         </div>
         <span
           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-            overdueCount > 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+            overdueCount > 0 ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
           }`}
           aria-label={t('monitoringDueCount', { count: totalCount })}
         >

@@ -202,7 +202,7 @@ export function JournalEntryForm({
           className="text-sm font-medium text-foreground"
         >
           {t('journalTitleLabel')}
-          <span className="ms-1 text-red-600" aria-hidden="true">*</span>
+          <span className="ms-1 text-destructive" aria-hidden="true">*</span>
         </label>
         <input
           id="journal-title"
@@ -216,12 +216,12 @@ export function JournalEntryForm({
           disabled={saving}
           required
           className="rounded-lg border border-border px-4 py-2 text-sm text-start
-            focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
+            focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary
             disabled:opacity-50"
           aria-describedby={titleError ? 'journal-title-error' : undefined}
         />
         {titleError && (
-          <p id="journal-title-error" role="alert" className="text-xs text-red-600">
+          <p id="journal-title-error" role="alert" className="text-xs text-destructive">
             {titleError}
           </p>
         )}
@@ -234,7 +234,7 @@ export function JournalEntryForm({
           className="text-sm font-medium text-foreground"
         >
           {t('journalBodyLabel')}
-          <span className="ms-1 text-red-600" aria-hidden="true">*</span>
+          <span className="ms-1 text-destructive" aria-hidden="true">*</span>
         </label>
         <textarea
           id="journal-body"
@@ -248,12 +248,12 @@ export function JournalEntryForm({
           disabled={saving}
           required
           className="rounded-lg border border-border px-4 py-3 text-sm text-start
-            focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
+            focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary
             disabled:opacity-50"
           aria-describedby={bodyError ? 'journal-body-error' : undefined}
         />
         {bodyError && (
-          <p id="journal-body-error" role="alert" className="text-xs text-red-600">
+          <p id="journal-body-error" role="alert" className="text-xs text-destructive">
             {bodyError}
           </p>
         )}
@@ -284,8 +284,8 @@ export function JournalEntryForm({
                   onClick={() => handleRemovePhoto(photo.id)}
                   disabled={saving}
                   className="absolute -end-2 -top-2 flex h-5 w-5 items-center justify-center
-                    rounded-full bg-red-500 text-white shadow
-                    focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50"
+                    rounded-full bg-destructive text-white shadow
+                    focus:outline-none focus:ring-2 focus:ring-destructive/30 disabled:opacity-50"
                   aria-label={t('journalRemovePhotoAriaLabel')}
                 >
                   <X size={12} aria-hidden="true" />
@@ -314,15 +314,15 @@ export function JournalEntryForm({
             onClick={() => fileInputRef.current?.click()}
             disabled={saving || processingPhoto}
             className="self-start rounded-lg border border-dashed border-border px-4 py-2
-              text-sm text-muted-foreground hover:border-primary-400 hover:text-primary-600
-              focus:outline-none focus:ring-2 focus:ring-primary-300 disabled:opacity-50"
+              text-sm text-muted-foreground hover:border-primary hover:text-primary
+              focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
           >
             {processingPhoto ? t('journalPhotoProcessing') : t('journalAddPhoto')}
           </button>
         )}
 
         {photoError && (
-          <p role="alert" className="text-xs text-red-600">{photoError}</p>
+          <p role="alert" className="text-xs text-destructive">{photoError}</p>
         )}
       </div>
 
@@ -334,7 +334,7 @@ export function JournalEntryForm({
             checked={showCaseContext}
             onChange={(e) => setShowCaseContext(e.target.checked)}
             disabled={saving}
-            className="h-4 w-4 rounded border-border accent-primary-500 disabled:opacity-50"
+            className="h-4 w-4 rounded border-border accent-primary disabled:opacity-50"
           />
           {t('journalAddCaseContext')}
         </label>
@@ -358,7 +358,7 @@ export function JournalEntryForm({
                 disabled={saving}
                 placeholder={t('journalProcedureRefPlaceholder')}
                 className="rounded-lg border border-border px-4 py-2 text-sm text-start
-                  focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
+                  focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary
                   disabled:opacity-50"
               />
             </div>
@@ -379,7 +379,7 @@ export function JournalEntryForm({
                 onChange={(e) => setProcedureName(e.target.value)}
                 disabled={saving}
                 className="rounded-lg border border-border px-4 py-2 text-sm text-start
-                  focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
+                  focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary
                   disabled:opacity-50"
               />
             </div>
@@ -400,7 +400,7 @@ export function JournalEntryForm({
                 onChange={(e) => setLearningOutcome(e.target.value)}
                 disabled={saving}
                 className="rounded-lg border border-border px-4 py-2 text-sm text-start
-                  focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
+                  focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary
                   disabled:opacity-50"
               />
             </div>

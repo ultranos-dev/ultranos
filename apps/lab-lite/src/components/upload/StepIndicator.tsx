@@ -37,9 +37,9 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
                 aria-label={t('stepLabel', { number: i + 1, label, suffix })}
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200 ${
                   isCompleted
-                    ? 'bg-green-600 text-white'
+                    ? 'bg-success text-white'
                     : isCurrent
-                      ? 'bg-primary-600 text-white'
+                      ? 'bg-primary text-white'
                       : 'bg-muted text-muted-foreground'
                 }`}
               >
@@ -51,7 +51,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
               </div>
               <span
                 className={`mt-1 text-center text-xs ${
-                  isCurrent ? 'font-semibold text-primary-700' : 'text-muted-foreground'
+                  isCurrent ? 'font-semibold text-primary' : 'text-muted-foreground'
                 }`}
               >
                 {label}
@@ -62,7 +62,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
             {i < STEPS.length - 1 && (
               <div
                 className={`mx-2 h-0.5 flex-1 ${
-                  i < currentIndex ? 'bg-green-600' : 'bg-muted'
+                  i < currentIndex ? 'bg-success' : 'bg-muted'
                 }`}
               />
             )}

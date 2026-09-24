@@ -33,7 +33,7 @@ export function LockIndicator({ lock }: LockIndicatorProps) {
 
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800"
+      className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning"
       title={`${t('locked')}: ${lock.techName} (${formatLockAge(lock.lockedAt)} ago)`}
       data-testid="lock-indicator"
       aria-label={`${t('locked')} ${lock.techName}`}
@@ -41,7 +41,7 @@ export function LockIndicator({ lock }: LockIndicatorProps) {
       {/* Padlock icon */}
       <Lock size={12} className="shrink-0" aria-hidden="true" />
       <span>{lock.techName}</span>
-      <span className="text-yellow-600">· {formatLockAge(lock.lockedAt)}</span>
+      <span className="text-warning">· {formatLockAge(lock.lockedAt)}</span>
     </span>
   )
 }

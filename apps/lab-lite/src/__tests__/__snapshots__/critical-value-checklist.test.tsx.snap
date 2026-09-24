@@ -13,11 +13,11 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15a renders in LTR 1`] = `
       class="relative w-full max-w-lg rounded-xl bg-card shadow-2xl mx-4"
     >
       <div
-        class="flex items-start gap-3 rounded-t-xl bg-red-50 border-b border-red-200 p-4"
+        class="flex items-start gap-3 rounded-t-xl bg-destructive/10 border-b border-destructive/30 p-4"
       >
         <svg
           aria-hidden="true"
-          class="lucide lucide-triangle-alert mt-0.5 shrink-0 text-red-600"
+          class="lucide lucide-triangle-alert mt-0.5 shrink-0 text-destructive"
           fill="none"
           height="22"
           stroke="currentColor"
@@ -40,13 +40,13 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15a renders in LTR 1`] = `
         </svg>
         <div>
           <h2
-            class="text-base font-semibold text-red-900"
+            class="text-base font-semibold text-destructive"
             id="checklist-title"
           >
             Critical Value Checklist
           </h2>
           <p
-            class="mt-0.5 text-sm text-red-700"
+            class="mt-0.5 text-sm text-destructive"
           >
             All items must be checked before releasing
           </p>
@@ -64,7 +64,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15a renders in LTR 1`] = `
           class="flex flex-wrap gap-2"
         >
           <span
-            class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700"
+            class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-destructive/10 text-destructive"
             data-testid="critical-badge-Potassium"
           >
             Potassium
@@ -92,7 +92,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15a renders in LTR 1`] = `
             />
             <span
               aria-hidden="true"
-              class="flex h-5 w-5 items-center justify-center rounded border-2 transition-colors border-green-500 bg-green-500"
+              class="flex h-5 w-5 items-center justify-center rounded border-2 transition-colors border-success bg-success"
             >
               <svg
                 aria-hidden="true"
@@ -127,7 +127,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15a renders in LTR 1`] = `
               QC passed today for this analyte
             </span>
             <span
-              class="ms-2 inline-flex items-center gap-0.5 rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700"
+              class="ms-2 inline-flex items-center gap-0.5 rounded-full bg-success/10 px-1.5 py-0.5 text-xs font-medium text-success"
               data-testid="auto-verified-badge-qc-passed-today"
             >
               <svg
@@ -182,7 +182,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15a renders in LTR 1`] = `
               Patient ID verified (two-identifier)
             </span>
             <span
-              class="ms-2 text-xs text-red-500"
+              class="ms-2 text-xs text-destructive"
             >
               *
             </span>
@@ -214,7 +214,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15a renders in LTR 1`] = `
               Result reviewed for plausibility
             </span>
             <span
-              class="ms-2 text-xs text-red-500"
+              class="ms-2 text-xs text-destructive"
             >
               *
             </span>
@@ -246,7 +246,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15a renders in LTR 1`] = `
               Delta check reviewed (if prior result exists)
             </span>
             <span
-              class="ms-2 text-xs text-red-500"
+              class="ms-2 text-xs text-destructive"
             >
               *
             </span>
@@ -292,7 +292,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15a renders in LTR 1`] = `
         </button>
         <button
           aria-disabled="true"
-          class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+          class="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-white hover:bg-destructive disabled:cursor-not-allowed disabled:opacity-40 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
           data-testid="checklist-release-button"
           disabled=""
           type="button"
@@ -318,11 +318,11 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15b renders in RTL 1`] = `
       class="relative w-full max-w-lg rounded-xl bg-card shadow-2xl mx-4"
     >
       <div
-        class="flex items-start gap-3 rounded-t-xl bg-red-50 border-b border-red-200 p-4"
+        class="flex items-start gap-3 rounded-t-xl bg-destructive/10 border-b border-destructive/30 p-4"
       >
         <svg
           aria-hidden="true"
-          class="lucide lucide-triangle-alert mt-0.5 shrink-0 text-red-600"
+          class="lucide lucide-triangle-alert mt-0.5 shrink-0 text-destructive"
           fill="none"
           height="22"
           stroke="currentColor"
@@ -345,13 +345,13 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15b renders in RTL 1`] = `
         </svg>
         <div>
           <h2
-            class="text-base font-semibold text-red-900"
+            class="text-base font-semibold text-destructive"
             id="checklist-title"
           >
             Critical Value Checklist
           </h2>
           <p
-            class="mt-0.5 text-sm text-red-700"
+            class="mt-0.5 text-sm text-destructive"
           >
             All items must be checked before releasing
           </p>
@@ -369,7 +369,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15b renders in RTL 1`] = `
           class="flex flex-wrap gap-2"
         >
           <span
-            class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700"
+            class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-destructive/10 text-destructive"
             data-testid="critical-badge-Potassium"
           >
             Potassium
@@ -397,7 +397,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15b renders in RTL 1`] = `
             />
             <span
               aria-hidden="true"
-              class="flex h-5 w-5 items-center justify-center rounded border-2 transition-colors border-green-500 bg-green-500"
+              class="flex h-5 w-5 items-center justify-center rounded border-2 transition-colors border-success bg-success"
             >
               <svg
                 aria-hidden="true"
@@ -432,7 +432,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15b renders in RTL 1`] = `
               QC passed today for this analyte
             </span>
             <span
-              class="ms-2 inline-flex items-center gap-0.5 rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700"
+              class="ms-2 inline-flex items-center gap-0.5 rounded-full bg-success/10 px-1.5 py-0.5 text-xs font-medium text-success"
               data-testid="auto-verified-badge-qc-passed-today"
             >
               <svg
@@ -487,7 +487,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15b renders in RTL 1`] = `
               Patient ID verified (two-identifier)
             </span>
             <span
-              class="ms-2 text-xs text-red-500"
+              class="ms-2 text-xs text-destructive"
             >
               *
             </span>
@@ -519,7 +519,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15b renders in RTL 1`] = `
               Result reviewed for plausibility
             </span>
             <span
-              class="ms-2 text-xs text-red-500"
+              class="ms-2 text-xs text-destructive"
             >
               *
             </span>
@@ -551,7 +551,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15b renders in RTL 1`] = `
               Delta check reviewed (if prior result exists)
             </span>
             <span
-              class="ms-2 text-xs text-red-500"
+              class="ms-2 text-xs text-destructive"
             >
               *
             </span>
@@ -597,7 +597,7 @@ exports[`CriticalValueChecklist — RTL snapshots > 8.15b renders in RTL 1`] = `
         </button>
         <button
           aria-disabled="true"
-          class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+          class="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-white hover:bg-destructive disabled:cursor-not-allowed disabled:opacity-40 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
           data-testid="checklist-release-button"
           disabled=""
           type="button"

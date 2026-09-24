@@ -151,8 +151,8 @@ export function ThumbprintCapture({ onCaptureComplete }: ThumbprintCaptureProps)
   if (captured) {
     return (
       <div className="flex flex-col items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-          <Check size={32} className="text-green-600 dark:text-green-400" />
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/10 dark:bg-success/30">
+          <Check size={32} className="text-success dark:text-success" />
         </div>
         <p className="text-sm font-medium">{t('thumbprint.captured')}</p>
         <button
@@ -183,7 +183,7 @@ export function ThumbprintCapture({ onCaptureComplete }: ThumbprintCaptureProps)
       />
 
       {tooLight && (
-        <p className="text-sm text-amber-600 dark:text-amber-400">{t('thumbprint.tooLight')}</p>
+        <p className="text-sm text-warning dark:text-warning">{t('thumbprint.tooLight')}</p>
       )}
 
       <div className="flex gap-3">

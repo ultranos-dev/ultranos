@@ -84,15 +84,15 @@ export function TemperatureDashboard() {
   }, [loadData])
 
   const statusIndicatorClasses: Record<StatusColor, string> = {
-    green: 'bg-green-500',
-    amber: 'bg-amber-500',
-    red: 'bg-red-500',
+    green: 'bg-success',
+    amber: 'bg-warning',
+    red: 'bg-destructive',
   }
 
   const statusBorderClasses: Record<StatusColor, string> = {
-    green: 'border-green-200',
-    amber: 'border-amber-200',
-    red: 'border-red-300',
+    green: 'border-success/30',
+    amber: 'border-warning/30',
+    red: 'border-destructive/30',
   }
 
   if (loading) {
@@ -145,16 +145,16 @@ export function TemperatureDashboard() {
         .map((card) => (
           <div
             key={card.excursion!.id}
-            className="mb-4 rounded-lg border border-red-300 bg-red-50 p-4"
+            className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-4"
             role="alert"
           >
             <div className="flex items-center gap-2">
-              <span className="inline-block h-3 w-3 rounded-full bg-red-500 animate-pulse" />
-              <span className="font-semibold text-red-800">
+              <span className="inline-block h-3 w-3 rounded-full bg-destructive animate-pulse" />
+              <span className="font-semibold text-destructive">
                 {t('excursionAlert')}
               </span>
             </div>
-            <p className="mt-1 text-sm text-red-700">
+            <p className="mt-1 text-sm text-destructive">
               {card.location.name} — {t('peakTemp')}: {card.excursion!.peakTemperature}°C,{' '}
               {t('duration')}: {getExcursionDuration(card.excursion!)} {t('minutes')}
             </p>
@@ -226,7 +226,7 @@ export function TemperatureDashboard() {
 
               {/* Overdue prompt indicator */}
               {card.promptDue && (
-                <div className="mb-3 rounded bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700">
+                <div className="mb-3 rounded bg-warning/10 px-2 py-1 text-xs font-medium text-warning">
                   {t('readingOverdue')}
                 </div>
               )}

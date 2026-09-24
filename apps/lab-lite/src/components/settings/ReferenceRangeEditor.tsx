@@ -43,8 +43,8 @@ export function canEditRanges(labRole: string | undefined): boolean {
 const BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-muted text-muted-foreground',
   blue: 'bg-primary/10 text-primary',
-  green: 'bg-green-50 text-green-700',
-  yellow: 'bg-amber-50 text-amber-700',
+  green: 'bg-success/10 text-success',
+  yellow: 'bg-warning/10 text-warning',
 }
 
 function SourceBadge({ source }: { source: RangeSource }) {
@@ -605,7 +605,7 @@ export function ReferenceRangeEditor() {
                                       type="button"
                                       onClick={() => void handleResetToDefault(r)}
                                       disabled={resetting}
-                                      className="rounded px-1.5 py-0.5 text-red-600 hover:bg-red-50 text-xs disabled:opacity-50"
+                                      className="rounded px-1.5 py-0.5 text-destructive hover:bg-destructive/10 text-xs disabled:opacity-50"
                                       aria-label={`Confirm reset ${group.analyteName} to default`}
                                     >
                                       {resetting ? 'Resetting…' : 'Confirm'}
@@ -880,7 +880,7 @@ export function ReferenceRangeEditor() {
                 <label className="col-span-2">
                   <span className="text-xs text-muted-foreground">
                     Change Reason{' '}
-                    <span className="text-red-500">*</span>
+                    <span className="text-destructive">*</span>
                     <span className="text-muted-foreground ms-1">(min 10 chars)</span>
                   </span>
                   <textarea
@@ -896,7 +896,7 @@ export function ReferenceRangeEditor() {
               </div>
 
               {error && (
-                <p className="rounded bg-red-50 px-3 py-2 text-xs text-red-700">
+                <p className="rounded bg-destructive/10 px-3 py-2 text-xs text-destructive">
                   {error}
                 </p>
               )}

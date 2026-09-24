@@ -90,7 +90,7 @@ export function CourierPickupScreen({
               value={destinationLocationId}
               defaultChecked
               readOnly
-              className="h-5 w-5 accent-blue-600"
+              className="h-5 w-5 accent-primary"
             />
             <div>
               <p className="text-lg font-semibold text-foreground">{t('mainLaboratory')}</p>
@@ -164,7 +164,7 @@ export function CourierPickupScreen({
         </div>
 
         {scanError === 'duplicate' && (
-          <p className="flex items-center gap-2 text-amber-600" role="alert">
+          <p className="flex items-center gap-2 text-warning" role="alert">
             <AlertCircle size={16} aria-hidden /> {t('labelAlreadyAdded')}
           </p>
         )}
@@ -177,7 +177,7 @@ export function CourierPickupScreen({
             <ul className="flex flex-col gap-1">
               {scannedLabels.map((label) => (
                 <li key={label} className="flex items-center gap-2 text-base text-foreground">
-                  <CheckCircle size={14} className="text-green-600 shrink-0" aria-hidden />
+                  <CheckCircle size={14} className="text-success shrink-0" aria-hidden />
                   <span className="font-mono">{label}</span>
                 </li>
               ))}
@@ -303,7 +303,7 @@ export function CourierPickupScreen({
         </div>
 
         {submitError && (
-          <p className="flex items-center gap-2 text-red-600" role="alert">
+          <p className="flex items-center gap-2 text-destructive" role="alert">
             <AlertCircle size={16} aria-hidden /> {t('startTransportError')}
           </p>
         )}
@@ -314,7 +314,7 @@ export function CourierPickupScreen({
             data-testid="start-transport-button"
             onClick={() => void handleStartTransport()}
             disabled={submitting}
-            className="flex-1 bg-green-600 hover:bg-green-700"
+            className="flex-1 bg-success hover:bg-success"
           >
             {submitting ? t('starting') : t('startTransport')}
           </LargeButton>
@@ -328,8 +328,8 @@ export function CourierPickupScreen({
   return (
     <div className="flex flex-col gap-4 p-4" data-testid="courier-pickup-screen">
       <div className="flex flex-col items-center gap-4">
-        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
-          <CheckCircle size={48} className="text-green-700" aria-hidden />
+        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-success/10">
+          <CheckCircle size={48} className="text-success" aria-hidden />
         </div>
         <h2 className="text-center text-2xl font-bold text-foreground">{t('successTitle')}</h2>
         <p className="text-center text-xl text-muted-foreground">

@@ -49,9 +49,9 @@ function StatusBadge({ status }: { status: MonitoringFlagStatus }) {
   }
   const styles: Record<MonitoringFlagStatus, string> = {
     upcoming: 'bg-muted text-muted-foreground',
-    due: 'bg-amber-100 text-amber-700',
-    overdue: 'bg-red-100 text-red-700 ring-1 ring-inset ring-red-200',
-    completed: 'bg-green-100 text-green-700',
+    due: 'bg-warning/10 text-warning',
+    overdue: 'bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/30',
+    completed: 'bg-success/10 text-success',
   }
   const icons: Record<MonitoringFlagStatus, React.ReactNode> = {
     upcoming: <Clock size={12} aria-hidden="true" />,
@@ -74,7 +74,7 @@ interface MonitoringFlagRowProps {
 
 function MonitoringFlagRow({ flag }: MonitoringFlagRowProps) {
   return (
-    <div className={`rounded-md border p-3 ${flag.status === 'overdue' ? 'border-red-200 bg-red-50' : 'border-border/50 bg-card'}`}>
+    <div className={`rounded-md border p-3 ${flag.status === 'overdue' ? 'border-destructive/30 bg-destructive/10' : 'border-border/50 bg-card'}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-foreground">{flag.testDisplay}</p>
@@ -97,7 +97,7 @@ function MonitoringFlagRow({ flag }: MonitoringFlagRowProps) {
           </div>
         )}
         {flag.status === 'completed' && (
-          <div className="col-span-2 text-green-600">
+          <div className="col-span-2 text-success">
             <CheckCircle size={12} className="me-1 inline" aria-hidden="true" />
             Completed — next due {flag.dueDate}
           </div>

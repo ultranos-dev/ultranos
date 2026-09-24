@@ -62,11 +62,11 @@ const TEST_NAME_KEY_MAP: Record<string, string> = {
 function TestIcon({ testCategory }: { testCategory: string }) {
   // Blood drop for CBC
   if (testCategory === '58410-2') {
-    return <Droplet size={24} aria-hidden="true" className="text-red-400" />
+    return <Droplet size={24} aria-hidden="true" className="text-destructive" />
   }
   // Heart for lipid panel
   if (testCategory === '57698-3') {
-    return <Heart size={24} aria-hidden="true" className="text-pink-400" />
+    return <Heart size={24} aria-hidden="true" className="text-primary" />
   }
   // Activity / chart for everything else
   return <Activity size={24} aria-hidden="true" className="text-primary" />
@@ -144,7 +144,7 @@ function ResultCard({ result, locale }: ResultCardProps) {
           <button
             type="button"
             onClick={() => setExpanded(v => !v)}
-            className="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-blue-200"
+            className="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-primary"
             aria-expanded={expanded}
           >
             {expanded ? '▲ Hide explanation' : '▼ Read explanation'}

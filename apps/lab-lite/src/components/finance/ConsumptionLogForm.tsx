@@ -167,10 +167,10 @@ export function ConsumptionLogForm({ reagent, onSuccess }: ConsumptionLogFormPro
           <div
             className={`h-full rounded-full transition-all ${
               progressPct >= 80
-                ? 'bg-green-500'
+                ? 'bg-success'
                 : progressPct >= 50
-                  ? 'bg-amber-500'
-                  : 'bg-red-500'
+                  ? 'bg-warning'
+                  : 'bg-destructive'
             }`}
             style={{ width: `${progressPct}%` }}
           />
@@ -194,7 +194,7 @@ export function ConsumptionLogForm({ reagent, onSuccess }: ConsumptionLogFormPro
         {errors.length > 0 && (
           <ul
             role="alert"
-            className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700 space-y-1"
+            className="rounded border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive space-y-1"
           >
             {errors.map((err, i) => (
               <li key={i}>{err}</li>

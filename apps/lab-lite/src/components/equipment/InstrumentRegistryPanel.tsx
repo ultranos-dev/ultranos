@@ -81,7 +81,7 @@ function FormField({
     <div>
       <label className="block text-xs font-medium text-muted-foreground mb-1">
         {label}
-        {required && <span className="text-red-500 ms-0.5">*</span>}
+        {required && <span className="text-destructive ms-0.5">*</span>}
       </label>
       {children}
     </div>
@@ -280,7 +280,7 @@ export function InstrumentRegistryPanel() {
                     {t('avgRunTime')}: {inst.avgRunTimeMinutes} min
                   </p>
                   {inst.status === 'OUT_OF_SERVICE' && inst.outOfServiceReason && (
-                    <p className="text-xs text-red-500 mt-0.5">
+                    <p className="text-xs text-destructive mt-0.5">
                       {t('outOfServiceReason') ?? 'Reason'}: {inst.outOfServiceReason}
                     </p>
                   )}
@@ -290,8 +290,8 @@ export function InstrumentRegistryPanel() {
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                       inst.status === 'IN_SERVICE'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
+                        ? 'bg-success/10 text-success'
+                        : 'bg-destructive/10 text-destructive'
                     }`}
                     data-testid={`instrument-status-${inst.id}`}
                   >
@@ -309,8 +309,8 @@ export function InstrumentRegistryPanel() {
                       onClick={() => void handleToggleStatus(inst)}
                       className={`text-xs hover:underline ${
                         inst.status === 'IN_SERVICE'
-                          ? 'text-red-500'
-                          : 'text-green-600'
+                          ? 'text-destructive'
+                          : 'text-success'
                       }`}
                       data-testid={`toggle-status-${inst.id}`}
                     >
@@ -409,7 +409,7 @@ export function InstrumentRegistryPanel() {
       </div>
 
       {error && (
-        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+        <p className="rounded bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
           {error}
         </p>
       )}

@@ -13,10 +13,10 @@ interface RecentUploadsListProps {
 }
 
 const statusStyles: Record<RecentUploadItem['status'], string> = {
-  completed: 'bg-green-50 text-green-700',
-  pending: 'bg-amber-50 text-amber-700',
-  uploading: 'bg-amber-50 text-amber-700',
-  failed: 'bg-red-50 text-red-700',
+  completed: 'bg-success/10 text-success',
+  pending: 'bg-warning/10 text-warning',
+  uploading: 'bg-warning/10 text-warning',
+  failed: 'bg-destructive/10 text-destructive',
   expired: 'bg-muted text-muted-foreground',
 }
 
@@ -113,7 +113,7 @@ export function RecentUploadsList({ items, onItemCancelled }: RecentUploadsListP
                     <button
                       type="button"
                       onClick={() => handleCancelConfirm(item)}
-                      className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 motion-safe:transition-colors"
+                      className="rounded-md bg-destructive px-3 py-1 text-xs font-medium text-white hover:bg-destructive focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive motion-safe:transition-colors"
                     >
                       {t('confirmCancel')}
                     </button>
@@ -145,7 +145,7 @@ export function RecentUploadsList({ items, onItemCancelled }: RecentUploadsListP
                         type="button"
                         onClick={() => setConfirmingId(item.id)}
                         aria-label={`${t('cancelUpload')} ${item.loincDisplay}`}
-                        className="rounded px-2 py-0.5 text-xs font-medium text-muted-foreground hover:bg-red-50 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-500 motion-safe:transition-colors"
+                        className="rounded px-2 py-0.5 text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-destructive motion-safe:transition-colors"
                       >
                         {t('cancelUpload')}
                       </button>

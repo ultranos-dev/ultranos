@@ -116,11 +116,11 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
             onChange={(e) => setNationalId(e.target.value)}
             placeholder={isOnline ? 'Enter patient National ID' : 'Enter cached patient ID'}
             disabled={loading}
-            className="rounded-lg border border-border px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="rounded-lg border border-border px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             autoComplete="off"
           />
           {!isOnline && (
-            <p className="text-xs text-amber-600">
+            <p className="text-xs text-warning">
               Offline — only cached patients can be verified. Use QR scan for signature-based
               verification.
             </p>
@@ -137,9 +137,9 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
 
       {/* Verification card — first name + age ONLY */}
       {verifiedResult && (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+        <div className="rounded-lg border border-success/30 bg-success/10 p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-green-800">Patient Verified</h3>
+            <h3 className="text-sm font-semibold text-success">Patient Verified</h3>
             <OfflineVerificationBadge source={verificationSource} />
           </div>
           {/* Avatar (photo when a signed URL is available, else initials) beside the minimal fields */}

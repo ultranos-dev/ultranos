@@ -29,12 +29,12 @@ function BarChart({
           <span className="w-20 shrink-0 truncate text-xs text-muted-foreground">{label(key)}</span>
           <div className="flex-1 rounded bg-muted">
             <div
-              className="h-4 rounded bg-blue-400 transition-all"
+              className="h-4 rounded bg-primary transition-all"
               style={{ width: `${Math.round((value / maxValue) * 100)}%` }}
               aria-label={`${value}`}
             />
           </div>
-          <span className="w-8 shrink-0 text-right text-xs font-medium text-foreground">
+          <span className="w-8 shrink-0 text-end text-xs font-medium text-foreground">
             {Math.round(value)}
           </span>
         </li>
@@ -157,7 +157,7 @@ export function WorkloadPatternsView({ techLabels = {} }: WorkloadPatternsProps)
       )}
 
       {error && (
-        <p className="text-sm text-red-600" role="alert">{error}</p>
+        <p className="text-sm text-destructive" role="alert">{error}</p>
       )}
 
       {!loading && !error && patterns && (
@@ -187,7 +187,7 @@ export function WorkloadPatternsView({ techLabels = {} }: WorkloadPatternsProps)
             {patterns.overloadedTechs.length === 0 ? (
               <p className="text-xs text-muted-foreground">{t('noneIdentified')}</p>
             ) : (
-              <ul className="space-y-0.5 text-xs text-red-700">
+              <ul className="space-y-0.5 text-xs text-destructive">
                 {patterns.overloadedTechs.map((id) => (
                   <li key={id}>• {techLabel(id)}</li>
                 ))}
@@ -201,7 +201,7 @@ export function WorkloadPatternsView({ techLabels = {} }: WorkloadPatternsProps)
             {patterns.underutilizedTechs.length === 0 ? (
               <p className="text-xs text-muted-foreground">{t('noneIdentified')}</p>
             ) : (
-              <ul className="space-y-0.5 text-xs text-amber-700">
+              <ul className="space-y-0.5 text-xs text-warning">
                 {patterns.underutilizedTechs.map((id) => (
                   <li key={id}>• {techLabel(id)}</li>
                 ))}

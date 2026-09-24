@@ -138,7 +138,7 @@ function DeleteConfirmDialog({
     >
       <div ref={dialogRef} className="w-full max-w-sm rounded-xl bg-card p-6 shadow-xl">
         <div className="flex items-start gap-3 mb-4">
-          <AlertTriangle size={20} className="text-red-500 shrink-0 mt-0.5" aria-hidden="true" />
+          <AlertTriangle size={20} className="text-destructive shrink-0 mt-0.5" aria-hidden="true" />
           <div>
             <h3 id="delete-confirm-title" className="text-sm font-semibold text-foreground">
               {t('rag.supply.deleteConfirmTitle')}
@@ -224,7 +224,7 @@ function SupplyForm({
 
       {/* Save error banner */}
       {saveError && (
-        <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2.5 text-xs text-red-700" role="alert">
+        <div className="flex items-start gap-2 rounded-md bg-destructive/10 border border-destructive/30 px-3 py-2.5 text-xs text-destructive" role="alert">
           <AlertTriangle size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
           <span>{saveError}</span>
         </div>
@@ -240,11 +240,11 @@ function SupplyForm({
           type="text"
           value={form.name}
           onChange={(e) => handleChange('name', e.target.value)}
-          className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+          className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           aria-required="true"
           aria-invalid={!!errors.name}
         />
-        {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
+        {errors.name && <p className="text-xs text-destructive mt-1">{errors.name}</p>}
       </div>
 
       {/* Category */}
@@ -256,7 +256,7 @@ function SupplyForm({
           id="supply-category"
           value={form.category}
           onChange={(e) => handleChange('category', e.target.value)}
-          className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+          className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
           {CATEGORIES.map((cat) => (
             <option key={cat} value={cat}>
@@ -279,12 +279,12 @@ function SupplyForm({
             step="any"
             value={form.currentStock}
             onChange={(e) => handleChange('currentStock', e.target.value)}
-            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             aria-required="true"
             aria-invalid={!!errors.currentStock}
           />
           {errors.currentStock && (
-            <p className="text-xs text-red-600 mt-1">{errors.currentStock}</p>
+            <p className="text-xs text-destructive mt-1">{errors.currentStock}</p>
           )}
         </div>
         <div className="flex-1">
@@ -296,11 +296,11 @@ function SupplyForm({
             type="text"
             value={form.unit}
             onChange={(e) => handleChange('unit', e.target.value)}
-            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             aria-required="true"
             aria-invalid={!!errors.unit}
           />
-          {errors.unit && <p className="text-xs text-red-600 mt-1">{errors.unit}</p>}
+          {errors.unit && <p className="text-xs text-destructive mt-1">{errors.unit}</p>}
         </div>
       </div>
 
@@ -316,12 +316,12 @@ function SupplyForm({
             step="any"
             value={form.reorderThreshold}
             onChange={(e) => handleChange('reorderThreshold', e.target.value)}
-            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             aria-required="true"
             aria-invalid={!!errors.reorderThreshold}
           />
           {errors.reorderThreshold && (
-            <p className="text-xs text-red-600 mt-1">{errors.reorderThreshold}</p>
+            <p className="text-xs text-destructive mt-1">{errors.reorderThreshold}</p>
           )}
         </div>
         <div className="flex-1">
@@ -334,7 +334,7 @@ function SupplyForm({
             step="any"
             value={form.criticalThreshold}
             onChange={(e) => handleChange('criticalThreshold', e.target.value)}
-            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       </div>
@@ -350,7 +350,7 @@ function SupplyForm({
           step="any"
           value={form.dailyUsageEstimate}
           onChange={(e) => handleChange('dailyUsageEstimate', e.target.value)}
-          className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+          className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <p className="text-xs text-muted-foreground mt-1">{t('rag.supply.dailyUsageHint')}</p>
       </div>
@@ -391,7 +391,7 @@ function QuickStockEdit({
         step="any"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="w-20 rounded-md border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+        className="w-20 rounded-md border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         aria-label={t('rag.supply.quickStockAriaLabel')}
       />
       <button
@@ -400,7 +400,7 @@ function QuickStockEdit({
           const parsed = parseFloat(value)
           if (!isNaN(parsed) && parsed >= 0) onSave(parsed)
         }}
-        className="rounded-md bg-green-600 p-1.5 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
+        className="rounded-md bg-success p-1.5 text-white hover:bg-success focus:outline-none focus:ring-2 focus:ring-success"
         aria-label={t('rag.supply.confirm')}
       >
         <Check size={13} aria-hidden="true" />
@@ -515,7 +515,7 @@ export function SupplyManagement() {
 
   if (!isAuthorized) {
     return (
-      <div className="flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+      <div className="flex items-start gap-3 rounded-lg bg-warning/10 border border-warning/30 px-4 py-3 text-sm text-warning">
         <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
         <p>{t('rag.supply.accessDenied')}</p>
       </div>
@@ -571,7 +571,7 @@ export function SupplyManagement() {
       <div className="flex flex-col gap-4">
         {/* Error banner */}
         {error && (
-          <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2.5 text-xs text-red-700" role="alert">
+          <div className="flex items-start gap-2 rounded-md bg-destructive/10 border border-destructive/30 px-3 py-2.5 text-xs text-destructive" role="alert">
             <AlertTriangle size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
             <span>{error}</span>
           </div>
@@ -648,7 +648,7 @@ export function SupplyManagement() {
                           <button
                             type="button"
                             onClick={() => setQuickStockItem(item.id)}
-                            className="ms-2 text-xs text-primary-600 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-300 rounded"
+                            className="ms-2 text-xs text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
                           >
                             {t('rag.supply.updateStock')}
                           </button>
@@ -677,7 +677,7 @@ export function SupplyManagement() {
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(item)}
-                          className="rounded p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                          className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus:outline-none focus:ring-2 focus:ring-destructive/30"
                           aria-label={t('rag.supply.deleteAriaLabel', { name: item.name })}
                         >
                           <Trash2 size={14} aria-hidden="true" />

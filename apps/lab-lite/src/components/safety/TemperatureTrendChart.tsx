@@ -68,15 +68,15 @@ export function TemperatureTrendChart({
       />
       <div className="flex gap-4 mt-2 text-xs text-muted-foreground justify-center">
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded bg-green-200" />
+          <span className="inline-block w-3 h-3 rounded bg-success/10" />
           {t('normal')}
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded bg-amber-200" />
+          <span className="inline-block w-3 h-3 rounded bg-warning/10" />
           {t('warning')}
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded bg-red-200" />
+          <span className="inline-block w-3 h-3 rounded bg-destructive/10" />
           {t('excursion')}
         </span>
       </div>

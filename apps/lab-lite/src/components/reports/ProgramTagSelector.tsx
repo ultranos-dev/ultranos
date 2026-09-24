@@ -83,7 +83,7 @@ export function ProgramTagSelector({ testLoincCode, value, onChange }: Props) {
             >
               {p.programName}
               {isAuto && selected && (
-                <span className="ms-1 text-blue-200" title={t('autoTagged')}>✦</span>
+                <span className="ms-1 text-primary" title={t('autoTagged')}>✦</span>
               )}
             </button>
           )

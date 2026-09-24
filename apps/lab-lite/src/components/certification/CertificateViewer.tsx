@@ -44,9 +44,9 @@ export function CertificateViewer({ certificate }: CertificateViewerProps) {
   return (
     <div className="space-y-4">
       {/* Certificate preview card */}
-      <div className="rounded-lg border-2 border-primary dark:border-primary bg-primary/10 dark:bg-blue-950/30 p-6 text-center">
+      <div className="rounded-lg border-2 border-primary dark:border-primary bg-primary/10 dark:bg-primary/30 p-6 text-center">
         <div className="flex justify-center mb-3">
-          <Award size={40} className="text-yellow-500" />
+          <Award size={40} className="text-warning" />
         </div>
         <p className="text-xs font-medium text-primary dark:text-primary uppercase tracking-widest mb-1">
           {t('certificateOf')}
@@ -82,7 +82,7 @@ export function CertificateViewer({ certificate }: CertificateViewerProps) {
         >
           {copied ? (
             <span className="flex items-center gap-1">
-              <CircleCheck size={12} className="text-green-500" />
+              <CircleCheck size={12} className="text-success" />
               {t('copied')}
             </span>
           ) : t('copy')}

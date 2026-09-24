@@ -41,12 +41,12 @@ export function DriftAlertBanner({ alerts, onAcknowledged }: DriftAlertBannerPro
   const rejectCount = alerts.filter((a) => a.severity === 'REJECT').length
   const warningCount = alerts.filter((a) => a.severity === 'WARNING').length
 
-  const bannerBg = isReject ? 'bg-red-50 border-red-300' : 'bg-amber-50 border-amber-300'
-  const textColor = isReject ? 'text-red-800' : 'text-amber-800'
-  const iconColor = isReject ? 'text-red-500' : 'text-amber-500'
+  const bannerBg = isReject ? 'bg-destructive/10 border-destructive/30' : 'bg-warning/10 border-warning/30'
+  const textColor = isReject ? 'text-destructive' : 'text-warning'
+  const iconColor = isReject ? 'text-destructive' : 'text-warning'
   const buttonBg = isReject
-    ? 'bg-red-100 hover:bg-red-200 text-red-800'
-    : 'bg-amber-100 hover:bg-amber-200 text-amber-800'
+    ? 'bg-destructive/10 hover:bg-destructive/10 text-destructive'
+    : 'bg-warning/10 hover:bg-warning/10 text-warning'
 
   function handleAcknowledge() {
     setSelectedAlert(primaryAlert ?? null)

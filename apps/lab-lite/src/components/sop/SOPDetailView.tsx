@@ -140,11 +140,11 @@ export function SOPDetailView({
         {/* Acknowledgment status */}
         <div className="mt-4">
           {acked ? (
-            <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
+            <span className="inline-flex items-center rounded-full bg-success/10 px-3 py-1 text-sm font-medium text-success dark:bg-success dark:text-success">
               {t('acknowledged')}
             </span>
           ) : (
-            <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+            <span className="inline-flex items-center rounded-full bg-warning/10 px-3 py-1 text-sm font-medium text-warning dark:bg-warning dark:text-warning">
               {t('reviewRequired')}
             </span>
           )}
@@ -159,8 +159,8 @@ export function SOPDetailView({
 
       {/* Acknowledgment button */}
       {!acked && (
-        <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-          <p className="mb-3 text-sm text-amber-800 dark:text-amber-200">
+        <div className="mt-6 rounded-lg border border-warning/30 bg-warning/10 p-4 dark:border-warning dark:bg-warning/20">
+          <p className="mb-3 text-sm text-warning dark:text-warning">
             {t('acknowledgePrompt', { title: sop.title })}
           </p>
           <button

@@ -45,8 +45,8 @@ const EVENT_TYPE_CONFIG: Partial<Record<
     ),
   },
   handoff: {
-    colorClass: 'text-amber-600',
-    bgClass: 'bg-amber-50 ring-amber-200',
+    colorClass: 'text-warning',
+    bgClass: 'bg-warning/10 ring-warning/30',
     icon: (
       // Arrow-right-left icon — semantic (indicates transfer), not directional
       <svg
@@ -69,29 +69,29 @@ const EVENT_TYPE_CONFIG: Partial<Record<
     ),
   },
   'status-change': {
-    colorClass: 'text-green-600',
-    bgClass: 'bg-green-50 ring-green-200',
+    colorClass: 'text-success',
+    bgClass: 'bg-success/10 ring-success/30',
     icon: (
       <RefreshCw size={14} aria-hidden="true" style={{ transform: 'none' }} />
     ),
   },
   rejection: {
-    colorClass: 'text-red-600',
-    bgClass: 'bg-red-50 ring-red-200',
+    colorClass: 'text-destructive',
+    bgClass: 'bg-destructive/10 ring-destructive/30',
     icon: (
       <CircleX size={14} aria-hidden="true" style={{ transform: 'none' }} />
     ),
   },
   'transport-pickup': {
-    colorClass: 'text-blue-600',
-    bgClass: 'bg-blue-50 ring-blue-200',
+    colorClass: 'text-primary',
+    bgClass: 'bg-primary/10 ring-primary/30',
     icon: (
       <Truck size={14} aria-hidden="true" style={{ transform: 'none' }} />
     ),
   },
   'transport-delivery': {
-    colorClass: 'text-blue-700',
-    bgClass: 'bg-blue-50 ring-blue-300',
+    colorClass: 'text-primary',
+    bgClass: 'bg-primary/10 ring-primary/30',
     icon: (
       <PackageCheck size={14} aria-hidden="true" style={{ transform: 'none' }} />
     ),

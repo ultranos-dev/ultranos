@@ -134,7 +134,7 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
             <div className="space-y-3">
               <div>
                 <label htmlFor="result-value" className="block text-sm font-medium text-foreground mb-1">
-                  {t('importResultValueLabel')} <span aria-hidden="true" className="text-red-500">*</span>
+                  {t('importResultValueLabel')} <span aria-hidden="true" className="text-destructive">*</span>
                 </label>
                 <input
                   id="result-value"
@@ -209,7 +209,7 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
             </div>
           )}
 
-          {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
@@ -219,7 +219,7 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
             <button
               type="submit"
               disabled={loading || (mode === 'file' && !fileContent) || (mode === 'manual' && !manualValue)}
-              className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              className="rounded-md bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success disabled:opacity-50"
             >
               {loading ? t('importSubmittingButton') : t('importSubmitButton')}
             </button>

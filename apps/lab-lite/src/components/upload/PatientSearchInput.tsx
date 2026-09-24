@@ -53,7 +53,7 @@ export function PatientSearchInput({ token, onSelect }: PatientSearchInputProps)
         placeholder={t('searchPatientsPlaceholder')}
         onChange={(e) => handleInputChange(e.target.value)}
         onFocus={() => { if (query.trim().length >= 2) setIsOpen(true) }}
-        className="mt-1 w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className="mt-1 w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
         autoComplete="off"
         aria-expanded={isOpen}
         aria-controls="patient-search-results"

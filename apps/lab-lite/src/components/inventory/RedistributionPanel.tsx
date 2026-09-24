@@ -104,7 +104,7 @@ export function RedistributionPanel({ myLabId, isNetworkAdmin = false }: Props) 
           <div
             key={id}
             role="listitem"
-            className="relative rounded-lg border border-orange-200 bg-orange-50 p-4"
+            className="relative rounded-lg border border-warning/30 bg-warning/10 p-4"
           >
             {/* Dismiss button */}
             <button
@@ -121,7 +121,7 @@ export function RedistributionPanel({ myLabId, isNetworkAdmin = false }: Props) 
               <span
                 className={`mb-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                   isDeficit
-                    ? 'bg-red-100 text-red-700'
+                    ? 'bg-destructive/10 text-destructive'
                     : 'bg-primary/10 text-primary'
                 }`}
               >
@@ -134,11 +134,11 @@ export function RedistributionPanel({ myLabId, isNetworkAdmin = false }: Props) 
               {rec.reagentDisplay}
             </p>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-foreground">
-              <span className="font-medium text-red-700">{rec.deficitLabName}</span>
+              <span className="font-medium text-destructive">{rec.deficitLabName}</span>
               <DirectionalIcon category="navigation">
                 <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden />
               </DirectionalIcon>
-              <span className="font-medium text-green-700">{rec.sourceLabName}</span>
+              <span className="font-medium text-success">{rec.sourceLabName}</span>
               <span className="text-xs text-muted-foreground">({rec.distanceLabel})</span>
             </div>
 
@@ -158,14 +158,14 @@ export function RedistributionPanel({ myLabId, isNetworkAdmin = false }: Props) 
             {/* Actions */}
             <div className="mt-3 flex gap-2">
               {isFlagged ? (
-                <span className="rounded-md bg-green-100 px-3 py-1.5 text-xs font-medium text-green-800">
+                <span className="rounded-md bg-success/10 px-3 py-1.5 text-xs font-medium text-success">
                   {t('transferRequested')}
                 </span>
               ) : (
                 <button
                   type="button"
                   onClick={() => handleInitiateTransfer(id)}
-                  className="inline-flex items-center gap-1.5 rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800"
+                  className="inline-flex items-center gap-1.5 rounded-md bg-muted px-3 py-1.5 text-xs font-medium text-white hover:bg-muted"
                 >
                   <Send className="h-3.5 w-3.5" aria-hidden />
                   {t('initiateTransfer')}

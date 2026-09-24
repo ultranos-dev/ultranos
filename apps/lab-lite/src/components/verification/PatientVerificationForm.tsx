@@ -197,7 +197,7 @@ export function PatientVerificationForm({
   // Completeness indicator
   const completenessIndicator = complete ? (
     <span
-      className="inline-flex items-center gap-1 text-green-700 text-sm font-medium"
+      className="inline-flex items-center gap-1 text-success text-sm font-medium"
       data-testid="completeness-indicator"
       aria-label={t('verification.complete')}
     >
@@ -206,7 +206,7 @@ export function PatientVerificationForm({
     </span>
   ) : selectedMethods.size === 1 ? (
     <span
-      className="inline-flex items-center gap-1 text-yellow-600 text-sm font-medium"
+      className="inline-flex items-center gap-1 text-warning text-sm font-medium"
       data-testid="completeness-indicator"
     >
       <span aria-hidden="true">⚠</span>
@@ -306,7 +306,7 @@ export function PatientVerificationForm({
       {showWarning && (
         <div
           role="alert"
-          className="rounded border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800 space-y-2"
+          className="rounded border border-warning/30 bg-warning/10 p-3 text-sm text-warning space-y-2"
           data-testid="single-id-warning"
         >
           <p className="font-medium">{t('verification.warning.singleIdentifier.title')}</p>
@@ -321,29 +321,29 @@ export function PatientVerificationForm({
                 setOverrideEnabled(e.target.checked)
                 if (!e.target.checked) setDeviationReason('')
               }}
-              className="h-4 w-4 rounded border-yellow-400 text-yellow-600 focus:ring-yellow-500"
+              className="h-4 w-4 rounded border-warning text-warning focus:ring-warning"
             />
             <span className="text-xs font-medium">{t('verification.override.label')}</span>
           </label>
 
           {overrideEnabled && (
             <div className="mt-1 space-y-1">
-              <label className="block text-xs font-medium text-yellow-800">
+              <label className="block text-xs font-medium text-warning">
                 {t('verification.override.reasonLabel')}
-                <span className="text-red-600 ms-0.5">*</span>
+                <span className="text-destructive ms-0.5">*</span>
               </label>
               <textarea
                 data-testid="deviation-reason-input"
                 value={deviationReason}
                 onChange={(e) => setDeviationReason(e.target.value)}
                 placeholder={t('verification.override.reasonPlaceholder')}
-                className="w-full rounded border border-yellow-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className="w-full rounded border border-warning/30 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-warning"
                 rows={2}
                 minLength={10}
                 maxLength={500}
               />
               {deviationReason.length > 0 && deviationReason.length < 10 && (
-                <p className="text-xs text-red-600">{t('verification.override.reasonTooShort')}</p>
+                <p className="text-xs text-destructive">{t('verification.override.reasonTooShort')}</p>
               )}
             </div>
           )}

@@ -98,7 +98,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
                     <div
                       className={`flex-1 rounded px-2 py-1.5 text-center text-xs font-medium ${
                         isDone
-                          ? 'bg-green-100 text-green-700'
+                          ? 'bg-success/10 text-success'
                           : isCurrent
                           ? 'bg-primary text-white'
                           : 'bg-muted text-muted-foreground'
@@ -132,7 +132,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
             />
           </div>
 
-          {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
           {/* Actions */}
           <div className="flex items-center justify-between pt-1">
@@ -140,7 +140,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
               type="button"
               onClick={handleCancel}
               disabled={loading || sendOut.status === 'cancelled' || sendOut.status === 'results-available'}
-              className="text-sm text-red-600 underline disabled:opacity-40"
+              className="text-sm text-destructive underline disabled:opacity-40"
             >
               {t('statusCancelSendOut')}
             </button>

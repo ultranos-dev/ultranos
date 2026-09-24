@@ -13,8 +13,8 @@ import { TrendingUp, TrendingDown, Minus } from '@ultranos/ui-kit/icons'
 import type { TATByCategory, TrendDirection } from '@/lib/portfolio-service'
 
 function TrendIcon({ trend }: { trend: TrendDirection }) {
-  if (trend === 'IMPROVING') return <TrendingUp size={14} className="text-emerald-600" aria-hidden />
-  if (trend === 'NEEDS_ATTENTION') return <TrendingDown size={14} className="text-amber-600" aria-hidden />
+  if (trend === 'IMPROVING') return <TrendingUp size={14} className="text-success" aria-hidden />
+  if (trend === 'NEEDS_ATTENTION') return <TrendingDown size={14} className="text-warning" aria-hidden />
   return <Minus size={14} className="text-muted-foreground" aria-hidden />
 }
 

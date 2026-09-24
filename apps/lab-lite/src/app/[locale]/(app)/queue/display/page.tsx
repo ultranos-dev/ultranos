@@ -64,7 +64,12 @@ export default function QueueDisplayPage() {
   }, [])
 
   return (
-    <div className="flex min-h-screen flex-col bg-neutral-950 text-white p-6">
+    // LAYOUT EXCEPTION (CLAUDE.md Content Area Layout): this is a full-screen,
+    // wall-mounted kiosk display — NOT a standard in-shell content page. It
+    // intentionally owns the whole viewport (`min-h-screen`, own `p-6` padding,
+    // dark background) instead of the `flex flex-1 flex-col gap-4 p-4` shell
+    // idiom. The standard page-root / toolbar / box rules do not apply here.
+    <div className="flex min-h-screen flex-col bg-muted text-white p-6">
       {/* Now Serving */}
       <section className="flex flex-1 flex-col items-center justify-center">
         <h1 className="text-[48px] font-bold tracking-tight mb-8">
@@ -87,7 +92,7 @@ export default function QueueDisplayPage() {
       </section>
 
       {/* Divider */}
-      <hr className="border-neutral-700 my-4" />
+      <hr className="border-border my-4" />
 
       {/* Waiting list */}
       <section className="pb-4">

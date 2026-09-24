@@ -9,11 +9,11 @@ interface OfflineVerificationBadgeProps {
 const badgeConfig: Record<VerificationSource, { label: string; classes: string }> = {
   online: {
     label: 'Online Verified',
-    classes: 'bg-green-100 text-green-800 border-green-200',
+    classes: 'bg-success/10 text-success border-success/30',
   },
   offline: {
     label: 'Offline Verified',
-    classes: 'bg-amber-100 text-amber-800 border-amber-200',
+    classes: 'bg-warning/10 text-warning border-warning/30',
   },
   cached: {
     label: 'Verified from Cache',

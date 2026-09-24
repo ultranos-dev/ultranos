@@ -82,8 +82,8 @@ export function SurveillanceAlertToast() {
           key={id}
           className={`flex max-w-sm items-start gap-3 rounded-lg border p-3 shadow-lg
             ${alert.severity === 'critical'
-              ? 'border-red-300 bg-red-50 text-red-900'
-              : 'border-amber-300 bg-amber-50 text-amber-900'
+              ? 'border-destructive/30 bg-destructive/10 text-destructive'
+              : 'border-warning/30 bg-warning/10 text-warning'
             }`}
           role="alert"
         >

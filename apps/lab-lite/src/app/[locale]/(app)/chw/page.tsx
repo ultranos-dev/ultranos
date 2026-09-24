@@ -74,7 +74,7 @@ export default function CHWPage() {
         : t('syncPending', { count: pendingCount })
 
   const syncColor =
-    !isOnline ? 'text-red-600' : pendingCount === 0 ? 'text-green-600' : 'text-amber-600'
+    !isOnline ? 'text-destructive' : pendingCount === 0 ? 'text-success' : 'text-warning'
   const SyncIcon = !isOnline ? WifiOff : pendingCount === 0 ? CheckCircle : AlertCircle
 
   return (
@@ -96,13 +96,13 @@ export default function CHWPage() {
           icon={<Truck size={48} aria-hidden />}
           label={t('courierPickup')}
           onClick={() => router.push(`/${locale}/chw/handoff`)}
-          color="bg-purple-600 hover:bg-purple-700"
+          color="bg-primary hover:bg-primary"
         />
         <ActionButton
           icon={<ClipboardList size={48} aria-hidden />}
           label={t('todaysLog')}
           onClick={() => router.push(`/${locale}/chw/log`)}
-          color="bg-gray-700 hover:bg-gray-800"
+          color="bg-muted hover:bg-muted"
         />
       </div>
 

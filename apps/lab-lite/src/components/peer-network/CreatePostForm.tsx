@@ -14,11 +14,11 @@ import { processPhoto, isValidPhotoType } from '@/lib/peer-network-photos'
 
 const INPUT_CLASS =
   'w-full rounded-lg border border-border px-4 py-2.5 text-sm ' +
-  'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500'
+  'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary'
 
 const TEXTAREA_CLASS =
   'w-full rounded-lg border border-border px-4 py-2.5 text-sm min-h-[120px] resize-y ' +
-  'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500'
+  'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary'
 
 interface CreatePostFormProps {
   onPostCreated?: (post: PeerPost) => void
@@ -158,8 +158,8 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {/* Error banner */}
       {errors.length > 0 && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3" role="alert">
-          <ul className="list-inside list-disc text-sm text-red-700">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3" role="alert">
+          <ul className="list-inside list-disc text-sm text-destructive">
             {errors.map((err, i) => (
               <li key={i}>{err}</li>
             ))}
@@ -168,9 +168,9 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
       )}
 
       {/* PHI Warning */}
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-        <p className="text-sm font-medium text-amber-800">{t('phiWarningTitle')}</p>
-        <p className="mt-1 text-xs text-amber-700">{t('phiWarningBody')}</p>
+      <div className="rounded-lg border border-warning/30 bg-warning/10 p-3">
+        <p className="text-sm font-medium text-warning">{t('phiWarningTitle')}</p>
+        <p className="mt-1 text-xs text-warning">{t('phiWarningBody')}</p>
       </div>
 
       {/* Title */}
@@ -220,7 +220,7 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
                 <button
                   type="button"
                   onClick={() => removePhoto(photo.id)}
-                  className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white"
+                  className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-white"
                   aria-label={t('removePhoto')}
                 >
                   &times;
@@ -244,7 +244,7 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={photoProcessing}
-              className="rounded-lg border border-dashed border-border px-4 py-2 text-sm text-muted-foreground hover:border-primary-500 hover:text-primary-600 disabled:opacity-50"
+              className="rounded-lg border border-dashed border-border px-4 py-2 text-sm text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-50"
             >
               {photoProcessing ? t('processingPhoto') : t('addPhoto')}
             </button>
@@ -370,7 +370,7 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
         <button
           type="submit"
           disabled={submitting || !phiConfirmed}
-          className="rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+          className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
         >
           {submitting ? t('posting') : t('post')}
         </button>

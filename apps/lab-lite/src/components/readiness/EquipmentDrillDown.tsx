@@ -31,15 +31,15 @@ function StatusBadge({ status }: { status: EquipmentDetail['status'] }) {
   const t = useTranslations()
   if (status === 'IN_SERVICE') {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 border border-green-200">
-        <span className="h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden="true" />
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success border border-success/30">
+        <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true" />
         {t('rag.status.inService')}
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 border border-red-200">
-      <span className="h-1.5 w-1.5 rounded-full bg-red-500" aria-hidden="true" />
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive border border-destructive/30">
+      <span className="h-1.5 w-1.5 rounded-full bg-destructive" aria-hidden="true" />
       {t('rag.status.outOfService')}
     </span>
   )
@@ -89,7 +89,7 @@ export function EquipmentDrillDown({ details, onBack }: EquipmentDrillDownProps)
             <li
               key={instrument.instrumentId}
               className={`px-4 py-3 ${
-                instrument.status === 'OUT_OF_SERVICE' ? 'bg-red-50/40' : 'bg-card'
+                instrument.status === 'OUT_OF_SERVICE' ? 'bg-destructive/40' : 'bg-card'
               }`}
             >
               <div className="flex items-start gap-3">
@@ -97,7 +97,7 @@ export function EquipmentDrillDown({ details, onBack }: EquipmentDrillDownProps)
                   size={16}
                   className={
                     instrument.status === 'OUT_OF_SERVICE'
-                      ? 'text-red-500 mt-0.5 shrink-0'
+                      ? 'text-destructive mt-0.5 shrink-0'
                       : 'text-muted-foreground mt-0.5 shrink-0'
                   }
                   aria-hidden="true"
@@ -107,7 +107,7 @@ export function EquipmentDrillDown({ details, onBack }: EquipmentDrillDownProps)
                     {instrument.name}
                   </p>
                   {instrument.status === 'OUT_OF_SERVICE' && instrument.outOfServiceReason && (
-                    <p className="text-xs text-red-600 mt-0.5">
+                    <p className="text-xs text-destructive mt-0.5">
                       {instrument.outOfServiceReason}
                     </p>
                   )}

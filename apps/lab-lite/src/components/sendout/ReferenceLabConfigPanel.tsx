@@ -151,7 +151,7 @@ export function ReferenceLabConfigPanel() {
         )}
       </div>
 
-      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
 
       {/* Add/Edit form */}
       {editingId !== null && (
@@ -170,7 +170,7 @@ export function ReferenceLabConfigPanel() {
           ].map(({ id, label, key, required, placeholder }) => (
             <div key={id}>
               <label htmlFor={id} className="block text-xs font-medium text-foreground mb-0.5">
-                {label}{required && <span aria-hidden="true" className="text-red-500 ms-0.5">*</span>}
+                {label}{required && <span aria-hidden="true" className="text-destructive ms-0.5">*</span>}
               </label>
               <input
                 id={id}
@@ -230,7 +230,7 @@ export function ReferenceLabConfigPanel() {
                     type="button"
                     onClick={() => setDeactivateTarget(lab.id)}
                     aria-label={t('refLabDeactivateAriaLabel', { name: lab.name })}
-                    className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-red-600"
+                    className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive"
                   >
                     <X size={16} />
                   </button>
@@ -264,7 +264,7 @@ export function ReferenceLabConfigPanel() {
             <button
               type="button"
               onClick={() => void confirmDeactivate()}
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+              className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive"
             >
               {t('refLabDeactivateConfirmButton')}
             </button>

@@ -38,12 +38,12 @@ export function CheckInPrompt({ pairings, onCheckIn }: CheckInPromptProps) {
     <div
       role="alert"
       aria-live="polite"
-      className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3"
+      className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3"
     >
       {/* Header row */}
-      <div className="flex items-center gap-2 text-sm font-semibold text-amber-800">
+      <div className="flex items-center gap-2 text-sm font-semibold text-warning">
         {/* Warning icon — non-directional, no mirror needed */}
-        <AlertTriangle size={16} className="shrink-0 text-amber-600" aria-hidden="true" />
+        <AlertTriangle size={16} className="shrink-0 text-warning" aria-hidden="true" />
         <span>
           {t('checkInOverdueCount', { count: pairings.length })}
         </span>
@@ -56,16 +56,16 @@ export function CheckInPrompt({ pairings, onCheckIn }: CheckInPromptProps) {
           return (
             <li
               key={pairing.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-amber-100 px-3 py-2"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-warning/10 px-3 py-2"
             >
-              <div className="flex flex-col gap-0.5 text-sm text-amber-900">
+              <div className="flex flex-col gap-0.5 text-sm text-warning">
                 {/* Partner name — no PHI risk, mentorship partner names are staff, not patients */}
                 <span className="font-medium">
                   {t('checkInPartnerLabel', {
                     name: `${pairing.mentorName} — ${pairing.menteeName}`,
                   })}
                 </span>
-                <span className="text-xs text-amber-700">
+                <span className="text-xs text-warning">
                   {t('checkInDaysOverdue', { count: days })}
                 </span>
               </div>

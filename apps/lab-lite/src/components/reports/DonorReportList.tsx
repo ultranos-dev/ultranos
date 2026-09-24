@@ -24,11 +24,11 @@ export function DonorReportList({ programCode, onOpenReport }: Props) {
   if (error) {
     return (
       <div
-        className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-center"
+        className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-center"
         role="alert"
         data-testid="donor-report-load-error"
       >
-        <p className="text-sm text-amber-800">{t('loadError')}</p>
+        <p className="text-sm text-warning">{t('loadError')}</p>
       </div>
     )
   }
@@ -71,8 +71,8 @@ export function DonorReportList({ programCode, onOpenReport }: Props) {
                 </div>
                 <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
                   r.status === 'finalized'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-amber-100 text-amber-700'
+                    ? 'bg-success/10 text-success'
+                    : 'bg-warning/10 text-warning'
                 }`}>
                   {r.status === 'finalized' ? t('statusFinalized') : t('statusDraft')}
                 </span>

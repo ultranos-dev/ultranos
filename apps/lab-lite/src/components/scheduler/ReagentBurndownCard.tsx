@@ -33,8 +33,8 @@ function AlertBadge({ level }: { level: AlertLevel }) {
 
   const styles: Record<Exclude<AlertLevel, 'none'>, string> = {
     info: 'bg-primary/10 text-primary',
-    warning: 'bg-amber-100 text-amber-700',
-    critical: 'bg-red-100 text-red-700',
+    warning: 'bg-warning/10 text-warning',
+    critical: 'bg-destructive/10 text-destructive',
   }
   const labels: Record<Exclude<AlertLevel, 'none'>, string> = {
     info: t('alertInfo'),
@@ -165,7 +165,7 @@ function BurndownMiniChart({
 
 function ConfidenceDot({ level }: { level: 'high' | 'medium' | 'low' }) {
   const t = useTranslations('scheduler.burndown.confidence')
-  const colors = { high: 'bg-green-400', medium: 'bg-amber-400', low: 'bg-red-400' }
+  const colors = { high: 'bg-success', medium: 'bg-warning', low: 'bg-destructive' }
   return (
     <span
       className={`inline-block h-2 w-2 rounded-full ${colors[level]}`}
@@ -203,7 +203,7 @@ function ReagentRow({
   const t = useTranslations('scheduler.burndown')
 
   const stockDisplay = item.currentStock <= 0
-    ? <span className="font-semibold text-red-600 uppercase text-xs">{t('stockout')}</span>
+    ? <span className="font-semibold text-destructive uppercase text-xs">{t('stockout')}</span>
     : <span>{item.currentStock} {item.unit}</span>
 
   return (
@@ -343,12 +343,12 @@ export function ReagentBurndownCard() {
           <h2 className="text-sm font-semibold text-foreground">{t('title')}</h2>
           {/* Alert summary chips */}
           {(counts.critical ?? 0) > 0 && (
-            <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
               {counts.critical} {t('alertCritical')}
             </span>
           )}
           {(counts.warning ?? 0) > 0 && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+            <span className="rounded-full bg-warning/10 px-2 py-0.5 text-xs font-semibold text-warning">
               {counts.warning} {t('alertWarning')}
             </span>
           )}
@@ -380,7 +380,7 @@ export function ReagentBurndownCard() {
 
       {/* Error */}
       {error && (
-        <div className="px-4 py-3 text-sm text-amber-700 bg-amber-50">
+        <div className="px-4 py-3 text-sm text-warning bg-warning/10">
           {error}
         </div>
       )}

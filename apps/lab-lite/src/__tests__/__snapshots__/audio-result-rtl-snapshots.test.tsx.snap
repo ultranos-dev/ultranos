@@ -91,7 +91,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in LTR mode 1`] = 
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-droplet text-red-400"
+              class="lucide lucide-droplet text-destructive"
               fill="none"
               height="24"
               stroke="currentColor"
@@ -171,7 +171,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in LTR mode 1`] = 
         >
           <button
             aria-expanded="false"
-            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-blue-200"
+            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-primary"
             type="button"
           >
             ▼ Read explanation
@@ -189,7 +189,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in LTR mode 1`] = 
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-heart text-pink-400"
+              class="lucide lucide-heart text-primary"
               fill="none"
               height="24"
               stroke="currentColor"
@@ -276,7 +276,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in LTR mode 1`] = 
         >
           <button
             aria-expanded="false"
-            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-blue-200"
+            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-primary"
             type="button"
           >
             ▼ Read explanation
@@ -316,7 +316,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (ar lo
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-droplet text-red-400"
+              class="lucide lucide-droplet text-destructive"
               fill="none"
               height="24"
               stroke="currentColor"
@@ -396,7 +396,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (ar lo
         >
           <button
             aria-expanded="false"
-            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-blue-200"
+            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-primary"
             type="button"
           >
             ▼ Read explanation
@@ -414,7 +414,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (ar lo
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-heart text-pink-400"
+              class="lucide lucide-heart text-primary"
               fill="none"
               height="24"
               stroke="currentColor"
@@ -501,7 +501,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (ar lo
         >
           <button
             aria-expanded="false"
-            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-blue-200"
+            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-primary"
             type="button"
           >
             ▼ Read explanation
@@ -541,7 +541,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (prs l
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-droplet text-red-400"
+              class="lucide lucide-droplet text-destructive"
               fill="none"
               height="24"
               stroke="currentColor"
@@ -621,7 +621,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (prs l
         >
           <button
             aria-expanded="false"
-            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-blue-200"
+            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-primary"
             type="button"
           >
             ▼ Read explanation
@@ -639,7 +639,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (prs l
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-heart text-pink-400"
+              class="lucide lucide-heart text-primary"
               fill="none"
               height="24"
               stroke="currentColor"
@@ -726,7 +726,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (prs l
         >
           <button
             aria-expanded="false"
-            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-blue-200"
+            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-primary"
             type="button"
           >
             ▼ Read explanation
@@ -766,7 +766,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (ps lo
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-droplet text-red-400"
+              class="lucide lucide-droplet text-destructive"
               fill="none"
               height="24"
               stroke="currentColor"
@@ -846,7 +846,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (ps lo
         >
           <button
             aria-expanded="false"
-            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-blue-200"
+            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-primary"
             type="button"
           >
             ▼ Read explanation
@@ -864,7 +864,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (ps lo
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-heart text-pink-400"
+              class="lucide lucide-heart text-primary"
               fill="none"
               height="24"
               stroke="currentColor"
@@ -951,7 +951,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (ps lo
         >
           <button
             aria-expanded="false"
-            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-blue-200"
+            class="text-sm text-primary underline hover:text-primary/80 dark:text-primary dark:hover:text-primary"
             type="button"
           >
             ▼ Read explanation

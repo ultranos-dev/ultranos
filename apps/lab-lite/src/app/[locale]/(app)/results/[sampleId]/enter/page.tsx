@@ -42,6 +42,10 @@ import { hlcNow } from '@/lib/hlc'
 import type { AnomalyFlag } from '@/lib/anomaly-engine'
 import { getPriorResult } from '@/lib/prior-results'
 import { AnomalyFlagDisplay } from '@/components/AnomalyFlagDisplay'
+import { triggerAutoEscalation } from '@/lib/confidence-escalation'
+import { Button } from '@/components/ui/Button'
+import { DirectionalIcon } from '@ultranos/ui-kit'
+import { ChevronLeft } from '@ultranos/ui-kit/icons'
 import type { FhirSpecimen } from '@ultranos/shared-types'
 import type { ReferenceRange as LocalizedRange, RangeSnapshot } from '@/lib/reference-ranges/types'
 
@@ -190,7 +194,7 @@ export default function ResultEntryPage({ params }: PageProps) {
 
   if (error || !sample) {
     return (
-      <div className="rounded-md bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-200">
+      <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive dark:bg-destructive/20 dark:text-destructive">
         {error ?? t('loadError')}
       </div>
     )
@@ -423,6 +427,27 @@ export default function ResultEntryPage({ params }: PageProps) {
     }
   }
 
+  // Escalate the anomaly to physician review via the Story 59.1 escalation sink
+  // (lab.escalateAiResult, wrapped by triggerAutoEscalation). PHI-free payload:
+  // opaque sampleId, confidence level, and rule IDs only — never patient identity
+  // or raw values (CLAUDE.md Rule #1). Best-effort; failure is surfaced by the
+  // wrapper (sync-status banner + FAILURE audit), never silently swallowed.
+  function handleEscalate() {
+    const worst = anomalyFlags[0]
+    if (worst) {
+      triggerAutoEscalation({
+        confidence: worst.confidence,
+        aiOutputSummary: `${anomalyFlags.length} statistical pattern flag(s): ${anomalyFlags
+          .map((f) => f.ruleId)
+          .join(', ')}`,
+        sourceFeature: 'anomaly-detection',
+        sampleId,
+        escalationReason: 'anomalyFlags.escalation.manual',
+      })
+    }
+    router.push('/worklist')
+  }
+
   // Show anomaly flags after save — physician must review before proceeding (CLAUDE.md Rule #2)
   if (anomalyFlags.length > 0) {
     return (
@@ -430,7 +455,7 @@ export default function ResultEntryPage({ params }: PageProps) {
         <AnomalyFlagDisplay
           flags={anomalyFlags}
           onAcknowledge={() => router.push('/worklist')}
-          onEscalate={() => router.push('/worklist')}
+          onEscalate={handleEscalate}
         />
         <button
           type="button"
@@ -445,15 +470,18 @@ export default function ResultEntryPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col">
-      <div className="border-b border-border px-4 py-3 dark:border-border">
-        <button
-          type="button"
+      <div className="border-b border-border px-4 py-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-fit px-0"
           onClick={() => router.back()}
-          className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 dark:text-primary"
         >
-          <span aria-hidden>‹</span>
+          <DirectionalIcon category="navigation">
+            <ChevronLeft size={16} />
+          </DirectionalIcon>
           {t('backToSample')}
-        </button>
+        </Button>
       </div>
       <ResultEntryForm
         sampleId={sampleId}

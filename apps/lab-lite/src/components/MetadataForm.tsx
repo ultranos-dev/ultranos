@@ -29,11 +29,11 @@ function getConfidenceLevel(confidence: number): ConfidenceLevel {
 function getConfidenceBadgeClasses(level: ConfidenceLevel): string {
   switch (level) {
     case 'high':
-      return 'bg-green-100 text-green-800'
+      return 'bg-success/10 text-success'
     case 'medium':
-      return 'bg-yellow-100 text-yellow-800'
+      return 'bg-warning/10 text-warning'
     case 'low':
-      return 'bg-red-100 text-red-800'
+      return 'bg-destructive/10 text-destructive'
   }
 }
 
@@ -145,13 +145,13 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
       )}
 
       {ocrStatus && !ocrStatus.loading && !ocrStatus.available && (
-        <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700" role="alert">
+        <div className="rounded-lg bg-warning/10 px-4 py-3 text-sm text-warning" role="alert">
           {t('ocrUnavailable')}
         </div>
       )}
 
       {ocrStatus && !ocrStatus.loading && ocrStatus.available && ocrStatus.processingTimeMs !== undefined && (
-        <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700" role="status">
+        <div className="rounded-lg bg-success/10 px-4 py-3 text-sm text-success" role="status">
           {t('ocrComplete', { time: (ocrStatus.processingTimeMs / 1000).toFixed(1) })}
           {hasOcr
             ? t('ocrSuggestionsFound', { count: ocrSuggestions.length })
@@ -185,7 +185,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
             if (errors.category) setErrors((prev) => ({ ...prev, category: undefined }))
           }}
           disabled={disabled}
-          className="rounded-lg border border-border px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-border px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">{t('selectCategory')}</option>
           {LOINC_CATEGORIES.map((cat) => (
@@ -195,12 +195,12 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
           ))}
         </select>
         {ocrLoincSuggestion && ocrLoincSuggestion.confidence < CONFIDENCE_THRESHOLD && (
-          <p className="text-xs text-amber-600">
+          <p className="text-xs text-warning">
             {t('ocrLowConfidence')}
           </p>
         )}
         {errors.category && (
-          <p className="text-xs text-red-600">{errors.category}</p>
+          <p className="text-xs text-destructive">{errors.category}</p>
         )}
       </div>
 
@@ -232,15 +232,15 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
             if (errors.date) setErrors((prev) => ({ ...prev, date: undefined }))
           }}
           disabled={disabled}
-          className="rounded-lg border border-border px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-border px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
         />
         {ocrDateSuggestion && ocrDateSuggestion.confidence < CONFIDENCE_THRESHOLD && (
-          <p className="text-xs text-amber-600">
+          <p className="text-xs text-warning">
             {t('ocrLowConfidence')}
           </p>
         )}
         {errors.date && (
-          <p className="text-xs text-red-600">{errors.date}</p>
+          <p className="text-xs text-destructive">{errors.date}</p>
         )}
       </div>
 
@@ -255,7 +255,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
                 setConfirmed(e.target.checked)
                 if (errors.confirm) setErrors((prev) => ({ ...prev, confirm: undefined }))
               }}
-              className="mt-0.5 h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
+              className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
               data-testid="ocr-confirm-checkbox"
             />
             <span className="text-foreground">
@@ -263,7 +263,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
             </span>
           </label>
           {errors.confirm && (
-            <p className="text-xs text-red-600">{errors.confirm}</p>
+            <p className="text-xs text-destructive">{errors.confirm}</p>
           )}
         </div>
       )}

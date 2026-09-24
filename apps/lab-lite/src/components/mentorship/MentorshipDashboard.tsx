@@ -207,8 +207,8 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
         <button
           type="button"
           onClick={handleCheckInCancel}
-          className="self-start text-sm text-primary-600 underline-offset-2 hover:underline
-            focus:outline-none focus:ring-2 focus:ring-primary-300"
+          className="self-start text-sm text-primary underline-offset-2 hover:underline
+            focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <span className="inline-block rtl:scale-x-[-1]" aria-hidden>←</span>{' '}{t('dashboardBack')}
         </button>
@@ -239,8 +239,8 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
         <button
           type="button"
           onClick={handleBackToList}
-          className="self-start text-sm text-primary-600 underline-offset-2 hover:underline
-            focus:outline-none focus:ring-2 focus:ring-primary-300"
+          className="self-start text-sm text-primary underline-offset-2 hover:underline
+            focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <span className="inline-block rtl:scale-x-[-1]" aria-hidden>←</span>{' '}{t('dashboardBack')}
         </button>
@@ -265,8 +265,8 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
         <button
           type="button"
           onClick={() => setActiveView({ type: 'journal', pairingId: currentPairing.id })}
-          className="self-start text-sm text-primary-600 underline-offset-2 hover:underline
-            focus:outline-none focus:ring-2 focus:ring-primary-300"
+          className="self-start text-sm text-primary underline-offset-2 hover:underline
+            focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <span className="inline-block rtl:scale-x-[-1]" aria-hidden>←</span>{' '}{t('dashboardBackToJournal')}
         </button>
@@ -330,9 +330,9 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
                 className={
                   'rounded-xl border p-4 shadow-sm transition-shadow ' +
                   (inactive
-                    ? 'border-red-200 bg-red-50'
+                    ? 'border-destructive/30 bg-destructive/10'
                     : overdue
-                    ? 'border-amber-200 bg-amber-50'
+                    ? 'border-warning/30 bg-warning/10'
                     : 'border-border bg-card')
                 }
               >
@@ -346,7 +346,7 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
                       'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' +
                       (isMentor(pairing, currentUserId)
                         ? 'bg-primary/10 text-primary'
-                        : 'bg-emerald-100 text-emerald-800')
+                        : 'bg-success/10 text-success')
                     }
                   >
                     {role}
@@ -357,7 +357,7 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
                     className={
                       'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' +
                       (pairing.status === 'active'
-                        ? 'bg-green-100 text-green-800'
+                        ? 'bg-success/10 text-success'
                         : pairing.status === 'paused'
                         ? 'bg-muted text-foreground'
                         : 'bg-muted text-muted-foreground')
@@ -369,7 +369,7 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
                   {/* Red warning — no activity in 30+ days */}
                   {inactive && (
                     <span
-                      className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700"
+                      className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive"
                       title={t('dashboardInactiveWarning')}
                     >
                       <AlertCircle size={12} aria-hidden="true" />
@@ -380,7 +380,7 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
                   {/* Amber warning — overdue check-in (only shown if not already red) */}
                   {!inactive && overdue && (
                     <span
-                      className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700"
+                      className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning"
                       title={t('dashboardOverdueWarning')}
                     >
                       <AlertTriangle size={12} aria-hidden="true" />

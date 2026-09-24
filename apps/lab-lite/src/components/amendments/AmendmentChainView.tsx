@@ -94,7 +94,7 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
 
   if (error) {
     return (
-      <div className="py-4 text-sm text-red-600" role="alert" data-testid="chain-error">
+      <div className="py-4 text-sm text-destructive" role="alert" data-testid="chain-error">
         {error}
       </div>
     )
@@ -129,8 +129,8 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
                 <span
                   className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                     amendment.status === 'COMMITTED'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
+                      ? 'bg-success/10 text-success'
+                      : 'bg-warning/10 text-warning'
                   }`}
                 >
                   {amendment.status === 'COMMITTED' ? t('committed') : t('pendingAuthorization')}

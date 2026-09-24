@@ -132,7 +132,7 @@ export function StaffHealthDashboard() {
   if (loadError) {
     return (
       <div className="p-6 text-center" data-testid="staff-health-load-error">
-        <p className="text-amber-700 font-medium">{t('loadError')}</p>
+        <p className="text-warning font-medium">{t('loadError')}</p>
       </div>
     )
   }
@@ -140,16 +140,16 @@ export function StaffHealthDashboard() {
   if (accessDenied) {
     return (
       <div className="p-6 text-center" data-testid="staff-health-access-denied">
-        <p className="text-red-600 font-medium">{t('accessDenied')}</p>
+        <p className="text-destructive font-medium">{t('accessDenied')}</p>
         <p className="text-sm text-muted-foreground mt-2">{t('labManagerRequired')}</p>
       </div>
     )
   }
 
   const STATE_COLORS = {
-    green: 'bg-green-500',
-    amber: 'bg-amber-500',
-    red: 'bg-red-500',
+    green: 'bg-success',
+    amber: 'bg-warning',
+    red: 'bg-destructive',
   }
 
   return (
@@ -164,7 +164,7 @@ export function StaffHealthDashboard() {
             <p className="text-sm text-muted-foreground">{t('totalStaff')}</p>
           </div>
           <div className="rounded-lg border p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">{stats.hepBImmunePercent}%</p>
+            <p className="text-2xl font-bold text-success">{stats.hepBImmunePercent}%</p>
             <p className="text-sm text-muted-foreground">{t('hepBImmunity')}</p>
           </div>
           <div className="rounded-lg border p-4 text-center">
@@ -172,7 +172,7 @@ export function StaffHealthDashboard() {
             <p className="text-sm text-muted-foreground">{t('tbCurrent')}</p>
           </div>
           <div className="rounded-lg border p-4 text-center">
-            <p className={`text-2xl font-bold ${stats.overdueCount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+            <p className={`text-2xl font-bold ${stats.overdueCount > 0 ? 'text-destructive' : 'text-success'}`}>
               {stats.overdueCount}
             </p>
             <p className="text-sm text-muted-foreground">{t('overdueScreenings')}</p>

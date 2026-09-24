@@ -64,14 +64,14 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
         <div className="text-5xl">✅</div>
-        <h2 className="text-2xl font-bold text-green-700">{t('restoration.done')}</h2>
+        <h2 className="text-2xl font-bold text-success">{t('restoration.done')}</h2>
         <p className="text-muted-foreground">{t('restoration.doneDescription')}</p>
         <button
           type="button"
           onClick={onComplete}
-          className="w-full py-4 bg-green-600 text-white rounded-lg font-bold text-lg
-            hover:bg-green-700 focus-visible:outline focus-visible:outline-2
-            focus-visible:outline-offset-2 focus-visible:outline-green-600"
+          className="w-full py-4 bg-success text-white rounded-lg font-bold text-lg
+            hover:bg-success focus-visible:outline focus-visible:outline-2
+            focus-visible:outline-offset-2 focus-visible:outline-success"
         >
           {t('restoration.doneButton')}
         </button>
@@ -82,7 +82,7 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
   if (step === 'error') {
     return (
       <div className="flex flex-col gap-4">
-        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-red-800">
+        <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-4 text-destructive">
           <p className="font-semibold">{t('restoration.failedTitle')}</p>
           <p className="text-sm mt-1">{error}</p>
         </div>
@@ -111,7 +111,7 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
             className="w-full py-4 border-2 border-border rounded-lg font-semibold
               text-foreground hover:border-border hover:bg-muted/30
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-              focus-visible:outline-neutral-600"
+              focus-visible:outline-border"
           >
             📁 {t('restoration.fromFile')}
           </button>
@@ -140,7 +140,7 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
               ref={fileRef}
               type="file"
               accept=".ultranos.bak,.json"
-              className="block w-full text-sm text-foreground file:mr-3 file:py-2 file:px-4
+              className="block w-full text-sm text-foreground file:me-3 file:py-2 file:px-4
                 file:rounded file:border-0 file:bg-muted file:font-medium
                 file:hover:bg-muted"
             />
@@ -161,7 +161,7 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 font-medium">{error}</p>
+            <p className="text-sm text-destructive font-medium">{error}</p>
           )}
 
           <button
@@ -211,7 +211,7 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 font-medium">{error}</p>
+            <p className="text-sm text-destructive font-medium">{error}</p>
           )}
 
           <button

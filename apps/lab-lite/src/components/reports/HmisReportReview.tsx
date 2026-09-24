@@ -48,13 +48,13 @@ function EditableField({
         onChange={(e) => onCorrect(fieldPath, Number(e.target.value))}
         disabled={disabled}
         className={`w-24 rounded-md border px-2 py-1 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring ${
-          isCorrected ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/30' : 'border-input bg-background'
+          isCorrected ? 'border-warning bg-warning/10 dark:bg-warning/30' : 'border-input bg-background'
         }`}
       />
       {isCorrected && !disabled && (
         <button
           onClick={() => onRevert(fieldPath)}
-          className="text-xs text-amber-700 dark:text-amber-400 underline hover:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+          className="text-xs text-warning dark:text-warning underline hover:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
           title={t('revertToComputed')}
         >
           {t('revertToComputed')}
@@ -262,12 +262,12 @@ export function HmisReportReview({ report, onUpdate, onBack }: HmisReportReviewP
           <p className="text-sm text-muted-foreground mt-1">
             {localReport.facilityName} — {period}
             {isFinalized && (
-              <span className="ms-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">
+              <span className="ms-2 inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success dark:bg-success/30 dark:text-success">
                 {t('statusFinalized')}
               </span>
             )}
             {!isFinalized && (
-              <span className="ms-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+              <span className="ms-2 inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning dark:bg-warning/30 dark:text-warning">
                 {t('statusDraft')}
               </span>
             )}
@@ -740,8 +740,8 @@ export function HmisReportReview({ report, onUpdate, onBack }: HmisReportReviewP
 
       {/* Corrections summary */}
       {localReport.corrections.length > 0 && (
-        <div className="mt-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3">
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+        <div className="mt-4 rounded-lg bg-warning/10 dark:bg-warning/20 border border-warning/30 dark:border-warning p-3">
+          <p className="text-sm font-medium text-warning dark:text-warning">
             {t('correctionsMade')}: {localReport.corrections.length} field(s) manually adjusted
           </p>
         </div>

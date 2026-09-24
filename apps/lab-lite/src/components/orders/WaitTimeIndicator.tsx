@@ -41,10 +41,10 @@ export function WaitTimeIndicator({ profile }: WaitTimeIndicatorProps) {
       </div>
 
       {/* Visual minute badge */}
-      <div className="flex-shrink-0 text-right">
+      <div className="flex-shrink-0 text-end">
         <span
           data-testid="wait-time-minutes"
-          className="inline-block rounded-full bg-blue-200 px-2.5 py-1 text-xs font-bold text-primary"
+          className="inline-block rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary"
         >
           ~{profile.estimatedMinutes}m
         </span>

@@ -48,7 +48,7 @@ export function RecentPatientsList({ patients, onSelect, loading = false }: Rece
             <button
               type="button"
               onClick={() => onSelect(p)}
-              className="flex w-full items-center justify-between py-2.5 text-start hover:bg-muted/30 rounded-md px-2 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary-300"
+              className="flex w-full items-center justify-between py-2.5 text-start hover:bg-muted/30 rounded-md px-2 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <span className="text-sm font-medium text-foreground">{p.firstName}</span>
               <span className="text-xs text-muted-foreground">{t('yearsOld', { age: p.age })}</span>

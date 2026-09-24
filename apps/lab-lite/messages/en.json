@@ -2691,7 +2691,9 @@
           "sba": "Calculate serum-ascites albumin gradient (SAAG) for ascitic fluid."
         }
       }
-    }
+    },
+    "contentPending": "Reference content pending",
+    "contentPendingDescription": "Physician-reviewed reference images for this category are being prepared. They will appear here once clinical review is complete."
   },
   "criticalValueChecklist": {
     "title": "Critical Value Checklist",
@@ -3332,7 +3334,8 @@
     "status": {
       "ready": "Ready",
       "caution": "Caution",
-      "actionNeeded": "Action Needed"
+      "actionNeeded": "Action Needed",
+      "notAvailable": "Not available"
     },
     "loading": "Loading readiness data…",
     "lastEvaluated": "Last evaluated at {time}",
@@ -3359,7 +3362,9 @@
       "equipment": {
         "title": "Equipment",
         "summaryNotConfigured": "Equipment tracking not configured",
-        "detailNotConfigured": "Equipment status tracking is not set up yet"
+        "detailNotConfigured": "Equipment status tracking is not set up yet",
+        "summaryNotAvailable": "Equipment tracking is not available yet",
+        "detailNotAvailable": "Equipment status monitoring will appear here once the tracking feature is available."
       },
       "pendingOrders": {
         "title": "Pending Orders",

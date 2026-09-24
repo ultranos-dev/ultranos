@@ -2691,7 +2691,9 @@
           "sba": "حساب تدرج ألبومين المصل-الاستسقاء للسائل الاستسقائي."
         }
       }
-    }
+    },
+    "contentPending": "المحتوى المرجعي قيد الإعداد",
+    "contentPendingDescription": "يجري إعداد الصور المرجعية المراجَعة من قبل الأطباء لهذه الفئة. ستظهر هنا بعد اكتمال المراجعة السريرية."
   },
   "criticalValueChecklist": {
     "title": "قائمة التحقق للقيم الحرجة",
@@ -3300,7 +3302,8 @@
     "status": {
       "ready": "جاهز",
       "caution": "تنبيه",
-      "actionNeeded": "يلزم اتخاذ إجراء"
+      "actionNeeded": "يلزم اتخاذ إجراء",
+      "notAvailable": "غير متوفر"
     },
     "loading": "جار تحميل بيانات الجاهزية…",
     "lastEvaluated": "آخر تقييم في {time}",
@@ -3327,7 +3330,9 @@
       "equipment": {
         "title": "المعدات",
         "summaryNotConfigured": "تتبع المعدات غير مفعّل",
-        "detailNotConfigured": "لم يُهيَّأ تتبع حالة المعدات بعد"
+        "detailNotConfigured": "لم يُهيَّأ تتبع حالة المعدات بعد",
+        "summaryNotAvailable": "تتبع المعدات غير متوفر بعد",
+        "detailNotAvailable": "ستظهر مراقبة حالة المعدات هنا بمجرد توفر ميزة التتبع."
       },
       "pendingOrders": {
         "title": "الطلبات المعلّقة",

@@ -104,9 +104,9 @@ export function PaymentForm() {
   if (successPayment) {
     return (
       <div className="flex flex-col gap-4">
-        <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
-          <p className="text-lg font-semibold text-green-800">{t('success')}</p>
-          <p className="mt-2 text-sm text-green-700">
+        <div className="rounded-lg border border-success/30 bg-success/10 p-6 text-center">
+          <p className="text-lg font-semibold text-success">{t('success')}</p>
+          <p className="mt-2 text-sm text-success">
             {successPayment.receiptNumber}
           </p>
           <div className="mt-4 flex gap-3 justify-center">
@@ -137,7 +137,7 @@ export function PaymentForm() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-foreground mb-6">{t('title')}</h1>
+      <h1 className="text-2xl font-semibold text-foreground">{t('title')}</h1>
 
       <div className="flex flex-col gap-4">
         {/* Patient Reference */}
@@ -203,7 +203,7 @@ export function PaymentForm() {
             className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
           />
           {amountNum > 0 && amountNum < totalDue && (
-            <p className="mt-2 text-sm text-amber-600">
+            <p className="mt-2 text-sm text-warning">
               {t('partialPaymentNote')} — {t('outstandingBalance')}: <span className="font-numeric">{formatAFN(outstandingBalance)}</span>
             </p>
           )}
@@ -259,9 +259,9 @@ export function PaymentForm() {
 
         {/* Validation Errors */}
         {errors.length > 0 && (
-          <div className="rounded-md bg-red-50 p-3">
+          <div className="rounded-md bg-destructive/10 p-3">
             {errors.map((err, i) => (
-              <p key={i} className="text-sm text-red-700">{err}</p>
+              <p key={i} className="text-sm text-destructive">{err}</p>
             ))}
           </div>
         )}

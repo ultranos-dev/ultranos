@@ -203,9 +203,9 @@ export function PatientVerifyScanner({ onVerified, onError, token }: PatientVeri
 
       {/* Verification card — confirm identity before proceeding (AC 5) */}
       {verifiedResult && (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+        <div className="rounded-lg border border-success/30 bg-success/10 p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-green-800">Patient Verified</h3>
+            <h3 className="text-sm font-semibold text-success">Patient Verified</h3>
             <OfflineVerificationBadge source={verificationSource} />
           </div>
           <dl className="grid grid-cols-2 gap-2 text-sm">

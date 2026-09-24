@@ -51,9 +51,9 @@ function MilestoneProgressBar({
   return (
     <div className="space-y-1.5" data-testid="milestone-progress-bar">
       <div className="flex items-center justify-between text-sm">
-        <span className={`font-medium ${earned ? 'text-indigo-700' : 'text-foreground'}`}>
+        <span className={`font-medium ${earned ? 'text-primary' : 'text-foreground'}`}>
           {label}
-          {earned && <span className="ms-2 text-xs text-indigo-500">✓ Earned!</span>}
+          {earned && <span className="ms-2 text-xs text-primary">✓ Earned!</span>}
         </span>
         <span className="text-xs text-muted-foreground">
           {current.toLocaleString()} / {target.toLocaleString()}
@@ -68,7 +68,7 @@ function MilestoneProgressBar({
         aria-label={`${label}: ${current} of ${target}`}
       >
         <div
-          className={`h-full rounded-full transition-all ${earned ? 'bg-indigo-500' : 'bg-indigo-300'}`}
+          className={`h-full rounded-full transition-all ${earned ? 'bg-primary' : 'bg-primary'}`}
           style={{ width: `${pct}%` }}
         />
       </div>

@@ -139,7 +139,7 @@ export function QueueBatchDialog({
         {/* Instrument selector */}
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">
-            {t('selectInstrument') ?? 'Instrument'} <span className="text-red-500">*</span>
+            {t('selectInstrument') ?? 'Instrument'} <span className="text-destructive">*</span>
           </label>
           <select
             className="form-input w-full"
@@ -155,7 +155,7 @@ export function QueueBatchDialog({
             ))}
           </select>
           {instruments.length === 0 && (
-            <p className="text-xs text-amber-600 mt-1">
+            <p className="text-xs text-warning mt-1">
               {t('noInServiceInstruments') ?? 'No in-service instruments available'}
             </p>
           )}
@@ -164,7 +164,7 @@ export function QueueBatchDialog({
         {/* Test type */}
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">
-            {t('testType') ?? 'Test Type'} <span className="text-red-500">*</span>
+            {t('testType') ?? 'Test Type'} <span className="text-destructive">*</span>
           </label>
           <input
             type="text"
@@ -179,7 +179,7 @@ export function QueueBatchDialog({
         {/* Sample count */}
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">
-            {t('sampleCount') ?? 'Sample Count'} <span className="text-red-500">*</span>
+            {t('sampleCount') ?? 'Sample Count'} <span className="text-destructive">*</span>
           </label>
           <input
             type="number"
@@ -215,7 +215,7 @@ export function QueueBatchDialog({
         )}
 
         {error && (
-          <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+          <p className="rounded bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
             {error}
           </p>
         )}

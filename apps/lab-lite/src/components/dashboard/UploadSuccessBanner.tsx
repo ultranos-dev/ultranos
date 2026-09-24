@@ -24,18 +24,18 @@ export function UploadSuccessBanner() {
 
   return (
     <div
-      className="flex items-center justify-between rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800"
+      className="flex items-center justify-between rounded-lg bg-success/10 border border-success/30 px-4 py-3 text-sm text-success"
       role="status"
       aria-live="polite"
     >
       <div className="flex items-center gap-2">
-        <CircleCheck size={20} className="shrink-0 text-green-600" aria-hidden="true" />
+        <CircleCheck size={20} className="shrink-0 text-success" aria-hidden="true" />
         <span className="font-medium">{t('uploadSuccess')}</span>
       </div>
       <button
         type="button"
         onClick={() => setVisible(false)}
-        className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
+        className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-success hover:bg-success/10 focus:outline-none focus:ring-2 focus:ring-success focus:ring-offset-1"
         aria-label={t('dismiss')}
       >
         {t('dismiss')}

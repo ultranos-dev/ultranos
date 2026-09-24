@@ -24,21 +24,21 @@ interface RAGDimensionCardProps {
 // ---------------------------------------------------------------------------
 
 const CARD_BG: Record<RAGStatus, string> = {
-  GREEN: 'bg-green-50 border-green-200',
-  AMBER: 'bg-amber-50 border-amber-300',
-  RED: 'bg-red-50 border-red-300',
+  GREEN: 'bg-success/10 border-success/30',
+  AMBER: 'bg-warning/10 border-warning/30',
+  RED: 'bg-destructive/10 border-destructive/30',
 }
 
 const CARD_BG_WALL: Record<RAGStatus, string> = {
-  GREEN: 'bg-green-500 border-green-600',
-  AMBER: 'bg-amber-500 border-amber-600',
-  RED: 'bg-red-500 border-red-600',
+  GREEN: 'bg-success border-success',
+  AMBER: 'bg-warning border-warning',
+  RED: 'bg-destructive border-destructive',
 }
 
 const STATUS_DOT: Record<RAGStatus, string> = {
-  GREEN: 'bg-green-500',
-  AMBER: 'bg-amber-500',
-  RED: 'bg-red-500',
+  GREEN: 'bg-success',
+  AMBER: 'bg-warning',
+  RED: 'bg-destructive',
 }
 
 const STATUS_DOT_WALL: Record<RAGStatus, string> = {

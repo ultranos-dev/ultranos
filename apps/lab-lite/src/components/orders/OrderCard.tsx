@@ -13,16 +13,16 @@ import { ReceiveSampleModal } from '@/components/samples/ReceiveSampleModal'
 import { PatientDetailsModal } from '@/components/orders/PatientDetailsModal'
 
 const URGENCY_STYLES: Record<string, string> = {
-  stat: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-  asap: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-  urgent: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-  routine: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  stat: 'bg-destructive/10 text-destructive dark:bg-destructive dark:text-destructive',
+  asap: 'bg-warning/10 text-warning dark:bg-warning dark:text-warning',
+  urgent: 'bg-warning/10 text-warning dark:bg-warning dark:text-warning',
+  routine: 'bg-success/10 text-success dark:bg-success dark:text-success',
 }
 
 const STATUS_STYLES: Record<string, string> = {
   RECEIVED: 'bg-primary/10 text-primary',
-  IN_PROGRESS: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  COMPLETED: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  IN_PROGRESS: 'bg-warning/10 text-warning dark:bg-warning dark:text-warning',
+  COMPLETED: 'bg-success/10 text-success dark:bg-success dark:text-success',
   CANCELLED: 'bg-muted text-muted-foreground dark:text-muted-foreground',
 }
 
@@ -185,7 +185,7 @@ export function OrderCard({ order }: { order: LabOrderEntry }) {
           {/* Badges + time */}
           <div className="flex flex-col items-end gap-2">
             {sampleReceived && (
-              <span className="inline-flex rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800 dark:bg-green-900 dark:text-green-200">
+              <span className="inline-flex rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success dark:bg-success dark:text-success">
                 {t('card.sampleReceived')}
               </span>
             )}

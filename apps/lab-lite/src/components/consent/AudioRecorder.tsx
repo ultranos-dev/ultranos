@@ -145,8 +145,8 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
 
   if (state === 'error') {
     return (
-      <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-center dark:border-red-700 dark:bg-red-900/20">
-        <p className="text-sm text-red-700 dark:text-red-300">{errorMessage}</p>
+      <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-center dark:border-destructive dark:bg-destructive/20">
+        <p className="text-sm text-destructive dark:text-destructive">{errorMessage}</p>
       </div>
     )
   }
@@ -154,12 +154,12 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
   if (state === 'recorded') {
     return (
       <div className="flex flex-col items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-          <Check size={32} className="text-green-600 dark:text-green-400" />
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/10 dark:bg-success/30">
+          <Check size={32} className="text-success dark:text-success" />
         </div>
         <p className="text-sm font-medium">{t('recording.recorded')}</p>
         {elapsed >= MAX_RECORDING_DURATION_S && (
-          <p className="text-xs text-amber-600 dark:text-amber-400">{t('recording.maxDuration')}</p>
+          <p className="text-xs text-warning dark:text-warning">{t('recording.maxDuration')}</p>
         )}
         {playbackUrl && (
           <audio controls src={playbackUrl} className="w-full max-w-xs" aria-label={t('recording.playback')}>
@@ -184,7 +184,7 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
           <button
             type="button"
             onClick={startRecording}
-            className="flex h-20 w-20 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+            className="flex h-20 w-20 items-center justify-center rounded-full bg-destructive text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
             aria-label={t('recording.idle')}
           >
             <Mic size={32} aria-hidden="true" />
@@ -198,17 +198,17 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
           <button
             type="button"
             onClick={stopRecording}
-            className="flex h-20 w-20 animate-pulse items-center justify-center rounded-full bg-red-600 text-white shadow-lg"
+            className="flex h-20 w-20 animate-pulse items-center justify-center rounded-full bg-destructive text-white shadow-lg"
             aria-label="Stop recording"
           >
             <StopCircle size={28} aria-hidden="true" />
           </button>
-          <p className="text-sm font-medium text-red-600 dark:text-red-400">
+          <p className="text-sm font-medium text-destructive dark:text-destructive">
             {t('recording.recording', { elapsed })}
           </p>
           <div className="h-1 w-full max-w-xs overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full bg-red-500 transition-all"
+              className="h-full bg-destructive transition-all"
               style={{ width: `${(elapsed / MAX_RECORDING_DURATION_S) * 100}%` }}
             />
           </div>

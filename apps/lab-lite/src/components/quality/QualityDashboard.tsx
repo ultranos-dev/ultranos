@@ -63,7 +63,7 @@ function StreakCard({ label, currentStreak, longestStreak, resetMessage, icon }:
         {t('longestStreak')}: <strong>{longestStreak}</strong> {t('days')}
       </p>
       {resetMessage && (
-        <div className="rounded-lg bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 p-3 text-xs text-amber-800 dark:text-amber-200" role="status">
+        <div className="rounded-lg bg-warning/10 dark:bg-warning border border-warning/30 dark:border-warning p-3 text-xs text-warning dark:text-warning" role="status">
           {resetMessage}
         </div>
       )}
@@ -82,8 +82,8 @@ function TrendIndicator({ trend, lowerIsBetter }: { trend: string; lowerIsBetter
   let icon: MetricTrendIcon = 'stable'
   let className = 'text-muted-foreground'
 
-  if (isImproving) { icon = 'up'; className = 'text-green-600 dark:text-green-400' }
-  else if (isDeclining) { icon = 'down'; className = 'text-red-600 dark:text-red-400' }
+  if (isImproving) { icon = 'up'; className = 'text-success dark:text-success' }
+  else if (isDeclining) { icon = 'down'; className = 'text-destructive dark:text-destructive' }
 
   // For lower-is-better metrics, flip the arrow direction
   const showUp = lowerIsBetter ? icon === 'down' : icon === 'up'

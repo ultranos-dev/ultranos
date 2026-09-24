@@ -50,13 +50,13 @@ export function HandoverAcknowledgment({
     <div
       role="alert"
       aria-live="assertive"
-      className="sticky top-0 z-40 border-b border-amber-300 bg-amber-50"
+      className="sticky top-0 z-40 border-b border-warning/30 bg-warning/10"
     >
       {/* Collapsed summary bar */}
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
-          <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-amber-500" />
-          <p className="text-sm font-medium text-amber-900">
+          <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-warning" />
+          <p className="text-sm font-medium text-warning">
             {t('handoverReportTitle')}: {report.outgoingTechName} at {handoverTime}
             {' — '}
             {pendingTotal} pending sample{pendingTotal !== 1 ? 's' : ''}
@@ -65,7 +65,7 @@ export function HandoverAcknowledgment({
         <button
           type="button"
           onClick={() => setIsExpanded((v) => !v)}
-          className="text-sm font-medium text-amber-700 underline hover:text-amber-900"
+          className="text-sm font-medium text-warning underline hover:text-warning"
           aria-expanded={isExpanded}
         >
           {isExpanded ? t('hideDetails') : t('viewDetails')}
@@ -74,27 +74,27 @@ export function HandoverAcknowledgment({
 
       {/* Expanded content */}
       {isExpanded && (
-        <div className="border-t border-amber-200 px-4 pb-4">
+        <div className="border-t border-warning/30 px-4 pb-4">
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {/* Pending Samples */}
-            <div className="rounded-md border border-amber-200 bg-card p-3">
+            <div className="rounded-md border border-warning/30 bg-card p-3">
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t('pendingSamplesLabel')}
               </h4>
               <div className="flex gap-4">
                 <div className="text-center">
-                  <p className="text-xl font-bold text-red-600">{report.pendingSamples.stat}</p>
+                  <p className="text-xl font-bold text-destructive">{report.pendingSamples.stat}</p>
                   <p className="text-xs text-muted-foreground">{t('statLabel')}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xl font-bold text-amber-600">{report.pendingSamples.routine}</p>
+                  <p className="text-xl font-bold text-warning">{report.pendingSamples.routine}</p>
                   <p className="text-xs text-muted-foreground">{t('routineLabel')}</p>
                 </div>
               </div>
             </div>
 
             {/* Equipment Alerts */}
-            <div className="rounded-md border border-amber-200 bg-card p-3">
+            <div className="rounded-md border border-warning/30 bg-card p-3">
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t('equipmentAlertsLabel')}
               </h4>
@@ -103,7 +103,7 @@ export function HandoverAcknowledgment({
               ) : (
                 <ul className="space-y-1">
                   {report.equipmentAlerts.map((a) => (
-                    <li key={a.instrumentId} className="text-sm text-red-700">
+                    <li key={a.instrumentId} className="text-sm text-destructive">
                       {a.instrumentName} — {a.alertType}
                     </li>
                   ))}
@@ -113,7 +113,7 @@ export function HandoverAcknowledgment({
 
             {/* QC Status */}
             {report.qcStatus.length > 0 && (
-              <div className="rounded-md border border-amber-200 bg-card p-3">
+              <div className="rounded-md border border-warning/30 bg-card p-3">
                 <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t('qcStatusLabel')}
                 </h4>
@@ -124,9 +124,9 @@ export function HandoverAcknowledgment({
                       <span
                         className={
                           q.status === 'PASS'
-                            ? 'font-medium text-green-600'
+                            ? 'font-medium text-success'
                             : q.status === 'FAIL'
-                              ? 'font-medium text-red-600'
+                              ? 'font-medium text-destructive'
                               : 'text-muted-foreground'
                         }
                       >
@@ -139,7 +139,7 @@ export function HandoverAcknowledgment({
             )}
 
             {/* Incomplete Orders */}
-            <div className="rounded-md border border-amber-200 bg-card p-3">
+            <div className="rounded-md border border-warning/30 bg-card p-3">
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t('incompleteOrdersLabel')}
               </h4>
@@ -153,7 +153,7 @@ export function HandoverAcknowledgment({
 
           {/* Outgoing notes */}
           {report.outgoingNotes && (
-            <div className="mt-4 rounded-md border border-amber-200 bg-card p-3">
+            <div className="mt-4 rounded-md border border-warning/30 bg-card p-3">
               <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t('notesLabel')} from {report.outgoingTechName}
               </h4>
@@ -173,14 +173,14 @@ export function HandoverAcknowledgment({
             />
 
             {error && (
-              <p className="text-sm text-red-600">{error}</p>
+              <p className="text-sm text-destructive">{error}</p>
             )}
 
             <button
               type="button"
               onClick={handleAcknowledge}
               disabled={isSubmitting}
-              className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+              className="rounded-md bg-warning px-4 py-2 text-sm font-medium text-white hover:bg-warning disabled:opacity-50"
             >
               {isSubmitting ? t('acknowledging') : t('acknowledgeHandover')}
             </button>

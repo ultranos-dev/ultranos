@@ -33,8 +33,8 @@ function StatusBadge({ status }: { status: QueuedBatchWithTimes['status'] }) {
   const t = useTranslations('equipment')
   const colorMap: Record<QueuedBatchWithTimes['status'], string> = {
     QUEUED: 'bg-primary/10 text-primary',
-    RUNNING: 'bg-amber-50 text-amber-700',
-    COMPLETED: 'bg-green-50 text-green-700',
+    RUNNING: 'bg-warning/10 text-warning',
+    COMPLETED: 'bg-success/10 text-success',
     CANCELLED: 'bg-muted text-muted-foreground',
   }
   const labelMap: Record<QueuedBatchWithTimes['status'], string> = {
@@ -74,7 +74,7 @@ export function BatchCard({
     <div
       className={`rounded-lg border px-3 py-2 ${
         isCurrent
-          ? 'border-amber-300 bg-amber-50'
+          ? 'border-warning/30 bg-warning/10'
           : 'border-border bg-card'
       }`}
       data-testid={`batch-card-${batch.id}`}
@@ -84,7 +84,7 @@ export function BatchCard({
           {/* Position badge */}
           <span
             className={`shrink-0 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-              isCurrent ? 'bg-amber-500 text-white' : 'bg-muted text-muted-foreground'
+              isCurrent ? 'bg-warning text-white' : 'bg-muted text-muted-foreground'
             }`}
             data-testid={`batch-position-${batch.id}`}
           >
@@ -148,7 +148,7 @@ export function BatchCard({
         {canStart && (
           <button
             onClick={() => onStartRun?.(batch.id)}
-            className="rounded bg-amber-500 px-2 py-0.5 text-xs font-medium text-white hover:bg-amber-600 active:brightness-90"
+            className="rounded bg-warning px-2 py-0.5 text-xs font-medium text-white hover:bg-warning active:brightness-90"
             data-testid={`start-run-${batch.id}`}
           >
             {t('startRun')}
@@ -157,7 +157,7 @@ export function BatchCard({
         {canComplete && (
           <button
             onClick={() => onCompleteRun?.(batch.id)}
-            className="rounded bg-green-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-green-700 active:brightness-90"
+            className="rounded bg-success px-2 py-0.5 text-xs font-medium text-white hover:bg-success active:brightness-90"
             data-testid={`complete-run-${batch.id}`}
           >
             {t('completeRun')}
@@ -166,7 +166,7 @@ export function BatchCard({
         {canCancel && (
           <button
             onClick={() => onCancel?.(batch.id)}
-            className="rounded border border-red-300 px-2 py-0.5 text-xs font-medium text-red-600 hover:bg-red-50"
+            className="rounded border border-destructive/30 px-2 py-0.5 text-xs font-medium text-destructive hover:bg-destructive/10"
             data-testid={`cancel-batch-${batch.id}`}
           >
             {t('cancelBatch') ?? 'Cancel'}

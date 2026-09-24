@@ -33,18 +33,18 @@ const STATUS_BADGE: Record<
   { container: string; dot: string; labelKey: string }
 > = {
   PASSING: {
-    container: 'bg-green-50 text-green-700 border border-green-200',
-    dot: 'bg-green-500',
+    container: 'bg-success/10 text-success border border-success/30',
+    dot: 'bg-success',
     labelKey: 'rag.status.passing',
   },
   DRIFT_WARNING: {
-    container: 'bg-amber-50 text-amber-700 border border-amber-200',
-    dot: 'bg-amber-500',
+    container: 'bg-warning/10 text-warning border border-warning/30',
+    dot: 'bg-warning',
     labelKey: 'rag.status.driftWarning',
   },
   FAILED: {
-    container: 'bg-red-50 text-red-700 border border-red-200',
-    dot: 'bg-red-500',
+    container: 'bg-destructive/10 text-destructive border border-destructive/30',
+    dot: 'bg-destructive',
     labelKey: 'rag.status.failed',
   },
   NOT_RUN: {
@@ -104,7 +104,7 @@ function AnalyteRow({ detail }: { detail: QcDetail }) {
               {detail.westgardViolations.map((violation, i) => (
                 <span
                   key={i}
-                  className="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-red-100 text-red-700"
+                  className="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-destructive/10 text-destructive"
                 >
                   {violation}
                 </span>
@@ -155,12 +155,12 @@ export function QCDrillDown({ details, onBack }: QCDrillDownProps) {
       {hasFailures && (
         <div
           role="alert"
-          className="flex items-start gap-2.5 rounded-lg bg-red-600 px-4 py-3 text-white"
+          className="flex items-start gap-2.5 rounded-lg bg-destructive px-4 py-3 text-white"
         >
           <AlertTriangle size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
           <div>
             <p className="text-sm font-bold">{t('rag.drillDown.resultsBlocked')}</p>
-            <p className="text-xs mt-0.5 text-red-100">
+            <p className="text-xs mt-0.5 text-destructive">
               {t('rag.drillDown.resultsBlockedDetail')}
             </p>
           </div>

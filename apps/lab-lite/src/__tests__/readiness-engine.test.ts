@@ -196,10 +196,16 @@ describe('evaluateReagents', () => {
 // ---------------------------------------------------------------------------
 
 describe('evaluateEquipment', () => {
-  it('always returns amber with not-configured summary', async () => {
+  it('returns an honest "not available" state (unavailable, no fabricated RAG)', async () => {
+    // Story 63.2: the equipment-tracking table does not exist yet. The dimension
+    // must report `unavailable: true` (excluded from the RAG rollup) rather than
+    // fabricate an amber warning.
     const result = await evaluateEquipment()
-    expect(result.status).toBe('amber')
     expect(result.dimension).toBe('equipment')
+    expect(result.unavailable).toBe(true)
+    expect(result.summaryKey).toBe('readiness.dimensions.equipment.summaryNotAvailable')
+    // No fabricated recommendations for a not-yet-built dimension.
+    expect(result.recommendations).toEqual([])
   })
 })
 
@@ -359,11 +365,13 @@ describe('generateReadinessBriefing', () => {
     })
 
     const briefing = await generateReadinessBriefing()
-    // Personnel returns amber (no roster), equipment returns amber,
-    // so overall can never be fully green in current MVP — but
-    // overallStatus = worstStatus of all dims
+    // Personnel returns amber (no roster); equipment is now an honest
+    // "not available" dimension (Story 63.2) that is EXCLUDED from the rollup,
+    // so it neither inflates nor deflates the overall status.
     expect(['green', 'amber', 'red']).toContain(briefing.overallStatus)
     expect(briefing.dimensions).toHaveLength(5)
+    const equipmentDim = briefing.dimensions.find((d) => d.dimension === 'equipment')
+    expect(equipmentDim?.unavailable).toBe(true)
     expect(briefing.refreshable).toBe(true)
     expect(briefing.generatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
   })

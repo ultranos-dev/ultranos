@@ -237,7 +237,7 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
               class="flex flex-col items-end gap-2"
             >
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold uppercase bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold uppercase bg-destructive/10 text-destructive dark:bg-destructive dark:text-destructive"
               >
                 STAT
               </span>
@@ -510,7 +510,7 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
               class="flex flex-col items-end gap-2"
             >
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold uppercase bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold uppercase bg-destructive/10 text-destructive dark:bg-destructive dark:text-destructive"
               >
                 STAT
               </span>

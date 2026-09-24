@@ -64,9 +64,9 @@ export function getCellColor(item: InventorySnapshotItem): HeatColor {
 }
 
 const COLOR_CLASSES: Record<HeatColor, string> = {
-  green:  'bg-green-100 text-green-800 border-green-200',
-  yellow: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  red:    'bg-red-100 text-red-800 border-red-200',
+  green:  'bg-success/10 text-success border-success/30',
+  yellow: 'bg-warning/10 text-warning border-warning/30',
+  red:    'bg-destructive/10 text-destructive border-destructive/30',
   gray:   'bg-muted text-muted-foreground border-border',
 }
 
@@ -202,7 +202,7 @@ export function NetworkInventoryHeatMap({ myLabId }: Props) {
     <div className="space-y-4">
       {/* Staleness warning */}
       {isStale && (
-        <div className="flex items-center gap-2 rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+        <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
           <WifiOff className="h-4 w-4 flex-shrink-0" aria-hidden />
           <span>
             {t('networkDataMayBeOutdated')} {lastSyncedAt && `(${t('lastSynced')}: ${new Date(lastSyncedAt).toLocaleString()})`}
@@ -213,14 +213,14 @@ export function NetworkInventoryHeatMap({ myLabId }: Props) {
       {/* Stockout alert banner */}
       {stockoutLabs.length > 0 && (
         <div
-          className="rounded-lg border border-red-300 bg-red-50 px-4 py-3"
+          className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3"
           role="alert"
         >
-          <div className="flex items-center gap-2 font-semibold text-red-800">
+          <div className="flex items-center gap-2 font-semibold text-destructive">
             <AlertTriangle className="h-4 w-4 flex-shrink-0" aria-hidden />
             <span>{t('stockoutAlertTitle')}</span>
           </div>
-          <ul className="mt-1 list-inside list-disc text-sm text-red-700">
+          <ul className="mt-1 list-inside list-disc text-sm text-destructive">
             {stockoutLabs.map(lab => (
               <li key={lab.labId}>{lab.labName}</li>
             ))}
@@ -369,7 +369,7 @@ export function NetworkInventoryHeatMap({ myLabId }: Props) {
             </dl>
             <button
               type="button"
-              className="mt-5 w-full rounded-lg bg-gray-900 py-2 text-sm font-medium text-white hover:bg-gray-800"
+              className="mt-5 w-full rounded-lg bg-muted py-2 text-sm font-medium text-white hover:bg-muted"
               onClick={() => setDrillDown(null)}
             >
               {t('close')}

@@ -52,9 +52,9 @@ export function LabelDisplay({ sampleId, labelNumber, patientAge, sampleType, ch
       </div>
 
       {/* Pictographic instruction — write number on tube */}
-      <div className="flex items-center gap-3 rounded-xl bg-amber-50 px-4 py-3">
-        <PenLine size={32} className="shrink-0 text-amber-700" aria-hidden />
-        <p className="text-lg font-medium text-amber-800">{t('instruction')}</p>
+      <div className="flex items-center gap-3 rounded-xl bg-warning/10 px-4 py-3">
+        <PenLine size={32} className="shrink-0 text-warning" aria-hidden />
+        <p className="text-lg font-medium text-warning">{t('instruction')}</p>
       </div>
 
       {/* Print button — only if printer detected */}
@@ -62,7 +62,7 @@ export function LabelDisplay({ sampleId, labelNumber, patientAge, sampleType, ch
         <button
           type="button"
           onClick={handlePrint}
-          className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl bg-gray-700 px-6 py-4 text-xl font-semibold text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl bg-muted px-6 py-4 text-xl font-semibold text-white hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
           <Printer size={24} aria-hidden />
           {t('printButton')}
@@ -73,7 +73,7 @@ export function LabelDisplay({ sampleId, labelNumber, patientAge, sampleType, ch
       <button
         type="button"
         onClick={onDone}
-        className="min-h-[56px] w-full rounded-xl bg-green-600 px-6 py-4 text-xl font-semibold text-white hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="min-h-[56px] w-full rounded-xl bg-success px-6 py-4 text-xl font-semibold text-white hover:bg-success focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         {t('doneButton')}
       </button>

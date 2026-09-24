@@ -13,7 +13,13 @@ import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
 import { getDb, seedAtlas } from '@/lib/db'
 import type { AtlasEntry, AtlasCategory, AtlasSubcategory } from '@/lib/visual-atlas'
-import { ATLAS_CATEGORY_TREE } from '@/lib/visual-atlas'
+import {
+  ATLAS_CATEGORY_TREE,
+  filterPlaceholderEntries,
+  isPlaceholderAtlasEntry,
+} from '@/lib/visual-atlas'
+import { showPlaceholderAtlasEntries } from '@/lib/feature-flags'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { searchAtlas } from '@/lib/atlas-search'
 import { reportAtlasView } from '@/lib/audit-client'
 import {
@@ -84,29 +90,40 @@ export function AtlasBrowser() {
         db.atlas_categories.toArray(),
       ])
 
+      // Story 63.2: placeholder entries (gray-square image / "Dr. A. Placeholder"
+      // author) are gated OFF by default so the reference tool never presents
+      // scaffolding as clinical truth. Reversible via the feature flag.
+      const allowPlaceholders = showPlaceholderAtlasEntries()
+
       if (storedEntries.length > 0) {
-        setEntries(storedEntries)
+        const visibleEntries = allowPlaceholders
+          ? storedEntries
+          : storedEntries.filter((e) => !isPlaceholderAtlasEntry(e))
+        setEntries(visibleEntries)
         // Hydrate ATLAS_CATEGORY_TREE with stored entries
         const enriched = ATLAS_CATEGORY_TREE.map((cat) => ({
           ...cat,
           subcategories: cat.subcategories.map((sub) => ({
             ...sub,
-            entries: storedEntries.filter((e) => e.subcategoryId === sub.id),
+            entries: visibleEntries.filter((e) => e.subcategoryId === sub.id),
           })),
         }))
         setCategories(enriched)
       } else {
         // Fallback to in-memory seed data if Dexie is unavailable
         const { ALL_SEED_ENTRIES_BY_SUBCATEGORY } = await import('@/lib/atlas-seed-data')
-        const enriched = ATLAS_CATEGORY_TREE.map((cat) => ({
-          ...cat,
-          subcategories: cat.subcategories.map((sub) => ({
-            ...sub,
-            entries: ALL_SEED_ENTRIES_BY_SUBCATEGORY[sub.id] ?? [],
+        const enriched = filterPlaceholderEntries(
+          ATLAS_CATEGORY_TREE.map((cat) => ({
+            ...cat,
+            subcategories: cat.subcategories.map((sub) => ({
+              ...sub,
+              entries: ALL_SEED_ENTRIES_BY_SUBCATEGORY[sub.id] ?? [],
+            })),
           })),
-        }))
+          allowPlaceholders,
+        )
         setCategories(enriched)
-        setEntries(Object.values(ALL_SEED_ENTRIES_BY_SUBCATEGORY).flat())
+        setEntries(enriched.flatMap((c) => c.subcategories.flatMap((s) => s.entries)))
       }
 
       // Auto-select first subcategory if coming from results context
@@ -340,7 +357,18 @@ function EntryGridView({
       </h2>
 
       {subcategory.entries.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t('noEntries')}</p>
+        // Story 63.2: when placeholder entries are gated off, an empty
+        // subcategory is an honest "content pending" state (real, reviewed
+        // photomicrographs not yet loaded) — never a silent blank.
+        showPlaceholderAtlasEntries() ? (
+          <p className="text-sm text-muted-foreground">{t('noEntries')}</p>
+        ) : (
+          <EmptyState
+            icon={Microscope}
+            title={t('contentPending')}
+            description={t('contentPendingDescription')}
+          />
+        )
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4" role="list">
           {subcategory.entries.map((entry) => (
@@ -404,10 +432,10 @@ function EntryCard({
 function PlaceholderThumbnail({ name }: { name: string }) {
   return (
     <div
-      className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-blue-50 to-neutral-100 dark:from-blue-900/20 dark:to-neutral-800"
+      className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-primary to-border dark:from-primary/20 dark:to-border"
       aria-label={name}
     >
-      <span className="text-blue-300 dark:text-primary">
+      <span className="text-primary dark:text-primary">
         <CircleX size={16} aria-hidden="true" />
       </span>
       <span className="text-center text-[10px] leading-tight text-muted-foreground px-2 line-clamp-2 dark:text-muted-foreground">
@@ -440,7 +468,7 @@ function EntryDetailView({
       <button
         type="button"
         onClick={onBack}
-        className="mb-4 flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring dark:text-primary dark:hover:text-blue-200"
+        className="mb-4 flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring dark:text-primary dark:hover:text-primary"
         aria-label={t('backToGrid')}
       >
         <ArrowLeft size={16} aria-hidden="true" className="rtl:scale-x-[-1]" />
@@ -465,7 +493,7 @@ function EntryDetailView({
           />
         )}
         {entry.placeholder && (
-          <p className="px-3 py-1.5 text-center text-xs text-amber-600 dark:text-amber-400 border-t border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
+          <p className="px-3 py-1.5 text-center text-xs text-warning dark:text-warning border-t border-warning/30 dark:border-warning bg-warning/10 dark:bg-warning/20">
             {t('placeholderImageNotice')}
           </p>
         )}
@@ -480,11 +508,11 @@ function EntryDetailView({
       </section>
 
       {/* Clinical significance */}
-      <section className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-700/40 dark:bg-amber-900/20" aria-label={t('clinicalSignificanceLabel')}>
-        <h2 className="mb-1 text-sm font-semibold text-amber-800 dark:text-amber-300">
+      <section className="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3 dark:border-warning/40 dark:bg-warning/20" aria-label={t('clinicalSignificanceLabel')}>
+        <h2 className="mb-1 text-sm font-semibold text-warning dark:text-warning">
           {t('clinicalSignificanceLabel')}
         </h2>
-        <p className="text-sm text-amber-700 dark:text-amber-200 leading-relaxed">{clinicalSignificance}</p>
+        <p className="text-sm text-warning dark:text-warning leading-relaxed">{clinicalSignificance}</p>
       </section>
 
       {/* Recommended next steps */}

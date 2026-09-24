@@ -27,7 +27,7 @@ export function OnlineStatusIndicator() {
   return (
     <div className="flex items-center gap-1.5">
       <span
-        className={`h-2 w-2 rounded-full ${online ? 'bg-green-500' : 'bg-red-500'}`}
+        className={`h-2 w-2 rounded-full ${online ? 'bg-success' : 'bg-destructive'}`}
         aria-hidden="true"
       />
       <span className="text-xs text-muted-foreground">{online ? 'Online' : 'Offline'}</span>

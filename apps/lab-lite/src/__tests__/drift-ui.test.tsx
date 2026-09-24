@@ -120,14 +120,14 @@ describe('DriftAlertBanner', () => {
     const banner = screen.getByTestId('drift-alert-banner')
     expect(banner).toBeInTheDocument()
     expect(banner).toHaveAttribute('data-severity', 'REJECT')
-    expect(banner.className).toContain('bg-red-50')
+    expect(banner.className).toContain('bg-destructive/10')
   })
 
   it('renders banner for a WARNING alert with amber styling', () => {
     render(<DriftAlertBanner alerts={[makeAlert({ severity: 'WARNING', ruleViolated: '1_2S' })]} />)
     const banner = screen.getByTestId('drift-alert-banner')
     expect(banner).toHaveAttribute('data-severity', 'WARNING')
-    expect(banner.className).toContain('bg-amber-50')
+    expect(banner.className).toContain('bg-warning/10')
   })
 
   it('shows the alert message text', () => {

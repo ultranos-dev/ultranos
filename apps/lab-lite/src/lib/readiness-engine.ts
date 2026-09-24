@@ -34,6 +34,14 @@ export interface DimensionResult {
   recommendations: string[]
   /** Context data for recommendation interpolation */
   recommendationArgs?: Array<Record<string, string | number>>
+  /**
+   * Story 63.2: true when this dimension has no real data source yet (e.g. the
+   * equipment-tracking table does not exist). An unavailable dimension is
+   * rendered as an honest "not available" state and is EXCLUDED from the overall
+   * RAG rollup — it must never fabricate an amber/red that misrepresents actual
+   * lab readiness. Reversible: clear this flag once the dimension is implemented.
+   */
+  unavailable?: boolean
 }
 
 export interface ReadinessBriefing {
@@ -231,17 +239,21 @@ export async function evaluateReagents(): Promise<DimensionResult> {
 // ---------------------------------------------------------------------------
 
 export async function evaluateEquipment(): Promise<DimensionResult> {
-  // Equipment tracking table does not exist yet (future story).
-  // Graceful degradation: return amber with "not configured" message.
-  // TODO: update once equipment tracking story is implemented.
+  // Story 63.2: the equipment-tracking table does not exist yet (future story).
+  // Return an HONEST "not available" state (unavailable=true) rather than a
+  // fabricated amber warning. It is excluded from the overall RAG rollup so a
+  // not-yet-built dimension can never misrepresent actual lab readiness.
+  // `status: 'green'` is a neutral placeholder that is IGNORED in the rollup
+  // because `unavailable` is set; the UI renders the "not available" treatment.
   return {
     dimension: 'equipment',
-    status: 'amber',
+    status: 'green',
+    unavailable: true,
     titleKey: 'readiness.dimensions.equipment.title',
-    summaryKey: 'readiness.dimensions.equipment.summaryNotConfigured',
-    details: ['readiness.dimensions.equipment.detailNotConfigured'],
-    recommendations: ['readiness.recommendations.equipmentAmber'],
-    recommendationArgs: [{}],
+    summaryKey: 'readiness.dimensions.equipment.summaryNotAvailable',
+    details: ['readiness.dimensions.equipment.detailNotAvailable'],
+    recommendations: [],
+    recommendationArgs: [],
   }
 }
 
@@ -417,7 +429,11 @@ export async function generateReadinessBriefing(): Promise<ReadinessBriefing> {
   ])
 
   const dimensions = [personnel, reagents, equipment, pendingOrders, power]
-  const overallStatus = worstStatus(dimensions.map((d) => d.status))
+  // Exclude "not available" dimensions (no real data source yet) from the
+  // overall RAG rollup so a stub can never fabricate readiness (Story 63.2).
+  const overallStatus = worstStatus(
+    dimensions.filter((d) => !d.unavailable).map((d) => d.status),
+  )
 
   return {
     dimensions,

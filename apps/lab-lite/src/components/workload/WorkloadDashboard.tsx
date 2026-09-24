@@ -173,7 +173,7 @@ export function WorkloadDashboard() {
 
       {/* Error banner */}
       {error && (
-        <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+        <div className="rounded border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
           {error}
           <button
             type="button"
@@ -281,15 +281,15 @@ function LoadLevelLegend({ t }: { t: ReturnType<typeof useTranslations<'workload
     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
       <span>{t('legend')}:</span>
       <span className="flex items-center gap-1">
-        <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-green-400" />
+        <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-success" />
         {t('normal')} (≤100%)
       </span>
       <span className="flex items-center gap-1">
-        <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-amber-400" />
+        <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-warning" />
         {t('elevated')} (101–150%)
       </span>
       <span className="flex items-center gap-1">
-        <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-red-400" />
+        <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-destructive" />
         {t('overloaded')} (&gt;150%)
       </span>
     </div>

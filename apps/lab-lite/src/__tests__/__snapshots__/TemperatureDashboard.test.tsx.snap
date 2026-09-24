@@ -16,7 +16,7 @@ exports[`TemperatureDashboard > RTL snapshot — renders location cards correctl
       class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
     >
       <div
-        class="rounded-lg border bg-card p-4 border-green-200"
+        class="rounded-lg border bg-card p-4 border-success/30"
       >
         <div
           class="flex items-center justify-between mb-3"
@@ -28,7 +28,7 @@ exports[`TemperatureDashboard > RTL snapshot — renders location cards correctl
           </h3>
           <span
             aria-label="status.green"
-            class="inline-block h-3 w-3 rounded-full bg-green-500"
+            class="inline-block h-3 w-3 rounded-full bg-success"
           />
         </div>
         <div

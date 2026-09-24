@@ -182,20 +182,20 @@ export function CriticalValueChecklist({
       {/* Modal panel */}
       <div className="relative w-full max-w-lg rounded-xl bg-card shadow-2xl mx-4">
         {/* Header */}
-        <div className="flex items-start gap-3 rounded-t-xl bg-red-50 border-b border-red-200 p-4">
+        <div className="flex items-start gap-3 rounded-t-xl bg-destructive/10 border-b border-destructive/30 p-4">
           <AlertTriangle
-            className="mt-0.5 shrink-0 text-red-600"
+            className="mt-0.5 shrink-0 text-destructive"
             aria-hidden="true"
             size={22}
           />
           <div>
             <h2
               id="checklist-title"
-              className="text-base font-semibold text-red-900"
+              className="text-base font-semibold text-destructive"
             >
               {t('title')}
             </h2>
-            <p className="mt-0.5 text-sm text-red-700">{t('subtitle')}</p>
+            <p className="mt-0.5 text-sm text-destructive">{t('subtitle')}</p>
           </div>
         </div>
 
@@ -211,7 +211,7 @@ export function CriticalValueChecklist({
                   key={i}
                   className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
                     cv.direction === 'HIGH'
-                      ? 'bg-red-100 text-red-700'
+                      ? 'bg-destructive/10 text-destructive'
                       : 'bg-primary/10 text-primary'
                   }`}
                   data-testid={`critical-badge-${cv.analyte}`}
@@ -256,7 +256,7 @@ export function CriticalValueChecklist({
             type="button"
             onClick={handleRelease}
             disabled={!allRequiredChecked || isLoading}
-            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+            className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-white hover:bg-destructive disabled:cursor-not-allowed disabled:opacity-40 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
             data-testid="checklist-release-button"
             aria-disabled={!allRequiredChecked || isLoading}
           >
@@ -307,7 +307,7 @@ function ChecklistRow({
           className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${
             isEffectivelyChecked
               ? item.isAutoVerified
-                ? 'border-green-500 bg-green-500'
+                ? 'border-success bg-success'
                 : 'border-primary bg-primary'
               : 'border-border bg-card group-hover:border-border'
           }`}
@@ -330,7 +330,7 @@ function ChecklistRow({
         </span>
         {item.isAutoVerified && (
           <span
-            className="ms-2 inline-flex items-center gap-0.5 rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700"
+            className="ms-2 inline-flex items-center gap-0.5 rounded-full bg-success/10 px-1.5 py-0.5 text-xs font-medium text-success"
             data-testid={`auto-verified-badge-${item.id}`}
           >
             <CircleCheck size={10} aria-hidden="true" />
@@ -347,7 +347,7 @@ function ChecklistRow({
           </span>
         )}
         {item.isRequired && !isEffectivelyChecked && (
-          <span className="ms-2 text-xs text-red-500">*</span>
+          <span className="ms-2 text-xs text-destructive">*</span>
         )}
       </span>
     </label>

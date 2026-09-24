@@ -113,3 +113,57 @@ export interface GuidanceTrigger {
   /** Threshold or code value to compare against */
   value?: string | number
 }
+
+// ---------------------------------------------------------------------------
+// Locale resolution with translation gate (Story 63.2, AC2)
+// ---------------------------------------------------------------------------
+
+import { isUntranslatedText, showUntranslatedGuidanceLocales } from '@/lib/feature-flags'
+
+/**
+ * Resolved guidance text for a single locale.
+ * `pending: true` means the requested locale's translation is not yet available
+ * (still carries the `[TRANSLATE]` marker). The UI must render a "translation
+ * pending" state — NEVER the raw `[TRANSLATE]…` string, and NEVER a silent
+ * English fallback for a language the patient expects (a misleading English
+ * block is worse than an honest pending state — decision recorded in the story).
+ */
+export interface ResolvedGuidanceLocale {
+  /** True when the locale's content is not yet translated (hidden). */
+  pending: boolean
+  /** The displayable text for the locale, or null when pending. */
+  text: string | null
+  /** The audio reference for the locale, or null when absent/pending. */
+  audio: string | null
+}
+
+/**
+ * Resolve one locale of a localized guidance text container, applying the
+ * translation gate. When the locale is untranslated (`[TRANSLATE]` marker) and
+ * the reveal flag is off (default), returns `{ pending: true, text: null }`.
+ *
+ * Audio is treated as pending/absent whenever the string is empty OR the text
+ * itself is still pending (no point playing audio for untranslated copy).
+ */
+export function resolveGuidanceLocale(
+  text: GuidanceLocalizedText,
+  audio: GuidanceLocalizedText,
+  locale: GuidanceLocale,
+): ResolvedGuidanceLocale {
+  const rawText = text[locale] ?? ''
+  const rawAudio = audio[locale] ?? ''
+  const untranslated = isUntranslatedText(rawText)
+
+  if (untranslated && !showUntranslatedGuidanceLocales()) {
+    return { pending: true, text: null, audio: null }
+  }
+
+  // Revealed (flag on) or already translated: strip a leading marker defensively
+  // so a raw "[TRANSLATE]" token can never reach the UI even when revealed.
+  const cleanText = rawText.replace(/^\s*\[TRANSLATE\]\s*/, '')
+  return {
+    pending: false,
+    text: cleanText.length > 0 ? cleanText : null,
+    audio: rawAudio.length > 0 ? rawAudio : null,
+  }
+}

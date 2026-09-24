@@ -93,7 +93,7 @@ export function LearningNotification({
             <button
               type="button"
               onClick={handleStart}
-              className="rounded bg-primary px-3 py-1 text-xs font-medium text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:bg-primary dark:hover:bg-blue-400"
+              className="rounded bg-primary px-3 py-1 text-xs font-medium text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:bg-primary dark:hover:bg-primary"
               data-testid="learning-notification-start"
             >
               {t('start')}
@@ -101,7 +101,7 @@ export function LearningNotification({
             <button
               type="button"
               onClick={handleDismiss}
-              className="rounded border border-primary px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:border-primary dark:hover:bg-blue-900/40"
+              className="rounded border border-primary px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:border-primary dark:hover:bg-primary/40"
               data-testid="learning-notification-dismiss"
             >
               {t('dismiss')}

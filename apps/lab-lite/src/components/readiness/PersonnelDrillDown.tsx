@@ -37,8 +37,8 @@ function StatusBadge({ status }: { status: PersonnelDetail['status'] }) {
   const t = useTranslations()
   if (status === 'ON_SHIFT') {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 border border-green-200">
-        <span className="h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden="true" />
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success border border-success/30">
+        <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true" />
         {t('rag.status.onShift')}
       </span>
     )

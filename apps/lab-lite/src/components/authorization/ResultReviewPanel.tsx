@@ -58,8 +58,8 @@ function ConfirmDialog({
   const [error, setError] = useState('')
 
   const variantClass = {
-    green: 'bg-green-600 hover:bg-green-700 text-white',
-    red: 'bg-amber-600 hover:bg-amber-700 text-white',
+    green: 'bg-success hover:bg-success text-white',
+    red: 'bg-warning hover:bg-warning text-white',
     blue: 'bg-primary hover:bg-primary/90 text-white',
   }[confirmVariant]
 
@@ -89,12 +89,12 @@ function ConfirmDialog({
         <p className="mt-2 text-sm text-muted-foreground">{description}</p>
 
         {requireCheckbox && checkboxLabel && (
-          <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
             <input
               type="checkbox"
               checked={checked}
               onChange={(e) => setChecked(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-red-300 accent-red-600"
+              className="mt-0.5 h-4 w-4 rounded border-destructive/30 accent-destructive"
             />
             <span>{checkboxLabel}</span>
           </label>
@@ -111,7 +111,7 @@ function ConfirmDialog({
           />
         )}
 
-        {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+        {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
 
         <div className="mt-5 flex justify-end gap-3">
           <button
@@ -139,8 +139,8 @@ function ConfirmDialog({
 const BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-muted text-muted-foreground',
   blue: 'bg-primary/10 text-primary',
-  green: 'bg-green-50 text-green-700',
-  yellow: 'bg-amber-50 text-amber-700',
+  green: 'bg-success/10 text-success',
+  yellow: 'bg-warning/10 text-warning',
 }
 
 function RangeSourceBadge({ source }: { source: RangeSource }) {
@@ -292,7 +292,7 @@ export function ResultReviewPanel({
         {/* Critical value banner */}
         {critical && (
           <div
-            className="flex items-center gap-3 bg-red-600 px-6 py-3 text-white"
+            className="flex items-center gap-3 bg-destructive px-6 py-3 text-white"
             role="alert"
             aria-live="assertive"
           >
@@ -335,7 +335,7 @@ export function ResultReviewPanel({
               <dd className="font-mono text-xs">{result.enteredBy}</dd>
               <dt className="text-muted-foreground">{t('qcStatus')}</dt>
               <dd>
-                <span className={`font-medium ${result.qcStatus === 'passing' ? 'text-green-600' : 'text-red-600'}`}>
+                <span className={`font-medium ${result.qcStatus === 'passing' ? 'text-success' : 'text-destructive'}`}>
                   {result.qcStatus ?? '—'}
                 </span>
               </dd>
@@ -368,16 +368,16 @@ export function ResultReviewPanel({
                     const rangeChanged = snapshot && currentRange &&
                       (snapshot.rangeMin !== currentRange.rangeMin || snapshot.rangeMax !== currentRange.rangeMax)
                     return (
-                      <tr key={obs.id} className={criticalObs ? 'bg-red-50' : ''}>
+                      <tr key={obs.id} className={criticalObs ? 'bg-destructive/10' : ''}>
                         <td className="px-3 py-2 font-mono text-xs">{obs.fieldCode}</td>
                         <td className="px-3 py-2">{obs.value ?? '—'}</td>
                         <td className="px-3 py-2">
                           {obs.flag ? (
-                            <span className={`font-semibold ${criticalObs ? 'text-red-700' : 'text-amber-700'}`}>
+                            <span className={`font-semibold ${criticalObs ? 'text-destructive' : 'text-warning'}`}>
                               {obs.flag}
                             </span>
                           ) : (
-                            <span className="text-green-600 text-xs">Normal</span>
+                            <span className="text-success text-xs">Normal</span>
                           )}
                         </td>
                         <td className="px-3 py-2 text-xs">
@@ -388,7 +388,7 @@ export function ResultReviewPanel({
                               </span>
                               <RangeSourceBadge source={snapshot.source} />
                               {rangeChanged && (
-                                <span className="flex items-center gap-1 text-amber-600 mt-0.5">
+                                <span className="flex items-center gap-1 text-warning mt-0.5">
                                   <Info size={12} aria-hidden="true" />
                                   <span>{t('rangeUpdated', { min: currentRange.rangeMin, max: currentRange.rangeMax })}</span>
                                 </span>
@@ -420,7 +420,7 @@ export function ResultReviewPanel({
           )}
 
           {actionError && (
-            <p className="rounded-lg bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700" role="alert">
+            <p className="rounded-lg bg-destructive/10 border border-destructive/30 px-4 py-2 text-sm text-destructive" role="alert">
               {actionError}
             </p>
           )}
@@ -436,14 +436,14 @@ export function ResultReviewPanel({
             {t('holdButton')}
           </button>
           <button
-            className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-40"
+            className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-2 text-sm font-semibold text-warning hover:bg-warning/10 disabled:opacity-40"
             disabled={!canRejectResult || busy}
             onClick={() => setActiveDialog('reject')}
           >
             {t('rejectButton')}
           </button>
           <button
-            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-40"
+            className="rounded-lg bg-success px-4 py-2 text-sm font-semibold text-white hover:bg-success disabled:opacity-40"
             disabled={!canApprove || busy}
             onClick={() => setActiveDialog('approve')}
           >

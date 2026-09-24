@@ -39,7 +39,7 @@ exports[`LocationCard RTL snapshots > renders in LTR 1`] = `
         >
           <span
             aria-label="online"
-            class="inline-block h-2 w-2 rounded-full bg-green-500"
+            class="inline-block h-2 w-2 rounded-full bg-success"
           />
           <span
             class="text-xs text-muted-foreground capitalize"
@@ -57,7 +57,7 @@ exports[`LocationCard RTL snapshots > renders in LTR 1`] = `
           main
         </span>
         <span
-          class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700"
+          class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-success/10 text-success"
         >
           Full
         </span>
@@ -167,7 +167,7 @@ exports[`LocationCard RTL snapshots > renders in RTL 1`] = `
         >
           <span
             aria-label="online"
-            class="inline-block h-2 w-2 rounded-full bg-green-500"
+            class="inline-block h-2 w-2 rounded-full bg-success"
           />
           <span
             class="text-xs text-muted-foreground capitalize"
@@ -185,7 +185,7 @@ exports[`LocationCard RTL snapshots > renders in RTL 1`] = `
           main
         </span>
         <span
-          class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700"
+          class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-success/10 text-success"
         >
           Full
         </span>
@@ -295,7 +295,7 @@ exports[`LocationCard RTL snapshots > renders inactive satellite in collection-o
         >
           <span
             aria-label="offline"
-            class="inline-block h-2 w-2 rounded-full bg-amber-500"
+            class="inline-block h-2 w-2 rounded-full bg-warning"
           />
           <span
             class="text-xs text-muted-foreground capitalize"
@@ -370,7 +370,7 @@ exports[`LocationCard RTL snapshots > renders inactive satellite in collection-o
     >
       <svg
         aria-hidden="true"
-        class="lucide lucide-clock text-amber-500"
+        class="lucide lucide-clock text-warning"
         fill="none"
         height="12"
         stroke="currentColor"
@@ -391,7 +391,7 @@ exports[`LocationCard RTL snapshots > renders inactive satellite in collection-o
         />
       </svg>
       <span
-        class="text-xs text-amber-600"
+        class="text-xs text-warning"
       >
         Never synced
         <span
@@ -474,7 +474,7 @@ exports[`NetworkMetricsSummary RTL snapshots > highlights sync failures when cou
       </p>
     </div>
     <div
-      class="rounded-lg border p-4 border-amber-200 bg-amber-50"
+      class="rounded-lg border p-4 border-warning/30 bg-warning/10"
     >
       <p
         class="text-sm text-muted-foreground"
@@ -482,7 +482,7 @@ exports[`NetworkMetricsSummary RTL snapshots > highlights sync failures when cou
         Sync Failures
       </p>
       <p
-        class="mt-1 text-3xl font-bold text-amber-700"
+        class="mt-1 text-3xl font-bold text-warning"
       >
         3
       </p>

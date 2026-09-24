@@ -41,11 +41,11 @@ export function NavLabUser({ name, email, role, avatarSrc, onSignOut }: NavLabUs
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar src={avatarSrc} name={name} size={32} className="shrink-0" />
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              <div className="grid flex-1 text-start text-sm leading-tight">
                 <span className="truncate font-semibold">{name}</span>
                 <span className="truncate text-xs text-muted-foreground">{formatUserRole(role)}</span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <ChevronsUpDown className="ms-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -57,7 +57,7 @@ export function NavLabUser({ name, email, role, avatarSrc, onSignOut }: NavLabUs
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5">
                 <Avatar src={avatarSrc} name={name} size={32} className="shrink-0" />
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                <div className="grid flex-1 text-start text-sm leading-tight">
                   <span className="truncate font-semibold">{name}</span>
                   {email && (
                     <span className="truncate text-xs text-muted-foreground">{email}</span>
@@ -68,9 +68,9 @@ export function NavLabUser({ name, email, role, avatarSrc, onSignOut }: NavLabUs
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={toggleTheme}>
               {theme === 'light' ? (
-                <Moon className="mr-2 size-4" />
+                <Moon className="me-2 size-4" />
               ) : (
-                <Sun className="mr-2 size-4" />
+                <Sun className="me-2 size-4" />
               )}
               {theme === 'light' ? 'Dark mode' : 'Light mode'}
             </DropdownMenuItem>
@@ -79,7 +79,7 @@ export function NavLabUser({ name, email, role, avatarSrc, onSignOut }: NavLabUs
               className="text-destructive focus:text-destructive focus:bg-destructive/10"
               onClick={onSignOut}
             >
-              <LogOut className="mr-2 size-4" />
+              <LogOut className="me-2 size-4" />
               Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>

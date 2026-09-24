@@ -151,7 +151,7 @@ export function SupervisorAuthGate({
           )}
 
           {error && (
-            <p role="alert" className="text-sm text-red-600" data-testid="auth-error">
+            <p role="alert" className="text-sm text-destructive" data-testid="auth-error">
               {error}
             </p>
           )}

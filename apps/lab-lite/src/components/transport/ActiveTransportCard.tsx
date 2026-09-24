@@ -56,15 +56,15 @@ function getStabilityColor(
 }
 
 const COLOR_CLASSES: Record<'green' | 'amber' | 'red', string> = {
-  green: 'bg-green-100 text-green-800',
-  amber: 'bg-amber-100 text-amber-800',
-  red: 'bg-red-100 text-red-800',
+  green: 'bg-success/10 text-success',
+  amber: 'bg-warning/10 text-warning',
+  red: 'bg-destructive/10 text-destructive',
 }
 
 const COLOR_DOT_CLASSES: Record<'green' | 'amber' | 'red', string> = {
-  green: 'bg-green-500',
-  amber: 'bg-amber-500',
-  red: 'bg-red-500',
+  green: 'bg-success',
+  amber: 'bg-warning',
+  red: 'bg-destructive',
 }
 
 // ---------------------------------------------------------------------------

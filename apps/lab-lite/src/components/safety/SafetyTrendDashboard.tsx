@@ -16,9 +16,9 @@ type TimePeriod = '30d' | '90d' | '12m'
 
 const CATEGORY_COLORS: Record<SafetyConcernCategory, string> = {
   [SafetyConcernCategory.HAND_HYGIENE]: 'bg-primary',
-  [SafetyConcernCategory.PPE_NON_USE]: 'bg-amber-500',
-  [SafetyConcernCategory.IMPROPER_WASTE_DISPOSAL]: 'bg-red-500',
-  [SafetyConcernCategory.EQUIPMENT_MISUSE]: 'bg-purple-500',
+  [SafetyConcernCategory.PPE_NON_USE]: 'bg-warning',
+  [SafetyConcernCategory.IMPROPER_WASTE_DISPOSAL]: 'bg-destructive',
+  [SafetyConcernCategory.EQUIPMENT_MISUSE]: 'bg-primary',
   [SafetyConcernCategory.OTHER]: 'bg-muted',
 }
 
@@ -124,7 +124,7 @@ export function SafetyTrendDashboard({ onBack }: SafetyTrendDashboardProps) {
         <button
           type="button"
           onClick={onBack}
-          className="text-sm text-primary-600 hover:underline"
+          className="text-sm text-primary hover:underline"
         >
           ← {t('backToList')}
         </button>
@@ -141,7 +141,7 @@ export function SafetyTrendDashboard({ onBack }: SafetyTrendDashboardProps) {
             onClick={() => setPeriod(p)}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               period === p
-                ? 'bg-primary-500 text-white'
+                ? 'bg-primary text-white'
                 : 'bg-muted text-muted-foreground hover:bg-muted'
             }`}
           >
@@ -197,13 +197,13 @@ export function SafetyTrendDashboard({ onBack }: SafetyTrendDashboardProps) {
 
           {/* Recurring issues */}
           {stats.recurring.length > 0 && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-              <h2 className="mb-2 text-sm font-semibold text-amber-800">
+            <div className="rounded-lg border border-warning/30 bg-warning/10 p-4">
+              <h2 className="mb-2 text-sm font-semibold text-warning">
                 {t('recurringIssues')}
               </h2>
               <ul className="space-y-1">
                 {stats.recurring.map((cat) => (
-                  <li key={cat} className="flex items-center gap-2 text-sm text-amber-700">
+                  <li key={cat} className="flex items-center gap-2 text-sm text-warning">
                     <span className="font-medium">{t(`category.${cat}`)}</span>
                     <span className="text-xs">({stats.byCat[cat]} {t('reports')})</span>
                   </li>

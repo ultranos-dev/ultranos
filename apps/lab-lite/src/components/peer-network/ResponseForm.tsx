@@ -11,7 +11,7 @@ import { processPhoto, isValidPhotoType } from '@/lib/peer-network-photos'
 
 const TEXTAREA_CLASS =
   'w-full rounded-lg border border-border px-4 py-2.5 text-sm min-h-[80px] resize-y ' +
-  'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500'
+  'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary'
 
 interface ResponseFormProps {
   postId: string
@@ -107,8 +107,8 @@ export function ResponseForm({ postId, onResponseCreated, onCancel }: ResponseFo
   return (
     <form onSubmit={handleSubmit} className="rounded-lg border border-border p-3">
       {errors.length > 0 && (
-        <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-2" role="alert">
-          <ul className="list-inside list-disc text-sm text-red-700">
+        <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 p-2" role="alert">
+          <ul className="list-inside list-disc text-sm text-destructive">
             {errors.map((err, i) => (
               <li key={i}>{err}</li>
             ))}
@@ -136,7 +136,7 @@ export function ResponseForm({ postId, onResponseCreated, onCancel }: ResponseFo
               <button
                 type="button"
                 onClick={() => removePhoto(photo.id)}
-                className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white"
+                className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-white"
                 aria-label={t('removePhoto')}
               >
                 &times;
@@ -161,7 +161,7 @@ export function ResponseForm({ postId, onResponseCreated, onCancel }: ResponseFo
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={photoProcessing}
-              className="text-sm text-primary-600 hover:text-primary-700 disabled:opacity-50"
+              className="text-sm text-primary hover:text-primary disabled:opacity-50"
             >
               {photoProcessing ? t('processingPhoto') : t('attachPhoto')}
             </button>
@@ -178,7 +178,7 @@ export function ResponseForm({ postId, onResponseCreated, onCancel }: ResponseFo
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-primary-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+            className="rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
           >
             {submitting ? t('responding') : t('respond')}
           </button>

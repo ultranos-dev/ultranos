@@ -101,7 +101,7 @@ export function ContainerDetailView({
       <button
         type="button"
         onClick={onBack}
-        className="self-start text-sm text-primary-500 hover:underline"
+        className="self-start text-sm text-primary hover:underline"
       >
         &larr; {t('backToList')}
       </button>
@@ -149,7 +149,7 @@ export function ContainerDetailView({
                 onClick={() => handleFillUpdate(level)}
                 className={`rounded-lg border py-3 text-center text-sm font-semibold transition-colors ${
                   container.fillLevel === level
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    ? 'border-primary bg-primary-50 text-primary'
                     : 'border-border text-muted-foreground hover:bg-muted'
                 } disabled:opacity-50`}
               >
@@ -162,8 +162,8 @@ export function ContainerDetailView({
 
       {/* Disposal workflow */}
       {showDisposal && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-          <h3 className="text-sm font-semibold text-red-800 mb-3">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4">
+          <h3 className="text-sm font-semibold text-destructive mb-3">
             {t('disposeContainer')}
           </h3>
 
@@ -180,7 +180,7 @@ export function ContainerDetailView({
                     onClick={() => setDisposalMethod(method)}
                     className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                       disposalMethod === method
-                        ? 'border-primary-500 bg-primary-50 text-primary-700'
+                        ? 'border-primary bg-primary-50 text-primary'
                         : 'border-border text-muted-foreground hover:bg-muted'
                     }`}
                   >
@@ -204,7 +204,7 @@ export function ContainerDetailView({
                 onChange={(e) => setQuantityEstimate(e.target.value)}
                 placeholder={t('quantityPlaceholder')}
                 required
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 

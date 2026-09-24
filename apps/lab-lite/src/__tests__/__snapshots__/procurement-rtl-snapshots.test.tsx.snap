@@ -30,22 +30,22 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
           >
             <svg
-              class="text-green-600"
+              class="text-success"
               data-size="20"
               data-testid="check-circle"
             />
           </span>
           <span
-            class="text-xs capitalize text-green-700"
+            class="text-xs capitalize text-success"
           >
             submitted
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-success"
         />
       </div>
       <div
@@ -56,22 +56,22 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
           >
             <svg
-              class="text-green-600"
+              class="text-success"
               data-size="20"
               data-testid="check-circle"
             />
           </span>
           <span
-            class="text-xs capitalize text-green-700"
+            class="text-xs capitalize text-success"
           >
             received
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-success"
         />
       </div>
       <div
@@ -187,7 +187,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -218,7 +218,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -249,7 +249,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders approved status with est
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -436,21 +436,21 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
       </div>
     </div>
     <div
-      class="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3"
+      class="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3"
     >
       <svg
-        class="mt-0.5 shrink-0 text-red-600"
+        class="mt-0.5 shrink-0 text-destructive"
         data-size="16"
         data-testid="x-circle"
       />
       <div>
         <p
-          class="text-sm font-medium text-red-800 capitalize"
+          class="text-sm font-medium text-destructive capitalize"
         >
           cancelled
         </p>
         <p
-          class="text-xs text-red-600"
+          class="text-xs text-destructive"
         >
           Another lab offered transfer
         </p>
@@ -473,7 +473,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -509,7 +509,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -540,7 +540,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -571,7 +571,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with re
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -623,22 +623,22 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
           >
             <svg
-              class="text-green-600"
+              class="text-success"
               data-size="20"
               data-testid="check-circle"
             />
           </span>
           <span
-            class="text-xs capitalize text-green-700"
+            class="text-xs capitalize text-success"
           >
             submitted
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-success"
         />
       </div>
       <div
@@ -649,22 +649,22 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
           >
             <svg
-              class="text-green-600"
+              class="text-success"
               data-size="20"
               data-testid="check-circle"
             />
           </span>
           <span
-            class="text-xs capitalize text-green-700"
+            class="text-xs capitalize text-success"
           >
             received
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-success"
         />
       </div>
       <div
@@ -675,22 +675,22 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
           >
             <svg
-              class="text-green-600"
+              class="text-success"
               data-size="20"
               data-testid="check-circle"
             />
           </span>
           <span
-            class="text-xs capitalize text-green-700"
+            class="text-xs capitalize text-success"
           >
             approved
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-success"
         />
       </div>
       <div
@@ -701,22 +701,22 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
           >
             <svg
-              class="text-green-600"
+              class="text-success"
               data-size="20"
               data-testid="check-circle"
             />
           </span>
           <span
-            class="text-xs capitalize text-green-700"
+            class="text-xs capitalize text-success"
           >
             ordered
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-success"
         />
       </div>
       <div
@@ -727,22 +727,22 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
           class="flex flex-col items-center gap-1"
         >
           <span
-            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
           >
             <svg
-              class="text-green-600"
+              class="text-success"
               data-size="20"
               data-testid="check-circle"
             />
           </span>
           <span
-            class="text-xs capitalize text-green-700"
+            class="text-xs capitalize text-success"
           >
             shipped
           </span>
         </div>
         <div
-          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          class="mx-1 h-0.5 w-6 shrink-0 bg-success"
         />
       </div>
       <div
@@ -756,7 +756,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
             class="flex items-center justify-center rounded-full w-8 h-8 bg-primary/10 ring-2 ring-primary"
           >
             <svg
-              class="text-green-600"
+              class="text-success"
               data-size="20"
               data-testid="check-circle"
             />
@@ -786,7 +786,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -817,7 +817,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -848,7 +848,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -879,7 +879,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -910,7 +910,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -941,7 +941,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with al
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -1146,7 +1146,7 @@ exports[`OrderStatusPipeline — LTR snapshot > renders submitted status in LTR 
           class="flex items-start gap-3 py-2"
         >
           <div
-            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
           />
           <div
             class="flex-1"
@@ -1212,22 +1212,22 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
             class="flex flex-col items-center gap-1"
           >
             <span
-              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
             >
               <svg
-                class="text-green-600"
+                class="text-success"
                 data-size="20"
                 data-testid="check-circle"
               />
             </span>
             <span
-              class="text-xs capitalize text-green-700"
+              class="text-xs capitalize text-success"
             >
               submitted
             </span>
           </div>
           <div
-            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+            class="mx-1 h-0.5 w-6 shrink-0 bg-success"
           />
         </div>
         <div
@@ -1238,22 +1238,22 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
             class="flex flex-col items-center gap-1"
           >
             <span
-              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
             >
               <svg
-                class="text-green-600"
+                class="text-success"
                 data-size="20"
                 data-testid="check-circle"
               />
             </span>
             <span
-              class="text-xs capitalize text-green-700"
+              class="text-xs capitalize text-success"
             >
               received
             </span>
           </div>
           <div
-            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+            class="mx-1 h-0.5 w-6 shrink-0 bg-success"
           />
         </div>
         <div
@@ -1264,22 +1264,22 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
             class="flex flex-col items-center gap-1"
           >
             <span
-              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
             >
               <svg
-                class="text-green-600"
+                class="text-success"
                 data-size="20"
                 data-testid="check-circle"
               />
             </span>
             <span
-              class="text-xs capitalize text-green-700"
+              class="text-xs capitalize text-success"
             >
               approved
             </span>
           </div>
           <div
-            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+            class="mx-1 h-0.5 w-6 shrink-0 bg-success"
           />
         </div>
         <div
@@ -1290,22 +1290,22 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
             class="flex flex-col items-center gap-1"
           >
             <span
-              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
             >
               <svg
-                class="text-green-600"
+                class="text-success"
                 data-size="20"
                 data-testid="check-circle"
               />
             </span>
             <span
-              class="text-xs capitalize text-green-700"
+              class="text-xs capitalize text-success"
             >
               ordered
             </span>
           </div>
           <div
-            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+            class="mx-1 h-0.5 w-6 shrink-0 bg-success"
           />
         </div>
         <div
@@ -1373,7 +1373,7 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
             class="flex items-start gap-3 py-2"
           >
             <div
-              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
             />
             <div
               class="flex-1"
@@ -1404,7 +1404,7 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
             class="flex items-start gap-3 py-2"
           >
             <div
-              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
             />
             <div
               class="flex-1"
@@ -1435,7 +1435,7 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
             class="flex items-start gap-3 py-2"
           >
             <div
-              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
             />
             <div
               class="flex-1"
@@ -1466,7 +1466,7 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
             class="flex items-start gap-3 py-2"
           >
             <div
-              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
             />
             <div
               class="flex-1"
@@ -1497,7 +1497,7 @@ exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with
             class="flex items-start gap-3 py-2"
           >
             <div
-              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
             />
             <div
               class="flex-1"
@@ -1553,22 +1553,22 @@ exports[`OrderStatusPipeline — RTL snapshot > renders in RTL direction (dir=au
             class="flex flex-col items-center gap-1"
           >
             <span
-              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
             >
               <svg
-                class="text-green-600"
+                class="text-success"
                 data-size="20"
                 data-testid="check-circle"
               />
             </span>
             <span
-              class="text-xs capitalize text-green-700"
+              class="text-xs capitalize text-success"
             >
               submitted
             </span>
           </div>
           <div
-            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+            class="mx-1 h-0.5 w-6 shrink-0 bg-success"
           />
         </div>
         <div
@@ -1579,22 +1579,22 @@ exports[`OrderStatusPipeline — RTL snapshot > renders in RTL direction (dir=au
             class="flex flex-col items-center gap-1"
           >
             <span
-              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
             >
               <svg
-                class="text-green-600"
+                class="text-success"
                 data-size="20"
                 data-testid="check-circle"
               />
             </span>
             <span
-              class="text-xs capitalize text-green-700"
+              class="text-xs capitalize text-success"
             >
               received
             </span>
           </div>
           <div
-            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+            class="mx-1 h-0.5 w-6 shrink-0 bg-success"
           />
         </div>
         <div
@@ -1605,22 +1605,22 @@ exports[`OrderStatusPipeline — RTL snapshot > renders in RTL direction (dir=au
             class="flex flex-col items-center gap-1"
           >
             <span
-              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-success/10"
             >
               <svg
-                class="text-green-600"
+                class="text-success"
                 data-size="20"
                 data-testid="check-circle"
               />
             </span>
             <span
-              class="text-xs capitalize text-green-700"
+              class="text-xs capitalize text-success"
             >
               approved
             </span>
           </div>
           <div
-            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+            class="mx-1 h-0.5 w-6 shrink-0 bg-success"
           />
         </div>
         <div
@@ -1712,7 +1712,7 @@ exports[`OrderStatusPipeline — RTL snapshot > renders in RTL direction (dir=au
             class="flex items-start gap-3 py-2"
           >
             <div
-              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted"
             />
             <div
               class="flex-1"

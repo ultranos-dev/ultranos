@@ -126,7 +126,7 @@ export function CertificationDashboard({ technicianId, technicianName }: Certifi
               <h2 className="font-semibold text-foreground">{t('certificate')}</h2>
               <button
                 onClick={() => setSelectedCertificate(null)}
-                className="text-muted-foreground hover:text-muted-foreground dark:hover:text-gray-300"
+                className="text-muted-foreground hover:text-muted-foreground dark:hover:text-muted-foreground"
               >
                 ✕
               </button>
@@ -146,7 +146,7 @@ export function CertificationDashboard({ technicianId, technicianName }: Certifi
               <h2 className="font-semibold text-foreground">{t('logSupervisedProcedure')}</h2>
               <button
                 onClick={() => setShowLogProcedure(false)}
-                className="text-muted-foreground hover:text-muted-foreground dark:hover:text-gray-300"
+                className="text-muted-foreground hover:text-muted-foreground dark:hover:text-muted-foreground"
               >
                 ✕
               </button>
@@ -217,7 +217,7 @@ function PathwayCard({
           )}
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="text-muted-foreground hover:text-muted-foreground dark:hover:text-gray-300"
+            className="text-muted-foreground hover:text-muted-foreground dark:hover:text-muted-foreground"
             aria-label={expanded ? t('collapse') : t('expand')}
           >
             <DirectionalIcon category="navigation">
@@ -253,7 +253,7 @@ function PathwayCard({
 
       {/* Milestone list */}
       {expanded && (
-        <div className="divide-y divide-border dark:divide-gray-800">
+        <div className="divide-y divide-border dark:divide-border">
           {sorted.map((milestone) => {
             const mp = progress?.milestoneProgress.find((p) => p.milestoneId === milestone.id)
             const current = mp?.currentValue ?? 0
@@ -266,11 +266,11 @@ function PathwayCard({
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 shrink-0">
                     {complete ? (
-                      <CircleCheck size={18} className="text-green-500" />
+                      <CircleCheck size={18} className="text-success" />
                     ) : current > 0 ? (
-                      <Clock size={18} className="text-yellow-500" />
+                      <Clock size={18} className="text-warning" />
                     ) : (
-                      <AlertCircle size={18} className="text-gray-300 dark:text-muted-foreground" />
+                      <AlertCircle size={18} className="text-muted-foreground dark:text-muted-foreground" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -287,12 +287,12 @@ function PathwayCard({
                     </p>
                     <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${complete ? 'bg-green-500' : 'bg-primary'}`}
+                        className={`h-full rounded-full transition-all duration-500 ${complete ? 'bg-success' : 'bg-primary'}`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
                     {complete && mp?.completedAt && (
-                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      <p className="text-xs text-success dark:text-success mt-1">
                         {t('completedOn', { date: new Date(mp.completedAt).toLocaleDateString() })}
                       </p>
                     )}
@@ -325,7 +325,7 @@ function PathwayCard({
                 className="flex items-center justify-between text-sm"
               >
                 <div className="flex items-center gap-2">
-                  <Award size={14} className="text-yellow-500 shrink-0" />
+                  <Award size={14} className="text-warning shrink-0" />
                   <span className="text-foreground">{cert.milestoneName}</span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -349,7 +349,7 @@ function PathwayCard({
       <div className="border-t border-border px-4 py-2 flex justify-end">
         <button
           onClick={onRefresh}
-          className="text-xs text-muted-foreground hover:text-muted-foreground dark:hover:text-gray-300"
+          className="text-xs text-muted-foreground hover:text-muted-foreground dark:hover:text-muted-foreground"
         >
           {t('refreshProgress')}
         </button>

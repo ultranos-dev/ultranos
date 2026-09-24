@@ -48,7 +48,7 @@ export default function LabHomePage() {
           silently hidden (operational-safety surface). */}
       {driftError ? (
         <div
-          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+          className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning"
           role="alert"
           aria-live="polite"
           data-testid="drift-alert-unavailable"
@@ -59,7 +59,7 @@ export default function LabHomePage() {
         <DriftAlertBanner alerts={alerts} onAcknowledged={refreshAlerts} />
       )}
       {error && (
-        <div className="flex items-center justify-between rounded-md bg-amber-50 p-3 text-sm text-amber-700" role="alert" aria-live="assertive">
+        <div className="flex items-center justify-between rounded-md bg-warning/10 p-3 text-sm text-warning" role="alert" aria-live="assertive">
           <span>{error}</span>
           <Button
             variant="warning"

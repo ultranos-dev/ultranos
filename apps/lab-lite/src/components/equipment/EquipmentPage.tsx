@@ -31,7 +31,7 @@ export function EquipmentPage() {
           onClick={() => setActiveTab('queue')}
           className={`px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'queue'
-              ? 'border-b-2 border-primary-500 text-primary-600'
+              ? 'border-b-2 border-primary text-primary'
               : 'text-muted-foreground hover:text-foreground'
           }`}
           data-testid="tab-queue"
@@ -43,7 +43,7 @@ export function EquipmentPage() {
             onClick={() => setActiveTab('instruments')}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === 'instruments'
-                ? 'border-b-2 border-primary-500 text-primary-600'
+                ? 'border-b-2 border-primary text-primary'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
             data-testid="tab-instruments"

@@ -13,9 +13,9 @@ interface LocationCardProps {
 
 function ConnectivityDot({ status }: { status: NetworkStatusSnapshot['connectivityStatus'] }) {
   const colorMap: Record<NetworkStatusSnapshot['connectivityStatus'], string> = {
-    online: 'bg-green-500',
-    offline: 'bg-amber-500',
-    degraded: 'bg-amber-400',
+    online: 'bg-success',
+    offline: 'bg-warning',
+    degraded: 'bg-warning',
   }
   return (
     <span
@@ -75,7 +75,7 @@ export function LocationCard({ location, snapshot, onEdit }: LocationCardProps) 
           </span>
           <span
             className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-              isActive ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'
+              isActive ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'
             }`}
           >
             {statusLabel()}
@@ -90,7 +90,7 @@ export function LocationCard({ location, snapshot, onEdit }: LocationCardProps) 
           <p className="text-xs text-muted-foreground">{t('pendingSamples')}</p>
         </div>
         <div className="rounded-md bg-muted/30 p-2 text-center">
-          <p className={`text-lg font-semibold ${snapshot.stockAlerts > 0 ? 'text-amber-600' : 'text-foreground'}`}>
+          <p className={`text-lg font-semibold ${snapshot.stockAlerts > 0 ? 'text-warning' : 'text-foreground'}`}>
             {snapshot.stockAlerts}
           </p>
           <p className="text-xs text-muted-foreground">{t('stockAlerts')}</p>
@@ -103,8 +103,8 @@ export function LocationCard({ location, snapshot, onEdit }: LocationCardProps) 
 
       {/* Last sync row */}
       <div className="mt-3 flex items-center gap-1.5">
-        <Clock size={12} className={isStale ? 'text-amber-500' : 'text-muted-foreground'} aria-hidden="true" />
-        <span className={`text-xs ${isStale ? 'text-amber-600' : 'text-muted-foreground'}`}>
+        <Clock size={12} className={isStale ? 'text-warning' : 'text-muted-foreground'} aria-hidden="true" />
+        <span className={`text-xs ${isStale ? 'text-warning' : 'text-muted-foreground'}`}>
           {relativeTime()}
           {!isOnline && <span className="ms-1 font-medium">{t('staleDataWarning')}</span>}
         </span>

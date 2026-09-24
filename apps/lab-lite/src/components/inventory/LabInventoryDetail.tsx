@@ -62,9 +62,9 @@ function computeNetworkStats(
 
 // Tailwind class for the supply level bar
 function colorBarClass(days: number): string {
-  if (days <= 7) return 'bg-red-500'
-  if (days <= 30) return 'bg-yellow-400'
-  return 'bg-green-500'
+  if (days <= 7) return 'bg-destructive'
+  if (days <= 30) return 'bg-warning'
+  return 'bg-success'
 }
 
 // ---------------------------------------------------------------------------
@@ -184,11 +184,11 @@ export function LabInventoryDetail({ labId, labName }: Props) {
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                         colorClass === 'green'
-                          ? 'bg-green-100 text-green-800'
+                          ? 'bg-success/10 text-success'
                           : colorClass === 'yellow'
-                            ? 'bg-yellow-100 text-yellow-800'
+                            ? 'bg-warning/10 text-warning'
                             : colorClass === 'red'
-                              ? 'bg-red-100 text-red-800'
+                              ? 'bg-destructive/10 text-destructive'
                               : 'bg-muted text-muted-foreground'
                       }`}
                     >

@@ -302,7 +302,7 @@ describe('CourierDeliveryScreen', () => {
 
     const warning = screen.getByTestId('stability-warning')
     expect(warning).toBeInTheDocument()
-    expect(warning.className).toContain('red')
+    expect(warning.className).toContain('destructive')
     expect(warning).toHaveTextContent(/exceeds 6 hours/i)
   })
 
@@ -313,7 +313,7 @@ describe('CourierDeliveryScreen', () => {
 
     const warning = screen.getByTestId('stability-warning')
     expect(warning).toBeInTheDocument()
-    expect(warning.className).toContain('amber')
+    expect(warning.className).toContain('warning')
     expect(warning).toHaveTextContent(/approaching 4 hours/i)
   })
 

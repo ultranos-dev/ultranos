@@ -61,7 +61,7 @@ export function FlagButton({ targetId, targetType }: FlagButtonProps) {
 
   if (submitted) {
     return (
-      <span className="text-xs text-amber-600">{t('flagSubmitted')}</span>
+      <span className="text-xs text-warning">{t('flagSubmitted')}</span>
     )
   }
 
@@ -70,7 +70,7 @@ export function FlagButton({ targetId, targetType }: FlagButtonProps) {
       <button
         type="button"
         onClick={() => setShowDialog(true)}
-        className="text-xs text-muted-foreground hover:text-amber-600"
+        className="text-xs text-muted-foreground hover:text-warning"
         aria-label={t('flagContent')}
         title={t('flagContent')}
       >
@@ -124,7 +124,7 @@ export function FlagButton({ targetId, targetType }: FlagButtonProps) {
                 type="button"
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="rounded-lg bg-amber-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50"
+                className="rounded-lg bg-warning px-4 py-1.5 text-sm font-medium text-white hover:bg-warning disabled:opacity-50"
               >
                 {submitting ? t('flagging') : t('submitFlag')}
               </button>

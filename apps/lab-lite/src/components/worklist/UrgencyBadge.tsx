@@ -7,11 +7,11 @@ interface UrgencyBadgeProps {
 const CONFIG: Record<SampleUrgency, { label: string; className: string }> = {
   stat: {
     label: 'STAT',
-    className: 'bg-red-100 text-red-800 border border-red-300',
+    className: 'bg-destructive/10 text-destructive border border-destructive/30',
   },
   urgent: {
     label: 'Urgent',
-    className: 'bg-amber-100 text-amber-800 border border-amber-300',
+    className: 'bg-warning/10 text-warning border border-warning/30',
   },
   routine: {
     label: 'Routine',

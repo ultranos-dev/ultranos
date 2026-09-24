@@ -92,15 +92,15 @@ export function WestgardHistoryView({ runs, alerts }: WestgardHistoryViewProps) 
       {/* Trend indicator */}
       {trend && (
         <div
-          className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5"
+          className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5"
           role="status"
           aria-live="polite"
           data-testid="trend-indicator"
         >
-          <span className="text-xl text-amber-600" aria-hidden="true">
+          <span className="text-xl text-warning" aria-hidden="true">
             {trend.direction === 'UP' ? '↑' : '↓'}
           </span>
-          <p className="text-sm text-amber-800">
+          <p className="text-sm text-warning">
             <strong>
               {trend.consecutiveCount} {t('trendConsecutive')}
             </strong>{' '}
@@ -132,9 +132,9 @@ export function WestgardHistoryView({ runs, alerts }: WestgardHistoryViewProps) 
                 key={run.id}
                 className={
                   status === 'REJECT'
-                    ? 'bg-red-50'
+                    ? 'bg-destructive/10'
                     : status === 'WARNING'
-                      ? 'bg-amber-50'
+                      ? 'bg-warning/10'
                       : ''
                 }
               >
@@ -184,8 +184,8 @@ export function WestgardHistoryView({ runs, alerts }: WestgardHistoryViewProps) 
                       isAcknowledged
                         ? 'border-border bg-muted/30'
                         : alert.severity === 'REJECT'
-                          ? 'border-red-200 bg-red-50'
-                          : 'border-amber-200 bg-amber-50'
+                          ? 'border-destructive/30 bg-destructive/10'
+                          : 'border-warning/30 bg-warning/10'
                     }`}
                     data-testid={`alert-history-item-${alert.id}`}
                   >
@@ -197,8 +197,8 @@ export function WestgardHistoryView({ runs, alerts }: WestgardHistoryViewProps) 
                               isAcknowledged
                                 ? 'bg-muted text-muted-foreground'
                                 : alert.severity === 'REJECT'
-                                  ? 'bg-red-100 text-red-700'
-                                  : 'bg-amber-100 text-amber-700'
+                                  ? 'bg-destructive/10 text-destructive'
+                                  : 'bg-warning/10 text-warning'
                             }`}
                           >
                             {isAcknowledged ? t('statusResolved') : alert.severity}
@@ -241,17 +241,17 @@ function StatusBadge({
     'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold'
   if (status === 'REJECT') {
     return (
-      <span className={`${base} bg-red-100 text-red-700`}>
+      <span className={`${base} bg-destructive/10 text-destructive`}>
         REJECT{ruleViolated && <span className="font-mono font-normal">· {ruleViolated}</span>}
       </span>
     )
   }
   if (status === 'WARNING') {
     return (
-      <span className={`${base} bg-amber-100 text-amber-700`}>
+      <span className={`${base} bg-warning/10 text-warning`}>
         WARNING{ruleViolated && <span className="font-mono font-normal">· {ruleViolated}</span>}
       </span>
     )
   }
-  return <span className={`${base} bg-green-100 text-green-700`}>PASS</span>
+  return <span className={`${base} bg-success/10 text-success`}>PASS</span>
 }

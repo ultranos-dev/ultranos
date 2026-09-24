@@ -144,6 +144,38 @@ export const ATLAS_CATEGORY_TREE: AtlasCategory[] = [
   },
 ]
 
+/** Placeholder-author stub used in seed data until real attribution lands. */
+export const PLACEHOLDER_AUTHOR_NAME = 'Dr. A. Placeholder'
+
+/**
+ * True if an atlas entry is placeholder/scaffolding content (Story 63.2):
+ * it carries the explicit `placeholder` flag OR the stub author name. Such
+ * entries are hidden from the clinical reference tool by default and only shown
+ * when the `showPlaceholderAtlasEntries` feature flag is enabled.
+ */
+export function isPlaceholderAtlasEntry(entry: AtlasEntry): boolean {
+  return entry.placeholder === true || entry.author?.name === PLACEHOLDER_AUTHOR_NAME
+}
+
+/**
+ * Filter placeholder entries out of a category tree unless they are permitted.
+ * Preserves structure (empty subcategories remain so the UI can show a
+ * "content pending" state). No mutation of the input.
+ */
+export function filterPlaceholderEntries(
+  categories: AtlasCategory[],
+  allowPlaceholders: boolean,
+): AtlasCategory[] {
+  if (allowPlaceholders) return categories
+  return categories.map((cat) => ({
+    ...cat,
+    subcategories: cat.subcategories.map((sub) => ({
+      ...sub,
+      entries: sub.entries.filter((e) => !isPlaceholderAtlasEntry(e)),
+    })),
+  }))
+}
+
 /**
  * Build a flat map of all entries across all categories.
  * Used by the search service.

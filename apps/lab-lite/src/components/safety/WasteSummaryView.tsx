@@ -47,9 +47,9 @@ export function WasteSummaryView() {
   }
 
   const TYPE_COLORS: Record<ContainerType, string> = {
-    [ContainerType.SHARPS]: 'bg-red-500',
-    [ContainerType.INFECTIOUS]: 'bg-amber-500',
-    [ContainerType.CHEMICAL]: 'bg-purple-500',
+    [ContainerType.SHARPS]: 'bg-destructive',
+    [ContainerType.INFECTIOUS]: 'bg-warning',
+    [ContainerType.CHEMICAL]: 'bg-primary',
   }
 
   return (
@@ -172,11 +172,11 @@ export function WasteSummaryView() {
 
           {/* Compliance notes */}
           {summary.complianceNotes.length > 0 && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-              <h3 className="text-sm font-medium text-amber-800 mb-2">
+            <div className="rounded-lg border border-warning/30 bg-warning/10 p-4">
+              <h3 className="text-sm font-medium text-warning mb-2">
                 {t('complianceNotes')}
               </h3>
-              <ul className="text-sm text-amber-700 list-disc list-inside">
+              <ul className="text-sm text-warning list-disc list-inside">
                 {summary.complianceNotes.map((note, i) => (
                   <li key={i}>{note}</li>
                 ))}

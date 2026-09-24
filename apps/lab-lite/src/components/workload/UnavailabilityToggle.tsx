@@ -71,14 +71,14 @@ export function UnavailabilityToggle({
   if (isCurrentlyUnavailable) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-xs text-amber-700">
+        <span className="text-xs text-warning">
           {currentReason ?? t('unavailable')}
         </span>
         <button
           type="button"
           disabled={saving}
           onClick={handleMarkAvailable}
-          className="rounded bg-green-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          className="rounded bg-success px-2 py-0.5 text-xs font-medium text-white hover:bg-success disabled:opacity-50"
         >
           {saving ? t('saving') : t('markAvailable')}
         </button>
@@ -95,7 +95,7 @@ export function UnavailabilityToggle({
         type="button"
         disabled={saving}
         onClick={() => void handleMarkUnavailable('BREAK')}
-        className="rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-100 disabled:opacity-50"
+        className="rounded border border-warning/30 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning hover:bg-warning/10 disabled:opacity-50"
       >
         {saving ? t('saving') : t('markUnavailable')}
       </button>
@@ -130,7 +130,7 @@ export function UnavailabilityToggle({
         type="button"
         disabled={saving}
         onClick={() => void handleMarkUnavailable()}
-        className="rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-100 disabled:opacity-50"
+        className="rounded border border-warning/30 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning hover:bg-warning/10 disabled:opacity-50"
       >
         {saving ? t('saving') : t('markUnavailable')}
       </button>

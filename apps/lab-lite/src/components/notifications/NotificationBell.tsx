@@ -79,7 +79,7 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="relative rounded-full p-2 text-muted-foreground [@media(hover:hover)and(pointer:fine)]:hover:bg-muted [@media(hover:hover)and(pointer:fine)]:hover:text-foreground active:brightness-[0.88] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className="relative rounded-full p-2 text-muted-foreground [@media(hover:hover)and(pointer:fine)]:hover:bg-muted [@media(hover:hover)and(pointer:fine)]:hover:text-foreground active:brightness-[0.88] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary"
         aria-label={`Notifications${totalUnread > 0 ? ` (${totalUnread} unread)` : ''}`}
       >
         {/* Bell SVG */}
@@ -88,7 +88,7 @@ export function NotificationBell() {
         {/* Unread badge */}
         {totalUnread > 0 && (
           <span
-            className="absolute -end-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold text-white"
+            className="absolute -end-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-xs font-bold text-white"
             data-testid="unread-badge"
           >
             {totalUnread > 99 ? '99+' : totalUnread}

@@ -26,13 +26,13 @@ export function ActivitySummaryCard({ uploadsCompleted, resultsPending, lastRefr
         )}
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <div className="rounded-md bg-green-50 px-3 py-2 text-center" role="status" aria-label={`${uploadsCompleted} ${t('completed')}`}>
-          <p className="text-2xl font-bold text-green-700" aria-hidden="true">{uploadsCompleted}</p>
-          <p className="text-xs font-medium text-green-700" aria-hidden="true">{t('completed')}</p>
+        <div className="rounded-md bg-success/10 px-3 py-2 text-center" role="status" aria-label={`${uploadsCompleted} ${t('completed')}`}>
+          <p className="text-2xl font-bold text-success" aria-hidden="true">{uploadsCompleted}</p>
+          <p className="text-xs font-medium text-success" aria-hidden="true">{t('completed')}</p>
         </div>
-        <div className="rounded-md bg-amber-50 px-3 py-2 text-center" role="status" aria-label={`${resultsPending} ${t('pendingReview')}`}>
-          <p className="text-2xl font-bold text-amber-700" aria-hidden="true">{resultsPending}</p>
-          <p className="text-xs font-medium text-amber-700" aria-hidden="true">{t('pendingReview')}</p>
+        <div className="rounded-md bg-warning/10 px-3 py-2 text-center" role="status" aria-label={`${resultsPending} ${t('pendingReview')}`}>
+          <p className="text-2xl font-bold text-warning" aria-hidden="true">{resultsPending}</p>
+          <p className="text-xs font-medium text-warning" aria-hidden="true">{t('pendingReview')}</p>
         </div>
       </div>
     </div>
