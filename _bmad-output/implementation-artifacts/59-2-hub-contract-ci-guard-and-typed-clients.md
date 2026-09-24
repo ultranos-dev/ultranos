@@ -1,6 +1,6 @@
 # Story 59.2: Hub Contract CI Guard & Typed Spoke Clients
 
-Status: in-progress
+Status: review
 
 ## Story
 
@@ -23,12 +23,12 @@ so that client↔hub drift (which has silently killed at least 14 features to da
   - [x] 1.1 Script (AST or robust regex scan) extracting every `${hub}/x.y` / `procedure path` literal from each spoke's src; emit per-spoke inventory JSON.
   - [x] 1.2 Test in hub-api workspace: import `_app.ts` router map (or its keys via type reflection/runtime introspection) and assert every inventoried path resolves; wire into `pnpm test` + CI workflow.
   - [x] 1.3 Seed inventories with today's calls; confirm the test FAILS on the known-dead paths before Story 59.1 fixes land (proves the guard works), passes after.
-- [ ] **Task 2: Typed shared client** (AC: 3, 4)
-  - [ ] 2.1 Create `packages/hub-client` (or per-app `lib/hub-client.ts`): thin fetch wrapper typed with `import type { AppRouter } from 'hub-api'` (type-only; verify no runtime leakage into bundles); centralizes auth header, 401-refresh-retry (coordinate with Story 59.3 Task on opd-lite's helper), error normalization.
-  - [ ] 2.2 Migrate call sites mechanically: opd-lite `lib/trpc.ts` (~15 helpers), lab-lite `lib/trpc.ts` (867 lines of wrappers), pharmacy-lite equivalents. Preserve exact request/response behavior — this is a refactor, not a redesign.
-  - [ ] 2.3 Encode the sync conflict HLC object-vs-string asymmetry in shared types (`packages/shared-types` or the client package).
-- [ ] **Task 3: Regression verification** (AC: 6)
-  - [ ] 3.1 Full test suites of all three spokes + hub pass; runtime request/response parity spot-checked (network fixture comparisons for pull/push/submitResult); `pnpm typecheck`.
+- [x] **Task 2: Typed shared client** (AC: 3, 4)
+  - [x] 2.1 Created `packages/hub-client` (`@ultranos/hub-client`) — **TYPE-ONLY** package (emits `export {}` runtime JS; verified no hub-api/@trpc leakage into any spoke bundle). Shares the compile-time contract: re-exports `AppRouter` (type-only from `hub-api/types/app-router`) + `HubInputs`/`HubOutputs` (`inferRouterInputs/Outputs<AppRouter>`). See Deviation note re: runtime transport.
+  - [x] 2.2 Migrated the three spokes' `lib/trpc.ts` to import the shared types + consolidated DTOs. **Behavior-preserving refactor only** — a targeted `git diff` grep for `fetch(|method:|headers|Authorization|Content-Type|body:|JSON.stringify` showed ZERO added/removed request-construction lines; not one `fetch` call altered. `sync-worker.ts` (the `sync.push` producer) left untouched.
+  - [x] 2.3 Encoded the `sync.push` HLC asymmetry in `hub-client/src/wire-shapes.ts` (`HlcTimestampString` request vs `HlcTimestampObject` `{wallMs,counter,nodeId}` response — verified via inference probe); consolidated spoke hub DTOs into `hub-client/src/dtos.ts` (`HubDiagnosticReportItem`, `VerifyPatientResult`, `PatientSearchResult`, `LabOrderResponse`, `PullOrdersResult`, `LabOrderPatientDetails`, `PharmacyPrescriptionItem`) re-exported under historical names (consumers untouched). `LabOrderEntry` is a local Dexie shape, not a hub DTO — correctly left alone.
+- [x] **Task 3: Regression verification** (AC: 6)
+  - [x] 3.1 Combined tree: opd 1466 / lab 3970 / pharmacy 1153 / hub 1856 — 0 failures; all 5 apps typecheck clean; contract test 6/6. Byte-equivalence spot-checked via diff on pull/push/submitResult helpers.
 
 ## Dev Notes
 
@@ -80,3 +80,14 @@ New — `scripts/extract-hub-calls.mjs`, `apps/hub-api/src/__tests__/spoke-contr
 
 ### Change Log
 - 2026-09-23: Story 59.2 Task 1 (contract CI guard) implemented (Wave 1) + verified 6/6. Tasks 2–3 (typed clients) deferred to Wave 6. Status → in-progress.
+- 2026-09-24: Tasks 2–3 (typed shared hub client) implemented (Wave 6 batch 1), verified, integrated. New `@ultranos/hub-client` (type-only), spoke `trpc.ts` migrated byte-equivalently, HLC wire-asymmetry + spoke DTOs consolidated. Story fully complete. Status → review.
+
+### Wave 6 Completion Notes (Tasks 2–3)
+- **Shared client is TYPE-ONLY, not a unified runtime transport (KEY DECISION / DEVIATION):** The three spokes build genuinely different request bytes today — opd routes through `hubTrpcRequest` with Supabase 401-refresh + `Content-Type` on GETs; lab sends a bare `Authorization` header with per-call `AbortSignal.timeout` and no `Content-Type` on GETs; pharmacy pulls the token from a zustand store. Unifying the runtime transport would change headers on the wire, directly violating the zero-regression mandate (AC6), which overrides. So AC3 is satisfied at the **compile-time contract** layer (the faithful reading of "typed against AppRouter via type-only imports"), and each spoke's transport stays byte-identical. If a single runtime client is later desired, it is a follow-up that must be paired with per-spoke wire-fixture tests.
+- **Spoke `package.json` + `tsconfig.json` changed:** unlike admin-portal (tsconfig `paths` only), each spoke needed BOTH a `hub-api/*` tsconfig path AND a `@ultranos/hub-client: workspace:*` dep for pnpm linking + Next/node resolution.
+- **`packages/hub-client/dist` is gitignored** (built on demand via `pnpm -F @ultranos/hub-client build`, run as part of the workspace build). Flagged for Story 63.3's build-model review (ensure it's in the build pipeline / CI staleness check).
+- **Contract-test stale-allowlist warnings** (8 lab paths now resolving post-59.1) remain warning-only, owned by 59.1's formal code-review — not touched here.
+
+### File List (Tasks 2–3)
+New — `packages/hub-client/{package.json,tsconfig.json,src/index.ts,src/wire-shapes.ts,src/dtos.ts}`.
+Modified — `apps/{opd-lite,lab-lite,pharmacy-lite}/src/lib/trpc.ts`, `apps/{opd-lite,lab-lite,pharmacy-lite}/tsconfig.json`, `apps/{opd-lite,lab-lite,pharmacy-lite}/package.json`, `pnpm-lock.yaml`.

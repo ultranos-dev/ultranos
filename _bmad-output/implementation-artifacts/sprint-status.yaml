@@ -756,7 +756,7 @@ development_status:
   # ============================================================
   epic-59: in-progress
   59-1-lab-lite-dead-endpoint-repair: review  # Wave 1 done+verified (7 new lab.* procs, 196 tests); Task 3.4 peerNetwork/ai-provenance deferred pending Decision #8
-  59-2-hub-contract-ci-guard-and-typed-clients: in-progress  # Wave 1: Task 1 (contract CI guard) done+verified 6/6; Tasks 2-3 (typed clients) scheduled Wave 6
+  59-2-hub-contract-ci-guard-and-typed-clients: review  # Wave 1: Task 1 CI guard; Wave 6 batch 1: Tasks 2-3 typed @ultranos/hub-client (type-only) + byte-equivalent spoke trpc.ts migration + DTO/HLC-wire consolidation; opd 1466/lab 3970/pharmacy 1153/hub 1856. Runtime transport intentionally not unified (zero-regression)
   59-3-opd-unwired-components-and-hub-call-consolidation: review  # FULLY complete (Task 3 PhiCleanupGuard resolved in Wave 4 — dead guard removed, key-wipe-on-close)
   59-4-appointments-repair: review  # Wave 2 done+verified (RBAC, HLC, durable queue; opd 1453)
 
@@ -768,7 +768,7 @@ development_status:
   60-1-hlc-discipline-platform-wide: review  # Wave 4 done+verified (HLC everywhere, staged hub validation log-only, ESLint guard; sync-engine 202, all apps green)
   60-2-sync-engine-fail-safe-hardening: review  # Wave 1 done+verified (sync-engine 188 tests; plaintext fallback removed, Tier-1 window fix)
   60-3-offline-patient-registration: review  # Wave 5 done+verified (offline reg OPD/lab/pharmacy, provisional-ID reconcile at drain, MPI_BLOCK_MODE default warn; hub 1839, opd 1466, lab 3961, pharmacy 1153); opd Dexie v29, routed via patient.syncCreate
-  60-4-sync-failure-visibility-and-cross-app-notifications: ready-for-dev
+  60-4-sync-failure-visibility-and-cross-app-notifications: review  # Wave 6 batch 1 done+verified (4 notification producers [PRESCRIPTION_READY reserved], MPI-review notify+audit, durable MedicationStatement outbox, lab dead-letter panel + durable ack retry; hub 1856, lab 3970); Dexie v58, repo migration 070 (applied live)
 
   # ============================================================
   # EPIC 61: Audit, Encryption & Transaction Integrity (2026-09-23)
