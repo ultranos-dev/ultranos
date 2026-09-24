@@ -336,12 +336,15 @@ export type LabOrderStatus = 'RECEIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELL
 
 export interface LabOrderEntry {
   orderId: string
-  patientFirstName: string // first name ONLY — CLAUDE.md Rule #7
+  patientFirstName: string
   patientAge: number | null // computed age, NOT DOB
-  patientRef: string // opaque Patient/{uuid}
-  // No patient photo on the order list (Rule #7 list tier / audit C-SYS-4, Story 58.1).
-  // The photo is loaded on demand from getOrderPatientDetails when the tech opens the
-  // Patient Details / Sample Details modal (detail/verification tier).
+  patientRef: string // opaque Patient/{blindIndex}
+  // Rule #7 (revised 2026-09-24): photo + demographics now permitted on the list tier.
+  // patientPhotoUrl is a short-lived SIGNED URL over the opaque storage key (never the
+  // patient UUID); may be absent/expired → falls back to initials. Cached for offline.
+  patientPhotoUrl?: string | null
+  patientGender?: string | null
+  patientPhone?: string | null
   testsRequested: Array<{ loincCode: string; loincDisplay: string }>
   urgency: OrderUrgency
   orderingPhysicianName: string

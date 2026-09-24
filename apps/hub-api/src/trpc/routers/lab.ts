@@ -18,7 +18,7 @@ import { compareHlc, deserializeHlc } from '@ultranos/sync-engine'
 import { hlcTimestampSchema } from '@/lib/hlc-format'
 import { monitoringPullEventsTotal } from '@/lib/clinical-safety-metrics'
 import { buildNotificationContent } from '@/lib/notification-content'
-import { signPhotoUrl } from '@/lib/photo-urls'
+import { signPhotoUrl, signPhotoUrls } from '@/lib/photo-urls'
 import { normalizeNameComponent, computePhoneticTokens, computeMpiResult } from '@ultranos/mpi-engine'
 import { signProceedToken, verifyProceedToken, consumeProceedToken } from '@/lib/mpi-proceed-token'
 import { fetchMpiCandidates } from '@/lib/mpi-candidate-query'
@@ -2060,6 +2060,12 @@ export const labRouter = createTRPCRouter({
             orderId: z.string(),
             patientFirstName: z.string(),
             patientAge: z.number().nullable(),
+            // Rule #7 (revised 2026-09-24): photo + demographics are now permitted on
+            // the lab list tier. Photo is a signed URL over the OPAQUE storage key
+            // (never the patient UUID); gender/phone are plain demographics.
+            patientPhotoUrl: z.string().nullable(),
+            patientGender: z.string().nullable(),
+            patientPhone: z.string().nullable(),
             patientRef: z.string(),
             testsRequested: z.array(z.object({ loincCode: z.string(), loincDisplay: z.string() })),
             urgency: z.string(),
@@ -2096,7 +2102,7 @@ export const labRouter = createTRPCRouter({
           special_instructions,
           meta_last_updated,
           received_by_lab_id,
-          patients!inner(id, name_given, birth_date, birth_year),
+          patients!inner(id, name_given, birth_date, birth_year, photo_url, gender, telecom_phone),
           practitioners!service_requests_requester_id_fkey(id, given_name, family_name)
         `)
         .in('status', ['active', 'on-hold'])
@@ -2155,10 +2161,16 @@ export const labRouter = createTRPCRouter({
       // P4: Use blind index for patientRef — never expose raw patient UUID
       const { hmacKey } = await getFieldEncryptionKeys()
 
-      // Data minimization projection: return ONLY first name + age (Rule #7 list tier).
-      // NO patient photo on this list surface (audit C-SYS-4 / H-HUB-5, Story 58.1):
-      // the photo lives on the order-scoped detail/verification tier
-      // (getOrderPatientDetails / verifyPatient) only.
+      // Rule #7 (revised 2026-09-24): the list tier now returns photo + demographics.
+      // Batch-sign the OPAQUE photo keys server-side (the lab receives a signed URL,
+      // never the raw key/path) so a photo URL still cannot correlate the patient UUID
+      // (audit C-SYS-4, Story 58.1). Raw National ID + real patient UUID remain hidden.
+      const photoUrlMap = await signPhotoUrls(
+        ctx.supabase,
+        'patient-photos',
+        (orders ?? []).map((o: any) => o.patients?.photo_url as string | null),
+      )
+
       const mapped = (orders ?? []).map((order: any) => {
         const patient = order.patients
         const practitioner = order.practitioners
@@ -2170,6 +2182,9 @@ export const labRouter = createTRPCRouter({
           orderId: order.id,
           patientFirstName: patient?.name_given ?? '',
           patientAge,
+          patientPhotoUrl: patient?.photo_url ? (photoUrlMap[patient.photo_url] ?? null) : null,
+          patientGender: patient?.gender ?? null,
+          patientPhone: patient?.telecom_phone ?? null,
           // Matching key: the blind index is derived from the order's own
           // patient_id (a NOT NULL FK), NOT the demographics join — so the
           // order↔patient linkage never depends on the join succeeding, and the
@@ -2846,6 +2861,10 @@ export const labRouter = createTRPCRouter({
             ref: z.string(),
             firstName: z.string(),
             age: z.number().nullable(),
+            // Rule #7 (revised 2026-09-24): photo (opaque-key signed URL) + demographics.
+            photoUrl: z.string().nullable(),
+            gender: z.string().nullable(),
+            phone: z.string().nullable(),
           }).strict(),
         ),
       }),
@@ -2866,13 +2885,21 @@ export const labRouter = createTRPCRouter({
 
       const { data: rows, error } = await ctx.supabase
         .from('patients')
-        .select('id, name_given, name_local, birth_date, birth_year')
+        .select('id, name_given, name_local, birth_date, birth_year, photo_url, gender, telecom_phone')
         .or(`name_given.ilike.%${safeQ}%,name_local.ilike.%${safeQ}%`)
         .eq('is_active', true)
         .limit(10)
       if (error) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Patient search failed' })
       }
+
+      // Rule #7 (revised): sign the OPAQUE photo keys server-side (lab never holds the
+      // raw key/UUID). Batch one request for the page.
+      const photoUrlMap = await signPhotoUrls(
+        ctx.supabase,
+        'patient-photos',
+        (rows ?? []).map((r) => (r.photo_url as string | null) ?? null),
+      )
 
       // Audit the PHI read (Rule #6). No PHI in metadata — never log the query text.
       try {
@@ -2895,6 +2922,9 @@ export const labRouter = createTRPCRouter({
           ref: `Patient/${generateBlindIndex(row.id as string, hmacKey)}`,
           firstName: (row.name_given as string) ?? (row.name_local as string) ?? '',
           age: computeAge(row.birth_date as string | null, row.birth_year as number | null),
+          photoUrl: row.photo_url ? (photoUrlMap[row.photo_url as string] ?? null) : null,
+          gender: (row.gender as string | null) ?? null,
+          phone: (row.telecom_phone as string | null) ?? null,
         })),
       }
     }),

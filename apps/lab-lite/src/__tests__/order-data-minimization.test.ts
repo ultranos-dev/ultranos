@@ -2,13 +2,20 @@ import { describe, it, expect } from 'vitest'
 import type { LabOrderEntry } from '../lib/db'
 import type { LabOrderResponse } from '../lib/trpc'
 
-describe('Order Data Minimization (CLAUDE.md Rule #7)', () => {
-  it('LabOrderResponse contains ONLY first name + age, no PHI fields', () => {
+// Rule #7 revised 2026-09-24: patient photo + demographics (gender, phone) ARE now
+// permitted on the lab order-list tier. The two identity secrets remain forbidden on
+// every lab surface — the raw National ID and the real patient UUID (patientRef stays
+// an opaque blind index). This test locks the new allowed shape + the retained bans.
+describe('Order list-tier fields (CLAUDE.md Rule #7, revised)', () => {
+  it('LabOrderResponse carries photo + demographics but never an identity secret', () => {
     const response: LabOrderResponse = {
       orderId: '550e8400-e29b-41d4-a716-446655440000',
       patientFirstName: 'Ahmad',
       patientAge: 45,
-      patientRef: 'Patient/123',
+      patientPhotoUrl: 'https://storage.example/patient-photos/opaque-key.webp?token=sig',
+      patientGender: 'male',
+      patientPhone: '+93700000000',
+      patientRef: 'Patient/blind-index-hash',
       testsRequested: [{ loincCode: '58410-2', loincDisplay: 'CBC' }],
       urgency: 'stat',
       orderingPhysicianName: 'Dr. Karimi',
@@ -18,47 +25,34 @@ describe('Order Data Minimization (CLAUDE.md Rule #7)', () => {
       assignedToLab: false,
     }
 
-    // Verify only allowed fields are present
-    const keys = Object.keys(response)
-    expect(keys).toEqual(expect.arrayContaining([
-      'orderId',
-      'patientFirstName',
-      'patientAge',
-      'patientRef',
-      'testsRequested',
-      'urgency',
-      'orderingPhysicianName',
-      'specialInstructions',
-      'status',
-      'authoredOn',
-    ]))
+    // Photo + demographics are now allowed on the list tier.
+    expect(response).toHaveProperty('patientPhotoUrl')
+    expect(response).toHaveProperty('patientGender')
+    expect(response).toHaveProperty('patientPhone')
+    // The photo is a signed URL over an opaque key — it must not embed the raw UUID.
+    expect(response.patientRef.startsWith('Patient/')).toBe(true)
 
-    // Verify NO PHI fields are present
-    // Story 58.1 / audit C-SYS-4: no patient photo on the list tier (photo lives on
-    // the order-scoped detail/verification tier only).
-    expect(response).not.toHaveProperty('patientPhotoUrl')
+    // STILL forbidden on any lab surface: identity secrets + raw DOB + clinical detail.
     expect(response).not.toHaveProperty('birthDate')
-    expect(response).not.toHaveProperty('gender')
-    expect(response).not.toHaveProperty('telecom')
-    expect(response).not.toHaveProperty('identifier')
-    expect(response).not.toHaveProperty('address')
     expect(response).not.toHaveProperty('nationalIdHash')
+    expect(response).not.toHaveProperty('patientId') // never the real UUID
+    expect(response).not.toHaveProperty('address')
     expect(response).not.toHaveProperty('medications')
     expect(response).not.toHaveProperty('allergies')
     expect(response).not.toHaveProperty('conditions')
-    expect(response).not.toHaveProperty('reasonCode')
-    expect(response).not.toHaveProperty('supportingInfo')
-    expect(response).not.toHaveProperty('encounter')
     expect(response).not.toHaveProperty('diagnosis')
     expect(response).not.toHaveProperty('clinicalHistory')
   })
 
-  it('LabOrderEntry (Dexie) contains ONLY first name + age, no PHI fields', () => {
+  it('LabOrderEntry (Dexie) may cache photo + demographics but no identity secret', () => {
     const entry: LabOrderEntry = {
       orderId: '550e8400-e29b-41d4-a716-446655440000',
       patientFirstName: 'Ahmad',
       patientAge: 45,
-      patientRef: 'Patient/123',
+      patientPhotoUrl: 'https://storage.example/patient-photos/opaque-key.webp?token=sig',
+      patientGender: 'male',
+      patientPhone: '+93700000000',
+      patientRef: 'Patient/blind-index-hash',
       testsRequested: [{ loincCode: '58410-2', loincDisplay: 'CBC' }],
       urgency: 'stat',
       orderingPhysicianName: 'Dr. Karimi',
@@ -70,26 +64,19 @@ describe('Order Data Minimization (CLAUDE.md Rule #7)', () => {
     }
 
     const keys = Object.keys(entry)
-    // Verify no PHI beyond first name + age
-    // Story 58.1 / audit C-SYS-4: patient photo removed from the cached order list tier.
-    expect(keys).not.toContain('patientPhotoUrl')
+    // Retained bans (identity secrets + raw DOB + clinical detail).
     expect(keys).not.toContain('birthDate')
-    expect(keys).not.toContain('gender')
-    expect(keys).not.toContain('telecom')
-    expect(keys).not.toContain('identifier')
-    expect(keys).not.toContain('address')
     expect(keys).not.toContain('nationalIdHash')
+    expect(keys).not.toContain('patientId')
+    expect(keys).not.toContain('address')
     expect(keys).not.toContain('medications')
     expect(keys).not.toContain('allergies')
     expect(keys).not.toContain('conditions')
-    expect(keys).not.toContain('reasonCode')
-    expect(keys).not.toContain('supportingInfo')
     expect(keys).not.toContain('diagnosis')
 
-    // Verify patient data is minimal
     expect(entry.patientFirstName).toBe('Ahmad')
     expect(entry.patientAge).toBe(45)
-    // patientRef is opaque reference only
+    // patientRef is the opaque blind index only — never a raw UUID.
     expect(entry.patientRef).toMatch(/^Patient\//)
   })
 })

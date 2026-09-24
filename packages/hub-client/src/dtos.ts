@@ -52,6 +52,11 @@ export interface LabOrderResponse {
   orderId: string
   patientFirstName: string
   patientAge: number | null
+  /** Rule #7 (revised 2026-09-24): signed photo URL over an opaque key (never the
+   *  patient UUID), plus demographics — now permitted on the lab list tier. */
+  patientPhotoUrl: string | null
+  patientGender: string | null
+  patientPhone: string | null
   patientRef: string
   testsRequested: Array<{ loincCode: string; loincDisplay: string }>
   urgency: 'routine' | 'urgent' | 'asap' | 'stat'
@@ -86,13 +91,18 @@ export interface VerifyPatientResult {
 // ── lab.searchPatients (lab-lite) ────────────────────────────────────────────
 
 /**
- * Rule #7 list-tier DTO: ONLY firstName + age + the opaque blind-index ref.
+ * Rule #7 list-tier DTO (revised 2026-09-24): firstName + age + the opaque blind-index
+ * ref, PLUS photo (signed URL over an opaque key) + demographics (gender, phone).
+ * Never the real patient UUID or National ID.
  */
 export interface PatientSearchResult {
   /** Opaque blind-index ref (`Patient/<hmac>`) — never the real patient UUID. */
   ref: string
   firstName: string
   age: number | null
+  photoUrl: string | null
+  gender: string | null
+  phone: string | null
 }
 
 // ── lab.getOrderPatientDetails (lab-lite) ────────────────────────────────────

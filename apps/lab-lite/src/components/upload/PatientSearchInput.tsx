@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { usePatientSearch, type PatientSearchItem } from '@/hooks/usePatientSearch'
 import { highlightQuery } from '@ultranos/ui-kit/lib/highlight'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 
 interface PatientSearchInputProps {
   token: string
@@ -80,7 +81,10 @@ export function PatientSearchInput({ token, onSelect }: PatientSearchInputProps)
                 onClick={() => handleSelect(patient)}
                 className="flex w-full items-center justify-between px-4 py-2.5 text-start hover:bg-primary-50 focus:bg-primary-50 focus:outline-none"
               >
-                <span className="text-sm font-medium text-foreground">{highlightQuery(patient.firstName, query)}</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <Avatar src={patient.photoUrl ?? null} name={patient.firstName} size={24} />
+                  <span className="truncate text-sm font-medium text-foreground">{highlightQuery(patient.firstName, query)}</span>
+                </span>
                 <span className="text-xs text-muted-foreground">{patient.age} years</span>
               </button>
             </li>

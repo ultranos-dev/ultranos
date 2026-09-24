@@ -2,13 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 /**
  * Story 58.1 / audit C-SYS-4 — Patient photo privacy on lab-facing surfaces.
+ * (Rule #7 revised 2026-09-24: photos ARE now shown on the lab list tier — but the
+ *  opaque-key invariant that makes that safe is exactly what this suite guards.)
  *
  * Guarantees:
- *  - lab.pullOrders (list tier) NEVER returns a patient photo, and its serialized
- *    output contains neither a `<uuid>.webp` key nor the raw patient UUID.
- *  - lab.getOrderPatientDetails / lab.verifyPatient (detail/verification tier) MAY
- *    return a signed photo URL, but the URL path carries only the OPAQUE storage key
- *    (patients.photo_url), never the patient UUID — so the blind index is preserved.
+ *  - lab.pullOrders / getOrderPatientDetails / verifyPatient MAY return a signed photo
+ *    URL, but the URL path carries only the OPAQUE storage key (patients.photo_url),
+ *    NEVER the patient UUID — so the blind index is preserved and no lab surface can
+ *    correlate a photo URL back to the real patient id.
  *  - opaquePhotoKey() never derives the key from a patient id.
  */
 
@@ -267,8 +268,8 @@ describe('lab.pullOrders photo privacy (list tier)', () => {
           special_instructions: null,
           meta_last_updated: '2026-05-30T10:00:00.000Z',
           received_by_lab_id: 'lab-1',
-          // Even if the patient HAS a photo, pullOrders must not surface it. (photo_url is no
-          // longer even selected — included here only to prove it never leaks downstream.)
+          // Rule #7 revised: pullOrders now surfaces the photo — but only as a signed
+          // URL over the OPAQUE key; the raw patient UUID must never leak downstream.
           patients: { id: PATIENT_ID, name_given: 'Ahmad', birth_date: null, birth_year: 1991, ...(patientHasPhoto ? { photo_url: OPAQUE_KEY } : {}) },
           practitioners: { id: 'doctor-1', given_name: 'Dr.', family_name: 'Karimi' },
         })
@@ -279,7 +280,7 @@ describe('lab.pullOrders photo privacy (list tier)', () => {
 
   beforeEach(() => { vi.clearAllMocks() })
 
-  it('never returns patientPhotoUrl and leaks no photo key or patient UUID', async () => {
+  it('returns a signed patientPhotoUrl over the OPAQUE key, never leaking the patient UUID (Rule #7 revised)', async () => {
     const pullFrom = buildPullFrom(true)
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)({
@@ -291,14 +292,14 @@ describe('lab.pullOrders photo privacy (list tier)', () => {
     const res = await caller.lab.pullOrders({ limit: 100 })
     const order = res.orders[0]!
 
-    expect(order).not.toHaveProperty('patientPhotoUrl')
-    // No photo was signed for the list tier at all.
-    expect(signSpy).not.toHaveBeenCalled()
+    // Photo IS now surfaced on the list tier — as a signed URL over the OPAQUE key.
+    expect(order).toHaveProperty('patientPhotoUrl')
+    expect(order.patientPhotoUrl).toContain(OPAQUE_KEY)
 
+    // ...but neither the URL nor the whole response may leak the patient UUID, and no
+    // photo key may be UUID-derived. patientRef stays the blind index (Patient/hmac-<uuid>).
+    expect(order.patientPhotoUrl).not.toContain(PATIENT_ID)
     const json = JSON.stringify(res)
-    expect(json).not.toContain('.webp')
-    expect(json).not.toContain(OPAQUE_KEY)
-    // patientRef is the blind index (Patient/hmac-<uuid>); the raw UUID must not appear.
     expect(json).not.toContain(`"${PATIENT_ID}"`)
     expect(json).not.toContain(`${PATIENT_ID}.webp`)
   })

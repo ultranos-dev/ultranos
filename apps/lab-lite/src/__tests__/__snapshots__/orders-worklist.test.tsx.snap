@@ -168,7 +168,7 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
               >
                 <span
                   aria-hidden="true"
-                  class="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-success/15 text-success"
+                  class="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-success/15 text-success [outline-style:solid] outline-1 outline-offset-2 outline-[color:oklch(var(--primary)/0.5)]"
                   style="width: 24px; height: 24px;"
                 >
                   <span
@@ -441,7 +441,7 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
               >
                 <span
                   aria-hidden="true"
-                  class="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-success/15 text-success"
+                  class="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-success/15 text-success [outline-style:solid] outline-1 outline-offset-2 outline-[color:oklch(var(--primary)/0.5)]"
                   style="width: 24px; height: 24px;"
                 >
                   <span

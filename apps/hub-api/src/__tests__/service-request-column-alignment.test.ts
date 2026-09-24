@@ -97,6 +97,9 @@ const PATIENTS_COLUMNS = new Set([
   // Real column (text) — the patient-photo feature signs this into a short-lived
   // URL for lab identity verification; never the raw key/UUID (Rule #7).
   'photo_url',
+  // Real column — demographics now permitted on the lab list tier (Rule #7 revised
+  // 2026-09-24); pullOrders embeds it alongside gender/photo_url.
+  'telecom_phone',
 ])
 // auth_user_id is a real practitioners column (rbac.ts labRestrictedProcedure and
 // lab.listStaff both select it; Story 61.3 getMyRole embeds it to resolve the

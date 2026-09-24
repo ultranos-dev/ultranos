@@ -1386,6 +1386,9 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     authoredOn: string | null;
                     patientFirstName: string;
                     patientAge: number | null;
+                    patientPhotoUrl: string | null;
+                    patientGender: string | null;
+                    patientPhone: string | null;
                     testsRequested: {
                         loincCode: string;
                         loincDisplay: string;
@@ -1509,6 +1512,9 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             };
             output: {
                 patients: {
+                    gender: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
                     ref: string;
                     firstName: string;
                     age: number | null;

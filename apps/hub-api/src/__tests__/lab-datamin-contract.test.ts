@@ -34,6 +34,7 @@ vi.mock('@/lib/field-encryption', () => ({
 // Photo signing: return null so we never touch storage in the contract test.
 vi.mock('@/lib/photo-urls', () => ({
   signPhotoUrl: vi.fn().mockResolvedValue(null),
+  signPhotoUrls: vi.fn().mockResolvedValue({}),
 }))
 
 const LAB_ID = 'lab-1'
@@ -244,7 +245,7 @@ function makeCaller() {
 describe('lab data-minimization contract — exact output field allowlists', () => {
   beforeEach(() => { vi.clearAllMocks(); mockAuditEmit.mockResolvedValue({ id: 'audit-1' }) })
 
-  it('pullOrders order objects expose ONLY the allowed list-tier fields', async () => {
+  it('pullOrders order objects expose the list-tier fields incl. photo + demographics (Rule #7 revised 2026-09-24)', async () => {
     mode = 'orders'
     const res = await makeCaller().lab.pullOrders({ limit: 10 })
     expect(res.orders.length).toBeGreaterThan(0)
@@ -257,6 +258,9 @@ describe('lab data-minimization contract — exact output field allowlists', () 
         'orderingPhysicianName',
         'patientAge',
         'patientFirstName',
+        'patientGender',
+        'patientPhone',
+        'patientPhotoUrl',
         'patientRef',
         'specialInstructions',
         'status',
@@ -264,10 +268,14 @@ describe('lab data-minimization contract — exact output field allowlists', () 
         'urgency',
       ].sort(),
     )
-    // Forbidden list-tier fields must never appear.
-    for (const forbidden of ['gender', 'phone', 'patientPhotoUrl', 'photoUrl', 'nationalId', 'patientId', 'bloodGroup']) {
+    // Photo + demographics are now permitted (revised Rule #7). The two identity
+    // secrets remain forbidden on any lab surface: the raw National ID and the real
+    // patient UUID (patientRef stays an opaque blind index, never `patientId`).
+    for (const forbidden of ['nationalId', 'patientId', 'birthDate', 'dob']) {
       expect(keys).not.toContain(forbidden)
     }
+    // patientRef must remain the opaque blind index (Patient/<hash>), not a raw UUID.
+    expect(res.orders[0]!.patientRef.startsWith('Patient/')).toBe(true)
   })
 
   it('verifyPatient exposes ONLY firstName + age + patientRef + photoUrl', async () => {

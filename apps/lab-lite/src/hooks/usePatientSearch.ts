@@ -14,6 +14,9 @@ export interface PatientSearchItem {
   id: string
   firstName: string
   age: number
+  // Rule #7 (revised 2026-09-24): photo (signed URL over an opaque key) now allowed
+  // on the list tier. Null for local-only rows / when the patient has no photo.
+  photoUrl?: string | null
   source: 'local' | 'remote'
 }
 
@@ -68,8 +71,9 @@ export function usePatientSearch(token: string): UsePatientSearchReturn {
           id: p.id,
           firstName: p._ultranos?.nameGiven ?? p.name?.[0]?.given?.[0] ?? '',
           age,
-          // gender / phone deliberately omitted — list tier is firstName+age+ref only
-          // (Rule #7 / Story 58.2). Gender for ranges comes from the detail tier.
+          // Local rows have no server-signed URL — initials fallback until the hub
+          // revalidation phase (below) replaces them with the signed photo.
+          photoUrl: null,
           source: 'local' as const,
         }
       })
@@ -90,6 +94,7 @@ export function usePatientSearch(token: string): UsePatientSearchReturn {
           id: r.ref,
           firstName: r.firstName,
           age: r.age ?? 0,
+          photoUrl: r.photoUrl ?? null,
           source: 'remote' as const,
         }))
 
