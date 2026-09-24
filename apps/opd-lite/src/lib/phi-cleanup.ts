@@ -1,6 +1,41 @@
 import { db } from './db'
 
 /**
+ * PHI cleanup lifecycle — OPD Lite semantics (Story 59.3, Task 3 / H-OPD-5).
+ *
+ * DECISION (settled post-Story 61.2): tab close / ordinary refresh wipes the
+ * in-memory encryption KEY ONLY; the encrypted PHI tables below are cleared only
+ * on EXPLICIT auth-expiry or logout — never on refresh.
+ *
+ * Why key-wipe-only on tab close is safe *and* required here (unlike lab/pharmacy):
+ * - OPD Lite is offline-first. The clinical cache in these tables MUST survive a
+ *   refresh so a clinician can keep working with the ethernet cable pulled. Story
+ *   61.2 made the at-rest key non-derivable (dual-wrapped DEK; offline PIN /
+ *   online hub-secret unlock), so a refresh re-opens the SAME DEK from the persisted
+ *   wrapped bundle while the session is valid — the data stays both encrypted at
+ *   rest and usable. Wiping the tables on every `beforeunload` would destroy that
+ *   cache and break offline-first (the exact regression this task must avoid).
+ * - The "tab close → encrypted cache cleared" requirement (CLAUDE.md, Encryption)
+ *   is satisfied by wiping the key: `encryption-key-store.ts` registers a
+ *   `beforeunload` → `encryptionKeyStore.wipe()` hook, so on close the RAM key is
+ *   gone and the on-disk blobs are opaque ciphertext until re-authentication.
+ *
+ * Where the PHI tables ARE cleared (the explicit end-of-session paths):
+ * - Logout: `AuthGuard.handleSignOut`, `nav-user`, `UserDropdown` → `clearPhiTables()`
+ *   + `encryptionKeyStore.wipe()` + `clearSession()`.
+ * - Auth-expiry (inactivity / max-duration): `SessionTimeoutWrapper.handleExpired`
+ *   → PHI store clears + `clearSyncedQueueEntries()` + key wipe + `clearSession()`.
+ * - Logout also triggers `key-lifecycle-hooks.ts`, which wipes the key when the
+ *   auth store flips to unauthenticated.
+ *
+ * Consequently OPD Lite intentionally has NO `PhiCleanupGuard` component. The dead,
+ * never-mounted guard (which cleared PHI on `beforeunload`) was removed in Story
+ * 59.3 rather than mounted, because mounting it would have wiped the offline cache
+ * on every refresh. (lab-lite / pharmacy-lite keep their own guards — those apps are
+ * push-only / transient staging surfaces with no offline-first cache to preserve.)
+ */
+
+/**
  * Tables containing PHI that must be cleared on session end.
  * Clearing these tables deletes encrypted PHI blobs from IndexedDB,
  * providing defense-in-depth beyond key-wipe alone.
