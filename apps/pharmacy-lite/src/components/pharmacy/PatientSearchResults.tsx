@@ -1,9 +1,11 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { highlightQuery } from '@ultranos/ui-kit/lib/highlight'
 import type { LocalPatient } from '@/lib/db'
+import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
 
 interface PatientSearchResultsProps {
   results: LocalPatient[]
@@ -18,6 +20,27 @@ export function PatientSearchResults({
   onSelect,
   onRegisterNew,
 }: PatientSearchResultsProps) {
+  // Rule #7 (revised 2026-09-24): show patient photos. Fetch short-lived signed URLs
+  // by patient id (Hub resolves the opaque key server-side); initials fallback on
+  // miss/offline. Keyed by patient id.
+  const [photoUrls, setPhotoUrls] = useState<Map<string, string>>(new Map())
+  useEffect(() => {
+    const ids = results.map((r) => r.id)
+    if (ids.length === 0) { setPhotoUrls(new Map()); return }
+    let cancelled = false
+    const controller = new AbortController()
+    ;(async () => {
+      const entries = await Promise.all(
+        ids.map(async (id) => [id, await getPatientPhotoUrl(id, controller.signal)] as const),
+      )
+      if (cancelled) return
+      const map = new Map<string, string>()
+      for (const [id, url] of entries) if (url) map.set(id, url)
+      setPhotoUrls(map)
+    })()
+    return () => { cancelled = true; controller.abort() }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results.map((r) => r.id).join(',')])
   if (results.length === 0) {
     return (
       <div
@@ -56,7 +79,7 @@ export function PatientSearchResults({
           data-testid={`patient-result-${patient.id}`}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <Avatar name={patient.nameGiven} size={28} />
+            <Avatar src={photoUrls.get(patient.id) ?? null} name={patient.nameGiven} size={28} />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-foreground truncate">
                 {[patient.nameGiven, patient.nameFather].filter(Boolean).map((seg, i) => (
