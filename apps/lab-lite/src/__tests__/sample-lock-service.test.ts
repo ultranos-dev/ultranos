@@ -16,6 +16,7 @@ vi.mock('../lib/audit-client', () => ({
 vi.mock('../lib/hlc', () => ({
   hlc: { now: () => ({ wallMs: Date.now(), counter: 0, nodeId: 'test-node' }) },
   serializeHlc: vi.fn().mockReturnValue('mock-hlc-ts'),
+  hlcNow: vi.fn().mockReturnValue('mock-hlc-ts'), // Story 60.1 shared HLC helper
 }))
 
 import { getDb } from '../lib/db'
