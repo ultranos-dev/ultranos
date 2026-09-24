@@ -765,7 +765,7 @@ development_status:
   # HLC discipline, fail-safe hardening, offline registration, visibility
   # ============================================================
   epic-60: in-progress
-  60-1-hlc-discipline-platform-wide: ready-for-dev
+  60-1-hlc-discipline-platform-wide: review  # Wave 4 done+verified (HLC everywhere, staged hub validation log-only, ESLint guard; sync-engine 202, all apps green)
   60-2-sync-engine-fail-safe-hardening: review  # Wave 1 done+verified (sync-engine 188 tests; plaintext fallback removed, Tier-1 window fix)
   60-3-offline-patient-registration: ready-for-dev
   60-4-sync-failure-visibility-and-cross-app-notifications: ready-for-dev

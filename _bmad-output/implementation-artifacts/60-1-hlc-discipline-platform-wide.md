@@ -1,6 +1,6 @@
 # Story 60.1: HLC Discipline Platform-Wide
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,21 +20,21 @@ so that conflict resolution ordering is causally correct on offline devices with
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Shared helper + engine hardening** (AC: 4, 5)
-  - [ ] 1.1 `packages/sync-engine/src/hlc.ts`: add persisted-state support (`seedFrom(persisted)`) and a `maxDriftMs` rejection/flag in `receive()` (`:56-80`); expose a canonical `hlcNow()` convenience.
-  - [ ] 1.2 Per-app singleton wiring persists last-issued HLC (IndexedDB/localStorage — non-PHI) and seeds on boot.
-- [ ] **Task 2: Lab-lite fixes** (AC: 1, 2)
-  - [ ] 2.1 `results/[sampleId]/enter/page.tsx:260,397` → `serializeHlc(hlc.now())`; `db.ts:2295-2322` make required + collision-safe IDs (`crypto.randomUUID()` suffix); sweep remaining lab sync enqueues (temperature/incident already correct — use as pattern).
-- [ ] **Task 3: Pharmacy sweep** (AC: 1)
-  - [ ] 3.1 Mechanical replacement across the ~15 files/60 sites: `inventory/stock-service.ts:40,51`, `expiry-watchdog.ts:30-66`, `goods-receipt-service.ts`, `goods-receipt-reversal.ts`, `qc-service.ts`, `procurement/*` (purchase-order, stock-count, supplier-invoice/-payment/-item/-service), `wholesale/contract-price-service.ts`, `customer-service.ts`, `patient-register.ts:39`. Keep `timestamp`/`createdAt` wall-clock fields as-is — only `hlcTimestamp` changes.
-- [ ] **Task 4: Hub validation** (AC: 3)
-  - [ ] 4.1 `sync.ts` input schema (currently `z.string().min(1)`): add HLC-format refinement behind `HLC_FORMAT_MODE=log-only|enforce`; telemetry counter for violations; also validate on `lab.submitResult`'s bundle stamps.
-- [ ] **Task 5: OPD consolidation + lint** (AC: 6)
-  - [ ] 5.1 `stores/encounter-store.ts:10-21` second clock → `lib/hlc.ts` singleton; migration note for in-flight encounter events.
-  - [ ] 5.2 Lint/CI grep rule forbidding wall-clock `hlcTimestamp` assignments; fix `lib/trpc.ts:399` (`hlcTimestamp: ''` on pulled reports).
-- [ ] **Task 6: Tests + regression verification** (AC: 7)
-  - [ ] 6.1 Engine tests: restart-with-backwards-clock monotonicity; drift rejection; existing 15-file suite still green.
-  - [ ] 6.2 Per-app: enqueued events carry valid HLC format; legacy-stamped entries still drain in log-only mode; full suites + `pnpm typecheck`.
+- [x] **Task 1: Shared helper + engine hardening** (AC: 4, 5)
+  - [x] 1.1 `packages/sync-engine/src/hlc.ts`: add persisted-state support (`seedFrom(persisted)`) and a `maxDriftMs` rejection/flag in `receive()` (`:56-80`); expose a canonical `hlcNow()` convenience.
+  - [x] 1.2 Per-app singleton wiring persists last-issued HLC (IndexedDB/localStorage — non-PHI) and seeds on boot.
+- [x] **Task 2: Lab-lite fixes** (AC: 1, 2)
+  - [x] 2.1 `results/[sampleId]/enter/page.tsx:260,397` → `serializeHlc(hlc.now())`; `db.ts:2295-2322` make required + collision-safe IDs (`crypto.randomUUID()` suffix); sweep remaining lab sync enqueues (temperature/incident already correct — use as pattern).
+- [x] **Task 3: Pharmacy sweep** (AC: 1)
+  - [x] 3.1 Mechanical replacement across the ~15 files/60 sites: `inventory/stock-service.ts:40,51`, `expiry-watchdog.ts:30-66`, `goods-receipt-service.ts`, `goods-receipt-reversal.ts`, `qc-service.ts`, `procurement/*` (purchase-order, stock-count, supplier-invoice/-payment/-item/-service), `wholesale/contract-price-service.ts`, `customer-service.ts`, `patient-register.ts:39`. Keep `timestamp`/`createdAt` wall-clock fields as-is — only `hlcTimestamp` changes.
+- [x] **Task 4: Hub validation** (AC: 3)
+  - [x] 4.1 `sync.ts` input schema (currently `z.string().min(1)`): add HLC-format refinement behind `HLC_FORMAT_MODE=log-only|enforce`; telemetry counter for violations; also validate on `lab.submitResult`'s bundle stamps.
+- [x] **Task 5: OPD consolidation + lint** (AC: 6)
+  - [x] 5.1 `stores/encounter-store.ts:10-21` second clock → `lib/hlc.ts` singleton; migration note for in-flight encounter events.
+  - [x] 5.2 Lint/CI grep rule forbidding wall-clock `hlcTimestamp` assignments; fix `lib/trpc.ts:399` (`hlcTimestamp: ''` on pulled reports).
+- [x] **Task 6: Tests + regression verification** (AC: 7)
+  - [x] 6.1 Engine tests: restart-with-backwards-clock monotonicity; drift rejection; existing 15-file suite still green.
+  - [x] 6.2 Per-app: enqueued events carry valid HLC format; legacy-stamped entries still drain in log-only mode; full suites + `pnpm typecheck`.
 
 ## Dev Notes
 
@@ -66,11 +66,23 @@ This story must introduce **zero regression in existing features and functionali
 ## Dev Agent Record
 
 ### Agent Model Used
-
-### Debug Log References
+Claude Fable 5 (1M) — implementation; Claude Opus 4.8 (1M) — integration & combined verification.
 
 ### Completion Notes List
+- **Task 1 (engine):** `packages/sync-engine/src/hlc.ts` — `seedFrom(persisted)` (seeds from `max(persisted, now)`, monotonic across restarts), `receiveWithResult()` + `maxDriftMs` bound (default 5 min; future-clocked remotes flagged/rejected, local clock still advances), `getState()`, `hlcNow(clock)`, `isSerializedHlc`/`SERIALIZED_HLC_RE`. Per-app singletons persist node-id + last state to localStorage and `seedFrom()` on boot.
+- **Task 2 (lab):** result-entry + `enqueueSyncEvent` use `hlcNow()`; `hlcTimestamp` now REQUIRED + collision-safe ids; **13 additional stray lab callers** that omitted the stamp were fixed.
+- **Task 3 (pharmacy):** ~20 files / ~60 sites swept to `hlcNow()` across inventory/procurement/wholesale/transfers/patient-register; wall-clock `timestamp`/`createdAt`/`paidAt` etc. left as-is.
+- **Task 4 (hub):** new `lib/hlc-format.ts` staged validator — `HLC_FORMAT_MODE` DEFAULT **log-only** (telemetry + warn, never rejects; legacy queued stamps still drain); applied to `sync.push`, `lab.submitResult`, `lab.pushSpecimen`.
+- **Task 5 (OPD + lint):** `encounter-store` consolidated onto the single `lib/hlc.ts` singleton (2nd sessionStorage clock removed); `trpc.ts` pulled-report `hlcTimestamp:''` fixed; new ESLint rule `ultranos/no-wallclock-hlc` (error) forbids `Date.now()`/`new Date()` into an `hlcTimestamp` field.
+- **Task 6:** `hlc-persistence-drift.test.ts` (16: restart monotonicity, drift rejection). **Integration fix:** added `hlcNow` to the `lib/hlc` mocks in `sample-lock-service`/`lock-expiry-checker` tests (their SUTs now call it).
+- Final scan: ZERO wall-clock `hlcTimestamp` in production across all apps.
+
+### Verification (combined tree)
+sync-engine + hub-api + opd + pharmacy + lab + admin typecheck clean; sync-engine **202**, hub **1788**, opd **1463**, pharmacy **1135**, lab **3948**, admin **334** — 0 failures.
 
 ### File List
+Modified — `packages/sync-engine/src/{hlc,index}.ts`; per-app `lib/hlc.ts` (opd/lab/pharmacy) + singletons; lab `results/[sampleId]/enter/page.tsx`, `lib/db.ts` + ~13 callers; ~20 pharmacy inventory/procurement/wholesale files; opd `stores/encounter-store.ts`, `lib/trpc.ts`; hub `sync.ts`, `lab.ts`; `packages/config-eslint`.
+New — `packages/sync-engine/src/__tests__/hlc-persistence-drift.test.ts`, `apps/hub-api/src/lib/hlc-format.ts`, `packages/config-eslint/rules/no-wallclock-hlc.js` + test.
 
 ### Change Log
+- 2026-09-23: Story 60.1 implemented (Wave 4), verified, integrated. HLC_FORMAT_MODE default log-only. New localStorage keys `ultranos_hlc_node_id`/`ultranos_hlc_state` per spoke. Status → review.
