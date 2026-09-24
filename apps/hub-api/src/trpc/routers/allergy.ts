@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter } from '../init'
-import { roleRestrictedProcedure } from '../rbac'
+import { roleRestrictedProcedure, isAdminRole } from '../rbac'
 import { db } from '@/lib/supabase'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { enforceEntitlement } from '../middleware/enforceEntitlement'
@@ -167,8 +167,9 @@ export const allergyRouter = createTRPCRouter({
     .use(enforceEntitlement('OPD_LITE'))
     .use(async (opts) => {
       // ADMIN is explicitly excluded from allergy creation — only clinical staff
-      // can write Tier 1 safety-critical allergy records.
-      if (opts.ctx.user.role === 'ADMIN') {
+      // can write Tier 1 safety-critical allergy records. Story 62.2: all admin
+      // variants (ORG_ADMIN/SUPERADMIN) remain excluded.
+      if (isAdminRole(opts.ctx.user.role)) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Access denied — ADMIN role cannot create allergy records',

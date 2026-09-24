@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { type LabPermission, hasLabPermission } from '@ultranos/shared-types'
-import type { LabContext } from '../rbac'
+import { type LabContext, isAdminRole } from '../rbac'
 import { tInstance } from '@/trpc/init'
 
 /**
@@ -23,9 +23,9 @@ export function enforceLabRole(requiredPermission: LabPermission) {
     // `lab` type — otherwise tRPC intersects `undefined` & `LabContext` → `never`.
     const lab: LabContext | undefined = (opts.ctx as { lab?: LabContext }).lab
 
-    // ADMIN bypass — explicit role check for safety
+    // Admin bypass — explicit role check for safety (all admin variants).
     if (!lab) {
-      if (user.role !== 'ADMIN') {
+      if (!isAdminRole(user.role)) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Lab context required for permission check',

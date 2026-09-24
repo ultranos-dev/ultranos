@@ -14,7 +14,8 @@ import type {
 
 export type UserRole = string
 
-const PHARMACIST_ROLES = new Set(['PHARMACIST', 'ADMIN'])
+// Story 62.2: all admin variants retain pharmacist-tier catalog access.
+const PHARMACIST_ROLES = new Set(['PHARMACIST', 'ADMIN', 'ORG_ADMIN', 'SUPERADMIN', 'PLATFORM_ADMIN'])
 const CLINICAL_ROLES = new Set(['DOCTOR', 'NURSE', 'LAB_TECH'])
 
 export function getTierForRole(role: UserRole): 'public' | 'clinical' | 'pharmacist' {

@@ -3,6 +3,7 @@ import { timingSafeEqual } from 'crypto'
 import { getSupabaseClient } from '@/lib/supabase'
 import { acquireCronLock, releaseCronLock } from '@/lib/cron-lock'
 import { runAuditChainVerify } from '@/jobs/audit-chain-verify'
+import { runJobWithRetry } from '@/jobs/job-runner'
 
 /**
  * Cron endpoint for daily audit chain integrity verification — Story 23.3 Task 2.
@@ -41,7 +42,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   try {
     const supabase = getSupabaseClient()
-    const result = await runAuditChainVerify(supabase)
+    const result = await runJobWithRetry('audit-chain-verify', () => runAuditChainVerify(supabase))
 
     return NextResponse.json({
       success: true,

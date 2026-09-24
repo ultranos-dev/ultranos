@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseClient } from '@/lib/supabase'
 import { runLicenseExpiryCheck } from '@/jobs/license-expiry-check'
+import { runJobWithRetry } from '@/jobs/job-runner'
 
 /**
  * Cron endpoint for daily license expiry check — Story 22.4 Task 6.
@@ -19,7 +20,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   try {
     const supabase = getSupabaseClient()
-    const result = await runLicenseExpiryCheck(supabase)
+    const result = await runJobWithRetry('license-expiry', () => runLicenseExpiryCheck(supabase))
 
     return NextResponse.json({
       success: true,

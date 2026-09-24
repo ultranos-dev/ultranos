@@ -5,6 +5,7 @@ import { verifySupabaseJwt, getSupabaseJwk, resolveAuthzClaims } from '@/lib/jwt
 import { isOriginAllowed, corsHeaders } from '@/lib/cors'
 import { AuditLogger } from '@ultranos/audit-logger'
 import type { UserRole } from '@ultranos/shared-types'
+import { isAdminRole } from '@/trpc/rbac'
 
 /** Add CORS headers for allowed spoke origins (mirrors the patient-photo route). */
 function withCors(req: Request, res: NextResponse): NextResponse {
@@ -63,7 +64,7 @@ async function loadAndGuard(
 
 /** Authorize: an admin (any staff in their org) OR the practitioner editing their OWN photo. */
 function authorizePhotoEdit(user: AuthedUser, targetAuthUserId: string | null): NextResponse | null {
-  const isAdmin = user.role === 'ADMIN'
+  const isAdmin = isAdminRole(user.role)
   const isSelf = !!targetAuthUserId && targetAuthUserId === user.sub
   if (!isAdmin && !isSelf) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   return null

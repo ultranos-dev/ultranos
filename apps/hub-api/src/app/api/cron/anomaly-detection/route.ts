@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { timingSafeEqual } from 'crypto'
 import { getSupabaseClient } from '@/lib/supabase'
 import { runAnomalyDetection } from '@/jobs/anomaly-detection'
+import { runJobWithRetry } from '@/jobs/job-runner'
 
 /**
  * Cron endpoint for daily prescribing anomaly detection — Story 22.6 Task 2.
@@ -26,7 +27,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   try {
     const supabase = getSupabaseClient()
-    const result = await runAnomalyDetection(supabase)
+    const result = await runJobWithRetry('anomaly-detection', () => runAnomalyDetection(supabase))
 
     return NextResponse.json({
       success: true,

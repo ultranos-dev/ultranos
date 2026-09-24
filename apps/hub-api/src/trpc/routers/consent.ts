@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
+import { isAdminRole } from '../rbac'
 import { db } from '@/lib/supabase'
 import { checkConsent } from '../middleware/enforceConsent'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
@@ -39,9 +40,10 @@ export const consentRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       // D167: Verify grantor ID matches authenticated user to prevent impersonation.
-      // Only PATIENT, GUARDIAN, and ADMIN may grant consent.
-      const CONSENT_GRANTOR_ROLES = ['PATIENT', 'GUARDIAN', 'ADMIN']
-      if (!CONSENT_GRANTOR_ROLES.includes(ctx.user.role)) {
+      // Only PATIENT, GUARDIAN, and administrators may grant consent.
+      // Story 62.2: all admin variants (ORG_ADMIN/SUPERADMIN) count as admin.
+      const CONSENT_GRANTOR_ROLES = ['PATIENT', 'GUARDIAN']
+      if (!CONSENT_GRANTOR_ROLES.includes(ctx.user.role) && !isAdminRole(ctx.user.role)) {
         // Story 21.3: Emit security audit event before rejecting
         const roleAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {
@@ -64,8 +66,8 @@ export const consentRouter = createTRPCRouter({
           message: 'Only patients, guardians, and administrators may grant consent',
         })
       }
-      // ADMIN may sync on behalf of patients (override).
-      if (ctx.user.role !== 'ADMIN' && input.grantorId !== ctx.user.sub) {
+      // ADMIN may sync on behalf of patients (override). Story 62.2: all admin variants.
+      if (!isAdminRole(ctx.user.role) && input.grantorId !== ctx.user.sub) {
         // Story 21.3: Emit security audit event before rejecting
         const impersonationAudit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
         try {

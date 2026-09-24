@@ -1,10 +1,11 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
+import { isAdminRole } from '../rbac'
 import { buildFacilityCrud } from './_facility-crud'
 
 const adminProcedure = protectedProcedure.use(async (opts) => {
-  if (opts.ctx.user.role !== 'ADMIN') throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' })
+  if (!isAdminRole(opts.ctx.user.role)) throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' })
   return opts.next(opts)
 })
 

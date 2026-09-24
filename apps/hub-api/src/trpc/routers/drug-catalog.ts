@@ -17,6 +17,7 @@ import type {
   DrugSearchResult, PharmacyPrice, DrugBrandWithPresentations, DrugBrand, DrugBrandPresentation,
 } from '@ultranos/shared-types'
 import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
+import { sanitizeFilterValue } from '@/lib/filter-sanitize'
 
 const langSchema = z.enum(['en', 'prs', 'ps']).default('en')
 
@@ -36,7 +37,7 @@ export const drugCatalogRouter = createTRPCRouter({
     }))
     .query(async ({ ctx, input }): Promise<DrugSearchResult[]> => {
       const { q, lang, limit } = input
-      const likeQ = `%${q.toLowerCase()}%`
+      const likeQ = `%${sanitizeFilterValue(q.toLowerCase())}%`
 
       const { data, error } = await ctx.supabase
         .from('drug_catalog')

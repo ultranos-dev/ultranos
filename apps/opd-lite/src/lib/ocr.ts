@@ -2,9 +2,17 @@
  * Cloud Vision OCR integration for KYC document field extraction.
  * Story 22.5 AC #3, #5: Auto-extract fields with per-field confidence indicators.
  *
- * Uses Google Cloud Vision API via REST — no SDK dependency.
+ * Story 62.2 (M-OPD-3): the browser NO LONGER calls Google Cloud Vision directly.
+ * The image is proxied to the Hub (`POST /api/ocr/kyc`), which holds the Google
+ * credential server-side and returns REAL word-level confidence from
+ * DOCUMENT_TEXT_DETECTION. The confidence shown to clinicians is now the actual
+ * Vision confidence of the matched words — not the previous synthetic 0.92/0.78.
+ * The `NEXT_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY` has been removed from the client.
+ *
  * SECURITY: Never log document content or extracted PHI.
  */
+import { getHubBaseUrl } from '@/lib/hub-url'
+import { getSupabaseBrowserClient } from '@/lib/supabase'
 
 export interface OcrField {
   name: string
@@ -16,6 +24,12 @@ export interface OcrResult {
   fields: OcrField[]
   success: boolean
   error?: string
+}
+
+/** A single OCR word with its real Vision confidence (as returned by the Hub proxy). */
+interface OcrWord {
+  text: string
+  confidence: number
 }
 
 /** Known KYC field patterns for extraction from license/ID documents */
@@ -38,76 +52,88 @@ const FIELD_PATTERNS: Record<string, RegExp[]> = {
   ],
 }
 
+function ocrEndpoint(): string {
+  return `${getHubBaseUrl()}/api/ocr/kyc`
+}
+
+async function bearer(): Promise<Record<string, string>> {
+  const { data } = await getSupabaseBrowserClient().auth.getSession()
+  const token = data.session?.access_token
+  return token ? { authorization: `Bearer ${token}` } : {}
+}
+
+const UNAVAILABLE: OcrResult = {
+  fields: [],
+  success: false,
+  error: 'Auto-extraction unavailable — please enter fields manually',
+}
+
 /**
- * Extract KYC fields from a document image using Google Cloud Vision OCR.
- * Falls back gracefully if OCR is unavailable.
+ * Extract KYC fields from a document image via the Hub OCR proxy.
+ * Falls back gracefully (manual entry) if OCR is unavailable.
  */
 export async function extractKycFields(imageBase64: string): Promise<OcrResult> {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY
-
-  if (!apiKey) {
-    return {
-      fields: [],
-      success: false,
-      error: 'Auto-extraction unavailable — please enter fields manually',
-    }
-  }
-
   try {
-    const response = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requests: [
-            {
-              image: { content: imageBase64 },
-              features: [{ type: 'TEXT_DETECTION', maxResults: 1 }],
-            },
-          ],
-        }),
-      },
-    )
+    const response = await fetch(ocrEndpoint(), {
+      method: 'POST',
+      headers: { ...(await bearer()), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64 }),
+    })
 
-    if (!response.ok) {
-      return {
-        fields: [],
-        success: false,
-        error: 'Auto-extraction unavailable — please enter fields manually',
-      }
+    if (!response.ok) return UNAVAILABLE
+
+    const data = (await response.json()) as {
+      success?: boolean
+      fullText?: string
+      words?: OcrWord[]
     }
 
-    const data = await response.json()
-    const annotations = data.responses?.[0]?.textAnnotations
+    if (!data.success || !data.fullText) return UNAVAILABLE
 
-    if (!annotations || annotations.length === 0) {
-      return {
-        fields: [],
-        success: false,
-        error: 'Auto-extraction unavailable — please enter fields manually',
-      }
-    }
-
-    // Full text is always the first annotation
-    const fullText: string = annotations[0].description ?? ''
-    const fields = extractFieldsFromText(fullText)
-
+    const fields = extractFieldsFromText(data.fullText, data.words ?? [])
     return { fields, success: true }
   } catch {
-    return {
-      fields: [],
-      success: false,
-      error: 'Auto-extraction unavailable — please enter fields manually',
-    }
+    return UNAVAILABLE
   }
 }
 
 /**
- * Parse OCR text to extract known KYC fields with confidence estimates.
- * Confidence is based on pattern match quality (regex specificity).
+ * Confidence for a matched value = the mean Vision confidence of the OCR words
+ * that make up the value. Falls back to 0 when no word overlaps (defensive — a
+ * genuinely low/absent confidence renders as "low confidence" in the UI, which is
+ * the safe behavior). This replaces the previous synthetic regex-index constant.
  */
-function extractFieldsFromText(text: string): OcrField[] {
+function confidenceForValue(value: string, words: OcrWord[]): number {
+  if (words.length === 0) return 0
+  // Normalize to alphanumeric tokens for matching against Vision words.
+  const valueTokens = value
+    .split(/\s+/)
+    .map((t) => t.replace(/[^\p{L}\p{N}]/gu, '').toLowerCase())
+    .filter((t) => t.length > 0)
+  if (valueTokens.length === 0) return 0
+
+  const confidences: number[] = []
+  for (const token of valueTokens) {
+    // Find the first Vision word whose normalized text contains / is contained by
+    // the value token (handles punctuation-split words).
+    const match = words.find((w) => {
+      const wt = w.text.replace(/[^\p{L}\p{N}]/gu, '').toLowerCase()
+      return wt.length > 0 && (wt.includes(token) || token.includes(wt))
+    })
+    if (match) confidences.push(match.confidence)
+  }
+
+  if (confidences.length === 0) return 0
+  const mean = confidences.reduce((a, b) => a + b, 0) / confidences.length
+  // Clamp to [0,1] defensively.
+  return Math.min(1, Math.max(0, mean))
+}
+
+/**
+ * Parse OCR text to extract known KYC fields, attaching REAL per-word confidence
+ * from the Hub/Vision response.
+ */
+function extractFieldsFromText(text: string, words: OcrWord[]): OcrField[] {
   const fields: OcrField[] = []
   const lines = text.split('\n')
 
@@ -115,13 +141,11 @@ function extractFieldsFromText(text: string): OcrField[] {
     let bestMatch: { value: string; confidence: number } | null = null
 
     for (const line of lines) {
-      for (let i = 0; i < patterns.length; i++) {
-        const match = line.match(patterns[i]!)
+      for (const pattern of patterns) {
+        const match = line.match(pattern)
         if (match) {
           const value = (match[1] ?? match[0]!).trim()
-          // TODO: v1 limitation — confidence is synthetic (based on regex specificity).
-          // Real fix: use DOCUMENT_TEXT_DETECTION and word-level confidence from Cloud Vision API.
-          const confidence = i === 0 ? 0.92 : 0.78
+          const confidence = confidenceForValue(value, words)
           if (!bestMatch || confidence > bestMatch.confidence) {
             bestMatch = { value, confidence }
           }
@@ -142,7 +166,7 @@ function extractFieldsFromText(text: string): OcrField[] {
 }
 
 /**
- * Convert a File to base64 string for Cloud Vision API.
+ * Convert a File to base64 string for the OCR proxy.
  */
 export function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {

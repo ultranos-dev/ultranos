@@ -2,12 +2,26 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { extractKycFields } from '../lib/ocr'
 
 // ============================================================
-// OCR Unit Tests — Story 22.5, Task 3
-// Tests Cloud Vision OCR field extraction, confidence scoring,
-// and graceful failure handling.
+// OCR Unit Tests — Story 22.5, Task 3; updated for Story 62.2 (M-OPD-3)
+// The browser no longer calls Google Vision directly — it proxies to the Hub
+// (POST /api/ocr/kyc), which returns fullText + REAL word-level confidence.
+// These tests exercise the proxy contract, field extraction, confidence
+// mapping, and graceful failure handling.
 // ============================================================
 
-// Mock fetch globally
+// Mock the hub URL + supabase session so extractKycFields can build the request.
+vi.mock('@/lib/hub-url', () => ({
+  getHubBaseUrl: () => 'http://hub.test',
+}))
+vi.mock('@/lib/supabase', () => ({
+  getSupabaseBrowserClient: () => ({
+    auth: {
+      getSession: () =>
+        Promise.resolve({ data: { session: { access_token: 'test-token' } } }),
+    },
+  }),
+}))
+
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
@@ -15,38 +29,44 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-describe('extractKycFields', () => {
-  it('returns error when API key is not configured', async () => {
-    // Ensure env var is not set
-    const original = process.env.NEXT_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY
-    delete process.env.NEXT_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY
+/** Build a Vision-proxy word list from a whitespace-separated string. */
+function wordsFrom(text: string, confidence: number) {
+  return text
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => ({ text: w, confidence }))
+}
 
-    const result = await extractKycFields('base64data')
+describe('extractKycFields (Hub OCR proxy)', () => {
+  it('POSTs to the hub OCR endpoint with a bearer token', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ success: true, fullText: 'Name: Dr. Ahmed Hassan', words: wordsFrom('Name Dr Ahmed Hassan', 0.95) }),
+    })
 
-    expect(result.success).toBe(false)
-    expect(result.error).toContain('manually')
-    expect(result.fields).toHaveLength(0)
+    await extractKycFields('base64data')
 
-    // Restore
-    if (original) process.env.NEXT_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY = original
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    const [url, init] = mockFetch.mock.calls[0]!
+    expect(url).toBe('http://hub.test/api/ocr/kyc')
+    expect(init.method).toBe('POST')
+    expect(init.headers.authorization).toBe('Bearer test-token')
+    expect(JSON.parse(init.body).imageBase64).toBe('base64data')
   })
 
-  it('extracts fields from OCR text with confidence scores', async () => {
-    process.env.NEXT_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY = 'test-key'
-
+  it('extracts fields with REAL word-level confidence from the proxy', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: () =>
         Promise.resolve({
-          responses: [
-            {
-              textAnnotations: [
-                {
-                  description:
-                    'Name: Dr. Ahmed Hassan\nLicense No: HAAD-12345\nIssued by: HAAD\nExpiry: 2027-12-31',
-                },
-              ],
-            },
+          success: true,
+          fullText:
+            'Name: Dr. Ahmed Hassan\nLicense No: HAAD-12345\nIssued by: HAAD\nExpiry: 2027-12-31',
+          words: [
+            ...wordsFrom('Name Dr Ahmed Hassan', 0.97),
+            ...wordsFrom('License No HAAD-12345', 0.88),
+            ...wordsFrom('Issued by HAAD', 0.9),
+            ...wordsFrom('Expiry 2027-12-31', 0.72),
           ],
         }),
     })
@@ -57,87 +77,61 @@ describe('extractKycFields', () => {
     expect(result.fields.length).toBeGreaterThanOrEqual(3)
 
     const nameField = result.fields.find((f) => f.name === 'full_name')
-    expect(nameField).toBeTruthy()
     expect(nameField!.value).toContain('Ahmed Hassan')
-    expect(nameField!.confidence).toBeGreaterThan(0)
-
-    const licenseField = result.fields.find((f) => f.name === 'license_number')
-    expect(licenseField).toBeTruthy()
-    expect(licenseField!.value).toContain('HAAD-12345')
+    // Confidence is derived from the matched Vision words (≈0.97), NOT a synthetic constant.
+    expect(nameField!.confidence).toBeGreaterThan(0.9)
 
     const expiryField = result.fields.find((f) => f.name === 'expiry_date')
-    expect(expiryField).toBeTruthy()
     expect(expiryField!.value).toContain('2027-12-31')
+    // The low-confidence expiry words (0.72) surface as a genuinely lower score.
+    expect(expiryField!.confidence).toBeLessThan(0.85)
   })
 
-  it('returns graceful error when API call fails', async () => {
-    process.env.NEXT_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY = 'test-key'
-
-    mockFetch.mockResolvedValueOnce({ ok: false, status: 500 })
-
+  it('returns graceful error when the proxy call fails (non-OK)', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 502 })
     const result = await extractKycFields('base64data')
-
     expect(result.success).toBe(false)
     expect(result.error).toContain('manually')
     expect(result.fields).toHaveLength(0)
   })
 
-  it('returns graceful error when no text annotations found', async () => {
-    process.env.NEXT_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY = 'test-key'
-
+  it('returns graceful error when the proxy reports unavailable', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: () =>
-        Promise.resolve({
-          responses: [{ textAnnotations: [] }],
-        }),
+      json: () => Promise.resolve({ success: false, error: 'OCR unavailable', fullText: '', words: [] }),
     })
-
     const result = await extractKycFields('base64data')
-
     expect(result.success).toBe(false)
     expect(result.error).toContain('manually')
   })
 
   it('returns graceful error on network failure', async () => {
-    process.env.NEXT_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY = 'test-key'
-
     mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
     const result = await extractKycFields('base64data')
-
     expect(result.success).toBe(false)
     expect(result.error).toContain('manually')
     expect(result.fields).toHaveLength(0)
   })
 
   it('never logs document content or extracted PHI', async () => {
-    process.env.NEXT_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY = 'test-key'
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: () =>
         Promise.resolve({
-          responses: [
-            {
-              textAnnotations: [
-                { description: 'Name: Dr. Secret Person\nLicense No: SEC-99999' },
-              ],
-            },
-          ],
+          success: true,
+          fullText: 'Name: Dr. Secret Person\nLicense No: SEC-99999',
+          words: [...wordsFrom('Name Dr Secret Person', 0.9), ...wordsFrom('License No SEC-99999', 0.9)],
         }),
     })
 
     await extractKycFields('base64data')
 
-    // Verify no PHI was logged
     for (const call of consoleSpy.mock.calls) {
       const logStr = JSON.stringify(call)
       expect(logStr).not.toContain('Secret Person')
       expect(logStr).not.toContain('SEC-99999')
     }
-
     consoleSpy.mockRestore()
   })
 })

@@ -80,6 +80,10 @@ export default function MergeWizardPage() {
   const [duplicateSearch, setDuplicateSearch] = useState('')
   const [duplicateResults, setDuplicateResults] = useState<Patient[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
+  // Story 62.2 (M-ADM-6): distinguish "search failed" from "no duplicates".
+  // A silent catch that empties results renders a false "no duplicates found",
+  // which could let an operator wrongly conclude a patient has no duplicate.
+  const [searchError, setSearchError] = useState(false)
 
   // Step 2: field resolutions
   const [resolutions, setResolutions] = useState<Record<string, 'survivor' | 'duplicate'>>({})
@@ -115,10 +119,12 @@ export default function MergeWizardPage() {
   const searchDuplicates = useCallback(async () => {
     if (!duplicateSearch.trim()) {
       setDuplicateResults([])
+      setSearchError(false)
       return
     }
     try {
       setSearchLoading(true)
+      setSearchError(false)
       const result = await trpc.patientAdmin.adminSearch.query({
         query: duplicateSearch.trim(),
         includeInactive: false,
@@ -128,8 +134,11 @@ export default function MergeWizardPage() {
       // Exclude survivor from results
       setDuplicateResults(patients.filter((p) => p.id !== survivor?.id))
     } catch {
-      // Silently handle search errors in the duplicate picker
+      // Story 62.2 (M-ADM-6): surface the failure as an error state — NEVER a
+      // false "no duplicates found". Clear stale results and flag the error so
+      // the UI shows a retryable error rather than an empty (misleading) list.
       setDuplicateResults([])
+      setSearchError(true)
     } finally {
       setSearchLoading(false)
     }
@@ -276,6 +285,32 @@ export default function MergeWizardPage() {
 
                 {searchLoading && (
                   <div className="mt-2 text-sm text-muted-foreground">Searching...</div>
+                )}
+
+                {/* Story 62.2 (M-ADM-6): explicit, retryable error state — never a
+                    silent false "no duplicates". */}
+                {!searchLoading && searchError && (
+                  <div className="mt-3 rounded-xl border border-danger-subtle bg-destructive/10 p-4">
+                    <p className="text-sm font-medium text-destructive">
+                      Duplicate search failed
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      The search could not be completed. This does NOT mean there are no
+                      duplicates. Check your connection and retry.
+                    </p>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="mt-3"
+                      onClick={() => void searchDuplicates()}
+                    >
+                      Retry search
+                    </Button>
+                  </div>
+                )}
+
+                {!searchLoading && !searchError && duplicateSearch.trim().length > 0 && duplicateResults.length === 0 && !duplicate && (
+                  <div className="mt-2 text-sm text-muted-foreground">No duplicates found.</div>
                 )}
 
                 {duplicateResults.length > 0 && !duplicate && (

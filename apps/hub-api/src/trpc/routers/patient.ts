@@ -12,14 +12,8 @@ import { normalizeNameComponent, computePhoneticTokens, computeMpiResult } from 
 import { signProceedToken, verifyProceedToken, consumeProceedToken } from '@/lib/mpi-proceed-token'
 import { fetchMpiCandidates } from '@/lib/mpi-candidate-query'
 import { CreatePatientMpiInputSchema, PatientContactSchema } from '@ultranos/shared-types'
-
-function sanitizeFilterValue(value: string): string {
-  // Strip dangerous chars, then escape SQL ILIKE wildcards
-  return value
-    .replace(/[,.*()\\]/g, '')
-    .replace(/%/g, '\\%')
-    .replace(/_/g, '\\_')
-}
+import { sanitizeFilterValue } from '@/lib/filter-sanitize'
+import { isAdminRole } from '../rbac'
 
 function hashNationalId(rawId: string): string {
   const { hmacKey } = getFieldEncryptionKeys()
@@ -1073,8 +1067,8 @@ export const patientRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Verify the caller is the patient themselves (or ADMIN)
-      if (ctx.user.role !== 'ADMIN' && ctx.user.sub !== input.patientId) {
+      // Verify the caller is the patient themselves (or an administrator).
+      if (!isAdminRole(ctx.user.role) && ctx.user.sub !== input.patientId) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Patients can only update their own tier',
@@ -1498,7 +1492,7 @@ export const patientRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       // Role-based limit: clinical staff see max 10, admins get full pagination
-      const maxLimit = ctx.user.role === 'ADMIN' ? input.limit : Math.min(input.limit, 10)
+      const maxLimit = isAdminRole(ctx.user.role) ? input.limit : Math.min(input.limit, 10)
 
       let query = ctx.supabase
         .from('audit_log')

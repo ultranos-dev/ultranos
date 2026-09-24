@@ -35,6 +35,59 @@ const CLINICIAN_RESOURCES = new Set([
   'Slot',
 ])
 
+/**
+ * Story 62.2 (M-ADM-4): the binary ADMIN role is split into SUPERADMIN
+ * (cross-org) and ORG_ADMIN (own-org). Legacy `ADMIN` is retained as a
+ * backward-compatible alias mapped to SUPERADMIN so no currently-provisioned
+ * admin loses access (zero-regression migration mapping).
+ *
+ * Capability matrix (see docs / story 62.2 Task 3):
+ *   Capability                              ORG_ADMIN   SUPERADMIN (=legacy ADMIN)
+ *   Own-org users/facilities/patients CRUD     ✓            ✓
+ *   Own-org audit read/export                  ✓            ✓
+ *   Full FHIR resource-type access             ✓            ✓
+ *   Create ORG_ADMIN/SUPERADMIN accounts       ✗            ✓
+ *   Patient merge / unmerge (cross-patient)    ✗            ✓
+ *   Cross-org operations                       ✗            ✓
+ *
+ * ADMIN_ROLES = every variant that behaves as "an administrator" for the purpose
+ * of resource-type access and the roleRestrictedProcedure bypass — this preserves
+ * the exact access every current ADMIN had.
+ */
+export const SUPERADMIN_ROLES: ReadonlySet<string> = new Set([
+  'ADMIN', // legacy alias → treated as SUPERADMIN (zero-regression)
+  'SUPERADMIN',
+  'PLATFORM_ADMIN',
+])
+
+export const ORG_ADMIN_ROLES: ReadonlySet<string> = new Set([
+  'ORG_ADMIN',
+])
+
+/** All roles that behave as an administrator (org-admin OR super-admin). */
+export const ADMIN_ROLES: ReadonlySet<string> = new Set([
+  ...SUPERADMIN_ROLES,
+  ...ORG_ADMIN_ROLES,
+])
+
+/**
+ * True when the role may perform CROSS-ORG operations: patient merge/unmerge,
+ * creating admin accounts, and any org-boundary-crossing action. Legacy ADMIN
+ * and PLATFORM_ADMIN are super-admins for backward compatibility.
+ */
+export function isSuperAdmin(role: string | null | undefined): boolean {
+  return !!role && SUPERADMIN_ROLES.has(role)
+}
+
+/**
+ * True when the role behaves as an administrator at all (own-org admin OR
+ * super-admin). Use this where the current code checks `role === 'ADMIN'` for
+ * an ORG-SCOPED capability that ORG_ADMIN should retain.
+ */
+export function isAdminRole(role: string | null | undefined): boolean {
+  return !!role && ADMIN_ROLES.has(role)
+}
+
 export const ROLE_PERMISSIONS: Record<string, Set<string>> = {
   DOCTOR: CLINICIAN_RESOURCES,
   CLINICIAN: CLINICIAN_RESOURCES,
@@ -74,6 +127,11 @@ export const ROLE_PERMISSIONS: Record<string, Set<string>> = {
     'Observation',
   ]),
   ADMIN: new Set(['*']),
+  // Story 62.2: both admin variants retain full FHIR resource-type access. The
+  // difference between them is enforced at the PROCEDURE level (cross-org gates
+  // via superAdminProcedure / isSuperAdmin), not at the resource-type level.
+  SUPERADMIN: new Set(['*']),
+  ORG_ADMIN: new Set(['*']),
   SYSTEM: new Set(['*']),
 }
 
@@ -98,8 +156,11 @@ export function roleRestrictedProcedure(allowedRoles: string[]) {
   return protectedProcedure.use(async (opts) => {
     const userRole = opts.ctx.user.role
 
-    // ADMIN bypass — full access to all resources
-    if (userRole === 'ADMIN') {
+    // Admin bypass — every administrator variant (legacy ADMIN, SUPERADMIN,
+    // ORG_ADMIN, PLATFORM_ADMIN) keeps full access. Story 62.2 preserves the
+    // prior ADMIN bypass for all admin roles; cross-org restrictions are applied
+    // at the procedure level, not here.
+    if (isAdminRole(userRole)) {
       return opts.next({ ctx: opts.ctx })
     }
 
@@ -114,6 +175,22 @@ export function roleRestrictedProcedure(allowedRoles: string[]) {
     return opts.next({ ctx: opts.ctx })
   })
 }
+
+/**
+ * Story 62.2 (M-ADM-4): a procedure gate that requires SUPER-ADMIN (cross-org)
+ * privileges. Use for cross-org operations: patient merge/unmerge, creating
+ * admin accounts, cross-org reads. ORG_ADMIN is rejected. Legacy ADMIN and
+ * PLATFORM_ADMIN pass (backward-compatible super-admin mapping).
+ */
+export const superAdminProcedure = protectedProcedure.use(async (opts) => {
+  if (!isSuperAdmin(opts.ctx.user.role)) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Access denied — super-admin (cross-org) privileges required',
+    })
+  }
+  return opts.next({ ctx: opts.ctx })
+})
 
 /**
  * Lab context extracted from practitioner record for lab-scoped endpoints.
@@ -137,12 +214,12 @@ export interface LabContext {
 export const labRestrictedProcedure = protectedProcedure.use(async (opts) => {
   const userRole = opts.ctx.user.role
 
-  // ADMIN bypass — no lab context injected; downstream endpoints
+  // Admin bypass — no lab context injected; downstream endpoints
   // check ctx.lab existence to scope queries or return all results.
   // Carry an explicit `lab: undefined` so both branches produce the same
   // context shape ({ lab?: LabContext }); otherwise tRPC infers `lab` as
-  // `never` at the call sites.
-  if (userRole === 'ADMIN') {
+  // `never` at the call sites. Story 62.2: all admin variants keep the bypass.
+  if (isAdminRole(userRole)) {
     return opts.next({ ctx: { ...opts.ctx, lab: undefined as LabContext | undefined } })
   }
 

@@ -673,11 +673,33 @@ export const syncRouter = createTRPCRouter({
         patientId: z.string().min(1).optional(),
         sinceHlc: z.string().min(1),
         resourceTypes: z.array(z.string().min(1)).optional(),
+        /**
+         * Story 62.2 (M-HUB-5): cursor pagination. `cursor` is the last
+         * `hlcTimestamp` the spoke received on the previous page (opaque to the
+         * spoke — it just echoes `nextCursor` back). Because every table filters
+         * `.gt('hlc_timestamp', …)` and orders by it ascending, and serialized
+         * HLCs are lexicographically sortable (zero-padded), a single global
+         * keyset bound cursors across all ~20 tables. Absent → start from
+         * `sinceHlc`.
+         */
+        cursor: z.string().min(1).optional(),
+        /**
+         * Max changes returned in one page. Bounds the previously-unbounded
+         * single-shot pull that timed out on large histories. Spokes loop on
+         * `nextCursor` until `hasMore` is false.
+         */
+        limit: z.number().int().min(1).max(2000).default(500),
       }),
     )
     .query(async ({ ctx, input }) => {
       const { hasResourceAccess } = await import('../rbac')
       const userRole = ctx.user.role
+      const pageLimit = input.limit
+
+      // Cursor keyset lower bound: resume after the last page's HLC, else the
+      // caller's sinceHlc. `.gt` is exclusive, so echoing the last-seen HLC
+      // never re-emits the boundary row.
+      const sinceBound = input.cursor ?? input.sinceHlc
 
       const targetTables = input.resourceTypes
         ? input.resourceTypes
@@ -724,6 +746,13 @@ export const syncRouter = createTRPCRouter({
         }
       }
 
+      // ── Phase 1: gate pass (sequential — audits consent-withdrawal exclusions) ──
+      // Build the set of tables this caller may actually query. RBAC + the
+      // consent gate stay exactly as before; only the fetch phase is parallelized.
+      // soap_ledger needs the patient's encounter ids resolved up-front so its
+      // fetch can join in Phase 2 without a nested await inside Promise.all.
+      const queryable: Array<{ type: string; table: string; encounterIds?: string[] }> = []
+
       for (const { type, table } of targetTables) {
         // RBAC: skip resource types the user cannot access
         if (!hasResourceAccess(userRole, type)) continue
@@ -759,73 +788,137 @@ export const syncRouter = createTRPCRouter({
         if (NO_HLC_TABLES.has(table)) continue
 
         // Org-scoped resources (wholesale tables): scope by org_id, no patient column.
-        // Fail-loud: if the caller has no org context, return nothing for this type
-        // (no cross-org leak). Skip the patient-column branch entirely.
+        // Fail-loud: if the caller has no org context, return nothing for this type.
         if (ORG_SCOPED_TABLES.has(table) && !PATIENT_COLUMN_MAP[table]) {
           if (!ctx.user.orgId) continue
-          const { data: rows, error } = await ctx.supabase
-            .from(table)
-            .select('*')
-            .eq('org_id', ctx.user.orgId)
-            .gt('hlc_timestamp', input.sinceHlc)
-          if (error) continue
-          const decrypted = db.fromRows(rows ?? []) as Array<Record<string, unknown>>
-          for (const row of decrypted) {
-            changes.push({
-              resourceType: type,
-              resourceId: row.id as string,
-              data: row,
-              hlcTimestamp: row.hlcTimestamp as string,
-            })
-          }
-          continue // skip the patient-column branch
+          queryable.push({ type, table })
+          continue
         }
 
-        let query = ctx.supabase
-          .from(table)
-          .select('*')
-          .gt('hlc_timestamp', input.sinceHlc)
-          .order('hlc_timestamp', { ascending: true })
-
-        // Patient-scope filter: restrict results to the requested patient.
-        // If no patientId was supplied (org-scoped-only pull), skip all patient-scoped
-        // tables — data-minimization fail-safe (never return un-scoped patient data).
+        // Patient-scoped tables require a patientId — data-minimization fail-safe
+        // (never return un-scoped patient data on an org-scoped-only pull).
         if (!input.patientId) continue
 
         const patientCol = PATIENT_COLUMN_MAP[table]
         if (patientCol) {
-          query = query.eq(patientCol, input.patientId)
+          queryable.push({ type, table })
         } else if (table === 'soap_ledger') {
           // soap_ledger has no direct patient column — it links via encounter_id.
           // Resolve the patient's encounters first, then scope SOAP notes to them.
-          // Without this filter, a ClinicalImpression pull returned EVERY patient's
-          // SOAP notes to any clinician (mass PHI exposure).
           const { data: encRows } = await ctx.supabase
             .from('encounters')
             .select('id')
             .eq('subject_id', input.patientId)
           const encounterIds = (encRows ?? []).map((r) => (r as { id: string }).id)
           if (encounterIds.length === 0) continue // no encounters → no SOAP for this patient
-          query = query.in('encounter_id', encounterIds)
+          queryable.push({ type, table, encounterIds })
+        }
+        // else: no patient-scoping column and no known linkage — skip (fail-safe).
+      }
+
+      // ── Phase 2: parallel fetch ──
+      // All queries run concurrently (Promise.all) instead of ~20 sequential
+      // round-trips. Each applies the keyset bound (`.gt` sinceBound, ascending)
+      // and its own `.limit(pageLimit)` cap so a single hot table cannot dominate
+      // and no query is unbounded. Results are merged, globally sorted by HLC,
+      // then truncated to pageLimit for the page contract.
+      // Each table returns its rows PLUS whether it hit the cap. A capped table
+      // may have more rows just past its last returned HLC, so the global cursor
+      // must never advance past any capped table's last HLC (see page assembly).
+      const perTableResults = await Promise.all(
+        queryable.map(async ({ type, table, encounterIds }) => {
+          const collected: typeof changes = []
+
+          const runQuery = async (): Promise<Array<Record<string, unknown>>> => {
+            if (ORG_SCOPED_TABLES.has(table) && !PATIENT_COLUMN_MAP[table]) {
+              const { data: rows, error } = await ctx.supabase
+                .from(table)
+                .select('*')
+                .eq('org_id', ctx.user.orgId as string)
+                .gt('hlc_timestamp', sinceBound)
+                .order('hlc_timestamp', { ascending: true })
+                .limit(pageLimit)
+              if (error) return []
+              return (rows ?? []) as Array<Record<string, unknown>>
+            }
+
+            let query = ctx.supabase
+              .from(table)
+              .select('*')
+              .gt('hlc_timestamp', sinceBound)
+              .order('hlc_timestamp', { ascending: true })
+              .limit(pageLimit)
+
+            const patientCol = PATIENT_COLUMN_MAP[table]
+            if (patientCol) {
+              query = query.eq(patientCol, input.patientId as string)
+            } else if (table === 'soap_ledger' && encounterIds) {
+              query = query.in('encounter_id', encounterIds)
+            }
+
+            const { data: rows } = await query
+            return (rows ?? []) as Array<Record<string, unknown>>
+          }
+
+          const rawRows = await runQuery()
+          const cappedAtLimit = rawRows.length === pageLimit
+          const decrypted = db.fromRows(rawRows) as Array<Record<string, unknown>>
+          for (const row of decrypted) {
+            collected.push({
+              resourceType: type,
+              resourceId: row.id as string,
+              data: row,
+              hlcTimestamp: row.hlcTimestamp as string,
+            })
+          }
+          // The last HLC this table returned (rows are HLC-ascending).
+          const lastHlc =
+            collected.length > 0 ? collected[collected.length - 1]!.hlcTimestamp : null
+          return { rows: collected, cappedAtLimit, lastHlc }
+        }),
+      )
+
+      for (const r of perTableResults) changes.push(...r.rows)
+
+      // ── Page assembly (safe global keyset) ──
+      // Sort the merged changes by HLC ascending. A table that returned exactly
+      // pageLimit rows (cappedAtLimit) may have MORE rows immediately past its
+      // last returned HLC; advancing the cursor beyond that HLC would silently
+      // skip them. So the safe cursor ceiling is the SMALLEST last-HLC among
+      // capped tables — every row at or below it is guaranteed complete across
+      // all tables. We emit rows up to that ceiling and set nextCursor to it.
+      changes.sort((a, b) =>
+        a.hlcTimestamp < b.hlcTimestamp ? -1 : a.hlcTimestamp > b.hlcTimestamp ? 1 : 0,
+      )
+
+      let cursorCeiling: string | null = null
+      for (const r of perTableResults) {
+        if (r.cappedAtLimit && r.lastHlc) {
+          if (cursorCeiling === null || r.lastHlc < cursorCeiling) cursorCeiling = r.lastHlc
+        }
+      }
+
+      let page: typeof changes
+      let hasMore: boolean
+      let nextCursor: string | null
+
+      if (cursorCeiling === null) {
+        // No table was capped → every table is exhausted; the merge is complete.
+        // Still honour pageLimit so a wide union across many tables can't exceed it.
+        page = changes.slice(0, pageLimit)
+        hasMore = changes.length > pageLimit
+        nextCursor = hasMore && page.length > 0 ? page[page.length - 1]!.hlcTimestamp : null
+      } else {
+        // Emit only rows guaranteed complete (HLC ≤ ceiling), then cap to pageLimit.
+        const safe = changes.filter((c) => c.hlcTimestamp <= cursorCeiling!)
+        page = safe.slice(0, pageLimit)
+        if (page.length < safe.length) {
+          // Even the safe slice exceeds one page — advance to the last emitted HLC.
+          nextCursor = page[page.length - 1]!.hlcTimestamp
         } else {
-          // No patient-scoping column and no known linkage — skip rather than
-          // return every patient's rows (data-minimization fail-safe).
-          continue
+          nextCursor = cursorCeiling
         }
-
-        const { data: rows } = await query
-
-        if (!rows) continue
-
-        const decrypted = db.fromRows(rows) as Array<Record<string, unknown>>
-        for (const row of decrypted) {
-          changes.push({
-            resourceType: type,
-            resourceId: row.id as string,
-            data: row,
-            hlcTimestamp: row.hlcTimestamp as string,
-          })
-        }
+        hasMore = true
       }
 
       // Audit: log PHI read for sync pull (patient-scoped) or org-scoped pull.
@@ -842,13 +935,16 @@ export const syncRouter = createTRPCRouter({
           metadata: {
             source: 'sync.pull',
             resourceTypesQueried: targetTables.map((t) => t.type),
-            changesReturned: changes.length,
+            changesReturned: page.length,
+            hasMore,
           },
         })
       } catch {
         // Audit failure should not block sync pull
       }
 
-      return { changes }
+      // `nextCursor` / `hasMore` are additive; existing callers that only read
+      // `.changes` are unaffected (they simply receive the first page).
+      return { changes: page, nextCursor, hasMore }
     }),
 })

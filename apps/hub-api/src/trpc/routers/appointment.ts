@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
+import { isAdminRole } from '../rbac'
 import { db } from '@/lib/supabase'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { AuditLogger } from '@ultranos/audit-logger'
@@ -75,7 +76,7 @@ function assertPractitionerOrAdmin(
   userId: string,
   practitionerId: string,
 ): void {
-  if (userRole === 'ADMIN') return
+  if (isAdminRole(userRole)) return
   if (userId === practitionerId) return
   throw new TRPCError({
     code: 'FORBIDDEN',
@@ -178,7 +179,7 @@ export const appointmentRouter = createTRPCRouter({
       // participant, so we require the array to contain BOTH refs (PostgREST `cs`
       // = "contains all of"). A single containment argument keeps it one filter.
       const requiredRefs =
-        ctx.user.role === 'ADMIN'
+        isAdminRole(ctx.user.role)
           ? [input.patientId]
           : [input.patientId, ctx.user.sub]
 

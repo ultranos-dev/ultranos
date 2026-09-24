@@ -482,43 +482,52 @@ export async function pullPatientChanges(
   const meta = await db.syncMeta.get(patientId)
   const sinceHlc = isValidHlc(meta?.lastPulledHlc) ? meta!.lastPulledHlc : '0'
 
-  // 2. Call sync.pull via tRPC
+  // 2. Call sync.pull via tRPC — paginate (Story 62.2 / M-HUB-5). The Hub caps
+  //    each response at a page limit and returns `{ changes, nextCursor, hasMore }`.
+  //    We loop, echoing `nextCursor` as the cursor, until the Hub reports no more
+  //    pages. This bounds each request so a large history no longer times out.
   const token = getAuthToken()
-  const params = encodeURIComponent(JSON.stringify({ json: { patientId, sinceHlc } }))
-  const res = await fetch(`${HUB_BASE_URL}/sync.pull?input=${params}`, {
-    method: 'GET',
-    headers: { Authorization: `Bearer ${token}` },
-  })
-
-  if (!res.ok) {
-    result.errors.push(`Pull failed: HTTP ${res.status}`)
-    return result
-  }
-
-  const data = await res.json() as {
-    result: { data: { json: { changes: Array<{
-      resourceType: string
-      resourceId: string
-      data: Record<string, unknown>
-      hlcTimestamp: string
-    }> } } }
-  }
-
-  const changes = data.result?.data?.json?.changes
-  if (!changes || changes.length === 0) {
-    // No changes — update the watermark timestamp only
-    await db.syncMeta.put({
-      patientId,
-      lastPulledHlc: sinceHlc,
-      lastPulledAt: new Date().toISOString(),
-    })
-    return result
-  }
-
-  // 3. Apply each change to the local Dexie table
   let highestHlc = sinceHlc
+  let cursor: string | null = null
+  let anyPageHadChanges = false
+  const MAX_PAGES = 1000 // hard stop: guards against a misbehaving cursor loop
 
-  for (const change of changes) {
+  for (let pageNum = 0; pageNum < MAX_PAGES; pageNum++) {
+    const pullInput: { patientId: string; sinceHlc: string; cursor?: string } = {
+      patientId,
+      sinceHlc,
+    }
+    if (cursor) pullInput.cursor = cursor
+    const params = encodeURIComponent(JSON.stringify({ json: pullInput }))
+    const res = await fetch(`${HUB_BASE_URL}/sync.pull?input=${params}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    if (!res.ok) {
+      result.errors.push(`Pull failed: HTTP ${res.status}`)
+      return result
+    }
+
+    const data = await res.json() as {
+      result: { data: { json: {
+        changes: Array<{
+          resourceType: string
+          resourceId: string
+          data: Record<string, unknown>
+          hlcTimestamp: string
+        }>
+        nextCursor?: string | null
+        hasMore?: boolean
+      } } }
+    }
+
+    const payload = data.result?.data?.json
+    const changes = payload?.changes ?? []
+    if (changes.length > 0) anyPageHadChanges = true
+
+    // 3. Apply each change to the local Dexie table
+    for (const change of changes) {
     const tableName = RESOURCE_TABLE_MAP[change.resourceType]
     if (!tableName) {
       result.errors.push(`Unknown resourceType: ${change.resourceType}`)
@@ -645,15 +654,24 @@ export async function pullPatientChanges(
         patientId,
         { source: 'sync-pull' },
       )
-    } catch (err) {
-      result.errors.push(`Failed to apply ${change.resourceType}/${change.resourceId}: ${err instanceof Error ? err.message : 'unknown'}`)
+      } catch (err) {
+        result.errors.push(`Failed to apply ${change.resourceType}/${change.resourceId}: ${err instanceof Error ? err.message : 'unknown'}`)
+      }
     }
+
+    // Advance to the next page, or stop when the Hub reports no more.
+    if (payload?.hasMore && payload.nextCursor) {
+      cursor = payload.nextCursor
+      continue
+    }
+    break
   }
 
-  // 4. Update the watermark
+  // 4. Update the watermark. When no page carried any change, retain the prior
+  //    watermark (the Hub had nothing newer than sinceHlc).
   await db.syncMeta.put({
     patientId,
-    lastPulledHlc: highestHlc,
+    lastPulledHlc: anyPageHadChanges ? highestHlc : sinceHlc,
     lastPulledAt: new Date().toISOString(),
   })
 

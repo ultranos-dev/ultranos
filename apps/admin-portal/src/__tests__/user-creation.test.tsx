@@ -98,14 +98,12 @@ describe('Story 27.7 — User Creation Role Selector', () => {
       expect(screen.getByText('ADMIN')).toBeInTheDocument()
     })
 
-    // Select ADMIN role and fill in the form. The page splits the name into
-    // "Given Name" + "Family Name" and requires a password (min 8 chars) plus a
-    // matching confirmation before the submit button enables.
+    // Select ADMIN role and fill in the form. Story 62.2 (M-ADM-5): invite-only —
+    // the page no longer collects a password; the submit button enables once
+    // name + email + a valid role are set.
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Given Name'), 'Test User')
     await user.type(screen.getByLabelText('Email'), 'test@example.com')
-    await user.type(screen.getByLabelText('Password'), 'password123')
-    await user.type(screen.getByLabelText('Confirm Password'), 'password123')
     await user.click(screen.getByText('ADMIN'))
 
     // Submit should work for available role
@@ -128,8 +126,6 @@ describe('Story 27.7 — User Creation Role Selector', () => {
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('Given Name'), 'Test User')
     await user.type(screen.getByLabelText('Email'), 'test@example.com')
-    await user.type(screen.getByLabelText('Password'), 'password123')
-    await user.type(screen.getByLabelText('Confirm Password'), 'password123')
     await user.click(screen.getByText('ADMIN'))
 
     // Override the selected role validation to fail

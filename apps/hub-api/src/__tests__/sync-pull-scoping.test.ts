@@ -84,6 +84,7 @@ function makeSupabase(opts: {
         b.select = () => b
         b.gt = () => b
         b.order = () => b
+        b.limit = () => b // Story 62.2: pull now caps each table with .limit()
         b.eq = () => b
         b.in = (col: string, vals: unknown) => {
           calls.soapIn = { col, vals }
@@ -98,6 +99,7 @@ function makeSupabase(opts: {
         b.select = () => b
         b.gt = () => b
         b.order = () => b
+        b.limit = () => b // Story 62.2: pull now caps each table with .limit()
         b.eq = (col: string, val: unknown) => {
           calls.allergyEq = { col, val }
           return b
@@ -112,6 +114,7 @@ function makeSupabase(opts: {
         b.select = () => b
         b.gt = () => b
         b.order = () => b
+        b.limit = () => b // Story 62.2: pull now caps each table with .limit()
         b.eq = () => b
         b.then = (res: (v: unknown) => unknown) =>
           Promise.resolve({ data: opts.medStatementRows ?? [], error: null }).then(res)

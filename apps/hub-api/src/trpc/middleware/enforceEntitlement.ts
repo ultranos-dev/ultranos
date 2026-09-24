@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { tInstance } from '@/trpc/init'
+import { isAdminRole } from '@/trpc/rbac'
 
 /**
  * Entitlement enforcement middleware — gates API access by org subscription.
@@ -48,8 +49,9 @@ export function enforceEntitlement(moduleCode: string, procedureType: 'query' | 
     }
 
     // Org ADMIN bypasses module entitlement but NOT org status checks (D5: AC #2 compliance)
-    // ADMIN of a CANCELLED org must be subject to read-only enforcement
-    if (user.role === 'ADMIN') {
+    // ADMIN of a CANCELLED org must be subject to read-only enforcement.
+    // Story 62.2: all admin variants (ORG_ADMIN/SUPERADMIN) keep this bypass.
+    if (isAdminRole(user.role)) {
       // Still need to check org status for ADMIN
       if (!user.orgId) {
         return opts.next({
@@ -136,7 +138,8 @@ export function enforceEntitlement(moduleCode: string, procedureType: 'query' | 
     }
 
     // ADMIN bypasses module entitlement (but already passed org status check above)
-    if (user.role === 'ADMIN') {
+    // Story 62.2: all admin variants keep this bypass.
+    if (isAdminRole(user.role)) {
       return opts.next({
         ctx: { ...opts.ctx, user, entitlement: { moduleCode, status: 'ADMIN_BYPASS' }, orgReadOnly },
       })

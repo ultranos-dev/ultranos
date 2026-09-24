@@ -1,11 +1,12 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
+import { isAdminRole } from '../rbac'
 import type { FacilityLocation, FacilityLocationKind } from '@ultranos/shared-types'
 
-/** ADMIN-role-only guard (mirrors pharmacy.ts). */
+/** Administrator-only guard (mirrors pharmacy.ts). Story 62.2: all admin variants. */
 const adminProcedure = protectedProcedure.use(async (opts) => {
-  if (opts.ctx.user?.role !== 'ADMIN') {
+  if (!isAdminRole(opts.ctx.user?.role)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' })
   }
   return opts.next(opts)

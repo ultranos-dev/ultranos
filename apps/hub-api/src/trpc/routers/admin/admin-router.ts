@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { createTRPCRouter, protectedProcedure, baseProcedure } from '../init'
+import { createTRPCRouter, protectedProcedure, baseProcedure } from '../../init'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db, selectExactCount } from '@/lib/supabase'
 import { ROLE_MODULE_MAP, MODULE_DISPLAY_NAMES, LabRole, AuditAction, UserRole } from '@ultranos/shared-types'
@@ -12,17 +12,38 @@ import { computeScreeningReminders } from '@/lib/screening-reminders'
 import { buildNotificationContent } from '@/lib/notification-content'
 import { signPhotoUrls } from '@/lib/photo-urls'
 import { invalidateOrgSecurityPolicy, DEFAULT_ORG_SECURITY_POLICY } from '@/lib/mfa-policy'
-import { checkRateLimit } from '../middleware/rateLimit'
+import { checkRateLimit } from '../../middleware/rateLimit'
+import { sanitizeFilterValue } from '@/lib/filter-sanitize'
+import { isAdminRole, isSuperAdmin } from '../../rbac'
 
 /**
- * ADMIN-role-only middleware guard.
- * Rejects non-ADMIN callers with FORBIDDEN error.
+ * Administrator middleware guard.
+ * Story 62.2 (M-ADM-4): admits any administrator variant — legacy ADMIN
+ * (backward-compat), SUPERADMIN, ORG_ADMIN, PLATFORM_ADMIN. The procedures
+ * behind this guard are ORG-SCOPED (they filter by ctx.user.orgId), so ORG_ADMIN
+ * is the correct least-privilege role and every current ADMIN retains access.
+ * Cross-org procedures use `superAdminOnly` below instead.
  */
 const adminProcedure = protectedProcedure.use(async (opts) => {
-  if (opts.ctx.user.role !== 'ADMIN') {
+  if (!isAdminRole(opts.ctx.user.role)) {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'Admin access required',
+    })
+  }
+  return opts.next(opts)
+})
+
+/**
+ * Cross-org (super-admin) guard. Story 62.2: gates the ADMIN-creation path so an
+ * ORG_ADMIN cannot mint further admins. Rejects ORG_ADMIN; admits legacy ADMIN /
+ * SUPERADMIN / PLATFORM_ADMIN.
+ */
+const superAdminOnly = protectedProcedure.use(async (opts) => {
+  if (!isSuperAdmin(opts.ctx.user.role)) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Access denied — super-admin (cross-org) privileges required',
     })
   }
   return opts.next(opts)
@@ -1170,7 +1191,7 @@ export const adminRouter = createTRPCRouter({
 
       // Epic C: search filter — filter by practitioner name/email
       if (input.search) {
-        const term = `%${input.search}%`
+        const term = `%${sanitizeFilterValue(input.search)}%`
         query = query.or(`given_name.ilike.${term},family_name.ilike.${term},telecom_email.ilike.${term}`)
       }
 
@@ -1387,7 +1408,7 @@ export const adminRouter = createTRPCRouter({
 
         // Epic C: search filter — filter by practitioner name/email via the joined practitioners
         if (input.search) {
-          const term = `%${input.search}%`
+          const term = `%${sanitizeFilterValue(input.search)}%`
           slaQuery = slaQuery.or(`given_name.ilike.${term},family_name.ilike.${term},telecom_email.ilike.${term}`, { referencedTable: 'practitioners' })
         }
 
@@ -1441,7 +1462,7 @@ export const adminRouter = createTRPCRouter({
 
       // Epic C: search filter — filter by practitioner name/email via the joined practitioners
       if (input.search) {
-        const term = `%${input.search}%`
+        const term = `%${sanitizeFilterValue(input.search)}%`
         query = query.or(`given_name.ilike.${term},family_name.ilike.${term},telecom_email.ilike.${term}`, { referencedTable: 'practitioners' })
       }
 
@@ -2538,7 +2559,7 @@ export const adminRouter = createTRPCRouter({
       }
 
       if (input.search && input.search.trim()) {
-        const term = `%${input.search.trim()}%`
+        const term = `%${sanitizeFilterValue(input.search.trim())}%`
         query = query.or(`given_name.ilike.${term},family_name.ilike.${term},telecom_email.ilike.${term}`)
       }
 
@@ -2687,7 +2708,15 @@ export const adminRouter = createTRPCRouter({
 
   /**
    * Create a new user: Supabase Auth user + practitioner record.
-   * Validates role against org subscriptions. Generates invite link.
+   * Validates role against org subscriptions. Generates invite/setup link.
+   *
+   * Story 62.2 (M-ADM-5): INVITE-ONLY. Admins no longer set an initial password;
+   * the account is created with no password and the returned `setupLink` (a
+   * Supabase recovery link) is the only path for the invitee to set their own
+   * credential. The `password` input has been removed.
+   *
+   * Story 62.2 (M-ADM-4): creating an ADMINISTRATOR account (any admin variant)
+   * is SUPER-ADMIN only — an ORG_ADMIN cannot mint further admins.
    */
   createUser: adminProcedure
     .input(
@@ -2696,11 +2725,20 @@ export const adminRouter = createTRPCRouter({
         givenName: z.string().min(1).max(200),
         familyName: z.string().max(200).default(''),
         role: z.string().min(1),
-        password: z.string().min(8).max(128),
         ...userProfileFieldsSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Story 62.2 (M-ADM-4): only a super-admin may create an administrator
+      // account. ORG_ADMIN may onboard clinical/pharmacy/lab staff in its own org,
+      // but not another admin (privilege-escalation guard).
+      if (isAdminRole(input.role) && !isSuperAdmin(ctx.user.role)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only a super-admin may create administrator accounts',
+        })
+      }
+
       // Check for duplicate email within org
       const { data: existingUser } = await ctx.supabase
         .from('practitioners')
@@ -2744,14 +2782,17 @@ export const adminRouter = createTRPCRouter({
         }
       }
 
-      // Create Supabase Auth user with admin-provided password.
+      // Create Supabase Auth user WITHOUT a password (Story 62.2 / M-ADM-5:
+      // invite-only). The account has no credential until the invitee follows the
+      // returned `setupLink` (recovery link) to set their own password. We keep
+      // `email_confirm: true` so the account is usable once the link is followed
+      // (the recovery flow does not require a separate email confirmation).
       // Story 56.1: authorization claims (role/org_id) live in app_metadata —
       // server-authoritative, only writable via the service-role Admin API.
       // user_metadata keeps display copies (name fields + legacy role/org_id)
       // for client display compatibility; the Hub never reads them for authz.
       const { data: authResult, error: authError } = await ctx.supabase.auth.admin.createUser({
         email: input.email,
-        password: input.password,
         email_confirm: true,
         app_metadata: {
           role: input.role,
@@ -3935,11 +3976,14 @@ export const adminRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      // Query audit_log for this admin's own recent actions
+      // Query audit_log for this admin's own recent actions.
+      // Story 62.2: scope by the caller's own actor_id and any admin-variant role
+      // (ADMIN/ORG_ADMIN/SUPERADMIN/PLATFORM_ADMIN) so a re-mapped admin still sees
+      // their history. actor_id already restricts to the caller's own rows.
       const { data: rows, error } = await ctx.supabase
         .from('audit_log')
         .select('id, timestamp, actor_id, actor_role, action, resource_type, resource_id, outcome, metadata')
-        .eq('actor_role', 'ADMIN')
+        .in('actor_role', ['ADMIN', 'ORG_ADMIN', 'SUPERADMIN', 'PLATFORM_ADMIN'])
         .eq('actor_id', ctx.user.sub)
         .order('timestamp', { ascending: false })
         .limit(input.limit)

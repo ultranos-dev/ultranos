@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
+import { isAdminRole } from '../rbac'
 import { buildFacilityCrud } from './_facility-crud'
 import type { PharmacyDirectoryEntry } from '@ultranos/shared-types'
 
@@ -17,11 +18,10 @@ function toDirectoryEntry(row: Record<string, unknown>): PharmacyDirectoryEntry 
 }
 
 /**
- * ADMIN-role-only middleware guard.
- * Rejects non-ADMIN callers with FORBIDDEN error.
+ * Administrator-only middleware guard. Story 62.2: all admin variants admitted.
  */
 const adminProcedure = protectedProcedure.use(async (opts) => {
-  if (opts.ctx.user?.role !== 'ADMIN') {
+  if (!isAdminRole(opts.ctx.user?.role)) {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'Admin access required',

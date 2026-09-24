@@ -1842,6 +1842,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             input: {
                 sinceHlc: string;
                 patientId?: string | undefined;
+                limit?: number | undefined;
+                cursor?: string | undefined;
                 resourceTypes?: string[] | undefined;
             };
             output: {
@@ -1851,6 +1853,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     data: Record<string, unknown>;
                     hlcTimestamp: string;
                 }[];
+                nextCursor: string | null;
+                hasMore: boolean;
             };
             meta: object;
         }>;
@@ -3056,7 +3060,6 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             input: {
                 role: string;
                 email: string;
-                password: string;
                 givenName: string;
                 phone?: string | undefined;
                 consultationLanguages?: string[] | undefined;
@@ -4843,7 +4846,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 readonly displayName: "";
                 readonly givenName: "";
                 readonly familyName: "";
-                readonly role: "GUARDIAN" | "DOCTOR" | "PHARMACIST" | "LAB_TECH" | "SYSTEM" | "ADMIN" | "PLATFORM_ADMIN";
+                readonly role: "GUARDIAN" | "DOCTOR" | "PHARMACIST" | "LAB_TECH" | "SYSTEM" | "ADMIN" | "SUPERADMIN" | "ORG_ADMIN" | "PLATFORM_ADMIN";
                 readonly status: string;
                 readonly avatarUrl: null;
                 readonly updatedAt: null;

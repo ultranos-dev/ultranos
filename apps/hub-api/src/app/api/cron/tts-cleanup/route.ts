@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseClient } from '@/lib/supabase'
 import { runTTSAudioCleanup } from '@/jobs/tts-audio-cleanup'
+import { runJobWithRetry } from '@/jobs/job-runner'
 
 /**
  * Cron endpoint for TTS audio file cleanup — Story 24.2.
@@ -20,7 +21,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   try {
     const supabase = getSupabaseClient()
-    const result = await runTTSAudioCleanup(supabase)
+    const result = await runJobWithRetry('tts-audio-cleanup', () => runTTSAudioCleanup(supabase))
 
     return NextResponse.json({
       success: true,

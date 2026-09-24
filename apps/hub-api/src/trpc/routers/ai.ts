@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, baseProcedure, protectedProcedure } from '../init'
+import { isAdminRole } from '../rbac'
 import { AuditLogger } from '@ultranos/audit-logger'
 import {
   AIModelType,
@@ -10,10 +11,11 @@ import {
 } from '@ultranos/shared-types'
 
 /**
- * ADMIN-role-only middleware guard for AI model management.
+ * Administrator-only middleware guard for AI model management.
+ * Story 62.2: all admin variants (ORG_ADMIN/SUPERADMIN/legacy ADMIN) admitted.
  */
 const adminProcedure = protectedProcedure.use(async (opts) => {
-  if (opts.ctx.user.role !== 'ADMIN') {
+  if (!isAdminRole(opts.ctx.user.role)) {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'Admin access required',

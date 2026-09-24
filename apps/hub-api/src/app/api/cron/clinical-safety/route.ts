@@ -4,6 +4,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { acquireCronLock, releaseCronLock } from '@/lib/cron-lock'
 import { runClinicalSafetyMonitor } from '@/jobs/clinical-safety-monitor'
 import { runClinicalSafetyReport } from '@/jobs/clinical-safety-report'
+import { runJobWithRetry } from '@/jobs/job-runner'
 
 /**
  * Cron endpoint for clinical safety monitoring — Story 23.2 Task 7.
@@ -42,7 +43,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     results.monitor = { skipped: true, reason: 'lock_held' }
   } else {
     try {
-      const monitorResult = await runClinicalSafetyMonitor(supabase)
+      const monitorResult = await runJobWithRetry('clinical-safety-monitor', () => runClinicalSafetyMonitor(supabase))
       results.monitor = { success: true, ...monitorResult }
     } catch (err) {
       console.error('[CRON] Clinical safety monitor failed:', (err as Error).message)
@@ -74,7 +75,7 @@ export async function GET(request: Request): Promise<NextResponse> {
         results.report = { skipped: true, reason: 'lock_held' }
       } else {
         try {
-          const reportResult = await runClinicalSafetyReport(supabase)
+          const reportResult = await runJobWithRetry('clinical-safety-report', () => runClinicalSafetyReport(supabase))
           results.report = { success: true, reportId: reportResult.reportId }
         } catch (err) {
           console.error('[CRON] Clinical safety report failed:', (err as Error).message)

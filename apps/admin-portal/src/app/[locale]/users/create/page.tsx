@@ -30,8 +30,6 @@ export default function CreateUserPage() {
   const [email, setEmail] = useState('')
   const [givenName, setGivenName] = useState('')
   const [familyName, setFamilyName] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [selectedRole, setSelectedRole] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -61,15 +59,8 @@ export default function CreateUserPage() {
     setSubmitError(null)
     setSubmitSuccess(false)
 
-    // Client-side password validation
-    if (password.length < 8) {
-      setSubmitError('Password must be at least 8 characters.')
-      return
-    }
-    if (password !== confirmPassword) {
-      setSubmitError('Passwords do not match.')
-      return
-    }
+    // Story 62.2 (M-ADM-5): invite-only onboarding — no admin-set password. The
+    // invitee sets their own credential via the returned setup/invite link.
 
     // Client-side guard: prevent submission of unavailable role
     const isAvailable = availableRoles.some((r) => r.role === selectedRole)
@@ -87,7 +78,7 @@ export default function CreateUserPage() {
         return
       }
 
-      const result = await trpc.admin.createUser.mutate({ givenName, familyName, email, role: selectedRole, password })
+      const result = await trpc.admin.createUser.mutate({ givenName, familyName, email, role: selectedRole })
       setCreatedUser(result)
       setSubmitSuccess(true)
     } catch (err: unknown) {
@@ -159,40 +150,12 @@ export default function CreateUserPage() {
             />
           </div>
 
-          {/* Password Field */}
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-muted-foreground">
-              Password
-            </label>
-            <Input
-              id="password"
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Minimum 8 characters"
-              className="mt-1.5"
-            />
-          </div>
-
-          {/* Confirm Password Field */}
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-muted-foreground">
-              Confirm Password
-            </label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              required
-              minLength={8}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-1.5"
-            />
-            {confirmPassword && password !== confirmPassword && (
-              <p className="mt-1.5 text-sm text-destructive">Passwords do not match</p>
-            )}
+          {/* Story 62.2 (M-ADM-5): invite-only. No password is set here — the
+              invitee receives a setup link (shown on success) to set their own
+              credential. */}
+          <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+            The new user will receive a secure setup link to create their own
+            password. Administrators no longer set initial passwords.
           </div>
 
           {/* Role Selector */}
@@ -284,8 +247,6 @@ export default function CreateUserPage() {
                   setGivenName('')
                   setFamilyName('')
                   setEmail('')
-                  setPassword('')
-                  setConfirmPassword('')
                   setSelectedRole('')
                   setSubmitError(null)
                 }}
@@ -303,7 +264,7 @@ export default function CreateUserPage() {
           <div className="flex gap-3">
             <Button
               type="submit"
-              disabled={submitting || !selectedRole || !givenName || !email || !password || password !== confirmPassword}
+              disabled={submitting || !selectedRole || !givenName || !email}
             >
               {submitting ? 'Creating...' : 'Create User'}
             </Button>

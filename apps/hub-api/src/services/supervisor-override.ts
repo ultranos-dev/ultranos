@@ -29,8 +29,18 @@ import type { SupabaseClient } from '@supabase/supabase-js'
  * opaque ids and outcome codes.
  */
 
-/** Roles that may authorise a dispense override for a pharmacist. */
-export const SUPERVISOR_CAPABLE_ROLES = ['DOCTOR', 'CLINICIAN', 'ADMIN'] as const
+/**
+ * Roles that may authorise a dispense override for a pharmacist.
+ * Story 62.2: all admin variants (ORG_ADMIN/SUPERADMIN/PLATFORM_ADMIN) retain this.
+ */
+export const SUPERVISOR_CAPABLE_ROLES = [
+  'DOCTOR',
+  'CLINICIAN',
+  'ADMIN',
+  'ORG_ADMIN',
+  'SUPERADMIN',
+  'PLATFORM_ADMIN',
+] as const
 
 export type SupervisorVerifyResult =
   | { ok: true; supervisorId: string }

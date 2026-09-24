@@ -13,6 +13,9 @@
  */
 export const ROLE_MODULE_MAP: Record<string, string | null> = {
   ADMIN: null,
+  // Story 62.2 (M-ADM-4): the split admin roles are always-available like ADMIN.
+  SUPERADMIN: null,
+  ORG_ADMIN: null,
   CLINICIAN: 'OPD_LITE',
   DOCTOR: 'OPD_LITE',
   PHARMACIST: 'PHARMACY_LITE',

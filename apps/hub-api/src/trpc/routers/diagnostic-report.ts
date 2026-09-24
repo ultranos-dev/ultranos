@@ -5,7 +5,7 @@ import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { enforceConsentMiddleware } from '../middleware/enforceConsent'
 import { enforceEntitlement } from '../middleware/enforceEntitlement'
 import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
-import { labRestrictedProcedure } from '../rbac'
+import { labRestrictedProcedure, isAdminRole } from '../rbac'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
 import { patientBlindRef } from '@/lib/patient-ref'
@@ -267,7 +267,7 @@ export const diagnosticReportRouter = createTRPCRouter({
       let orgLabIds: string[] | null = null
 
       if (!labId) {
-        if (ctx.user.role === 'ADMIN' && ctx.user.orgId) {
+        if (isAdminRole(ctx.user.role) && ctx.user.orgId) {
           const { data: orgLabs, error: orgLabsError } = await ctx.supabase
             .from('labs')
             .select('id')

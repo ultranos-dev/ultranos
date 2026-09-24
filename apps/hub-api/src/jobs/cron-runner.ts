@@ -1,5 +1,6 @@
 import { getSupabaseClient } from '@/lib/supabase'
 import { acquireCronLock, releaseCronLock } from '@/lib/cron-lock'
+import { runJobWithRetry } from './job-runner'
 import { runLicenseExpiryCheck } from './license-expiry-check'
 import { runAnomalyDetection } from './anomaly-detection'
 import { runAuditChainVerify } from './audit-chain-verify'
@@ -33,7 +34,8 @@ export async function runDailyJobs(): Promise<void> {
   } else {
     console.info('[CRON] Starting daily license expiry check')
     try {
-      const result = await runLicenseExpiryCheck(supabase)
+      // Story 62.2: retry+backoff; dead-letter alert on exhaustion (rethrows).
+      const result = await runJobWithRetry('license-expiry', () => runLicenseExpiryCheck(supabase))
       console.info('[CRON] License expiry check complete', {
         suspended: result.suspendedCount,
         notifications: result.notificationsSent,
@@ -41,7 +43,7 @@ export async function runDailyJobs(): Promise<void> {
         duration: `${new Date(result.completedAt).getTime() - new Date(result.startedAt).getTime()}ms`,
       })
     } catch (err) {
-      console.error('[CRON] License expiry check failed:', (err as Error).message)
+      console.error('[CRON] License expiry check failed (alerted):', (err as Error).message)
     } finally {
       await releaseCronLock('license-expiry', licenseToken)
     }
@@ -54,14 +56,14 @@ export async function runDailyJobs(): Promise<void> {
   } else {
     console.info('[CRON] Starting daily anomaly detection')
     try {
-      const result = await runAnomalyDetection(supabase)
+      const result = await runJobWithRetry('anomaly-detection', () => runAnomalyDetection(supabase))
       console.info('[CRON] Anomaly detection complete', {
         alertsGenerated: result.alertsGenerated,
         errors: result.errors,
         duration: `${new Date(result.completedAt).getTime() - new Date(result.startedAt).getTime()}ms`,
       })
     } catch (err) {
-      console.error('[CRON] Anomaly detection failed:', (err as Error).message)
+      console.error('[CRON] Anomaly detection failed (alerted):', (err as Error).message)
     } finally {
       await releaseCronLock('anomaly-detection', anomalyToken)
     }
@@ -74,14 +76,14 @@ export async function runDailyJobs(): Promise<void> {
   } else {
     console.info('[CRON] Starting daily audit chain verification')
     try {
-      const result = await runAuditChainVerify(supabase)
+      const result = await runJobWithRetry('audit-chain-verify', () => runAuditChainVerify(supabase))
       console.info('[CRON] Audit chain verification complete', {
         valid: result.valid,
         checkedCount: result.checkedCount,
         duration: `${result.jobDurationMs}ms`,
       })
     } catch (err) {
-      console.error('[CRON] Audit chain verification failed:', (err as Error).message)
+      console.error('[CRON] Audit chain verification failed (alerted):', (err as Error).message)
     } finally {
       await releaseCronLock('audit-chain-verify', auditChainToken)
     }

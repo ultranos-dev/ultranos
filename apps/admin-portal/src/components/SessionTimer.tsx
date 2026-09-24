@@ -30,11 +30,23 @@ export function SessionTimer() {
         return Math.max(0, SESSION_MAX_MS - elapsed)
       }
 
-      setRemainingMs(computeRemaining())
+      const enforce = (remaining: number) => {
+        setRemainingMs(remaining)
+        // Story 62.2 (M-ADM-3): SessionTimer is now ENFORCING, not display-only.
+        // When the 4h cap elapses, sign out immediately (belt-and-braces with the
+        // AuthGuard watchdog). Tick every 15s near expiry so enforcement is prompt.
+        if (remaining <= 0) {
+          void supabase.auth.signOut().finally(() => {
+            window.location.href = '/login'
+          })
+        }
+      }
+
+      enforce(computeRemaining())
 
       interval = setInterval(() => {
-        setRemainingMs(computeRemaining())
-      }, 60_000)
+        enforce(computeRemaining())
+      }, 15_000)
     }
 
     init()

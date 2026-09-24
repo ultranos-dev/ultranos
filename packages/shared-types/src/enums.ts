@@ -10,7 +10,21 @@ export enum UserRole {
   PATIENT = 'PATIENT',
   GUARDIAN = 'GUARDIAN',
   SYSTEM = 'SYSTEM',
+  // Legacy full-access admin. Story 62.2 (M-ADM-4) split this binary role into
+  // SUPERADMIN (cross-org) vs ORG_ADMIN (own-org). ADMIN is retained as a
+  // BACKWARD-COMPATIBLE alias: any user/JWT still carrying role 'ADMIN' is
+  // treated as SUPERADMIN by the RBAC layer (isSuperAdmin/isOrgAdmin in rbac.ts)
+  // so no currently-provisioned admin loses access. New provisioning assigns
+  // ORG_ADMIN by default and SUPERADMIN only for cross-org operators.
   ADMIN = 'ADMIN',
+  // Story 62.2: cross-org super-admin. May perform cross-org operations —
+  // patient merge/unmerge across orgs, creating ORG_ADMIN/SUPERADMIN accounts
+  // in any org, and reading audit across orgs. Superset of ORG_ADMIN.
+  SUPERADMIN = 'SUPERADMIN',
+  // Story 62.2: own-org administrator (facility-admin per Epic 27 tenancy).
+  // Scoped to their own org: own-org users/facilities/patients only. Cannot
+  // perform cross-org operations.
+  ORG_ADMIN = 'ORG_ADMIN',
   // Cross-org platform super-admin. Bypasses org-scoped entitlement/status checks
   // (see enforceEntitlement / enforceVerifiedOrg) and gates platform-governance
   // procedures via roleRestrictedProcedure(['PLATFORM_ADMIN']).

@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { createTRPCRouter } from '../init'
-import { roleRestrictedProcedure } from '../rbac'
+import { roleRestrictedProcedure, isAdminRole } from '../rbac'
 
 /**
  * Patient Key router — ECDSA-P256 public key registration for identity QR verification.
@@ -19,8 +19,8 @@ export const patientKeyRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Non-ADMIN callers can only register keys for themselves
-      if (ctx.user.role !== 'ADMIN' && ctx.user.sub !== input.patientId) {
+      // Non-admin callers can only register keys for themselves (all admin variants bypass).
+      if (!isAdminRole(ctx.user.role) && ctx.user.sub !== input.patientId) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Can only register keys for your own patient ID',

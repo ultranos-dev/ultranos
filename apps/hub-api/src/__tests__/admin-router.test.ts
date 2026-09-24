@@ -206,17 +206,22 @@ describe('Admin Router — createUser split name', () => {
     }
 
     const caller = createCallerFactory(adminRouter)(ctx)
+    // Story 62.2 (M-ADM-5): invite-only — no `password` is passed; the auth user
+    // is created without a credential and the invitee sets it via the setup link.
     const result = await caller.createUser({
       givenName: 'Ahmad',
       familyName: 'Shah',
       email: 'ahmad@clinic.af',
       role: 'DOCTOR',
-      password: 'securePass1',
     })
 
     expect(createUserMock).toHaveBeenCalledWith(expect.objectContaining({
       user_metadata: expect.objectContaining({ given_name: 'Ahmad', family_name: 'Shah' }),
     }))
+    // No password must be sent to Supabase Admin createUser (invite-only).
+    expect(createUserMock).toHaveBeenCalledWith(
+      expect.not.objectContaining({ password: expect.anything() }),
+    )
     expect(result.name).toBe('Ahmad Shah')
   })
 })

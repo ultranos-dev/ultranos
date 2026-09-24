@@ -62,8 +62,7 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
     await user.type(screen.getByLabelText('Given Name'), 'Fatima')
     await user.type(screen.getByLabelText('Family Name / Last Name'), 'Al-Rashid')
     await user.type(screen.getByLabelText('Email'), 'fatima@clinic.org')
-    await user.type(screen.getByLabelText('Password'), 'Password123!')
-    await user.type(screen.getByLabelText('Confirm Password'), 'Password123!')
+    // Story 62.2 (M-ADM-5): invite-only — no password fields on the form.
     await user.click(screen.getByText('CLINICIAN'))
 
     await user.click(screen.getByRole('button', { name: /Create User/i }))
@@ -72,13 +71,12 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
       expect(screen.getByText('User created successfully')).toBeInTheDocument()
     })
 
-    // Verify createUser was called with correct args (split-name API)
+    // Verify createUser was called with the invite-only args (NO password).
     expect(mockCreateUser).toHaveBeenCalledWith({
       givenName: 'Fatima',
       familyName: 'Al-Rashid',
       email: 'fatima@clinic.org',
       role: 'CLINICIAN',
-      password: expect.any(String),
     })
 
     // Verify user details shown in confirmation
@@ -115,8 +113,6 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
     await user.type(screen.getByLabelText('Given Name'), 'Ali')
     await user.type(screen.getByLabelText('Family Name / Last Name'), 'Hassan')
     await user.type(screen.getByLabelText('Email'), 'ali@clinic.org')
-    await user.type(screen.getByLabelText('Password'), 'Password123!')
-    await user.type(screen.getByLabelText('Confirm Password'), 'Password123!')
     await user.click(screen.getByText('ADMIN'))
 
     await user.click(screen.getByRole('button', { name: /Create User/i }))
@@ -152,8 +148,6 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
     await user.type(screen.getByLabelText('Given Name'), 'Amira')
     await user.type(screen.getByLabelText('Family Name / Last Name'), 'Nurse')
     await user.type(screen.getByLabelText('Email'), 'amira@clinic.org')
-    await user.type(screen.getByLabelText('Password'), 'Password123!')
-    await user.type(screen.getByLabelText('Confirm Password'), 'Password123!')
     await user.click(screen.getByText('CLINICIAN'))
     await user.click(screen.getByRole('button', { name: /Create User/i }))
 
@@ -188,8 +182,6 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
     await user.type(screen.getByLabelText('Given Name'), 'Test')
     await user.type(screen.getByLabelText('Family Name / Last Name'), 'User')
     await user.type(screen.getByLabelText('Email'), 'test@clinic.org')
-    await user.type(screen.getByLabelText('Password'), 'Password123!')
-    await user.type(screen.getByLabelText('Confirm Password'), 'Password123!')
     await user.click(screen.getByText('ADMIN'))
     await user.click(screen.getByRole('button', { name: /Create User/i }))
 
@@ -203,7 +195,6 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
     expect(screen.getByLabelText('Given Name')).toHaveValue('')
     expect(screen.getByLabelText('Family Name / Last Name')).toHaveValue('')
     expect(screen.getByLabelText('Email')).toHaveValue('')
-    expect(screen.getByLabelText('Password')).toHaveValue('')
     expect(screen.getByRole('button', { name: /Create User/i })).toBeInTheDocument()
     expect(screen.queryByText('User created successfully')).not.toBeInTheDocument()
   })

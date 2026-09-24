@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
-import { setAccessToken, trpc } from '@/lib/trpc'
+import { setAccessToken, getAccessToken, trpc } from '@/lib/trpc'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppSidebar } from '@/components/sidebar/app-sidebar'
@@ -20,7 +20,33 @@ const TRIAL_BYPASS_PATHS = ['/subscriptions', '/subscriptions/billing']
 /** Admin session max age: 4 hours per NFR9. */
 const SESSION_MAX_AGE_S = 4 * 60 * 60
 
+/**
+ * Story 62.2 (M-ADM-3): inactivity timeout. After this many ms with no user
+ * interaction on a clinical/admin view, the session is signed out. CLAUDE.md
+ * auth policy: "30-min inactivity → re-auth required on clinical views".
+ */
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000
+
+/** How often the continuous session watchdog re-checks the 4h cap. */
+const SESSION_CHECK_INTERVAL_MS = 30 * 1000
+
+/**
+ * Story 62.2 (M-ADM-4): the binary ADMIN role was split into SUPERADMIN and
+ * ORG_ADMIN. The portal admits any administrator variant; per-page/per-action
+ * gating for cross-org features is enforced hub-side. Legacy ADMIN is retained
+ * for zero-regression.
+ */
+const ADMIN_PORTAL_ROLES = new Set(['ADMIN', 'ORG_ADMIN', 'SUPERADMIN', 'PLATFORM_ADMIN'])
+
 const PUBLIC_PATHS = ['/', '/login', '/register', '/forgot-password', '/reset-password']
+
+/** Centralized sign-out used by the access-denied UI, the watchdog, and events. */
+function forceSignOut(): void {
+  useAuthSessionStore.getState().clearSession()
+  setAccessToken(null)
+  void getSupabaseBrowserClient().auth.signOut()
+  window.location.href = '/login'
+}
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GuardState>('loading')
@@ -69,7 +95,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
           return
         }
 
-        if (role !== 'ADMIN') {
+        if (!ADMIN_PORTAL_ROLES.has(role)) {
           setState('access-denied')
           return
         }
@@ -135,6 +161,65 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // Story 62.2 (M-ADM-3): continuous session enforcement. Once authenticated,
+  // a watchdog interval re-checks the 4h absolute cap (JWT `iat`) AND an
+  // inactivity timeout on every tick — the prior code only checked the cap once
+  // at mount, so a session left open past 4h stayed usable until a full reload.
+  // Any user interaction resets the inactivity clock. Reaching either limit
+  // signs the user out immediately.
+  useEffect(() => {
+    if (state !== 'authenticated') return
+
+    let lastActivity = Date.now()
+    const markActivity = () => {
+      lastActivity = Date.now()
+    }
+    const activityEvents: Array<keyof WindowEventMap> = [
+      'mousedown',
+      'keydown',
+      'scroll',
+      'touchstart',
+      'pointerdown',
+    ]
+    for (const evt of activityEvents) {
+      window.addEventListener(evt, markActivity, { passive: true })
+    }
+
+    const readIatSeconds = (): number | null => {
+      const token = getAccessToken()
+      if (!token) return null
+      try {
+        const part = token.split('.')[1]
+        if (!part) return null
+        const base64 = part.replace(/-/g, '+').replace(/_/g, '/')
+        const payload = JSON.parse(atob(base64)) as { iat?: number }
+        return typeof payload.iat === 'number' ? payload.iat : null
+      } catch {
+        return null
+      }
+    }
+
+    const interval = window.setInterval(() => {
+      // Absolute 4h cap — enforced continuously, not just at mount.
+      const iat = readIatSeconds()
+      if (iat && Math.floor(Date.now() / 1000) - iat > SESSION_MAX_AGE_S) {
+        forceSignOut()
+        return
+      }
+      // Inactivity timeout.
+      if (Date.now() - lastActivity > INACTIVITY_TIMEOUT_MS) {
+        forceSignOut()
+      }
+    }, SESSION_CHECK_INTERVAL_MS)
+
+    return () => {
+      window.clearInterval(interval)
+      for (const evt of activityEvents) {
+        window.removeEventListener(evt, markActivity)
+      }
+    }
+  }, [state])
+
   if (state === 'loading') return null
 
   if (state === 'access-denied') {
@@ -143,17 +228,12 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         <div className="w-full max-w-md rounded-2xl border border-danger-subtle bg-destructive/10 p-8 text-center">
           <h1 className="text-xl font-bold text-destructive">Access Denied</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            You do not have admin privileges. This portal is restricted to users with the ADMIN role.
+            You do not have admin privileges. This portal is restricted to administrator roles.
           </p>
           <Button
             variant="destructive"
             className="mt-4"
-            onClick={() => {
-              useAuthSessionStore.getState().clearSession()
-              setAccessToken(null)
-              getSupabaseBrowserClient().auth.signOut()
-              window.location.href = '/login'
-            }}
+            onClick={forceSignOut}
           >
             Sign Out
           </Button>
@@ -194,12 +274,7 @@ function TrialExpiredInterstitial() {
           <Button
             variant="link"
             className="text-muted-foreground"
-            onClick={() => {
-              useAuthSessionStore.getState().clearSession()
-              setAccessToken(null)
-              getSupabaseBrowserClient().auth.signOut()
-              window.location.href = '/login'
-            }}
+            onClick={forceSignOut}
           >
             Sign Out
           </Button>
