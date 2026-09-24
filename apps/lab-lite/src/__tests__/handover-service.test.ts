@@ -18,9 +18,15 @@ vi.mock('../lib/audit-client', () => ({
   reportHandoverAuditEvent: vi.fn(),
 }))
 
-// Mock crypto.randomUUID for deterministic IDs
+// Mock crypto.randomUUID for deterministic IDs.
+// Story 58.3: preserve real crypto.subtle/getRandomValues (the PHI encryption
+// middleware needs them). Capture the real crypto BEFORE stubbing to avoid
+// recursing into the stub.
 let uuidCounter = 0
+const _realCrypto = globalThis.crypto
 vi.stubGlobal('crypto', {
+  subtle: _realCrypto.subtle,
+  getRandomValues: (arr: Uint8Array) => _realCrypto.getRandomValues(arr),
   randomUUID: () => `test-uuid-${++uuidCounter}`,
 })
 

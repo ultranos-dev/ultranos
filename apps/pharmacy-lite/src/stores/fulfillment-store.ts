@@ -412,10 +412,26 @@ export const useFulfillmentStore = create<FulfillmentState>()(
                 : undefined) ??
               0
             const quantity = item.prescription.dos.qty
+            // Story 58.3 (M-PHARM-3): do NOT store the medication free-text name
+            // (prescription.medT / medN) on the invoice line — financial records
+            // are non-clinical and are preserved across logout, so a plaintext
+            // patient-linked drug name would persist forever on a shared POS.
+            // The exact medication is retained losslessly via `catalogItemId`
+            // (an opaque catalog reference); the human-readable `description` is
+            // a de-identified generic label from catalog reference attributes
+            // (dosage form + strength — NOT a brand/drug name), or the catalog
+            // id when no catalog row resolves.
+            // NOTE for Story 62.1: this is the sole write site for invoice line
+            // med text. If invoice display needs the drug name, resolve it at
+            // render time via catalogItemId → catalogItems lookup (never persist
+            // the name on the line).
+            const description = catalogItem
+              ? `${catalogItem.form} ${catalogItem.strength}${catalogItem.strengthUnit}`.trim()
+              : item.prescription.med
             return {
               catalogItemId: catalogItem?.id ?? item.prescription.med,
               stockBatchId: item.fefoBatchId ?? '',
-              description: item.prescription.medT || item.prescription.medN,
+              description,
               quantity,
               unitPrice,
               lineTotal: unitPrice * quantity,

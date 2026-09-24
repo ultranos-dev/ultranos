@@ -20,7 +20,15 @@ import { usePrioritizedWorklist } from '../hooks/usePrioritizedWorklist'
 vi.mock('next/navigation', () => ({ useRouter: vi.fn(), usePathname: vi.fn() }))
 
 let uuidSeq = 0
-vi.stubGlobal('crypto', { randomUUID: () => `test-uuid-${++uuidSeq}` })
+// Story 58.3: preserve real crypto.subtle/getRandomValues (the PHI encryption
+// middleware needs them) while keeping deterministic randomUUID. Capture the
+// real crypto BEFORE stubbing to avoid recursing into the stub.
+const _realCrypto = globalThis.crypto
+vi.stubGlobal('crypto', {
+  subtle: _realCrypto.subtle,
+  getRandomValues: (arr: Uint8Array) => _realCrypto.getRandomValues(arr),
+  randomUUID: () => `test-uuid-${++uuidSeq}`,
+})
 
 const SPECIMEN_ID = 'specimen-hydrated-001'
 const ORDER_REF   = 'ServiceRequest/order-hydrated-999'

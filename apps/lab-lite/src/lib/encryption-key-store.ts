@@ -47,10 +47,13 @@ export class EncryptionKeyNotAvailableError extends Error {
 }
 
 let sessionKey: CryptoKey | null = null
+let keyMap: Record<string, CryptoKey> = {}
+let currentWriteVersion = 'v1'
 
 export const encryptionKeyStore = {
   setKey(key: CryptoKey): void {
     sessionKey = key
+    keyMap = { [currentWriteVersion]: key }
   },
 
   getKey(): CryptoKey | null {
@@ -58,25 +61,34 @@ export const encryptionKeyStore = {
   },
 
   /**
-   * Story 61.2: install a write key at a version. Lab-lite keeps no local
-   * encrypted PHI store and no version map, so this is equivalent to setKey —
-   * the `version` is accepted for API parity with the other spokes' key stores.
+   * Story 61.2 / 58.3: install a write key AT a specific version, replacing the
+   * current write version. Used by the vNext DEK path to make 'v2' the write
+   * version while any legacy 'v1' key remains in the map for decrypt-only.
+   *
+   * Story 58.3 upgraded lab-lite from a single-key store to a full key map so
+   * the Dexie field-encryption middleware (ported from opd-lite/pharmacy-lite)
+   * can decrypt multi-version records. Pre-58.3 lab-lite kept no local encrypted
+   * PHI store, so a version map was unnecessary; it now does (samples, orders,
+   * results, smsQueue, etc. are field-encrypted at rest).
    */
-  installWriteKey(_version: string, key: CryptoKey): void {
+  installWriteKey(version: string, key: CryptoKey): void {
+    currentWriteVersion = version
     sessionKey = key
+    keyMap[version] = key
   },
 
   /**
-   * Story 61.2: no-op on lab-lite (no version map / no local PHI to migrate).
-   * Present for API parity so the shared vNext establishment module compiles.
+   * Story 61.2: add a decrypt-only key at a version WITHOUT changing the current
+   * write key. Keeps a legacy 'v1' key available for reading pre-migration data
+   * while new writes use the vNext DEK at 'v2'.
    */
-  addDecryptKey(_version: string, _key: CryptoKey): void {
-    /* lab-lite has no key map — nothing to register */
+  addDecryptKey(version: string, key: CryptoKey): void {
+    keyMap[version] = key
   },
 
   /**
    * Returns the key or throws if unavailable.
-   * Use this in code paths that must not proceed without encryption.
+   * Use this in write paths that must not proceed without encryption.
    */
   requireKey(): CryptoKey {
     if (!sessionKey) {
@@ -85,16 +97,35 @@ export const encryptionKeyStore = {
     return sessionKey
   },
 
+  /**
+   * Returns the full key map (version → CryptoKey) for read/decrypt paths.
+   * Supports multi-version decryption during and after key rotation.
+   * Throws if no keys are available.
+   */
+  requireKeyMap(): Record<string, CryptoKey> {
+    if (Object.keys(keyMap).length === 0) {
+      throw new EncryptionKeyNotAvailableError()
+    }
+    return { ...keyMap }
+  },
+
+  /** Returns the version string for the current write key (e.g. 'v1', 'v2'). */
+  getCurrentWriteVersion(): string {
+    return currentWriteVersion
+  },
+
   isReady(): boolean {
     return sessionKey !== null
   },
 
   /**
-   * Securely wipe the key from memory.
+   * Securely wipe all keys from memory.
    * Called on tab close, logout, and session expiry.
    */
   wipe(): void {
     sessionKey = null
+    keyMap = {}
+    currentWriteVersion = 'v1'
   },
 }
 

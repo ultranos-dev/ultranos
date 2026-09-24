@@ -2,6 +2,10 @@ import Dexie from 'dexie'
 import type { DataUsageCategory } from '@ultranos/sync-engine'
 export type { DataUsageCategory }  // re-export for existing consumers
 import { hlcNow } from './hlc'
+import {
+  applyEncryptionMiddleware,
+  type EncryptionTableConfig,
+} from './dexie-encryption-middleware'
 import type { FhirSpecimen, PatientVerificationRecord, AmendmentRecord } from '@ultranos/shared-types'
 import type { ClientAuditEvent } from '@ultranos/audit-logger/client'
 import type { CustodyEvent } from '@/types/custody-event'
@@ -2056,11 +2060,149 @@ class LabLiteDatabase extends Dexie {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Field-level PHI encryption (Story 58.3 — H-LAB-1)
+//
+// Ports the AES-256-GCM Dexie field-encryption middleware used by opd-lite and
+// pharmacy-lite (see dexie-encryption-middleware.ts) to lab-lite's PHI tables.
+// Each PHI record's non-indexed fields are stored inside an encrypted `_enc`
+// blob; only the fields listed in `indexedFields` stay in cleartext so Dexie
+// index queries (worklist/QC/report filters) continue to work at speed
+// (field-level, not whole-row — keeps indexes usable per opd's ADR-028).
+//
+// Key source: the memory-only session key established at login by the vNext
+// dual-wrapped DEK path (encryption-key-vnext.ts → encryptionKeyStore). No key
+// is re-derived here. Pre-existing plaintext rows are upgraded lazily by the
+// startup migration in encryption-migration-vnext.ts.
+//
+// Data-minimization note (CLAUDE.md Rule #7): lab-lite already stores only
+// first name + age for patients. This encrypts those minimal fields at rest so
+// a shared clinic workstation retains nothing readable after logout.
+//
+// Tables NOT covered here and why:
+//   consentRecords         — audio/thumbprint already stored as pre-encrypted
+//                            Blobs (no plaintext PHI at rest); patientRef is an
+//                            opaque blind-index ref, not PHI.
+//   familyDelegates        — delegatePhone/delegateName already stored as
+//                            app-layer AES-GCM ciphertext (Story 49.x).
+//   employee_health_records— stored as EncryptedHealthRecord (pre-encrypted).
+//   patients (full FHIR)   — indexed name fields (_ultranos.nameLocal/nameLatin)
+//                            are load-bearing search keys; this table holds the
+//                            full-tier patient record and is CLEARED at logout
+//                            (phi-cleanup). Covered by wipe, not field-encryption,
+//                            to preserve local name search. (Data-min tier: the
+//                            data-minimized surfaces use verified_patients /
+//                            orders / queueEntries, which ARE encrypted here.)
+// ---------------------------------------------------------------------------
+const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
+  {
+    // subject.reference is an opaque Patient ref; the rest of the FHIR specimen
+    // (collection, notes, container) is encrypted.
+    tableName: 'samples',
+    indexedFields: [
+      'id',
+      '_ultranos.labSampleId',
+      '_ultranos.pipelineStatus',
+      'subject.reference',
+      'meta.lastUpdated',
+    ],
+  },
+  {
+    // patientFirstName / patientAge / testsRequested / instructions → _enc.
+    tableName: 'orders',
+    indexedFields: ['orderId', 'status', 'urgency', 'patientRef', 'authoredOn'],
+  },
+  {
+    // reportComment (clinical free-text) and any patient-linked content → _enc.
+    tableName: 'lab_results',
+    indexedFields: ['id', 'loincCode', 'enteredBy', 'enteredAt', 'status', 'patientRef'],
+  },
+  {
+    // fieldCode / value / comment (clinical analyte values) → _enc.
+    tableName: 'lab_observations',
+    indexedFields: ['id', 'resultId'],
+  },
+  {
+    // recipientPhone + messageBody (critical-result notification content) → _enc.
+    tableName: 'smsQueue',
+    indexedFields: [
+      'id',
+      'status',
+      'confirmCode',
+      'criticalResultRef',
+      'escalationStep',
+      'createdAt',
+    ],
+  },
+  {
+    // patientRef + criticalValue + analyte (result escalation content) → _enc.
+    tableName: 'escalation_chains',
+    indexedFields: ['id', 'chainId', 'resultId', 'status', 'currentStep', 'createdAt'],
+  },
+  {
+    // firstName / fatherName / age (verification cache) → _enc.
+    tableName: 'verified_patients',
+    indexedFields: ['patientId', 'verifiedAt'],
+  },
+  {
+    // patientRef / patientFirstName + upload file Blob + metadata → _enc.
+    tableName: 'uploadQueue',
+    indexedFields: ['id', 'status', 'queuedAt'],
+  },
+  {
+    // patientFirstName / patientAge (queue display) → _enc.
+    tableName: 'queueEntries',
+    indexedFields: ['id', 'status', 'tokenDisplayKey', 'registeredAt', 'patientRef'],
+  },
+  {
+    // patientFirstName / patientAge / resultSummary (logbook clinical) → _enc.
+    tableName: 'labLogbook',
+    indexedFields: ['id', 'seqNo', 'diagnosticReportId', 'date', 'syncStatus', 'entryType'],
+  },
+  {
+    // patientFirstName / patientAge (TDM monitoring; medication identity is
+    // already stripped server-side per C-LAB-1) → _enc.
+    tableName: 'monitoringFlags',
+    indexedFields: ['id', 'patientRef', 'testRequired', 'status', 'dueDate'],
+  },
+  {
+    // testsPayedFor (test names + prices tied to a patient) → _enc.
+    tableName: 'payments',
+    indexedFields: ['id', 'paymentId', 'patientRef', 'createdAt', 'syncStatus'],
+  },
+]
+
+/** Tables covered by field-level encryption — used by the startup migration. */
+export const ENCRYPTED_PHI_TABLES = PHI_TABLE_CONFIGS.map((c) => c.tableName)
+
+/**
+ * Raw (un-proxied) table references, captured BEFORE applyEncryptionMiddleware
+ * replaces the table refs with encrypting proxies. The startup migration reads
+ * pre-existing plaintext rows from these and re-writes them through the proxy
+ * to encrypt. Module-private: the proxy is the only legitimate prod PHI path.
+ */
+const _rawPhiTables: Record<string, { toArray: () => Promise<unknown[]> }> = {}
+
+/** @internal Startup migration accessor for raw plaintext reads. */
+export function _getRawPhiTable(tableName: string): { toArray: () => Promise<unknown[]> } | undefined {
+  return _rawPhiTables[tableName]
+}
+
 let dbInstance: LabLiteDatabase | null = null
 
 export function getDb(): LabLiteDatabase {
   if (!dbInstance) {
     dbInstance = new LabLiteDatabase()
+    // Capture raw table refs BEFORE the middleware swaps them for proxies
+    // (Story 58.3 — needed to read pre-existing plaintext rows during migration).
+    for (const { tableName } of PHI_TABLE_CONFIGS) {
+      const raw = (dbInstance as unknown as Record<string, unknown>)[tableName]
+      if (raw) {
+        _rawPhiTables[tableName] = raw as { toArray: () => Promise<unknown[]> }
+      }
+    }
+    // Apply field-level AES-GCM encryption to PHI tables (Story 58.3 — H-LAB-1).
+    applyEncryptionMiddleware(dbInstance, PHI_TABLE_CONFIGS)
     // Auto-install the read-only guard (Story 49.4) — idempotent, safe to call multiple times.
     import('@/lib/security/read-only-guard').then(({ installReadOnlyGuard }) => {
       if (dbInstance) installReadOnlyGuard(dbInstance)

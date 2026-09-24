@@ -30,10 +30,22 @@ export const PHI_TABLES = [
  *   stockMovements     — inventory operational data; not PHI
  *   goodsReceipts      — inventory operational data; not PHI
  *   pharmacySettings   — lab-level configuration; not PHI
- *   invoices           — financial records (patient accounts); not clinical PHI
+ *   invoices           — financial records (patient accounts); not clinical PHI.
+ *                        Story 58.3 (M-PHARM-3): invoice line `description` no
+ *                        longer carries the medication free-text name — it is a
+ *                        de-identified generic label (dosage form + strength);
+ *                        the exact drug is referenced only by the opaque
+ *                        `catalogItemId`. With the medication name stripped at the
+ *                        write site (fulfillment-store.createInvoiceAfterDispense),
+ *                        invoices no longer hold patient-linked clinical free-text,
+ *                        so they remain PRESERVED (financial durability) rather than
+ *                        cleared/encrypted.
  *   payments           — financial records; not clinical PHI
- *   ledgerEntries      — financial ledger; not clinical PHI
- *   patientAccounts    — financial account records; not clinical PHI
+ *   ledgerEntries      — financial ledger; not clinical PHI. Holds only amount /
+ *                        type / invoiceId / optional free-text `note` — no
+ *                        medication text or patient demographics.
+ *   patientAccounts    — financial account records (patientId + balance); not
+ *                        clinical PHI, no medication text.
  *   cashDrawers        — POS operational data; not PHI
  *   suppliers          — procurement reference data; not PHI
  *   purchaseOrders     — procurement operational data; not PHI
@@ -72,6 +84,39 @@ export const PRESERVE_TABLES = [
   'drugBrandsMirror',
   'drugBrandPresentationsMirror',
   'drugCatalogSyncMeta',
+] as const
+
+/**
+ * Story 58.3 (mirrors lab-lite Task 2.2) — non-PHI operational tables NOT already
+ * in PRESERVE_TABLES. Enumerated so the completeness guard
+ * (phi-cleanup-completeness.test.ts) can assert every Dexie table is classified
+ * as exactly one of: PHI (cleared/selective), preserved, or non-PHI. Adding a new
+ * Dexie table without classifying it fails that test, forcing a cleanup decision.
+ *
+ * These are wholesale-B2B / procurement / inventory-location operational records.
+ * They hold no PATIENT-linked clinical content:
+ *   contractPrices        — negotiated wholesale price lists (B2B); no patient data
+ *   customerAccounts      — WHOLESALE customer (business) accounts; not patients
+ *   customerLedgerEntries — wholesale customer financial ledger; not patients
+ *   salesOrders           — wholesale sales orders (B2B); not patient dispenses
+ *   stockLocations        — physical stock location registry; operational
+ *   supplierInvoices      — supplier (upstream) invoices; procurement, not patient
+ *   supplierItems         — supplier catalog mappings; reference data
+ *   supplierPayments      — payments to suppliers; procurement, not patient
+ *   wholesaleCustomers    — B2B customer registry (businesses); not patients
+ *   wholesalePullMeta     — wholesale sync metadata; operational
+ */
+export const NON_PHI_TABLES = [
+  'contractPrices',
+  'customerAccounts',
+  'customerLedgerEntries',
+  'salesOrders',
+  'stockLocations',
+  'supplierInvoices',
+  'supplierItems',
+  'supplierPayments',
+  'wholesaleCustomers',
+  'wholesalePullMeta',
 ] as const
 
 // Compile-time safety: ensure syncQueue is never accidentally added to PHI_TABLES

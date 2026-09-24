@@ -29,6 +29,9 @@ vi.mock('@/lib/db', () => {
     'orders', 'queueEntries', 'consentRecords', 'payments', 'culturalPreferences',
     'familyDelegates', 'smsQueue', 'lab_results', 'lab_observations',
     'amendments', 'labLogbook', 'chw_samples', 'monitoringFlags',
+    // Story 58.3 (H-LAB-2) additions:
+    'patients', 'escalation_chains', 'resultSnapshots', 'custody_events',
+    'distributionQueue',
     'syncQueue', 'clientAuditLog', 'practitioner_keys',
     'reagent_inventory', 'reagent_consumption_log',
     'sops', 'sop_acknowledgments', 'micro_learning_modules', 'module_completions',

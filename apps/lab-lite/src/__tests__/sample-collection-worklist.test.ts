@@ -38,14 +38,16 @@ vi.mock('@/stores/auth-session-store', () => ({
   },
 }))
 
-// crypto.randomUUID stub (fake-indexeddb environment lacks it)
+// crypto.randomUUID stub (fake-indexeddb environment lacks it).
+// Story 58.3: preserve real crypto.subtle/getRandomValues so the PHI encryption
+// middleware (samples table) can encrypt/decrypt. Capture the real crypto BEFORE
+// stubbing to avoid recursing into the stub.
 let uuidSeq = 0
+const _realCrypto = globalThis.crypto
 vi.stubGlobal('crypto', {
+  subtle: _realCrypto.subtle,
+  getRandomValues: (arr: Uint8Array) => _realCrypto.getRandomValues(arr),
   randomUUID: () => `test-uuid-${(++uuidSeq).toString().padStart(4, '0')}`,
-  getRandomValues: (arr: Uint8Array) => {
-    for (let i = 0; i < arr.length; i++) arr[i] = i % 256
-    return arr
-  },
 })
 
 const ORDER_ID = '550e8400-e29b-41d4-a716-446655440000'

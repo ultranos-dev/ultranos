@@ -10,7 +10,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import 'fake-indexeddb/auto'
 import { renderHook, act } from '@testing-library/react'
-import { getDb } from '../lib/db'
+import { getDb, _getRawPhiTable } from '../lib/db'
 
 vi.mock('next/navigation', () => ({ useRouter: vi.fn(), usePathname: vi.fn() }))
 
@@ -22,7 +22,15 @@ vi.mock('@/lib/specimen-hydrate', () => ({
 }))
 
 let uuidSeq = 0
-vi.stubGlobal('crypto', { randomUUID: () => `test-uuid-${++uuidSeq}` })
+// Story 58.3: preserve real crypto.subtle/getRandomValues (the PHI encryption
+// middleware needs them) while keeping deterministic randomUUID. Capture the
+// real crypto BEFORE stubbing to avoid recursing into the stub.
+const _realCrypto = globalThis.crypto
+vi.stubGlobal('crypto', {
+  subtle: _realCrypto.subtle,
+  getRandomValues: (arr: Uint8Array) => _realCrypto.getRandomValues(arr),
+  randomUUID: () => `test-uuid-${++uuidSeq}`,
+})
 
 describe('usePrioritizedWorklist — real Dexie error vs. legitimate empty', () => {
   beforeEach(async () => {
@@ -44,10 +52,12 @@ describe('usePrioritizedWorklist — real Dexie error vs. legitimate empty', () 
   // Bug 3: real Dexie error on samples.filter().toArray() → must set error
   // -------------------------------------------------------------------------
   it('a real Dexie read error sets error (not a false empty worklist)', async () => {
-    const db = getDb()
-
-    // Inject a spy that throws on the samples table filter to simulate a real DB error
-    const filterSpy = vi.spyOn(db.samples, 'filter').mockImplementation(() => {
+    // Story 58.3: the `samples` table is now wrapped by the encryption proxy, so
+    // spying on `db.samples.filter` (the proxy) is bypassed — the proxy delegates
+    // reads to the RAW table's toCollection(). Spy on the raw table's
+    // toCollection so the proxy's filter() path throws a real Dexie read error.
+    const raw = _getRawPhiTable('samples') as unknown as { toCollection: () => unknown }
+    const filterSpy = vi.spyOn(raw, 'toCollection').mockImplementation(() => {
       throw new Error('IndexedDB: transaction aborted')
     })
 
@@ -110,11 +120,14 @@ describe('usePrioritizedWorklist — real Dexie error vs. legitimate empty', () 
   // handler (inner re-throw propagates correctly to outer catch)
   // -------------------------------------------------------------------------
   it('error propagates to the outer catch which sets error state', async () => {
-    const db = getDb()
-
-    // Make .toArray() reject after filter succeeds (more realistic — filter is lazy)
-    vi.spyOn(db.samples, 'filter').mockReturnValue({
-      toArray: () => Promise.reject(new Error('Dexie internal error')),
+    // Story 58.3: spy the RAW table's toCollection (the encryption proxy delegates
+    // reads to it). Return a collection whose filter().toArray() rejects — the
+    // async error must propagate through the proxy to the hook's outer catch.
+    const raw = _getRawPhiTable('samples') as unknown as { toCollection: () => unknown }
+    vi.spyOn(raw, 'toCollection').mockReturnValue({
+      filter: () => ({
+        toArray: () => Promise.reject(new Error('Dexie internal error')),
+      }),
     } as any)
 
     const { usePrioritizedWorklist } = await import('../hooks/usePrioritizedWorklist')

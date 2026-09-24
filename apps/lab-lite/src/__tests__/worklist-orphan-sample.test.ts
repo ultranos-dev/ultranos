@@ -20,7 +20,15 @@ vi.mock('next/navigation', () => ({ useRouter: vi.fn(), usePathname: vi.fn() }))
 
 // crypto.randomUUID is used by some db helpers
 let uuidSeq = 0
-vi.stubGlobal('crypto', { randomUUID: () => `test-uuid-${++uuidSeq}` })
+// Story 58.3: preserve real crypto.subtle/getRandomValues (the PHI encryption
+// middleware needs them) while keeping deterministic randomUUID. Capture the
+// real crypto BEFORE stubbing to avoid recursing into the stub.
+const _realCrypto = globalThis.crypto
+vi.stubGlobal('crypto', {
+  subtle: _realCrypto.subtle,
+  getRandomValues: (arr: Uint8Array) => _realCrypto.getRandomValues(arr),
+  randomUUID: () => `test-uuid-${++uuidSeq}`,
+})
 
 const ORPHAN_SPECIMEN_ID = 'specimen-orphan-001'
 const ORPHAN_ORDER_REF = 'ServiceRequest/orphan-order-999'

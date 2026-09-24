@@ -8,6 +8,7 @@ import { useEntitlementCheck } from '@/hooks/useEntitlementCheck'
 import { EntitlementGate } from '@ultranos/ui-kit'
 import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import { establishSessionKey } from '@/lib/encryption-key-vnext'
+import { migratePlaintextPhiToEncrypted } from '@/lib/encryption-migration-vnext'
 import { getDevicePin } from '@/lib/device-pin'
 import { clearPhiTables } from '@/lib/phi-cleanup'
 import { getMyRole } from '@/lib/trpc'
@@ -59,6 +60,13 @@ export function AuthGuard({ children }: { children: ReactNode }) {
             throw new Error('Key derivation unavailable')
           }
         }
+
+        // Story 58.3 (H-LAB-1): once the session key is available, encrypt any
+        // pre-existing plaintext PHI rows in place. Resumable + idempotent; runs
+        // in the background so it never blocks rendering the app.
+        void migratePlaintextPhiToEncrypted().catch(() => {
+          /* non-fatal — retried on next login (marker stays unset) */
+        })
 
         if (!useAuthSessionStore.getState().isAuthenticated) {
           const user = data.session.user
