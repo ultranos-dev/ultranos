@@ -93,8 +93,14 @@ END;
 $function$;
 
 -- ── 3. Recreate the emit RPC: accept p_chain_version, stamp it, and hash the ─
---       full row when version >= 2. Signature adds one trailing param (defaulted),
---       so existing 15-arg callers keep working (they get the legacy hash).
+--       full row when version >= 2. The new arg makes this a DISTINCT function
+--       identity from migration 045's 15-arg version, so drop the old one first —
+--       otherwise both overloads coexist and a 15-arg call becomes ambiguous
+--       ("could not choose best candidate"). The 16-arg version's p_chain_version
+--       DEFAULT 1 serves any legacy 15-arg caller.
+DROP FUNCTION IF EXISTS public.audit_emit_with_lock(
+  text, text, text, text, text, text, text, text, text, text, text, text, text, jsonb, text
+);
 CREATE OR REPLACE FUNCTION public.audit_emit_with_lock(
   p_id text, p_timestamp text, p_actor_id text DEFAULT NULL::text, p_actor_role text DEFAULT NULL::text,
   p_action text DEFAULT NULL::text, p_resource_type text DEFAULT NULL::text, p_resource_id text DEFAULT NULL::text,
