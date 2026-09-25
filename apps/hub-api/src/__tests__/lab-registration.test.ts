@@ -164,7 +164,7 @@ beforeEach(() => {
 
 // ═══════════════════════════════════════════════════════════════
 describe('lab.searchPatients', () => {
-  it('returns EXACTLY ref + firstName + age per match — never the raw UUID (Rule #7)', async () => {
+  it('returns firstName + age + photo + demographics per match — never the raw UUID (Rule #7 revised)', async () => {
     setupLabAffiliation()
     patientsSelectResult = {
       data: [
@@ -179,8 +179,9 @@ describe('lab.searchPatients', () => {
     expect(result.patients).toHaveLength(1)
     const p = result.patients[0]!
 
-    // CRITICAL: exact field set — nothing beyond firstName/age/ref
-    expect(Object.keys(p).sort()).toEqual(['age', 'firstName', 'ref'])
+    // Rule #7 (revised 2026-09-24): list tier now carries photo + demographics too.
+    // Still NO raw UUID / National ID; ref stays the opaque blind index.
+    expect(Object.keys(p).sort()).toEqual(['age', 'firstName', 'gender', 'phone', 'photoUrl', 'ref'])
 
     // The ref is the prefixed HMAC blind index, NOT the raw patient UUID
     const expectedBlind = generateBlindIndex(PATIENT_UUID, TEST_HMAC_KEY)
