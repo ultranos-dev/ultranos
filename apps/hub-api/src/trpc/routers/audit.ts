@@ -2,10 +2,25 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
 import { AuditLogger } from '@ultranos/audit-logger'
-import { AuditAction, AuditResourceType, UserRole } from '@ultranos/shared-types'
+import { AuditAction, AuditResourceType, UserRole, LabRole } from '@ultranos/shared-types'
 import { checkRateLimit, deriveIdentifier } from '../middleware/rateLimit'
 
-const userRoleValues = Object.values(UserRole) as [string, ...string[]]
+/**
+ * Story 56.4 (M-HUB-3): the claimable `actorRole` is the platform UserRole set
+ * PLUS the lab sub-roles (LabRole) that are NOT themselves UserRole members —
+ * SENIOR_TECH / SUPERVISOR / LAB_MANAGER (LAB_TECH is already a UserRole). The
+ * lab authorization workflow (ResultReviewPanel) and outbreak modals deliberately
+ * record the authorizing lab TIER as actorRole — that sub-role IS the
+ * accountability-relevant fact (canAuthorize() gates on it), so collapsing them to
+ * LAB_TECH would destroy an audit distinction. Omitting them made audit.sync 400 on
+ * any batch containing a supervisor/manager action, silently dropping the whole
+ * batch (Rule #6). No new trust surface: actorRole is already client-supplied and
+ * only shape-validated; actorId is forced server-side. The audit_log.actor_role
+ * column is free text, so these values persist and render (format-role.ts) fine.
+ */
+const clientClaimableActorRoleValues = Array.from(
+  new Set<string>([...Object.values(UserRole), ...Object.values(LabRole)]),
+) as [string, ...string[]]
 
 /**
  * Story 56.4 (M-HUB-3): audit.sync accepts CLIENT-submitted events, so the
@@ -105,7 +120,7 @@ export const auditRouter = createTRPCRouter({
             z.object({
               id: z.string().uuid(),
               actorId: z.string().min(1),
-              actorRole: z.enum(userRoleValues),
+              actorRole: z.enum(clientClaimableActorRoleValues),
               // Story 56.4 (M-HUB-3): only client-claimable actions/resource types.
               action: z.enum(clientClaimableActionValues),
               resourceType: z.enum(clientClaimableResourceTypeValues),

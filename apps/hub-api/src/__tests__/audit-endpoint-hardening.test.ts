@@ -123,6 +123,20 @@ describe('audit.sync — client-claimable allowlist (M-HUB-3)', () => {
       expect(res.results[0]).toEqual({ id: '00000000-0000-4000-8000-000000000001', success: true })
     },
   )
+
+  // Regression: the lab authorization workflow + outbreak modals stamp actorRole
+  // with the lab SUB-ROLE (LabRole), which is the accountability-relevant tier.
+  // These are NOT top-level UserRole members, but must be claimable or audit.sync
+  // 400s and drops the whole batch (Rule #6). LAB_TECH is already a UserRole.
+  it.each(['SENIOR_TECH', 'SUPERVISOR', 'LAB_MANAGER'])(
+    'ACCEPTS the lab sub-role actorRole %s',
+    async (actorRole) => {
+      const router = createTRPCRouter({ audit: auditRouter })
+      const caller = createCallerFactory(router)(makeCtx(AUTHED))
+      const res = await caller.audit.sync({ events: [baseEvent({ actorRole })] })
+      expect(res.results[0]).toEqual({ id: '00000000-0000-4000-8000-000000000001', success: true })
+    },
+  )
 })
 
 describe('lab.reportAuthEvent — spoofed actor not attributed (M-HUB-3)', () => {
