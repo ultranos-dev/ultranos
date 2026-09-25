@@ -51,6 +51,30 @@ const CLIENT_CLAIMABLE_RESOURCE_TYPES = [
   AuditResourceType.SERVICE_REQUEST,
   AuditResourceType.DIAGNOSTIC_REPORT,
   AuditResourceType.SYSTEM,
+  // Operational / spoke-emitted resource types (Story 49-1 + lab/pharmacy audit
+  // clients). These are legitimately claimed by spoke clients; omitting them made
+  // audit.sync 400 on any batch containing one, silently dropping the whole batch
+  // (Rule #6). Hub-only types (PRESCRIBING_ANOMALY / KYC_SUBMISSION / LAB_REGISTRATION)
+  // stay OUT — a client must never claim those.
+  AuditResourceType.PRACTITIONER,
+  AuditResourceType.LAB_SAMPLE,
+  AuditResourceType.SPECIMEN,
+  AuditResourceType.TEMPERATURE_MONITORING,
+  AuditResourceType.WASTE_CONTAINER,
+  AuditResourceType.EMPLOYEE_HEALTH,
+  AuditResourceType.SHIFT_HANDOVER,
+  AuditResourceType.CONSULTATION,
+  AuditResourceType.DATA_BUDGET,
+  AuditResourceType.AI_PROVENANCE,
+  AuditResourceType.CASH_DRAWER,
+  AuditResourceType.INVOICE,
+  AuditResourceType.REFUND,
+  AuditResourceType.GOODS_RECEIPT,
+  AuditResourceType.PURCHASE_ORDER,
+  AuditResourceType.STOCK_BATCH,
+  AuditResourceType.SUPPLIER_INVOICE,
+  AuditResourceType.SUPPLIER_PAYMENT,
+  AuditResourceType.SUPPLY_REQUEST,
 ] as const
 
 const clientClaimableActionValues = CLIENT_CLAIMABLE_ACTIONS as unknown as [string, ...string[]]

@@ -111,6 +111,18 @@ describe('audit.sync — client-claimable allowlist (M-HUB-3)', () => {
       caller.audit.sync({ events: [baseEvent({ resourceType: 'PRESCRIBING_ANOMALY' })] }),
     ).rejects.toThrow()
   })
+
+  // Regression: operational resource types the spoke clients legitimately emit must
+  // be claimable, or audit.sync 400s and silently drops the whole batch (Rule #6).
+  it.each(['DATA_BUDGET', 'SPECIMEN', 'LAB_SAMPLE', 'TEMPERATURE_MONITORING', 'CASH_DRAWER'])(
+    'ACCEPTS the client-operational resourceType %s',
+    async (resourceType) => {
+      const router = createTRPCRouter({ audit: auditRouter })
+      const caller = createCallerFactory(router)(makeCtx(AUTHED))
+      const res = await caller.audit.sync({ events: [baseEvent({ resourceType })] })
+      expect(res.results[0]).toEqual({ id: '00000000-0000-4000-8000-000000000001', success: true })
+    },
+  )
 })
 
 describe('lab.reportAuthEvent — spoofed actor not attributed (M-HUB-3)', () => {
