@@ -168,11 +168,14 @@ export function WorklistItem({
         </p>
       </div>
 
-      {/* Stability badge */}
-      <StabilityBadge
-        status={sample.stabilityStatus}
-        remainingMinutes={sample.remainingMinutes}
-      />
+      {/* Stability badge — countdown for non-expired samples; the EXPIRED
+          label is relocated next to the Archive action below. */}
+      {!isExpired && (
+        <StabilityBadge
+          status={sample.stabilityStatus}
+          remainingMinutes={sample.remainingMinutes}
+        />
+      )}
 
       {/* Time in queue */}
       <span className="shrink-0 text-xs text-muted-foreground" aria-label={`In queue: ${timeInQueueLabel}`}>
@@ -199,6 +202,14 @@ export function WorklistItem({
         </div>
       )}
 
+      {/* EXPIRED badge — relocated to sit next to the Archive action */}
+      {isExpired && (
+        <StabilityBadge
+          status={sample.stabilityStatus}
+          remainingMinutes={sample.remainingMinutes}
+        />
+      )}
+
       {/* Archive / Unarchive — secondary action, always available on both shelves */}
       <button
         type="button"
@@ -220,12 +231,14 @@ export function WorklistItem({
         {isArchivedView ? t('unarchive') : t('archive')}
       </button>
 
-      {/* Re-collect sample — secondary action, opens ReceiveSampleModal for replacement */}
+      {/* Re-collect sample — secondary action, opens ReceiveSampleModal for
+          replacement. Disabled while archived: a sample must be unarchived
+          (back on the Active shelf) before it can be re-collected. */}
       <button
         type="button"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={handleRecollect}
-        disabled={isLockedByOther}
+        disabled={isLockedByOther || isArchivedView}
         className="shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
         aria-label={`${t('recollect')} — ${sample.patientRef.firstName}`}
         title={t('recollect')}
