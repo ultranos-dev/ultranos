@@ -33,6 +33,18 @@ export async function getPatientPhotoUrl(
   }
 }
 
+/** Convert a data: URL (from the photo cropper) to a Blob for multipart upload. */
+export function dataUrlToBlob(dataUrl: string): Blob {
+  const commaIdx = dataUrl.indexOf(',')
+  const header = dataUrl.slice(0, commaIdx)
+  const base64 = dataUrl.slice(commaIdx + 1)
+  const mime = /data:(.*?);/.exec(header)?.[1] ?? 'image/jpeg'
+  const bytes = atob(base64)
+  const arr = new Uint8Array(bytes.length)
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i)
+  return new Blob([arr], { type: mime })
+}
+
 export async function uploadPatientPhoto(
   patientId: string,
   blob: Blob,

@@ -92,12 +92,18 @@ interface CreatePatientResult {
 }
 
 async function checkDuplicates(input: Record<string, unknown>): Promise<CheckDuplicatesResult> {
+  // POST, not GET: patient.checkDuplicates is a tRPC mutation so the identifying
+  // PHI in `input` (National ID, name, phone) rides in the request body — never
+  // the URL/query string, where it would land in logs and browser history.
   const url = new URL(getHubApiUrl())
   url.pathname = url.pathname.replace(/\/$/, '') + '/patient.checkDuplicates'
-  url.searchParams.set('input', JSON.stringify({ json: input }))
 
   const headers = await getAuthHeaders()
-  const res = await fetch(url.toString(), { headers })
+  const res = await fetch(url.toString(), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ json: input }),
+  })
   if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
   const body = await res.json() as { result: { data: { json: CheckDuplicatesResult } } }
   return body.result.data.json

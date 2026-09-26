@@ -1,7 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { db } from '@/lib/db'
-import { registerPatientOffline } from '@/lib/offline-registration'
+import {
+  registerPatientOffline,
+  uploadPendingPatientPhoto,
+  drainPendingPatientPhotos,
+} from '@/lib/offline-registration'
 import type { FhirPatient } from '@ultranos/shared-types'
+
+// Stub the photo upload network call; keep dataUrlToBlob real-ish (returns a Blob).
+const { mockUploadPatientPhoto } = vi.hoisted(() => ({ mockUploadPatientPhoto: vi.fn() }))
+vi.mock('@/lib/patient-photo-api', () => ({
+  uploadPatientPhoto: (...args: unknown[]) => mockUploadPatientPhoto(...args),
+  dataUrlToBlob: (s: string) => new Blob([s]),
+}))
 
 const PROV = 'prov-offline-0001'
 
@@ -27,7 +38,14 @@ function makeLocalPatient(id: string): FhirPatient {
 
 describe('registerPatientOffline (Story 60.3, C-OPD-2)', () => {
   beforeEach(async () => {
-    await Promise.all([db.patients.clear(), db.syncQueue.clear()])
+    await Promise.all([
+      db.patients.clear(),
+      db.syncQueue.clear(),
+      db.pendingPatientPhotos.clear(),
+      db.provisionalIdMap.clear(),
+    ])
+    mockUploadPatientPhoto.mockReset()
+    mockUploadPatientPhoto.mockResolvedValue({ photoUrl: 'opaque-key', lastUpdated: new Date().toISOString() })
   })
 
   it('writes the patient to encrypted local storage with the mpiPending flag and enqueues a Patient create', async () => {
@@ -64,5 +82,65 @@ describe('registerPatientOffline (Story 60.3, C-OPD-2)', () => {
     // either way it must be a non-empty string that the drain will decrypt.
     expect(typeof raw).toBe('string')
     expect((raw ?? '').length).toBeGreaterThan(0)
+  })
+
+  it('does NOT stash a photo when none is provided', async () => {
+    await registerPatientOffline(PROV, makeLocalPatient(PROV), { consent: {} })
+    expect(await db.pendingPatientPhotos.get(PROV)).toBeUndefined()
+  })
+
+  it('stashes the captured photo (encrypted) keyed by the provisional id when provided', async () => {
+    const dataUrl = 'data:image/webp;base64,QUJD'
+    await registerPatientOffline(PROV, makeLocalPatient(PROV), { consent: {} }, dataUrl)
+
+    const stash = await db.pendingPatientPhotos.get(PROV)
+    expect(stash?.dataUrl).toBe(dataUrl)
+    expect(typeof stash?.createdAt).toBe('string')
+  })
+})
+
+describe('offline photo deferred upload', () => {
+  beforeEach(async () => {
+    await Promise.all([db.pendingPatientPhotos.clear(), db.provisionalIdMap.clear()])
+    mockUploadPatientPhoto.mockReset()
+    mockUploadPatientPhoto.mockResolvedValue({ photoUrl: 'opaque-key', lastUpdated: new Date().toISOString() })
+  })
+
+  it('uploadPendingPatientPhoto uploads under the Hub id and clears the stash', async () => {
+    await db.pendingPatientPhotos.put({ provisionalId: PROV, dataUrl: 'data:image/webp;base64,QUJD', createdAt: new Date().toISOString() })
+
+    await uploadPendingPatientPhoto(PROV, 'hub-uuid-1')
+
+    expect(mockUploadPatientPhoto).toHaveBeenCalledTimes(1)
+    expect(mockUploadPatientPhoto.mock.calls[0]?.[0]).toBe('hub-uuid-1')
+    expect(await db.pendingPatientPhotos.get(PROV)).toBeUndefined()
+  })
+
+  it('uploadPendingPatientPhoto is a no-op when nothing is stashed', async () => {
+    await uploadPendingPatientPhoto(PROV, 'hub-uuid-1')
+    expect(mockUploadPatientPhoto).not.toHaveBeenCalled()
+  })
+
+  it('leaves the stash in place when the upload fails (retried by the sweep)', async () => {
+    await db.pendingPatientPhotos.put({ provisionalId: PROV, dataUrl: 'data:image/webp;base64,QUJD', createdAt: new Date().toISOString() })
+    mockUploadPatientPhoto.mockRejectedValueOnce(new Error('network'))
+
+    await expect(uploadPendingPatientPhoto(PROV, 'hub-uuid-1')).rejects.toThrow()
+    expect(await db.pendingPatientPhotos.get(PROV)).toBeDefined()
+  })
+
+  it('drainPendingPatientPhotos uploads reconciled stashes and skips unreconciled ones', async () => {
+    // Reconciled: has a provisional→hub mapping → should upload + clear.
+    await db.pendingPatientPhotos.put({ provisionalId: 'prov-reconciled', dataUrl: 'data:image/webp;base64,QUJD', createdAt: new Date().toISOString() })
+    await db.provisionalIdMap.put({ provisionalId: 'prov-reconciled', hubId: 'hub-9', reconciledAt: new Date().toISOString() })
+    // Unreconciled: no mapping yet → should be left untouched.
+    await db.pendingPatientPhotos.put({ provisionalId: 'prov-pending', dataUrl: 'data:image/webp;base64,QUJD', createdAt: new Date().toISOString() })
+
+    await drainPendingPatientPhotos()
+
+    expect(mockUploadPatientPhoto).toHaveBeenCalledTimes(1)
+    expect(mockUploadPatientPhoto.mock.calls[0]?.[0]).toBe('hub-9')
+    expect(await db.pendingPatientPhotos.get('prov-reconciled')).toBeUndefined()
+    expect(await db.pendingPatientPhotos.get('prov-pending')).toBeDefined()
   })
 })

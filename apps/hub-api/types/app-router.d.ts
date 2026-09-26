@@ -183,7 +183,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             };
             meta: object;
         }>;
-        checkDuplicates: import("@trpc/server").TRPCQueryProcedure<{
+        checkDuplicates: import("@trpc/server").TRPCMutationProcedure<{
             input: {
                 gender?: "unknown" | "male" | "female" | "other" | undefined;
                 phone?: string | undefined;
@@ -259,6 +259,10 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 occupation?: string | undefined;
                 educationLevel?: "NONE" | "PRIMARY" | "SECONDARY" | "TERTIARY" | "UNKNOWN" | undefined;
                 disability?: boolean | undefined;
+                householdId?: string | undefined;
+                nationalIdType?: "OTHER" | "PASSPORT" | "TAZKIRA_PAPER" | "ETAZKIRA" | "UNHCR" | undefined;
+                bloodGroup?: string | undefined;
+                photoUrl?: string | undefined;
                 birthDate?: string | undefined;
                 birthYearOnly?: boolean | undefined;
                 maritalStatus?: "M" | "S" | "D" | "W" | "UNK" | undefined;
@@ -272,6 +276,12 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     gender?: import("@ultranos/shared-types").AdministrativeGender | undefined;
                 }[] | undefined;
                 phoneUse?: "home" | "work" | "mobile" | undefined;
+                allergies?: {
+                    substanceText: string;
+                    substanceCode?: string | undefined;
+                    substanceSystem?: string | undefined;
+                    criticality?: "low" | "high" | "unable-to-assess" | undefined;
+                }[] | undefined;
             };
             output: {
                 id: string;
@@ -331,6 +341,10 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 occupation?: string | undefined;
                 educationLevel?: "NONE" | "PRIMARY" | "SECONDARY" | "TERTIARY" | "UNKNOWN" | undefined;
                 disability?: boolean | undefined;
+                householdId?: string | undefined;
+                nationalIdType?: "OTHER" | "PASSPORT" | "TAZKIRA_PAPER" | "ETAZKIRA" | "UNHCR" | undefined;
+                bloodGroup?: string | undefined;
+                photoUrl?: string | undefined;
                 birthDate?: string | undefined;
                 birthYearOnly?: boolean | undefined;
                 maritalStatus?: "M" | "S" | "D" | "W" | "UNK" | undefined;
@@ -344,6 +358,12 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     gender?: import("@ultranos/shared-types").AdministrativeGender | undefined;
                 }[] | undefined;
                 phoneUse?: "home" | "work" | "mobile" | undefined;
+                allergies?: {
+                    substanceText: string;
+                    substanceCode?: string | undefined;
+                    substanceSystem?: string | undefined;
+                    criticality?: "low" | "high" | "unable-to-assess" | undefined;
+                }[] | undefined;
             } & {
                 offlineCreatedAt: string;
             };
@@ -415,6 +435,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     mpiScore: number;
                     photoUrl: string;
                     bloodGroup: string;
+                    householdId: string;
+                    nationalIdType: string;
                     displacementCategory: string;
                     nationality: string;
                     occupation: string;

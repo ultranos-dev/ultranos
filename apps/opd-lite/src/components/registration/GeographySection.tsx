@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { ProvinceAutocomplete } from '@/components/shared/ProvinceAutocomplete'
 import { DistrictAutocomplete } from '@/components/shared/DistrictAutocomplete'
 import type { AfghanProvince } from '@ultranos/shared-types'
+import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { Card } from '@/components/Card'
 
 interface AddressFields {
@@ -91,10 +92,10 @@ export function GeographySection({
           >
             {t('village')}
           </label>
-          <input
+          <Input
             id="origin-village"
             type="text"
-            className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+            className="min-h-[44px]"
             placeholder={t('villagePlaceholder')}
             value={origin.village}
             onChange={(e) =>
@@ -165,10 +166,10 @@ export function GeographySection({
               >
                 {t('village')}
               </label>
-              <input
+              <Input
                 id="current-village"
                 type="text"
-                className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                className="min-h-[44px]"
                 placeholder={t('villagePlaceholder')}
                 value={current.village}
                 onChange={(e) =>

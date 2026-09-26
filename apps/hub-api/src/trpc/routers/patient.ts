@@ -22,6 +22,22 @@ function hashNationalId(rawId: string): string {
 }
 
 /**
+ * Map validated registration allergies to the snake_case rows the
+ * create_patient_with_consent RPC inserts into allergy_intolerances (Tier-1
+ * safety data, persisted atomically with the patient). Empty/absent → [].
+ */
+function buildAllergyRows(
+  allergies?: Array<{ substanceText: string; substanceCode?: string; substanceSystem?: string; criticality?: string }>,
+): Array<Record<string, unknown>> {
+  return (allergies ?? []).map((a) => ({
+    substance_text:   a.substanceText,
+    substance_code:   a.substanceCode ?? null,
+    substance_system: a.substanceSystem ?? null,
+    criticality:      a.criticality ?? null,
+  }))
+}
+
+/**
  * Roles barred from enumerating the patient directory (patient.list / patient.search).
  * PATIENT and GUARDIAN hold `Patient` in ROLE_PERMISSIONS (so enforceResourceAccess
  * lets them through) but must NEVER browse the registry — they use their own-record
@@ -395,7 +411,12 @@ export const patientRouter = createTRPCRouter({
         { message: 'At least one identity field (name or hard identifier) is required' }
       )
     )
-    .query(async ({ ctx, input }) => {
+    // MUTATION (POST), not query: the input carries raw identifying PHI (National
+    // ID, name, phone). A tRPC query would serialise that into the request URL,
+    // leaking it into server/proxy access logs and browser history (Rule #1, and
+    // the same rationale as lab.verifyPatient staying a mutation, Rule #7 H-LAB-5).
+    // No DB write occurs here — this is a read-only dedupe check sent over POST.
+    .mutation(async ({ ctx, input }) => {
       const { hmacKey } = getFieldEncryptionKeys()
 
       const nationalIdHash = input.nationalId
@@ -641,6 +662,10 @@ export const patientRouter = createTRPCRouter({
         education_level:       input.educationLevel ?? null,
         disability:            input.disability ?? null,
         telecom_phone_use:     input.phoneUse ?? null,
+        household_id:          input.householdId ?? null,
+        national_id_type:      input.nationalIdType ?? null,
+        blood_group:           input.bloodGroup ?? null,
+        photo_url:             input.photoUrl ?? null,
         emergency_contacts:    input.contacts ? JSON.stringify(input.contacts) : JSON.stringify([]),
       })
 
@@ -664,7 +689,7 @@ export const patientRouter = createTRPCRouter({
       // Step 7: Atomic insert via RPC
       const { data: rpcData, error: rpcError } = await ctx.supabase.rpc(
         'create_patient_with_consent',
-        { p_patient: row, p_consent: consentRow },
+        { p_patient: row, p_consent: consentRow, p_allergies: buildAllergyRows(input.allergies) },
       )
 
       if (rpcError || !rpcData) {
@@ -791,6 +816,10 @@ export const patientRouter = createTRPCRouter({
         education_level:       input.educationLevel ?? null,
         disability:            input.disability ?? null,
         telecom_phone_use:     input.phoneUse ?? null,
+        household_id:          input.householdId ?? null,
+        national_id_type:      input.nationalIdType ?? null,
+        blood_group:           input.bloodGroup ?? null,
+        photo_url:             input.photoUrl ?? null,
         emergency_contacts:    input.contacts ? JSON.stringify(input.contacts) : JSON.stringify([]),
       })
 
@@ -805,7 +834,7 @@ export const patientRouter = createTRPCRouter({
 
       const { data: rpcData, error: rpcError } = await ctx.supabase.rpc(
         'create_patient_with_consent',
-        { p_patient: row, p_consent: consentRow },
+        { p_patient: row, p_consent: consentRow, p_allergies: buildAllergyRows(input.allergies) },
       )
 
       if (rpcError || !rpcData) {
@@ -889,6 +918,7 @@ export const patientRouter = createTRPCRouter({
           'address_province_origin, address_district_origin, address_village_origin, ' +
           'address_province_current, address_district_current, address_village_current, ' +
           'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
+          'household_id, national_id_type, ' +
           'mpi_score, mpi_warn, guardian_id, consent_version, patient_tier, ' +
           'biometric_fingerprint_hash, biometric_algorithm_version, ' +
           'birth_date_enc, merged_into, ' +
@@ -936,6 +966,7 @@ export const patientRouter = createTRPCRouter({
             'address_province_origin, address_district_origin, address_village_origin, ' +
             'address_province_current, address_district_current, address_village_current, ' +
             'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
+          'household_id, national_id_type, ' +
             'mpi_score, mpi_warn, guardian_id, consent_version, patient_tier, ' +
             'biometric_fingerprint_hash, biometric_algorithm_version, ' +
             'birth_date_enc, merged_into, ' +
@@ -1061,6 +1092,8 @@ export const patientRouter = createTRPCRouter({
           mpiScore: (patient.mpiScore as number) ?? undefined,
           photoUrl: (patient.photoUrl as string) ?? undefined,
           bloodGroup: (patient.bloodGroup as string) ?? undefined,
+          householdId: (patient.householdId as string) ?? undefined,
+          nationalIdType: (patient.nationalIdType as string) ?? undefined,
           displacementCategory: (patient.displacementCategory as string) ?? undefined,
           nationality: (patient.nationality as string)?.toUpperCase() ?? undefined,
           occupation: (patient.occupation as string) ?? undefined,

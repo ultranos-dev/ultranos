@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Plus, Trash2 } from '@ultranos/ui-kit/icons'
+import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/Card'
 import type { ContactRelationship, PatientContact } from '@ultranos/shared-types'
@@ -112,12 +113,12 @@ export function EmergencyContactSection({
                 {t('contactName')}
                 <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
               </label>
-              <input
+              <Input
                 id={`contact-name-${index}`}
                 type="text"
                 dir="auto"
                 maxLength={200}
-                className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                className="min-h-[44px]"
                 placeholder={t('contactNamePlaceholder')}
                 value={contact.name}
                 onChange={(e) => updateContact(index, { name: e.target.value })}
@@ -135,13 +136,13 @@ export function EmergencyContactSection({
                   ({t('optional')})
                 </span>
               </label>
-              <input
+              <Input
                 id={`contact-phone-${index}`}
                 type="tel"
                 dir="ltr"
                 inputMode="tel"
                 maxLength={50}
-                className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                className="min-h-[44px]"
                 placeholder={t('phonePlaceholder')}
                 value={contact.phone ?? ''}
                 onChange={(e) => updateContact(index, { phone: e.target.value || undefined })}

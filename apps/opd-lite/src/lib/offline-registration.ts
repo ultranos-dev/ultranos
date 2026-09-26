@@ -26,6 +26,7 @@ import { syncQueue } from './sync-queue'
 import { encryptionKeyStore } from './encryption-key-store'
 import { EncryptionKeyNotAvailableError } from './encryption-key-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from './audit'
+import { uploadPatientPhoto, dataUrlToBlob } from './patient-photo-api'
 import type { FhirPatient } from '@ultranos/shared-types'
 
 /**
@@ -44,6 +45,7 @@ export async function registerPatientOffline(
   provisionalId: string,
   localPatient: FhirPatient,
   syncPayload: Record<string, unknown>,
+  photoDataUrl?: string | null,
 ): Promise<void> {
   // Fail fast if the encryption key is gone (re-auth needed) — surfaced to the
   // caller which redirects to login. A patient write must never land unencrypted.
@@ -52,6 +54,17 @@ export async function registerPatientOffline(
   }
 
   await db.patients.put(localPatient)
+
+  // Stash the captured photo (encrypted at rest) keyed by the provisional id.
+  // The photo endpoint needs the authoritative Hub UUID, so the upload is
+  // deferred until reconciliation at sync-drain (see uploadPendingPatientPhoto).
+  if (photoDataUrl) {
+    await db.pendingPatientPhotos.put({
+      provisionalId,
+      dataUrl: photoDataUrl,
+      createdAt: new Date().toISOString(),
+    })
+  }
 
   const hlcTimestamp = serializeHlc(hlc.now())
   await enqueueSyncAction(syncQueue, {
@@ -67,4 +80,47 @@ export async function registerPatientOffline(
     phiAccess: 'patient_register_offline',
     mpiPending: true,
   })
+}
+
+/**
+ * Upload a stashed offline-registration photo now that the provisional patient
+ * has a real Hub id, then clear the stash. Rule #7: the server stores it under
+ * an opaque random key. On any failure the stash is LEFT in place so the sweep
+ * (drainPendingPatientPhotos) retries it — never lost on a transient error.
+ * No-op when there is no stashed photo for this provisional id.
+ */
+export async function uploadPendingPatientPhoto(provisionalId: string, hubId: string): Promise<void> {
+  const pending = await db.pendingPatientPhotos.get(provisionalId)
+  if (!pending?.dataUrl) return
+  const blob = dataUrlToBlob(pending.dataUrl)
+  // A freshly-synced patient's updated_at is <= now, so `new Date()` satisfies
+  // the photo endpoint's optimistic-concurrency guard.
+  await uploadPatientPhoto(hubId, blob, new Date().toISOString())
+  await db.pendingPatientPhotos.delete(provisionalId)
+}
+
+/**
+ * Best-effort sweep of any orphaned offline photo stashes whose patient has
+ * already reconciled to a Hub id (via provisionalIdMap) but whose upload did
+ * not complete (e.g. the app closed, or a transient upload failure). Safe to
+ * call on every worker start; each entry is retried independently and left in
+ * place on failure. Requires the encryption key to decrypt the stash.
+ */
+export async function drainPendingPatientPhotos(): Promise<void> {
+  if (!encryptionKeyStore.isReady()) return
+  let pendings: Array<{ provisionalId: string }>
+  try {
+    pendings = await db.pendingPatientPhotos.toArray()
+  } catch {
+    return
+  }
+  for (const p of pendings) {
+    const map = await db.provisionalIdMap.get(p.provisionalId)
+    if (!map?.hubId) continue // patient not reconciled yet — retry after its drain
+    try {
+      await uploadPendingPatientPhoto(p.provisionalId, map.hubId)
+    } catch {
+      // Leave the stash for the next sweep — opaque id only, no PHI logged.
+    }
+  }
 }

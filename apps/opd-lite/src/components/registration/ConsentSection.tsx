@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { FileText } from '@ultranos/ui-kit/icons'
+import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { Button } from '@/components/ui/Button'
 import { ConsentTextModal } from './ConsentTextModal'
 import { Card } from '@/components/Card'
@@ -53,7 +54,7 @@ export function ConsentSection({
 
       <div className="space-y-4">
         {/* Consent method radio group */}
-        <div role="radiogroup" aria-labelledby="consent-method-label">
+        <div role="radiogroup" aria-labelledby="consent-method-label" aria-required="true">
           <p
             id="consent-method-label"
             className="mb-2 text-sm font-semibold text-foreground"
@@ -111,17 +112,17 @@ export function ConsentSection({
               {t('consentWitness')}
               <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
             </label>
-            <input
+            <Input
               id="consent-witness"
               type="text"
               required
               aria-required="true"
               aria-invalid={!!errors?.witnessedBy}
               aria-describedby={errors?.witnessedBy ? 'consent-witness-error' : undefined}
-              className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+              className={`min-h-[44px] ${
                 errors?.witnessedBy
-                  ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                  : 'border-border focus:border-primary focus:ring-ring'
+                  ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                  : ''
               }`}
               placeholder={t('consentWitnessPlaceholder')}
               value={witnessedBy}
@@ -148,6 +149,8 @@ export function ConsentSection({
             id="consent-language"
             value={language}
             onChange={(e) => onLanguageChange(e.target.value as ConsentLanguage)}
+            required
+            aria-required="true"
             aria-invalid={!!errors?.language}
             className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.language

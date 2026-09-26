@@ -157,9 +157,13 @@ export interface FhirPatient {
     /** Soft MPI score — DEFERRED: computed by MPI engine */
     mpiScore?: number
     identifiers?: PatientIdentifier[]
-    /** Patient photo path — DEFERRED: separate photo capture workflow */
+    /** Patient photo path — set via the opaque-key photo upload after create */
     photoUrl?: string
     bloodGroup?: string
+    /** Alphanumeric household grouping id (family/tent/case id). Quasi-identifier. */
+    householdId?: string
+    /** Type of the presented national identity document (raw number never stored). */
+    nationalIdType?: 'TAZKIRA_PAPER' | 'ETAZKIRA' | 'PASSPORT' | 'UNHCR' | 'OTHER'
     /** Display name of last updater — DEFERRED: resolved at read time */
     updatedByName?: string
     /** Role of last updater — DEFERRED: resolved at read time */

@@ -10,6 +10,7 @@ import { DrainWorker, ConnectivityManager, isImmediateSyncTier, type SyncResult,
 import { createMeterFetch } from '@ultranos/sync-engine'
 import { recordDataUsage } from './db'
 import { syncQueue, decryptEntryPayload, setOnEnqueuedBridge, runSyncQueueRetention } from './sync-queue'
+import { drainPendingPatientPhotos, uploadPendingPatientPhoto } from './offline-registration'
 import { encryptionKeyStore } from './encryption-key-store'
 import { auditPhiAccess, AuditAction } from './audit'
 import type { AuditResourceType } from './audit'
@@ -162,6 +163,12 @@ async function pushPatientCreateEntries(
     try {
       const { reconcileProvisionalPatient } = await import('./reconcile-provisional-patient')
       await reconcileProvisionalPatient(entry.resourceId, hubId)
+      // Deferred offline photo (if one was captured): upload now that the Hub id
+      // exists. Non-fatal — on failure the stash is left for drainPendingPatientPhotos
+      // to retry, so a transient error never loses the photo or fails the sync.
+      try {
+        await uploadPendingPatientPhoto(entry.resourceId, hubId)
+      } catch { /* retried by the startup sweep */ }
       out.set(entry.resourceId, { success: true })
     } catch {
       out.set(entry.resourceId, { success: false, error: 'PROVISIONAL_PATIENT_RECONCILE_FAILED' })
@@ -377,6 +384,10 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
   // Housekeeping: bound synced-row PHI payload retention (Story 60.2).
   // Fire-and-forget on worker start; never blocks or fails sync startup.
   void runSyncQueueRetention()
+
+  // Retry any offline-captured patient photos whose patient has since reconciled
+  // to a Hub id but whose upload didn't complete. Fire-and-forget; best-effort.
+  void drainPendingPatientPhotos()
 
   // Bridge browser connectivity events into the manager for prompt state flips.
   // Use stable named refs so listeners can be removed on stop, preventing

@@ -115,6 +115,22 @@ export interface ProvisionalIdMapEntry {
   reParentedCount?: number
 }
 
+/**
+ * A patient photo captured during OFFLINE registration, stashed until the
+ * provisional patient reconciles to a Hub id and the image can be uploaded
+ * (the photo endpoint needs the real Hub UUID). The `dataUrl` is PHI (a
+ * patient face) and is encrypted at rest via PHI_TABLE_CONFIGS. Keyed by the
+ * provisional id so the reconcile/sweep can find it.
+ */
+export interface PendingPatientPhotoEntry {
+  /** Provisional client-minted patient id (primary key). */
+  provisionalId: string
+  /** Cropped image as a data: URL (encrypted at rest). */
+  dataUrl: string
+  /** ISO 8601 instant the photo was captured. */
+  createdAt: string
+}
+
 export interface PractitionerKeyEntry {
   publicKey: string          // base64-encoded Ed25519 public key (primary key)
   practitionerId: string
@@ -286,6 +302,7 @@ class OpdLiteDatabase extends Dexie {
   pharmaciesMirror!: EntityTable<PharmacyDirectoryEntry, 'id'>
   labsMirror!: EntityTable<LabDirectoryEntry, 'id'>
   provisionalIdMap!: EntityTable<ProvisionalIdMapEntry, 'provisionalId'>
+  pendingPatientPhotos!: EntityTable<PendingPatientPhotoEntry, 'provisionalId'>
 
   constructor() {
     super('opd-lite')
@@ -749,6 +766,13 @@ class OpdLiteDatabase extends Dexie {
     this.version(29).stores({
       provisionalIdMap: 'provisionalId, hubId, reconciledAt',
     })
+
+    // v30: Offline-captured patient photos, stashed until the provisional patient
+    // reconciles to a Hub id and the image can be uploaded (Story 60.3 follow-up).
+    // The `dataUrl` is a patient face → PHI, encrypted at rest via PHI_TABLE_CONFIGS.
+    this.version(30).stores({
+      pendingPatientPhotos: 'provisionalId',
+    })
   }
 }
 
@@ -891,6 +915,12 @@ const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
   {
     tableName: 'diagnosticReportObservations',
     indexedFields: ['id', 'diagnosticReportId'],
+  },
+  // Offline-captured patient photo stash — `dataUrl` is a patient face (PHI) and
+  // must be encrypted into _enc; only the provisional id key stays cleartext.
+  {
+    tableName: 'pendingPatientPhotos',
+    indexedFields: ['provisionalId'],
   },
 ]
 

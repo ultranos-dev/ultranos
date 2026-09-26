@@ -283,11 +283,15 @@ describe('PatientRegistrationForm — section order', () => {
 })
 
 describe('PatientRegistrationForm — Additional info collapsible', () => {
-  it('is collapsed by default: Photo/Social/Emergency sections are hidden', () => {
+  it('is collapsed by default: Social/Emergency sections are hidden', () => {
     renderForm()
-    expect(screen.queryByTestId('patient-photo-section')).toBeNull()
     expect(screen.queryByTestId('social-info-section')).toBeNull()
     expect(screen.queryByTestId('emergency-contact-section')).toBeNull()
+  })
+
+  it('patient photo is always visible (moved to the identity block, not in the collapsible group)', () => {
+    renderForm()
+    expect(screen.getByTestId('patient-photo-section')).toBeDefined()
   })
 
   it('toggle button has aria-expanded=false by default', () => {
@@ -301,7 +305,6 @@ describe('PatientRegistrationForm — Additional info collapsible', () => {
     const toggle = screen.getByRole('button', { name: /additionalInfoSection/i })
     fireEvent.click(toggle)
     expect(toggle.getAttribute('aria-expanded')).toBe('true')
-    expect(screen.getByTestId('patient-photo-section')).toBeDefined()
     expect(screen.getByTestId('social-info-section')).toBeDefined()
     expect(screen.getByTestId('emergency-contact-section')).toBeDefined()
   })
@@ -312,7 +315,7 @@ describe('PatientRegistrationForm — Additional info collapsible', () => {
     fireEvent.click(toggle)
     fireEvent.click(toggle)
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
-    expect(screen.queryByTestId('patient-photo-section')).toBeNull()
+    expect(screen.queryByTestId('social-info-section')).toBeNull()
   })
 
   it('Consent section is always visible regardless of Additional group state', () => {

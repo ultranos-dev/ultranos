@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { Card } from '@/components/Card'
 import type { DisplacementCategory, EducationLevel } from '@ultranos/shared-types'
 
@@ -65,7 +66,7 @@ export function SocialInfoSection({
         {t('socialInfoSection')}
       </legend>
 
-      <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
         {/* Displacement / population category */}
         <div>
           <label
@@ -129,12 +130,12 @@ export function SocialInfoSection({
               ({t('optional')})
             </span>
           </label>
-          <input
+          <Input
             id="occupation"
             type="text"
             dir="auto"
             maxLength={200}
-            className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+            className="min-h-[44px]"
             placeholder={t('occupationPlaceholder')}
             value={occupation}
             onChange={(e) => onOccupationChange(e.target.value)}
@@ -168,7 +169,7 @@ export function SocialInfoSection({
         </div>
 
         {/* Disability */}
-        <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+        <label className="flex items-center gap-2 cursor-pointer min-h-[44px] sm:col-span-2">
           <input
             type="checkbox"
             checked={disability}

@@ -15,6 +15,7 @@ import type {
 } from '@ultranos/shared-types'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
+import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { ChevronDown } from '@ultranos/ui-kit/icons'
 import { NameInputSection } from './NameInputSection'
 import { PatientPhotoSection } from './PatientPhotoSection'
@@ -23,7 +24,9 @@ import { ConsentSection } from './ConsentSection'
 import { MpiResultModal } from './MpiResultModal'
 import { SocialInfoSection } from './SocialInfoSection'
 import { EmergencyContactSection } from './EmergencyContactSection'
+import { AllergiesSection, type AllergyEntry } from './AllergiesSection'
 import { getHubApiUrl, getAuthHeaders } from '@/lib/hub-auth'
+import { uploadPatientPhoto, dataUrlToBlob } from '@/lib/patient-photo-api'
 import { Card } from '@/components/Card'
 import { db } from '@/lib/db'
 import { EncryptionKeyNotAvailableError } from '@/lib/encryption-key-store'
@@ -50,12 +53,18 @@ interface CreatePatientResult {
 }
 
 async function checkDuplicates(input: Record<string, unknown>): Promise<CheckDuplicatesResult> {
+  // POST, not GET: patient.checkDuplicates is a tRPC mutation so the identifying
+  // PHI in `input` (National ID, name, phone) rides in the request body — never
+  // the URL/query string, where it would land in logs and browser history.
   const url = new URL(getHubApiUrl())
   url.pathname = url.pathname.replace(/\/$/, '') + '/patient.checkDuplicates'
-  url.searchParams.set('input', JSON.stringify({ json: input }))
 
   const headers = await getAuthHeaders()
-  const res = await fetch(url.toString(), { headers })
+  const res = await fetch(url.toString(), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ json: input }),
+  })
   if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
   const body = await res.json() as { result: { data: { json: CheckDuplicatesResult } } }
   return body.result.data.json
@@ -108,6 +117,8 @@ const ClientRegistrationSchema = z.object({
   preferredLanguage: z.enum(['en', 'ar', 'prs', 'ps']).optional(),
   isNomadic: z.boolean().optional(),
   bloodGroup: z.string().optional(),
+  householdId: z.string().max(64).regex(/^[A-Za-z0-9-]+$/, 'householdIdInvalid').optional(),
+  nationalIdType: z.enum(['TAZKIRA_PAPER', 'ETAZKIRA', 'PASSPORT', 'UNHCR', 'OTHER']).optional(),
   maritalStatus: z.enum(['M', 'S', 'D', 'W', 'UNK']).optional(),
   addressOriginProvince: z.string().min(1, 'required'),
   addressOriginDistrict: z.string().min(1, 'required'),
@@ -149,6 +160,38 @@ const BLOOD_GROUPS = [
   'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown',
 ] as const
 
+type NationalIdType = 'TAZKIRA_PAPER' | 'ETAZKIRA' | 'PASSPORT' | 'UNHCR' | 'OTHER'
+
+const NATIONAL_ID_TYPES: { value: NationalIdType; labelKey: string }[] = [
+  { value: 'TAZKIRA_PAPER', labelKey: 'idTypeTazkiraPaper' },
+  { value: 'ETAZKIRA',      labelKey: 'idTypeEtazkira' },
+  { value: 'PASSPORT',      labelKey: 'idTypePassport' },
+  { value: 'UNHCR',         labelKey: 'idTypeUnhcr' },
+  { value: 'OTHER',         labelKey: 'idTypeOther' },
+]
+
+// Error-summary metadata: maps a fieldErrors key to its DOM anchor (for
+// focus/scroll) and an i18n label key. Keys without an anchor still render.
+const ERROR_FIELD_META: Record<string, { anchor?: string; labelKey: string }> = {
+  nameGiven:             { anchor: 'name-given',                labelKey: 'nameGiven' },
+  gender:                { anchor: 'gender',                    labelKey: 'gender' },
+  birthYear:             { anchor: 'birth-year',                labelKey: 'birthYear' },
+  birthDate:             { anchor: 'birth-date',                labelKey: 'birthDate' },
+  addressOriginProvince: { labelKey: 'province' },
+  addressOriginDistrict: { labelKey: 'district' },
+  householdId:           { anchor: 'household-id',              labelKey: 'householdIdLabel' },
+  consentMethod:         { anchor: 'consent-method-label',      labelKey: 'consentMethod' },
+  consentWitnessedBy:    { anchor: 'consent-witness',           labelKey: 'consentWitness' },
+  consentLanguage:       { anchor: 'consent-language',          labelKey: 'consentLanguage' },
+  guardianContact:       { anchor: 'emergency-contacts-anchor', labelKey: 'emergencyContactSection' },
+}
+
+// SNOMED CT "No known allergy" — coded marker stored when the clinician
+// affirms NKDA, so "asked, none" is distinguishable from "never asked".
+const NKDA_SUBSTANCE = 'No known allergies (NKDA)'
+const NKDA_CODE = '716186003'
+const NKDA_SYSTEM = 'http://snomed.info/sct'
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 interface PatientRegistrationFormProps {
@@ -175,6 +218,8 @@ export function PatientRegistrationForm({
   const [phone, setPhone] = useState('')
   const [phoneUse, setPhoneUse] = useState<'home' | 'work' | 'mobile' | ''>('')
   const [nationalId, setNationalId] = useState('')
+  const [nationalIdType, setNationalIdType] = useState<NationalIdType | ''>('')
+  const [householdId, setHouseholdId] = useState('')
   const [preferredLanguage, setPreferredLanguage] = useState<PatientLanguage>(
     locale === 'prs' ? 'prs' : locale === 'ar' ? 'ar' : locale === 'ps' ? 'ps' : 'en',
   )
@@ -196,6 +241,10 @@ export function PatientRegistrationForm({
 
   // Patient photo
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
+
+  // Allergies (Tier-1 safety) — NKDA affirmation or a free-text substance list
+  const [noKnownAllergies, setNoKnownAllergies] = useState(false)
+  const [allergies, setAllergies] = useState<AllergyEntry[]>([])
 
   // Emergency contacts
   const [emergencyContacts, setEmergencyContacts] = useState<PatientContact[]>([])
@@ -236,8 +285,43 @@ export function PatientRegistrationForm({
     isNomadic, bloodGroup, maritalStatus, addressOrigin, addressCurrent,
     sameAsOrigin, displacementCategory, nationality, occupation, educationLevel,
     disability, emergencyContacts, consentMethod, consentWitnessedBy,
-    consentLanguage, photoDataUrl,
+    consentLanguage, photoDataUrl, nationalIdType, householdId,
+    noKnownAllergies, allergies,
   ])
+
+  // ── Unsaved-changes guard ──
+  // Warn on tab close / reload / external navigation while the form is dirty so a
+  // half-entered patient record isn't lost. In-app Cancel is guarded separately.
+  useEffect(() => {
+    if (!isDirty) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [isDirty])
+
+  // ── Derived: patient age & guardian requirement for minors ──
+  const birthYearNum = birthYearOnly
+    ? (birthYear ? parseInt(birthYear, 10) : undefined)
+    : (birthDate ? parseInt(birthDate.slice(0, 4), 10) : undefined)
+  const patientAge = birthYearNum && birthYearNum >= 1900 ? CURRENT_YEAR - birthYearNum : undefined
+  const isMinor = patientAge !== undefined && patientAge >= 0 && patientAge < 18
+  const hasGuardianContact = emergencyContacts.some(
+    (c) => c.relationship === 'GUARDIAN' || c.relationship === 'PARENT',
+  )
+
+  // Build the allergies payload: an NKDA coded marker, or the non-empty substances.
+  const buildAllergiesInput = useCallback(() => {
+    if (noKnownAllergies) {
+      return [{ substanceText: NKDA_SUBSTANCE, substanceCode: NKDA_CODE, substanceSystem: NKDA_SYSTEM, criticality: 'low' as const }]
+    }
+    const cleaned = allergies
+      .map((a) => ({ substanceText: a.substanceText.trim(), criticality: a.criticality }))
+      .filter((a) => a.substanceText.length > 0)
+    return cleaned.length > 0 ? cleaned : undefined
+  }, [noKnownAllergies, allergies])
 
   // ── Build submission payload ──
 
@@ -260,6 +344,9 @@ export function PatientRegistrationForm({
         phone: phone || undefined,
         phoneUse: phoneUse || undefined,
         nationalId: nationalId || undefined,
+        nationalIdType: nationalIdType || undefined,
+        householdId: householdId || undefined,
+        allergies: buildAllergiesInput(),
         isNomadic,
         preferredLanguage: preferredLanguage || undefined,
         bloodGroup: bloodGroup !== 'Unknown' ? bloodGroup : undefined,
@@ -308,7 +395,8 @@ export function PatientRegistrationForm({
     },
     [
       nameGiven, nameFather, nameGrandfather, nameFamily, gender, birthYearOnly,
-      birthYear, birthDate, phone, phoneUse, nationalId, preferredLanguage,
+      birthYear, birthDate, phone, phoneUse, nationalId, nationalIdType, householdId,
+      buildAllergiesInput, preferredLanguage,
       isNomadic, bloodGroup, maritalStatus,
       addressOrigin, addressCurrent, sameAsOrigin,
       displacementCategory, nationality, occupation, educationLevel, disability,
@@ -331,6 +419,8 @@ export function PatientRegistrationForm({
       phone: phone || undefined,
       phoneUse: phoneUse || undefined,
       nationalId: nationalId || undefined,
+      nationalIdType: nationalIdType || undefined,
+      householdId: householdId || undefined,
       preferredLanguage: preferredLanguage || undefined,
       isNomadic,
       bloodGroup: bloodGroup || undefined,
@@ -356,7 +446,11 @@ export function PatientRegistrationForm({
       for (const issue of result.error.issues) {
         const key = issue.path.join('.')
         if (!errors[key]) {
-          errors[key] = issue.message === 'required' ? t('fieldRequired') : issue.message
+          const msg = issue.message
+          errors[key] =
+            msg === 'required' ? t('fieldRequired')
+            : msg === 'householdIdInvalid' ? t('householdIdInvalid')
+            : msg
         }
       }
       setFieldErrors(errors)
@@ -367,7 +461,8 @@ export function PatientRegistrationForm({
     return true
   }, [
     nameGiven, nameFather, nameGrandfather, nameFamily, gender, birthYearOnly,
-    birthYear, birthDate, phone, phoneUse, nationalId, preferredLanguage,
+    birthYear, birthDate, phone, phoneUse, nationalId, nationalIdType, householdId,
+    preferredLanguage,
     isNomadic, bloodGroup, maritalStatus,
     addressOrigin, addressCurrent,
     displacementCategory, nationality, occupation, educationLevel, disability,
@@ -416,6 +511,8 @@ export function PatientRegistrationForm({
                 : undefined),
           isNomadic,
           bloodGroup: bloodGroup !== 'Unknown' ? bloodGroup : undefined,
+          householdId: householdId || undefined,
+          nationalIdType: (nationalIdType as NationalIdType) || undefined,
           preferredLanguage: preferredLanguage || undefined,
           nationalIdHash: undefined,
           isActive: true,
@@ -434,6 +531,7 @@ export function PatientRegistrationForm({
     [
       nameGiven, nameFather, nameGrandfather, nameFamily, gender, birthDate, birthYear,
       birthYearOnly, phone, phoneUse, preferredLanguage, isNomadic, bloodGroup,
+      householdId, nationalIdType,
       maritalStatus, addressOrigin, addressCurrent, sameAsOrigin,
       displacementCategory, nationality, occupation, educationLevel, disability,
       emergencyContacts,
@@ -466,30 +564,34 @@ export function PatientRegistrationForm({
       // (which already carries `consent`) plus offlineCreatedAt. mpiProceedToken
       // is meaningless offline — the Hub re-runs MPI at drain — so drop it.
       const { mpiProceedToken: _drop, ...syncPayload } = payload
-      await registerPatientOffline(provisionalId, localPatient, {
-        ...syncPayload,
-        offlineCreatedAt: now,
-      })
+      await registerPatientOffline(
+        provisionalId,
+        localPatient,
+        { ...syncPayload, offlineCreatedAt: now },
+        photoDataUrl,
+      )
       return provisionalId
     },
-    [buildLocalPatient],
+    [buildLocalPatient, photoDataUrl],
   )
 
-  // ── Field-to-section mapping for scroll-to-first-error ──
-  // These are the DOM element ids that correspond to fieldErrors keys.
-  // Fields inside the "Additional information" collapsible group are listed here
-  // so we know to expand the group before scrolling.
-  // None of the current zod-required fields map to these sections, but the logic
-  // is implemented defensively in case the schema changes in the future.
-  const ADDITIONAL_SECTION_FIELD_IDS: Record<string, string> = {
-    // SocialInfoSection fields (all optional in schema)
-    displacementCategory: 'displacement-category',
-    nationality: 'nationality',
-    occupation: 'occupation',
-    educationLevel: 'education-level',
-    // EmergencyContactSection fields would use dynamic ids (contact-name-0, etc.)
-    // PatientPhotoSection has no schema-linked inputs
-  }
+  // Upload the captured photo AFTER the patient exists (Rule #7: the server stores
+  // it under an opaque random key and returns a signed reference — the spoke never
+  // holds the raw key). Non-fatal: a failed photo upload must never strand a
+  // successfully created patient. Online path only; offline photo capture is added
+  // from the profile once connectivity returns.
+  const uploadPhotoIfPresent = useCallback(
+    async (patientId: string) => {
+      if (!photoDataUrl) return
+      try {
+        const blob = dataUrlToBlob(photoDataUrl)
+        await uploadPatientPhoto(patientId, blob, new Date().toISOString())
+      } catch {
+        // Swallow — the clinician can add the photo later from the patient profile.
+      }
+    },
+    [photoDataUrl],
+  )
 
   // ── Submit handler ──
 
@@ -526,6 +628,19 @@ export function PatientRegistrationForm({
             firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' })
             firstInvalid.focus()
           }
+        })
+        return
+      }
+
+      // Guardian required for minors (enterprise pediatric registration): a patient
+      // under 18 must have at least one PARENT/GUARDIAN emergency contact. Surface
+      // as an error and expand the Additional group where contacts are entered.
+      if (isMinor && !hasGuardianContact) {
+        setFieldErrors((prev) => ({ ...prev, guardianContact: t('guardianRequiredForMinor') }))
+        setShowAdditional(true)
+        requestAnimationFrame(() => {
+          const el = document.getElementById('emergency-contacts-anchor')
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
         })
         return
       }
@@ -577,6 +692,7 @@ export function PatientRegistrationForm({
               return
             }
           }
+          await uploadPhotoIfPresent(created.id)
           router.push(`/${locale}/patient/${created.id}`)
         } else {
           setMpiDecision(dupeResult.decision as 'WARN' | 'BLOCK')
@@ -609,7 +725,8 @@ export function PatientRegistrationForm({
         setSubmitting(false)
       }
     },
-    [validate, buildPayload, savePatientLocally, registerOffline, setShowAdditional, router, locale, t],
+    [validate, buildPayload, savePatientLocally, registerOffline, uploadPhotoIfPresent,
+     isMinor, hasGuardianContact, setShowAdditional, router, locale, t],
   )
 
   // ── MPI modal handlers ──
@@ -632,6 +749,7 @@ export function PatientRegistrationForm({
             return
           }
         }
+        await uploadPhotoIfPresent(created.id)
         router.push(`/${locale}/patient/${created.id}`)
       } catch (err) {
         // Same offline fallback as handleSubmit: a connectivity failure while
@@ -659,7 +777,7 @@ export function PatientRegistrationForm({
         setSubmitting(false)
       }
     },
-    [buildPayload, savePatientLocally, registerOffline, router, locale, t],
+    [buildPayload, savePatientLocally, registerOffline, uploadPhotoIfPresent, router, locale, t],
   )
 
   const handleMpiCancel = useCallback(() => {
@@ -676,10 +794,62 @@ export function PatientRegistrationForm({
 
   const errorCount = Object.keys(fieldErrors).length
 
+  // Focus/scroll to an errored field from the error-summary; expands the
+  // Additional group first if the target lives inside it.
+  const focusField = useCallback((anchor?: string) => {
+    if (anchor && document.getElementById(anchor)?.closest('#additional-info-group')) {
+      setShowAdditional(true)
+    }
+    requestAnimationFrame(() => {
+      const el = anchor
+        ? document.getElementById(anchor)
+        : document.querySelector<HTMLElement>('[aria-invalid="true"]')
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.focus?.()
+      }
+    })
+  }, [])
+
   return (
     <>
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
-        {/* 1. Name section — first */}
+        {/* Error summary — announced on failed submit, links to each errored field */}
+        {errorCount > 0 && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="rounded-xl bg-destructive/10 p-4 ring-[0.65px] ring-destructive/30"
+          >
+            <p className="text-sm font-semibold text-destructive">
+              {t('errorSummaryTitle', { count: errorCount })}
+            </p>
+            <ul className="mt-2 space-y-1">
+              {Object.entries(fieldErrors).map(([key, msg]) => {
+                const meta = ERROR_FIELD_META[key]
+                const label = meta ? t(meta.labelKey) : key
+                return (
+                  <li key={key}>
+                    <button
+                      type="button"
+                      onClick={() => focusField(meta?.anchor)}
+                      className="text-start text-sm text-destructive underline underline-offset-2 hover:no-underline"
+                    >
+                      {label}: {msg}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )}
+        {/* 1. Identity — photo first, then names (grouped for verification) */}
+        <PatientPhotoSection
+          photoDataUrl={photoDataUrl}
+          onPhotoChange={setPhotoDataUrl}
+        />
+
+        {/* 2. Name section */}
         <NameInputSection
           nameGiven={nameGiven}
           nameFather={nameFather}
@@ -717,6 +887,8 @@ export function PatientRegistrationForm({
                 id="gender"
                 value={gender}
                 onChange={(e) => setGender(e.target.value as AdministrativeGender)}
+                required
+                aria-required="true"
                 aria-invalid={!!fieldErrors.gender}
                 className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                   fieldErrors.gender
@@ -764,17 +936,19 @@ export function PatientRegistrationForm({
                     {t('birthYear')}
                     <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
                   </label>
-                  <input
+                  <Input
                     id="birth-year"
                     type="number"
                     inputMode="numeric"
                     min={1900}
                     max={CURRENT_YEAR}
+                    required
+                    aria-required="true"
                     aria-invalid={!!fieldErrors.birthYear}
-                    className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                    className={`min-h-[44px] ${
                       fieldErrors.birthYear
-                        ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                        : 'border-border focus:border-primary focus:ring-ring'
+                        ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                        : ''
                     }`}
                     placeholder={t('birthYearPlaceholder')}
                     value={birthYear}
@@ -795,14 +969,16 @@ export function PatientRegistrationForm({
                     {t('birthDate')}
                     <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
                   </label>
-                  <input
+                  <Input
                     id="birth-date"
                     type="date"
+                    required
+                    aria-required="true"
                     aria-invalid={!!fieldErrors.birthDate}
-                    className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                    className={`min-h-[44px] ${
                       fieldErrors.birthDate
-                        ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                        : 'border-border focus:border-primary focus:ring-ring'
+                        ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                        : ''
                     }`}
                     value={birthDate}
                     onChange={(e) => setBirthDate(e.target.value)}
@@ -812,6 +988,15 @@ export function PatientRegistrationForm({
                       {fieldErrors.birthDate}
                     </p>
                   )}
+                </div>
+              )}
+
+              {isMinor && (
+                <div
+                  className="mt-2 flex items-start gap-2 rounded-xl bg-primary/5 px-3 py-2 text-sm text-foreground ring-[0.65px] ring-primary/20"
+                  role="status"
+                >
+                  <span>{t('minorGuardianNotice')}</span>
                 </div>
               )}
             </div>
@@ -869,13 +1054,21 @@ export function PatientRegistrationForm({
           </div>
         </Card>
 
-        {/* 3. Contact & Identification — National ID, Phone, Preferred Language */}
+        {/* 4. Allergies — safety-critical, prominent, never collapsed (Rule #4) */}
+        <AllergiesSection
+          noKnownAllergies={noKnownAllergies}
+          allergies={allergies}
+          onNoKnownAllergiesChange={setNoKnownAllergies}
+          onAllergiesChange={setAllergies}
+        />
+
+        {/* 5. Contact & Identification — National ID (+ type), Household ID, Phone, Language */}
         <Card as="fieldset">
           <legend className="text-base font-bold text-foreground">
             {t('contactSection')}
           </legend>
 
-          <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             {/* National ID */}
             <div>
               <label
@@ -887,16 +1080,75 @@ export function PatientRegistrationForm({
                   ({t('optional')})
                 </span>
               </label>
-              <input
+              <Input
                 id="national-id"
                 type="text"
                 inputMode="text"
                 maxLength={200}
-                className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                className="min-h-[44px]"
                 placeholder={t('nationalIdPlaceholder')}
                 value={nationalId}
                 onChange={(e) => setNationalId(e.target.value)}
               />
+            </div>
+
+            {/* National ID type */}
+            <div>
+              <label
+                htmlFor="national-id-type"
+                className="mb-1 block text-sm font-semibold text-foreground"
+              >
+                {t('nationalIdTypeLabel')}
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
+                  ({t('optional')})
+                </span>
+              </label>
+              <select
+                id="national-id-type"
+                value={nationalIdType}
+                onChange={(e) => setNationalIdType(e.target.value as NationalIdType | '')}
+                className="w-full min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="">{t('nationalIdTypePlaceholder')}</option>
+                {NATIONAL_ID_TYPES.map((it) => (
+                  <option key={it.value} value={it.value}>{t(it.labelKey)}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Household ID (alphanumeric) */}
+            <div>
+              <label
+                htmlFor="household-id"
+                className="mb-1 block text-sm font-semibold text-foreground"
+              >
+                {t('householdIdLabel')}
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
+                  ({t('optional')})
+                </span>
+              </label>
+              <Input
+                id="household-id"
+                type="text"
+                inputMode="text"
+                dir="ltr"
+                maxLength={64}
+                aria-invalid={!!fieldErrors.householdId}
+                aria-describedby={fieldErrors.householdId ? 'household-id-error' : undefined}
+                className={`min-h-[44px] ${
+                  fieldErrors.householdId
+                    ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                    : ''
+                }`}
+                placeholder={t('householdIdPlaceholder')}
+                value={householdId}
+                onChange={(e) => setHouseholdId(e.target.value)}
+              />
+              {fieldErrors.householdId && (
+                <p id="household-id-error" className="mt-1 text-sm text-destructive" role="alert">
+                  {fieldErrors.householdId}
+                </p>
+              )}
             </div>
 
             {/* Phone + phone use type */}
@@ -923,12 +1175,12 @@ export function PatientRegistrationForm({
                   <option value="home">{t('phoneUseHome')}</option>
                   <option value="work">{t('phoneUseWork')}</option>
                 </select>
-                <input
+                <Input
                   id="phone"
                   type="tel"
                   dir="ltr"
                   inputMode="tel"
-                  className="flex-1 min-h-[44px] rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="min-h-[44px] flex-1"
                   placeholder={t('phonePlaceholder')}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -980,7 +1232,7 @@ export function PatientRegistrationForm({
           }}
         />
 
-        {/* 5. Additional information — collapsible (Photo + Social + Emergency) */}
+        {/* 7. Additional information — collapsible (Household detail + Social + Emergency) */}
         <div>
           <button
             type="button"
@@ -999,12 +1251,6 @@ export function PatientRegistrationForm({
 
           {showAdditional && (
             <div id="additional-info-group" className="mt-4 space-y-4">
-              {/* Patient photo */}
-              <PatientPhotoSection
-                photoDataUrl={photoDataUrl}
-                onPhotoChange={setPhotoDataUrl}
-              />
-
               {/* Social / HMIS section */}
               <SocialInfoSection
                 displacementCategory={displacementCategory}
@@ -1020,15 +1266,25 @@ export function PatientRegistrationForm({
               />
 
               {/* Emergency contact section */}
-              <EmergencyContactSection
-                contacts={emergencyContacts}
-                onContactsChange={setEmergencyContacts}
-              />
+              <div id="emergency-contacts-anchor">
+                {fieldErrors.guardianContact && (
+                  <div
+                    className="mb-2 flex items-start gap-2 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive ring-[0.65px] ring-destructive/30"
+                    role="alert"
+                  >
+                    <span>{fieldErrors.guardianContact}</span>
+                  </div>
+                )}
+                <EmergencyContactSection
+                  contacts={emergencyContacts}
+                  onContactsChange={setEmergencyContacts}
+                />
+              </div>
             </div>
           )}
         </div>
 
-        {/* 6. Consent section — always visible, never collapsed */}
+        {/* 8. Consent section — always visible, never collapsed */}
         <ConsentSection
           method={consentMethod}
           witnessedBy={consentWitnessedBy}
@@ -1056,7 +1312,9 @@ export function PatientRegistrationForm({
             <Button
               variant="outline"
               type="button"
-              onClick={() => router.back()}
+              onClick={() => {
+                if (!isDirty || window.confirm(t('discardChangesConfirm'))) router.back()
+              }}
             >
               {t('cancel')}
             </Button>

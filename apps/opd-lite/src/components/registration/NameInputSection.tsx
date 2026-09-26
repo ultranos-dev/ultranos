@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { Card } from '@/components/Card'
 
 interface NameInputSectionProps {
@@ -45,7 +46,7 @@ export function NameInputSection({
         {t('nameSection')}
       </legend>
 
-      <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
         {/* Given name */}
         <div>
           <label
@@ -55,7 +56,7 @@ export function NameInputSection({
             {t('nameGiven')}
             <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
           </label>
-          <input
+          <Input
             id="name-given"
             type="text"
             dir="auto"
@@ -63,10 +64,10 @@ export function NameInputSection({
             aria-required="true"
             aria-invalid={!!errors?.nameGiven}
             aria-describedby={errors?.nameGiven ? 'name-given-error' : undefined}
-            className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+            className={`min-h-[44px] ${
               errors?.nameGiven
-                ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                : 'border-border focus:border-primary focus:ring-ring'
+                ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                : ''
             }`}
             placeholder={t('nameGivenPlaceholder')}
             value={nameGiven}
@@ -87,16 +88,16 @@ export function NameInputSection({
           >
             {t('nameFamily')}
           </label>
-          <input
+          <Input
             id="name-family"
             type="text"
             dir="auto"
             aria-invalid={!!errors?.nameFamily}
             aria-describedby={errors?.nameFamily ? 'name-family-error' : undefined}
-            className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+            className={`min-h-[44px] ${
               errors?.nameFamily
-                ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                : 'border-border focus:border-primary focus:ring-ring'
+                ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                : ''
             }`}
             placeholder={t('nameFamilyPlaceholder')}
             value={nameFamily}
@@ -117,16 +118,16 @@ export function NameInputSection({
           >
             {t('nameFather')}
           </label>
-          <input
+          <Input
             id="name-father"
             type="text"
             dir="auto"
             aria-invalid={!!errors?.nameFather}
             aria-describedby={errors?.nameFather ? 'name-father-error' : undefined}
-            className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+            className={`min-h-[44px] ${
               errors?.nameFather
-                ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                : 'border-border focus:border-primary focus:ring-ring'
+                ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                : ''
             }`}
             placeholder={t('nameFatherPlaceholder')}
             value={nameFather}
@@ -147,16 +148,16 @@ export function NameInputSection({
           >
             {t('nameGrandfather')}
           </label>
-          <input
+          <Input
             id="name-grandfather"
             type="text"
             dir="auto"
             aria-invalid={!!errors?.nameGrandfather}
             aria-describedby={errors?.nameGrandfather ? 'name-grandfather-error' : undefined}
-            className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+            className={`min-h-[44px] ${
               errors?.nameGrandfather
-                ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                : 'border-border focus:border-primary focus:ring-ring'
+                ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/30'
+                : ''
             }`}
             placeholder={t('nameGrandfatherPlaceholder')}
             value={nameGrandfather}
@@ -172,7 +173,7 @@ export function NameInputSection({
         {/* Display Name preview — grouped with dividers */}
         {hasAnyName && (
           <div
-            className="mt-3 rounded-xl ring-[0.65px] ring-border/50 bg-muted px-4 py-3"
+            className="sm:col-span-2 rounded-xl ring-[0.65px] ring-border/50 bg-muted px-4 py-3"
             aria-live="polite"
           >
             <p className="text-xs font-semibold text-muted-foreground mb-2">

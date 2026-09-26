@@ -69,6 +69,27 @@ export const EducationLevelSchema = z.enum([
 
 export const PatientLanguageSchema = z.enum(['en', 'ar', 'prs', 'ps'])
 
+// Type of the presented national identity document. The raw number is never
+// stored (only national_id_hash); this categorises WHICH document was shown —
+// important in the refugee/IDP/returnee deployment context (Tazkira, e-Tazkira,
+// passport, UNHCR/ProGres refugee ID, or other).
+export const NationalIdTypeSchema = z.enum([
+  'TAZKIRA_PAPER', 'ETAZKIRA', 'PASSPORT', 'UNHCR', 'OTHER',
+])
+export type NationalIdType = z.infer<typeof NationalIdTypeSchema>
+
+// Lightweight registration-time allergy capture (Safety Rule #4/#5). A free-text
+// substance (or a coded "No known allergies" marker) recorded unconfirmed /
+// unable-to-assess until a clinician verifies. Fuller AllergyIntolerance detail
+// is captured later in the clinical flow.
+export const RegistrationAllergyInputSchema = z.object({
+  substanceText:   z.string().min(1).max(200),
+  substanceCode:   z.string().max(64).optional(),
+  substanceSystem: z.string().max(128).optional(),
+  criticality:     z.enum(['low', 'high', 'unable-to-assess']).optional(),
+})
+export type RegistrationAllergyInput = z.infer<typeof RegistrationAllergyInputSchema>
+
 const PatientUltranosExtSchema = z.object({
   nameLocal: z.string(),
   nameLatin: z.string().optional(),
@@ -100,6 +121,10 @@ const PatientUltranosExtSchema = z.object({
   occupation: z.string().max(200).optional(),
   educationLevel: EducationLevelSchema.optional(),
   disability: z.boolean().optional(),
+  householdId: z.string().max(64).optional(),
+  nationalIdType: NationalIdTypeSchema.optional(),
+  bloodGroup: z.string().optional(),
+  photoUrl: z.string().optional(),
 })
 
 export const FhirPatientSchema = z.object({
@@ -187,6 +212,15 @@ export const CreatePatientMpiInputSchema = z
     educationLevel:       EducationLevelSchema.optional(),
     disability:           z.boolean().optional(),
     preferredLanguage:    PatientLanguageSchema.optional(),
+    // Alphanumeric household grouping id (family/tent/case id). Quasi-identifier.
+    householdId:          z.string().max(64).regex(/^[A-Za-z0-9-]+$/, 'householdId must be alphanumeric').optional(),
+    nationalIdType:       NationalIdTypeSchema.optional(),
+    bloodGroup:           z.string().max(20).optional(),
+    // Opaque photo storage key/url set server-side; only relevant on the offline
+    // sync path (online registration uploads the photo after create).
+    photoUrl:             z.string().max(500).optional(),
+    // Lightweight registration allergies, persisted atomically with the patient.
+    allergies:            z.array(RegistrationAllergyInputSchema).max(32).optional(),
     consent:           ConsentInputSchema,
   })
   // Transform: firstName alias → nameGiven (firstName stripped from output)
