@@ -8,6 +8,7 @@ import { usePatientStore } from '@/stores/patient-store'
 import { usePatientSearch } from '@/lib/use-patient-search'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { PatientResultList } from '@/components/patient-result-list'
+import { PatientCreateModal } from '@/components/patient/PatientCreateModal'
 import { Button } from '@/components/ui/Button'
 import { TodayEncountersCard } from './TodayEncountersCard'
 import { PendingLabResultsCard } from './PendingLabResultsCard'
@@ -35,6 +36,11 @@ export function ClinicalDashboard() {
   // behaviour previously baked into the app-local SearchInput component.
   const [inputValue, setInputValue] = useState(query)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Register-new-patient modal (opened in place; the /register-patient route also
+  // hosts this same modal for the nav link / bookmarks / deep-links).
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createPrefill, setCreatePrefill] = useState('')
 
   // Keep the input in sync when the store query is reset externally (e.g. after
   // selecting a patient clears the query).
@@ -89,7 +95,7 @@ export function ClinicalDashboard() {
         <Button variant="primary" onClick={handleStartEncounter}>
           {t('findPatient')}
         </Button>
-        <Button variant="outline" onClick={() => router.push('/register-patient')}>
+        <Button variant="outline" onClick={() => { setCreatePrefill(''); setCreateOpen(true) }}>
           {t('registerNew')}
         </Button>
       </div>
@@ -112,6 +118,7 @@ export function ClinicalDashboard() {
               isSearching={isSearching}
               onSelect={handleSelect}
               query={query}
+              onRegisterNew={(q) => { setCreatePrefill(q); setCreateOpen(true) }}
             />
           </div>
         )}
@@ -129,6 +136,12 @@ export function ClinicalDashboard() {
       <section>
         <RecentEncountersList />
       </section>
+
+      <PatientCreateModal
+        open={createOpen}
+        prefilledNameGiven={createPrefill}
+        onClose={() => setCreateOpen(false)}
+      />
     </div>
   )
 }

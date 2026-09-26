@@ -95,12 +95,13 @@ describe('NavMain', () => {
     expect(screen.getByText('99+')).toBeInTheDocument()
   })
 
-  it('renders parent items of groups with children (overview sub-item behind collapsible)', () => {
-    // The patients group has children (registerPatient) which adds an auto-prepended
-    // Overview sub-item rendered via t('overview'). With pathname '/', the collapsible
-    // is closed so only the parent renders, but this confirms the nav renders without error.
+  it('renders Patients as a single main nav item (no Overview / Register Patient sub-items)', () => {
+    // The Patients collapsible was removed: it is now a plain link to /patients,
+    // so neither the auto-prepended Overview sub-item nor Register Patient render.
     render(<NavMain groups={navGroups} />)
     expect(screen.getByText('patients')).toBeInTheDocument()
+    expect(screen.queryByText('registerPatient')).not.toBeInTheDocument()
+    expect(screen.queryByText('overview')).not.toBeInTheDocument()
   })
 })
 

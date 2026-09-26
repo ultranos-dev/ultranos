@@ -4,8 +4,7 @@
  * Covers:
  * - Section render order (Name first, then Demographics, Contact, Geography,
  *   then collapsed Additional group, then Consent)
- * - Additional info group is collapsed by default
- * - Expanding/collapsing the Additional info group
+ * - Social and Emergency sections are always visible (no collapsible toggle)
  * - Submit with empty form shows error count in save bar
  * - Validation exposes required-field errors (nameGiven, gender, birthYear, consent)
  * - MPI WARN flow: modal opens, user can proceed
@@ -15,7 +14,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { PatientRegistrationForm } from '@/components/registration/PatientRegistrationForm'
+import { PatientRegistrationForm, diffAllergies } from '@/components/registration/PatientRegistrationForm'
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -236,8 +235,9 @@ beforeEach(() => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function renderForm(props?: { prefilledNameGiven?: string }) {
-  return render(<PatientRegistrationForm {...props} />)
+function renderForm(props?: Record<string, unknown>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return render(<PatientRegistrationForm {...(props as any)} />)
 }
 
 function hubApiResponse(body: unknown, ok = true) {
@@ -267,64 +267,44 @@ describe('PatientRegistrationForm — section order', () => {
     expect(nameIdx).toBe(0)
   })
 
-  it('renders Consent section after the Additional info toggle', () => {
+  it('renders Consent section last, after the Social and Emergency sections', () => {
     const { container } = renderForm()
     const all = container.querySelectorAll(
-      '[data-testid="consent-section"], button[aria-expanded]'
+      '[data-testid="social-info-section"], [data-testid="emergency-contact-section"], [data-testid="consent-section"]'
     )
-    const toggleIdx = Array.from(all).findIndex(
-      (el) => el.tagName === 'BUTTON' && el.hasAttribute('aria-expanded')
+    const socialIdx = Array.from(all).findIndex(
+      (el) => el.getAttribute('data-testid') === 'social-info-section'
+    )
+    const emergencyIdx = Array.from(all).findIndex(
+      (el) => el.getAttribute('data-testid') === 'emergency-contact-section'
     )
     const consentIdx = Array.from(all).findIndex(
       (el) => el.getAttribute('data-testid') === 'consent-section'
     )
-    expect(toggleIdx).toBeLessThan(consentIdx)
+    expect(socialIdx).toBeLessThan(consentIdx)
+    expect(emergencyIdx).toBeLessThan(consentIdx)
   })
 })
 
-describe('PatientRegistrationForm — Additional info collapsible', () => {
-  it('is collapsed by default: Social/Emergency sections are hidden', () => {
+describe('PatientRegistrationForm — always-visible sections', () => {
+  it('Social and Emergency sections are visible without any toggle', () => {
     renderForm()
-    expect(screen.queryByTestId('social-info-section')).toBeNull()
-    expect(screen.queryByTestId('emergency-contact-section')).toBeNull()
-  })
-
-  it('patient photo is always visible (moved to the identity block, not in the collapsible group)', () => {
-    renderForm()
-    expect(screen.getByTestId('patient-photo-section')).toBeDefined()
-  })
-
-  it('toggle button has aria-expanded=false by default', () => {
-    renderForm()
-    const toggle = screen.getByRole('button', { name: /additionalInfoSection/i })
-    expect(toggle.getAttribute('aria-expanded')).toBe('false')
-  })
-
-  it('expands when toggle button is clicked', () => {
-    renderForm()
-    const toggle = screen.getByRole('button', { name: /additionalInfoSection/i })
-    fireEvent.click(toggle)
-    expect(toggle.getAttribute('aria-expanded')).toBe('true')
     expect(screen.getByTestId('social-info-section')).toBeDefined()
     expect(screen.getByTestId('emergency-contact-section')).toBeDefined()
   })
 
-  it('collapses again when toggle is clicked a second time', () => {
+  it('has no Additional-information collapsible toggle', () => {
     renderForm()
-    const toggle = screen.getByRole('button', { name: /additionalInfoSection/i })
-    fireEvent.click(toggle)
-    fireEvent.click(toggle)
-    expect(toggle.getAttribute('aria-expanded')).toBe('false')
-    expect(screen.queryByTestId('social-info-section')).toBeNull()
+    expect(screen.queryByRole('button', { name: /additionalInfoSection/i })).toBeNull()
   })
 
-  it('Consent section is always visible regardless of Additional group state', () => {
+  it('patient photo is always visible (identity block)', () => {
     renderForm()
-    expect(screen.getByTestId('consent-section')).toBeDefined()
-    const toggle = screen.getByRole('button', { name: /additionalInfoSection/i })
-    fireEvent.click(toggle) // expand
-    expect(screen.getByTestId('consent-section')).toBeDefined()
-    fireEvent.click(toggle) // collapse
+    expect(screen.getByTestId('patient-photo-section')).toBeDefined()
+  })
+
+  it('Consent section is always visible', () => {
+    renderForm()
     expect(screen.getByTestId('consent-section')).toBeDefined()
   })
 })
@@ -483,5 +463,110 @@ describe('PatientRegistrationForm — Cancel button navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
     expect(mockBack).toHaveBeenCalledOnce()
     expect(mockPush).not.toHaveBeenCalled()
+  })
+})
+
+// ── Edit mode ─────────────────────────────────────────────────────────────────
+
+function makeEditPatient() {
+  return {
+    id: 'p1',
+    resourceType: 'Patient',
+    name: [{ given: ['Ahmad'], family: 'Noor', text: 'Ahmad Noor' }],
+    gender: 'male',
+    birthYearOnly: true,
+    maritalStatus: 'M',
+    telecom: [{ system: 'phone', value: '0700123456', use: 'mobile' }],
+    contact: [{ relationship: 'PARENT', name: 'Dad' }],
+    _ultranos: {
+      nameLocal: 'Ahmad Noor', nameGiven: 'Ahmad', nameFather: 'Karim', nameFamily: 'Noor',
+      birthYear: 1990, isNomadic: false, isActive: true, patient_tier: 'FREE',
+      createdAt: '2020-01-01T00:00:00Z', bloodGroup: 'O+', householdId: 'HH-9',
+      nationalIdType: 'PASSPORT', preferredLanguage: 'en',
+      addressOrigin: { province: 'Kabul', district: 'Kabul City', village: '' },
+    },
+    meta: { lastUpdated: '2026-01-01T00:00:00Z' },
+  }
+}
+
+function makeEditContext(overrides?: Record<string, unknown>) {
+  return {
+    patientId: 'p1',
+    patient: makeEditPatient(),
+    existingAllergies: [],
+    lastKnownUpdate: '2026-01-01T00:00:00Z',
+    onSaved: vi.fn(),
+    onCancel: vi.fn(),
+    ...overrides,
+  }
+}
+
+describe('PatientRegistrationForm — edit mode', () => {
+  it('prefills main-form fields from the existing patient', () => {
+    renderForm({ editContext: makeEditContext() })
+    expect((document.getElementById('household-id') as HTMLInputElement).value).toBe('HH-9')
+    expect((document.getElementById('national-id-type') as HTMLSelectElement).value).toBe('PASSPORT')
+    expect((document.getElementById('gender') as HTMLSelectElement).value).toBe('male')
+  })
+
+  it('submits via patient.update (never MPI checkDuplicates / create) and calls onSaved', async () => {
+    mockFetch.mockResolvedValue(
+      hubApiResponse({ result: { data: { json: { id: 'p1', meta: { lastUpdated: '2026-02-02T00:00:00Z' } } } } }),
+    )
+    const ctx = makeEditContext()
+    renderForm({ editContext: ctx })
+
+    fireEvent.click(screen.getByRole('button', { name: /saveChanges/i }))
+
+    await waitFor(() => expect(ctx.onSaved).toHaveBeenCalled())
+    const urls = mockFetch.mock.calls.map((c) => String(c[0]))
+    expect(urls.some((u) => u.includes('patient.update'))).toBe(true)
+    expect(urls.some((u) => u.includes('checkDuplicates'))).toBe(false)
+    expect(urls.some((u) => u.includes('patient.create'))).toBe(false)
+    expect(mockPush).not.toHaveBeenCalled() // edit stays put; the modal host closes
+  })
+
+  it('Cancel invokes editContext.onCancel (not router.back)', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const ctx = makeEditContext()
+    renderForm({ editContext: ctx })
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
+    expect(ctx.onCancel).toHaveBeenCalledOnce()
+    expect(mockBack).not.toHaveBeenCalled()
+    confirmSpy.mockRestore()
+  })
+})
+
+describe('diffAllergies (append-only allergy diff)', () => {
+  it('unchanged list → nothing to do', () => {
+    const a = [{ id: '1', substanceText: 'Penicillin', criticality: 'high' as const }]
+    expect(diffAllergies(a, a)).toEqual({ toDeactivate: [], toAdd: [] })
+  })
+
+  it('new entry (no id) → toAdd only', () => {
+    const orig = [{ id: '1', substanceText: 'Penicillin', criticality: 'high' as const }]
+    const desired = [...orig, { substanceText: 'Aspirin', criticality: 'low' as const }]
+    const r = diffAllergies(desired, orig)
+    expect(r.toDeactivate).toEqual([])
+    expect(r.toAdd).toEqual([{ substanceText: 'Aspirin', criticality: 'low' }])
+  })
+
+  it('removed entry → deactivate its id', () => {
+    const orig = [{ id: '1', substanceText: 'Penicillin', criticality: 'high' as const }]
+    expect(diffAllergies([], orig)).toEqual({ toDeactivate: ['1'], toAdd: [] })
+  })
+
+  it('changed criticality → deactivate old id AND add the new version', () => {
+    const orig = [{ id: '1', substanceText: 'Penicillin', criticality: 'high' as const }]
+    const desired = [{ id: '1', substanceText: 'Penicillin', criticality: 'low' as const }]
+    const r = diffAllergies(desired, orig)
+    expect(r.toDeactivate).toEqual(['1'])
+    expect(r.toAdd).toEqual([{ id: '1', substanceText: 'Penicillin', criticality: 'low' }])
+  })
+
+  it('missing criticality is keyed as unable-to-assess (no spurious diff)', () => {
+    const orig = [{ id: '1', substanceText: 'Penicillin' }]
+    const desired = [{ id: '1', substanceText: 'Penicillin', criticality: 'unable-to-assess' as const }]
+    expect(diffAllergies(desired, orig)).toEqual({ toDeactivate: [], toAdd: [] })
   })
 })

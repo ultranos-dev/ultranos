@@ -64,9 +64,6 @@ export const navGroups: NavGroup[] = [
         titleKey: 'patients',
         url: '/patients',
         icon: Users,
-        children: [
-          { titleKey: 'registerPatient', url: '/register-patient' },
-        ],
       },
     ],
   },

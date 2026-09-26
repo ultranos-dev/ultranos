@@ -172,6 +172,92 @@ describe('consent.sync', () => {
   })
 })
 
+const TEST_DOCTOR = { sub: 'doc-1', role: 'DOCTOR' as const, sessionId: 'sess-d', facilityId: null, status: 'ACTIVE', orgId: 'org-1' }
+const POC_PATIENT_ID = '00000000-0000-4000-8000-000000000020'
+
+describe('consent.recordAtPointOfCare', () => {
+  function mkFrom(opts: { practitioner?: { id: string } | null; insertError?: unknown } = {}) {
+    const insert = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({
+          data: opts.insertError ? null : { id: CONSENT_UUID },
+          error: opts.insertError ?? null,
+        }),
+      }),
+    })
+    const from = vi.fn((table: string) => {
+      if (table === 'consent_records') return { insert }
+      if (table === 'practitioners') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: opts.practitioner ?? null, error: null }),
+            }),
+          }),
+        }
+      }
+      // AuditLogger / fallback — permissive so the audit write never breaks the test.
+      return {
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: 'a' }, error: null }) }),
+        }),
+      }
+    })
+    return { from, insert }
+  }
+
+  it('rejects non-clinical roles (PATIENT)', async () => {
+    const ctx = createTestContext({ supabaseFrom: mkFrom().from, user: TEST_USER })
+    const caller = createCaller(ctx)
+    await expect(
+      caller.consent.recordAtPointOfCare({ patientId: POC_PATIENT_ID, method: 'WRITTEN', language: 'en', version: '1.0' }),
+    ).rejects.toThrow()
+  })
+
+  it('records WRITTEN consent with no witness, grantor SELF', async () => {
+    const { from, insert } = mkFrom()
+    const ctx = createTestContext({ supabaseFrom: from, user: TEST_DOCTOR })
+    const caller = createCaller(ctx)
+    const res = await caller.consent.recordAtPointOfCare({
+      patientId: POC_PATIENT_ID, method: 'WRITTEN', language: 'en', version: '1.0',
+    })
+    expect(res.success).toBe(true)
+    expect(res.consentId).toBe(CONSENT_UUID)
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({
+      patient_id: POC_PATIENT_ID,
+      grantor_id: 'doc-1',
+      grantor_role: 'SELF',
+      purpose: 'TREATMENT',
+      status: 'ACTIVE',
+      consent_method: 'WRITTEN',
+      consent_language: 'en',
+      witnessed_by: null,
+    }))
+  })
+
+  it('resolves the clinician practitioner as witness for VERBAL_WITNESSED', async () => {
+    const { from, insert } = mkFrom({ practitioner: { id: 'prac-1' } })
+    const ctx = createTestContext({ supabaseFrom: from, user: TEST_DOCTOR })
+    const caller = createCaller(ctx)
+    await caller.consent.recordAtPointOfCare({
+      patientId: POC_PATIENT_ID, method: 'VERBAL_WITNESSED', language: 'en', version: '1.0',
+    })
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({
+      consent_method: 'VERBAL_WITNESSED',
+      witnessed_by: 'prac-1',
+    }))
+  })
+
+  it('rejects VERBAL_WITNESSED when the user has no practitioner record', async () => {
+    const { from } = mkFrom({ practitioner: null })
+    const ctx = createTestContext({ supabaseFrom: from, user: TEST_DOCTOR })
+    const caller = createCaller(ctx)
+    await expect(
+      caller.consent.recordAtPointOfCare({ patientId: POC_PATIENT_ID, method: 'VERBAL_WITNESSED', language: 'en', version: '1.0' }),
+    ).rejects.toThrow()
+  })
+})
+
 describe('consent.check', () => {
   it('requires authentication', async () => {
     const ctx = createTestContext({ user: null })

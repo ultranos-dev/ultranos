@@ -11,6 +11,9 @@ interface PatientResultListProps {
   isSearching: boolean
   onSelect: (patient: FhirPatient) => void
   query?: string
+  /** When provided, "Register new" opens the create modal in place (prefilled with
+   *  the query) instead of navigating to the /register-patient route. */
+  onRegisterNew?: (query: string) => void
 }
 
 function formatAge(birthDate?: string, birthYearOnly?: boolean): string {
@@ -41,7 +44,7 @@ function getIdentifier(patient: FhirPatient): string | null {
   return `${natId.system}: ***${natId.value.slice(-4)}`
 }
 
-export function PatientResultList({ results, isSearching, onSelect, query }: PatientResultListProps) {
+export function PatientResultList({ results, isSearching, onSelect, query, onRegisterNew }: PatientResultListProps) {
   const t = useTranslations('patient')
   const tReg = useTranslations('registration')
 
@@ -102,12 +105,22 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
         })}
       </ul>
       {results.length < 3 && (
-        <Link
-          href={`/register-patient${query ? `?nameGiven=${encodeURIComponent(query)}` : ''}`}
-          className="mt-4 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[44px]"
-        >
-          {tReg('registerNew')}
-        </Link>
+        onRegisterNew ? (
+          <button
+            type="button"
+            onClick={() => onRegisterNew(query ?? '')}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[44px]"
+          >
+            {tReg('registerNew')}
+          </button>
+        ) : (
+          <Link
+            href={`/register-patient${query ? `?nameGiven=${encodeURIComponent(query)}` : ''}`}
+            className="mt-4 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[44px]"
+          >
+            {tReg('registerNew')}
+          </Link>
+        )
       )}
     </>
   )

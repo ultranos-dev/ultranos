@@ -16,7 +16,6 @@ import type {
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
-import { ChevronDown } from '@ultranos/ui-kit/icons'
 import { NameInputSection } from './NameInputSection'
 import { PatientPhotoSection } from './PatientPhotoSection'
 import { GeographySection } from './GeographySection'
@@ -27,6 +26,9 @@ import { EmergencyContactSection } from './EmergencyContactSection'
 import { AllergiesSection, type AllergyEntry } from './AllergiesSection'
 import { getHubApiUrl, getAuthHeaders } from '@/lib/hub-auth'
 import { uploadPatientPhoto, dataUrlToBlob } from '@/lib/patient-photo-api'
+import { useAllergyStore } from '@/stores/allergy-store'
+import { hlc, serializeHlc } from '@/lib/hlc'
+import type { FhirAllergyIntolerance } from '@ultranos/shared-types'
 import { Card } from '@/components/Card'
 import { db } from '@/lib/db'
 import { EncryptionKeyNotAvailableError } from '@/lib/encryption-key-store'
@@ -85,6 +87,38 @@ async function createPatient(input: Record<string, unknown>): Promise<CreatePati
   return body.result.data.json
 }
 
+interface UpdatePatientResult {
+  id: string
+  meta?: { lastUpdated?: string }
+}
+
+async function updatePatient(input: Record<string, unknown>): Promise<UpdatePatientResult> {
+  const url = new URL(getHubApiUrl())
+  url.pathname = url.pathname.replace(/\/$/, '') + '/patient.update'
+  const headers = await getAuthHeaders()
+  const res = await fetch(url.toString(), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ json: input }),
+  })
+  if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
+  const body = await res.json() as { result: { data: { json: UpdatePatientResult } } }
+  return body.result.data.json
+}
+
+/** Clinician point-of-care consent capture (append-only). Edit mode only. */
+async function recordConsentPoc(input: Record<string, unknown>): Promise<void> {
+  const url = new URL(getHubApiUrl())
+  url.pathname = url.pathname.replace(/\/$/, '') + '/consent.recordAtPointOfCare'
+  const headers = await getAuthHeaders()
+  const res = await fetch(url.toString(), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ json: input }),
+  })
+  if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
+}
+
 /**
  * True when the failure is a connectivity failure (the Hub was unreachable),
  * not an application-level rejection. `fetch` rejects with a TypeError on
@@ -131,9 +165,11 @@ const ClientRegistrationSchema = z.object({
   occupation: z.string().max(200).optional(),
   educationLevel: z.enum(['NONE', 'PRIMARY', 'SECONDARY', 'TERTIARY', 'UNKNOWN']).optional(),
   disability: z.boolean().optional(),
-  consentMethod: z.enum(['WRITTEN', 'VERBAL_WITNESSED'], { required_error: 'required' }),
+  // Consent is required at registration (enforced create-only in validate()); in
+  // edit mode it is an optional point-of-care re-capture, so it is optional here.
+  consentMethod: z.enum(['WRITTEN', 'VERBAL_WITNESSED']).optional(),
   consentWitnessedBy: z.string().optional(),
-  consentLanguage: z.enum(['en', 'ar', 'prs', 'ps']),
+  consentLanguage: z.enum(['en', 'ar', 'prs', 'ps']).optional(),
 }).superRefine((val, ctx) => {
   if (val.birthYearOnly && !val.birthYear) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthYear'], message: 'required' })
@@ -192,19 +228,102 @@ const NKDA_SUBSTANCE = 'No known allergies (NKDA)'
 const NKDA_CODE = '716186003'
 const NKDA_SYSTEM = 'http://snomed.info/sct'
 
+const ALLERGY_CLINICAL_SYSTEM = 'http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical'
+const ALLERGY_VERIFICATION_SYSTEM = 'http://terminology.hl7.org/CodeSystem/allergyintolerance-verification'
+
+/**
+ * Build a FhirAllergyIntolerance for the allergy store (edit-mode add / append-only
+ * edit). Unconfirmed / unable-to-assess by default until a clinician verifies.
+ */
+function buildFhirAllergy(patientId: string, entry: AllergyEntry, recordedByRole: string): FhirAllergyIntolerance {
+  const now = new Date().toISOString()
+  const isNkda = entry.substanceText === NKDA_SUBSTANCE
+  return {
+    id: crypto.randomUUID(),
+    resourceType: 'AllergyIntolerance',
+    clinicalStatus: { coding: [{ system: ALLERGY_CLINICAL_SYSTEM, code: 'active' }] },
+    verificationStatus: { coding: [{ system: ALLERGY_VERIFICATION_SYSTEM, code: 'unconfirmed' }] },
+    type: 'allergy',
+    criticality: entry.criticality ?? 'unable-to-assess',
+    code: isNkda
+      ? { coding: [{ system: NKDA_SYSTEM, code: NKDA_CODE, display: NKDA_SUBSTANCE }], text: NKDA_SUBSTANCE }
+      : { coding: [], text: entry.substanceText },
+    patient: { reference: `Patient/${patientId}` },
+    recordedDate: now,
+    _ultranos: {
+      substanceFreeText: entry.substanceText,
+      createdAt: now,
+      recordedByRole,
+      isOfflineCreated: false,
+      hlcTimestamp: serializeHlc(hlc.now()),
+    },
+    meta: { lastUpdated: now },
+  }
+}
+
+/** Stable identity for allergy-diff comparison (substance + coarse criticality). */
+function allergyKey(a: AllergyEntry): string {
+  return `${a.substanceText.trim()}|${a.criticality ?? 'unable-to-assess'}`
+}
+
+/**
+ * Append-only allergy diff for edit-mode save: which existing allergy ids to
+ * deactivate (removed or changed) and which entries to add (new or changed).
+ * "Changed" = deactivate the old + add the new — the record is never mutated
+ * in place (Tier-1 append-only, Safety Rule #5). Pure + exported for testing.
+ */
+export function diffAllergies(
+  desired: AllergyEntry[],
+  original: AllergyEntry[],
+): { toDeactivate: string[]; toAdd: AllergyEntry[] } {
+  const desiredKeys = new Set(desired.map(allergyKey))
+  const originalKeys = new Set(original.map(allergyKey))
+  const toDeactivate = original
+    .filter((o) => o.id && !desiredKeys.has(allergyKey(o)))
+    .map((o) => o.id as string)
+  const toAdd = desired.filter((d) => !originalKeys.has(allergyKey(d)))
+  return { toDeactivate, toAdd }
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
+
+/**
+ * Edit-mode context. When provided, the form becomes the "Edit Profile" surface:
+ * it pre-fills from an existing patient, hides the photo section (photo is edited
+ * on the header avatar), makes consent an optional point-of-care re-capture, and
+ * on submit runs patient.update + an append-only allergy diff (via the allergy
+ * store) + an optional consent append — never MPI dedup / create.
+ */
+export interface RegistrationEditContext {
+  patientId: string
+  patient: FhirPatient
+  /** Active allergies for this patient, mapped to form entries (each carries its id). */
+  existingAllergies: AllergyEntry[]
+  lastKnownUpdate: string
+  onSaved: (updated: FhirPatient) => void
+  onCancel: () => void
+}
 
 interface PatientRegistrationFormProps {
   prefilledNameGiven?: string
+  editContext?: RegistrationEditContext
+  /** Create mode only: called by Cancel when the form is hosted in a modal
+   *  (falls back to router.back() when absent). Edit mode uses editContext.onCancel. */
+  onCancel?: () => void
 }
 
 export function PatientRegistrationForm({
   prefilledNameGiven = '',
+  editContext,
+  onCancel,
 }: PatientRegistrationFormProps) {
   const t = useTranslations('registration')
   const locale = useLocale()
   const isRtl = locale === 'ar' || locale === 'prs' || locale === 'ps'
   const router = useRouter()
+  const editing = !!editContext
+  const addAllergyToStore = useAllergyStore((s) => s.addAllergy)
+  const updateAllergyStatus = useAllergyStore((s) => s.updateAllergyStatus)
 
   // ── Form state ──
   const [nameGiven, setNameGiven] = useState(prefilledNameGiven)
@@ -261,7 +380,6 @@ export function PatientRegistrationForm({
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [isDirty, setIsDirty] = useState(!!prefilledNameGiven)
-  const [showAdditional, setShowAdditional] = useState(false)
   // Track whether the component has mounted so we can skip the first effect run
   const mountedRef = useRef(false)
 
@@ -270,6 +388,66 @@ export function PatientRegistrationForm({
   const [mpiDecision, setMpiDecision] = useState<'WARN' | 'BLOCK'>('WARN')
   const [mpiCandidates, setMpiCandidates] = useState<CheckDuplicatesResult['candidates']>([])
   const [mpiProceedToken, setMpiProceedToken] = useState<string | undefined>()
+
+  // ── Edit-mode prefill ──
+  // Populate every field from the existing patient once (guarded by a ref) so the
+  // Edit Profile modal opens fully pre-filled and later user edits are preserved.
+  const prefilledRef = useRef(false)
+  useEffect(() => {
+    if (!editContext || prefilledRef.current) return
+    prefilledRef.current = true
+    const p = editContext.patient
+    const u = p._ultranos
+    setNameGiven(u.nameGiven ?? p.name?.[0]?.given?.[0] ?? '')
+    setNameFather(u.nameFather ?? '')
+    setNameGrandfather(u.nameGrandfather ?? '')
+    setNameFamily(u.nameFamily ?? p.name?.[0]?.family ?? '')
+    setGender((p.gender as AdministrativeGender) ?? '')
+    const yearOnly = p.birthYearOnly ?? true
+    setBirthYearOnly(yearOnly)
+    setBirthYear(u.birthYear != null ? String(u.birthYear) : '')
+    setBirthDate(!yearOnly && p.birthDate ? p.birthDate : '')
+    const tel = p.telecom?.find((x) => x.system === 'phone')
+    setPhone(tel?.value ?? '')
+    setPhoneUse((tel?.use as 'home' | 'work' | 'mobile') ?? '')
+    setNationalIdType((u.nationalIdType as NationalIdType) ?? '')
+    setHouseholdId(u.householdId ?? '')
+    if (u.preferredLanguage) setPreferredLanguage(u.preferredLanguage)
+    setIsNomadic(u.isNomadic ?? false)
+    setBloodGroup(u.bloodGroup ?? 'Unknown')
+    setMaritalStatus((p.maritalStatus as MaritalStatus) ?? '')
+    if (u.addressOrigin) {
+      setAddressOrigin({
+        province: u.addressOrigin.province as AfghanProvince,
+        district: u.addressOrigin.district ?? '',
+        village: u.addressOrigin.village ?? '',
+      })
+    }
+    if (u.addressCurrent) {
+      setAddressCurrent({
+        province: u.addressCurrent.province as AfghanProvince,
+        district: u.addressCurrent.district ?? '',
+        village: u.addressCurrent.village ?? '',
+      })
+    }
+    setDisplacementCategory((u.displacementCategory as DisplacementCategory) ?? '')
+    setNationality(u.nationality ?? '')
+    setOccupation(u.occupation ?? '')
+    setEducationLevel((u.educationLevel as EducationLevel) ?? '')
+    setDisability(u.disability ?? false)
+    if (p.contact && p.contact.length > 0) setEmergencyContacts(p.contact)
+    // Allergies: prefill from existing (each entry carries its id). A lone NKDA
+    // marker → the "no known allergies" toggle; otherwise the substance list.
+    const existing = editContext.existingAllergies
+    const nkdaOnly = existing.length === 1 && existing[0]?.substanceText === NKDA_SUBSTANCE
+    if (nkdaOnly) {
+      setNoKnownAllergies(true)
+      setAllergies([])
+    } else {
+      setAllergies(existing.filter((a) => a.substanceText !== NKDA_SUBSTANCE))
+    }
+    // Consent is left blank — in edit mode it is an optional point-of-care re-capture.
+  }, [editContext])
 
   // ── Dirty tracking ──
   // Mark the form as dirty after first mount whenever any field value changes.
@@ -441,8 +619,8 @@ export function PatientRegistrationForm({
       consentLanguage,
     })
 
+    const errors: Record<string, string> = {}
     if (!result.success) {
-      const errors: Record<string, string> = {}
       for (const issue of result.error.issues) {
         const key = issue.path.join('.')
         if (!errors[key]) {
@@ -453,6 +631,16 @@ export function PatientRegistrationForm({
             : msg
         }
       }
+    }
+
+    // Consent is mandatory at registration (create) only. In edit mode it is an
+    // optional point-of-care re-capture, so an empty consent section is valid.
+    if (!editing) {
+      if (!consentMethod) errors.consentMethod = t('fieldRequired')
+      if (!consentLanguage) errors.consentLanguage = t('fieldRequired')
+    }
+
+    if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
       return false
     }
@@ -466,7 +654,7 @@ export function PatientRegistrationForm({
     isNomadic, bloodGroup, maritalStatus,
     addressOrigin, addressCurrent,
     displacementCategory, nationality, occupation, educationLevel, disability,
-    consentMethod, consentWitnessedBy, consentLanguage, t,
+    consentMethod, consentWitnessedBy, consentLanguage, editing, t,
   ])
 
   // ── Persist to local IndexedDB ──
@@ -595,6 +783,95 @@ export function PatientRegistrationForm({
 
   // ── Submit handler ──
 
+  // ── Edit-mode save ──
+  // patient.update (all fields) + optional point-of-care consent append + an
+  // append-only allergy diff via the allergy store. No MPI dedup / create.
+  const runEditSave = useCallback(async () => {
+    if (!editContext) return
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      const nameLocal = [nameGiven, nameFather, nameGrandfather, nameFamily].filter(Boolean).join(' ')
+      const updateInput: Record<string, unknown> = {
+        patientId: editContext.patientId,
+        lastKnownUpdate: editContext.lastKnownUpdate,
+        nameLocal,
+        nameGiven,
+        nameFather: nameFather || undefined,
+        nameGrandfather: nameGrandfather || undefined,
+        nameFamily: nameFamily || undefined,
+        gender: gender || undefined,
+        birthYearOnly,
+        birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
+        birthDate: !birthYearOnly && birthDate ? birthDate : undefined,
+        telecomPhone: phone || undefined,
+        phoneUse: phoneUse || undefined,
+        nationalIdType: nationalIdType || undefined,
+        householdId: householdId || undefined,
+        preferredLanguage: preferredLanguage || undefined,
+        isNomadic,
+        bloodGroup: bloodGroup !== 'Unknown' ? bloodGroup : undefined,
+        maritalStatus: maritalStatus || undefined,
+        addressProvinceOrigin: addressOrigin.province || undefined,
+        addressDistrictOrigin: addressOrigin.district || undefined,
+        addressVillageOrigin: addressOrigin.village || undefined,
+        addressProvinceCurrent: sameAsOrigin ? (addressOrigin.province || undefined) : (addressCurrent.province || undefined),
+        addressDistrictCurrent: sameAsOrigin ? (addressOrigin.district || undefined) : (addressCurrent.district || undefined),
+        addressVillageCurrent: sameAsOrigin ? (addressOrigin.village || undefined) : (addressCurrent.village || undefined),
+        displacementCategory: displacementCategory || undefined,
+        nationality: nationality || undefined,
+        occupation: occupation || undefined,
+        educationLevel: educationLevel || undefined,
+        disability,
+        contacts: emergencyContacts.length > 0 ? emergencyContacts : undefined,
+        // Only re-hashed server-side if the clinician typed a new value (blank = unchanged).
+        nationalId: nationalId || undefined,
+      }
+      const res = await updatePatient(updateInput)
+      const now = res.meta?.lastUpdated ?? new Date().toISOString()
+
+      // Optional point-of-care consent re-capture.
+      if (consentMethod) {
+        try {
+          await recordConsentPoc({
+            patientId: editContext.patientId,
+            method: consentMethod,
+            language: consentLanguage,
+            version: '1.0',
+          })
+        } catch { /* non-fatal — the demographic update already saved */ }
+      }
+
+      // Append-only allergy diff via the allergy store (add new/changed; deactivate removed).
+      const desired: AllergyEntry[] = noKnownAllergies
+        ? [{ substanceText: NKDA_SUBSTANCE, criticality: 'low' }]
+        : allergies.filter((a) => a.substanceText.trim())
+      const { toDeactivate, toAdd } = diffAllergies(desired, editContext.existingAllergies)
+      for (const id of toDeactivate) {
+        try { await updateAllergyStatus(id, 'inactive') } catch { /* best-effort */ }
+      }
+      for (const d of toAdd) {
+        try { await addAllergyToStore(buildFhirAllergy(editContext.patientId, d, 'CLINICIAN')) } catch { /* best-effort */ }
+      }
+
+      // Refresh the local cache + notify the parent page.
+      const updatedPatient = buildLocalPatient(editContext.patientId, now)
+      try { await savePatientLocally(editContext.patientId, now) } catch { /* savePatientLocally handles the encryption-key case */ }
+      editContext.onSaved(updatedPatient)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : t('submitError'))
+    } finally {
+      setSubmitting(false)
+    }
+  }, [
+    editContext, nameGiven, nameFather, nameGrandfather, nameFamily, gender, birthYearOnly,
+    birthYear, birthDate, phone, phoneUse, nationalId, nationalIdType, householdId,
+    preferredLanguage, isNomadic, bloodGroup, maritalStatus, addressOrigin, addressCurrent,
+    sameAsOrigin, displacementCategory, nationality, occupation, educationLevel, disability,
+    emergencyContacts, consentMethod, consentLanguage, noKnownAllergies, allergies,
+    buildLocalPatient, savePatientLocally, addAllergyToStore, updateAllergyStatus, t,
+  ])
+
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
@@ -602,29 +879,13 @@ export function PatientRegistrationForm({
 
       const isValid = validate()
       if (!isValid) {
-        // Scroll to first invalid field; expand the Additional group if needed.
-        // We use the DOM (aria-invalid) rather than fieldErrors state because
-        // setFieldErrors is async — the DOM reflects the fresh render after rAF.
+        // Scroll to the first invalid field. We read the DOM (aria-invalid) rather
+        // than fieldErrors state because setFieldErrors is async — the DOM reflects
+        // the fresh render after rAF. All sections are always visible, so no
+        // expand step is needed.
         requestAnimationFrame(() => {
-          const additionalGroupEl = document.getElementById('additional-info-group')
           const firstInvalid = document.querySelector<HTMLElement>('[aria-invalid="true"]')
-
-          const isInsideAdditional =
-            firstInvalid != null &&
-            additionalGroupEl != null &&
-            additionalGroupEl.contains(firstInvalid)
-
-          if (isInsideAdditional) {
-            // Expand the group first, then scroll after another frame
-            setShowAdditional(true)
-            requestAnimationFrame(() => {
-              const target = document.querySelector<HTMLElement>('[aria-invalid="true"]')
-              if (target) {
-                target.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                target.focus()
-              }
-            })
-          } else if (firstInvalid) {
+          if (firstInvalid) {
             firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' })
             firstInvalid.focus()
           }
@@ -634,14 +895,19 @@ export function PatientRegistrationForm({
 
       // Guardian required for minors (enterprise pediatric registration): a patient
       // under 18 must have at least one PARENT/GUARDIAN emergency contact. Surface
-      // as an error and expand the Additional group where contacts are entered.
+      // as an error and scroll to the emergency-contacts section.
       if (isMinor && !hasGuardianContact) {
         setFieldErrors((prev) => ({ ...prev, guardianContact: t('guardianRequiredForMinor') }))
-        setShowAdditional(true)
         requestAnimationFrame(() => {
           const el = document.getElementById('emergency-contacts-anchor')
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
         })
+        return
+      }
+
+      // Edit mode: update the existing patient (no MPI dedup / create).
+      if (editing) {
+        await runEditSave()
         return
       }
 
@@ -726,7 +992,7 @@ export function PatientRegistrationForm({
       }
     },
     [validate, buildPayload, savePatientLocally, registerOffline, uploadPhotoIfPresent,
-     isMinor, hasGuardianContact, setShowAdditional, router, locale, t],
+     isMinor, hasGuardianContact, editing, runEditSave, router, locale, t],
   )
 
   // ── MPI modal handlers ──
@@ -794,12 +1060,9 @@ export function PatientRegistrationForm({
 
   const errorCount = Object.keys(fieldErrors).length
 
-  // Focus/scroll to an errored field from the error-summary; expands the
-  // Additional group first if the target lives inside it.
+  // Focus/scroll to an errored field from the error-summary. All sections are
+  // always visible, so this is a straight scroll — no group to expand first.
   const focusField = useCallback((anchor?: string) => {
-    if (anchor && document.getElementById(anchor)?.closest('#additional-info-group')) {
-      setShowAdditional(true)
-    }
     requestAnimationFrame(() => {
       const el = anchor
         ? document.getElementById(anchor)
@@ -843,10 +1106,13 @@ export function PatientRegistrationForm({
             </ul>
           </div>
         )}
-        {/* 1. Identity — photo first, then names (grouped for verification) */}
+        {/* 1. Identity — photo first, then names (grouped for verification).
+            Create: deferred local capture. Edit: immediate upload to the patient. */}
         <PatientPhotoSection
           photoDataUrl={photoDataUrl}
           onPhotoChange={setPhotoDataUrl}
+          patientId={editContext?.patientId}
+          lastKnownUpdate={editContext?.lastKnownUpdate}
         />
 
         {/* 2. Name section */}
@@ -1232,59 +1498,37 @@ export function PatientRegistrationForm({
           }}
         />
 
-        {/* 7. Additional information — collapsible (Household detail + Social + Emergency) */}
-        <div>
-          <button
-            type="button"
-            aria-expanded={showAdditional}
-            aria-controls="additional-info-group"
-            onClick={() => setShowAdditional((prev) => !prev)}
-            className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground hover:bg-muted/50 focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <span>{t('additionalInfoSection')}</span>
-            <ChevronDown
-              size={18}
-              aria-hidden="true"
-              className={`text-muted-foreground transition-transform duration-200 ${showAdditional ? 'rotate-180' : ''}`}
-            />
-          </button>
+        {/* 7. Social / HMIS section — always visible */}
+        <SocialInfoSection
+          displacementCategory={displacementCategory}
+          nationality={nationality}
+          occupation={occupation}
+          educationLevel={educationLevel}
+          disability={disability}
+          onDisplacementCategoryChange={setDisplacementCategory}
+          onNationalityChange={setNationality}
+          onOccupationChange={setOccupation}
+          onEducationLevelChange={setEducationLevel}
+          onDisabilityChange={setDisability}
+        />
 
-          {showAdditional && (
-            <div id="additional-info-group" className="mt-4 space-y-4">
-              {/* Social / HMIS section */}
-              <SocialInfoSection
-                displacementCategory={displacementCategory}
-                nationality={nationality}
-                occupation={occupation}
-                educationLevel={educationLevel}
-                disability={disability}
-                onDisplacementCategoryChange={setDisplacementCategory}
-                onNationalityChange={setNationality}
-                onOccupationChange={setOccupation}
-                onEducationLevelChange={setEducationLevel}
-                onDisabilityChange={setDisability}
-              />
-
-              {/* Emergency contact section */}
-              <div id="emergency-contacts-anchor">
-                {fieldErrors.guardianContact && (
-                  <div
-                    className="mb-2 flex items-start gap-2 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive ring-[0.65px] ring-destructive/30"
-                    role="alert"
-                  >
-                    <span>{fieldErrors.guardianContact}</span>
-                  </div>
-                )}
-                <EmergencyContactSection
-                  contacts={emergencyContacts}
-                  onContactsChange={setEmergencyContacts}
-                />
-              </div>
+        {/* 8. Emergency contact section — always visible */}
+        <div id="emergency-contacts-anchor">
+          {fieldErrors.guardianContact && (
+            <div
+              className="mb-2 flex items-start gap-2 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive ring-[0.65px] ring-destructive/30"
+              role="alert"
+            >
+              <span>{fieldErrors.guardianContact}</span>
             </div>
           )}
+          <EmergencyContactSection
+            contacts={emergencyContacts}
+            onContactsChange={setEmergencyContacts}
+          />
         </div>
 
-        {/* 8. Consent section — always visible, never collapsed */}
+        {/* 9. Consent section — always visible, never collapsed */}
         <ConsentSection
           method={consentMethod}
           witnessedBy={consentWitnessedBy}
@@ -1313,7 +1557,11 @@ export function PatientRegistrationForm({
               variant="outline"
               type="button"
               onClick={() => {
-                if (!isDirty || window.confirm(t('discardChangesConfirm'))) router.back()
+                if (!isDirty || window.confirm(t('discardChangesConfirm'))) {
+                  if (editing) editContext!.onCancel()
+                  else if (onCancel) onCancel()
+                  else router.back()
+                }
               }}
             >
               {t('cancel')}
@@ -1331,7 +1579,7 @@ export function PatientRegistrationForm({
               </span>
             )}
             <Button variant="primary" type="submit" disabled={submitting}>
-              {submitting ? t('submitting') : t('submitRegistration')}
+              {submitting ? t('submitting') : editing ? t('saveChanges') : t('submitRegistration')}
             </Button>
           </div>
         </div>

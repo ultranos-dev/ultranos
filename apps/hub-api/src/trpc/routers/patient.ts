@@ -11,7 +11,14 @@ import { db } from '@/lib/supabase'
 import { normalizeNameComponent, computePhoneticTokens, computeMpiResult } from '@ultranos/mpi-engine'
 import { signProceedToken, verifyProceedToken, consumeProceedToken } from '@/lib/mpi-proceed-token'
 import { fetchMpiCandidates } from '@/lib/mpi-candidate-query'
-import { CreatePatientMpiInputSchema, PatientContactSchema } from '@ultranos/shared-types'
+import {
+  CreatePatientMpiInputSchema,
+  PatientContactSchema,
+  MaritalStatusSchema,
+  DisplacementCategorySchema,
+  EducationLevelSchema,
+  NationalIdTypeSchema,
+} from '@ultranos/shared-types'
 import { sanitizeFilterValue } from '@/lib/filter-sanitize'
 import { isAdminRole } from '../rbac'
 import { getMpiBlockMode } from '@/lib/mpi-block-mode'
@@ -1246,6 +1253,18 @@ export const patientRouter = createTRPCRouter({
         // Profile page additions
         photoUrl: z.string().max(500).optional(),
         bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown']).optional(),
+        // Full-profile edit (Edit Profile form) — demographics/HMIS/identity fields
+        // that registration captures but earlier update did not persist.
+        maritalStatus: MaritalStatusSchema.optional(),
+        displacementCategory: DisplacementCategorySchema.optional(),
+        nationality: z.string().length(2).optional(),
+        occupation: z.string().max(200).optional(),
+        educationLevel: EducationLevelSchema.optional(),
+        disability: z.boolean().optional(),
+        phoneUse: z.enum(['home', 'work', 'mobile']).optional(),
+        contacts: z.array(PatientContactSchema).max(2).optional(),
+        householdId: z.string().max(64).optional(),
+        nationalIdType: NationalIdTypeSchema.optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -1410,6 +1429,49 @@ export const patientRouter = createTRPCRouter({
 
         updates.nationalIdHash = newHash
         fieldsUpdated.push('nationalId')
+      }
+
+      // Full-profile edit fields (map to existing columns; db.toRow snake-cases).
+      if (input.maritalStatus !== undefined) {
+        updates.maritalStatus = input.maritalStatus
+        fieldsUpdated.push('maritalStatus')
+      }
+      if (input.displacementCategory !== undefined) {
+        updates.displacementCategory = input.displacementCategory
+        fieldsUpdated.push('displacementCategory')
+      }
+      if (input.nationality !== undefined) {
+        updates.nationality = input.nationality.toUpperCase()
+        fieldsUpdated.push('nationality')
+      }
+      if (input.occupation !== undefined) {
+        updates.occupation = input.occupation
+        fieldsUpdated.push('occupation')
+      }
+      if (input.educationLevel !== undefined) {
+        updates.educationLevel = input.educationLevel
+        fieldsUpdated.push('educationLevel')
+      }
+      if (input.disability !== undefined) {
+        updates.disability = input.disability
+        fieldsUpdated.push('disability')
+      }
+      if (input.phoneUse !== undefined) {
+        updates.telecomPhoneUse = input.phoneUse
+        fieldsUpdated.push('phoneUse')
+      }
+      if (input.contacts !== undefined) {
+        // jsonb column — pass the array; supabase-js serialises it (do NOT stringify).
+        updates.emergencyContacts = input.contacts
+        fieldsUpdated.push('contacts')
+      }
+      if (input.householdId !== undefined) {
+        updates.householdId = input.householdId
+        fieldsUpdated.push('householdId')
+      }
+      if (input.nationalIdType !== undefined) {
+        updates.nationalIdType = input.nationalIdType
+        fieldsUpdated.push('nationalIdType')
       }
 
       if (fieldsUpdated.length === 0) {

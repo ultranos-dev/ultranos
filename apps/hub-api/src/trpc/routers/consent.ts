@@ -1,7 +1,8 @@
 import { z } from 'zod'
+import { createHash } from 'node:crypto'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
-import { isAdminRole } from '../rbac'
+import { isAdminRole, roleRestrictedProcedure } from '../rbac'
 import { db } from '@/lib/supabase'
 import { checkConsent } from '../middleware/enforceConsent'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
@@ -14,6 +15,97 @@ import { produceConsentChangeNotification } from '@/lib/notification-producers'
  * Handles consent sync from Health Passport and consent status checks.
  */
 export const consentRouter = createTRPCRouter({
+  /**
+   * Edit Profile — clinician point-of-care consent capture.
+   * A clinician (DOCTOR/CLINICIAN/ADMIN) records the patient's consent at the point
+   * of care, mirroring how registration captures it via the create RPC (grantor_role
+   * SELF, append-only — never an update/delete of prior grants). Distinct from
+   * consent.sync, which is grantor-authenticated (patient/guardian/admin) for
+   * Health-Passport-originated grants. The role gate is the authorization here.
+   */
+  recordAtPointOfCare: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN', 'ADMIN'])
+    .input(
+      z.object({
+        patientId: z.string().uuid(),
+        method: z.enum(['WRITTEN', 'VERBAL_WITNESSED']),
+        language: z.enum(['en', 'ar', 'prs', 'ps']),
+        version: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const now = new Date()
+      const nowIso = now.toISOString()
+      const validUntil = new Date(now.getTime() + 3 * 365 * 24 * 60 * 60 * 1000).toISOString()
+      const auditHash = createHash('sha256')
+        .update(`${input.patientId}|${input.version}|${nowIso}|${ctx.user.sub}`)
+        .digest('hex')
+
+      // witnessed_by FKs to practitioners (a practitioner UUID, not an auth-user id).
+      // A VERBAL_WITNESSED consent requires a witness (DB CHECK), so resolve the
+      // attending clinician's practitioner id from their auth user and record them
+      // as the witness of record. WRITTEN → no witness.
+      let witnessedBy: string | null = null
+      if (input.method === 'VERBAL_WITNESSED') {
+        const { data: prac } = await ctx.supabase
+          .from('practitioners')
+          .select('id')
+          .eq('auth_user_id', ctx.user.sub)
+          .single()
+        if (!prac?.id) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Cannot record witnessed consent: no practitioner record for the current user',
+          })
+        }
+        witnessedBy = prac.id as string
+      }
+
+      const { data, error } = await ctx.supabase
+        .from('consent_records')
+        .insert({
+          patient_id: input.patientId,
+          grantor_id: ctx.user.sub,
+          grantor_role: 'SELF',
+          purpose: 'TREATMENT',
+          scope: ['TREATMENT'],
+          valid_from: nowIso,
+          valid_until: validUntil,
+          status: 'ACTIVE',
+          consent_version: input.version,
+          consent_method: input.method,
+          consent_language: input.language,
+          witnessed_by: witnessedBy,
+          audit_hash: auditHash,
+          created_at: nowIso,
+        })
+        .select('id')
+        .single()
+
+      if (error || !data) {
+        console.error('[CONSENT_POC] insert error:', { code: error?.code })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to record consent' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'CONSENT',
+          resourceId: data.id,
+          patientId: input.patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'consent_point_of_care', method: input.method },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'CONSENT', resourceId: data.id })
+      }
+
+      return { success: true, consentId: data.id, lastUpdated: nowIso }
+    }),
+
   /**
    * AC 3: Sync a consent resource from Health Passport to Hub.
    * Appends to the consent ledger (append-only — no updates/deletes).

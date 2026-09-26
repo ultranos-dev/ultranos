@@ -14,6 +14,7 @@ import { db } from '@/lib/db'
 import type { LocalPatient } from '@/lib/db'
 import { usePatientListSync } from '@/lib/use-patient-list-sync'
 import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
+import { PatientCreateModal } from '@/components/patient/PatientCreateModal'
 
 type SortField = 'name' | 'age' | 'gender' | 'phone' | 'lastVisit' | 'status' | 'lastUpdated'
 type SortDir = 'asc' | 'desc'
@@ -363,9 +364,10 @@ export function PatientDirectory() {
     [router, locale]
   )
 
+  const [createOpen, setCreateOpen] = useState(false)
   const handleRegisterNew = useCallback(() => {
-    router.push(`/${locale}/register-patient`)
-  }, [router, locale])
+    setCreateOpen(true)
+  }, [])
 
   const handleClearFilters = useCallback(() => {
     setSearchQuery('')
@@ -654,6 +656,8 @@ export function PatientDirectory() {
           )}
         </>
       )}
+
+      <PatientCreateModal open={createOpen} onClose={() => setCreateOpen(false)} />
     </div>
   )
 }

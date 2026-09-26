@@ -494,6 +494,21 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                 preferredLanguage?: "en" | "ar" | "prs" | "ps" | undefined;
                 photoUrl?: string | undefined;
                 bloodGroup?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | "Unknown" | undefined;
+                maritalStatus?: "D" | "M" | "S" | "W" | "UNK" | undefined;
+                displacementCategory?: "IDP" | "RETURNEE" | "REFUGEE" | "HOST_COMMUNITY" | undefined;
+                nationality?: string | undefined;
+                occupation?: string | undefined;
+                educationLevel?: "UNKNOWN" | "NONE" | "PRIMARY" | "SECONDARY" | "TERTIARY" | undefined;
+                disability?: boolean | undefined;
+                phoneUse?: "home" | "work" | "mobile" | undefined;
+                contacts?: {
+                    relationship: "GUARDIAN" | "OTHER" | "SPOUSE" | "PARENT" | "SIBLING" | "CHILD" | "FRIEND";
+                    name: string;
+                    phone?: string | undefined;
+                    gender?: import("@ultranos/shared-types").AdministrativeGender | undefined;
+                }[] | undefined;
+                householdId?: string | undefined;
+                nationalIdType?: "TAZKIRA_PAPER" | "ETAZKIRA" | "PASSPORT" | "UNHCR" | "OTHER" | undefined;
             };
             output: {
                 id: string;
@@ -1021,6 +1036,20 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
         errorShape: import("@trpc/server").TRPCDefaultErrorShape;
         transformer: true;
     }, import("@trpc/server").TRPCDecorateCreateRouterOptions<{
+        recordAtPointOfCare: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+                patientId: string;
+                version: string;
+                method: "WRITTEN" | "VERBAL_WITNESSED";
+                language: "en" | "ar" | "prs" | "ps";
+            };
+            output: {
+                success: boolean;
+                consentId: any;
+                lastUpdated: string;
+            };
+            meta: object;
+        }>;
         sync: import("@trpc/server").TRPCMutationProcedure<{
             input: {
                 id: string;

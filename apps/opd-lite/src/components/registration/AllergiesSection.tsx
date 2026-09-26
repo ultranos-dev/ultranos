@@ -10,6 +10,8 @@ import { Card } from '@/components/Card'
 export type AllergyCriticality = 'low' | 'high' | 'unable-to-assess'
 
 export interface AllergyEntry {
+  /** Present for allergies loaded from an existing patient (edit mode); absent for newly added ones. */
+  id?: string
   substanceText: string
   criticality?: AllergyCriticality
 }

@@ -494,6 +494,42 @@ describe('patient.update', () => {
     })
   }
 
+  it('persists full-profile fields (marital, HMIS, contacts, householdId, nationalIdType, phoneUse)', async () => {
+    const mockFrom = mockPatientUpdateFrom()
+    const ctx = createTestContext(mockFrom)
+    const caller = createCaller(ctx)
+
+    await caller.patient.update({
+      patientId: PATIENT_UUID,
+      lastKnownUpdate: '2026-06-01T00:00:00Z',
+      maritalStatus: 'M',
+      displacementCategory: 'IDP',
+      nationality: 'af', // lower-case in → uppercased on write
+      occupation: 'Teacher',
+      educationLevel: 'SECONDARY',
+      disability: true,
+      phoneUse: 'mobile',
+      contacts: [{ relationship: 'PARENT', name: 'Dad' }],
+      householdId: 'HH-1',
+      nationalIdType: 'PASSPORT',
+    })
+
+    // db.toRow(updates) receives the camelCase update map; assert the new fields
+    // are mapped (contacts as an array for the jsonb column, nationality uppercased).
+    expect(mockToRow).toHaveBeenCalledWith(expect.objectContaining({
+      maritalStatus: 'M',
+      displacementCategory: 'IDP',
+      nationality: 'AF',
+      occupation: 'Teacher',
+      educationLevel: 'SECONDARY',
+      disability: true,
+      telecomPhoneUse: 'mobile',
+      emergencyContacts: [{ relationship: 'PARENT', name: 'Dad' }],
+      householdId: 'HH-1',
+      nationalIdType: 'PASSPORT',
+    }))
+  })
+
   it('successfully updates patient demographics', async () => {
     const mockFrom = mockPatientUpdateFrom()
     const ctx = createTestContext(mockFrom)
