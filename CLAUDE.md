@@ -56,6 +56,10 @@ pnpm lint                             # Lint all (ESLint + Prettier)
 pnpm typecheck                        # TypeScript check across monorepo
 ```
 
+## ⛔ Deployment — Read Before Shipping to Production
+
+**Whenever we are ready for a production deployment, first work through `Complete_Prior_to_Deployment.md`** (repo root). It is the authoritative pre-deploy checklist: blocking items (server-only secrets like `HUB_KEY_WRAPPING_MASTER_SECRET` / `GOOGLE_CLOUD_VISION_API_KEY`, migration-applied verification, the one-time auth-claims script, legacy photo re-key), tracked deferred gate steps (e.g. flip HLC validation log-only → enforce; empty the spoke-contract allowlist), CI/tooling, and non-blocking follow-ups. Re-confirm live DB/migration state at deploy time. Keep that file updated as new deploy prerequisites arise.
+
 ## ⛔ HEALTHCARE SAFETY RULES — NEVER VIOLATE
 
 This is a healthcare system handling Protected Health Information (PHI). These rules are non-negotiable.
