@@ -148,10 +148,22 @@ export function PatientDetailsAccordion({
               <dd>{formatRegisteredDate(ext.createdAt, locale)}</dd>
             </div>
 
-            {/* Consent version */}
+            {/* Consent status — a human-readable state (+ how it was obtained),
+                never the raw policy version string (e.g. "1.0"). consentVersion is
+                populated by patient.read only when an ACTIVE grant exists. */}
             <div className="flex gap-2">
               <dt className="font-medium text-muted-foreground shrink-0">{t('consentLabel')}:</dt>
-              <dd>{ext.consentVersion ?? t('notProvided')}</dd>
+              <dd>
+                {ext.consentVersion
+                  ? ext.consentMethod
+                    ? `${t('consentProvided')} · ${t(
+                        ext.consentMethod === 'WRITTEN'
+                          ? 'consentMethodWritten'
+                          : 'consentMethodVerbal',
+                      )}`
+                    : t('consentProvided')
+                  : t('notProvided')}
+              </dd>
             </div>
 
             {/* Identifiers */}
