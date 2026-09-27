@@ -307,6 +307,15 @@ describe('PatientRegistrationForm — always-visible sections', () => {
     renderForm()
     expect(screen.getByTestId('consent-section')).toBeDefined()
   })
+
+  it('renders the Vitals section (weight/height/BP/temperature)', () => {
+    renderForm()
+    expect(document.getElementById('vital-weight')).not.toBeNull()
+    expect(document.getElementById('vital-height')).not.toBeNull()
+    expect(document.getElementById('vital-systolic')).not.toBeNull()
+    expect(document.getElementById('vital-diastolic')).not.toBeNull()
+    expect(document.getElementById('vital-temperature')).not.toBeNull()
+  })
 })
 
 describe('PatientRegistrationForm — save bar', () => {
@@ -483,6 +492,7 @@ function makeEditPatient() {
       birthYear: 1990, isNomadic: false, isActive: true, patient_tier: 'FREE',
       createdAt: '2020-01-01T00:00:00Z', bloodGroup: 'O+', householdId: 'HH-9',
       nationalIdType: 'PASSPORT', preferredLanguage: 'en',
+      nationalIdHash: 'hash-xyz', nationalIdLast4: '4321', consentMethod: 'WRITTEN', consentLanguage: 'en',
       addressOrigin: { province: 'Kabul', district: 'Kabul City', village: '' },
     },
     meta: { lastUpdated: '2026-01-01T00:00:00Z' },
@@ -502,14 +512,29 @@ function makeEditContext(overrides?: Record<string, unknown>) {
 }
 
 describe('PatientRegistrationForm — edit mode', () => {
-  it('prefills main-form fields from the existing patient', () => {
+  it('prefills main-form fields, consent, and masks the National ID that is on file', () => {
     renderForm({ editContext: makeEditContext() })
     expect((document.getElementById('household-id') as HTMLInputElement).value).toBe('HH-9')
     expect((document.getElementById('national-id-type') as HTMLSelectElement).value).toBe('PASSPORT')
     expect((document.getElementById('gender') as HTMLSelectElement).value).toBe('male')
+    // Consent prefilled (the mocked ConsentSection reflects the method prop).
+    expect((screen.getByTestId('consent-written') as HTMLInputElement).checked).toBe(true)
+    // National ID on file → masked "on file" affordance showing only the last 4,
+    // not an input.
+    expect(screen.getByText(/nationalIdOnFile/i)).toBeDefined()
+    expect(screen.getByText(/•••• 4321/)).toBeDefined()
+    expect(document.getElementById('national-id')).toBeNull()
   })
 
-  it('submits via patient.update (never MPI checkDuplicates / create) and calls onSaved', async () => {
+  it('reveals an empty National ID input when the masked field is clicked', () => {
+    renderForm({ editContext: makeEditContext() })
+    fireEvent.click(screen.getByRole('button', { name: /nationalIdReplaceHint/i }))
+    const input = document.getElementById('national-id') as HTMLInputElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('')
+  })
+
+  it('submits via patient.update (never MPI/create), skips consent when unchanged, calls onSaved', async () => {
     mockFetch.mockResolvedValue(
       hubApiResponse({ result: { data: { json: { id: 'p1', meta: { lastUpdated: '2026-02-02T00:00:00Z' } } } } }),
     )
@@ -523,6 +548,8 @@ describe('PatientRegistrationForm — edit mode', () => {
     expect(urls.some((u) => u.includes('patient.update'))).toBe(true)
     expect(urls.some((u) => u.includes('checkDuplicates'))).toBe(false)
     expect(urls.some((u) => u.includes('patient.create'))).toBe(false)
+    // Consent unchanged from what was prefilled → no new grant appended.
+    expect(urls.some((u) => u.includes('recordAtPointOfCare'))).toBe(false)
     expect(mockPush).not.toHaveBeenCalled() // edit stays put; the modal host closes
   })
 

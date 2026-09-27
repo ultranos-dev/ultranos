@@ -21,6 +21,11 @@ vi.mock('@/components/registration/PatientRegistrationForm', () => ({
       >
         cancel
       </button>
+      {props.editContext && (
+        <button data-testid="form-save" onClick={() => props.editContext.onSaved({ id: 'p1' })}>
+          save
+        </button>
+      )}
     </div>
   ),
 }))
@@ -86,5 +91,15 @@ describe('PatientEditModal', () => {
     expect(form.getAttribute('data-mode')).toBe('edit')
     expect(form.getAttribute('data-patient-id')).toBe('p1')
     expect(mockFetchAllergies).toHaveBeenCalledWith('p1')
+  })
+
+  it('closes the modal and forwards the patient on successful save', async () => {
+    const onClose = vi.fn()
+    const onSaved = vi.fn()
+    render(<PatientEditModal open patient={patient} patientId="p1" onClose={onClose} onSaved={onSaved} />)
+    await waitFor(() => expect(screen.getByTestId('reg-form')).toBeDefined())
+    fireEvent.click(screen.getByTestId('form-save'))
+    expect(onSaved).toHaveBeenCalledWith({ id: 'p1' })
+    expect(onClose).toHaveBeenCalled()
   })
 })

@@ -115,7 +115,9 @@ export function PatientEditModal({
                 patient,
                 existingAllergies,
                 lastKnownUpdate: patient.meta.lastUpdated,
-                onSaved,
+                // Close the modal on a successful save (onSaved fires only after
+                // the update succeeds), then hand the updated patient to the page.
+                onSaved: (updated) => { onSaved(updated); onClose() },
                 onCancel: onClose,
               }}
             />

@@ -56,6 +56,7 @@ export const PHI_TABLES = [
   'serviceRequests', // Lab orders: patient-linked (subject.reference) with encrypted clinical reasonCode/note
   'appointments', // Stores patient-linked appointment PHI (datetime, practitioner ref, reason)
   'syncMeta',      // Stores last-pulled-at timestamps per patient — contains patient IDs as FK
+  'pendingPatientPhotos', // Cropped patient face photo (biometric PHI) as an encrypted data URL, keyed by the provisional patient id — MUST be wiped on session end
 ] as const
 
 /**

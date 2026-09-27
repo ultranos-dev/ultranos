@@ -135,6 +135,10 @@ export interface FhirPatient {
     nationalIdHash?: string  // SHA-256 of national ID for MPI matching
     guardianId?: string      // UUID → another Patient (guardian)
     consentVersion?: string  // version of consent terms at registration
+    /** Latest consent grant's method — surfaced by patient.read for the edit-form prefill. */
+    consentMethod?: 'WRITTEN' | 'VERBAL_WITNESSED'
+    /** Latest consent grant's language — surfaced by patient.read for the edit-form prefill. */
+    consentLanguage?: PatientLanguage
     /** Subscription tier — defaults to 'FREE' on self-registration */
     patient_tier: PatientTier
     /** Patient's preferred language */
@@ -164,6 +168,8 @@ export interface FhirPatient {
     householdId?: string
     /** Type of the presented national identity document (raw number never stored). */
     nationalIdType?: 'TAZKIRA_PAPER' | 'ETAZKIRA' | 'PASSPORT' | 'UNHCR' | 'OTHER'
+    /** Last 4 chars of the National ID for masked display (••••1234). Fragment only. */
+    nationalIdLast4?: string
     /** Display name of last updater — DEFERRED: resolved at read time */
     updatedByName?: string
     /** Role of last updater — DEFERRED: resolved at read time */
@@ -183,6 +189,9 @@ export interface FhirPatient {
     /** True if the patient has any recorded allergy. Derived flag for the
      *  directory list — no allergy detail/PHI is exposed. */
     hasAllergies?: boolean
+    /** True if a National ID is on file. Server-derived presence flag for the
+     *  directory (the ID hash itself is never sent to the client, audit C-HUB-4). */
+    hasNationalId?: boolean
     /** ISO 8601 instant of the patient's most recent encounter (period.start),
      *  or absent if none. Derived for the directory's Last Visit column. */
     lastVisitAt?: string

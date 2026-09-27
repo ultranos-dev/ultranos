@@ -28,6 +28,13 @@ import { getHubApiUrl, getAuthHeaders } from '@/lib/hub-auth'
 import { uploadPatientPhoto, dataUrlToBlob } from '@/lib/patient-photo-api'
 import { useAllergyStore } from '@/stores/allergy-store'
 import { hlc, serializeHlc } from '@/lib/hlc'
+import { enqueueSyncAction } from '@ultranos/sync-engine'
+import { syncQueue } from '@/lib/sync-queue'
+import { calculateBMI } from '@ultranos/shared-types'
+import { VitalsForm, type RangeStatus } from '@/components/clinical/vitals-form'
+import { mapVitalsToObservations, LOINC } from '@/lib/vitals-fhir-mapper'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { getVitalRangeStatus, type VitalKey } from '@/lib/vitals-config'
 import type { FhirAllergyIntolerance } from '@ultranos/shared-types'
 import { Card } from '@/components/Card'
 import { db } from '@/lib/db'
@@ -365,6 +372,14 @@ export function PatientRegistrationForm({
   const [noKnownAllergies, setNoKnownAllergies] = useState(false)
   const [allergies, setAllergies] = useState<AllergyEntry[]>([])
 
+  // Vitals — captured as patient-scoped Observations (no encounter). BMI derived.
+  const [vitalWeight, setVitalWeight] = useState('')
+  const [vitalHeight, setVitalHeight] = useState('')
+  const [vitalSystolic, setVitalSystolic] = useState('')
+  const [vitalDiastolic, setVitalDiastolic] = useState('')
+  const [vitalTemperature, setVitalTemperature] = useState('')
+  const originalVitalsRef = useRef({ weight: '', height: '', systolic: '', diastolic: '', temperature: '' })
+
   // Emergency contacts
   const [emergencyContacts, setEmergencyContacts] = useState<PatientContact[]>([])
 
@@ -380,6 +395,15 @@ export function PatientRegistrationForm({
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [isDirty, setIsDirty] = useState(!!prefilledNameGiven)
+  // Edit mode: National ID is stored one-way hashed (Rule #7), so the raw value can
+  // never be pre-filled. When one is on file we show a masked placeholder until the
+  // clinician clicks to enter a replacement. `nidEditing` tracks that reveal.
+  const [nidEditing, setNidEditing] = useState(false)
+  const hasNationalIdOnFile = !!editContext?.patient?._ultranos?.nationalIdHash
+  const nidLast4 = editContext?.patient?._ultranos?.nationalIdLast4
+  // The consent captured at read time — used to detect a real change before
+  // appending a new (append-only) consent grant on save.
+  const originalConsentRef = useRef<{ method?: string; language?: string }>({})
   // Track whether the component has mounted so we can skip the first effect run
   const mountedRef = useRef(false)
 
@@ -446,7 +470,55 @@ export function PatientRegistrationForm({
     } else {
       setAllergies(existing.filter((a) => a.substanceText !== NKDA_SUBSTANCE))
     }
-    // Consent is left blank — in edit mode it is an optional point-of-care re-capture.
+    // Consent: prefill from the latest recorded grant and remember it, so we only
+    // append a NEW grant on save when the clinician actually changes it.
+    if (u.consentMethod) setConsentMethod(u.consentMethod)
+    if (u.consentLanguage) setConsentLanguage(u.consentLanguage)
+    originalConsentRef.current = { method: u.consentMethod, language: u.consentLanguage }
+  }, [editContext])
+
+  // Edit mode: prefill vitals from the patient's latest local Observations (the
+  // same source the header's baseline vitals read), keeping the latest per LOINC.
+  useEffect(() => {
+    if (!editContext) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const obs = await db.observations
+          .where('subject.reference')
+          .equals(`Patient/${editContext.patientId}`)
+          .toArray()
+        const latest = new Map<string, (typeof obs)[number]>()
+        for (const o of obs) {
+          const code = o.code?.coding?.[0]?.code
+          if (!code) continue
+          const ex = latest.get(code)
+          if (!ex || (o._ultranos?.hlcTimestamp ?? '') > (ex._ultranos?.hlcTimestamp ?? '')) {
+            latest.set(code, o)
+          }
+        }
+        if (cancelled) return
+        const next = { weight: '', height: '', systolic: '', diastolic: '', temperature: '' }
+        for (const [code, o] of latest) {
+          if (code === LOINC.BODY_WEIGHT && o.valueQuantity) next.weight = String(o.valueQuantity.value)
+          else if (code === LOINC.BODY_HEIGHT && o.valueQuantity) next.height = String(o.valueQuantity.value)
+          else if (code === LOINC.BODY_TEMPERATURE && o.valueQuantity) next.temperature = String(o.valueQuantity.value)
+          else if (code === LOINC.BLOOD_PRESSURE && o.component) {
+            for (const c of o.component) {
+              const cc = c.code?.coding?.[0]?.code
+              if (cc === LOINC.SYSTOLIC_BP && c.valueQuantity) next.systolic = String(c.valueQuantity.value)
+              else if (cc === LOINC.DIASTOLIC_BP && c.valueQuantity) next.diastolic = String(c.valueQuantity.value)
+            }
+          }
+        }
+        setVitalWeight(next.weight); setVitalHeight(next.height); setVitalSystolic(next.systolic)
+        setVitalDiastolic(next.diastolic); setVitalTemperature(next.temperature)
+        originalVitalsRef.current = next
+      } catch {
+        // Best-effort — no local vitals available; the section starts empty.
+      }
+    })()
+    return () => { cancelled = true }
   }, [editContext])
 
   // ── Dirty tracking ──
@@ -465,6 +537,7 @@ export function PatientRegistrationForm({
     disability, emergencyContacts, consentMethod, consentWitnessedBy,
     consentLanguage, photoDataUrl, nationalIdType, householdId,
     noKnownAllergies, allergies,
+    vitalWeight, vitalHeight, vitalSystolic, vitalDiastolic, vitalTemperature,
   ])
 
   // ── Unsaved-changes guard ──
@@ -703,6 +776,10 @@ export function PatientRegistrationForm({
           nationalIdType: (nationalIdType as NationalIdType) || undefined,
           preferredLanguage: preferredLanguage || undefined,
           nationalIdHash: undefined,
+          // Directory "NID missing" badge derives from this; the hash is computed
+          // server-side, so record presence locally from what the clinician entered.
+          hasNationalId: !!nationalId,
+          nationalIdLast4: nationalId ? nationalId.slice(-4) : undefined,
           isActive: true,
           patient_tier: 'FREE',
           createdAt: now,
@@ -719,7 +796,7 @@ export function PatientRegistrationForm({
     [
       nameGiven, nameFather, nameGrandfather, nameFamily, gender, birthDate, birthYear,
       birthYearOnly, phone, phoneUse, preferredLanguage, isNomadic, bloodGroup,
-      householdId, nationalIdType,
+      householdId, nationalIdType, nationalId,
       maritalStatus, addressOrigin, addressCurrent, sameAsOrigin,
       displacementCategory, nationality, occupation, educationLevel, disability,
       emergencyContacts,
@@ -781,6 +858,53 @@ export function PatientRegistrationForm({
     [photoDataUrl],
   )
 
+  // Persist entered vitals as patient-scoped, append-only Observations (no encounter
+  // — a baseline/profile capture). Best-effort: vitals must never fail the save.
+  const persistVitals = useCallback(
+    async (patientId: string) => {
+      try {
+        const bmi = calculateBMI(parseFloat(vitalWeight), parseFloat(vitalHeight))
+        const observations = mapVitalsToObservations(
+          {
+            weight: vitalWeight, height: vitalHeight,
+            systolic: vitalSystolic, diastolic: vitalDiastolic,
+            temperature: vitalTemperature, bmi,
+          },
+          { patientId, hlcTimestamp: serializeHlc(hlc.now()), nowIso: new Date().toISOString() },
+        )
+        if (observations.length === 0) return
+        await db.observations.bulkAdd(observations)
+        // Rule #6 — audit the local PHI write (opaque ids only). The sync-worker
+        // emits a separate SYNC audit when these push to the Hub.
+        auditPhiAccess(AuditAction.CREATE, AuditResourceType.OBSERVATION, patientId, patientId, {
+          phiAccess: 'vitals_capture',
+          source: editing ? 'profile_edit' : 'registration',
+        })
+        for (const o of observations) {
+          void enqueueSyncAction(syncQueue, {
+            resourceType: 'Observation',
+            resourceId: o.id,
+            action: 'create',
+            payload: o as unknown as Record<string, unknown>,
+            hlcTimestamp: o._ultranos.hlcTimestamp,
+          })
+        }
+      } catch {
+        // Best-effort — a vitals write must never fail the patient create/update.
+      }
+    },
+    [vitalWeight, vitalHeight, vitalSystolic, vitalDiastolic, vitalTemperature, editing],
+  )
+
+  const vitalsChanged = useCallback(() => {
+    const o = originalVitalsRef.current
+    return (
+      vitalWeight !== o.weight || vitalHeight !== o.height ||
+      vitalSystolic !== o.systolic || vitalDiastolic !== o.diastolic ||
+      vitalTemperature !== o.temperature
+    )
+  }, [vitalWeight, vitalHeight, vitalSystolic, vitalDiastolic, vitalTemperature])
+
   // ── Submit handler ──
 
   // ── Edit-mode save ──
@@ -830,8 +954,14 @@ export function PatientRegistrationForm({
       const res = await updatePatient(updateInput)
       const now = res.meta?.lastUpdated ?? new Date().toISOString()
 
-      // Optional point-of-care consent re-capture.
-      if (consentMethod) {
+      // Optional point-of-care consent re-capture — append a new grant ONLY when the
+      // clinician actually changed method/language (the ledger is append-only, so
+      // re-saving unchanged consent must not create duplicate records).
+      const consentChanged =
+        !!consentMethod &&
+        (consentMethod !== originalConsentRef.current.method ||
+          consentLanguage !== originalConsentRef.current.language)
+      if (consentChanged) {
         try {
           await recordConsentPoc({
             patientId: editContext.patientId,
@@ -854,6 +984,11 @@ export function PatientRegistrationForm({
         try { await addAllergyToStore(buildFhirAllergy(editContext.patientId, d, 'CLINICIAN')) } catch { /* best-effort */ }
       }
 
+      // Vitals — record a new (append-only) patient-scoped snapshot only if changed.
+      if (vitalsChanged()) {
+        await persistVitals(editContext.patientId)
+      }
+
       // Refresh the local cache + notify the parent page.
       const updatedPatient = buildLocalPatient(editContext.patientId, now)
       try { await savePatientLocally(editContext.patientId, now) } catch { /* savePatientLocally handles the encryption-key case */ }
@@ -869,7 +1004,8 @@ export function PatientRegistrationForm({
     preferredLanguage, isNomadic, bloodGroup, maritalStatus, addressOrigin, addressCurrent,
     sameAsOrigin, displacementCategory, nationality, occupation, educationLevel, disability,
     emergencyContacts, consentMethod, consentLanguage, noKnownAllergies, allergies,
-    buildLocalPatient, savePatientLocally, addAllergyToStore, updateAllergyStatus, t,
+    buildLocalPatient, savePatientLocally, addAllergyToStore, updateAllergyStatus,
+    persistVitals, vitalsChanged, t,
   ])
 
   const handleSubmit = useCallback(
@@ -959,6 +1095,7 @@ export function PatientRegistrationForm({
             }
           }
           await uploadPhotoIfPresent(created.id)
+          await persistVitals(created.id)
           router.push(`/${locale}/patient/${created.id}`)
         } else {
           setMpiDecision(dupeResult.decision as 'WARN' | 'BLOCK')
@@ -992,7 +1129,7 @@ export function PatientRegistrationForm({
       }
     },
     [validate, buildPayload, savePatientLocally, registerOffline, uploadPhotoIfPresent,
-     isMinor, hasGuardianContact, editing, runEditSave, router, locale, t],
+     persistVitals, isMinor, hasGuardianContact, editing, runEditSave, router, locale, t],
   )
 
   // ── MPI modal handlers ──
@@ -1016,6 +1153,7 @@ export function PatientRegistrationForm({
           }
         }
         await uploadPhotoIfPresent(created.id)
+        await persistVitals(created.id)
         router.push(`/${locale}/patient/${created.id}`)
       } catch (err) {
         // Same offline fallback as handleSubmit: a connectivity failure while
@@ -1043,7 +1181,7 @@ export function PatientRegistrationForm({
         setSubmitting(false)
       }
     },
-    [buildPayload, savePatientLocally, registerOffline, uploadPhotoIfPresent, router, locale, t],
+    [buildPayload, savePatientLocally, registerOffline, uploadPhotoIfPresent, persistVitals, router, locale, t],
   )
 
   const handleMpiCancel = useCallback(() => {
@@ -1057,6 +1195,27 @@ export function PatientRegistrationForm({
     },
     [router, locale],
   )
+
+  // Derived vitals: BMI + per-field range statuses (reuses the encounter-vitals config).
+  const vitalsBmi = calculateBMI(parseFloat(vitalWeight), parseFloat(vitalHeight))
+  const vitalRangeStatuses: Partial<Record<string, RangeStatus>> = {}
+  {
+    const fields: [VitalKey, string][] = [
+      ['weight', vitalWeight], ['height', vitalHeight],
+      ['systolic', vitalSystolic], ['diastolic', vitalDiastolic], ['temperature', vitalTemperature],
+    ]
+    for (const [key, raw] of fields) {
+      const val = parseFloat(raw)
+      if (raw !== '' && Number.isFinite(val)) {
+        const s = getVitalRangeStatus(key, val)
+        if (s !== 'normal') vitalRangeStatuses[key] = s
+      }
+    }
+    if (vitalsBmi !== null) {
+      const s = getVitalRangeStatus('bmi', vitalsBmi)
+      if (s !== 'normal') vitalRangeStatuses.bmi = s
+    }
+  }
 
   const errorCount = Object.keys(fieldErrors).length
 
@@ -1320,6 +1479,27 @@ export function PatientRegistrationForm({
           </div>
         </Card>
 
+        {/* 3b. Vitals — recorded as patient-scoped Observations (BMI auto-derived) */}
+        <Card as="fieldset">
+          <legend className="text-base font-bold text-foreground">{t('vitalsSection')}</legend>
+          <div className="mt-2">
+            <VitalsForm
+              weight={vitalWeight}
+              height={vitalHeight}
+              systolic={vitalSystolic}
+              diastolic={vitalDiastolic}
+              temperature={vitalTemperature}
+              onWeightChange={setVitalWeight}
+              onHeightChange={setVitalHeight}
+              onSystolicChange={setVitalSystolic}
+              onDiastolicChange={setVitalDiastolic}
+              onTemperatureChange={setVitalTemperature}
+              bmi={vitalsBmi}
+              rangeStatuses={vitalRangeStatuses}
+            />
+          </div>
+        </Card>
+
         {/* 4. Allergies — safety-critical, prominent, never collapsed (Rule #4) */}
         <AllergiesSection
           noKnownAllergies={noKnownAllergies}
@@ -1346,16 +1526,39 @@ export function PatientRegistrationForm({
                   ({t('optional')})
                 </span>
               </label>
-              <Input
-                id="national-id"
-                type="text"
-                inputMode="text"
-                maxLength={200}
-                className="min-h-[44px]"
-                placeholder={t('nationalIdPlaceholder')}
-                value={nationalId}
-                onChange={(e) => setNationalId(e.target.value)}
-              />
+              {hasNationalIdOnFile && !nidEditing ? (
+                <>
+                  {/* Masked "on file" state — the raw ID is never stored (Rule #7),
+                      so there is nothing to reveal. Click to enter a replacement. */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNidEditing(true)
+                      requestAnimationFrame(() => document.getElementById('national-id')?.focus())
+                    }}
+                    className="flex min-h-[44px] w-full items-center justify-between rounded-xl border border-border bg-background px-4 py-2 text-sm text-muted-foreground hover:border-primary"
+                    aria-label={t('nationalIdReplaceHint')}
+                  >
+                    <span aria-hidden="true" className="tracking-widest">
+                      {nidLast4 ? `•••• ${nidLast4}` : '•••• •••• ••••'}
+                    </span>
+                    <span className="text-xs">{t('nationalIdOnFile')}</span>
+                  </button>
+                  <p className="mt-1 text-xs text-muted-foreground">{t('nationalIdReplaceHint')}</p>
+                </>
+              ) : (
+                <Input
+                  id="national-id"
+                  type="text"
+                  inputMode="text"
+                  maxLength={200}
+                  autoFocus={nidEditing}
+                  className="min-h-[44px]"
+                  placeholder={hasNationalIdOnFile ? t('nationalIdReplacePlaceholder') : t('nationalIdPlaceholder')}
+                  value={nationalId}
+                  onChange={(e) => setNationalId(e.target.value)}
+                />
+              )}
             </div>
 
             {/* National ID type */}

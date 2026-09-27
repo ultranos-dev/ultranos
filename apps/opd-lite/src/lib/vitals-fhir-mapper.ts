@@ -27,7 +27,10 @@ interface VitalsData {
 
 interface MappingContext {
   patientId: string
-  encounterId: string
+  /** Optional: vitals recorded at a visit link to the encounter. Patient-scoped
+   *  captures (e.g. the profile modal) omit it — encounter is optional in FHIR R4
+   *  and the observations.encounter_id column is nullable. */
+  encounterId?: string
   hlcTimestamp: string
   nowIso: string
   practitionerRef?: string
@@ -58,7 +61,7 @@ function makeObservation(
       text: display,
     },
     subject: { reference: `Patient/${ctx.patientId}` },
-    encounter: { reference: `Encounter/${ctx.encounterId}` },
+    encounter: ctx.encounterId ? { reference: `Encounter/${ctx.encounterId}` } : undefined,
     effectiveDateTime: ctx.nowIso,
     performer: ctx.practitionerRef ? [{ reference: ctx.practitionerRef }] : undefined,
     _ultranos: {

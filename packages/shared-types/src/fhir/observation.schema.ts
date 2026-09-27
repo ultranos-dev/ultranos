@@ -42,10 +42,12 @@ export const FhirObservationSchema = z.object({
     reference: z.string(),
     display: z.string().optional(),
   }),
+  // Optional (FHIR R4 Observation.encounter is 0..1; observations.encounter_id is
+  // nullable). Patient-scoped captures (e.g. the profile vitals section) omit it.
   encounter: z.object({
     reference: z.string(),
     display: z.string().optional(),
-  }),
+  }).optional(),
   effectiveDateTime: z.string().datetime(),
   performer: z.array(ReferenceSchema).optional(),
   valueQuantity: QuantitySchema.optional(),

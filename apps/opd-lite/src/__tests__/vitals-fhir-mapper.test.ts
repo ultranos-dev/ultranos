@@ -105,8 +105,17 @@ describe('mapVitalsToObservations', () => {
       { weight: '70', height: '', systolic: '', diastolic: '', temperature: '', bmi: null },
       ctx,
     )
-    expect(obs[0]!.encounter.reference).toBe(`Encounter/${ctx.encounterId}`)
+    expect(obs[0]!.encounter!.reference).toBe(`Encounter/${ctx.encounterId}`)
     expect(obs[0]!.subject.reference).toBe(`Patient/${ctx.patientId}`)
+  })
+
+  it('omits the encounter for patient-scoped vitals (no encounterId)', () => {
+    const obs = mapVitalsToObservations(
+      { weight: '70', height: '', systolic: '', diastolic: '', temperature: '', bmi: null },
+      { patientId: 'p1', hlcTimestamp: 'h', nowIso: '2026-01-01T00:00:00.000Z' },
+    )
+    expect(obs[0]!.encounter).toBeUndefined()
+    expect(obs[0]!.subject.reference).toBe('Patient/p1')
   })
 
   it('sets FHIR Observation status to final', () => {

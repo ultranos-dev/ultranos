@@ -101,7 +101,7 @@ export const patientRouter = createTRPCRouter({
           'address_province_origin, address_district_origin, address_village_origin, ' +
           'address_province_current, address_district_current, address_village_current, ' +
           'is_nomadic, telecom_phone, blood_group, preferred_language, ' +
-          'mpi_score, mpi_warn, ' +
+          'mpi_score, mpi_warn, national_id_hash, ' +
           'marital_status, displacement_category, nationality, occupation, ' +
           'education_level, disability, telecom_phone_use, emergency_contacts'
         )
@@ -224,6 +224,9 @@ export const patientRouter = createTRPCRouter({
             preferredLanguage: (row.preferred_language as string) ?? undefined,
             mpiScore:    row.mpi_score,
             mpiWarn:     (row.mpi_warn as boolean) ?? false,
+            // Server-derived presence flag only — the hash itself is NEVER returned
+            // to the client (audit C-HUB-4). Drives the directory's "NID missing" badge.
+            hasNationalId: row.national_id_hash != null,
             displacementCategory: (row.displacement_category as string) ?? undefined,
             nationality: (row.nationality as string)?.toUpperCase() ?? undefined,
             occupation:  (row.occupation as string) ?? undefined,
@@ -294,7 +297,7 @@ export const patientRouter = createTRPCRouter({
           'address_province_origin, address_district_origin, address_village_origin, ' +
           'address_province_current, address_district_current, address_village_current, ' +
           'is_nomadic, telecom_phone, blood_group, preferred_language, ' +
-          'mpi_score, mpi_warn, ' +
+          'mpi_score, mpi_warn, national_id_hash, ' +
           'marital_status, displacement_category, nationality, occupation, ' +
           'education_level, disability, telecom_phone_use, emergency_contacts'
         )
@@ -383,6 +386,9 @@ export const patientRouter = createTRPCRouter({
             preferredLanguage: (row.preferred_language as string) ?? undefined,
             mpiScore:    row.mpi_score,
             mpiWarn:     (row.mpi_warn as boolean) ?? false,
+            // Server-derived presence flag only — the hash itself is NEVER returned
+            // to the client (audit C-HUB-4). Drives the directory's "NID missing" badge.
+            hasNationalId: row.national_id_hash != null,
             displacementCategory: (row.displacement_category as string) ?? undefined,
             nationality: (row.nationality as string)?.toUpperCase() ?? undefined,
             occupation:  (row.occupation as string) ?? undefined,
@@ -642,6 +648,7 @@ export const patientRouter = createTRPCRouter({
         birth_year_only: input.birthYearOnly ?? false,
         telecom_phone:  input.phone ?? null,
         national_id_hash:              nationalIdHash,
+        national_id_last4:             input.nationalId ? input.nationalId.slice(-4) : null,
         tazkira_paper_hash:            tazkiraPaperHash,
         biometric_fingerprint_hash:    input.biometricFingerprintHash ?? null,
         biometric_algorithm_version:   input.biometricAlgorithmVersion ?? null,
@@ -795,6 +802,7 @@ export const patientRouter = createTRPCRouter({
         birth_year_only: input.birthYearOnly ?? false,
         telecom_phone:  input.phone ?? null,
         national_id_hash:              nationalIdHash,
+        national_id_last4:             input.nationalId ? input.nationalId.slice(-4) : null,
         tazkira_paper_hash:            tazkiraPaperHash,
         biometric_fingerprint_hash:    input.biometricFingerprintHash ?? null,
         biometric_algorithm_version:   input.biometricAlgorithmVersion ?? null,
@@ -925,7 +933,7 @@ export const patientRouter = createTRPCRouter({
           'address_province_origin, address_district_origin, address_village_origin, ' +
           'address_province_current, address_district_current, address_village_current, ' +
           'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
-          'household_id, national_id_type, ' +
+          'household_id, national_id_type, national_id_last4, ' +
           'mpi_score, mpi_warn, guardian_id, consent_version, patient_tier, ' +
           'biometric_fingerprint_hash, biometric_algorithm_version, ' +
           'birth_date_enc, merged_into, ' +
@@ -973,7 +981,7 @@ export const patientRouter = createTRPCRouter({
             'address_province_origin, address_district_origin, address_village_origin, ' +
             'address_province_current, address_district_current, address_village_current, ' +
             'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
-          'household_id, national_id_type, ' +
+          'household_id, national_id_type, national_id_last4, ' +
             'mpi_score, mpi_warn, guardian_id, consent_version, patient_tier, ' +
             'biometric_fingerprint_hash, biometric_algorithm_version, ' +
             'birth_date_enc, merged_into, ' +
@@ -1016,6 +1024,41 @@ export const patientRouter = createTRPCRouter({
           updatedByName = `${practitioner.given_name} ${practitioner.family_name}`
           updatedByRole = practitioner.role
         }
+      }
+
+      // Current consent (method/language) for the Edit Profile prefill. The consent
+      // ledger is append-only; surface the latest grant so the edit form can show
+      // what was captured and detect an actual change before appending a new one.
+      let consentMethod: string | undefined
+      let consentLanguage: string | undefined
+      // The append-only consent ledger is the SOURCE OF TRUTH for consent (it is what
+      // the Hub's consent enforcement reads). The denormalized `patients.consent_version`
+      // column is NOT populated by the registration RPC, so it is null for most patients
+      // even when an ACTIVE grant exists — reading it made the profile show "Not provided"
+      // for consented patients. Source the version from the latest ACTIVE ledger record.
+      let ledgerConsentVersion: string | undefined
+      let hadLedgerConsent = false
+      try {
+        const { data: latestConsent } = await ctx.supabase
+          .from('consent_records')
+          .select('consent_method, consent_language, consent_version, status, created_at')
+          .eq('patient_id', patientRow.id ?? input.patientId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (latestConsent) {
+          hadLedgerConsent = true
+          consentMethod = (latestConsent.consent_method as string) ?? undefined
+          consentLanguage = (latestConsent.consent_language as string) ?? undefined
+          // Only surface a version when the latest grant is ACTIVE — a withdrawn/expired
+          // consent must NOT display as consented (safety: consent governs data access).
+          if (latestConsent.status === 'ACTIVE') {
+            ledgerConsentVersion = (latestConsent.consent_version as string) ?? undefined
+          }
+        }
+      } catch {
+        // Non-critical: a consent-lookup failure must never fail the patient read.
+        // The edit form simply won't pre-fill consent (it stays an explicit action).
       }
 
       // Audit PHI read (CLAUDE.md Rule #6)
@@ -1068,7 +1111,13 @@ export const patientRouter = createTRPCRouter({
           namePhonetic: (patient.namePhoneticEnc as string) ?? (patient.namePhonetic as string | null) ?? undefined,
           nationalIdHash: (patient.nationalIdHash as string) ?? undefined,
           guardianId: (patient.guardianId as string) ?? undefined,
-          consentVersion: (patient.consentVersion as string) ?? undefined,
+          // Ledger is authoritative when a record exists (ACTIVE → version, else undefined).
+          // Fall back to the denormalized column only when the ledger lookup found nothing.
+          consentVersion: hadLedgerConsent
+            ? ledgerConsentVersion
+            : ((patient.consentVersion as string) ?? undefined),
+          consentMethod: consentMethod as 'WRITTEN' | 'VERBAL_WITNESSED' | undefined,
+          consentLanguage: consentLanguage as 'en' | 'ar' | 'prs' | 'ps' | undefined,
           patient_tier: ((patient.patientTier as string) ?? 'FREE') as 'FREE' | 'PREMIUM',
           preferredLanguage: (patient.preferredLanguage as string) ?? undefined,
           isActive: (patient.isActive as boolean) ?? true,
@@ -1101,6 +1150,7 @@ export const patientRouter = createTRPCRouter({
           bloodGroup: (patient.bloodGroup as string) ?? undefined,
           householdId: (patient.householdId as string) ?? undefined,
           nationalIdType: (patient.nationalIdType as string) ?? undefined,
+          nationalIdLast4: (patient.nationalIdLast4 as string) ?? undefined,
           displacementCategory: (patient.displacementCategory as string) ?? undefined,
           nationality: (patient.nationality as string)?.toUpperCase() ?? undefined,
           occupation: (patient.occupation as string) ?? undefined,
@@ -1398,13 +1448,8 @@ export const patientRouter = createTRPCRouter({
         fieldsUpdated.push('photoUrl')
       }
       if (input.bloodGroup !== undefined) {
-        // Write-once enforcement: blood group cannot be changed once set to a real value
-        if (current.blood_group && current.blood_group !== 'Unknown') {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: 'Blood group cannot be changed once set',
-          })
-        }
+        // Fully editable — a data-entry error must be correctable. The change is
+        // captured in the PHI_WRITE audit event below (no write-once lock).
         updates.bloodGroup = input.bloodGroup
         fieldsUpdated.push('bloodGroup')
       }
@@ -1428,6 +1473,7 @@ export const patientRouter = createTRPCRouter({
         }
 
         updates.nationalIdHash = newHash
+        updates.nationalIdLast4 = input.nationalId.slice(-4)
         fieldsUpdated.push('nationalId')
       }
 

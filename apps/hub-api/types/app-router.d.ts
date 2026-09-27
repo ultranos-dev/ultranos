@@ -103,6 +103,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                         preferredLanguage: string;
                         mpiScore: unknown;
                         mpiWarn: boolean;
+                        hasNationalId: boolean;
                         displacementCategory: string;
                         nationality: string;
                         occupation: string;
@@ -170,6 +171,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                         preferredLanguage: string;
                         mpiScore: unknown;
                         mpiWarn: boolean;
+                        hasNationalId: boolean;
                         displacementCategory: string;
                         nationality: string;
                         occupation: string;
@@ -409,6 +411,8 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     nationalIdHash: string;
                     guardianId: string;
                     consentVersion: string;
+                    consentMethod: "WRITTEN" | "VERBAL_WITNESSED" | undefined;
+                    consentLanguage: "en" | "ar" | "prs" | "ps" | undefined;
                     patient_tier: "FREE" | "PREMIUM";
                     preferredLanguage: string;
                     isActive: boolean;
@@ -437,6 +441,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     bloodGroup: string;
                     householdId: string;
                     nationalIdType: string;
+                    nationalIdLast4: string;
                     displacementCategory: string;
                     nationality: string;
                     occupation: string;

@@ -28,7 +28,7 @@ import { encryptPayload, decryptPayload } from '@ultranos/crypto'
 import { db } from './db'
 import { encryptionKeyStore } from './encryption-key-store'
 import { auditPhiAccess, AuditAction } from './audit'
-import type { AuditResourceType } from './audit'
+import { fhirToAuditResourceType } from './audit-resource-type'
 import { useSyncStore } from '@/stores/sync-store'
 
 /** Dexie-backed storage adapter for the sync queue. */
@@ -158,7 +158,7 @@ function surfaceEnqueueFailure(input: EnqueueInput, err: unknown): void {
   }
   auditPhiAccess(
     AuditAction.SYNC,
-    input.resourceType as AuditResourceType,
+    fhirToAuditResourceType(input.resourceType),
     input.resourceId,
     undefined,
     { syncOutcome: 'failure', reason: 'enqueue_failed', errorName, action: input.action },
@@ -175,7 +175,7 @@ function holdForEncryption(input: EnqueueInput, reason: 'key_unavailable' | 'enc
   }
   auditPhiAccess(
     AuditAction.SYNC,
-    input.resourceType as AuditResourceType,
+    fhirToAuditResourceType(input.resourceType),
     input.resourceId,
     undefined,
     { syncOutcome: 'failure', reason, action: input.action, held: true },

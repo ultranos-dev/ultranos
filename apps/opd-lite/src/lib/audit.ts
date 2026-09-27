@@ -153,4 +153,9 @@ export function auditPhiAccess(
   void emitClientAudit(input)
 }
 
+// Re-exported from a side-effect-free module so the sync layer can import the mapper
+// without pulling in this module's Dexie/drain wiring, and so tests that fully mock
+// '@/lib/audit' still resolve the real mapping. See audit-resource-type.ts.
+export { fhirToAuditResourceType } from './audit-resource-type'
+
 export { AuditAction, AuditResourceType }

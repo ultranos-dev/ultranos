@@ -283,6 +283,153 @@ describe('patient.read', () => {
     expect(mockFromRow).toHaveBeenCalled()
   })
 
+  it('sources consentVersion from the ACTIVE consent ledger when patients.consent_version is null', async () => {
+    // Regression: the registration RPC never populates the denormalized
+    // patients.consent_version column, so a consented patient showed "Not provided".
+    // patient.read must surface the version from the authoritative consent ledger.
+    const mockFrom = createMockFrom()
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'consent_records') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({
+                    data: {
+                      consent_method: 'WRITTEN',
+                      consent_language: 'en',
+                      consent_version: '1.0',
+                      status: 'ACTIVE',
+                      created_at: '2026-09-26T00:00:00Z',
+                    },
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+      // patients row (consent_version column deliberately null)
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                id: PATIENT_UUID,
+                name_local: 'Consented Patient',
+                gender: AdministrativeGender.MALE,
+                birth_date: '1990-01-01',
+                birth_year_only: false,
+                consent_version: null,
+                is_active: true,
+                created_at: '2026-01-01T00:00:00Z',
+                updated_at: '2026-01-01T00:00:00Z',
+                mpi_warn: false,
+              },
+              error: null,
+            }),
+          }),
+        }),
+      }
+    })
+
+    mockFromRow.mockImplementation((data: any) => ({
+      id: data.id,
+      nameLocal: data.name_local,
+      gender: data.gender,
+      birthDate: data.birth_date,
+      birthYearOnly: data.birth_year_only,
+      consentVersion: data.consent_version, // null — must NOT be what we display
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      mpiWarn: data.mpi_warn,
+    }))
+
+    const ctx = createTestContext(mockFrom)
+    const caller = createCaller(ctx)
+
+    const result = await caller.patient.read({ patientId: PATIENT_UUID })
+
+    // Column is null, but the ACTIVE ledger grant is v1.0 — that must win.
+    expect(result._ultranos.consentVersion).toBe('1.0')
+    expect(result._ultranos.consentMethod).toBe('WRITTEN')
+    expect(result._ultranos.consentLanguage).toBe('en')
+  })
+
+  it('does NOT surface a consent version when the latest ledger grant is withdrawn', async () => {
+    // A withdrawn/expired grant must show as not-consented (consent governs data access),
+    // never a stale version from the denormalized column.
+    const mockFrom = createMockFrom()
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'consent_records') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({
+                    data: {
+                      consent_method: 'WRITTEN',
+                      consent_language: 'en',
+                      consent_version: '1.0',
+                      status: 'WITHDRAWN',
+                      created_at: '2026-09-26T00:00:00Z',
+                    },
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                id: PATIENT_UUID,
+                name_local: 'Withdrawn Patient',
+                gender: AdministrativeGender.MALE,
+                birth_date: '1990-01-01',
+                birth_year_only: false,
+                consent_version: 'v0.9-stale', // stale column — must be ignored
+                is_active: true,
+                created_at: '2026-01-01T00:00:00Z',
+                updated_at: '2026-01-01T00:00:00Z',
+                mpi_warn: false,
+              },
+              error: null,
+            }),
+          }),
+        }),
+      }
+    })
+
+    mockFromRow.mockImplementation((data: any) => ({
+      id: data.id,
+      nameLocal: data.name_local,
+      gender: data.gender,
+      birthDate: data.birth_date,
+      birthYearOnly: data.birth_year_only,
+      consentVersion: data.consent_version,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      mpiWarn: data.mpi_warn,
+    }))
+
+    const ctx = createTestContext(mockFrom)
+    const caller = createCaller(ctx)
+
+    const result = await caller.patient.read({ patientId: PATIENT_UUID })
+
+    expect(result._ultranos.consentVersion).toBeUndefined()
+  })
+
   it('blocks access when consent middleware denies', async () => {
     // Override consent middleware mock to deny access
     const { enforceConsentMiddleware: consentMw } = await import('../trpc/middleware/enforceConsent')
@@ -404,12 +551,14 @@ describe('patient.update', () => {
   function mockPatientUpdateFrom(options?: {
     currentUpdatedAt?: string
     currentNationalIdHash?: string | null
+    currentBloodGroup?: string | null
     updateError?: any
     duplicateExists?: boolean
   }) {
     const {
       currentUpdatedAt = '2026-01-01T00:00:00Z',
       currentNationalIdHash = null,
+      currentBloodGroup = null,
       updateError = null,
       duplicateExists = false,
     } = options ?? {}
@@ -429,6 +578,7 @@ describe('patient.update', () => {
                       id: PATIENT_UUID,
                       updated_at: currentUpdatedAt,
                       national_id_hash: currentNationalIdHash,
+                      blood_group: currentBloodGroup,
                     },
                     error: null,
                   }),
@@ -528,6 +678,21 @@ describe('patient.update', () => {
       householdId: 'HH-1',
       nationalIdType: 'PASSPORT',
     }))
+  })
+
+  it('allows correcting an already-set blood group (fully editable, no write-once lock)', async () => {
+    const mockFrom = mockPatientUpdateFrom({ currentBloodGroup: 'AB+' })
+    const ctx = createTestContext(mockFrom)
+    const caller = createCaller(ctx)
+
+    // A data-entry error must be correctable: changing AB+ → O+ succeeds.
+    const result = await caller.patient.update({
+      patientId: PATIENT_UUID,
+      lastKnownUpdate: '2026-06-01T00:00:00Z',
+      bloodGroup: 'O+',
+    })
+    expect(result.id).toBe(PATIENT_UUID)
+    expect(mockToRow).toHaveBeenCalledWith(expect.objectContaining({ bloodGroup: 'O+' }))
   })
 
   it('successfully updates patient demographics', async () => {

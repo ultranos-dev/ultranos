@@ -13,7 +13,7 @@ import { syncQueue, decryptEntryPayload, setOnEnqueuedBridge, runSyncQueueRetent
 import { drainPendingPatientPhotos, uploadPendingPatientPhoto } from './offline-registration'
 import { encryptionKeyStore } from './encryption-key-store'
 import { auditPhiAccess, AuditAction } from './audit'
-import type { AuditResourceType } from './audit'
+import { fhirToAuditResourceType } from './audit-resource-type'
 
 let worker: DrainWorker | null = null
 let connectivityListenersAdded = false
@@ -371,7 +371,7 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
     onAudit: (entry: SyncQueueEntry, outcome: 'success' | 'failure' | 'conflict') => {
       auditPhiAccess(
         AuditAction.SYNC,
-        entry.resourceType as AuditResourceType,
+        fhirToAuditResourceType(entry.resourceType),
         entry.resourceId,
         undefined,
         { syncOutcome: outcome, action: entry.action },

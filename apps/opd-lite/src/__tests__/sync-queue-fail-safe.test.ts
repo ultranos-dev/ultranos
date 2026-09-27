@@ -80,7 +80,9 @@ describe('AC 1 — plaintext is never stored at rest', () => {
       // Audit failure event emitted (opaque ids only).
       expect(auditPhiAccess).toHaveBeenCalledWith(
         'SYNC',
-        'AllergyIntolerance',
+        // FHIR 'AllergyIntolerance' maps to the audit-domain 'ALLERGY' enum value
+        // (fhirToAuditResourceType) — never the raw FHIR string, which the Hub rejects.
+        'ALLERGY',
         baseInput.resourceId,
         undefined,
         expect.objectContaining({ syncOutcome: 'failure', reason: 'encrypt_failed', held: true }),
@@ -117,7 +119,9 @@ describe('AC 1 — plaintext is never stored at rest', () => {
       expect(getHeldForEncryptionCount()).toBe(1)
       expect(auditPhiAccess).toHaveBeenCalledWith(
         'SYNC',
-        'AllergyIntolerance',
+        // FHIR 'AllergyIntolerance' maps to the audit-domain 'ALLERGY' enum value
+        // (fhirToAuditResourceType) — never the raw FHIR string, which the Hub rejects.
+        'ALLERGY',
         baseInput.resourceId,
         undefined,
         expect.objectContaining({ syncOutcome: 'failure', reason: 'key_unavailable', held: true }),
@@ -207,7 +211,9 @@ describe('AC 2 — storage failures surface to UI + audit (QuotaExceededError)',
       expect(useSyncStore.getState().syncError).toBe('STORAGE_QUOTA_EXCEEDED')
       expect(auditPhiAccess).toHaveBeenCalledWith(
         'SYNC',
-        'AllergyIntolerance',
+        // FHIR 'AllergyIntolerance' maps to the audit-domain 'ALLERGY' enum value
+        // (fhirToAuditResourceType) — never the raw FHIR string, which the Hub rejects.
+        'ALLERGY',
         baseInput.resourceId,
         undefined,
         expect.objectContaining({
@@ -246,7 +252,9 @@ describe('AC 2 — storage failures surface to UI + audit (QuotaExceededError)',
       expect(useSyncStore.getState().syncError).toBe('SYNC_ENQUEUE_FAILED')
       expect(auditPhiAccess).toHaveBeenCalledWith(
         'SYNC',
-        'AllergyIntolerance',
+        // FHIR 'AllergyIntolerance' maps to the audit-domain 'ALLERGY' enum value
+        // (fhirToAuditResourceType) — never the raw FHIR string, which the Hub rejects.
+        'ALLERGY',
         baseInput.resourceId,
         undefined,
         expect.objectContaining({ syncOutcome: 'failure', reason: 'enqueue_failed' }),

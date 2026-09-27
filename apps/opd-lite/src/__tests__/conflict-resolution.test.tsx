@@ -217,7 +217,8 @@ describe('resolveConflict', () => {
     // Verify audit event was emitted
     expect(auditPhiAccess).toHaveBeenCalledWith(
       'UPDATE',
-      'AllergyIntolerance',
+      // FHIR 'AllergyIntolerance' → audit-domain 'ALLERGY' (fhirToAuditResourceType).
+      'ALLERGY',
       'allergy-abc12345',
       'patient-001',
       expect.objectContaining({

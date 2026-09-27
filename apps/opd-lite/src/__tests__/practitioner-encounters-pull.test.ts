@@ -78,7 +78,8 @@ describe('pullPractitionerEncounters', () => {
     expect(written.subject.reference).toBe(`Patient/${PATIENT_ID}`)
     expect(auditPhiAccess).toHaveBeenCalledWith(
       'READ',
-      'Encounter',
+      // FHIR 'Encounter' → audit-domain 'ENCOUNTER' (fhirToAuditResourceType).
+      'ENCOUNTER',
       'enc-1',
       PATIENT_ID,
       { source: 'sync-pull-practitioner' },

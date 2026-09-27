@@ -10,7 +10,7 @@
 
 import { db, type SyncQueueEntry } from './db'
 import { auditPhiAccess, AuditAction } from './audit'
-import type { AuditResourceType } from './audit'
+import { fhirToAuditResourceType } from './audit-resource-type'
 
 /** Tier 1 resource types that require append-only merge by default. */
 export const TIER_1_RESOURCE_TYPES = [
@@ -150,7 +150,7 @@ export async function resolveConflict(
   // Emit audit event outside transaction — never log PHI field values
   auditPhiAccess(
     AuditAction.UPDATE,
-    entry.resourceType as AuditResourceType,
+    fhirToAuditResourceType(entry.resourceType),
     entry.resourceId,
     entry.patientRef?.replace('Patient/', ''),
     {

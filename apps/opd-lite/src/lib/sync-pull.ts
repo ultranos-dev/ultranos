@@ -14,7 +14,7 @@ import {
   type SyncRecord,
 } from '@ultranos/sync-engine'
 import { auditPhiAccess, AuditAction } from './audit'
-import type { AuditResourceType } from './audit'
+import { fhirToAuditResourceType } from './audit-resource-type'
 import type { FhirPatient, PatientAddress, PatientTier, PatientLanguage } from '@ultranos/shared-types'
 import { getHubTrpcUrl } from '@/lib/hub-url'
 
@@ -567,7 +567,7 @@ export async function pullPatientChanges(
         // else: a newer unsynced local edit exists — keep it (LWW).
         auditPhiAccess(
           AuditAction.READ,
-          change.resourceType as AuditResourceType,
+          fhirToAuditResourceType(change.resourceType),
           change.resourceId,
           patientId,
           { source: 'sync-pull' },
@@ -649,7 +649,7 @@ export async function pullPatientChanges(
       // Audit each PHI read
       auditPhiAccess(
         AuditAction.READ,
-        change.resourceType as AuditResourceType,
+        fhirToAuditResourceType(change.resourceType),
         change.resourceId,
         patientId,
         { source: 'sync-pull' },
@@ -714,7 +714,7 @@ async function applyPulledEncounter(row: Record<string, unknown>): Promise<boole
   )
   auditPhiAccess(
     AuditAction.READ,
-    'Encounter' as AuditResourceType,
+    fhirToAuditResourceType('Encounter'),
     id,
     subjectId,
     { source: 'sync-pull-practitioner' },

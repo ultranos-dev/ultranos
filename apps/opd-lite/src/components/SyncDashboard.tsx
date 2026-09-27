@@ -18,7 +18,7 @@ import { triggerDrain } from '@/lib/sync-worker'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { pullPatientChanges } from '@/lib/sync-pull'
 import { auditPhiAccess, AuditAction } from '@/lib/audit'
-import type { AuditResourceType } from '@/lib/audit'
+import { fhirToAuditResourceType } from '@/lib/audit-resource-type'
 import { ConflictDiffView } from '@/components/conflicts/ConflictDiffView'
 
 // --- PHI-safe resource labels (AC: 9) ---
@@ -250,7 +250,7 @@ export function SyncDashboard() {
     if (entry) {
       auditPhiAccess(
         AuditAction.DELETE_REQUEST,
-        entry.resourceType as AuditResourceType,
+        fhirToAuditResourceType(entry.resourceType),
         entry.resourceId,
         undefined,
         { reason: 'user_discard_from_sync_dashboard' },

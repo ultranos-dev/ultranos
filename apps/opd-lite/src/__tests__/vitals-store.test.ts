@@ -97,7 +97,7 @@ describe('useVitalsStore', () => {
     const weightObs = saved.find((o) => o.code.coding![0]!.code === LOINC.BODY_WEIGHT)
     expect(weightObs).toBeDefined()
     expect(weightObs!.valueQuantity!.value).toBe(70)
-    expect(weightObs!.encounter.reference).toBe('Encounter/enc-1')
+    expect(weightObs!.encounter!.reference).toBe('Encounter/enc-1')
     expect(weightObs!.subject.reference).toBe('Patient/pat-1')
   })
 

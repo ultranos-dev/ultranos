@@ -226,7 +226,7 @@ export function PatientDirectory() {
       lastVisit: latestIso(lastVisitMap.get(p.id), p._ultranos?.lastVisitAt),
       status: p._ultranos?.isActive !== false ? 'active' : 'inactive',
       hasAllergies: allergyPatientIds.has(p.id) || (p._ultranos?.hasAllergies ?? false),
-      hasNationalId: !!p._ultranos?.nationalIdHash,
+      hasNationalId: !!(p._ultranos?.hasNationalId || p._ultranos?.nationalIdHash),
       lastUpdated: (p.meta?.lastUpdated as string) ?? null,
       photoKey: p._ultranos?.photoUrl ?? null,
     }))

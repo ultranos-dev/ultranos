@@ -7,7 +7,7 @@ import { CircleCheck, ChevronDown } from '@ultranos/ui-kit/icons'
 import { db, type SyncQueueEntry } from '@/lib/db'
 import { isTier1Resource, isConflictOverdue } from '@/lib/conflict-resolution'
 import { auditPhiAccess, AuditAction } from '@/lib/audit'
-import type { AuditResourceType } from '@/lib/audit'
+import { fhirToAuditResourceType } from '@/lib/audit-resource-type'
 import { Button } from '@/components/ui/Button'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
@@ -71,7 +71,7 @@ export function ConflictList() {
     if (entry && expandedId !== entryId) {
       auditPhiAccess(
         AuditAction.READ,
-        entry.resourceType as AuditResourceType,
+        fhirToAuditResourceType(entry.resourceType),
         entry.resourceId,
         entry.patientRef?.replace('Patient/', ''),
         { phiAccess: 'conflict_review' },

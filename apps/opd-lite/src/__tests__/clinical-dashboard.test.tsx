@@ -100,6 +100,9 @@ vi.mock('@/stores/encounter-store', () => ({
 vi.mock('@ultranos/sync-engine', () => ({
   HybridLogicalClock: vi.fn().mockImplementation(() => ({
     now: () => ({ wallTime: Date.now(), counter: 0, nodeId: 'test' }),
+    // hlc.ts seeds the clock at module init; the dashboard now mounts the
+    // registration form (which imports '@/lib/hlc'), so this must exist.
+    seedFrom: () => {},
   })),
   serializeHlc: () => new Date().toISOString(),
   enqueueSyncAction: vi.fn(),
