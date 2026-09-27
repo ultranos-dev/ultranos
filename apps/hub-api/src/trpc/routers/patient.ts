@@ -1585,6 +1585,89 @@ export const patientRouter = createTRPCRouter({
       }
     }),
 
+  // ── patient.setActive ───────────────────────────────────────
+  // Toggle a patient's active status (soft activate/deactivate). Deactivation is a
+  // reversible soft-delete (is_active=false) — the record is retained (audit/history),
+  // just hidden from active-only reads. Distinct from patient.update because it must be
+  // able to TARGET an inactive patient (to reactivate one) — update filters is_active=true
+  // and so can never see, let alone flip, a deactivated record.
+  setActive: protectedProcedure
+    .use(enforceResourceAccess('Patient'))
+    .input(
+      z.object({
+        patientId: z.string().uuid(),
+        isActive: z.boolean(),
+        // Tier-3 LWW guard, same as patient.update.
+        lastKnownUpdate: z.string().min(1),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Fetch by id ONLY (no is_active filter) so an inactive patient can be reactivated.
+      const { data: current, error: fetchError } = await ctx.supabase
+        .from('patients')
+        .select('id, updated_at, is_active')
+        .eq('id', input.patientId)
+        .single()
+
+      if (fetchError || !current) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Patient not found' })
+      }
+
+      // Tier-3 LWW conflict detection — reject a stale toggle.
+      if (current.updated_at && input.lastKnownUpdate < (current.updated_at as string)) {
+        throw new TRPCError({ code: 'CONFLICT', message: 'Stale update — a newer version exists' })
+      }
+
+      // No-op if already in the requested state — nothing to write, but not an error.
+      if ((current.is_active as boolean) === input.isActive) {
+        return {
+          id: input.patientId,
+          resourceType: 'Patient' as const,
+          isActive: input.isActive,
+          meta: { lastUpdated: current.updated_at as string },
+        }
+      }
+
+      const updatedAt = new Date().toISOString()
+      const { data: updated, error: updateError } = await ctx.supabase
+        .from('patients')
+        .update({ is_active: input.isActive, updated_at: updatedAt, updated_by: ctx.user.sub })
+        .eq('id', input.patientId)
+        .select('id')
+
+      if (updateError) {
+        console.error('[PATIENT] setActive error:', { code: updateError.code })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update patient status' })
+      }
+      if (!updated || updated.length === 0) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Patient not found' })
+      }
+
+      // Audit PHI write (CLAUDE.md Rule #6) — opaque id + the status transition only.
+      const audit = new AuditLogger(ctx.supabase, ctx.user?.orgId ?? undefined)
+      try {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'PATIENT',
+          resourceId: input.patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'setActive', isActive: input.isActive },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PATIENT', resourceId: input.patientId })
+      }
+
+      return {
+        id: input.patientId,
+        resourceType: 'Patient' as const,
+        isActive: input.isActive,
+        meta: { lastUpdated: updatedAt },
+      }
+    }),
+
   // ── patient.unresolvedConflictCount ─────────────────────────
   unresolvedConflictCount: protectedProcedure
     .use(enforceResourceAccess('Patient'))

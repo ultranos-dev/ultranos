@@ -805,6 +805,105 @@ describe('patient.update', () => {
   })
 })
 
+describe('patient.setActive', () => {
+  const createCaller = createCallerFactory(appRouter)
+  const NOW = '2026-09-27T00:00:00Z'
+  const OLDER = '2026-09-26T00:00:00Z'
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockToRow.mockImplementation((data: any) => data)
+    mockFromRow.mockImplementation((data: any) => data)
+  })
+
+  /** Build a from() mock: patients supports select→eq→single AND update→eq→select. */
+  function makeMockFrom(current: { is_active: boolean; updated_at: string }) {
+    const updateSelect = vi.fn().mockResolvedValue({ data: [{ id: PATIENT_UUID }], error: null })
+    const updateEq = vi.fn().mockReturnValue({ select: updateSelect })
+    const update = vi.fn().mockReturnValue({ eq: updateEq })
+    const mockFrom = createMockFrom()
+    mockFrom.mockImplementation(() => ({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { id: PATIENT_UUID, updated_at: current.updated_at, is_active: current.is_active },
+            error: null,
+          }),
+        }),
+      }),
+      update,
+    }))
+    return { mockFrom, update }
+  }
+
+  it('deactivates an active patient (is_active=false)', async () => {
+    const { mockFrom, update } = makeMockFrom({ is_active: true, updated_at: OLDER })
+    const caller = createCaller(createTestContext(mockFrom))
+
+    const result = await caller.patient.setActive({
+      patientId: PATIENT_UUID,
+      isActive: false,
+      lastKnownUpdate: NOW,
+    })
+
+    expect(result.isActive).toBe(false)
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ is_active: false }))
+  })
+
+  it('reactivates an inactive patient (fetch is NOT filtered by is_active)', async () => {
+    const { mockFrom, update } = makeMockFrom({ is_active: false, updated_at: OLDER })
+    const caller = createCaller(createTestContext(mockFrom))
+
+    const result = await caller.patient.setActive({
+      patientId: PATIENT_UUID,
+      isActive: true,
+      lastKnownUpdate: NOW,
+    })
+
+    expect(result.isActive).toBe(true)
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ is_active: true }))
+  })
+
+  it('no-ops (no write) when already in the requested state', async () => {
+    const { mockFrom, update } = makeMockFrom({ is_active: true, updated_at: OLDER })
+    const caller = createCaller(createTestContext(mockFrom))
+
+    const result = await caller.patient.setActive({
+      patientId: PATIENT_UUID,
+      isActive: true,
+      lastKnownUpdate: NOW,
+    })
+
+    expect(result.isActive).toBe(true)
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  it('throws CONFLICT on a stale lastKnownUpdate', async () => {
+    const { mockFrom } = makeMockFrom({ is_active: true, updated_at: NOW })
+    const caller = createCaller(createTestContext(mockFrom))
+
+    await expect(
+      caller.patient.setActive({ patientId: PATIENT_UUID, isActive: false, lastKnownUpdate: OLDER }),
+    ).rejects.toThrow(/stale/i)
+  })
+
+  it('throws NOT_FOUND when the patient does not exist', async () => {
+    const mockFrom = createMockFrom()
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+        }),
+      }),
+    })
+    const caller = createCaller(createTestContext(mockFrom))
+
+    await expect(
+      caller.patient.setActive({ patientId: PATIENT_UUID, isActive: false, lastKnownUpdate: NOW }),
+    ).rejects.toThrow(/not found/i)
+  })
+})
+
 describe('patient.search — phonetic results', () => {
   const createCaller = createCallerFactory(appRouter)
 

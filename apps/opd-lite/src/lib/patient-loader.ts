@@ -167,6 +167,62 @@ export async function fetchPatientFromHub(
   }
 }
 
+export interface SetPatientActiveResult {
+  isActive: boolean
+  lastUpdated: string
+}
+
+/**
+ * Toggle a patient's active status via the Hub (patient.setActive) and mirror the
+ * change into the local Dexie cache so the directory reflects it immediately (before
+ * the next full resync). Throws on failure so the caller surfaces an error rather than
+ * silently leaving the row in its old state.
+ */
+export async function setPatientActive(
+  patientId: string,
+  isActive: boolean,
+  lastKnownUpdate: string,
+): Promise<SetPatientActiveResult> {
+  const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+  const supabase = getSupabaseBrowserClient()
+  const { data: sessionData } = await supabase.auth.getSession()
+  const token = sessionData.session?.access_token
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${HUB_API_URL}/api/trpc/patient.setActive`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ json: { patientId, isActive, lastKnownUpdate } }),
+  })
+  if (!res.ok) throw new Error(`patient.setActive failed: ${res.status}`)
+
+  const body = (await res.json()) as {
+    result: { data: { json: { isActive?: boolean; meta?: { lastUpdated?: string } } } }
+  }
+  const result = body.result?.data?.json
+  const lastUpdated = result?.meta?.lastUpdated ?? new Date().toISOString()
+
+  // Mirror into the local cache (best-effort). The Hub is authoritative; a resync
+  // reconciles if this fails.
+  try {
+    const raw = await db.patients.get(patientId)
+    if (raw) {
+      const p = raw as unknown as Record<string, unknown>
+      const ext = (p._ultranos as Record<string, unknown>) ?? {}
+      const meta = (p.meta as Record<string, unknown>) ?? {}
+      await db.patients.put({
+        ...p,
+        _ultranos: { ...ext, isActive },
+        meta: { ...meta, lastUpdated },
+      } as never)
+    }
+  } catch {
+    // Non-critical — a resync will reconcile the local cache.
+  }
+
+  return { isActive: result?.isActive ?? isActive, lastUpdated }
+}
+
 export interface LoadPatientResult {
   /** The resolved patient, or null if not found anywhere. */
   patient: FhirPatient | null

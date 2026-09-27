@@ -93,6 +93,11 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
   FileSearch: () => <svg data-testid="icon-file-search" />,
   ChevronUp: ({ className, 'aria-hidden': ariaHidden }: { className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }) => <svg data-testid="icon-chevron-up" className={className} aria-hidden={ariaHidden} />,
   ChevronDown: ({ className, 'aria-hidden': ariaHidden }: { className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }) => <svg data-testid="icon-chevron-down" className={className} aria-hidden={ariaHidden} />,
+  MoreVertical: ({ className }: { className?: string }) => <svg data-testid="icon-more-vertical" className={className} />,
+  Stethoscope: () => <svg data-testid="icon-stethoscope" />,
+  Eye: () => <svg data-testid="icon-eye" />,
+  Pencil: () => <svg data-testid="icon-pencil" />,
+  UserX: () => <svg data-testid="icon-user-x" />,
 }))
 
 // Mock Avatar from ui-kit
@@ -246,6 +251,52 @@ describe('PatientDirectory', () => {
       expect(screen.getByText('Ahmad Khan')).toBeDefined()
       expect(screen.getByText('Fatima Ali')).toBeDefined()
     })
+  })
+
+  it('floats patients with an active encounter to the top and tints the row green', async () => {
+    // p-2 (Fatima) has an open encounter; p-1 (Ahmad) sorts first by name normally.
+    mockEncountersToArray.mockResolvedValue([
+      {
+        id: 'e-1',
+        subject: { reference: 'Patient/p-2' },
+        status: 'in-progress',
+        period: { start: '2026-09-27T08:00:00Z' },
+      },
+    ])
+    const { PatientDirectory } = await import('@/components/patients/PatientDirectory')
+    const { container } = render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('Fatima Ali')).toBeDefined()
+    })
+
+    const rows = container.querySelectorAll('tr[data-testid^="patient-row-"]')
+    // Active-encounter patient (p-2) is first despite the default name-asc sort.
+    expect(rows[0]?.getAttribute('data-testid')).toBe('patient-row-p-2')
+    expect(rows[0]?.getAttribute('data-active-encounter')).toBe('true')
+    expect(rows[0]?.className).toContain('bg-primary/10')
+
+    // The non-active row is neither pinned nor tinted.
+    const ahmad = container.querySelector('[data-testid="patient-row-p-1"]')
+    expect(ahmad?.getAttribute('data-active-encounter')).toBeNull()
+    expect(ahmad?.className).not.toContain('bg-primary/10')
+  })
+
+  it('does not tint or reorder when a patient encounter is finished', async () => {
+    mockEncountersToArray.mockResolvedValue([
+      { id: 'e-2', subject: { reference: 'Patient/p-2' }, status: 'finished' },
+    ])
+    const { PatientDirectory } = await import('@/components/patients/PatientDirectory')
+    const { container } = render(<PatientDirectory />)
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('Ahmad Khan')).toBeDefined()
+    })
+
+    const rows = container.querySelectorAll('tr[data-testid^="patient-row-"]')
+    // Default name-asc order preserved (Ahmad before Fatima), no tint.
+    expect(rows[0]?.getAttribute('data-testid')).toBe('patient-row-p-1')
+    expect(rows[0]?.className).not.toContain('bg-primary/10')
   })
 
   it('shows allergy flag for patients with allergies', async () => {

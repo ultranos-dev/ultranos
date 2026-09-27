@@ -410,7 +410,7 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
                     namePhonetic: string;
                     nationalIdHash: string;
                     guardianId: string;
-                    consentVersion: string;
+                    consentVersion: string | undefined;
                     consentMethod: "WRITTEN" | "VERBAL_WITNESSED" | undefined;
                     consentLanguage: "en" | "ar" | "prs" | "ps" | undefined;
                     patient_tier: "FREE" | "PREMIUM";
@@ -518,6 +518,22 @@ export declare const appRouter: import("@trpc/server").TRPCBuiltRouter<{
             output: {
                 id: string;
                 resourceType: "Patient";
+                meta: {
+                    lastUpdated: string;
+                };
+            };
+            meta: object;
+        }>;
+        setActive: import("@trpc/server").TRPCMutationProcedure<{
+            input: {
+                patientId: string;
+                lastKnownUpdate: string;
+                isActive: boolean;
+            };
+            output: {
+                id: string;
+                resourceType: "Patient";
+                isActive: boolean;
                 meta: {
                     lastUpdated: string;
                 };

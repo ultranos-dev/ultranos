@@ -10,11 +10,17 @@ import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { Users, UserCheck, AlertTriangle, Clock, FileSearch, ChevronUp, ChevronDown } from '@ultranos/ui-kit/icons'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { formatDate, formatRelativeTime } from '@ultranos/ui-kit'
+import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { db } from '@/lib/db'
 import type { LocalPatient } from '@/lib/db'
+import type { FhirPatient } from '@ultranos/shared-types'
 import { usePatientListSync } from '@/lib/use-patient-list-sync'
 import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
+import { fetchPatientFromHub, setPatientActive } from '@/lib/patient-loader'
 import { PatientCreateModal } from '@/components/patient/PatientCreateModal'
+import { PatientEditModal } from '@/components/patient/PatientEditModal'
+import { PatientRowActions } from './PatientRowActions'
+import { ConfirmDialog } from './ConfirmDialog'
 
 type SortField = 'name' | 'age' | 'gender' | 'phone' | 'lastVisit' | 'status' | 'lastUpdated'
 type SortDir = 'asc' | 'desc'
@@ -31,6 +37,7 @@ interface PatientRow {
   phone: string
   lastVisit: string | null
   status: string
+  hasActiveEncounter: boolean
   hasAllergies: boolean
   hasNationalId: boolean
   lastUpdated: string | null
@@ -93,6 +100,7 @@ export function PatientDirectory() {
 
   const [patients, setPatients] = useState<LocalPatient[]>([])
   const [allergyPatientIds, setAllergyPatientIds] = useState<Set<string>>(new Set())
+  const [activeEncounterIds, setActiveEncounterIds] = useState<Set<string>>(new Set())
   const [lastVisitMap, setLastVisitMap] = useState<Map<string, string>>(new Map())
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
@@ -147,12 +155,17 @@ export function PatientDirectory() {
       }
       setAllergyPatientIds(allergyIds)
 
-      // Latest visit per patient from encounters.
+      // Latest visit per patient + which patients have an OPEN (active) encounter.
+      // "Active" = any encounter not in a closed state (finished/cancelled/error).
+      const CLOSED_ENCOUNTER_STATUSES = new Set(['finished', 'cancelled', 'entered-in-error'])
       const visitMap = new Map<string, string>()
+      const activeIds = new Set<string>()
       for (const enc of encounters) {
         const ref = (enc as { subject?: { reference?: string } }).subject?.reference
         if (!ref) continue
         const pid = ref.replace('Patient/', '')
+        const status = (enc as { status?: string }).status
+        if (status && !CLOSED_ENCOUNTER_STATUSES.has(status)) activeIds.add(pid)
         // Use the encounter's actual visit datetime (period.start, ISO) — NOT
         // the HLC clock string, which is not a parseable date ("Invalid Date").
         const ts = (enc as { period?: { start?: string } }).period?.start
@@ -163,6 +176,7 @@ export function PatientDirectory() {
         if (!existing || ts > existing) visitMap.set(pid, ts)
       }
       setLastVisitMap(visitMap)
+      setActiveEncounterIds(activeIds)
     } catch {
       // Encryption key not available or Dexie error — keep current state.
     }
@@ -225,12 +239,13 @@ export function PatientDirectory() {
       // the local per-patient cache (covers patients opened on this device).
       lastVisit: latestIso(lastVisitMap.get(p.id), p._ultranos?.lastVisitAt),
       status: p._ultranos?.isActive !== false ? 'active' : 'inactive',
+      hasActiveEncounter: activeEncounterIds.has(p.id),
       hasAllergies: allergyPatientIds.has(p.id) || (p._ultranos?.hasAllergies ?? false),
       hasNationalId: !!(p._ultranos?.hasNationalId || p._ultranos?.nationalIdHash),
       lastUpdated: (p.meta?.lastUpdated as string) ?? null,
       photoKey: p._ultranos?.photoUrl ?? null,
     }))
-  }, [patients, allergyPatientIds, lastVisitMap])
+  }, [patients, allergyPatientIds, activeEncounterIds, lastVisitMap])
 
   // Stat counts derived from already-loaded rows (no new fetch)
   // - total: all patients
@@ -297,6 +312,12 @@ export function PatientDirectory() {
   const sorted = useMemo(() => {
     const copy = [...filtered]
     copy.sort((a, b) => {
+      // Patients with an active (open) encounter always float to the top,
+      // regardless of the selected column sort.
+      if (a.hasActiveEncounter !== b.hasActiveEncounter) {
+        return a.hasActiveEncounter ? -1 : 1
+      }
+
       let cmp = 0
       const valA = a[sortField]
       const valB = b[sortField]
@@ -377,6 +398,84 @@ export function PatientDirectory() {
     setPage(1)
   }, [])
 
+  // ── Row actions (⋮ menu) ────────────────────────────────────────────────
+  const [editPatient, setEditPatient] = useState<FhirPatient | null>(null)
+  const [editPatientId, setEditPatientId] = useState<string | null>(null)
+  const [confirmRow, setConfirmRow] = useState<PatientRow | null>(null)
+  const [statusBusy, setStatusBusy] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
+
+  const handleStartEncounter = useCallback(
+    (id: string) => router.push(`/${locale}/encounter/${id}`),
+    [router, locale],
+  )
+
+  const handleViewProfile = useCallback(
+    (id: string) => router.push(`/${locale}/patient/${id}`),
+    [router, locale],
+  )
+
+  // Edit needs the COMPLETE record (list/search rows are partial), so fetch from the
+  // Hub first, falling back to the local copy when offline.
+  const handleEditProfile = useCallback(
+    async (id: string) => {
+      setActionError(null)
+      let full: FhirPatient | null = null
+      try {
+        full = await fetchPatientFromHub(id)
+      } catch {
+        full = null
+      }
+      if (!full) {
+        const local = patients.find((p) => p.id === id)
+        full = local ? (local as unknown as FhirPatient) : null
+      }
+      if (full) {
+        setEditPatient(full)
+        setEditPatientId(id)
+      } else {
+        setActionError(t('actionLoadFailed'))
+      }
+    },
+    [patients, t],
+  )
+
+  const applyStatus = useCallback(
+    async (row: PatientRow, isActive: boolean) => {
+      setStatusBusy(true)
+      setActionError(null)
+      try {
+        await setPatientActive(row.id, isActive, row.lastUpdated ?? new Date().toISOString())
+        // Optimistic: flip the row locally so the list updates immediately.
+        setPatients((prev) =>
+          prev.map((p) =>
+            p.id === row.id
+              ? ({ ...p, _ultranos: { ...(p._ultranos ?? {}), isActive } } as LocalPatient)
+              : p,
+          ),
+        )
+        setConfirmRow(null)
+        void refreshFromDexie()
+      } catch {
+        setActionError(t('statusChangeFailed'))
+      } finally {
+        setStatusBusy(false)
+      }
+    },
+    [refreshFromDexie, t],
+  )
+
+  const handleToggleStatus = useCallback(
+    (row: PatientRow) => {
+      if (row.status === 'active') {
+        setConfirmRow(row) // confirm before soft-deactivating
+      } else {
+        void applyStatus(row, true) // reactivation is immediate (non-destructive)
+      }
+    },
+    [applyStatus],
+  )
+
   return (
     <div className="flex flex-col gap-4">
       {/* Header row — standalone h1 with syncing indicator */}
@@ -391,6 +490,20 @@ export function PatientDirectory() {
           </span>
         )}
       </div>
+
+      {/* Row-action error (status change / edit load) */}
+      {actionError && (
+        <Alert variant="destructive" role="alert" className="flex items-center justify-between gap-3">
+          <span>{actionError}</span>
+          <button
+            type="button"
+            onClick={() => setActionError(null)}
+            className="shrink-0 text-xs font-medium underline hover:no-underline"
+          >
+            {t('dismiss')}
+          </button>
+        </Alert>
+      )}
 
       {/* Stat strip — derived from already-loaded patient rows */}
       {!loading && rows.length > 0 && (
@@ -553,6 +666,9 @@ export function PatientDirectory() {
                   <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     {t('allergies')}
                   </th>
+                  <th className="w-12 px-4 py-3 text-end text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <span className="sr-only">{t('actionsColumn')}</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -560,8 +676,13 @@ export function PatientDirectory() {
                   <tr
                     key={row.id}
                     onClick={() => handleRowClick(row.id)}
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    className={`cursor-pointer transition-colors ${
+                      row.hasActiveEncounter
+                        ? 'bg-primary/10 hover:bg-primary/20'
+                        : 'hover:bg-muted/50'
+                    }`}
                     data-testid={`patient-row-${row.id}`}
+                    data-active-encounter={row.hasActiveEncounter || undefined}
                   >
                     <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground">
                       <span className="flex items-center gap-2">
@@ -634,6 +755,21 @@ export function PatientDirectory() {
                         <span className="text-xs text-muted-foreground">·</span>
                       )}
                     </td>
+                    <td
+                      className="whitespace-nowrap px-4 py-3 text-end"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex justify-end">
+                        <PatientRowActions
+                          patientName={row.nameSegments.length > 0 ? row.nameSegments.join(' ') : row.name}
+                          isActive={row.status === 'active'}
+                          onStartEncounter={() => handleStartEncounter(row.id)}
+                          onViewProfile={() => handleViewProfile(row.id)}
+                          onEditProfile={() => { void handleEditProfile(row.id) }}
+                          onToggleStatus={() => handleToggleStatus(row)}
+                        />
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -658,6 +794,32 @@ export function PatientDirectory() {
       )}
 
       <PatientCreateModal open={createOpen} onClose={() => setCreateOpen(false)} />
+
+      {editPatient && editPatientId && (
+        <PatientEditModal
+          open
+          patient={editPatient}
+          patientId={editPatientId}
+          onClose={() => { setEditPatient(null); setEditPatientId(null) }}
+          onSaved={() => {
+            setEditPatient(null)
+            setEditPatientId(null)
+            void refreshFromDexie()
+          }}
+        />
+      )}
+
+      <ConfirmDialog
+        open={confirmRow !== null}
+        title={t('confirmDeactivateTitle')}
+        description={confirmRow ? t('confirmDeactivateBody', { name: confirmRow.name }) : undefined}
+        confirmLabel={t('actionDeactivate')}
+        cancelLabel={tCommon('cancel')}
+        destructive
+        busy={statusBusy}
+        onConfirm={() => { if (confirmRow) void applyStatus(confirmRow, false) }}
+        onCancel={() => setConfirmRow(null)}
+      />
     </div>
   )
 }
