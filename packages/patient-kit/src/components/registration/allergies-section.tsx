@@ -4,17 +4,13 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Plus, Trash2, AlertCircle } from '@ultranos/ui-kit/icons'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
-import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/Card'
+import { Button } from '../ui/button.js'
+import { Card } from '../ui/card.js'
+import type { AllergyEntry, AllergyCriticality } from '../../types.js'
 
-export type AllergyCriticality = 'low' | 'high' | 'unable-to-assess'
-
-export interface AllergyEntry {
-  /** Present for allergies loaded from an existing patient (edit mode); absent for newly added ones. */
-  id?: string
-  substanceText: string
-  criticality?: AllergyCriticality
-}
+// AllergyEntry / AllergyCriticality are canonical in patient-kit's contracts (types.ts);
+// re-export here so existing consumers importing them alongside AllergiesSection keep working.
+export type { AllergyEntry, AllergyCriticality } from '../../types.js'
 
 interface AllergiesSectionProps {
   noKnownAllergies: boolean

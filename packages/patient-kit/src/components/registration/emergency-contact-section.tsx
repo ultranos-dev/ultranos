@@ -4,8 +4,8 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Plus, Trash2 } from '@ultranos/ui-kit/icons'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
-import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/Card'
+import { Button } from '../ui/button.js'
+import { Card } from '../ui/card.js'
 import type { ContactRelationship, PatientContact } from '@ultranos/shared-types'
 
 const RELATIONSHIP_OPTIONS: { value: ContactRelationship; labelKey: string }[] = [

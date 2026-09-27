@@ -5,12 +5,8 @@ import { useTranslations } from 'next-intl'
 import { Camera, User } from '@ultranos/ui-kit/icons'
 import { AVATAR_RING } from '@ultranos/ui-kit/components/ui/avatar'
 import { PhotoUploadModal } from '@ultranos/ui-kit/components/photo/photo-upload-modal'
-import { Card } from '@/components/Card'
-import {
-  uploadPatientPhoto,
-  removePatientPhoto,
-  getPatientPhotoUrl,
-} from '@/lib/patient-photo-api'
+import { Card } from '../ui/card.js'
+import type { PatientPhotoApi } from '../../types.js'
 
 interface PatientPhotoSectionProps {
   /** Local captured data URL (create/deferred mode). */
@@ -24,6 +20,8 @@ interface PatientPhotoSectionProps {
    */
   patientId?: string
   lastKnownUpdate?: string
+  /** Injected photo transport (opaque-key upload/fetch/remove lives in the host app). */
+  photoApi: PatientPhotoApi
 }
 
 /** Cropped Blob → data URL (deferred local capture). */
@@ -53,6 +51,7 @@ export function PatientPhotoSection({
   onPhotoChange,
   patientId,
   lastKnownUpdate,
+  photoApi,
 }: PatientPhotoSectionProps) {
   const t = useTranslations('patientPhoto')
   const [modalOpen, setModalOpen] = useState(false)
@@ -67,7 +66,7 @@ export function PatientPhotoSection({
     let cancelled = false
     const controller = new AbortController()
     ;(async () => {
-      const url = await getPatientPhotoUrl(patientId, controller.signal)
+      const url = await photoApi.getPatientPhotoUrl(patientId, controller.signal)
       if (!cancelled) setServerPhotoSrc(url)
     })()
     return () => { cancelled = true; controller.abort() }
@@ -116,7 +115,7 @@ export function PatientPhotoSection({
         cropShape="circle"
         uploadFn={async (blob, lku) => {
           if (immediate && patientId) {
-            const r = await uploadPatientPhoto(patientId, blob, lku)
+            const r = await photoApi.uploadPatientPhoto(patientId, blob, lku)
             setRefresh((n) => n + 1)
             return { photoKey: r.photoUrl, lastUpdated: r.lastUpdated }
           }
@@ -127,7 +126,7 @@ export function PatientPhotoSection({
         }}
         removeFn={async (lku) => {
           if (immediate && patientId) {
-            const r = await removePatientPhoto(patientId, lku)
+            const r = await photoApi.removePatientPhoto(patientId, lku)
             setRefresh((n) => n + 1)
             return { lastUpdated: r.lastUpdated }
           }

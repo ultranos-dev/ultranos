@@ -7,7 +7,7 @@ import type { FhirPatient, FhirAllergyIntolerance } from '@ultranos/shared-types
 import {
   PatientRegistrationForm,
 } from '@/components/registration/PatientRegistrationForm'
-import type { AllergyEntry } from '@/components/registration/AllergiesSection'
+import type { AllergyEntry } from '@ultranos/patient-kit/components/registration/allergies-section'
 import { fetchPatientAllergiesFromHub } from '@/lib/trpc'
 
 interface PatientEditModalProps {

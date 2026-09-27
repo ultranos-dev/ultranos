@@ -146,8 +146,55 @@ interface PatientFormCapabilities {
     Component tests here assert render/a11y/derived-state, not cross-boundary events; before
     heavier interactive components move (2b/2c) we need a shared vitest preset that aliases
     react/react-dom/react/jsx-runtime to a single copy. Not a product issue.
-- **Next — Step 2b:** move the remaining presentational sections (Social, EmergencyContact,
-  Allergies, Consent, PatientPhoto; Geography last) via the same proven pattern.
+- **2026-09-27 — Step 2b DONE (presentational sections):** moved **5 sections + 3
+  sub-components** into patient-kit via `git mv` (byte-identical, rename-tracked) + import
+  rewrites: `SocialInfoSection`, `EmergencyContactSection`, `AllergiesSection`,
+  `ConsentSection` (+`ConsentTextModal`), `GeographySection` (+`ProvinceAutocomplete`,
+  `DistrictAutocomplete`) — plus a shared `Button` shim. `AllergyEntry`/`AllergyCriticality`
+  consolidated onto patient-kit `types.ts` (criticality made optional to match reality;
+  allergies-section re-exports for existing consumers). opd-lite form + PatientEditModal
+  imports re-pointed; local files deleted; form-test section mocks re-pointed.
+  - **Verified:** patient-kit typecheck + 8 tests green; opd-lite typecheck + the 3 suites
+    that render the form/sections (patient-registration, patient-modals, consent-text-modal
+    = 38) green — including the **un-mocked real `AllergiesSection`** rendering from the
+    package and the **`ConsentTextModal` event tests** (tab-switch/close) passing.
+  - **DEFERRED to 2c — `PatientPhotoSection`:** it has hard app-data coupling
+    (`@/lib/patient-photo-api` upload/fetch/remove) — that data layer is exactly what the
+    `PatientDataAdapter` (2c) is for. Moving it now via ad-hoc injection then redoing it via
+    the adapter is wasteful churn, so it stays in opd-lite until 2c.
+  - **Testing strategy decision:** shared-component **event/interaction** tests live in the
+    **consuming app** (opd-lite: `@vitejs/plugin-react` + single React → events fire).
+    patient-kit's own suite covers pure logic + render-smoke. This sidesteps the isolated
+    dual-React event gap cleanly (the `ConsentTextModal` event test was kept in opd-lite,
+    re-pointed to the package, rather than moved). Adding `@vitejs/plugin-react` to
+    patient-kit's vitest to enable in-package event tests remains an optional follow-up.
+
+- **2026-09-27 — Step 2c (components) DONE — component extraction COMPLETE:** moved
+  `PatientPhotoSection` (photo transport injected via a new `PatientPhotoApi` contract — the
+  opaque-key upload/fetch/remove stays in the host app) and `MpiResultModal` into patient-kit.
+  **Every reusable registration component + sub-component now lives in patient-kit**
+  (9 components + Button + Card + autocompletes); opd-lite's `registration/` dir contains only
+  the orchestrator form. Verified: patient-kit typecheck + 8 tests; opd-lite typecheck + the 4
+  form/photo suites (patient-photo-section, patient-registration, patient-modals,
+  consent-text-modal = 40) green.
+
+### 6.6 Remaining: orchestrator-form move (2d) — SAFETY-GATED, do NOT rush
+The 1802-line `PatientRegistrationForm` is the last piece. It is the most safety-critical
+code in this migration (offline create, field-level crypto, append-only consent, Tier-1
+allergy merge, MPI dedupe). Moving it to patient-kit requires:
+1. A finalized `PatientDataAdapter` implementation (`OpdPatientAdapter`) wrapping the form's
+   inline hub-auth / db / sync-queue / offline-registration / audit / hlc / photo logic.
+2. Injecting the `useAllergyStore` actions (a zustand hook — can't be imported into a
+   package; the app wrapper passes them in) and the shared clinical `VitalsForm` +
+   vitals mappers (used by encounters too — must NOT move to patient-kit; injected instead).
+3. `next` added as a patient-kit peer (form uses `useRouter`).
+**Verification gate:** the current opd-lite suite MOCKS the sections, so it does NOT exercise
+the offline/crypto/consent/create paths. A blind refactor of this file cannot be honestly
+claimed to work against those tests. Before/with 2d we must add integration tests covering
+offline create, consent capture, and the allergy Tier-1 merge — then refactor. This is why
+2d is a separate, verification-gated pass, not part of the component-extraction burst.
+
+- **After 2d:** 2e (pharmacy-lite) + 2f (lab-lite, MINIMIZED caps) adopt the shared form.
 
 ### 6.5 Step 2 execution plan (grounded 2026-09-27)
 

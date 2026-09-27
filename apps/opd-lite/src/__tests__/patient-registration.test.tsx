@@ -124,13 +124,13 @@ vi.mock('@ultranos/patient-kit/components/registration/name-input-section', () =
   ),
 }))
 
-vi.mock('@/components/registration/PatientPhotoSection', () => ({
+vi.mock('@ultranos/patient-kit/components/registration/patient-photo-section', () => ({
   PatientPhotoSection: () => (
     <div data-testid="patient-photo-section">PhotoSection</div>
   ),
 }))
 
-vi.mock('@/components/registration/GeographySection', () => ({
+vi.mock('@ultranos/patient-kit/components/registration/geography-section', () => ({
   GeographySection: ({
     errors,
   }: {
@@ -144,19 +144,19 @@ vi.mock('@/components/registration/GeographySection', () => ({
   ),
 }))
 
-vi.mock('@/components/registration/SocialInfoSection', () => ({
+vi.mock('@ultranos/patient-kit/components/registration/social-info-section', () => ({
   SocialInfoSection: () => (
     <div data-testid="social-info-section">SocialInfo</div>
   ),
 }))
 
-vi.mock('@/components/registration/EmergencyContactSection', () => ({
+vi.mock('@ultranos/patient-kit/components/registration/emergency-contact-section', () => ({
   EmergencyContactSection: () => (
     <div data-testid="emergency-contact-section">EmergencyContacts</div>
   ),
 }))
 
-vi.mock('@/components/registration/ConsentSection', () => ({
+vi.mock('@ultranos/patient-kit/components/registration/consent-section', () => ({
   ConsentSection: ({
     errors,
     method,
@@ -181,7 +181,7 @@ vi.mock('@/components/registration/ConsentSection', () => ({
   ),
 }))
 
-vi.mock('@/components/registration/MpiResultModal', () => ({
+vi.mock('@ultranos/patient-kit/components/registration/mpi-result-modal', () => ({
   MpiResultModal: ({
     open,
     decision,

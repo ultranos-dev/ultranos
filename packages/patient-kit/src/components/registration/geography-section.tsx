@@ -1,11 +1,11 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { ProvinceAutocomplete } from '@/components/shared/ProvinceAutocomplete'
-import { DistrictAutocomplete } from '@/components/shared/DistrictAutocomplete'
+import { ProvinceAutocomplete } from '../shared/province-autocomplete.js'
+import { DistrictAutocomplete } from '../shared/district-autocomplete.js'
 import type { AfghanProvince } from '@ultranos/shared-types'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
-import { Card } from '@/components/Card'
+import { Card } from '../ui/card.js'
 
 interface AddressFields {
   province: AfghanProvince | ''

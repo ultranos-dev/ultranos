@@ -1,67 +1,31 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useLocale } from 'next-intl'
 import { X } from '@ultranos/ui-kit/icons'
-import { Button } from '@/components/ui/Button'
-import { AFGHAN_PROVINCES } from '@ultranos/shared-types'
-import type { AfghanProvince } from '@ultranos/shared-types'
+import { Button } from '../ui/button.js'
+import { getDistrictsByProvince } from '@ultranos/shared-types'
+import type { AfghanProvince, AfghanDistrict } from '@ultranos/shared-types'
 
-// Province display names in Dari/Pashto script
-const PROVINCE_NAME_LOCAL: Record<AfghanProvince, string> = {
-  Badakhshan: '\u0628\u062f\u062e\u0634\u0627\u0646',
-  Badghis: '\u0628\u0627\u062f\u063a\u06cc\u0633',
-  Baghlan: '\u0628\u063a\u0644\u0627\u0646',
-  Balkh: '\u0628\u0644\u062e',
-  Bamyan: '\u0628\u0627\u0645\u06cc\u0627\u0646',
-  Daykundi: '\u062f\u0627\u06cc\u06a9\u0646\u062f\u06cc',
-  Farah: '\u0641\u0631\u0627\u0647',
-  Faryab: '\u0641\u0627\u0631\u06cc\u0627\u0628',
-  Ghazni: '\u063a\u0632\u0646\u06cc',
-  Ghor: '\u063a\u0648\u0631',
-  Helmand: '\u0647\u0644\u0645\u0646\u062f',
-  Herat: '\u0647\u0631\u0627\u062a',
-  Jawzjan: '\u062c\u0648\u0632\u062c\u0627\u0646',
-  Kabul: '\u06a9\u0627\u0628\u0644',
-  Kandahar: '\u06a9\u0646\u062f\u0647\u0627\u0631',
-  Kapisa: '\u06a9\u0627\u067e\u06cc\u0633\u0627',
-  Khost: '\u062e\u0648\u0633\u062a',
-  Kunar: '\u06a9\u0646\u0631',
-  Kunduz: '\u06a9\u0646\u062f\u0632',
-  Laghman: '\u0644\u063a\u0645\u0627\u0646',
-  Logar: '\u0644\u0648\u06af\u0631',
-  Nangarhar: '\u0646\u0646\u06af\u0631\u0647\u0627\u0631',
-  Nimroz: '\u0646\u06cc\u0645\u0631\u0648\u0632',
-  Nuristan: '\u0646\u0648\u0631\u0633\u062a\u0627\u0646',
-  Paktia: '\u067e\u06a9\u062a\u06cc\u0627',
-  Paktika: '\u067e\u06a9\u062a\u06cc\u06a9\u0627',
-  Panjshir: '\u067e\u0646\u062c\u0634\u06cc\u0631',
-  Parwan: '\u067e\u0631\u0648\u0627\u0646',
-  Samangan: '\u0633\u0645\u0646\u06af\u0627\u0646',
-  'Sar-e-Pol': '\u0633\u0631\u067e\u0644',
-  Takhar: '\u062a\u062e\u0627\u0631',
-  Urozgan: '\u0627\u0631\u0632\u06af\u0627\u0646',
-  Wardak: '\u0648\u0631\u062f\u06a9',
-  Zabul: '\u0632\u0627\u0628\u0644',
-}
-
-interface ProvinceAutocompleteProps {
-  value: AfghanProvince | ''
-  onChange: (province: AfghanProvince | '') => void
+interface DistrictAutocompleteProps {
+  province: AfghanProvince | ''
+  value: string
+  onChange: (district: string) => void
   label: string
   placeholder: string
   required?: boolean
   error?: string
 }
 
-export function ProvinceAutocomplete({
+export function DistrictAutocomplete({
+  province,
   value,
   onChange,
   label,
   placeholder,
   required,
   error,
-}: ProvinceAutocompleteProps) {
+}: DistrictAutocompleteProps) {
   const locale = useLocale()
   const isRtl = locale === 'ar' || locale === 'prs' || locale === 'ps'
   const [query, setQuery] = useState('')
@@ -71,20 +35,35 @@ export function ProvinceAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
 
+  const districts: AfghanDistrict[] = useMemo(
+    () => (province ? getDistrictsByProvince(province) : []),
+    [province],
+  )
+
   const getDisplayName = useCallback(
-    (province: AfghanProvince) =>
-      isRtl ? PROVINCE_NAME_LOCAL[province] : province,
+    (d: AfghanDistrict) => (isRtl ? d.nameLocal : d.name),
     [isRtl],
   )
 
-  const filtered = AFGHAN_PROVINCES.filter((p) => {
-    if (!query) return true
+  const filtered = useMemo(() => {
+    if (!query) return districts
     const q = query.toLowerCase()
-    return (
-      p.toLowerCase().includes(q) ||
-      PROVINCE_NAME_LOCAL[p].includes(query)
+    return districts.filter(
+      (d) =>
+        d.name.toLowerCase().includes(q) ||
+        d.nameLocal.includes(query),
     )
-  })
+  }, [districts, query])
+
+  // Reset value when province changes
+  useEffect(() => {
+    if (value && province) {
+      const stillValid = districts.some((d) => d.name === value)
+      if (!stillValid) {
+        onChange('')
+      }
+    }
+  }, [province])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -97,13 +76,12 @@ export function ProvinceAutocomplete({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Reset highlighted index when filtered list changes
   useEffect(() => {
     setHighlightedIndex(-1)
   }, [query])
 
-  const handleSelect = (province: AfghanProvince) => {
-    onChange(province)
+  const handleSelect = (district: AfghanDistrict) => {
+    onChange(district.name)
     setQuery('')
     setIsOpen(false)
   }
@@ -142,7 +120,6 @@ export function ProvinceAutocomplete({
     }
   }
 
-  // Scroll highlighted item into view
   useEffect(() => {
     if (highlightedIndex >= 0 && listboxRef.current) {
       const item = listboxRef.current.children[highlightedIndex] as HTMLElement | undefined
@@ -150,8 +127,11 @@ export function ProvinceAutocomplete({
     }
   }, [highlightedIndex])
 
-  const inputId = `province-autocomplete-${label.replace(/\s+/g, '-').toLowerCase()}`
+  const disabled = !province
+  const inputId = `district-autocomplete-${label.replace(/\s+/g, '-').toLowerCase()}`
   const listboxId = `${inputId}-listbox`
+
+  const selectedDistrict = districts.find((d) => d.name === value)
 
   return (
     <div ref={containerRef} className="relative">
@@ -164,24 +144,30 @@ export function ProvinceAutocomplete({
       </label>
 
       <div className="relative">
-        {value ? (
-          <div className="flex items-center min-h-[44px] rounded-xl border border-border bg-background px-3 py-2">
+        {value && selectedDistrict ? (
+          <div
+            className={`flex items-center min-h-[44px] rounded-xl border border-border bg-background px-3 py-2 ${
+              disabled ? 'opacity-50' : ''
+            }`}
+          >
             <span className="flex-1 text-sm text-foreground">
-              {getDisplayName(value)}
+              {getDisplayName(selectedDistrict)}
             </span>
-            <Button
-              variant="icon"
-              type="button"
-              className="ms-2 p-1"
-              onClick={() => {
-                onChange('')
-                setQuery('')
-                inputRef.current?.focus()
-              }}
-              aria-label="Clear province"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            {!disabled && (
+              <Button
+                variant="icon"
+                type="button"
+                className="ms-2 p-1"
+                onClick={() => {
+                  onChange('')
+                  setQuery('')
+                  inputRef.current?.focus()
+                }}
+                aria-label="Clear district"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         ) : (
           <input
@@ -196,34 +182,40 @@ export function ProvinceAutocomplete({
             }
             aria-required={required}
             aria-invalid={!!error}
+            aria-disabled={disabled}
             autoComplete="off"
+            disabled={disabled}
             className={`w-full min-h-[44px] rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
-              error
-                ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                : 'border-border focus:border-primary focus:ring-ring'
+              disabled
+                ? 'cursor-not-allowed border-border bg-muted text-muted-foreground'
+                : error
+                  ? 'border-destructive focus:border-destructive focus:ring-destructive'
+                  : 'border-border focus:border-primary focus:ring-ring'
             }`}
-            placeholder={placeholder}
+            placeholder={disabled ? '' : placeholder}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value)
               setIsOpen(true)
             }}
-            onFocus={() => setIsOpen(true)}
+            onFocus={() => {
+              if (!disabled) setIsOpen(true)
+            }}
             onKeyDown={handleKeyDown}
           />
         )}
       </div>
 
-      {isOpen && !value && filtered.length > 0 && (
+      {isOpen && !disabled && !value && filtered.length > 0 && (
         <ul
           ref={listboxRef}
           id={listboxId}
           role="listbox"
           className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl ring-[0.65px] ring-border/50 bg-background shadow-lg"
         >
-          {filtered.map((province, index) => (
+          {filtered.map((district, index) => (
             <li
-              key={province}
+              key={district.name}
               id={`${inputId}-option-${index}`}
               role="option"
               aria-selected={highlightedIndex === index}
@@ -234,17 +226,17 @@ export function ProvinceAutocomplete({
               }`}
               onMouseDown={(e) => {
                 e.preventDefault()
-                handleSelect(province)
+                handleSelect(district)
               }}
               onMouseEnter={() => setHighlightedIndex(index)}
             >
-              <span>{getDisplayName(province)}</span>
+              <span>{getDisplayName(district)}</span>
               {isRtl && (
-                <span className="ms-2 text-xs text-muted-foreground">{province}</span>
+                <span className="ms-2 text-xs text-muted-foreground">{district.name}</span>
               )}
               {!isRtl && (
                 <span className="ms-2 text-xs text-muted-foreground">
-                  {PROVINCE_NAME_LOCAL[province]}
+                  {district.nameLocal}
                 </span>
               )}
             </li>
@@ -252,9 +244,9 @@ export function ProvinceAutocomplete({
         </ul>
       )}
 
-      {isOpen && !value && filtered.length === 0 && query && (
+      {isOpen && !disabled && !value && filtered.length === 0 && query && (
         <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-border/50 bg-background px-3 py-3 text-sm text-muted-foreground shadow-lg">
-          No matching province
+          No matching district
         </div>
       )}
 

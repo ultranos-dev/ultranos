@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { ConsentTextModal } from '../components/registration/ConsentTextModal'
+import { ConsentTextModal } from '@ultranos/patient-kit/components/registration/consent-text-modal'
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,

@@ -17,15 +17,15 @@ import { Button } from '@/components/ui/Button'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { NameInputSection } from '@ultranos/patient-kit/components/registration/name-input-section'
-import { PatientPhotoSection } from './PatientPhotoSection'
-import { GeographySection } from './GeographySection'
-import { ConsentSection } from './ConsentSection'
-import { MpiResultModal } from './MpiResultModal'
-import { SocialInfoSection } from './SocialInfoSection'
-import { EmergencyContactSection } from './EmergencyContactSection'
-import { AllergiesSection, type AllergyEntry } from './AllergiesSection'
+import { PatientPhotoSection } from '@ultranos/patient-kit/components/registration/patient-photo-section'
+import { GeographySection } from '@ultranos/patient-kit/components/registration/geography-section'
+import { ConsentSection } from '@ultranos/patient-kit/components/registration/consent-section'
+import { MpiResultModal } from '@ultranos/patient-kit/components/registration/mpi-result-modal'
+import { SocialInfoSection } from '@ultranos/patient-kit/components/registration/social-info-section'
+import { EmergencyContactSection } from '@ultranos/patient-kit/components/registration/emergency-contact-section'
+import { AllergiesSection, type AllergyEntry } from '@ultranos/patient-kit/components/registration/allergies-section'
 import { getHubApiUrl, getAuthHeaders } from '@/lib/hub-auth'
-import { uploadPatientPhoto, dataUrlToBlob } from '@/lib/patient-photo-api'
+import { uploadPatientPhoto, removePatientPhoto, getPatientPhotoUrl, dataUrlToBlob } from '@/lib/patient-photo-api'
 import { useAllergyStore } from '@/stores/allergy-store'
 import { hlc, serializeHlc } from '@/lib/hlc'
 import { enqueueSyncAction } from '@ultranos/sync-engine'
@@ -1272,6 +1272,7 @@ export function PatientRegistrationForm({
           onPhotoChange={setPhotoDataUrl}
           patientId={editContext?.patientId}
           lastKnownUpdate={editContext?.lastKnownUpdate}
+          photoApi={{ getPatientPhotoUrl, uploadPatientPhoto, removePatientPhoto }}
         />
 
         {/* 2. Name section */}

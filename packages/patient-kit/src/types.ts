@@ -37,7 +37,8 @@ export interface AllergyEntry {
   /** Present for existing allergies (edit mode); absent for newly-added ones. */
   id?: string
   substanceText: string
-  criticality: AllergyCriticality
+  /** Optional — a newly-added entry may be recorded before criticality is assessed. */
+  criticality?: AllergyCriticality
 }
 
 /** A structured address (origin / current). Empty strings render as "not provided". */
@@ -194,3 +195,21 @@ export interface PatientDataAdapter {
 }
 
 export type PatientFormMode = 'create' | 'edit'
+
+/**
+ * Photo operations injected into the shared PatientPhotoSection. The opaque-key upload
+ * mechanism + Hub transport live in the host app (Rule #7); the shared component only
+ * orchestrates the capture/crop UX and calls these.
+ */
+export interface PatientPhotoApi {
+  getPatientPhotoUrl(patientId: string, signal?: AbortSignal): Promise<string | null>
+  uploadPatientPhoto(
+    patientId: string,
+    blob: Blob,
+    lastKnownUpdate: string,
+  ): Promise<{ photoUrl: string; lastUpdated: string }>
+  removePatientPhoto(
+    patientId: string,
+    lastKnownUpdate: string,
+  ): Promise<{ lastUpdated: string }>
+}

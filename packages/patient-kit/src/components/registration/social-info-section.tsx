@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
-import { Card } from '@/components/Card'
+import { Card } from '../ui/card.js'
 import type { DisplacementCategory, EducationLevel } from '@ultranos/shared-types'
 
 // ISO 3166-1 alpha-2 codes for the primary nationalities in this deployment context.

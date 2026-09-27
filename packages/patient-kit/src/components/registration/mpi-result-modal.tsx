@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@ultranos/ui-kit/components/ui/dialog'
-import { Button } from '@/components/ui/Button'
+import { Button } from '../ui/button.js'
 
 interface MpiCandidate {
   id: string

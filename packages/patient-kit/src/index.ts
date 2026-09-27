@@ -13,6 +13,7 @@ export type {
   SectionVisibility,
   PatientFormCapabilities,
   PatientDataAdapter,
+  PatientPhotoApi,
   UpdatePatientArgs,
   DuplicateDecision,
   PatientWriteResult,

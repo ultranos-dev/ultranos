@@ -10,7 +10,16 @@
     "./types": "./src/types.ts",
     "./capabilities": "./src/capabilities.ts",
     "./components/ui/card": "./src/components/ui/card.tsx",
-    "./components/registration/name-input-section": "./src/components/registration/name-input-section.tsx"
+    "./components/ui/button": "./src/components/ui/button.tsx",
+    "./components/registration/name-input-section": "./src/components/registration/name-input-section.tsx",
+    "./components/registration/social-info-section": "./src/components/registration/social-info-section.tsx",
+    "./components/registration/emergency-contact-section": "./src/components/registration/emergency-contact-section.tsx",
+    "./components/registration/allergies-section": "./src/components/registration/allergies-section.tsx",
+    "./components/registration/consent-section": "./src/components/registration/consent-section.tsx",
+    "./components/registration/consent-text-modal": "./src/components/registration/consent-text-modal.tsx",
+    "./components/registration/geography-section": "./src/components/registration/geography-section.tsx",
+    "./components/registration/patient-photo-section": "./src/components/registration/patient-photo-section.tsx",
+    "./components/registration/mpi-result-modal": "./src/components/registration/mpi-result-modal.tsx"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
