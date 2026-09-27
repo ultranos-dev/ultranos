@@ -908,7 +908,10 @@
     "statusAll": "كل الحالات",
     "statusUnread": "غير مقروء",
     "statusRead": "مقروء",
-    "noResults": "لا توجد إشعارات تطابق الفلاتر"
+    "noResults": "لا توجد إشعارات تطابق الفلاتر",
+    "loadMore": "تحميل المزيد",
+    "loadingMore": "جارٍ التحميل…",
+    "showingCount": "عرض {shown} من {total}"
   },
   "registration": {
     "title": "تسجيل مريض جديد",

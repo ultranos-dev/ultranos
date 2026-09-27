@@ -113,12 +113,16 @@ export function NotificationCenter() {
   const {
     notifications,
     unreadCount,
+    total,
+    hasMore,
+    loadingMore,
     loading,
     error,
     acknowledge,
     acknowledgeAll,
     markUnread,
     remove,
+    loadMore,
   } = useNotificationPoll()
 
   const query = search.trim().toLowerCase()
@@ -248,6 +252,25 @@ export function NotificationCenter() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Pagination — root sibling below the content box */}
+      {!error && !loading && total > 0 && (
+        <div className="flex flex-col items-center gap-2">
+          {hasMore && (
+            <Button
+              variant="outline"
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="h-9"
+            >
+              {loadingMore ? t('loadingMore') : t('loadMore')}
+            </Button>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {t('showingCount', { shown: notifications.length, total })}
+          </p>
         </div>
       )}
     </div>

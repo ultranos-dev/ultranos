@@ -10,14 +10,22 @@ import {
 } from '@/lib/notification-api'
 
 const POLL_INTERVAL_MS = 30_000 // 30s polling for <60s SLA
+const PAGE_SIZE = 50 // rows fetched per "load more" step (matches server default)
 
 export interface UseNotificationPollResult {
   notifications: NotificationItem[]
   newNotifications: NotificationItem[]
   unreadCount: number
+  /** Total rows available for the caller (unwindowed) — drives "load more". */
+  total: number
+  /** True when the server holds more rows than the current window has loaded. */
+  hasMore: boolean
+  /** True while a loadMore fetch is in flight. */
+  loadingMore: boolean
   loading: boolean
   error: string | null
   refetch: () => Promise<void>
+  loadMore: () => Promise<void>
   acknowledge: (id: string) => Promise<void>
   acknowledgeAll: () => Promise<void>
   markUnread: (id: string) => Promise<void>
@@ -38,10 +46,14 @@ export function useNotificationPoll(intervalMs = POLL_INTERVAL_MS): UseNotificat
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [newNotifications, setNewNotifications] = useState<NotificationItem[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [total, setTotal] = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const activeRef = useRef(true)
   const notificationsRef = useRef<NotificationItem[]>([])
+  /** Current fetch window (grows as the user loads more). */
+  const windowSizeRef = useRef(PAGE_SIZE)
   /** Tracks IDs seen since first load. Seeded on first successful fetch. */
   const seenIdsRef = useRef<Set<string> | null>(null)
 
@@ -51,7 +63,7 @@ export function useNotificationPoll(intervalMs = POLL_INTERVAL_MS): UseNotificat
 
   const fetchAll = useCallback(async () => {
     try {
-      const { notifications: items } = await fetchNotifications()
+      const { notifications: items, total: totalCount } = await fetchNotifications(windowSizeRef.current)
       if (activeRef.current) {
         if (seenIdsRef.current === null) {
           // First successful load — seed seenIds with all current IDs so the
@@ -68,6 +80,7 @@ export function useNotificationPoll(intervalMs = POLL_INTERVAL_MS): UseNotificat
         setNotifications(items)
         notificationsRef.current = items
         setUnreadCount(computeUnread(items))
+        setTotal(totalCount)
         setError(null)
       }
     } catch {
@@ -80,6 +93,17 @@ export function useNotificationPoll(intervalMs = POLL_INTERVAL_MS): UseNotificat
       }
     }
   }, [computeUnread])
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore) return
+    setLoadingMore(true)
+    windowSizeRef.current += PAGE_SIZE
+    try {
+      await fetchAll()
+    } finally {
+      if (activeRef.current) setLoadingMore(false)
+    }
+  }, [fetchAll, loadingMore])
 
   // Initial fetch + polling
   useEffect(() => {
@@ -137,6 +161,7 @@ export function useNotificationPoll(intervalMs = POLL_INTERVAL_MS): UseNotificat
       setUnreadCount(updated.filter(n => n.status !== 'ACKNOWLEDGED').length)
       return updated
     })
+    setTotal(t => Math.max(0, t - 1))
 
     try {
       await deleteNotification(id)
@@ -172,9 +197,13 @@ export function useNotificationPoll(intervalMs = POLL_INTERVAL_MS): UseNotificat
     notifications,
     newNotifications,
     unreadCount,
+    total,
+    hasMore: notifications.length < total,
+    loadingMore,
     loading,
     error,
     refetch: fetchAll,
+    loadMore,
     acknowledge,
     acknowledgeAll: acknowledgeAllFn,
     markUnread,

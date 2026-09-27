@@ -908,7 +908,10 @@
     "statusAll": "All statuses",
     "statusUnread": "Unread",
     "statusRead": "Read",
-    "noResults": "No notifications match your filters"
+    "noResults": "No notifications match your filters",
+    "loadMore": "Load more",
+    "loadingMore": "Loading…",
+    "showingCount": "Showing {shown} of {total}"
   },
   "registration": {
     "title": "Register New Patient",

@@ -71,8 +71,18 @@ async function trpcMutation<T>(path: string, input: object): Promise<T> {
   return body.result.data.json
 }
 
-export async function fetchNotifications(): Promise<{ notifications: NotificationItem[] }> {
-  return trpcQuery<{ notifications: NotificationItem[] }>('notification.list')
+/**
+ * Fetch the caller's notifications, newest-first with unread items surfaced
+ * ahead of read ones. `limit` is a growing window (default 50); `total` is the
+ * full unwindowed count so callers can offer "load more".
+ */
+export async function fetchNotifications(
+  limit?: number,
+): Promise<{ notifications: NotificationItem[]; total: number }> {
+  return trpcQuery<{ notifications: NotificationItem[]; total: number }>(
+    'notification.list',
+    limit != null ? { limit } : undefined,
+  )
 }
 
 export async function fetchUnreadCount(): Promise<{ count: number }> {

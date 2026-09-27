@@ -908,7 +908,10 @@
     "statusAll": "ټولې حالتونه",
     "statusUnread": "نالوستل شوی",
     "statusRead": "لوستل شوی",
-    "noResults": "ستاسو فلترونو سره هیڅ خبرتیا سمون نه خوري"
+    "noResults": "ستاسو فلترونو سره هیڅ خبرتیا سمون نه خوري",
+    "loadMore": "نور ورزیات کړئ",
+    "loadingMore": "بارېږي…",
+    "showingCount": "{shown} د {total} څخه ښودل کیږي"
   },
   "registration": {
     "title": "نوي ناروغ ثبت کول",

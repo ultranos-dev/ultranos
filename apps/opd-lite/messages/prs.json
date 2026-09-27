@@ -908,7 +908,10 @@
     "statusAll": "همه حالت‌ها",
     "statusUnread": "ناخوانده",
     "statusRead": "خوانده‌شده",
-    "noResults": "هیچ اعلانی با فیلترهای شما مطابقت ندارد"
+    "noResults": "هیچ اعلانی با فیلترهای شما مطابقت ندارد",
+    "loadMore": "بارگیری بیشتر",
+    "loadingMore": "در حال بارگیری…",
+    "showingCount": "نمایش {shown} از {total}"
   },
   "registration": {
     "title": "ثبت مریض جدید",

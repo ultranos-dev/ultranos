@@ -121,15 +121,16 @@ describe('notification.list', () => {
       },
     ]
 
+    // Chain: .select(cols, { count }).in().order(acknowledged_at).order(created_at).range()
+    const rangeMock = vi.fn().mockResolvedValue({
+      data: mockNotifications,
+      count: 1,
+      error: null,
+    })
+    const secondOrderMock = vi.fn().mockReturnValue({ range: rangeMock })
+    const firstOrderMock = vi.fn().mockReturnValue({ order: secondOrderMock })
     mockSelect.mockReturnValue({
-      in: vi.fn().mockReturnValue({
-        order: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue({
-            data: mockNotifications,
-            error: null,
-          }),
-        }),
-      }),
+      in: vi.fn().mockReturnValue({ order: firstOrderMock }),
     })
 
     const router = createTRPCRouter({ notification: notificationRouter })
@@ -144,6 +145,38 @@ describe('notification.list', () => {
     expect(result.notifications[0]!.bodyKey).toBe('orderReceivedBody')
     expect(result.notifications[0]!.bodyParams).toEqual({ testCategory: 'CBC' })
     expect(result.notifications[0]!.notesKey).toBe('orderReceivedNotes')
+    // Total (unwindowed) is returned so the client can offer "load more".
+    expect(result.total).toBe(1)
+    // Unread-first ordering: null acknowledged_at floats ahead of read rows so
+    // an unread item is never hidden behind the window cap.
+    expect(firstOrderMock).toHaveBeenCalledWith(
+      'acknowledged_at',
+      expect.objectContaining({ nullsFirst: true }),
+    )
+    expect(secondOrderMock).toHaveBeenCalledWith(
+      'created_at',
+      expect.objectContaining({ ascending: false }),
+    )
+    // Window is applied via .range (default 50 rows: 0..49).
+    expect(rangeMock).toHaveBeenCalledWith(0, 49)
+  })
+
+  it('honors a custom window limit via .range (load-more)', async () => {
+    const rangeMock = vi.fn().mockResolvedValue({ data: [], count: 120, error: null })
+    const secondOrderMock = vi.fn().mockReturnValue({ range: rangeMock })
+    const firstOrderMock = vi.fn().mockReturnValue({ order: secondOrderMock })
+    mockSelect.mockReturnValue({
+      in: vi.fn().mockReturnValue({ order: firstOrderMock }),
+    })
+
+    const router = createTRPCRouter({ notification: notificationRouter })
+    const caller = createCallerFactory(router)(makeCtx(DOCTOR_USER))
+
+    const result = await caller.notification.list({ limit: 100 })
+
+    // range spans the requested window and total reflects the full backlog.
+    expect(rangeMock).toHaveBeenCalledWith(0, 99)
+    expect(result.total).toBe(120)
   })
 
   it('rejects unauthenticated list requests', async () => {

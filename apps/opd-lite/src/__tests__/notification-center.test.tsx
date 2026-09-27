@@ -153,7 +153,7 @@ const SAMPLE_NOTIFICATIONS = [
 describe('NotificationCenter', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockFetchNotifications.mockResolvedValue({ notifications: SAMPLE_NOTIFICATIONS })
+    mockFetchNotifications.mockResolvedValue({ notifications: SAMPLE_NOTIFICATIONS, total: SAMPLE_NOTIFICATIONS.length })
     mockFetchUnreadCount.mockResolvedValue({ count: 6 })
     mockAcknowledgeNotification.mockResolvedValue({ success: true })
     mockDeleteNotification.mockResolvedValue({ success: true })
@@ -545,6 +545,43 @@ describe('NotificationCenter', () => {
 
       expect(screen.getByText('noResults')).toBeInTheDocument()
       expect(screen.queryByTestId('notification-n1')).not.toBeInTheDocument()
+    })
+  })
+
+  // --- Pagination: load-more window (regression: unread hidden behind 50-cap) ---
+  describe('Pagination: load more', () => {
+    it('does not show Load more when everything is already loaded', async () => {
+      // total === loaded → no more pages
+      mockFetchNotifications.mockResolvedValue({
+        notifications: SAMPLE_NOTIFICATIONS,
+        total: SAMPLE_NOTIFICATIONS.length,
+      })
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('notification-n1')).toBeInTheDocument()
+      })
+      expect(screen.queryByRole('button', { name: /loadMore/ })).not.toBeInTheDocument()
+    })
+
+    it('shows Load more when the server has more rows than the window, and grows the window on click', async () => {
+      // Server reports 60 total but only returns the first window.
+      mockFetchNotifications.mockResolvedValue({ notifications: SAMPLE_NOTIFICATIONS, total: 60 })
+      const { NotificationCenter } = await import('../components/notifications/NotificationCenter')
+      render(<NotificationCenter />)
+
+      const loadMoreBtn = await screen.findByRole('button', { name: /loadMore/ })
+      expect(loadMoreBtn).toBeInTheDocument()
+
+      await act(async () => {
+        fireEvent.click(loadMoreBtn)
+      })
+
+      await waitFor(() => {
+        // Second call requests a larger window (100 = 50 + 50).
+        expect(mockFetchNotifications).toHaveBeenLastCalledWith(100)
+      })
     })
   })
 

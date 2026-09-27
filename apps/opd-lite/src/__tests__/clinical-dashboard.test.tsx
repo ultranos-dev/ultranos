@@ -244,6 +244,7 @@ describe('PendingLabResultsCard', () => {
         { id: '2', type: 'LAB_RESULT_AVAILABLE', status: 'ACKNOWLEDGED', payload: {}, createdAt: '', deliveredAt: null, acknowledgedAt: null },
         { id: '3', type: 'SYNC_CONFLICT', status: 'UNREAD', payload: {}, createdAt: '', deliveredAt: null, acknowledgedAt: null },
       ],
+      total: 3,
     })
 
     const { PendingLabResultsCard } = await import('@/components/dashboard/PendingLabResultsCard')

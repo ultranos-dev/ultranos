@@ -50,17 +50,36 @@ export const notificationRouter = createTRPCRouter({
   /**
    * List notifications for the authenticated user.
    * AC: 3, 4 — OPD Lite and Patient Lite Mobile poll this endpoint.
-   * Returns newest first, limited to 50.
+   *
+   * Ordering is UNREAD-FIRST, then newest-first: rows with a null
+   * `acknowledged_at` (QUEUED/SENT) sort ahead of acknowledged rows. This
+   * guarantees every unread notification appears within the returned window,
+   * so the `unreadCount` badge can never point at an item the list has
+   * truncated (a recipient with >`limit` notifications previously hid an old
+   * unread item behind the cap while the badge still counted it).
+   *
+   * `limit` is a growing client window (default 50); `total` lets the client
+   * offer "load more" to page through the full history.
    */
   list: protectedProcedure
-    .query(async ({ ctx }) => {
+    .input(
+      z
+        .object({ limit: z.number().int().min(1).max(200).default(50) })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const limit = input?.limit ?? 50
       const recipientRefs = await recipientRefsForUser(ctx)
-      const { data: notifications, error } = await ctx.supabase
+      const { data: notifications, count, error } = await ctx.supabase
         .from('notifications')
-        .select('id, type, payload, status, created_at, delivered_at, acknowledged_at, source_app, subject_key, body_key, body_params, notes_key')
+        .select(
+          'id, type, payload, status, created_at, delivered_at, acknowledged_at, source_app, subject_key, body_key, body_params, notes_key',
+          { count: 'exact' },
+        )
         .in('recipient_ref', recipientRefs)
+        .order('acknowledged_at', { ascending: false, nullsFirst: true })
         .order('created_at', { ascending: false })
-        .limit(50)
+        .range(0, limit - 1)
 
       if (error) {
         throw new TRPCError({
@@ -100,34 +119,40 @@ export const notificationRouter = createTRPCRouter({
         }
       }
 
+      const mapped = (notifications ?? []).map((n: {
+        id: string
+        type: string
+        payload: string | object
+        status: string
+        created_at: string
+        delivered_at: string | null
+        acknowledged_at: string | null
+        source_app: string | null
+        subject_key: string | null
+        body_key: string | null
+        body_params: object | null
+        notes_key: string | null
+      }) => ({
+        id: n.id,
+        type: n.type,
+        payload: typeof n.payload === 'string' ? (() => { try { return JSON.parse(n.payload) } catch { return {} } })() : n.payload,
+        status: n.status === 'QUEUED' ? 'SENT' : n.status,
+        createdAt: n.created_at,
+        deliveredAt: n.delivered_at,
+        acknowledgedAt: n.acknowledged_at,
+        sourceApp: n.source_app ?? null,
+        subjectKey: n.subject_key ?? null,
+        bodyKey: n.body_key ?? null,
+        bodyParams: n.body_params ?? {},
+        notesKey: n.notes_key ?? null,
+      }))
+
       return {
-        notifications: (notifications ?? []).map((n: {
-          id: string
-          type: string
-          payload: string | object
-          status: string
-          created_at: string
-          delivered_at: string | null
-          acknowledged_at: string | null
-          source_app: string | null
-          subject_key: string | null
-          body_key: string | null
-          body_params: object | null
-          notes_key: string | null
-        }) => ({
-          id: n.id,
-          type: n.type,
-          payload: typeof n.payload === 'string' ? (() => { try { return JSON.parse(n.payload) } catch { return {} } })() : n.payload,
-          status: n.status === 'QUEUED' ? 'SENT' : n.status,
-          createdAt: n.created_at,
-          deliveredAt: n.delivered_at,
-          acknowledgedAt: n.acknowledged_at,
-          sourceApp: n.source_app ?? null,
-          subjectKey: n.subject_key ?? null,
-          bodyKey: n.body_key ?? null,
-          bodyParams: n.body_params ?? {},
-          notesKey: n.notes_key ?? null,
-        })),
+        notifications: mapped,
+        // Total rows for this recipient (ignores the window) so the client can
+        // offer "load more". Falls back to the returned count if the DB driver
+        // omitted the exact count.
+        total: count ?? mapped.length,
       }
     }),
 
