@@ -16,7 +16,7 @@ import type {
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
-import { NameInputSection } from './NameInputSection'
+import { NameInputSection } from '@ultranos/patient-kit/components/registration/name-input-section'
 import { PatientPhotoSection } from './PatientPhotoSection'
 import { GeographySection } from './GeographySection'
 import { ConsentSection } from './ConsentSection'

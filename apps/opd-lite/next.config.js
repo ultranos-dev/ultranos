@@ -13,7 +13,7 @@ const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@ultranos/shared-types', '@ultranos/ui-kit', '@ultranos/sync-engine', '@ultranos/crypto'],
+  transpilePackages: ['@ultranos/shared-types', '@ultranos/ui-kit', '@ultranos/patient-kit', '@ultranos/sync-engine', '@ultranos/crypto'],
   async headers() {
     return getSecurityHeaders({ hubApiOrigin, reportUri, supabaseOrigin })
   },

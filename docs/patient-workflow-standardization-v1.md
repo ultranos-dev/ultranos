@@ -134,9 +134,52 @@ interface PatientFormCapabilities {
   supporting types) + capability tier presets (`FULL`/`CLINICAL` → full edit; `MINIMIZED`
   → cross-org-lab MPI-only; `CONTINUITY` → read-only) with `capabilitiesForTier`. Typecheck
   clean; 5 capability tests green. **No app consumes it yet** (zero-risk so far).
-- **Next — Step 2:** move the opd-lite form/modals into `patient-kit`, refactored behind an
-  injected adapter, with opd-lite as first consumer (behavior-preserving). This is the first
-  step that touches a shipping app → its own review/checkpoint.
+- **2026-09-27 — Step 2a DONE (pipeline proof):** stood up patient-kit's UI layer (shared
+  `Card` primitive + ui-kit/next-intl deps) and moved the first section — `NameInputSection`
+  — into `patient-kit`. opd-lite now consumes it cross-package (added to `transpilePackages`
+  + tailwind `content` + workspace dep; form import re-pointed; local file deleted; form
+  test mock re-pointed). Verified: patient-kit typecheck + 8 tests (incl. a real-component
+  render proof) green; opd-lite typecheck + patient-registration/patient-modals (32) green.
+  - **Harness note (follow-up for 2b/2c):** interaction (onChange) tests inside patient-kit
+    hit a dual-React/JSX-runtime boundary issue for source-consumed ui-kit components
+    (render works, synthetic events don't fire; `dedupe`+`deps.inline` didn't fully fix it).
+    Component tests here assert render/a11y/derived-state, not cross-boundary events; before
+    heavier interactive components move (2b/2c) we need a shared vitest preset that aliases
+    react/react-dom/react/jsx-runtime to a single copy. Not a product issue.
+- **Next — Step 2b:** move the remaining presentational sections (Social, EmergencyContact,
+  Allergies, Consent, PatientPhoto; Geography last) via the same proven pattern.
+
+### 6.5 Step 2 execution plan (grounded 2026-09-27)
+
+**Measured reality:** `PatientRegistrationForm.tsx` is **1802 lines**, wired to ~10 app-local
+`@/lib`/`@/stores` modules (hub-auth, patient-photo-api, allergy-store, hlc, sync-queue,
+vitals-fhir-mapper, vitals-config, audit, db, encryption-key-store, offline-registration).
+Its section components are **lightly coupled / presentational** (deps: `Card`, `Button`,
+next-intl; Geography also pulls Province/District autocompletes). **The form test mocks each
+section + `Card` by local path** — so every section move must also re-point its test mock.
+
+**Strategy — strangler, bottom-up, one verifiable slice per checkpoint** (never move the
+1802-line orchestrator wholesale):
+
+- **2a (pipeline proof, THIS step):** stand up patient-kit's UI layer (shared `Card`
+  primitive + ui-kit/next-intl deps) and move the cleanest section — **`NameInputSection`**
+  (self-contained: props + `useTranslations` + ui-kit Input). Prove opd-lite consumes a
+  patient-kit **client component** end-to-end (transpilePackages + tailwind scan + i18n +
+  import + test-mock re-point), tests green. Lowest blast radius (only the form uses it).
+- **2b:** move the remaining presentational sections (Social, EmergencyContact, Allergies,
+  Consent, PatientPhoto, Name-done) the same way; Geography last (autocomplete coupling).
+- **2c:** extract the **data layer** into an `OpdPatientAdapter` implementing
+  `PatientDataAdapter` (wrap the form's inline create/update/checkDuplicates/consent/vitals/
+  photo/allergy-diff logic). Validates the contract against reality. Additive first.
+- **2d:** move the **orchestrator form** into patient-kit, consuming sections + the injected
+  adapter + capabilities; opd-lite renders `<PatientForm adapter={opdAdapter} caps={...}/>`.
+- **2e:** migrate **pharmacy-lite** onto patient-kit (delete its 2 form copies).
+- **2f:** migrate **lab-lite** with a MINIMIZED capability config + blind-ref adapter.
+
+**i18n decision (v1):** moved components keep `useTranslations('registration')`; the
+consuming app must provide those keys (opd-lite already does). Consolidating into a
+patient-kit-owned message bundle (or prop-injected `t`) is a tracked follow-up before
+pharmacy/lab adopt in 2e/2f.
 
 ### 6.4 Definition of done (Phase 1)
 - One form implementation; the 3 apps consume it; old per-app forms deleted.

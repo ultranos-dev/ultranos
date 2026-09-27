@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
-import { Card } from '@/components/Card'
+import { Card } from '../ui/card.js'
 
 interface NameInputSectionProps {
   nameGiven: string

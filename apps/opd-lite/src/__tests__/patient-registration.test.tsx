@@ -102,7 +102,7 @@ vi.mock('@/components/Card', () => ({
 
 // Mock each registration section — we verify they mount with correct props
 // rather than re-testing their internals here.
-vi.mock('@/components/registration/NameInputSection', () => ({
+vi.mock('@ultranos/patient-kit/components/registration/name-input-section', () => ({
   NameInputSection: ({
     nameGiven,
     errors,
