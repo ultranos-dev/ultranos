@@ -194,6 +194,22 @@ claimed to work against those tests. Before/with 2d we must add integration test
 offline create, consent capture, and the allergy Tier-1 merge — then refactor. This is why
 2d is a separate, verification-gated pass, not part of the component-extraction burst.
 
+**2026-09-27 — 2d tests-first (guard net) DONE.** Added the two missing guards to
+`patient-registration.test.tsx` (section mocks enriched to drive a real create submit —
+wired `NameInputSection` onChange, `GeographySection` origin fill, `ConsentSection`
+method/language):
+- **offline create** — with `navigator.onLine=false`, submit persists via
+  `registerPatientOffline` and makes **no Hub round-trip** (no checkDuplicates/patient.create).
+- **consent-capture-on-change** — changing consent language en→ar in edit mode appends a new
+  grant (`consent.recordAtPointOfCare`) on save (previously only the unchanged→not-appended
+  negative was covered).
+With the existing guards (MPI WARN/BLOCK create, edit→patient.update, `diffAllergies`
+Tier-1, validation), the offline/consent/create/allergy paths are now pinned.
+`patient-registration` = 27 green; opd-lite typecheck clean.
+**Next (final 2d step):** extract `OpdPatientAdapter` + inject the allergy-store actions and
+shared `VitalsForm`, add `next` peer, move the orchestrator form into patient-kit — now safe
+to verify against this guard net.
+
 - **After 2d:** 2e (pharmacy-lite) + 2f (lab-lite, MINIMIZED caps) adopt the shared form.
 
 ### 6.5 Step 2 execution plan (grounded 2026-09-27)

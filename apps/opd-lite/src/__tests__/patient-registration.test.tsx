@@ -45,6 +45,12 @@ vi.mock('@/lib/db', () => ({
   },
 }))
 
+// Offline registration primitive — spy so we can guard the offline-create path (2d).
+const { mockRegisterPatientOffline } = vi.hoisted(() => ({ mockRegisterPatientOffline: vi.fn() }))
+vi.mock('@/lib/offline-registration', () => ({
+  registerPatientOffline: mockRegisterPatientOffline,
+}))
+
 vi.mock('@ultranos/ui-kit/components/ui/alert', () => ({
   Alert: ({ children }: { children: React.ReactNode }) => (
     <div role="alert" data-testid="alert">
@@ -106,16 +112,19 @@ vi.mock('@ultranos/patient-kit/components/registration/name-input-section', () =
   NameInputSection: ({
     nameGiven,
     errors,
+    onNameGivenChange,
   }: {
     nameGiven: string
     errors?: { nameGiven?: string }
+    onNameGivenChange?: (v: string) => void
   }) => (
     <div data-testid="name-input-section">
       <input
         data-testid="name-given-input"
         id="name-given"
         aria-invalid={!!errors?.nameGiven}
-        defaultValue={nameGiven}
+        value={nameGiven}
+        onChange={(e) => onNameGivenChange?.(e.target.value)}
       />
       {errors?.nameGiven && (
         <p data-testid="name-given-error">{errors.nameGiven}</p>
@@ -133,10 +142,20 @@ vi.mock('@ultranos/patient-kit/components/registration/patient-photo-section', (
 vi.mock('@ultranos/patient-kit/components/registration/geography-section', () => ({
   GeographySection: ({
     errors,
+    onOriginChange,
   }: {
     errors?: { originProvince?: string }
+    onOriginChange?: (a: { province: string; district: string; village: string }) => void
   }) => (
     <div data-testid="geography-section">
+      {/* Test affordance: fill a valid origin so create-path validation passes. */}
+      <button
+        type="button"
+        data-testid="fill-origin"
+        onClick={() => onOriginChange?.({ province: 'Kabul', district: 'Kabul City', village: '' })}
+      >
+        fill-origin
+      </button>
       {errors?.originProvince && (
         <p data-testid="origin-province-error">{errors.originProvince}</p>
       )}
@@ -160,9 +179,13 @@ vi.mock('@ultranos/patient-kit/components/registration/consent-section', () => (
   ConsentSection: ({
     errors,
     method,
+    onMethodChange,
+    onLanguageChange,
   }: {
     errors?: { method?: string }
     method: string
+    onMethodChange?: (m: string) => void
+    onLanguageChange?: (language: string) => void
   }) => (
     <div data-testid="consent-section">
       <input
@@ -171,9 +194,13 @@ vi.mock('@ultranos/patient-kit/components/registration/consent-section', () => (
         value="WRITTEN"
         data-testid="consent-written"
         aria-invalid={!!errors?.method}
-        onChange={vi.fn()}
+        onChange={() => onMethodChange?.('WRITTEN')}
         checked={method === 'WRITTEN'}
       />
+      {/* Test affordance: switch consent language (a consent change that needs no witness). */}
+      <button type="button" data-testid="consent-lang-ar" onClick={() => onLanguageChange?.('ar')}>
+        ar
+      </button>
       {errors?.method && (
         <p data-testid="consent-method-error">{errors.method}</p>
       )}
@@ -466,6 +493,34 @@ describe('PatientRegistrationForm — MPI BLOCK flow', () => {
   })
 })
 
+describe('PatientRegistrationForm — offline create', () => {
+  it('registers locally (registerPatientOffline) with no Hub round-trip when offline', async () => {
+    // Guard for the offline-first create path (2d refactor safety net): when the device
+    // is offline the form must NOT hit the Hub (no dedupe/create) — it persists locally
+    // with a provisional id and navigates. This path was previously unguarded.
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: false })
+    mockRegisterPatientOffline.mockResolvedValue(undefined)
+    try {
+      renderForm()
+      fireEvent.change(screen.getByTestId('name-given-input'), { target: { value: 'Ahmad' } })
+      fireEvent.change(document.getElementById('gender') as HTMLSelectElement, { target: { value: 'male' } })
+      fireEvent.change(document.getElementById('birth-year') as HTMLInputElement, { target: { value: '1990' } })
+      fireEvent.click(screen.getByTestId('fill-origin')) // valid origin province + district
+      fireEvent.click(screen.getByTestId('consent-written')) // consent required for create
+
+      fireEvent.click(screen.getByRole('button', { name: /submitRegistration/i }))
+
+      await waitFor(() => expect(mockRegisterPatientOffline).toHaveBeenCalled())
+      const urls = mockFetch.mock.calls.map((c) => String(c[0]))
+      expect(urls.some((u) => u.includes('checkDuplicates'))).toBe(false)
+      expect(urls.some((u) => u.includes('patient.create'))).toBe(false)
+      expect(mockPush).toHaveBeenCalled() // navigates to the provisional patient chart
+    } finally {
+      Object.defineProperty(navigator, 'onLine', { configurable: true, value: true })
+    }
+  })
+})
+
 describe('PatientRegistrationForm — Cancel button navigation', () => {
   it('calls router.back when Cancel is clicked before any changes', () => {
     renderForm()
@@ -551,6 +606,25 @@ describe('PatientRegistrationForm — edit mode', () => {
     // Consent unchanged from what was prefilled → no new grant appended.
     expect(urls.some((u) => u.includes('recordAtPointOfCare'))).toBe(false)
     expect(mockPush).not.toHaveBeenCalled() // edit stays put; the modal host closes
+  })
+
+  it('appends a new consent grant (recordAtPointOfCare) when consent changes in edit mode', async () => {
+    // Guard for the consent-capture-on-change path (2d refactor safety net): the existing
+    // suite only covers the NEGATIVE (unchanged → not appended). Here consent language is
+    // changed en → ar, so a new append-only grant MUST be recorded on save.
+    mockFetch.mockResolvedValue(
+      hubApiResponse({ result: { data: { json: { id: 'p1', meta: { lastUpdated: '2026-02-02T00:00:00Z' } } } } }),
+    )
+    const ctx = makeEditContext()
+    renderForm({ editContext: ctx })
+
+    fireEvent.click(screen.getByTestId('consent-lang-ar')) // en → ar
+    fireEvent.click(screen.getByRole('button', { name: /saveChanges/i }))
+
+    await waitFor(() => expect(ctx.onSaved).toHaveBeenCalled())
+    const urls = mockFetch.mock.calls.map((c) => String(c[0]))
+    expect(urls.some((u) => u.includes('patient.update'))).toBe(true)
+    expect(urls.some((u) => u.includes('recordAtPointOfCare'))).toBe(true)
   })
 
   it('Cancel invokes editContext.onCancel (not router.back)', () => {
