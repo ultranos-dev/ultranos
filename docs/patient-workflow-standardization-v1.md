@@ -206,9 +206,18 @@ method/language):
 With the existing guards (MPI WARN/BLOCK create, edit→patient.update, `diffAllergies`
 Tier-1, validation), the offline/consent/create/allergy paths are now pinned.
 `patient-registration` = 27 green; opd-lite typecheck clean.
-**Next (final 2d step):** extract `OpdPatientAdapter` + inject the allergy-store actions and
-shared `VitalsForm`, add `next` peer, move the orchestrator form into patient-kit — now safe
-to verify against this guard net.
+**2026-09-27 — 2d adapter (network slice) DONE.** Extracted the form's Hub transport
+(`checkDuplicates`, `createPatient`, `updatePatient`, `recordConsentPoc`, `isNetworkError`
++ result types) verbatim into `apps/opd-lite/src/lib/opd-patient-network.ts` (the swappable
+transport layer — pharmacy/lab differ here). The form imports them; call sites unchanged.
+Verified against the guard net: opd-lite typecheck clean; patient-registration +
+patient-modals = 34 green.
+
+**Remaining (final 2d step):** the form's STATEFUL ops (`savePatientLocally`,
+`registerOffline`, `uploadPhotoIfPresent`, `persistVitals`) close over React state + Dexie,
+so they become adapter METHODS taking explicit inputs (form builds inputs from state). Then
+inject the allergy-store actions + shared `VitalsForm` + hlc + audit, add `next` peer, and
+move the orchestrator into patient-kit — verified against this guard net.
 
 - **After 2d:** 2e (pharmacy-lite) + 2f (lab-lite, MINIMIZED caps) adopt the shared form.
 

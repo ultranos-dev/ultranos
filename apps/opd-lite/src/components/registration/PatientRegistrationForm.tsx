@@ -40,104 +40,16 @@ import { Card } from '@/components/Card'
 import { db } from '@/lib/db'
 import { EncryptionKeyNotAvailableError } from '@/lib/encryption-key-store'
 import { registerPatientOffline } from '@/lib/offline-registration'
+import {
+  checkDuplicates,
+  createPatient,
+  updatePatient,
+  recordConsentPoc,
+  isNetworkError,
+  type CheckDuplicatesResult,
+} from '@/lib/opd-patient-network'
 import type { FhirPatient } from '@ultranos/shared-types'
 
-interface CheckDuplicatesResult {
-  decision: 'ALLOW' | 'WARN' | 'BLOCK'
-  candidates: Array<{
-    id: string
-    nameGiven?: string
-    nameFather?: string
-    birthYear?: number
-    gender?: string
-    districtOrigin?: string
-    mpiScore: number
-    scoreBreakdown: Record<string, number>
-  }>
-  proceedToken?: string
-}
-
-interface CreatePatientResult {
-  id: string
-}
-
-async function checkDuplicates(input: Record<string, unknown>): Promise<CheckDuplicatesResult> {
-  // POST, not GET: patient.checkDuplicates is a tRPC mutation so the identifying
-  // PHI in `input` (National ID, name, phone) rides in the request body — never
-  // the URL/query string, where it would land in logs and browser history.
-  const url = new URL(getHubApiUrl())
-  url.pathname = url.pathname.replace(/\/$/, '') + '/patient.checkDuplicates'
-
-  const headers = await getAuthHeaders()
-  const res = await fetch(url.toString(), {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ json: input }),
-  })
-  if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
-  const body = await res.json() as { result: { data: { json: CheckDuplicatesResult } } }
-  return body.result.data.json
-}
-
-async function createPatient(input: Record<string, unknown>): Promise<CreatePatientResult> {
-  const url = new URL(getHubApiUrl())
-  url.pathname = url.pathname.replace(/\/$/, '') + '/patient.create'
-
-  const headers = await getAuthHeaders()
-  const res = await fetch(url.toString(), {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ json: input }),
-  })
-  if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
-  const body = await res.json() as { result: { data: { json: CreatePatientResult } } }
-  return body.result.data.json
-}
-
-interface UpdatePatientResult {
-  id: string
-  meta?: { lastUpdated?: string }
-}
-
-async function updatePatient(input: Record<string, unknown>): Promise<UpdatePatientResult> {
-  const url = new URL(getHubApiUrl())
-  url.pathname = url.pathname.replace(/\/$/, '') + '/patient.update'
-  const headers = await getAuthHeaders()
-  const res = await fetch(url.toString(), {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ json: input }),
-  })
-  if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
-  const body = await res.json() as { result: { data: { json: UpdatePatientResult } } }
-  return body.result.data.json
-}
-
-/** Clinician point-of-care consent capture (append-only). Edit mode only. */
-async function recordConsentPoc(input: Record<string, unknown>): Promise<void> {
-  const url = new URL(getHubApiUrl())
-  url.pathname = url.pathname.replace(/\/$/, '') + '/consent.recordAtPointOfCare'
-  const headers = await getAuthHeaders()
-  const res = await fetch(url.toString(), {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ json: input }),
-  })
-  if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
-}
-
-/**
- * True when the failure is a connectivity failure (the Hub was unreachable),
- * not an application-level rejection. `fetch` rejects with a TypeError on
- * network failure ("Failed to fetch"); a reachable Hub returning 4xx/5xx throws
- * our own `Error("Hub API error: <status>")` — that is NOT a network error and
- * must be surfaced (e.g. a BLOCK PRECONDITION_FAILED), never silently queued.
- */
-function isNetworkError(err: unknown): boolean {
-  if (err instanceof TypeError) return true
-  if (err instanceof Error) return /Hub API error/.test(err.message) === false && /fetch|network/i.test(err.message)
-  return false
-}
 
 // ── Validation schema ────────────────────────────────────────────────────────
 
