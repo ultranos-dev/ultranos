@@ -13,6 +13,14 @@ vi.mock('@/lib/supabase', () => ({
   }),
 }))
 
+// AuthGuard tracks the live pathname via next/navigation's usePathname so that a
+// client-side (soft) navigation — e.g. the post-login router.push('/') — is seen
+// without a remount. Mock it with a mutable value the tests can flip.
+let mockPathname = '/upload'
+vi.mock('next/navigation', () => ({
+  usePathname: () => mockPathname,
+}))
+
 let locationHref = '/'
 Object.defineProperty(window, 'location', {
   value: {
@@ -28,14 +36,53 @@ Object.defineProperty(window, 'location', {
   writable: true,
 })
 
+/** Set both the router pathname and window.location.pathname in lockstep. */
+function setPathname(path: string) {
+  mockPathname = path
+  Object.defineProperty(window.location, 'pathname', { value: path, writable: true })
+}
+
 describe('AuthGuard (Lab Lite)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     useAuthSessionStore.getState().clearSession()
     locationHref = '/'
-    Object.defineProperty(window.location, 'pathname', {
-      value: '/upload',
-      writable: true,
+    setPathname('/upload')
+  })
+
+  it('re-runs the session check after a soft navigation from a public page to a protected page (no remount)', async () => {
+    // Start on the public login page — the guard must NOT run a session check there.
+    setPathname('/login')
+    mockGetSession.mockResolvedValue({
+      data: {
+        session: {
+          user: { id: 'lab-1', email: 'tech@lab.example', user_metadata: {} },
+        },
+      },
+      error: null,
+    })
+
+    const { rerender } = render(
+      <AuthGuard>
+        <div>Protected Content</div>
+      </AuthGuard>,
+    )
+
+    expect(mockGetSession).not.toHaveBeenCalled()
+
+    // Simulate the post-login router.push('/') soft navigation: the SAME AuthGuard
+    // instance (mounted in the root layout) re-renders with a new pathname — it must
+    // now perform the session check. The pre-fix code captured the pathname once on
+    // mount, so it stayed on the public-page branch here and never established the key.
+    setPathname('/')
+    rerender(
+      <AuthGuard>
+        <div>Protected Content</div>
+      </AuthGuard>,
+    )
+
+    await waitFor(() => {
+      expect(mockGetSession).toHaveBeenCalled()
     })
   })
 

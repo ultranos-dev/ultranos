@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 import type { LabRole } from '@ultranos/shared-types'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -18,12 +19,14 @@ import { HandoverAcknowledgment } from '@/components/shift/HandoverAcknowledgmen
 export function AuthGuard({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
   const [pendingHandover, setPendingHandover] = useState<HandoverReport | null>(null)
-  const [pathname, setPathname] = useState('')
+  // Track the live pathname. AuthGuard is mounted in the ROOT layout, so it survives
+  // client-side (soft) navigations without remounting — notably the post-login
+  // router.push('/'). usePathname() updates on every such navigation; reading
+  // window.location.pathname once on mount (the previous approach) went stale after
+  // the /login → / push, leaving isPublicPage=true so the session check + encryption
+  // key establishment never ran and LabKeyGate hung until a hard refresh.
+  const pathname = usePathname()
   const session = useAuthSessionStore((s) => s.session)
-
-  useEffect(() => {
-    setPathname(window.location.pathname)
-  }, [])
 
   const isPublicPage = pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password'
 
