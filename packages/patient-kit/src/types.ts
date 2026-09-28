@@ -17,6 +17,7 @@
  * stable.
  */
 
+import type { ComponentType } from 'react'
 import type {
   MaritalStatus,
   DisplacementCategory,
@@ -24,6 +25,9 @@ import type {
   PatientContact,
   PatientLanguage,
   NationalIdType,
+  FhirPatient,
+  FhirObservation,
+  FhirAllergyIntolerance,
 } from '@ultranos/shared-types'
 
 // ── Field model ────────────────────────────────────────────────────────────
@@ -195,6 +199,79 @@ export interface PatientDataAdapter {
 }
 
 export type PatientFormMode = 'create' | 'edit'
+
+// ── Orchestrator injection (opd-lite is the canonical implementation; all apps supply
+//    these to reuse the shared PatientRegistrationForm) ──────────────────────────────
+
+export interface CheckDuplicatesResult {
+  decision: 'ALLOW' | 'WARN' | 'BLOCK'
+  candidates: Array<{
+    id: string
+    nameGiven?: string
+    nameFather?: string
+    birthYear?: number
+    gender?: string
+    districtOrigin?: string
+    mpiScore: number
+    scoreBreakdown: Record<string, number>
+  }>
+  proceedToken?: string
+}
+
+/** Every data operation the registration/edit form performs. Host apps implement this. */
+export interface PatientFormAdapter {
+  checkDuplicates(input: Record<string, unknown>): Promise<CheckDuplicatesResult>
+  createPatient(input: Record<string, unknown>): Promise<{ id: string }>
+  updatePatient(input: Record<string, unknown>): Promise<{ id: string; meta?: { lastUpdated?: string } }>
+  recordConsent(input: Record<string, unknown>): Promise<void>
+  isNetworkError(err: unknown): boolean
+  savePatient(patient: FhirPatient): Promise<void>
+  registerOffline(
+    provisionalId: string,
+    localPatient: FhirPatient,
+    syncPayload: Record<string, unknown>,
+    photoDataUrl: string | null,
+  ): Promise<void>
+  uploadPhoto(patientId: string, dataUrl: string): Promise<void>
+  saveObservations(observations: FhirObservation[]): Promise<void>
+}
+
+/** Loose vitals range status (host owns the exact union). */
+export type VitalRangeStatus = string
+export type VitalFieldKey = string
+
+/**
+ * Non-data host dependencies the shared form needs injected: clinical vitals subsystem
+ * (shared with encounters — cannot live in patient-kit), the allergy store actions, the
+ * HLC clock, audit, the encryption-key-error predicate, and the photo transport.
+ */
+export interface PatientFormExternals {
+  addAllergyToStore: (allergy: FhirAllergyIntolerance) => void | Promise<void>
+  updateAllergyStatus: (id: string, status: string) => void | Promise<void>
+  auditPhiAccess: (
+    action: string,
+    resourceType: string,
+    resourceId: string,
+    patientId?: string,
+    metadata?: Record<string, unknown>,
+  ) => void
+  hlc: { now: () => unknown }
+  serializeHlc: (t: unknown) => string
+  mapVitalsToObservations: (
+    vitals: { weight: string; height: string; systolic: string; diastolic: string; temperature: string; bmi: number | null },
+    ctx: { patientId: string; hlcTimestamp: string; nowIso: string },
+  ) => FhirObservation[]
+  LOINC: Record<string, string>
+  getVitalRangeStatus: (key: string, value: number) => VitalRangeStatus
+  isEncryptionKeyError: (err: unknown) => boolean
+  loadVitalsObservations: (patientRef: string) => Promise<FhirObservation[]>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  VitalsForm: ComponentType<any>
+  photoApi: PatientPhotoApi
+  /** Host navigation (keeps patient-kit free of a hard next/navigation dependency). */
+  navigate: (path: string) => void
+  navigateBack: () => void
+}
 
 /**
  * Photo operations injected into the shared PatientPhotoSection. The opaque-key upload

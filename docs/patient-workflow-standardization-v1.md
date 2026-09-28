@@ -223,12 +223,33 @@ form's direct data-lib imports (offline-registration, sync-queue, sync-engine, d
 hub-auth). Verified: opd-lite typecheck clean; the guard net (34) exercises the create /
 offline / update / consent paths THROUGH the adapter and stays green.
 
-**Remaining (final 2d step — mechanical):** convert `adapter` from a useMemo to an injected
-PROP; inject the remaining non-data deps the form still imports (shared `VitalsForm`,
-`useAllergyStore` actions, hlc/serializeHlc, auditPhiAccess, `EncryptionKeyNotAvailableError`
-predicate, vitals mapper/config), add `next` as a patient-kit peer, then move the
-orchestrator file into patient-kit + point opd-lite at it via a thin wrapper that assembles
-those deps. Verified against this same guard net.
+**2026-09-28 — 2d COMPLETE: orchestrator form MOVED to patient-kit.** `git mv`'d
+`PatientRegistrationForm` → `packages/patient-kit/src/components/registration/patient-registration-form.tsx`
+(1802-line body preserved). Adapted:
+- Sections import via relative paths; Button/Card from patient-kit; `AuditAction`/
+  `AuditResourceType`/`calculateBMI`/Fhir types from shared-types; ui-kit Alert/Input.
+- `adapter: PatientFormAdapter` + `externals: PatientFormExternals` are now PROPS
+  (destructured, names preserved so the body barely changed). Externals inject the clinical
+  vitals subsystem (VitalsForm, mapVitalsToObservations, LOINC, getVitalRangeStatus,
+  loadVitalsObservations), allergy-store actions, hlc, auditPhiAccess, an
+  `isEncryptionKeyError` predicate, and `photoApi`.
+- Decoupled from `next/navigation` entirely: navigation is injected (`navigate`/
+  `navigateBack`) — patient-kit needs no `next` runtime dep.
+- opd-lite keeps a **thin wrapper** at the old path (`PatientRegistrationForm.tsx`) that
+  assembles the adapter + externals from its libs and re-exports `diffAllergies` +
+  `RegistrationEditContext`, so every consumer (create/edit modals, dashboard, directory,
+  register route) and the test suite are unchanged.
+
+**Verified:** patient-kit typecheck + 8 tests; opd-lite typecheck; and the full guard net +
+integration suites through the wrapper — patient-registration, patient-modals,
+patient-photo-section, consent-text-modal, clinical-dashboard, patient-directory =
+**84 tests green**. Offline-create / consent-change / edit-update / MPI / allergy-Tier-1 all
+pass through the moved form.
+
+**opd-lite Phase-1 extraction is DONE** — every registration component + the orchestrator
+live in patient-kit; opd-lite is a thin host. Next: 2e (pharmacy-lite) + 2f (lab-lite,
+MINIMIZED caps) provide their own thin wrappers against the same adapter/externals contract.
+(Minor cleanup: patient-kit's `next` peer/devDep is now unused — navigation is injected.)
 
 - **After 2d:** 2e (pharmacy-lite) + 2f (lab-lite, MINIMIZED caps) adopt the shared form.
 
