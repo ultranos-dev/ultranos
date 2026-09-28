@@ -32,6 +32,8 @@ vi.mock('@/lib/db', () => {
     // Story 58.3 (H-LAB-2) additions:
     'patients', 'escalation_chains', 'resultSnapshots', 'custody_events',
     'distributionQueue',
+    // Shared patient-form clinical tables (v59, full access 2026-09-28):
+    'allergyIntolerances', 'observations',
     'syncQueue', 'clientAuditLog', 'practitioner_keys',
     'reagent_inventory', 'reagent_consumption_log',
     'sops', 'sop_acknowledgments', 'micro_learning_modules', 'module_completions',

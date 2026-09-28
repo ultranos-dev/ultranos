@@ -20,7 +20,10 @@
     "./components/registration/geography-section": "./src/components/registration/geography-section.tsx",
     "./components/registration/patient-photo-section": "./src/components/registration/patient-photo-section.tsx",
     "./components/registration/mpi-result-modal": "./src/components/registration/mpi-result-modal.tsx",
-    "./components/registration/patient-registration-form": "./src/components/registration/patient-registration-form.tsx"
+    "./components/registration/patient-registration-form": "./src/components/registration/patient-registration-form.tsx",
+    "./components/clinical/vitals-form": "./src/components/clinical/vitals-form.tsx",
+    "./lib/vitals-config": "./src/lib/vitals-config.ts",
+    "./lib/vitals-fhir-mapper": "./src/lib/vitals-fhir-mapper.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

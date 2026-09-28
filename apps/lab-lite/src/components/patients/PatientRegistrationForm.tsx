@@ -1,463 +1,140 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+/**
+ * Lab-Lite host wrapper for the shared @ultranos/patient-kit registration/edit form
+ * (the canonical OPD-Lite model). Full access, product decision 2026-09-28 — NOTHING
+ * gated: lab renders the exact same full form as every other app (photo, identity,
+ * demographics, national ID, contact, address, social, allergies, vitals, consent) and
+ * uses the same clinician-facing patient.* / consent.* / patient-photo transports (lab
+ * users now have full Hub access). Role-based access will be layered on later.
+ */
+import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { Button } from '@/components/ui/Button'
+import { PatientRegistrationForm as KitPatientRegistrationForm } from '@ultranos/patient-kit/components/registration/patient-registration-form'
+import type {
+  PatientFormAdapter,
+  PatientFormExternals,
+} from '@ultranos/patient-kit'
+import { VitalsForm } from '@ultranos/patient-kit/components/clinical/vitals-form'
+import { mapVitalsToObservations, LOINC } from '@ultranos/patient-kit/lib/vitals-fhir-mapper'
+import { getVitalRangeStatus, type VitalKey } from '@ultranos/patient-kit/lib/vitals-config'
+import type { FhirObservation, FhirPatient } from '@ultranos/shared-types'
+import { AuditAction, AuditResourceType, UserRole } from '@ultranos/shared-types'
+import { emitClientAudit } from '@ultranos/audit-logger/client'
+import { getHubApiUrl } from '@/lib/trpc'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
-import { putPatient } from '@/lib/db'
+import { putPatient, enqueueSyncEvent } from '@/lib/db'
+import { hlc, hlcNow, serializeHlc } from '@/lib/hlc'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 import {
-  checkDuplicates,
-  createPatient,
-  type CheckDuplicatesResult,
-  type CreatePatientInput,
-} from '@/lib/trpc'
-import { MpiResultModal } from './MpiResultModal'
-import { CulturalFlagsEditor } from './CulturalFlagsEditor'
-import type { PatientCulturalPreferences } from '@/lib/cultural-flags'
-import { registerPatientOfflineLab } from '@/lib/patient-register-offline'
+  getPatientPhotoUrl,
+  uploadPatientPhoto,
+  removePatientPhoto,
+  dataUrlToBlob,
+} from '@/lib/patient-photo-api'
+import {
+  addAllergy,
+  updateAllergyStatus as updateAllergyStatusStore,
+  loadVitalsObservations,
+  saveObservations,
+} from '@/lib/patient-clinical-store'
+
+export { diffAllergies } from '@ultranos/patient-kit/components/registration/patient-registration-form'
+export type { RegistrationEditContext } from '@ultranos/patient-kit/components/registration/patient-registration-form'
+import type { RegistrationEditContext } from '@ultranos/patient-kit/components/registration/patient-registration-form'
 
 /**
- * True for a connectivity failure (Hub unreachable), not an application-level
- * rejection. `fetch` rejects with TypeError / AbortError on network failure or
- * timeout; a reachable Hub returning an error throws with a real message that
- * must surface (e.g. an enforced BLOCK), never be silently queued.
+ * Minimal raw tRPC mutation fetch (mirrors lab's makeTrpcProcedure) so we can call
+ * arbitrary patient.* / consent.* paths — lab users now have full Hub access.
  */
+async function rawMutate(path: string, input: Record<string, unknown>): Promise<unknown> {
+  const { data } = await getSupabaseBrowserClient().auth.getSession()
+  const token = data.session?.access_token
+  const res = await fetch(`${getHubApiUrl()}/${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ json: input }),
+  })
+  if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
+  const body = (await res.json()) as { result?: { data?: { json?: unknown } } }
+  return body?.result?.data?.json ?? null
+}
+
 function isNetworkError(err: unknown): boolean {
   if (err instanceof TypeError) return true
   if (err instanceof DOMException && err.name === 'AbortError') return true
-  if (err instanceof Error) return /fetch|network|Failed to fetch/i.test(err.message)
+  if (err instanceof Error) return /Hub API error/.test(err.message) === false && /fetch|network/i.test(err.message)
   return false
 }
 
-const INPUT_CLASS =
-  'w-full rounded-lg border border-border px-4 py-2.5 text-sm focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring'
+interface PatientRegistrationFormProps {
+  prefilledNameGiven?: string
+  editContext?: RegistrationEditContext
+  onCancel?: () => void
+}
 
-const currentYear = new Date().getFullYear()
-
-type ConsentMethod = 'WRITTEN' | 'VERBAL_WITNESSED'
-
-/**
- * Patient registration form for Lab Lite.
- * Captures minimal demographics + consent, runs MPI duplicate check,
- * creates patient via Hub API, and saves locally to Dexie.
- *
- * Task 10 — Patient Registration with MPI Duplicate Detection.
- */
-export function PatientRegistrationForm() {
-  const t = useTranslations('patients')
+export function PatientRegistrationForm(props: PatientRegistrationFormProps) {
   const router = useRouter()
 
-  // Form fields
-  const [nameGiven, setNameGiven] = useState('')
-  const [nameFather, setNameFather] = useState('')
-  const [gender, setGender] = useState('')
-  const [yearOnly, setYearOnly] = useState(true)
-  const [birthYear, setBirthYear] = useState('')
-  const [birthDate, setBirthDate] = useState('')
-  const [phone, setPhone] = useState('')
-  const [consentMethod, setConsentMethod] = useState<ConsentMethod>('WRITTEN')
-  const [witnessName, setWitnessName] = useState('')
+  const adapter = useMemo<PatientFormAdapter>(() => ({
+    checkDuplicates: (input) => rawMutate('patient.checkDuplicates', input) as Promise<never>,
+    createPatient: (input) => rawMutate('patient.create', input) as Promise<never>,
+    updatePatient: (input) => rawMutate('patient.update', input) as Promise<never>,
+    recordConsent: async (input) => { await rawMutate('consent.recordAtPointOfCare', input) },
+    isNetworkError,
+    // Full access: lab stores the full FHIR patient locally (its `patients` table is untyped).
+    savePatient: async (patient: FhirPatient) => { await putPatient(patient) },
+    registerOffline: async (provisionalId, localPatient, syncPayload) => {
+      await putPatient(localPatient)
+      await enqueueSyncEvent({
+        resourceType: 'Patient',
+        resourceId: provisionalId,
+        payload: syncPayload,
+        hlcTimestamp: hlcNow(),
+      })
+    },
+    uploadPhoto: async (patientId, dataUrl) => {
+      await uploadPatientPhoto(patientId, dataUrlToBlob(dataUrl), new Date().toISOString())
+    },
+    saveObservations,
+  }), [])
 
-  // State
-  const [submitting, setSubmitting] = useState(false)
-  const [errors, setErrors] = useState<string[]>([])
-  const [mpiResult, setMpiResult] = useState<CheckDuplicatesResult | null>(null)
-  const [showCulturalPrefs, setShowCulturalPrefs] = useState(false)
-  const [savedCulturalPrefs, setSavedCulturalPrefs] = useState<PatientCulturalPreferences | null>(null)
-
-  const getToken = useCallback(async (): Promise<string> => {
-    const supabase = getSupabaseBrowserClient()
-    const { data } = await supabase.auth.getSession()
-    const token = data.session?.access_token
-    if (!token) throw new Error('Not authenticated')
-    return token
-  }, [])
-
-  function validate(): string[] {
-    const errs: string[] = []
-    if (!nameGiven.trim()) errs.push(t('errorNameRequired'))
-    if (!gender) errs.push(t('errorGenderRequired'))
-    if (yearOnly) {
-      if (!birthYear.trim()) {
-        errs.push(t('errorBirthYearRequired'))
-      } else {
-        const y = Number(birthYear)
-        if (y < 1900 || y > currentYear) errs.push(t('errorBirthYearRange'))
-      }
-    } else {
-      if (!birthDate) errs.push(t('errorBirthDateRequired'))
-    }
-    if (consentMethod === 'VERBAL_WITNESSED' && !witnessName.trim()) {
-      errs.push(t('errorWitnessRequired'))
-    }
-    return errs
-  }
-
-  function buildInput(proceedToken?: string): CreatePatientInput {
-    return {
-      nameLocal: nameGiven.trim(),
-      nameGiven: nameGiven.trim() || undefined,
-      nameFather: nameFather.trim() || undefined,
-      gender,
-      birthDate: yearOnly ? undefined : birthDate || undefined,
-      birthYearOnly: yearOnly,
-      birthYear: yearOnly ? Number(birthYear) : undefined,
-      phone: phone.trim() || undefined,
-      consent: {
-        method: consentMethod,
-        witnessedBy:
-          consentMethod === 'VERBAL_WITNESSED' ? witnessName.trim() : undefined,
-        language: 'en',
-        version: '1.0',
-      },
-      mpiProceedToken: proceedToken,
-    }
-  }
-
-  async function saveAndRedirect(patientRef: string) {
-    // Rule #7 data minimization: the FULL demographics (father's name, exact DOB,
-    // phone) go to the Hub via createPatient, but the lab only RETAINS what it
-    // needs locally — first name, gender (required for lab reference ranges), and
-    // birth YEAR (for age). Father's name, exact date of birth, and phone are
-    // never persisted in the lab's local store. The local key is the OPAQUE
-    // blind-index ref the Hub issued — the lab never holds the real patient UUID.
-    const birthYearValue = yearOnly
-      ? Number(birthYear)
-      : (birthDate ? new Date(birthDate).getFullYear() : undefined)
-
-    const patient = {
-      id: patientRef,
-      resourceType: 'Patient',
-      name: [{ given: [nameGiven.trim()] }],
-      gender,
-      _ultranos: {
-        nameLocal: nameGiven.trim(),
-        birthYearOnly: true,
-        birthYear: birthYearValue,
-      },
-      meta: { lastUpdated: new Date().toISOString(), versionId: '1' },
-    }
-    await putPatient(patient)
-    router.push(`/upload?patientId=${encodeURIComponent(patientRef)}`)
-  }
-
-  /**
-   * Story 59.1 (AC 4): surface the ACTUAL failure instead of a generic message.
-   * Hub tRPC errors carry safe, non-PHI messages (e.g. duplicate detected,
-   * validation failure); network failures fall back to the generic string.
-   */
-  function surfaceError(err: unknown) {
-    const message =
-      err instanceof Error && err.message.trim().length > 0
-        ? err.message
-        : t('errorUnexpected')
-    setErrors([message])
-  }
-
-  /**
-   * Offline registration fallback (Story 60.3, M-LAB-3): register the patient
-   * locally with a provisional ref + enqueue the Hub `lab.registerPatient`
-   * create, then navigate to upload. The tech continues immediately; MPI runs
-   * at drain and the provisional ref reconciles to the Hub blind-ref.
-   */
-  async function registerOfflineAndGo(input: CreatePatientInput) {
-    const provisionalRef = await registerPatientOfflineLab(input, {
-      firstName: nameGiven.trim(),
-      gender,
-      birthYear: yearOnly
-        ? Number(birthYear)
-        : (birthDate ? new Date(birthDate).getFullYear() : undefined),
-    })
-    router.push(`/upload?patientId=${encodeURIComponent(provisionalRef)}`)
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const validationErrors = validate()
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors)
-      return
-    }
-    setErrors([])
-    setSubmitting(true)
-
-    // Offline-first: if the device is offline, skip the doomed Hub round-trip
-    // and register locally + enqueue. MPI runs at drain.
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+  const externals = useMemo<PatientFormExternals>(() => ({
+    addAllergyToStore: addAllergy,
+    updateAllergyStatus: (id, status) =>
+      updateAllergyStatusStore(id, status as 'active' | 'inactive' | 'resolved'),
+    auditPhiAccess: (action, resourceType, resourceId, patientId, metadata) => {
       try {
-        await registerOfflineAndGo(buildInput())
-      } catch (err) {
-        surfaceError(err)
-      } finally {
-        setSubmitting(false)
-      }
-      return
-    }
+        void emitClientAudit({
+          actorId: useAuthSessionStore.getState().session?.userId ?? 'unknown',
+          actorRole: UserRole.LAB_TECH,
+          action: action as AuditAction,
+          resourceType: resourceType as AuditResourceType,
+          resourceId,
+          hlcTimestamp: serializeHlc(hlc.now()),
+          metadata: { ...metadata, patientId, source: 'lab-lite' },
+        })
+      } catch { /* audit is best-effort client-side; Hub audits authoritatively */ }
+    },
+    hlc,
+    serializeHlc: (t: unknown) => serializeHlc(t as Parameters<typeof serializeHlc>[0]),
+    mapVitalsToObservations,
+    LOINC,
+    getVitalRangeStatus: (key, value) => getVitalRangeStatus(key as VitalKey, value),
+    isEncryptionKeyError: (e) => e instanceof Error && /encryption key/i.test(e.message),
+    loadVitalsObservations: (ref) => loadVitalsObservations(ref) as Promise<FhirObservation[]>,
+    VitalsForm,
+    photoApi: { getPatientPhotoUrl, uploadPatientPhoto, removePatientPhoto },
+    navigate: (path: string) => router.push(path),
+    navigateBack: () => router.back(),
+  }), [router])
 
-    try {
-      const token = await getToken()
-
-      // MPI duplicate check
-      const dupInput: Record<string, unknown> = {
-        nameGiven: nameGiven.trim(),
-        nameFather: nameFather.trim() || undefined,
-        gender,
-        birthYear: yearOnly ? Number(birthYear) : undefined,
-        birthDate: yearOnly ? undefined : birthDate,
-      }
-      const result = await checkDuplicates(dupInput, token)
-
-      if (result.decision === 'ALLOW') {
-        const created = await createPatient(buildInput(), token)
-        await saveAndRedirect(created.ref)
-        return
-      }
-
-      // WARN or BLOCK — show modal
-      setMpiResult(result)
-    } catch (err) {
-      // Connectivity failure mid-submit → offline fallback. A reachable Hub
-      // returning an error surfaces its message (never silently queued).
-      if (isNetworkError(err)) {
-        try {
-          await registerOfflineAndGo(buildInput())
-          return
-        } catch (offlineErr) {
-          surfaceError(offlineErr)
-          return
-        }
-      }
-      surfaceError(err)
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  async function handleMpiProceed(proceedToken?: string) {
-    setMpiResult(null)
-    setSubmitting(true)
-    try {
-      const token = await getToken()
-      const created = await createPatient(buildInput(proceedToken), token)
-      await saveAndRedirect(created.ref)
-    } catch (err) {
-      if (isNetworkError(err)) {
-        try {
-          await registerOfflineAndGo(buildInput(proceedToken))
-          return
-        } catch (offlineErr) {
-          surfaceError(offlineErr)
-          return
-        }
-      }
-      surfaceError(err)
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  function handleSelectExisting(patientRef: string) {
-    // patientRef is the opaque blind-index ref from the MPI candidate (Rule #7).
-    setMpiResult(null)
-    router.push(`/upload?patientId=${encodeURIComponent(patientRef)}`)
-  }
-
+  // No `capabilities` prop → shared form defaults to fullFormCapabilities: lab renders
+  // the exact same full form as OPD-Lite, every section functional, nothing gated.
   return (
-    <>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Errors */}
-        {errors.length > 0 && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
-            {errors.map((err) => (
-              <p key={err} className="text-sm text-destructive">
-                {err}
-              </p>
-            ))}
-          </div>
-        )}
-
-        {/* Given Name */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">
-            {t('nameGiven')} *
-          </label>
-          <input
-            type="text"
-            maxLength={200}
-            value={nameGiven}
-            onChange={(e) => setNameGiven(e.target.value)}
-            className={INPUT_CLASS}
-          />
-        </div>
-
-        {/* Father's Name */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">
-            {t('nameFather')}
-          </label>
-          <input
-            type="text"
-            maxLength={200}
-            value={nameFather}
-            onChange={(e) => setNameFather(e.target.value)}
-            className={INPUT_CLASS}
-          />
-        </div>
-
-        {/* Gender */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">
-            {t('gender')} *
-          </label>
-          <select
-            value={gender}
-            onChange={(e) => setGender(e.target.value)}
-            className={INPUT_CLASS}
-          >
-            <option value="">{t('selectGender')}</option>
-            <option value="male">{t('male')}</option>
-            <option value="female">{t('female')}</option>
-            <option value="other">{t('other')}</option>
-          </select>
-        </div>
-
-        {/* Birth Info */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">
-            {t('birthInfo')} *
-          </label>
-          <div className="mb-2 flex items-center gap-3">
-            <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={yearOnly}
-                onChange={(e) => setYearOnly(e.target.checked)}
-                className="rounded border-border"
-              />
-              {t('yearOnly')}
-            </label>
-          </div>
-          {yearOnly ? (
-            <input
-              type="number"
-              min={1900}
-              max={currentYear}
-              value={birthYear}
-              onChange={(e) => setBirthYear(e.target.value)}
-              placeholder="1990"
-              className={INPUT_CLASS}
-            />
-          ) : (
-            <input
-              type="date"
-              value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
-              max={new Date().toISOString().split('T')[0]}
-              className={INPUT_CLASS}
-            />
-          )}
-        </div>
-
-        {/* Phone */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">
-            {t('phone')}
-          </label>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className={INPUT_CLASS}
-          />
-        </div>
-
-        {/* Consent */}
-        <fieldset>
-          <legend className="mb-2 text-sm font-medium text-foreground">
-            {t('consent')} *
-          </legend>
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm text-foreground">
-              <input
-                type="radio"
-                name="consent"
-                value="WRITTEN"
-                checked={consentMethod === 'WRITTEN'}
-                onChange={() => setConsentMethod('WRITTEN')}
-              />
-              {t('consentWritten')}
-            </label>
-            <label className="flex items-center gap-2 text-sm text-foreground">
-              <input
-                type="radio"
-                name="consent"
-                value="VERBAL_WITNESSED"
-                checked={consentMethod === 'VERBAL_WITNESSED'}
-                onChange={() => setConsentMethod('VERBAL_WITNESSED')}
-              />
-              {t('consentVerbal')}
-            </label>
-          </div>
-          {consentMethod === 'VERBAL_WITNESSED' && (
-            <div className="mt-2">
-              <label className="mb-1 block text-sm text-muted-foreground">
-                {t('witnessName')} *
-              </label>
-              <input
-                type="text"
-                value={witnessName}
-                onChange={(e) => setWitnessName(e.target.value)}
-                className={INPUT_CLASS}
-              />
-            </div>
-          )}
-        </fieldset>
-
-        {/* Cultural Preferences — collapsible, optional (Story 45.6 Task 6) */}
-        <details
-          open={showCulturalPrefs}
-          onToggle={(e) => setShowCulturalPrefs((e.target as HTMLDetailsElement).open)}
-          data-testid="cultural-prefs-section"
-        >
-          <summary className="cursor-pointer text-sm font-medium text-primary hover:text-primary/80">
-            {t('culturalPreferences', { defaultMessage: 'Cultural Preferences (optional)' })}
-          </summary>
-          <div className="mt-3">
-            <CulturalFlagsEditor
-              patientRef=""
-              existingPrefs={savedCulturalPrefs}
-              techId=""
-              hlcTimestamp=""
-              onSave={(prefs) => setSavedCulturalPrefs(prefs)}
-            />
-          </div>
-        </details>
-
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => router.back()}
-          >
-            {t('cancel')}
-          </Button>
-          <Button type="submit" disabled={submitting}>
-            {submitting ? t('registering') : t('registerPatient')}
-          </Button>
-        </div>
-      </form>
-
-      {/* MPI Duplicate Modal */}
-      {mpiResult && (
-        <MpiResultModal
-          result={mpiResult}
-          onProceed={handleMpiProceed}
-          onSelectExisting={handleSelectExisting}
-          onCancel={() => setMpiResult(null)}
-        />
-      )}
-    </>
+    <KitPatientRegistrationForm {...props} adapter={adapter} externals={externals} />
   )
 }

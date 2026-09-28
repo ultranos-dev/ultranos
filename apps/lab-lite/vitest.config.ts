@@ -9,6 +9,14 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     setupFiles: ['./src/__tests__/setup.ts'],
+    // The suite is large (300+ files); async render tests (waitFor/user-event over
+    // dynamically-imported pages + Dexie) intermittently exceeded the default 5s
+    // testTimeout / 1s waitFor under full-suite parallel CPU load, so a different
+    // render test flaked each run (all pass in isolation). Give them headroom — this
+    // only lengthens how long a wait polls before failing; it never slows a passing
+    // test. Paired with configure({ asyncUtilTimeout }) in setup.ts.
+    testTimeout: 20000,
+    hookTimeout: 20000,
   },
   resolve: {
     // Array form so the bare `@ultranos/ui-kit` alias can be an EXACT-match regex.

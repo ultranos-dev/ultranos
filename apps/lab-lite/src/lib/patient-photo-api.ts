@@ -13,11 +13,11 @@ async function accessToken(): Promise<string | null> {
 }
 
 /**
- * Fetch a short-lived signed URL for a patient's photo by patient id (Rule #7
- * revised 2026-09-24: the Hub resolves the opaque storage key server-side and returns
- * a signed URL — the client never holds the raw key). Returns null when the patient
- * has no photo or on any failure (caller shows initials). Pharmacy holds the real
- * patient UUID locally, so it can query by id like opd-lite.
+ * Fetch a short-lived signed URL for a patient's photo by patient id (Rule #7: the
+ * Hub resolves the opaque storage key server-side and returns a signed URL — the
+ * client never holds the raw key). Returns null when the patient has no photo or on
+ * any failure (caller shows initials). Lab-lite holds the real patient id (full
+ * access, product decision 2026-09-28), so it can query by id like every other app.
  */
 export async function getPatientPhotoUrl(
   patientId: string,
@@ -51,11 +51,7 @@ export function dataUrlToBlob(dataUrl: string): Blob {
   return new Blob([arr], { type: mime })
 }
 
-/**
- * Upload/replace a patient's photo (multipart). The Hub stores it under an opaque,
- * random storage key (Rule #7) and returns a fresh signed URL. Content-Type is left
- * to the browser so it sets the multipart boundary.
- */
+/** Upload/replace a patient's photo (multipart). Hub stores it under an opaque key. */
 export async function uploadPatientPhoto(
   patientId: string,
   blob: Blob,

@@ -315,6 +315,21 @@ describe('patient.read — follows merged_into', () => {
           }),
         }
       }
+      // patient.read also reads the append-only consent ledger for the Edit-Profile
+      // prefill (.select().eq().order().limit().maybeSingle()) — return no grant here.
+      if (table === 'consent_records') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
       return {}
     })
 
@@ -325,6 +340,7 @@ describe('patient.read — follows merged_into', () => {
 
     // Should return the survivor's data, not the duplicate's
     expect(result.id).toBe(SURVIVOR_ID)
-    expect(mockFrom).toHaveBeenCalledTimes(2)
+    // 3 reads: patient (follow merged_into) → survivor → consent ledger prefill.
+    expect(mockFrom).toHaveBeenCalledTimes(3)
   })
 })

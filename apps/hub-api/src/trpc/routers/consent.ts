@@ -23,7 +23,10 @@ export const consentRouter = createTRPCRouter({
    * consent.sync, which is grantor-authenticated (patient/guardian/admin) for
    * Health-Passport-originated grants. The role gate is the authorization here.
    */
-  recordAtPointOfCare: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN', 'ADMIN'])
+  // LAB_TECH added 2026-09-28: lab-lite gets full unrestricted access at this stage
+  // (role-based access deferred) so it can capture point-of-care consent in the shared
+  // patient workflow, like every other app.
+  recordAtPointOfCare: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN', 'ADMIN', 'LAB_TECH'])
     .input(
       z.object({
         patientId: z.string().uuid(),

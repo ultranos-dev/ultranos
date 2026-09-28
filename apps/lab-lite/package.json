@@ -19,6 +19,7 @@
     "@ultranos/audit-logger": "workspace:*",
     "@ultranos/crypto": "workspace:*",
     "@ultranos/hub-client": "workspace:*",
+    "@ultranos/patient-kit": "workspace:*",
     "@ultranos/shared-types": "workspace:*",
     "@ultranos/sync-engine": "workspace:^",
     "@ultranos/ui-kit": "workspace:*",

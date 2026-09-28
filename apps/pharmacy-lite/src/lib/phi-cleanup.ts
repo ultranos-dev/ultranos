@@ -16,6 +16,11 @@ export const PHI_TABLES = [
   'dispenseAuditLog',
   'patients',
   'patientAllergyCache',
+  // Patient clinical records captured by the shared registration/edit form (v25).
+  // Encrypted PHI cache cleared on logout — the unsynced writes survive separately
+  // in syncQueue (PRESERVE), so clearing these loses no pending Hub data.
+  'allergyIntolerances',
+  'observations',
 ] as const
 
 /**

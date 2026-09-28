@@ -664,6 +664,9 @@ export const patientRouter = createTRPCRouter({
         mpi_score: mpiResult.topScore,
         is_active:              true,
         patient_tier:           'FREE',
+        // Owning org (nullable). Stamps the registering clinician's org so a
+        // same-org lab can later be de-minimized for this patient (Rule #7).
+        org_id:                 ctx.user.orgId ?? null,
         preferred_language:     input.preferredLanguage ?? null,
         created_by:             ctx.user.sub,
         created_at:             now,

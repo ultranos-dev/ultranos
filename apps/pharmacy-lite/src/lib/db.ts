@@ -13,7 +13,7 @@ import type { Supplier, PurchaseOrder, StockCount, SupplierInvoice, SupplierPaym
 import type { StockTransfer } from './transfers/types'
 import type { DataUsageCategory } from '@ultranos/sync-engine'
 import type { DrugEntry } from '@ultranos/drug-catalog-sync'
-import type { DrugBrand, DrugBrandPresentation } from '@ultranos/shared-types'
+import type { DrugBrand, DrugBrandPresentation, FhirAllergyIntolerance, FhirObservation } from '@ultranos/shared-types'
 import type { WholesaleCustomer, SalesOrder, CustomerAccount, CustomerLedgerEntry, ContractPrice } from '@/lib/wholesale/types'
 export type { DataUsageCategory }  // re-export for consumers
 
@@ -222,6 +222,11 @@ class PharmacyLiteDatabase extends Dexie {
   patientAllergyCache!: EntityTable<PatientAllergyCacheEntry, 'patientRef'>
   stockReconciliationTasks!: EntityTable<StockReconciliationTask, 'id'>
   refunds!: EntityTable<Refund, 'id'>
+  // Patient clinical records captured by the shared registration/edit form (parity
+  // with OPD-Lite: allergies are Tier-1 append-only, vitals are Observations). Both
+  // are PHI → encrypted (see PHI_TABLE_CONFIGS below).
+  allergyIntolerances!: EntityTable<FhirAllergyIntolerance, 'id'>
+  observations!: EntityTable<FhirObservation, 'id'>
 
   constructor() {
     super('pharmacy-lite')
@@ -426,6 +431,17 @@ class PharmacyLiteDatabase extends Dexie {
           s['taxRateConvention'] = 'percent'
         })
       })
+
+    // v25: Patient clinical records captured by the shared registration/edit form
+    // (parity with OPD-Lite — nothing gated). `allergyIntolerances` is Tier-1
+    // append-only (Safety Rule #5); `observations` holds vitals as FHIR Observations.
+    // Index strings mirror OPD-Lite exactly. Both are PHI (encrypted below).
+    this.version(25).stores({
+      allergyIntolerances:
+        'id, patient.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      observations:
+        'id, encounter.reference, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+    })
   }
 }
 
@@ -440,6 +456,28 @@ class PharmacyLiteDatabase extends Dexie {
  * medicationDisplay and patient references (clinical content).
  */
 const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
+  {
+    // Patient allergies (clinical content) — mirrors OPD-Lite's config exactly.
+    tableName: 'allergyIntolerances',
+    indexedFields: [
+      'id',
+      'patient.reference',
+      'clinicalStatus.coding[0].code',
+      '_ultranos.hlcTimestamp',
+      'meta.lastUpdated',
+    ],
+  },
+  {
+    // Vitals as FHIR Observations (clinical content) — mirrors OPD-Lite's config.
+    tableName: 'observations',
+    indexedFields: [
+      'id',
+      'encounter.reference',
+      'subject.reference',
+      '_ultranos.hlcTimestamp',
+      'meta.lastUpdated',
+    ],
+  },
   {
     tableName: 'dispenses',
     indexedFields: [

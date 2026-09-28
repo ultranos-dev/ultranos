@@ -872,6 +872,10 @@ class LabLiteDatabase extends Dexie {
   /** v55 — worklist archive shelf markers (opaque specimen ids only). */
   archived_samples!: Dexie.Table<ArchivedSampleEntry, string>
   patients!: Dexie.Table<any, string>
+  // Patient clinical records captured by the shared registration/edit form (full
+  // access, product decision 2026-09-28). PHI → encrypted (see PHI_TABLE_CONFIGS).
+  allergyIntolerances!: Dexie.Table<any, string>
+  observations!: Dexie.Table<any, string>
   syncQueue!: Dexie.Table<any, string>
   // v4 — Reagent Waste & Expiry Tracking (Story 44.3)
   reagent_inventory!: Dexie.Table<ReagentInventoryEntry, number>
@@ -2091,6 +2095,14 @@ class LabLiteDatabase extends Dexie {
     this.version(58).stores({
       orderAckQueue: '&orderId, status, createdAt',
     })
+    // v59 — Patient clinical records captured by the shared registration/edit form
+    // (full access, product decision 2026-09-28). allergyIntolerances is Tier-1
+    // append-only; observations holds vitals as FHIR Observations. Both are PHI
+    // (encrypted below). Index paths mirror opd-lite/pharmacy.
+    this.version(59).stores({
+      allergyIntolerances: '&id, patient.reference, meta.lastUpdated',
+      observations: '&id, subject.reference, meta.lastUpdated',
+    })
   }
 }
 
@@ -2129,6 +2141,16 @@ class LabLiteDatabase extends Dexie {
 //                            orders / queueEntries, which ARE encrypted here.)
 // ---------------------------------------------------------------------------
 const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
+  {
+    // Patient allergies (clinical content) captured by the shared form.
+    tableName: 'allergyIntolerances',
+    indexedFields: ['id', 'patient.reference', 'meta.lastUpdated'],
+  },
+  {
+    // Vitals as FHIR Observations captured by the shared form.
+    tableName: 'observations',
+    indexedFields: ['id', 'subject.reference', 'meta.lastUpdated'],
+  },
   {
     // subject.reference is an opaque Patient ref; the rest of the FHIR specimen
     // (collection, notes, container) is encrypted.

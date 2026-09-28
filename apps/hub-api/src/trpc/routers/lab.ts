@@ -3140,6 +3140,9 @@ export const labRouter = createTRPCRouter({
         mpi_score: mpiResult.topScore,
         is_active:    true,
         patient_tier: 'FREE',
+        // Owning org = this lab's org. A lab is de-minimized for patients it
+        // registered (same-org), so the real ref is returned below (Rule #7).
+        org_id:       ctx.user.orgId ?? null,
         created_by:   ctx.user.sub,
         created_at:   now,
         updated_at:   now,
@@ -3193,8 +3196,10 @@ export const labRouter = createTRPCRouter({
         console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PATIENT', resourceId: confirmedPatientId })
       }
 
-      // Rule #7: the lab NEVER receives the real patient UUID — return the
-      // blind-index ref (prefixed, consistent with pullOrders/search).
+      // NOTE (2026-09-28): the shared patient registration/edit form uses the
+      // clinician-facing `patient.create`/`patient.update` transports (lab users now
+      // have full Hub access), NOT this endpoint — so this legacy lab.registerPatient
+      // path keeps its original opaque blind-index ref contract unchanged.
       return {
         ref: `Patient/${generateBlindIndex(confirmedPatientId, hmacKey)}`,
         mpiWarn,

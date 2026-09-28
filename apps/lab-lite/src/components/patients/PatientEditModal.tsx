@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import type { FhirPatient, FhirAllergyIntolerance } from '@ultranos/shared-types'
 import type { AllergyEntry } from '@ultranos/patient-kit/components/registration/allergies-section'
-import { PatientRegistrationForm } from '@/components/registration/PatientRegistrationForm'
+import { PatientRegistrationForm } from '@/components/patients/PatientRegistrationForm'
 import { loadPatientAllergies } from '@/lib/patient-clinical-store'
 
 interface PatientEditModalProps {
@@ -26,11 +26,9 @@ function toAllergyEntry(a: FhirAllergyIntolerance): AllergyEntry {
 }
 
 /**
- * Edit Patient Profile — renders the shared PatientRegistrationForm (pharmacy host
- * wrapper) in edit mode, pre-filled from this patient. Mirrors OPD-Lite exactly so
- * create and edit use the same modal + full form (nothing gated) and never diverge.
- * All form/submit logic lives in the shared component; this modal only loads the
- * patient's active allergies for the section's pre-fill.
+ * Edit Patient Profile — renders the shared PatientRegistrationForm (lab host wrapper)
+ * in edit mode, pre-filled from this patient. Mirrors OPD-Lite exactly so create and
+ * edit use the same modal + full form (nothing gated) and never diverge.
  */
 export function PatientEditModal({
   open,
@@ -40,10 +38,8 @@ export function PatientEditModal({
   onSaved,
 }: PatientEditModalProps) {
   const t = useTranslations('registration')
-  // null = still loading; an array (possibly empty) = ready to render the form.
   const [existingAllergies, setExistingAllergies] = useState<AllergyEntry[] | null>(null)
 
-  // Load the patient's active allergies when the modal opens (for prefill).
   useEffect(() => {
     if (!open) {
       setExistingAllergies(null)
@@ -59,7 +55,6 @@ export function PatientEditModal({
     }
   }, [open, patientId])
 
-  // Escape closes the modal.
   useEffect(() => {
     if (!open) return
     const handler = (e: KeyboardEvent) => {

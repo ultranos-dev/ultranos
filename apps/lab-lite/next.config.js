@@ -15,7 +15,7 @@ const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@ultranos/shared-types', '@ultranos/ui-kit', '@ultranos/sync-engine'],
+  transpilePackages: ['@ultranos/shared-types', '@ultranos/ui-kit', '@ultranos/patient-kit', '@ultranos/sync-engine'],
   webpack: (config) => {
     // NodeNext-style .js imports in workspace package source need to resolve to .ts/.tsx
     config.resolve.extensionAlias = {

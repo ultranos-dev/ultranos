@@ -89,15 +89,19 @@ describe('Notification Audit Events (AC: 10)', () => {
   // Dispatch audit behavior is covered by lab-register tests.
 
   it('emits audit event with action=UPDATE when notification is delivered', async () => {
-    // Mock list returning QUEUED notifications (scoped via .in on the caller's refs)
+    // Mock list returning QUEUED notifications (scoped via .in on the caller's refs).
+    // Production chains .in().order().order().range() (multi-sort + pagination).
+    const listResult = {
+      data: [
+        { id: 'n-1', type: 'LAB_RESULT_AVAILABLE', payload: '{}', status: 'QUEUED', created_at: new Date().toISOString(), delivered_at: null, acknowledged_at: null },
+      ],
+      error: null,
+    }
     mockSelect.mockReturnValue({
       in: vi.fn().mockReturnValue({
         order: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue({
-            data: [
-              { id: 'n-1', type: 'LAB_RESULT_AVAILABLE', payload: '{}', status: 'QUEUED', created_at: new Date().toISOString(), delivered_at: null, acknowledged_at: null },
-            ],
-            error: null,
+          order: vi.fn().mockReturnValue({
+            range: vi.fn().mockResolvedValue(listResult),
           }),
         }),
       }),

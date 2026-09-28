@@ -1,18 +1,24 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { PatientRegistrationForm } from '@/components/registration/PatientRegistrationForm'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { PatientCreateModal } from '@/components/patient/PatientCreateModal'
 
+/**
+ * Thin host route for the register-new-patient modal. Kept so the sidebar nav
+ * link, bookmarks, and the `?nameGiven=` deep-link still resolve to a real URL;
+ * the actual UI is the shared PatientCreateModal (same form as Edit Profile).
+ * Mirrors OPD-Lite exactly. Closing the modal returns to the previous view.
+ */
 export default function RegisterPatientPage() {
+  const router = useRouter()
   const searchParams = useSearchParams()
-  const t = useTranslations('registration')
   const prefilledName = searchParams.get('nameGiven') ?? ''
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold text-foreground">{t('registerNew')}</h1>
-      <PatientRegistrationForm prefilledNameGiven={prefilledName} />
-    </div>
+    <PatientCreateModal
+      open
+      prefilledNameGiven={prefilledName}
+      onClose={() => router.back()}
+    />
   )
 }

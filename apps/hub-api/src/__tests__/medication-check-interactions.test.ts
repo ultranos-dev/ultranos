@@ -171,18 +171,17 @@ describe('medication.checkInteractions', () => {
     ).rejects.toThrow('UNAUTHORIZED')
   })
 
-  it('rejects LAB_TECH (no MedicationRequest access) → FORBIDDEN', async () => {
-    const mockFrom = vi.fn((table: string) => {
-      if (table === 'organizations') return mockOrganizationsTable()
-      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
-      return { select: vi.fn().mockReturnValue({ eq: vi.fn() }) }
-    })
+  it('allows LAB_TECH — product decision 2026-09-28 grants lab full access (role-based access deferred)', async () => {
+    // Previously rejected LAB_TECH (no MedicationRequest access). LAB_TECH now has
+    // full '*' resource access at this stage (CLAUDE.md Rule #7), so it is no longer
+    // FORBIDDEN — it proceeds like any other authorized role.
+    const mockFrom = emptyPatientMock()
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: LAB_TECH_USER })
     const caller = createCaller(ctx)
 
     await expect(
       caller.medication.checkInteractions(DEFAULT_INPUT),
-    ).rejects.toThrow(/denied|forbidden/i)
+    ).resolves.toBeDefined()
   })
 
   // --- AC #1, #2, #3, #4: Core functionality ---

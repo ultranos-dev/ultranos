@@ -122,10 +122,12 @@ export const ROLE_PERMISSIONS: Record<string, Set<string>> = {
     'MedicationStatement',
     'GuardianLink',
   ]),
-  LAB_TECH: new Set([
-    'DiagnosticReport',
-    'Observation',
-  ]),
+  // Product decision 2026-09-28: at this stage lab-lite users get FULL, unrestricted
+  // access to all patient data + results — no role-based gating, no data minimization.
+  // Role-based access control will be layered on later. Previously limited to
+  // ['DiagnosticReport', 'Observation']; widened to '*' so the lab uses the exact same
+  // full patient workflow (create/read/update/photo/vitals/allergies) as every other app.
+  LAB_TECH: new Set(['*']),
   ADMIN: new Set(['*']),
   // Story 62.2: both admin variants retain full FHIR resource-type access. The
   // difference between them is enforced at the PROCEDURE level (cross-org gates

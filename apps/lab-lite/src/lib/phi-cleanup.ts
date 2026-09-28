@@ -68,6 +68,11 @@ export const PHI_TABLES = [
   'resultSnapshots',
   'custody_events',
   'distributionQueue',
+  // Patient clinical records captured by the shared registration/edit form (v59,
+  // full access 2026-09-28). Encrypted PHI cache cleared on logout — unsynced writes
+  // survive separately in syncQueue.
+  'allergyIntolerances',
+  'observations',
 ] as const
 
 /**

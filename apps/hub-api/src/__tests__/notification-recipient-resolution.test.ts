@@ -67,6 +67,10 @@ function makeSupabase(store: NotifRow[], practitioners: PracRow[]) {
       limit() {
         return Promise.resolve({ data: rows, error: null })
       },
+      range(from = 0, to?: number) {
+        const sliced = typeof to === 'number' ? rows.slice(from, to + 1) : rows.slice(from)
+        return Promise.resolve({ data: sliced, error: null })
+      },
       single() {
         return rows.length === 1
           ? Promise.resolve({ data: rows[0], error: null })
