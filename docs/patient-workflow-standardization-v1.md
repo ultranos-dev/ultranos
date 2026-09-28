@@ -266,7 +266,29 @@ submit logic (consent-required validation, allergy diff, vitals persist) via
 enabled sections; stubs for disabled ones), then delete the app's old form + point tests at
 the wrapper.** The per-app capability CONFIG is a product decision (see open question).
 
-**Open question — per-app capability configs:**
+**2026-09-28 — 2e pharmacy-lite register adoption DONE (verified).** Pharmacy's
+`components/registration/PatientRegistrationForm.tsx` is now a thin host wrapper over the
+shared form: a `PatientFormAdapter` (pharmacy Hub transport + `db.patients.put` of a reduced
+`LocalPatient` projection + offline via `enqueuePharmacySyncEntry` with the **full** payload,
+so no data is lost offline), `PatientFormExternals` (maps pharmacy's `auditPhiAccess(userId,…)`,
+its hlc, enc-error predicate; stubs the gated sections), and a pharmacy capability config
+(identity/demographics/nationalId/contact/address/social/consent enabled; photo/vitals/
+allergies gated off until pharmacy grows that infra). patient-kit wired into pharmacy
+(dep + transpilePackages + tailwind content). Merged 107 opd-lite `registration` i18n keys
+into pharmacy's 4 locales (opd-lite canonical). Verified: pharmacy typecheck clean; **1159
+tests green**; 4 locales valid. (Runtime/visual render verification via Playwright is a
+follow-up — pharmacy has no form-render test.)
+
+**Remaining:** pharmacy EDIT modal on the shared form (edit mode) + delete pharmacy's
+duplicate sections; then lab-lite; then share the create/edit modals + row-actions so
+buttons/actions match everywhere.
+
+**Resolved (per "all apps follow OPD-Lite"):**
+- Each app adopts the shared form via a host wrapper (adapter + externals + capability config
+  matching its infra). opd-lite = full; pharmacy = full minus photo/vitals/allergies (infra
+  follow-up); lab = its blind-ref/verify backend behind the adapter.
+
+**Prior open question — per-app capability configs (superseded above):**
 - **lab-lite:** MINIMIZED (identity + demographics + nationalId + contact only). ✔ clear.
 - **pharmacy-lite:** proposed = identity + demographics + nationalId + contact + **allergies**
   + **photo** (allergies matter for dispense-time interaction checks; pharmacy has photo-api),

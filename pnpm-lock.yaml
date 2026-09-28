@@ -675,6 +675,9 @@ importers:
       '@ultranos/hub-client':
         specifier: workspace:*
         version: link:../../packages/hub-client
+      '@ultranos/patient-kit':
+        specifier: workspace:*
+        version: link:../../packages/patient-kit
       '@ultranos/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types

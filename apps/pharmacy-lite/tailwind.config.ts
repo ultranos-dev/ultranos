@@ -6,6 +6,7 @@ const config: Config = {
   content: [
     './src/**/*.{ts,tsx}',
     '../../packages/ui-kit/src/**/*.{ts,tsx}',
+    '../../packages/patient-kit/src/**/*.{ts,tsx}',
   ],
   theme: {
     extend: {
