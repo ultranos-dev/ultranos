@@ -29,10 +29,13 @@ import { AllergiesSection, type AllergyEntry } from './allergies-section.js'
 import type {
   PatientFormAdapter,
   PatientFormExternals,
+  PatientFormCapabilities,
+  PatientFormSection,
   CheckDuplicatesResult,
   VitalRangeStatus as RangeStatus,
   VitalFieldKey as VitalKey,
 } from '../../types.js'
+import { isSectionVisible, fullFormCapabilities } from '../../capabilities.js'
 
 
 // ── Validation schema ────────────────────────────────────────────────────────
@@ -217,6 +220,8 @@ interface PatientRegistrationFormProps {
   adapter: PatientFormAdapter
   /** Non-data host deps (clinical vitals subsystem, allergy store, hlc, audit, photo). */
   externals: PatientFormExternals
+  /** Which sections render/are editable. Defaults to the full clinical set (opd-lite). */
+  capabilities?: PatientFormCapabilities
 }
 
 export function PatientRegistrationForm({
@@ -225,11 +230,15 @@ export function PatientRegistrationForm({
   onCancel,
   adapter,
   externals,
+  capabilities = fullFormCapabilities,
 }: PatientRegistrationFormProps) {
   const t = useTranslations('registration')
   const locale = useLocale()
   const isRtl = locale === 'ar' || locale === 'prs' || locale === 'ps'
   const editing = !!editContext
+  // Section visibility (capability-driven). Under the default full set every section shows,
+  // so opd-lite behavior is unchanged; pharmacy/lab pass reduced capabilities.
+  const show = (s: PatientFormSection) => isSectionVisible(capabilities, s)
   const {
     addAllergyToStore,
     updateAllergyStatus,
@@ -620,7 +629,7 @@ export function PatientRegistrationForm({
 
     // Consent is mandatory at registration (create) only. In edit mode it is an
     // optional point-of-care re-capture, so an empty consent section is valid.
-    if (!editing) {
+    if (!editing && show('consent')) {
       if (!consentMethod) errors.consentMethod = t('fieldRequired')
       if (!consentLanguage) errors.consentLanguage = t('fieldRequired')
     }
@@ -875,19 +884,21 @@ export function PatientRegistrationForm({
       }
 
       // Append-only allergy diff via the allergy store (add new/changed; deactivate removed).
-      const desired: AllergyEntry[] = noKnownAllergies
-        ? [{ substanceText: NKDA_SUBSTANCE, criticality: 'low' }]
-        : allergies.filter((a) => a.substanceText.trim())
-      const { toDeactivate, toAdd } = diffAllergies(desired, editContext.existingAllergies)
-      for (const id of toDeactivate) {
-        try { await updateAllergyStatus(id, 'inactive') } catch { /* best-effort */ }
-      }
-      for (const d of toAdd) {
-        try { await addAllergyToStore(buildFhirAllergy(editContext.patientId, d, 'CLINICIAN', serializeHlc(hlc.now()))) } catch { /* best-effort */ }
+      if (show('allergies')) {
+        const desired: AllergyEntry[] = noKnownAllergies
+          ? [{ substanceText: NKDA_SUBSTANCE, criticality: 'low' }]
+          : allergies.filter((a) => a.substanceText.trim())
+        const { toDeactivate, toAdd } = diffAllergies(desired, editContext.existingAllergies)
+        for (const id of toDeactivate) {
+          try { await updateAllergyStatus(id, 'inactive') } catch { /* best-effort */ }
+        }
+        for (const d of toAdd) {
+          try { await addAllergyToStore(buildFhirAllergy(editContext.patientId, d, 'CLINICIAN', serializeHlc(hlc.now()))) } catch { /* best-effort */ }
+        }
       }
 
       // Vitals — record a new (append-only) patient-scoped snapshot only if changed.
-      if (vitalsChanged()) {
+      if (show('vitals') && vitalsChanged()) {
         await persistVitals(editContext.patientId)
       }
 
@@ -997,7 +1008,7 @@ export function PatientRegistrationForm({
             }
           }
           await uploadPhotoIfPresent(created.id)
-          await persistVitals(created.id)
+          if (show('vitals')) await persistVitals(created.id)
           navigate(`/${locale}/patient/${created.id}`)
         } else {
           setMpiDecision(dupeResult.decision as 'WARN' | 'BLOCK')
@@ -1055,7 +1066,7 @@ export function PatientRegistrationForm({
           }
         }
         await uploadPhotoIfPresent(created.id)
-        await persistVitals(created.id)
+        if (show('vitals')) await persistVitals(created.id)
         navigate(`/${locale}/patient/${created.id}`)
       } catch (err) {
         // Same offline fallback as handleSubmit: a connectivity failure while
@@ -1169,6 +1180,7 @@ export function PatientRegistrationForm({
         )}
         {/* 1. Identity — photo first, then names (grouped for verification).
             Create: deferred local capture. Edit: immediate upload to the patient. */}
+        {show('photo') && (
         <PatientPhotoSection
           photoDataUrl={photoDataUrl}
           onPhotoChange={setPhotoDataUrl}
@@ -1176,6 +1188,7 @@ export function PatientRegistrationForm({
           lastKnownUpdate={editContext?.lastKnownUpdate}
           photoApi={photoApi}
         />
+        )}
 
         {/* 2. Name section */}
         <NameInputSection
@@ -1383,6 +1396,7 @@ export function PatientRegistrationForm({
         </Card>
 
         {/* 3b. Vitals — recorded as patient-scoped Observations (BMI auto-derived) */}
+        {show('vitals') && (
         <Card as="fieldset">
           <legend className="text-base font-bold text-foreground">{t('vitalsSection')}</legend>
           <div className="mt-2">
@@ -1402,14 +1416,17 @@ export function PatientRegistrationForm({
             />
           </div>
         </Card>
+        )}
 
         {/* 4. Allergies — safety-critical, prominent, never collapsed (Rule #4) */}
+        {show('allergies') && (
         <AllergiesSection
           noKnownAllergies={noKnownAllergies}
           allergies={allergies}
           onNoKnownAllergiesChange={setNoKnownAllergies}
           onAllergiesChange={setAllergies}
         />
+        )}
 
         {/* 5. Contact & Identification — National ID (+ type), Household ID, Phone, Language */}
         <Card as="fieldset">
@@ -1587,6 +1604,7 @@ export function PatientRegistrationForm({
         </Card>
 
         {/* 4. Geography section */}
+        {show('address') && (
         <GeographySection
           origin={addressOrigin}
           current={addressCurrent}
@@ -1603,8 +1621,10 @@ export function PatientRegistrationForm({
             currentDistrict: fieldErrors.addressCurrentDistrict,
           }}
         />
+        )}
 
-        {/* 7. Social / HMIS section — always visible */}
+        {/* 7. Social / HMIS section */}
+        {show('social') && (
         <SocialInfoSection
           displacementCategory={displacementCategory}
           nationality={nationality}
@@ -1617,6 +1637,7 @@ export function PatientRegistrationForm({
           onEducationLevelChange={setEducationLevel}
           onDisabilityChange={setDisability}
         />
+        )}
 
         {/* 8. Emergency contact section — always visible */}
         <div id="emergency-contacts-anchor">
@@ -1634,7 +1655,8 @@ export function PatientRegistrationForm({
           />
         </div>
 
-        {/* 9. Consent section — always visible, never collapsed */}
+        {/* 9. Consent section */}
+        {show('consent') && (
         <ConsentSection
           method={consentMethod}
           witnessedBy={consentWitnessedBy}
@@ -1648,6 +1670,7 @@ export function PatientRegistrationForm({
             language: fieldErrors.consentLanguage,
           }}
         />
+        )}
 
         {/* Submit error */}
         {submitError && (

@@ -247,9 +247,32 @@ patient-photo-section, consent-text-modal, clinical-dashboard, patient-directory
 pass through the moved form.
 
 **opd-lite Phase-1 extraction is DONE** — every registration component + the orchestrator
-live in patient-kit; opd-lite is a thin host. Next: 2e (pharmacy-lite) + 2f (lab-lite,
-MINIMIZED caps) provide their own thin wrappers against the same adapter/externals contract.
-(Minor cleanup: patient-kit's `next` peer/devDep is now unused — navigation is injected.)
+live in patient-kit; opd-lite is a thin host.
+
+**2026-09-28 — 2e/2f enabler: form is now CAPABILITY-AWARE.** The shared form takes an
+optional `capabilities` prop (default `fullFormCapabilities` = opd-lite unchanged) and gates
+the six optional sections — photo, address, social, allergies, vitals, consent — plus their
+submit logic (consent-required validation, allergy diff, vitals persist) via
+`isSectionVisible`. Under full caps every `show()` is true, so opd-lite is a verified no-op
+(guard net 42 + patient-kit 8 green; both typecheck clean). This unblocks pharmacy/lab, which
+**lack** opd-lite's vitals/allergy(/photo) infra — confirmed by survey:
+- pharmacy-lite: has hlc, audit-emitter, patient-photo-api, patient-register; MISSING
+  VitalsForm, allergy-store, vitals-fhir-mapper, offline-registration.
+- lab-lite: has hlc; MISSING VitalsForm, allergy-store, patient-photo-api, vitals-mapper,
+  offline-registration (has patient-register-offline). MINIMIZED by Rule #7.
+
+**Remaining 2e/2f (per app): a thin wrapper providing (a) a `capabilities` config, (b) a
+`PatientFormAdapter` over that app's backend, (c) `PatientFormExternals` (real impls for
+enabled sections; stubs for disabled ones), then delete the app's old form + point tests at
+the wrapper.** The per-app capability CONFIG is a product decision (see open question).
+
+**Open question — per-app capability configs:**
+- **lab-lite:** MINIMIZED (identity + demographics + nationalId + contact only). ✔ clear.
+- **pharmacy-lite:** proposed = identity + demographics + nationalId + contact + **allergies**
+  + **photo** (allergies matter for dispense-time interaction checks; pharmacy has photo-api),
+  but NOT vitals/address/social/consent. NEEDS CONFIRMATION — and pharmacy currently lacks an
+  allergy store, so enabling allergies means either adding one or an adapter-backed allergy
+  write. (Minor cleanup still pending: patient-kit's unused `next` peer/devDep.)
 
 - **After 2d:** 2e (pharmacy-lite) + 2f (lab-lite, MINIMIZED caps) adopt the shared form.
 
