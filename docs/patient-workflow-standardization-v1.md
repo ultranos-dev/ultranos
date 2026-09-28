@@ -213,11 +213,22 @@ transport layer — pharmacy/lab differ here). The form imports them; call sites
 Verified against the guard net: opd-lite typecheck clean; patient-registration +
 patient-modals = 34 green.
 
-**Remaining (final 2d step):** the form's STATEFUL ops (`savePatientLocally`,
-`registerOffline`, `uploadPhotoIfPresent`, `persistVitals`) close over React state + Dexie,
-so they become adapter METHODS taking explicit inputs (form builds inputs from state). Then
-inject the allergy-store actions + shared `VitalsForm` + hlc + audit, add `next` peer, and
-move the orchestrator into patient-kit — verified against this guard net.
+**2026-09-28 — 2d adapter (data layer) DONE.** All form data ops now route through one
+`OpdPatientAdapter` (`apps/opd-lite/src/lib/opd-patient-adapter.ts`): Hub transport
+(checkDuplicates/create/update/recordConsent/isNetworkError) + local persistence
+(`savePatient`), offline registration (`registerOffline`), photo upload (`uploadPhoto`), and
+vitals write (`saveObservations`). The form builds inputs from state and calls `adapter.X`;
+the adapter is created once via `useMemo` (in-place — form still in opd-lite). Removed the
+form's direct data-lib imports (offline-registration, sync-queue, sync-engine, dataUrlToBlob,
+hub-auth). Verified: opd-lite typecheck clean; the guard net (34) exercises the create /
+offline / update / consent paths THROUGH the adapter and stays green.
+
+**Remaining (final 2d step — mechanical):** convert `adapter` from a useMemo to an injected
+PROP; inject the remaining non-data deps the form still imports (shared `VitalsForm`,
+`useAllergyStore` actions, hlc/serializeHlc, auditPhiAccess, `EncryptionKeyNotAvailableError`
+predicate, vitals mapper/config), add `next` as a patient-kit peer, then move the
+orchestrator file into patient-kit + point opd-lite at it via a thin wrapper that assembles
+those deps. Verified against this same guard net.
 
 - **After 2d:** 2e (pharmacy-lite) + 2f (lab-lite, MINIMIZED caps) adopt the shared form.
 

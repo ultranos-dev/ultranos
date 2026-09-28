@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { z } from 'zod'
@@ -24,12 +24,9 @@ import { MpiResultModal } from '@ultranos/patient-kit/components/registration/mp
 import { SocialInfoSection } from '@ultranos/patient-kit/components/registration/social-info-section'
 import { EmergencyContactSection } from '@ultranos/patient-kit/components/registration/emergency-contact-section'
 import { AllergiesSection, type AllergyEntry } from '@ultranos/patient-kit/components/registration/allergies-section'
-import { getHubApiUrl, getAuthHeaders } from '@/lib/hub-auth'
-import { uploadPatientPhoto, removePatientPhoto, getPatientPhotoUrl, dataUrlToBlob } from '@/lib/patient-photo-api'
+import { uploadPatientPhoto, removePatientPhoto, getPatientPhotoUrl } from '@/lib/patient-photo-api'
 import { useAllergyStore } from '@/stores/allergy-store'
 import { hlc, serializeHlc } from '@/lib/hlc'
-import { enqueueSyncAction } from '@ultranos/sync-engine'
-import { syncQueue } from '@/lib/sync-queue'
 import { calculateBMI } from '@ultranos/shared-types'
 import { VitalsForm, type RangeStatus } from '@/components/clinical/vitals-form'
 import { mapVitalsToObservations, LOINC } from '@/lib/vitals-fhir-mapper'
@@ -39,15 +36,7 @@ import type { FhirAllergyIntolerance } from '@ultranos/shared-types'
 import { Card } from '@/components/Card'
 import { db } from '@/lib/db'
 import { EncryptionKeyNotAvailableError } from '@/lib/encryption-key-store'
-import { registerPatientOffline } from '@/lib/offline-registration'
-import {
-  checkDuplicates,
-  createPatient,
-  updatePatient,
-  recordConsentPoc,
-  isNetworkError,
-  type CheckDuplicatesResult,
-} from '@/lib/opd-patient-network'
+import { createOpdPatientAdapter, type CheckDuplicatesResult } from '@/lib/opd-patient-adapter'
 import type { FhirPatient } from '@ultranos/shared-types'
 
 
@@ -243,6 +232,11 @@ export function PatientRegistrationForm({
   const editing = !!editContext
   const addAllergyToStore = useAllergyStore((s) => s.addAllergy)
   const updateAllergyStatus = useAllergyStore((s) => s.updateAllergyStatus)
+
+  // Single data seam for all patient create/edit/persist operations. Created once;
+  // when this form moves into @ultranos/patient-kit this becomes an injected prop so
+  // pharmacy/lab can supply their own implementations (see docs §6.6).
+  const adapter = useMemo(() => createOpdPatientAdapter(), [])
 
   // ── Form state ──
   const [nameGiven, setNameGiven] = useState(prefilledNameGiven)
@@ -719,7 +713,7 @@ export function PatientRegistrationForm({
     async (id: string, now: string) => {
       const patient = buildLocalPatient(id, now)
       try {
-        await db.patients.put(patient)
+        await adapter.savePatient(patient)
       } catch (err) {
         if (err instanceof EncryptionKeyNotAvailableError) {
           throw err
@@ -741,7 +735,7 @@ export function PatientRegistrationForm({
       // (which already carries `consent`) plus offlineCreatedAt. mpiProceedToken
       // is meaningless offline — the Hub re-runs MPI at drain — so drop it.
       const { mpiProceedToken: _drop, ...syncPayload } = payload
-      await registerPatientOffline(
+      await adapter.registerOffline(
         provisionalId,
         localPatient,
         { ...syncPayload, offlineCreatedAt: now },
@@ -761,8 +755,7 @@ export function PatientRegistrationForm({
     async (patientId: string) => {
       if (!photoDataUrl) return
       try {
-        const blob = dataUrlToBlob(photoDataUrl)
-        await uploadPatientPhoto(patientId, blob, new Date().toISOString())
+        await adapter.uploadPhoto(patientId, photoDataUrl)
       } catch {
         // Swallow — the clinician can add the photo later from the patient profile.
       }
@@ -785,22 +778,13 @@ export function PatientRegistrationForm({
           { patientId, hlcTimestamp: serializeHlc(hlc.now()), nowIso: new Date().toISOString() },
         )
         if (observations.length === 0) return
-        await db.observations.bulkAdd(observations)
+        await adapter.saveObservations(observations)
         // Rule #6 — audit the local PHI write (opaque ids only). The sync-worker
         // emits a separate SYNC audit when these push to the Hub.
         auditPhiAccess(AuditAction.CREATE, AuditResourceType.OBSERVATION, patientId, patientId, {
           phiAccess: 'vitals_capture',
           source: editing ? 'profile_edit' : 'registration',
         })
-        for (const o of observations) {
-          void enqueueSyncAction(syncQueue, {
-            resourceType: 'Observation',
-            resourceId: o.id,
-            action: 'create',
-            payload: o as unknown as Record<string, unknown>,
-            hlcTimestamp: o._ultranos.hlcTimestamp,
-          })
-        }
       } catch {
         // Best-effort — a vitals write must never fail the patient create/update.
       }
@@ -863,7 +847,7 @@ export function PatientRegistrationForm({
         // Only re-hashed server-side if the clinician typed a new value (blank = unchanged).
         nationalId: nationalId || undefined,
       }
-      const res = await updatePatient(updateInput)
+      const res = await adapter.updatePatient(updateInput)
       const now = res.meta?.lastUpdated ?? new Date().toISOString()
 
       // Optional point-of-care consent re-capture — append a new grant ONLY when the
@@ -875,7 +859,7 @@ export function PatientRegistrationForm({
           consentLanguage !== originalConsentRef.current.language)
       if (consentChanged) {
         try {
-          await recordConsentPoc({
+          await adapter.recordConsent({
             patientId: editContext.patientId,
             method: consentMethod,
             language: consentLanguage,
@@ -993,10 +977,10 @@ export function PatientRegistrationForm({
           addressDistrictOrigin: (payload.addressOrigin as { district?: string } | undefined)?.district,
           addressProvinceOrigin: (payload.addressOrigin as { province?: string } | undefined)?.province,
         }
-        const dupeResult = await checkDuplicates(dupeCheckInput)
+        const dupeResult = await adapter.checkDuplicates(dupeCheckInput)
 
         if (dupeResult.decision === 'ALLOW') {
-          const created = await createPatient(payload)
+          const created = await adapter.createPatient(payload)
           try {
             await savePatientLocally(created.id, new Date().toISOString())
           } catch (saveErr) {
@@ -1019,7 +1003,7 @@ export function PatientRegistrationForm({
         // Network-class failure mid-submit → fall back to offline registration
         // rather than throwing (the "pull the ethernet cable" test). A hub 4xx/5xx
         // with a real message (e.g. a BLOCK PRECONDITION) is surfaced, not swallowed.
-        if (isNetworkError(err)) {
+        if (adapter.isNetworkError(err)) {
           try {
             const provisionalId = await registerOffline(payload)
             router.push(`/${locale}/patient/${provisionalId}`)
@@ -1054,7 +1038,7 @@ export function PatientRegistrationForm({
 
       const payload = buildPayload(token)
       try {
-        const created = await createPatient(payload)
+        const created = await adapter.createPatient(payload)
         try {
           await savePatientLocally(created.id, new Date().toISOString())
         } catch (saveErr) {
@@ -1072,7 +1056,7 @@ export function PatientRegistrationForm({
         // confirming a WARN override registers the patient locally instead of
         // stranding the clinician. The provisional proceedToken is dropped —
         // the Hub re-runs MPI at drain.
-        if (isNetworkError(err)) {
+        if (adapter.isNetworkError(err)) {
           try {
             const provisionalId = await registerOffline(payload)
             router.push(`/${locale}/patient/${provisionalId}`)
