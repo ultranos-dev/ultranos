@@ -10,8 +10,10 @@ import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
 import { Users, UserCheck, AlertTriangle, Clock, FileSearch, ChevronUp, ChevronDown } from '@ultranos/ui-kit/icons'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { formatDate, formatRelativeTime } from '@ultranos/ui-kit'
+import { highlightQuery } from '@ultranos/ui-kit/lib/highlight'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { db } from '@/lib/db'
+import { hashNationalId } from '@/lib/hash-national-id'
 import type { LocalPatient } from '@/lib/db'
 import type { FhirPatient } from '@ultranos/shared-types'
 import { usePatientListSync } from '@/lib/use-patient-list-sync'
@@ -40,6 +42,7 @@ interface PatientRow {
   hasActiveEncounter: boolean
   hasAllergies: boolean
   hasNationalId: boolean
+  nationalIdHash: string | null
   lastUpdated: string | null
   photoKey: string | null
 }
@@ -121,6 +124,9 @@ export function PatientDirectory() {
 
   // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  // HMAC blind-index of the debounced query, so the directory can also match by
+  // National ID (the raw NID is never stored — only its hash). Computed async.
+  const [searchIdHash, setSearchIdHash] = useState<string | null>(null)
 
   // Signed photo URLs for the current page's patients (key → signed URL).
   // Built once per page change, falls back gracefully when offline.
@@ -133,6 +139,17 @@ export function PatientDirectory() {
     }, 300)
     return () => clearTimeout(timer)
   }, [searchQuery])
+
+  // Hash the (debounced) query for National-ID matching — best-effort, async.
+  useEffect(() => {
+    const q = debouncedSearch.trim()
+    if (!q) { setSearchIdHash(null); return }
+    let cancelled = false
+    hashNationalId(q)
+      .then((h) => { if (!cancelled) setSearchIdHash(h) })
+      .catch(() => { if (!cancelled) setSearchIdHash(null) })
+    return () => { cancelled = true }
+  }, [debouncedSearch])
 
   // Read patients + allergy/encounter aux data from local IndexedDB. Reused on
   // mount, after the Hub sync, and on tab re-focus so the allergy column and
@@ -242,6 +259,7 @@ export function PatientDirectory() {
       hasActiveEncounter: activeEncounterIds.has(p.id),
       hasAllergies: allergyPatientIds.has(p.id) || (p._ultranos?.hasAllergies ?? false),
       hasNationalId: !!(p._ultranos?.hasNationalId || p._ultranos?.nationalIdHash),
+      nationalIdHash: p._ultranos?.nationalIdHash ?? null,
       lastUpdated: (p.meta?.lastUpdated as string) ?? null,
       photoKey: p._ultranos?.photoUrl ?? null,
     }))
@@ -267,13 +285,15 @@ export function PatientDirectory() {
   const filtered = useMemo(() => {
     let result = rows
 
-    // Text search
+    // Text search — name, phone, patient ID (uuid), or National ID (blind-index hash)
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase()
       result = result.filter(
         (r) =>
           r.name.toLowerCase().includes(q) ||
-          r.phone.toLowerCase().includes(q)
+          r.phone.toLowerCase().includes(q) ||
+          r.id.toLowerCase().includes(q) ||
+          (!!searchIdHash && r.nationalIdHash === searchIdHash)
       )
     }
 
@@ -306,7 +326,7 @@ export function PatientDirectory() {
     }
 
     return result
-  }, [rows, debouncedSearch, statusFilter, allergyFilter, visitFilter])
+  }, [rows, debouncedSearch, searchIdHash, statusFilter, allergyFilter, visitFilter])
 
   // Sort
   const sorted = useMemo(() => {
@@ -691,8 +711,11 @@ export function PatientDirectory() {
                           name={row.nameSegments.length > 0 ? row.nameSegments.join(' ') : row.name}
                           size={28}
                         />
-                        <span>
-                          {row.nameSegments.length > 0 ? row.nameSegments.join(' ') : row.name}
+                        <span dir="auto">
+                          {highlightQuery(
+                            row.nameSegments.length > 0 ? row.nameSegments.join(' ') : row.name,
+                            debouncedSearch,
+                          )}
                         </span>
                         {!row.hasNationalId && (
                           <span className="inline-flex rounded-full bg-warning/20 px-2 py-0.5 text-xs font-semibold text-warning">

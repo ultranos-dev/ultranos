@@ -1,9 +1,12 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
-import { usePatientSearch } from '@/hooks/usePatientSearch'
-import { PatientSearchResults } from './PatientSearchResults'
+import {
+  PatientSearchBar as SharedPatientSearchBar,
+  type PatientSearchResult,
+} from '@ultranos/patient-kit/components/search/patient-search-bar'
+import { searchPatientsAdapter } from '@/lib/patient-search-adapter'
+import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
 import type { LocalPatient } from '@/lib/db'
 
 interface PatientSearchBarProps {
@@ -11,38 +14,31 @@ interface PatientSearchBarProps {
   onRegisterNew: (prefillName?: string) => void
 }
 
+/**
+ * Pharmacy patient search — now the shared `PatientSearchBar` (identical to every
+ * other app): as-you-type match highlighting, photos, and name / phone / patient-ID
+ * search (National ID resolved via the Hub). Data comes from the pharmacy adapter.
+ */
 export function PatientSearchBar({ onSelectPatient, onRegisterNew }: PatientSearchBarProps) {
   const t = useTranslations('patientSearch')
-  const { query, setQuery, results, isSearching, hasSearched } = usePatientSearch()
 
   return (
-    <div className="relative" data-testid="patient-search-bar">
-      <div className="relative">
-        <SearchInput
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t('placeholder')}
-          className="w-full"
-          inputClassName="h-9 rounded-full"
-          data-testid="patient-search-input"
-          autoComplete="off"
-        />
-        {isSearching && (
-          <div className="absolute end-11 top-1/2 -translate-y-1/2">
-            <span className="inline-block h-4 w-4 animate-spin motion-reduce:animate-none rounded-full border-2 border-primary-200 border-t-primary-600" />
-          </div>
-        )}
-      </div>
-
-      {hasSearched && (
-        <PatientSearchResults
-          results={results}
-          query={query}
-          onSelect={onSelectPatient}
-          onRegisterNew={() => onRegisterNew(query)}
-        />
-      )}
+    <div data-testid="patient-search-bar">
+      <SharedPatientSearchBar
+        search={searchPatientsAdapter}
+        onSelect={(r: PatientSearchResult) => onSelectPatient(r.raw as LocalPatient)}
+        onRegisterNew={(q) => onRegisterNew(q)}
+        resolvePhotoUrl={getPatientPhotoUrl}
+        placeholder={t('placeholder')}
+        searchingLabel={t('searching')}
+        noResultsLabel={t('noResults')}
+        registerNewLabel={t('registerNew')}
+        allergyLabel={t('allergies')}
+        minChars={2}
+        debounceMs={300}
+        inputClassName="h-9 rounded-full"
+        data-testid="patient-search-input"
+      />
     </div>
   )
 }

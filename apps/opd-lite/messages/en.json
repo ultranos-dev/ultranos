@@ -1179,7 +1179,13 @@
     "removeContact": "Remove contact",
     "unsavedChanges": "Unsaved changes",
     "additionalInfoSection": "Additional information (optional)",
-    "errorCount": "{count, plural, one {1 field needs attention} other {{count} fields need attention}}"
+    "errorCount": "{count, plural, one {1 field needs attention} other {{count} fields need attention}}",
+    "groupPersonal": "Personal",
+    "groupClinical": "Clinical",
+    "groupContact": "Contact",
+    "groupConsent": "Consent",
+    "sectionsNavLabel": "Form sections",
+    "islandNewPatient": "New patient"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -1199,7 +1205,7 @@
   },
   "patients": {
     "title": "Patient Directory",
-    "searchPlaceholder": "Search by name or phone...",
+    "searchPlaceholder": "Search by name, ID, or National ID...",
     "name": "Name",
     "age": "Age",
     "gender": "Gender",

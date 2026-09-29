@@ -583,6 +583,8 @@ describe('PatientRegistrationForm — edit mode', () => {
 
   it('reveals an empty National ID input when the masked field is clicked', () => {
     renderForm({ editContext: makeEditContext() })
+    // National ID lives in the Contact tab — switch to it before interacting.
+    fireEvent.click(screen.getByRole('tab', { name: 'groupContact' }))
     fireEvent.click(screen.getByRole('button', { name: /nationalIdReplaceHint/i }))
     const input = document.getElementById('national-id') as HTMLInputElement
     expect(input).not.toBeNull()

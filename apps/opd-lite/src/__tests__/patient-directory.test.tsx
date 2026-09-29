@@ -19,7 +19,7 @@ vi.mock('next-intl', () => ({
   useTranslations: () => {
     const messages: Record<string, string> = {
       title: 'Patient Directory',
-      searchPlaceholder: 'Search by name or phone...',
+      searchPlaceholder: 'Search by name, ID, or National ID...',
       name: 'Name',
       age: 'Age',
       gender: 'Gender',
@@ -322,13 +322,21 @@ describe('PatientDirectory', () => {
       expect(screen.getByText('Ahmad Khan')).toBeDefined()
     })
 
-    const searchInput = screen.getByPlaceholderText('Search by name or phone...')
+    const searchInput = screen.getByPlaceholderText('Search by name, ID, or National ID...')
     fireEvent.change(searchInput, { target: { value: 'Fatima' } })
 
-    // Wait for debounce
+    // Wait for debounce. The matched name is now highlighted (split across a <mark>
+    // and text nodes), so match the name cell's own span by its full textContent.
     await vi.waitFor(() => {
       expect(screen.queryByText('Ahmad Khan')).toBeNull()
-      expect(screen.getByText('Fatima Ali')).toBeDefined()
+      expect(
+        screen.getByText(
+          (_, el) =>
+            el?.tagName === 'SPAN' &&
+            el.getAttribute('dir') === 'auto' &&
+            el.textContent === 'Fatima Ali',
+        ),
+      ).toBeDefined()
     }, { timeout: 1000 })
   })
 

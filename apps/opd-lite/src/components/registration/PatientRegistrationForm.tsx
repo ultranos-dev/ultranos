@@ -33,6 +33,8 @@ interface PatientRegistrationFormProps {
   prefilledNameGiven?: string
   editContext?: RegistrationEditContext
   onCancel?: () => void
+  /** Modal layout: fixed island header + scrolling sections + locked footer. */
+  fillHeight?: boolean
 }
 
 export function PatientRegistrationForm(props: PatientRegistrationFormProps) {

@@ -1179,7 +1179,13 @@
     "photoCropSizeError": "لا تزال الصورة أكبر من 1 ميجابايت بعد الاقتصاص. يرجى تجربة صورة مصدر أصغر.",
     "contactSection": "الاتصال والتعريف",
     "additionalInfoSection": "معلومات إضافية (اختياري)",
-    "errorCount": "{count, plural, one {حقل واحد يحتاج إلى الانتباه} other {{count} حقول تحتاج إلى الانتباه}}"
+    "errorCount": "{count, plural, one {حقل واحد يحتاج إلى الانتباه} other {{count} حقول تحتاج إلى الانتباه}}",
+    "groupPersonal": "شخصي",
+    "groupClinical": "سريري",
+    "groupContact": "الاتصال",
+    "groupConsent": "الموافقة",
+    "sectionsNavLabel": "أقسام النموذج",
+    "islandNewPatient": "مريض جديد"
   },
   "sidebar": {
     "dashboard": "لوحة المعلومات",
@@ -1199,7 +1205,7 @@
   },
   "patients": {
     "title": "دليل المرضى",
-    "searchPlaceholder": "بحث بالاسم أو رقم الهاتف...",
+    "searchPlaceholder": "ابحث بالاسم أو المعرف أو الهوية الوطنية...",
     "name": "الاسم",
     "age": "العمر",
     "gender": "الجنس",

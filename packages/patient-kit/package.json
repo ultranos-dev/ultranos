@@ -23,7 +23,8 @@
     "./components/registration/patient-registration-form": "./src/components/registration/patient-registration-form.tsx",
     "./components/clinical/vitals-form": "./src/components/clinical/vitals-form.tsx",
     "./lib/vitals-config": "./src/lib/vitals-config.ts",
-    "./lib/vitals-fhir-mapper": "./src/lib/vitals-fhir-mapper.ts"
+    "./lib/vitals-fhir-mapper": "./src/lib/vitals-fhir-mapper.ts",
+    "./components/search/patient-search-bar": "./src/components/search/patient-search-bar.tsx"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

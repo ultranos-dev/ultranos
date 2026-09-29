@@ -931,7 +931,13 @@
     "photoCropSizeError": "عکس پس از برش هنوز بیش از ۱ مگابایت است. لطفاً تصویر منبع کوچک‌تری امتحان کنید.",
     "contactSection": "تماس و شناسایی",
     "additionalInfoSection": "معلومات اضافی (اختیاری)",
-    "errorCount": "{count, plural, one {۱ فیلد نیاز به توجه دارد} other {{count} فیلد نیاز به توجه دارند}}"
+    "errorCount": "{count, plural, one {۱ فیلد نیاز به توجه دارد} other {{count} فیلد نیاز به توجه دارند}}",
+    "groupPersonal": "شخصی",
+    "groupClinical": "کلینیکی",
+    "groupContact": "تماس",
+    "groupConsent": "رضایت",
+    "sectionsNavLabel": "بخش‌های فرم",
+    "islandNewPatient": "بیمار جدید"
   },
   "dashboard": {
     "findOrRegisterPatient": "جستجو یا ثبت مریض",
@@ -1444,11 +1450,15 @@
     "unknownBody": "سابقه حساسیت این مریض به دست نیامد. پیش از تحویل دوا، حساسیت‌ها را به صورت شفاهی از مریض تایید کنید."
   },
   "patientSearch": {
-    "placeholder": "جستجوی مریض بر اساس نام یا تلفن...",
+    "placeholder": "جستجو با نام، تلفن یا شناسه…",
     "clearProvince": "پاک کردن ولایت",
     "clearDistrict": "پاک کردن ولسوالی",
     "noMatchingProvince": "هیچ ولایت مطابقی یافت نشد",
-    "noMatchingDistrict": "هیچ ولسوالی مطابقی یافت نشد"
+    "noMatchingDistrict": "هیچ ولسوالی مطابقی یافت نشد",
+    "searching": "در حال جستجو…",
+    "noResults": "بیماری یافت نشد",
+    "registerNew": "+ ثبت بیمار جدید",
+    "allergies": "حساسیت‌ها"
   },
   "languageSelector": {
     "ariaLabel": "انتخاب زبان",

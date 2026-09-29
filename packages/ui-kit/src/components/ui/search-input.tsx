@@ -29,8 +29,31 @@ export interface SearchInputProps
 }
 
 /**
+ * First strong directional character of `value` → its writing direction. Used to
+ * flip the WRAPPER (and thus the trailing magnifier button) to match RTL content
+ * typed into an otherwise-LTR app: without this, an Arabic/Pashto/Dari name is
+ * right-aligned by the input's own bidi while the button stays on the right, so
+ * the text renders *behind* the button. Returns undefined for neutral/empty input
+ * (the wrapper then inherits the document direction).
+ */
+function resolveContentDir(value: unknown): 'rtl' | 'ltr' | undefined {
+  if (typeof value !== 'string') return undefined
+  for (const ch of value) {
+    const c = ch.codePointAt(0)
+    if (c === undefined) continue
+    // Hebrew, Arabic, Syriac, Thaana, NKo + Arabic presentation forms → RTL.
+    if ((c >= 0x0590 && c <= 0x08ff) || (c >= 0xfb1d && c <= 0xfdff) || (c >= 0xfe70 && c <= 0xfeff)) return 'rtl'
+    // Latin letters (Basic + Latin-1 Supplement + Extended-A/B) → LTR.
+    if ((c >= 0x0041 && c <= 0x005a) || (c >= 0x0061 && c <= 0x007a) || (c >= 0x00c0 && c <= 0x024f)) return 'ltr'
+  }
+  return undefined
+}
+
+/**
  * Search field with a trailing circular magnifier button (inline-end, RTL-safe).
  * Built from the shared ui-kit `Input` + `Button` so it matches the design system.
+ * The wrapper's direction follows the typed content so the button and the text are
+ * always on opposite ends — text is never hidden behind the button, in any locale.
  */
 function SearchInput({
   className,
@@ -44,9 +67,10 @@ function SearchInput({
   // Button label is decoupled from the input's aria-label/placeholder so the
   // input and its magnifier button never expose the same accessible name.
   const label = searchLabel ?? 'Search'
+  const contentDir = resolveContentDir(props.value)
 
   return (
-    <div className={cn('relative flex items-center', className)}>
+    <div dir={contentDir} className={cn('relative flex items-center', className)}>
       <Input
         type={type}
         // pe-11 reserves room for the trailing button so text never runs under it

@@ -931,7 +931,13 @@
     "photoCropSizeError": "لا تزال الصورة أكبر من 1 ميجابايت بعد الاقتصاص. يرجى تجربة صورة مصدر أصغر.",
     "contactSection": "الاتصال والتعريف",
     "additionalInfoSection": "معلومات إضافية (اختياري)",
-    "errorCount": "{count, plural, one {حقل واحد يحتاج إلى الانتباه} other {{count} حقول تحتاج إلى الانتباه}}"
+    "errorCount": "{count, plural, one {حقل واحد يحتاج إلى الانتباه} other {{count} حقول تحتاج إلى الانتباه}}",
+    "groupPersonal": "شخصي",
+    "groupClinical": "سريري",
+    "groupContact": "الاتصال",
+    "groupConsent": "الموافقة",
+    "sectionsNavLabel": "أقسام النموذج",
+    "islandNewPatient": "مريض جديد"
   },
   "dashboard": {
     "findOrRegisterPatient": "البحث عن مريض أو تسجيله",
@@ -1444,11 +1450,15 @@
     "unknownBody": "تعذر الحصول على سجل الحساسية لهذا المريض. تحقق من الحساسية شفهياً من المريض قبل صرف الدواء."
   },
   "patientSearch": {
-    "placeholder": "البحث عن مريض بالاسم أو الهاتف...",
+    "placeholder": "ابحث بالاسم أو الهاتف أو المعرف…",
     "clearProvince": "مسح المحافظة",
     "clearDistrict": "مسح المنطقة",
     "noMatchingProvince": "لا توجد محافظة مطابقة",
-    "noMatchingDistrict": "لا توجد منطقة مطابقة"
+    "noMatchingDistrict": "لا توجد منطقة مطابقة",
+    "searching": "جارٍ البحث…",
+    "noResults": "لم يتم العثور على مرضى",
+    "registerNew": "+ تسجيل مريض جديد",
+    "allergies": "حساسية"
   },
   "languageSelector": {
     "ariaLabel": "اختر اللغة",

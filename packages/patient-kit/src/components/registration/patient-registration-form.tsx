@@ -16,6 +16,7 @@ import type {
 } from '@ultranos/shared-types'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
+import { X } from '@ultranos/ui-kit/icons'
 import { Button } from '../ui/button.js'
 import { Card } from '../ui/card.js'
 import { NameInputSection } from './name-input-section.js'
@@ -222,7 +223,16 @@ interface PatientRegistrationFormProps {
   externals: PatientFormExternals
   /** Which sections render/are editable. Defaults to the full clinical set (opd-lite). */
   capabilities?: PatientFormCapabilities
+  /**
+   * Modal layout: fill the host's fixed height as a flex column with a fixed
+   * island header, a single scrolling section area, and a footer locked to the
+   * bottom. Default false = natural page flow (sticky header + sticky save bar).
+   */
+  fillHeight?: boolean
 }
+
+/** The four tabbed section groups of the registration form. */
+type RegGroup = 'personal' | 'clinical' | 'contact' | 'consent'
 
 export function PatientRegistrationForm({
   prefilledNameGiven = '',
@@ -231,6 +241,7 @@ export function PatientRegistrationForm({
   adapter,
   externals,
   capabilities = fullFormCapabilities,
+  fillHeight = false,
 }: PatientRegistrationFormProps) {
   const t = useTranslations('registration')
   const locale = useLocale()
@@ -928,16 +939,19 @@ export function PatientRegistrationForm({
 
       const isValid = validate()
       if (!isValid) {
-        // Scroll to the first invalid field. We read the DOM (aria-invalid) rather
-        // than fieldErrors state because setFieldErrors is async — the DOM reflects
-        // the fresh render after rAF. All sections are always visible, so no
-        // expand step is needed.
+        // Reveal the tab group holding the first invalid field, then scroll/focus
+        // it after the reveal renders (the field may sit in a hidden group).
         requestAnimationFrame(() => {
           const firstInvalid = document.querySelector<HTMLElement>('[aria-invalid="true"]')
-          if (firstInvalid) {
-            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            firstInvalid.focus()
-          }
+          const grp = firstInvalid?.closest('[data-reg-group]')?.getAttribute('data-reg-group') as RegGroup | null
+          if (grp) setActiveGroup(grp)
+          requestAnimationFrame(() => {
+            const target = document.querySelector<HTMLElement>('[aria-invalid="true"]')
+            if (target) {
+              target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              target.focus()
+            }
+          })
         })
         return
       }
@@ -947,6 +961,8 @@ export function PatientRegistrationForm({
       // as an error and scroll to the emergency-contacts section.
       if (isMinor && !hasGuardianContact) {
         setFieldErrors((prev) => ({ ...prev, guardianContact: t('guardianRequiredForMinor') }))
+        // The emergency-contacts section lives in the Contact tab — reveal it first.
+        setActiveGroup('contact')
         requestAnimationFrame(() => {
           const el = document.getElementById('emergency-contacts-anchor')
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -1132,23 +1148,169 @@ export function PatientRegistrationForm({
 
   const errorCount = Object.keys(fieldErrors).length
 
-  // Focus/scroll to an errored field from the error-summary. All sections are
-  // always visible, so this is a straight scroll — no group to expand first.
+  // Which tab group is currently shown. The other groups' sections are kept
+  // mounted (state preserved) but hidden via the `hidden` attribute.
+  const [activeGroup, setActiveGroup] = useState<RegGroup>('personal')
+  // The scrolling section area (fillHeight/modal layout) — reset to top on tab change.
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
+
+  // Focus/scroll to an errored field from the error-summary. The field may live
+  // in a hidden group — reveal that group first, then scroll/focus after render.
   const focusField = useCallback((anchor?: string) => {
+    const el = anchor
+      ? document.getElementById(anchor)
+      : document.querySelector<HTMLElement>('[aria-invalid="true"]')
+    const grp = el?.closest('[data-reg-group]')?.getAttribute('data-reg-group') as RegGroup | null
+    if (grp) setActiveGroup(grp)
     requestAnimationFrame(() => {
-      const el = anchor
+      const target = anchor
         ? document.getElementById(anchor)
         : document.querySelector<HTMLElement>('[aria-invalid="true"]')
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        el.focus?.()
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        target.focus?.()
       }
     })
   }, [])
 
+  // Tabbed section groups. The 9 sections are bucketed into 4 clinician-friendly
+  // groups; the active tab shows only its group's fields. A group hides entirely
+  // when reduced capabilities (pharmacy/lab) leave it with no visible section.
+  const groups = [
+    { id: 'personal' as const, label: t('groupPersonal'), visible: true, first: 'reg-sec-identity' },
+    {
+      id: 'clinical' as const,
+      label: t('groupClinical'),
+      visible: show('vitals') || show('allergies'),
+      first: show('vitals') ? 'reg-sec-vitals' : 'reg-sec-allergies',
+    },
+    { id: 'contact' as const, label: t('groupContact'), visible: true, first: 'reg-sec-contact' },
+    {
+      id: 'consent' as const,
+      label: t('groupConsent'),
+      visible: show('social') || show('consent'),
+      first: show('social') ? 'reg-sec-social' : 'reg-sec-consent',
+    },
+  ].filter((g) => g.visible)
+  const goToGroup = (id: RegGroup) => {
+    setActiveGroup(id)
+    requestAnimationFrame(() => {
+      // Modal (fillHeight): reset the single scroll area to the top of the new
+      // group. Page flow: scroll the group's first section to the top of the page.
+      if (fillHeight && scrollAreaRef.current) {
+        scrollAreaRef.current.scrollTo({ top: 0 })
+        return
+      }
+      const first = groups.find((g) => g.id === id)?.first
+      if (first) document.getElementById(first)?.scrollIntoView({ block: 'start' })
+    })
+  }
+
+  // Command-island identity (chart-page parity): live name preview + meta line.
+  const islandNameSegments = [
+    [nameGiven, nameFamily].filter(Boolean).join(' ').trim(),
+    nameFather,
+    nameGrandfather,
+  ].filter((s) => !!s && s.trim().length > 0)
+  const islandName = islandNameSegments.length > 0 ? islandNameSegments.join(' · ') : t('islandNewPatient')
+  const islandAge = (() => {
+    const now = new Date()
+    if (birthYearOnly) {
+      const y = parseInt(birthYear, 10)
+      return Number.isFinite(y) && y > 0 ? `~${now.getFullYear() - y}` : ''
+    }
+    if (birthDate) {
+      const b = new Date(birthDate)
+      if (!Number.isNaN(b.getTime())) {
+        let a = now.getFullYear() - b.getFullYear()
+        const m = now.getMonth() - b.getMonth()
+        if (m < 0 || (m === 0 && now.getDate() < b.getDate())) a--
+        return String(a)
+      }
+    }
+    return ''
+  })()
+  const islandMeta = [gender || undefined, islandAge || undefined, phone || undefined]
+    .filter(Boolean)
+    .join(' · ')
+  const closeHandler = editing ? editContext?.onCancel : onCancel
+
+  // Modal (fillHeight) vs page-flow layout. In fillHeight the form is a flex column:
+  // fixed island header (shrink-0) + one scrolling section area (flex-1) + a footer
+  // locked to the bottom (shrink-0). In page flow the header/footer are sticky.
+  const formClass = fillHeight ? 'flex min-h-0 flex-1 flex-col' : 'space-y-4'
+  const islandClass = fillHeight
+    ? 'shrink-0 overflow-hidden border-b border-border bg-muted/50'
+    : 'sticky top-0 z-20 -mx-4 -mt-4 mb-0 overflow-hidden border-b border-border bg-muted/50'
+  const sectionAreaClass = fillHeight
+    ? 'min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-5'
+    : 'space-y-4'
+  const footerClass = fillHeight
+    ? 'flex shrink-0 items-center justify-between gap-4 border-t border-border bg-background px-4 py-3'
+    : 'sticky bottom-0 z-10 flex items-center justify-between gap-4 border-t border-border bg-background py-3'
+
   return (
     <>
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className={formClass}>
+        {/* Command island — chart-page parity: photo + live identity + section tabs.
+            fillHeight (modal): a fixed header. Page flow: sticky to the top. */}
+        <div className={islandClass}>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-6 pt-5 pb-4">
+            {show('photo') && (
+              <PatientPhotoSection
+                variant="inline"
+                photoDataUrl={photoDataUrl}
+                onPhotoChange={setPhotoDataUrl}
+                patientId={editContext?.patientId}
+                lastKnownUpdate={editContext?.lastKnownUpdate}
+                photoApi={photoApi}
+              />
+            )}
+            <div className="min-w-0">
+              <h2 className="truncate text-base font-bold text-foreground" dir="auto">{islandName}</h2>
+              {islandMeta && (
+                <p className="truncate text-xs font-medium text-muted-foreground tabular-nums" dir="auto">
+                  {islandMeta}
+                </p>
+              )}
+            </div>
+            {closeHandler && (
+              <button
+                type="button"
+                onClick={closeHandler}
+                aria-label={t('close')}
+                className="ms-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            )}
+          </div>
+          <div
+            className="flex flex-wrap gap-2 px-6 pb-5"
+            role="tablist"
+            aria-label={t('sectionsNavLabel')}
+          >
+            {groups.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                role="tab"
+                onClick={() => goToGroup(g.id)}
+                aria-selected={activeGroup === g.id}
+                className={`h-9 rounded-full px-4 text-sm font-semibold transition-colors ${
+                  activeGroup === g.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Scrolling section area — the single element that scrolls in modal layout,
+            with top spacing separating it from the fixed island header. */}
+        <div ref={scrollAreaRef} className={sectionAreaClass}>
         {/* Error summary — announced on failed submit, links to each errored field */}
         {errorCount > 0 && (
           <div
@@ -1178,18 +1340,9 @@ export function PatientRegistrationForm({
             </ul>
           </div>
         )}
-        {/* 1. Identity — photo first, then names (grouped for verification).
-            Create: deferred local capture. Edit: immediate upload to the patient. */}
-        {show('photo') && (
-        <PatientPhotoSection
-          photoDataUrl={photoDataUrl}
-          onPhotoChange={setPhotoDataUrl}
-          patientId={editContext?.patientId}
-          lastKnownUpdate={editContext?.lastKnownUpdate}
-          photoApi={photoApi}
-        />
-        )}
-
+        {/* 1. Identity — names. The patient photo now lives in the command island
+            header above (create: deferred local capture; edit: immediate upload). */}
+        <div id="reg-sec-identity" data-reg-group="personal" hidden={activeGroup !== 'personal'} className="scroll-mt-16 space-y-4">
         {/* 2. Name section */}
         <NameInputSection
           nameGiven={nameGiven}
@@ -1207,9 +1360,10 @@ export function PatientRegistrationForm({
             nameFamily: fieldErrors.nameFamily,
           }}
         />
+        </div>
 
         {/* 2. Demographics — Gender, DOB, Marital Status, Blood Group */}
-        <Card as="fieldset">
+        <Card as="fieldset" id="reg-sec-demographics" data-reg-group="personal" hidden={activeGroup !== 'personal'} className="scroll-mt-16">
           <legend className="text-base font-bold text-foreground">
             {t('demographicsSection')}
           </legend>
@@ -1397,7 +1551,7 @@ export function PatientRegistrationForm({
 
         {/* 3b. Vitals — recorded as patient-scoped Observations (BMI auto-derived) */}
         {show('vitals') && (
-        <Card as="fieldset">
+        <Card as="fieldset" id="reg-sec-vitals" data-reg-group="clinical" hidden={activeGroup !== 'clinical'} className="scroll-mt-16">
           <legend className="text-base font-bold text-foreground">{t('vitalsSection')}</legend>
           <div className="mt-2">
             <VitalsForm
@@ -1420,16 +1574,18 @@ export function PatientRegistrationForm({
 
         {/* 4. Allergies — safety-critical, prominent, never collapsed (Rule #4) */}
         {show('allergies') && (
+        <div id="reg-sec-allergies" data-reg-group="clinical" hidden={activeGroup !== 'clinical'} className="scroll-mt-16">
         <AllergiesSection
           noKnownAllergies={noKnownAllergies}
           allergies={allergies}
           onNoKnownAllergiesChange={setNoKnownAllergies}
           onAllergiesChange={setAllergies}
         />
+        </div>
         )}
 
         {/* 5. Contact & Identification — National ID (+ type), Household ID, Phone, Language */}
-        <Card as="fieldset">
+        <Card as="fieldset" id="reg-sec-contact" data-reg-group="contact" hidden={activeGroup !== 'contact'} className="scroll-mt-16">
           <legend className="text-base font-bold text-foreground">
             {t('contactSection')}
           </legend>
@@ -1605,6 +1761,7 @@ export function PatientRegistrationForm({
 
         {/* 4. Geography section */}
         {show('address') && (
+        <div id="reg-sec-address" data-reg-group="contact" hidden={activeGroup !== 'contact'} className="scroll-mt-16">
         <GeographySection
           origin={addressOrigin}
           current={addressCurrent}
@@ -1621,10 +1778,12 @@ export function PatientRegistrationForm({
             currentDistrict: fieldErrors.addressCurrentDistrict,
           }}
         />
+        </div>
         )}
 
         {/* 7. Social / HMIS section */}
         {show('social') && (
+        <div id="reg-sec-social" data-reg-group="consent" hidden={activeGroup !== 'consent'} className="scroll-mt-16">
         <SocialInfoSection
           displacementCategory={displacementCategory}
           nationality={nationality}
@@ -1637,10 +1796,11 @@ export function PatientRegistrationForm({
           onEducationLevelChange={setEducationLevel}
           onDisabilityChange={setDisability}
         />
+        </div>
         )}
 
         {/* 8. Emergency contact section — always visible */}
-        <div id="emergency-contacts-anchor">
+        <div id="emergency-contacts-anchor" data-reg-group="contact" hidden={activeGroup !== 'contact'} className="scroll-mt-16">
           {fieldErrors.guardianContact && (
             <div
               className="mb-2 flex items-start gap-2 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive ring-[0.65px] ring-destructive/30"
@@ -1657,6 +1817,7 @@ export function PatientRegistrationForm({
 
         {/* 9. Consent section */}
         {show('consent') && (
+        <div id="reg-sec-consent" data-reg-group="consent" hidden={activeGroup !== 'consent'} className="scroll-mt-16">
         <ConsentSection
           method={consentMethod}
           witnessedBy={consentWitnessedBy}
@@ -1670,6 +1831,7 @@ export function PatientRegistrationForm({
             language: fieldErrors.consentLanguage,
           }}
         />
+        </div>
         )}
 
         {/* Submit error */}
@@ -1678,9 +1840,10 @@ export function PatientRegistrationForm({
             {submitError}
           </Alert>
         )}
+        </div>{/* end scrolling section area */}
 
-        {/* Sticky save bar */}
-        <div className="sticky bottom-0 z-10 flex items-center justify-between gap-4 border-t border-border bg-background py-3">
+        {/* Save bar — locked to the modal bottom (fillHeight) / sticky (page flow). */}
+        <div className={footerClass}>
           <div className="flex items-center gap-3">
             <Button
               variant="outline"

@@ -22,6 +22,12 @@ interface PatientPhotoSectionProps {
   lastKnownUpdate?: string
   /** Injected photo transport (opaque-key upload/fetch/remove lives in the host app). */
   photoApi: PatientPhotoApi
+  /**
+   * `card` (default) — the full boxed capture section (96px avatar in a Card).
+   * `inline` — a compact 48px clickable avatar with no Card wrapper, for the
+   * command-island header (matches the chart page's identity avatar).
+   */
+  variant?: 'card' | 'inline'
 }
 
 /** Cropped Blob → data URL (deferred local capture). */
@@ -52,6 +58,7 @@ export function PatientPhotoSection({
   patientId,
   lastKnownUpdate,
   photoApi,
+  variant = 'card',
 }: PatientPhotoSectionProps) {
   const t = useTranslations('patientPhoto')
   const [modalOpen, setModalOpen] = useState(false)
@@ -59,6 +66,7 @@ export function PatientPhotoSection({
   const [refresh, setRefresh] = useState(0)
 
   const immediate = !!patientId
+  const inline = variant === 'inline'
 
   // Edit mode: load (and refresh after upload/remove) the current signed photo URL.
   useEffect(() => {
@@ -74,37 +82,38 @@ export function PatientPhotoSection({
 
   const previewSrc = immediate ? serverPhotoSrc : photoDataUrl
 
-  return (
-    <Card>
-      <div className="flex flex-col items-center gap-4">
-        {/* Clickable avatar — opens the shared photo modal (same as patient profile) */}
-        <div
-          className={`group relative h-24 w-24 cursor-pointer overflow-hidden rounded-full bg-muted ${AVATAR_RING}`}
-          onClick={() => setModalOpen(true)}
-          role="button"
-          tabIndex={0}
-          aria-label={t('title')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault()
-              setModalOpen(true)
-            }
-          }}
-        >
-          {previewSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={previewSrc} alt="" aria-hidden="true" className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <User className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
-            </div>
-          )}
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-            <Camera className="h-6 w-6 text-white" aria-hidden="true" />
-          </div>
+  // The clickable avatar — full-size (card) or compact (inline/island).
+  const avatar = (
+    <div
+      className={`group relative shrink-0 cursor-pointer overflow-hidden rounded-full bg-muted ${AVATAR_RING} ${
+        inline ? 'h-12 w-12' : 'h-24 w-24'
+      }`}
+      onClick={() => setModalOpen(true)}
+      role="button"
+      tabIndex={0}
+      aria-label={t('title')}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          setModalOpen(true)
+        }
+      }}
+    >
+      {previewSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={previewSrc} alt="" aria-hidden="true" className="h-full w-full object-cover" />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center">
+          <User className={inline ? 'h-6 w-6 text-muted-foreground' : 'h-10 w-10 text-muted-foreground'} aria-hidden="true" />
         </div>
+      )}
+      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+        <Camera className={inline ? 'h-5 w-5 text-white' : 'h-6 w-6 text-white'} aria-hidden="true" />
       </div>
+    </div>
+  )
 
+  const uploadModal = (
       <PhotoUploadModal
         open={modalOpen}
         currentPhotoKey={previewSrc ? '__present__' : null}
@@ -141,6 +150,23 @@ export function PatientPhotoSection({
           tooLarge: t('tooLarge'), conflict: t('conflict'), saveFailed: t('saveFailed'),
         }}
       />
+  )
+
+  // Inline (island) — bare compact avatar; the host lays it out beside the name.
+  if (inline) {
+    return (
+      <>
+        {avatar}
+        {uploadModal}
+      </>
+    )
+  }
+
+  // Card — the full boxed capture section (default).
+  return (
+    <Card>
+      <div className="flex flex-col items-center gap-4">{avatar}</div>
+      {uploadModal}
     </Card>
   )
 }

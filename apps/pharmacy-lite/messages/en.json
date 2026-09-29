@@ -931,7 +931,13 @@
     "removeContact": "Remove contact",
     "unsavedChanges": "Unsaved changes",
     "additionalInfoSection": "Additional information (optional)",
-    "errorCount": "{count, plural, one {1 field needs attention} other {{count} fields need attention}}"
+    "errorCount": "{count, plural, one {1 field needs attention} other {{count} fields need attention}}",
+    "groupPersonal": "Personal",
+    "groupClinical": "Clinical",
+    "groupContact": "Contact",
+    "groupConsent": "Consent",
+    "sectionsNavLabel": "Form sections",
+    "islandNewPatient": "New patient"
   },
   "dashboard": {
     "findOrRegisterPatient": "Find or Register Patient",
@@ -1444,11 +1450,15 @@
     "unknownBody": "No allergy record could be obtained for this patient. Verify allergies verbally with the patient before dispensing."
   },
   "patientSearch": {
-    "placeholder": "Search patient by name or phone...",
+    "placeholder": "Search by name, phone, or ID…",
     "clearProvince": "Clear province",
     "clearDistrict": "Clear district",
     "noMatchingProvince": "No matching province",
-    "noMatchingDistrict": "No matching district"
+    "noMatchingDistrict": "No matching district",
+    "searching": "Searching…",
+    "noResults": "No patients found",
+    "registerNew": "+ Register new patient",
+    "allergies": "Allergies"
   },
   "languageSelector": {
     "ariaLabel": "Select language",

@@ -931,7 +931,13 @@
     "photoCropSizeError": "عکس د کراپ کولو وروسته لا هم له ۱ MB څخه لوی دی. مهرباني وکړئ کوچنۍ سرچینه انځور وازمویئ.",
     "contactSection": "اړیکه او پېژندنه",
     "additionalInfoSection": "اضافي معلومات (اختیاري)",
-    "errorCount": "{count, plural, one {۱ ساحه پاملرنې ته اړتیا لري} other {{count} ساحې پاملرنې ته اړتیا لري}}"
+    "errorCount": "{count, plural, one {۱ ساحه پاملرنې ته اړتیا لري} other {{count} ساحې پاملرنې ته اړتیا لري}}",
+    "groupPersonal": "شخصي",
+    "groupClinical": "کلینیکي",
+    "groupContact": "اړیکه",
+    "groupConsent": "رضایت",
+    "sectionsNavLabel": "د فورمې برخې",
+    "islandNewPatient": "نوی ناروغ"
   },
   "dashboard": {
     "findOrRegisterPatient": "ناروغ ولټوئ یا ثبت کړئ",
@@ -1444,11 +1450,15 @@
     "unknownBody": "د دې ناروغ د حساسیت ریکارډ ترلاسه نه شو. د درملو له ورکولو مخکې له ناروغ سره په شفاهي توګه حساسیتونه تایید کړئ."
   },
   "patientSearch": {
-    "placeholder": "د نوم یا تلیفون له مخې ناروغ ولټوئ...",
+    "placeholder": "د نوم، تلیفون یا پیژندنې له مخې لټون…",
     "clearProvince": "ولایت پاکول",
     "clearDistrict": "ولسوالي پاکول",
     "noMatchingProvince": "هیڅ سم ولایت ونه موندل شو",
-    "noMatchingDistrict": "هیڅ سم ولسوالي ونه موندل شوه"
+    "noMatchingDistrict": "هیڅ سم ولسوالي ونه موندل شوه",
+    "searching": "لټون کیږي…",
+    "noResults": "هیڅ ناروغ ونه موندل شو",
+    "registerNew": "+ نوی ناروغ ثبت کړئ",
+    "allergies": "حساسیتونه"
   },
   "languageSelector": {
     "ariaLabel": "ژبه غوره کړئ",

@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { PatientRegistrationForm } from '@/components/registration/PatientRegistrationForm'
 
 interface PatientCreateModalProps {
@@ -37,22 +36,17 @@ export function PatientCreateModal({ open, prefilledNameGiven = '', onClose }: P
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="register-patient-title"
+      aria-label={t('title')}
       onClick={onClose}
     >
       <div
-        className="flex w-full max-w-3xl max-h-[90vh] flex-col overflow-hidden rounded-xl bg-background shadow-xl"
+        className="flex w-full max-w-3xl h-[85vh] flex-col overflow-hidden rounded-2xl bg-background shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <ModalHeader
-          title={t('title')}
-          titleId="register-patient-title"
-          onClose={onClose}
-          closeLabel={t('close')}
-          className="rounded-t-xl"
-        />
-        <div className="flex-1 overflow-y-auto p-4">
-          <PatientRegistrationForm prefilledNameGiven={prefilledNameGiven} onCancel={onClose} />
+        {/* The shared form renders its own fixed island header + scrolling section
+            area + locked footer (fillHeight), so the modal body is just the frame. */}
+        <div className="flex min-h-0 flex-1 flex-col">
+          <PatientRegistrationForm prefilledNameGiven={prefilledNameGiven} onCancel={onClose} fillHeight />
         </div>
       </div>
     </div>
