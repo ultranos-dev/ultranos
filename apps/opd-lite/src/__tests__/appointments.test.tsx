@@ -23,6 +23,8 @@ vi.mock('next-intl', () => ({
       previousWeek: 'Previous week',
       nextWeek: 'Next week',
       available: 'Available',
+      free: 'Free',
+      allergies: 'Allergies',
       booked: 'Booked',
       checkedIn: 'Checked In',
       inProgress: 'In Progress',
@@ -182,7 +184,7 @@ describe('Appointment Scheduling', () => {
     expect(screen.getByText('16:30')).toBeDefined()
   })
 
-  it('Available slot shows "Available" label', async () => {
+  it('Free slot shows "Free" label', async () => {
     const { AppointmentSlot } = await import(
       '@/components/appointments/AppointmentSlot'
     )
@@ -190,9 +192,9 @@ describe('Appointment Scheduling', () => {
       <AppointmentSlot time="09:00" onClick={vi.fn()} />,
     )
 
-    // When no appointment is provided, the slot shows "Available"
-    const availableTexts = screen.getAllByText('Available')
-    expect(availableTexts.length).toBeGreaterThanOrEqual(1)
+    // When no appointment is provided, the slot is marked "Free" (matches the mockup)
+    const freeTexts = screen.getAllByText('Free')
+    expect(freeTexts.length).toBeGreaterThanOrEqual(1)
   })
 
   it('Booked slot shows patient name and type badge', async () => {
@@ -227,9 +229,10 @@ describe('Appointment Scheduling', () => {
     const slot = screen.getByText('09:00')
     fireEvent.click(slot.closest('button')!)
 
-    // BookingModal should appear with its header
+    // BookingModal should appear with its header (DialogTitle is a heading;
+    // "Book Appointment" also appears on the footer button, so query the heading).
     await vi.waitFor(() => {
-      expect(screen.getByText('Book Appointment')).toBeDefined()
+      expect(screen.getByRole('heading', { name: 'Book Appointment' })).toBeDefined()
     })
   })
 

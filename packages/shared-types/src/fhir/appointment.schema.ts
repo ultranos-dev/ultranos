@@ -43,6 +43,8 @@ export const FhirAppointmentSchema = z.object({
     hlcTimestamp: z.string(),
     createdAt: z.string().datetime(),
     clinicId: z.string().optional(),
+    /** When the patient was checked in (status → arrived); starts the wait counter. */
+    arrivedAt: z.string().datetime().optional(),
   }),
   meta: FhirMetaSchema,
 })

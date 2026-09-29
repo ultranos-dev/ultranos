@@ -27,7 +27,7 @@ export const STATUS_COLORS: Record<string, string> = {
 /** Pill badge colors for appointment status labels (used in AppointmentSlot) */
 export const STATUS_BADGE_COLORS: Record<string, string> = {
   booked: 'bg-primary/20 text-primary',
-  arrived: 'bg-warning/20 text-warning',
+  arrived: 'bg-primary text-primary-foreground',
   fulfilled: 'bg-secondary text-foreground',
   cancelled: 'bg-destructive/20 text-destructive',
   noshow: 'bg-destructive/20 text-destructive',

@@ -20,6 +20,15 @@ function nowHlc(): string {
   return serializeHlc(hlc.now())
 }
 
+// Cross-instance refresh: every useAppointments() hook subscribes here, and every
+// mutation broadcasts, so a booking/edit/cancel/walk-in made through ONE instance
+// (e.g. the BookingModal) immediately reloads the schedule rendered by ANOTHER
+// instance (DayScheduleView) — no hard refresh needed.
+const appointmentChangeListeners = new Set<() => void>()
+function notifyAppointmentsChanged(): void {
+  for (const listener of appointmentChangeListeners) listener()
+}
+
 /** Matches a serialized HLC "<15d>:<5d>:<nodeId>" (see serializeHlc). */
 const SERIALIZED_HLC_RE = /^\d{15}:\d{5}:.+/
 /** Matches a legacy millisecond-epoch string (old Date.now().toString() stamp). */
@@ -102,11 +111,27 @@ interface UseAppointmentsReturn {
     id: string,
     newStatus: FhirAppointmentZod['status'],
   ) => Promise<void>
+  /** Edit an existing appointment's patient / date-time / type / notes. */
+  updateAppointment: (
+    id: string,
+    data: {
+      patientRef: string
+      patientName: string
+      slotId: string
+      serviceType: AppointmentServiceType
+      start: string
+      end: string
+      description?: string
+    },
+  ) => Promise<FhirAppointmentZod>
   cancelAppointment: (id: string) => Promise<void>
+  /** Check a patient in (status → arrived) and start their wait counter. */
+  checkIn: (id: string) => Promise<void>
   addWalkIn: (
     patientRef: string,
     patientName: string,
     type: AppointmentServiceType,
+    complaint?: string,
   ) => Promise<FhirAppointmentZod>
   syncAppointments: () => Promise<void>
 }
@@ -166,6 +191,13 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
 
   useEffect(() => {
     void loadData()
+  }, [loadData])
+
+  // Subscribe to cross-instance change broadcasts (see notifyAppointmentsChanged).
+  useEffect(() => {
+    const listener = () => { void loadData() }
+    appointmentChangeListeners.add(listener)
+    return () => { appointmentChangeListeners.delete(listener) }
   }, [loadData])
 
   const createAppointment = useCallback(
@@ -246,6 +278,7 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
         { phiAccess: 'appointment_create' },
       )
       await loadData()
+      notifyAppointmentsChanged()
       return appointment
     },
     [loadData],
@@ -299,6 +332,91 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
       }
 
       await loadData()
+      notifyAppointmentsChanged()
+    },
+    [loadData],
+  )
+
+  const updateAppointment = useCallback(
+    async (
+      id: string,
+      data: {
+        patientRef: string
+        patientName: string
+        slotId: string
+        serviceType: AppointmentServiceType
+        start: string
+        end: string
+        description?: string
+      },
+    ): Promise<FhirAppointmentZod> => {
+      const existing = (await db.appointments.get(id)) as
+        | FhirAppointmentZod
+        | undefined
+      if (!existing) throw new Error('APPOINTMENT_NOT_FOUND')
+
+      const nowIso = new Date().toISOString()
+      const hlcTimestamp = nowHlc()
+      const currentVersion = parseInt(existing.meta.versionId ?? '0', 10)
+      // Walk-ins are a queue (no reserved slot), so never touch slots for them.
+      const timeChanged = existing.start !== data.start && !existing._ultranos?.walkIn
+
+      // Slot handoff when the start time changes: free the old slot, reserve the
+      // new one (double-booking guarded exactly like createAppointment).
+      if (timeChanged) {
+        const newSlot = (await db.slots.get(data.slotId)) as FhirSlotZod | undefined
+        if (newSlot && newSlot.status !== 'free') throw new Error('SLOT_BUSY')
+        await freeSlotForAppointment(existing, hlcTimestamp, nowIso)
+        if (newSlot) {
+          await db.slots.update(data.slotId, {
+            status: 'busy',
+            '_ultranos.hlcTimestamp': hlcTimestamp,
+            'meta.lastUpdated': nowIso,
+          })
+        }
+      }
+
+      const updated: FhirAppointmentZod = {
+        ...existing,
+        serviceType: [
+          {
+            system: 'http://terminology.hl7.org/CodeSystem/service-type',
+            code: data.serviceType,
+            display: data.serviceType,
+          },
+        ],
+        start: data.start,
+        end: data.end,
+        description: data.description,
+        participant: [
+          {
+            actor: {
+              reference: `Patient/${data.patientRef}`,
+              display: data.patientName,
+            },
+            status: existing.participant?.[0]?.status ?? 'accepted',
+          },
+        ],
+        _ultranos: { ...existing._ultranos, hlcTimestamp },
+        meta: {
+          ...existing.meta,
+          lastUpdated: nowIso,
+          versionId: String(currentVersion + 1),
+        },
+      }
+
+      await db.appointments.put(updated)
+      enqueueAppointment(updated, 'update')
+      auditPhiAccess(
+        AuditAction.UPDATE,
+        AuditResourceType.APPOINTMENT,
+        updated.id,
+        data.patientRef,
+        { phiAccess: 'appointment_update' },
+      )
+      await loadData()
+      notifyAppointmentsChanged()
+      return updated
     },
     [loadData],
   )
@@ -310,11 +428,42 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
     [updateStatus],
   )
 
+  // Check a patient in: status → arrived + stamp arrivedAt, which starts the wait
+  // counter shown on the schedule card / queue row.
+  const checkIn = useCallback(
+    async (id: string): Promise<void> => {
+      const existing = (await db.appointments.get(id)) as FhirAppointmentZod | undefined
+      if (!existing) throw new Error('APPOINTMENT_NOT_FOUND')
+      const nowIso = new Date().toISOString()
+      const hlcTimestamp = nowHlc()
+      const currentVersion = parseInt(existing.meta.versionId ?? '0', 10)
+      const updated: FhirAppointmentZod = {
+        ...existing,
+        status: 'arrived',
+        _ultranos: { ...existing._ultranos, hlcTimestamp, arrivedAt: nowIso },
+        meta: { ...existing.meta, lastUpdated: nowIso, versionId: String(currentVersion + 1) },
+      }
+      await db.appointments.put(updated)
+      enqueueAppointment(updated, 'update')
+      auditPhiAccess(
+        AuditAction.UPDATE,
+        AuditResourceType.APPOINTMENT,
+        updated.id,
+        undefined,
+        { phiAccess: 'appointment_checkin' },
+      )
+      await loadData()
+      notifyAppointmentsChanged()
+    },
+    [loadData],
+  )
+
   const addWalkIn = useCallback(
     async (
       patientRef: string,
       patientName: string,
       type: AppointmentServiceType,
+      complaint?: string,
     ): Promise<FhirAppointmentZod> => {
       const nowIso = new Date().toISOString()
       const hlcTimestamp = nowHlc()
@@ -349,6 +498,7 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
         ],
         start: nowIso,
         end: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30-min default
+        description: complaint?.trim() || undefined,
         participant: [
           {
             actor: {
@@ -381,6 +531,7 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
         { phiAccess: 'appointment_walkin_create' },
       )
       await loadData()
+      notifyAppointmentsChanged()
       return appointment
     },
     [loadData],
@@ -420,7 +571,9 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
     loadError,
     createAppointment,
     updateStatus,
+    updateAppointment,
     cancelAppointment,
+    checkIn,
     addWalkIn,
     syncAppointments,
   }

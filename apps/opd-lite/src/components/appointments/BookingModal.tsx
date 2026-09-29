@@ -1,484 +1,566 @@
 'use client'
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
 import {
   Dialog,
   DialogContent,
-  ModalHeader,
+  DialogTitle,
 } from '@ultranos/ui-kit/components/ui/dialog'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
+import { CalendarPlus, X, Clock, CalendarDays, AlertTriangle, Plus, Trash2, CircleCheck } from '@ultranos/ui-kit/icons'
+import {
+  PatientSearchBar,
+  type PatientSearchResult,
+} from '@ultranos/patient-kit/components/search/patient-search-bar'
+import { searchPatientsAdapter } from '@/lib/patient-search-adapter'
+import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { useAppointments } from '@/hooks/useAppointments'
 import { db } from '@/lib/db'
-import { searchPatientsOnHub } from '@/lib/trpc'
-import { highlightQuery } from '@/lib/highlight-matches'
-import { hashNationalId } from '@/lib/hash-national-id'
-import { encryptionKeyStore } from '@/lib/encryption-key-store'
-import type { AppointmentServiceType, FhirPatient } from '@ultranos/shared-types'
-import { AlertTriangle } from '@ultranos/ui-kit/icons'
+import type { AppointmentServiceType, FhirPatient, FhirAppointmentZod } from '@ultranos/shared-types'
 
-/** Clinic hours: 08:00-17:00, 30-minute slots */
-const CLINIC_START_HOUR = 8
-const CLINIC_END_HOUR = 17
 const SLOT_DURATION_MINUTES = 30
-
-function generateTimeSlots(): string[] {
-  const slots: string[] = []
-  for (let h = CLINIC_START_HOUR; h < CLINIC_END_HOUR; h++) {
-    for (let m = 0; m < 60; m += SLOT_DURATION_MINUTES) {
-      slots.push(
-        `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`,
-      )
-    }
-  }
-  return slots
-}
-
-const ALL_TIME_SLOTS = generateTimeSlots()
-
-function formatDateInput(date: Date): string {
-  return date.toISOString().slice(0, 10)
-}
 
 interface BookingModalProps {
   isOpen: boolean
   onClose: () => void
   prefilledDate?: Date
   prefilledTime?: string
+  /** When set, the modal opens in EDIT mode for this existing appointment. */
+  appointment?: FhirAppointmentZod | null
 }
 
-const SERVICE_TYPES: {
-  value: AppointmentServiceType
-  key: string
-}[] = [
+const SERVICE_TYPES: { value: AppointmentServiceType; key: string }[] = [
   { value: 'new-consult', key: 'newConsult' },
   { value: 'follow-up', key: 'followUp' },
   { value: 'urgent', key: 'urgent' },
 ]
 
-export function BookingModal({
-  isOpen,
-  onClose,
-  prefilledDate,
-  prefilledTime,
-}: BookingModalProps) {
+// Walk-ins use a different service-type set (they are a queue, not a scheduled visit).
+const WALKIN_TYPES: { value: AppointmentServiceType; key: string }[] = [
+  { value: 'walk-in', key: 'walkIn' },
+  { value: 'urgent', key: 'urgent' },
+]
+
+const DURATION_OPTIONS = [15, 30, 45, 60] as const
+type Duration = (typeof DURATION_OPTIONS)[number] | 'custom'
+
+function formatDateInput(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+/** "HH:MM" + minutes → "HH:MM" (clamped to the same day). */
+function addMinutes(hhmm: string, minutes: number): string {
+  const [h = 0, m = 0] = hhmm.split(':').map(Number)
+  const total = Math.min(h * 60 + m + minutes, 23 * 60 + 59)
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
+}
+
+function toMinutes(hhmm: string): number {
+  const [h = 0, m = 0] = hhmm.split(':').map(Number)
+  return h * 60 + m
+}
+
+function getDisplayName(p: FhirPatient): string {
+  return p._ultranos?.nameLocal || p.name?.[0]?.text || 'Unknown'
+}
+
+function formatAge(p: FhirPatient): string {
+  if (!p.birthDate) return ''
+  const birth = new Date(p.birthDate)
+  const now = new Date()
+  if (p.birthYearOnly) return `~${now.getFullYear() - birth.getFullYear()}y`
+  let age = now.getFullYear() - birth.getFullYear()
+  const md = now.getMonth() - birth.getMonth()
+  if (md < 0 || (md === 0 && now.getDate() < birth.getDate())) age--
+  return `${age}y`
+}
+
+function timeFromIso(iso: string): string {
+  const d = new Date(iso)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+function durationFromRange(startIso: string, endIso: string): Duration {
+  const mins = Math.round((new Date(endIso).getTime() - new Date(startIso).getTime()) / 60000)
+  return (DURATION_OPTIONS as readonly number[]).includes(mins) ? (mins as Duration) : 'custom'
+}
+
+export function BookingModal({ isOpen, onClose, prefilledDate, prefilledTime, appointment }: BookingModalProps) {
   const t = useTranslations('appointments')
+  const tCommon = useTranslations('common')
   const { selectedDate } = useAppointmentStore()
+  const editing = !!appointment
+  // Editing a walk-in: no scheduled slot (hide date/time), walk-in/urgent types,
+  // and the description field is the chief complaint.
+  const isWalkIn = editing && !!(appointment?._ultranos as { walkIn?: boolean } | undefined)?.walkIn
+  const typeOptions = isWalkIn ? WALKIN_TYPES : SERVICE_TYPES
 
   const initialDate = prefilledDate ?? selectedDate
+  const initialStart = prefilledTime || '09:00'
+
   const [bookingDate, setBookingDate] = useState(initialDate)
-  const [selectedTime, setSelectedTime] = useState(
-    prefilledTime ?? '',
-  )
-  const [serviceType, setServiceType] =
-    useState<AppointmentServiceType>('new-consult')
+  const [startTime, setStartTime] = useState(initialStart)
+  const [endTime, setEndTime] = useState(addMinutes(initialStart, SLOT_DURATION_MINUTES))
+  const [duration, setDuration] = useState<Duration>(SLOT_DURATION_MINUTES)
+  const [serviceType, setServiceType] = useState<AppointmentServiceType>('new-consult')
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  // Patient search state (local to modal — avoids clashing with dashboard's global store)
-  const [patientQuery, setPatientQuery] = useState('')
-  const [patientResults, setPatientResults] = useState<FhirPatient[]>([])
-  const [isSearchingPatient, setIsSearchingPatient] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState<FhirPatient | null>(null)
+  const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(null)
   const [hasAllergies, setHasAllergies] = useState(false)
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const abortRef = useRef<AbortController | null>(null)
 
-  // Debounced local + Hub patient search
-  const handlePatientQueryChange = useCallback((value: string) => {
-    setPatientQuery(value)
-    // If user clears or edits after selecting, deselect
-    setSelectedPatient(null)
-    setHasAllergies(false)
+  const { slots, createAppointment, updateAppointment, cancelAppointment, checkIn } = useAppointments(bookingDate)
 
-    if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-    if (!value.trim()) {
-      setPatientResults([])
-      setIsSearchingPatient(false)
-      return
-    }
-
-    setIsSearchingPatient(true)
-    searchTimerRef.current = setTimeout(async () => {
-      const trimmed = value.trim()
-      // Phase 1: Local Dexie search (wrapped in try/catch — decryption
-      // can fail if records were encrypted with a previous session key)
-      const localResults: FhirPatient[] = []
-      if (encryptionKeyStore.isReady()) {
-        try {
-          const seen = new Set<string>()
-          const byName = await db.patients
-            .where('_ultranos.nameLocal')
-            .startsWithIgnoreCase(trimmed)
-            .limit(20)
-            .toArray()
-          const byLatin = await db.patients
-            .where('_ultranos.nameLatin')
-            .startsWithIgnoreCase(trimmed)
-            .limit(20)
-            .toArray()
-          const idHash = await hashNationalId(trimmed)
-          const byId = await db.patients
-            .where('_ultranos.nationalIdHash')
-            .equals(idHash)
-            .limit(20)
-            .toArray()
-          for (const p of [...byName, ...byLatin, ...byId]) {
-            if (!seen.has(p.id)) {
-              seen.add(p.id)
-              localResults.push(p)
-            }
-          }
-        } catch {
-          // Decryption failed (key mismatch or corrupt data) — skip local results
-        }
-      }
-      setPatientResults(localResults)
-      setIsSearchingPatient(false)
-
-      // Phase 2: Background Hub revalidation
-      if (abortRef.current) abortRef.current.abort()
-      abortRef.current = new AbortController()
-      try {
-        const hubResult = await searchPatientsOnHub(trimmed, abortRef.current.signal)
-        if (hubResult.patients.length > 0) {
-          await db.patients.bulkPut(hubResult.patients)
-          // Re-search locally to merge
-          const merged: FhirPatient[] = []
-          const seen = new Set<string>()
-          const all = await db.patients
-            .where('_ultranos.nameLocal')
-            .startsWithIgnoreCase(trimmed)
-            .limit(20)
-            .toArray()
-          const allLatin = await db.patients
-            .where('_ultranos.nameLatin')
-            .startsWithIgnoreCase(trimmed)
-            .limit(20)
-            .toArray()
-          for (const p of [...all, ...allLatin]) {
-            if (!seen.has(p.id)) {
-              seen.add(p.id)
-              merged.push(p)
-            }
-          }
-          setPatientResults(merged)
-        }
-      } catch {
-        // Hub unavailable or decryption error — local results are sufficient
-      }
-    }, 250)
-  }, [])
-
-  // Handle patient selection — load allergies
-  const handleSelectPatient = useCallback(async (patient: FhirPatient) => {
+  // Load allergies + photo for the chosen patient (Rule #4: allergies surface in red).
+  const handleSelectPatient = useCallback(async (result: PatientSearchResult) => {
+    const patient = result.raw as FhirPatient
     setSelectedPatient(patient)
-    setPatientQuery(patient._ultranos?.nameLocal || patient.name?.[0]?.text || '')
-    setPatientResults([])
-
-    // Check if this patient has allergies in local IndexedDB
+    setSelectedPhotoUrl(result.photoUrl ?? null)
     try {
-      const allergies = await db.allergyIntolerances
-        .filter((a) => {
-          const ref = (a as { patient?: { reference?: string } }).patient?.reference
-          return ref === `Patient/${patient.id}`
-        })
+      const allergy = await db.allergyIntolerances
+        .filter((a) => (a as { patient?: { reference?: string } }).patient?.reference === `Patient/${patient.id}`)
         .first()
-      setHasAllergies(!!allergies)
+      setHasAllergies(!!allergy)
     } catch {
-      // Decryption error — can't determine allergy status, default to safe display
       setHasAllergies(false)
     }
-  }, [])
-
-  // Cleanup timers on unmount
-  useEffect(() => {
-    return () => {
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-      if (abortRef.current) abortRef.current.abort()
+    // Best-effort signed photo URL (opaque key) if the search result didn't carry one.
+    if (!result.photoUrl) {
+      try {
+        const url = await getPatientPhotoUrl(patient.id)
+        setSelectedPhotoUrl(url)
+      } catch { /* initials fallback */ }
     }
   }, [])
 
-  const { appointments, slots, createAppointment } =
-    useAppointments(bookingDate)
+  const clearPatient = useCallback(() => {
+    setSelectedPatient(null)
+    setSelectedPhotoUrl(null)
+    setHasAllergies(false)
+  }, [])
 
-  // Determine which time slots are free
-  const busyTimes = useMemo(() => {
-    const busy = new Set<string>()
-    for (const apt of appointments) {
-      if (apt._ultranos.walkIn) continue
-      if (
-        apt.status === 'cancelled' ||
-        apt.status === 'noshow' ||
-        apt.status === 'entered-in-error'
-      )
-        continue
-      const start = new Date(apt.start)
-      const key = `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`
-      busy.add(key)
-    }
-    for (const slot of slots) {
-      if (slot.status !== 'free') {
-        const start = new Date(slot.start)
-        const key = `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`
-        busy.add(key)
-      }
-    }
-    return busy
-  }, [appointments, slots])
+  // Duration chip → auto-set end from start. Editing a time directly = "custom".
+  const applyDuration = useCallback((d: Duration) => {
+    setDuration(d)
+    if (d !== 'custom') setEndTime(addMinutes(startTime, d))
+  }, [startTime])
+
+  const handleStartChange = useCallback((value: string) => {
+    setStartTime(value)
+    if (duration !== 'custom') setEndTime(addMinutes(value, duration))
+  }, [duration])
+
+  const handleEndChange = useCallback((value: string) => {
+    setEndTime(value)
+    setDuration('custom')
+  }, [])
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
-    if (val) {
-      const [y = 0, m = 1, d = 1] = val.split('-').map(Number)
-      setBookingDate(new Date(y, m - 1, d))
-      setSelectedTime('') // Reset time when date changes
-    }
+    if (!val) return
+    const [y = 0, m = 1, d = 1] = val.split('-').map(Number)
+    setBookingDate(new Date(y, m - 1, d))
   }
 
-  const handleSubmit = async () => {
-    if (!selectedPatient || !selectedTime) return
+  const reset = useCallback(() => {
+    clearPatient()
+    setStartTime(initialStart)
+    setEndTime(addMinutes(initialStart, SLOT_DURATION_MINUTES))
+    setDuration(SLOT_DURATION_MINUTES)
+    setServiceType('new-consult')
+    setNotes('')
+    setError('')
+  }, [clearPatient, initialStart])
 
+  // Prefill on open: EDIT loads from the appointment; CREATE uses the free slot.
+  useEffect(() => {
+    if (!isOpen) return
+    setError('')
+    if (appointment) {
+      const startIso = appointment.start
+      const endIso = appointment.end
+      setBookingDate(new Date(startIso))
+      setStartTime(timeFromIso(startIso))
+      setEndTime(timeFromIso(endIso))
+      setDuration(durationFromRange(startIso, endIso))
+      setServiceType((appointment.serviceType?.[0]?.code as AppointmentServiceType) ?? 'new-consult')
+      setNotes(appointment.description ?? '')
+      const pid = appointment.participant?.[0]?.actor?.reference?.replace(/^Patient\//, '') ?? ''
+      const display = appointment.participant?.[0]?.actor?.display ?? ''
+      void (async () => {
+        let patient: FhirPatient | null = null
+        try { patient = ((await db.patients.get(pid)) as FhirPatient | undefined) ?? null } catch { patient = null }
+        // Fall back to a minimal patient built from the appointment participant.
+        setSelectedPatient(
+          patient ??
+            ({ id: pid, resourceType: 'Patient', name: [{ text: display }], _ultranos: { nameLocal: display } } as unknown as FhirPatient),
+        )
+        try {
+          const allergy = await db.allergyIntolerances
+            .filter((a) => (a as { patient?: { reference?: string } }).patient?.reference === `Patient/${pid}`)
+            .first()
+          setHasAllergies(!!allergy)
+        } catch { setHasAllergies(false) }
+        try { setSelectedPhotoUrl(await getPatientPhotoUrl(pid)) } catch { setSelectedPhotoUrl(null) }
+      })()
+    } else {
+      clearPatient()
+      setBookingDate(prefilledDate ?? selectedDate)
+      setStartTime(prefilledTime || '09:00')
+      setEndTime(addMinutes(prefilledTime || '09:00', SLOT_DURATION_MINUTES))
+      setDuration(SLOT_DURATION_MINUTES)
+      setServiceType('new-consult')
+      setNotes('')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, appointment])
+
+  const canSubmit = !!selectedPatient && !!startTime && !!endTime && !submitting
+
+  const handleSubmit = async () => {
+    if (!selectedPatient) return
+    if (toMinutes(endTime) <= toMinutes(startTime)) {
+      setError(t('endBeforeStart'))
+      return
+    }
     setSubmitting(true)
     setError('')
-
     try {
-      // Build start/end ISO strings for the selected date + time
-      const [hours = 0, minutes = 0] = selectedTime.split(':').map(Number)
+      const [sh = 0, sm = 0] = startTime.split(':').map(Number)
+      const [eh = 0, em = 0] = endTime.split(':').map(Number)
       const start = new Date(bookingDate)
-      start.setHours(hours, minutes, 0, 0)
-      const end = new Date(
-        start.getTime() + SLOT_DURATION_MINUTES * 60_000,
-      )
+      start.setHours(sh, sm, 0, 0)
+      const end = new Date(bookingDate)
+      end.setHours(eh, em, 0, 0)
 
-      // Find matching slot ID if it exists
       const matchingSlot = slots.find((s) => {
-        const slotStart = new Date(s.start)
-        return (
-          slotStart.getHours() === hours &&
-          slotStart.getMinutes() === minutes &&
-          s.status === 'free'
-        )
+        const st = new Date(s.start)
+        return st.getHours() === sh && st.getMinutes() === sm && s.status === 'free'
       })
 
-      await createAppointment({
+      const data = {
         patientRef: selectedPatient.id,
-        patientName: selectedPatient._ultranos?.nameLocal || selectedPatient.name?.[0]?.text || patientQuery.trim(),
+        patientName: getDisplayName(selectedPatient),
         slotId: matchingSlot?.id ?? crypto.randomUUID(),
         serviceType,
         start: start.toISOString(),
         end: end.toISOString(),
         description: notes.trim() || undefined,
-      })
+      }
 
-      // Success — reset & close
-      setPatientQuery('')
-      setSelectedPatient(null)
-      setPatientResults([])
-      setHasAllergies(false)
-      setSelectedTime('')
-      setNotes('')
-      setServiceType('new-consult')
+      if (appointment) {
+        await updateAppointment(appointment.id, data)
+      } else {
+        await createAppointment(data)
+      }
+
+      reset()
       onClose()
     } catch (err) {
-      if (
-        err instanceof Error &&
-        err.message === 'SLOT_BUSY'
-      ) {
-        setError(t('slotTaken'))
-      } else {
-        setError(t('schedulingConflict'))
-      }
+      setError(err instanceof Error && err.message === 'SLOT_BUSY' ? t('slotTaken') : t('schedulingConflict'))
     } finally {
       setSubmitting(false)
     }
   }
 
+  const handleCancelAppointment = async () => {
+    if (!appointment) return
+    if (!window.confirm(t('cancelAppointmentConfirm'))) return
+    setSubmitting(true)
+    setError('')
+    try {
+      await cancelAppointment(appointment.id)
+      reset()
+      onClose()
+    } catch {
+      setError(t('schedulingConflict'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  // Check-in — booked patient has arrived; starts the wait counter (status → arrived).
+  const isArrived = appointment?.status === 'arrived'
+  const canCheckIn = editing && appointment?.status === 'booked'
+
+  const handleCheckIn = async () => {
+    if (!appointment) return
+    setSubmitting(true)
+    setError('')
+    try {
+      await checkIn(appointment.id)
+      reset()
+      onClose()
+    } catch {
+      setError(t('schedulingConflict'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const patientMeta = useMemo(() => {
+    if (!selectedPatient) return ''
+    return [selectedPatient.gender ?? undefined, formatAge(selectedPatient) || undefined,
+      selectedPatient.telecom?.find((c) => c.system === 'phone')?.value ?? undefined]
+      .filter(Boolean).join(' · ')
+  }, [selectedPatient])
+
+  const ctlClass = 'flex h-[42px] items-center gap-2 rounded-xl border border-border bg-card px-3 text-sm text-foreground'
+  const chip = (active: boolean) =>
+    `flex h-8 items-center rounded-full border px-3.5 text-xs font-semibold transition-colors ${
+      active ? 'border-transparent bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:text-foreground'
+    }`
+
   return (
     <Dialog open={isOpen} onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-md" hideClose>
-        {/* Header */}
-        <ModalHeader title={t('bookAppointment')} tone="primary" dialog inset />
-
-        {/* Safety Rule 4: Allergy banner at highest prominence */}
-        {hasAllergies && (
-          <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm font-semibold text-destructive">
-            <AlertTriangle className="inline-block h-4 w-4 me-1.5 align-[-2px] shrink-0" aria-hidden="true" />
-            {t('allergyWarning')}
+      <DialogContent
+        hideClose
+        className="flex max-h-[85vh] max-w-lg flex-col gap-0 overflow-hidden p-0"
+      >
+        {/* Header — icon chip + title + subtitle + close (matches the modal redesign) */}
+        <div className="flex shrink-0 items-center gap-3 border-b border-border px-5 py-4">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <CalendarPlus className="h-5 w-5" aria-hidden="true" />
           </div>
-        )}
-
-        <div className="space-y-4">
-          {/* Patient search with autocomplete */}
-          <div className="relative">
-            <label className="mb-1 block text-sm font-medium text-foreground">
-              {t('patient')}
-            </label>
-            <input
-              type="text"
-              value={patientQuery}
-              onChange={(e) => handlePatientQueryChange(e.target.value)}
-              placeholder={t('selectPatient')}
-              className={`w-full rounded-xl border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring ${
-                selectedPatient
-                  ? 'border-success bg-success/10'
-                  : 'border-border'
-              }`}
-            />
-            {selectedPatient && (
-              <span className="absolute end-3 top-[2.1rem] text-xs text-success">
-                {selectedPatient.gender ?? ''} &middot; {selectedPatient.birthDate ? `${new Date().getFullYear() - new Date(selectedPatient.birthDate).getFullYear()}y` : ''}
-              </span>
-            )}
-            {/* Dropdown results */}
-            {patientResults.length > 0 && !selectedPatient && (
-              <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-border bg-background shadow-lg">
-                <ul className="divide-y divide-border" role="listbox" aria-label={t('selectPatient')}>
-                  {patientResults.map((patient) => (
-                    <li
-                      key={patient.id}
-                      role="option"
-                      aria-selected={false}
-                      onClick={() => handleSelectPatient(patient)}
-                      className="flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-accent"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium text-foreground">
-                          {highlightQuery(patient._ultranos?.nameLocal || patient.name?.[0]?.text || 'Unknown', patientQuery)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {patient.gender ?? ''} &middot; {patient.birthDate ? `${new Date().getFullYear() - new Date(patient.birthDate).getFullYear()}y` : ''}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {isSearchingPatient && (
-              <div className="absolute z-10 mt-1 w-full rounded-xl border border-border bg-background px-3 py-3 text-center text-sm text-muted-foreground shadow-lg">
-                {t('searching')}
-              </div>
-            )}
-            {patientQuery.trim() && patientResults.length === 0 && !isSearchingPatient && !selectedPatient && (
-              <div className="absolute z-10 mt-1 w-full rounded-xl border border-border bg-background px-3 py-3 text-center text-sm text-muted-foreground shadow-lg">
-                {t('noResults')}
-              </div>
-            )}
+          <div className="min-w-0">
+            <DialogTitle className="text-base font-bold text-foreground">
+              {isWalkIn ? t('editWalkIn') : editing ? t('editAppointment') : t('bookAppointment')}
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground">{editing ? t('editSubtitle') : t('subtitle')}</p>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={tCommon('cancel')}
+            className="ms-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
 
-          {/* Date picker */}
+        {/* Body (scrolls) */}
+        <div className="flex min-h-0 flex-1 flex-col gap-[18px] overflow-y-auto px-5 py-5">
+          {/* Patient — working search → selected chip */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">
-              {t('selectDate')}
+            <label className="mb-2 block text-xs font-semibold text-foreground">
+              {t('patient')}<span className="ms-0.5 text-destructive">*</span>
             </label>
-            <input
-              type="date"
-              value={formatDateInput(bookingDate)}
-              onChange={handleDateChange}
-              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
-            />
+            {selectedPatient ? (
+              <div className="flex items-center gap-3 rounded-2xl border border-primary/35 bg-primary/[0.07] p-3">
+                <Avatar src={selectedPhotoUrl} name={getDisplayName(selectedPatient)} size={40} />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground" dir="auto">
+                    {getDisplayName(selectedPatient)}
+                  </p>
+                  {patientMeta && (
+                    <p className="truncate text-xs text-muted-foreground">{patientMeta}</p>
+                  )}
+                </div>
+                {hasAllergies && (
+                  <span className="flex shrink-0 items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                    <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                    {t('allergies')}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={clearPatient}
+                  className="ms-auto shrink-0 text-sm font-semibold text-primary hover:underline"
+                >
+                  {t('change')}
+                </button>
+              </div>
+            ) : (
+              <PatientSearchBar
+                search={searchPatientsAdapter}
+                onSelect={handleSelectPatient}
+                resolvePhotoUrl={getPatientPhotoUrl}
+                placeholder={t('searchPatientPlaceholder')}
+                searchingLabel={t('searching')}
+                noResultsLabel={t('noResults')}
+                allergyLabel={t('allergies')}
+                inputClassName="h-[42px] rounded-full"
+                registerNewThreshold={0}
+              />
+            )}
           </div>
 
-          {/* Available time slots */}
+          {/* Date + Time — hidden for walk-ins (a queue, not a scheduled slot) */}
+          {!isWalkIn && (
+          <>
           <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">
-              {t('selectTime')}
+            <label className="mb-2 block text-xs font-semibold text-foreground">
+              {t('dateLabel')}<span className="ms-0.5 text-destructive">*</span>
             </label>
-            <div className="flex flex-wrap gap-1.5">
-              {ALL_TIME_SLOTS.map((time) => {
-                const isBusy = busyTimes.has(time)
-                const isSelected = selectedTime === time
-                return (
-                  <Button
-                    key={time}
-                    variant="ghost"
-                    type="button"
-                    disabled={isBusy}
-                    onClick={() => setSelectedTime(time)}
-                    className={`rounded-md px-2.5 py-1 text-xs font-medium ${
-                      isBusy
-                        ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                        : isSelected
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-success/10 text-success hover:bg-success/20 border border-success/20'
-                    }`}
-                  >
-                    {time}
-                  </Button>
-                )
-              })}
+            <div className={ctlClass}>
+              <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <input
+                type="date"
+                value={formatDateInput(bookingDate)}
+                onChange={handleDateChange}
+                aria-label={t('dateLabel')}
+                className="w-full bg-transparent text-sm text-foreground focus:outline-none"
+              />
             </div>
           </div>
 
-          {/* Appointment type */}
+          {/* Time — custom start + end + duration chips */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">
-              {t('appointmentType')}
+            <label className="mb-2 block text-xs font-semibold text-foreground">
+              {t('time')}<span className="ms-0.5 text-destructive">*</span>
             </label>
-            <div className="flex gap-4">
-              {SERVICE_TYPES.map(({ value, key }) => (
-                <label
-                  key={value}
-                  className="flex items-center gap-1.5 text-sm"
-                >
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="mb-1.5 ms-0.5 text-[11px] font-medium text-muted-foreground">{t('startLabel')}</p>
+                <div className={ctlClass}>
+                  <Clock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                   <input
-                    type="radio"
-                    name="serviceType"
-                    value={value}
-                    checked={serviceType === value}
-                    onChange={() => setServiceType(value)}
-                    className="text-primary"
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => handleStartChange(e.target.value)}
+                    aria-label={t('startLabel')}
+                    className="w-full bg-transparent text-sm text-foreground focus:outline-none"
                   />
+                </div>
+              </div>
+              <div>
+                <p className="mb-1.5 ms-0.5 text-[11px] font-medium text-muted-foreground">{t('endLabel')}</p>
+                <div className={ctlClass}>
+                  <Clock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => handleEndChange(e.target.value)}
+                    aria-label={t('endLabel')}
+                    className="w-full bg-transparent text-sm text-foreground focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              {DURATION_OPTIONS.map((d) => (
+                <button key={d} type="button" onClick={() => applyDuration(d)} className={chip(duration === d)}>
+                  {t('durationMin', { minutes: d })}
+                </button>
+              ))}
+              <button type="button" onClick={() => applyDuration('custom')} className={chip(duration === 'custom')}>
+                {t('durationCustom')}
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">{t('timeHint')}</p>
+          </div>
+          </>
+          )}
+
+          {/* Appointment type — segmented control */}
+          <div>
+            <label className="mb-2 block text-xs font-semibold text-foreground">{t('appointmentType')}</label>
+            <div className="inline-flex gap-1 rounded-full bg-muted p-1">
+              {typeOptions.map(({ value, key }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setServiceType(value)}
+                  aria-pressed={serviceType === value}
+                  className={`h-8 rounded-full px-4 text-sm font-semibold transition-colors ${
+                    serviceType === value ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
                   {t(key)}
-                </label>
+                </button>
               ))}
             </div>
           </div>
 
-          {/* Notes */}
+          {/* Notes / chief complaint (walk-in) */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">
-              {t('notes')}
+            <label className="mb-2 block text-xs font-semibold text-foreground">
+              {isWalkIn ? t('chiefComplaint') : t('notes')}
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+              placeholder={isWalkIn ? t('chiefComplaintPlaceholder') : t('notesPlaceholder')}
+              className="min-h-[60px] w-full resize-y rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
 
-          {/* Error message */}
           {error && (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm font-medium text-destructive">
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm font-medium text-destructive" role="alert">
               {error}
             </div>
           )}
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="primary"
-              type="button"
-              onClick={handleSubmit}
-              disabled={
-                !selectedPatient || !selectedTime || submitting
-              }
-              className="flex-1"
-            >
-              {t('confirmBooking')}
-            </Button>
-            <Button
-              variant="outline"
-              type="button"
-              onClick={onClose}
-            >
-              {t('cancelAppointment')}
-            </Button>
-          </div>
+        {/* Footer — locked to the bottom. Edit adds a destructive "cancel appointment". */}
+        <div className="flex shrink-0 items-center gap-3 border-t border-border px-5 py-4">
+          {editing ? (
+            <>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={handleCancelAppointment}
+                disabled={submitting}
+                className="gap-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                {t('cancelAppointment')}
+              </Button>
+              <div className="ms-auto flex items-center gap-3">
+                {canCheckIn && (
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={handleCheckIn}
+                    disabled={submitting}
+                    className="gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+                  >
+                    <CircleCheck className="h-4 w-4" aria-hidden="true" />
+                    {t('checkIn')}
+                  </Button>
+                )}
+                {isArrived && (
+                  <span className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+                    <CircleCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t('checkedIn')}
+                  </span>
+                )}
+                <Button
+                  variant="primary"
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={!canSubmit}
+                >
+                  {submitting ? t('searching') : t('saveChanges')}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" type="button" onClick={onClose}>
+                {tCommon('cancel')}
+              </Button>
+              <Button
+                variant="primary"
+                type="button"
+                onClick={handleSubmit}
+                disabled={!canSubmit}
+                className="flex-1 gap-2"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                {submitting ? t('searching') : t('bookAppointment')}
+              </Button>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

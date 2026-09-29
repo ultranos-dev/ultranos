@@ -1,18 +1,23 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { ChevronLeft, ChevronRight, CalendarDays } from '@ultranos/ui-kit/icons'
-import { DirectionalIcon } from '@ultranos/ui-kit'
+import { CalendarDays } from '@ultranos/ui-kit/icons'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
-import { Button } from '@/components/ui/Button'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { useAppointments } from '@/hooks/useAppointments'
+import { db } from '@/lib/db'
 import { AppointmentSlot } from './AppointmentSlot'
-import { PatientSummaryPopup } from './PatientSummaryPopup'
 import { WalkInQueue } from './WalkInQueue'
 import { BookingModal } from './BookingModal'
+import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
 import type { FhirAppointmentZod } from '@ultranos/shared-types'
+
+/** "Patient/<id>" → "<id>" (bare patient id from an appointment participant ref). */
+function patientIdFromAppointment(apt: FhirAppointmentZod): string | null {
+  const ref = apt.participant?.[0]?.actor?.reference
+  return ref ? ref.replace(/^Patient\//, '') : null
+}
 
 /** Clinic hours: 08:00–17:00, 30-minute slots */
 const CLINIC_START_HOUR = 8
@@ -33,27 +38,12 @@ function generateTimeSlots(): string[] {
 
 const TIME_SLOTS = generateTimeSlots()
 
-function formatDate(date: Date): string {
-  return date.toISOString().slice(0, 10)
-}
-
-function formatDisplayDate(date: Date): string {
-  return date.toLocaleDateString(undefined, {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
 export function DayScheduleView() {
   const t = useTranslations('appointments')
-  const { selectedDate, setSelectedDate, prevDay, nextDay } =
-    useAppointmentStore()
-  const { appointments, loading, updateStatus } =
-    useAppointments(selectedDate)
+  const { selectedDate } = useAppointmentStore()
+  const { appointments, loading } = useAppointments(selectedDate)
 
-  const [selectedAppointment, setSelectedAppointment] =
+  const [editingAppointment, setEditingAppointment] =
     useState<FhirAppointmentZod | null>(null)
   const [bookingModalOpen, setBookingModalOpen] = useState(false)
   const [bookingPrefilledTime, setBookingPrefilledTime] = useState<
@@ -65,6 +55,7 @@ export function DayScheduleView() {
     const map = new Map<string, FhirAppointmentZod>()
     for (const apt of appointments) {
       if (apt._ultranos.walkIn) continue // Walk-ins shown separately
+      if (apt.status === 'cancelled' || apt.status === 'entered-in-error') continue // Removed from the schedule
       const startDate = new Date(apt.start)
       const timeKey = `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`
       map.set(timeKey, apt)
@@ -72,24 +63,94 @@ export function DayScheduleView() {
     return map
   }, [appointments])
 
+  // Rendered rows = the fixed clinic grid PLUS a row for any appointment that
+  // falls outside it (e.g. an 18:00 booking after the 17:00 cutoff, or an
+  // off-grid custom time). Auto-expands the schedule so no booking is hidden.
+  const timeSlots = useMemo(() => {
+    const set = new Set<string>(TIME_SLOTS)
+    for (const timeKey of appointmentsByTime.keys()) set.add(timeKey)
+    return Array.from(set).sort() // HH:MM zero-padded → lexical sort is chronological
+  }, [appointmentsByTime])
+
+  // Rule #4: flag booked patients who have recorded allergies. One batched read
+  // over the day's booked patients (not per-row) — best-effort, never blocks render.
+  const [allergyPatientIds, setAllergyPatientIds] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    let cancelled = false
+    const refs = new Set<string>()
+    for (const apt of appointments) {
+      if (apt._ultranos.walkIn) continue
+      const pid = patientIdFromAppointment(apt)
+      if (pid) refs.add(`Patient/${pid}`)
+    }
+    if (refs.size === 0) {
+      setAllergyPatientIds(new Set())
+      return
+    }
+    async function loadAllergies() {
+      try {
+        const rows = await db.allergyIntolerances
+          .filter((a) => {
+            const ref = (a as { patient?: { reference?: string } }).patient?.reference
+            return ref ? refs.has(ref) : false
+          })
+          .toArray()
+        if (cancelled) return
+        const withAllergy = new Set<string>()
+        for (const a of rows) {
+          const ref = (a as { patient?: { reference?: string } }).patient?.reference
+          if (ref) withAllergy.add(ref.replace(/^Patient\//, ''))
+        }
+        setAllergyPatientIds(withAllergy)
+      } catch {
+        // Decryption/DB unavailable — omit allergy flags rather than guess
+      }
+    }
+    void loadAllergies()
+    return () => { cancelled = true }
+  }, [appointments])
+
+  // Signed patient photos for booked rows (opaque key). Batched per day; best-effort.
+  const [photoUrlMap, setPhotoUrlMap] = useState<Map<string, string>>(new Map())
+  useEffect(() => {
+    const ids = Array.from(new Set(
+      appointments
+        .filter((a) => !a._ultranos.walkIn)
+        .map((a) => patientIdFromAppointment(a))
+        .filter((id): id is string => !!id),
+    ))
+    if (ids.length === 0) { setPhotoUrlMap(new Map()); return }
+    let cancelled = false
+    const controller = new AbortController()
+    void (async () => {
+      const entries = await Promise.all(
+        ids.map(async (id) => [id, await getPatientPhotoUrl(id, controller.signal)] as const),
+      )
+      if (cancelled) return
+      const map = new Map<string, string>()
+      for (const [id, url] of entries) if (url) map.set(id, url)
+      setPhotoUrlMap(map)
+    })().catch(() => { /* best-effort — initials fallback */ })
+    return () => { cancelled = true; controller.abort() }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appointments.map((a) => a.id).join(',')])
+
   const handleSlotClick = (time: string) => {
     const apt = appointmentsByTime.get(time)
     if (apt) {
-      setSelectedAppointment(apt)
+      // Booked → open the booking modal in EDIT mode for this appointment.
+      setEditingAppointment(apt)
+      setBookingPrefilledTime(undefined)
+      setBookingModalOpen(true)
     } else {
+      setEditingAppointment(null)
       setBookingPrefilledTime(time)
       setBookingModalOpen(true)
     }
   }
 
-  const handleDateInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-    if (val) {
-      // Parse as local date to avoid timezone shift
-      const [y = 0, m = 1, d = 1] = val.split('-').map(Number)
-      setSelectedDate(new Date(y, m - 1, d))
-    }
-  }
+  const bookedCount = appointmentsByTime.size
+  const freeCount = timeSlots.length - bookedCount
 
   if (loading) {
     return (
@@ -100,83 +161,55 @@ export function DayScheduleView() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Date navigation */}
-      <div className="flex items-center justify-between gap-4">
-        <Button
-          variant="outline"
-          type="button"
-          onClick={prevDay}
-          aria-label={t('previousDay')}
-        >
-          <DirectionalIcon category="navigation">
-            <ChevronLeft className="h-5 w-5" />
-          </DirectionalIcon>
-        </Button>
-
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-foreground font-numeric">
-            {formatDisplayDate(selectedDate)}
-          </h2>
-          <input
-            type="date"
-            value={formatDate(selectedDate)}
-            onChange={handleDateInput}
-            className="rounded-xl border border-border px-2 py-1 text-sm"
-            aria-label={t('datePicker')}
-          />
+    <div className="flex flex-col gap-4">
+      {/* Two-column: day schedule + walk-in queue rail */}
+      <div className="gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+          {/* Board header — Day schedule · N booked · M slots free */}
+          <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+            <h2 className="text-sm font-semibold text-foreground">{t('dayScheduleTitle')}</h2>
+            <span className="ms-auto text-xs font-medium text-muted-foreground font-numeric">
+              {t('scheduleSummary', { booked: bookedCount, free: freeCount })}
+            </span>
+          </div>
+          {appointmentsByTime.size === 0 && (
+            <div className="border-b border-border py-8">
+              <EmptyState icon={CalendarDays} title={t('noAppointments')} />
+            </div>
+          )}
+          {/* Timetable — hairline-separated rows, time in the leading lane */}
+          <div className="px-3 py-1.5">
+            {timeSlots.map((time) => {
+              const apt = appointmentsByTime.get(time)
+              const pid = apt ? patientIdFromAppointment(apt) : null
+              return (
+                <AppointmentSlot
+                  key={time}
+                  time={time}
+                  appointment={apt}
+                  hasAllergy={pid ? allergyPatientIds.has(pid) : false}
+                  photoUrl={pid ? photoUrlMap.get(pid) ?? null : null}
+                  onClick={() => handleSlotClick(time)}
+                />
+              )
+            })}
+          </div>
         </div>
 
-        <Button
-          variant="outline"
-          type="button"
-          onClick={nextDay}
-          aria-label={t('nextDay')}
-        >
-          <DirectionalIcon category="navigation">
-            <ChevronRight className="h-5 w-5" />
-          </DirectionalIcon>
-        </Button>
+        {/* Walk-in queue rail */}
+        <aside className="mt-4 lg:mt-0">
+          <WalkInQueue />
+        </aside>
       </div>
 
-      {/* Time grid */}
-      {appointmentsByTime.size === 0 && (
-        <div className="flex items-center justify-center rounded-xl bg-card py-8 shadow-card ring-[0.65px] ring-border/50">
-          <EmptyState icon={CalendarDays} title={t('noAppointments')} />
-        </div>
-      )}
-      <div className="space-y-2">
-        {TIME_SLOTS.map((time) => {
-          const apt = appointmentsByTime.get(time)
-          return (
-            <AppointmentSlot
-              key={time}
-              time={time}
-              appointment={apt}
-              onClick={() => handleSlotClick(time)}
-            />
-          )
-        })}
-      </div>
-
-      {/* Walk-in queue */}
-      <WalkInQueue />
-
-      {/* Patient summary popup */}
-      {selectedAppointment && (
-        <PatientSummaryPopup
-          appointment={selectedAppointment}
-          onClose={() => setSelectedAppointment(null)}
-          onStatusChange={updateStatus}
-        />
-      )}
-
-      {/* Booking modal */}
+      {/* Booking modal — create (free slot) or edit (clicked booked appointment) */}
       <BookingModal
         isOpen={bookingModalOpen}
+        appointment={editingAppointment}
         onClose={() => {
           setBookingModalOpen(false)
           setBookingPrefilledTime(undefined)
+          setEditingAppointment(null)
         }}
         prefilledDate={selectedDate}
         prefilledTime={bookingPrefilledTime}
