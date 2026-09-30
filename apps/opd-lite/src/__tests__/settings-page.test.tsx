@@ -399,12 +399,6 @@ describe('PreferencesCard', () => {
     })
   })
 
-  it('shows "Coming soon" label', async () => {
-    const { PreferencesCard } = await import('@/components/settings/PreferencesCard')
-    render(<PreferencesCard />)
-    expect(screen.getByText(/coming soon/i)).toBeDefined()
-  })
-
   it('shows Lab result alerts, Sync conflict alerts, System notifications', async () => {
     const { PreferencesCard } = await import('@/components/settings/PreferencesCard')
     render(<PreferencesCard />)

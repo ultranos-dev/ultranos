@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { useTranslations } from 'next-intl'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { getHubTrpcUrl } from '@/lib/hub-url'
 import { uploadStaffPhoto, removeStaffPhoto } from '@/lib/staff-photo-api'
-import { Card } from '@/components/Card'
 import { PhotoAvatarField } from '@ultranos/ui-kit/components/photo/photo-avatar-field'
 import { AVATAR_RING } from '@ultranos/ui-kit/components/ui/avatar'
 
@@ -31,6 +31,7 @@ interface PractitionerProfile {
 }
 
 export function ProfileCard() {
+  const t = useTranslations('settings')
   const session = useAuthSessionStore((s) => s.session)
   const [practitionerProfile, setPractitionerProfile] = useState<PractitionerProfile | null>(null)
   const [avatarKey, setAvatarKey] = useState<string | null>(null)
@@ -73,59 +74,58 @@ export function ProfileCard() {
   const resolvedPractitionerId = practitionerProfile?.practitionerId ?? null
 
   return (
-    <Card>
-      <h2 className="mb-4 text-sm font-semibold text-foreground">Profile</h2>
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      <h3 className="border-b border-border px-[18px] py-4 text-[15px] font-bold text-foreground">
+        {t('profile')}
+      </h3>
 
-      <div className="flex items-start gap-4">
-        {resolvedPractitionerId ? (
-          <PhotoAvatarField
-            name={displayName}
-            photoKey={avatarKey}
-            lastKnownUpdate={avatarUpdatedAt}
-            signUrl={async (key) => {
-              const { data } = await getSupabaseBrowserClient().storage
-                .from('staff-photos')
-                .createSignedUrl(key, 3600)
-              return data?.signedUrl ?? null
-            }}
-            uploadFn={async (blob, lku) => {
-              const result = await uploadStaffPhoto(resolvedPractitionerId, blob, lku)
-              return { photoKey: result.photoUrl, lastUpdated: result.lastUpdated }
-            }}
-            removeFn={async (lku) => {
-              return removeStaffPhoto(resolvedPractitionerId, lku)
-            }}
-            onUpdated={(key, lastUpdated) => {
-              setAvatarKey(key)
-              setAvatarUpdatedAt(lastUpdated)
-            }}
-          />
-        ) : (
-          /* Initials fallback — shown while loading or when no practitioner row */
-          <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground ${AVATAR_RING}`}>
-            {initials}
-          </div>
-        )}
+      <div className="p-[18px]">
+        <div className="flex items-center gap-[18px]">
+          {resolvedPractitionerId ? (
+            <PhotoAvatarField
+              name={displayName}
+              photoKey={avatarKey}
+              lastKnownUpdate={avatarUpdatedAt}
+              signUrl={async (key) => {
+                const { data } = await getSupabaseBrowserClient().storage
+                  .from('staff-photos')
+                  .createSignedUrl(key, 3600)
+                return data?.signedUrl ?? null
+              }}
+              uploadFn={async (blob, lku) => {
+                const result = await uploadStaffPhoto(resolvedPractitionerId, blob, lku)
+                return { photoKey: result.photoUrl, lastUpdated: result.lastUpdated }
+              }}
+              removeFn={async (lku) => {
+                return removeStaffPhoto(resolvedPractitionerId, lku)
+              }}
+              onUpdated={(key, lastUpdated) => {
+                setAvatarKey(key)
+                setAvatarUpdatedAt(lastUpdated)
+              }}
+            />
+          ) : (
+            /* Initials fallback — shown while loading or when no practitioner row */
+            <div className={`flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-full bg-muted text-xl font-semibold text-muted-foreground ${AVATAR_RING}`}>
+              {initials}
+            </div>
+          )}
 
-        <div className="min-w-0 flex-1 space-y-2">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground">Name</p>
-            <p className="text-sm text-foreground">{displayName}</p>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground">Role</p>
-            <p className="text-sm text-foreground">{formatRole(session.role)}</p>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground">ID</p>
-            <p className="text-sm font-mono text-foreground">{session.practitionerId}</p>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground">Email</p>
-            <p className="text-sm text-foreground">{session.email || '·'}</p>
-          </div>
+          <dl className="grid min-w-0 flex-1 grid-cols-[100px_1fr] gap-x-4 gap-y-1.5 text-sm sm:grid-cols-[120px_1fr]">
+            <dt className="text-muted-foreground">{t('name')}</dt>
+            <dd className="min-w-0 truncate text-foreground" dir="auto">{displayName}</dd>
+
+            <dt className="text-muted-foreground">{t('role')}</dt>
+            <dd className="text-foreground">{formatRole(session.role)}</dd>
+
+            <dt className="text-muted-foreground">{t('email')}</dt>
+            <dd className="min-w-0 truncate text-foreground">{session.email || '·'}</dd>
+
+            <dt className="text-muted-foreground">{t('practitionerId')}</dt>
+            <dd className="min-w-0 truncate font-mono text-xs text-muted-foreground">{session.practitionerId}</dd>
+          </dl>
         </div>
       </div>
-    </Card>
+    </section>
   )
 }

@@ -28,7 +28,7 @@ function countdownColor(remainingMs: number): string {
   return 'text-destructive'
 }
 
-export function SessionInfoCard() {
+export function SessionInfoCard({ variant = 'card' }: { variant?: 'card' | 'row' }) {
   const t = useTranslations('settings')
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   const session = useAuthSessionStore((s) => s.session)
@@ -51,6 +51,28 @@ export function SessionInfoCard() {
   if (!session) return null
 
   const loginTime = loginAtMs ? formatTime(new Date(loginAtMs), locale) : t('unavailable')
+
+  // Row mode — an "Active session" row inside the composed Security & MFA card
+  if (variant === 'row') {
+    return (
+      <div className="flex items-center justify-between gap-3 border-t border-border px-[18px] py-[14px]">
+        <div>
+          <p className="text-sm font-semibold text-foreground">{t('activeSession')}</p>
+          <p className="text-xs text-muted-foreground">{t('loginTimeExpiry')}</p>
+        </div>
+        {remainingMs !== null ? (
+          <span
+            data-testid="session-countdown"
+            className={`text-sm font-mono tabular-nums ${countdownColor(remainingMs)}`}
+          >
+            {formatCountdown(remainingMs)}
+          </span>
+        ) : (
+          <span className="text-sm font-mono text-muted-foreground">{t('unavailable')}</span>
+        )}
+      </div>
+    )
+  }
 
   return (
     <Card>

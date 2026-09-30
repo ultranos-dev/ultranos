@@ -6,7 +6,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/Card'
 
-export function MfaManagementCard() {
+export function MfaManagementCard({ variant = 'card' }: { variant?: 'card' | 'row' }) {
   const t = useTranslations('settings')
   const [isEnrolled, setIsEnrolled] = useState<boolean | null>(null)
   const [existingFactorId, setExistingFactorId] = useState<string | null>(null)
@@ -178,6 +178,107 @@ export function MfaManagementCard() {
     setVerifyCode('')
     setError(null)
   }, [factorId])
+
+  // Shared interactive panels (confirm current code / scan QR + verify / error).
+  const interactivePanels = (
+    <>
+      {confirming && (
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">{t('confirmReconfigurePrompt')}</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={confirmingCode}
+              onChange={(e) => setConfirmingCode(e.target.value)}
+              placeholder={t('currentTotpPlaceholder')}
+              className="rounded-xl border border-border px-3 py-1.5 text-sm"
+              maxLength={6}
+              aria-label={t('currentTotpAriaLabel')}
+            />
+            <Button variant="primary" disabled={confirmingCode.length < 6} onClick={handleConfirmCurrentTotp}>
+              {t('confirm')}
+            </Button>
+            <Button variant="secondary" onClick={handleCancel}>
+              {t('cancel')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {enrolling && qrCode && (
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">{t('scanQrPrompt')}</p>
+          <img src={qrCode} alt={t('totpQrAlt')} className="h-48 w-48" />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={verifyCode}
+              onChange={(e) => setVerifyCode(e.target.value)}
+              placeholder={t('enterCodePlaceholder')}
+              className="rounded-xl border border-border px-3 py-1.5 text-sm"
+              maxLength={6}
+              aria-label={t('totpVerifyAriaLabel')}
+            />
+            <Button variant="primary" disabled={verifyCode.length < 6} onClick={handleVerify}>
+              {t('verify')}
+            </Button>
+            <Button variant="secondary" onClick={handleCancel}>
+              {t('cancel')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </>
+  )
+
+  // Row mode — a "Two-factor (TOTP)" row inside the composed Security & MFA card
+  if (variant === 'row') {
+    const showAction = !loading && isEnrolled !== null && !confirming && !enrolling && isOnline
+    return (
+      <>
+        <div className="flex items-center justify-between gap-3 border-t border-border px-[18px] py-[14px]">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">{t('twoFactorTotp')}</p>
+            <p className="text-xs text-muted-foreground">{t('totpHelper')}</p>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            {loading ? (
+              <span className="text-xs text-muted-foreground">{t('mfaLoading')}</span>
+            ) : isEnrolled !== null ? (
+              isEnrolled ? (
+                <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-medium text-success">
+                  {t('totpEnrolled')}
+                </span>
+              ) : (
+                <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+                  {t('totpNotEnrolled')}
+                </span>
+              )
+            ) : null}
+            {showAction && (
+              <Button
+                variant="primary"
+                onClick={isEnrolled ? handleStartReconfigure : startEnrollment}
+                aria-label={isEnrolled ? t('reconfigureTotp') : t('enrollTotp')}
+              >
+                {isEnrolled ? t('reconfigureTotp') : t('enrollTotp')}
+              </Button>
+            )}
+          </div>
+        </div>
+        {!isOnline && (
+          <p className="border-t border-border bg-warning/10 px-[18px] py-2 text-xs text-warning">
+            {t('mfaOffline')}
+          </p>
+        )}
+        {(confirming || enrolling || error) && (
+          <div className="border-t border-border px-[18px] py-[14px]">{interactivePanels}</div>
+        )}
+      </>
+    )
+  }
 
   return (
     <Card>
