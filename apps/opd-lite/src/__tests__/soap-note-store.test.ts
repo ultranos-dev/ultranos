@@ -17,7 +17,25 @@ function resetStore() {
     encounterId: null,
     autosaveStatus: 'idle',
     lastSavedAt: null,
+    decryptFailed: false,
   })
+}
+
+const DECRYPT_PLACEHOLDER = '[Encrypted Content]'
+
+async function seedLedgerEntry(overrides: Record<string, unknown>) {
+  await db.soapLedger.add({
+    id: '11111111-1111-4000-8000-000000000001',
+    encounterId: TEST_ENCOUNTER_ID,
+    subjective: '',
+    objective: '',
+    assessment: '',
+    plan: '',
+    assessorRef: 'Practitioner/x',
+    hlcTimestamp: '100:0:node',
+    createdAt: new Date().toISOString(),
+    ...overrides,
+  } as never)
 }
 
 const TEST_ENCOUNTER_ID = 'e7e3c8a0-2222-4000-8000-000000000001'
@@ -199,6 +217,58 @@ describe('soap note store', () => {
 
       expect(useSoapNoteStore.getState().subjective).toBe('latest')
       expect(useSoapNoteStore.getState().objective).toBe('latest-obj')
+    })
+  })
+
+  describe('decryption fail-safe safeguard', () => {
+    it('blanks placeholder fields and flags decryptFailed on load', async () => {
+      useSoapNoteStore.getState().initForEncounter(TEST_ENCOUNTER_ID)
+      await seedLedgerEntry({
+        subjective: DECRYPT_PLACEHOLDER,
+        objective: DECRYPT_PLACEHOLDER,
+        assessment: DECRYPT_PLACEHOLDER,
+        plan: DECRYPT_PLACEHOLDER,
+      })
+
+      await useSoapNoteStore.getState().loadFromLedger(TEST_ENCOUNTER_ID)
+
+      const s = useSoapNoteStore.getState()
+      expect(s.decryptFailed).toBe(true)
+      // The placeholder must never become editable clinical content.
+      expect(s.subjective).toBe('')
+      expect(s.objective).toBe('')
+      expect(s.assessment).toBe('')
+      expect(s.plan).toBe('')
+    })
+
+    it('blocks autosave while decryptFailed so the original is never overwritten', async () => {
+      useSoapNoteStore.getState().initForEncounter(TEST_ENCOUNTER_ID)
+      await seedLedgerEntry({ subjective: DECRYPT_PLACEHOLDER })
+      await useSoapNoteStore.getState().loadFromLedger(TEST_ENCOUNTER_ID)
+      expect(useSoapNoteStore.getState().decryptFailed).toBe(true)
+
+      await db.soapLedger.clear()
+      await useSoapNoteStore.getState().persistToLedger()
+
+      // No new ledger entry appended while in the failed state.
+      expect((await db.soapLedger.toArray()).length).toBe(0)
+    })
+
+    it('clears the flag on edit and allows saving fresh content as a new entry', async () => {
+      useSoapNoteStore.getState().initForEncounter(TEST_ENCOUNTER_ID)
+      await seedLedgerEntry({ subjective: DECRYPT_PLACEHOLDER })
+      await useSoapNoteStore.getState().loadFromLedger(TEST_ENCOUNTER_ID)
+      expect(useSoapNoteStore.getState().decryptFailed).toBe(true)
+
+      useSoapNoteStore.getState().setSubjective('Fresh note for this visit')
+      expect(useSoapNoteStore.getState().decryptFailed).toBe(false)
+
+      await db.soapLedger.clear()
+      await useSoapNoteStore.getState().persistToLedger()
+
+      const entries = await db.soapLedger.toArray()
+      expect(entries.length).toBe(1)
+      expect(entries[0]!.subjective).toBe('Fresh note for this visit')
     })
   })
 

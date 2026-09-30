@@ -10,6 +10,13 @@ import { syncQueue } from '@/lib/sync-queue'
 
 const SOAP_FIELD_MAX_LENGTH = 10_000
 
+// Server-side decryption fail-safe sentinel (see @ultranos/crypto `decryptField`).
+// When a stored SOAP field can't be decrypted, the Hub returns this literal string.
+// It must NEVER be loaded into an editable field or saved back — doing so would
+// display a non-note as clinical content and could overwrite the (still-intact,
+// append-only) original ciphertext on the next autosave.
+const DECRYPT_PLACEHOLDER = '[Encrypted Content]'
+
 const SoapLedgerPayloadSchema = z.object({
   encounterId: z.string().uuid(),
   subjective: z.string().max(SOAP_FIELD_MAX_LENGTH),
@@ -52,6 +59,13 @@ interface SoapNoteState {
   encounterId: string | null
   autosaveStatus: AutosaveStatus
   lastSavedAt: string | null
+
+  /**
+   * True when the loaded note contained the decryption fail-safe placeholder.
+   * The original ciphertext is intact on the Hub (append-only); the UI must show a
+   * recovery notice and autosave is blocked so the placeholder can't be persisted.
+   */
+  decryptFailed: boolean
 
   /** AI scribe diff state */
   aiDiff: AIScribeDiffState
@@ -106,29 +120,37 @@ export const useSoapNoteStore = create<SoapNoteState>()(
     encounterId: null,
     autosaveStatus: 'idle' as AutosaveStatus,
     lastSavedAt: null,
+    decryptFailed: false,
     aiDiff: { ...initialAIDiff },
 
+    // Editing clears the decrypt-failed flag: the clinician is now authoring fresh
+    // content, which is safe to persist as a new append-only ledger entry (the
+    // original ciphertext is untouched).
     setSubjective: (text: string) => {
       set((state) => {
         state.subjective = text
+        state.decryptFailed = false
       })
     },
 
     setObjective: (text: string) => {
       set((state) => {
         state.objective = text
+        state.decryptFailed = false
       })
     },
 
     setAssessment: (text: string) => {
       set((state) => {
         state.assessment = text
+        state.decryptFailed = false
       })
     },
 
     setPlan: (text: string) => {
       set((state) => {
         state.plan = text
+        state.decryptFailed = false
       })
     },
 
@@ -141,14 +163,19 @@ export const useSoapNoteStore = create<SoapNoteState>()(
         state.plan = ''
         state.autosaveStatus = 'idle'
         state.lastSavedAt = null
+        state.decryptFailed = false
         state.aiDiff = { ...initialAIDiff }
       })
     },
 
     persistToLedger: async () => {
-      const { encounterId, subjective, objective, assessment, plan, autosaveStatus } = get()
+      const { encounterId, subjective, objective, assessment, plan, autosaveStatus, decryptFailed } = get()
       if (!encounterId) return
       if (autosaveStatus === 'saving') return // in-flight guard
+      // Never write back an undecryptable note: this would append the placeholder/
+      // blanked fields over the intact original (append-only) ciphertext. Editing a
+      // field clears this flag, so genuine new content still saves normally.
+      if (decryptFailed) return
 
       const payload = SoapLedgerPayloadSchema.safeParse({
         encounterId,
@@ -222,11 +249,23 @@ export const useSoapNoteStore = create<SoapNoteState>()(
         phiAccess: 'soap_note_view',
       })
 
+      // A field that decrypted to the fail-safe placeholder is NOT clinical content:
+      // blank it (so it never appears as an editable note) and flag the failure so
+      // the UI shows a recovery notice and autosave is blocked.
+      const isPlaceholder = (v?: string) => v === DECRYPT_PLACEHOLDER
+      const anyFailed =
+        isPlaceholder(latest.subjective) ||
+        isPlaceholder(latest.objective) ||
+        isPlaceholder(latest.assessment) ||
+        isPlaceholder(latest.plan)
+      const sanitize = (v?: string) => (isPlaceholder(v) ? '' : (v ?? ''))
+
       set((state) => {
-        state.subjective = latest.subjective ?? ''
-        state.objective = latest.objective ?? ''
-        state.assessment = latest.assessment ?? ''
-        state.plan = latest.plan ?? ''
+        state.subjective = sanitize(latest.subjective)
+        state.objective = sanitize(latest.objective)
+        state.assessment = sanitize(latest.assessment)
+        state.plan = sanitize(latest.plan)
+        state.decryptFailed = anyFailed
         state.autosaveStatus = 'idle'
       })
     },
@@ -240,6 +279,7 @@ export const useSoapNoteStore = create<SoapNoteState>()(
         state.encounterId = null
         state.autosaveStatus = 'idle'
         state.lastSavedAt = null
+        state.decryptFailed = false
         state.aiDiff = { ...initialAIDiff }
       })
     },
