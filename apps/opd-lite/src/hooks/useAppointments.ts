@@ -20,6 +20,61 @@ function nowHlc(): string {
   return serializeHlc(hlc.now())
 }
 
+type AppointmentParticipant = FhirAppointmentZod['participant'][number]
+type ParticipantStatus = AppointmentParticipant['status']
+
+/**
+ * Build the FHIR `participant` array for a locally-created/edited appointment:
+ * the patient PLUS the owning practitioner.
+ *
+ * The practitioner entry is load-bearing, not cosmetic. The Hub derives
+ * `participant_refs` from this array on every `appointment.syncBatch` push, and
+ * the pull (`appointment.listByPractitioner`) filters `participant_refs contains
+ * [practitionerId]`. Omit the practitioner and the row still persists to Supabase
+ * but is orphaned — never pulled back once the encrypted local cache clears, so it
+ * "disappears" on the next login. The ref MUST be the session's `practitionerId`
+ * (= `practitioner_id ?? sub`), the SAME value the pull passes, so the containment
+ * match is guaranteed.
+ *
+ * @param existing  On edit, the appointment's current participant list. Any
+ *   practitioner entry there is PRESERVED (an edit never reassigns the owner);
+ *   only a legacy patient-only row falls back to stamping `practitionerId`.
+ *
+ * Exported for direct unit coverage (the hook's create/walk-in/edit paths all
+ * route through it).
+ */
+export function appointmentParticipants(
+  patientRef: string,
+  patientName: string,
+  practitionerId: string | undefined,
+  patientStatus: ParticipantStatus = 'accepted',
+  existing?: AppointmentParticipant[],
+): AppointmentParticipant[] {
+  const participants: AppointmentParticipant[] = [
+    {
+      actor: { reference: `Patient/${patientRef}`, display: patientName },
+      status: patientStatus,
+    },
+  ]
+  const preservedPractitioners = (existing ?? []).filter((p) =>
+    p.actor.reference.startsWith('Practitioner/'),
+  )
+  if (preservedPractitioners.length > 0) {
+    participants.push(...preservedPractitioners)
+  } else if (practitionerId) {
+    participants.push({
+      actor: { reference: `Practitioner/${practitionerId}` },
+      status: 'accepted',
+    })
+  }
+  return participants
+}
+
+/** Current session's practitioner ref id (= `practitioner_id ?? sub`), or undefined. */
+function sessionPractitionerId(): string | undefined {
+  return useAuthSessionStore.getState().session?.practitionerId
+}
+
 // Cross-instance refresh: every useAppointments() hook subscribes here, and every
 // mutation broadcasts, so a booking/edit/cancel/walk-in made through ONE instance
 // (e.g. the BookingModal) immediately reloads the schedule rendered by ANOTHER
@@ -248,15 +303,11 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
         ],
         start: data.start,
         end: data.end,
-        participant: [
-          {
-            actor: {
-              reference: `Patient/${data.patientRef}`,
-              display: data.patientName,
-            },
-            status: 'accepted',
-          },
-        ],
+        participant: appointmentParticipants(
+          data.patientRef,
+          data.patientName,
+          sessionPractitionerId(),
+        ),
         description: data.description,
         _ultranos: {
           walkIn: false,
@@ -401,15 +452,13 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
         start: data.start,
         end: data.end,
         description: data.description,
-        participant: [
-          {
-            actor: {
-              reference: `Patient/${data.patientRef}`,
-              display: data.patientName,
-            },
-            status: existing.participant?.[0]?.status ?? 'accepted',
-          },
-        ],
+        participant: appointmentParticipants(
+          data.patientRef,
+          data.patientName,
+          sessionPractitionerId(),
+          existing.participant?.[0]?.status ?? 'accepted',
+          existing.participant,
+        ),
         _ultranos: { ...existing._ultranos, hlcTimestamp },
         meta: {
           ...existing.meta,
@@ -512,15 +561,11 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
         start: nowIso,
         end: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30-min default
         description: complaint?.trim() || undefined,
-        participant: [
-          {
-            actor: {
-              reference: `Patient/${patientRef}`,
-              display: patientName,
-            },
-            status: 'accepted',
-          },
-        ],
+        participant: appointmentParticipants(
+          patientRef,
+          patientName,
+          sessionPractitionerId(),
+        ),
         _ultranos: {
           walkIn: true,
           queuePosition: maxQueue + 1,
