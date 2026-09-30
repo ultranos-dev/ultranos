@@ -36,6 +36,21 @@ const DOCTOR_USER: TestUser = { sub: 'doctor-001', role: 'DOCTOR' as const, sess
 const ADMIN_USER: TestUser = { sub: 'admin-001', role: 'ADMIN' as const, sessionId: 'sess-3', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }
 const PHARMACIST_USER: TestUser = { sub: 'pharma-001', role: 'PHARMACIST' as const, sessionId: 'sess-4', orgId: 'org-1', facilityId: null, status: 'ACTIVE' }
 
+// A practitioner whose FHIR practitioner identity (participant_refs value, =
+// `practitioner_id ?? sub`) DIFFERS from the raw auth `sub`. Scoping MUST match on
+// this identity, not sub, or a `practitioner_id` claim would 403 the pull. UUID
+// values because listByPractitioner input requires z.string().uuid().
+const DOCTOR_DISTINCT: TestUser = {
+  sub: '00000000-0000-4000-8000-0000000000d1',
+  practitionerId: '00000000-0000-4000-8000-0000000000d2',
+  role: 'DOCTOR' as const, sessionId: 'sess-5', orgId: 'org-1', facilityId: null, status: 'ACTIVE',
+}
+// Legacy/no-claim case: no practitionerId → falls back to sub (zero-regression).
+const DOCTOR_UUID_SUB: TestUser = {
+  sub: '00000000-0000-4000-8000-0000000000d0',
+  role: 'DOCTOR' as const, sessionId: 'sess-6', orgId: 'org-1', facilityId: null, status: 'ACTIVE',
+}
+
 const PATIENT_UUID = '00000000-0000-4000-8000-000000000001'
 
 /** audit_log table stub so AuditLogger.emit never throws in tests. */
@@ -64,6 +79,8 @@ function buildAppointmentsQuery(rows: unknown[] = []) {
     in: vi.fn(() => q),
     lt: vi.fn(() => q),
     gt: vi.fn(() => q),
+    gte: vi.fn(() => q),
+    lte: vi.fn(() => q),
     neq: vi.fn(() => q),
     eq: vi.fn(() => q),
     order: vi.fn(() => q),
@@ -131,6 +148,17 @@ describe('appointment.listByPatient — RBAC + ownership scoping', () => {
     expect(q.contains).toHaveBeenCalledWith('participant_refs', [PATIENT_UUID])
   })
 
+  it('scopes a clinician by practitionerId (not raw sub) when they differ', async () => {
+    const q = buildAppointmentsQuery([])
+    const from = vi.fn((t: string) => (t === 'audit_log' ? mockAuditLogTable() : q))
+    const caller = createCaller(createTestContext({ supabaseFrom: from, user: DOCTOR_DISTINCT }))
+
+    await caller.appointment.listByPatient(input)
+
+    // participant_refs stores the practitioner IDENTITY, not the auth sub — scope on it.
+    expect(q.contains).toHaveBeenCalledWith('participant_refs', [PATIENT_UUID, DOCTOR_DISTINCT.practitionerId])
+  })
+
   it('emits a PHI_READ audit event', async () => {
     const q = buildAppointmentsQuery([])
     const auditTable = mockAuditLogTable()
@@ -141,6 +169,44 @@ describe('appointment.listByPatient — RBAC + ownership scoping', () => {
     await caller.appointment.listByPatient(input)
     // AuditLogger writes via rpc('audit_emit_with_lock'); assert it was invoked.
     expect((ctx.supabase as any).rpc).toHaveBeenCalled()
+  })
+})
+
+// ─── listByPractitioner RBAC — scope by practitioner identity, not raw sub ────
+describe('appointment.listByPractitioner — scopes by practitioner identity', () => {
+  const range = { startDate: '2026-06-01T00:00:00.000Z', endDate: '2026-06-08T00:00:00.000Z' }
+
+  it('allows a practitioner whose practitionerId differs from sub to list their own appointments', async () => {
+    const q = buildAppointmentsQuery([])
+    const from = vi.fn((t: string) => (t === 'audit_log' ? mockAuditLogTable() : q))
+    const caller = createCaller(createTestContext({ supabaseFrom: from, user: DOCTOR_DISTINCT }))
+
+    // RBAC must compare input.practitionerId against ctx.user.practitionerId — NOT sub —
+    // so this own-record query is allowed rather than 403'd.
+    await expect(
+      caller.appointment.listByPractitioner({ practitionerId: DOCTOR_DISTINCT.practitionerId as string, ...range }),
+    ).resolves.toBeDefined()
+    expect(q.contains).toHaveBeenCalledWith('participant_refs', [DOCTOR_DISTINCT.practitionerId])
+  })
+
+  it('forbids a practitioner from querying a DIFFERENT practitioner’s appointments', async () => {
+    const from = vi.fn((t: string) => (t === 'audit_log' ? mockAuditLogTable() : buildAppointmentsQuery([])))
+    const caller = createCaller(createTestContext({ supabaseFrom: from, user: DOCTOR_DISTINCT }))
+
+    await expect(
+      caller.appointment.listByPractitioner({ practitionerId: '00000000-0000-4000-8000-0000000000ff', ...range }),
+    ).rejects.toThrow(/denied|forbidden/i)
+  })
+
+  it('legacy case: practitionerId absent → falls back to sub (zero-regression)', async () => {
+    const q = buildAppointmentsQuery([])
+    const from = vi.fn((t: string) => (t === 'audit_log' ? mockAuditLogTable() : q))
+    const caller = createCaller(createTestContext({ supabaseFrom: from, user: DOCTOR_UUID_SUB }))
+
+    await expect(
+      caller.appointment.listByPractitioner({ practitionerId: DOCTOR_UUID_SUB.sub, ...range }),
+    ).resolves.toBeDefined()
+    expect(q.contains).toHaveBeenCalledWith('participant_refs', [DOCTOR_UUID_SUB.sub])
   })
 })
 

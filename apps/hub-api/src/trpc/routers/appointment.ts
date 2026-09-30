@@ -109,7 +109,16 @@ export const appointmentRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      assertPractitionerOrAdmin(ctx.user.role, ctx.user.sub, input.practitionerId)
+      // Scope on the practitioner IDENTITY (`practitioner_id ?? sub`), NOT raw sub:
+      // participant_refs stores that identity, and the client passes it as
+      // input.practitionerId. Comparing against sub would 403 the pull the moment a
+      // `practitioner_id` claim diverging from sub is introduced (init.ts warns of
+      // exactly this). Falls back to sub when no claim/practitionerId is present.
+      assertPractitionerOrAdmin(
+        ctx.user.role,
+        ctx.user.practitionerId ?? ctx.user.sub,
+        input.practitionerId,
+      )
 
       // Query appointments where any participant references this practitioner
       const { data, error } = await ctx.supabase
@@ -178,10 +187,12 @@ export const appointmentRouter = createTRPCRouter({
       // ADMIN sees all appointments for the patient; a clinician must also be a
       // participant, so we require the array to contain BOTH refs (PostgREST `cs`
       // = "contains all of"). A single containment argument keeps it one filter.
+      // The caller's own ref is the practitioner IDENTITY (`practitioner_id ?? sub`)
+      // that participant_refs actually stores — NOT raw sub (see listByPractitioner).
       const requiredRefs =
         isAdminRole(ctx.user.role)
           ? [input.patientId]
-          : [input.patientId, ctx.user.sub]
+          : [input.patientId, ctx.user.practitionerId ?? ctx.user.sub]
 
       const { data, error } = await ctx.supabase
         .from('appointments')
