@@ -15,8 +15,8 @@ vi.mock('next-intl', () => ({
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
+  default: ({ children, href, ...rest }: { children: React.ReactNode; href: string }) => (
+    <a href={href} {...rest}>{children}</a>
   ),
 }))
 
@@ -433,6 +433,8 @@ describe('ClinicalDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     setupAuthSession()
+    // No in-progress encounter and no recent encounters → ResumeEncounterStrip
+    // renders nothing, TodayEncounters is 0.
     mockEncountersOrderBy.mockReturnValue({
       reverse: vi.fn().mockReturnValue({
         limit: vi.fn().mockReturnValue({
@@ -446,6 +448,9 @@ describe('ClinicalDashboard', () => {
     mockSyncQueueFilter.mockReturnValue({
       count: vi.fn().mockResolvedValue(0),
     })
+    // The duplicate-review count hook hits the Hub over fetch — stub it so the
+    // chip resolves to "unavailable" instead of making a real network call.
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('no network')))
   })
 
   it('renders welcome header with practitioner name', async () => {
@@ -462,39 +467,46 @@ describe('ClinicalDashboard', () => {
     expect(screen.getByText('Doctor')).toBeDefined()
   })
 
-  it('renders Find patient button', async () => {
-    // ClinicalDashboard renders t('findPatient') — mock returns the i18n key 'findPatient'.
+  it('renders the launcher search as the primary action', async () => {
     const { ClinicalDashboard } = await import('@/components/dashboard/ClinicalDashboard')
     render(<ClinicalDashboard />)
-    expect(screen.getByText('findPatient')).toBeDefined()
+    // The launcher now uses the shared PatientSearchBar; its input is a combobox.
+    expect(screen.getByRole('combobox')).toBeDefined()
   })
 
-  it('renders inline patient search', async () => {
+  it('renders register and appointments secondary actions', async () => {
+    // The calm launcher replaces the "Find patient" button with the prominent
+    // search; the two secondary buttons are Register + Appointments.
     const { ClinicalDashboard } = await import('@/components/dashboard/ClinicalDashboard')
     render(<ClinicalDashboard />)
-    // Search input is the ui-kit SearchInput; its aria-label is the i18n key
-    // 'searchAriaLabel' (the next-intl mock returns keys verbatim). The magnifier
-    // button carries the 'common.search' → 'search' label, so this matches only
-    // the input.
-    expect(screen.getByLabelText('searchAriaLabel')).toBeDefined()
+    expect(screen.getByText('registerNew')).toBeDefined()
+    // "appointments" now labels both the secondary button and the attention chip.
+    expect(screen.getByRole('button', { name: 'appointments' })).toBeDefined()
   })
 
-  it('renders all four summary cards', async () => {
-    // Cards render i18n keys via the next-intl mock
+  it('renders the attention strip with six chips (not a stat-card grid)', async () => {
     const { ClinicalDashboard } = await import('@/components/dashboard/ClinicalDashboard')
     render(<ClinicalDashboard />)
-    expect(screen.getByText('todayEncounters')).toBeDefined()
-    expect(screen.getByText('pendingLabResults')).toBeDefined()
+    const chips = await screen.findAllByTestId('attention-chip')
+    // Appointments + Waiting (today's schedule) lead, then the four safety/queue chips.
+    expect(chips).toHaveLength(6)
+    // Chip labels come from the dashboard i18n namespace (mock returns keys).
+    expect(screen.getByText('waiting')).toBeDefined()
     expect(screen.getByText('unresolvedConflicts')).toBeDefined()
-    // DuplicateReviewsCard is mocked above
-    expect(screen.getByTestId('duplicate-reviews-card')).toBeDefined()
+    expect(screen.getByText('pendingLabResults')).toBeDefined()
+    expect(screen.getByText('pendingDuplicates')).toBeDefined()
+    expect(screen.getByText('todayEncounters')).toBeDefined()
+    // "appointments" appears twice (chip + button) — assert at least the chip exists.
+    expect(screen.getAllByText('appointments').length).toBeGreaterThanOrEqual(1)
   })
 
-  it('renders recent encounters section', async () => {
-    // RecentEncountersList renders t('recentEncounters') — mock returns i18n key
+  it('hides the resume strip when there is no in-progress encounter', async () => {
     const { ClinicalDashboard } = await import('@/components/dashboard/ClinicalDashboard')
     render(<ClinicalDashboard />)
-    expect(screen.getByText('recentEncounters')).toBeDefined()
+    await vi.waitFor(() => {
+      expect(screen.getByText('registerNew')).toBeDefined()
+    })
+    expect(screen.queryByTestId('resume-encounter-strip')).toBeNull()
   })
 
   it('does NOT render SyncPulse or NotificationBell (moved to shell layout)', async () => {

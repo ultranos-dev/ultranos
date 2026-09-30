@@ -684,7 +684,20 @@
     "conflictCheckUnavailable": "Conflict check unavailable",
     "noResults": "No patients found",
     "registerNew": "Register New Patient",
-    "pendingDuplicates": "Pending Duplicates"
+    "pendingDuplicates": "Pending Duplicates",
+    "resumeConsultation": "Resume consultation",
+    "continue": "Continue",
+    "needsAttention": "Needs attention",
+    "unavailableShort": "—",
+    "appointments": "Appointments",
+    "scanQr": "Scan QR",
+    "scanQrTitle": "Scan patient QR code",
+    "scanQrSubtitle": "Point the camera at the patient's Health Passport QR in their Patient Lite app.",
+    "qrStarting": "Starting camera…",
+    "qrCameraError": "Camera access denied or unavailable.",
+    "qrExpired": "This Health Passport QR code has expired.",
+    "qrInvalid": "QR code not recognized. Please try again.",
+    "waiting": "Waiting"
   },
   "install": {
     "prompt": "Install OPD Lite for offline access",

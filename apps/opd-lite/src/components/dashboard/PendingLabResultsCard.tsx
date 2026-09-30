@@ -1,36 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { fetchNotifications } from '@/lib/notification-api'
 import { Card } from '@/components/Card'
 import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { FlaskConical } from '@ultranos/ui-kit/icons'
+import { usePendingLabResultsCount } from './use-dashboard-counts'
 
 export function PendingLabResultsCard() {
   const t = useTranslations('dashboard')
-  const [count, setCount] = useState<number | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function loadLabCount() {
-      try {
-        const { notifications } = await fetchNotifications()
-        const labUnread = notifications.filter(
-          (n) => n.type === 'LAB_RESULT_AVAILABLE' && n.status !== 'ACKNOWLEDGED'
-        ).length
-        setCount(labUnread)
-      } catch {
-        // Network unavailable — keep last known count (null on first load)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadLabCount()
-    const interval = setInterval(loadLabCount, 30_000)
-    return () => clearInterval(interval)
-  }, [])
+  const { count, loading } = usePendingLabResultsCount()
 
   return (
     <Card>

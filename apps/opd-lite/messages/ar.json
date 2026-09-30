@@ -684,7 +684,20 @@
     "conflictCheckUnavailable": "فحص التعارضات غير متاح",
     "noResults": "لم يُعثر على مرضى",
     "registerNew": "تسجيل مريض جديد",
-    "pendingDuplicates": "التكرارات المعلقة"
+    "pendingDuplicates": "التكرارات المعلقة",
+    "resumeConsultation": "استئناف الاستشارة",
+    "continue": "متابعة",
+    "needsAttention": "يتطلب الانتباه",
+    "unavailableShort": "—",
+    "appointments": "المواعيد",
+    "scanQr": "مسح رمز QR",
+    "scanQrTitle": "مسح رمز QR للمريض",
+    "scanQrSubtitle": "وجّه الكاميرا نحو رمز جواز الصحة QR في تطبيق Patient Lite الخاص بالمريض.",
+    "qrStarting": "جارٍ تشغيل الكاميرا…",
+    "qrCameraError": "تم رفض الوصول إلى الكاميرا أو أنها غير متاحة.",
+    "qrExpired": "انتهت صلاحية رمز جواز الصحة QR هذا.",
+    "qrInvalid": "رمز QR غير معروف. يرجى المحاولة مرة أخرى.",
+    "waiting": "قيد الانتظار"
   },
   "install": {
     "prompt": "ثبّت عيادة خارجية للاستخدام دون اتصال",

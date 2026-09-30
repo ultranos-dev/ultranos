@@ -684,7 +684,20 @@
     "conflictCheckUnavailable": "د تضاد ازموینه شتون نلري",
     "noResults": "هیڅ ناروغ ونه موندل شو",
     "registerNew": "نوی ناروغ ثبت کړئ",
-    "pendingDuplicates": "انتظار کې تکراري"
+    "pendingDuplicates": "انتظار کې تکراري",
+    "resumeConsultation": "مشوره بیا پیل کړئ",
+    "continue": "دوام ورکړئ",
+    "needsAttention": "پاملرنې ته اړتیا",
+    "unavailableShort": "—",
+    "appointments": "ټاکنې",
+    "scanQr": "د QR سکن",
+    "scanQrTitle": "د ناروغ د QR کوډ سکن",
+    "scanQrSubtitle": "کمره د ناروغ د Patient Lite اپ کې د روغتیا پاسپورټ QR ته ونیسئ.",
+    "qrStarting": "کمره پیلېږي…",
+    "qrCameraError": "کمرې ته لاسرسی رد شو یا شتون نلري.",
+    "qrExpired": "د روغتیا پاسپورټ دا QR کوډ نېټه تېره ده.",
+    "qrInvalid": "QR کوډ ونه پېژندل شو. مهرباني وکړئ بیا هڅه وکړئ.",
+    "waiting": "په تمه"
   },
   "install": {
     "prompt": "د آفلاین لاسرسي لپاره سرپایي کلینیک نصب کړئ",

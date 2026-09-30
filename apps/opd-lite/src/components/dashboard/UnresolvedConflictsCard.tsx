@@ -1,42 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-import { db } from '@/lib/db'
-import { TIER_1_RESOURCE_TYPES } from '@/lib/conflict-resolution'
 import { Card } from '@/components/Card'
 import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { AlertTriangle } from '@ultranos/ui-kit/icons'
+import { useUnresolvedConflictsCount } from './use-dashboard-counts'
 
 export function UnresolvedConflictsCard() {
   const t = useTranslations('dashboard')
-  const [count, setCount] = useState<number | null>(0)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function loadConflicts() {
-      try {
-        const conflicts = await db.syncQueue
-          .filter(
-            (entry) =>
-              entry.conflictFlag === true &&
-              entry.status !== 'synced' &&
-              (TIER_1_RESOURCE_TYPES as readonly string[]).includes(entry.resourceType)
-          )
-          .count()
-        setCount(conflicts)
-      } catch {
-        setCount(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadConflicts()
-    const interval = setInterval(loadConflicts, 10_000)
-    return () => clearInterval(interval)
-  }, [])
+  const { count, loading } = useUnresolvedConflictsCount()
 
   return (
     <Card>

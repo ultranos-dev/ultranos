@@ -2,19 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { usePatientStore } from '@/stores/patient-store'
-import { usePatientSearch } from '@/lib/use-patient-search'
-import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
-import { PatientResultList } from '@/components/patient-result-list'
+import { PatientSearchBar, type PatientSearchResult } from '@ultranos/patient-kit/components/search/patient-search-bar'
+import { searchPatientsAdapter } from '@/lib/patient-search-adapter'
+import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
 import { PatientCreateModal } from '@/components/patient/PatientCreateModal'
+import { PatientQrScannerModal } from '@/components/patient/PatientQrScannerModal'
 import { Button } from '@/components/ui/Button'
-import { TodayEncountersCard } from './TodayEncountersCard'
-import { PendingLabResultsCard } from './PendingLabResultsCard'
-import { UnresolvedConflictsCard } from './UnresolvedConflictsCard'
-import { DuplicateReviewsCard } from './DuplicateReviewsCard'
-import { RecentEncountersList } from './RecentEncountersList'
+import { QrCode } from '@ultranos/ui-kit/icons'
+import { ResumeEncounterStrip } from './ResumeEncounterStrip'
+import { AttentionStrip } from './AttentionStrip'
 import type { FhirPatient } from '@ultranos/shared-types'
 
 function formatRole(role: string): string {
@@ -26,121 +25,140 @@ export function ClinicalDashboard() {
   const router = useRouter()
   const t = useTranslations('dashboard')
   const tCommon = useTranslations('common')
+  const tPatient = useTranslations('patient')
+  const tReg = useTranslations('registration')
+  const locale = useLocale()
   const session = useAuthSessionStore((s) => s.session)
-  const { query, results, isSearching, selectPatient } = usePatientStore()
-  const { search } = usePatientSearch()
+  const selectPatient = usePatientStore((s) => s.selectPatient)
   const searchRef = useRef<HTMLDivElement>(null)
-
-  // Local immediate input value; the actual search (Dexie decrypt-and-filter) is
-  // debounced 250ms so it does not run on every keystroke. Preserves the debounce
-  // behaviour previously baked into the app-local SearchInput component.
-  const [inputValue, setInputValue] = useState(query)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Register-new-patient modal (opened in place; the /register-patient route also
   // hosts this same modal for the nav link / bookmarks / deep-links).
   const [createOpen, setCreateOpen] = useState(false)
   const [createPrefill, setCreatePrefill] = useState('')
 
-  // Keep the input in sync when the store query is reset externally (e.g. after
-  // selecting a patient clears the query).
-  useEffect(() => {
-    setInputValue(query)
-  }, [query])
-
-  const handleQueryChange = useCallback(
-    (value: string) => {
-      setInputValue(value)
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      debounceRef.current = setTimeout(() => {
-        search(value)
-      }, 250)
+  // Scan a patient's Health Passport QR (from the Patient Lite mobile app) →
+  // route straight to that patient's encounter.
+  const [scanOpen, setScanOpen] = useState(false)
+  const handleScanned = useCallback(
+    (patientId: string) => {
+      setScanOpen(false)
+      router.push(`/encounter/${patientId}`)
     },
-    [search]
+    [router],
   )
 
+  // ⌘K / Ctrl+K focuses the launcher search from anywhere on the dashboard.
   useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault()
+        searchRef.current?.querySelector('input')?.focus()
+      }
     }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
   }, [])
 
   const handleSelect = useCallback(
-    (patient: FhirPatient) => {
+    (result: PatientSearchResult) => {
+      const patient = result.raw as FhirPatient
       selectPatient(patient)
       router.push(`/encounter/${patient.id}`)
     },
     [selectPatient, router]
   )
 
-  const handleStartEncounter = useCallback(() => {
-    searchRef.current?.querySelector('input')?.focus()
-  }, [])
-
   const displayName = session?.name || session?.email?.split('@')[0] || 'Clinician'
   const displayRole = formatRole(session?.role ?? '')
 
+  let dateLabel = ''
+  try {
+    dateLabel = new Date().toLocaleDateString(locale, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })
+  } catch {
+    dateLabel = ''
+  }
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* Greeting (page title is the shell BreadcrumbHeader, not an h1 here) */}
-      <div>
-        <p className="text-base font-semibold text-foreground">
-          {t('welcome', { name: displayName })}
-        </p>
-        <p className="text-sm text-muted-foreground">{displayRole}</p>
-      </div>
+    // Full-width page root (never capped) — the calm-launcher hero is centered
+    // *within* it, so the page still spans the shell, it is not a boxed page.
+    <div className="flex flex-1 flex-col items-center">
+      <div className="flex w-full max-w-2xl flex-col items-center gap-6 pt-10 text-center md:pt-16">
+        {/* Greeting — the hero. Shell breadcrumb still shows "Dashboard". */}
+        <div className="flex flex-col gap-1">
+          {dateLabel && (
+            <p className="text-sm font-medium text-muted-foreground font-numeric">{dateLabel}</p>
+          )}
+          <h1 className="text-2xl font-semibold text-foreground">
+            {t('welcome', { name: displayName })}
+          </h1>
+          <p className="text-sm text-muted-foreground">{displayRole}</p>
+        </div>
 
-      {/* Primary CTAs */}
-      <div className="flex items-center gap-3">
-        <Button variant="primary" onClick={handleStartEncounter}>
-          {t('findPatient')}
-        </Button>
-        <Button variant="outline" onClick={() => { setCreatePrefill(''); setCreateOpen(true) }}>
-          {t('registerNew')}
-        </Button>
-      </div>
-
-      {/* Inline patient search */}
-      <section ref={searchRef}>
-        <SearchInput
-          type="search"
-          value={inputValue}
-          onChange={(e) => handleQueryChange(e.target.value)}
-          placeholder={t('searchPlaceholder')}
-          aria-label={t('searchAriaLabel')}
-          searchLabel={tCommon('search')}
-          inputClassName="h-9 rounded-full"
-        />
-        {(results.length > 0 || isSearching || query.length > 0) && (
-          <div className="mt-2">
-            <PatientResultList
-              results={results}
-              isSearching={isSearching}
+        {/* Command search — the primary focus of the calm launcher.
+            Uses the shared PatientSearchBar (name / patient ID / National ID,
+            with as-you-type highlighting) so search is identical app-wide. */}
+        <section ref={searchRef} className="w-full text-start">
+          <div className="relative">
+            <PatientSearchBar
+              search={searchPatientsAdapter}
               onSelect={handleSelect}
-              query={query}
               onRegisterNew={(q) => { setCreatePrefill(q); setCreateOpen(true) }}
+              resolvePhotoUrl={getPatientPhotoUrl}
+              placeholder={t('searchPlaceholder')}
+              searchLabel={tCommon('search')}
+              searchingLabel={tPatient('loading')}
+              noResultsLabel={tPatient('noResults')}
+              registerNewLabel={tReg('registerNew')}
+              allergyLabel={tPatient('allergies')}
+              inputClassName="h-14 rounded-2xl text-base ps-4 pe-24"
             />
+            <kbd
+              className="pointer-events-none absolute end-14 top-7 hidden -translate-y-1/2 rounded-md border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground sm:inline-block"
+              aria-hidden="true"
+            >
+              ⌘K
+            </kbd>
           </div>
-        )}
-      </section>
+        </section>
 
-      {/* Summary cards grid */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <UnresolvedConflictsCard />
-        <TodayEncountersCard />
-        <PendingLabResultsCard />
-        <DuplicateReviewsCard />
-      </section>
+        {/* Secondary actions */}
+        <div className="flex items-center justify-center gap-3">
+          <Button variant="primary" onClick={() => { setCreatePrefill(''); setCreateOpen(true) }}>
+            {t('registerNew')}
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={() => setScanOpen(true)}>
+            <QrCode className="h-4 w-4" aria-hidden="true" />
+            {t('scanQr')}
+          </Button>
+          <Button variant="outline" onClick={() => router.push('/appointments')}>
+            {t('appointments')}
+          </Button>
+        </div>
 
-      {/* Recent encounters */}
-      <section>
-        <RecentEncountersList />
-      </section>
+        {/* Resume in-progress encounter (renders only when one exists) */}
+        <div className="w-full text-start">
+          <ResumeEncounterStrip />
+        </div>
+
+        {/* Compact attention line (replaces the four equal stat cards) */}
+        <AttentionStrip />
+      </div>
 
       <PatientCreateModal
         open={createOpen}
         prefilledNameGiven={createPrefill}
         onClose={() => setCreateOpen(false)}
+      />
+
+      <PatientQrScannerModal
+        open={scanOpen}
+        onClose={() => setScanOpen(false)}
+        onScanned={handleScanned}
       />
     </div>
   )

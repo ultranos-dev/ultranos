@@ -1,65 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { db } from '@/lib/db'
 import { Card } from '@/components/Card'
-import { useEncounterStore } from '@/stores/encounter-store'
-import { deserializeHlc } from '@ultranos/sync-engine'
 import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { CalendarDays } from '@ultranos/ui-kit/icons'
-
-interface TodayStats {
-  total: number
-  hasActive: boolean
-}
+import { useTodayEncounters } from './use-dashboard-counts'
 
 export function TodayEncountersCard() {
   const t = useTranslations('dashboard')
   const tEnc = useTranslations('encounter')
-  const [stats, setStats] = useState<TodayStats>({ total: 0, hasActive: false })
-  const [loading, setLoading] = useState(true)
-  const activeEncounter = useEncounterStore((s) => s.activeEncounter)
-
-  useEffect(() => {
-    async function loadToday() {
-      try {
-        const todayStart = new Date()
-        todayStart.setHours(0, 0, 0, 0)
-        const todayMs = todayStart.getTime()
-
-        const encounters = await db.encounters
-          .orderBy('_ultranos.hlcTimestamp')
-          .filter((e) => {
-            const ts = e._ultranos?.hlcTimestamp ?? ''
-            if (!ts) {
-              // Fall back to meta.lastUpdated (ISO 8601)
-              const fallback = e.meta?.lastUpdated ?? ''
-              return fallback ? new Date(fallback).getTime() >= todayMs : false
-            }
-            try {
-              const hlc = deserializeHlc(ts)
-              return hlc.wallMs >= todayMs
-            } catch {
-              return false
-            }
-          })
-          .toArray()
-
-        setStats({
-          total: encounters.length,
-          hasActive: encounters.some((e) => e.status === 'in-progress'),
-        })
-      } catch {
-        // Dexie unavailable — show zero state
-        setStats({ total: 0, hasActive: false })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadToday()
-  }, [activeEncounter])
+  const { stats, loading } = useTodayEncounters()
 
   return (
     <Card>

@@ -684,7 +684,20 @@
     "conflictCheckUnavailable": "بررسی تعارض در دسترس نیست",
     "noResults": "مریضی یافت نشد",
     "registerNew": "ثبت مریض جدید",
-    "pendingDuplicates": "تکراری‌های معلق"
+    "pendingDuplicates": "تکراری‌های معلق",
+    "resumeConsultation": "ادامه مشوره",
+    "continue": "ادامه",
+    "needsAttention": "نیازمند توجه",
+    "unavailableShort": "—",
+    "appointments": "وقت‌ملاقات‌ها",
+    "scanQr": "اسکن رمز QR",
+    "scanQrTitle": "اسکن رمز QR بیمار",
+    "scanQrSubtitle": "کمره را به سمت رمز QR پاسپورت صحی در برنامه Patient Lite بیمار بگیرید.",
+    "qrStarting": "در حال روشن کردن کمره…",
+    "qrCameraError": "دسترسی به کمره رد شد یا در دسترس نیست.",
+    "qrExpired": "اعتبار این رمز QR پاسپورت صحی به پایان رسیده است.",
+    "qrInvalid": "رمز QR شناخته نشد. لطفاً دوباره تلاش کنید.",
+    "waiting": "در انتظار"
   },
   "install": {
     "prompt": "نصب کلینیک سرپایی برای دسترسی آفلاین",

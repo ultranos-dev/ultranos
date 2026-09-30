@@ -1,12 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Card } from '@/components/Card'
-import { getHubTrpcUrl } from '@/lib/hub-url'
 import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { Copy } from '@ultranos/ui-kit/icons'
+import { useDuplicateReviewsCount } from './use-dashboard-counts'
 
 /**
  * Dashboard card showing the number of pending MPI duplicate reviews.
@@ -14,41 +13,7 @@ import { Copy } from '@ultranos/ui-kit/icons'
  */
 export function DuplicateReviewsCard() {
   const t = useTranslations('duplicateReview')
-  const [count, setCount] = useState<number | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function loadPendingCount() {
-      try {
-        const { getSupabaseBrowserClient } = await import('@/lib/supabase')
-        const { data: authData } = await getSupabaseBrowserClient().auth.getSession()
-        const token = authData.session?.access_token
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-        if (token) headers['Authorization'] = `Bearer ${token}`
-
-        const hubUrl = getHubTrpcUrl()
-        const res = await fetch(
-          `${hubUrl}/duplicateReview.pendingCount?input=${encodeURIComponent(JSON.stringify({ json: {} }))}`,
-          { method: 'GET', headers }
-        )
-
-        if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
-
-        const body = (await res.json()) as {
-          result: { data: { json: { count: number } } }
-        }
-        setCount(body.result.data.json.count)
-      } catch {
-        // Network unavailable — keep last known count (null on first load)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadPendingCount()
-    const interval = setInterval(loadPendingCount, 30_000)
-    return () => clearInterval(interval)
-  }, [])
+  const { count, loading } = useDuplicateReviewsCount()
 
   return (
     <Card>
