@@ -2,56 +2,187 @@
 
 exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page matches 1`] = `
 <div
-  class="flex flex-col gap-4"
+  class="flex flex-1 flex-col gap-4"
 >
-  <div
-    data-slot="detail-banner"
+  <section
+    class="sticky top-[4.5rem] z-20 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_6px_24px_-12px_rgba(0,0,0,0.18)]"
   >
     <div
-      data-testid="patient-banner-stack"
+      aria-live="assertive"
+      class="mb-4 rounded-xl bg-destructive/10 px-4 py-3 shadow-card ring-[0.65px] ring-destructive/50 text-center text-sm font-bold text-destructive transition-colors duration-200 !mb-0 !rounded-none !shadow-none !ring-0 border-b border-border"
+      data-banner-state="active"
+      data-testid="allergy-banner"
+      role="alert"
+    >
+      <span
+        aria-label="bannerActiveAria"
+      >
+        Penicillin
+      </span>
+    </div>
+    <div
+      class="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3"
     >
       <div
-        aria-live="assertive"
-        class="mb-4 rounded-xl bg-destructive/10 px-4 py-3 shadow-card ring-[0.65px] ring-destructive/50 text-center text-sm font-bold text-destructive transition-colors duration-200"
-        data-banner-state="active"
-        data-testid="allergy-banner"
-        role="alert"
-      >
-        <span
-          aria-label="bannerActiveAria"
-        >
-          Penicillin
-        </span>
-      </div>
-      <div
-        class="rounded-xl border px-4 py-3 text-sm border-primary/20 bg-primary/10 text-primary mb-4"
-        role="status"
+        class="flex flex-col items-center gap-1"
       >
         <div
-          class="flex items-start gap-2"
+          aria-label="Upload patient photo"
+          class="group relative cursor-pointer overflow-hidden rounded-full [outline-style:solid] outline-1 outline-offset-2 outline-[color:oklch(var(--primary)/0.5)]"
+          role="button"
+          style="width: 44px; height: 44px;"
+          tabindex="0"
         >
           <div
-            class="min-w-0 flex-1"
+            aria-hidden="true"
+            class="flex h-full w-full items-center justify-center text-white font-bold select-none"
+            style="background-color: rgb(89, 192, 158); font-size: 15.399999999999999px;"
+          >
+            ?
+          </div>
+          <div
+            class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-camera h-6 w-6 text-white"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+              />
+              <circle
+                cx="12"
+                cy="13"
+                r="3"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div
+        class="min-w-0"
+      >
+        <h2
+          class="truncate text-base font-bold text-foreground"
+          dir="auto"
+        >
+          Snapshot Patient Local
+        </h2>
+        <p
+          class="truncate text-xs font-medium text-muted-foreground tabular-nums"
+        >
+          female · 41y · ID …44444444
+        </p>
+      </div>
+      <div
+        class="ms-auto flex items-center gap-2"
+      >
+        <button
+          aria-label="Edit patient profile"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+          data-size="default"
+          data-slot="button"
+          data-variant="ghost"
+          type="button"
+        >
+          Edit Profile
+        </button>
+        <a
+          aria-label="Start New Encounter"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+          href="/encounter/44444444-4444-4444-4444-444444444444"
+        >
+          Start New Encounter
+        </a>
+      </div>
+    </div>
+    <div
+      aria-label="timelineTitle"
+      class="flex flex-wrap gap-2 border-t border-border px-3 py-2"
+      role="tablist"
+    >
+      <button
+        aria-selected="true"
+        class="h-9 rounded-full px-4 text-sm font-semibold transition-colors bg-primary text-primary-foreground"
+        role="tab"
+        type="button"
+      >
+        tabTimeline
+      </button>
+      <button
+        aria-selected="false"
+        class="h-9 rounded-full px-4 text-sm font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+        role="tab"
+        type="button"
+      >
+        tabEncounters
+      </button>
+      <button
+        aria-selected="false"
+        class="h-9 rounded-full px-4 text-sm font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+        role="tab"
+        type="button"
+      >
+        tabResults
+      </button>
+      <button
+        aria-selected="false"
+        class="h-9 rounded-full px-4 text-sm font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+        role="tab"
+        type="button"
+      >
+        tabMedications
+      </button>
+      <button
+        aria-selected="false"
+        class="h-9 rounded-full px-4 text-sm font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+        role="tab"
+        type="button"
+      >
+        tabDocuments
+      </button>
+    </div>
+  </section>
+  <div
+    data-testid="patient-banner-stack"
+  >
+    <div
+      class="rounded-xl border px-4 py-3 text-sm border-primary/20 bg-primary/10 text-primary mb-4"
+      role="status"
+    >
+      <div
+        class="flex items-start gap-2"
+      >
+        <div
+          class="min-w-0 flex-1"
+        >
+          <div
+            class=""
           >
             <div
-              class=""
+              class="flex items-center justify-between gap-3"
             >
-              <div
-                class="flex items-center justify-between gap-3"
+              <p>
+                biometricStaleMessage
+              </p>
+              <button
+                class="group/button inline-flex items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 shrink-0"
+                data-size="default"
+                data-slot="button"
+                data-variant="default"
+                type="button"
               >
-                <p>
-                  biometricStaleMessage
-                </p>
-                <button
-                  class="group/button inline-flex items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 shrink-0"
-                  data-size="default"
-                  data-slot="button"
-                  data-variant="default"
-                  type="button"
-                >
-                  biometricStaleAction
-                </button>
-              </div>
+                biometricStaleAction
+              </button>
             </div>
           </div>
         </div>
@@ -59,235 +190,55 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
     </div>
   </div>
   <div
-    class="gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start"
+    class="gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start"
   >
     <div
-      class="order-2 flex min-w-0 flex-col gap-4 lg:order-1"
+      class="min-w-0"
     >
-      <section
-        aria-label="encounterHistory"
+      <div
+        class="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-card"
       >
-        <h2
-          class="mb-3 text-lg font-semibold text-foreground"
-        >
-          encounterHistory
-        </h2>
         <div
-          class="space-y-3 rounded-xl bg-card p-3 shadow-card ring-[0.65px] ring-border/50"
-        >
-          <div
-            class="animate-pulse rounded-2xl bg-muted h-20 w-full"
-            data-slot="skeleton"
-          />
-          <div
-            class="animate-pulse rounded-2xl bg-muted h-20 w-full"
-            data-slot="skeleton"
-          />
-          <div
-            class="animate-pulse rounded-2xl bg-muted h-20 w-full"
-            data-slot="skeleton"
-          />
-        </div>
-      </section>
-      <section
-        aria-label="labResultsSection"
-      />
+          class="animate-pulse rounded-2xl bg-muted h-12 w-full"
+          data-slot="skeleton"
+        />
+        <div
+          class="animate-pulse rounded-2xl bg-muted h-12 w-full"
+          data-slot="skeleton"
+        />
+        <div
+          class="animate-pulse rounded-2xl bg-muted h-12 w-4/5"
+          data-slot="skeleton"
+        />
+      </div>
     </div>
     <aside
       aria-label="contextRailLabel"
-      class="order-1 mb-4 flex flex-col gap-4 lg:order-2 lg:mb-0 lg:sticky lg:top-[4.5rem] lg:max-h-[calc(100svh-4.5rem)] lg:overflow-y-auto lg:pb-2"
+      class="mt-4 flex flex-col gap-4 lg:mt-0"
     >
-      <div
-        class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 "
+      <section
+        class="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
       >
-        <div
-          class="flex items-start gap-5"
+        <h3
+          class="border-b border-border px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
         >
-          <div
-            class="flex flex-col items-center gap-1"
+          railAllergies
+        </h3>
+        <ul
+          class="divide-y divide-border"
+        >
+          <li
+            class="flex items-center justify-between gap-2 px-4 py-2.5 text-sm"
           >
-            <div
-              class="flex flex-col items-center gap-1"
-            >
-              <div
-                aria-label="Upload patient photo"
-                class="group relative cursor-pointer overflow-hidden rounded-full [outline-style:solid] outline-1 outline-offset-2 outline-[color:oklch(var(--primary)/0.5)]"
-                role="button"
-                style="width: 80px; height: 80px;"
-                tabindex="0"
-              >
-                <div
-                  aria-hidden="true"
-                  class="flex h-full w-full items-center justify-center text-white font-bold select-none"
-                  style="background-color: rgb(89, 192, 158); font-size: 28px;"
-                >
-                  ?
-                </div>
-                <div
-                  class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
-                >
-                  <svg
-                    aria-hidden="true"
-                    class="lucide lucide-camera h-6 w-6 text-white"
-                    fill="none"
-                    height="24"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
-                    />
-                    <circle
-                      cx="12"
-                      cy="13"
-                      r="3"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div
-            class="min-w-0 flex-1"
-          >
-            <h2
-              class="text-xl font-semibold text-foreground leading-snug"
+            <span
+              class="min-w-0 truncate text-foreground"
               dir="auto"
             >
-              Snapshot Patient Local
-            </h2>
-            <p
-              class="mt-0.5 text-xs text-muted-foreground"
-            >
-              Snapshot Patient Latin
-            </p>
-            <p
-              class="mt-2 text-sm font-medium text-muted-foreground"
-            >
-              female
-              <span
-                class="mx-1"
-              >
-                ·
-              </span>
-              41y
-              <span
-                class="mx-1"
-              >
-                ·
-              </span>
-              --
-            </p>
-            <dl
-              class="mt-3 grid grid-cols-4 gap-x-3 gap-y-1"
-            >
-              <div
-                class="min-w-0"
-              >
-                <dt
-                  class="text-xs text-muted-foreground"
-                >
-                  Height
-                </dt>
-                <dd
-                  class="truncate text-sm font-semibold text-foreground tabular-nums"
-                >
-                  <span
-                    class="font-normal text-muted-foreground"
-                  >
-                    Not recorded
-                  </span>
-                </dd>
-              </div>
-              <div
-                class="min-w-0"
-              >
-                <dt
-                  class="text-xs text-muted-foreground"
-                >
-                  Weight
-                </dt>
-                <dd
-                  class="truncate text-sm font-semibold text-foreground tabular-nums"
-                >
-                  <span
-                    class="font-normal text-muted-foreground"
-                  >
-                    Not recorded
-                  </span>
-                </dd>
-              </div>
-              <div
-                class="min-w-0"
-              >
-                <dt
-                  class="text-xs text-muted-foreground"
-                >
-                  BMI
-                </dt>
-                <dd
-                  class="truncate text-sm font-semibold text-foreground tabular-nums"
-                >
-                  <span
-                    class="font-normal text-muted-foreground"
-                  >
-                    Not recorded
-                  </span>
-                </dd>
-              </div>
-              <div
-                class="min-w-0"
-              >
-                <dt
-                  class="text-xs text-muted-foreground"
-                >
-                  Blood
-                </dt>
-                <dd
-                  class="truncate text-sm font-semibold text-foreground tabular-nums"
-                >
-                  <span
-                    class="font-normal text-muted-foreground"
-                  >
-                    Not recorded
-                  </span>
-                </dd>
-              </div>
-            </dl>
-            <p
-              class="mt-1 text-xs text-muted-foreground"
-            >
-              lastUpdated
-            </p>
-          </div>
-        </div>
-        <div
-          class="mt-4 flex items-center justify-between gap-3"
-        >
-          <button
-            aria-label="Edit patient profile"
-            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
-            data-size="default"
-            data-slot="button"
-            data-variant="ghost"
-            type="button"
-          >
-            Edit Profile
-          </button>
-          <a
-            aria-label="Start New Encounter"
-            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
-            href="/encounter/44444444-4444-4444-4444-444444444444"
-          >
-            Start New Encounter
-          </a>
-        </div>
-      </div>
+              Penicillin
+            </span>
+          </li>
+        </ul>
+      </section>
       <div
         class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 "
       >
@@ -313,72 +264,75 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
           />
         </div>
       </div>
-      <div
-        class="rounded-xl bg-card shadow-sm ring-[0.65px] ring-border/50"
+      <section
+        class="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
       >
-        <button
-          aria-controls="patient-details-content"
-          aria-expanded="false"
-          class="flex w-full items-center justify-between px-5 py-4 text-start"
-          type="button"
+        <h3
+          class="border-b border-border px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
         >
-          <span
-            class="text-sm font-semibold text-foreground"
-          >
-            detailsTitle
-          </span>
-          <svg
-            aria-hidden="true"
-            class="lucide lucide-chevron-down h-4 w-4 text-muted-foreground transition-transform duration-200"
-            fill="none"
-            height="24"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="m6 9 6 6 6-6"
-            />
-          </svg>
-        </button>
-      </div>
-      <div
-        class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 p-0"
-      >
-        <button
-          aria-controls="patient-audit-trail-content"
-          aria-expanded="false"
-          class="flex w-full items-center justify-between px-5 py-4 text-start"
-          type="button"
+          railDetails
+        </h3>
+        <dl
+          class="divide-y divide-border"
         >
-          <span
-            class="text-sm font-semibold text-foreground"
+          <div
+            class="flex items-center justify-between px-4 py-2.5 text-sm"
           >
-            auditTrail
-          </span>
-          <svg
-            aria-hidden="true"
-            class="lucide lucide-chevron-down h-4 w-4 text-muted-foreground transition-transform duration-200"
-            fill="none"
-            height="24"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="24"
-            xmlns="http://www.w3.org/2000/svg"
+            <dt
+              class="text-muted-foreground"
+            >
+              detailHeight
+            </dt>
+            <dd
+              class="font-semibold text-foreground tabular-nums"
+            >
+              --
+            </dd>
+          </div>
+          <div
+            class="flex items-center justify-between px-4 py-2.5 text-sm"
           >
-            <path
-              d="m6 9 6 6 6-6"
-            />
-          </svg>
-        </button>
-      </div>
+            <dt
+              class="text-muted-foreground"
+            >
+              detailWeight
+            </dt>
+            <dd
+              class="font-semibold text-foreground tabular-nums"
+            >
+              --
+            </dd>
+          </div>
+          <div
+            class="flex items-center justify-between px-4 py-2.5 text-sm"
+          >
+            <dt
+              class="text-muted-foreground"
+            >
+              detailBmi
+            </dt>
+            <dd
+              class="font-semibold text-foreground tabular-nums"
+            >
+              --
+            </dd>
+          </div>
+          <div
+            class="flex items-center justify-between px-4 py-2.5 text-sm"
+          >
+            <dt
+              class="text-muted-foreground"
+            >
+              detailBlood
+            </dt>
+            <dd
+              class="font-semibold text-foreground tabular-nums"
+            >
+              --
+            </dd>
+          </div>
+        </dl>
+      </section>
     </aside>
   </div>
 </div>
@@ -386,56 +340,187 @@ exports[`Patient Chart — Snapshot Tests > snapshot: LTR patient chart page mat
 
 exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page matches 1`] = `
 <div
-  class="flex flex-col gap-4"
+  class="flex flex-1 flex-col gap-4"
 >
-  <div
-    data-slot="detail-banner"
+  <section
+    class="sticky top-[4.5rem] z-20 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_6px_24px_-12px_rgba(0,0,0,0.18)]"
   >
     <div
-      data-testid="patient-banner-stack"
+      aria-live="assertive"
+      class="mb-4 rounded-xl bg-destructive/10 px-4 py-3 shadow-card ring-[0.65px] ring-destructive/50 text-center text-sm font-bold text-destructive transition-colors duration-200 !mb-0 !rounded-none !shadow-none !ring-0 border-b border-border"
+      data-banner-state="active"
+      data-testid="allergy-banner"
+      role="alert"
+    >
+      <span
+        aria-label="bannerActiveAria"
+      >
+        Penicillin
+      </span>
+    </div>
+    <div
+      class="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3"
     >
       <div
-        aria-live="assertive"
-        class="mb-4 rounded-xl bg-destructive/10 px-4 py-3 shadow-card ring-[0.65px] ring-destructive/50 text-center text-sm font-bold text-destructive transition-colors duration-200"
-        data-banner-state="active"
-        data-testid="allergy-banner"
-        role="alert"
-      >
-        <span
-          aria-label="bannerActiveAria"
-        >
-          Penicillin
-        </span>
-      </div>
-      <div
-        class="rounded-xl border px-4 py-3 text-sm border-primary/20 bg-primary/10 text-primary mb-4"
-        role="status"
+        class="flex flex-col items-center gap-1"
       >
         <div
-          class="flex items-start gap-2"
+          aria-label="Upload patient photo"
+          class="group relative cursor-pointer overflow-hidden rounded-full [outline-style:solid] outline-1 outline-offset-2 outline-[color:oklch(var(--primary)/0.5)]"
+          role="button"
+          style="width: 44px; height: 44px;"
+          tabindex="0"
         >
           <div
-            class="min-w-0 flex-1"
+            aria-hidden="true"
+            class="flex h-full w-full items-center justify-center text-white font-bold select-none"
+            style="background-color: rgb(89, 192, 158); font-size: 15.399999999999999px;"
+          >
+            ?
+          </div>
+          <div
+            class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-camera h-6 w-6 text-white"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+              />
+              <circle
+                cx="12"
+                cy="13"
+                r="3"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div
+        class="min-w-0"
+      >
+        <h2
+          class="truncate text-base font-bold text-foreground"
+          dir="auto"
+        >
+          Snapshot Patient Local
+        </h2>
+        <p
+          class="truncate text-xs font-medium text-muted-foreground tabular-nums"
+        >
+          female · 41y · ID …44444444
+        </p>
+      </div>
+      <div
+        class="ms-auto flex items-center gap-2"
+      >
+        <button
+          aria-label="Edit patient profile"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+          data-size="default"
+          data-slot="button"
+          data-variant="ghost"
+          type="button"
+        >
+          Edit Profile
+        </button>
+        <a
+          aria-label="Start New Encounter"
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
+          href="/encounter/44444444-4444-4444-4444-444444444444"
+        >
+          Start New Encounter
+        </a>
+      </div>
+    </div>
+    <div
+      aria-label="timelineTitle"
+      class="flex flex-wrap gap-2 border-t border-border px-3 py-2"
+      role="tablist"
+    >
+      <button
+        aria-selected="true"
+        class="h-9 rounded-full px-4 text-sm font-semibold transition-colors bg-primary text-primary-foreground"
+        role="tab"
+        type="button"
+      >
+        tabTimeline
+      </button>
+      <button
+        aria-selected="false"
+        class="h-9 rounded-full px-4 text-sm font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+        role="tab"
+        type="button"
+      >
+        tabEncounters
+      </button>
+      <button
+        aria-selected="false"
+        class="h-9 rounded-full px-4 text-sm font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+        role="tab"
+        type="button"
+      >
+        tabResults
+      </button>
+      <button
+        aria-selected="false"
+        class="h-9 rounded-full px-4 text-sm font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+        role="tab"
+        type="button"
+      >
+        tabMedications
+      </button>
+      <button
+        aria-selected="false"
+        class="h-9 rounded-full px-4 text-sm font-semibold transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+        role="tab"
+        type="button"
+      >
+        tabDocuments
+      </button>
+    </div>
+  </section>
+  <div
+    data-testid="patient-banner-stack"
+  >
+    <div
+      class="rounded-xl border px-4 py-3 text-sm border-primary/20 bg-primary/10 text-primary mb-4"
+      role="status"
+    >
+      <div
+        class="flex items-start gap-2"
+      >
+        <div
+          class="min-w-0 flex-1"
+        >
+          <div
+            class=""
           >
             <div
-              class=""
+              class="flex items-center justify-between gap-3"
             >
-              <div
-                class="flex items-center justify-between gap-3"
+              <p>
+                biometricStaleMessage
+              </p>
+              <button
+                class="group/button inline-flex items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 shrink-0"
+                data-size="default"
+                data-slot="button"
+                data-variant="default"
+                type="button"
               >
-                <p>
-                  biometricStaleMessage
-                </p>
-                <button
-                  class="group/button inline-flex items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11 shrink-0"
-                  data-size="default"
-                  data-slot="button"
-                  data-variant="default"
-                  type="button"
-                >
-                  biometricStaleAction
-                </button>
-              </div>
+                biometricStaleAction
+              </button>
             </div>
           </div>
         </div>
@@ -443,235 +528,55 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
     </div>
   </div>
   <div
-    class="gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start"
+    class="gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start"
   >
     <div
-      class="order-2 flex min-w-0 flex-col gap-4 lg:order-1"
+      class="min-w-0"
     >
-      <section
-        aria-label="encounterHistory"
+      <div
+        class="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-card"
       >
-        <h2
-          class="mb-3 text-lg font-semibold text-foreground"
-        >
-          encounterHistory
-        </h2>
         <div
-          class="space-y-3 rounded-xl bg-card p-3 shadow-card ring-[0.65px] ring-border/50"
-        >
-          <div
-            class="animate-pulse rounded-2xl bg-muted h-20 w-full"
-            data-slot="skeleton"
-          />
-          <div
-            class="animate-pulse rounded-2xl bg-muted h-20 w-full"
-            data-slot="skeleton"
-          />
-          <div
-            class="animate-pulse rounded-2xl bg-muted h-20 w-full"
-            data-slot="skeleton"
-          />
-        </div>
-      </section>
-      <section
-        aria-label="labResultsSection"
-      />
+          class="animate-pulse rounded-2xl bg-muted h-12 w-full"
+          data-slot="skeleton"
+        />
+        <div
+          class="animate-pulse rounded-2xl bg-muted h-12 w-full"
+          data-slot="skeleton"
+        />
+        <div
+          class="animate-pulse rounded-2xl bg-muted h-12 w-4/5"
+          data-slot="skeleton"
+        />
+      </div>
     </div>
     <aside
       aria-label="contextRailLabel"
-      class="order-1 mb-4 flex flex-col gap-4 lg:order-2 lg:mb-0 lg:sticky lg:top-[4.5rem] lg:max-h-[calc(100svh-4.5rem)] lg:overflow-y-auto lg:pb-2"
+      class="mt-4 flex flex-col gap-4 lg:mt-0"
     >
-      <div
-        class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 "
+      <section
+        class="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
       >
-        <div
-          class="flex items-start gap-5"
+        <h3
+          class="border-b border-border px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
         >
-          <div
-            class="flex flex-col items-center gap-1"
+          railAllergies
+        </h3>
+        <ul
+          class="divide-y divide-border"
+        >
+          <li
+            class="flex items-center justify-between gap-2 px-4 py-2.5 text-sm"
           >
-            <div
-              class="flex flex-col items-center gap-1"
-            >
-              <div
-                aria-label="Upload patient photo"
-                class="group relative cursor-pointer overflow-hidden rounded-full [outline-style:solid] outline-1 outline-offset-2 outline-[color:oklch(var(--primary)/0.5)]"
-                role="button"
-                style="width: 80px; height: 80px;"
-                tabindex="0"
-              >
-                <div
-                  aria-hidden="true"
-                  class="flex h-full w-full items-center justify-center text-white font-bold select-none"
-                  style="background-color: rgb(89, 192, 158); font-size: 28px;"
-                >
-                  ?
-                </div>
-                <div
-                  class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
-                >
-                  <svg
-                    aria-hidden="true"
-                    class="lucide lucide-camera h-6 w-6 text-white"
-                    fill="none"
-                    height="24"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                    width="24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
-                    />
-                    <circle
-                      cx="12"
-                      cy="13"
-                      r="3"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div
-            class="min-w-0 flex-1"
-          >
-            <h2
-              class="text-xl font-semibold text-foreground leading-snug"
+            <span
+              class="min-w-0 truncate text-foreground"
               dir="auto"
             >
-              Snapshot Patient Local
-            </h2>
-            <p
-              class="mt-0.5 text-xs text-muted-foreground"
-            >
-              Snapshot Patient Latin
-            </p>
-            <p
-              class="mt-2 text-sm font-medium text-muted-foreground"
-            >
-              female
-              <span
-                class="mx-1"
-              >
-                ·
-              </span>
-              41y
-              <span
-                class="mx-1"
-              >
-                ·
-              </span>
-              --
-            </p>
-            <dl
-              class="mt-3 grid grid-cols-4 gap-x-3 gap-y-1"
-            >
-              <div
-                class="min-w-0"
-              >
-                <dt
-                  class="text-xs text-muted-foreground"
-                >
-                  Height
-                </dt>
-                <dd
-                  class="truncate text-sm font-semibold text-foreground tabular-nums"
-                >
-                  <span
-                    class="font-normal text-muted-foreground"
-                  >
-                    Not recorded
-                  </span>
-                </dd>
-              </div>
-              <div
-                class="min-w-0"
-              >
-                <dt
-                  class="text-xs text-muted-foreground"
-                >
-                  Weight
-                </dt>
-                <dd
-                  class="truncate text-sm font-semibold text-foreground tabular-nums"
-                >
-                  <span
-                    class="font-normal text-muted-foreground"
-                  >
-                    Not recorded
-                  </span>
-                </dd>
-              </div>
-              <div
-                class="min-w-0"
-              >
-                <dt
-                  class="text-xs text-muted-foreground"
-                >
-                  BMI
-                </dt>
-                <dd
-                  class="truncate text-sm font-semibold text-foreground tabular-nums"
-                >
-                  <span
-                    class="font-normal text-muted-foreground"
-                  >
-                    Not recorded
-                  </span>
-                </dd>
-              </div>
-              <div
-                class="min-w-0"
-              >
-                <dt
-                  class="text-xs text-muted-foreground"
-                >
-                  Blood
-                </dt>
-                <dd
-                  class="truncate text-sm font-semibold text-foreground tabular-nums"
-                >
-                  <span
-                    class="font-normal text-muted-foreground"
-                  >
-                    Not recorded
-                  </span>
-                </dd>
-              </div>
-            </dl>
-            <p
-              class="mt-1 text-xs text-muted-foreground"
-            >
-              lastUpdated
-            </p>
-          </div>
-        </div>
-        <div
-          class="mt-4 flex items-center justify-between gap-3"
-        >
-          <button
-            aria-label="Edit patient profile"
-            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
-            data-size="default"
-            data-slot="button"
-            data-variant="ghost"
-            type="button"
-          >
-            Edit Profile
-          </button>
-          <a
-            aria-label="Start New Encounter"
-            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 [@media(pointer:coarse)]:min-h-11"
-            href="/encounter/44444444-4444-4444-4444-444444444444"
-          >
-            Start New Encounter
-          </a>
-        </div>
-      </div>
+              Penicillin
+            </span>
+          </li>
+        </ul>
+      </section>
       <div
         class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 "
       >
@@ -697,72 +602,75 @@ exports[`Patient Chart — Snapshot Tests > snapshot: RTL patient chart page mat
           />
         </div>
       </div>
-      <div
-        class="rounded-xl bg-card shadow-sm ring-[0.65px] ring-border/50"
+      <section
+        class="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
       >
-        <button
-          aria-controls="patient-details-content"
-          aria-expanded="false"
-          class="flex w-full items-center justify-between px-5 py-4 text-start"
-          type="button"
+        <h3
+          class="border-b border-border px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
         >
-          <span
-            class="text-sm font-semibold text-foreground"
-          >
-            detailsTitle
-          </span>
-          <svg
-            aria-hidden="true"
-            class="lucide lucide-chevron-down h-4 w-4 text-muted-foreground transition-transform duration-200"
-            fill="none"
-            height="24"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="m6 9 6 6 6-6"
-            />
-          </svg>
-        </button>
-      </div>
-      <div
-        class="rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50 p-0"
-      >
-        <button
-          aria-controls="patient-audit-trail-content"
-          aria-expanded="false"
-          class="flex w-full items-center justify-between px-5 py-4 text-start"
-          type="button"
+          railDetails
+        </h3>
+        <dl
+          class="divide-y divide-border"
         >
-          <span
-            class="text-sm font-semibold text-foreground"
+          <div
+            class="flex items-center justify-between px-4 py-2.5 text-sm"
           >
-            auditTrail
-          </span>
-          <svg
-            aria-hidden="true"
-            class="lucide lucide-chevron-down h-4 w-4 text-muted-foreground transition-transform duration-200"
-            fill="none"
-            height="24"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="24"
-            xmlns="http://www.w3.org/2000/svg"
+            <dt
+              class="text-muted-foreground"
+            >
+              detailHeight
+            </dt>
+            <dd
+              class="font-semibold text-foreground tabular-nums"
+            >
+              --
+            </dd>
+          </div>
+          <div
+            class="flex items-center justify-between px-4 py-2.5 text-sm"
           >
-            <path
-              d="m6 9 6 6 6-6"
-            />
-          </svg>
-        </button>
-      </div>
+            <dt
+              class="text-muted-foreground"
+            >
+              detailWeight
+            </dt>
+            <dd
+              class="font-semibold text-foreground tabular-nums"
+            >
+              --
+            </dd>
+          </div>
+          <div
+            class="flex items-center justify-between px-4 py-2.5 text-sm"
+          >
+            <dt
+              class="text-muted-foreground"
+            >
+              detailBmi
+            </dt>
+            <dd
+              class="font-semibold text-foreground tabular-nums"
+            >
+              --
+            </dd>
+          </div>
+          <div
+            class="flex items-center justify-between px-4 py-2.5 text-sm"
+          >
+            <dt
+              class="text-muted-foreground"
+            >
+              detailBlood
+            </dt>
+            <dd
+              class="font-semibold text-foreground tabular-nums"
+            >
+              --
+            </dd>
+          </div>
+        </dl>
+      </section>
     </aside>
   </div>
 </div>

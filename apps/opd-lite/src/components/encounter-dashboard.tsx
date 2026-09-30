@@ -38,13 +38,34 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/Card'
 import { usePatientSync } from '@/hooks/usePatientSync'
 import { hasUnresolvedTier1Conflicts } from '@/lib/conflict-check'
-import { DetailLayout } from '@ultranos/ui-kit/components/ui/detail-layout'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
-import { AlertTriangle } from '@ultranos/ui-kit/icons'
-import { EncounterContextRail } from '@/components/encounter/EncounterContextRail'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
+import { AlertTriangle, ChevronDown, Pill } from '@ultranos/ui-kit/icons'
+import { getPatientPhotoUrl } from '@/lib/patient-photo-api'
 
 interface EncounterDashboardProps {
   patientId: string
+}
+
+// Command-island layout: the four workflow sections are tabs (one open at a time).
+// Allergies are deliberately NOT a tab — they render in the island's always-red
+// strip (Rule #4) and are edited via a peek drawer.
+type SectionKey = 'vitals' | 'soap' | 'prescriptions' | 'labs'
+
+// Shared shapes so the island, its drawers, and the work panels all read as one
+// rounded, bordered system (matches the approved mockup).
+const ISLAND_CLASS =
+  'sticky top-[4.5rem] z-20 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_6px_24px_-12px_rgba(0,0,0,0.18)]'
+const PANEL_CLASS = 'rounded-2xl border border-border bg-card p-5 shadow-card'
+
+/** Work-panel header: title + optional right-aligned control (e.g. autosave). */
+function PanelHeader({ title, right }: { title: string; right?: React.ReactNode }) {
+  return (
+    <div className="mb-4 flex items-center justify-between gap-3">
+      <h2 className="text-lg font-bold text-foreground">{title}</h2>
+      {right}
+    </div>
+  )
 }
 
 // Resolve age from an exact birthDate when present, else fall back to the
@@ -88,11 +109,9 @@ function patientNameSegments(ext?: FhirPatient['_ultranos']): string[] {
 export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const tPatient = useTranslations('patient')
   const tPrescription = useTranslations('prescription')
-  const tLabOrder = useTranslations('labOrder')
   const tEncounter = useTranslations('encounter')
   const tNav = useTranslations('nav')
   const tSoap = useTranslations('soap')
-  const tAllergy = useTranslations('allergy')
   const locale = useLocale() as 'en' | 'ar' | 'prs' | 'ps'
   // Canonical FHIR reference. Encounters (participant) and prescriptions
   // (requester) are stored verbatim, and the Hub scopes encounter.listByPractitioner
@@ -117,6 +136,9 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const [dexiePatient, setDexiePatient] = useState<FhirPatient | null>(null)
   const [loading, setLoading] = useState(false)
   const [needsReauth, setNeedsReauth] = useState(false)
+  // Patient photo (signed URL, opaque key resolved server-side) — shown in the
+  // header and rail; falls back to initials on miss/offline.
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
 
   const { isSyncing } = usePatientSync(patientId)
   const [prescriptionBlocked, setPrescriptionBlocked] = useState(false)
@@ -129,6 +151,15 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const loadActiveEncounter = useEncounterStore((s) => s.loadActiveEncounter)
   const isActive = activeEncounter?.status === 'in-progress'
 
+  // Command island: the four work sections are tabs (one open at a time); SOAP is
+  // the default. Reference info (allergies, active meds) opens as peek drawers that
+  // drop out of the island, so they can overlay whatever work tab you're on.
+  const [activeSection, setActiveSection] = useState<SectionKey>('soap')
+  const [openDrawer, setOpenDrawer] = useState<'allergies' | 'meds' | null>(null)
+  const toggleDrawer = useCallback((d: 'allergies' | 'meds') => {
+    setOpenDrawer((cur) => (cur === d ? null : d))
+  }, [])
+
   // SOAP note state
   const subjective = useSoapNoteStore((s) => s.subjective)
   const objective = useSoapNoteStore((s) => s.objective)
@@ -139,6 +170,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const setAssessment = useSoapNoteStore((s) => s.setAssessment)
   const setSoapPlan = useSoapNoteStore((s) => s.setPlan)
   const autosaveStatus = useSoapNoteStore((s) => s.autosaveStatus)
+  const soapDecryptFailed = useSoapNoteStore((s) => s.decryptFailed)
   const initForEncounter = useSoapNoteStore((s) => s.initForEncounter)
   const persistToLedger = useSoapNoteStore((s) => s.persistToLedger)
   const loadFromLedger = useSoapNoteStore((s) => s.loadFromLedger)
@@ -243,6 +275,18 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       cancelled = true
     }
   }, [patientId, selectedPatient])
+
+  // Patient photo — signed URL by id (Hub resolves the opaque key); null on miss.
+  useEffect(() => {
+    if (!patientId) { setPhotoUrl(null); return }
+    let cancelled = false
+    const controller = new AbortController()
+    ;(async () => {
+      const url = await getPatientPhotoUrl(patientId, controller.signal)
+      if (!cancelled) setPhotoUrl(url ?? null)
+    })()
+    return () => { cancelled = true; controller.abort() }
+  }, [patientId])
 
   // Load any active encounter for this patient + practitioner from Dexie.
   useEffect(() => {
@@ -570,32 +614,16 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const patient = (selectedPatient?.id === patientId ? selectedPatient : null) ?? dexiePatient
   const nameSegments = patient ? patientNameSegments(patient._ultranos) : []
 
-  // Rail props — derived from same sources as the existing patient info UI.
-  // These are display-only derivations; no clinical logic is changed here.
-  const railPatient = patient
-    ? {
-        display:
-          nameSegments.length > 0
-            ? nameSegments.join(' · ')
-            : (patient._ultranos?.nameLocal ?? ''),
-        ageSex: `${formatAge(patient.birthDate, patient._ultranos?.birthYear, tPatient('unknownAge'))} · ${patient.gender ?? tPatient('unknownGender')}`,
-        idSlice: patient.id.slice(0, 8),
-      }
-    : { display: '', ageSex: '', idSlice: '' }
-
-  // AllergyIntolerance.code is CodeableConcept: prefer text, then first coding display.
-  const railAllergies = activeAllergies
-    .map((a) => a.code?.text ?? a.code?.coding?.[0]?.display ?? '')
-    .filter(Boolean)
-
-  // interactionModal.checkResult is the last stored check result from the modal state.
-  // `null` means no check has run yet (no prescription added). This is deliberately
-  // NOT 'UNAVAILABLE': UNAVAILABLE is reserved for a check that ran and failed
-  // (safety rule #3). The rail renders `null` as a neutral "none recorded" chip.
-  const railInteractionStatus = interactionModal.checkResult?.result ?? null
+  // Island identity display name (patronymic chain, or local name fallback).
+  const islandDisplayName =
+    nameSegments.length > 0
+      ? nameSegments.join(' · ')
+      : (patient?._ultranos?.nameLocal ?? '')
+  const patientPhone = patient?.telecom?.find((tc) => tc.system === 'phone')?.value
 
   // MedicationStatement.medicationCodeableConcept is CodeableConcept: prefer text.
   // Also include any pending prescriptions from the current encounter session.
+  // Feeds the island's "Active meds" peek drawer.
   const railActiveMeds = [
     ...activeMedicationStatements.map(
       (s) => s.medicationCodeableConcept?.text ?? s.medicationCodeableConcept?.coding?.[0]?.display ?? '',
@@ -604,6 +632,17 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       (rx) => rx.medicationCodeableConcept.text ?? rx.medicationCodeableConcept.coding?.[0]?.display ?? '',
     ),
   ].filter(Boolean)
+
+  // --- Encounter A: collapsed-section summaries + sticky-nav interaction pill ---
+  const anyInteractionUnavailable = pendingPrescriptions.some(
+    (rx) => rx._ultranos.interactionCheckResult === 'UNAVAILABLE',
+  )
+  const sectionNav: { key: SectionKey; label: string }[] = [
+    { key: 'vitals', label: tEncounter('vitalSigns') },
+    { key: 'soap', label: tSoap('clinicalNotes') },
+    { key: 'labs', label: tEncounter('labsTab') },
+    { key: 'prescriptions', label: tEncounter('prescriptions') },
+  ]
 
   // Reset palette state when entering/exiting loading to prevent desync
   useEffect(() => {
@@ -660,106 +699,44 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   }
 
   return (
-    <>
-      {isActive && (
-        <style>{`
-          @keyframes sectionFadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          /* Base state is visible (opacity: 1) with 'backwards' fill — NOT 'forwards'.
-             With 'forwards', the section retains the final keyframe transform, which
-             computes to matrix(1,0,0,1,0,0) (a non-'none' transform) and therefore
-             keeps a stacking context alive on every card. That traps descendant
-             z-index — e.g. the medication autocomplete dropdown's z-20 — inside the
-             card, so a later sibling card paints over any dropdown that overflows the
-             card bounds. 'backwards' only borrows the 'from' frame before the run and
-             reverts to transform: none afterwards, releasing the stacking context. */
-          .encounter-section {
-            animation: sectionFadeIn 250ms ease-out backwards;
-            opacity: 1;
-          }
-        `}</style>
-      )}
-      <DetailLayout
-        railLabel={tPatient('contextRailLabel')}
-        banner={
-          /* CLAUDE.md Rule #4: Allergy banner renders FIRST, in red, never collapsed */
-          <AllergyBanner patientId={patientId} />
-        }
-        rail={
-          <EncounterContextRail
-            patient={railPatient}
-            allergies={railAllergies}
-            interactionStatus={railInteractionStatus}
-            activeMeds={railActiveMeds}
-          />
-        }
-      >
+    <div className="flex flex-1 flex-col gap-4">
       <ConflictBanner patientId={patientId} />
       {/* Title and back navigation are provided by the shell's BreadcrumbHeader. */}
 
-      <Card
-        as="section"
-        aria-label={tEncounter('patientInfo')}
-      >
-        <h2 className="text-xl font-semibold text-foreground leading-snug" dir="auto">
-          {nameSegments.length > 0
-            ? nameSegments.map((name, i) => (
-                <span key={i}>
-                  {i > 0 && (
-                    <span className="mx-1.5 text-muted-foreground" aria-hidden="true">&middot;</span>
-                  )}
-                  {name}
-                </span>
-              ))
-            : patient._ultranos?.nameLocal}
-        </h2>
-        {patient._ultranos?.nameLatin && (
-          <p className="text-sm font-semibold text-muted-foreground">
-            {patient._ultranos.nameLatin}
-          </p>
-        )}
-        <div className="mt-3 flex gap-4 text-sm font-semibold text-muted-foreground">
-          <span>ID: {patient.id.slice(0, 8)}...</span>
-          <span>{patient.gender ?? tPatient('unknownGender')}</span>
-          <span>{formatAge(patient.birthDate, patient._ultranos?.birthYear, tPatient('unknownAge'))}</span>
-        </div>
-      </Card>
-
-      {/* Encounter status + controls */}
-      <Card
-        as="section"
-        aria-label={tEncounter('statusAria')}
-      >
-        {isActive ? (
-          <>
-            <div className="flex items-center gap-3">
-              <span
-                className="inline-block h-3 w-3 rounded-full bg-success"
-                aria-hidden="true"
-              />
-              <span className="text-lg font-semibold text-success" role="status">
-                {tEncounter('activeConsultation')}
-              </span>
+      {/* Pre-encounter: identity + Start action (no island until active). */}
+      {!isActive && (
+        <>
+          <AllergyBanner patientId={patientId} />
+          <Card as="section" aria-label={tEncounter('patientInfo')}>
+            <div className="flex items-start gap-4">
+              <Avatar src={photoUrl} name={islandDisplayName} size={56} />
+              <div className="min-w-0 flex-1">
+                <h2 className="text-xl font-semibold text-foreground leading-snug" dir="auto">
+                  {nameSegments.length > 0
+                    ? nameSegments.map((name, i) => (
+                        <span key={i}>
+                          {i > 0 && (
+                            <span className="mx-1.5 text-muted-foreground" aria-hidden="true">&middot;</span>
+                          )}
+                          {name}
+                        </span>
+                      ))
+                    : patient._ultranos?.nameLocal}
+                </h2>
+                {patient._ultranos?.nameLatin && (
+                  <p className="text-sm font-semibold text-muted-foreground">
+                    {patient._ultranos.nameLatin}
+                  </p>
+                )}
+                <div className="mt-3 flex flex-wrap gap-4 text-sm font-semibold text-muted-foreground">
+                  <span>ID: {patient.id.slice(0, 8)}...</span>
+                  <span>{patient.gender ?? tPatient('unknownGender')}</span>
+                  <span>{formatAge(patient.birthDate, patient._ultranos?.birthYear, tPatient('unknownAge'))}</span>
+                </div>
+              </div>
             </div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {tEncounter('started', {
-                time: activeEncounter.period.start
-                  ? formatTime(activeEncounter.period.start, locale)
-                  : tEncounter('startedUnknown')
-              })}
-            </p>
-            <Button
-              variant="secondary"
-              onClick={handleEndEncounter}
-              className="mt-4"
-            >
-              {tEncounter('endEncounter')}
-            </Button>
-          </>
-        ) : (
-          <>
+          </Card>
+          <Card as="section" aria-label={tEncounter('statusAria')}>
             <p className="mb-4 font-semibold text-muted-foreground">
               {tEncounter('noActiveConsultation')}
             </p>
@@ -770,38 +747,192 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             >
               {isStarting ? tEncounter('starting') : tEncounter('startEncounter')}
             </Button>
-          </>
-        )}
-      </Card>
-
-      {/* Allergies — visible only during active encounter */}
-      {isActive && (
-        <Card
-          as="section"
-          className="encounter-section"
-          style={{ animationDelay: '0ms' }}
-          aria-label={tAllergy('title')}
-          data-section="allergies"
-          tabIndex={-1}
-        >
-          <AllergyEntry patientId={patientId} />
-        </Card>
+          </Card>
+        </>
       )}
 
-      {/* Vital Signs — visible only during active encounter */}
+      {/* Active encounter: the sticky command island carries all patient context. */}
       {isActive && (
-        <Card
-          as="section"
-          className="encounter-section"
-          style={{ animationDelay: '50ms' }}
+        <section className={ISLAND_CLASS} aria-label={tEncounter('patientInfo')}>
+          {/* Allergy strip — always red, always first, never a tab (Rule #4). */}
+          <AllergyBanner
+            patientId={patientId}
+            className="!mb-0 !rounded-none !shadow-none !ring-0 border-b border-border"
+          />
+
+          {/* Identity + live status */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+            <Avatar src={photoUrl} name={islandDisplayName} size={44} />
+            <div className="min-w-0">
+              <h2 className="truncate text-base font-bold text-foreground" dir="auto">
+                {islandDisplayName}
+              </h2>
+              <p className="truncate text-xs font-medium text-muted-foreground tabular-nums">
+                {[
+                  patient.gender ?? tPatient('unknownGender'),
+                  formatAge(patient.birthDate, patient._ultranos?.birthYear, tPatient('unknownAge')),
+                  patientPhone,
+                  `ID …${patient.id.slice(0, 8)}`,
+                  patient._ultranos?.bloodGroup ? `${tEncounter('bloodShort')} ${patient._ultranos.bloodGroup}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+            </div>
+            <div className="ms-auto flex items-center gap-3">
+              <span
+                role="status"
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                  anyInteractionUnavailable ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success'
+                }`}
+              >
+                {anyInteractionUnavailable ? (
+                  <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+                ) : (
+                  <span className="inline-block h-2 w-2 rounded-full bg-success" aria-hidden="true" />
+                )}
+                {anyInteractionUnavailable ? tEncounter('interactionUnavailable') : tEncounter('interactionActive')}
+              </span>
+              <span className="hidden items-center gap-1.5 text-xs font-semibold text-primary sm:inline-flex">
+                <span className="inline-block h-2 w-2 rounded-full bg-primary" aria-hidden="true" />
+                <span>{tEncounter('activeConsultation')}</span>
+                {activeEncounter?.period?.start && (
+                  <span className="tabular-nums" data-testid="encounter-start-time">
+                    · {formatTime(activeEncounter.period.start, locale)}
+                  </span>
+                )}
+              </span>
+            </div>
+          </div>
+
+          {/* Work tabs + reference peek triggers */}
+          <div className="flex flex-wrap items-center gap-2 px-3 pb-3">
+            <div className="flex flex-wrap items-center gap-1" role="tablist" aria-label={tEncounter('sectionNavLabel')}>
+              {sectionNav.map((s) => (
+                <button
+                  key={s.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeSection === s.key}
+                  onClick={() => setActiveSection(s.key)}
+                  className={`flex h-9 items-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors ${
+                    activeSection === s.key
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  {s.label}
+                  {s.key === 'prescriptions' && pendingPrescriptions.length > 0 && (
+                    <span
+                      className={`rounded-full px-1.5 text-xs font-bold ${
+                        activeSection === 'prescriptions'
+                          ? 'bg-primary-foreground/25 text-primary-foreground'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {pendingPrescriptions.length}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="ms-auto flex items-center gap-2">
+              <button
+                type="button"
+                aria-expanded={openDrawer === 'allergies'}
+                onClick={() => toggleDrawer('allergies')}
+                className={`flex h-9 items-center gap-1.5 rounded-full border px-3 text-sm font-semibold transition-colors ${
+                  openDrawer === 'allergies'
+                    ? 'border-transparent bg-primary text-primary-foreground'
+                    : 'border-border text-foreground hover:bg-muted'
+                }`}
+              >
+                {tEncounter('manageAllergies')}
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform ${openDrawer === 'allergies' ? 'rotate-180' : ''}`}
+                  aria-hidden="true"
+                />
+              </button>
+              <button
+                type="button"
+                aria-expanded={openDrawer === 'meds'}
+                onClick={() => toggleDrawer('meds')}
+                className={`flex h-9 items-center gap-1.5 rounded-full border px-3 text-sm font-semibold transition-colors ${
+                  openDrawer === 'meds'
+                    ? 'border-transparent bg-primary text-primary-foreground'
+                    : 'border-border text-foreground hover:bg-muted'
+                }`}
+              >
+                <Pill className="h-3.5 w-3.5" aria-hidden="true" />
+                {tEncounter('railActiveMeds')}
+                {railActiveMeds.length > 0 && (
+                  <span
+                    className={`rounded-full px-1.5 text-xs font-bold ${
+                      openDrawer === 'meds'
+                        ? 'bg-primary-foreground/25 text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {railActiveMeds.length}
+                  </span>
+                )}
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform ${openDrawer === 'meds' ? 'rotate-180' : ''}`}
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Peek drawers — drop out of the island, overlaying whatever tab is open. */}
+          {openDrawer === 'allergies' && (
+            <div className="max-h-[50vh] overflow-y-auto border-t border-border bg-muted/40 px-4 py-4">
+              <AllergyEntry patientId={patientId} />
+            </div>
+          )}
+          {openDrawer === 'meds' && (
+            <div className="max-h-[50vh] overflow-y-auto border-t border-border bg-muted/40 px-4 py-4">
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {tEncounter('railActiveMeds')}
+              </h4>
+              {railActiveMeds.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{tEncounter('railNoneRecorded')}</p>
+              ) : (
+                <ul className="flex flex-col divide-y divide-border text-sm text-foreground">
+                  {railActiveMeds.map((med) => (
+                    <li key={med} className="py-2">
+                      {med}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Interaction override modal — mounted at root so a BLOCKED result always
+          surfaces regardless of the active tab (Rule #3). */}
+      {isActive && (
+        <InteractionWarningModal
+          open={interactionModal.open}
+          interactions={interactionModal.interactions}
+          onCancel={handleInteractionCancel}
+          onOverride={handleInteractionOverride}
+        />
+      )}
+
+      {/* Vital Signs tab panel */}
+      {isActive && (
+        <div
+          className={PANEL_CLASS}
+          role="tabpanel"
           aria-label={tEncounter('vitalSigns')}
           data-section="vitals"
           tabIndex={-1}
+          hidden={activeSection !== 'vitals'}
         >
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">{tEncounter('vitalSigns')}</h2>
-            <AutosaveIndicator status={vitalsAutosaveStatus} />
-          </div>
+          <PanelHeader title={tEncounter('vitalSigns')} right={<AutosaveIndicator status={vitalsAutosaveStatus} />} />
           <VitalsForm
             weight={vWeight}
             height={vHeight}
@@ -816,21 +947,29 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             bmi={getBmi()}
             rangeStatuses={getRangeStatuses()}
           />
-        </Card>
+        </div>
       )}
 
-      {/* SOAP Note Entry — visible only during active encounter */}
+      {/* Clinical Notes (SOAP) tab panel */}
       {isActive && (
-        <Card
-          as="section"
-          className="encounter-section"
-          style={{ animationDelay: '100ms' }}
+        <div
+          className={PANEL_CLASS}
+          role="tabpanel"
           aria-label={tEncounter('soapNotes')}
+          data-section="soap"
+          tabIndex={-1}
+          hidden={activeSection !== 'soap'}
         >
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-foreground">{tSoap('clinicalNotes')}</h2>
-            <AutosaveIndicator status={autosaveStatus} />
-          </div>
+          <PanelHeader title={tSoap('clinicalNotes')} right={<AutosaveIndicator status={autosaveStatus} />} />
+          {soapDecryptFailed && (
+            <Alert variant="warning" role="alert" className="mb-3" icon={<AlertTriangle className="h-4 w-4" />}>
+              <p className="text-sm font-semibold text-foreground">{tSoap('decryptFailedTitle')}</p>
+              <p className="text-xs text-muted-foreground">{tSoap('decryptFailedBody')}</p>
+            </Alert>
+          )}
+          <p className="mb-3 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+            {tEncounter('reviewAiNote')}
+          </p>
           <SOAPNoteEntry
             subjective={subjective}
             objective={objective}
@@ -845,19 +984,33 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             aiConsentGranted={aiConsentGranted}
             isOnline={isOnline}
           />
-        </Card>
+        </div>
       )}
 
-      {/* Prescriptions — visible only during active encounter */}
+      {/* Prescriptions tab panel */}
       {isActive && (
-        <Card
-          as="section"
-          className="encounter-section"
-          style={{ animationDelay: '150ms' }}
+        <div
+          className={PANEL_CLASS}
+          role="tabpanel"
           aria-label={tEncounter('prescriptions')}
           data-section="prescriptions"
           tabIndex={-1}
+          hidden={activeSection !== 'prescriptions'}
         >
+          <PanelHeader title={tEncounter('prescriptions')} />
+
+          {/* Active-meds reference at prescribe time (also available as the island
+              peek drawer). Keeps current meds visible while writing a prescription. */}
+          {railActiveMeds.length > 0 && (
+            <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+              <span className="font-semibold uppercase tracking-wide">{tEncounter('railActiveMeds')}:</span>
+              {railActiveMeds.map((med) => (
+                <span key={med} className="rounded-full border border-border bg-card px-2.5 py-0.5 font-semibold text-foreground">
+                  {med}
+                </span>
+              ))}
+            </div>
+          )}
           {/* Story 10.1 AC 9: Medication history unavailable warning */}
           {!medicationHistoryAvailable && (
             <Alert variant="warning" role="alert" className="mb-4">
@@ -890,13 +1043,6 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
               </p>
             </Alert>
           )}
-
-          <InteractionWarningModal
-            open={interactionModal.open}
-            interactions={interactionModal.interactions}
-            onCancel={handleInteractionCancel}
-            onOverride={handleInteractionOverride}
-          />
 
           {prescriptionBlocked && (
             <Alert variant="destructive" role="alert" className="mb-4" icon={<AlertTriangle className="h-4 w-4" />}>
@@ -1032,29 +1178,47 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
               )}
             </div>
           )}
-        </Card>
+          </div>
       )}
 
-      {/* Lab orders — visible only during active encounter */}
+      {/* Lab orders tab panel */}
       {isActive && (
-        <Card
-          as="section"
-          className="encounter-section"
-          style={{ animationDelay: '200ms' }}
-          aria-label={tLabOrder('title')}
+        <div
+          className={PANEL_CLASS}
+          role="tabpanel"
+          aria-label={tEncounter('labsTab')}
           data-section="lab-orders"
           tabIndex={-1}
+          hidden={activeSection !== 'labs'}
         >
+          <PanelHeader title={tEncounter('labsTab')} />
           <LabOrderEntry
             encounterId={activeEncounter.id}
             patientId={patientId}
             practitionerRef={practitionerRef}
           />
-        </Card>
+        </div>
       )}
 
-      </DetailLayout>
+      {/* Review & sign — the end-of-flow close action. Entries autosave; ending
+          the encounter is the deliberate sign-off that closes the consultation. */}
+      {isActive && (
+        <div className={PANEL_CLASS} role="group" aria-label={tEncounter('reviewSignTitle')}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <h2 className="text-lg font-bold text-foreground">{tEncounter('reviewSignTitle')}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {isOnline ? tEncounter('signOffHint') : tEncounter('signOffHintOffline')}
+              </p>
+            </div>
+            <Button variant="primary" onClick={handleEndEncounter} className="shrink-0">
+              {tEncounter('endEncounter')}
+            </Button>
+          </div>
+        </div>
+      )}
+
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
-    </>
+    </div>
   )
 }

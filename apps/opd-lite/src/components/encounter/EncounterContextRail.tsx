@@ -3,6 +3,13 @@
 import { useTranslations } from 'next-intl'
 import type { InteractionCheckSummary } from '@/services/interactionService'
 import { Card } from '@/components/Card'
+import { Avatar } from '@ultranos/ui-kit/components/ui/avatar'
+
+// The rail lives inside DetailLayout's `overflow-y-auto` aside, which clips the
+// Card's *outset* ring on the inline edges (making the cards look border-less).
+// `ring-inset` draws the same 0.65px border just inside the box, so it survives
+// the clip and matches the main-column cards exactly.
+const RAIL_CARD = 'ring-inset'
 
 // Derive from the canonical drug-db result type (re-exported by the service the
 // encounter screen uses) so this safety-critical prop can never drift from source.
@@ -17,6 +24,8 @@ const CHIP_CLASS: Record<InteractionStatus, string> = {
 
 export interface EncounterContextRailProps {
   patient: { display: string; ageSex: string; idSlice: string }
+  /** Signed patient photo URL (opaque key resolved server-side); null → initials. */
+  photoUrl?: string | null
   allergies: string[]
   /**
    * Last interaction-check result, or `null` when no check has run yet (no
@@ -30,6 +39,7 @@ export interface EncounterContextRailProps {
 
 export function EncounterContextRail({
   patient,
+  photoUrl,
   allergies,
   interactionStatus,
   activeMeds,
@@ -46,17 +56,22 @@ export function EncounterContextRail({
   return (
     <>
       {/* Patient identity */}
-      <Card as="section" aria-label={t('railPatientCard')}>
-        <p className="text-base font-bold text-foreground" dir="auto">
-          {patient.display}
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground tabular-nums">
-          {patient.ageSex} · {patient.idSlice}
-        </p>
+      <Card as="section" aria-label={t('railPatientCard')} className={RAIL_CARD}>
+        <div className="flex items-center gap-3">
+          <Avatar src={photoUrl} name={patient.display} size={40} />
+          <div className="min-w-0">
+            <p className="text-base font-bold text-foreground" dir="auto">
+              {patient.display}
+            </p>
+            <p className="mt-0.5 text-sm text-muted-foreground tabular-nums">
+              {patient.ageSex} · {patient.idSlice}
+            </p>
+          </div>
+        </div>
       </Card>
 
       {/* Allergies */}
-      <Card as="section" aria-label={t('railAllergies')}>
+      <Card as="section" aria-label={t('railAllergies')} className={RAIL_CARD}>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {t('railAllergies')}
         </p>
@@ -79,7 +94,7 @@ export function EncounterContextRail({
       </Card>
 
       {/* Interaction check */}
-      <Card as="section" aria-label={t('railInteractionCheck')}>
+      <Card as="section" aria-label={t('railInteractionCheck')} className={RAIL_CARD}>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {t('railInteractionCheck')}
         </p>
@@ -96,7 +111,7 @@ export function EncounterContextRail({
       </Card>
 
       {/* Active medications */}
-      <Card as="section" aria-label={t('railActiveMeds')}>
+      <Card as="section" aria-label={t('railActiveMeds')} className={RAIL_CARD}>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {t('railActiveMeds')}
         </p>

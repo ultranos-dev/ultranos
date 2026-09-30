@@ -12,6 +12,12 @@ interface PatientBannerStackProps {
   patient: FhirPatient
   patientId: string
   consentExpiryDate?: string | null
+  /**
+   * Skip the allergy banner — used when the allergy strip is rendered elsewhere
+   * (e.g. inside the chart's command island) so it is not duplicated. The
+   * remaining secondary banners (conflict/mpi/nid/biometric) still render.
+   */
+  omitAllergy?: boolean
 }
 
 const EXPECTED_BIOMETRIC_VERSION =
@@ -33,6 +39,7 @@ export function PatientBannerStack({
   patient,
   patientId,
   consentExpiryDate,
+  omitAllergy = false,
 }: PatientBannerStackProps) {
   const mpiScore = patient._ultranos.mpiScore
   const hasNationalId = !!patient._ultranos.nationalIdHash
@@ -43,11 +50,14 @@ export function PatientBannerStack({
     <div data-testid="patient-banner-stack">
       {/* 1. Allergies — ALWAYS first, never collapsed (CLAUDE.md Rule #4).
              Pass the Hub-derived hasAllergies hint so an un-synced local cache shows
-             "unavailable" rather than a false "No known allergies". */}
-      <AllergyBanner
-        patientId={patientId}
-        hubHasAllergies={patient._ultranos?.hasAllergies ?? false}
-      />
+             "unavailable" rather than a false "No known allergies".
+             Omitted when the allergy strip is rendered by the command island. */}
+      {!omitAllergy && (
+        <AllergyBanner
+          patientId={patientId}
+          hubHasAllergies={patient._ultranos?.hasAllergies ?? false}
+        />
+      )}
 
       {/* 2. Sync conflicts — always rendered, self-hides when empty */}
       <ConflictBanner patientId={patientId} />

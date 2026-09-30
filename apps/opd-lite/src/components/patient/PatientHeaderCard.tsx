@@ -16,6 +16,12 @@ interface PatientHeaderCardProps {
   patientId: string
   onEditClick: () => void
   onPatientUpdated: (patient: FhirPatient) => void
+  /**
+   * Render the content flush (no Card wrapper) so it can sit inside another
+   * surface — e.g. the chart's command island — without creating a nested card.
+   * Default false preserves the standalone Card used by the context rail.
+   */
+  bare?: boolean
 }
 
 /** LOINC codes for baseline vitals. */
@@ -60,6 +66,7 @@ export function PatientHeaderCard({
   patientId,
   onEditClick,
   onPatientUpdated,
+  bare = false,
 }: PatientHeaderCardProps) {
   const locale = useLocale()
   const t = useTranslations('patient')
@@ -149,8 +156,8 @@ export function PatientHeaderCard({
     patient._ultranos.nameGrandfather,
   ].filter((s): s is string => !!s && s.trim().length > 0)
 
-  return (
-    <Card>
+  const content = (
+    <>
       <div className="flex items-start gap-5">
         {/* Avatar */}
         <div className="flex flex-col items-center gap-1">
@@ -252,6 +259,7 @@ export function PatientHeaderCard({
           Start New Encounter
         </Link>
       </div>
-    </Card>
+    </>
   )
+  return bare ? <div>{content}</div> : <Card>{content}</Card>
 }

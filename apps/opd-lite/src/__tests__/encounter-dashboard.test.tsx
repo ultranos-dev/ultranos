@@ -404,8 +404,9 @@ describe('Encounter Dashboard', () => {
 
     fireEvent.click(screen.getByText('Start Encounter'))
 
+    // The command island shows the live "Active Consultation · <time>" status.
     await waitFor(() => {
-      expect(screen.getByText(/Started:/)).toBeDefined()
+      expect(screen.getByTestId('encounter-start-time')).toBeInTheDocument()
     })
   })
 
@@ -456,7 +457,7 @@ describe('Encounter Dashboard', () => {
     expect(mockAddPrescription).not.toHaveBeenCalled()
   })
 
-  it('renders encounter in two columns with a pinned context rail', async () => {
+  it('shows the sticky command island with always-visible interaction status', async () => {
     const patient = makePatient('patient-rail', 'Rail Test')
     usePatientStore.setState({ selectedPatient: patient })
     render(<EncounterDashboard patientId="patient-rail" />)
@@ -464,12 +465,13 @@ describe('Encounter Dashboard', () => {
     await waitFor(() => {
       expect(screen.getByText('Active Consultation')).toBeDefined()
     })
-    expect(screen.getByRole('complementary')).toBeInTheDocument()
-    const rail = screen.getByRole('complementary')
-    expect(rail).toHaveTextContent(/interaction check/i)
+    // Interaction status lives in the island and is always visible (Rule #3).
+    expect(screen.getByText(/interaction check active/i)).toBeInTheDocument()
+    // The old two-column context rail is gone — no complementary landmark.
+    expect(screen.queryByRole('complementary')).toBeNull()
   })
 
-  it('allergy banner is not inside the rail landmark', async () => {
+  it('allergy banner renders in the island, not a rail (Rule #4)', async () => {
     const patient = makePatient('patient-rail2', 'Rail Test 2')
     usePatientStore.setState({ selectedPatient: patient })
     render(<EncounterDashboard patientId="patient-rail2" />)
@@ -477,12 +479,11 @@ describe('Encounter Dashboard', () => {
     await waitFor(() => {
       expect(screen.getByText('Active Consultation')).toBeDefined()
     })
-    const rail = screen.getByRole('complementary')
-    // The AllergyBanner renders in the detail-banner slot (full-width, above grid).
-    // Verify: the banner's test-id element is NOT a descendant of the aside/rail.
+    // The red allergy strip renders first, in the island — never behind a tab.
     const allergyBanner = document.querySelector('[data-testid="allergy-banner"]')
     expect(allergyBanner).not.toBeNull()
-    expect(rail.contains(allergyBanner)).toBe(false)
+    // No rail landmark exists anymore.
+    expect(screen.queryByRole('complementary')).toBeNull()
   })
 
   it('renders prescription-load-error banner when prescription store has a loadError', async () => {

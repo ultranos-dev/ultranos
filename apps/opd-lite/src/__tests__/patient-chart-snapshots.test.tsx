@@ -125,15 +125,15 @@ describe('Patient Chart — Snapshot Tests', () => {
     await db.patients.put(testPatient)
     await db.encounters.put(testEncounter)
 
-    const { container, findByTestId } = render(
+    const { findByTestId, getAllByRole } = render(
       <PatientChartPage patientId={TEST_PATIENT_ID} />,
     )
 
     const banner = await findByTestId('allergy-banner')
-    // Verify banner is inside the banner slot (first slot in DetailLayout, above the grid)
-    const bannerSlot = container.querySelector('[data-slot="detail-banner"]')
-    expect(bannerSlot).toBeTruthy()
-    expect(bannerSlot).toContainElement(banner)
+    // Rule #4: the allergy strip renders first in DOM — the first alert — inside
+    // the command island at the top of the page.
+    const alerts = getAllByRole('alert')
+    expect(alerts[0]).toBe(banner)
     // Verify it has active state (red)
     expect(banner.getAttribute('data-banner-state')).toBe('active')
     // Rule #4: the actual allergen name (patient data) must reach the DOM

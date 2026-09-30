@@ -134,10 +134,10 @@ describe('PatientChartPage', () => {
     await waitFor(() => {
       const banner = screen.getByTestId('allergy-banner')
       expect(banner).toBeTruthy()
-      // In the two-column layout, the banner is inside data-slot="detail-banner"
-      // which is the first child of the DetailLayout root.
-      const detailRoot = banner.closest('[data-slot="detail-banner"]')
-      expect(detailRoot).toBeTruthy()
+      // The allergy strip renders first, inside the command island at the top of
+      // the page (Rule #4). It is the first alert in the DOM.
+      const alerts = screen.getAllByRole('alert')
+      expect(alerts[0]).toBe(banner)
     })
   })
 

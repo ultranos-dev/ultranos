@@ -14,6 +14,8 @@ interface AllergyBannerProps {
    * "none" for a safety-critical field we can't confirm).
    */
   hubHasAllergies?: boolean
+  /** Extra classes appended to the banner root (e.g. to flatten it into a card/island strip). */
+  className?: string
 }
 
 /**
@@ -28,7 +30,7 @@ interface AllergyBannerProps {
  * DOM position: renders first in the banner stack, never collapsed.
  * Accessibility: role="alert", aria-live="assertive" (warning/active states), "polite" (loading/NKA), contrast >= 4.5:1.
  */
-export function AllergyBanner({ patientId, hubHasAllergies }: AllergyBannerProps) {
+export function AllergyBanner({ patientId, hubHasAllergies, className = '' }: AllergyBannerProps) {
   const t = useTranslations('allergy')
   const allergies = useAllergyStore((s) => s.allergies)
   const isLoading = useAllergyStore((s) => s.isLoading)
@@ -41,10 +43,14 @@ export function AllergyBanner({ patientId, hubHasAllergies }: AllergyBannerProps
     }
   }, [patientId, loadAllergies])
 
+  // Appended with a leading space only when non-empty, so the default banner
+  // markup (and its snapshot) is unchanged when no className is passed.
+  const extra = className ? ` ${className}` : ''
+
   if (isLoading) {
     return (
       <div
-        className="mb-4 rounded-xl bg-card px-4 py-3 shadow-card ring-[0.65px] ring-border/50 text-center text-sm font-semibold text-muted-foreground transition-colors duration-200"
+        className={`mb-4 rounded-xl bg-card px-4 py-3 shadow-card ring-[0.65px] ring-border/50 text-center text-sm font-semibold text-muted-foreground transition-colors duration-200${extra}`}
         role="alert"
         aria-live="polite"
         data-testid="allergy-banner"
@@ -59,7 +65,7 @@ export function AllergyBanner({ patientId, hubHasAllergies }: AllergyBannerProps
   if (loadError) {
     return (
       <div
-        className="mb-4 rounded-xl bg-warning/10 px-4 py-3 shadow-card ring-[0.65px] ring-warning/40 text-center text-sm font-bold text-foreground transition-colors duration-200"
+        className={`mb-4 rounded-xl bg-warning/10 px-4 py-3 shadow-card ring-[0.65px] ring-warning/40 text-center text-sm font-bold text-foreground transition-colors duration-200${extra}`}
         role="alert"
         aria-live="assertive"
         data-testid="allergy-banner"
@@ -78,7 +84,7 @@ export function AllergyBanner({ patientId, hubHasAllergies }: AllergyBannerProps
 
     return (
       <div
-        className="mb-4 rounded-xl bg-destructive/10 px-4 py-3 shadow-card ring-[0.65px] ring-destructive/50 text-center text-sm font-bold text-destructive transition-colors duration-200"
+        className={`mb-4 rounded-xl bg-destructive/10 px-4 py-3 shadow-card ring-[0.65px] ring-destructive/50 text-center text-sm font-bold text-destructive transition-colors duration-200${extra}`}
         role="alert"
         aria-live="assertive"
         data-testid="allergy-banner"
@@ -97,7 +103,7 @@ export function AllergyBanner({ patientId, hubHasAllergies }: AllergyBannerProps
   if (hubHasAllergies) {
     return (
       <div
-        className="mb-4 rounded-xl bg-warning/10 px-4 py-3 shadow-card ring-[0.65px] ring-warning/40 text-center text-sm font-bold text-foreground transition-colors duration-200"
+        className={`mb-4 rounded-xl bg-warning/10 px-4 py-3 shadow-card ring-[0.65px] ring-warning/40 text-center text-sm font-bold text-foreground transition-colors duration-200${extra}`}
         role="alert"
         aria-live="assertive"
         data-testid="allergy-banner"
