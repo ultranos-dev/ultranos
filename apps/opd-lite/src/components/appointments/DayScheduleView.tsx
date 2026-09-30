@@ -50,15 +50,22 @@ export function DayScheduleView() {
     string | undefined
   >(undefined)
 
-  // Map appointments to time slots by HH:MM
+  // Map appointments to time slots by HH:MM. A slot may hold MORE THAN ONE
+  // appointment — multiple patients can be booked at the same time — so each key
+  // maps to a list (older/earlier-created first for a stable stacking order).
   const appointmentsByTime = useMemo(() => {
-    const map = new Map<string, FhirAppointmentZod>()
+    const map = new Map<string, FhirAppointmentZod[]>()
     for (const apt of appointments) {
       if (apt._ultranos.walkIn) continue // Walk-ins shown separately
       if (apt.status === 'cancelled' || apt.status === 'entered-in-error') continue // Removed from the schedule
       const startDate = new Date(apt.start)
       const timeKey = `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`
-      map.set(timeKey, apt)
+      const list = map.get(timeKey)
+      if (list) list.push(apt)
+      else map.set(timeKey, [apt])
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) => (a._ultranos.createdAt ?? '').localeCompare(b._ultranos.createdAt ?? ''))
     }
     return map
   }, [appointments])
@@ -135,22 +142,24 @@ export function DayScheduleView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appointments.map((a) => a.id).join(',')])
 
-  const handleSlotClick = (time: string) => {
-    const apt = appointmentsByTime.get(time)
-    if (apt) {
-      // Booked → open the booking modal in EDIT mode for this appointment.
-      setEditingAppointment(apt)
-      setBookingPrefilledTime(undefined)
-      setBookingModalOpen(true)
-    } else {
-      setEditingAppointment(null)
-      setBookingPrefilledTime(time)
-      setBookingModalOpen(true)
-    }
+  // Empty slot → open the booking modal in CREATE mode prefilled to this time.
+  const handleBookSlot = (time: string) => {
+    setEditingAppointment(null)
+    setBookingPrefilledTime(time)
+    setBookingModalOpen(true)
   }
 
-  const bookedCount = appointmentsByTime.size
-  const freeCount = timeSlots.length - bookedCount
+  // Booked card → open the booking modal in EDIT mode for that appointment.
+  const handleEditAppointment = (apt: FhirAppointmentZod) => {
+    setEditingAppointment(apt)
+    setBookingPrefilledTime(undefined)
+    setBookingModalOpen(true)
+  }
+
+  // "booked" counts every appointment (a slot may hold several); "free" counts
+  // only the timetable rows that currently hold none.
+  const bookedCount = Array.from(appointmentsByTime.values()).reduce((n, list) => n + list.length, 0)
+  const freeCount = timeSlots.filter((time) => !appointmentsByTime.has(time)).length
 
   if (loading) {
     return (
@@ -177,21 +186,34 @@ export function DayScheduleView() {
               <EmptyState icon={CalendarDays} title={t('noAppointments')} />
             </div>
           )}
-          {/* Timetable — hairline-separated rows, time in the leading lane */}
+          {/* Timetable — hairline-separated rows, time in the leading lane. A time
+              with several appointments stacks a card per patient; the time label
+              shows once (on the first card of that row). */}
           <div className="px-3 py-1.5">
-            {timeSlots.map((time) => {
-              const apt = appointmentsByTime.get(time)
-              const pid = apt ? patientIdFromAppointment(apt) : null
-              return (
-                <AppointmentSlot
-                  key={time}
-                  time={time}
-                  appointment={apt}
-                  hasAllergy={pid ? allergyPatientIds.has(pid) : false}
-                  photoUrl={pid ? photoUrlMap.get(pid) ?? null : null}
-                  onClick={() => handleSlotClick(time)}
-                />
-              )
+            {timeSlots.flatMap((time) => {
+              const list = appointmentsByTime.get(time)
+              if (!list || list.length === 0) {
+                return [
+                  <AppointmentSlot
+                    key={time}
+                    time={time}
+                    onClick={() => handleBookSlot(time)}
+                  />,
+                ]
+              }
+              return list.map((apt, i) => {
+                const pid = patientIdFromAppointment(apt)
+                return (
+                  <AppointmentSlot
+                    key={apt.id}
+                    time={i === 0 ? time : ''}
+                    appointment={apt}
+                    hasAllergy={pid ? allergyPatientIds.has(pid) : false}
+                    photoUrl={pid ? photoUrlMap.get(pid) ?? null : null}
+                    onClick={() => handleEditAppointment(apt)}
+                  />
+                )
+              })
             })}
           </div>
         </div>

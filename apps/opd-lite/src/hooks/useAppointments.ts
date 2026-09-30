@@ -29,6 +29,19 @@ function notifyAppointmentsChanged(): void {
   for (const listener of appointmentChangeListeners) listener()
 }
 
+/**
+ * Subscribe to appointment change broadcasts (create/update/cancel/check-in/
+ * walk-in) from any `useAppointments` instance. Lets non-appointments views —
+ * e.g. the dashboard attention counts — refresh live without a hard reload.
+ * Returns an unsubscribe function.
+ */
+export function subscribeAppointmentChanges(listener: () => void): () => void {
+  appointmentChangeListeners.add(listener)
+  return () => {
+    appointmentChangeListeners.delete(listener)
+  }
+}
+
 /** Matches a serialized HLC "<15d>:<5d>:<nodeId>" (see serializeHlc). */
 const SERIALIZED_HLC_RE = /^\d{15}:\d{5}:.+/
 /** Matches a legacy millisecond-epoch string (old Date.now().toString() stamp). */
