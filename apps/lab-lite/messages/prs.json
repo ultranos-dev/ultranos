@@ -365,7 +365,10 @@
     "filterAll": "همه",
     "filterUnread": "خوانده‌نشده",
     "filterRead": "خوانده‌شده",
-    "noResults": "اعلان مطابقی یافت نشد"
+    "noResults": "اعلان مطابقی یافت نشد",
+    "seeAll": "دیدن همه اعلان‌ها",
+    "bellAria": "اعلان‌ها",
+    "bellUnreadAria": "اعلان‌ها ({count} خوانده‌نشده)"
   },
   "queue": {
     "title": "صف بارگذاری",

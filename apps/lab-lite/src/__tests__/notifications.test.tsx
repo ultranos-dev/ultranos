@@ -18,6 +18,9 @@ vi.mock('next-intl', () => ({
       'notifications.loadError': 'Unable to load notifications. Check your connection.',
       'notifications.error': 'Unable to load notifications',
       'notifications.empty': 'No notifications',
+      'notifications.bellAria': 'Notifications',
+      'notifications.bellUnreadAria': `Notifications (${params?.count ?? '{count}'} unread)`,
+      'notifications.seeAll': 'See all notifications',
       'notifications.unreadAriaLabel': 'Unread',
       'notifications.unreadMessage': `Unread: ${params?.message ?? '{message}'}`,
       'notifications.resultUploaded': 'Result uploaded',
@@ -244,73 +247,69 @@ afterEach(() => {
 // ── Test Suite ─────────────────────────────────────────────
 
 describe('NotificationBell', () => {
+  // The shared shell derives the badge from the Hub notification list
+  // (useNotificationPoll → listNotifications), so drive tests via that mock.
+  function makeUnread(count: number): NotificationItem[] {
+    return Array.from({ length: count }, (_, i) => makeNotification({ id: `u${i}`, status: 'SENT' }))
+  }
+
   it('renders bell icon with correct unread count (AC #5)', async () => {
-    mockGetUnreadCount.mockResolvedValue(3)
+    mockListNotifications.mockResolvedValue(makeUnread(3))
     render(<NotificationBell />)
 
     await waitFor(() => {
-      expect(screen.getByTestId('unread-badge')).toHaveTextContent('3')
+      expect(screen.getByTestId('notif-badge')).toHaveTextContent('3')
     })
     expect(screen.getByLabelText('Notifications (3 unread)')).toBeInTheDocument()
   })
 
   it('shows no badge when unread count is 0', async () => {
-    mockGetUnreadCount.mockResolvedValue(0)
+    mockListNotifications.mockResolvedValue([])
     render(<NotificationBell />)
 
     await waitFor(() => {
-      expect(mockGetUnreadCount).toHaveBeenCalled()
+      expect(mockListNotifications).toHaveBeenCalled()
     })
-    expect(screen.queryByTestId('unread-badge')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('notif-badge')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Notifications')).toBeInTheDocument()
   })
 
   it('caps badge display at 99+', async () => {
-    mockGetUnreadCount.mockResolvedValue(150)
+    mockListNotifications.mockResolvedValue(makeUnread(150))
     render(<NotificationBell />)
 
     await waitFor(() => {
-      expect(screen.getByTestId('unread-badge')).toHaveTextContent('99+')
+      expect(screen.getByTestId('notif-badge')).toHaveTextContent('99+')
     })
   })
 
   it('opens panel on bell click (AC #1)', async () => {
-    mockGetUnreadCount.mockResolvedValue(1)
     mockListNotifications.mockResolvedValue([makeNotification()])
     render(<NotificationBell />)
 
     await waitFor(() => {
-      expect(screen.getByTestId('unread-badge')).toBeInTheDocument()
+      expect(screen.getByTestId('notif-badge')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByRole('button', { name: /notifications/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Notifications/ }))
     expect(screen.getByTestId('notification-panel')).toBeInTheDocument()
   })
 
-  it('polls every 30 seconds (AC #5)', async () => {
-    mockGetUnreadCount.mockResolvedValue(0)
+  it('polls notifications every 30 seconds (AC #5)', async () => {
+    mockListNotifications.mockResolvedValue([])
     render(<NotificationBell />)
 
     await waitFor(() => {
-      expect(mockGetUnreadCount).toHaveBeenCalledTimes(1)
+      expect(mockListNotifications).toHaveBeenCalledTimes(1)
     })
 
-    // Advance 30 seconds
+    // Advance 30 seconds → the poll fires again.
     await act(async () => {
       vi.advanceTimersByTime(30_000)
     })
 
     await waitFor(() => {
-      expect(mockGetUnreadCount).toHaveBeenCalledTimes(2)
-    })
-
-    // Advance another 30 seconds
-    await act(async () => {
-      vi.advanceTimersByTime(30_000)
-    })
-
-    await waitFor(() => {
-      expect(mockGetUnreadCount).toHaveBeenCalledTimes(3)
+      expect(mockListNotifications).toHaveBeenCalledTimes(2)
     })
   })
 })

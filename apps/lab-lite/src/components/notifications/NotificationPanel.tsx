@@ -221,7 +221,7 @@ export function NotificationPanel({
   )
 }
 
-function PanelNotificationRow({
+export function PanelNotificationRow({
   notification: n,
   openId,
   setOpenId,

@@ -77,11 +77,12 @@ describe('NotificationBell', () => {
   it('renders bell icon with unread count badge', async () => {
     render(<NotificationBell />)
 
+    // Count is derived from the list: n1 is SENT (unread), n2 ACKNOWLEDGED → 1 unread.
     await waitFor(() => {
-      expect(screen.getByText('3')).toBeInTheDocument()
+      expect(screen.getByTestId('notif-badge')).toHaveTextContent('1')
     })
 
-    // t('bellUnreadAria', { count: 3 }) returns key 'bellUnreadAria' via mock
+    // t('bellUnreadAria', { count }) returns key 'bellUnreadAria' via mock
     expect(screen.getByLabelText('bellUnreadAria')).toBeInTheDocument()
   })
 
@@ -135,7 +136,7 @@ describe('NotificationBell', () => {
     })
 
     // Click the first notification row
-    const rows = screen.getAllByRole('button').filter(b => !b.getAttribute('aria-label'))
+    const rows = screen.getAllByRole('button').filter(b => b.tagName === 'DIV')
     const firstRow = rows[0]
     if (!firstRow) throw new Error('No notification row button found')
     fireEvent.click(firstRow)
@@ -156,7 +157,7 @@ describe('NotificationBell', () => {
     })
 
     // Click the first notification row button
-    const rows = screen.getAllByRole('button').filter(b => !b.getAttribute('aria-label'))
+    const rows = screen.getAllByRole('button').filter(b => b.tagName === 'DIV')
     const firstRow = rows[0]
     if (!firstRow) throw new Error('No notification row button found')
     fireEvent.click(firstRow)

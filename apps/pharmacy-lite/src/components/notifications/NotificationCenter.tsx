@@ -3,21 +3,21 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { NotificationBell as SharedNotificationBell } from '@ultranos/ui-kit/components/notifications/notification-bell'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
 import { deleteNotification, markUnreadNotification } from '@/lib/trpc'
 import type { PharmacyNotification } from '@/lib/trpc'
 import { PanelNotificationRow } from './NotificationPanel'
 
 /**
- * Pharmacy notification bell — adapts Pharmacy's Hub notification poll to the
- * SHARED ui-kit NotificationBell shell (badge + dropdown + "See all"). Rows reuse
- * Pharmacy's PanelNotificationRow (pharmacy payload mapping + deep links).
+ * Full-page "See all notifications" list for Pharmacy-Lite. Reuses the same
+ * PanelNotificationRow + poll the header bell uses, laid out in the shared
+ * list-page box idiom.
  */
-export function NotificationBell() {
+export function NotificationCenter() {
   const tNotif = useTranslations('notifications')
   const router = useRouter()
-  const { notifications: polled, unreadCount, loading, error, acknowledge } = useNotificationPoll()
+  const { notifications: polled, loading, error, acknowledge } = useNotificationPoll()
   const [openId, setOpenId] = useState<string | null>(null)
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
   const [statusOverrides, setStatusOverrides] = useState<Map<string, Partial<PharmacyNotification>>>(new Map())
@@ -42,7 +42,7 @@ export function NotificationBell() {
     try {
       await markUnreadNotification(id)
     } catch {
-      // Best-effort mark-unread — optimistic update stays
+      // Best-effort mark-unread
     }
   }, [])
 
@@ -52,36 +52,41 @@ export function NotificationBell() {
     try {
       await deleteNotification(id)
     } catch {
-      // Best-effort delete — row stays removed locally
+      // Best-effort delete
     }
   }, [])
 
-  const hasLocalEdits = deletedIds.size > 0 || statusOverrides.size > 0
-  const badgeCount = hasLocalEdits
-    ? notifications.filter(n => n.status !== 'ACKNOWLEDGED').length
-    : unreadCount
-
   return (
-    <SharedNotificationBell
-      unreadCount={badgeCount}
-      loading={loading}
-      error={!!error}
-      empty={!loading && !error && notifications.length === 0}
-      onSeeAll={() => router.push('/notifications')}
-    >
-      {notifications.map(n => (
-        <PanelNotificationRow
-          key={n.id}
-          notification={n}
-          openId={openId}
-          setOpenId={setOpenId}
-          onAcknowledge={handleAcknowledge}
-          onMarkUnread={handleMarkUnread}
-          onDelete={handleDelete}
-          onNavigate={(path) => { router.push(path) }}
-          tNotif={tNotif}
-        />
-      ))}
-    </SharedNotificationBell>
+    <div className="overflow-hidden rounded-xl bg-card shadow-card ring-[0.65px] ring-border/50">
+      {error ? (
+        <p className="flex min-h-[16rem] items-center justify-center px-4 text-center text-sm text-destructive">
+          {tNotif('error')}
+        </p>
+      ) : loading ? (
+        <p className="flex min-h-[16rem] items-center justify-center px-4 text-center text-sm text-muted-foreground">
+          {tNotif('loading')}
+        </p>
+      ) : notifications.length === 0 ? (
+        <div className="flex min-h-[16rem] items-center justify-center">
+          <EmptyState title={tNotif('empty')} />
+        </div>
+      ) : (
+        <div className="divide-y divide-border">
+          {notifications.map(n => (
+            <PanelNotificationRow
+              key={n.id}
+              notification={n}
+              openId={openId}
+              setOpenId={setOpenId}
+              onAcknowledge={handleAcknowledge}
+              onMarkUnread={handleMarkUnread}
+              onDelete={handleDelete}
+              onNavigate={(path) => { router.push(path) }}
+              tNotif={tNotif}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

@@ -43,9 +43,9 @@ export function BreadcrumbHeader() {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="ms-auto flex items-center gap-2">
-        <NotificationBell />
         <DataBudgetIndicator />
         <SyncPulse />
+        <NotificationBell />
         <LanguageSelectorClient />
       </div>
     </header>

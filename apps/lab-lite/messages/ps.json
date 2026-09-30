@@ -365,7 +365,10 @@
     "filterAll": "ټول",
     "filterUnread": "نالوستل شوي",
     "filterRead": "لوستل شوي",
-    "noResults": "هیڅ ورته خبرتیا ونه موندل شوه"
+    "noResults": "هیڅ ورته خبرتیا ونه موندل شوه",
+    "seeAll": "ټولې خبرتیاوې وګورئ",
+    "bellAria": "خبرتیاوې",
+    "bellUnreadAria": "خبرتیاوې ({count} نالوستل شوي)"
   },
   "queue": {
     "title": "د پورته کولو لیست",

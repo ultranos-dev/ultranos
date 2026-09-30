@@ -1,107 +1,103 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getUnreadCount } from '@/lib/trpc'
+import { useState, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { NotificationBell as SharedNotificationBell } from '@ultranos/ui-kit/components/notifications/notification-bell'
+import { useNotificationPoll } from '@/lib/use-notification-poll'
+import { deleteNotification, markUnreadNotification } from '@/lib/trpc'
+import type { NotificationItem } from '@/lib/trpc'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
-import { useDataBudgetStore } from '@/stores/data-budget-store'
-import { useAuthSessionStore } from '@/stores/auth-session-store'
-import { getActiveInstrumentNotifications } from '@/lib/equipment-service'
-import { NotificationPanel } from './NotificationPanel'
-import { Bell } from '@ultranos/ui-kit/icons'
+import { PanelNotificationRow } from './NotificationPanel'
 
 /**
- * Bell icon with unread count badge. Polls Hub API every 30 seconds (10 min in low data mode).
- * Story 17.4 — Task 1 (AC #1, #5)
+ * Lab-Lite notification bell — adapts Lab's Hub notification poll to the SHARED
+ * ui-kit NotificationBell shell (badge + dropdown + "See all"). The badge and
+ * list both reflect Hub notifications, consistent with every other app; active
+ * instrument alerts still surface on the equipment queue view. Rows reuse Lab's
+ * PanelNotificationRow (lab-specific payload mapping + deep links).
  */
 export function NotificationBell() {
-  const lowDataMode = useDataBudgetStore((s) => s.lowDataMode)
-  const pollIntervalMs = lowDataMode ? 600_000 : 30_000 // 10 min in low data mode, 30s normal
+  const tNotif = useTranslations('notifications')
+  const router = useRouter()
+  const { notifications: polled, unreadCount, loading, error, acknowledge } = useNotificationPoll()
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
+  const [statusOverrides, setStatusOverrides] = useState<Map<string, Partial<NotificationItem>>>(new Map())
 
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [instrumentNotifCount, setInstrumentNotifCount] = useState(0)
-  const [isOpen, setIsOpen] = useState(false)
-  const [hasSession, setHasSession] = useState(false)
-  const techId = useAuthSessionStore((s) => s.session?.practitionerId ?? '')
+  const notifications = useMemo(
+    () => polled
+      .filter(n => !deletedIds.has(n.id))
+      .map(n => {
+        const override = statusOverrides.get(n.id)
+        return override ? { ...n, ...override } : n
+      }),
+    [polled, deletedIds, statusOverrides],
+  )
 
-  useEffect(() => {
-    let active = true
-
-    const poll = async () => {
-      try {
-        const supabase = getSupabaseBrowserClient()
-        const { data } = await supabase.auth.getSession()
-        const token = data.session?.access_token
-        if (!token || !active) {
-          if (active) setHasSession(false)
-          return
-        }
-
-        if (active) setHasSession(true)
-        const count = await getUnreadCount(token)
-        if (active) setUnreadCount(count)
-      } catch {
-        // Silently handle — network may be unavailable (offline-first)
-      }
+  const getToken = useCallback(async (): Promise<string | null> => {
+    try {
+      const { data } = await getSupabaseBrowserClient().auth.getSession()
+      return data.session?.access_token ?? null
+    } catch {
+      return null
     }
+  }, [])
 
-    poll()
-    const interval = setInterval(poll, pollIntervalMs)
-    return () => {
-      active = false
-      clearInterval(interval)
+  const handleAcknowledge = useCallback(async (id: string) => {
+    setStatusOverrides(prev => { const next = new Map(prev); next.delete(id); return next })
+    await acknowledge(id)
+  }, [acknowledge])
+
+  const handleMarkUnread = useCallback(async (id: string) => {
+    setStatusOverrides(prev => { const next = new Map(prev); next.set(id, { status: 'SENT', acknowledgedAt: null }); return next })
+    try {
+      const token = await getToken()
+      if (token) await markUnreadNotification(id, token)
+    } catch {
+      // Best-effort mark-unread — optimistic update stays
     }
-  }, [lowDataMode, pollIntervalMs])
+  }, [getToken])
 
-  // P10: poll Dexie instrument notifications so they surface in the badge
-  // even when the tech is not on the equipment page
-  useEffect(() => {
-    if (!techId) return
-    let active = true
-    const poll = async () => {
-      try {
-        const notifs = await getActiveInstrumentNotifications(techId)
-        if (active) setInstrumentNotifCount(notifs.length)
-      } catch {
-        // Dexie unavailable — no badge increment
-      }
+  const handleDelete = useCallback(async (id: string) => {
+    setDeletedIds(prev => new Set([...prev, id]))
+    setStatusOverrides(prev => { const next = new Map(prev); next.delete(id); return next })
+    try {
+      const token = await getToken()
+      if (token) await deleteNotification(id, token)
+    } catch {
+      // Best-effort delete — row stays removed locally
     }
-    poll()
-    const interval = setInterval(poll, pollIntervalMs)
-    return () => { active = false; clearInterval(interval) }
-  }, [techId, pollIntervalMs])
+  }, [getToken])
 
-  const totalUnread = unreadCount + instrumentNotifCount
-
-  if (!hasSession) return null
+  // Badge counts unread among the (locally-filtered) Hub notifications, matching
+  // the dropdown list; falls back to the poll's count before any local overrides.
+  const hasLocalEdits = deletedIds.size > 0 || statusOverrides.size > 0
+  const badgeCount = hasLocalEdits
+    ? notifications.filter(n => n.status !== 'ACKNOWLEDGED').length
+    : unreadCount
 
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="relative rounded-full p-2 text-muted-foreground [@media(hover:hover)and(pointer:fine)]:hover:bg-muted [@media(hover:hover)and(pointer:fine)]:hover:text-foreground active:brightness-[0.88] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary"
-        aria-label={`Notifications${totalUnread > 0 ? ` (${totalUnread} unread)` : ''}`}
-      >
-        {/* Bell SVG */}
-        <Bell size={24} aria-hidden="true" />
-
-        {/* Unread badge */}
-        {totalUnread > 0 && (
-          <span
-            className="absolute -end-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-xs font-bold text-white"
-            data-testid="unread-badge"
-          >
-            {totalUnread > 99 ? '99+' : totalUnread}
-          </span>
-        )}
-      </button>
-
-      {isOpen && (
-        <NotificationPanel
-          onClose={() => setIsOpen(false)}
-          onCountChange={setUnreadCount}
+    <SharedNotificationBell
+      unreadCount={badgeCount}
+      loading={loading}
+      error={!!error}
+      empty={!loading && !error && notifications.length === 0}
+      onSeeAll={() => router.push('/notifications')}
+    >
+      {notifications.map(n => (
+        <PanelNotificationRow
+          key={n.id}
+          notification={n}
+          openId={openId}
+          setOpenId={setOpenId}
+          onAcknowledge={handleAcknowledge}
+          onMarkUnread={handleMarkUnread}
+          onDelete={handleDelete}
+          onNavigate={(path) => { router.push(path) }}
+          tNotif={tNotif}
         />
-      )}
-    </div>
+      ))}
+    </SharedNotificationBell>
   )
 }

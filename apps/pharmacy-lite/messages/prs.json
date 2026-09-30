@@ -82,7 +82,8 @@
       "prescription": "نسخه",
       "status": "وضعیت",
       "received": "تاریخ دریافت"
-    }
+    },
+    "seeAll": "دیدن همه اعلان‌ها"
   },
   "rxLookup": {
     "title": "جستجوی نسخه",

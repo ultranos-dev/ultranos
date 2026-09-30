@@ -54,7 +54,8 @@
       "status": "Status",
       "received": "Received",
       "pathogen": "Pathogen"
-    }
+    },
+    "seeAll": "See all notifications"
   },
   "language": {
     "label": "Language",

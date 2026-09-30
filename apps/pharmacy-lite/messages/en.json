@@ -82,7 +82,8 @@
       "prescription": "Prescription",
       "status": "Status",
       "received": "Received"
-    }
+    },
+    "seeAll": "See all notifications"
   },
   "rxLookup": {
     "title": "Prescription lookup",

@@ -82,7 +82,8 @@
       "prescription": "نسخه",
       "status": "حالت",
       "received": "د ترلاسه کولو نیټه"
-    }
+    },
+    "seeAll": "ټولې خبرتیاوې وګورئ"
   },
   "rxLookup": {
     "title": "د نسخې لټون",

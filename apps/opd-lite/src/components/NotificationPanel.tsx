@@ -4,18 +4,15 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatDate, formatDateTime } from '@ultranos/ui-kit'
-import { Bell, X } from '@ultranos/ui-kit/icons'
-import { Button } from '@/components/ui/Button'
 import {
   fetchNotifications,
-  fetchUnreadCount,
   acknowledgeNotification,
   deleteNotification,
   markUnreadNotification,
   type NotificationItem,
 } from '@/lib/notification-api'
 import type { NotificationDetailField } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
-import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { NotificationBell as SharedNotificationBell } from '@ultranos/ui-kit/components/notifications/notification-bell'
 import { NotificationRow } from '@ultranos/ui-kit/components/ui/notification-row'
 import { NotificationDetailModal } from '@ultranos/ui-kit/components/ui/notification-detail-modal'
 import { sourceAppIcon, sourceAppNameKey, deriveSourceApp } from '@ultranos/ui-kit/notification-presentation'
@@ -40,190 +37,95 @@ function formatTimestamp(
 }
 
 /**
- * Notification bell icon with unread count badge.
- * Toggles the notification panel on click.
+ * OPD-Lite notification bell — adapts OPD's notification data to the SHARED
+ * ui-kit NotificationBell shell (badge + dropdown + "See all"). Rows are still
+ * OPD-specific (PanelNotificationRow carries OPD's payload mapping, deep links,
+ * and patient enrichment); the shell owns the chrome so the bell is identical
+ * across all apps.
  */
 export function NotificationBell() {
   const tNotif = useTranslations('notifications')
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [isOpen, setIsOpen] = useState(false)
+  const router = useRouter()
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+  const [openId, setOpenId] = useState<string | null>(null)
 
-  useEffect(() => {
-    let active = true
-    const poll = async () => {
-      try {
-        const { count } = await fetchUnreadCount()
-        if (active) setUnreadCount(count)
-      } catch {
-        // Silently handle — network may be unavailable (offline-first)
-      }
-    }
-
-    poll()
-    const interval = setInterval(poll, POLL_INTERVAL_MS)
-    return () => {
-      active = false
-      clearInterval(interval)
+  const load = useCallback(async () => {
+    try {
+      const { notifications: items } = await fetchNotifications()
+      setNotifications(items)
+      setError(false)
+    } catch {
+      setError(true) // never a false "no notifications"
+    } finally {
+      setLoading(false)
     }
   }, [])
 
-  return (
-    <div className="relative">
-      <Button
-        variant="icon"
-        type="button"
-        className="relative p-2"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label={
-          unreadCount > 0
-            ? tNotif('bellUnreadAria', { count: unreadCount })
-            : tNotif('bellAria')
-        }
-      >
-        <Bell className="h-6 w-6" />
-
-        {/* Unread badge */}
-        {unreadCount > 0 && (
-          <span className="absolute -end-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-xs font-bold text-destructive-foreground">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
-      </Button>
-
-      {isOpen && (
-        <NotificationDropdown
-          onClose={() => setIsOpen(false)}
-          onCountChange={setUnreadCount}
-        />
-      )}
-    </div>
-  )
-}
-
-/**
- * Notification dropdown panel.
- * Rows use the shared ui-kit NotificationRow with descriptor-field resolver.
- */
-function NotificationDropdown({
-  onClose,
-  onCountChange,
-}: {
-  onClose: () => void
-  onCountChange: (count: number) => void
-}) {
-  const tNotif = useTranslations('notifications')
-  const [notifications, setNotifications] = useState<NotificationItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [openId, setOpenId] = useState<string | null>(null)
-  const router = useRouter()
-
   useEffect(() => {
     let active = true
-    const load = async () => {
-      try {
-        const { notifications: items } = await fetchNotifications()
-        if (active) {
-          setNotifications(items)
-          const unread = items.filter(n => n.status !== 'ACKNOWLEDGED').length
-          onCountChange(unread)
-        }
-      } catch {
-        // Offline-tolerant: show empty state
-      } finally {
-        if (active) setLoading(false)
-      }
-    }
-    load()
-    return () => { active = false }
-  }, [onCountChange])
+    const run = () => { if (active) void load() }
+    run()
+    const interval = setInterval(run, POLL_INTERVAL_MS)
+    return () => { active = false; clearInterval(interval) }
+  }, [load])
+
+  const unreadCount = notifications.filter(n => n.status !== 'ACKNOWLEDGED').length
 
   const handleAcknowledge = useCallback(async (id: string) => {
     try {
       await acknowledgeNotification(id)
-      setNotifications(prev => {
-        const updated = prev.map(n => n.id === id ? { ...n, status: 'ACKNOWLEDGED', acknowledgedAt: new Date().toISOString() } : n)
-        onCountChange(updated.filter(n => n.status !== 'ACKNOWLEDGED').length)
-        return updated
-      })
+      setNotifications(prev => prev.map(n =>
+        n.id === id ? { ...n, status: 'ACKNOWLEDGED', acknowledgedAt: new Date().toISOString() } : n,
+      ))
     } catch {
       // Best-effort acknowledge
     }
-  }, [onCountChange])
+  }, [])
 
   const handleMarkUnread = useCallback(async (id: string) => {
-    // Optimistic update — flip back to unread immediately
-    setNotifications(prev => {
-      const updated = prev.map(n =>
-        n.id === id ? { ...n, status: 'SENT', acknowledgedAt: null } : n,
-      )
-      onCountChange(updated.filter(n => n.status !== 'ACKNOWLEDGED').length)
-      return updated
-    })
-
+    setNotifications(prev => prev.map(n =>
+      n.id === id ? { ...n, status: 'SENT', acknowledgedAt: null } : n,
+    ))
     try {
       await markUnreadNotification(id)
     } catch {
       // Best-effort mark-unread
     }
-  }, [onCountChange])
+  }, [])
 
   const handleDelete = useCallback(async (id: string) => {
-    // Optimistic removal
-    setNotifications(prev => {
-      const updated = prev.filter(n => n.id !== id)
-      onCountChange(updated.filter(n => n.status !== 'ACKNOWLEDGED').length)
-      return updated
-    })
-
+    setNotifications(prev => prev.filter(n => n.id !== id))
     try {
       await deleteNotification(id)
     } catch {
       // Best-effort delete
     }
-  }, [onCountChange])
+  }, [])
 
   return (
-    <div className="absolute end-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl bg-background ring-[0.65px] ring-border/50 shadow-lg">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h3 className="text-sm font-semibold text-foreground">{tNotif('title')}</h3>
-        <Button
-          variant="icon"
-          type="button"
-          onClick={onClose}
-          aria-label={tNotif('closeAria')}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Content */}
-      <div className="max-h-96 overflow-y-auto">
-        {loading && (
-          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            {tNotif('loading')}
-          </div>
-        )}
-
-        {!loading && notifications.length === 0 && (
-          <EmptyState title={tNotif('empty')} size="sm" />
-        )}
-
-        {!loading && notifications.map(n => (
-          <PanelNotificationRow
-            key={n.id}
-            notification={n}
-            openId={openId}
-            setOpenId={setOpenId}
-            onAcknowledge={handleAcknowledge}
-            onMarkUnread={handleMarkUnread}
-            onDelete={handleDelete}
-            onNavigate={(path) => { router.push(path); onClose() }}
-            tNotif={tNotif}
-          />
-        ))}
-      </div>
-    </div>
+    <SharedNotificationBell
+      unreadCount={unreadCount}
+      loading={loading}
+      error={error}
+      empty={!loading && !error && notifications.length === 0}
+      onSeeAll={() => router.push('/notifications')}
+    >
+      {notifications.map(n => (
+        <PanelNotificationRow
+          key={n.id}
+          notification={n}
+          openId={openId}
+          setOpenId={setOpenId}
+          onAcknowledge={handleAcknowledge}
+          onMarkUnread={handleMarkUnread}
+          onDelete={handleDelete}
+          onNavigate={(path) => { router.push(path) }}
+          tNotif={tNotif}
+        />
+      ))}
+    </SharedNotificationBell>
   )
 }
 

@@ -365,7 +365,10 @@
     "filterAll": "الكل",
     "filterUnread": "غير مقروءة",
     "filterRead": "مقروءة",
-    "noResults": "لا توجد إشعارات مطابقة"
+    "noResults": "لا توجد إشعارات مطابقة",
+    "seeAll": "عرض كل الإشعارات",
+    "bellAria": "الإشعارات",
+    "bellUnreadAria": "الإشعارات ({count} غير مقروءة)"
   },
   "queue": {
     "title": "قائمة انتظار الرفع",

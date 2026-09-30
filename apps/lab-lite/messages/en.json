@@ -365,7 +365,10 @@
     "filterAll": "All",
     "filterUnread": "Unread",
     "filterRead": "Read",
-    "noResults": "No matching notifications"
+    "noResults": "No matching notifications",
+    "seeAll": "See all notifications",
+    "bellAria": "Notifications",
+    "bellUnreadAria": "Notifications ({count} unread)"
   },
   "queue": {
     "title": "Upload Queue",

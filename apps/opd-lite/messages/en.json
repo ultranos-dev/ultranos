@@ -525,7 +525,9 @@
     },
     "markRead": "Mark as read",
     "markUnread": "Mark as unread",
-    "delete": "Delete notification"
+    "delete": "Delete notification",
+    "seeAll": "See all notifications",
+    "error": "Unable to load notifications"
   },
   "sync": {
     "dashboardTitle": "Sync Status",
