@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { LOINC_CATEGORIES } from '@/lib/loinc-categories'
 import { Button } from '@/components/ui/Button'
@@ -248,14 +249,12 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
       {hasOcr && (
         <div className="flex flex-col gap-1">
           <label className="flex items-start gap-2 text-sm">
-            <input
-              type="checkbox"
+            <Checkbox className="mt-0.5"
               checked={confirmed}
               onChange={(e) => {
                 setConfirmed(e.target.checked)
                 if (errors.confirm) setErrors((prev) => ({ ...prev, confirm: undefined }))
               }}
-              className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
               data-testid="ocr-confirm-checkbox"
             />
             <span className="text-foreground">

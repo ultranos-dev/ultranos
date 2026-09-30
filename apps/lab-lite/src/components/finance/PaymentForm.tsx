@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
@@ -167,11 +168,9 @@ export function PaymentForm() {
                 className="flex items-center justify-between rounded-md border border-border p-3 cursor-pointer hover:bg-muted/30"
               >
                 <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={test.selected}
                     onChange={() => toggleTest(idx)}
-                    className="h-4 w-4 rounded border-border text-primary focus:ring-ring"
                   />
                   <span className="text-sm text-foreground">{test.testName}</span>
                 </div>

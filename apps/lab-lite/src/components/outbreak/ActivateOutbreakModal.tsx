@@ -11,6 +11,7 @@
  */
 
 import { useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { AlertTriangle, ChevronDown } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
@@ -338,8 +339,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
               {availableLoincCodes.map(({ code, display }) => (
                 <label key={code} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={selectedTestCodes.includes(code)}
                     onChange={() => toggleTestCode(code)}
                   />
@@ -357,8 +357,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
               {labLocationIds.map((locationId) => (
                 <label key={locationId} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={selectedScope.includes(locationId)}
                     onChange={() => toggleScope(locationId)}
                   />

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { ModalHeader } from '@/components/ui/dialog'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { AllergyBanner } from './AllergyBanner'
 import { RecallAlertBanner } from './RecallAlertBanner'
 import { InteractionCheckBanner, type InteractionStatus } from './InteractionCheckBanner'
@@ -332,11 +333,10 @@ export function DispensingConfirmationModal({
         </div>
 
         <label className="flex items-start gap-3 rounded-2xl border border-border bg-muted p-3 cursor-pointer mb-4">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={acknowledged}
             onChange={(e) => setAcknowledged(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-border text-primary-600"
+            className="mt-0.5"
             data-testid="dispensing-ack-checkbox"
           />
           <span className="text-sm text-foreground">

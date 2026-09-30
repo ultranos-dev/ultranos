@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Plus, Trash2, AlertCircle } from '@ultranos/ui-kit/icons'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { Button } from '../ui/button.js'
 import { Card } from '../ui/card.js'
 import type { AllergyEntry, AllergyCriticality } from '../../types.js'
@@ -77,11 +78,10 @@ export function AllergiesSection({
 
         {/* No known allergies affirmation */}
         <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-          <input
-            type="checkbox"
+          <Checkbox
+            size="md"
             checked={noKnownAllergies}
             onChange={(e) => toggleNoKnown(e.target.checked)}
-            className="h-5 w-5 rounded border-border text-primary focus:ring-ring"
           />
           <span className="text-sm font-medium text-foreground">
             {t('noKnownAllergies')}

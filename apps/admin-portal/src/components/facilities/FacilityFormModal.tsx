@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import {
   Dialog,
@@ -240,11 +241,9 @@ export function FacilityFormModal({
             <section className="flex flex-col gap-2">
               {boolFields.map(({ name, label }) => (
                 <label key={name} className="inline-flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={Boolean(form[name])}
                     onChange={(e) => set(name, e.target.checked)}
-                    className="h-4 w-4 rounded border-border"
                   />
                   {t(label)}
                 </label>

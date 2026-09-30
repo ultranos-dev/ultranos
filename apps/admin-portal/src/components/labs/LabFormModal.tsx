@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import {
   Dialog,
@@ -170,11 +171,9 @@ export function LabFormModal({ open, onOpenChange, initial, onSaved }: LabFormMo
             </div>
             {/* Boolean fields in identity section */}
             <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={Boolean(form['capAccredited'])}
                 onChange={(e) => set('capAccredited', e.target.checked)}
-                className="h-4 w-4 rounded border-border"
               />
               {t('labs.capAccredited') ?? 'CAP Accredited'}
             </label>
@@ -190,20 +189,16 @@ export function LabFormModal({ open, onOpenChange, initial, onSaved }: LabFormMo
               <Input id="turnaroundTimeHours" value={val('turnaroundTimeHours')} onChange={(e) => set('turnaroundTimeHours', e.target.value)} />
             </div>
             <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={Boolean(form['homeCollection'])}
                 onChange={(e) => set('homeCollection', e.target.checked)}
-                className="h-4 w-4 rounded border-border"
               />
               {t('labs.homeCollection') ?? 'Home Collection'}
             </label>
             <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={Boolean(form['sampleCollection'])}
                 onChange={(e) => set('sampleCollection', e.target.checked)}
-                className="h-4 w-4 rounded border-border"
               />
               {t('labs.sampleCollection') ?? 'Sample Collection'}
             </label>

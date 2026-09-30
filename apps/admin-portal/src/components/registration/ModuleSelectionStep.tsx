@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 
 export interface ModuleOption {
@@ -80,11 +81,9 @@ export function ModuleSelectionStep({
                   : 'border-border hover:border-primary'
               }`}
             >
-              <input
-                type="checkbox"
+              <Checkbox className="mt-0.5"
                 checked={isSelected}
                 onChange={() => toggleModule(mod.code)}
-                className="mt-0.5 h-4 w-4 rounded border-border accent-accent"
               />
               <div>
                 <span className="text-sm font-medium text-foreground">{mod.name}</span>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { CountdownTimer } from './CountdownTimer'
 import { getSpillProtocol } from '@/lib/safety/spill-protocols'
@@ -318,8 +319,7 @@ export function SpillResponseWorkflow({ spillType, onClose, onComplete }: SpillR
                     minHeight: '48px',
                   }}
                 >
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={!!ppeChecked[i]}
                     onChange={(e) => setPpeChecked((prev) => ({ ...prev, [i]: e.target.checked }))}
                     style={{ width: '20px', height: '20px', flexShrink: 0, marginTop: '2px', cursor: 'pointer' }}

@@ -19,6 +19,7 @@
     "./components/ui/badge": "./src/components/ui/badge.tsx",
     "./components/ui/breadcrumb": "./src/components/ui/breadcrumb.tsx",
     "./components/ui/button": "./src/components/ui/button.tsx",
+    "./components/ui/checkbox": "./src/components/ui/checkbox.tsx",
     "./components/ui/dialog": "./src/components/ui/dialog.tsx",
     "./components/ui/dropdown-menu": "./src/components/ui/dropdown-menu.tsx",
     "./components/ui/input": "./src/components/ui/input.tsx",

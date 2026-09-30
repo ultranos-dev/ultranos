@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
 import { Label } from '@ultranos/ui-kit/components/ui/label'
@@ -208,11 +209,9 @@ export function DataBudgetDashboard() {
           </div>
 
           <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
+            <Checkbox className="mt-0.5"
               checked={lowData}
               onChange={(e) => setLowData(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
             />
             <div className="flex flex-col gap-0.5">
               <span className="text-sm font-medium text-foreground">{t('lowDataMode')}</span>

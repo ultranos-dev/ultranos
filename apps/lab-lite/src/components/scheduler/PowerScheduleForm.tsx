@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
 import {
@@ -174,11 +175,9 @@ export function PowerScheduleForm() {
 
           {/* Active toggle */}
           <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              className="h-4 w-4 rounded border-border"
             />
             <span className="text-sm text-foreground">{t('active')}</span>
           </label>

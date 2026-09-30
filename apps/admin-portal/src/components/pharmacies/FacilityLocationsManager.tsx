@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { SearchInput } from '@/components/ui/search-input'
@@ -261,12 +262,10 @@ export function FacilityLocationsManager({ facilityId }: { facilityId: string })
               </select>
             </div>
             <div className="flex items-center gap-2">
-              <input
+              <Checkbox
                 id="fl-primary"
-                type="checkbox"
                 checked={formIsPrimary}
                 onChange={(e) => setFormIsPrimary(e.target.checked)}
-                className="h-4 w-4 rounded border-border"
               />
               <Label htmlFor="fl-primary">{t('fieldPrimary')}</Label>
             </div>

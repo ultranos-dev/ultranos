@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 
@@ -201,11 +202,9 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
 function CheckboxItem({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <label className="flex items-center gap-2 cursor-pointer">
-      <input
-        type="checkbox"
+      <Checkbox
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="accent-accent rounded"
       />
       <span className="text-sm text-foreground">{label}</span>
     </label>

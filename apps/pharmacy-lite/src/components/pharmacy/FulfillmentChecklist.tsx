@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { useFulfillmentStore, type FulfillmentItem } from '@/stores/fulfillment-store'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { DispensingConfirmationModal } from './DispensingConfirmationModal'
 import { BrandSubstitutionPicker } from './BrandSubstitutionPicker'
 import { AllergyBanner } from './AllergyBanner'
@@ -97,12 +98,12 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
           >
             <div className="flex items-start gap-3">
               {/* Selection checkbox */}
-              <input
-                type="checkbox"
+              <Checkbox
+                size="md"
                 data-testid={`fulfill-checkbox-${item.prescription.id}`}
                 checked={item.selected}
                 onChange={() => toggleItem(item.prescription.id)}
-                className="mt-1 h-5 w-5 rounded border-border text-primary-600 focus:ring-primary-500"
+                className="mt-1"
                 aria-label={t('fulfillAriaLabel', { medication: item.prescription.medN })}
               />
 

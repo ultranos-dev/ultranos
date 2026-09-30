@@ -14,6 +14,7 @@
  */
 
 import { useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { ModalHeader } from '@ultranos/ui-kit/components/ui/dialog'
 import { LabRole } from '@ultranos/shared-types'
@@ -136,12 +137,10 @@ export function SupervisorAuthGate({
 
           {isSupervisor && (
             <div className="flex items-start gap-3">
-              <input
+              <Checkbox className="mt-0.5"
                 id="self-auth-acknowledge"
-                type="checkbox"
                 checked={acknowledged}
                 onChange={(e) => setAcknowledged(e.target.checked)}
-                className="mt-0.5 h-4 w-4 text-primary border-border rounded"
                 data-testid="self-auth-acknowledge"
               />
               <label htmlFor="self-auth-acknowledge" className="text-sm text-foreground">

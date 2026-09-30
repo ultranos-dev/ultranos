@@ -14,6 +14,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { AlertTriangle } from '@ultranos/ui-kit/icons'
 import { acknowledgeStep } from '@/lib/escalation-manager'
@@ -269,12 +270,10 @@ export function CriticalValueAlert({
         {/* Mandatory acknowledgment */}
         <div className="mt-6 space-y-4">
           <label className="flex items-start gap-3 cursor-pointer">
-            <input
+            <Checkbox size="md" variant="destructive" className="mt-1 flex-shrink-0"
               ref={checkboxRef}
-              type="checkbox"
               checked={checked}
               onChange={(e) => setChecked(e.target.checked)}
-              className="mt-1 h-5 w-5 flex-shrink-0 accent-destructive"
               aria-required="true"
             />
             <span className="text-sm font-medium text-foreground leading-snug">

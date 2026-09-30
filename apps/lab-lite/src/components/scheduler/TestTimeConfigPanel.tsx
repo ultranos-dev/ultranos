@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
 import {
@@ -111,13 +112,11 @@ export function TestTimeConfigPanel() {
                   />
                 </td>
                 <td className="py-2 pe-3">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={est.requiresPower}
                     onChange={(e) =>
                       handleUpdate(est.loincCode, 'requiresPower', e.target.checked)
                     }
-                    className="h-4 w-4 rounded border-border"
                   />
                 </td>
                 <td className="py-2">

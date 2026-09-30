@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -228,11 +229,9 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                 key={lab.id}
                 className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
               >
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={selectedLabIds.has(lab.id)}
                   onChange={() => toggleLab(lab.id)}
-                  className="accent-accent h-4 w-4"
                 />
                 <span className="text-sm font-medium text-foreground">{lab.name}</span>
                 <Badge
@@ -331,7 +330,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
         <div className="mt-3 space-y-4">
           {/* In-app — always on */}
           <div className="flex items-center gap-3 rounded-2xl border border-border p-4 bg-card">
-            <input type="checkbox" checked disabled className="accent-accent h-4 w-4" />
+            <Checkbox checked disabled />
             <div>
               <p className="text-sm font-medium text-foreground">In-App Notifications</p>
               <p className="text-xs text-muted-foreground">Always enabled</p>
@@ -341,8 +340,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
           {/* SMS */}
           <div className="rounded-2xl border border-border p-4">
             <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={smsEnabled}
                 onChange={(e) => {
                   setSmsEnabled(e.target.checked)
@@ -350,7 +348,6 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                     setChannels((prev) => ({ ...prev, sms_phone: undefined }))
                   }
                 }}
-                className="accent-accent h-4 w-4"
               />
               <div>
                 <p className="text-sm font-medium text-foreground">SMS Notifications</p>
@@ -371,8 +368,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
           {/* Email */}
           <div className="rounded-2xl border border-border p-4">
             <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={emailEnabled}
                 onChange={(e) => {
                   setEmailEnabled(e.target.checked)
@@ -380,7 +376,6 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                     setChannels((prev) => ({ ...prev, email: undefined }))
                   }
                 }}
-                className="accent-accent h-4 w-4"
               />
               <div>
                 <p className="text-sm font-medium text-foreground">Email Notifications</p>

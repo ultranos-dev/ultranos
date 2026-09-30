@@ -12,6 +12,7 @@
  */
 
 import { useState, useRef } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { getDb } from '@/lib/db'
 import { X } from '@ultranos/ui-kit/icons'
@@ -329,12 +330,10 @@ export function JournalEntryForm({
       {/* Case context toggle */}
       <div className="flex flex-col gap-3">
         <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={showCaseContext}
             onChange={(e) => setShowCaseContext(e.target.checked)}
             disabled={saving}
-            className="h-4 w-4 rounded border-border accent-primary disabled:opacity-50"
           />
           {t('journalAddCaseContext')}
         </label>

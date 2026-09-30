@@ -16,6 +16,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { AlertTriangle, CircleCheck, CircleX } from '@ultranos/ui-kit/icons'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import type { CriticalValueMatch, ChecklistItem, CompletedChecklist, ChecklistConfig } from '@/lib/critical-values/types'
 import { DEFAULT_CHECKLIST_CONFIG_ITEMS } from '@/lib/critical-values/default-thresholds'
 import { getChecklistConfig } from '@/lib/db'
@@ -294,30 +295,15 @@ function ChecklistRow({
       className="flex items-start gap-3 cursor-pointer group"
       data-testid={`checklist-item-${item.id}`}
     >
-      {/* Checkbox */}
-      <span className="relative mt-0.5 shrink-0">
-        <input
-          type="checkbox"
-          checked={isEffectivelyChecked}
-          onChange={() => onToggle(item.id)}
-          className="peer sr-only"
-          aria-label={labelOverride}
-        />
-        <span
-          className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${
-            isEffectivelyChecked
-              ? item.isAutoVerified
-                ? 'border-success bg-success'
-                : 'border-primary bg-primary'
-              : 'border-border bg-card group-hover:border-border'
-          }`}
-          aria-hidden="true"
-        >
-          {isEffectivelyChecked && (
-            <CircleCheck size={12} className="text-white" aria-hidden="true" />
-          )}
-        </span>
-      </span>
+      {/* Checkbox — auto-verified items use the success (green) variant. */}
+      <Checkbox
+        size="md"
+        variant={item.isAutoVerified ? 'success' : 'primary'}
+        checked={isEffectivelyChecked}
+        onChange={() => onToggle(item.id)}
+        aria-label={labelOverride}
+        className="mt-0.5"
+      />
 
       {/* Label + badges */}
       <span className="flex-1 min-w-0">

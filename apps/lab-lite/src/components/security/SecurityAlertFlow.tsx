@@ -23,6 +23,7 @@
  */
 
 import { useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useSecurityAlertStore } from '@/stores/security-alert-store'
@@ -334,11 +335,9 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
 
             {/* First confirmation */}
             <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
+              <Checkbox size="md" variant="destructive" className="mt-0.5"
                 checked={wipeConfirm1}
                 onChange={(e) => setWipeConfirm1(e.target.checked)}
-                className="mt-0.5 h-5 w-5 accent-destructive"
               />
               <span className="text-sm font-medium text-foreground">
                 {t('wipe.firstConfirmLabel')}

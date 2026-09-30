@@ -10,6 +10,7 @@ import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
 import { Card } from '@/components/Card'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { CircleCheck } from '@ultranos/ui-kit/icons'
 import {
   getKycUploadUrl,
@@ -474,11 +475,10 @@ export default function KycPage() {
           </div>
 
           <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-muted/40 p-4">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={confirmed}
               onChange={(e) => setConfirmed(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-border"
+              className="mt-0.5"
             />
             <span className="text-sm text-foreground">
               {t('confirmAccuracy')}

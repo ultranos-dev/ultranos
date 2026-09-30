@@ -5,6 +5,7 @@ import { ProvinceAutocomplete } from '../shared/province-autocomplete.js'
 import { DistrictAutocomplete } from '../shared/district-autocomplete.js'
 import type { AfghanProvince } from '@ultranos/shared-types'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { Card } from '../ui/card.js'
 
 interface AddressFields {
@@ -119,11 +120,10 @@ export function GeographySection({
 
         {/* Same as origin checkbox */}
         <label className="mb-4 flex items-center gap-2 cursor-pointer min-h-[44px]">
-          <input
-            type="checkbox"
+          <Checkbox
+            size="md"
             checked={sameAsOrigin}
             onChange={(e) => onSameAsOriginChange(e.target.checked)}
-            className="h-5 w-5 rounded border-border text-primary focus:ring-ring"
           />
           <span className="text-sm font-medium text-foreground">
             {t('sameAsOrigin')}
@@ -186,11 +186,10 @@ export function GeographySection({
         <>
           <hr className="border-border my-4" />
           <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-            <input
-              type="checkbox"
+            <Checkbox
+              size="md"
               checked={isNomadic ?? false}
               onChange={(e) => onIsNomadicChange(e.target.checked)}
-              className="h-5 w-5 rounded border-border text-primary focus:ring-ring"
             />
             <span className="text-sm font-medium text-foreground">
               {t('isNomadic')}

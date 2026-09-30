@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { Card } from '../ui/card.js'
 import type { DisplacementCategory, EducationLevel } from '@ultranos/shared-types'
 
@@ -170,11 +171,10 @@ export function SocialInfoSection({
 
         {/* Disability */}
         <label className="flex items-center gap-2 cursor-pointer min-h-[44px] sm:col-span-2">
-          <input
-            type="checkbox"
+          <Checkbox
+            size="md"
             checked={disability}
             onChange={(e) => onDisabilityChange(e.target.checked)}
-            className="h-5 w-5 rounded border-border text-primary focus:ring-ring"
           />
           <span className="text-sm font-medium text-foreground">
             {t('disability')}

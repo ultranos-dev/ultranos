@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { PatientVerificationMethod } from '@ultranos/shared-types'
 import type { PatientVerificationRecord } from '@ultranos/shared-types'
@@ -262,13 +263,11 @@ export function PatientVerificationForm({
           return (
             <div key={config.method} className="space-y-1">
               <label className="flex items-start gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
+                <Checkbox className="mt-0.5"
                   data-testid={`method-${config.method}`}
                   checked={checked}
                   readOnly={isQrAutoChecked}
                   onChange={() => !isQrAutoChecked && toggleMethod(config.method)}
-                  className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-ring"
                   aria-describedby={config.descriptionKey ? `desc-${config.method}` : undefined}
                 />
                 <span className="text-sm text-foreground">{t(config.labelKey)}</span>
@@ -313,15 +312,13 @@ export function PatientVerificationForm({
           <p className="text-xs">{t('verification.warning.singleIdentifier.detail')}</p>
 
           <label className="flex items-center gap-2 mt-2 cursor-pointer">
-            <input
-              type="checkbox"
+            <Checkbox variant="warning"
               data-testid="override-checkbox"
               checked={overrideEnabled}
               onChange={(e) => {
                 setOverrideEnabled(e.target.checked)
                 if (!e.target.checked) setDeviationReason('')
               }}
-              className="h-4 w-4 rounded border-warning text-warning focus:ring-warning"
             />
             <span className="text-xs font-medium">{t('verification.override.label')}</span>
           </label>

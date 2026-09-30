@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { getDb } from '@/lib/db'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -322,12 +323,10 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
       {/* Anonymization toggle */}
       <div className="rounded-lg border border-border p-3">
         <div className="flex items-start gap-3">
-          <input
+          <Checkbox className="mt-0.5"
             id="reveal-lab"
-            type="checkbox"
             checked={revealLabName}
             onChange={(e) => setRevealLabName(e.target.checked)}
-            className="mt-0.5"
           />
           <div>
             <label htmlFor="reveal-lab" className="text-sm font-medium text-foreground">
@@ -344,12 +343,10 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
 
       {/* PHI Confirmation */}
       <div className="flex items-start gap-3">
-        <input
+        <Checkbox className="mt-0.5"
           id="phi-confirm"
-          type="checkbox"
           checked={phiConfirmed}
           onChange={(e) => setPhiConfirmed(e.target.checked)}
-          className="mt-0.5"
         />
         <label htmlFor="phi-confirm" className="text-sm text-foreground">
           {t('phiConfirmLabel')}

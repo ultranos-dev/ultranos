@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -272,8 +273,7 @@ export function ModuleSettingsCard({ moduleCode, moduleName }: ModuleSettingsCar
                     const checked = current.includes(opt.value)
                     return (
                       <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={checked}
                           onChange={() => {
                             const updated = checked
@@ -281,7 +281,6 @@ export function ModuleSettingsCard({ moduleCode, moduleName }: ModuleSettingsCar
                               : [...current, opt.value]
                             updateSetting(ctrl.key, updated)
                           }}
-                          className="accent-accent rounded"
                         />
                         <span className="text-sm text-foreground">{opt.label}</span>
                       </label>

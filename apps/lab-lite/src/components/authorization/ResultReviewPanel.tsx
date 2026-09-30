@@ -9,6 +9,7 @@
  * RTL: uses logical CSS properties throughout.
  */
 import { useState, useEffect } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { AlertTriangle, X, Info } from '@ultranos/ui-kit/icons'
 import { approveResult, rejectResult, holdResult } from '@/lib/authorization-actions'
@@ -90,11 +91,9 @@ function ConfirmDialog({
 
         {requireCheckbox && checkboxLabel && (
           <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-            <input
-              type="checkbox"
+            <Checkbox variant="destructive" className="mt-0.5"
               checked={checked}
               onChange={(e) => setChecked(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-destructive/30 accent-destructive"
             />
             <span>{checkboxLabel}</span>
           </label>

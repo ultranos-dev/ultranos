@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { AudioRecorder } from '@/components/consent/AudioRecorder'
@@ -308,11 +309,9 @@ export default function ConsentPage() {
             </dl>
 
             <label className="flex items-start gap-2">
-              <input
-                type="checkbox"
+              <Checkbox className="mt-1"
                 checked={witnessConfirmed}
                 onChange={(e) => setWitnessConfirmed(e.target.checked)}
-                className="mt-1"
               />
               <span className="text-sm">{t('review.confirmWitness')}</span>
             </label>

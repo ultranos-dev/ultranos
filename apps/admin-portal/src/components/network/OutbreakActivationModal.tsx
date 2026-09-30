@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -106,11 +107,9 @@ export function OutbreakActivationModal({ labs, open, onOpenChange, onSuccess }:
                         : 'border-border hover:bg-card'
                     }`}
                   >
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={selectedLabs.has(lab.labId)}
                       onChange={() => toggleLab(lab.labId)}
-                      className="accent-accent"
                     />
                     <span className="text-sm font-medium text-foreground">{lab.labName}</span>
                     <Badge

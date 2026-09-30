@@ -15,6 +15,7 @@
  */
 
 import { useTranslations } from 'next-intl'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useSecurityAlertStore, type ChecklistItem } from '@/stores/security-alert-store'
 
 interface ShutdownChecklistProps {
@@ -79,12 +80,10 @@ export function ShutdownChecklist({ onComplete }: ShutdownChecklistProps) {
                   : 'border-border bg-card hover:bg-muted/30'}
               `}
             >
-              <input
-                type="checkbox"
+              <Checkbox size="md" variant="success" className="mt-0.5 flex-shrink-0"
                 checked={item.checked}
                 onChange={() => handleToggle(item)}
                 aria-label={t(item.label)}
-                className="mt-0.5 h-5 w-5 flex-shrink-0 accent-success"
               />
               <div className="flex flex-col gap-0.5 min-w-0">
                 <span className="text-sm font-medium leading-snug">

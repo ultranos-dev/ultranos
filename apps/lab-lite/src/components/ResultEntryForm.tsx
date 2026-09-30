@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect, useCallback, useId, useRef } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { MessageSquare } from '@ultranos/ui-kit/icons'
@@ -515,11 +516,9 @@ export function ResultEntryForm({
             {t('criticalAlertBody')}
           </p>
           <label className="flex cursor-pointer items-center gap-2 text-sm text-destructive dark:text-destructive">
-            <input
-              type="checkbox"
+            <Checkbox variant="destructive"
               checked={criticalAcknowledged}
               onChange={(e) => setCriticalAcknowledged(e.target.checked)}
-              className="h-4 w-4 rounded border-destructive text-destructive focus:ring-destructive"
             />
             {t('criticalAcknowledgeLabel')}
           </label>

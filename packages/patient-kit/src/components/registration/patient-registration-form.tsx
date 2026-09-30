@@ -16,6 +16,7 @@ import type {
 } from '@ultranos/shared-types'
 import { Alert } from '@ultranos/ui-kit/components/ui/alert'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { X } from '@ultranos/ui-kit/icons'
 import { Button } from '../ui/button.js'
 import { Card } from '../ui/card.js'
@@ -1407,15 +1408,14 @@ export function PatientRegistrationForm({
             {/* Birth year or full date toggle */}
             <div>
               <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-                <input
-                  type="checkbox"
+                <Checkbox
+                  size="md"
                   checked={birthYearOnly}
                   onChange={(e) => {
                     setBirthYearOnly(e.target.checked)
                     if (e.target.checked) setBirthDate('')
                     else setBirthYear('')
                   }}
-                  className="h-5 w-5 border-border text-primary focus:ring-ring"
                 />
                 <span className="text-sm font-medium text-foreground">
                   {t('birthYearOnly')}

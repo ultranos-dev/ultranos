@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Button } from '@ultranos/ui-kit/components/ui/button'
 import { Input } from '@ultranos/ui-kit/components/ui/input'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { SearchInput } from '@ultranos/ui-kit/components/ui/search-input'
 import { Package, FileSearch } from '@ultranos/ui-kit/icons'
@@ -249,13 +250,11 @@ export function ReorderReportPage() {
                   <tr key={line.catalogItemId} className="hover:bg-muted/50">
                     <td className="px-4 py-3">
                       {hasEffectiveSupplier ? (
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={state.selected}
                           onChange={(e) =>
                             updateRow(line.catalogItemId, { selected: e.target.checked })
                           }
-                          className="h-4 w-4 cursor-pointer accent-primary"
                         />
                       ) : (
                         <span

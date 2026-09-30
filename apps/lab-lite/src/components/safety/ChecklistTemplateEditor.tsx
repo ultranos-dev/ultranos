@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 import { useTranslations } from 'next-intl'
 import { LabRole } from '@ultranos/shared-types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -267,12 +268,10 @@ export function ChecklistTemplateEditor() {
           </div>
 
           <div className="flex items-center gap-2">
-            <input
+            <Checkbox
               id="add-requires-photo"
-              type="checkbox"
               checked={addRequiresPhoto}
               onChange={(e) => setAddRequiresPhoto(e.target.checked)}
-              className="h-4 w-4 rounded border-border text-primary focus:ring-ring"
             />
             <label htmlFor="add-requires-photo" className="text-sm text-foreground">
               {t('fieldRequiresPhoto')}
@@ -379,12 +378,10 @@ export function ChecklistTemplateEditor() {
                           />
                         </div>
                         <div className="flex items-center gap-2">
-                          <input
+                          <Checkbox
                             id={`edit-photo-${item.id}`}
-                            type="checkbox"
                             checked={editRequiresPhoto}
                             onChange={(e) => setEditRequiresPhoto(e.target.checked)}
-                            className="h-4 w-4 rounded border-border text-primary"
                           />
                           <label
                             htmlFor={`edit-photo-${item.id}`}
