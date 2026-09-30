@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { ShieldCheck, KeyRound } from '@ultranos/ui-kit/icons'
+import { Checkbox } from '@ultranos/ui-kit/components/ui/checkbox'
 // Story 56.3: admin login uses a real Supabase TOTP challenge (not the former
 // empty-code WebAuthn ceremony). The challenge runs ONLY when the signed-in admin
 // has a verified TOTP factor — which only exists once their org enabled MFA and
@@ -30,8 +31,45 @@ export default function AdminLoginPage() {
   const [totpCode, setTotpCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [rememberEmail, setRememberEmail] = useState(false)
 
   const t = useTranslations('auth')
+
+  // "Remember email": prefill a previously-saved email and keep it in sync.
+  // The login email is a staff identifier (not PHI), so localStorage is fine.
+  const REMEMBER_EMAIL_KEY = 'ultranos.rememberedEmail'
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(REMEMBER_EMAIL_KEY)
+      if (saved) {
+        setEmail(saved)
+        setRememberEmail(true)
+      }
+    } catch {
+      // localStorage unavailable — skip prefill
+    }
+  }, [])
+
+  function handleRememberToggle(checked: boolean) {
+    setRememberEmail(checked)
+    try {
+      if (checked) localStorage.setItem(REMEMBER_EMAIL_KEY, email)
+      else localStorage.removeItem(REMEMBER_EMAIL_KEY)
+    } catch {
+      // localStorage unavailable — ignore
+    }
+  }
+
+  function handleEmailChange(value: string) {
+    setEmail(value)
+    if (rememberEmail) {
+      try {
+        localStorage.setItem(REMEMBER_EMAIL_KEY, value)
+      } catch {
+        // localStorage unavailable — ignore
+      }
+    }
+  }
   const searchParams = useSearchParams()
   const router = useRouter()
   const resetSuccess = searchParams.get('reset') === 'success'
@@ -286,7 +324,7 @@ export default function AdminLoginPage() {
                     type="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => handleEmailChange(e.target.value)}
                     placeholder="admin@hospital.example"
                     autoComplete="email"
                   />
@@ -302,7 +340,14 @@ export default function AdminLoginPage() {
                     autoComplete="current-password"
                   />
                 </div>
-                <div className="flex justify-end">
+                <div className="flex items-center justify-between gap-3">
+                  <label className="flex cursor-pointer select-none items-center gap-2">
+                    <Checkbox
+                      checked={rememberEmail}
+                      onChange={(e) => handleRememberToggle(e.target.checked)}
+                    />
+                    <span className="text-sm text-muted-foreground">{t('rememberEmail')}</span>
+                  </label>
                   <Link
                     href={
                       email

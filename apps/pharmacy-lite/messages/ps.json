@@ -165,7 +165,8 @@
     "panelTagline": "د درملو مدیریت او ویښل",
     "panelFeature1": "د نسخو ڈیجیټل تصدیق",
     "panelFeature2": "د درملو د متقابل عمل کتنه",
-    "panelFeature3": "د سټاک او موجودی مدیریت"
+    "panelFeature3": "د سټاک او موجودی مدیریت",
+    "rememberEmail": "برېښنالیک په یاد ولرئ"
   },
   "fulfillment": {
     "title": "د ورکولو چک لیست",

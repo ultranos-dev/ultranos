@@ -165,7 +165,8 @@
     "panelTagline": "مدیریت و توزیع داروها",
     "panelFeature1": "تأیید دیجیتالی نسخ‌ها",
     "panelFeature2": "بررسی تداخل دارویی",
-    "panelFeature3": "مدیریت موجودی و انبار"
+    "panelFeature3": "مدیریت موجودی و انبار",
+    "rememberEmail": "ایمیل را به خاطر بسپار"
   },
   "fulfillment": {
     "title": "چک‌لیست تحویل",

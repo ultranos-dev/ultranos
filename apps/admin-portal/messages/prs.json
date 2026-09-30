@@ -129,7 +129,8 @@
     "signOut": "خروج",
     "trialExpiredTitle": "دوره آزمایشی رایگان شما به پایان رسید",
     "trialExpiredBody": "برای ادامه استفاده از Ultranos یک روش پرداخت اضافه کنید.",
-    "setUpBilling": "تنظیم صورت‌حساب"
+    "setUpBilling": "تنظیم صورت‌حساب",
+    "rememberEmail": "ایمیل را به خاطر بسپار"
   },
   "common": {
     "loading": "در حال بارگذاری…",

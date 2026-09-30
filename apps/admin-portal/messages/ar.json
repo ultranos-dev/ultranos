@@ -129,7 +129,8 @@
     "signOut": "تسجيل الخروج",
     "trialExpiredTitle": "انتهت فترتك التجريبية المجانية",
     "trialExpiredBody": "أضف طريقة دفع لمواصلة استخدام Ultranos.",
-    "setUpBilling": "إعداد الفوترة"
+    "setUpBilling": "إعداد الفوترة",
+    "rememberEmail": "تذكّر البريد الإلكتروني"
   },
   "common": {
     "loading": "جارٍ التحميل…",

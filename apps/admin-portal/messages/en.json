@@ -129,7 +129,8 @@
     "signOut": "Sign Out",
     "trialExpiredTitle": "Your free trial has expired",
     "trialExpiredBody": "Add a payment method to continue using Ultranos.",
-    "setUpBilling": "Set Up Billing"
+    "setUpBilling": "Set Up Billing",
+    "rememberEmail": "Remember email"
   },
   "common": {
     "loading": "Loading…",

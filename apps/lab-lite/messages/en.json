@@ -83,7 +83,8 @@
     "panelTagline": "Diagnostic result entry and quality control",
     "panelFeature1": "Barcode scan & result entry",
     "panelFeature2": "Quality control charts",
-    "panelFeature3": "AI-assisted result validation"
+    "panelFeature3": "AI-assisted result validation",
+    "rememberEmail": "Remember email"
   },
   "upload": {
     "title": "Upload Lab Result",

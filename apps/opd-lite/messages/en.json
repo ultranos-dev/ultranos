@@ -66,7 +66,8 @@
     "panelFeature1": "Patient registration & encounters",
     "panelFeature2": "Offline-first clinical documentation",
     "panelFeature3": "Prescription management",
-    "platformName": "Ultranos Healthcare Platform"
+    "platformName": "Ultranos Healthcare Platform",
+    "rememberEmail": "Remember email"
   },
   "patient": {
     "photoNotSaved": "Photo not saved to record yet",

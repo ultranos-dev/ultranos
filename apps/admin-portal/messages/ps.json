@@ -129,7 +129,8 @@
     "signOut": "وتل",
     "trialExpiredTitle": "ستاسو وړیا آزمایشي دوره پای ته ورسیده",
     "trialExpiredBody": "د Ultranos کارولو ته دوام ورکولو لپاره د تادیې یوه طریقه اضافه کړئ.",
-    "setUpBilling": "د بل تنظیم"
+    "setUpBilling": "د بل تنظیم",
+    "rememberEmail": "برېښنالیک په یاد ولرئ"
   },
   "common": {
     "loading": "بارول روان دي…",

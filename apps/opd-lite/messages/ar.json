@@ -66,7 +66,8 @@
     "panelFeature1": "تسجيل المرضى والزيارات",
     "panelFeature2": "توثيق سريري يعمل بدون اتصال",
     "panelFeature3": "إدارة الوصفات الطبية",
-    "platformName": "منصة أولترانوس الصحية"
+    "platformName": "منصة أولترانوس الصحية",
+    "rememberEmail": "تذكّر البريد الإلكتروني"
   },
   "patient": {
     "photoNotSaved": "لم يتم حفظ الصورة في السجل بعد",

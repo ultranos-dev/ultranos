@@ -64,6 +64,7 @@ vi.mock('@/components/LanguageSelectorClient', () => ({
 
 vi.mock('@ultranos/ui-kit/icons', () => ({
   Pill: () => null,
+  Check: () => null,
 }))
 
 // deriveSessionKey is the DETERMINISTIC PBKDF2 key that must match AuthGuard — the

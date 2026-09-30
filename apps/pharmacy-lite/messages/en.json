@@ -165,7 +165,8 @@
     "panelTagline": "Medication management and dispensing",
     "panelFeature1": "Digital prescription verification",
     "panelFeature2": "Drug interaction checking",
-    "panelFeature3": "Inventory & stock management"
+    "panelFeature3": "Inventory & stock management",
+    "rememberEmail": "Remember email"
   },
   "fulfillment": {
     "title": "Fulfillment Checklist",

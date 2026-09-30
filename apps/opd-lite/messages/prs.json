@@ -66,7 +66,8 @@
     "panelFeature1": "ثبت بیمار و ویزیت‌ها",
     "panelFeature2": "مستندسازی بالینی آفلاین‌اول",
     "panelFeature3": "مدیریت نسخ‌ها",
-    "platformName": "پلتفرم صحی اولترانوس"
+    "platformName": "پلتفرم صحی اولترانوس",
+    "rememberEmail": "ایمیل را به خاطر بسپار"
   },
   "patient": {
     "photoNotSaved": "عکس هنوز در سابقه ذخیره نشده است",
